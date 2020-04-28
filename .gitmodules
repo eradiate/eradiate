@@ -1,0 +1,3 @@
+[submodule "ext/mitsuba2"]
+	path = ext/mitsuba2
+	url = https://github.com/leroyvn/mitsuba2

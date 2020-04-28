@@ -1,0 +1,18 @@
+name: eradiate_nested
+channels:
+  - default
+dependencies:
+  - python=3.7
+  - pytest 
+  - pytest-xdist
+  - sphinx>=2.4
+  - pip
+  - pyyaml
+  - numpy
+  - matplotlib
+  # Optional deps
+  - jupyter
+  - ipython
+  - pip:
+    - guzzle_sphinx_theme
+    - sphinxcontrib-bibtex
