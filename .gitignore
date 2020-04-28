@@ -1,3 +1,5 @@
 .pytest_cache/
 .vscode/
 build/
+*.egg-info
+__pycache__
