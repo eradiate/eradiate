@@ -3,16 +3,20 @@ channels:
   - default
 dependencies:
   - python=3.7
+  - attrs
+  - ipython
+  - jupyter
+  - lxml
+  - matplotlib
+  - numpy
+  - pint
+  - pip
   - pytest 
   - pytest-xdist
-  - sphinx>=2.4
-  - pip
   - pyyaml
-  - numpy
-  - matplotlib
+  - scipy
+  - sphinx>=2.4
   # Optional deps
-  - jupyter
-  - ipython
   - pip:
     - guzzle_sphinx_theme
     - sphinxcontrib-bibtex
