@@ -1,1 +1,4 @@
-import mitsuba as kernel
+import eradiate.kernel
+import eradiate.scenes
+import eradiate.solvers
+import eradiate.util
