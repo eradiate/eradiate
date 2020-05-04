@@ -17,6 +17,8 @@ elif [ "$ZSH_VERSION" ]; then
     export ERADIATE_DIR=$(dirname "$0:A")
 fi
 
-export PYTHONPATH="$ERADIATE_DIR/dist/python:$ERADIATE_DIR/$BUILD_DIR/dist/python:$PYTHONPATH"
-export PATH="$ERADIATE_DIR/dist:$ERADIATE_DIR/$BUILD_DIR/dist:$PATH"
-export MITSUBA_DIR="$ERADIATE_DIR"/ext/mitsuba2
+# export PYTHONPATH="$ERADIATE_DIR/dist/python:$ERADIATE_DIR/$BUILD_DIR/dist/python:$PYTHONPATH"
+# export PATH="$ERADIATE_DIR/dist:$ERADIATE_DIR/$BUILD_DIR/dist:$PATH"
+export PYTHONPATH="$ERADIATE_DIR/$BUILD_DIR/dist/python:$PYTHONPATH"
+export PATH="$ERADIATE_DIR/$BUILD_DIR/dist:$PATH"
+export MITSUBA_DIR="$ERADIATE_DIR/ext/mitsuba2"
