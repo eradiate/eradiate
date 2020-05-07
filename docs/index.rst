@@ -48,6 +48,7 @@ Contents
     :caption: User guide
 
     rst/user_guide/intro
+    rst/user_guide/post_processing
 
 .. toctree::
     :maxdepth: 2

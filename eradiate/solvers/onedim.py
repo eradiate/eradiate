@@ -4,7 +4,7 @@ import numpy as np
 
 from ..scenes.atmosphere import RayleighHomogeneous
 from ..scenes.builder import *
-from ..scenes.util import angles_to_direction
+from ..util.frame import angles_to_direction
 from ..util import ensure_array, ureg
 
 

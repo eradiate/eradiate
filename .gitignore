@@ -10,3 +10,6 @@ __pycache__
 build/
 test_report/generated
 docs/_build/
+*.egg-info
+__pycache__
+.idea

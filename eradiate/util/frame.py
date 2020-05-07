@@ -28,3 +28,9 @@ def angles_to_direction(theta, phi):
     :return (np.ndarray): Direction corresponding to the angular parameters.
     """
     return cos_angle_to_direction(np.cos(theta), phi)
+
+
+def degree_to_radians(wi):
+    """Convert a pair of angles in degrees to radians
+    """
+    return [wi[0]/180.*np.pi, wi[1]/180.*np.pi]
