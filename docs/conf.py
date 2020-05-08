@@ -60,6 +60,8 @@ extensions = []
 extensions.append("guzzle_sphinx_theme")
 extensions.append("sphinx.ext.mathjax")
 
+extensions.append("sphinxcontrib.bibtex")
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.

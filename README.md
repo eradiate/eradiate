@@ -1,45 +1,19 @@
-# Eradiate Nested Build Example
+# Eradiate Radiative Transfer Model
 
-## Cloning
+![Eradiate logo](docs/fig/eradiate-logo-dark-no_bg.png "Blabla")
 
-```
-git clone --recursive <URL>
-```
+**TODO:** Add badges.
 
-## Setting up and activating Conda env
+**TODO:** Add software package and project description.
 
-```
-conda env create --file resources/environment.yml
-conda activate eradiate_nested
-```
+## Installing and using Eradiate
 
-## Setting up environment variables
+See documentation.
 
-TODO: add this to environment setup (easier).
-```
-source setpath.sh
-```
+## About
 
-## Building
+Eradiate's development is funded by a European Space Agency project funded by the European Commission's Copernicus programme. The design phase was funded by the MetEOC-3 project.
 
-Build Mitsuba:
-```
-cmake . -B build -GNinja
-cmake --build build
-```
+Eradiate's core development team consists of Yves Govaerts, Vincent Leroy, Yvan Nollet and Sebastian Schunke.
 
-Install the Eradiate package in dev mode:
-```
-python setup.py develop
-```
-
-## Testing
-
-Print embedded Mitsuba version:
-```
-python -c "import eradiate; eradiate.kernel.set_variant('scalar_rgb'); print(eradiate.kernel.core.MTS_VERSION)"
-```
-Run the Mitsuba test suite:
-```
-pytest -m "not slow" ext/mitsuba2/src
-```
+Eradiate uses the [Mitsuba 2](https://github.com/mitsuba-renderer/mitsuba2) renderer as its computational kernel. The Eradiate team acknowledges Mitsuba 2 creators and contributors for their exceptional work.
