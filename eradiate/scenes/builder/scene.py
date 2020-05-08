@@ -14,9 +14,29 @@ from .util import count
 
 @attr.s
 class Scene(Object, Instantiable):
+    r"""This class wraps Mitsuba's ``Scene`` class.
+
+    Class attributes:
+        ``_tag`` = ``"scene"``
+
+    Constructor arguments / public attributes:
+        ``bsdfs`` (:class:`list` [:class:`eradiate.scenes.builder.BSDF`]):
+            List of BSDF plugin interface objects for top-level referencing.
+        ``phase`` (:class:`list` [:class:`eradiate.scenes.builder.Phase`]):
+            List of phase function plugin interface objects for top-level 
+            referencing.
+        ``media`` (:class:`list` [:class:`eradiate.scenes.builder.Phase`]):
+            List of medium plugin interface objects for top-level referencing.
+        ``phase`` (:class:`list` [:class:`eradiate.scenes.builder.Medium`]):
+            List of phase function plugin interface objects for top-level 
+            referencing.
+        ``shapes`` (:class:`list` [:class:`eradiate.scenes.builder.Shape`]):
+            List of geometric shapes.
+        ``emitter`` (:class:`eradiate.scenes.builder.Emitter`):
+            List of phase function plugin interface objects for top-level 
+            referencing.
     """
-    The main scene abstraction.
-    """
+
     _tag = "scene"
     bsdfs = attr.ib(
         kw_only=True,
@@ -60,6 +80,8 @@ class Scene(Object, Instantiable):
 
     @property
     def sequence(self):
+        """Access the complete plugin interface sequence."""
+
         s = []
         s.extend(self.bsdfs)
         s.extend(self.phase)
@@ -74,8 +96,7 @@ class Scene(Object, Instantiable):
         return s
 
     def check(self):
-        """
-        Perform scene sanity check.
+        """Check the scene sequence for inconsistencies.
         """
         if any([not isinstance(s, Shape) for s in self.shapes]):
             raise TypeError("all objects in 'shapes' must be Shape")
@@ -92,9 +113,8 @@ class Scene(Object, Instantiable):
         return e
 
     def to_xml(self, pretty_print=False, add_version=True):
-        """
-        Convenience redefinition of this method (default kwargs are different
-        from those of the super class).
+        """This method overrides ``Object``'s ``to_xml()`` with more convenient 
+        default values for keyword arguments.
         """
         return super().to_xml(pretty_print=pretty_print,
                               add_version=add_version)

@@ -11,9 +11,17 @@ Eradiate is a radiative transfer simulation software package written in Python a
 
 Eradiate uses Monte Carlo ray tracing integration methods to compute radiative transfer in scenes consisting of an arbitrary 3D geometry illuminated by an arbitrary number of light sources, possibly accounting for polarisation.
 
-.. admonition:: Where do I go?
+.. admonition:: Where should I go?
 
-   **New users** may want to jump to the :ref:`Getting started<sec-getting_started-intro>` section to learn about how to get and compile Eradiate. The :ref:`Tutorials<sec-tutorials-intro>` section holds a series of guides, some of which interactive in jupyter notebooks, to familiarize users with the capabilities of Eradiate. The :ref:`Advanced topics<sec-advanced_topics-intro>` section holds references for developers and contributors to the Eradiate project.
+    :ref:`Getting started<sec-getting_started-intro>`
+        Go here to learn about Eradiate, how to get it and how to compile it.
+    :ref:`User guide<sec-user_guide-intro>`
+        Go here to learn about how to use Eradiate's applications and API.
+    :ref:`Developer guide<sec-developer_guide-intro>`
+        Go here to learn about how to modify Eradiate.
+    :ref:`API reference<sec-api_reference-intro>`
+        Go here for the complete API reference.
+
 
 About
 -----
@@ -28,62 +36,36 @@ Contents
 --------
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Getting started
+    :maxdepth: 2
+    :caption: Getting started
 
-   rst/getting_started/intro
-   rst/getting_started/getting_code
-   rst/getting_started/building
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorials
-
-   rst/tutorials/intro
+    rst/getting_started/intro
+    rst/getting_started/getting_code
+    rst/getting_started/building
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Advanced topics
+    :maxdepth: 1
+    :caption: User guide
 
-   rst/advanced_topics/intro
+    rst/user_guide/intro
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Developer guide
+
+    rst/developer_guide/intro
+
+.. toctree::
+    :maxdepth: 1
+    :caption: API reference
+
+    rst/api_reference/intro
+    rst/api_reference/kernel
+    rst/api_reference/scenes
+    rst/api_reference/solvers
 
 .. toctree::
     :maxdepth: 1
     :caption: Miscellaneous
 
     rst/miscellaneous/bibliography
-
-.. .. toctree::
-..     :hidden:
-..     :maxdepth: 1
-..     :caption: Python interface
-
-..     python_bindings/intro
-..     python_bindings/rendering_scene
-..     python_bindings/depth_integrator
-..     python_bindings/direct_integrator
-..     python_bindings/diffuse_bsdf
-
-.. .. toctree::
-..     :hidden:
-..     :maxdepth: 1
-..     :caption: Tutorials
-
-..     tutorials/intro
-
-.. .. toctree::
-..     :hidden:
-..     :maxdepth: 3
-..     :caption: Advanced topics
-
-..     advanced_topics/pythoninterface
-..     advanced_topics/dev_guide
-..     advanced_topics/plugin_docs
-..     advanced_topics/api_reference
-
-.. Indices and tables
-.. ==================
-
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`

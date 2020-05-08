@@ -56,21 +56,36 @@ def _make_default_scene():
 
 @attr.s
 class OneDimSolver:
-    """A simple wrapper to perform simulations on one-dimensional scenes,
-    i.e. with 2 translational invariances.
+    r"""This class executes simulations on one-dimensional scenes, *i.e.* with 
+    2 translational invariances.
+
+    Constructor arguments / public attributes:
+        ``scene`` (:class:`eradiate.scenes.builder.Scene`):
+            Scene for which simulations will be run. If no value is 
+            passed, a default scene is constructed. It consists of a square 
+            covering :math:`[-1, 1]^2` with normal vector :math:`+Z` 
+            with a Lambertian BRDF (reflectance :math:`\rho = 0.5`) illuminated
+            directional emitter with direction vector :math:`-Z` and constant 
+            irradiance equal to 1.
     """
+
     scene = attr.ib(default=_make_default_scene())
 
     def run(self, vza=0., vaa=0., spp=3200):
         """Run the simulation for a set of specified sensor angular
         configurations.
 
-        :param (float or array-like) vza: Viewing zenith angles [deg].
-        :param (float or array-like) vaa: Viewing azimuth angles [deg].
-        :param (int) spp: Number of samples taken for each angular
-            configuration.
+        Parameter ``vza`` (float or array-like):
+            Viewing zenith angles [deg].
+        
+        Parameter ``vaa`` (float or array-like): 
+            Viewing azimuth angles [deg].
 
-        :return (float or array): Recorded leaving radiance.
+        Parameter ``spp`` (int): 
+            Number of samples taken for each angular configuration.
+
+        Returns → float or array: 
+            Recorded leaving radiance.
         """
 
         # Ensure that vza and vaa are numpy arrays

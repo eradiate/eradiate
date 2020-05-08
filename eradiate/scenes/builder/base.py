@@ -14,21 +14,32 @@ from .util import seq_to_str, has_length, load
 
 @attr.s
 class Object(ABC):
-    """
-    Basic XML tree node object. It provides the basic XML node generation code,
-    the facilities to recursively expend into an XML tree if needed and a method
-    to convert to XML code.
+    """This abstract base class implements a basic XML tree node.
+    It provides the basic XML node generation code, the facilities to
+    recursively expand into an XML tree if needed and a method to convert to XML
+    code.
 
-    This class is not meant to be used directly and should rather be inherited
-    by concrete types.
+    This class cannot be used directly and must be inherited by concrete types
+    to be of any use. Any concrete child class must define the :attr:`_tag`
+    class attribute.
+
+    Class attributes:
+        ``_tag``:
+            Private class attribute defining the XML tag associated with the
+            class. :class:`Object` does *not* define this attribute: this is
+            left to children classes.
+
+    Constructor arguments / public attributes:
+        ``name`` (str):
+            An optional instance attribute used to specify parameter names in 
+            the scene language. It sets the value of the ``name`` XML attribute.
     """
 
     @property
     @classmethod
     @abstractmethod
     def _tag(cls):
-        """
-        The XML tag associated with the object
+        """The XML tag associated with the object.
         """
         pass
 
@@ -36,13 +47,22 @@ class Object(ABC):
         kw_only=True,
         default=None,
         validator=is_optional(is_instance(str))
-    )  # An optional instance attribute used to specify parameter names in the scene language
+    )  # 
 
     @classmethod
     def convert(cls, x):
         """
         Convert x to the current type. By default, implements a simple copy
         constructor.
+
+        Parameter `x`:
+            Object to try and convert to the current class's type.
+
+        Returns → Object:
+            Object of the current class's type if conversion is successful.
+        
+        Raises → TypeError:
+            If `x` cannot be converted to the current class's type.
         """
         if isinstance(x, cls):
             return deepcopy(x)
@@ -51,8 +71,7 @@ class Object(ABC):
                             f"to '{cls.__name__}'")
 
     def to_etree(self):
-        """
-        Generate an XML tree node corresponding to the current object.
+        """Generate an XML tree node corresponding to the current object.
         """
         e = etree.Element(self._tag)
         if self.name is not None:
@@ -60,15 +79,18 @@ class Object(ABC):
         return e
 
     def to_xml(self, pretty_print=False, add_version=False):
-        """
-        Emit the XML code corresponding to the tree of which the current object
-        is the root node.
+        """Emit the XML code corresponding to the tree of which the current
+        object is the root node.
 
-        :param (bool) pretty_print: If `True`, the emitted XML code will be
-            indented for improved legibility.
-        :param (bool) add_version: If `True`, the top-level node will be added
-            the ``version`` attribute.
-        :return (str): XML code.
+        Parameter ``pretty_print`` (bool):
+            If ``True``, the emitted XML code will be indented for improved
+            legibility.
+        Parameter ``add_version`` (bool):
+            If ``True``, the top-level node will be added the ``version``
+            attribute.
+
+        Returns → str:
+            XML code fragment compatible with the Mitsuba scene format.
         """
         e = self.to_etree()
         if add_version:
@@ -78,18 +100,21 @@ class Object(ABC):
 
 
 class Instantiable:
-    """
-    Mixin allowing an object to be instantiated.
+    """This mixin allows an XML interface object inheriting from :class:`Object`
+    to be instantiated as a Mitsuba object.
     """
 
     def instantiate(self):
+        """Return the Mitsuba object corresponding to the current object's XML
+        sequence.
+        """
         return load(self)
 
 
 @attr.s
 class Plugin(Object, Instantiable):
     """
-    This abstract class is to be used to write tree node classes used to 
+    This abstract class is to be used to write tree node classes used to
     initialise plugins.
     """
 
