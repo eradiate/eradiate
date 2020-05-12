@@ -72,7 +72,7 @@ class Object(ABC):
         """
         e = self.to_etree()
         if add_version:
-            e.set("version", "0.1.0")
+            e.set("version", "2.0.0")
         return etree.tostring(e, encoding="unicode",
                               pretty_print=pretty_print)
 

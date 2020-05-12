@@ -28,11 +28,11 @@ def test_scene(variant_scalar_mono):
 
     # Minimal init
     s = Scene(shapes=[Rectangle()])
-    assert s.to_xml() == """<scene version="0.1.0"><shape type="rectangle"/></scene>"""
+    assert s.to_xml() == """<scene version="2.0.0"><shape type="rectangle"/></scene>"""
     s.instantiate()
 
     s = Scene(emitter=Constant())
-    assert s.to_xml() == """<scene version="0.1.0"><emitter type="constant"/></scene>"""
+    assert s.to_xml() == """<scene version="2.0.0"><emitter type="constant"/></scene>"""
     s.instantiate()
 
     # Init with nonempty sequence
@@ -43,7 +43,7 @@ def test_scene(variant_scalar_mono):
         shapes=[Rectangle(bsdf=Diffuse(reflectance=Spectrum(0.5)))]
     )
     assert s.to_xml(pretty_print=False) == \
-        '<scene version="0.1.0">' \
+        '<scene version="2.0.0">' \
         '<shape type="rectangle">' \
         '<bsdf type="diffuse">' \
         '<spectrum name="reflectance" value="0.5"/>' \
@@ -68,7 +68,7 @@ def test_scene(variant_scalar_mono):
         shapes=[Rectangle(bsdf=Ref("lambert"))]
     )
     assert s.to_xml(pretty_print=False) == \
-           '<scene version="0.1.0">' \
+           '<scene version="2.0.0">' \
            '<bsdf type="diffuse" id="lambert">' \
            '<spectrum name="reflectance" value="0.5"/>' \
            '</bsdf>' \

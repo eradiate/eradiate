@@ -10,7 +10,7 @@ def test_object():
 
     o = MyObject()
     assert o.to_xml() == """<obj/>"""
-    assert o.to_xml(add_version=True) == """<obj version="0.1.0"/>"""
+    assert o.to_xml(add_version=True) == """<obj version="2.0.0"/>"""
 
     o = MyObject(name="some_name")
     assert o.to_xml() == """<obj name="some_name"/>"""

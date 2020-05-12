@@ -83,7 +83,7 @@ def test_rayleigh_homogeneous_solver(variant_scalar_mono):
     # Construct
     solver = RayleighHomogeneousSolver()
     assert solver.scene.to_xml() == \
-        '<scene version="0.1.0">' \
+        '<scene version="2.0.0">' \
         '<bsdf type="diffuse" id="surface_brdf">' \
         '<spectrum name="reflectance" value="0.5"/>' \
         '</bsdf>' \
