@@ -1,6 +1,12 @@
-.pytest_cache/
+# Text editors and IDEs
 .vscode/
-build/
-docs/_build/
+
+# Python
+.pytest_cache/
 *.egg-info
 __pycache__
+
+# Build files
+build/
+test_report/generated
+docs/_build/
