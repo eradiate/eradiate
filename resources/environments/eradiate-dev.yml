@@ -1,4 +1,4 @@
-name: eradiate_nested
+name: eradiate
 channels:
   - default
   - conda-forge

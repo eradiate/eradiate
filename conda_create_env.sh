@@ -1,7 +1,7 @@
 #!/bin/bash
 eval "$(conda shell.bash hook)"
 ROOT=`pwd`
-CONDA_ENV_NAME="eradiate_nested"
+CONDA_ENV_NAME="eradiate"
 
 echo "Creating conda env ${CONDA_ENV_NAME} ..."
 conda env create --force --quiet --file resources/environments/eradiate.yml --name ${CONDA_ENV_NAME} || { echo "${CONDA_ENV_NAME} env creation failed" ; exit 1; }
