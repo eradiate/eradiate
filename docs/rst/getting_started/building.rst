@@ -49,6 +49,8 @@ Eradiate requires that a few environment variables (``PATH``/``PYTHONPATH``) are
 Note that this step is optional if you followed the instructions for :ref:`automated Conda environment setup <sec-getting_started-automated_conda>`
 
 
+.. _sec_compiling_mitsuba:
+
 Building the Mitsuba kernel
 ---------------------------
 
@@ -81,7 +83,7 @@ Now, compilation should be as simple as running the following from inside Eradia
 
 .. code-block:: bash
 
-    cd $ERADIATE_DIR
+    cd $MITSUBA_DIR
     mkdir build
     cd build
     cmake -GNinja ..
@@ -97,6 +99,15 @@ where ``scene.xml`` is a Mitsuba scene file. Calling ``mitsuba --help`` will pri
 
 Installing Eradiate
 -------------------
+
+.. attention::
+
+    If you followed this guide from the start, you have to navigate back 
+    to the root directory now:
+
+    .. code-block:: bash
+
+        cd $ERADIATE_DIR
 
 Once Mitsuba is compiled, Eradiate can be installed using the shipped setup script:
 
@@ -115,18 +126,3 @@ Once this is done, you can check if the installation is successful by printing t
 .. code-block:: bash
 
     python -c "import eradiate.kernel; print(eradiate.kernel.core.MTS_VERSION)"
-
-Running the tests
------------------
-
-To run the test suite, invoke ``pytest`` with the following command:
-
-.. code-block:: bash
-
-    pytest eradiate
-
-The Mitsuba test suite can also be run:
-
-.. code-block:: bash
-
-    pytest ext/mitsuba2/src

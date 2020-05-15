@@ -1,14 +1,37 @@
 # Eradiate Radiative Transfer Model
 
-![Eradiate logo](docs/fig/eradiate-logo-dark-no_bg.png "Blabla")
+![Eradiate logo](docs/fig/eradiate-logo-dark-no_bg.png "Eradiate — A new-generation radiative transfer simulation package")
 
 **TODO:** Add badges.
 
 **TODO:** Add software package and project description.
 
-## Installing and using Eradiate
+## Documentation
 
-See documentation.
+Eradiate's documentation can currently only be browsed offline and has to be built from project sources.
+
+
+1. Clone the source repository
+2. Navigate to the source repository's root directory.
+3. Create a build directory, *e.g.*
+   ```
+   $ mkdir build
+   ```
+4. Set up the conda environment and set the relevant environment variables
+    ```
+    $ source conda_create_env.sh
+    $ conda activate eradiate
+    $ source setpath.sh
+    ```
+6. Generate the documentation using using Sphinx:
+   ```
+   $ python -m sphinx html docs build/html
+   ```
+7. The documentation is generated a `html` subdirectory and can be viewed in a browser
+
+## Building
+
+For build instructions, refer to the [documentation](#documentation). 
 
 ## About
 

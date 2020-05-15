@@ -191,7 +191,7 @@ class Ref(Object):
 @attr.s
 class Bool(Object):
     """
-    An boolean.
+    A boolean.
     """
     _tag = "boolean"
     value = attr.ib(converter=bool)

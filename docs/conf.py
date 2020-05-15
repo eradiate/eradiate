@@ -62,6 +62,7 @@ extensions.append("sphinx.ext.mathjax")
 
 extensions.append("sphinx.ext.autodoc")
 extensions.append("sphinxcontrib.bibtex")
+extensions.append("sphinx.ext.autosummary")
 
 # Intersphinx configuration for cross-project referencing
 extensions.append("sphinx.ext.intersphinx")
@@ -156,3 +157,7 @@ html_show_sourcelink = False
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'eradiate_doc'
+
+# Autodoc options
+autosummary_generate = True
+autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'inherited-members']

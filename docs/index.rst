@@ -50,7 +50,7 @@ Contents
     rst/user_guide/intro
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Developer guide
 
     rst/developer_guide/intro
