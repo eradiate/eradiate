@@ -8,9 +8,10 @@ import pytest
 from eradiate.scenes.builder import *
 
 
-@pytest.mark.parametrize("illumination", ["directional", "constant"])
+@pytest.mark.parametrize("illumination,spp", [("directional", 1),
+                                              ("constant", 32000)])
 @pytest.mark.parametrize("li", [0.1, 1.0, 10.0])
-def test_radiometric_accuracy(variant_scalar_mono, illumination, li):
+def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
     r"""
     Radiometric check (``path``)
     ----------------------------
@@ -40,7 +41,7 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, li):
         tolerance of 0.1%).
 
         Theoretical solutions: 
-        
+
         - `directional`: :math:`L_\mathrm{o} = \frac{\rho L_\mathrm{i}}{\pi}`
         - `constant`: :math:`L_\mathrm{o} = \rho L_\mathrm{i}`
 
@@ -66,5 +67,5 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, li):
         solver.scene.emitter = \
             emitters.Constant(radiance=Spectrum(li))
 
-    result = solver.run(vza=vza, vaa=0., spp=3200)
+    result = solver.run(vza=vza, vaa=0., spp=spp)
     assert np.allclose(result, theoretical_solution, rtol=1e-3)
