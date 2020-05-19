@@ -15,13 +15,13 @@ Eradiate requires a recent version of Python (at least **3.6**). A Conda environ
 
 .. code-block:: bash
 
-    conda env create --file resources/environments/eradiate.yml --name eradiate_nested
+    conda env create --file resources/environments/eradiate.yml --name eradiate
 
 Once your environment is ready, you can activate it:
 
 .. code-block:: bash
 
-    conda activate eradiate_nested
+    conda activate eradiate
 
 .. _sec-getting_started-automated_conda:
 

@@ -9,7 +9,7 @@ In order to clone Eradiate's Git repository and its submodules recursively, you 
 
 .. code-block:: bash
 
-    git clone --recursive git@europa.local:rtm/eradiate_nested.git
+    git clone --recursive git@europa.local:rtm/eradiate.git
 
 If you already cloned the repository and forgot to specify this flag, it's possible to fix the repository in retrospect using the following command:
 
