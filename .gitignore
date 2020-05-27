@@ -1,3 +1,6 @@
+# OS specific 
+.DS_Store
+
 # Text editors and IDEs
 .vscode/
 
@@ -8,8 +11,6 @@ __pycache__
 
 # Build files
 build/
-test_report/generated
 docs/_build/
-*.egg-info
-__pycache__
-.idea
+docs/rst/stubs/
+test_report/generated
