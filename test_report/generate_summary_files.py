@@ -5,13 +5,14 @@ from tabulate import tabulate
 import os
 import pathlib
 
+
 def get_filename_testcasename(test):
     return test['nodeid'].split("::")
 
 
 def get_git_revision_short_hash():
     rev = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
-    return rev.decode(encoding='UTF-8',errors='strict').strip("\n")
+    return rev.decode(encoding='UTF-8', errors='strict').strip("\n")
 
 
 def group_results_unittests(report):
@@ -182,6 +183,7 @@ def generate():
 
     with open(build_dir / "skipped.rst", "w") as skipped_file:
         skipped_file.write(create_skipped_table(skipped))
+
 
 if __name__ == "__main__":
     generate()

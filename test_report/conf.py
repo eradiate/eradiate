@@ -37,33 +37,11 @@ templates_path = ['_templates']
 # source_suffix = ['.rst', '.md']
 source_suffix = '.rst'
 
-rst_prolog = r"""
-.. role:: paramtype
-
-.. role:: monosp
-
-.. |spectrum| replace:: :paramtype:`spectrum`
-.. |texture| replace:: :paramtype:`texture`
-.. |float| replace:: :paramtype:`float`
-.. |bool| replace:: :paramtype:`bool`
-.. |false| replace:: :monosp:`false`
-.. |true| replace:: :monosp:`true`
-.. |string| replace:: :paramtype:`string`
-.. |bsdf| replace:: :paramtype:`bsdf`
-.. |point| replace:: :paramtype:`point`
-.. |transform| replace:: :paramtype:`transform`
-.. |vector| replace:: :paramtype:`vector`
-
-.. |nbsp| unicode:: 0xA0
-   :trim:
-
-"""
-
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'static/index'
+master_doc = 'index'
 
 # General information about the project.
 project = 'Eradiate'
@@ -133,13 +111,6 @@ html_theme = "alabaster"
 # Register the theme as an extension to generate a sitemap.xml
 extensions = ["alabaster"]
 extensions.append("sphinx.ext.mathjax")
-
-sys.path.append(os.path.abspath('exts/sphinxtr'))
-# extensions.append("subfig")
-# extensions.append("figtable")
-# extensions.append("numfig")
-# extensions.append("pluginparameters")
-
 extensions.append("sphinxcontrib.bibtex")
 
 # Theme options are theme-specific and customize the look and feel of a theme

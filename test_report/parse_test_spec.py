@@ -5,6 +5,7 @@ import os
 import pathlib
 import re
 
+
 def get_files(path):
     """
     Returns all files in 'path' whose name starts with 'test_' and ends with '.py'
@@ -27,13 +28,14 @@ def parse_tests(file):
     spec = importlib.util.spec_from_file_location(module_name, file)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    
+
     returndict = dict()
     for name, value in inspect.getmembers(mod):
         if inspect.isfunction(value):
             if name.find("test_") == 0:
                 returndict[name] = value.__doc__
     return returndict
+
 
 def remove_indentation(doc):
     """
@@ -47,7 +49,6 @@ def remove_indentation(doc):
     spaces = regex.match(lines[1]).group()
 
     return "\n".join([line.replace(spaces, '', 1) for line in lines])
-
 
 
 def get_testcase_outcome(report, name):
@@ -69,11 +70,13 @@ def get_testcase_outcome(report, name):
 
     # if no variant is found, name should only occur once in the test report
     if "no variant" in returndict and len(returndict) > 1:
-        raise KeyError(f"Inconsistent parametrizations found for test {name}. Testcase name clash?")
+        raise KeyError(
+            f"Inconsistent parametrizations found for test {name}. Testcase name clash?")
     if len(returndict) == 0:
         return {"no variant": "Result not found!"}
     else:
         return returndict
+
 
 def get_testcase_loation(report, name):
     """
@@ -85,14 +88,14 @@ def get_testcase_loation(report, name):
             return testlocation
     else:
         return "Test case not found!"
-    
-    
+
+
 def update_docstring(doc, name, report):
     """
     Split the heading off the docstring and insert a line containing
     the result of the respective test case.
     """
-    
+
     outcomes = get_testcase_outcome(report, name)
     location = get_testcase_loation(report, name)
 
@@ -115,14 +118,15 @@ def update_docstring(doc, name, report):
                 outcomes[variant] = f":green:`{outcome}`"
             elif outcome == 'failed':
                 outcomes[variant] = f":red:`{outcome}`"
-        result = ", ".join([f"{variant}: {outcomes[variant]}" for variant in sorted(outcomes)])
-                
+        result = ", ".join(
+            [f"{variant}: {outcomes[variant]}" for variant in sorted(outcomes)])
+
     resultstring = f":Test result: {result}"
     locationstring = f":Test location: {location}"
-    
+
     firstpart = "\n".join([firstpart, resultstring, locationstring])
     doc = "".join([firstpart, splitstring, lastpart])
-    
+
     return doc
 
 
@@ -130,7 +134,7 @@ def write_to_file(test_dict, output_dir):
     """
     Write the rst file containing the updated documentation for all integration tests.
     """
-    
+
     header = """
 .. role:: red
 
@@ -147,15 +151,16 @@ by the test setup and execution, which includes critical points about the implem
 finally the expected behaviour of the software under test and how the success or failure of
 the test is asserted.    
 """
-    
+
     body = ""
     for _, doc in test_dict.items():
         body += doc
         body += "\n"
-        
+
     with open(output_dir / "testspec.rst", "w") as specfile:
         specfile.write(header)
         specfile.write(body)
+
 
 def generate():
     print("Parsing test specification and generating documents for report")
@@ -164,20 +169,20 @@ def generate():
     output_dir = eradiate_dir / "test_report" / "generated"
     if not pathlib.Path.exists(output_dir):
         os.mkdir(output_dir)
-    
+
     with open(output_dir / "report_eradiate.json") as json_data:
         report = json.load(json_data)
-        
+
     testfiles = get_files(test_dir)
-    
+
     test_dict = dict()
     for file in testfiles:
         test_dict.update(parse_tests(file))
-        
+
     for name, doc in test_dict.items():
         doc = update_docstring(doc, name, report)
         test_dict.update({name: doc})
-        
+
     write_to_file(test_dict, output_dir)
 
 

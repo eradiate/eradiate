@@ -31,15 +31,13 @@ The section **Benchmarks** contains the results of different benchmarking proced
     :hidden:
     :maxdepth: 1
 
-    ../generated/passed
-
-    ../generated/failed
-
-    ../generated/skipped
+    generated/passed
+    generated/failed
+    generated/skipped
 
 .. toctree::
     :hidden:
     :maxdepth: 2
 
-    ../generated/testspec
-    benchmarks
+    generated/testspec
+    static/benchmarks
