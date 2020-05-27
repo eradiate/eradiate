@@ -3,7 +3,7 @@ import numpy as np
 
 
 def cos_angle_to_direction(cos_theta, phi):
-    """Convert a zenith cosine and azimuth angle pair to a direction.
+    r"""Convert a zenith cosine and azimuth angle pair to a direction.
 
     :param (float) theta: Zenith angle cosine [dimensionless].
         Convention: 1 corresponds to zenith, -1 corresponds to nadir.
@@ -18,7 +18,7 @@ def cos_angle_to_direction(cos_theta, phi):
 
 
 def angles_to_direction(theta, phi):
-    """Convert a zenith and azimuth angle pair to a direction.
+    r"""Convert a zenith and azimuth angle pair to a direction.
 
     :param (float) theta: Zenith angle [radian].
         Convention: 0 corresponds to zenith, :math:`\pi` corresponds to nadir.

@@ -23,7 +23,7 @@ Once your environment is ready, you can activate it:
 
     conda activate eradiate
 
-.. _sec-getting_started-automated_conda:
+.. _sec-getting_started-building-automated_conda:
 
 .. admonition:: Automated Conda environment setup
 
@@ -33,9 +33,9 @@ Once your environment is ready, you can activate it:
 
         source conda_create_env.sh
 
-    The created environment will also contain environment variable setup scripts which will make the :ref:`environment variable setup optional <sec-getting_started-environment_variables>`.
+    The created environment will also contain environment variable setup scripts which will make the :ref:`environment variable setup optional <sec-getting_started-building-environment_variables>`.
 
-.. _sec-getting_started-environment_variables:
+.. _sec-getting_started-building-environment_variables:
 
 Configuring environment variables
 ---------------------------------
@@ -46,10 +46,10 @@ Eradiate requires that a few environment variables (``PATH``/``PYTHONPATH``) are
 
     source setpath.sh
 
-Note that this step is optional if you followed the instructions for :ref:`automated Conda environment setup <sec-getting_started-automated_conda>`
+Note that this step is optional if you followed the instructions for :ref:`automated Conda environment setup <sec-getting_started-building-automated_conda>`
 
 
-.. _sec_compiling_mitsuba:
+.. _sec-getting_started-building-mitsuba:
 
 Building the Mitsuba kernel
 ---------------------------
@@ -59,7 +59,7 @@ Compiling Mitsuba 2 requires a recent version of CMake (at least **3.9.0**). Fur
 Linux
 ~~~~~
 
-.. warning::
+.. todo::
     
     Add Linux installation instructions.
 
@@ -83,7 +83,7 @@ Now, compilation should be as simple as running the following from inside Eradia
 
 .. code-block:: bash
 
-    cd $MITSUBA_DIR
+    cd $ERADIATE_DIR
     mkdir build
     cd build
     cmake -GNinja ..
@@ -100,22 +100,14 @@ where ``scene.xml`` is a Mitsuba scene file. Calling ``mitsuba --help`` will pri
 Installing Eradiate
 -------------------
 
-.. attention::
-
-    If you followed this guide from the start, you have to navigate back 
-    to the root directory now:
-
-    .. code-block:: bash
-
-        cd $ERADIATE_DIR
-
 Once Mitsuba is compiled, Eradiate can be installed using the shipped setup script:
 
 .. code-block:: bash
 
+    cd $ERADIATE_DIR
     python setup.py
 
-If you are modifying Eradiate's code, you can install it in developer mode:
+If you are modifying Eradiate's code, you should install it in developer mode:
 
 .. code-block:: bash
 

@@ -1,4 +1,4 @@
-.. _sec-developer_guide-plugins:
+.. _sec-developer_guide-plugin_development:
 
 Developing a plugin
 ===================
@@ -444,7 +444,7 @@ Writing the build (CMake) code
 
 We simply need to add the files we just wrote to the ``toy`` library's CMake script:
 
-.. code-block:: cpp
+.. code-block:: cmake
 
     add_library(mitsuba-toy-obj OBJECT
         ${INC_DIR}/fwd.h
@@ -564,7 +564,7 @@ We start by writing the code required to build our library. It sits in a new ``s
 
 We then declare a new target which will build our library. We include all the files required to compile it, including headers. For the moment, we just have the forward declaration header.
 
-.. code-block:: cpp
+.. code-block:: cmake
 
     add_library(mitsuba-toy-obj OBJECT
         ${INC_DIR}/fwd.h

@@ -1,5 +1,9 @@
+.. _sec-developer_guide-testing:
+
 Testing and test report
 =======================
+
+Eradiate is shipped with a series of tests written with `pytest <https://docs.pytest.org/en/latest/>`_.
 
 Running the tests
 -----------------
@@ -19,15 +23,13 @@ The Mitsuba test suite can also be run:
 Test report
 -----------
 
-Eradiate can generate a html based test report, collecting information about
-the number of tests, their outcome and which will collect the test specification
-for more complex test cases, such as integration and system tests.
+Eradiate can generate an HTML based test report, collecting information about the number of tests, their outcome and which will collect the test specification for more complex test cases, such as integration and system tests.
 
 .. code-block:: bash
 
    python test_report/generate_report.py
 
-The resulting report will be located in :code:`$ERADIATE_DIR/build/html_test-report`
+The resulting report will be located in ``$ERADIATE_DIR/build/html_test-report``.
 
 Testing guidelines
 ------------------
@@ -35,15 +37,17 @@ Testing guidelines
 Writing test specification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-While unit tests focus on the smallest testable units of code in Eradiate, integration
-and system tests emphasize the interaction of components or even the entire software.
+Eradiate's tests can be roughly categorised as follows:
 
-Since the test idea and setup may not be readily understandable from looking at the source code
-of these tests, they are documented in a structured way and their specification is added in a separate section in the test report.
+- unit tests focus on the smallest testable units of code;
+- integration tests assess the interaction between several components;
+- system tests check the behaviour of entire applications.
 
-The test specification consists of three main parts: The **description of the test idea**,
-the **details of the setup**, explaining in prose, how a test is designed and finally the **expected outcome** of the test, detailing what is checked.
-The following template can be copied to new test cases and the information filled in as needed.
+While categorising each individual test is not always an easy task, this nomenclature highlights the fact that tests have varied degrees of complexity. When the rationale, setup and course of action of a test is not obvious by reading the corresponding source code, properly documenting it in a structured way is crucial. For this reason, Eradiate defines a test description template to be used for integration and system tests. Documented tests have a dedicated section in the test report.
+
+The test specification consists of three main parts: the **description of the test rationale**, the **details of the setup**, explaining in prose, how a test is designed and, finally, the **expected outcome** of the test, which describes based on what the test should pass or fail. 
+
+The following template can be copied to new test cases and the information filled in as needed. Note that we strongly suggest using literal strings (prefixed with a ``r``) in order to avoid issues with escape sequences.
 
 .. code-block:: none
 
@@ -72,10 +76,8 @@ The following template can be copied to new test cases and the information fille
         
     """
 
-
 The test specification can hold any valid restructured text. A quick rundown on that can be found
 `here <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ .
-
 
 Upon report generation, the test result and location of the test file will
 be added and the result will look similar to this:

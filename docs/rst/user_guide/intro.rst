@@ -1,7 +1,7 @@
 .. _sec-user_guide-intro:
 
-Introduction
-============
+User guide
+==========
 
 This section will include content about using Eradiate's applications and API.
 

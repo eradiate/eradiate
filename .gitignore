@@ -2,6 +2,7 @@
 .DS_Store
 
 # Text editors and IDEs
+.idea/
 .vscode/
 
 # Python

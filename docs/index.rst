@@ -14,13 +14,13 @@ Eradiate uses Monte Carlo ray tracing integration methods to compute radiative t
 .. admonition:: Where should I go?
 
     :ref:`Getting started<sec-getting_started-intro>`
-        Go here to learn about Eradiate, how to get it and how to compile it.
+        Learn about Eradiate, how to get it and how to compile it.
     :ref:`User guide<sec-user_guide-intro>`
-        Go here to learn about how to use Eradiate's applications and API.
+        Learn how to use Eradiate's applications and API.
     :ref:`Developer guide<sec-developer_guide-intro>`
-        Go here to learn about how to modify Eradiate.
+        Learn how to work with Eradiate's source code and modify it.
     :ref:`API reference<sec-api_reference-intro>`
-        Go here for the complete API reference.
+        The complete API reference.
 
 
 About
@@ -30,7 +30,7 @@ Eradiate's development is funded by a European Space Agency project funded by th
 
 Eradiate's core development team consists of Yves Govaerts, Vincent Leroy, Yvan Nollet and Sebastian Schunke.
 
-Eradiate inherits its core infrastructure from the `Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_ renderer and the Eradiate team acknowledges all Mitsuba 2 contributors for their exceptional work.
+Eradiate uses as its computational kernel a modified copy of the `Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_ renderer. The Eradiate team acknowledges all Mitsuba 2 contributors for their exceptional work.
 
 Contents
 --------
@@ -39,34 +39,38 @@ Contents
     :maxdepth: 2
     :caption: Getting started
 
-    rst/getting_started/intro
+    Introduction<rst/getting_started/intro>
     rst/getting_started/getting_code
     rst/getting_started/building
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: User guide
 
-    rst/user_guide/intro
+    Introduction<rst/user_guide/intro>
     rst/user_guide/post_processing
 
 .. toctree::
     :maxdepth: 2
     :caption: Developer guide
 
-    rst/developer_guide/intro
+    Introduction<rst/developer_guide/intro>
+    rst/developer_guide/documentation
+    rst/developer_guide/testing
+    rst/developer_guide/plugin_development
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: API reference
 
-    rst/api_reference/intro
+    Introduction<rst/api_reference/intro>
     rst/api_reference/kernel
     rst/api_reference/scenes
     rst/api_reference/solvers
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Miscellaneous
 
     rst/miscellaneous/bibliography
+    Todo list<rst/miscellaneous/todolist>

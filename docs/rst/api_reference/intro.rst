@@ -1,6 +1,6 @@
 .. _sec-api_reference-intro:
 
-Introduction
-============
+API reference
+=============
 
 Eradiate's API reference documentation is generated automatically using Sphinx's autodoc extension.

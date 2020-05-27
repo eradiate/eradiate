@@ -61,12 +61,19 @@ extensions.append("guzzle_sphinx_theme")
 extensions.append("sphinx.ext.mathjax")
 
 extensions.append("sphinx.ext.autodoc")
-extensions.append("sphinxcontrib.bibtex")
 extensions.append("sphinx.ext.autosummary")
+extensions.append("sphinxcontrib.bibtex")
 
 # Intersphinx configuration for cross-project referencing
 extensions.append("sphinx.ext.intersphinx")
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'mitsuba': ('https://mitsuba2.readthedocs.io/en/latest/', None)
+}
+
+# Activate todo notes
+extensions.append("sphinx.ext.todo")
+todo_include_todos = True
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

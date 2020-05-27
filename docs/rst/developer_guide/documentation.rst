@@ -1,16 +1,25 @@
-Documentation
-=============
+.. _sec-developer_guide-documentation:
+
+
+Building the documentation
+==========================
+
+Eradiate's documentation consists of two separate documents:
+
+- the current document;
+- the Mitsuba kernel documentation.
 
 Building this document
 ----------------------
 
-Once Eradiate is installed, this document can be built with only one step:
+Once Eradiate is installed, this document can be built using the following commands:
 
 .. code-block:: bash
 
-    python -m sphinx html docs build/html
+    cd $ERADIATE_DIR/docs
+    make html
 
-After the build is completed, the html document is located in :code:`build/html`
+After the build is completed, the html document is located in :code:`$ERADIATE_DIR/docs/_build/html`.
 
 .. _sec_mitsuba_docs:
 
@@ -18,12 +27,13 @@ Building the Mitsuba documentation
 ----------------------------------
 
 Mitsuba exposes a CMake target to build its documentation, which can be accessed
-once CMake is set up, as described in section :ref:`sec_compiling_mitsuba`.
+once CMake is set up, as described in :ref:`sec-getting_started-building-mitsuba`.
 
-Simply run the follwing command in Mitsuba'S build directory:
+Run the follwing commands:
 
 .. code-block:: bash
 
+    cd $ERADIATE_DIR/build
     ninja mkdoc
 
-The html documentation will then be located in :code:`$MITSUBA_DIR/build/html`.
+The compiled html documentation will then be located in :code:`$ERADIATE_DIR/build/html`.
