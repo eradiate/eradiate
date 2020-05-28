@@ -1,11 +1,13 @@
 name: eradiate
 channels:
   - default
-  - conda-forge
 dependencies:
   - python=3.7
   - attrs=19.3
   - lxml=4.5
   - numpy=1.18
-  - pint=0.11
+  - scipy=1.3
   - xarray=0.15
+  - pip
+  - pip:
+      - pint~=0.11
