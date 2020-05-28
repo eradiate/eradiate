@@ -68,23 +68,15 @@ def test_rayleigh_delta():
 
 
 def test_rayleigh_homogeneous():
+    from eradiate.kernel.core.xml import load_dict
     # Default constructor
     r = RayleighHomogeneous()
-    
-    assert r.phase()[0].to_xml() == \
-        '<phase type="rayleigh" id="phase_rayleigh"/>'
-    assert r.media()[0].to_xml() == \
-        f'<medium type="homogeneous" id="medium_rayleigh">' \
-        f'<ref id="phase_rayleigh"/>' \
-        f'<spectrum name="sigma_t" value="{rayleigh_scattering_coefficient_1()}"/>' \
-        f'<spectrum name="albedo" value="1.0"/>' \
-        f'</medium>'
-    assert r.shapes()[0].to_xml() == \
-        '<shape type="cube">' \
-        '<transform name="to_world">' \
-        '<scale value="1.0, 1.0, 1.0"/>' \
-        '<translate value="0.0, 0.0, 1.0"/>' \
-        '</transform>' \
-        '<ref name="interior" id="medium_rayleigh"/>' \
-        '<bsdf type="null"/>' \
-        '</shape>'
+
+    dict_phase = next(iter(r.phase().values()))
+    assert load_dict(dict_phase) is not None
+
+    dict_medium = next(iter(r.media().values()))
+    assert load_dict(dict_medium) is not None
+
+    dict_shape = next(iter(r.shapes().values()))
+    assert load_dict(dict_shape) is not None

@@ -4,7 +4,6 @@ import attr
 import numpy as np
 from scipy.constants import physical_constants
 
-from .builder import *
 from ..util import Q_
 
 # Physical constants
@@ -82,7 +81,7 @@ def rayleigh_scattering_coefficient_1(
         If this parameter is set, then its value is used to compute the value of
         the corresponding King factor and supersedes ``king_factor``.
 
-    :return (float): scattering coefficient in inverse meters.
+    :return (float): scattering coefficient [m^1].
     """
     if depolarisation_ratio is not None:
         king_factor = king_correction_factor(depolarisation_ratio)
@@ -163,11 +162,11 @@ class RayleighHomogeneous(Atmosphere):
     """
 
     # Class attributes
-    albedo = Spectrum(1.)
+    albedo = 1.
 
     # Instance attributes
     sigma_t = attr.ib(default=rayleigh_scattering_coefficient_1(),
-                      converter=Spectrum)
+                      converter=float)
 
     def __attrs_post_init__(self):
         self.init()
@@ -181,34 +180,37 @@ class RayleighHomogeneous(Atmosphere):
 
     def phase(self):
         if self._phase is None:
-            self._phase = [phase.Rayleigh(id="phase_rayleigh")]
+            self._phase = {"phase_rayleigh": {"type": "rayleigh"}}
 
         return self._phase
 
     def media(self):
         if self._medium is None:
-            phase = self.phase()[0]
+            phase = self.phase()["phase_rayleigh"]
 
-            self._medium = [media.Homogeneous(
-                id="medium_rayleigh",
-                phase=phase.get_ref(),
-                sigma_t=self.sigma_t,
-                albedo=self.albedo
-            )]
+            self._medium = {
+                "medium_rayleigh": {
+                    "type": "homogeneous",
+                    "phase": phase,
+                    "sigma_t": {"type": "uniform", "value": self.sigma_t},
+                    "albedo": {"type": "uniform", "value": self.albedo},
+                }
+            }
 
         return self._medium
 
     def shapes(self):
+        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
         if self._shapes is None:
-            medium = self.media()[0]
+            medium = self.media()["medium_rayleigh"]
 
-            self._shapes = [shapes.Cube(
-                to_world=Transform([
-                    Scale(value=[1., 1., 1.]),
-                    Translate(value=[0., 0., 1.])
-                ]),
-                bsdf=bsdfs.Null(),
-                interior=medium.get_ref()
-            )]
+            self._shapes = {
+                "shape_atmosphere": {
+                    "type": "cube",
+                    "to_world": ScalarTransform4f.scale(1.).translate([0, 0, 1]),
+                    "bsdf": {"type": "null"},
+                    "interior": medium
+                }
+            }
 
         return self._shapes

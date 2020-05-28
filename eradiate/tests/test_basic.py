@@ -2,15 +2,13 @@
 
 import numpy as np
 
-import attr
-import eradiate
 import pytest
-from eradiate.scenes.builder import *
 
 
 @pytest.mark.parametrize("illumination,spp", [("directional", 1),
                                               ("constant", 32000)])
 @pytest.mark.parametrize("li", [0.1, 1.0, 10.0])
+@pytest.mark.slow
 def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
     r"""
     Radiometric check (``path``)
@@ -53,19 +51,25 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
     rho = 0.5
 
     solver = OneDimSolver()
-    solver.scene.bsdfs = [
-        bsdfs.Diffuse(id="brdf_surface", reflectance=Spectrum(rho))
-    ]
+    solver.dict_scene["brdf_surface"] = {
+        "type": "diffuse",
+        "reflectance": {"type": "uniform", "value": rho}
+    }
 
     if illumination == "directional":
-        solver.scene.emitter = \
-            emitters.Directional(direction=[0, 0, -1], irradiance=Spectrum(li))
+        solver.dict_scene["illumination"] = {
+            "type": "directional",
+            "direction": [0, 0, -1],
+            "irradiance": {"type": "uniform", "value": li}
+        }
         theoretical_solution = np.full_like(vza, rho * li / np.pi)
 
     elif illumination == "constant":
+        solver.dict_scene["illumination"] = {
+            "type": "constant",
+            "radiance": {"type": "uniform", "value": li}
+        }
         theoretical_solution = np.full_like(vza, rho * li)
-        solver.scene.emitter = \
-            emitters.Constant(radiance=Spectrum(li))
 
     result = solver.run(vza=vza, vaa=0., spp=spp)
     assert np.allclose(result, theoretical_solution, rtol=1e-3)
