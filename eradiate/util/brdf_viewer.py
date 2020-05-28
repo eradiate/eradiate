@@ -127,7 +127,7 @@ class BRDFView(ABC):
         If the given value yields a non integer number of steps, the number of 
         steps is rounded up to the next integer.
         """
-        return 360 / (len(_azm) - 1)
+        return 360 / (len(self._azm) - 1)
 
     @azm_res.setter
     def azm_res(self, res):
@@ -159,7 +159,7 @@ class BRDFView(ABC):
         If the given value yields a non integer number of steps, the number of 
         steps is rounded up to the next integer.
         """
-        return 360 / (len(_zen) - 1)
+        return 360 / (len(self._zen) - 1)
 
     @zen_res.setter
     def zen_res(self, res):
@@ -195,7 +195,7 @@ class BRDFView(ABC):
         or with a string pointing to a data file holding scattering data
         retrieved by simulating radiative transfer with Eradiate
 
-        Parameter ``source`` (object) or (string):
+        Parameter ``source`` (object) or (str):
             Source to load the BRDF from.
             If a eradiate.kernel.render.BSDF object is given, the BSDPlugin wrapper
             will be instantiated.
@@ -229,7 +229,7 @@ class BRDFView(ABC):
 
         data[theta=np.pi/2., phi=np.pi]
 
-        Returns xarray:
+        Returns → xarray.DataArray:
             Data obtained from evaluate
         """
         pass
@@ -257,7 +257,7 @@ class PolarView(BRDFView):
             Axis object for attaching the plot
             If not set, the current axes object will be obtained from matplotlib
 
-        Returns Axes:
+        Returns → Axes:
             An Axes object for use in custom matplotlib setups
         """
         if ax is None:
@@ -308,11 +308,11 @@ class PrincipalPlaneView(BRDFView):
         """
         Output the data to a 2D plot
 
-        Parameter ``ax`` (Axes):
+        Parameter ``ax`` (Axes)
             Axis object for attaching the plot
             If not set, the current axes object will be obtained from matplotlib
 
-        Returns Axes:
+        Returns → Axes
             An Axes object for use in custom matplotlib setups
         """
         if ax is None:
@@ -330,7 +330,7 @@ class PrincipalPlaneView(BRDFView):
         with theta=0 in the middle of the array. Therefore the array is simply sliced
         in half for storage.
 
-        Returns xarray:
+        Returns → xarray.DataArray
             Data obtained from evaluate
         """
         halflength = len(self._z) / 2.0
@@ -360,13 +360,13 @@ class PrincipalPlaneView(BRDFView):
 def generate_ticks(num_ticks, limits):
     """Generates ticks and their respective tickmarks.
 
-    Parameter ``num_ticks`` (int):
+    Parameter ``num_ticks`` (int)
         Number of ticks to generate, including the limits
         of the given range
-    Parameter ``limits`` (list[float]):
+    Parameter ``limits`` (list[float])
         List of two values, limiting the ticks inclusive
 
-    Returns list, list:
+    Returns → list, list
         - Values for the ticks
         - Tick values converted to degrees as string tickmarks
     """
