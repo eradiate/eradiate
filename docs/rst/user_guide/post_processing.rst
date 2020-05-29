@@ -5,12 +5,27 @@ BRDF Viewer
 -----------
 
 The BRDF viewer is a utility for the visualization of BRDF data. In its current
-state it handles only Eradiate kernel BSDF plugins but its main application will
-be the representation of BRDF data that was computed with Eradiate.
+state it handles Eradiate kernel BSDF plugins and gridded data stored in 
+`xarray <https://xarray.pydata.org/en/stable/>`_ types.
 
 The viewer offers two modes of visualization, a polar hemispherical plot and a
 principal plane plot. This page introduces the utility and guides new users to
 its use.
+
+XArray data format specification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The XArray adapter can be used to display results from radiative transfer computation
+performed with Eradiate. Data is expected to be formatted in the following way:
+
+- The array has 5 dimensions, named and ordered like this:
+  :code:`['theta_i', 'phi_i', 'theta_o', 'phi_o', 'wavelength']`
+- The phi_o dimension must contain values for at least one of the two values
+  0° and 360° for interpolation. If only one is present, it is used for
+  interpolation from both directions
+- Dimensions along which only one value is provided (e.g. only one wavelength
+  was used in the computation) cannot be interpolated and the exact value must
+  be chosen to parametrize the view.
 
 Hemispherical view
 ^^^^^^^^^^^^^^^^^^
@@ -26,12 +41,13 @@ Eradiate kernel BSDF plugin, with the individual steps explained below.
     import eradiate.util.brdf_viewer as bv
     from eradiate.kernel.core.xml import load_string
 
-    bsdf = load_string("""<bsdf version='2.0.0' type="roughdielectric">
-        <string name="distribution" value="beckmann"/>
-        <float name="alpha" value="0.1"/>
-        <string name="int_ior" value="bk7"/>
-        <string name="ext_ior" value="air"/>
-    </bsdf>""")
+    bsdf = {
+      'type':  'roughdielectric',
+      'distribution': 'beckmann',
+      'alpha': 0.1,
+      'int_ior': 'bk7',
+      'ext_ior': 'air'
+    }
 
     view = bv.PolarView()
     view.zen_res = 1

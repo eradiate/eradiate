@@ -10,7 +10,7 @@ from ..util import frame
 
 
 @attr.s
-class BRDF(ABC):
+class BRDFAdapter(ABC):
     """
     Wrapper class for different B[RS]DF backends.
     """
@@ -24,8 +24,8 @@ class BRDF(ABC):
 
 
 @attr.s
-class MitsubaBSDFPlugin(BRDF):
-    """Wrapper class around eradiate.kernel.BSDF plugins.
+class MitsubaBSDFPluginAdapter(BRDFAdapter):
+    r"""Wrapper class around eradiate.kernel.BSDF plugins.
     Holds a BSDF plugin and exposes an evaluate method, taking care of internal
     necessities for evaluating the plugin.
 
@@ -45,6 +45,7 @@ class MitsubaBSDFPlugin(BRDF):
             )
 
     def evaluate(self, wo, wi, wavelength):
+        from eradiate.kernel.render import SurfaceInteraction3f, BSDFContext
         ctx = BSDFContext()
         si = SurfaceInteraction3f()
         si.wi = wi
@@ -56,6 +57,110 @@ class MitsubaBSDFPlugin(BRDF):
 
     def sample(self):
         raise NotImplementedError("Coming soon.")
+
+
+@attr.s
+class DataArrayBRDFAdapter(BRDFAdapter):
+    r"""Wrapper class around xarray formatted data from Eradiate solvers.
+    Holds gridded data obtained through radiative transfer computation and exposes
+    an evaluate method. Gridded data is interpolated linearly between data points
+    and clipped to 0 outside of the data boundaries.
+
+    If data along the :math:`\phi_o` axis does not contain data for 0° and 360° one value
+    is copied to the other position to complete the data set for interpolation.
+
+    This class expects the xarray data to be formatted in the following way:
+
+    - The array has 5 dimensions, named and ordered like this:
+        :code:`['theta_i', 'phi_i', 'theta_o', 'phi_o', 'wavelength']`
+    - The phi_o dimension must contain values for at least one of the two values
+      0° and 360° for interpolation. If only one is present, it is used for
+      interpolation from both directions
+
+    """
+
+    data = attr.ib()
+
+    @data.validator
+    def _check_data(self, attribute, value):
+        if not isinstance(value, xr.DataArray):
+            raise TypeError(
+                f"This class must be instantiated with a xarray.DataArray"
+                f"Found: {type(value)}"
+            )
+        required_dims = ["theta_i", "phi_i", "theta_o", "phi_o", "wavelength"]
+        for dim in required_dims:
+            if dim not in self.data.dims:
+                raise ValueError(
+                    f"Required data dimension {dim} not present in data!")
+
+    def __attrs_post_init__(self):
+        if 0 not in self.data.phi_o:
+            self.data = self.copy_phi_o_values(360, 0)
+        elif 360 not in self.data.phi_o:
+            self.data = self.copy_phi_o_values(0, 360)
+        elif 0 not in self.data.phi_o and 360 not in self.data.phi_o:
+            raise ValueError("Data contains data for neither 0° nor 360°!")
+
+    def _copy_phi_o_values(self, origin, target):
+        r"""Constructs a new xarray, containing one extra value in the ":math:`phi_o`" dimension.
+        Data from :math:`phi_o` == origin is copied into :math:`phi_o` == target.
+        """
+
+        coords = {dim: self.data.coords[dim].values for dim in self.data.dims}
+        coords["phi_o"] = np.append(coords["phi_o"], target)
+
+        empty = np.zeros([len(coords[dim])
+                          for dim in self.data.dims])
+        data_new = xr.DataArray(empty, [coords[dim]
+                                        for dim in self.data.dims], self.data.dims)
+
+        theta_i_ind = xr.DataArray(
+            np.arange(len(self.data.coords["theta_i"])), dims=["theta_i"])
+        phi_i_ind = xr.DataArray(
+            np.arange(len(self.data.coords["phi_i"])), dims=["phi_i"])
+        theta_o_ind = xr.DataArray(
+            np.arange(len(self.data.coords["theta_o"])), dims=["theta_o"])
+        phi_o_ind = xr.DataArray(
+            np.arange(len(self.data.coords["phi_o"])), dims=["phi_o"])
+        wavelength_ind = xr.DataArray(
+            np.arange(len(self.data.coords["wavelength"])), dims=["wavelength"])
+
+        data_new[theta_i_ind, phi_i_ind, theta_o_ind, phi_o_ind,
+                 wavelength_ind] = self.data[theta_i_ind, phi_i_ind, theta_o_ind, phi_o_ind, wavelength_ind]
+        data_new = xr.where(
+            (data_new.coords["phi_o"] == target), self.data.sel(phi_o=origin), data_new)
+
+        return data_new
+
+    def _split_dimensions_for_interp(self, **kwargs):
+        sel_kwargs = {}
+        interp_kwargs = {}
+        for dim, coords in kwargs.items():
+            if len(self.data.coords[dim]) == 1:
+                sel_kwargs[dim] = coords
+            else:
+                interp_kwargs[dim] = coords
+        return sel_kwargs, interp_kwargs
+
+    def evaluate(self, wo, wi, wavelength):
+        if len(wi) == 3:
+            wi = frame.direction_to_angles(wi)
+        if len(wo) == 3:
+            wo = frame.direction_to_angles(wo)
+
+        selkws, interpkws = self.split_dimensions_for_interp(
+            theta_i=np.rad2deg(wi[0]), phi_i=np.rad2deg(wi[1]),
+            theta_o=np.rad2deg(wo[0]), phi_o=np.rad2deg(wo[1]), wavelength=wavelength)
+        print("selkws:", selkws)
+        print("interpkws:", interpkws)
+
+        try:
+            return self.data.sel(**selkws).interp(**interpkws, kwargs={"fill_value": 0.0}).data
+        except KeyError as e:
+            e.message = e.message + \
+                "\nNon interpolateable dimension was called with a value that does not fit the data points!"
+            raise e
 
 
 @attr.s
@@ -176,12 +281,13 @@ class BRDFView(ABC):
     @wi.setter
     def wi(self, wi):
         if len(wi) == 2:
-            wi_rad = np.deg2rad(wi)
-            self._wi = frame.angles_to_direction(wi_rad[0], wi_rad[1])
+            self._wi = frame.angles_to_direction(
+                np.deg2rad(wi[0]), np.deg2rad(wi[1]))
         elif len(wi) == 3:
             norm = np.linalg.norm(wi)
             if norm == 0:
-                raise ValueError("Incoming direction vector cannot have length 0!")
+                raise ValueError(
+                    "Incoming direction vector cannot have length 0!")
             else:
                 self._wi = wi / np.linalg.norm(wi)
 
@@ -201,7 +307,9 @@ class BRDFView(ABC):
             will be instantiated.
         """
         if isinstance(source, eradiate.kernel.render.BSDF):
-            self._brdf = MitsubaBSDFPlugin(source)
+            self._brdf = MitsubaBSDFPluginAdapter(source)
+        elif isinstance(source, xr.DataArray):
+            self._brdf = DataArrayBRDFAdapter(source)
         elif isinstance(source, str):
             raise TypeError("Loading BRDF data files is not supported yet.")
         else:
@@ -247,7 +355,8 @@ class PolarView(BRDFView):
         for i in range(np.shape(self.r)[0]):
             for j in range(np.shape(self.r)[1]):
                 wo = frame.angles_to_direction(self.r[i][j], self.th[i][j])
-                self._z[i][j] = self.brdf.evaluate(wo, self.wi, self.wavelength)
+                self._z[i][j] = self.brdf.evaluate(
+                    wo, self.wi, self.wavelength)
 
     def plot(self, ax=None):
         """
@@ -281,7 +390,7 @@ class PolarView(BRDFView):
 
 @attr.s
 class PrincipalPlaneView(BRDFView):
-    """Plots scattering in the principal plane, that is \phi=0 and \phi=\pi
+    r"""Plots scattering in the principal plane, that is :math:`\phi=0` and :math:`\phi=\pi`
 
     Results from BRDF evaluation can be exported to an xarray, holding two rows
     of values, for the azimuth angles, instead of one row, as the data are depicted
@@ -338,7 +447,8 @@ class PrincipalPlaneView(BRDFView):
         if halflength % 1 == 0:
             data = xr.DataArray(
                 np.array(
-                    [self._z[int(halflength) - 1:: -1], self._z[int(halflength):]]
+                    [self._z[int(halflength) - 1:: -1],
+                     self._z[int(halflength):]]
                 ),
                 dims=("phi", "theta"),
                 coords={"theta": self.zen, "phi": [np.pi, 0]},
