@@ -14,5 +14,5 @@ __pycache__
 # Build files
 build/
 docs/_build/
-docs/rst/stubs/
-test_report/generated
+docs/rst/api_reference/generated/
+test_report/generated/

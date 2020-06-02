@@ -1,8 +1,10 @@
 High-level solvers [eradiate.solvers]
 =====================================
 
-One-dimensional solver reference
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. rubric:: Modules
 
-.. autoclass:: eradiate.solvers.onedim.OneDimSolver(scene)
-    :members:
+.. autosummary::
+   :toctree: generated
+
+    eradiate.solvers
+    eradiate.solvers.onedim

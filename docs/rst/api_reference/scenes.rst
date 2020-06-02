@@ -1,7 +1,12 @@
 Scene generation [eradiate.scenes]
 ==================================
 
-.. toctree::
-    :maxdepth: 1
+.. rubric:: Modules
 
-    scenes-atmosphere
+.. autosummary::
+   :toctree: generated/
+
+   eradiate.scenes
+   eradiate.scenes.atmosphere
+   eradiate.scenes.atmosphere.base
+   eradiate.scenes.atmosphere.rayleigh

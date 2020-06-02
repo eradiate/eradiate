@@ -1,24 +1,14 @@
 Utility [eradiate.util]
 =======================
 
-.. automodule:: eradiate.util
-    :members:
+.. rubric:: Modules
 
-eradiate.util.decorators
-------------------------
+.. autosummary::
+   :toctree: generated
 
-.. automodule:: eradiate.util.decorators
-    :members:
+    eradiate.util
+    eradiate.util.brdf_viewer
+    eradiate.util.decorators
+    eradiate.util.frame
+    eradiate.util.units
 
-
-eradiate.util.frame
--------------------
-
-.. automodule:: eradiate.util.frame
-    :members:
-
-eradiate.util.units
--------------------
-
-.. automodule:: eradiate.util.units
-    :members:

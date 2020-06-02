@@ -3,6 +3,7 @@
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
+   
    {% block methods %}
    {% if methods %}
    .. rubric:: Methods

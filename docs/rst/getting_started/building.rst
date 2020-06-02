@@ -27,11 +27,11 @@ Once your environment is ready, you can activate it:
 
 .. admonition:: Automated Conda environment setup
 
-    Conda environment creation can be automatically handled by sourcing ``conda_create_env.sh`` script. *Be careful however as this will reset the existing environment!*
+    Conda environment creation can be automatically handled by executing the ``conda_create_env.sh`` script. *Be careful however as this will reset the existing environment!* Note that we are not sourcing the script, we are executing it in a subshell.
 
     .. code-block:: bash
 
-        source conda_create_env.sh
+        bash conda_create_env.sh
 
     The created environment will also contain environment variable setup scripts which will make the :ref:`environment variable setup optional <sec-getting_started-building-environment_variables>`.
 
