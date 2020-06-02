@@ -1,6 +1,6 @@
 import attr
 
-from .base import Plugin, Ref
+from .base import Plugin, Ref, String
 from .bsdfs import BSDF
 from .media import Medium
 from .transforms import Transform
@@ -46,3 +46,17 @@ class Cube(Shape):
     """
     _type = "cube"
     _params = Shape._params + list(_cube_params.keys())
+
+
+_ply_params = {
+    "filename": parameter(String, name="filename", optional=False),
+    "bsdf": parameter((Ref, BSDF))
+}
+
+@attr.s(these=_ply_params)
+class Ply(Shape):
+    """
+    Ply shape plugin
+    """
+    _type = "ply"
+    _params = Shape._params + list(_ply_params.keys())

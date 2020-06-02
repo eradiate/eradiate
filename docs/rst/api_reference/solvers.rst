@@ -1,5 +1,5 @@
-High-level solver API reference
-===============================
+High-level solvers [eradiate.solvers]
+=====================================
 
 One-dimensional solver reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

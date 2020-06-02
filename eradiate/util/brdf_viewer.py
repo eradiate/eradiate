@@ -176,7 +176,7 @@ class BRDFView(ABC):
     @wi.setter
     def wi(self, wi):
         if len(wi) == 2:
-            wi_rad = frame.degree_to_radians(wi)
+            wi_rad = np.deg2rad(wi)
             self._wi = frame.angles_to_direction(wi_rad[0], wi_rad[1])
         elif len(wi) == 3:
             norm = np.linalg.norm(wi)

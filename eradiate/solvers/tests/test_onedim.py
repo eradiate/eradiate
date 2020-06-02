@@ -1,28 +1,17 @@
-from pprint import pprint
+import numpy as np
 
-import eradiate.kernel
-from eradiate.solvers.onedim import *
-from eradiate.solvers.onedim import _make_distant, _make_default_scene
-
-
-def test_make_sensor(variant_scalar_mono):
-    from eradiate.kernel.core.xml import load_dict
-
-    # Without units (check if created dict is valid)
-    dict_sensor = _make_distant(45., 0., 32)
-    assert load_dict(dict_sensor) is not None
-
-    # With degrees
-    assert _make_distant(45. * ureg.deg, 0., 32) == dict_sensor
-
-    # With radian
-    assert _make_distant(0.25 * np.pi * ureg.rad, 0., 32) == dict_sensor
+from eradiate.solvers.onedim import OneDimSolver
 
 
 def test_onedimsolver(variant_scalar_mono):
+    from eradiate.kernel.core.xml import load_dict
+
     # Construct
     solver = OneDimSolver()
-    assert solver.dict_scene == _make_default_scene()
+    assert solver.dict_scene == OneDimSolver.DEFAULT_DICT_SCENE
+
+    # Check if default scene is valid
+    assert load_dict(solver.dict_scene) is not None
 
     # Run simulation with default parameters (and check if result array is cast to scalar)
     assert solver.run() == 0.1591796875
@@ -40,8 +29,19 @@ def test_onedimsolver(variant_scalar_mono):
     assert np.all(result == 0.1591796875)
 
 
-def test_add_rayleigh_atmosphere(variant_scalar_mono):
-    from eradiate.kernel.core.xml import load_dict
+# def test_onedimsolverdict(variant_scalar_mono):
+#     # Construct
+#     solver = OneDimSolverDict()
+#     assert solver.mode == DEFAULT_ONEDIMDICT_MODE
+#     assert solver.illumination == DEFAULT_ONEDIMDICT_ILLUMINATION
+#     assert solver.measure == DEFAULT_ONEDIMDICT_MEASURE
+#     assert solver.atmosphere == None
+#     assert solver.surface == DEFAULT_ONEDIMDICT_SURFACE
+#
+#     # Run simulation with default parameters
+#     assert solver.run() == 0.1591796875
+#
+#     # Run simulation with custom emitter
+#     solver = OneDimSolverDict(illumination={'type': 'constant'})
+#     assert np.isclose(solver.run(), 0.5, rtol=1e-2)
 
-    dict_scene = _make_default_scene()
-    assert load_dict(add_rayleigh_atmosphere(dict_scene)) is not None

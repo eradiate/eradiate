@@ -36,13 +36,27 @@ div.sphinxsidebar h4 {
 }
 
 .paramtype {
-	font-family: 'Courier New', Courier, monospace;
+	font-size: 0.9em;
+	font-family: Hack, Fira Code, Consolas, monospace;
 }
 
 .monosp {
-	font-family: 'Courier New', Courier, monospace;
-    font-size: 90%;
+	font-size: 0.9em;
+    font-family: Hack, Fira Code, Consolas, monospace;
 }
+
+/* code font adjustments */
+
+code, pre, tt {
+	font-size: 0.9em;
+	font-family: Hack, Fira Code, Consolas, monospace;
+}
+
+code, tt {
+	color: #862222;
+}
+
+/* sidebar geometry adjustments */
 
 div.sphinxsidebar {
     margin: 1em;

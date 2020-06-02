@@ -1,17 +1,16 @@
 import numpy as np
+import pytest
 
-from eradiate.scenes.atmosphere import (
-    _LOSCHMIDT, RayleighHomogeneous, king_correction_factor, rayleigh_delta,
-    rayleigh_scattering_coefficient_1, rayleigh_scattering_coefficient_mixture
-)
-from eradiate.util import Q_
+from eradiate.scenes.atmosphere.rayleigh import _LOSCHMIDT, king_factor, sigmas_single, \
+    sigmas_mixture, delta, RayleighHomogeneous
+from eradiate.util.units import Q_
 
 
 def test_king_correction_factor():
     """Test computation of King correction factor"""
 
     # Compare to a reference value
-    assert np.allclose(king_correction_factor(), 1.048, rtol=1.e-2)
+    assert np.allclose(king_factor(), 1.048, rtol=1.e-2)
 
 
 def test_rayleigh_scattering_coefficient_1():
@@ -23,7 +22,7 @@ def test_rayleigh_scattering_coefficient_1():
 
     # Compare to reference value computed from scattering cross section in
     # Bates (1984) Planetary and Space Science, Volume 32, No. 6.
-    assert np.allclose(rayleigh_scattering_coefficient_1(),
+    assert np.allclose(sigmas_single(),
                        reference_value, rtol=1e-2)
 
 
@@ -34,7 +33,7 @@ def test_rayleigh_scattering_coefficient_mixture():
     types.
     """
     coefficient_air = \
-        rayleigh_scattering_coefficient_mixture(
+        sigmas_mixture(
             550, [_LOSCHMIDT.magnitude], 1.0002932,
             [_LOSCHMIDT.magnitude],
             [1.0002932],
@@ -42,10 +41,10 @@ def test_rayleigh_scattering_coefficient_mixture():
         )
 
     assert np.allclose(
-        coefficient_air, rayleigh_scattering_coefficient_1(), rtol=1e-6)
+        coefficient_air, sigmas_single(), rtol=1e-6)
 
     coefficient_2_particle_types_mixture = \
-        rayleigh_scattering_coefficient_mixture(
+        sigmas_mixture(
             550.,
             _LOSCHMIDT.magnitude * np.ones(2) / 2,
             2.,
@@ -53,7 +52,7 @@ def test_rayleigh_scattering_coefficient_mixture():
             2. * np.ones(2),
             1. * np.ones(2)
         )
-    expected_value = 24 * np.pi**3 / ((550.e-9)**4 * _LOSCHMIDT.magnitude)
+    expected_value = 24 * np.pi ** 3 / ((550.e-9) ** 4 * _LOSCHMIDT.magnitude)
 
     assert np.allclose(
         coefficient_2_particle_types_mixture,
@@ -63,11 +62,12 @@ def test_rayleigh_scattering_coefficient_mixture():
 
 
 def test_rayleigh_delta():
-    assert np.isclose(rayleigh_delta(),
+    assert np.isclose(delta(),
                       0.9587257754327136, rtol=1e-6)
 
 
-def test_rayleigh_homogeneous():
+@pytest.mark.parametrize("ref", (False, True))
+def test_rayleigh_homogeneous(variant_scalar_mono, ref):
     from eradiate.kernel.core.xml import load_dict
     # Default constructor
     r = RayleighHomogeneous()
@@ -80,3 +80,17 @@ def test_rayleigh_homogeneous():
 
     dict_shape = next(iter(r.shapes().values()))
     assert load_dict(dict_shape) is not None
+
+    # Check if produced scene can be instanitated
+    dict_scene = r.add_to({"type": "scene"}, ref)
+    assert load_dict(dict_scene) is not None
+
+    # Construct with parameters
+    r = RayleighHomogeneous(
+        rayleigh_parameters={"wavelength": 550.},
+        height=10.
+    )
+
+    # Check if produced scene can be instantiated
+    dict_scene = r.add_to({"type": "scene"}, ref)
+    assert load_dict(dict_scene) is not None

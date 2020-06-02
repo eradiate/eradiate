@@ -1,7 +1,7 @@
-Scene generation API reference
-==============================
+Scene generation [eradiate.scenes]
+==================================
 
 .. toctree::
     :maxdepth: 1
 
-    scenes-builder
+    scenes-atmosphere

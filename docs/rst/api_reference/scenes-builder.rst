@@ -8,7 +8,7 @@ Base classes
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/base
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Object
@@ -30,7 +30,7 @@ BSDFs
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/bsdfs
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     BSDF
@@ -45,7 +45,7 @@ Emitters
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/emitters
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Emitter
@@ -60,7 +60,7 @@ Films
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/films
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Film
@@ -73,7 +73,7 @@ Integrators
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/integrators
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Integrator
@@ -88,7 +88,7 @@ Media
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/media
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Medium
@@ -101,7 +101,7 @@ Phase functions
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/phase
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     PhaseFunction
@@ -116,7 +116,7 @@ Reconstruction filters
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/rfilters
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     ReconstructionFilter
@@ -129,7 +129,7 @@ Samplers
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/samplers
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Sampler
@@ -142,7 +142,7 @@ Scene
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/scene
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Scene
@@ -154,7 +154,7 @@ Sensors
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/sensors
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Sensor
@@ -169,7 +169,7 @@ Shapes
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/sensors
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Shape
@@ -183,7 +183,7 @@ Spectra
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/sensors
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Spectrum
@@ -195,7 +195,7 @@ Textures
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/textures
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Texture
@@ -208,7 +208,7 @@ Transforms
 
 .. autosummary::
     :toctree: ../stubs/scenes/builder/transforms
-    :template: autoclass.rst
+    :template: autosummary/class.rst
     :nosignatures:
 
     Transform

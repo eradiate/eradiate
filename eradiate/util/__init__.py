@@ -1,21 +1,19 @@
-""" A collection of generic, high-level utilities. """
+""" A collection of generic utilities. """
 
 import numpy as np
 
-import pint
-
-# Pint definitions
-ureg = pint.UnitRegistry()
-Q_ = ureg.Quantity
-
 
 def always_iterable(obj, base_type=(str, bytes)):
-    """
-    If obj is iterable, return an iterator over its items.
-    If obj is not iterable, return a one-item iterable containing obj.
-    If obj is None, return an empty iterable.
+    """Ensure that the object it is passed is iterable.
 
-    Copied from the more-itertools library [https://github.com/more-itertools]
+    - If ``obj`` is iterable, return an iterator over its items.
+    - If ``obj`` is not iterable, return a one-item iterable containing ``obj``.
+    - If ``obj`` is `None`, return an empty iterable.
+
+    .. note::
+
+        Copied from the more-itertools library
+        [https://github.com/more-itertools].
     """
     if obj is None:
         return iter(())

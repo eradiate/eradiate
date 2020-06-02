@@ -23,17 +23,14 @@ class Scene(Object, Instantiable):
         ``bsdfs`` (:class:`list` [:class:`eradiate.scenes.builder.BSDF`]):
             List of BSDF plugin interface objects for top-level referencing.
         ``phase`` (:class:`list` [:class:`eradiate.scenes.builder.Phase`]):
-            List of phase function plugin interface objects for top-level 
+            List of phase function plugin interface objects for top-level
             referencing.
-        ``media`` (:class:`list` [:class:`eradiate.scenes.builder.Phase`]):
+        ``media`` (:class:`list` [:class:`eradiate.scenes.builder.Medium`]):
             List of medium plugin interface objects for top-level referencing.
-        ``phase`` (:class:`list` [:class:`eradiate.scenes.builder.Medium`]):
-            List of phase function plugin interface objects for top-level 
-            referencing.
         ``shapes`` (:class:`list` [:class:`eradiate.scenes.builder.Shape`]):
             List of geometric shapes.
         ``emitter`` (:class:`eradiate.scenes.builder.Emitter`):
-            List of phase function plugin interface objects for top-level 
+            List of phase function plugin interface objects for top-level
             referencing.
     """
 
@@ -113,7 +110,7 @@ class Scene(Object, Instantiable):
         return e
 
     def to_xml(self, pretty_print=False, add_version=True):
-        """This method overrides ``Object``'s ``to_xml()`` with more convenient 
+        """This method overrides ``Object``'s ``to_xml()`` with more convenient
         default values for keyword arguments.
         """
         return super().to_xml(pretty_print=pretty_print,

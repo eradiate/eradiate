@@ -68,7 +68,8 @@ extensions.append("sphinxcontrib.bibtex")
 extensions.append("sphinx.ext.intersphinx")
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    'mitsuba': ('https://mitsuba2.readthedocs.io/en/latest/', None)
+    'mitsuba': ('https://mitsuba2.readthedocs.io/en/latest/', None),
+    'pint': ('https://pint.readthedocs.io/en/latest/', None),
 }
 
 # Activate todo notes
