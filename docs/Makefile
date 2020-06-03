@@ -12,7 +12,7 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: autobuild help clean Makefile
+.PHONY: autobuild help clean clean_generated Makefile
 
 autobuild:
 	sphinx-autobuild .  _build/html
@@ -22,7 +22,6 @@ clean: clean_generated
 
 clean_generated:
 	rm -rf rst/api_reference/generated/*
-
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

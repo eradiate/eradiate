@@ -46,7 +46,7 @@ class RayleighSolverApp(ConfigObject):
                        "type": "lambertian"
                    },
                    "atmosphere": {
-                       "rayleigh_homogeneous"
+                       "type": "rayleigh_homogeneous"
                    },
                    "illumination": {
                        "type": "directional"

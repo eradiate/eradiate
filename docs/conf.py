@@ -36,7 +36,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ["_build"]
 
 # Add custom extension
 extensions.append("ertdocs")
@@ -67,6 +67,8 @@ extensions.append("sphinx.ext.mathjax")
 extensions.append("sphinx.ext.autodoc")
 extensions.append("sphinx.ext.autosummary")
 extensions.append("sphinxcontrib.bibtex")
+extensions.append("nbsphinx")
+extensions.append("sphinx_copybutton")
 
 # Intersphinx configuration for cross-project referencing
 extensions.append("sphinx.ext.intersphinx")
@@ -172,6 +174,9 @@ html_show_sourcelink = False
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "eradiate_doc"
+
+# Define nbsphinx execution policy
+nbsphinx_execute = "never"
 
 # Autodoc options
 autosummary_generate = True

@@ -1,3 +1,5 @@
+.. _sec-user_guide-post-processing:
+
 Data post-processing and visualization
 ======================================
 
