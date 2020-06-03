@@ -57,10 +57,14 @@ def test_xarray_wrapper(variant_scalar_mono):
         theta_o = rands[0] * 90
         phi_o = rands[1] * 360
 
-        assert np.all(wrapper.evaluate([theta_o, phi_o], [theta_i, phi_i], [550]) == array.sel(theta_i=theta_i, phi_i=phi_i, wavelength=550).interp(
-            theta_o=theta_o, phi_o=phi_o, kwargs={'fill_value': 0.0}).data)
+        result = wrapper.plotting_data([theta_i, phi_i], [550])[2]
+
+        assert np.allclose(result, array)
 
     # wavelength cannot be interpolated, so it must be called with the 
     # exact value of a data point
-    with pytest.raises(KeyError) as e:
-        wrapper.evaluate([45, 180], [0, 45], [600])
+    with pytest.raises(ValueError) as e:
+        wrapper.plotting_data([45, 180], [600])
+    with pytest.raises(ValueError) as e:
+        wrapper.plotting_data([30, 180], [550])
+    

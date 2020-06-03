@@ -8,19 +8,16 @@ import xarray as xr
 import eradiate.kernel
 from ..util import frame
 
+FLAG_GRIDDED_ADAPTER = 0b01
+FLAG_SAMPLED_ADAPTER = 0b10
+
 
 @attr.s
 class BRDFAdapter(ABC):
     """
     Wrapper class for different B[RS]DF backends.
     """
-
-    @abstractmethod
-    def evaluate(self, wo, wi, wavelength):
-        """
-        Evaluate the BRDF in a way appropriate for the implementation
-        """
-        pass
+    flag = attr.ib(init=False)
 
 
 @attr.s
@@ -42,11 +39,27 @@ class MitsubaBSDFPluginAdapter(BRDFAdapter):
                 f"BSDF plugin. Found: {type(value)}"
             )
 
+    def __attrs_post_init__(self):
+        self.flag = FLAG_SAMPLED_ADAPTER
+
     def evaluate(self, wo, wi, wavelength):
+        """Retrieve the value of the BSDF for a given set of incoming and outgoing
+        directions as well as a given wavelength.
+
+        Parameter ``wo`` (array)
+            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`´
+            and :math:`phi` values in degrees
+        Parameter ``wi`` (array)
+            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`´
+            and :math:`phi` values in degrees
+        Parameter ``wavelength``(float)
+            Wavelength to query the BSDF plugin at
+        """
         from eradiate.kernel.render import SurfaceInteraction3f, BSDFContext
         ctx = BSDFContext()
         si = SurfaceInteraction3f()
-        si.wi = wi
+        wi = np.deg2rad(wi)
+        si.wi = frame.angles_to_direction(wi[0], wi[1])
         si.wavelengths = [wavelength]
         if len(wo) == 2:
             wo = frame.angles_to_direction(wo[0], wo[1])
@@ -60,11 +73,9 @@ class MitsubaBSDFPluginAdapter(BRDFAdapter):
 @attr.s
 class DataArrayBRDFAdapter(BRDFAdapter):
     r"""Wrapper class around xarray formatted data from Eradiate solvers.
-    Holds gridded data obtained through radiative transfer computation and exposes
-    an evaluate method. Gridded data is interpolated linearly between data points
-    and clipped to 0 outside of the data boundaries.
+    Holds gridded data obtained through radiative transfer computation
 
-    If data along the :math:`\phi_o` axis does not contain data for 0° and 360° one value
+    If data along the :code:`\phi_o` axis does not contain data for 0° and 360° one value
     is copied to the other position to complete the data set for interpolation.
 
     This class expects the xarray data to be formatted in the following way:
@@ -72,8 +83,7 @@ class DataArrayBRDFAdapter(BRDFAdapter):
     - The array has 5 dimensions, named and ordered like this:
         :code:`['theta_i', 'phi_i', 'theta_o', 'phi_o', 'wavelength']`
     - The phi_o dimension must contain values for at least one of the two values
-      0° and 360° for interpolation. If only one is present, it is used for
-      interpolation from both directions
+      0° and 360°. If only one is present, it is copied to the other value for better plotting
 
     """
 
@@ -99,6 +109,8 @@ class DataArrayBRDFAdapter(BRDFAdapter):
             self.data = self.copy_phi_o_values(0, 360)
         elif 0 not in self.data.phi_o and 360 not in self.data.phi_o:
             raise ValueError("Data contains data for neither 0° nor 360°!")
+
+        self.flag = FLAG_GRIDDED_ADAPTER
 
     def _copy_phi_o_values(self, origin, target):
         r"""Constructs a new xarray, containing one extra value in the ":math:`phi_o`" dimension.
@@ -131,34 +143,29 @@ class DataArrayBRDFAdapter(BRDFAdapter):
 
         return data_new
 
-    def _split_dimensions_for_interp(self, **kwargs):
-        sel_kwargs = {}
-        interp_kwargs = {}
-        for dim, coords in kwargs.items():
-            if len(self.data.coords[dim]) == 1:
-                sel_kwargs[dim] = coords
-            else:
-                interp_kwargs[dim] = coords
-        return sel_kwargs, interp_kwargs
+    def plotting_data(self, wi, wavelength):
+        """Return data required for plotting
 
-    def evaluate(self, wo, wi, wavelength):
-        if len(wi) == 3:
-            wi = frame.direction_to_angles(wi)
-        if len(wo) == 3:
-            wo = frame.direction_to_angles(wo)
+        Parameter ``wi`` (array)
+            Pair of (theta,phi) values to select the proper values from the gridded data
+            Must match exactly the data points in the DataArray
 
-        selkws, interpkws = self._split_dimensions_for_interp(
-            theta_i=np.rad2deg(wi[0]), phi_i=np.rad2deg(wi[1]),
-            theta_o=np.rad2deg(wo[0]), phi_o=np.rad2deg(wo[1]), wavelength=wavelength)
-        print("selkws:", selkws)
-        print("interpkws:", interpkws)
+        Parameter ``wavelength`` (float)
+            Wavelength to select the proper values from the gridded data
+            Must match exactly the data points in the DataArray
 
-        try:
-            return self.data.sel(**selkws).interp(**interpkws, kwargs={"fill_value": 0.0}).data
-        except KeyError as e:
-            e.message = e.message + \
-                "\nNon interpolateable dimension was called with a value that does not fit the data points!"
-            raise e
+        Returns → Array: Theta values
+        Returns → Array: Phi values
+        """
+        theta_i, phi_i = wi
+
+        if theta_i not in self.data.coords['theta_i'] or \
+                phi_i not in self.data.coords['phi_i'] or \
+                wavelength not in self.data.coords['wavelength']:
+            raise ValueError(
+                "Selected values don't align with data grid! Wavelength and incoming direction cannot be interpolated.")
+
+        return self.data.coords['theta_o'], self.data.coords['phi_o'], self.data.sel(theta_i=theta_i, phi_i=phi_i, wavelength=wavelength).data
 
 
 @attr.s
@@ -167,14 +174,16 @@ class BRDFView(ABC):
     functions. It can read data from Mitsuba plugins as well as BRDF files computed
     with Eradiate itself.
 
+    Directions (wi, wo) are represented as 2-vectors of :math:`(\theta,\phi)` values in
+    degrees.
+
     It can create polar plots as well as linear plots of the principal plane.
 
     Instance attributes:
         ``brdf`` (:class:`BRDF`):
             Source of scattering data to be evaluated and plotted
         ``wi`` (:class:`float`):
-            Incoming direction of radiation, can be set in cartesian
-            or spherical (in degrees) coordinates
+            Incoming direction of radiation in spherical (in degrees) coordinates
         ``azm`` (:class:`float`):
             Azimuth angle resolution, can be given as a number of
             steps or a resolution in degrees
@@ -187,7 +196,7 @@ class BRDFView(ABC):
     """
 
     _brdf = attr.ib(init=False)
-    _wi = attr.ib(default=[0.0, 0.0, 1.0])
+    _wi = attr.ib(default=[0, 0])
     _azm = attr.ib(default=np.linspace(0, np.pi * 2, 101))
     _zen = attr.ib(default=np.linspace(0, np.pi / 2.0, 101))
     _wavelength = attr.ib(default=650)
@@ -211,6 +220,11 @@ class BRDFView(ABC):
         or as a resolution using the azm_res setter
         """
         return self._azm
+
+    @azm.setter
+    def azm(self, angles):
+        """Directly set the azimuth angles with an array of angles in radians."""
+        self._azm = angles
 
     @property
     def azm_steps(self):
@@ -243,6 +257,11 @@ class BRDFView(ABC):
         or as a resolution using the azm_res setter
         """
         return self._zen
+
+    @zen.setter
+    def zen(self, angles):
+        """Directly set the zenith angles with an array of angles in radians."""
+        self._zen = angles
 
     @property
     def zen_steps(self):
@@ -279,15 +298,15 @@ class BRDFView(ABC):
     @wi.setter
     def wi(self, wi):
         if len(wi) == 2:
-            self._wi = frame.angles_to_direction(
-                np.deg2rad(wi[0]), np.deg2rad(wi[1]))
+            self._wi = wi
         elif len(wi) == 3:
             norm = np.linalg.norm(wi)
             if norm == 0:
                 raise ValueError(
                     "Incoming direction vector cannot have length 0!")
             else:
-                self._wi = wi / np.linalg.norm(wi)
+                self._wi = np.rad2deg(
+                    frame.direction_to_angles(wi / np.linalg.norm(wi)))
 
     @property
     def brdf(self):
@@ -317,6 +336,13 @@ class BRDFView(ABC):
     def evaluate(self):
         """Evaluate the BRDF object, filling the data structures necessary for
         the desired plot.
+        The `BRDFView` classes discriminate two types of `BRDFAdapter`_
+        - Sampled adapters expose a method :code:`evaluate()` where each data point
+          in the plot is queried individually and the adapter handles the retrieval
+          of values for arbitrary incoming and outgoing directions
+        - Gridded adapters expose a method :code:`plotting_data`, which overrides
+          the viewer's settings for resolution, setting it to match exactly the number
+          of data points in the gridded data
         """
         pass
 
@@ -347,14 +373,25 @@ class PolarView(BRDFView):
     """
 
     def evaluate(self):
-        self.r, self.th = np.meshgrid(self.zen, self.azm)
-        self._z = np.zeros(np.shape(self.r))
 
-        for i in range(np.shape(self.r)[0]):
-            for j in range(np.shape(self.r)[1]):
-                wo = frame.angles_to_direction(self.r[i][j], self.th[i][j])
-                self._z[i][j] = self.brdf.evaluate(
-                    wo, self.wi, self.wavelength)
+        if self.brdf.flag == FLAG_GRIDDED_ADAPTER:
+            thetas, phis, data = self.brdf.plotting_data(
+                self.wi, self.wavelength)
+            self.zen = np.deg2rad(thetas)
+            self.azm = np.deg2rad(phis)
+            self._z = np.transpose(data)
+            self.r, self.th = np.meshgrid(self.zen, self.azm)
+        elif self.brdf.flag == FLAG_SAMPLED_ADAPTER:
+            self.r, self.th = np.meshgrid(self.zen, self.azm)
+            self._z = np.zeros(np.shape(self.r))
+            for i in range(np.shape(self.r)[0]):
+                for j in range(np.shape(self.r)[1]):
+                    wo = [self.r[i][j], self.th[i][j]]
+                    val = self.brdf.evaluate(
+                        wo, self.wi, self.wavelength)
+                    self._z[i][j] = val
+        else:
+            raise TypeError(f"Unsupported adapter {type(self.brdf)}!")
 
     def plot(self, ax=None):
         """
@@ -397,19 +434,36 @@ class PrincipalPlaneView(BRDFView):
 
     def evaluate(self):
         self._z = np.zeros(np.shape(self.zen)[0] * 2)
-        # phi=0 goes in the second half of the array
-        for i in range(np.shape(self.zen)[0]):
-            wo = frame.angles_to_direction(self.zen[i], 0)
-            self._z[i + np.shape(self.zen)[0]] = self.brdf.evaluate(
-                wo, self.wi, self.wavelength
-            )
 
-        # phi=pi goes in the first half of the array, but reversed
-        for i in range(np.shape(self.zen)[0]):
-            wo = frame.angles_to_direction(self.zen[i], np.pi)
-            self._z[np.shape(self.zen)[0] - (i + 1)] = self.brdf.evaluate(
-                wo, self.wi, self.wavelength
-            )
+        if self.brdf.flag == FLAG_GRIDDED_ADAPTER:
+            thetas, phis, data = self.brdf.plotting_data(
+                self.wi, self.wavelength)
+            if 180 not in phis:
+                raise ValueError(
+                    "The principal plane view requires values at phi=180°!")
+
+            self.zen = np.deg2rad(thetas)
+            self._z = np.zeros(np.shape(self.zen)[0] * 2)
+            phi_zero = np.where(phis == 0)
+            phi_oneeighty = np.where(phis == 180)
+            self._z[np.shape(self.zen)[0]:] = np.squeeze(data[:, phi_zero])
+            self._z[:np.shape(self.zen)[0]] = np.squeeze(
+                data[:, phi_oneeighty])
+
+        elif self.brdf.flag == FLAG_SAMPLED_ADAPTER:
+            # phi=0 goes in the second half of the array
+            for i in range(np.shape(self.zen)[0]):
+                wo = [self.zen[i], 0]
+                self._z[i + np.shape(self.zen)[0]] = self.brdf.evaluate(
+                    wo, self.wi, self.wavelength
+                )
+
+            # phi=pi goes in the first half of the array, but reversed
+            for i in range(np.shape(self.zen)[0]):
+                wo = [self.zen[i], np.pi]
+                self._z[np.shape(self.zen)[0] - (i + 1)] = self.brdf.evaluate(
+                    wo, self.wi, self.wavelength
+                )
 
     def plot(self, ax=None):
         """

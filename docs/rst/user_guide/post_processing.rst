@@ -12,6 +12,23 @@ The viewer offers two modes of visualization, a polar hemispherical plot and a
 principal plane plot. This page introduces the utility and guides new users to
 its use.
 
+Gridded vs. sampled BRDF adapters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The BRDF viewer disciminates two types of BRDF adapters, *gridded* and *sampled*.
+
+* Sampled BRDF adapters can be queried for arbitrary light directions and wavelengths
+  They might internally implement an analytical representation of their scattering
+  model or interpolate look-up tables. These adapters expose a method :code:`evaluate()`
+  which accepts an incoming and outgoing direction for the scattering, as well as
+  a wavelength and returns the BRDF value.
+* Gridded BRDF adapters do not interpolate their data, since they represent measurements
+  rather than models. They expose a method :code:`plotting_data()`, which accepts
+  a direction for incoming light and a wavelength. They return arrays of :math:`\theta`
+  and :math:`\phi` values for which their data exist as well as the data themselves.
+  The viewer subequently plots the data in their natural resolution, overriding the
+  value given by the user.
+
 XArray data format specification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -21,11 +38,10 @@ performed with Eradiate. Data is expected to be formatted in the following way:
 - The array has 5 dimensions, named and ordered like this:
   :code:`['theta_i', 'phi_i', 'theta_o', 'phi_o', 'wavelength']`
 - The phi_o dimension must contain values for at least one of the two values
-  0° and 360° for interpolation. If only one is present, it is used for
-  interpolation from both directions
-- Dimensions along which only one value is provided (e.g. only one wavelength
-  was used in the computation) cannot be interpolated and the exact value must
-  be chosen to parametrize the view.
+  0° and 360° for interpolation. If only one is present, it is copied into the other's
+  place for plotting
+- The queried values for  incoming light direction as well as the wavelength must 
+  exactly match the grid points in the DataArray, since no interpolation is performed
 
 Hemispherical view
 ^^^^^^^^^^^^^^^^^^
@@ -140,12 +156,8 @@ The BRDFViewer offers some flexibility on how parameters can be set:
 * Zenith and azimuth resolutions can be set as resolutions in degrees, using the
   :code:`zen_res` and :code:`azm_res` variables or as a number of steps, using
   the :code:`zen_steps` and :code:`azm_steps` variables
-* The direction of incoming light can be set by any iterable object with two or
-  three elements. 
-
-  * An object with three elements is interpreted as a cartesian vector
-  * An object with two elements is interpreted as a pair of zenith and azimuth
-    angles
+* The direction of incoming light can be set by any iterable object with two elements. 
+  It is interpreted as a pair of :math:`\theta` and :math:`phi` angles in degrees.
 
 * The :code:`plot()` method accepts and returns a :code:`Matplotlib.Axes` object
   which can be used in custom plotting setups. If no :code:`Axes` object is

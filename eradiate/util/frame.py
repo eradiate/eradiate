@@ -51,7 +51,7 @@ def direction_to_angles(wi):
         +z direction
     """
     wi = wi / np.linalg.norm(wi)
-    theta = np.rad2deg(np.arccos(wi[2]))
-    phi = np.rad2deg(np.arctan2(wi[1], wi[0]))
+    theta = np.arccos(wi[2])
+    phi = np.arctan2(wi[1], wi[0])
 
     return [theta, phi]
