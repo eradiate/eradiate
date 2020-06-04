@@ -8,3 +8,4 @@ High-level solvers [eradiate.solvers]
 
     eradiate.solvers
     eradiate.solvers.onedim
+    eradiate.solvers.onedim.rayleigh

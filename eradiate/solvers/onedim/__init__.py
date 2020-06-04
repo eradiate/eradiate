@@ -1,19 +1,19 @@
-from copy import deepcopy
+""" This module contains basic facilities to run simulations on one-dimensional
+scenes. """
 
 import attr
-import eradiate
 import numpy as np
 
-import eradiate.scenes.atmosphere.rayleigh
-from ..scenes import atmosphere, illumination, measure, lithosphere
-from ..util import ensure_array
-from ..util.decorators import classproperty
+import eradiate
+from ...scenes import measure
+from ...util import ensure_array
+from ...util.decorators import classproperty
 
 
 @attr.s
 class OneDimSolver(metaclass=classproperty.meta):
-    r"""This class executes simulations on one-dimensional scenes, *i.e.* with
-    2 translational invariances.
+    r"""Execute simulations on one-dimensional scenes, *i.e.* with 2
+    translational invariances.
 
     Constructor arguments / public attributes:
         ``dict_scene`` (dict):
@@ -22,7 +22,12 @@ class OneDimSolver(metaclass=classproperty.meta):
             consists of a square covering :math:`[-1, 1]^2` with normal vector 
             :math:`+Z` and a Lambertian BRDF (reflectance :math:`\rho = 0.5`) 
             illuminated by a directional emitter with direction vector 
-            :math:`-Z` and constant irradiance equal to 1.
+            :math:`-Z` and constant irradiance equal to 1. If set to `None`,
+            defaults to :data:`DEFAULT_DICT_SCENE`.
+        ``variant`` (str):
+            Kernel variant to use for the simulation. By default, the
+            ``scalar_mono_double`` variant is used.
+
     """
 
     @classproperty
@@ -44,8 +49,15 @@ class OneDimSolver(metaclass=classproperty.meta):
             },
             "integrator": {"type": "path"}
         }
+    """Shalala"""
 
     dict_scene = attr.ib(default=None)
+    variant = attr.ib(default="scalar_mono_double")
+
+    @variant.validator
+    def _check_variant(self, attribute, value):
+        if value not in ["scalar_mono", "scalar_mono_double"]:
+            raise ValueError(f"unsupported kernel variant '{value}'")
 
     def __attrs_post_init__(self):
         if self.dict_scene is None:
@@ -54,6 +66,9 @@ class OneDimSolver(metaclass=classproperty.meta):
     def run(self, vza=0., vaa=0., spp=3200):
         """Run the simulation for a set of specified sensor angular
         configurations.
+
+        The solver uses the variant stored in its :data:`variant` instance
+        attribute.
 
         Parameter ``vza`` (float or array-like):
             Viewing zenith angles [deg].
@@ -73,7 +88,7 @@ class OneDimSolver(metaclass=classproperty.meta):
         vaa = ensure_array(vaa)
 
         # Basic setup
-        eradiate.kernel.set_variant("scalar_mono_double")
+        eradiate.kernel.set_variant(self.variant)
         from eradiate.kernel.core import Thread
         from eradiate.kernel.core.xml import load_dict
         Thread.thread().logger().clear_appenders()
@@ -100,87 +115,3 @@ class OneDimSolver(metaclass=classproperty.meta):
             return float(reflected_radiance)
         except TypeError:
             return np.squeeze(reflected_radiance)
-
-
-@attr.s
-class RayleighSolverApp(metaclass=classproperty.meta):
-    # Static methods
-    @staticmethod
-    def _select(params):
-        switcher = {
-            "constant": illumination.constant,
-            "directional": illumination.directional,
-            "lambert": lithosphere.Lambertian
-        }
-
-        params = deepcopy(params)
-        callable_ = switcher[params["type"]]
-        del params["type"]
-        return callable_(**params)
-
-    # Class attributes
-    @classproperty
-    def DEFAULT_CONFIG(cls):
-        return {
-            "mode": {
-                "type": "mono",
-                "wavelength": 550.
-            },
-            "illumination": {
-                "type": "directional",
-                "zenith": 180.,
-                "azimuth": 0.,
-                "irradiance": 1.
-            },
-            "measure": {
-                "type": "distant",
-                "zenith": 30.,
-                "azimuth": 180.
-            },
-            "surface": {
-                "type": "lambert",
-                "reflectance": 0.5
-            }
-        }
-
-    # Instance attributes
-    config = attr.ib(default=None)
-    _solver = attr.ib(default=OneDimSolver())
-
-    def __attrs_post_init__(self):
-        self.init()
-
-    def init(self):
-        if self.config is None:
-            self.config = self.DEFAULT_CONFIG
-
-        self._solver.init()
-        self._configure_scene()
-
-    def _configure_scene(self):
-        # Set illumination
-        config_illumination = self.config["illumination"]
-        self._solver.dict_scene["illumination"] = self._select(config_illumination)
-
-        # Set atmosphere
-        try:
-            config_atmosphere = self.config["atmosphere"]
-            rayleigh_parameters = {"wavelength": self.config["mode"]["wavelength"]}
-            atmosphere_ = eradiate.scenes.atmosphere.rayleigh.RayleighHomogeneous(
-                scattering_coefficient=None,
-                rayleigh_parameters=rayleigh_parameters,
-                width=None, height=1e5
-            )
-            atmosphere_.add_to(self._solver.dict_scene, inplace=True)
-        except KeyError:
-            atmosphere_ = None
-
-        # Set surface
-        config_surface = self.config["surface"]
-        if atmosphere_ is not None:
-            config_surface["width"] = atmosphere_.width
-        surface = self._select(config_surface)
-        surface.add_to(self._solver.dict_scene, inplace=True)
-
-    def run(self):
-        self._solver.run()

@@ -3,24 +3,25 @@
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
+
+   {% block attributes %}
+   {% if attributes %}
+   .. rubric:: Class attributes
+
+   {% for item in attributes %}
+   .. autoattribute:: {{ name }}.{{ item }}
+   {%- endfor %}
+   {% endif %}
+   {% endblock %}
    
    {% block methods %}
    {% if methods %}
    .. rubric:: Methods
 
    {% for item in methods %}
+   {%- if not item == '__init__' %}
    .. automethod:: {{ name }}.{{ item }}
-   {%- endfor %}
-   {% endif %}
-   {% endblock %}
-
-   {% block attributes %}
-   {% if attributes %}
-   .. rubric:: Attributes
-
-   .. autosummary::
-   {% for item in attributes %}
-      {{ name }}.{{ item }}
+   {%- endif -%}
    {%- endfor %}
    {% endif %}
    {% endblock %}
