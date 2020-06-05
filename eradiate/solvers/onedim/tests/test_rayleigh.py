@@ -109,3 +109,35 @@ def test_rayleigh_solver_app():
     # run with custom config
     #assert app.run() < 0.1591796875
 
+
+def test_rayleigh_solver_app_run():
+    """Test the creation of a DataArray from the solver result
+
+    We create a default scene with a set of zenith and azimuth angles,
+    render the scene and create the DataArray.
+
+    We assert the correct setting of the DataArray coordinates and dimensions,
+    as well as the correct setting of data.
+    """
+    import xarray as xr
+    import numpy as np
+    assert eradiate.kernel.variant() == "scalar_mono_double"
+
+    config = {"measure": {
+        "type": "distant",
+        "zenith": [0, 30, 60, 90],
+        "azimuth": [0, 45, 90, 135, 180, 225, 270, 315, 360]
+        },
+    }
+
+    app = RayleighSolverApp(config)
+    app.run()
+
+    for dim in ["theta_i", "phi_i", "theta_o", "phi_o", "wavelength"]:
+        assert dim in app.result.dims
+
+    assert np.all(app.result.coords["phi_o"] == config["measure"]["azimuth"])
+    assert np.all(app.result.coords["theta_o"] == config["measure"]["zenith"])
+
+    assert np.all(app.result.data > 0)
+    assert np.all(app.result == app.result.sel(theta_i=0, phi_i=0, theta_o=0, phi_o=0, wavelength=550))

@@ -70,6 +70,7 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'mitsuba': ('https://mitsuba2.readthedocs.io/en/latest/', None),
     'pint': ('https://pint.readthedocs.io/en/latest/', None),
+    'xarray': ('http://xarray.pydata.org/en/stable/', None),
 }
 
 # Activate todo notes

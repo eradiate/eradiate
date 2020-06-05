@@ -76,7 +76,7 @@ class OneDimSolver:
         """(Re)initialise internal state. Currently a placeholder."""
         pass
 
-    def run(self, vza=0., vaa=0., spp=3200):
+    def run(self, vza=0., vaa=0., spp=3200, squeeze=True):
         """Run the simulation for a set of specified sensor angular
         configurations.
 
@@ -124,8 +124,11 @@ class OneDimSolver:
                 result = float(np.array(film.bitmap(), dtype=float))
                 reflected_radiance[i, j] = result
 
-        # Fix result dimensionality (remove useless dims)
-        try:
-            return float(reflected_radiance)
-        except TypeError:
-            return np.squeeze(reflected_radiance)
+        if squeeze:
+            # Fix result dimensionality (remove useless dims)
+            try:
+                return float(reflected_radiance)
+            except TypeError:
+                return np.squeeze(reflected_radiance)
+        else:
+            return reflected_radiance
