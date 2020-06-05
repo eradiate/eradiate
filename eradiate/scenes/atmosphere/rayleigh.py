@@ -3,6 +3,7 @@ import numpy as np
 from scipy.constants import physical_constants
 
 from .base import Atmosphere
+from ..factory import Factory
 from ...util.units import Q_
 
 offset = {
@@ -13,8 +14,11 @@ offset = {
 }
 
 # Physical constants
+#: Loschmidt constant [m^-3].
 _LOSCHMIDT = Q_(
     *physical_constants["Loschmidt constant (273.15 K, 101.325 kPa)"][:2])
+#: Refractive index of dry air [dimensionless].
+_IOR_DRY_AIR = Q_(1.0002932, "")
 
 
 def king_factor(ratio=0.0279):
@@ -33,11 +37,11 @@ def king_factor(ratio=0.0279):
 
 
 def sigmas_single(
-        wavelength=550.,
-        number_density=_LOSCHMIDT.magnitude,
-        refractive_index=1.0002932,
-        king_factor=1.049,
-        depolarisation_ratio=None
+    wavelength=550.,
+    number_density=_LOSCHMIDT.magnitude,
+    refractive_index=_IOR_DRY_AIR.magnitude,
+    king_factor=1.049,
+    depolarisation_ratio=None
 ):
     """Compute the Rayleigh scattering coefficient for one type of scattering
     particles.
@@ -76,7 +80,7 @@ def sigmas_single(
     return \
         8. * np.power(np.pi, 3) / (3. * np.power((wavelength * 1e-9), 4)) / \
         number_density * \
-        np.square(np.square(refractive_index) - 1) * king_factor
+        np.square(np.square(refractive_index) - 1.) * king_factor
 
 
 def sigmas_mixture(
@@ -152,51 +156,75 @@ def delta(ratio=0.0279):
 
 
 @attr.s()
+@Factory.register("rayleigh_homogeneous")
 class RayleighHomogeneous(Atmosphere):
     r"""This class builds an atmosphere consisting of a non-absorbing
     homogeneous medium. Scattering uses the Rayleigh phase function and the
     Rayleigh scattering coefficient of a single gas.
 
-    Constructor arguments / public attributes:
-        ``scattering_coefficient`` (float):
-            Atmosphere scattering coefficient [m^-1].
+    TODO: update docs
 
-        ``rayleigh_parameters`` (dict):
-            Parameters of :func:`eradiate.scenes.atmosphere.rayleigh_scattering_coefficient_1`
+    Constructor arguments / public attributes:
+        ``height`` (float):
+            Height of the atmosphere [m].
 
         ``width`` (float)
             Width of the atmosphere [m].
 
-        ``height`` (float):
-            Height of the atmosphere [m].
+        ``scattering_coefficient`` (float):
+            Atmosphere scattering coefficient [m^-1].
+
+        ``wavelength`` (float):
+            Wavelength [nm].
+
+        ``number_density`` (float):
+            Number density of the scattering particles [m^-3].
+
+        ``refractive_index`` (float):
+            Refractive index of scattering particles [dimensionless].
+            Default value is the air refractive index at 550 nm as
+            given by :cite:`Bates1984RayleighScatteringAir`.
+
+        ``king_factor`` (float):
+            King correction factor of the scattering particles [dimensionless].
+            Default value is the air effective King factor at 550 nm as given by
+            :cite:`Bates1984RayleighScatteringAir`.
+
+        ``depolarisation_ratio`` (float):
+            Depolarisation ratio [dimensionless].
+            If this parameter is set, then its value is used to compute the value of
+            the corresponding King factor and supersedes ``king_factor``.
+
+        Note: If ``scattering_coefficient`` is set, ``wavelength``,
+        ``number_density``, ``refractive_index``, ``king_factor`` and
+        ``depolarisation_ratio`` must not be set. If ``scattering_coefficient``
+        is not set, ``wavelength``, ``number_density``, ``refractive_index``,
+        and ``king_factor`` or ``depolarisation_ratio`` are used to compute the
+        scattering coefficient.
     """
 
     # Class attributes
-    albedo = 1.
-
-    # Instance attributes
-    scattering_coefficient = attr.ib(default=None)
-    rayleigh_parameters = attr.ib(default=None)
-    width = attr.ib(default=None)
-    height = attr.ib(default=1e5)
-
-    def __attrs_post_init__(self):
-        self.init()
+    DEFAULT_CONFIG = {
+        "height": 1e5,
+        # "width": None,
+        "sigmas": 1e-6,
+        # "sigmas_params": None
+    }
+    ALBEDO = 1.
 
     def init(self):
-        """(Re)initialise hidden internal state."""
-        if self.scattering_coefficient is None:
-            if self.rayleigh_parameters is None:
-                self.rayleigh_parameters = {}
-            self.scattering_coefficient = \
-                sigmas_single(**self.rayleigh_parameters)
-        # TODO: add a warning if both scattering_coefficient and rayleigh_parameters are set
+        r"""(Re)initialise hidden internal state.
+        """
+        print(self.config)
+        # If sigmas_params is set, override sigmas based on parametrisation
+        if self.config.get("sigmas_params", None) is not None:
+            self.config["sigmas"] = \
+                sigmas_single(**self.config["sigmas_params"])
 
-        # if width is not set, compute a value that is large enough (5 times
-        # the scattering mean free path) so that there is
-        # almost no edge effect
-        if self.width is None:
-            self.width = 5. / self.scattering_coefficient
+        # If width is not set, compute a value corresponding to an optically
+        # thick layer (10x scattering mean free path)
+        if self.config.get("width", None) is None:
+            self.config["width"] = 10. / self.config["sigmas"]
 
     def phase(self):
         return {"phase_atmosphere": {"type": "rayleigh"}}
@@ -211,27 +239,30 @@ class RayleighHomogeneous(Atmosphere):
             "medium_atmosphere": {
                 "type": "homogeneous",
                 "phase": phase,
-                "sigma_t": {"type": "uniform", "value": self.scattering_coefficient},
-                "albedo": {"type": "uniform", "value": self.albedo},
+                "sigma_t": {"type": "uniform", "value": self.config["sigmas"]},
+                "albedo": {"type": "uniform", "value": self.ALBEDO},
             }
         }
 
     def shapes(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f
-        from eradiate.kernel import variant
+        from eradiate.kernel.core.math import ShadowEpsilon
+        offset = ShadowEpsilon
 
         if ref:
             medium = {"type": "ref", "id": "medium_atmosphere"}
         else:
             medium = self.media(ref=False)["medium_atmosphere"]
 
+        width = self.config["width"]
+        height = self.config["height"]
+
         return {
             "shape_atmosphere": {
                 "type": "cube",
                 "to_world": ScalarTransform4f
-                    .scale([self.width / 2., self.width / 2., self.height / 2.])
-                    .translate([0., 0., self.height / 2. + offset[variant()]]),
-                    # TODO: remove offset dict and replace it with a formula using eradiate.kernel.core.math.Epsilon (or RayEpsilon, or ShadowEpsilon)
+                    .scale([0.5 * width, 0.5 * width, 0.5 * height])
+                    .translate([0.0, 0.0, 0.5 * height + offset]),
                 "bsdf": {"type": "null"},
                 "interior": medium
             }

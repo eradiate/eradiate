@@ -1,11 +1,16 @@
+"""Scene generation facilities related with scene illumination."""
+
+import attr
 import numpy as np
 
-from eradiate.util.units import ureg
-from eradiate.util.frame import angles_to_direction
+from .base import SceneHelper
+from .factory import Factory
+from ..util.frame import angles_to_direction
+from ..util.units import ureg
 
 
 @ureg.wraps(None, (ureg.deg, ureg.deg, None), strict=False)
-def directional(zenith=0., azimuth=0., irradiance=1.):
+def _directional(zenith=0., azimuth=0., irradiance=1.):
     """Create a dictionary which will instantiate a `directional` Mitsuba plugin
     based on the provided angular geometry.
 
@@ -37,7 +42,30 @@ def directional(zenith=0., azimuth=0., irradiance=1.):
     }
 
 
-def constant(radiance=1.):
+@attr.s
+@Factory.register()
+class Directional(SceneHelper):
+    """TODO: add docs"""
+
+    DEFAULT_CONFIG = {
+        "zenith": 0.0,
+        "azimuth": 0.0,
+        "irradiance": 1.0
+    }
+
+    id = attr.ib(default="illumination")
+
+    def kernel_dict(self, **kwargs):
+        return {
+            self.id: _directional(
+                self.config["zenith"],
+                self.config["azimuth"],
+                self.config["irradiance"]
+            )
+        }
+
+
+def _constant(radiance=1.):
     """Create a dictionary which will instantiate a `constant` Mitsuba plugin.
 
     Parameter ``radiance`` (float or dict)
@@ -54,3 +82,16 @@ def constant(radiance=1.):
             if isinstance(radiance, float)
             else radiance
     }
+
+
+@attr.s
+@Factory.register()
+class Constant(SceneHelper):
+    """TODO: add docs"""
+
+    DEFAULT_CONFIG = {"radiance": 1.0}
+
+    id = attr.ib(default="illumination")
+
+    def kernel_dict(self, **kwargs):
+        return {self.id: _constant(self.config["radiance"])}

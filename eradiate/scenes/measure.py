@@ -1,11 +1,16 @@
+"""Scene generation facilities related with measurement."""
+
+import attr
 import numpy as np
 
-from ..util.units import ureg
+from .base import SceneHelper
+from .factory import Factory
 from ..util.frame import angles_to_direction
+from ..util.units import ureg
 
 
 @ureg.wraps(None, (ureg.deg, ureg.deg, None), strict=False)
-def distant(zenith=0., azimuth=0., spp=10000):
+def _distant(zenith=0., azimuth=0., spp=10000):
     """Create a dictionary which will instantiate a `distant` Mitsuba plugin
     based on the provided angular geometry.
 
@@ -43,3 +48,25 @@ def distant(zenith=0., azimuth=0., spp=10000):
             "rfilter": {"type": "box"}
         }
     }
+
+@attr.s
+@Factory.register()
+class Distant(SceneHelper):
+    """TODO: add docs"""
+
+    DEFAULT_CONFIG = {
+        "zenith": 0.0,
+        "azimuth": 0.0,
+        "spp": 10000
+    }
+
+    id = attr.ib(default="measure")
+
+    def kernel_dict(self, **kwargs):
+        return {
+            self.id: _distant(
+                self.config["zenith"],
+                self.config["azimuth"],
+                self.config["spp"]
+            )
+        }

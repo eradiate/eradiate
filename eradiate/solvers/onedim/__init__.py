@@ -17,11 +17,11 @@ class OneDimSolver(metaclass=classproperty.meta):
 
     Constructor arguments / public attributes:
         ``dict_scene`` (dict):
-            Dictionary used to generate the scene for which simulations will be 
-            run. If no value is passed, a default scene is constructed. It 
-            consists of a square covering :math:`[-1, 1]^2` with normal vector 
-            :math:`+Z` and a Lambertian BRDF (reflectance :math:`\rho = 0.5`) 
-            illuminated by a directional emitter with direction vector 
+            Dictionary used to generate the scene for which simulations will be
+            run. If no value is passed, a default scene is constructed. It
+            consists of a square covering :math:`[-1, 1]^2` with normal vector
+            :math:`+Z` and a Lambertian BRDF (reflectance :math:`\rho = 0.5`)
+            illuminated by a directional emitter with direction vector
             :math:`-Z` and constant irradiance equal to 1. If set to `None`,
             defaults to :data:`DEFAULT_DICT_SCENE`.
         ``variant`` (str):
@@ -49,7 +49,6 @@ class OneDimSolver(metaclass=classproperty.meta):
             },
             "integrator": {"type": "path"}
         }
-    """Shalala"""
 
     dict_scene = attr.ib(default=None)
     variant = attr.ib(default="scalar_mono_double")
@@ -98,7 +97,7 @@ class OneDimSolver(metaclass=classproperty.meta):
         for i, theta in enumerate(vza):
             for j, phi in enumerate(vaa):
                 # Adjust scene setup
-                self.dict_scene["sensor_distant"] = measure.distant(theta, phi, spp)
+                self.dict_scene["sensor_distant"] = measure._distant(theta, phi, spp)
 
                 # Run computation
                 scene = load_dict(self.dict_scene)

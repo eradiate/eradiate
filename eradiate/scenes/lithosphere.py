@@ -1,90 +1,89 @@
-from abc import ABC, abstractmethod
-from copy import deepcopy
+"""Scene generation facilities related with the lithosphere."""
+
+from abc import abstractmethod
 
 import attr
 
+from .base import SceneHelper
+from .factory import Factory
+
 
 @attr.s
-class Surface(ABC):
+class Surface(SceneHelper):
     """An abstract base class defining common facilities for all surfaces."""
 
+    id = attr.ib(default="surface")
+
     @abstractmethod
     def bsdfs(self):
-        """Return phase function plugin interfaces.
-
-        return (list): List of ``Bsdf`` plugin interfaces.
-        """
+        """TODO: add docs"""
         pass
 
     @abstractmethod
-    def shapes(self):
-        """Return shape plugin interfaces using references.
-
-        return (list): List of ``Shape`` plugin interfaces.
-        """
+    def shapes(self, ref=False):
+        """TODO: add docs"""
         pass
 
-    def add_to(self, dict_scene, inplace=False):
-        """Add current surface to scene dictionary.
-        """
-        if not inplace:  # If copy mode, replace mutable argument with a copy of itself
-            dict_scene = deepcopy(dict_scene)
+    def kernel_dict(self, ref=True):
+        scene_dict = {}
 
-        dict_scene["surface"] = self.shapes()["shape_surface"]
+        if not ref:
+            scene_dict["surface"] = self.shapes(ref=False)["shape_surface"]
+        else:
+            scene_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
+            scene_dict["surface"] = self.shapes(ref=True)["shape_surface"]
 
-        return dict_scene
+        return scene_dict
 
 
 @attr.s
+@Factory.register()
 class Lambertian(Surface):
     r"""This class builds a Lambertian surface.
-
-    Constructor arguments / public attributes:
-        ``reflectance`` (float):
-            Surface reflectance value [dimensionless].
-        ``width`` (float):
-            Surface width [m].
     """
 
-    reflectance = attr.ib(default=0.5)
-    width = attr.ib(default=1.)
-
-    def __attrs_post_init__(self):
-        self.init()
-
-    def init(self):
-        """(Re)initialise hidden internal state
-        """
-        self._bsdf = None
-        self._shape = None
+    DEFAULT_CONFIG = {
+        "reflectance": 0.5,
+        "width": 1.,
+    }
 
     def bsdfs(self):
-        if self._bsdf is None:
-            self._bsdf = {
-                "bsdf_surface": {
-                    "type": "diffuse",
-                    "reflectance": {
-                        "type": "uniform",
-                        "value": self.reflectance
-                    }
+        return {
+            "bsdf_surface": {
+                "type": "diffuse",
+                "reflectance": {
+                    "type": "uniform",
+                    "value": self.config["reflectance"]
                 }
             }
+        }
 
-        return self._bsdf
-
-    def shapes(self):  # TODO: add support of referencing
+    def shapes(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
-        if self._shape is None:
+        if ref:
+            bsdf = {"type": "ref", "id": "bsdf_surface"}
+        else:
             bsdf = self.bsdfs()["bsdf_surface"]
 
-            self._shape = {
-                "shape_surface": {
-                    "type": "rectangle",
-                    "to_world": ScalarTransform4f
-                        .scale(ScalarVector3f(self.width / 2., self.width / 2., 1.)),
-                    "bsdf": bsdf
-                }
-            }
+        size = self.config["width"]
 
-        return self._shape
+        return {
+            "shape_surface": {
+                "type": "rectangle",
+                "to_world": ScalarTransform4f
+                    .scale(ScalarVector3f(size / 2., size / 2., 1.)),
+                "bsdf": bsdf
+            }
+        }
+
+    def kernel_dict(self, ref=True):
+        scene_dict = {}
+
+        if not ref:
+            scene_dict["surface"] = self.shapes(ref=False)["shape_surface"]
+        else:
+            scene_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
+            scene_dict["surface"] = self.shapes(ref=True)["shape_surface"]
+
+        return scene_dict

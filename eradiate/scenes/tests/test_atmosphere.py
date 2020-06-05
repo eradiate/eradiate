@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
 
-from eradiate.scenes.atmosphere.rayleigh import _LOSCHMIDT, king_factor, sigmas_single, \
+from eradiate.scenes.atmosphere.rayleigh import (
+    _LOSCHMIDT, _IOR_DRY_AIR, king_factor, sigmas_single,
     sigmas_mixture, delta, RayleighHomogeneous
+)
 from eradiate.util.units import Q_
 
 
@@ -13,20 +15,19 @@ def test_king_correction_factor():
     assert np.allclose(king_factor(), 1.048, rtol=1.e-2)
 
 
-def test_rayleigh_scattering_coefficient_1():
+def test_sigmas_single():
     """Test computation of Rayleigh scattering coefficient with default values"""
 
-    reference_scattering_cross_section = Q_(4.513e-27, 'cm**2')
-    reference_scattering_coefficient = reference_scattering_cross_section * _LOSCHMIDT
-    reference_value = reference_scattering_coefficient.to('m^-1').magnitude
+    ref_cross_section = Q_(4.513e-27, 'cm**2')
+    ref_sigmas = ref_cross_section * _LOSCHMIDT
+    expected = ref_sigmas.to('m^-1').magnitude
 
     # Compare to reference value computed from scattering cross section in
     # Bates (1984) Planetary and Space Science, Volume 32, No. 6.
-    assert np.allclose(sigmas_single(),
-                       reference_value, rtol=1e-2)
+    assert np.allclose(sigmas_single(), expected, rtol=1e-2)
 
 
-def test_rayleigh_scattering_coefficient_mixture():
+def test_sigmas_mixture():
     """Test computation of the Rayleigh scattering coefficient for a mixture of
     particles types by calling the function with the parameters for a single
     particle type, namely air particles, then for a mixture of two particle
@@ -34,14 +35,15 @@ def test_rayleigh_scattering_coefficient_mixture():
     """
     coefficient_air = \
         sigmas_mixture(
-            550, [_LOSCHMIDT.magnitude], 1.0002932,
+            550., 
+            [_LOSCHMIDT.magnitude], 
+            _IOR_DRY_AIR.magnitude,
             [_LOSCHMIDT.magnitude],
-            [1.0002932],
+            [_IOR_DRY_AIR.magnitude],
             [1.049]
         )
 
-    assert np.allclose(
-        coefficient_air, sigmas_single(), rtol=1e-6)
+    assert np.allclose(coefficient_air, sigmas_single(), rtol=1e-6)
 
     coefficient_2_particle_types_mixture = \
         sigmas_mixture(
@@ -61,9 +63,8 @@ def test_rayleigh_scattering_coefficient_mixture():
     )
 
 
-def test_rayleigh_delta():
-    assert np.isclose(delta(),
-                      0.9587257754327136, rtol=1e-6)
+def test_delta():
+    assert np.isclose(delta(), 0.9587257754327136, rtol=1e-6)
 
 
 @pytest.mark.parametrize("ref", (False, True))
@@ -86,10 +87,10 @@ def test_rayleigh_homogeneous(variant_scalar_mono, ref):
     assert load_dict(dict_scene) is not None
 
     # Construct with parameters
-    r = RayleighHomogeneous(
-        rayleigh_parameters={"wavelength": 550.},
-        height=10.
-    )
+    r = RayleighHomogeneous(dict(
+        height=10.,
+        sigmas_params={"wavelength": 550.}
+    ))
 
     # Check if produced scene can be instantiated
     dict_scene = r.add_to({"type": "scene"}, ref)
