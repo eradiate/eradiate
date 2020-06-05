@@ -1,16 +1,19 @@
+import warnings
 from copy import deepcopy
 
 import attr
+import eradiate.kernel
 
 from . import OneDimSolver
-from ...scenes import measure
+from ...scenes import measure, SceneDict
 from ...scenes.atmosphere import RayleighHomogeneous
 from ...scenes.factory import Factory
-from ...util.decorators import classproperty
+from ...util.collections import frozendict
+from ...util.exceptions import ConfigWarning
 
 
 @attr.s
-class RayleighSolverApp(metaclass=classproperty.meta):
+class RayleighSolverApp:
     r"""Application to run simulations in Rayleigh-scattering homogeneous
     one-dimensional scenes.
 
@@ -22,11 +25,11 @@ class RayleighSolverApp(metaclass=classproperty.meta):
         This class is initialised with a configuration dictionary with the
         following keys:
 
-            - ``mode``              (required)
-            - ``illumination``      (required)
-            - ``measure``           (required)
-            - ``surface``           (required)
-            - ``atmosphere``        (optional)
+        - ``mode``              (required)
+        - ``illumination``      (required)
+        - ``measure``           (required)
+        - ``surface``           (required)
+        - ``atmosphere``        (optional)
 
         For each of these keys, the corresponding value is a dictionary that
         specifies the configuration of the given element. That configuration
@@ -49,7 +52,7 @@ class RayleighSolverApp(metaclass=classproperty.meta):
 
         Supported configuration entries:
             ============== ===========================
-             component     available ``type``values
+             component     available ``type`` values
             ============== ===========================
              mode           'mono'
              illumination   'constant', 'directional'
@@ -80,95 +83,108 @@ class RayleighSolverApp(metaclass=classproperty.meta):
             ``rayleigh_homogeneous``
                 Attributes of
                 :class:`eradiate.scenes.atmosphere.rayleigh.RayleighHomogeneous`
-
     """
 
-    # Static methods
-    @staticmethod
-    def _select(params):
-        switcher = {
-            "distant": measure._distant,
-        }
-
-        params = deepcopy(params)
-        callable_ = switcher[params["type"]]
-        del params["type"]
-        return callable_(**params)
-
     # Class attributes
-    @classproperty
-    def DEFAULT_CONFIG(cls):
-        return {
-            "mode": {
-                "type": "mono",
-                "wavelength": 550.
-            },
-            "illumination": {
-                "type": "directional",
-                "zenith": 0.,
-                "azimuth": 0.,
-                "irradiance": 1.
-            },
-            "measure": {
-                "type": "distant",
-                "zenith": 30.,
-                "azimuth": 180.
-            },
-            "surface": {
-                "type": "lambertian",
-                "reflectance": 0.5
-            }
+    #: Default configuration
+    DEFAULT_CONFIG = frozendict({
+        "mode": {
+            "type": "mono",
+            "wavelength": 550.
+        },
+        "illumination": {
+            "type": "directional",
+            "zenith": 180.,
+            "azimuth": 0.,
+            "irradiance": 1.
+        },
+        "measure": {
+            "type": "distant",
+            "zenith": 30.,
+            "azimuth": 180.
+        },
+        "surface": {
+            "type": "lambertian",
+            "reflectance": 0.5
         }
+    })
 
     # Instance attributes
     config = attr.ib(default=None)
-    _solver = attr.ib(default=OneDimSolver())
+    _scene_dict = attr.ib(default=None)
+    _solver = attr.ib(default=None)
 
     def __attrs_post_init__(self):
+        if self.config is None:
+            self.config = dict(self.DEFAULT_CONFIG)
+        else:
+            self.config = {**self.DEFAULT_CONFIG, **self.config}
+
         self.init()
 
     def init(self):
-        """(Re)initialise hidden internal state."""
-        if self.config is None:
-            self.config = self.DEFAULT_CONFIG
+        r"""(Re)initialise hidden internal state.
+        """
+        # Select the kernel variant based on configuration
+        self._set_kernel_variant()
 
-        #self._solver.init()
+        # Reinitialise scene
+        self._scene_dict = SceneDict.empty()
         self._configure_scene()
+
+        # Reinitialise solver
+        self._solver = OneDimSolver(self._scene_dict)
+
+    def _set_kernel_variant(self):
+        """Set kernel variant according to scene dictionary. If scene dictionary
+        has not been created, use mode information to set variant.
+        """
+
+        if self._scene_dict is not None:
+            eradiate.kernel.set_variant(self._scene_dict.variant)
+        else:
+            mode = self.config["mode"]["type"]
+            if mode == "mono":
+                eradiate.kernel.set_variant("scalar_mono_double")
+            else:
+                raise ValueError(f"unsupported mode '{mode}'")
 
     def _configure_scene(self):
         factory = Factory()
 
+        # Gather mode information
+        wavelength = self.config["mode"]["wavelength"]
+
         # Set illumination
         illumination = factory.create(self.config["illumination"])
-        illumination.add_to(self._solver.dict_scene, inplace=True)
+        illumination.add_to(self._scene_dict, inplace=True)
 
         # Set measure
-        # TODO: refactor using factory
-        config_measure = self.config["measure"]
-        self._solver.dict_scene["measure"] = self._select(config_measure)
+        measure = factory.create(self.config["measure"])
+        measure.add_to(self._scene_dict, inplace=True)
 
         # Set atmosphere
-        # TODO: refactor using factory
         try:
             config_atmosphere = self.config["atmosphere"]
 
-            if 'scattering_coefficient' not in config_atmosphere:
-                try:
-                    wavelength = self.config["mode"]["wavelength"]
-                except KeyError:
-                    wavelength = 550.
-                config_atmosphere['wavelength'] = wavelength
-
-            atmosphere = RayleighHomogeneous(**config_atmosphere)
-            atmosphere.add_to(self._solver.dict_scene, inplace=True)
+            try:
+                wavelength_atmosphere = config_atmosphere["sigmas_params"]["wavelength"]
+                if wavelength_atmosphere != wavelength:
+                    warnings.warn("overriding 'atmosphere.sigmas_params.wavelength' "
+                                  "with 'mode.wavelength'", ConfigWarning)
+                    config_atmosphere["sigmas_params"]["wavelength"] = wavelength
+            except KeyError:
+                pass
+            atmosphere = RayleighHomogeneous(config_atmosphere)
+            atmosphere.add_to(self._scene_dict, inplace=True)
         except KeyError:
-            atmosphere = None
+            atmosphere = {}
 
         # Set surface
-        if atmosphere is not None:
-            self.config["surface"]["width"] = atmosphere.width
+        if atmosphere:
+            self.config["surface"]["width"] = atmosphere.config["width"]
         surface = factory.create(self.config["surface"])
-        surface.add_to(self._solver.dict_scene, inplace=True)
+        surface.add_to(self._scene_dict, inplace=True)
 
     def run(self):
         self._solver.run()

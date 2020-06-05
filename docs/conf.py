@@ -170,3 +170,7 @@ htmlhelp_basename = 'eradiate_doc'
 autosummary_generate = True
 autosummary_members = True
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'inherited-members']
+
+# Set Mitsuba variant for autodoc
+import eradiate.kernel
+eradiate.kernel.set_variant('scalar_mono_double')

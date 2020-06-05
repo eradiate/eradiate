@@ -1,30 +1,18 @@
-from eradiate.solvers.onedim.rayleigh import *
+import eradiate.kernel
+from eradiate.scenes import SceneDict
+from eradiate.solvers.onedim.rayleigh import RayleighSolverApp
+
 
 def test_rayleigh_solver_app():
-
-    # default constructor
+    # Default constructor
     app = RayleighSolverApp()
-    assert app.config == {
-            "mode": {
-                "type": "mono",
-                "wavelength": 550.
-            },
-            "illumination": {
-                "type": "directional",
-                "zenith": 0.,
-                "azimuth": 0.,
-                "irradiance": 1.
-            },
-            "measure": {
-                "type": "distant",
-                "zenith": 30.,
-                "azimuth": 180.
-            },
-            "surface": {
-                "type": "lambertian",
-                "reflectance": 0.5
-            }
-        }
+    assert app.config == SceneDict(RayleighSolverApp.DEFAULT_CONFIG)
+    assert eradiate.kernel.variant() == "scalar_mono_double"
+
+    # Check that the default scene can be instantiated
+    assert app._scene_dict.load() is not None
+
+    # TODO: check and improve following tests
 
     # run with default configuration
     #assert app.run() == 0.1591796875
@@ -79,7 +67,7 @@ def test_rayleigh_solver_app():
             "reflectance": 0.5
         },
         "atmosphere": {
-            "scattering_coefficient": 1e-6,
+            "sigmas": 1e-6,
             "height": 1e5
         }
     }

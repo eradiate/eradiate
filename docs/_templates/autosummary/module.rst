@@ -27,3 +27,23 @@
     {% endfor %}
 
 {% endif %}
+
+{% if exceptions %}
+.. rubric:: Exceptions
+
+.. autosummary::
+    :toctree: .
+    {% for exception in exceptions %}
+    {{ exception }}
+    {% endfor %}
+
+{% endif %}
+
+{% if attributes %}
+.. rubric:: Attributes
+    :toctree: .
+    {% for attribute in attributes %}
+    {{ attribute }}
+    {% endfor %}
+
+{% endif %}

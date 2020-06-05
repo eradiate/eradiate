@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
+
 import attr
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 
 import eradiate.kernel
-
 from ..util import frame
 
 
@@ -32,8 +32,6 @@ class MitsubaBSDFPluginAdapter(BRDFAdapter):
     Instance attributes:
         ``bsdf`` (:class:`eradiate.kernel.render.BSDF`): Mitsuba BSDF plugin
     """
-    from eradiate.kernel.render import SurfaceInteraction3f, BSDFContext
-
     bsdf = attr.ib()
 
     @bsdf.validator
@@ -149,7 +147,7 @@ class DataArrayBRDFAdapter(BRDFAdapter):
         if len(wo) == 3:
             wo = frame.direction_to_angles(wo)
 
-        selkws, interpkws = self.split_dimensions_for_interp(
+        selkws, interpkws = self._split_dimensions_for_interp(
             theta_i=np.rad2deg(wi[0]), phi_i=np.rad2deg(wi[1]),
             theta_o=np.rad2deg(wo[0]), phi_o=np.rad2deg(wo[1]), wavelength=wavelength)
         print("selkws:", selkws)

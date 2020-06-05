@@ -1,14 +1,15 @@
-import pytest
 import enoki as ek
 import numpy as np
+import pytest
 import xarray as xr
-from eradiate.kernel.core.xml import load_dict
+
 import eradiate.util.brdf_viewer as bv
 
 
-def test_bsdf_wrapper():
+def test_bsdf_wrapper(variant_scalar_mono):
     """Test the Mitsuba BSDF-Plugin wrapper, by instantiating the wrapper class
     and calling its evaluate method with different values"""
+    from eradiate.kernel.core.xml import load_dict
 
     bsdf_dict = {
         'type': 'diffuse',
@@ -36,7 +37,7 @@ def make_xarray(theta_i, phi_i, theta_o, phi_o, wavelength):
     return array
 
 
-def test_xarray_wrapper():
+def test_xarray_wrapper(variant_scalar_mono):
     """Testing the XArray wrapper, by instantiating the wrapper class and calling its
     evaluate method with different values"""
 

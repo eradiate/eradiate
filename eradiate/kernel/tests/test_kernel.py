@@ -1,5 +1,6 @@
-import pytest
 import importlib
+
+import pytest
 
 
 def test_top_level_import():
@@ -9,6 +10,7 @@ def test_top_level_import():
     assert eradiate.kernel is mitsuba
 
     # We check that C++ functions are available
+    eradiate.kernel.set_variant("scalar_mono")
     from eradiate.kernel.core.xml import load_string as load_string_ert
     from mitsuba.core.xml import load_string as load_string_mts
     assert load_string_ert is load_string_mts
@@ -21,18 +23,9 @@ def test_top_level_import():
 def test_variants():
     import eradiate.kernel
 
-    # We check if the default variant is set
-    assert eradiate.kernel.variant() is not None    
-
     # We check if we can use all compiled variants
     for v in eradiate.kernel.variants():
         eradiate.kernel.set_variant(v)
-
-
-def test_cpp_direct_import():
-    # The following should not raise because we set a default variant
-    from eradiate.kernel.core.xml import load_string
-    from eradiate.kernel.core import Vector3f
 
 
 @pytest.mark.parametrize("submod", ["python", "python.autodiff", "python.test"])
