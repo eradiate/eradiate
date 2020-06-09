@@ -45,6 +45,7 @@ def _distant(zenith=0., azimuth=0., spp=10000):
             "width": 1,
             "height": 1,
             "pixel_format": "luminance",
+            "component_format": "float32",
             "rfilter": {"type": "box"}
         }
     }

@@ -30,7 +30,7 @@ class OneDimSolver:
             solver.run()
 
     Constructor arguments / public attributes:
-        ``dict_scene`` (:class:`~eradiate.scenes.SceneDict`):
+        ``scene_dict`` (:class:`~eradiate.scenes.SceneDict`):
             Dictionary used to generate the scene for which simulations will be 
             run. If no value is passed, a default scene is constructed. It 
             consists of a square covering :math:`[-1, 1]^2` with normal vector 
@@ -59,7 +59,7 @@ class OneDimSolver:
         "integrator": {"type": "path"}
     })
 
-    dict_scene = attr.ib(default=None)
+    scene_dict = attr.ib(default=None)
 
     def _check_variant(self):
         variant = eradiate.kernel.variant()
@@ -67,8 +67,8 @@ class OneDimSolver:
             raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
     def __attrs_post_init__(self):
-        if self.dict_scene is None:
-            self.dict_scene = SceneDict(self.DEFAULT_SCENE_DICT)
+        if self.scene_dict is None:
+            self.scene_dict = SceneDict(self.DEFAULT_SCENE_DICT)
 
         self.init()
 
@@ -112,10 +112,10 @@ class OneDimSolver:
                 # Adjust scene setup
                 measure.Distant(
                     {'zenith': theta, 'azimuth': phi, 'spp': spp}
-                ).add_to(self.dict_scene, inplace=True)
+                ).add_to(self.scene_dict, inplace=True)
 
                 # Run computation
-                kernel_scene = self.dict_scene.load()
+                kernel_scene = self.scene_dict.load()
                 sensor = kernel_scene.sensors()[0]
                 kernel_scene.integrator().render(kernel_scene, sensor)
 

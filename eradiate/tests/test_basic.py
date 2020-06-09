@@ -51,13 +51,13 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
     rho = 0.5
 
     solver = OneDimSolver()
-    solver.dict_scene["brdf_surface"] = {
+    solver.scene_dict["brdf_surface"] = {
         "type": "diffuse",
         "reflectance": {"type": "uniform", "value": rho}
     }
 
     if illumination == "directional":
-        solver.dict_scene["illumination"] = {
+        solver.scene_dict["illumination"] = {
             "type": "directional",
             "direction": [0, 0, -1],
             "irradiance": {"type": "uniform", "value": li}
@@ -65,7 +65,7 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
         theoretical_solution = np.full_like(vza, rho * li / np.pi)
 
     elif illumination == "constant":
-        solver.dict_scene["illumination"] = {
+        solver.scene_dict["illumination"] = {
             "type": "constant",
             "radiance": {"type": "uniform", "value": li}
         }
