@@ -1,6 +1,7 @@
 import attr
 
-from eradiate.scenes.base import SceneHelper, scene_dict_empty
+from eradiate.scenes import SceneDict
+from eradiate.scenes.base import SceneHelper
 
 
 @attr.s
@@ -19,14 +20,14 @@ class TinyDirectional(SceneHelper):
 
 
 def test_scene_helper(variant_scalar_mono):
-    from eradiate.kernel.core.xml import load_dict
-
     # Default constructor
     d = TinyDirectional()
     assert d.config == d.DEFAULT_CONFIG
 
     # Check that create scene can be instantiated
-    assert load_dict(d.add_to(scene_dict_empty())) is not None
+    scene_dict = SceneDict.empty()
+    scene_dict.add(d)
+    assert scene_dict.load() is not None
 
     # Construct using from_dict factory
     assert d == TinyDirectional.from_dict({})

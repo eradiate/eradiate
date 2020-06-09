@@ -1,5 +1,6 @@
 import numpy as np
 
+from eradiate.scenes import SceneDict
 from eradiate.scenes.measure import _distant, Distant
 from eradiate.util.units import ureg
 
@@ -19,9 +20,7 @@ def test_distant_function(variant_scalar_mono):
 
 
 def test_distant_class(variant_scalar_mono):
-    from eradiate.kernel.core.xml import load_dict
-
     # Constructor
     d = Distant()
     assert d.kernel_dict()[d.id] == _distant()
-    assert load_dict(d.add_to({"type": "scene"})) is not None
+    assert SceneDict.empty().add(d) is not None

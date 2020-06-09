@@ -110,9 +110,9 @@ class OneDimSolver:
         for i, theta in enumerate(vza):
             for j, phi in enumerate(vaa):
                 # Adjust scene setup
-                measure.Distant(
+                self.scene_dict.add(measure.Distant(
                     {'zenith': theta, 'azimuth': phi, 'spp': spp}
-                ).add_to(self.scene_dict, inplace=True)
+                ))
 
                 # Run computation
                 kernel_scene = self.scene_dict.load()

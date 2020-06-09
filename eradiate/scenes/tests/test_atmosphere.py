@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from eradiate.scenes import SceneDict
 from eradiate.scenes.atmosphere.rayleigh import (
     _LOSCHMIDT, _IOR_DRY_AIR, king_factor, sigmas_single,
     sigmas_mixture, delta, RayleighHomogeneous
@@ -82,9 +83,10 @@ def test_rayleigh_homogeneous(variant_scalar_mono, ref):
     dict_shape = next(iter(r.shapes().values()))
     assert load_dict(dict_shape) is not None
 
-    # Check if produced scene can be instanitated
-    dict_scene = r.add_to({"type": "scene"}, ref)
-    assert load_dict(dict_scene) is not None
+    # Check if produced scene can be instantiated
+    scene_dict = SceneDict.empty()
+    scene_dict.add(r)
+    assert scene_dict.load() is not None
 
     # Construct with parameters
     r = RayleighHomogeneous(dict(
@@ -93,5 +95,4 @@ def test_rayleigh_homogeneous(variant_scalar_mono, ref):
     ))
 
     # Check if produced scene can be instantiated
-    dict_scene = r.add_to({"type": "scene"}, ref)
-    assert load_dict(dict_scene) is not None
+    assert SceneDict.empty().add(r).load() is not None

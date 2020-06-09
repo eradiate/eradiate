@@ -160,8 +160,7 @@ class RayleighSolverApp:
         wavelength = self.config["mode"]["wavelength"]
 
         # Set illumination
-        illumination = factory.create(self.config["illumination"])
-        illumination.add_to(self._scene_dict, inplace=True)
+        self._scene_dict.add(factory.create(self.config["illumination"]))
 
         # Set atmosphere
         try:
@@ -176,15 +175,14 @@ class RayleighSolverApp:
             except KeyError:
                 pass
             atmosphere = RayleighHomogeneous(config_atmosphere)
-            atmosphere.add_to(self._scene_dict, inplace=True)
+            self._scene_dict.add(atmosphere)
         except KeyError:
             atmosphere = {}
 
         # Set surface
         if atmosphere:
             self.config["surface"]["width"] = atmosphere.config["width"]
-        surface = factory.create(self.config["surface"])
-        surface.add_to(self._scene_dict, inplace=True)
+        self._scene_dict.add(factory.create(self.config["surface"]))
 
     def run(self):
 

@@ -1,6 +1,7 @@
 """ Eradiate scene generation library """
 
 import eradiate.kernel
+from .base import SceneHelper
 from ..util.exceptions import KernelVariantError
 
 
@@ -54,6 +55,28 @@ class SceneDict(dict):
             raise KernelVariantError(f"scene dictionary created for kernel "
                                      f"variant '{self.variant}', incompatible "
                                      f"with current variant '{variant}'")
+
+    def add(self, content):
+        """Merge the content of a :class:`~eradiate.scenes.base.SceneHelper` or
+        another dictionary object with the current :class:`SceneDict`.
+
+        Parameter ``content`` (dict or :class:`~eradiate.scenes.base.SceneHelper`)
+            Content to merge with the current scene. If ``content`` is a
+            :class:`~eradiate.scenes.base.SceneHelper` instance, its
+            :meth:`~eradiate.scenes.base.SceneHelper.kernel_dict` method will
+            be called with ``ref`` set to `True`.
+
+        Returns → ``self``
+        """
+
+        if isinstance(content, SceneHelper):
+            for key, value in content.kernel_dict(ref=True).items():
+                self[key] = value
+        else:
+            for key, value in content.items():
+                self[key] = value
+
+        return self
 
     def normalize(self):
         self["type"] = "scene"

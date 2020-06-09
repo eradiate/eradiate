@@ -1,5 +1,6 @@
 import numpy as np
 
+from eradiate.scenes import SceneDict
 from eradiate.scenes.illumination import _directional, Directional, _constant, Constant
 from eradiate.util.units import ureg
 
@@ -19,12 +20,10 @@ def test_directional_function(variant_scalar_mono):
 
 
 def test_directional_class(variant_scalar_mono):
-    from eradiate.kernel.core.xml import load_dict
-
     # Constructor
     d = Directional()
     assert d.kernel_dict()[d.id] == _directional()
-    assert load_dict(d.add_to({"type": "scene"})) is not None
+    assert SceneDict.empty().add(d).load() is not None
 
 
 def test_constant_function(variant_scalar_mono):
@@ -36,9 +35,7 @@ def test_constant_function(variant_scalar_mono):
 
 
 def test_constant_class(variant_scalar_mono):
-    from eradiate.kernel.core.xml import load_dict
-
     # Constructor
     c = Constant()
     assert c.kernel_dict()[c.id] == _constant()
-    assert load_dict(c.add_to({"type": "scene"})) is not None
+    assert SceneDict.empty().add(c).load() is not None

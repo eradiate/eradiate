@@ -40,3 +40,8 @@ def test_scene_dict():
     eradiate.kernel.set_variant("scalar_mono_double")
     scene_dict = SceneDict({"type": "scene", "shape": {"type": "sphere"}})
     assert scene_dict.load() is not None
+
+    # Check that add method works as intended with dicts
+    scene_dict = SceneDict.empty()
+    scene_dict.add({"shape": {"type": "sphere"}})
+    assert scene_dict == {"type": "scene", "shape": {"type": "sphere"}}
