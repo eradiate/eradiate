@@ -45,9 +45,9 @@ def test_xarray_wrapper(variant_scalar_mono):
                         0, 45, 90], [0, 180, 360], [550])
 
     with pytest.raises(TypeError):
-        wrapper = bv.DataArrayBRDFAdapter("test")
+        wrapper = bv.DataArrayAdapter("test")
 
-    wrapper = bv.DataArrayBRDFAdapter(array)
+    wrapper = bv.DataArrayAdapter(array)
 
     num_tests = 0
     for i in range(num_tests):
@@ -57,14 +57,14 @@ def test_xarray_wrapper(variant_scalar_mono):
         theta_o = rands[0] * 90
         phi_o = rands[1] * 360
 
-        result = wrapper.plotting_data([theta_i, phi_i], [550])[2]
+        result = wrapper._plotting_data([theta_i, phi_i], [550])[2]
 
         assert np.allclose(result, array)
 
     # wavelength cannot be interpolated, so it must be called with the 
     # exact value of a data point
     with pytest.raises(ValueError) as e:
-        wrapper.plotting_data([45, 180], [600])
+        wrapper._plotting_data([45, 180], [600])
     with pytest.raises(ValueError) as e:
-        wrapper.plotting_data([30, 180], [550])
+        wrapper._plotting_data([30, 180], [550])
     

@@ -1,19 +1,18 @@
 import warnings
 
 import attr
-import eradiate.kernel
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 
+import eradiate.kernel
 from . import OneDimSolver
-from ...scenes import measure, SceneDict
+from ...scenes import SceneDict
 from ...scenes.atmosphere import RayleighHomogeneous
 from ...scenes.factory import Factory
 from ...util import brdf_viewer as bv, ensure_array
 from ...util.collections import frozendict
 from ...util.exceptions import ConfigWarning
-from ...util.decorators import classproperty
 
 
 @attr.s
@@ -115,13 +114,9 @@ class RayleighSolverApp:
 
     # Instance attributes
     config = attr.ib(default=None)
-<<<<<<< HEAD
     _scene_dict = attr.ib(default=None)
     _solver = attr.ib(default=None)
-=======
-    _solver = attr.ib(default=OneDimSolver())
     result = attr.ib(init=False)
->>>>>>> ec2a0f1... WIP: implemented plotting for the RayleighSolverApp and started a first testcase
 
     def __attrs_post_init__(self):
         if self.config is None:
@@ -137,12 +132,8 @@ class RayleighSolverApp:
         # Select the kernel variant based on configuration
         self._set_kernel_variant()
 
-<<<<<<< HEAD
         # Reinitialise scene
         self._scene_dict = SceneDict.empty()
-=======
-        # self._solver.init()
->>>>>>> ec2a0f1... WIP: implemented plotting for the RayleighSolverApp and started a first testcase
         self._configure_scene()
 
         # Reinitialise solver
@@ -205,9 +196,14 @@ class RayleighSolverApp:
         wavelength = ensure_array(self.config['mode']['wavelength'])
 
         data = self._solver.run(vza=theta_o, vaa=phi_o, squeeze=False)
-        data = np.expand_dims(data, (0, 1, 4))
-        self.result = xr.DataArray(data, coords=[theta_i, phi_i, theta_o, phi_o, wavelength], dims=[
-                             "theta_i", "phi_i", "theta_o", "phi_o", "wavelength"])
+        for dim in [0, 1, 4]:
+            data = np.expand_dims(data, dim)
+
+        self.result = xr.DataArray(
+            data,
+            coords=[theta_i, phi_i, theta_o, phi_o, wavelength],
+            dims=["theta_i", "phi_i", "theta_o", "phi_o", "wavelength"]
+        )
 
     def visualize(self, plot_type, ax_ext=None, fname=None):
         """Generate the requested plot type with the :class:`BRDFView` and store
@@ -216,10 +212,11 @@ class RayleighSolverApp:
         Parameter ``plot_type`` (str)
             Sets the plot type to request from the :class:`BRDFView`.
             Currently supported options are:
-            - hemispherical: Plot scattering into the hemisphere around the scattering
-              surface normal
-            - principal_plane: Plot scattering into the plane defined by the surface normal
-              and the incoming light direction
+
+            - ``hemispherical``: Plot scattering into the hemisphere around the
+              scattering surface normal
+            - ``principal_plane``: Plot scattering into the plane defined by the
+              surface normal and the incoming light direction
 
         Parameter ``fname`` (str or PathLike)
             Location and file name to store the plot. File type is inferred from the suffix of
@@ -235,6 +232,7 @@ class RayleighSolverApp:
             viewer.wi = [self.config['illumination']['zenith'],
                          self.config['illumination']['azimuth']]
             viewer.brdf = self.result
+
         elif plot_type == "principal_plane":
             fig, ax = plt.subplot(1, 1)
             plt.title("Principal plane view")
@@ -244,6 +242,9 @@ class RayleighSolverApp:
             viewer.wi = [self.config['illumination']['zenith'],
                          self.config['illumination']['azimuth']]
             viewer.brdf = self.result
+
+        else:
+            raise ValueError(f"unsupported plot type '{plot_type}'")
 
         viewer.evaluate()
 
