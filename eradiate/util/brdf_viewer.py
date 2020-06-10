@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 
+import eradiate
 import eradiate.kernel
 from ..util import frame
 
@@ -428,7 +429,7 @@ class HemisphericalView(BRDFView):
                 self.wi, self.wavelength)
             self.zen = np.deg2rad(thetas)
             self.azm = np.deg2rad(phis)
-            self._z = np.transpose(data)
+            self._z = data
             self.r, self.th = np.meshgrid(self.zen, self.azm)
 
         elif isinstance(self.brdf, SampledAdapter):
@@ -464,12 +465,20 @@ class HemisphericalView(BRDFView):
         if ax is None:
             ax = plt.gca(projection="polar")
 
-        if mode == "pcolormesh":
-            cmap_data = ax.pcolormesh(self.th, self.r, self._z, cmap="BuPu_r")
-        elif mode == "contourf":
-            cmap_data = ax.contourf(self.th, self.r, self._z, cmap="BuPu_r")
+        if isinstance(self.brdf, GriddedAdapter):
+            if mode == "pcolormesh":
+                cmap_data = ax.pcolormesh(self.th, self.r, np.transpose(self._z), cmap="BuPu_r")
+            elif mode == "contourf":
+                cmap_data = ax.contourf(self.th, self.r, np.transpose(self._z), cmap="BuPu_r")
+            else:
+                raise ValueError(f"unsupported plot mode {mode}")
         else:
-            raise ValueError(f"unsupported plot mode {mode}")
+            if mode == "pcolormesh":
+                cmap_data = ax.pcolormesh(self.th, self.r, self._z, cmap="BuPu_r")
+            elif mode == "contourf":
+                cmap_data = ax.contourf(self.th, self.r, self._z, cmap="BuPu_r")
+            else:
+                raise ValueError(f"unsupported plot mode {mode}")
 
         ticks, labels = generate_ticks(5, (0, np.pi / 2.0))
         ax.set_yticks(ticks)
@@ -520,8 +529,8 @@ class PrincipalPlaneView(BRDFView):
             # Ignore one of the two values
 
             # Stitch both sides of the principal plane appropriately
-            self._z[len(self.zen):] = data[phi_0deg, :].squeeze()
-            self._z[:len(self.zen)] = data[phi_180deg, ::-1].squeeze()
+            self._z[len(self.zen):] = data[:, phi_0deg].squeeze()
+            self._z[:len(self.zen)] = data[::-1, phi_180deg].squeeze()
 
         elif isinstance(self.brdf, SampledAdapter):
             # phi=0 goes in the second half of the array
