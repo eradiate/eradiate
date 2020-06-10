@@ -22,12 +22,12 @@ class BRDFAdapter(ABC):
 
 @attr.s
 class MitsubaBSDFPluginAdapter(BRDFAdapter):
-    r"""Wrapper class around eradiate.kernel.BSDF plugins.
+    r"""Wrapper class around :class:`~mitsuba.render.BSDF` plugins.
     Holds a BSDF plugin and exposes an evaluate method, taking care of internal
     necessities for evaluating the plugin.
 
     Instance attributes:
-        ``bsdf`` (:class:`eradiate.kernel.render.BSDF`): Mitsuba BSDF plugin
+        ``bsdf`` (:class:`~mitsuba.render.BSDF`): Mitsuba BSDF plugin
     """
     bsdf = attr.ib()
 
@@ -43,17 +43,19 @@ class MitsubaBSDFPluginAdapter(BRDFAdapter):
         self.flag = FLAG_SAMPLED_ADAPTER
 
     def evaluate(self, wo, wi, wavelength):
-        """Retrieve the value of the BSDF for a given set of incoming and outgoing
+        r"""Retrieve the value of the BSDF for a given set of incoming and outgoing
         directions as well as a given wavelength.
 
         Parameter ``wo`` (array)
-            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`´
-            and :math:`phi` values in degrees
+            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`
+            and :math:`\phi` values in degrees.
+
         Parameter ``wi`` (array)
-            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`´
-            and :math:`phi` values in degrees
-        Parameter ``wavelength``(float)
-            Wavelength to query the BSDF plugin at
+            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`
+            and :math:`\phi` values in degrees.
+
+        Parameter ``wavelength`` (float)
+            Wavelength to query the BSDF plugin at.
         """
         from eradiate.kernel.render import SurfaceInteraction3f, BSDFContext
         ctx = BSDFContext()
@@ -336,7 +338,10 @@ class BRDFView(ABC):
     def evaluate(self):
         """Evaluate the BRDF object, filling the data structures necessary for
         the desired plot.
-        The `BRDFView` classes discriminate two types of `BRDFAdapter`_
+
+        The :class:`BRDFView` classes discriminate two types of
+        :class:`BRDFAdapter`:
+
         - Sampled adapters expose a method :code:`evaluate()` where each data point
           in the plot is queried individually and the adapter handles the retrieval
           of values for arbitrary incoming and outgoing directions
