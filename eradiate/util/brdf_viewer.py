@@ -207,7 +207,7 @@ class DataArrayAdapter(GriddedAdapter):
 
 @attr.s
 class BRDFView(ABC):
-    """The BRDFViewer class is a utility to visualize bidirectional reflection
+    r"""The BRDFViewer class is a utility to visualize bidirectional reflection
     distribution functions. It can read data from Mitsuba plugins as well as
     BRDF files computed with Eradiate itself.
 
@@ -442,13 +442,19 @@ class HemisphericalView(BRDFView):
         else:
             raise TypeError(f"Unsupported adapter {type(self.brdf)}!")
 
-    def plot(self, ax=None):
+    def plot(self, ax=None, mode="pcolormesh"):
         """
-        Output the data to a polar contour plot
+        Output the data to a polar plot.
 
         Parameter ``ax`` (:class:`~matplotlib.axes.Axes`):
             Axis object for attaching the plot
             If not set, the current axes object will be obtained from matplotlib
+
+        Parameter ``mode`` (str):
+            Plotting command used to create the plot.
+            Accepted values are:
+            - ``pcolormesh`` (uses :matplotlib:`matplotlib.pyplot.pcolormesh`)
+            - ``contourf`` (uses :matplotlib:`matplotlib.pyplot.contourf`)
 
         Returns → :class:`~matplotlib.axes.Axes`:
             An Axes object for use in custom matplotlib setups
@@ -456,12 +462,18 @@ class HemisphericalView(BRDFView):
         if ax is None:
             ax = plt.gca(projection="polar")
 
-        contour = ax.contourf(self.th, self.r, self._z, cmap="BuPu")
+        if mode == "pcolormesh":
+            cmap_data = ax.pcolormesh(self.th, self.r, self._z, cmap="BuPu_r")
+        elif mode == "contourf":
+            cmap_data = ax.contourf(self.th, self.r, self._z, cmap="BuPu_r")
+        else:
+            raise ValueError(f"unsupported plot mode {mode}")
+
         ticks, labels = generate_ticks(5, (0, np.pi / 2.0))
         ax.set_yticks(ticks)
         ax.set_yticklabels(labels)
         ax.grid(True)
-        plt.colorbar(contour)
+        plt.colorbar(cmap_data)
 
         return ax
 
@@ -474,8 +486,8 @@ class HemisphericalView(BRDFView):
 
 @attr.s
 class PrincipalPlaneView(BRDFView):
-    r"""Plots scattering in the principal plane, that is :math:`\phi=0` and
-    :math:`\phi=\pi`
+    r"""Plots scattering in the principal plane, that is :math:`\phi = 0` and
+    :math:`\phi = \pi`
 
     Results from BRDF evaluation can be exported to an xarray, holding two rows
     of values, for the azimuth angles, instead of one row, as the data are
