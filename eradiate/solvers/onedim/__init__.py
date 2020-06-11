@@ -2,6 +2,7 @@
 
 import attr
 import numpy as np
+from tqdm import tqdm
 
 import eradiate.kernel
 from ...scenes import measure, SceneDict
@@ -17,7 +18,7 @@ class OneDimSolver:
 
     .. important::
 
-        Prior to calling :meth:`run`, a kernel variant must be selected using
+        Prior to using :class:`OneDimSolver`, a kernel variant must be selected using
         :func:`~mitsuba.set_variant`:
 
         .. code:: python
@@ -76,7 +77,7 @@ class OneDimSolver:
         """(Re)initialise internal state. Currently a placeholder."""
         pass
 
-    def run(self, vza=0., vaa=0., spp=3200, squeeze=True):
+    def run(self, vza=0., vaa=0., spp=3200, squeeze=True, show_progress=True):
         """Run the simulation for a set of specified sensor angular
         configurations.
 
@@ -91,6 +92,9 @@ class OneDimSolver:
 
         Parameter ``spp`` (int):
             Number of samples taken for each angular configuration.
+
+        Parameter ``show_progress`` (bool):
+            If `True`, display a progress bar while running the simulation.
 
         Returns → float or array:
             Recorded leaving radiance.
@@ -107,22 +111,25 @@ class OneDimSolver:
 
         reflected_radiance = np.empty((len(vza), len(vaa)))
 
-        for i, theta in enumerate(vza):
-            for j, phi in enumerate(vaa):
-                # Adjust scene setup
-                self.scene_dict.add(measure.Distant(
-                    {'zenith': theta, 'azimuth': phi, 'spp': spp}
-                ))
+        with tqdm(total=reflected_radiance.size, disable=not show_progress) as progressbar:
+            for i, theta in enumerate(vza):
+                for j, phi in enumerate(vaa):
+                    # Adjust scene setup
+                    self.scene_dict.add(measure.Distant(
+                        {'zenith': theta, 'azimuth': phi, 'spp': spp}
+                    ))
 
-                # Run computation
-                kernel_scene = self.scene_dict.load()
-                sensor = kernel_scene.sensors()[0]
-                kernel_scene.integrator().render(kernel_scene, sensor)
+                    # Run computation
+                    kernel_scene = self.scene_dict.load()
+                    sensor = kernel_scene.sensors()[0]
+                    kernel_scene.integrator().render(kernel_scene, sensor)
 
-                # Collect results
-                film = sensor.film()
-                result = float(np.array(film.bitmap(), dtype=float))
-                reflected_radiance[i, j] = result
+                    # Collect results
+                    film = sensor.film()
+                    result = float(np.array(film.bitmap(), dtype=float))
+                    reflected_radiance[i, j] = result
+
+                    progressbar.update()
 
         if squeeze:
             # Fix result dimensionality (remove useless dims)

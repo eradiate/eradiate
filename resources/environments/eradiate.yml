@@ -9,5 +9,6 @@ dependencies:
   - scipy=1.3
   - xarray=0.15
   - pip
+  - tqdm=4.46
   - pip:
       - pint~=0.11
