@@ -12,11 +12,6 @@ def test_rayleigh_solver_app():
     # Check that the default scene can be instantiated
     assert app._scene_dict.load() is not None
 
-    # TODO: check and improve following tests
-
-    # run with default configuration
-    #assert app.run() == 0.1591796875
-
     # custom config
     config = {
         "mode": {
@@ -41,9 +36,6 @@ def test_rayleigh_solver_app():
     }
     app = RayleighSolverApp(config)
     assert app.config == config
-
-    # run with custom config
-    #assert app.run() == 0.1591796875
 
     # custom config (with atmosphere)
     config = {
@@ -74,9 +66,6 @@ def test_rayleigh_solver_app():
     }
     app = RayleighSolverApp(config)
     assert app.config == config
-
-    # run with custom config
-    #assert app.run() < 0.1591796875
 
     # custom config (with custom refractive index)
     config = {
@@ -115,13 +104,8 @@ def test_rayleigh_solver_app():
 
     # check that the scattering coefficient is computed correctly
     from eradiate.scenes.atmosphere.rayleigh import sigma_s_single
-    assert app._scene_dict["medium_atmosphere"]["sigma_t"]["value"] == sigma_s_single(
-        wavelength=570.,
-        refractive_index=1.0003
-    )
-
-    # run with custom config
-    #assert app.run() < 0.1591796875
+    assert app._scene_dict["medium_atmosphere"]["sigma_t"]["value"] == \
+           sigma_s_single(wavelength=570., refractive_index=1.0003)
 
 
 def test_rayleigh_solver_app_run():
@@ -133,15 +117,15 @@ def test_rayleigh_solver_app_run():
     We assert the correct setting of the DataArray coordinates and dimensions,
     as well as the correct setting of data.
     """
-    import xarray as xr
     import numpy as np
     assert eradiate.kernel.variant() == "scalar_mono_double"
 
-    config = {"measure": {
-        "type": "distant",
-        "zenith": [0, 30, 60, 90],
-        "azimuth": [0, 45, 90, 135, 180, 225, 270, 315, 360]
-        },
+    config = {
+        "measure": {
+            "type": "distant",
+            "zenith": [0., 30., 60., 90.],
+            "azimuth": [0., 45., 90., 135., 180., 225., 270., 315., 360.]
+        }
     }
 
     app = RayleighSolverApp(config)
@@ -154,4 +138,7 @@ def test_rayleigh_solver_app_run():
     assert np.all(app.result.coords["theta_o"] == config["measure"]["zenith"])
 
     assert np.all(app.result.data > 0)
-    assert np.all(app.result == app.result.sel(theta_i=0, phi_i=0, theta_o=0, phi_o=0, wavelength=550))
+    assert np.allclose(app.result,
+                       app.result.sel(theta_i=0., phi_i=0.,
+                                      theta_o=0., phi_o=0.,
+                                      wavelength=550.))

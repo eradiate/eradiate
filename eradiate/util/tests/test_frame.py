@@ -1,5 +1,3 @@
-import numpy as np
-
 from eradiate.util.frame import *
 
 def test_spherical_to_cartesian():

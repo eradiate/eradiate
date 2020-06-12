@@ -1,7 +1,6 @@
 """Basic abstractions and utilities to assist with scene generation."""
 
 from abc import ABC, abstractmethod
-from copy import deepcopy
 
 import attr
 
