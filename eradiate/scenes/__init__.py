@@ -60,11 +60,13 @@ class SceneDict(dict):
         """Merge the content of a :class:`~eradiate.scenes.base.SceneHelper` or
         another dictionary object with the current :class:`SceneDict`.
 
-        Parameter ``content`` (dict or :class:`~eradiate.scenes.base.SceneHelper`)
+        Parameter ``content`` (:class:`~eradiate.scenes.base.SceneHelper` or list or dict)
             Content to merge with the current scene. If ``content`` is a
             :class:`~eradiate.scenes.base.SceneHelper` instance, its
             :meth:`~eradiate.scenes.base.SceneHelper.kernel_dict` method will
-            be called with ``ref`` set to `True`.
+            be called with ``ref`` set to `True`. If ``content`` is a list,
+            :meth:`add` will be called for each element of it. If ``content`` is
+            a dict, it will be merged without change.
 
         Returns → ``self``
         """
@@ -72,6 +74,9 @@ class SceneDict(dict):
         if isinstance(content, SceneHelper):
             for key, value in content.kernel_dict(ref=True).items():
                 self[key] = value
+        elif isinstance(content, list):
+            for item in content:
+                self.add(item)
         else:
             for key, value in content.items():
                 self[key] = value

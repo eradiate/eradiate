@@ -43,7 +43,7 @@ def direction_to_angles(wi):
     """Converts a cartesian 3-vector to a pair of theta and phi values
     in spherical coordinates
 
-    Parameter ``wi`` (array): 
+    Parameter ``wi`` (array):
         3-vector designating a direction in cartesian coordinates
 
     Returns → list[float]:
@@ -55,3 +55,27 @@ def direction_to_angles(wi):
     phi = np.arctan2(wi[1], wi[0])
 
     return [theta, phi]
+
+def spherical_to_cartesian(r, theta, phi):
+    r"""Convert spherical coordinates to cartesian coordinates
+
+    Parameter ``r`` (float):
+        Radial distance coordinate.
+
+    Parameter ``theta`` (float):
+        Zenith angle coordinate [radian].
+        Convention: 0 corresponds to zenith, :math:`\pi` corresponds to nadir.
+
+    Parameter ``phi`` (float):
+        Azimuth angle coordinate [radian].
+        Convention: :math:`2 \pi` corresponds to the X axis.
+
+    Returns → tuple:
+        Cartesian coordinates x, y, z.
+    """
+
+    x = r * np.sin(theta) * np.cos(phi)
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
+
+    return x, y, z

@@ -67,8 +67,9 @@ def test_rayleigh_solver_app():
             "reflectance": 0.5
         },
         "atmosphere": {
-            "sigmas": 1e-6,
-            "height": 1e5
+            "type": "rayleigh_homogeneous",
+            "height": 1e5,
+            "sigma_s": 1e-6
         }
     }
     app = RayleighSolverApp(config)
@@ -81,7 +82,7 @@ def test_rayleigh_solver_app():
     config = {
         "mode": {
             "type": "mono",
-            "wavelength": 550.
+            "wavelength": 570.
         },
         "illumination": {
             "type": "directional",
@@ -99,12 +100,25 @@ def test_rayleigh_solver_app():
             "reflectance": 0.5
         },
         "atmosphere": {
-            "refractive_index": 1.0003,
-            "height": 1e5
+            "type": "rayleigh_homogeneous",
+            "height": 1e5,
+            "sigma_s_params": {
+                "refractive_index": 1.0003
+            }
         }
     }
     app = RayleighSolverApp(config)
     assert app.config == config
+
+    # check that wavelength from mode is included in the atmosphere config
+    assert app.config["atmosphere"]["sigma_s_params"]["wavelength"] == 570.
+
+    # check that the scattering coefficient is computed correctly
+    from eradiate.scenes.atmosphere.rayleigh import sigma_s_single
+    assert app._scene_dict["medium_atmosphere"]["sigma_t"]["value"] == sigma_s_single(
+        wavelength=570.,
+        refractive_index=1.0003
+    )
 
     # run with custom config
     #assert app.run() < 0.1591796875

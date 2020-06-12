@@ -22,7 +22,23 @@ class SampledAdapter(BRDFAdapter):
 
     @abstractmethod
     def evaluate(self, wo, wi, wavelength):
-        """"""
+        r"""Retrieve the value of the BSDF for a given set of incoming and
+        outgoing directions and wavelength.
+
+        Parameter ``wo`` (array)
+            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`
+            and :math:`\phi` values in degrees.
+
+        Parameter ``wi`` (array)
+            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`
+            and :math:`\phi` values in degrees.
+
+        Parameter ``wavelength`` (float)
+            Wavelength to query the BSDF plugin at.
+
+        Returns → float
+            Evaluated BRDF value.
+        """
         pass
 
 
@@ -51,20 +67,6 @@ class MitsubaBSDFPluginAdapter(SampledAdapter):
             )
 
     def evaluate(self, wo, wi, wavelength):
-        r"""Retrieve the value of the BSDF for a given set of incoming and outgoing
-        directions as well as a given wavelength.
-
-        Parameter ``wo`` (array)
-            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`
-            and :math:`\phi` values in degrees.
-
-        Parameter ``wi`` (array)
-            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`
-            and :math:`\phi` values in degrees.
-
-        Parameter ``wavelength`` (float)
-            Wavelength to query the BSDF plugin at.
-        """
         from eradiate.kernel.render import SurfaceInteraction3f, BSDFContext
         ctx = BSDFContext()
         si = SurfaceInteraction3f()
@@ -382,11 +384,11 @@ class BRDFView(ABC):
         The :class:`BRDFView` classes discriminate two types of
         :class:`BRDFAdapter`:
 
-        - :class:`SampledAdapter`s expose a method
+        - :class:`SampledAdapter` s expose a method
           :meth:`~SampledAdapter.evaluate()` where each data point in the plot
           is queried individually and the adapter handles the retrieval of
           values for arbitrary incoming and outgoing directions
-        - :class:`GriddedAdapter`s expose a method
+        - :class:`GriddedAdapter` s expose a method
           :meth:`~GriddedAdapter._plotting_data` which overrides the viewer's
           settings for resolution, setting it to match exactly the number of
           data points in the gridded data
@@ -443,8 +445,7 @@ class HemisphericalView(BRDFView):
             raise TypeError(f"Unsupported adapter {type(self.brdf)}!")
 
     def plot(self, ax=None, mode="pcolormesh"):
-        """
-        Output the data to a polar plot.
+        """Output the data to a polar plot.
 
         Parameter ``ax`` (:class:`~matplotlib.axes.Axes`):
             Axis object for attaching the plot
@@ -453,8 +454,9 @@ class HemisphericalView(BRDFView):
         Parameter ``mode`` (str):
             Plotting command used to create the plot.
             Accepted values are:
-            - ``pcolormesh`` (uses :matplotlib:`matplotlib.pyplot.pcolormesh`)
-            - ``contourf`` (uses :matplotlib:`matplotlib.pyplot.contourf`)
+
+            - ``pcolormesh`` (uses :func:`matplotlib.pyplot.pcolormesh`)
+            - ``contourf`` (uses :func:`matplotlib.pyplot.contourf`)
 
         Returns → :class:`~matplotlib.axes.Axes`:
             An Axes object for use in custom matplotlib setups

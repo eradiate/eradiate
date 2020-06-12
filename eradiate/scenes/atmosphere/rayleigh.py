@@ -6,13 +6,6 @@ from .base import Atmosphere
 from ..factory import Factory
 from ...util.units import Q_
 
-offset = {
-    "scalar_rgb": 1e-4,
-    "scalar_mono": 1e-4,
-    "scalar_rgb_double": 1e-7,
-    "scalar_mono_double": 1e-7
-}
-
 # Physical constants
 #: Loschmidt constant [m^-3].
 _LOSCHMIDT = Q_(
@@ -21,7 +14,7 @@ _LOSCHMIDT = Q_(
 _IOR_DRY_AIR = Q_(1.0002932, "")
 
 
-def king_factor(ratio=0.0279):
+def kf(ratio=0.0279):
     """Compute the King correction factor.
 
     Parameter ``ratio`` (float):
@@ -36,7 +29,7 @@ def king_factor(ratio=0.0279):
     return (6. + 3. * ratio) / (6. - 7. * ratio)
 
 
-def sigmas_single(
+def sigma_s_single(
     wavelength=550.,
     number_density=_LOSCHMIDT.magnitude,
     refractive_index=_IOR_DRY_AIR.magnitude,
@@ -64,9 +57,10 @@ def sigmas_single(
     Parameter ``king_factor`` (float):
         King correction factor of the scattering particles [dimensionless].
         Default value is the air effective King factor at 550 nm as given by
-        :cite:`Bates1984RayleighScatteringAir`.
+        :cite:`Bates1984RayleighScatteringAir`. Overridden by a call to
+        :func:`kf` if ``depolarisation_ratio`` is set.
 
-    Parameter ``depolarisation_ratio`` (float):
+    Parameter ``depolarisation_ratio`` (float or None):
         Depolarisation ratio [dimensionless].
         If this parameter is set, then its value is used to compute the value of
         the corresponding King factor and supersedes ``king_factor``.
@@ -75,7 +69,7 @@ def sigmas_single(
         Scattering coefficient [m^1].
     """
     if depolarisation_ratio is not None:
-        king_factor = king_factor(depolarisation_ratio)
+        king_factor = kf(depolarisation_ratio)
 
     return \
         8. * np.power(np.pi, 3) / (3. * np.power((wavelength * 1e-9), 4)) / \
@@ -83,7 +77,7 @@ def sigmas_single(
         np.square(np.square(refractive_index) - 1.) * king_factor
 
 
-def sigmas_mixture(
+def sigma_s_mixture(
         wavelength,
         number_densities,
         mixture_refractive_index,
@@ -113,7 +107,8 @@ def sigmas_mixture(
 
     Parameter ``king_factors`` (array):
         King correction factors of the scattering particles at the specified
-        wavelength [dimensionless].
+        wavelength [dimensionless]. Overridden by a call to :func:`kf` if
+        ``depolarisation_ratio`` is set.
 
     Parameter ``depolarisation_ratios`` (array):
         Scattering particles depolarisation ratios at the specified wavelength.
@@ -125,7 +120,7 @@ def sigmas_mixture(
     """
 
     if depolarisation_ratios is not None:
-        king_factors = king_factor(depolarisation_ratios)
+        king_factors = kf(depolarisation_ratios)
 
     lorenz_factor = (np.square(mixture_refractive_index) + 2.) / 3.
 
@@ -164,67 +159,54 @@ class RayleighHomogeneous(Atmosphere):
 
     TODO: update docs
 
-    Constructor arguments / public attributes:
+    Configuration:
         ``height`` (float):
             Height of the atmosphere [m].
 
         ``width`` (float)
-            Width of the atmosphere [m].
+            Width of the atmosphere [m]. If not set, a value will be estimated
+            to ensure that the medium is optically thick.
 
-        ``scattering_coefficient`` (float):
+        ``sigma_s`` (float):
             Atmosphere scattering coefficient [m^-1].
+            This parameter is mutually exclusive with ``sigma_s_params``.
+            If neither ``sigma_s`` nor ``sigma_s_params`` is specified,
+            :func:`eradiate.scenes.atmosphere.rayleigh.sigma_s_single` will be
+            called to set the value of ``sigma_s``.
 
-        ``wavelength`` (float):
-            Wavelength [nm].
-
-        ``number_density`` (float):
-            Number density of the scattering particles [m^-3].
-
-        ``refractive_index`` (float):
-            Refractive index of scattering particles [dimensionless].
-            Default value is the air refractive index at 550 nm as
-            given by :cite:`Bates1984RayleighScatteringAir`.
-
-        ``king_factor`` (float):
-            King correction factor of the scattering particles [dimensionless].
-            Default value is the air effective King factor at 550 nm as given by
-            :cite:`Bates1984RayleighScatteringAir`.
-
-        ``depolarisation_ratio`` (float):
-            Depolarisation ratio [dimensionless].
-            If this parameter is set, then its value is used to compute the value of
-            the corresponding King factor and supersedes ``king_factor``.
-
-        Note: If ``scattering_coefficient`` is set, ``wavelength``,
-        ``number_density``, ``refractive_index``, ``king_factor`` and
-        ``depolarisation_ratio`` must not be set. If ``scattering_coefficient``
-        is not set, ``wavelength``, ``number_density``, ``refractive_index``,
-        and ``king_factor`` or ``depolarisation_ratio`` are used to compute the
-        scattering coefficient.
+        ``sigma_s_params`` (dict):
+            Parameters of :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`
+            This parameter is mutually exclusive with ``sigma_s``.
     """
 
     # Class attributes
     DEFAULT_CONFIG = {
         "height": 1e5,
         # "width": None,
-        "sigmas": 1e-6,
-        # "sigmas_params": None
+        # "sigma_s": None,
+        # "sigma_s_params": None
     }
     ALBEDO = 1.
 
     def init(self):
         r"""(Re)initialise hidden internal state.
         """
-        print(self.config)
-        # If sigmas_params is set, override sigmas based on parametrisation
-        if self.config.get("sigmas_params", None) is not None:
-            self.config["sigmas"] = \
-                sigmas_single(**self.config["sigmas_params"])
+
+        if self.config.get("sigma_s_params", None) is not None:
+            if self.config.get("sigma_s", None) is not None:
+                raise ValueError("sigma_s_params and sigma_s are mutually \
+                    exclusive")
+            else:
+                self.config["sigma_s"] = \
+                    sigma_s_single(**self.config["sigma_s_params"])
+        else:
+            if self.config.get("sigma_s", None) is None:
+                self.config["sigma_s"] = sigma_s_single()
 
         # If width is not set, compute a value corresponding to an optically
         # thick layer (10x scattering mean free path)
         if self.config.get("width", None) is None:
-            self.config["width"] = 10. / self.config["sigmas"]
+            self.config["width"] = 10. / self.config["sigma_s"]
 
     def phase(self):
         return {"phase_atmosphere": {"type": "rayleigh"}}
@@ -239,7 +221,7 @@ class RayleighHomogeneous(Atmosphere):
             "medium_atmosphere": {
                 "type": "homogeneous",
                 "phase": phase,
-                "sigma_t": {"type": "uniform", "value": self.config["sigmas"]},
+                "sigma_t": {"type": "uniform", "value": self.config["sigma_s"]},
                 "albedo": {"type": "uniform", "value": self.ALBEDO},
             }
         }
@@ -260,9 +242,10 @@ class RayleighHomogeneous(Atmosphere):
         return {
             "shape_atmosphere": {
                 "type": "cube",
-                "to_world": ScalarTransform4f
-                    .scale([0.5 * width, 0.5 * width, 0.5 * height])
-                    .translate([0.0, 0.0, 0.5 * height + offset]),
+                "to_world":
+                    ScalarTransform4f.translate([0, 0, 0.5 * height + offset]) *
+                    ScalarTransform4f.scale([0.5 * width, 0.5 * width, 0.5 * height + offset])
+                ,
                 "bsdf": {"type": "null"},
                 "interior": medium
             }

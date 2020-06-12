@@ -14,3 +14,4 @@ Scene generation [eradiate.scenes]
    eradiate.scenes.factory
    eradiate.scenes.illumination
    eradiate.scenes.lithosphere
+   eradiate.scenes.measure

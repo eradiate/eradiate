@@ -167,13 +167,21 @@ class RayleighSolverApp:
             config_atmosphere = self.config["atmosphere"]
 
             try:
-                wavelength_atmosphere = config_atmosphere["sigmas_params"]["wavelength"]
-                if wavelength_atmosphere != wavelength:
-                    warnings.warn("overriding 'atmosphere.sigmas_params.wavelength' "
-                                  "with 'mode.wavelength'", ConfigWarning)
-                    config_atmosphere["sigmas_params"]["wavelength"] = wavelength
+                sigma_s_params = config_atmosphere["sigma_s_params"]
+
+                try:
+                    wavelength_atmosphere = sigma_s_params["wavelength"]
+                    if wavelength_atmosphere != wavelength:
+                        warnings.warn("overriding 'atmosphere.sigma_s_params.wavelength' "
+                                    "with 'mode.wavelength'", ConfigWarning)
+                    config_atmosphere["sigma_s_params"]["wavelength"] = wavelength
+                except KeyError:
+                    config_atmosphere["sigma_s_params"]["wavelength"] = wavelength
+
             except KeyError:
-                pass
+                if "sigma_s" not in config_atmosphere:
+                    config_atmosphere["sigma_s_params"] = {"wavelength": wavelength}
+
             atmosphere = RayleighHomogeneous(config_atmosphere)
             self._scene_dict.add(atmosphere)
         except KeyError:
