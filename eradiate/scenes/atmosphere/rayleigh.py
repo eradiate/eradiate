@@ -7,9 +7,9 @@ from ..factory import Factory
 from ...util.units import Q_
 
 # Physical constants
-#: Loschmidt constant [m^-3].
+#: Loschmidt constant [km^-3].
 _LOSCHMIDT = Q_(
-    *physical_constants["Loschmidt constant (273.15 K, 101.325 kPa)"][:2])
+    *physical_constants["Loschmidt constant (273.15 K, 101.325 kPa)"][:2]).to('km^-3')
 #: Refractive index of dry air [dimensionless].
 _IOR_DRY_AIR = Q_(1.0002932, "")
 
@@ -47,7 +47,7 @@ def sigma_s_single(
         Wavelength [nm].
 
     Parameter ``number_density`` (float):
-        Number density of the scattering particles [m^-3].
+        Number density of the scattering particles [km^-3].
 
     Parameter ``refractive_index`` (float):
         Refractive index of scattering particles [dimensionless].
@@ -66,13 +66,13 @@ def sigma_s_single(
         the corresponding King factor and supersedes ``king_factor``.
 
     Returns → float:
-        Scattering coefficient [m^1].
+        Scattering coefficient [km^-1].
     """
     if depolarisation_ratio is not None:
         king_factor = kf(depolarisation_ratio)
 
     return \
-        8. * np.power(np.pi, 3) / (3. * np.power((wavelength * 1e-9), 4)) / \
+        8. * np.power(np.pi, 3) / (3. * np.power((wavelength * 1e-12), 4)) / \
         number_density * \
         np.square(np.square(refractive_index) - 1.) * king_factor
 
@@ -93,13 +93,13 @@ def sigma_s_mixture(
         Wavelength [nm].
 
     Parameter ``number_densities`` (array):
-        Scattering particles number densities [m^-3].
+        Scattering particles number densities [km^-3].
 
     Parameter ``mixture_refractive_index`` (float):
         Mixture refractive index at the specified wavelength [dimensionless].
 
     Parameter ``standard_number_densities`` (array):
-        Scattering particles standard number densities [m^-3].
+        Scattering particles standard number densities [km^-3].
 
     Parameter ``standard_refractive_indices`` (array):
         scattering particles refractive indices at the particles standard number
@@ -116,7 +116,7 @@ def sigma_s_mixture(
         of the corresponding King factors.
 
     Returns → float or array:
-        Mixture Rayleigh scattering coefficient [m^-1].
+        Mixture Rayleigh scattering coefficient [km^-1].
     """
 
     if depolarisation_ratios is not None:
@@ -132,7 +132,7 @@ def sigma_s_mixture(
         ) * king_factors)
 
     return \
-        24. * np.power(np.pi, 3) / np.power(wavelength * 1e-9, 4) * \
+        24. * np.power(np.pi, 3) / np.power(wavelength * 1e-12, 4) * \
         np.square(lorenz_factor) * particles_sum
 
 
@@ -161,14 +161,14 @@ class RayleighHomogeneous(Atmosphere):
 
     Configuration:
         ``height`` (float):
-            Height of the atmosphere [m].
+            Height of the atmosphere [km].
 
         ``width`` (float)
-            Width of the atmosphere [m]. If not set, a value will be estimated
+            Width of the atmosphere [km]. If not set, a value will be estimated
             to ensure that the medium is optically thick.
 
         ``sigma_s`` (float):
-            Atmosphere scattering coefficient [m^-1].
+            Atmosphere scattering coefficient [km^-1].
             This parameter is mutually exclusive with ``sigma_s_params``.
             If neither ``sigma_s`` nor ``sigma_s_params`` is specified,
             :func:`eradiate.scenes.atmosphere.rayleigh.sigma_s_single` will be
@@ -181,7 +181,7 @@ class RayleighHomogeneous(Atmosphere):
 
     # Class attributes
     DEFAULT_CONFIG = {
-        "height": 1e5,
+        "height": 1e2,
         # "width": None,
         # "sigma_s": None,
         # "sigma_s_params": None

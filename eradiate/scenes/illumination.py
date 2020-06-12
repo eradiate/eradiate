@@ -22,7 +22,7 @@ def _directional(zenith=0., azimuth=0., irradiance=1.):
 
     Parameter ``irradiance`` (float or dict)
         Emitted irradiance in the plane orthogonal to the emitter's direction
-        [W/m^2/nm].
+        [W/km^2/nm].
 
     Returns → dict
         A dictionary which can be used to instantiate a `directional` Mitsuba

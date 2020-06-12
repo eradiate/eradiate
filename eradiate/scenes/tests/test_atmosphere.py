@@ -20,8 +20,8 @@ def test_sigma_s_single():
     """Test computation of Rayleigh scattering coefficient with default values"""
 
     ref_cross_section = Q_(4.513e-27, 'cm**2')
-    ref_sigma_s = ref_cross_section * _LOSCHMIDT
-    expected = ref_sigma_s.to('m^-1').magnitude
+    ref_sigmas = ref_cross_section * _LOSCHMIDT
+    expected = ref_sigmas.to('km^-1').magnitude
 
     # Compare to reference value computed from scattering cross section in
     # Bates (1984) Planetary and Space Science, Volume 32, No. 6.
@@ -35,7 +35,7 @@ def test_sigma_s_mixture():
     types.
     """
     coefficient_air = \
-        sigma_s_mixture(
+        sigmas_mixture(
             550.,
             [_LOSCHMIDT.magnitude],
             _IOR_DRY_AIR.magnitude,
@@ -55,7 +55,7 @@ def test_sigma_s_mixture():
             2. * np.ones(2),
             1. * np.ones(2)
         )
-    expected_value = 24 * np.pi ** 3 / ((550.e-9) ** 4 * _LOSCHMIDT.magnitude)
+    expected_value = 24 * np.pi ** 3 / ((550.e-12) ** 4 * _LOSCHMIDT.magnitude)
 
     assert np.allclose(
         coefficient_2_particle_types_mixture,
