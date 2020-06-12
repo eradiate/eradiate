@@ -35,7 +35,7 @@ def test_sigma_s_mixture():
     types.
     """
     coefficient_air = \
-        sigmas_mixture(
+        sigma_s_mixture(
             550.,
             [_LOSCHMIDT.magnitude],
             _IOR_DRY_AIR.magnitude,
