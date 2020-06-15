@@ -27,6 +27,8 @@ def always_iterable(obj, base_type=(str, bytes)):
         return iter((obj,))
 
 
-def ensure_array(x):
+def ensure_array(x, dtype=None):
     """Ensure that passed object is a numpy array."""
-    return np.array(list(always_iterable(x)))
+    kwargs = dict(dtype=dtype) if dtype is not None else {}
+
+    return np.array(list(always_iterable(x)), **kwargs)

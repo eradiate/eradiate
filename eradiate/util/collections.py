@@ -40,3 +40,24 @@ class frozendict(collections.abc.Mapping):
                 hash_ ^= hash(pair)
             self._hash = hash_
         return self._hash
+
+
+def update(d, u):
+    """This function updates nested dictionaries.
+    See https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth.
+
+    Parameter ``d`` (dict):
+        Dictionary which will be updated (**modified in-place**).
+
+    Parameter ``u`` (dict):
+        Dictionary holding the values to update ``d`` with.
+
+    Returns → dict:
+        Updated ``d``.
+    """
+    for k, v in u.items():
+        if isinstance(v, collections.abc.Mapping):
+            d[k] = update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d

@@ -115,12 +115,12 @@ class DataArrayAdapter(GriddedAdapter):
                     f"Required data dimension {dim} not present in data!")
 
     def __attrs_post_init__(self):
-        if 0 not in self.data.phi_o:
-            self.data = self._copy_phi_o_values(360, 0)
-        elif 360 not in self.data.phi_o:
-            self.data = self._copy_phi_o_values(0, 360)
-        elif 0 not in self.data.phi_o and 360 not in self.data.phi_o:
+        if 0. not in self.data.phi_o and 360. not in self.data.phi_o:
             raise ValueError("Data contains data for neither 0° nor 360°!")
+        elif 0. not in self.data.phi_o:
+            self.data = self._copy_phi_o_values(360., 0.)
+        elif 360. not in self.data.phi_o:
+            self.data = self._copy_phi_o_values(0., 360.)
 
     def _copy_phi_o_values(self, origin, target):
         r"""Constructs a new xarray, containing one extra value in the
@@ -201,10 +201,10 @@ class DataArrayAdapter(GriddedAdapter):
                              "Wavelength and incoming direction cannot be "
                              "interpolated.")
 
+        data = self.data.sel(theta_i=theta_i, phi_i=phi_i, wavelength=wavelength).data
         return self.data.coords['theta_o'], \
                self.data.coords['phi_o'], \
-               self.data.sel(theta_i=theta_i,
-                             phi_i=phi_i, wavelength=wavelength).data
+               data
 
 
 @attr.s
@@ -489,11 +489,11 @@ class HemisphericalView(BRDFView):
 @attr.s
 class PrincipalPlaneView(BRDFView):
     r"""Plots scattering in the principal plane, that is :math:`\phi = 0` and
-    :math:`\phi = \pi`
+    :math:`\phi = \pi`.
 
-    Results from BRDF evaluation can be exported to an xarray, holding two rows
-    of values, for the azimuth angles, instead of one row, as the data are
-    depicted in the plot.
+    Results from BRDF evaluation can be exported to a :class:`xarray.DataArray`
+    holding two rows of values for the azimuth angles, instead of one row as
+    the data are depicted in the plot.
     """
 
     def evaluate(self):
@@ -502,16 +502,26 @@ class PrincipalPlaneView(BRDFView):
         if isinstance(self.brdf, GriddedAdapter):
             thetas, phis, data = self.brdf._plotting_data(
                 self.wi, self.wavelength)
+
             if 180 not in phis:
                 raise ValueError(
-                    "The principal plane view requires values at phi=180°!")
+                    "The principal plane view requires values at phi = 180°!")
 
-            self.zen = np.deg2rad(thetas)
-            self._z = np.zeros(np.shape(self.zen)[0] * 2)
+            # Detect where the 0 and 180 azimuth are located
             phi_0deg = np.where(phis == 0)
             phi_180deg = np.where(phis == 180)
-            self._z[np.shape(self.zen)[0]:] = np.squeeze(data[:, phi_0deg])
-            self._z[:np.shape(self.zen)[0]] = np.squeeze(data[:, phi_180deg])
+
+            # Initialise z plot values
+            self.zen = np.deg2rad(thetas)
+            n_thetas = len(thetas)
+            self._z = np.zeros(n_thetas * 2)
+            # FIXME: theta = 0 is duplicated for phi = 0 and phi = 180
+            # Add a check and warn the user if it happens
+            # Ignore one of the two values
+
+            # Stitch both sides of the principal plane appropriately
+            self._z[len(self.zen):] = data[phi_0deg, :].squeeze()
+            self._z[:len(self.zen)] = data[phi_180deg, ::-1].squeeze()
 
         elif isinstance(self.brdf, SampledAdapter):
             # phi=0 goes in the second half of the array
@@ -555,8 +565,8 @@ class PrincipalPlaneView(BRDFView):
         with theta=0 in the middle of the array. Therefore the array is simply sliced
         in half for storage.
 
-        Returns → xarray.DataArray
-            Data obtained from evaluate
+        Returns → :class:`xarray.DataArray`
+            Data obtained from :meth:`evaluate`
         """
         halflength = len(self._z) / 2.0
         # since we double the theta array, theta=0 will show up twice
