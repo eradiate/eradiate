@@ -113,8 +113,8 @@ If you are modifying Eradiate's code, you should install it in developer mode:
 
     python setup.py develop
 
-Once this is done, you can check if the installation is successful by printing the embedded Mitsuba version to the terminal:
+Once this is done, you can check if the installation is successful by printing the embedded Mitsuba version number to the terminal:
 
 .. code-block:: bash
 
-    python -c "import eradiate.kernel; print(eradiate.kernel.core.MTS_VERSION)"
+    python -c "import eradiate.kernel; eradiate.kernel.set_variant('scalar_mono'); print(eradiate.kernel.core.MTS_VERSION)"
