@@ -228,8 +228,6 @@ class RayleighHomogeneous(Atmosphere):
 
     def shapes(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f
-        from eradiate.kernel.core.math import ShadowEpsilon
-        offset = ShadowEpsilon
 
         if ref:
             medium = {"type": "ref", "id": "medium_atmosphere"}
@@ -238,13 +236,18 @@ class RayleighHomogeneous(Atmosphere):
 
         width = self.config["width"]
         height = self.config["height"]
+        height_offset = height * 0.01
 
         return {
             "shape_atmosphere": {
                 "type": "cube",
                 "to_world":
-                    ScalarTransform4f.translate([0, 0, 0.5 * height + offset]) *
-                    ScalarTransform4f.scale([0.5 * width, 0.5 * width, 0.5 * height + offset])
+                    ScalarTransform4f([
+                        [0.5 * width, 0., 0., 0.],
+                        [0., 0.5 * width, 0., 0.],
+                        [0., 0., 0.5 * (height + height_offset), 0.5 * (height - height_offset)],
+                        [0., 0., 0., 1.],
+                    ])
                 ,
                 "bsdf": {"type": "null"},
                 "interior": medium
