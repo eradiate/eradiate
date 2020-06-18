@@ -27,6 +27,7 @@ def cli(config, output, quiet):
 
     # Post-process and plot results
     app.plot()
+    # TODO: transfer that to RayleighSolverApp
     print(f"Saving to {output} ...")
     plt.savefig(output)
     plt.close()

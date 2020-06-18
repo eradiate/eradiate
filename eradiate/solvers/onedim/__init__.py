@@ -2,7 +2,7 @@
 
 import attr
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 import eradiate.kernel
 from ...scenes import measure, SceneDict
@@ -111,7 +111,7 @@ class OneDimSolver:
 
         reflected_radiance = np.empty((len(vza), len(vaa)))
 
-        with tqdm(total=reflected_radiance.size, ncols=80, ascii=True,
+        with tqdm(total=reflected_radiance.size,
                   disable=not show_progress) as progressbar:
             for i, theta in enumerate(vza):
                 for j, phi in enumerate(vaa):
@@ -130,7 +130,8 @@ class OneDimSolver:
                     result = float(np.array(film.bitmap(), dtype=float))
                     reflected_radiance[i, j] = result
 
-                    progressbar.desc = f"Processing|Z:{theta:4.1f}|A:{phi:5.1f}"
+                    progressbar.desc = \
+                        f"Processing | Z:{theta:4.1f} | A:{phi:5.1f}"
                     progressbar.update()
 
         if squeeze:
