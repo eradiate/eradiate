@@ -1,6 +1,7 @@
 """Factory used to instantiate classes deriving from
 :class:`~eradiate.scenes.base.SceneHelper` from dictionaries.
 """
+# TODO: refactor into core module?
 
 import importlib
 import inspect

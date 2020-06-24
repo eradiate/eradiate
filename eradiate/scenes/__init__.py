@@ -1,4 +1,5 @@
 """ Eradiate scene generation library """
+# TODO: refactor into core module?
 
 import eradiate.kernel
 from .base import SceneHelper

@@ -1,4 +1,5 @@
 """Basic abstractions and utilities to assist with scene generation."""
+# TODO: refactor into core module?
 
 from abc import ABC, abstractmethod
 

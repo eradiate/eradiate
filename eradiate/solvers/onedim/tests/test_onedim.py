@@ -30,6 +30,7 @@ def test_onedimsolver(variant_scalar_mono):
     assert np.allclose(result, 1. / (2. * np.pi), rtol=1e-3)
 
 
+# TODO: refactor this test into an integration test
 @pytest.mark.slow
 @pytest.mark.parametrize("scene_size", [10 ** i for i in range(1, 9)])
 def test_onedimsolver_large_size(variant_scalar_mono_double, scene_size):

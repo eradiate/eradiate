@@ -13,6 +13,7 @@ from ...util.exceptions import KernelVariantError
 
 @attr.s
 class OneDimSolver:
+    # TODO: rename OneDimRunner?
     r"""Execute simulations on one-dimensional scenes, *i.e.* with 2
     translational invariances.
 
