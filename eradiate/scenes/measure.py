@@ -74,10 +74,14 @@ class Distant(SceneHelper):
         }
 
 
-@ureg.wraps(None, (ureg.deg, ureg.deg, ureg.km, None, None), strict=False)
-def _perspective(zenith=45., azimuth=180., distance=1., res=64, spp=10000):
-    """Create a dictionary which will instantiate a `perspective` Mitsuba plugin
-    based on the provided angular geometry.
+@ureg.wraps(None, (ureg.km, ureg.deg, ureg.deg, ureg.km, None, None), strict=False)
+def _perspective(target=[0, 0, 0], zenith=45., azimuth=180., distance=1.,
+                 res=64, spp=10000):
+    """Create a dictionary which will instantiate a ``perspective`` kernel
+    plugin based on the provided angular geometry.
+
+    Parameter ``target`` (list(float))
+        Target point location [km].
 
     Parameter ``zenith`` (float)
         Zenith angle [deg].
@@ -86,7 +90,7 @@ def _perspective(zenith=45., azimuth=180., distance=1., res=64, spp=10000):
         Azimuth angle [deg].
 
     Parameter ``distance`` (float)
-        Distance to scene center [km].
+        Distance to ``target`` [km].
 
     Parameter ``res`` (int)
         Film resolution.
@@ -95,25 +99,25 @@ def _perspective(zenith=45., azimuth=180., distance=1., res=64, spp=10000):
         Number of samples used from this sensor.
 
     Returns → dict
-        A dictionary which can be used to instantiate a `perspective` Mitsuba
+        A dictionary which can be used to instantiate a ``perspective`` kernel
         plugin facing the direction specified by the angular configuration and
-        pointing towards the origin :math:`(0, 0, 0)` in world coordinates.
+        pointing towards the origin ``target`` in world coordinates.
     """
 
     from eradiate.kernel.core import ScalarTransform4f
 
-    x, y, z = spherical_to_cartesian(distance,
-                                     np.deg2rad(zenith),
-                                     np.deg2rad(azimuth))
+    origin = spherical_to_cartesian(distance,
+                                    np.deg2rad(zenith),
+                                    np.deg2rad(azimuth))
 
-    if [x, y, z] == [0, 0, 0]:
-        raise ValueError("invalid look_at transform")
+    if np.allclose(origin, target):
+        raise ValueError("target is too close to the camera")
 
     return {
         "type": "perspective",
         "far_clip": 1e7,
         "to_world": ScalarTransform4f
-            .look_at(origin=[x, y, z], target=[0, 0, 0], up=[0, 0, 1]),
+            .look_at(origin=origin, target=target, up=[0, 0, 1]),
         "sampler": {
             "type": "independent",
             "sample_count": spp
@@ -132,14 +136,17 @@ def _perspective(zenith=45., azimuth=180., distance=1., res=64, spp=10000):
 @attr.s
 @Factory.register()
 class Perspective(SceneHelper):
-    """TODO: add docs"""
+    """This scene generation helper positions a perspective camera based on an
+    angular configuration.
+    """
 
     DEFAULT_CONFIG = {
+        "target": [0, 0, 0],
         "zenith": 45.0,
         "azimuth": 180.0,
         "distance": 1.0,
         "res": 64,
-        "spp": 10000
+        "spp": 10000,
     }
 
     id = attr.ib(default="measure")
@@ -147,10 +154,11 @@ class Perspective(SceneHelper):
     def kernel_dict(self, **kwargs):
         return {
             self.id: _perspective(
-                self.config["zenith"],
-                self.config["azimuth"],
-                self.config["distance"],
-                self.config["res"],
-                self.config["spp"]
+                target=self.config["target"],
+                zenith=self.config["zenith"],
+                azimuth=self.config["azimuth"],
+                distance=self.config["distance"],
+                res=self.config["res"],
+                spp=self.config["spp"]
             )
         }

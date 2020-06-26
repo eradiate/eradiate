@@ -29,20 +29,20 @@ def test_perspective_function(variant_scalar_mono):
     from eradiate.kernel.core.xml import load_dict
 
     # Without units (check if created dict is valid)
-    dict_sensor = _perspective(45., 180., 10., 32, 64)
+    dict_sensor = _perspective([0, 0, 0], 45., 180., 10., 32, 64)
     assert load_dict(dict_sensor) is not None
 
     # With degrees
-    assert _perspective(45. * ureg.deg, 180., 10., 32, 64) == dict_sensor
+    assert _perspective([0, 0, 0], 45. * ureg.deg, 180., 10., 32, 64) == dict_sensor
 
     # With radian
-    assert _perspective(0.25 * np.pi * ureg.rad, 180., 10., 32, 64) == dict_sensor
+    assert _perspective([0, 0, 0], 0.25 * np.pi * ureg.rad, 180., 10., 32, 64) == dict_sensor
 
     # With kilometers
-    assert _perspective(45., 180., 10. * ureg.km, 32, 64) == dict_sensor
+    assert _perspective([0, 0, 0] * ureg.km, 45., 180., 10. * ureg.km, 32, 64) == dict_sensor
 
     # With meters
-    assert _perspective(45., 180., 10000. * ureg.m, 32, 64) == dict_sensor
+    assert _perspective([0, 0, 0] * ureg.m, 45., 180., 10000. * ureg.m, 32, 64) == dict_sensor
 
 
 def test_perspective_class(variant_scalar_mono):
