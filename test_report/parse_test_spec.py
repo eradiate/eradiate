@@ -48,7 +48,7 @@ def remove_indentation(doc):
     regex = re.compile("^[ ]+")
     spaces = regex.match(lines[1]).group()
 
-    return "\n".join([line.replace(spaces, '', 1) for line in lines])
+    return "\n".join([line.replace(spaces, "", 1) for line in lines])
 
 
 def get_testcase_outcome(report, name):
@@ -57,8 +57,8 @@ def get_testcase_outcome(report, name):
     If no result is found, return None.
     """
     returndict = dict()
-    for test in report['tests']:
-        testname = test['nodeid'].split('::')[-1]
+    for test in report["tests"]:
+        testname = test["nodeid"].split("::")[-1]
 
         if testname.find(name) != -1:
             if testname.find("[") != -1:
@@ -71,7 +71,8 @@ def get_testcase_outcome(report, name):
     # if no variant is found, name should only occur once in the test report
     if "no variant" in returndict and len(returndict) > 1:
         raise KeyError(
-            f"Inconsistent parametrizations found for test {name}. Testcase name clash?")
+            f"Inconsistent parametrizations found for test {name}. Testcase name clash?"
+        )
     if len(returndict) == 0:
         return {"no variant": "Result not found!"}
     else:
@@ -82,12 +83,44 @@ def get_testcase_loation(report, name):
     """
     Return the file location for a testcase
     """
-    for test in report['tests']:
-        testlocation, testname = test['nodeid'].split('::')
+    for test in report["tests"]:
+        testlocation, testname = test["nodeid"].split("::")
         if testname.find(name) != -1:
             return testlocation
     else:
         return "Test case not found!"
+
+
+def get_testcase_metric(report, name):
+    """
+    Get the testcase metric if it exists and concatenate
+    """
+    eradiate_dir = pathlib.Path(os.environ["ERADIATE_DIR"])
+
+    try:
+        for test in report["tests"]:
+            testname = test["nodeid"].split("::")[-1]
+            if testname.find(name) != -1:
+                metric = test["metadata"]["metrics"]
+    except KeyError:
+        return ""
+        
+    returnstring = "\nMetrics\n^^^^^^^\n\n"
+    for id in metric:
+        returnstring += (
+            metric[id]["name"]
+            + "\n"
+            + '"' * len(metric[id]["name"])
+            + "\n\n"
+            + metric[id]["description"]
+            + " "
+            + metric[id]["value"]
+            + " "
+            + metric[id]["unit"]
+            + "\n\n"
+        )
+
+    return returnstring
 
 
 def update_docstring(doc, name, report):
@@ -98,6 +131,7 @@ def update_docstring(doc, name, report):
 
     outcomes = get_testcase_outcome(report, name)
     location = get_testcase_loation(report, name)
+    metric = get_testcase_metric(report, name)
 
     doc = remove_indentation(doc)
     splitstring = "\n\nRationale\n^^^^^^^^^\n\n"
@@ -106,26 +140,27 @@ def update_docstring(doc, name, report):
     result = ""
     if len(outcomes) == 1:
         outcome = outcomes["no variant"]
-        if outcome == 'passed':
+        if outcome == "passed":
             result = f":green:`{outcome}`"
-        elif outcome == 'failed':
+        elif outcome == "failed":
             result = f" :red:`{outcome}`"
         else:
             result = outcome
     else:
         for variant, outcome in outcomes.items():
-            if outcome == 'passed':
+            if outcome == "passed":
                 outcomes[variant] = f":green:`{outcome}`"
-            elif outcome == 'failed':
+            elif outcome == "failed":
                 outcomes[variant] = f":red:`{outcome}`"
         result = ", ".join(
-            [f"{variant}: {outcomes[variant]}" for variant in sorted(outcomes)])
+            [f"{variant}: {outcomes[variant]}" for variant in sorted(outcomes)]
+        )
 
     resultstring = f":Test result: {result}"
     locationstring = f":Test location: {location}"
 
     firstpart = "\n".join([firstpart, resultstring, locationstring])
-    doc = "".join([firstpart, splitstring, lastpart])
+    doc = "".join([firstpart, splitstring, lastpart, metric, "\n\n--------\n\n"])
 
     return doc
 
@@ -164,8 +199,8 @@ the test is asserted.
 
 def generate():
     print("Parsing test specification and generating documents for report")
-    eradiate_dir = pathlib.Path(os.environ['ERADIATE_DIR'])
-    test_dir = eradiate_dir / "src" / "tests"
+    eradiate_dir = pathlib.Path(os.environ["ERADIATE_DIR"])
+    test_dir = eradiate_dir / "eradiate" / "tests"
     output_dir = eradiate_dir / "test_report" / "generated"
     if not pathlib.Path.exists(output_dir):
         os.mkdir(output_dir)
