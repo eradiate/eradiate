@@ -9,6 +9,9 @@ conda env create --force --quiet --file resources/environments/eradiate.yml --na
 echo "Updating conda env ${CONDA_ENV_NAME} with dev packages ..."
 conda env update --quiet --file resources/environments/eradiate-dev.yml --name ${CONDA_ENV_NAME} || { echo "${CONDA_ENV_NAME} env update failed" ; exit 1; }
 
+echo "Updating conda env ${CONDA_ENV_NAME} with jupyter lab ..."
+conda env update --quiet --file resources/environments/eradiate-jupyter.yml --name ${CONDA_ENV_NAME} || { echo "${CONDA_ENV_NAME} env update failed" ; exit 1; }
+
 echo "Copying environment variable setup scripts ..."
 conda activate ${CONDA_ENV_NAME}
 
@@ -32,6 +35,15 @@ SCRIPT="${SCRIPT}\nunset ERADIATE_DIR"
 SCRIPT="${SCRIPT}\nunset MITSUBA_DIR"
 mkdir -p ${CONDA_PREFIX}/etc/conda/deactivate.d
 echo -e ${SCRIPT} > ${CONDA_PREFIX}/etc/conda/deactivate.d/env_vars.sh
+
+# Enable ipywidgets support
+echo "Enabling ipywidgets within jupyter lab ..."
+jupyter nbextension enable --py widgetsnbextension
+jupyter labextension install @jupyter-widgets/jupyterlab-manager
+
+# Install Eradiate in dev mode
+echo "Installing Eradiate to conda env ${CONDA_ENV_NAME} in developer mode ..."
+python setup.py develop > /dev/null
 
 conda deactivate
 
