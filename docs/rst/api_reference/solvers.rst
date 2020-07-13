@@ -16,4 +16,3 @@ High-level solvers [eradiate.solvers]
    :toctree: generated/
 
    onedim
-   onedim.rayleigh
