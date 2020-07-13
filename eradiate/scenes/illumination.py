@@ -10,8 +10,7 @@
 import attr
 import numpy as np
 
-from . import SceneHelper
-from .core import Factory
+from .core import Factory, SceneHelper
 from ..util.collections import frozendict
 from ..util.frame import angles_to_direction
 from ..util.units import ureg

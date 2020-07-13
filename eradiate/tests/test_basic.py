@@ -44,13 +44,13 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
         - `constant`: :math:`L_\mathrm{o} = \rho L_\mathrm{i}`
 
     """
-    from eradiate.solvers.onedim import OneDimSolver
+    from eradiate.solvers.onedim.runner import OneDimRunner
 
     # Basic configuration
     vza = np.linspace(0, 90, 11)
     rho = 0.5
 
-    solver = OneDimSolver()
+    solver = OneDimRunner()
     solver.kernel_dict["brdf_surface"] = {
         "type": "diffuse",
         "reflectance": {"type": "uniform", "value": rho}

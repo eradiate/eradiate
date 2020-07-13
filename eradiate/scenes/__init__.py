@@ -1,3 +1,3 @@
-""" Eradiate scene generation library """
+"""Components to generate scenes.
+"""
 
-from .core import SceneHelper

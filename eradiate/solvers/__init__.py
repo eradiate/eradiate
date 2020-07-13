@@ -1,1 +1,2 @@
-from . import onedim
+"""Components to run radiative transfer simulations.
+"""

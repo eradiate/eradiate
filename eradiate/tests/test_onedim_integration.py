@@ -33,7 +33,7 @@ def test_onedimsolver_large_size(variant_scalar_mono_double, json_metadata):
     """
     from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
     from eradiate.scenes.core import KernelDict
-    from eradiate.solvers.onedim import OneDimSolver
+    from eradiate.solvers.onedim.runner import OneDimRunner
 
     min_expected_size = 1e3
     results = dict()
@@ -59,7 +59,7 @@ def test_onedimsolver_large_size(variant_scalar_mono_double, json_metadata):
             "integrator": {"type": "path"},
         })
 
-        solver = OneDimSolver(kernel_dict)
+        solver = OneDimRunner(kernel_dict)
 
         vza = np.linspace(0, 90, 10)
         vaa = np.linspace(0, 360, 37)

@@ -1,3 +1,6 @@
+"""Configuration dictionary-based class components."""
+
+
 from abc import ABC, abstractmethod
 
 import attr

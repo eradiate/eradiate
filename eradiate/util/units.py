@@ -2,8 +2,5 @@
 
 import pint
 
-#: Unit registry common to all Eradiate components.
-ureg = pint.UnitRegistry()
-
-#: Alias to :data:`ureg`'s ``Quantity`` member.
-Q_ = ureg.Quantity
+ureg = pint.UnitRegistry()  #: Unit registry common to all Eradiate components.
+Q_ = ureg.Quantity  #: Alias to :data:`ureg`'s ``Quantity`` member.

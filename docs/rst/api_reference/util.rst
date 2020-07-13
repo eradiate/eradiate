@@ -3,16 +3,24 @@
 Utility [eradiate.util]
 =======================
 
+.. rubric:: Description
+
+.. automodule:: eradiate.util
+
+.. currentmodule:: eradiate.util
+
 .. rubric:: Modules
 
 .. autosummary::
-   :toctree: generated
+   :recursive:
+   :toctree: generated/
 
-    eradiate.util
-    eradiate.util.collections
-    eradiate.util.config_object
-    eradiate.util.decorators
-    eradiate.util.exceptions
-    eradiate.util.frame
-    eradiate.util.units
-    eradiate.util.view
+    collections
+    config_object
+    decorators
+    exceptions
+    frame
+    metaclasses
+    units
+    view
+    xarray

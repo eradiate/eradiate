@@ -1,15 +1,15 @@
 import numpy as np
 import pytest
 
-from eradiate.solvers.onedim import OneDimSolver
+from eradiate.solvers.onedim.runner import OneDimRunner
 
 
 def test_onedimsolver(variant_scalar_mono):
     from eradiate.kernel.core.xml import load_dict
 
     # Construct
-    solver = OneDimSolver()
-    assert solver.kernel_dict == OneDimSolver.DEFAULT_KERNEL_DICT
+    solver = OneDimRunner()
+    assert solver.kernel_dict == OneDimRunner.DEFAULT_KERNEL_DICT
 
     # Check if default scene is valid
     assert load_dict(solver.kernel_dict) is not None

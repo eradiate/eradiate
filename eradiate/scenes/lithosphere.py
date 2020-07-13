@@ -11,8 +11,7 @@ from abc import abstractmethod
 
 import attr
 
-from . import SceneHelper
-from .core import Factory
+from .core import Factory, SceneHelper
 from ..util.collections import frozendict
 
 

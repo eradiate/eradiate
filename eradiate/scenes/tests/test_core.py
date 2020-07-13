@@ -4,8 +4,7 @@ import attr
 import pytest
 
 import eradiate.kernel
-from eradiate.scenes import SceneHelper
-from eradiate.scenes.core import Factory, KernelDict
+from eradiate.scenes.core import Factory, KernelDict, SceneHelper
 from eradiate.util.collections import frozendict
 from eradiate.util.exceptions import KernelVariantError
 

@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 import attr
 
-from .. import SceneHelper
+from ..core import SceneHelper
 
 
 @attr.s

@@ -1,3 +1,6 @@
+"""A collection of utility metaclasses."""
+
+
 class Singleton(type):
     """A simple singleton implementation.
     See also

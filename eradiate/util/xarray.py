@@ -1,3 +1,5 @@
+"""xarray-related components."""
+
 import xarray as xr
 
 

@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 
 import eradiate.kernel
-from . import OneDimSolver
+from .runner import OneDimRunner
 from ...scenes.core import Factory, KernelDict
 from ...util import view, ensure_array
 from ...util.collections import frozendict
@@ -224,7 +224,7 @@ class RayleighSolverApp(ConfigObject):
         self._configure_scene()
 
         # Reinitialise solver
-        self._runner = OneDimSolver(self._kernel_dict)
+        self._runner = OneDimRunner(self._kernel_dict)
 
     def _set_kernel_variant(self):
         """Set kernel variant according to kernel scene dictionary. If scene

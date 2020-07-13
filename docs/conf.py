@@ -17,15 +17,6 @@ import sys
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath("./_ext"))
 
-# -- Mock kernel module ------------------------------------------------------
-
-# This ensures that the docs can be built even if the kernel is not compiled.
-#
-import mock
-MOCK_MODULES = ["eradiate.kernel"]
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
-
 
 # -- Project information -----------------------------------------------------
 
@@ -188,6 +179,7 @@ htmlhelp_basename = "eradiate_doc"
 autosummary_generate = True
 autosummary_members = True
 autodoc_default_flags = ["members", "undoc-members", "show-inheritance", "inherited-members"]
+autodoc_mock_imports = ["eradiate.kernel"]
 
 # Set Mitsuba variant for autodoc (not required anymore)
 # import eradiate.kernel

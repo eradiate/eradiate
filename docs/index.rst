@@ -63,7 +63,7 @@ Contents
     :maxdepth: 2
     :caption: API reference
 
-    Introduction<rst/api_reference/intro>
+    Introduction [eradiate]<rst/api_reference/intro>
     rst/api_reference/kernel
     rst/api_reference/scenes
     rst/api_reference/solvers

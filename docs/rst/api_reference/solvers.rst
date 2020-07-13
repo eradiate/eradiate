@@ -3,11 +3,17 @@
 High-level solvers [eradiate.solvers]
 =====================================
 
+.. rubric:: Description
+
+.. automodule:: eradiate.solvers
+
+.. currentmodule:: eradiate.solvers
+
 .. rubric:: Modules
 
 .. autosummary::
-   :toctree: generated
+   :recursive:
+   :toctree: generated/
 
-    eradiate.solvers
-    eradiate.solvers.onedim
-    eradiate.solvers.onedim.rayleigh
+   onedim
+   onedim.rayleigh
