@@ -13,8 +13,9 @@ import xarray as xr
 import eradiate.kernel
 from . import OneDimSolver
 from ...scenes.core import Factory, KernelDict
-from ...util import brdf_viewer as bv, ensure_array
+from ...util import view, ensure_array
 from ...util.collections import frozendict
+from ...util.xarray import eo_dataarray
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
 
@@ -207,7 +208,7 @@ class RayleighSolverApp(ConfigObject):
     _kernel_dict = attr.ib(default=None)
     _helpers = attr.ib(default=None)
     _runner = attr.ib(default=None)
-    results = attr.ib(init=False)
+    results = attr.ib(init=False, factory=xr.Dataset)
 
     def __attrs_post_init__(self):
         super(RayleighSolverApp, self).__attrs_post_init__()
@@ -316,9 +317,9 @@ class RayleighSolverApp(ConfigObject):
         elif measure_type == "pplane":
             theta_o = np.arange(0., 90., self.config["measure"]["zenith_res"])
             phi_o = np.array([
-                self.config["illumination"]["azimuth"],
-                self.config["illumination"]["azimuth"] + 180.
-            ] % 360.)
+                                 illumination.config["illumination"]["azimuth"],
+                                 illumination.config["illumination"]["azimuth"] + 180.
+                             ] % 360.)
 
         else:
             raise ValueError(f"unsupported measure.type {measure_type}")
@@ -331,14 +332,24 @@ class RayleighSolverApp(ConfigObject):
         for dim in [0, 1, 4]:
             data = np.expand_dims(data, dim)
 
-        # Store results to an xarray.DataArray
-        self.results = xr.DataArray(
-            data,
-            coords=[theta_i, phi_i, theta_o, phi_o, wavelength],
-            dims=["theta_i", "phi_i", "theta_o", "phi_o", "wavelength"]
-        )
+        self.results["lo"] = eo_dataarray(data, theta_i, phi_i, theta_o, phi_o, wavelength)
+        self.results.attrs = self.results["lo"].attrs
+        self.results.attrs["irradiance"] = illumination.config["irradiance"]
 
-    def plot(self, plot_type=None, ax=None):
+    def postprocess(self):
+        """Compute the TOA BRDF and TOA BRF from the raw results.
+        The BRDF is computed by dividing the raw result by the incident radiance, while
+        the BRF is computed by further dividing that result by the BRDF of a
+        homogeneously reflecting (lambertian) surface.
+        """
+        # TODO: make metadata handling more robust
+        # TODO: add support of CF convention-style metadata (discuss fields to include with Yvan)
+        self.results["brdf"] = self.results["lo"] / self._helpers["illumination"].config["irradiance"]
+        self.results["brdf"].attrs = self.results["lo"].attrs
+        self.results["brf"] = self.results["brdf"] / np.pi
+        self.results["brf"].attrs = self.results["lo"].attrs
+
+    def plot(self, plot_type=None, ax=None, result_type="brdf"):
         """Generate the requested plot type with the :class:`BRDFView` and store
         the resulting figure in a file under the given path.
 
@@ -355,10 +366,18 @@ class RayleighSolverApp(ConfigObject):
             - ``pplane``: Plot scattering into the plane defined by the
               surface normal and the incoming light direction.
 
-        Parameter ``fname`` (str or PathLike)
-            Location and file name to store the plot. File type is inferred from
-            the suffix of this parameter upon call of
-            :func:`~matplotlib.pyplot.savefig`.
+        Parameter ``ax`` (:class:`~matplotlib.Axes`)
+            Optional Axes object to embed the plot in a separate plotting script
+
+        Parameter ``result_type`` (str)
+            Result type to plot
+
+            Currently supported options are:
+
+            - ``lo``: Plots the leaving radiance
+            - ``brdf``: Plots the ToA BRDF
+            - ``brf``: Plots the ToA BRF
+
         """
         measure_type = self.config["measure"]["type"]
 
@@ -373,27 +392,27 @@ class RayleighSolverApp(ConfigObject):
                 ax = plt.subplot(111, projection="polar")
             plt.title("Hemispherical view")
 
-            viewer = bv.HemisphericalView()
-            viewer.wavelength = self.config["mode"]["wavelength"]
-            viewer.wi = [self.config["illumination"]["zenith"],
-                         self.config["illumination"]["azimuth"]]
-            viewer.brdf = self.results
+            hdata = self.results[result_type].ert.sel(
+                theta_i=self.config["illumination"]["zenith"],
+                phi_i=self.config["illumination"]["azimuth"],
+                wavelength=self.config["mode"]["wavelength"]
+            )
+
+            hdata.ert.plot("pcolormesh", ax=ax)
 
         elif plot_type == "pplane":
             if ax is None:
                 ax = plt.subplot(111)
             plt.title("Principal plane view")
 
-            viewer = bv.PrincipalPlaneView()
-            viewer.wavelength = self.config["mode"]["wavelength"]
-            viewer.wi = [self.config["illumination"]["zenith"],
-                         self.config["illumination"]["azimuth"]]
-            viewer.brdf = self.results
+            bhdata = self.results[result_type].ert.sel(wavelength=self.config['mode']['wavelength'])
+            plane = view.pplane(bhdata,
+                                theta_i=self.config['illumination']['zenith'],
+                                phi_i=self.config['illumination']['azimuth'])
+
+            plane.ert.plot(plane, ax=ax)
 
         else:
             raise ValueError(f"unsupported measure.type {plot_type}")
-
-        viewer.evaluate()
-        viewer.plot(ax=ax)
 
         return ax

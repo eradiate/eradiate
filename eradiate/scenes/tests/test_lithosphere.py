@@ -1,7 +1,6 @@
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.lithosphere import LambertianSurface, RPVSurface
 
-
 def test_lambertian(variant_scalar_mono):
     from eradiate.kernel.core.xml import load_dict
 

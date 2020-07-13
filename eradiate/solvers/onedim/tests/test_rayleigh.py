@@ -144,13 +144,49 @@ def test_rayleigh_solver_app_run():
 
     app.compute()
 
-    for dim in ["theta_i", "phi_i", "theta_o", "phi_o", "wavelength"]:
-        assert dim in app.results.dims
+    assert set(app.results["lo"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
+
+    assert app.results["lo"].attrs["angle_convention"] == "eo_scene"
 
     # We expect the whole [0, 360] to be covered
-    assert len(app.results.coords["phi_o"]) == 360 / 10 + 1
+    assert len(app.results["lo"].coords["vaa"]) == 360 / 10 + 1
     # We expect [0, 90[ to be covered (90° should be missing)
-    assert len(app.results.coords["theta_o"]) == 90 / 5
+    assert len(app.results["lo"].coords["vza"]) == 90 / 5
 
     # We just check that we record something as expected
-    assert np.all(app.results.data > 0)
+    assert np.all(app.results["lo"].data > 0)
+
+
+def test_rayleigh_solver_app_postprocessing():
+    """Test the postprocessing method by computing the processed quantities and comparing
+    them to a reference computation."""
+
+    import numpy as np
+    config = {
+        "measure": {
+            "type": "hemispherical",
+            "zenith_res": 5.,
+            "azimuth_res": 10.,
+            "spp": 1000,
+        },
+        "illumination": {
+            "type": "directional",
+            "zenith": 0,
+            "azimuth": 0,
+            "irradiance": 5.
+        }
+    }
+
+    app = RayleighSolverApp(config)
+    assert eradiate.kernel.variant() == "scalar_mono_double"
+    app.compute()
+    app.postprocess()
+
+    assert np.allclose(
+        app.results["brdf"],
+        app.results["lo"] / config["illumination"]["irradiance"]
+    )
+    assert np.allclose(
+        app.results["brf"],
+        app.results["brdf"] / np.pi
+    )
