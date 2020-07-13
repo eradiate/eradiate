@@ -1,11 +1,19 @@
-"""Scene generation facilities related with the lithosphere."""
+"""Lithosphere-related scene generation facilities.
+
+.. admonition:: Factory-enabled scene generation helpers
+    :class: hint
+
+    .. factorytable::
+        :modules: lithosphere
+"""
 
 from abc import abstractmethod
 
 import attr
 
-from .base import SceneHelper
-from .factory import Factory
+from . import SceneHelper
+from .core import Factory
+from ..util.collections import frozendict
 
 
 @attr.s
@@ -25,27 +33,51 @@ class Surface(SceneHelper):
         pass
 
     def kernel_dict(self, ref=True):
-        scene_dict = {}
+        kernel_dict = {}
 
         if not ref:
-            scene_dict["surface"] = self.shapes(ref=False)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
         else:
-            scene_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            scene_dict["surface"] = self.shapes(ref=True)["shape_surface"]
+            kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
+            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
 
-        return scene_dict
+        return kernel_dict
 
 
 @attr.s
-@Factory.register()
-class Lambertian(Surface):
-    r"""This class builds a Lambertian surface.
+@Factory.register(name="lambertian")
+class LambertianSurface(Surface):
+    """Lambertian surface scene generation helper [:factorykey:`lambertian`].
+
+    This class creates a square surface to which a Lambertian BRDF is attached.
+
+    .. admonition:: Configuration format
+        :class: hint
+
+        ``reflectance`` (float):
+            Reflectance [dimensionless].
+
+            Default value: 0.5.
+
+        ``width`` (float):
+            Size of the square surface [u_length].
+
+            Default: 1.
     """
 
-    DEFAULT_CONFIG = {
-        "reflectance": 0.5,
-        "width": 1.,
-    }
+    CONFIG_SCHEMA = frozendict({
+        "reflectance": {
+            "type": "number",
+            "min": 0.,
+            "max": 1.,
+            "default": 0.5,
+        },
+        "width": {
+            "type": "number",
+            "min": 0.,
+            "default": 1.,
+        }
+    })
 
     def bsdfs(self):
         return {
@@ -78,29 +110,67 @@ class Lambertian(Surface):
         }
 
     def kernel_dict(self, ref=True):
-        scene_dict = {}
+        kernel_dict = {}
 
         if not ref:
-            scene_dict["surface"] = self.shapes(ref=False)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
         else:
-            scene_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            scene_dict["surface"] = self.shapes(ref=True)["shape_surface"]
+            kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
+            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
 
-        return scene_dict
+        return kernel_dict
+
 
 @attr.s
-@Factory.register()
-class RPV(Surface):
-    r"""This class builds a RPV surface.
-    """
+@Factory.register(name="rpv")
+class RPVSurface(Surface):
+    """RPV surface scene generation helper [:factorykey:`rpv`].
 
-    # Grassland (visible light) from the 1993 RPV paper, Table 1
-    DEFAULT_CONFIG = {
-        "rho_0": 0.183,
-        "k": 0.780,
-        "ttheta": -0.1,
-        "width": 1.,
-    }
+    This class creates a square surface to which a RPV BRDF
+    :cite:`Rahman1993CoupledSurfaceatmosphereReflectance`
+    is attached.
+
+    The default configuration corresponds to grassland (visible light)
+    (:cite:`Rahman1993CoupledSurfaceatmosphereReflectance`, Table 1).
+
+    .. admonition:: Configuration format
+        :class: hint
+
+        ``rho_0`` (float):
+            Default: 0.183.
+
+        ``k`` (float):
+            Default: 0.780.
+
+        ``ttheta`` (float):
+            Default: -0.1.
+
+        ``width`` (float):
+            Size of the square surface [u_length].
+
+            Default: 1.
+    """
+    # TODO: check if there are bounds to default parameters
+
+    CONFIG_SCHEMA = frozendict({
+        "rho_0": {
+            "type": "number",
+            "default": 0.183,
+        },
+        "k": {
+            "type": "number",
+            "default": 0.780,
+        },
+        "ttheta": {
+            "type": "number",
+            "default": -0.1,
+        },
+        "width": {
+            "type": "number",
+            "min": 0.,
+            "default": 1.,
+        }
+    })
 
     def bsdfs(self):
         return {
@@ -141,12 +211,12 @@ class RPV(Surface):
         }
 
     def kernel_dict(self, ref=True):
-        scene_dict = {}
+        kernel_dict = {}
 
         if not ref:
-            scene_dict["surface"] = self.shapes(ref=False)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
         else:
-            scene_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            scene_dict["surface"] = self.shapes(ref=True)["shape_surface"]
+            kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
+            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
 
-        return scene_dict
+        return kernel_dict

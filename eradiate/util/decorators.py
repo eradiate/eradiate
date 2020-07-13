@@ -1,4 +1,4 @@
-""" This module contains function and class decorators. """
+""" Function and class decorators. """
 
 
 class _ClassPropertyMeta(type):

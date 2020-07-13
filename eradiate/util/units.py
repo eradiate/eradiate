@@ -1,4 +1,4 @@
-""" This module contains unit system-related components. """
+""" Unit system-related components. """
 
 import pint
 

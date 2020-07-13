@@ -1,3 +1,5 @@
+.. _sec-api_reference-solvers:
+
 High-level solvers [eradiate.solvers]
 =====================================
 

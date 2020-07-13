@@ -1,11 +1,13 @@
 """ Basic facilities to run simulations on one-dimensional scenes. """
+# TODO: refactor into runners module?
 
 import attr
 import numpy as np
 from tqdm.auto import tqdm
 
 import eradiate.kernel
-from ...scenes import measure, SceneDict
+from ...scenes import measure
+from ...scenes.core import KernelDict
 from ...util import ensure_array
 from ...util.collections import frozendict
 from ...util.exceptions import KernelVariantError
@@ -19,8 +21,8 @@ class OneDimSolver:
 
     .. important::
 
-        Prior to using :class:`OneDimSolver`, a kernel variant must be selected using
-        :func:`~mitsuba.set_variant`:
+        Prior to using :class:`OneDimSolver`, a kernel variant must be selected
+        using :func:`~mitsuba.set_variant`:
 
         .. code:: python
 
@@ -32,18 +34,18 @@ class OneDimSolver:
             solver.run()
 
     Constructor arguments / public attributes:
-        ``scene_dict`` (:class:`~eradiate.scenes.SceneDict`):
+        ``kernel_dict`` (:class:`~eradiate.scenes.core.KernelDict`):
             Dictionary used to generate the scene for which simulations will be 
             run. If no value is passed, a default scene is constructed. It 
             consists of a square covering :math:`[-1, 1]^2` with normal vector 
             :math:`+Z` and a Lambertian BRDF (reflectance :math:`\rho = 0.5`) 
             illuminated by a directional emitter with direction vector 
             :math:`-Z` and constant irradiance equal to 1. If set to `None`,
-            defaults to :data:`DEFAULT_DICT_SCENE`.
+            defaults to :data:`DEFAULT_KERNEL_DICT`.
     """
 
     SUPPORTED_VARIANTS = frozenset({"scalar_mono", "scalar_mono_double"})
-    DEFAULT_SCENE_DICT = frozendict({
+    DEFAULT_KERNEL_DICT = frozendict({
         "type": "scene",
         "bsdf_surface": {
             "type": "diffuse",
@@ -61,7 +63,7 @@ class OneDimSolver:
         "integrator": {"type": "path"}
     })
 
-    scene_dict = attr.ib(default=None)
+    kernel_dict = attr.ib(default=None)
 
     def _check_variant(self):
         variant = eradiate.kernel.variant()
@@ -69,8 +71,8 @@ class OneDimSolver:
             raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
     def __attrs_post_init__(self):
-        if self.scene_dict is None:
-            self.scene_dict = SceneDict(self.DEFAULT_SCENE_DICT)
+        if self.kernel_dict is None:
+            self.kernel_dict = KernelDict(self.DEFAULT_KERNEL_DICT)
 
         self.init()
 
@@ -117,12 +119,12 @@ class OneDimSolver:
             for i, theta in enumerate(vza):
                 for j, phi in enumerate(vaa):
                     # Adjust scene setup
-                    self.scene_dict.add(measure.Distant(
+                    self.kernel_dict.add(measure.DistantMeasure(
                         {'zenith': theta, 'azimuth': phi, 'spp': spp}
                     ))
 
                     # Run computation
-                    kernel_scene = self.scene_dict.load()
+                    kernel_scene = self.kernel_dict.load()
                     sensor = kernel_scene.sensors()[0]
                     kernel_scene.integrator().render(kernel_scene, sensor)
 

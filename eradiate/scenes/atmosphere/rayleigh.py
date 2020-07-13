@@ -3,13 +3,15 @@ import numpy as np
 from scipy.constants import physical_constants
 
 from .base import Atmosphere
-from ..factory import Factory
+from ..core import Factory
+from ...util.collections import frozendict
 from ...util.units import Q_
 
 # Physical constants
 #: Loschmidt constant [km^-3].
 _LOSCHMIDT = Q_(
-    *physical_constants["Loschmidt constant (273.15 K, 101.325 kPa)"][:2]).to('km^-3')
+    *physical_constants["Loschmidt constant (273.15 K, 101.325 kPa)"][:2]).to(
+        "km^-3")
 #: Refractive index of dry air [dimensionless].
 _IOR_DRY_AIR = Q_(1.0002932, "")
 
@@ -29,13 +31,11 @@ def kf(ratio=0.0279):
     return (6. + 3. * ratio) / (6. - 7. * ratio)
 
 
-def sigma_s_single(
-    wavelength=550.,
-    number_density=_LOSCHMIDT.magnitude,
-    refractive_index=_IOR_DRY_AIR.magnitude,
-    king_factor=1.049,
-    depolarisation_ratio=None
-):
+def sigma_s_single(wavelength=550.,
+                   number_density=_LOSCHMIDT.magnitude,
+                   refractive_index=_IOR_DRY_AIR.magnitude,
+                   king_factor=1.049,
+                   depolarisation_ratio=None):
     """Compute the Rayleigh scattering coefficient for one type of scattering
     particles.
 
@@ -77,15 +77,13 @@ def sigma_s_single(
         np.square(np.square(refractive_index) - 1.) * king_factor
 
 
-def sigma_s_mixture(
-        wavelength,
-        number_densities,
-        mixture_refractive_index,
-        standard_number_densities,
-        standard_refractive_indices,
-        king_factors,
-        depolarisation_ratios=None
-):
+def sigma_s_mixture(wavelength,
+                    number_densities,
+                    mixture_refractive_index,
+                    standard_number_densities,
+                    standard_refractive_indices,
+                    king_factors,
+                    depolarisation_ratios=None):
     """Compute the Rayleigh scattering coefficient for a mixture of scattering
     particles.
 
@@ -125,11 +123,9 @@ def sigma_s_mixture(
     lorenz_factor = (np.square(mixture_refractive_index) + 2.) / 3.
 
     particles_sum = np.sum(
-        (number_densities / np.square(standard_number_densities)) *
-        np.square(
+        (number_densities / np.square(standard_number_densities)) * np.square(
             (np.square(standard_refractive_indices) - 1.) /
-            (np.square(standard_refractive_indices) + 2.)
-        ) * king_factors)
+            (np.square(standard_refractive_indices) + 2.)) * king_factors)
 
     return \
         24. * np.power(np.pi, 3) / np.power(wavelength * 1e-12, 4) * \
@@ -152,61 +148,118 @@ def delta(ratio=0.0279):
 
 @attr.s()
 @Factory.register("rayleigh_homogeneous")
-class RayleighHomogeneous(Atmosphere):
-    r"""This class builds an atmosphere consisting of a non-absorbing
+class RayleighHomogeneousAtmosphere(Atmosphere):
+    r"""Rayleigh homogeneous atmosphere scene generation helper [:factorykey:`rayleigh_homogeneous`].
+
+    This class builds an atmosphere consisting of a non-absorbing
     homogeneous medium. Scattering uses the Rayleigh phase function and the
     Rayleigh scattering coefficient of a single gas.
 
-    TODO: update docs
+    .. admonition:: Configuration format
+        :class: hint
 
-    Configuration:
         ``height`` (float):
             Height of the atmosphere [km].
 
-        ``width`` (float)
-            Width of the atmosphere [km]. If not set, a value will be estimated
-            to ensure that the medium is optically thick.
+            Default: 100.
 
-        ``sigma_s`` (float):
-            Atmosphere scattering coefficient [km^-1].
-            This parameter is mutually exclusive with ``sigma_s_params``.
-            If neither ``sigma_s`` nor ``sigma_s_params`` is specified,
-            :func:`eradiate.scenes.atmosphere.rayleigh.sigma_s_single` will be
-            called to set the value of ``sigma_s``.
+        ``width`` (float or string)
+            Width of the atmosphere [km].
+            If the string ``"auto"`` is passed, a value will be estimated to
+            ensure that the medium is optically thick.
 
-        ``sigma_s_params`` (dict):
-            Parameters of :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`
-            This parameter is mutually exclusive with ``sigma_s``.
+            Default: None.
+
+        ``sigma_s`` (float or dict):
+            Atmosphere scattering coefficient value [km^-1] or keyword argument
+            dictionary to be passed to
+            :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`.
+            If a dictionary is passed and misses arguments,
+            :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`'s
+            defaults apply as usual.
+
+            Default: {}.
     """
 
     # Class attributes
-    DEFAULT_CONFIG = {
-        "height": 1e2,
-        # "width": None,
-        # "sigma_s": None,
-        # "sigma_s_params": None
-    }
-    ALBEDO = 1.
+    CONFIG_SCHEMA = frozendict({
+        "height": {
+            "type": "number",
+            "min": 0.,
+            "default": 1.e+2
+        },
+        "width": {
+            "anyof": [{
+                "type": "number",
+                "min": 0.
+            }, {
+                "type": "string",
+                "allowed": ["auto"]
+            }],
+            "default": "auto"
+        },
+        "sigma_s": {
+            "oneof": [{
+                "type": "number",
+                "min": 0.,
+            }, {
+                "type": "dict",
+                "schema": {
+                    "wavelength": {
+                        "type": "number",
+                        "min": 0.0,
+                    },
+                    "number_density": {
+                        "type": "number",
+                        "min": 0.0,
+                    },
+                    "refractive_index": {
+                        "type": "number",
+                        "min": 0.0,
+                    },
+                    "king_factor": {
+                        "type": "number",
+                        "min": 0.0,
+                    },
+                    "depolarisation_ratio": {
+                        "type": "number",
+                        "min": 0.0,
+                        "nullable": True,
+                    },
+                }
+            }],
+            "default": {},
+        },
+    })
 
-    def init(self):
-        r"""(Re)initialise hidden internal state.
-        """
+    @property
+    def _albedo(self):
+        """Return albedo."""
+        return 1.
 
-        if self.config.get("sigma_s_params", None) is not None:
-            if self.config.get("sigma_s", None) is not None:
-                raise ValueError("sigma_s_params and sigma_s are mutually \
-                    exclusive")
-            else:
-                self.config["sigma_s"] = \
-                    sigma_s_single(**self.config["sigma_s_params"])
-        else:
-            if self.config.get("sigma_s", None) is None:
-                self.config["sigma_s"] = sigma_s_single()
+    @property
+    def _width(self):
+        """Return scene width based on configuration."""
+        # TODO: make this a cached property
 
         # If width is not set, compute a value corresponding to an optically
         # thick layer (10x scattering mean free path)
-        if self.config.get("width", None) is None:
-            self.config["width"] = 10. / self.config["sigma_s"]
+        width = self.config["width"]
+
+        if width == "auto":
+            return 10. / self._sigma_s
+        else:
+            return width
+
+    @property
+    def _sigma_s(self):
+        """Return scattering coefficient based on configuration."""
+        # TODO: make this a cached property
+
+        if isinstance(self.config["sigma_s"], dict):
+            return sigma_s_single(**self.config["sigma_s"])
+        else:
+            return self.config["sigma_s"]
 
     def phase(self):
         return {"phase_atmosphere": {"type": "rayleigh"}}
@@ -221,8 +274,14 @@ class RayleighHomogeneous(Atmosphere):
             "medium_atmosphere": {
                 "type": "homogeneous",
                 "phase": phase,
-                "sigma_t": {"type": "uniform", "value": self.config["sigma_s"]},
-                "albedo": {"type": "uniform", "value": self.ALBEDO},
+                "sigma_t": {
+                    "type": "uniform",
+                    "value": self._sigma_s
+                },
+                "albedo": {
+                    "type": "uniform",
+                    "value": self._albedo
+                },
             }
         }
 
@@ -234,22 +293,28 @@ class RayleighHomogeneous(Atmosphere):
         else:
             medium = self.media(ref=False)["medium_atmosphere"]
 
-        width = self.config["width"]
+        width = self._width
         height = self.config["height"]
         height_offset = height * 0.01
 
         return {
             "shape_atmosphere": {
-                "type": "cube",
+                "type":
+                    "cube",
                 "to_world":
                     ScalarTransform4f([
                         [0.5 * width, 0., 0., 0.],
                         [0., 0.5 * width, 0., 0.],
-                        [0., 0., 0.5 * (height + height_offset), 0.5 * (height - height_offset)],
+                        [
+                            0., 0., 0.5 * (height + height_offset),
+                            0.5 * (height - height_offset)
+                        ],
                         [0., 0., 0., 1.],
-                    ])
-                ,
-                "bsdf": {"type": "null"},
-                "interior": medium
+                    ]),
+                "bsdf": {
+                    "type": "null"
+                },
+                "interior":
+                    medium
             }
         }

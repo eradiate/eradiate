@@ -45,6 +45,11 @@ div.sphinxsidebar h4 {
     font-family: Hack, Fira Code, Consolas, monospace;
 }
 
+.bolditalic {
+  font-weight: bold;
+  font-style: italic;
+}
+
 /* code font adjustments */
 
 code, pre, tt {

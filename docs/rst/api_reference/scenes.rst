@@ -1,3 +1,5 @@
+.. _sec-api_reference-scenes:
+
 Scene generation [eradiate.scenes]
 ==================================
 
@@ -7,11 +9,10 @@ Scene generation [eradiate.scenes]
    :toctree: generated/
 
    eradiate.scenes
-   eradiate.scenes.base
+   eradiate.scenes.core
    eradiate.scenes.atmosphere
    eradiate.scenes.atmosphere.base
    eradiate.scenes.atmosphere.rayleigh
-   eradiate.scenes.factory
    eradiate.scenes.illumination
    eradiate.scenes.lithosphere
    eradiate.scenes.measure

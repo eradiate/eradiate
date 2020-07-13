@@ -1,18 +1,27 @@
+import pytest
+
 import eradiate.kernel
-from eradiate.scenes import SceneDict
 from eradiate.solvers.onedim.rayleigh import RayleighSolverApp
 
 
 def test_rayleigh_solver_app():
-    # Default constructor
+    # Test default configuration handling
     app = RayleighSolverApp()
-    assert app.config == SceneDict(RayleighSolverApp.DEFAULT_CONFIG)
+    assert app.config == {
+        "atmosphere": {"type": "rayleigh_homogeneous"},
+        "illumination": {"type": "directional"},
+        "measure": {"type": "hemispherical", "azimuth_res": 10.0, "zenith_res": 10.0, "spp": 1000},
+        "mode": {"type": "mono", "wavelength": 550.0},
+        "surface": {"type": "lambertian"}
+    }
+
+    # Check that the appropriate variant is selected
     assert eradiate.kernel.variant() == "scalar_mono_double"
 
     # Check that the default scene can be instantiated
-    assert app._scene_dict.load() is not None
+    assert app._kernel_dict.load() is not None
 
-    # custom config
+    # Pass a well-formed custom configuration object (without an atmosphere)
     config = {
         "mode": {
             "type": "mono",
@@ -32,13 +41,14 @@ def test_rayleigh_solver_app():
         },
         "surface": {
             "type": "lambertian",
-            "reflectance": 0.35
-        }
+            "reflectance": 0.35,
+        },
+        "atmosphere": None,
     }
     app = RayleighSolverApp(config)
-    # assert app.config == config
+    assert app._kernel_dict.load() is not None
 
-    # custom config (with atmosphere)
+    # Pass a well-formed custom configuration object (with an atmosphere)
     config = {
         "mode": {
             "type": "mono",
@@ -67,7 +77,7 @@ def test_rayleigh_solver_app():
         }
     }
     app = RayleighSolverApp(config)
-    # assert app.config == config
+    assert app._kernel_dict.load() is not None
 
     # custom config (with custom refractive index)
     config = {
@@ -94,23 +104,21 @@ def test_rayleigh_solver_app():
         "atmosphere": {
             "type": "rayleigh_homogeneous",
             "height": 1e5,
-            "sigma_s_params": {
+            "sigma_s": {
                 "refractive_index": 1.0003
             }
         }
     }
     app = RayleighSolverApp(config)
-    # assert app.config == config
-
-    # check that wavelength from mode is included in the atmosphere config
-    assert app.config["atmosphere"]["sigma_s_params"]["wavelength"] == 570.
+    assert app._kernel_dict.load() is not None
 
     # check that the scattering coefficient is computed correctly
     from eradiate.scenes.atmosphere.rayleigh import sigma_s_single
-    assert app._scene_dict["medium_atmosphere"]["sigma_t"]["value"] == \
+    assert app._kernel_dict["medium_atmosphere"]["sigma_t"]["value"] == \
            sigma_s_single(wavelength=570., refractive_index=1.0003)
 
 
+@pytest.mark.slow
 def test_rayleigh_solver_app_run():
     """Test the creation of a DataArray from the solver result
 
@@ -137,15 +145,12 @@ def test_rayleigh_solver_app_run():
     app.compute()
 
     for dim in ["theta_i", "phi_i", "theta_o", "phi_o", "wavelength"]:
-        assert dim in app.result.dims
+        assert dim in app.results.dims
 
     # We expect the whole [0, 360] to be covered
-    assert len(app.result.coords["phi_o"]) == 360 / 10 + 1
+    assert len(app.results.coords["phi_o"]) == 360 / 10 + 1
     # We expect [0, 90[ to be covered (90° should be missing)
-    assert len(app.result.coords["theta_o"]) == 90 / 5
+    assert len(app.results.coords["theta_o"]) == 90 / 5
 
-    assert np.all(app.result.data > 0)
-    assert np.allclose(
-        app.result,
-        app.result.sel(theta_i=0., phi_i=0., theta_o=0., phi_o=0.)
-    )
+    # We just check that we record something as expected
+    assert np.all(app.results.data > 0)

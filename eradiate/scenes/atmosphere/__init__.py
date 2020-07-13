@@ -1,3 +1,10 @@
-from .rayleigh import RayleighHomogeneous
+"""Atmosphere-related scene generation facilities.
 
-__all__ = ["RayleighHomogeneous"]
+.. admonition:: Factory-enabled scene generation helpers
+    :class: hint
+
+    .. factorytable::
+        :modules: atmosphere
+"""
+
+from .rayleigh import RayleighHomogeneousAtmosphere

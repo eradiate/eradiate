@@ -1,17 +1,25 @@
-"""Scene generation facilities related with measurement."""
+"""Measurement-related scene generation facilities.
+
+.. admonition:: Factory-enabled scene generation helpers
+    :class: hint
+
+    .. factorytable::
+        :modules: measure
+"""
 
 import attr
 import numpy as np
 
-from .base import SceneHelper
-from .factory import Factory
+from . import SceneHelper
+from .core import Factory
+from ..util.collections import frozendict
 from ..util.frame import angles_to_direction, spherical_to_cartesian
 from ..util.units import ureg
 
 
 @ureg.wraps(None, (ureg.deg, ureg.deg, None), strict=False)
 def _distant(zenith=0., azimuth=0., spp=10000):
-    """Create a dictionary which will instantiate a `distant` Mitsuba plugin
+    """Create a dictionary which will instantiate a ``distant`` kernel plugin
     based on the provided angular geometry.
 
     Parameter ``zenith`` (float)
@@ -24,7 +32,7 @@ def _distant(zenith=0., azimuth=0., spp=10000):
         Number of samples used from this sensor.
 
     Returns → dict
-        A dictionary which can be used to instantiate a `distant` Mitsuba plugin
+        A dictionary which can be used to instantiate a ``distant`` kernel plugin
         facing the direction specified by the angular configuration and pointing
         towards the origin :math:`(0, 0, 0)` in world coordinates.
     """
@@ -52,15 +60,51 @@ def _distant(zenith=0., azimuth=0., spp=10000):
 
 
 @attr.s
-@Factory.register()
-class Distant(SceneHelper):
-    """TODO: add docs"""
+@Factory.register(name="distant")
+class DistantMeasure(SceneHelper):
+    """Distant measure scene generation helper [:factorykey:`distant`].
 
-    DEFAULT_CONFIG = {
-        "zenith": 0.0,
-        "azimuth": 0.0,
-        "spp": 10000
-    }
+    The sensor is oriented based on the classical angular convention used
+    in Earth observation.
+
+    .. admonition:: Configuration format
+        :class: hint
+
+        ``zenith`` (float):
+            Zenith angle [deg].
+
+            Default value: 0.
+
+        ``azimuth`` (float):
+            Azimuth angle value [deg].
+
+            Default value: 0.
+
+        ``spp`` (int):
+            Number of samples.
+
+            Default: 10000.
+    """
+
+    CONFIG_SCHEMA = frozendict({
+        "zenith": {
+            "type": "number",
+            "min": 0.,
+            "max": 90.,
+            "default": 0.0,
+        },
+        "azimuth": {
+            "type": "number",
+            "min": 0.,
+            "max": 360.,
+            "default": 0.0,
+        },
+        "spp": {
+            "type": "integer",
+            "min": 0,
+            "default": 10000
+        }
+    })
 
     id = attr.ib(default="measure")
 
@@ -76,7 +120,7 @@ class Distant(SceneHelper):
 
 @ureg.wraps(None, (ureg.km, ureg.deg, ureg.deg, ureg.km, None, None), strict=False)
 def _perspective(target=[0, 0, 0], zenith=45., azimuth=180., distance=1.,
-                 res=64, spp=10000):
+                 res=64, spp=32):
     """Create a dictionary which will instantiate a ``perspective`` kernel
     plugin based on the provided angular geometry.
 
@@ -134,20 +178,84 @@ def _perspective(target=[0, 0, 0], zenith=45., azimuth=180., distance=1.,
 
 
 @attr.s
-@Factory.register()
-class Perspective(SceneHelper):
-    """This scene generation helper positions a perspective camera based on an
-    angular configuration.
+@Factory.register(name="perspective")
+class PerspectiveCameraMeasure(SceneHelper):
+    """Perspective camera scene generation helper [:factorykey:`perspective`].
+
+    The sensor is oriented based on the classical angular convention used
+    in Earth observation.
+
+    The film is a square.
+
+    .. admonition:: Configuration format
+        :class: hint
+
+        ``target`` (list[float]):
+            A 3-element vector specifying the location targeted by the camera
+            [u_length].
+
+            Default: [0, 0, 0].
+
+        ``zenith`` (float):
+            Zenith angle [deg].
+
+            Default value: 0.
+
+        ``azimuth`` (float):
+            Azimuth angle value [deg].
+
+            Default value: 0.
+
+        ``distance`` (float):
+            Distance from the ``target`` point to the camera [u_length].
+
+            Default: 1.
+
+        ``res`` (int):
+            Resolution of the film in pixels.
+
+            Default: 64.
+
+        ``spp`` (int):
+            Number of samples per pixel.
+
+            Default: 32.
     """
 
-    DEFAULT_CONFIG = {
-        "target": [0, 0, 0],
-        "zenith": 45.0,
-        "azimuth": 180.0,
-        "distance": 1.0,
-        "res": 64,
-        "spp": 10000,
-    }
+    CONFIG_SCHEMA = frozendict({
+        "target": {
+            "type": "list",
+            "items": [{"type": "number"}] * 3,
+            "default": [0, 0, 0]
+        },
+        "zenith": {
+            "type": "number",
+            "min": 0.,
+            "max": 90.,
+            "default": 45.
+        },
+        "azimuth": {
+            "type": "number",
+            "min": 0.,
+            "max": 360.,
+            "default": 180.
+        },
+        "distance": {
+            "type": "number",
+            "min": 0.,
+            "default": 1.,
+        },
+        "res": {
+            "type": "integer",
+            "min": 0,
+            "default": 64
+        },
+        "spp": {
+            "type": "integer",
+            "min": 0,
+            "default": 32
+        }
+    })
 
     id = attr.ib(default="measure")
 

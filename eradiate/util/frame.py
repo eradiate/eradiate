@@ -1,4 +1,4 @@
-""" This module contains frame and angle manipulation utilities. """
+""" Frame and angle manipulation utilities. """
 
 import numpy as np
 
@@ -55,6 +55,7 @@ def direction_to_angles(wi):
     phi = np.arctan2(wi[1], wi[0])
 
     return [theta, phi]
+
 
 def spherical_to_cartesian(r, theta, phi):
     r"""Convert spherical coordinates to cartesian coordinates

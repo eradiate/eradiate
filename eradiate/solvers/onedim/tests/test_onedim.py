@@ -1,4 +1,3 @@
-from decimal import Decimal
 import numpy as np
 import pytest
 
@@ -10,10 +9,10 @@ def test_onedimsolver(variant_scalar_mono):
 
     # Construct
     solver = OneDimSolver()
-    assert solver.scene_dict == OneDimSolver.DEFAULT_SCENE_DICT
+    assert solver.kernel_dict == OneDimSolver.DEFAULT_KERNEL_DICT
 
     # Check if default scene is valid
-    assert load_dict(solver.scene_dict) is not None
+    assert load_dict(solver.kernel_dict) is not None
 
     # Run simulation with default parameters (and check if result array is cast to scalar)
     assert np.allclose(solver.run(), 1. / (2. * np.pi), rtol=1e-3)

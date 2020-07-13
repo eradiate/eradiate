@@ -1,4 +1,9 @@
+"""Rayleigh solver application class and related facilities."""
+
+# TODO: refactor into apps module?
+
 import warnings
+from copy import deepcopy
 
 import attr
 import matplotlib.pyplot as plt
@@ -7,16 +12,15 @@ import xarray as xr
 
 import eradiate.kernel
 from . import OneDimSolver
-from ...scenes import SceneDict
-from ...scenes.atmosphere import RayleighHomogeneous
-from ...scenes.factory import Factory
+from ...scenes.core import Factory, KernelDict
 from ...util import brdf_viewer as bv, ensure_array
-from ...util.collections import frozendict, update
+from ...util.collections import frozendict
+from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
 
 
 @attr.s
-class RayleighSolverApp:
+class RayleighSolverApp(ConfigObject):
     r"""Application to run simulations in Rayleigh-scattering homogeneous
     one-dimensional scenes.
 
@@ -24,108 +28,189 @@ class RayleighSolverApp:
         ``config`` (dict):
             Configuration dictionary (see specification below).
 
-    Configuration format:
-        This class is initialised with a configuration dictionary with the
-        following keys:
+    .. admonition:: Configuration format
+        :class: hint
 
-        - ``mode``              (required)
-        - ``illumination``      (required)
-        - ``measure``           (required)
-        - ``surface``           (required)
-        - ``atmosphere``        (optional)
+        ``mode`` (dict):
+            Section dedicated to operation mode selection.
 
-        For each of these keys, the corresponding value is a dictionary that
-        specifies the configuration of the given element. That configuration
-        includes at least a ``type`` entry and a number of additional optional
-        parameters. This dictionary is merged with the default one
-        (see :data:`DEFAULT_CONFIG`): if parameters are omitted, they will be
-        set to their default values.
+            ``type`` (str):
+                Operational mode selection.
 
-        .. admonition:: Example
+                Allowed values:
+                ``mono``.
 
-            The following dictionary configures a Lambertian surface with a
-            reflectance value of 0.3:
+                Default: ``mono``.
 
-            .. code:: python
+            ``wavelength`` (float):
+                Selected wavelength.
 
-                {
-                    "type": "lambertian",
-                    "reflectance": 0.3
-                }
+                Default: 550.0.
 
-        Supported configuration entries:
-            ============== ===========================
-             component     available ``type`` values
-            ============== ===========================
-             mode           'mono'
-             illumination   'constant', 'directional'
-             measure        'distant'
-             surface        'lambertian'
-             atmosphere     'rayleigh_homogeneous'
-            ============== ===========================
+        ``surface`` (dict):
+            Section dedicated to configuring the scene's surface.
+            This section must be a factory configuration dictionary which will
+            be passed to :meth:`eradiate.scenes.core.Factory.create`.
 
-        Configuration parameters:
-            ``mono``
-                - ``wavelength`` (float or list): wavelength at which to run the
-                  simulation.
+            Allowed scene generation helpers:
+            :factorykey:`lambertian`,
+            :factorykey:`rpv`
 
-            ``constant``
-                Parameters of :func:`eradiate.scene.illumination.constant`
+            Default:
+            :factorykey:`lambertian`.
 
-            ``directional``
-                Parameters of :func:`eradiate.scenes.illumination.directional`
+        ``atmosphere`` (dict or None):
+            Section dedicated to configuring the scene's atmosphere.
+            This section must be a factory configuration dictionary which will
+            be passed to :meth:`eradiate.scenes.core.Factory.create`.
+            If set to ``None``, no atmosphere is added to the scene.
 
-            ``distant``
-                Parameters of :func:`eradiate.scenes.measure.distant`
+            Allowed scene generation helpers:
+            :factorykey:`rayleigh_homogeneous`.
 
-            ``lambertian``
-                Attributes of :class: eradiate.scenes.lithosphere.Lambert
-                Note: if an atmosphere is set, `width` will be set to the
-                atmosphere's width.
+            Default:
+            :factorykey:`rayleigh_homogeneous`.
 
-            ``rayleigh_homogeneous``
-                Attributes of
-                :class:`eradiate.scenes.atmosphere.rayleigh.RayleighHomogeneous`
+        ``illumination`` (dict):
+            Section dedicated to configuring the scene's illumination.
+            This section must be a factory configuration dictionary which will
+            be passed to :meth:`eradiate.scenes.core.Factory.create`.
+
+            Allowed scene generation helpers:
+            :factorykey:`constant`,
+            :factorykey:`directional`.
+
+            Default:
+            :factorykey:`directional`.
+
+        ``measure`` (dict):
+            Section dedicated to measure definition.
+
+            ``type`` (str):
+                Operational mode selection.
+
+                Allowed values: ``mono``.
+
+                Default: ``mono``.
+
+            ``wavelength`` (float):
+                Selected wavelength.
+
+                Default: 550.0.
+
+            ``type`` (str):
+                Selected measure type.
+
+                Allowed values:
+                ``hemispherical`` (hemispherical),
+                ``pplane`` (principal plane).
+
+                Default: ``hemispherical``.
+
+            ``zenith_res`` (float):
+                Zenith angle grid resolution [deg].
+
+                Default: 10.
+
+            ``azimuth_res`` (float):
+                Azimuth angle grid resolution [deg].
+
+                Default: 10.
+
+            ``spp`` (int):
+                Number of samples taken for each viewing angle configuration.
+
+                Default: 1000.
     """
 
     # Class attributes
-    #: Default configuration
-    DEFAULT_CONFIG = frozendict({
+    #: Configuration validation schema
+    CONFIG_SCHEMA = frozendict({
         "mode": {
-            "type": "mono",
-            "wavelength": 550.
-        },
-        "illumination": {
-            "type": "directional",
-            "zenith": 0.,
-            "azimuth": 0.,
-            "irradiance": 1.
-        },
-        "measure": {
-            "type": "hemispherical",
-            "zenith_res": 10.,
-            "azimuth_res": 10.,
-            "spp": 1000,
+            "type": "dict",
+            "default": {},
+            "schema": {
+                "type": {
+                    "type": "string",
+                    "allowed": ["mono"],
+                    "default": "mono"
+                },
+                "wavelength": {"type": "number", "min": 0.0, "default": 550.0},
+            }
         },
         "surface": {
-            "type": "lambertian",
-            "reflectance": 0.5
+            "type": "dict",
+            "default": {},
+            "allow_unknown": True,
+            "schema": {
+                "type": {
+                    "type": "string",
+                    "allowed": ["lambertian", "rpv"],
+                    "default": "lambertian"
+                },
+            }
+        },
+        "atmosphere": {
+            "type": "dict",
+            "nullable": True,
+            "default": {},
+            "allow_unknown": True,
+            "schema": {
+                "type": {
+                    "type": "string",
+                    "allowed": ["rayleigh_homogeneous"],
+                    "default": "rayleigh_homogeneous",
+                },
+            }
+        },
+        "illumination": {
+            "type": "dict",
+            "default": {},
+            "allow_unknown": True,
+            "schema": {
+                "type": {
+                    "type": "string",
+                    "allowed": ["directional", "constant"],
+                    "default": "directional"
+                },
+            },
+        },
+        "measure": {
+            "type": "dict",
+            "default": {},
+            "schema": {
+                "type": {
+                    "type": "string",
+                    "allowed": ["hemispherical", "pplane"],
+                    "default": "hemispherical",
+                },
+                "zenith_res": {
+                    "type": "number",
+                    "min": 1.0,
+                    "default": 10.0,
+                },
+                "azimuth_res": {
+                    "type": "number",
+                    "min": 1.0,
+                    "default": 10.0,
+                },
+                "spp": {
+                    "type": "integer",
+                    "min": 1,
+                    "default": 1000,
+                }
+            }
         }
     })
 
     # Instance attributes
-    config = attr.ib(default=None)
-    _scene_dict = attr.ib(default=None)
-    _solver = attr.ib(default=None)
-    result = attr.ib(init=False)
+    _kernel_dict = attr.ib(default=None)
+    _helpers = attr.ib(default=None)
+    _runner = attr.ib(default=None)
+    results = attr.ib(init=False)
 
     def __attrs_post_init__(self):
-        if self.config is None:
-            self.config = dict(self.DEFAULT_CONFIG)
-        else:
-            config = dict(self.DEFAULT_CONFIG)
-            self.config = update(config, self.config)
-
+        super(RayleighSolverApp, self).__attrs_post_init__()
         self.init()
 
     def init(self):
@@ -135,19 +220,18 @@ class RayleighSolverApp:
         self._set_kernel_variant()
 
         # Reinitialise scene
-        self._scene_dict = SceneDict.empty()
         self._configure_scene()
 
         # Reinitialise solver
-        self._solver = OneDimSolver(self._scene_dict)
+        self._runner = OneDimSolver(self._kernel_dict)
 
     def _set_kernel_variant(self):
-        """Set kernel variant according to scene dictionary. If scene dictionary
-        has not been created, use mode information to set variant.
+        """Set kernel variant according to kernel scene dictionary. If scene
+        dictionary has not been created, use mode information to set variant.
         """
 
-        if self._scene_dict is not None:
-            eradiate.kernel.set_variant(self._scene_dict.variant)
+        if self._kernel_dict is not None:
+            eradiate.kernel.set_variant(self._kernel_dict.variant)
         else:
             mode = self.config["mode"]["type"]
             if mode == "mono":
@@ -157,53 +241,70 @@ class RayleighSolverApp:
 
     def _configure_scene(self):
         factory = Factory()
+        config = deepcopy(self.config)
+        self._helpers = {}
+        self._kernel_dict = KernelDict.empty()
 
         # Gather mode information
-        wavelength = self.config["mode"]["wavelength"]
+        wavelength = config["mode"]["wavelength"]
 
         # Set illumination
-        self._scene_dict.add(factory.create(self.config["illumination"]))
+        self._helpers["illumination"] = factory.create(config["illumination"])
 
         # Set atmosphere
-        try:
-            config_atmosphere = self.config["atmosphere"]
+        config_atmosphere = config.get("atmosphere", None)
 
+        if config_atmosphere is not None:
             try:
-                sigma_s_params = config_atmosphere["sigma_s_params"]
+                sigma_s = config_atmosphere["sigma_s"]
 
                 try:
-                    wavelength_atmosphere = sigma_s_params["wavelength"]
+                    wavelength_atmosphere = sigma_s["wavelength"]
                     if wavelength_atmosphere != wavelength:
-                        warnings.warn("overriding 'atmosphere.sigma_s_params.wavelength' "
-                                      "with 'mode.wavelength'", ConfigWarning)
-                    config_atmosphere["sigma_s_params"]["wavelength"] = wavelength
+                        warnings.warn(
+                            "overriding 'atmosphere.sigma_s.wavelength' "
+                            "with 'mode.wavelength'",
+                            ConfigWarning
+                        )
+
                 except KeyError:
-                    config_atmosphere["sigma_s_params"]["wavelength"] = wavelength
+                    # sigma_s does not contain wavelength spec:
+                    # we add it
+                    config_atmosphere["sigma_s"]["wavelength"] = wavelength
+
+                except TypeError:
+                    # sigma_s is a number: we leave it as it is
+                    pass
 
             except KeyError:
-                if "sigma_s" not in config_atmosphere:
-                    config_atmosphere["sigma_s_params"] = {"wavelength": wavelength}
+                # config_atmosphere is missing a scattering coefficient
+                # specification: just add it
+                config_atmosphere["sigma_s"] = {"wavelength": wavelength}
 
-            atmosphere = RayleighHomogeneous(config_atmosphere)
-            self._scene_dict.add(atmosphere)
-        except KeyError:
-            atmosphere = {}
+            self._helpers["atmosphere"] = factory.create(config_atmosphere)
 
         # Set surface
-        if atmosphere:
-            self.config["surface"]["width"] = atmosphere.config["width"]
-        self._scene_dict.add(factory.create(self.config["surface"]))
+        atmosphere = self._helpers.get("atmosphere", None)
+        if atmosphere is not None:
+            if "width" in config["surface"].keys():
+                warnings.warn(
+                    "overriding 'surface.width' with 'atmosphere.width'",
+                    ConfigWarning
+                )
+            config["surface"]["width"] = atmosphere._width
 
-        # Process measure configuration
-        measure_type = self.config["measure"]["type"]
-        if measure_type not in {"hemispherical", "pplane"}:
-            raise ValueError(f"unsupported measure.type {measure_type}")
+        self._helpers["surface"] = factory.create(config["surface"])
+
+        # Expand helpers to kernel scene dictionary
+        self._kernel_dict.add(list(self._helpers.values()))
 
     def compute(self, quiet=False):
-        # Ensure that scalar values used as DataArray coords are arrays
-        theta_i = ensure_array(self.config['illumination']['zenith'], dtype=float)
-        phi_i = ensure_array(self.config['illumination']['azimuth'], dtype=float)
-        wavelength = ensure_array(self.config['mode']['wavelength'], dtype=float)
+        # Ensure that scalar values used as xarray coordinates are arrays
+        illumination = self._helpers["illumination"]
+
+        theta_i = ensure_array(illumination.config["zenith"], dtype=float)
+        phi_i = ensure_array(illumination.config["azimuth"], dtype=float)
+        wavelength = ensure_array(self.config["mode"]["wavelength"], dtype=float)
 
         # Process measure angles
         measure_type = self.config["measure"]["type"]
@@ -214,14 +315,16 @@ class RayleighSolverApp:
 
         elif measure_type == "pplane":
             theta_o = np.arange(0., 90., self.config["measure"]["zenith_res"])
-            phi_o = np.array([self.config["illumination"]["azimuth"],
-                              self.config["illumination"]["azimuth"] + 180.])
+            phi_o = np.array([
+                self.config["illumination"]["azimuth"],
+                self.config["illumination"]["azimuth"] + 180.
+            ] % 360.)
 
         else:
             raise ValueError(f"unsupported measure.type {measure_type}")
 
         # Run simulation
-        data = self._solver.run(vza=theta_o, vaa=phi_o,
+        data = self._runner.run(vza=theta_o, vaa=phi_o,
                                 spp=self.config["measure"]["spp"],
                                 squeeze=False,
                                 show_progress=not quiet)
@@ -229,7 +332,7 @@ class RayleighSolverApp:
             data = np.expand_dims(data, dim)
 
         # Store results to an xarray.DataArray
-        self.result = xr.DataArray(
+        self.results = xr.DataArray(
             data,
             coords=[theta_i, phi_i, theta_o, phi_o, wavelength],
             dims=["theta_i", "phi_i", "theta_o", "phi_o", "wavelength"]
@@ -271,10 +374,10 @@ class RayleighSolverApp:
             plt.title("Hemispherical view")
 
             viewer = bv.HemisphericalView()
-            viewer.wavelength = self.config['mode']['wavelength']
-            viewer.wi = [self.config['illumination']['zenith'],
-                         self.config['illumination']['azimuth']]
-            viewer.brdf = self.result
+            viewer.wavelength = self.config["mode"]["wavelength"]
+            viewer.wi = [self.config["illumination"]["zenith"],
+                         self.config["illumination"]["azimuth"]]
+            viewer.brdf = self.results
 
         elif plot_type == "pplane":
             if ax is None:
@@ -282,10 +385,10 @@ class RayleighSolverApp:
             plt.title("Principal plane view")
 
             viewer = bv.PrincipalPlaneView()
-            viewer.wavelength = self.config['mode']['wavelength']
-            viewer.wi = [self.config['illumination']['zenith'],
-                         self.config['illumination']['azimuth']]
-            viewer.brdf = self.result
+            viewer.wavelength = self.config["mode"]["wavelength"]
+            viewer.wi = [self.config["illumination"]["zenith"],
+                         self.config["illumination"]["azimuth"]]
+            viewer.brdf = self.results
 
         else:
             raise ValueError(f"unsupported measure.type {plot_type}")

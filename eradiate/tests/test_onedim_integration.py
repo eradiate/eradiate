@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+
 @pytest.mark.slow
 def test_onedimsolver_large_size(variant_scalar_mono_double, json_metadata):
     r"""
@@ -30,38 +31,35 @@ def test_onedimsolver_large_size(variant_scalar_mono_double, json_metadata):
     For all scene sizes below the parametrized size :code:`min_expected_size` the computational
     results must be equal to the theoretical prediction within a relative tolerance of 1e-3.
     """
-    from eradiate.scenes import SceneDict
     from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+    from eradiate.scenes.core import KernelDict
     from eradiate.solvers.onedim import OneDimSolver
 
     min_expected_size = 1e3
     results = dict()
     for scene_size in [10 ** i for i in range(1, 9)]:
+        kernel_dict = KernelDict({
+            "type": "scene",
+            "bsdf_surface": {
+                "type": "diffuse",
+                "reflectance": {"type": "uniform", "value": 0.5},
+            },
+            "surface": {
+                "type": "rectangle",
+                "to_world": ScalarTransform4f.scale(
+                    ScalarVector3f(scene_size, scene_size, 1)
+                ),
+                "bsdf": {"type": "ref", "id": "bsdf_surface"},
+            },
+            "illumination": {
+                "type": "directional",
+                "direction": [0, 0, -1],
+                "irradiance": {"type": "uniform", "value": 1.0},
+            },
+            "integrator": {"type": "path"},
+        })
 
-        scene_dict = SceneDict(
-            {
-                "type": "scene",
-                "bsdf_surface": {
-                    "type": "diffuse",
-                    "reflectance": {"type": "uniform", "value": 0.5},
-                },
-                "surface": {
-                    "type": "rectangle",
-                    "to_world": ScalarTransform4f.scale(
-                        ScalarVector3f(scene_size, scene_size, 1)
-                    ),
-                    "bsdf": {"type": "ref", "id": "bsdf_surface"},
-                },
-                "illumination": {
-                    "type": "directional",
-                    "direction": [0, 0, -1],
-                    "irradiance": {"type": "uniform", "value": 1.0},
-                },
-                "integrator": {"type": "path"},
-            }
-        )
-
-        solver = OneDimSolver(scene_dict)
+        solver = OneDimSolver(kernel_dict)
 
         vza = np.linspace(0, 90, 10)
         vaa = np.linspace(0, 360, 37)
@@ -84,7 +82,7 @@ def test_onedimsolver_large_size(variant_scalar_mono_double, json_metadata):
     passed_sizes = [size for size in results if results[size] == True]
     maxsize = np.max(passed_sizes)
 
-    json_metadata['metrics'] = {
+    json_metadata["metrics"] = {
         "test_onedimsolver_large_size": {
             "name": "OneDimSolver maximum scene size",
             "description": "The maximum size for OneDimSolver scenes is:",

@@ -12,16 +12,26 @@ import guzzle_sphinx_theme
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+import os
+import sys
 # sys.path.insert(0, os.path.abspath('.'))
+sys.path.append(os.path.abspath("./_ext"))
+
+# -- Mock kernel module ------------------------------------------------------
+
+# This ensures that the docs can be built even if the kernel is not compiled.
+#
+import mock
+MOCK_MODULES = ["eradiate.kernel"]
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'Eradiate'
-copyright = '2020, The Eradiate Team'
-author = 'The Eradiate Team'
+project = "Eradiate"
+copyright = "2020, The Eradiate Team"
+author = "The Eradiate Team"
 
 
 # -- General configuration ---------------------------------------------------
@@ -29,16 +39,23 @@ author = 'The Eradiate Team'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-]
+extensions = []
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
+
+# Add custom extension
+extensions.append("ertdocs")
+
+rst_prolog = r"""
+.. role:: bolditalic
+  :class: bolditalic
+"""
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -47,16 +64,15 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
-html_theme = 'guzzle_sphinx_theme'
-html_css_files = ['theme_overrides.css']
+html_theme = "guzzle_sphinx_theme"
+html_css_files = ["theme_overrides.css"]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Register the theme as an extension to generate a sitemap.xml
-extensions = []
 extensions.append("guzzle_sphinx_theme")
 extensions.append("sphinx.ext.mathjax")
 
@@ -67,11 +83,11 @@ extensions.append("sphinxcontrib.bibtex")
 # Intersphinx configuration for cross-project referencing
 extensions.append("sphinx.ext.intersphinx")
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3/', None),
-    'matplotlib': ('https://matplotlib.org/', None),
-    'xarray': ('http://xarray.pydata.org/en/stable/', None),
-    'mitsuba': ('https://mitsuba2.readthedocs.io/en/latest/', None),
-    'pint': ('https://pint.readthedocs.io/en/latest/', None),
+    "python": ("https://docs.python.org/3/", None),
+    "matplotlib": ("https://matplotlib.org/", None),
+    "xarray": ("http://xarray.pydata.org/en/stable/", None),
+    "mitsuba": ("https://mitsuba2.readthedocs.io/en/latest/", None),
+    "pint": ("https://pint.readthedocs.io/en/latest/", None),
 }
 
 # Activate todo notes
@@ -91,12 +107,12 @@ html_theme_options = {}
 #html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = 'Eradiate'
+html_short_title = "Eradiate"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
 html_sidebars = {
-    '**': ['logo-text.html', 'globaltoc.html', 'searchbox.html']
+    "**": ["logo-text.html", "globaltoc.html", "searchbox.html"]
 }
 
 # The name of an image file (within the static path) to use as favicon of the
@@ -107,7 +123,7 @@ html_sidebars = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -166,13 +182,13 @@ html_show_sourcelink = False
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'eradiate_doc'
+htmlhelp_basename = "eradiate_doc"
 
 # Autodoc options
 autosummary_generate = True
 autosummary_members = True
-autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'inherited-members']
+autodoc_default_flags = ["members", "undoc-members", "show-inheritance", "inherited-members"]
 
-# Set Mitsuba variant for autodoc
-import eradiate.kernel
-eradiate.kernel.set_variant('scalar_mono_double')
+# Set Mitsuba variant for autodoc (not required anymore)
+# import eradiate.kernel
+# eradiate.kernel.set_variant("scalar_mono_double")

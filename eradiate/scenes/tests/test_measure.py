@@ -1,7 +1,7 @@
 import numpy as np
 
-from eradiate.scenes import SceneDict
-from eradiate.scenes.measure import _distant, Distant, _perspective, Perspective
+from eradiate.scenes.core import KernelDict
+from eradiate.scenes.measure import _distant, DistantMeasure, _perspective, PerspectiveCameraMeasure
 from eradiate.util.units import ureg
 
 
@@ -21,7 +21,7 @@ def test_distant_function(variant_scalar_mono):
 
 def test_distant_class(variant_scalar_mono):
     # Constructor
-    d = Distant()
+    d = DistantMeasure()
     assert d.kernel_dict()[d.id] == _distant()
 
 
@@ -47,6 +47,6 @@ def test_perspective_function(variant_scalar_mono):
 
 def test_perspective_class(variant_scalar_mono):
     # Constructor
-    d = Perspective()
+    d = PerspectiveCameraMeasure()
     assert d.kernel_dict()[d.id] == _perspective()
-    assert SceneDict.empty().add(d) is not None
+    assert KernelDict.empty().add(d) is not None

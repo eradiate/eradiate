@@ -1,7 +1,7 @@
 import numpy as np
 
-from eradiate.scenes import SceneDict
-from eradiate.scenes.illumination import _directional, Directional, _constant, Constant
+from eradiate.scenes.core import KernelDict
+from eradiate.scenes.illumination import _directional, DirectionalIllumination, _constant, ConstantIllumination
 from eradiate.util.units import ureg
 
 
@@ -21,9 +21,9 @@ def test_directional_function(variant_scalar_mono):
 
 def test_directional_class(variant_scalar_mono):
     # Constructor
-    d = Directional()
+    d = DirectionalIllumination()
     assert d.kernel_dict()[d.id] == _directional()
-    assert SceneDict.empty().add(d).load() is not None
+    assert KernelDict.empty().add(d).load() is not None
 
 
 def test_constant_function(variant_scalar_mono):
@@ -36,6 +36,6 @@ def test_constant_function(variant_scalar_mono):
 
 def test_constant_class(variant_scalar_mono):
     # Constructor
-    c = Constant()
+    c = ConstantIllumination()
     assert c.kernel_dict()[c.id] == _constant()
-    assert SceneDict.empty().add(c).load() is not None
+    assert KernelDict.empty().add(c).load() is not None

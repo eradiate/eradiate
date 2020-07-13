@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 
-from eradiate.scenes import SceneDict
+from eradiate.scenes.core import KernelDict
 from eradiate.scenes.atmosphere.rayleigh import (
     _LOSCHMIDT, _IOR_DRY_AIR, kf, sigma_s_single,
-    sigma_s_mixture, delta, RayleighHomogeneous
+    sigma_s_mixture, delta, RayleighHomogeneousAtmosphere
 )
 from eradiate.util.units import Q_
 
@@ -12,16 +12,17 @@ from eradiate.util.units import Q_
 def test_king_correction_factor():
     """Test computation of King correction factor"""
 
-    # Compare to a reference value
-    assert np.allclose(kf(), 1.048, rtol=1.e-2)
+    # Compare default mean depolarisation ratio for dry air given by
+    # (Young, 1980) with corresponding value
+    assert np.allclose(kf(0.0279), 1.048, rtol=1.e-2)
 
 
 def test_sigma_s_single():
     """Test computation of Rayleigh scattering coefficient with default values"""
 
-    ref_cross_section = Q_(4.513e-27, 'cm**2')
+    ref_cross_section = Q_(4.513e-27, "cm**2")
     ref_sigmas = ref_cross_section * _LOSCHMIDT
-    expected = ref_sigmas.to('km^-1').magnitude
+    expected = ref_sigmas.to("km^-1").magnitude
 
     # Compare to reference value computed from scattering cross section in
     # Bates (1984) Planetary and Space Science, Volume 32, No. 6.
@@ -70,10 +71,14 @@ def test_delta():
 
 @pytest.mark.parametrize("ref", (False, True))
 def test_rayleigh_homogeneous(variant_scalar_mono, ref):
-    from eradiate.kernel.core.xml import load_dict
-    # Default constructor
-    r = RayleighHomogeneous()
+    # This test checks the functionality of RayleighHomogeneousAtmosphere
 
+    from eradiate.kernel.core.xml import load_dict
+
+    # Check if default constructor works
+    r = RayleighHomogeneousAtmosphere()
+
+    # Check if default constructs can be loaded by the kernel
     dict_phase = next(iter(r.phase().values()))
     assert load_dict(dict_phase) is not None
 
@@ -84,44 +89,38 @@ def test_rayleigh_homogeneous(variant_scalar_mono, ref):
     assert load_dict(dict_shape) is not None
 
     # Check if produced scene can be instantiated
-    scene_dict = SceneDict.empty()
-    scene_dict.add(r)
-    assert scene_dict.load() is not None
+    kernel_dict = KernelDict.empty()
+    kernel_dict.add(r)
+    assert kernel_dict.load() is not None
 
     # Construct with parameters
-    r = RayleighHomogeneous(dict(
+    r = RayleighHomogeneousAtmosphere(dict(
         height=10.,
-        sigma_s_params={"wavelength": 650.}
+        sigma_s={"wavelength": 650.}
     ))
 
     # check if sigma_s was correctly computed using wavelength value in
     # sigma_s_params
-    assert np.isclose(r.config["sigma_s"], sigma_s_single(wavelength=650.))
+    assert np.isclose(r._sigma_s, sigma_s_single(wavelength=650.))
+
+    # check if automatic scene width works as intended
+    assert np.isclose(r._width, 10. / sigma_s_single(wavelength=650.))
 
     # Check if produced scene can be instantiated
-    assert SceneDict.empty().add(r).load() is not None
+    assert KernelDict.empty().add(r).load() is not None
 
-    # check that setting sigma_s and sigma_s_params simultaneously raises an
-    # error
-    with pytest.raises(ValueError):
-        r = RayleighHomogeneous(dict(
-            sigma_s=1e-5,
-            sigma_s_params={"refractive_index": 1.0003}
-        ))
+    # Check that if no value for sigma_s is provided, sigma_s_single is called
+    # to set the value of _sigma_s
+    r = RayleighHomogeneousAtmosphere()
+    assert r._sigma_s == sigma_s_single()
 
-    # check that if nor sigma_s nor sigma_s_params is provided, sigma_s_single
-    # is called to set the value of sigma_s
-    r = RayleighHomogeneous()
-    assert r.config["sigma_s"] == sigma_s_single()
-
-    # check that we can set sigma_s_params with every parameters of
+    # Check that we can set sigma_s_params with every parameter of
     # sigma_s_single
-    params={
+    params = {
         "wavelength": 480.,
         "number_density": 2.0e25,
         "refractive_index": 1.0003,
-        "king_factor": 1.05}
-    r = RayleighHomogeneous(dict(
-        sigma_s_params=params
-    ))
-    assert r.config["sigma_s"] == sigma_s_single(**params)
+        "king_factor": 1.05
+    }
+    r = RayleighHomogeneousAtmosphere({"sigma_s": params})
+    assert r._sigma_s == sigma_s_single(**params)
