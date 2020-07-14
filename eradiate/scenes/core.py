@@ -16,8 +16,23 @@ from ..util.metaclasses import Singleton
 
 @attr.s
 class SceneHelper(ConfigObject):
-    """Abstract class for all scene generation helpers."""
-    # TODO: rename to SceneGenerationHelper
+    """Abstract class for all scene generation helpers.
+
+    This abstract base class provides a basic template for all scene generation
+    helper classes. Since it inherits from
+    :class:`~eradiate.scenes.core.ConfigObject`, its subclasses must define
+    a :data:`CONFIG_SCHEMA` class attribute.
+
+    .. note::
+
+        This class is designed to integrate with the :claas:`Factory` class.
+        See the corresponding information for a list of factory-enabled
+        scene generation helper classes.
+
+    Instance attributes:
+        ``id`` (str)
+            Unique identifier used to prefix kernel dictionary objects.
+    """
 
     id = attr.ib(default=None)  #: Base identifier
 
@@ -28,7 +43,10 @@ class SceneHelper(ConfigObject):
         self.init()
 
     def init(self):
-        """(Re)initialise internal state."""
+        """(Re)initialise internal state.
+
+        This method is automatically called by the constructor to initialise the
+        object."""
         pass
 
     @abstractmethod
@@ -164,12 +182,51 @@ class Factory(metaclass=Singleton):
     Upon initialisation, this instance will look up modules listed in the
     :attr:`SUBMODULES` and search for classes on which the :meth:`register`
     decorator has been applied. Note that decorated classes must implement
-    a ``from_dict`` class method which generates instances from a dictionary.
+    a ``from_dict()`` class method which generates instances from a dictionary.
     Since :class:`~eradiate.scenes.core.SceneHelper` has been designed to work
     with this class, it implements one.
 
     Using the factory simply requires to import it, instantiate it and call its
-    :meth:`create` method with a dictionary.
+    :meth:`create` method with a dictionary containing:
+
+    - a ``type`` key, whose value will be the keyword corresponding to the
+      object the factory will create;
+    - dictionary contents which will be passed to the target class's
+      ``from_dict()`` class method.
+
+    Eradiate only registers :class:`~eradiate.scenes.core.SceneHelper`
+    derivatives to its factory by default. Consequently, configuration
+    dictionary validation will occur upon calling :meth:`create`.
+
+    .. admonition:: Example
+
+        The following code snippet instantiates a
+        :class:`~eradiate.scenes.illumination.DistantIllumination` helper using
+        its :factorykey:`distant` factory key:
+
+        .. code:: python
+
+            from eradiate.scenes.core import Factory
+
+            factory = Factory()
+            illumination = factory.create({
+                "type": "distant",
+                "irradiance": 1.0,
+                "zenith": 30.0,
+                "azimuth": 180.0
+            })
+
+        In practice, the ``type`` key is used to look up the class to
+        instantiate, then popped from the configuration dictionary. Therefore,
+        the corresponding object creation call is, in this particular case:
+
+        .. code:: python
+
+            DistantSurface({
+                "irradiance": 1.0,
+                "zenith": 30.0,
+                "azimuth": 180.0
+            })
 
     .. admonition:: List of factory-enabled scene generation helpers
         :class: hint

@@ -11,12 +11,36 @@ from .collections import configdict
 
 @attr.s
 class ConfigObject(ABC):
-    """Abstract base class for objects configured using a validation schema."""
+    """Abstract base class for objects configured using a validation schema.
+
+    Every object inheriting from this class has a :data:`config` attribute which
+    is intended to store a configuration dictionary.
+
+    Upon execution of the constructor, the dictionary passed as an argument
+    is validated using the `Cerberus <https://docs.python-cerberus.org>`_
+    validation library. :data:`config` is checked for compliance with a
+    validation schema stored in the :data:`CONFIG_SCHEMA` class constant.
+    Should validation fail, a :class:`ValueError` is raised which contains the
+    validation error report.
+
+    If validation is successful, the constructor's :data:`config` argument is
+    normalised to apply defaults defined in :data:`CONFIG_SCHEMA`, then
+    converted to a :class:`~eradiate.util.collections.configdict`.
+    """
 
     @property
     @abstractmethod
     def CONFIG_SCHEMA(self):
-        """TODO: add docs"""
+        """Cerberus validation schema to validate :data:`config`.
+
+        See the `Cerberus documentation <https://docs.python-cerberus.org>`_
+        for available rules.
+
+        .. note::
+
+            This member is implemented as an abstract property to force defining
+            it upon subclassing :class:`ConfigObject`.
+        """
         pass
 
     config = attr.ib(default={})

@@ -9,7 +9,7 @@ dependencies:
   - pytest=5.3
   - pytest-metadata=1.8  # Required by pytest-json-report
   - pytest-xdist=1.30
-  - sphinx>=3.0
+  - sphinx>=3.1
   - tabulate=0.8
   - pip
   - pip:

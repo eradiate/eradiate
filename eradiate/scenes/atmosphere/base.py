@@ -13,20 +13,42 @@ class Atmosphere(SceneHelper):
 
     @abstractmethod
     def phase(self):
-        # TODO: add docs
+        """Return phase function plugin specifications only.
+
+        Returns → dict:
+            Return a dictionary suitable for merge with a
+            :class:`~eradiate.scenes.core.KernelDict` containing all the phase
+            functions attached to the atmosphere.
+        """
+        # TODO: return a KernelDict
         pass
 
     @abstractmethod
     def media(self, ref=False):
-        # TODO: add docs
+        """Return medium plugin specifications only.
+
+        Returns → dict:
+            Return a dictionary suitable for merge with a
+            :class:`~eradiate.scenes.core.KernelDict` containing all the media
+            attached to the atmosphere.
+        """
+        # TODO: return a KernelDict
         pass
 
     @abstractmethod
     def shapes(self, ref=False):
-        # TODO: add docs
+        """Return shape plugin specifications only.
+
+        Returns → dict:
+            A dictionary suitable for merge with a
+            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
+            attached to the atmosphere.
+        """
+        # TODO: return a KernelDict
         pass
     
     def kernel_dict(self, ref=True):
+        # TODO: return a KernelDict
         kernel_dict = {"integrator": {"type": "volpath"}}  # Force volpath integrator
         
         if not ref:
