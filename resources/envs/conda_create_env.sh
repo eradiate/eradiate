@@ -4,13 +4,13 @@ ROOT=`pwd`
 CONDA_ENV_NAME="eradiate"
 
 echo "Creating conda env ${CONDA_ENV_NAME} ..."
-conda env create --force --quiet --file resources/environments/eradiate.yml --name ${CONDA_ENV_NAME} || { echo "${CONDA_ENV_NAME} env creation failed" ; exit 1; }
+conda env create --force --file ../deps/requirements_conda.yml --name ${CONDA_ENV_NAME} || { echo "${CONDA_ENV_NAME} env creation failed" ; exit 1; }
 
 echo "Updating conda env ${CONDA_ENV_NAME} with dev packages ..."
-conda env update --quiet --file resources/environments/eradiate-dev.yml --name ${CONDA_ENV_NAME} || { echo "${CONDA_ENV_NAME} env update failed" ; exit 1; }
+conda env update --quiet --file ../deps/requirements_dev_conda.yml --name ${CONDA_ENV_NAME} || { echo "${CONDA_ENV_NAME} env update failed" ; exit 1; }
 
 echo "Updating conda env ${CONDA_ENV_NAME} with jupyter lab ..."
-conda env update --quiet --file resources/environments/eradiate-jupyter.yml --name ${CONDA_ENV_NAME} || { echo "${CONDA_ENV_NAME} env update failed" ; exit 1; }
+conda env update --quiet --file ../deps/requirements_jupyter_conda.yml --name ${CONDA_ENV_NAME} || { echo "${CONDA_ENV_NAME} env update failed" ; exit 1; }
 
 echo "Copying environment variable setup scripts ..."
 conda activate ${CONDA_ENV_NAME}

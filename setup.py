@@ -19,12 +19,17 @@ def get_version(rel_path):
         raise RuntimeError("Unable to find version string.")
 
 
+def get_requirements(rel_path):
+    with open(rel_path, "r") as file:
+        return file.read().strip().splitlines()
+
+
 setup(
     name="eradiate",
     version=get_version("eradiate/__init__.py"),
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
-    install_requires=[],
+    install_requires=[get_requirements("resources/deps/requirements_pip.txt")],
     entry_points={
         "console_scripts": [
             "ertrayleigh = eradiate.scripts.ertrayleigh:cli"

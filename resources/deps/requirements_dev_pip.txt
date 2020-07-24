@@ -1,0 +1,13 @@
+autopep8
+isort
+mock
+pylint
+pytest==5.3
+pytest-metadata==1.8
+pytest-xdist==1.30
+sphinx>=3.1
+tabulate==0.8
+guzzle-sphinx-theme~=0.7
+pytest-json-report~=1.2
+sphinxcontrib-bibtex~=1.0
+tinydb

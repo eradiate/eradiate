@@ -19,7 +19,11 @@ def run_pytest(target_dir=None, json_report_file=None, cwd=None):
     """
     cmd = ["python", "-m", "pytest"]
 
-    if target_dir is not None:
+    if isinstance(target_dir, list):
+        cmd = cmd + target_dir
+    elif target_dir is None:
+        pass
+    else:
         cmd.append(target_dir)
 
     if json_report_file is not None:
@@ -59,6 +63,7 @@ def cli():
     eradiate_dir = os.environ["ERADIATE_DIR"]
     kernel_dir = os.environ["MITSUBA_DIR"]
     build_dir = os.path.join(eradiate_dir, "test_report", "generated")
+    special_dirs = [os.path.join(eradiate_dir, "resources", "deps", "tests")]
 
     parser = argparse.ArgumentParser(description=helptext)
     parser.add_argument(
@@ -75,6 +80,8 @@ def cli():
                    json_report_file=os.path.join(build_dir, 'report_kernel.json'))
         run_pytest(target_dir=os.path.join(eradiate_dir, "eradiate"),
                    json_report_file=os.path.join(build_dir, 'report_eradiate.json'))
+        run_pytest(target_dir=special_dirs,
+                   json_report_file=os.path.join(build_dir, "report_special.json"))
 
     summaries.generate()
     ts.generate()

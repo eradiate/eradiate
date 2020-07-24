@@ -160,17 +160,18 @@ def generate():
     if not pathlib.Path.exists(build_dir):
         os.mkdir(build_dir)
 
-    with open(build_dir / "report_kernel.json") as json_data:
-        report = json.load(json_data)
-    passed1, failed1, skipped1 = group_results_unittests(report)
+    passed = dict()
+    failed = dict()
+    skipped = dict()
 
-    with open(build_dir / "report_eradiate.json") as json_data:
-        report = json.load(json_data)
-    passed2, failed2, skipped2 = group_results_unittests(report)
-
-    passed = {**passed1, **passed2}
-    failed = {**failed1, **failed2}
-    skipped = {**skipped1, **skipped2}
+    for file in [f for f in os.listdir(build_dir) if os.path.isfile(os.path.join(build_dir, f))]:
+        if os.path.splitext(file)[-1] == ".json":
+            with open(os.path.join(build_dir, file), "r") as json_file:
+                report = json.load(json_file)
+            passed_, failed_, skipped_ = group_results_unittests(report)
+            passed = {**passed, **passed_}
+            failed = {**failed, **failed_}
+            skipped = {**skipped, **skipped_}
 
     with open(build_dir / "summary.rst", "w") as summary_file:
         summary_file.write(create_summary_table(report))
