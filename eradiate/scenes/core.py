@@ -25,8 +25,8 @@ class SceneHelper(ConfigObject):
 
     .. note::
 
-        This class is designed to integrate with the :claas:`Factory` class.
-        See the corresponding information for a list of factory-enabled
+        This class is designed to integrate with the :class:`Factory` class.
+        See the corresponding documentation for a list of factory-enabled
         scene generation helper classes.
 
     Instance attributes:
@@ -197,6 +197,13 @@ class Factory(metaclass=Singleton):
     Eradiate only registers :class:`~eradiate.scenes.core.SceneHelper`
     derivatives to its factory by default. Consequently, configuration
     dictionary validation will occur upon calling :meth:`create`.
+
+    .. note::
+
+        This class is designed to allow for runtime instantiation and
+        configuration of :class:`~eradiate.scenes.core.SceneHelper` children
+        classes from YAML fragments.
+
 
     .. admonition:: Example
 
