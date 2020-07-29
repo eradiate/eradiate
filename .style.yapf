@@ -4,3 +4,4 @@ spaces_before_comment = 2
 split_before_logical_operator = true
 split_complex_comprehension = true
 indent_dictionary_value = true
+dedent_closing_brackets = true
