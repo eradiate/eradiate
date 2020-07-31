@@ -4,7 +4,7 @@ import xarray as xr
 from eradiate.scenes.atmosphere.profiles import *
 
 
-def test_checker():
+def test_check():
     # profile with a missing data variable (total number density)
     p = xr.Dataset(
         data_vars={
@@ -18,7 +18,7 @@ def test_checker():
             "species": ("species", ["N2", "O2"])
         }
     )
-    assert checker(p) is False
+    assert check(p) is False
 
     # profile with a missing dimension (species)
     p = xr.Dataset(
@@ -33,7 +33,7 @@ def test_checker():
             "altitude": ("altitude", np.linspace(0, 100e3, 100), {"units": "m"}),
         }
     )
-    assert checker(p) is False
+    assert check(p) is False
 
     # profile with missing coordinate (altitude)
     p = xr.Dataset(
@@ -48,7 +48,7 @@ def test_checker():
             "species": ("species", ["N2", "O2"])
         }
     )
-    assert checker(p) is False
+    assert check(p) is False
 
     # good profile
     p = xr.Dataset(
@@ -64,7 +64,7 @@ def test_checker():
             "species": ("species", ["N2", "O2"])
         }
     )
-    assert checker(p) is True
+    assert check(p) is True
 
 
 def test_us76():

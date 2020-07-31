@@ -1,6 +1,5 @@
 """Runner classes to solve one-dimensional problems."""
 
-
 import attr
 import numpy as np
 from tqdm.notebook import tqdm
