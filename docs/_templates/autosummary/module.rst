@@ -54,6 +54,8 @@
 
 {% if attributes %}
 .. rubric:: Attributes
+
+.. autosummary::
     :toctree: .
     {% for attribute in attributes %}
     {{ attribute }}

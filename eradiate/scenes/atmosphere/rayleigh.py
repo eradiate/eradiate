@@ -28,7 +28,7 @@ def kf(ratio=0.0279):
         King correction factor [dimensionless].
     """
 
-    return (6. + 3. * ratio) / (6. - 7. * ratio)
+    return (6.0 + 3.0 * ratio) / (6.0 - 7.0 * ratio)
 
 
 def sigma_s_single(wavelength=550.,
