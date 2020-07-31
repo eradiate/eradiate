@@ -20,6 +20,7 @@ Utility [eradiate.util]
     decorators
     exceptions
     frame
+    fresolver
     metaclasses
     units
     view
