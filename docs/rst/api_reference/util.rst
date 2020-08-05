@@ -20,8 +20,8 @@ Utility [eradiate.util]
     decorators
     exceptions
     frame
-    fresolver
     metaclasses
+    presolver
     units
     view
     xarray

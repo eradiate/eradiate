@@ -1,17 +1,22 @@
+import warnings
+from copy import deepcopy
+
 import attr
 import numpy as np
 from scipy.constants import physical_constants
 
+import eradiate
 from .base import Atmosphere
 from ..core import Factory
 from ...util.collections import frozendict
+from ...util.exceptions import ConfigWarning, ModeError
 from ...util.units import Q_
 
 # Physical constants
 #: Loschmidt constant [km^-3].
 _LOSCHMIDT = Q_(
     *physical_constants["Loschmidt constant (273.15 K, 101.325 kPa)"][:2]).to(
-        "km^-3")
+    "km^-3")
 #: Refractive index of dry air [dimensionless].
 _IOR_DRY_AIR = Q_(1.0002932, "")
 
@@ -149,11 +154,23 @@ def delta(ratio=0.0279):
 @attr.s()
 @Factory.register("rayleigh_homogeneous")
 class RayleighHomogeneousAtmosphere(Atmosphere):
-    r"""Rayleigh homogeneous atmosphere scene generation helper [:factorykey:`rayleigh_homogeneous`].
+    """Rayleigh homogeneous atmosphere scene generation helper
+    [:factorykey:`rayleigh_homogeneous`].
 
     This class builds an atmosphere consisting of a non-absorbing
     homogeneous medium. Scattering uses the Rayleigh phase function and the
     Rayleigh scattering coefficient of a single gas.
+
+    .. admonition:: Configuration example
+        :class: hint
+
+        Default:
+            .. code:: python
+
+               {
+                   "height": 100.,
+                   "width": "auto",
+               }
 
     .. admonition:: Configuration format
         :class: hint
@@ -168,7 +185,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             If the string ``"auto"`` is passed, a value will be estimated to
             ensure that the medium is optically thick.
 
-            Default: None.
+            Default: auto.
 
         ``sigma_s`` (float or dict):
             Atmosphere scattering coefficient value [km^-1] or keyword argument
@@ -177,6 +194,11 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             If a dictionary is passed and misses arguments,
             :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`'s
             defaults apply as usual.
+
+            Note that :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`
+            will always be evaluated according to mode configuration,
+            regardless any value which could be passed as the ``wavelength``
+            argument of :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`.
 
             Default: {}.
     """
@@ -256,8 +278,22 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         """Return scattering coefficient based on configuration."""
         # TODO: make this a cached property
 
-        if isinstance(self.config["sigma_s"], dict):
-            return sigma_s_single(**self.config["sigma_s"])
+        if eradiate.mode.type != "mono":
+            raise ModeError(f"unsupported mode '{eradiate.mode.type}'")
+
+        sigma_s = deepcopy(self.config["sigma_s"])
+
+        if isinstance(sigma_s, dict):
+            try:
+                if sigma_s["wavelength"] != eradiate.mode.config["wavelength"]:
+                    warnings.warn("overriding 'sigma_s.wavelength' with "
+                                  "specified mode wavelength", ConfigWarning)
+            except KeyError:
+                pass
+
+            sigma_s["wavelength"] = eradiate.mode.config["wavelength"]
+            return sigma_s_single(**sigma_s)
+
         else:
             return self.config["sigma_s"]
 
@@ -305,10 +341,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                     ScalarTransform4f([
                         [0.5 * width, 0., 0., 0.],
                         [0., 0.5 * width, 0., 0.],
-                        [
-                            0., 0., 0.5 * (height + height_offset),
-                            0.5 * (height - height_offset)
-                        ],
+                        [0., 0., 0.5 * (height + height_offset), 0.5 * (height - height_offset)],
                         [0., 0., 0., 1.],
                     ]),
                 "bsdf": {

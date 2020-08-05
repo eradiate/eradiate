@@ -74,7 +74,7 @@ class TinyDirectional(SceneHelper):
         }
 
 
-def test_scene_helper(variant_scalar_mono):
+def test_scene_helper(mode_mono):
     # Default constructor (check if defaults are applied as intended)
     d = TinyDirectional()
     assert d.config == {"direction": [0, 0, -1], "irradiance": 1.0}

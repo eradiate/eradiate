@@ -16,54 +16,65 @@ from ..util.frame import angles_to_direction
 from ..util.units import ureg
 
 
-def _constant(radiance=1.):
-    """Create a dictionary which will instantiate a ``constant`` kernel plugin.
-
-    Parameter ``radiance`` (float or dict)
-        Emitted radiance [(u_power)/(u_length)^2/sr/nm].
-
-    Returns → dict
-        A dictionary which can be used to instantiate a ``constant`` kernel
-        plugin facing the direction specified by the angular configuration.
-    """
-    # Design note: this function provides experimental support for units.
-    # It will be removed when general support for units will be added.
-
-    return {
-        "type": "constant",
-        "radiance":
-            {"type": "uniform", "value": radiance}
-            if isinstance(radiance, float)
-            else radiance
-    }
-
-
 @attr.s
 @Factory.register(name="constant")
 class ConstantIllumination(SceneHelper):
     """Constant illumination scene generation helper [:factorykey:`constant`].
 
+    .. admonition:: Configuration examples
+        :class: hint
+
+        Default:
+            .. code:: python
+
+               {"radiance": {"type": "uniform"}}
+
+        Fully specified:
+            .. code:: python
+
+               {"radiance": {"type": "uniform", "value": 10.}}
+
     .. admonition:: Configuration format
         :class: hint
 
-        ``radiance`` (float):
-            Emitted radiance [(u_power)/(u_length)^2/nm].
+        ``radiance`` (dict):
+            Emitted radiance spectrum. This section must be a factory
+            configuration dictionary which will be passed to
+            :meth:`eradiate.scenes.core.Factory.create`.
 
-            Default: 1.
+            Allowed scene generation helpers:
+            :factorykey:`uniform`,
+            :factorykey:`solar_irradiance`
+
+            Default:
+            :factorykey:`uniform`.
     """
 
     CONFIG_SCHEMA = frozendict({
         "radiance": {
-            "type": "number",
-            "min": 0.,
-            "default": 1.
+            "type": "dict",
+            "default": {},
+            "allow_unknown": True,
+            "schema": {
+                "type": {
+                    "type": "string",
+                    "allowed": ["uniform", "solar_irradiance"],
+                    "default": "uniform"
+                }
+            }
         }
     })
 
     id = attr.ib(default="illumination")
 
     def kernel_dict(self, **kwargs):
-        return {self.id: _constant(self.config["radiance"])}
+        radiance = Factory().create(self.config["radiance"])
+        return {
+            self.id: {
+                "type": "constant",
+                "radiance": radiance.kernel_dict()["spectrum"]
+            }
+        }
 
 
 @ureg.wraps(None, (ureg.deg, ureg.deg, None), strict=False)
@@ -108,6 +119,30 @@ class DirectionalIllumination(SceneHelper):
     The illumination is oriented based on the classical angular convention used
     in Earth observation.
 
+    .. admonition:: Configuration examples
+        :class: hint
+
+        Default:
+            .. code:: python
+
+               {
+                   "zenith": 0.,
+                   "azimuth": 0.,
+                   "irradiance": {"type": "solar_irradiance"}
+               }
+
+        Fully specified:
+            .. code:: python
+
+               {
+                   "zenith": 0.,
+                   "azimuth": 0.,
+                   "irradiance": {
+                       "type": "uniform",
+                       "value": 10.
+                   }
+               }
+
     .. admonition:: Configuration format
         :class: hint
 
@@ -121,26 +156,46 @@ class DirectionalIllumination(SceneHelper):
 
             Default: 0.
 
-        ``irradiance`` (float):
-            Emitted radiant power flux in the plane orthogonal to the
-            illumination direction [(u_power)/(u_length)^2/nm].
+        ``irradiance`` (dict):
+            Emitted power flux in the plane orthogonal to the
+            illumination direction. This section must be a factory
+            configuration dictionary which will be passed to
+            :meth:`eradiate.scenes.core.Factory.create`.
 
-            Default: 1.
+            Allowed scene generation helpers:
+            :factorykey:`uniform`,
+            :factorykey:`solar_irradiance`
+
+            Default:
+            :factorykey:`solar_irradiance`.
     """
 
     CONFIG_SCHEMA = frozendict({
         "zenith": {"type": "number", "default": 0.},
         "azimuth": {"type": "number", "default": 0.},
-        "irradiance": {"type": "number", "default": 1.}
+        "irradiance": {
+            "type": "dict",
+            "default": {},
+            "allow_unknown": True,
+            "schema": {
+                "type": {
+                    "type": "string",
+                    "allowed": ["uniform", "solar_irradiance"],
+                    "default": "solar_irradiance"
+                }
+            }
+        }
     })
 
     id = attr.ib(default="illumination")
 
     def kernel_dict(self, **kwargs):
+        irradiance = Factory().create(self.config["irradiance"])
+
         return {
             self.id: _directional(
                 self.config["zenith"],
                 self.config["azimuth"],
-                self.config["irradiance"]
+                irradiance.kernel_dict()["spectrum"]
             )
         }

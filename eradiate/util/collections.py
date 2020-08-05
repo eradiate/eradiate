@@ -7,6 +7,15 @@ from dpath import util as dpu
 from dpath.exceptions import PathNotFound
 
 
+def onedict_value(d):
+    """Get the value of a single-entry dictionary."""
+
+    if len(d) != 1:
+        raise ValueError(f"dictionary has wrong length (expected 1, got {len(d)}")
+
+    return next(iter(d.values()))
+
+
 class frozendict(collections.abc.Mapping):
     """A frozen dictionary implementation. See
     https://stackoverflow.com/questions/2703599/what-would-a-frozen-dict-be.

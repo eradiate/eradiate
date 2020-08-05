@@ -1,11 +1,13 @@
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.atmosphere.rayleigh import (
     _LOSCHMIDT, _IOR_DRY_AIR, kf, sigma_s_single,
     sigma_s_mixture, delta, RayleighHomogeneousAtmosphere
 )
+from eradiate.util.collections import onedict_value
 from eradiate.util.units import Q_
 
 
@@ -70,7 +72,7 @@ def test_delta():
 
 
 @pytest.mark.parametrize("ref", (False, True))
-def test_rayleigh_homogeneous(variant_scalar_mono, ref):
+def test_rayleigh_homogeneous(mode_mono, ref):
     # This test checks the functionality of RayleighHomogeneousAtmosphere
 
     from eradiate.kernel.core.xml import load_dict
@@ -79,13 +81,13 @@ def test_rayleigh_homogeneous(variant_scalar_mono, ref):
     r = RayleighHomogeneousAtmosphere()
 
     # Check if default constructs can be loaded by the kernel
-    dict_phase = next(iter(r.phase().values()))
+    dict_phase = onedict_value(r.phase())
     assert load_dict(dict_phase) is not None
 
-    dict_medium = next(iter(r.media().values()))
+    dict_medium = onedict_value(r.media())
     assert load_dict(dict_medium) is not None
 
-    dict_shape = next(iter(r.shapes().values()))
+    dict_shape = onedict_value(r.shapes())
     assert load_dict(dict_shape) is not None
 
     # Check if produced scene can be instantiated
@@ -94,33 +96,33 @@ def test_rayleigh_homogeneous(variant_scalar_mono, ref):
     assert kernel_dict.load() is not None
 
     # Construct with parameters
-    r = RayleighHomogeneousAtmosphere(dict(
-        height=10.,
-        sigma_s={"wavelength": 650.}
-    ))
+    eradiate.mode.config["wavelength"] = 650.
+    r = RayleighHomogeneousAtmosphere({"height": 10.})
 
-    # check if sigma_s was correctly computed using wavelength value in
-    # sigma_s_params
-    assert np.isclose(r._sigma_s, sigma_s_single(wavelength=650.))
+    # check if sigma_s was correctly computed using the mode wavelength value
+    assert np.isclose(r._sigma_s,
+                      sigma_s_single(wavelength=eradiate.mode.config["wavelength"]))
 
     # check if automatic scene width works as intended
-    assert np.isclose(r._width, 10. / sigma_s_single(wavelength=650.))
+    assert np.isclose(r._width,
+                      10. / sigma_s_single(wavelength=eradiate.mode.config["wavelength"]))
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(r).load() is not None
 
-    # Check that if no value for sigma_s is provided, sigma_s_single is called
-    # to set the value of _sigma_s
-    r = RayleighHomogeneousAtmosphere()
-    assert r._sigma_s == sigma_s_single()
+    # Check that sigma_s wavelength specification is overridden
+    eradiate.mode.config["wavelength"] = 650.
+    r = RayleighHomogeneousAtmosphere({"sigma_s": 600.})
+    assert r._sigma_s != sigma_s_single(wavelength=600.)
 
-    # Check that we can set sigma_s_params with every parameter of
+    # Check that we can set sigma_s_params with the other parameters of
     # sigma_s_single
     params = {
-        "wavelength": 480.,
-        "number_density": 2.0e25,
+        "number_density": 2.0e34,
         "refractive_index": 1.0003,
         "king_factor": 1.05
     }
     r = RayleighHomogeneousAtmosphere({"sigma_s": params})
-    assert r._sigma_s == sigma_s_single(**params)
+    assert r._sigma_s == sigma_s_single(
+        wavelength=eradiate.mode.config["wavelength"], **params
+    )

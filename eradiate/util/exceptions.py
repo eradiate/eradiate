@@ -2,6 +2,10 @@
 
 
 # Exceptions
+class ModeError(Exception):
+    """Raised when encountering issues with Eradiate modes."""
+
+
 class KernelVariantError(Exception):
     """Raised when encountering issues with Eradiate kernel variants."""
     pass

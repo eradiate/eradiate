@@ -12,7 +12,7 @@ from abc import abstractmethod
 import attr
 
 from .core import Factory, SceneHelper
-from ..util.collections import frozendict
+from ..util.collections import frozendict, onedict_value
 
 
 @attr.s
@@ -65,26 +65,60 @@ class LambertianSurface(Surface):
 
     This class creates a square surface to which a Lambertian BRDF is attached.
 
-    .. admonition:: Configuration format
+    .. admonition:: Configuration examples
         :class: hint
 
-        ``reflectance`` (float):
-            Reflectance [dimensionless].
+        Default:
+            .. code:: python
 
-            Default value: 0.5.
+               {
+                   "width": 1.,
+                   "reflectance": {
+                       "type": "uniform",
+                       "value": 0.5
+                   }
+               }
+
+    .. admonition:: Configuration format
+        :class: hint
 
         ``width`` (float):
             Size of the square surface [u_length].
 
             Default: 1.
+
+        ``reflectance`` (dict):
+            Reflectance spectrum [dimensionless].
+            This section must be a factory configuration dictionary which will
+            be passed to :meth:`.Factory.create`.
+
+            Allowed scene generation helpers:
+            :factorykey:`uniform` (if selected, ``value`` must be in [0, 1]).
+
+            Default:
+            :factorykey:`uniform` with ``value`` set to 0.5.
     """
 
     CONFIG_SCHEMA = frozendict({
         "reflectance": {
-            "type": "number",
-            "min": 0.,
-            "max": 1.,
-            "default": 0.5,
+            "type": "dict",
+            "default": {},
+            "allow_unknown": True,
+            "schema": {
+                "type": {
+                    "type": "string",
+                    "allowed": ["uniform"],
+                    "default": "uniform"
+                },
+                "value": {  # If selecting uniform, we check that this is a reflectance spectrum
+                    "type": "number",
+                    "dependencies": {"type": "uniform"},
+                    "required": False,
+                    "min": 0.,
+                    "max": 1.,
+                    "default": 0.5
+                }
+            },
         },
         "width": {
             "type": "number",
@@ -94,13 +128,11 @@ class LambertianSurface(Surface):
     })
 
     def bsdfs(self):
+        reflectance = Factory().create(self.config["reflectance"])
         return {
             "bsdf_surface": {
                 "type": "diffuse",
-                "reflectance": {
-                    "type": "uniform",
-                    "value": self.config["reflectance"]
-                }
+                "reflectance": reflectance.kernel_dict()["spectrum"]
             }
         }
 
@@ -147,6 +179,19 @@ class RPVSurface(Surface):
     The default configuration corresponds to grassland (visible light)
     (:cite:`Rahman1993CoupledSurfaceatmosphereReflectance`, Table 1).
 
+    .. admonition:: Configuration example
+        :class: hint
+
+        Default:
+            .. code:: python
+
+               {
+                   "width": 1.,
+                   "rho_0": 0.183,
+                   "k": 0.78,
+                   "ttheta": -0.1,
+               }
+
     .. admonition:: Configuration format
         :class: hint
 
@@ -165,6 +210,7 @@ class RPVSurface(Surface):
             Default: 1.
     """
     # TODO: check if there are bounds to default parameters
+    # TODO: add support for spectra
 
     CONFIG_SCHEMA = frozendict({
         "rho_0": {

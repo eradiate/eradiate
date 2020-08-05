@@ -13,11 +13,11 @@ import xarray as xr
 import eradiate.kernel
 from .runner import OneDimRunner
 from ...scenes.core import Factory, KernelDict
-from ...util import view, ensure_array
+from ...util import ensure_array, view
 from ...util.collections import frozendict
-from ...util.xarray import eo_dataarray
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
+from ...util.xarray import eo_dataarray
 
 
 @attr.s
@@ -28,6 +28,34 @@ class RayleighSolverApp(ConfigObject):
     Constructor arguments / public attributes:
         ``config`` (dict):
             Configuration dictionary (see specification below).
+
+    .. admonition:: Configuration examples
+        :class: hint
+
+        Default:
+            .. code:: yaml
+
+               {
+                   "mode": {
+                       "type": "mono",
+                       "wavelength": 550.
+                   },
+                   "surface": {
+                       "type": "lambertian"
+                   },
+                   "atmosphere": {
+                       "rayleigh_homogeneous"
+                   },
+                   "illumination": {
+                       "type": "directional"
+                   },
+                   "measure": {
+                       "type": "hemispherical",
+                       "zenith_res": 10.,
+                       "azimuth_res": 10.,
+                       "spp": 1000
+                   }
+               }
 
     .. admonition:: Configuration format
         :class: hint
@@ -44,7 +72,7 @@ class RayleighSolverApp(ConfigObject):
                 Default: ``mono``.
 
             ``wavelength`` (float):
-                Selected wavelength.
+                Selected wavelength [nm].
 
                 Default: 550.0.
 
@@ -79,25 +107,13 @@ class RayleighSolverApp(ConfigObject):
 
             Allowed scene generation helpers:
             :factorykey:`constant`,
-            :factorykey:`directional`.
+            :factorykey:`directional`,
 
             Default:
             :factorykey:`directional`.
 
         ``measure`` (dict):
             Section dedicated to measure definition.
-
-            ``type`` (str):
-                Operational mode selection.
-
-                Allowed values: ``mono``.
-
-                Default: ``mono``.
-
-            ``wavelength`` (float):
-                Selected wavelength.
-
-                Default: 550.0.
 
             ``type`` (str):
                 Selected measure type.
@@ -110,12 +126,10 @@ class RayleighSolverApp(ConfigObject):
 
             ``zenith_res`` (float):
                 Zenith angle grid resolution [deg].
-
                 Default: 10.
 
             ``azimuth_res`` (float):
                 Azimuth angle grid resolution [deg].
-
                 Default: 10.
 
             ``spp`` (int):
@@ -217,8 +231,8 @@ class RayleighSolverApp(ConfigObject):
     def init(self):
         r"""(Re)initialise hidden internal state.
         """
-        # Select the kernel variant based on configuration
-        self._set_kernel_variant()
+        # Select spectral mode based on configuration
+        self._set_mode()
 
         # Reinitialise scene
         self._configure_scene()
@@ -226,19 +240,19 @@ class RayleighSolverApp(ConfigObject):
         # Reinitialise solver
         self._runner = OneDimRunner(self._kernel_dict)
 
-    def _set_kernel_variant(self):
-        """Set kernel variant according to kernel scene dictionary. If scene
-        dictionary has not been created, use mode information to set variant.
+    def _set_mode(self):
+        """Set spectral mode according to configuration. If a scene dictionary
+        is already loaded, check that it is compatible with the requested
+        spectral mode.
         """
 
+        mode_config = deepcopy(self.config["mode"])
+        mode_type = mode_config.pop("type")
+        eradiate.set_mode(mode_type, **mode_config)
+
+        # Check that scene dictionary is compatible with requested spectral mode
         if self._kernel_dict is not None:
-            eradiate.kernel.set_variant(self._kernel_dict.variant)
-        else:
-            mode = self.config["mode"]["type"]
-            if mode == "mono":
-                eradiate.kernel.set_variant("scalar_mono_double")
-            else:
-                raise ValueError(f"unsupported mode '{mode}'")
+            self._kernel_dict.check()
 
     def _configure_scene(self):
         factory = Factory()
@@ -250,38 +264,12 @@ class RayleighSolverApp(ConfigObject):
         wavelength = config["mode"]["wavelength"]
 
         # Set illumination
-        self._helpers["illumination"] = factory.create(config["illumination"])
+        self._helpers["illumination"] = factory.create(self.config["illumination"])
 
         # Set atmosphere
         config_atmosphere = config.get("atmosphere", None)
 
         if config_atmosphere is not None:
-            try:
-                sigma_s = config_atmosphere["sigma_s"]
-
-                try:
-                    wavelength_atmosphere = sigma_s["wavelength"]
-                    if wavelength_atmosphere != wavelength:
-                        warnings.warn(
-                            "overriding 'atmosphere.sigma_s.wavelength' "
-                            "with 'mode.wavelength'",
-                            ConfigWarning
-                        )
-
-                except KeyError:
-                    # sigma_s does not contain wavelength spec:
-                    # we add it
-                    config_atmosphere["sigma_s"]["wavelength"] = wavelength
-
-                except TypeError:
-                    # sigma_s is a number: we leave it as it is
-                    pass
-
-            except KeyError:
-                # config_atmosphere is missing a scattering coefficient
-                # specification: just add it
-                config_atmosphere["sigma_s"] = {"wavelength": wavelength}
-
             self._helpers["atmosphere"] = factory.create(config_atmosphere)
 
         # Set surface
@@ -316,10 +304,12 @@ class RayleighSolverApp(ConfigObject):
 
         elif measure_type == "pplane":
             theta_o = np.arange(0., 90., self.config["measure"]["zenith_res"])
-            phi_o = np.array([
-                                 illumination.config["illumination"]["azimuth"],
-                                 illumination.config["illumination"]["azimuth"] + 180.
-                             ] % 360.)
+            phi_o = np.array(
+                [
+                    illumination.config["illumination"]["azimuth"],
+                    illumination.config["illumination"]["azimuth"] + 180.
+                ] % 360.
+            )
 
         else:
             raise ValueError(f"unsupported measure.type {measure_type}")
@@ -333,8 +323,17 @@ class RayleighSolverApp(ConfigObject):
             data = np.expand_dims(data, dim)
 
         self.results["lo"] = eo_dataarray(data, theta_i, phi_i, theta_o, phi_o, wavelength)
+        self.results["irradiance"] = (
+            ("sza", "saa", "wavelength"),
+            np.array(self._kernel_dict["illumination"]["irradiance"]["value"]).reshape(1, 1, 1),
+            {
+                "long_name": "illumination spectral irradiance",
+                "units": "W/km^2/nm",
+                "angles_convention": "eo_scene"
+            }
+        )
+
         self.results.attrs = self.results["lo"].attrs
-        self.results.attrs["irradiance"] = illumination.config["irradiance"]
 
     def postprocess(self):
         """Compute the TOA BRDF and TOA BRF from the raw results.
@@ -344,7 +343,7 @@ class RayleighSolverApp(ConfigObject):
         """
         # TODO: make metadata handling more robust
         # TODO: add support of CF convention-style metadata (discuss fields to include with Yvan)
-        self.results["brdf"] = self.results["lo"] / self._helpers["illumination"].config["irradiance"]
+        self.results["brdf"] = self.results["lo"] / self.results["irradiance"]
         self.results["brdf"].attrs = self.results["lo"].attrs
         self.results["brf"] = self.results["brdf"] / np.pi
         self.results["brf"].attrs = self.results["lo"].attrs

@@ -6,11 +6,12 @@ from pathlib import Path
 from .metaclasses import Singleton
 
 
-class FileResolver(metaclass=Singleton):
-    """This class implements a simple cross-platform file resolver.
+class PathResolver(metaclass=Singleton):
+    """This class implements a simple cross-platform path resolver.
     It looks for a file or directory given its (possibly relative) name and a
     set of search paths. The implementation walks through the search paths in
-    order and stops once the file is found."""
+    order and stops once the file is found.
+    """
 
     def __init__(self):
         """Initialize a new file resolver with the current working directory
@@ -38,8 +39,8 @@ class FileResolver(metaclass=Singleton):
 
         self.clear()
         for path in [
-            Path.cwd(),
-            Path(os.getenv("ERADIATE_DIR")).absolute() / "resources/data"
+            Path.cwd(),  # Current working directory
+            Path(os.getenv("ERADIATE_DIR")).absolute() / "resources/data"  # Eradiate data directory
         ]:
             self.append(path)
 

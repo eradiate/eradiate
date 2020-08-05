@@ -1,11 +1,11 @@
 import numpy as np
 
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.illumination import _directional, DirectionalIllumination, _constant, ConstantIllumination
+from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination, _directional
 from eradiate.util.units import ureg
 
 
-def test_directional_function(variant_scalar_mono):
+def test_directional_function(mode_mono):
     from eradiate.kernel.core.xml import load_dict
 
     # Without units (check if created dict is valid)
@@ -19,23 +19,27 @@ def test_directional_function(variant_scalar_mono):
     assert _directional(0.25 * np.pi * ureg.rad, 0., 10.) == dict_emitter
 
 
-def test_directional_class(variant_scalar_mono):
+def test_directional_class(mode_mono):
     # Constructor
     d = DirectionalIllumination()
+    assert KernelDict.empty().add(d).load() is not None
+
+    # Check if a more detailed spec is valid
+    d = DirectionalIllumination({
+        "irradiance": {"type": "uniform", "value": 1.0}
+    })
     assert d.kernel_dict()[d.id] == _directional()
     assert KernelDict.empty().add(d).load() is not None
 
 
-def test_constant_function(variant_scalar_mono):
-    from eradiate.kernel.core.xml import load_dict
-
-    # Without units (check if created dict is valid)
-    dict_emitter = _constant(10.)
-    assert load_dict(dict_emitter) is not None
-
-
-def test_constant_class(variant_scalar_mono):
+def test_constant(mode_mono):
     # Constructor
     c = ConstantIllumination()
-    assert c.kernel_dict()[c.id] == _constant()
+    assert c.kernel_dict()[c.id] == {"type": "constant", "radiance": {"type": "uniform", "value": 1.0}}
     assert KernelDict.empty().add(c).load() is not None
+
+    # Check if a more detailed spec is valid
+    d = ConstantIllumination({
+        "radiance": {"type": "uniform", "value": 1.0}
+    })
+    assert KernelDict.empty().add(d).load() is not None

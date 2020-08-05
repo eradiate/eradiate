@@ -51,10 +51,10 @@ class SceneHelper(ConfigObject):
 
     @abstractmethod
     def kernel_dict(self, ref=True):
-        """Return dictionary suitable for kernel scene configuration.
+        """Return a dictionary suitable for kernel scene configuration.
 
         Parameter ``ref`` (bool):
-            If `True`, use referencing for all relevant nested plugins.
+            If `True`, use referencing for all relevant nested kernel plugins.
 
         Returns → dict:
             Dictionary suitable for merge with a kernel scene dictionary
@@ -218,7 +218,7 @@ class Factory(metaclass=Singleton):
             factory = Factory()
             illumination = factory.create({
                 "type": "distant",
-                "irradiance": 1.0,
+                "irradiance": {"type": "uniform", "value": 1.0},
                 "zenith": 30.0,
                 "azimuth": 180.0
             })
@@ -229,8 +229,8 @@ class Factory(metaclass=Singleton):
 
         .. code:: python
 
-            DistantSurface({
-                "irradiance": 1.0,
+            DistantIllumination({
+                "irradiance": {"type": "uniform", "value": 1.0},
                 "zenith": 30.0,
                 "azimuth": 180.0
             })
@@ -299,7 +299,8 @@ class Factory(metaclass=Singleton):
         "atmosphere",
         "illumination",
         "lithosphere",
-        "measure"
+        "measure",
+        "spectra"
     ]  #: List of submodules where to look for registered classes
 
     def __init__(self):

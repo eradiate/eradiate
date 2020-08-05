@@ -1,10 +1,9 @@
 import numpy as np
-import pytest
 
 from eradiate.solvers.onedim.runner import OneDimRunner
 
 
-def test_onedimsolver(variant_scalar_mono):
+def test_onedimsolver(mode_mono):
     from eradiate.kernel.core.xml import load_dict
 
     # Construct

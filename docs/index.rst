@@ -67,6 +67,7 @@ Contents
     rst/api_reference/kernel
     rst/api_reference/scenes
     rst/api_reference/solvers
+    rst/api_reference/data
     rst/api_reference/util
 
 .. toctree::

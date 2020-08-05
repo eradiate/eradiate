@@ -1,26 +1,31 @@
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.lithosphere import LambertianSurface, RPVSurface
 
-def test_lambertian(variant_scalar_mono):
-    from eradiate.kernel.core.xml import load_dict
 
+def test_lambertian(mode_mono):
     # Default constructor
     ls = LambertianSurface()
-    assert ls.config == {"reflectance": .5, "width": 1.}
+    assert ls.config == {
+        "reflectance": {"type": "uniform", "value": .5}, "width": 1.
+    }
 
     # Check if produced scene can be instantiated
     kernel_dict = KernelDict.empty()
     kernel_dict.add(ls)
+    print(kernel_dict)
     assert kernel_dict.load() is not None
 
     # Constructor with arguments
-    ls = LambertianSurface.from_dict({"width": 1000., "reflectance": 0.3})
+    ls = LambertianSurface.from_dict({
+        "width": 1000.,
+        "reflectance": {"type": "uniform", "value": .3}
+    })
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(ls).load() is not None
 
 
-def test_rpv(variant_scalar_mono):
+def test_rpv(mode_mono):
     from eradiate.kernel.core.xml import load_dict
 
     # Default constructor
@@ -37,4 +42,3 @@ def test_rpv(variant_scalar_mono):
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(ls).load() is not None
     assert load_dict(kernel_dict) is not None
-

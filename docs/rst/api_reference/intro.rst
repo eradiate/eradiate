@@ -11,12 +11,37 @@ API reference [eradiate]
 .. rubric:: Description
 
 .. automodule:: eradiate
-   :members: __version__
 
+.. currentmodule:: eradiate
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree: generated/
+
+   __version__
+   mode
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   set_mode
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   EradiateMode
 
 .. rubric:: Modules
 
-- :ref:`sec-api_reference-kernel`
-- :ref:`sec-api_reference-scenes`
-- :ref:`sec-api_reference-solvers`
-- :ref:`sec-api_reference-util`
+.. autosummary::
+
+   kernel
+   scenes
+   solvers
+   data
+   util

@@ -20,3 +20,4 @@ Scene generation [eradiate.scenes]
    illumination
    lithosphere
    measure
+   spectra

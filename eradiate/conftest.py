@@ -1,6 +1,9 @@
 import pytest
 
+import eradiate
 
+
+# Create kernel variant fixtures
 def generate_fixture(variant):
     @pytest.fixture()
     def fixture():
@@ -8,19 +11,35 @@ def generate_fixture(variant):
             import eradiate.kernel
             eradiate.kernel.set_variant(variant)
         except Exception:
-            pytest.skip('Mitsuba variant "%s" is not enabled!' % variant)
+            pytest.skip(f"Mitsuba variant '{variant}' is not enabled!")
 
-    globals()['variant_' + variant] = fixture
+    globals()["variant_" + variant] = fixture
 
 
-for variant in ['scalar_mono', 'scalar_mono_double',
-                'scalar_mono_polarized',
-                'scalar_rgb', 'scalar_spectral',
-                'packet_rgb', 'packet_spectral']:
+for variant in ["scalar_mono", "scalar_mono_double",
+                "scalar_mono_polarized",
+                "scalar_rgb", "scalar_spectral",
+                "packet_rgb", "packet_spectral"]:
     generate_fixture(variant)
 del generate_fixture
 
 
+# Create mode fixtures
+def generate_fixture(mode):
+    @pytest.fixture()
+    def fixture():
+        import eradiate
+        eradiate.set_mode(mode)
+
+    globals()['mode_' + mode] = fixture
+
+
+for mode in eradiate._mode_default_configs.keys():
+    generate_fixture(mode)
+del generate_fixture
+
+
+# Add slow test marker
 def pytest_configure(config):
     markexpr = config.getoption("markexpr", 'False')
     if not 'not slow' in markexpr:

@@ -1,6 +1,6 @@
 import pytest
 
-import eradiate.kernel
+import eradiate
 from eradiate.solvers.onedim.rayleigh import RayleighSolverApp
 
 
@@ -10,13 +10,18 @@ def test_rayleigh_solver_app():
     assert app.config == {
         "atmosphere": {"type": "rayleigh_homogeneous"},
         "illumination": {"type": "directional"},
-        "measure": {"type": "hemispherical", "azimuth_res": 10.0, "zenith_res": 10.0, "spp": 1000},
+        "measure": {
+            "type": "hemispherical",
+            "azimuth_res": 10.0,
+            "zenith_res": 10.0,
+            "spp": 1000
+        },
         "mode": {"type": "mono", "wavelength": 550.0},
         "surface": {"type": "lambertian"}
     }
 
     # Check that the appropriate variant is selected
-    assert eradiate.kernel.variant() == "scalar_mono_double"
+    assert eradiate.mode.type == "mono"
 
     # Check that the default scene can be instantiated
     assert app._kernel_dict.load() is not None
@@ -31,7 +36,7 @@ def test_rayleigh_solver_app():
             "type": "directional",
             "zenith": 10.,
             "azimuth": 0.,
-            "irradiance": 1.
+            "irradiance": {"type": "uniform", "value": 1.}
         },
         "measure": {
             "type": "hemispherical",
@@ -41,7 +46,7 @@ def test_rayleigh_solver_app():
         },
         "surface": {
             "type": "lambertian",
-            "reflectance": 0.35,
+            "reflectance": {"type": "uniform", "value": 0.35},
         },
         "atmosphere": None,
     }
@@ -58,7 +63,7 @@ def test_rayleigh_solver_app():
             "type": "directional",
             "zenith": 0.,
             "azimuth": 0.,
-            "irradiance": 1.
+            "irradiance": {"type": "uniform", "value": 1.}
         },
         "measure": {
             "type": "hemispherical",
@@ -68,7 +73,7 @@ def test_rayleigh_solver_app():
         },
         "surface": {
             "type": "lambertian",
-            "reflectance": 0.5
+            "reflectance": {"type": "uniform", "value": 0.5}
         },
         "atmosphere": {
             "type": "rayleigh_homogeneous",
@@ -89,7 +94,7 @@ def test_rayleigh_solver_app():
             "type": "directional",
             "zenith": 0.,
             "azimuth": 0.,
-            "irradiance": 1.
+            "irradiance": {"type": "uniform", "value": 1.}
         },
         "measure": {
             "type": "hemispherical",
@@ -99,7 +104,7 @@ def test_rayleigh_solver_app():
         },
         "surface": {
             "type": "lambertian",
-            "reflectance": 0.5
+            "reflectance": {"type": "uniform", "value": 0.5}
         },
         "atmosphere": {
             "type": "rayleigh_homogeneous",
@@ -140,7 +145,7 @@ def test_rayleigh_solver_app_run():
     }
 
     app = RayleighSolverApp(config)
-    assert eradiate.kernel.variant() == "scalar_mono_double"
+    assert eradiate.mode.type == "mono"
 
     app.compute()
 
@@ -173,18 +178,18 @@ def test_rayleigh_solver_app_postprocessing():
             "type": "directional",
             "zenith": 0,
             "azimuth": 0,
-            "irradiance": 5.
+            "irradiance": {"type": "uniform", "value": 5.}
         }
     }
 
     app = RayleighSolverApp(config)
-    assert eradiate.kernel.variant() == "scalar_mono_double"
+    assert eradiate.mode.type == "mono"
     app.compute()
     app.postprocess()
 
     assert np.allclose(
         app.results["brdf"],
-        app.results["lo"] / config["illumination"]["irradiance"]
+        app.results["lo"] / config["illumination"]["irradiance"]["value"]
     )
     assert np.allclose(
         app.results["brf"],

@@ -66,6 +66,18 @@ class DistantMeasure(SceneHelper):
     The sensor is oriented based on the classical angular convention used
     in Earth observation.
 
+    .. admonition:: Configuration example
+        :class: hint
+
+        Default:
+            .. code:: python
+
+               {
+                   "zenith": 0.,
+                   "azimuth": 0.,
+                   "spp": 10000,
+               }
+
     .. admonition:: Configuration format
         :class: hint
 
@@ -185,6 +197,21 @@ class PerspectiveCameraMeasure(SceneHelper):
     in Earth observation.
 
     The film is a square.
+
+    .. admonition:: Configuration example
+        :class: hint
+
+        Default:
+            .. code:: python
+
+               {
+                   "target": [0, 0, 0],
+                   "zenith": 0.,
+                   "azimuth": 0.,
+                   "distance": 1.,
+                   "res": 64,
+                   "spp": 32,
+               }
 
     .. admonition:: Configuration format
         :class: hint
