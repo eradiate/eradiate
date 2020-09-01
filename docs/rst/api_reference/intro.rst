@@ -1,45 +1,17 @@
 .. _sec-api_reference-intro:
 
-API reference [eradiate]
-========================
+API reference
+=============
 
 .. note::
 
     Eradiate's API reference documentation is generated automatically using
     Sphinx's ``autodoc`` and ``autosummary`` extensions.
 
-.. rubric:: Description
+.. toctree::
+   :maxdepth: 2
 
-.. automodule:: eradiate
-
-.. currentmodule:: eradiate
-
-.. rubric:: Attributes
-
-.. autosummary::
-   :toctree: generated/
-
-   __version__
-   mode
-
-.. rubric:: Functions
-
-.. autosummary::
-   :toctree: generated/
-
-   set_mode
-
-.. rubric:: Classes
-
-.. autosummary::
-   :toctree: generated/
-
-   EradiateMode
-
-.. rubric:: Modules
-
-.. autosummary::
-
+   top_module
    kernel
    scenes
    solvers

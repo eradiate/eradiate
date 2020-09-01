@@ -54,9 +54,8 @@ rst_prolog = r"""
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme_path = guzzle_sphinx_theme.html_theme_path()
-html_theme = "guzzle_sphinx_theme"
-html_css_files = ["theme_overrides.css"]
+html_theme = "pydata_sphinx_theme"
+html_logo = "fig/icon_eradiate.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

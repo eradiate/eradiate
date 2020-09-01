@@ -11,3 +11,10 @@ Getting started
     2. Features
     3. Technology / architectural fundamentals
     4. About (funding and governance)
+
+.. toctree::
+    :maxdepth: 1
+    :hidden:
+
+    getting_code
+    building
