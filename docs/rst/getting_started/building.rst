@@ -94,14 +94,14 @@ Building the Mitsuba kernel
 Compiling Mitsuba 2 requires a recent version of CMake (at least **3.9.0**). Further platform-specific dependencies and compilation instructions are provided below for each operating system.
 
 Linux
-~~~~~
+^^^^^
 
 .. todo::
     
     Add Linux installation instructions.
 
 macOS
-~~~~~
+^^^^^
 
 On macOS, you will need to install Xcode, CMake, and `Ninja <https://ninja-build.org/>`_. Additionally, running the Xcode command line tools once might be necessary:
 
