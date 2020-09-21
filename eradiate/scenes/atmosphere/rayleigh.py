@@ -37,9 +37,9 @@ def kf(ratio=0.0279):
     return (6.0 + 3.0 * ratio) / (6.0 - 7.0 * ratio)
 
 
-@ureg.wraps(ureg.km**-1,
+@ureg.wraps(ureg.km ** -1,
             (ureg.nm,
-             ureg.km**-3,
+             ureg.km ** -3,
              ureg.dimensionless, None, None),
             strict=False)
 def sigma_s_single(wavelength=550.,
@@ -234,7 +234,11 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             },
             "width_unit": {
                 "type": "string",
-                "default": str(cdu.units.get("length")())
+                "required": False,
+                "nullable": True,
+                "default_setter": lambda doc:
+                None if isinstance(doc["width"], str)
+                else cdu.units.get("length")()
             },
             "sigma_s": {
                 "oneof": [{
@@ -296,7 +300,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         # thick layer (10x scattering mean free path)
         width = self.get_quantity("width")
 
-        if width.magnitude == "auto":
+        if width == "auto":
             return 10. / self._sigma_s
         else:
             return width
@@ -320,12 +324,18 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 pass
 
             try:
-                sigma_s["number_density"] = sigma_s["number_density"]*ureg(sigma_s["number_density_unit"])
+                sigma_s["number_density"] = ureg.Quantity(
+                    sigma_s["number_density"],
+                    sigma_s["number_density_unit"]
+                )
                 sigma_s.pop("number_density_unit")
             except KeyError:
                 pass
 
-            sigma_s["wavelength"] = eradiate.mode.config["wavelength"]*eradiate.mode.config["wavelength_unit"]
+            sigma_s["wavelength"] = ureg.Quantity(
+                eradiate.mode.config["wavelength"],
+                eradiate.mode.config["wavelength_unit"]
+            )
             return sigma_s_single(**sigma_s)
 
         else:
