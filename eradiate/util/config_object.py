@@ -1,6 +1,5 @@
 """Configuration dictionary-based class components."""
 
-
 from abc import ABC, abstractmethod
 
 import attr
@@ -8,7 +7,7 @@ import cerberus
 import pint
 
 from .collections import configdict
-from .units import ureg, DefaultUnits
+from .units import DefaultUnits
 
 
 @attr.s
@@ -58,13 +57,6 @@ class ConfigObject(ABC):
 
         self.config = configdict(v.normalized(self.config))
 
-    def get_quantity(self, key):
-        magnitude = self.config[key]
-        unit = self.config.get(f"{key}_unit", None)
-        if unit is None:
-            return magnitude
-        else:
-            return ureg.Quantity(magnitude, unit)
 
-
+#: Default unit set used when interpreting config dictionaries
 config_default_units = DefaultUnits()

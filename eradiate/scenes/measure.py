@@ -88,9 +88,9 @@ class DistantMeasure(SceneHelper):
     id = attr.ib(default="measure")
 
     def kernel_dict(self, **kwargs):
-        zenith = self.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude
-        azimuth = self.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
-        spp = self.get_quantity("spp")
+        zenith = self.config.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude
+        azimuth = self.config.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
+        spp = self.config.get_quantity("spp")
         return {
             self.id: {
                 "type": "distant",
@@ -231,12 +231,12 @@ class PerspectiveCameraMeasure(SceneHelper):
     id = attr.ib(default="measure")
 
     def kernel_dict(self, **kwargs):
-        target = self.get_quantity("target").to(kdu.units.get("length")()).magnitude
-        zenith = self.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude
-        azimuth = self.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
-        distance = self.get_quantity("distance").to(kdu.units.get("length")()).magnitude
-        res = self.get_quantity("res"),
-        spp = self.get_quantity("spp")
+        target = self.config.get_quantity("target").to(kdu.units.get("length")()).magnitude
+        zenith = self.config.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude
+        azimuth = self.config.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
+        distance = self.config.get_quantity("distance").to(kdu.units.get("length")()).magnitude
+        res = self.config.get_quantity("res"),
+        spp = self.config.get_quantity("spp")
 
         from eradiate.kernel.core import ScalarTransform4f
 

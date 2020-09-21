@@ -6,6 +6,8 @@ import collections
 from dpath import util as dpu
 from dpath.exceptions import PathNotFound
 
+from .units import ureg
+
 
 def onedict_value(d):
     """Get the value of a single-entry dictionary."""
@@ -62,13 +64,13 @@ def update(d, u):
     """This function updates nested dictionaries.
     See https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth.
 
-    Parameter ``d`` (dict):
+    Parameter ``d`` (dict)
         Dictionary which will be updated (**modified in-place**).
 
-    Parameter ``u`` (dict):
+    Parameter ``u`` (dict)
         Dictionary holding the values to update ``d`` with.
 
-    Returns → dict:
+    Returns → dict
         Updated ``d``.
     """
     for k, v in u.items():
@@ -83,15 +85,16 @@ class configdict(dict):
     """A nested dict structure suitable to hold configuration contents. Keys
     are expected to be strings (untested with different key types).
     """
+
     # Requires dpath [https://github.com/akesterson/dpath-python]
 
     def __init__(self, d={}, separator="."):
         """Initialise from another dictionary.
 
-        Parameter ``d`` (dict):
+        Parameter ``d`` (dict)
             Dictionary to initialise from.
 
-        Parameter ``separator`` (str):
+        Parameter ``separator`` (str)
             Key separator.
 
         """
@@ -110,14 +113,14 @@ class configdict(dict):
     def rget(self, key):
         """Recursively access an element in the nested dictionary.
 
-        Parameter ``key`` (str):
+        Parameter ``key`` (str)
             Path to the queried element. The path separator is defined by
             ``self.separator``.
 
-        Returns → object:
+        Returns → object
             Requested object.
 
-        Raises → ``KeyError``:
+        Raises → ``KeyError``
             The requested key could not be found.
         """
         return dpu.get(self, key, separator=self.separator)
@@ -125,11 +128,11 @@ class configdict(dict):
     def rset(self, key, value):
         """Set an element in the nested dictionary.
 
-        Parameter ``key`` (str):
+        Parameter ``key`` (str)
             Path to the element to set. The path separator is defined by
             ``self.separator``.
 
-        Raises → ``KeyError``:
+        Raises → ``KeyError``
             The requested key could not be found.
         """
         try:
@@ -137,4 +140,27 @@ class configdict(dict):
         except PathNotFound:
             raise KeyError(key)
 
+    def get_quantity(self, key):
+        """Get a quantity from the dictionary. The ``key`` item is first looked
+        up as with a regular dictionary. If it is found, this method looks
+        for the corresponding ``_unit``-suffixed entry. If a corresponding unit
+        field is found, the retrieved value is turned into a
+        :class:`pint.Quantity` object using the unit found bby the method.
 
+        Parameter ``key``
+            Key to lookup from the dictionary.
+
+        Returns
+            The ``key`` item. In addition, if a unit
+            field is found, the ``key`` item is returned as a
+            :class:`pint.Quantity`.
+
+        Raises → ``KeyError``
+            The requested key could not be found.
+        """
+        magnitude = self[key]
+        unit = self.get(f"{key}_unit", None)
+        if unit is None:
+            return magnitude
+        else:
+            return ureg.Quantity(magnitude, unit)

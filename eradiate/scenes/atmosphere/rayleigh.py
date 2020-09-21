@@ -298,7 +298,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
 
         # If width is not set, compute a value corresponding to an optically
         # thick layer (10x scattering mean free path)
-        width = self.get_quantity("width")
+        width = self.config.get_quantity("width")
 
         if width == "auto":
             return 10. / self._sigma_s
@@ -339,7 +339,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             return sigma_s_single(**sigma_s)
 
         else:
-            return self.get_quantity("sigma_s")
+            return self.config.get_quantity("sigma_s")
 
     def phase(self):
         return {"phase_atmosphere": {"type": "rayleigh"}}
@@ -374,7 +374,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             medium = self.media(ref=False)["medium_atmosphere"]
 
         width = self._width.to(kdu.units.get("length")()).magnitude
-        height = self.get_quantity("height").to(kdu.units.get("length")()).magnitude
+        height = self.config.get_quantity("height").to(kdu.units.get("length")()).magnitude
         height_offset = height * 0.01
 
         return {

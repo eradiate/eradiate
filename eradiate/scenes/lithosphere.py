@@ -172,7 +172,7 @@ class LambertianSurface(Surface):
     def kernel_dict(self, ref=True):
         kernel_dict = {}
 
-        size = self.get_quantity("width")
+        size = self.config.get_quantity("width")
 
         if not ref:
             kernel_dict["surface"] = self.shapes(size, ref=False)["shape_surface"]
@@ -294,7 +294,7 @@ class RPVSurface(Surface):
     def kernel_dict(self, ref=True):
         kernel_dict = {}
 
-        size = self.get_quantity("width")
+        size = self.config.get_quantity("width")
 
         if not ref:
             kernel_dict["surface"] = self.shapes(size, ref=False)["shape_surface"]

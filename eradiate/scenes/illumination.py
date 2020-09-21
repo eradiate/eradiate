@@ -180,8 +180,8 @@ class DirectionalIllumination(SceneHelper):
     def kernel_dict(self, **kwargs):
         irradiance_ = Factory().create(self.config["irradiance"])
 
-        zenith = self.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude,
-        azimuth = self.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
+        zenith = self.config.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude,
+        azimuth = self.config.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
         irradiance = irradiance_.kernel_dict()["spectrum"]
 
         return {

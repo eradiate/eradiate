@@ -1,6 +1,7 @@
 import pytest
 
 from eradiate.util.collections import configdict
+from eradiate.util.units import ureg
 
 
 def test_configdict_construct():
@@ -68,3 +69,16 @@ def test_configdict_rset():
         d = configdict({"a": None})
         d.rset("a.b", 1)
         assert d == {"a": {"b": 1}}
+
+
+def test_configdict_get_quantity():
+    d = configdict({
+        "a": 1
+    })
+    assert d.get_quantity("a") == 1
+
+    d["a_unit"] = "m"
+    assert d.get_quantity("a") == ureg.Quantity(1, "m")
+
+    with pytest.raises(KeyError):
+        d.get_quantity("b")
