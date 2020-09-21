@@ -11,10 +11,11 @@ import attr
 import numpy as np
 
 from .core import Factory, SceneHelper
+from .core import kernel_default_units as kdu
 from .. import data
-from ..util.collections import frozendict
+from ..util.config_object import config_default_units
 from ..util.exceptions import ModeError
-from ..util.units import Q_
+from ..util.units import ureg
 
 
 @attr.s
@@ -38,19 +39,37 @@ class UniformSpectrum(SceneHelper):
 
             Default: 1.
     """
-    CONFIG_SCHEMA = frozendict({
-        "value": {
-            "type": "number",
-            "min": 0.,
-            "default": 1.0,
-        },
-    })
+    @classmethod
+    def config_schema(cls):
+        return dict({
+            "value": {
+                "type": "number",
+                "min": 0.,
+                "default": 1.0,
+            },
+            "quantity": {
+                "type": "string",
+                "allowed": ["radiance", "irradiance"],
+                "default": "radiance",
+                "nullable": True
+            }
+        })
 
     def kernel_dict(self, **kwargs):
+        if self.config["quantity"] == "radiance":
+            value = self.config["value"]*config_default_units.units.get("radiance")()
+            value = value.to(kdu.units.get("radiance")()).magnitude
+        elif self.config["quantity"] == "irradiance":
+            value = self.config["value"]*config_default_units.units.get("irradiance")()
+            value = value.to(kdu.units.get("irradiance")()).magnitude
+        elif self.config["quantity"] is None:
+            value = self.config["value"]
+        else:
+            raise ValueError(f"Unsupported quantity {self.config['quantity']}.")
         return {
             "spectrum": {
                 "type": "uniform",
-                "value": self.config["value"],
+                "value": value,
             }
         }
 
@@ -111,18 +130,25 @@ class SolarIrradianceSpectrum(SceneHelper):
          - [200, 2397]
     """
 
-    CONFIG_SCHEMA = frozendict({
-        "dataset": {
-            "type": "string",
-            "allowed": ["thuillier2003"],
-            "default": "thuillier2003",
-        },
-        "scale": {
-            "type": "number",
-            "min": 0.,
-            "default": 1.0,
-        },
-    })
+    @classmethod
+    def config_schema(cls):
+        return dict({
+            "dataset": {
+                "type": "string",
+                "allowed": ["thuillier2003"],
+                "default": "thuillier2003",
+            },
+            "scale": {
+                "type": "number",
+                "min": 0.,
+                "default": 1.0,
+            },
+            "quantity": {
+                "type": "string",
+                "allowed": ["radiance", "irradiance"],
+                "default": "irradiance"
+            }
+        })
 
     dataset = attr.ib(default=None)
 
@@ -131,7 +157,7 @@ class SolarIrradianceSpectrum(SceneHelper):
 
         # Select dataset
         if dataset == "thuillier2003":
-            self.dataset = data.get("spectra/thuillier2003.nc")
+            self.dataset = data.get("spectra/thuillier_2003.nc")
         else:
             raise ValueError(f"unsupported dataset {dataset}")
 
@@ -142,7 +168,7 @@ class SolarIrradianceSpectrum(SceneHelper):
             wavelength = mode.config.get("wavelength", None)
 
             irradiance_magnitude = float(
-                self.dataset["irradiance"].interp(
+                self.dataset["spectral_irradiance"].interp(
                     wavelength=wavelength,
                     method="linear",
                 ).values
@@ -153,17 +179,21 @@ class SolarIrradianceSpectrum(SceneHelper):
                 raise ValueError(f"dataset evaluation returned nan")
 
             # Apply units
-            irradiance = Q_(
+            irradiance = ureg.Quantity(
                 irradiance_magnitude,
-                self.dataset["irradiance"].attrs["units"]
+                self.dataset["spectral_irradiance"].attrs["units"]
             )
+
+            if self.config["quantity"] == "irradiance":
+                irradiance = irradiance.to(kdu.units.get("irradiance")()).magnitude
+            else:
+                raise NotImplementedError(f"Cannot convert to {self.config['quantity']}.")
 
             # Apply unit conversion and scaling, build kernel dict
             return {
                 "spectrum": {
                     "type": "uniform",
-                    "value": irradiance.to("W/km^2/nm").magnitude *
-                             self.config["scale"]
+                    "value": irradiance * self.config["scale"]
                 }
             }
 

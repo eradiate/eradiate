@@ -6,13 +6,14 @@ def test_lambertian(mode_mono):
     # Default constructor
     ls = LambertianSurface()
     assert ls.config == {
-        "reflectance": {"type": "uniform", "value": .5}, "width": 1.
+        "reflectance": {"type": "uniform", "value": .5, "quantity": None},
+        "width": 1.,
+        "width_unit": "meter",
     }
 
     # Check if produced scene can be instantiated
     kernel_dict = KernelDict.empty()
     kernel_dict.add(ls)
-    print(kernel_dict)
     assert kernel_dict.load() is not None
 
     # Constructor with arguments

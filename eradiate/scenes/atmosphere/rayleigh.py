@@ -8,17 +8,18 @@ from scipy.constants import physical_constants
 import eradiate
 from .base import Atmosphere
 from ..core import Factory
-from ...util.collections import frozendict
+from ..core import kernel_default_units as kdu
+from ...util.config_object import config_default_units as cdu
 from ...util.exceptions import ConfigWarning, ModeError
-from ...util.units import Q_
+from ...util.units import ureg
 
 # Physical constants
 #: Loschmidt constant [km^-3].
-_LOSCHMIDT = Q_(
+_LOSCHMIDT = ureg.Quantity(
     *physical_constants["Loschmidt constant (273.15 K, 101.325 kPa)"][:2]).to(
     "km^-3")
 #: Refractive index of dry air [dimensionless].
-_IOR_DRY_AIR = Q_(1.0002932, "")
+_IOR_DRY_AIR = ureg.Quantity(1.0002932, "")
 
 
 def kf(ratio=0.0279):
@@ -36,6 +37,11 @@ def kf(ratio=0.0279):
     return (6.0 + 3.0 * ratio) / (6.0 - 7.0 * ratio)
 
 
+@ureg.wraps(ureg.km**-1,
+            (ureg.nm,
+             ureg.km**-3,
+             ureg.dimensionless, None, None),
+            strict=False)
 def sigma_s_single(wavelength=550.,
                    number_density=_LOSCHMIDT.magnitude,
                    refractive_index=_IOR_DRY_AIR.magnitude,
@@ -204,55 +210,77 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
     """
 
     # Class attributes
-    CONFIG_SCHEMA = frozendict({
-        "height": {
-            "type": "number",
-            "min": 0.,
-            "default": 1.e+2
-        },
-        "width": {
-            "anyof": [{
-                "type": "number",
-                "min": 0.
-            }, {
-                "type": "string",
-                "allowed": ["auto"]
-            }],
-            "default": "auto"
-        },
-        "sigma_s": {
-            "oneof": [{
+    @classmethod
+    def config_schema(cls):
+        return dict({
+            "height": {
                 "type": "number",
                 "min": 0.,
-            }, {
-                "type": "dict",
-                "schema": {
-                    "wavelength": {
-                        "type": "number",
-                        "min": 0.0,
-                    },
-                    "number_density": {
-                        "type": "number",
-                        "min": 0.0,
-                    },
-                    "refractive_index": {
-                        "type": "number",
-                        "min": 0.0,
-                    },
-                    "king_factor": {
-                        "type": "number",
-                        "min": 0.0,
-                    },
-                    "depolarisation_ratio": {
-                        "type": "number",
-                        "min": 0.0,
-                        "nullable": True,
-                    },
-                }
-            }],
-            "default": {},
-        },
-    })
+                "default": 1.e+2
+            },
+            "height_unit": {
+                "type": "string",
+                "default": str(cdu.units.get("length")())
+            },
+            "width": {
+                "anyof": [{
+                    "type": "number",
+                    "min": 0.
+                }, {
+                    "type": "string",
+                    "allowed": ["auto"]
+                }],
+                "default": "auto"
+            },
+            "width_unit": {
+                "type": "string",
+                "default": str(cdu.units.get("length")())
+            },
+            "sigma_s": {
+                "oneof": [{
+                    "type": "number",
+                    "min": 0.,
+                }, {
+                    "type": "dict",
+                    "schema": {
+                        "wavelength": {
+                            "type": "number",
+                            "min": 0.0,
+                        },
+                        "wavelength_unit": {
+                            "type": "string",
+                            "default": str(cdu.units.get("wavelength")())
+                        },
+                        "number_density": {
+                            "type": "number",
+                            "min": 0.0,
+                        },
+                        "number_density_unit": {
+                            "type": "string",
+                            "default": f"{cdu.units.get('length')()}^-3"
+                        },
+                        "refractive_index": {
+                            "type": "number",
+                            "min": 0.0,
+                        },
+                        "king_factor": {
+                            "type": "number",
+                            "min": 0.0,
+                        },
+                        "depolarisation_ratio": {
+                            "type": "number",
+                            "min": 0.0,
+                            "nullable": True,
+                        },
+                    }
+                }],
+                "default": {},
+            },
+            "sigma_s_unit": {
+                "type": "string",
+                "default": str(f"{cdu.units.get('length')()}^-1")
+            }
+        })
 
     @property
     def _albedo(self):
@@ -266,9 +294,9 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
 
         # If width is not set, compute a value corresponding to an optically
         # thick layer (10x scattering mean free path)
-        width = self.config["width"]
+        width = self.get_quantity("width")
 
-        if width == "auto":
+        if width.magnitude == "auto":
             return 10. / self._sigma_s
         else:
             return width
@@ -291,11 +319,17 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             except KeyError:
                 pass
 
-            sigma_s["wavelength"] = eradiate.mode.config["wavelength"]
+            try:
+                sigma_s["number_density"] = sigma_s["number_density"]*ureg(sigma_s["number_density_unit"])
+                sigma_s.pop("number_density_unit")
+            except KeyError:
+                pass
+
+            sigma_s["wavelength"] = eradiate.mode.config["wavelength"]*eradiate.mode.config["wavelength_unit"]
             return sigma_s_single(**sigma_s)
 
         else:
-            return self.config["sigma_s"]
+            return self.get_quantity("sigma_s")
 
     def phase(self):
         return {"phase_atmosphere": {"type": "rayleigh"}}
@@ -312,7 +346,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 "phase": phase,
                 "sigma_t": {
                     "type": "uniform",
-                    "value": self._sigma_s
+                    "value": self._sigma_s.to(f"{kdu.units.get('length')()}^-1").magnitude
                 },
                 "albedo": {
                     "type": "uniform",
@@ -329,8 +363,8 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         else:
             medium = self.media(ref=False)["medium_atmosphere"]
 
-        width = self._width
-        height = self.config["height"]
+        width = self._width.to(kdu.units.get("length")()).magnitude
+        height = self.get_quantity("height").to(kdu.units.get("length")()).magnitude
         height_offset = height * 0.01
 
         return {

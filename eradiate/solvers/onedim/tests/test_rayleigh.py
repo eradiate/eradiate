@@ -2,6 +2,7 @@ import pytest
 
 import eradiate
 from eradiate.solvers.onedim.rayleigh import RayleighSolverApp
+from eradiate.util.units import ureg
 
 
 def test_rayleigh_solver_app():
@@ -120,7 +121,7 @@ def test_rayleigh_solver_app():
     # check that the scattering coefficient is computed correctly
     from eradiate.scenes.atmosphere.rayleigh import sigma_s_single
     assert app._kernel_dict["medium_atmosphere"]["sigma_t"]["value"] == \
-           sigma_s_single(wavelength=570., refractive_index=1.0003)
+           sigma_s_single(wavelength=ureg.Quantity(570., "nm"), refractive_index=1.0003).to("km^-1").magnitude
 
 
 @pytest.mark.slow

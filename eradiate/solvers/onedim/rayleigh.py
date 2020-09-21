@@ -13,9 +13,9 @@ import xarray as xr
 import eradiate.kernel
 from .runner import OneDimRunner
 from ...scenes.core import Factory, KernelDict
+from ...scenes.core import kernel_default_units as kdu
 from ...util import ensure_array, view
-from ...util.collections import frozendict
-from ...util.config_object import ConfigObject
+from ...util.config_object import ConfigObject, config_default_units
 from ...util.exceptions import ConfigWarning
 from ...util.xarray import eo_dataarray
 
@@ -140,83 +140,85 @@ class RayleighSolverApp(ConfigObject):
 
     # Class attributes
     #: Configuration validation schema
-    CONFIG_SCHEMA = frozendict({
-        "mode": {
-            "type": "dict",
-            "default": {},
-            "schema": {
-                "type": {
-                    "type": "string",
-                    "allowed": ["mono"],
-                    "default": "mono"
-                },
-                "wavelength": {"type": "number", "min": 0.0, "default": 550.0},
-            }
-        },
-        "surface": {
-            "type": "dict",
-            "default": {},
-            "allow_unknown": True,
-            "schema": {
-                "type": {
-                    "type": "string",
-                    "allowed": ["lambertian", "rpv"],
-                    "default": "lambertian"
-                },
-            }
-        },
-        "atmosphere": {
-            "type": "dict",
-            "nullable": True,
-            "default": {},
-            "allow_unknown": True,
-            "schema": {
-                "type": {
-                    "type": "string",
-                    "allowed": ["rayleigh_homogeneous"],
-                    "default": "rayleigh_homogeneous",
-                },
-            }
-        },
-        "illumination": {
-            "type": "dict",
-            "default": {},
-            "allow_unknown": True,
-            "schema": {
-                "type": {
-                    "type": "string",
-                    "allowed": ["directional", "constant"],
-                    "default": "directional"
+    @classmethod
+    def config_schema(cls):
+        return dict({
+            "mode": {
+                "type": "dict",
+                "default": {},
+                "schema": {
+                    "type": {
+                        "type": "string",
+                        "allowed": ["mono"],
+                        "default": "mono"
+                    },
+                    "wavelength": {"type": "number", "min": 0.0, "default": 550.0},
+                }
+            },
+            "surface": {
+                "type": "dict",
+                "default": {},
+                "allow_unknown": True,
+                "schema": {
+                    "type": {
+                        "type": "string",
+                        "allowed": ["lambertian", "rpv"],
+                        "default": "lambertian"
+                    },
+                }
+            },
+            "atmosphere": {
+                "type": "dict",
+                "nullable": True,
+                "default": {},
+                "allow_unknown": True,
+                "schema": {
+                    "type": {
+                        "type": "string",
+                        "allowed": ["rayleigh_homogeneous"],
+                        "default": "rayleigh_homogeneous",
+                    },
+                }
+            },
+            "illumination": {
+                "type": "dict",
+                "default": {},
+                "allow_unknown": True,
+                "schema": {
+                    "type": {
+                        "type": "string",
+                        "allowed": ["directional", "constant"],
+                        "default": "directional"
+                    },
                 },
             },
-        },
-        "measure": {
-            "type": "dict",
-            "default": {},
-            "schema": {
-                "type": {
-                    "type": "string",
-                    "allowed": ["hemispherical", "pplane"],
-                    "default": "hemispherical",
-                },
-                "zenith_res": {
-                    "type": "number",
-                    "min": 1.0,
-                    "default": 10.0,
-                },
-                "azimuth_res": {
-                    "type": "number",
-                    "min": 1.0,
-                    "default": 10.0,
-                },
-                "spp": {
-                    "type": "integer",
-                    "min": 1,
-                    "default": 1000,
+            "measure": {
+                "type": "dict",
+                "default": {},
+                "schema": {
+                    "type": {
+                        "type": "string",
+                        "allowed": ["hemispherical", "pplane"],
+                        "default": "hemispherical",
+                    },
+                    "zenith_res": {
+                        "type": "number",
+                        "min": 1.0,
+                        "default": 10.0,
+                    },
+                    "azimuth_res": {
+                        "type": "number",
+                        "min": 1.0,
+                        "default": 10.0,
+                    },
+                    "spp": {
+                        "type": "integer",
+                        "min": 1,
+                        "default": 1000,
+                    }
                 }
             }
-        }
-    })
+        })
 
     # Instance attributes
     _kernel_dict = attr.ib(default=None)
@@ -260,32 +262,35 @@ class RayleighSolverApp(ConfigObject):
         self._helpers = {}
         self._kernel_dict = KernelDict.empty()
 
-        # Gather mode information
-        wavelength = config["mode"]["wavelength"]
+        with config_default_units.override({"length": "km"}):
+            with kdu.override({"length": "km"}):
+                # Gather mode information
+                wavelength = config["mode"]["wavelength"]
 
-        # Set illumination
-        self._helpers["illumination"] = factory.create(self.config["illumination"])
+                # Set illumination
+                self._helpers["illumination"] = factory.create(self.config["illumination"])
 
-        # Set atmosphere
-        config_atmosphere = config.get("atmosphere", None)
+                # Set atmosphere
+                config_atmosphere = config.get("atmosphere", None)
 
-        if config_atmosphere is not None:
-            self._helpers["atmosphere"] = factory.create(config_atmosphere)
+                if config_atmosphere is not None:
+                    self._helpers["atmosphere"] = factory.create(config_atmosphere)
 
-        # Set surface
-        atmosphere = self._helpers.get("atmosphere", None)
-        if atmosphere is not None:
-            if "width" in config["surface"].keys():
-                warnings.warn(
-                    "overriding 'surface.width' with 'atmosphere.width'",
-                    ConfigWarning
-                )
-            config["surface"]["width"] = atmosphere._width
+                # Set surface
+                atmosphere = self._helpers.get("atmosphere", None)
+                if atmosphere is not None:
+                    if "width" in config["surface"].keys():
+                        warnings.warn(
+                            "overriding 'surface.width' with 'atmosphere.width'",
+                            ConfigWarning
+                        )
+                    config["surface"]["width"] = atmosphere._width.magnitude
+                    config["surface"]["width_unit"] = str(atmosphere._width.units)
 
-        self._helpers["surface"] = factory.create(config["surface"])
+                self._helpers["surface"] = factory.create(config["surface"])
 
-        # Expand helpers to kernel scene dictionary
-        self._kernel_dict.add(list(self._helpers.values()))
+                # Expand helpers to kernel scene dictionary
+                self._kernel_dict.add(list(self._helpers.values()))
 
     def compute(self, quiet=False):
         # Ensure that scalar values used as xarray coordinates are arrays

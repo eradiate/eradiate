@@ -10,7 +10,7 @@ import xarray as xr
 from scipy.interpolate import interp1d
 
 from eradiate import __version__
-from eradiate.util.units import Q_, ureg
+from eradiate.util.units import ureg
 
 # ------------------------------------------------------------------------------
 #
@@ -317,7 +317,7 @@ def create(z, variables=None):
                 raise ValueError(var, " is not a valid variable name")
 
     # initialise data set
-    ds = init_data_set(Q_(z, "m"))
+    ds = init_data_set(ureg.Quantity(z, "m"))
 
     # compute the model in the low-altitude region
     compute_low_altitude(ds, ds.coords['altitude'] <= 86000., inplace=True)
@@ -444,7 +444,7 @@ def compute_high_altitude(data_set, mask=None, inplace=False):
     if len(altitudes) == 0:
         return ds
 
-    z = Q_(altitudes.values, 'm')
+    z = ureg.Quantity(altitudes.values, 'm')
     n = compute_number_densities_high_altitude(z)
     species = ["N2", "O", "O2", "Ar", "He", "H"]
     ni = np.array([n[s] for s in species])
@@ -598,7 +598,7 @@ def compute_number_densities_high_altitude(altitudes):
 
     # pre-computed variables
     m = compute_mean_molar_mass_high_altitude(grid)  # [kg/mol]
-    g = compute_gravity(Q_(grid, "km"))  # [m / s^2]
+    g = compute_gravity(ureg.Quantity(grid, "km"))  # [m / s^2]
     t = compute_temperature_high_altitude(grid)  # [K]
     dt_dz = compute_temperature_gradient_high_altitude(grid)  # [K/m]
     below_115 = grid < 115.0
@@ -1166,7 +1166,7 @@ def tau_function(z_grid, below_500=True):
     if below_500:
         z_grid = z_grid[::-1]
 
-    y = M["H"] * compute_gravity(Q_(z_grid, "km")) / \
+    y = M["H"] * compute_gravity(ureg.Quantity(z_grid, "km")) / \
         (R * compute_temperature_high_altitude(z_grid))  # [m^-1]
     integral_values = integrate(y, 1e3 * z_grid)  # the factor 1e3 converts
     # z_grid to meters

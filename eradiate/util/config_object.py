@@ -5,8 +5,10 @@ from abc import ABC, abstractmethod
 
 import attr
 import cerberus
+import pint
 
 from .collections import configdict
+from .units import ureg, DefaultUnits
 
 
 @attr.s
@@ -28,9 +30,9 @@ class ConfigObject(ABC):
     converted to a :class:`~eradiate.util.collections.configdict`.
     """
 
-    @property
+    @classmethod
     @abstractmethod
-    def CONFIG_SCHEMA(self):
+    def config_schema(cls):
         """Cerberus validation schema to validate :data:`config`.
 
         See the `Cerberus documentation <https://docs.python-cerberus.org>`_
@@ -47,9 +49,22 @@ class ConfigObject(ABC):
 
     def __attrs_post_init__(self):
         # Check config contents and normalise
-        v = cerberus.Validator(self.CONFIG_SCHEMA)
+        v = cerberus.Validator(self.config_schema())
+        pint_unit = cerberus.TypeDefinition("pint_unit", (pint.unit.Unit,), ())
+        v.types_mapping["pint_unit"] = pint_unit
 
         if not v.validate(self.config):
             raise ValueError(v.errors)
 
         self.config = configdict(v.normalized(self.config))
+
+    def get_quantity(self, key):
+        magnitude = self.config[key]
+        unit = self.config.get(f"{key}_unit", None)
+        if unit is None:
+            return magnitude
+        else:
+            return ureg.Quantity(magnitude, unit)
+
+
+config_default_units = DefaultUnits()

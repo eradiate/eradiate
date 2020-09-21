@@ -1,5 +1,6 @@
 import pytest
 from eradiate.scenes.atmosphere.us76 import *
+from eradiate.util.units import ureg
 
 
 def test_create():
@@ -9,7 +10,7 @@ def test_create():
         "number_density",
         "total_number_density",
     ]
-    z = Q_(np.linspace(0.0, 100000.0, 101), "meter")
+    z = ureg.Quantity(np.linspace(0.0, 100000.0, 101), "meter")
     ds = create(z, variables=variables)
 
     dims = ds.dims
@@ -164,15 +165,15 @@ def test_init_data_set():
         assert ds["number_density"].values.ndim == 2
         assert all(ds["species"].values == ['N2', 'O2', 'Ar', 'CO2', 'Ne', 'He', 'Kr', 'Xe', 'CH4', 'H2', 'O', 'H'])
 
-    z1 = Q_(np.linspace(0., 50000.), "m")
+    z1 = ureg.Quantity(np.linspace(0., 50000.), "m")
     ds1 = init_data_set(z1)
     check_data_set(ds1)
 
-    z2 = Q_(np.linspace(120000., 650000.), "m")
+    z2 = ureg.Quantity(np.linspace(120000., 650000.), "m")
     ds2 = init_data_set(z2)
     check_data_set(ds2)
 
-    z3 = Q_(np.linspace(70000., 100000.), "m")
+    z3 = ureg.Quantity(np.linspace(70000., 100000.), "m")
     ds3 = init_data_set(z3)
     check_data_set(ds3)
 
@@ -195,7 +196,7 @@ def rtol(v, ref):
 
 def test_compute_number_density():
     # the following altitudes values are chosen arbitrarily
-    altitudes = Q_(
+    altitudes = ureg.Quantity(
         np.array([
             86.0,
             90.0,

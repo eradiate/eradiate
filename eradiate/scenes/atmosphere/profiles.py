@@ -30,7 +30,7 @@ from datetime import datetime
 import numpy as np
 
 from .us76 import create
-from ...util.units import Q_, ureg
+from ...util.units import ureg
 
 
 def check(profile):
@@ -79,7 +79,7 @@ def check(profile):
 
 
 @ureg.wraps(ret=None, args=("m", None), strict=False)
-def us76(height=Q_(1e5, "m"), n_layers=50):
+def us76(height=ureg.Quantity(1e5, "m"), n_layers=50):
     r"""Generates an atmosphere vertical profile based on the
     US76 Standard Atmosphere.
 
@@ -113,7 +113,7 @@ def us76(height=Q_(1e5, "m"), n_layers=50):
     centers = (nodes[:-1] + nodes[1:]) / 2
 
     ds = create(
-        Q_(centers, "m"),
+        ureg.Quantity(centers, "m"),
         variables=[
             "pressure",
             "temperature",

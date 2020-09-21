@@ -11,9 +11,9 @@ import attr
 import numpy as np
 
 from .core import Factory, SceneHelper
-from ..util.collections import frozendict
+from .core import kernel_default_units as kdu
+from ..util.config_object import config_default_units
 from ..util.frame import angles_to_direction
-from ..util.units import ureg
 
 
 @attr.s
@@ -50,20 +50,27 @@ class ConstantIllumination(SceneHelper):
             :factorykey:`uniform`.
     """
 
-    CONFIG_SCHEMA = frozendict({
-        "radiance": {
-            "type": "dict",
-            "default": {},
-            "allow_unknown": True,
-            "schema": {
-                "type": {
-                    "type": "string",
-                    "allowed": ["uniform", "solar_irradiance"],
-                    "default": "uniform"
+    @classmethod
+    def config_schema(cls):
+        return dict({
+            "radiance": {
+                "type": "dict",
+                "default": {},
+                "allow_unknown": True,
+                "schema": {
+                    "type": {
+                        "type": "string",
+                        "allowed": ["uniform", "solar_irradiance"],
+                        "default": "uniform"
+                    },
+                    "quantity": {
+                        "type": "string",
+                        "allowed": ["radiance"],
+                        "default": "radiance"
+                    }
                 }
-            }
-        }
-    })
+            },
+        })
 
     id = attr.ib(default="illumination")
 
@@ -75,40 +82,6 @@ class ConstantIllumination(SceneHelper):
                 "radiance": radiance.kernel_dict()["spectrum"]
             }
         }
-
-
-@ureg.wraps(None, (ureg.deg, ureg.deg, None), strict=False)
-def _directional(zenith=0., azimuth=0., irradiance=1.):
-    """Create a dictionary which will instantiate a ``directional`` kernel
-    plugin based on the provided angular geometry.
-
-    Parameter ``zenith`` (float)
-        Zenith angle [deg].
-
-    Parameter ``azimuth`` (float)
-        Azimuth angle [deg].
-
-    Parameter ``irradiance`` (float or dict)
-        Emitted irradiance in the plane orthogonal to the emitter's direction
-        [(u_power)/(u_length)^2/nm].
-
-    Returns → dict
-        A dictionary which can be used to instantiate a ``directional`` kernel
-        plugin facing the direction specified by the angular configuration.
-    """
-    # Design note: see _constant()
-
-    return {
-        "type": "directional",
-        "direction": list(-angles_to_direction(
-            theta=np.deg2rad(zenith),
-            phi=np.deg2rad(azimuth)
-        )),
-        "irradiance":
-            {"type": "uniform", "value": irradiance}
-            if isinstance(irradiance, float)
-            else irradiance
-    }
 
 
 @attr.s
@@ -170,32 +143,57 @@ class DirectionalIllumination(SceneHelper):
             :factorykey:`solar_irradiance`.
     """
 
-    CONFIG_SCHEMA = frozendict({
-        "zenith": {"type": "number", "default": 0.},
-        "azimuth": {"type": "number", "default": 0.},
-        "irradiance": {
-            "type": "dict",
-            "default": {},
-            "allow_unknown": True,
-            "schema": {
-                "type": {
-                    "type": "string",
-                    "allowed": ["uniform", "solar_irradiance"],
-                    "default": "solar_irradiance"
+    @classmethod
+    def config_schema(cls):
+        return dict({
+            "zenith": {"type": "number", "default": 0.},
+            "zenith_unit": {
+                "type": "string",
+                "default": str(config_default_units.units.get("angle")())
+            },
+            "azimuth": {"type": "number", "default": 0.},
+            "azimuth_unit": {
+                "type": "string",
+                "default": str(config_default_units.units.get("angle")())
+            },
+            "irradiance": {
+                "type": "dict",
+                "default": {},
+                "allow_unknown": True,
+                "schema": {
+                    "type": {
+                        "type": "string",
+                        "allowed": ["uniform", "solar_irradiance"],
+                        "default": "solar_irradiance"
+                    },
+                    "quantity": {
+                        "type": "string",
+                        "allowed": ["irradiance"],
+                        "default": "irradiance"
+                    }
                 }
-            }
-        }
-    })
+            },
+        })
 
     id = attr.ib(default="illumination")
 
     def kernel_dict(self, **kwargs):
-        irradiance = Factory().create(self.config["irradiance"])
+        irradiance_ = Factory().create(self.config["irradiance"])
+
+        zenith = self.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude,
+        azimuth = self.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
+        irradiance = irradiance_.kernel_dict()["spectrum"]
 
         return {
-            self.id: _directional(
-                self.config["zenith"],
-                self.config["azimuth"],
-                irradiance.kernel_dict()["spectrum"]
-            )
+            self.id: {
+                "type": "directional",
+                "direction": list(-angles_to_direction(
+                    theta=np.deg2rad(zenith),
+                    phi=np.deg2rad(azimuth)
+                )),
+                "irradiance":
+                    {"type": "uniform", "value": irradiance}
+                    if isinstance(irradiance, float)
+                    else irradiance
+            }
         }

@@ -5,6 +5,7 @@ __version__ = "0.0.1"  #: Eradiate version number.
 import attr
 
 from .util.collections import configdict
+from .util.config_object import config_default_units
 
 
 @attr.s
@@ -24,7 +25,8 @@ See also :func:`set_mode`.
 
 _mode_default_configs = {
     "mono": {
-        "wavelength": 550.
+        "wavelength": 550.,
+        "wavelength_unit": config_default_units.units.get("wavelength")()
     }
 }
 

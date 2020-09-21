@@ -1,6 +1,7 @@
 import pytest
 import xarray as xr
 from eradiate.scenes.atmosphere.profiles import *
+from eradiate.util.units import ureg
 
 
 def test_check():
@@ -80,7 +81,7 @@ def test_us76():
         assert var in profile
 
     # custom atmosphere height
-    profile = us76(height=Q_("120 kilometers"))
+    profile = us76(height=ureg.Quantity("120 kilometers"))
 
     assert profile.dims["altitude"] == 50
     assert profile["lower_bound"].values[0] == 0.
@@ -92,7 +93,7 @@ def test_us76():
         assert var in profile
 
     # custom number of layers
-    profile = us76(height=Q_("120 kilometers"), n_layers=36)
+    profile = us76(height=ureg.Quantity("120 kilometers"), n_layers=36)
 
     assert profile.dims["altitude"] == 36
     assert profile["lower_bound"].values[0] == 0.
@@ -103,7 +104,7 @@ def test_us76():
                 "total_number_density", "upper_bound", "lower_bound"]:
         assert var in profile
 
-    profile = us76(height=Q_("120 kilometers"), n_layers=1)
+    profile = us76(height=ureg.Quantity("120 kilometers"), n_layers=1)
 
     assert profile.dims["altitude"] == 1
     assert profile["lower_bound"].values[0] == 0.

@@ -5,7 +5,6 @@ import pytest
 
 import eradiate.kernel
 from eradiate.scenes.core import Factory, KernelDict, SceneHelper
-from eradiate.util.collections import frozendict
 from eradiate.util.exceptions import KernelVariantError
 
 
@@ -51,17 +50,19 @@ def test_kernel_dict():
 
 @attr.s
 class TinyDirectional(SceneHelper):
-    CONFIG_SCHEMA = frozendict({
-        "direction": {
-            "type": "list",
-            "items": [{"type": "number"}] * 3,
-            "default": [0, 0, -1]
-        },
-        "irradiance": {
-            "type": "number",
-            "default": 1.0
-        }
-    })
+    @classmethod
+    def config_schema(cls):
+        return dict({
+            "direction": {
+                "type": "list",
+                "items": [{"type": "number"}] * 3,
+                "default": [0, 0, -1]
+            },
+            "irradiance": {
+                "type": "number",
+                "default": 1.0
+            }
+        })
 
     id = attr.ib(default="illumination")
 

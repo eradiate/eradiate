@@ -12,7 +12,9 @@ from abc import abstractmethod
 import attr
 
 from .core import Factory, SceneHelper
-from ..util.collections import frozendict, onedict_value
+from .core import kernel_default_units as kdu
+from ..util.config_object import config_default_units as cdu
+from ..util.units import ureg
 
 
 @attr.s
@@ -35,7 +37,8 @@ class Surface(SceneHelper):
         pass
 
     @abstractmethod
-    def shapes(self, ref=False):
+    @ureg.wraps(None, [None, kdu.units.get("length")(), None], strict=False)
+    def shapes(self, size, ref=False):
         """Return shape plugin specifications only.
 
         Returns → dict:
@@ -99,33 +102,45 @@ class LambertianSurface(Surface):
             :factorykey:`uniform` with ``value`` set to 0.5.
     """
 
-    CONFIG_SCHEMA = frozendict({
-        "reflectance": {
-            "type": "dict",
-            "default": {},
-            "allow_unknown": True,
-            "schema": {
-                "type": {
-                    "type": "string",
-                    "allowed": ["uniform"],
-                    "default": "uniform"
+    @classmethod
+    def config_schema(cls):
+        return dict({
+            "reflectance": {
+                "type": "dict",
+                "default": {},
+                "allow_unknown": True,
+                "schema": {
+                    "type": {
+                        "type": "string",
+                        "allowed": ["uniform"],
+                        "default": "uniform"
+                    },
+                    "value": {  # If selecting uniform, we check that this is a reflectance spectrum
+                        "type": "number",
+                        "dependencies": {"type": "uniform"},
+                        "required": False,
+                        "min": 0.,
+                        "max": 1.,
+                        "default": 0.5
+                    },
+                    "quantity": {
+                        "type": "string",
+                        "nullable": True,
+                        "allowed": [],
+                        "default": None
+                    }
                 },
-                "value": {  # If selecting uniform, we check that this is a reflectance spectrum
-                    "type": "number",
-                    "dependencies": {"type": "uniform"},
-                    "required": False,
-                    "min": 0.,
-                    "max": 1.,
-                    "default": 0.5
-                }
             },
-        },
-        "width": {
-            "type": "number",
-            "min": 0.,
-            "default": 1.,
-        }
-    })
+            "width": {
+                "type": "number",
+                "min": 0.,
+                "default": 1.,
+            },
+            "width_unit": {
+                "type": "string",
+                "default": str(cdu.units.get("length")())
+            }
+        })
 
     def bsdfs(self):
         reflectance = Factory().create(self.config["reflectance"])
@@ -136,15 +151,14 @@ class LambertianSurface(Surface):
             }
         }
 
-    def shapes(self, ref=False):
+    @ureg.wraps(None, [None, kdu.units.get("length")(), None], strict=False)
+    def shapes(self, size, ref=False):
         from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
         if ref:
             bsdf = {"type": "ref", "id": "bsdf_surface"}
         else:
             bsdf = self.bsdfs()["bsdf_surface"]
-
-        size = self.config["width"]
 
         return {
             "shape_surface": {
@@ -158,11 +172,13 @@ class LambertianSurface(Surface):
     def kernel_dict(self, ref=True):
         kernel_dict = {}
 
+        size = self.get_quantity("width")
+
         if not ref:
-            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(size, ref=False)["shape_surface"]
         else:
             kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(size, ref=True)["shape_surface"]
 
         return kernel_dict
 
@@ -212,25 +228,31 @@ class RPVSurface(Surface):
     # TODO: check if there are bounds to default parameters
     # TODO: add support for spectra
 
-    CONFIG_SCHEMA = frozendict({
-        "rho_0": {
-            "type": "number",
-            "default": 0.183,
-        },
-        "k": {
-            "type": "number",
-            "default": 0.780,
-        },
-        "ttheta": {
-            "type": "number",
-            "default": -0.1,
-        },
-        "width": {
-            "type": "number",
-            "min": 0.,
-            "default": 1.,
-        }
-    })
+    @classmethod
+    def config_schema(cls):
+        return dict({
+            "rho_0": {
+                "type": "number",
+                "default": 0.183,
+            },
+            "k": {
+                "type": "number",
+                "default": 0.780,
+            },
+            "ttheta": {
+                "type": "number",
+                "default": -0.1,
+            },
+            "width": {
+                "type": "number",
+                "min": 0.,
+                "default": 1.,
+            },
+            "width_unit": {
+                "type": "string",
+                "default": str(cdu.units.get("length")())
+            }
+        })
 
     def bsdfs(self):
         return {
@@ -251,15 +273,14 @@ class RPVSurface(Surface):
             }
         }
 
-    def shapes(self, ref=False):
+    @ureg.wraps(None, [None, kdu.units.get("length")(), None], strict=False)
+    def shapes(self, size, ref=False):
         from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
         if ref:
             bsdf = {"type": "ref", "id": "bsdf_surface"}
         else:
             bsdf = self.bsdfs()["bsdf_surface"]
-
-        size = self.config["width"]
 
         return {
             "shape_surface": {
@@ -273,10 +294,12 @@ class RPVSurface(Surface):
     def kernel_dict(self, ref=True):
         kernel_dict = {}
 
+        size = self.get_quantity("width")
+
         if not ref:
-            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(size, ref=False)["shape_surface"]
         else:
             kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(size, ref=True)["shape_surface"]
 
         return kernel_dict

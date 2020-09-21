@@ -8,7 +8,8 @@ from eradiate.scenes.atmosphere.rayleigh import (
     sigma_s_mixture, delta, RayleighHomogeneousAtmosphere
 )
 from eradiate.util.collections import onedict_value
-from eradiate.util.units import Q_
+from eradiate.util.config_object import config_default_units
+from eradiate.util.units import ureg
 
 
 def test_king_correction_factor():
@@ -22,12 +23,14 @@ def test_king_correction_factor():
 def test_sigma_s_single():
     """Test computation of Rayleigh scattering coefficient with default values"""
 
-    ref_cross_section = Q_(4.513e-27, "cm**2")
+    ref_cross_section = ureg.Quantity(4.513e-27, "cm**2")
     ref_sigmas = ref_cross_section * _LOSCHMIDT
-    expected = ref_sigmas.to("km^-1").magnitude
+    expected = ref_sigmas
 
     # Compare to reference value computed from scattering cross section in
     # Bates (1984) Planetary and Space Science, Volume 32, No. 6.
+    print(expected.to("m^-1"))
+    print(sigma_s_single().to("m^-1"))
     assert np.allclose(sigma_s_single(), expected, rtol=1e-2)
 
 
@@ -47,7 +50,7 @@ def test_sigma_s_mixture():
             [1.049]
         )
 
-    assert np.allclose(coefficient_air, sigma_s_single(), rtol=1e-6)
+    assert np.allclose(coefficient_air, sigma_s_single().to("km^-1").magnitude, rtol=1e-6)
 
     coefficient_2_particle_types_mixture = \
         sigma_s_mixture(
@@ -97,15 +100,16 @@ def test_rayleigh_homogeneous(mode_mono, ref):
 
     # Construct with parameters
     eradiate.mode.config["wavelength"] = 650.
+    eradiate.mode.config["wavelength_unit"] = config_default_units.units.get("wavelength")()
     r = RayleighHomogeneousAtmosphere({"height": 10.})
 
     # check if sigma_s was correctly computed using the mode wavelength value
     assert np.isclose(r._sigma_s,
-                      sigma_s_single(wavelength=eradiate.mode.config["wavelength"]))
+                      sigma_s_single(wavelength=eradiate.mode.config["wavelength"]*eradiate.mode.config["wavelength_unit"]))
 
     # check if automatic scene width works as intended
     assert np.isclose(r._width,
-                      10. / sigma_s_single(wavelength=eradiate.mode.config["wavelength"]))
+                      10. / sigma_s_single(wavelength=eradiate.mode.config["wavelength"]*eradiate.mode.config["wavelength_unit"]))
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(r).load() is not None
@@ -119,10 +123,16 @@ def test_rayleigh_homogeneous(mode_mono, ref):
     # sigma_s_single
     params = {
         "number_density": 2.0e34,
+        "number_density_unit": "km^-3",
         "refractive_index": 1.0003,
         "king_factor": 1.05
     }
+    params_pint = {
+        "number_density": params["number_density"]*ureg(params["number_density_unit"]),
+        "refractive_index": params["refractive_index"],
+        "king_factor": params["king_factor"]
+    }
     r = RayleighHomogeneousAtmosphere({"sigma_s": params})
     assert r._sigma_s == sigma_s_single(
-        wavelength=eradiate.mode.config["wavelength"], **params
+        wavelength=eradiate.mode.config["wavelength"]*eradiate.mode.config["wavelength_unit"], **params_pint
     )
