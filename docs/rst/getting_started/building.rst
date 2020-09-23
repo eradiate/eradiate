@@ -26,18 +26,6 @@ Once your environment is ready, you can activate it:
 
     conda activate eradiate
 
-.. _sec-getting_started-building-automated_conda:
-
-.. admonition:: Automated Conda environment setup
-
-    Conda environment creation can be automatically handled by executing the ``conda_create_env.sh`` script. *Be careful however as this will reset the existing environment!* Note that we are not sourcing the script, we are executing it in a subshell.
-
-    .. code-block:: bash
-
-        bash conda_create_env.sh
-
-    The created environment will also contain environment variable setup scripts which will make the :ref:`environment variable setup optional <sec-getting_started-building-environment_variables>`.
-
 Optional requirements
 """""""""""""""""""""
 
@@ -93,15 +81,44 @@ Building the Mitsuba kernel
 
 Compiling Mitsuba 2 requires a recent version of CMake (at least **3.9.0**). Further platform-specific dependencies and compilation instructions are provided below for each operating system.
 
-Linux
-^^^^^
+Linux prerequisites
+^^^^^^^^^^^^^^^^^^^
 
-.. todo::
-    
-    Add Linux installation instructions.
+The following table lists software that was installed on a fresh setup of Linux (Ubuntu 20.04.1).
 
-macOS
-^^^^^
+ ============= =================
+  Requirement   tested version
+ ============= =================
+  git           2.25.1
+  cmake         3.16.3
+  ninja         1.10.0
+  Conda         4.8.3
+  clang         10.0.0-4ubuntu1
+  libc++        10
+  libc++abi     10
+  libpng
+  zlib
+  libjpeg
+ ============= =================
+
+.. admonition:: Installing packages
+
+    All prerequisites except for conda can be installed through the usual Linux package managers. For example, using the APT package manager, which is used in most Debian based distributions, like Ubuntu:
+
+    .. code-block:: bash
+
+        # Install build tools, compiler and libc++
+        sudo apt install -y git cmake ninja-build clang-10 libc++-dev libc++abi-dev
+
+        # Install libraries for image I/O
+        sudo apt install -y libpng-dev zlib1g-dev libjpeg-dev
+
+    If your Linux distribution does not include APT, please consult your package manager's repositories for the respective packages.
+
+Miniconda does not provide packages for the usual Linux package managers as of the writing of this document. However installers and installation instructions can be found on their `website <https://docs.conda.io/en/latest/miniconda.html>`_.
+
+macOS prerequisites
+^^^^^^^^^^^^^^^^^^^
 
 On macOS, you will need to install Xcode, CMake, and `Ninja <https://ninja-build.org/>`_. Additionally, running the Xcode command line tools once might be necessary:
 
@@ -116,7 +133,10 @@ On macOS, you will need to install Xcode, CMake, and `Ninja <https://ninja-build
     * cmake 3.16.4
     * Python 3.7.3
 
-Now, compilation should be as simple as running the following from inside Eradiate's root directory:
+Compiling
+^^^^^^^^^
+
+After following the steps for your OS above, compilation should be as simple as running the following from inside Eradiate's root directory:
 
 .. code-block:: bash
 
@@ -133,6 +153,34 @@ Once Mitsuba is compiled, it can then be used to compute radiative transfer in a
     mitsuba scene.xml
 
 where ``scene.xml`` is a Mitsuba scene file. Calling ``mitsuba --help`` will print additional information about various command line arguments.
+
+.. admonition:: Tips & Tricks
+
+    Mitsuba compilation can fail due to CMake not accessing the correct Python interpreter and/or C/C++ compiler.
+    In this case, the interpreter and compiler can be specified manually through CMake variables. To determine the path to the python interpreter run the following command in your terminal
+
+    .. code-block:: bash
+
+        which python
+
+    The response should be a path, similar to this:
+
+    .. code-block::
+
+        /home/<username>/miniconda3/envs/eradiate/bin/python
+
+    For the C and C++ compilers, run the following commands respectively.
+
+    .. code-block:: bash
+
+        which clang
+        which clang++
+
+    The resulting paths can be passed to CMake as variables, like this.
+
+    .. code-block:: bash
+
+        cmake -GNinja -D PYHTON_EXECUTABLE=<result of the query> CMAKE_C_COMPILER=<result of the query> CMAKE_CXX_COMPILER=<result of the query> ..
 
 .. _sec-getting_started-building-package_install:
 
@@ -157,6 +205,8 @@ Once this is done, you can check if the installation is successful by printing t
 .. code-block:: bash
 
     python -c "import eradiate.kernel; eradiate.kernel.set_variant('scalar_mono'); print(eradiate.kernel.core.MTS_VERSION)"
+
+.. _sec-getting_started-building-automated_conda:
 
 Setup automation
 ----------------
