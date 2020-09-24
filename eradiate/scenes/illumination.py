@@ -11,8 +11,7 @@ import attr
 import numpy as np
 
 from .core import Factory, SceneHelper
-from .core import kernel_default_units as kdu
-from ..util.config_object import config_default_units
+from ..util.units import kernel_default_units as kdu, config_default_units as cdu
 from ..util.frame import angles_to_direction
 
 
@@ -149,12 +148,12 @@ class DirectionalIllumination(SceneHelper):
             "zenith": {"type": "number", "default": 0.},
             "zenith_unit": {
                 "type": "string",
-                "default": str(config_default_units.units.get("angle")())
+                "default": str(cdu.get("angle"))
             },
             "azimuth": {"type": "number", "default": 0.},
             "azimuth_unit": {
                 "type": "string",
-                "default": str(config_default_units.units.get("angle")())
+                "default": str(cdu.get("angle"))
             },
             "irradiance": {
                 "type": "dict",
@@ -180,8 +179,8 @@ class DirectionalIllumination(SceneHelper):
     def kernel_dict(self, **kwargs):
         irradiance_ = Factory().create(self.config["irradiance"])
 
-        zenith = self.config.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude,
-        azimuth = self.config.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
+        zenith = self.config.get_quantity("zenith").to(kdu.get("angle")).magnitude,
+        azimuth = self.config.get_quantity("azimuth").to(kdu.get("angle")).magnitude
         irradiance = irradiance_.kernel_dict()["spectrum"]
 
         return {

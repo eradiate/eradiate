@@ -7,7 +7,6 @@ import cerberus
 import pint
 
 from .collections import configdict
-from .units import DefaultUnits
 
 
 @attr.s
@@ -39,8 +38,8 @@ class ConfigObject(ABC):
 
         .. note::
 
-            This member is implemented as an abstract property to force defining
-            it upon subclassing :class:`ConfigObject`.
+           This member is implemented as an abstract method to force defining
+           it upon subclassing :class:`ConfigObject`.
         """
         pass
 
@@ -56,7 +55,3 @@ class ConfigObject(ABC):
             raise ValueError(v.errors)
 
         self.config = configdict(v.normalized(self.config))
-
-
-#: Default unit set used when interpreting config dictionaries
-config_default_units = DefaultUnits()

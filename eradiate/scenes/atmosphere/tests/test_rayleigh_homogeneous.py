@@ -8,8 +8,7 @@ from eradiate.scenes.atmosphere.rayleigh import (
     sigma_s_mixture, delta, RayleighHomogeneousAtmosphere
 )
 from eradiate.util.collections import onedict_value
-from eradiate.util.config_object import config_default_units
-from eradiate.util.units import ureg
+from eradiate.util.units import ureg, config_default_units
 
 
 def test_king_correction_factor():
@@ -100,7 +99,7 @@ def test_rayleigh_homogeneous(mode_mono, ref):
 
     # Construct with parameters
     eradiate.mode.config["wavelength"] = 650.
-    eradiate.mode.config["wavelength_unit"] = config_default_units.units.get("wavelength")()
+    eradiate.mode.config["wavelength_unit"] = config_default_units.get("wavelength")
     r = RayleighHomogeneousAtmosphere({"height": 10.})
 
     # check if sigma_s was correctly computed using the mode wavelength value

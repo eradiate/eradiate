@@ -11,11 +11,9 @@ import attr
 import numpy as np
 
 from .core import Factory, SceneHelper
-from .core import kernel_default_units as kdu
 from .. import data
-from ..util.config_object import config_default_units
 from ..util.exceptions import ModeError
-from ..util.units import ureg
+from ..util.units import ureg, kernel_default_units as kdu, config_default_units as cdu
 
 
 @attr.s
@@ -39,6 +37,7 @@ class UniformSpectrum(SceneHelper):
 
             Default: 1.
     """
+
     @classmethod
     def config_schema(cls):
         return dict({
@@ -57,11 +56,11 @@ class UniformSpectrum(SceneHelper):
 
     def kernel_dict(self, **kwargs):
         if self.config["quantity"] == "radiance":
-            value = self.config["value"]*config_default_units.units.get("radiance")()
-            value = value.to(kdu.units.get("radiance")()).magnitude
+            value = self.config["value"] * cdu.get("radiance")
+            value = value.to(kdu.get("radiance")).magnitude
         elif self.config["quantity"] == "irradiance":
-            value = self.config["value"]*config_default_units.units.get("irradiance")()
-            value = value.to(kdu.units.get("irradiance")()).magnitude
+            value = self.config["value"] * cdu.get("irradiance")
+            value = value.to(kdu.get("irradiance")).magnitude
         elif self.config["quantity"] is None:
             value = self.config["value"]
         else:
@@ -185,7 +184,7 @@ class SolarIrradianceSpectrum(SceneHelper):
             )
 
             if self.config["quantity"] == "irradiance":
-                irradiance = irradiance.to(kdu.units.get("irradiance")()).magnitude
+                irradiance = irradiance.to(kdu.get("irradiance")).magnitude
             else:
                 raise NotImplementedError(f"Cannot convert to {self.config['quantity']}.")
 

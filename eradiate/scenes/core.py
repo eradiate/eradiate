@@ -9,11 +9,9 @@ from copy import deepcopy
 import attr
 
 import eradiate.kernel
-from ..util.config_object import ConfigObject, DefaultUnits
+from ..util.config_object import ConfigObject
 from ..util.exceptions import KernelVariantError
 from ..util.metaclasses import Singleton
-
-kernel_default_units = DefaultUnits()
 
 
 @attr.s

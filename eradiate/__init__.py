@@ -6,7 +6,6 @@ import attr
 
 from .util.units import ureg
 from .util.collections import configdict
-from .util.config_object import config_default_units
 
 
 @attr.s

@@ -12,9 +12,7 @@ from abc import abstractmethod
 import attr
 
 from .core import Factory, SceneHelper
-from .core import kernel_default_units as kdu
-from ..util.config_object import config_default_units as cdu
-from ..util.units import ureg
+from ..util.units import ureg, kernel_default_units as kdu, config_default_units as cdu
 
 
 @attr.s
@@ -37,7 +35,7 @@ class Surface(SceneHelper):
         pass
 
     @abstractmethod
-    @ureg.wraps(None, [None, kdu.units.get("length")(), None], strict=False)
+    @ureg.wraps(None, [None, kdu.get("length"), None], strict=False)
     def shapes(self, size, ref=False):
         """Return shape plugin specifications only.
 
@@ -138,7 +136,7 @@ class LambertianSurface(Surface):
             },
             "width_unit": {
                 "type": "string",
-                "default": str(cdu.units.get("length")())
+                "default": str(cdu.get("length"))
             }
         })
 
@@ -151,7 +149,7 @@ class LambertianSurface(Surface):
             }
         }
 
-    @ureg.wraps(None, [None, kdu.units.get("length")(), None], strict=False)
+    @ureg.wraps(None, [None, kdu.get("length"), None], strict=False)
     def shapes(self, size, ref=False):
         from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
@@ -250,7 +248,7 @@ class RPVSurface(Surface):
             },
             "width_unit": {
                 "type": "string",
-                "default": str(cdu.units.get("length")())
+                "default": str(cdu.get("length"))
             }
         })
 
@@ -273,7 +271,7 @@ class RPVSurface(Surface):
             }
         }
 
-    @ureg.wraps(None, [None, kdu.units.get("length")(), None], strict=False)
+    @ureg.wraps(None, [None, kdu.get("length"), None], strict=False)
     def shapes(self, size, ref=False):
         from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 

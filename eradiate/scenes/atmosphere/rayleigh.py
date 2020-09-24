@@ -8,10 +8,8 @@ from scipy.constants import physical_constants
 import eradiate
 from .base import Atmosphere
 from ..core import Factory
-from ..core import kernel_default_units as kdu
-from ...util.config_object import config_default_units as cdu
 from ...util.exceptions import ConfigWarning, ModeError
-from ...util.units import ureg
+from ...util.units import ureg, config_default_units as cdu, kernel_default_units as kdu
 
 # Physical constants
 #: Loschmidt constant [km^-3].
@@ -220,7 +218,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             },
             "height_unit": {
                 "type": "string",
-                "default": str(cdu.units.get("length")())
+                "default": str(cdu.get("length"))
             },
             "width": {
                 "anyof": [{
@@ -238,7 +236,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 "nullable": True,
                 "default_setter": lambda doc:
                 None if isinstance(doc["width"], str)
-                else cdu.units.get("length")()
+                else cdu.get("length")
             },
             "sigma_s": {
                 "oneof": [{
@@ -253,7 +251,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                         },
                         "wavelength_unit": {
                             "type": "string",
-                            "default": str(cdu.units.get("wavelength")())
+                            "default": str(cdu.get("wavelength"))
                         },
                         "number_density": {
                             "type": "number",
@@ -261,7 +259,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                         },
                         "number_density_unit": {
                             "type": "string",
-                            "default": f"{cdu.units.get('length')()}^-3"
+                            "default": f"{cdu.get('length')}^-3"
                         },
                         "refractive_index": {
                             "type": "number",
@@ -282,7 +280,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             },
             "sigma_s_unit": {
                 "type": "string",
-                "default": str(f"{cdu.units.get('length')()}^-1")
+                "default": str(f"{cdu.get('length')}^-1")
             }
         })
 
@@ -356,7 +354,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 "phase": phase,
                 "sigma_t": {
                     "type": "uniform",
-                    "value": self._sigma_s.to(f"{kdu.units.get('length')()}^-1").magnitude
+                    "value": self._sigma_s.to(f"{kdu.get('length')}^-1").magnitude
                 },
                 "albedo": {
                     "type": "uniform",
@@ -373,8 +371,8 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         else:
             medium = self.media(ref=False)["medium_atmosphere"]
 
-        width = self._width.to(kdu.units.get("length")()).magnitude
-        height = self.config.get_quantity("height").to(kdu.units.get("length")()).magnitude
+        width = self._width.to(kdu.get("length")).magnitude
+        height = self.config.get_quantity("height").to(kdu.get("length")).magnitude
         height_offset = height * 0.01
 
         return {

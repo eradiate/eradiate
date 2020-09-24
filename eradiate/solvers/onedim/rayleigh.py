@@ -13,9 +13,9 @@ import xarray as xr
 import eradiate.kernel
 from .runner import OneDimRunner
 from ...scenes.core import Factory, KernelDict
-from ...scenes.core import kernel_default_units as kdu
+from ...util.units import kernel_default_units as kdu, config_default_units as cdu
 from ...util import ensure_array, view
-from ...util.config_object import ConfigObject, config_default_units
+from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
 from ...util.xarray import eo_dataarray
 
@@ -262,7 +262,7 @@ class RayleighSolverApp(ConfigObject):
         self._helpers = {}
         self._kernel_dict = KernelDict.empty()
 
-        with config_default_units.override({"length": "km"}):
+        with cdu.override({"length": "km"}):
             with kdu.override({"length": "km"}):
                 # Gather mode information
                 wavelength = config["mode"]["wavelength"]

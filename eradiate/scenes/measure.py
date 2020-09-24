@@ -11,8 +11,7 @@ import attr
 import numpy as np
 
 from .core import Factory, SceneHelper
-from .core import kernel_default_units as kdu
-from ..util.config_object import config_default_units
+from ..util.units import kernel_default_units as kdu, config_default_units as cdu
 from ..util.frame import angles_to_direction, spherical_to_cartesian
 
 
@@ -66,7 +65,7 @@ class DistantMeasure(SceneHelper):
             },
             "zenith_unit": {
                 "type": "string",
-                "default": str(config_default_units.units.get("angle")())
+                "default": str(cdu.get("angle"))
             },
             "azimuth": {
                 "type": "number",
@@ -76,7 +75,7 @@ class DistantMeasure(SceneHelper):
             },
             "azimuth_unit": {
                 "type": "string",
-                "default": str(config_default_units.units.get("angle")())
+                "default": str(cdu.get("angle"))
             },
             "spp": {
                 "type": "integer",
@@ -88,8 +87,8 @@ class DistantMeasure(SceneHelper):
     id = attr.ib(default="measure")
 
     def kernel_dict(self, **kwargs):
-        zenith = self.config.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude
-        azimuth = self.config.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
+        zenith = self.config.get_quantity("zenith").to(kdu.get("angle")).magnitude
+        azimuth = self.config.get_quantity("azimuth").to(kdu.get("angle")).magnitude
         spp = self.config.get_quantity("spp")
         return {
             self.id: {
@@ -185,7 +184,7 @@ class PerspectiveCameraMeasure(SceneHelper):
             },
             "target_unit": {
                 "type": "string",
-                "default": str(config_default_units.units.get("length")())
+                "default": str(cdu.get("length"))
             },
             "zenith": {
                 "type": "number",
@@ -195,7 +194,7 @@ class PerspectiveCameraMeasure(SceneHelper):
             },
             "zenith_unit": {
                 "type": "string",
-                "default": str(config_default_units.units.get("angle")())
+                "default": str(cdu.get("angle"))
             },
             "azimuth": {
                 "type": "number",
@@ -205,7 +204,7 @@ class PerspectiveCameraMeasure(SceneHelper):
             },
             "azimuth_unit": {
                 "type": "string",
-                "default": str(config_default_units.units.get("angle")())
+                "default": str(cdu.get("angle"))
             },
             "distance": {
                 "type": "number",
@@ -214,7 +213,7 @@ class PerspectiveCameraMeasure(SceneHelper):
             },
             "distance_unit": {
                 "type": "string",
-                "default": str(config_default_units.units.get("length")())
+                "default": str(cdu.get("length"))
             },
             "res": {
                 "type": "integer",
@@ -231,10 +230,10 @@ class PerspectiveCameraMeasure(SceneHelper):
     id = attr.ib(default="measure")
 
     def kernel_dict(self, **kwargs):
-        target = self.config.get_quantity("target").to(kdu.units.get("length")()).magnitude
-        zenith = self.config.get_quantity("zenith").to(kdu.units.get("angle")()).magnitude
-        azimuth = self.config.get_quantity("azimuth").to(kdu.units.get("angle")()).magnitude
-        distance = self.config.get_quantity("distance").to(kdu.units.get("length")()).magnitude
+        target = self.config.get_quantity("target").to(kdu.get("length")).magnitude
+        zenith = self.config.get_quantity("zenith").to(kdu.get("angle")).magnitude
+        azimuth = self.config.get_quantity("azimuth").to(kdu.get("angle")).magnitude
+        distance = self.config.get_quantity("distance").to(kdu.get("length")).magnitude
         res = self.config.get_quantity("res"),
         spp = self.config.get_quantity("spp")
 
