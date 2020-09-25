@@ -2,7 +2,6 @@ import numpy as np
 
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure import DistantMeasure, PerspectiveCameraMeasure
-from eradiate.util.units import ureg
 
 
 def test_distant_class(mode_mono):

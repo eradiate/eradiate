@@ -236,7 +236,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 "nullable": True,
                 "default_setter": lambda doc:
                 None if isinstance(doc["width"], str)
-                else cdu.get("length")
+                else str(cdu.get("length"))
             },
             "sigma_s": {
                 "oneof": [{

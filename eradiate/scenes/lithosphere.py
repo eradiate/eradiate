@@ -35,8 +35,7 @@ class Surface(SceneHelper):
         pass
 
     @abstractmethod
-    @ureg.wraps(None, [None, kdu.get("length"), None], strict=False)
-    def shapes(self, size, ref=False):
+    def shapes(self, ref=False):
         """Return shape plugin specifications only.
 
         Returns → dict:
@@ -149,8 +148,7 @@ class LambertianSurface(Surface):
             }
         }
 
-    @ureg.wraps(None, [None, kdu.get("length"), None], strict=False)
-    def shapes(self, size, ref=False):
+    def shapes(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
         if ref:
@@ -158,11 +156,14 @@ class LambertianSurface(Surface):
         else:
             bsdf = self.bsdfs()["bsdf_surface"]
 
+        width = self.config.get_quantity("width").to(kdu.get("length")).magnitude
+
         return {
             "shape_surface": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f
-                    .scale(ScalarVector3f(size / 2., size / 2., 1.)),
+                "to_world": ScalarTransform4f.scale(ScalarVector3f(
+                    width * 0.5, width * 0.5, 1.)
+                ),
                 "bsdf": bsdf
             }
         }
@@ -170,13 +171,11 @@ class LambertianSurface(Surface):
     def kernel_dict(self, ref=True):
         kernel_dict = {}
 
-        size = self.config.get_quantity("width")
-
         if not ref:
-            kernel_dict["surface"] = self.shapes(size, ref=False)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
         else:
             kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            kernel_dict["surface"] = self.shapes(size, ref=True)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
 
         return kernel_dict
 
@@ -271,8 +270,7 @@ class RPVSurface(Surface):
             }
         }
 
-    @ureg.wraps(None, [None, kdu.get("length"), None], strict=False)
-    def shapes(self, size, ref=False):
+    def shapes(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
         if ref:
@@ -280,11 +278,14 @@ class RPVSurface(Surface):
         else:
             bsdf = self.bsdfs()["bsdf_surface"]
 
+        width = self.config.get_quantity("width").to(kdu.get("length")).magnitude
+
         return {
             "shape_surface": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f
-                    .scale(ScalarVector3f(size / 2., size / 2., 1.)),
+                "to_world": ScalarTransform4f.scale(ScalarVector3f(
+                    width * 0.5, width * 0.5, 1.)
+                ),
                 "bsdf": bsdf
             }
         }
@@ -292,12 +293,10 @@ class RPVSurface(Surface):
     def kernel_dict(self, ref=True):
         kernel_dict = {}
 
-        size = self.config.get_quantity("width")
-
         if not ref:
-            kernel_dict["surface"] = self.shapes(size, ref=False)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
         else:
             kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            kernel_dict["surface"] = self.shapes(size, ref=True)["shape_surface"]
+            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
 
         return kernel_dict

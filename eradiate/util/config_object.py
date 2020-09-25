@@ -48,8 +48,6 @@ class ConfigObject(ABC):
     def __attrs_post_init__(self):
         # Check config contents and normalise
         v = cerberus.Validator(self.config_schema())
-        pint_unit = cerberus.TypeDefinition("pint_unit", (pint.unit.Unit,), ())
-        v.types_mapping["pint_unit"] = pint_unit
 
         if not v.validate(self.config):
             raise ValueError(v.errors)

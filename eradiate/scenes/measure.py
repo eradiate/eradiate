@@ -230,28 +230,30 @@ class PerspectiveCameraMeasure(SceneHelper):
     id = attr.ib(default="measure")
 
     def kernel_dict(self, **kwargs):
-        target = self.config.get_quantity("target").to(kdu.get("length")).magnitude
-        zenith = self.config.get_quantity("zenith").to(kdu.get("angle")).magnitude
-        azimuth = self.config.get_quantity("azimuth").to(kdu.get("angle")).magnitude
-        distance = self.config.get_quantity("distance").to(kdu.get("length")).magnitude
-        res = self.config.get_quantity("res"),
-        spp = self.config.get_quantity("spp")
-
         from eradiate.kernel.core import ScalarTransform4f
 
-        origin = spherical_to_cartesian(distance,
-                                        np.deg2rad(zenith),
-                                        np.deg2rad(azimuth))
+        target = self.config.get_quantity("target").to(kdu.get("length")).magnitude
+        distance = self.config.get_quantity("distance").to(kdu.get("length")).magnitude
+        res = self.config["res"]
+        spp = self.config["spp"]
+        zenith = self.config.get_quantity("zenith").to("rad").magnitude
+        azimuth = self.config.get_quantity("azimuth").to("rad").magnitude
+
+        origin = spherical_to_cartesian(distance, zenith, azimuth)
+        direction = origin / np.linalg.norm(origin)
 
         if np.allclose(origin, target):
             raise ValueError("target is too close to the camera")
+
+        up = [np.cos(azimuth), np.sin(azimuth), 0] \
+            if np.allclose(direction, [0, 0, 1]) \
+            else [0, 0, 1]
 
         return {
             self.id: {
                 "type": "perspective",
                 "far_clip": 1e7,
-                "to_world": ScalarTransform4f
-                    .look_at(origin=origin, target=target, up=[0, 0, 1]),
+                "to_world": ScalarTransform4f.look_at(origin=origin, target=target, up=up),
                 "sampler": {
                     "type": "independent",
                     "sample_count": spp
