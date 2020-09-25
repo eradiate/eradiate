@@ -4,8 +4,6 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import guzzle_sphinx_theme
-
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -74,6 +72,7 @@ extensions.append("sphinxcontrib.bibtex")
 extensions.append("sphinx.ext.intersphinx")
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
     "matplotlib": ("https://matplotlib.org/", None),
     "xarray": ("http://xarray.pydata.org/en/stable/", None),
     "mitsuba": ("https://mitsuba2.readthedocs.io/en/latest/", None),
