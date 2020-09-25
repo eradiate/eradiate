@@ -277,3 +277,191 @@ class PerspectiveCameraMeasure(Measure):
                 }
             }
         }
+
+
+@attr.s
+@Factory.register(name="radiance_hemi")
+class RadianceMeterHemisphere(Measure):
+    """Distant hemispherical measure scene generation helper [:factorykey:`radiance_hemi`].
+
+    This creates a :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin,
+    covering the hemisphere defined by the "origin" point and the "direction" vector.
+
+    The sensor is oriented based on the classical angular convention used
+    in Earth observation.
+
+    .. admonition:: Configuration example
+        :class: hint
+
+        Default:
+            .. code:: python
+
+               {
+                   "zenith_res": 10.,
+                   "azimuth_res": 10.,
+                   "origin": [0, 0, 0],
+                   "zenith_direction": [0, 0, 1],
+                   "hemisphere": "front"
+                   "spp": 32,
+               }
+
+    .. admonition:: Configuration format
+        :class: hint
+
+        ``zenith_res`` (float):
+            Zenith angle resolution
+
+            Default value: 10 degrees
+
+        ``azimuth_res`` (float):
+            Azimuth angle resolution
+
+            Default value: 10 degrees
+
+        ``origin`` (list[float]):
+            Position of the RadiancemeterArray
+
+            Default value: [0, 0, 0]
+
+        ``direction`` (list[float]):
+            Direction of the hemisphere's zenith
+
+            Default value: [0, 0, 1]
+
+        ``orientation`` (list[float]):
+            Direction of the hemisphere's principal plane
+
+            Default value: [1, 0, 0]
+
+        ``hemisphere`` (string):
+            "front" sets the sensors to point into the hemisphere that holds
+            the "direction" vector, while "back" sets them to point into the
+            opposite hemisphere.
+
+            Default value: "front"
+
+        ``spp`` (int):
+            Number of samples.
+
+            Default: 32.
+    """
+
+    @classmethod
+    def config_schema(cls):
+        d = super(RadianceMeterHemisphere, cls).config_schema()
+        d.update({
+            "zenith_res": {
+                "type": "number",
+                "min": 1,
+                "default": 10,
+            },
+            "zenith_res_unit": {
+                "type": "string",
+                "default": str(cdu.get("angle"))
+            },
+            "azimuth_res": {
+                "type": "number",
+                "min": 1,
+                "default": 10,
+            },
+            "azimuth_res_unit": {
+                "type": "string",
+                "default": str(cdu.get("angle"))
+            },
+            "origin": {
+                "type": "list",
+                "items": [{"type": "number"}] * 3,
+                "default": [0, 0, 0]
+            },
+            "direction": {
+                "type": "list",
+                "items": [{"type": "number"}] * 3,
+                "default": [0, 0, 1]
+            },
+            "hemisphere": {
+                "type": "string",
+                "allowed": ["front", "back"],
+                "default": "front"
+            },
+            "orientation": {
+                "type": "list",
+                "items": [{"type": "number"}] * 3,
+                "default": [1, 0, 0]
+            },
+            "spp": {
+                "type": "integer",
+                "min": 1,
+                "default": 32
+            }
+        })
+        
+        return d
+
+    zenith_angles = attr.ib(default=[])
+    azimuth_angles = attr.ib(default=[])
+
+    def init(self):
+        """(Re)initialise internal state.
+
+        This method is automatically called by the constructor to initialise the
+        object."""
+
+        zenith_res = self.config.get_quantity("zenith_res").to("deg").magnitude
+        azimuth_res = self.config.get_quantity("azimuth_res").to("deg").magnitude
+        
+        self.zenith_angles = np.arange(0, 90, zenith_res)
+        self.azimuth_angles = np.arange(0, 360, azimuth_res)
+
+    def repack_results(self, results):
+        """This method reshapes the 1D results returned by the
+        :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin into the shape
+        implied by the azimuth and zenith angle resolutions, such that
+        the result complies with the format required to further process the results."""
+
+        return np.reshape(results, (len(self.zenith_angles), len(self.azimuth_angles)))
+
+    def get_orientation_transform(self):
+        from eradiate.kernel.core import Transform4f
+        origin = self.config.get_quantity("origin")
+        zenith_direction = self.config.get_quantity("direction")
+        orientation = self.config.get_quantity("orientation")
+
+        return Transform4f.look_at(origin, zenith_direction, orientation)
+
+    def generate_directions(self):
+        hemisphere_transform = self.get_orientation_transform()
+
+        directions = []
+        for theta in self.zenith_angles:
+            for phi in self.azimuth_angles:
+                directions.append(hemisphere_transform.transform_vector(
+                    angles_to_direction(theta=theta, phi=phi))
+                )
+
+        return -np.array(directions) if self.config.get("hemisphere") == "back" \
+            else np.array(directions)
+
+    def kernel_dict(self, **kwargs):
+        spp = self.config.get_quantity("spp")
+        directions = self.generate_directions()
+        origin = self.config.get_quantity("origin")
+
+        return {
+            self.id: {
+                "type": "radiancemeterarray",
+                "directions": ", ".join([str(x) for x in directions.flatten()]),
+                "origins": ", ".join([str(x) for x in origin]*len(directions)),
+                "sampler": {
+                    "type": "independent",
+                    "sample_count": spp
+                },
+                "film": {
+                    "type": "hdrfilm",
+                    "width": len(directions),
+                    "height": 1,
+                    "pixel_format": "luminance",
+                    "component_format": "float32",
+                    "rfilter": {"type": "box"}
+                }
+            }
+        }
