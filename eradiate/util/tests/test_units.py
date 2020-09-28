@@ -12,6 +12,10 @@ def test_default_units():
     with pytest.raises(KeyError):
         du.get("distance")
 
+    # Test string getter
+    assert du.get_str("length") == "meter"
+    assert du.get_str("irradiance") == "watt / meter ** 2 / nanometer"
+
     # Test evaluation method
     assert du.units() == {
         "length": ureg.m,

@@ -115,7 +115,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             },
             "height_unit": {
                 "type": "string",
-                "default": str(cdu.get("length"))
+                "default": cdu.get_str("length")
             },
             "width": {
                 "anyof": [{
@@ -133,7 +133,7 @@ class HeterogeneousAtmosphere(Atmosphere):
                 "nullable": True,
                 "default_setter": lambda doc:
                 None if isinstance(doc["width"], str)
-                else str(cdu.get("length"))
+                else cdu.get_str("length")
             },
             "sigma_t": {
                 "type": "string",

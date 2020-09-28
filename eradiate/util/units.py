@@ -159,6 +159,20 @@ class DefaultUnits:
         except KeyError:
             raise
 
+    def get_str(self, key):
+        """Get default unit for a given quantity and return it as a string.
+
+        Returns → str
+            Requested unit as a string.
+
+        Raises → ``KeyError``
+            The requested ``key`` could not be found in the unit map.
+        """
+        try:
+            return str(self.get(key))
+        except KeyError:
+            raise
+
     @contextmanager
     def override(self, d):
         """A context manager which lets the user temporarily alter default units

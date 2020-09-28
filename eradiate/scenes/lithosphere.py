@@ -135,7 +135,7 @@ class LambertianSurface(Surface):
             },
             "width_unit": {
                 "type": "string",
-                "default": str(cdu.get("length"))
+                "default": cdu.get_str("length")
             }
         })
 
@@ -247,7 +247,7 @@ class RPVSurface(Surface):
             },
             "width_unit": {
                 "type": "string",
-                "default": str(cdu.get("length"))
+                "default": cdu.get_str("length")
             }
         })
 

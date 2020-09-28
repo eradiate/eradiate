@@ -148,12 +148,12 @@ class DirectionalIllumination(SceneHelper):
             "zenith": {"type": "number", "default": 0.},
             "zenith_unit": {
                 "type": "string",
-                "default": str(cdu.get("angle"))
+                "default": cdu.get_str("angle")
             },
             "azimuth": {"type": "number", "default": 0.},
             "azimuth_unit": {
                 "type": "string",
-                "default": str(cdu.get("angle"))
+                "default": cdu.get_str("angle")
             },
             "irradiance": {
                 "type": "dict",

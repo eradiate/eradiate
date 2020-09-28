@@ -218,7 +218,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             },
             "height_unit": {
                 "type": "string",
-                "default": str(cdu.get("length"))
+                "default": cdu.get_str("length")
             },
             "width": {
                 "anyof": [{
@@ -236,7 +236,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 "nullable": True,
                 "default_setter": lambda doc:
                 None if isinstance(doc["width"], str)
-                else str(cdu.get("length"))
+                else cdu.get_str("length")
             },
             "sigma_s": {
                 "oneof": [{
@@ -251,7 +251,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                         },
                         "wavelength_unit": {
                             "type": "string",
-                            "default": str(cdu.get("wavelength"))
+                            "default": cdu.get_str("wavelength")
                         },
                         "number_density": {
                             "type": "number",

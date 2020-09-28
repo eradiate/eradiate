@@ -65,7 +65,7 @@ class DistantMeasure(SceneHelper):
             },
             "zenith_unit": {
                 "type": "string",
-                "default": str(cdu.get("angle"))
+                "default": cdu.get_str("angle")
             },
             "azimuth": {
                 "type": "number",
@@ -75,7 +75,7 @@ class DistantMeasure(SceneHelper):
             },
             "azimuth_unit": {
                 "type": "string",
-                "default": str(cdu.get("angle"))
+                "default": cdu.get_str("angle")
             },
             "spp": {
                 "type": "integer",
@@ -184,7 +184,7 @@ class PerspectiveCameraMeasure(SceneHelper):
             },
             "target_unit": {
                 "type": "string",
-                "default": str(cdu.get("length"))
+                "default": cdu.get_str("length")
             },
             "zenith": {
                 "type": "number",
@@ -194,7 +194,7 @@ class PerspectiveCameraMeasure(SceneHelper):
             },
             "zenith_unit": {
                 "type": "string",
-                "default": str(cdu.get("angle"))
+                "default": cdu.get_str("angle")
             },
             "azimuth": {
                 "type": "number",
@@ -204,7 +204,7 @@ class PerspectiveCameraMeasure(SceneHelper):
             },
             "azimuth_unit": {
                 "type": "string",
-                "default": str(cdu.get("angle"))
+                "default": cdu.get_str("angle")
             },
             "distance": {
                 "type": "number",
@@ -213,7 +213,7 @@ class PerspectiveCameraMeasure(SceneHelper):
             },
             "distance_unit": {
                 "type": "string",
-                "default": str(cdu.get("length"))
+                "default": cdu.get_str("length")
             },
             "res": {
                 "type": "integer",
