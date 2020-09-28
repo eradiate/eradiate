@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.scenes.atmosphere.rayleigh import (
+from eradiate.scenes.atmosphere.homogeneous import (
     _IOR_DRY_AIR, _LOSCHMIDT, RayleighHomogeneousAtmosphere,
     delta, kf, sigma_s_mixture,sigma_s_single
 )
@@ -31,46 +31,6 @@ def test_sigma_s_single():
     print(expected.to("m^-1"))
     print(sigma_s_single().to("m^-1"))
     assert np.allclose(sigma_s_single(), expected, rtol=1e-2)
-
-
-def test_sigma_s_mixture():
-    """Test computation of the Rayleigh scattering coefficient for a mixture of
-    particles types by calling the function with the parameters for a single
-    particle type, namely air particles, then for a mixture of two particle
-    types.
-    """
-    coefficient_air = \
-        sigma_s_mixture(
-            550.,
-            [_LOSCHMIDT.magnitude],
-            _IOR_DRY_AIR.magnitude,
-            [_LOSCHMIDT.magnitude],
-            [_IOR_DRY_AIR.magnitude],
-            [1.049]
-        )
-
-    assert np.allclose(coefficient_air, sigma_s_single().to("km^-1").magnitude, rtol=1e-6)
-
-    coefficient_2_particle_types_mixture = \
-        sigma_s_mixture(
-            550.,
-            _LOSCHMIDT.magnitude * np.ones(2) / 2,
-            2.,
-            _LOSCHMIDT.magnitude * np.ones(2),
-            2. * np.ones(2),
-            1. * np.ones(2)
-        )
-    expected_value = 24 * np.pi ** 3 / ((550.e-12) ** 4 * _LOSCHMIDT.magnitude)
-
-    assert np.allclose(
-        coefficient_2_particle_types_mixture,
-        expected_value,
-        rtol=1e-6
-    )
-
-
-def test_delta():
-    assert np.isclose(delta(), 0.9587257754327136, rtol=1e-6)
 
 
 @pytest.mark.parametrize("ref", (False, True))
