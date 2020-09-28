@@ -16,3 +16,9 @@ Data handling facilities [eradiate.data]
 
    get
 
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree: generated/
+
+   SOLAR_IRRADIANCE_SPECTRA

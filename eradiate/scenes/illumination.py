@@ -164,11 +164,6 @@ class DirectionalIllumination(SceneHelper):
                         "type": "string",
                         "allowed": ["uniform", "solar_irradiance"],
                         "default": "solar_irradiance"
-                    },
-                    "quantity": {
-                        "type": "string",
-                        "allowed": ["irradiance"],
-                        "default": "irradiance"
                     }
                 }
             },

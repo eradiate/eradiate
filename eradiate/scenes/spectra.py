@@ -12,6 +12,7 @@ import numpy as np
 
 from .core import Factory, SceneHelper
 from .. import data
+from ..data import SOLAR_IRRADIANCE_SPECTRA
 from ..util.exceptions import ModeError
 from ..util.units import ureg, kernel_default_units as kdu, config_default_units as cdu
 
@@ -82,9 +83,10 @@ class SolarIrradianceSpectrum(SceneHelper):
     This scene generation helper produces the scene dictionary required to
     instantiate a kernel plugin using the Sun irradiance spectrum. The data set
     used by this helper is controlled by the ``dataset`` configuration parameter
-    (see configuration format). The spectral range of the data sets shipped can
-    vary and an attempt for use outside of the supported spectral range will
-    raise a :class:`ValueError` upon calling :meth:`kernel_dict`.
+    (see configuration format for the list of available data sets). The spectral
+    range of the data sets shipped can vary and an attempt for use outside of
+    the supported spectral range will raise a :class:`ValueError` upon calling
+    :meth:`kernel_dict`.
 
     The generated kernel dictionary varies based on the selected mode of
     operation. By default, irradiance values are given in W/km^2/nm. The
@@ -98,7 +100,7 @@ class SolarIrradianceSpectrum(SceneHelper):
             .. code:: python
 
                {
-                   "dataset": "thuillier2003",
+                   "dataset": "thuillier_2003",
                    "scale": 1.
                }
 
@@ -108,25 +110,14 @@ class SolarIrradianceSpectrum(SceneHelper):
         ``dataset`` (str):
             Dataset key.
 
-            Allowed values: see table below.
+            Allowed values: see :attr:`eradiate.data.SOLAR_IRRADIANCE_SPECTRA`.
 
-            Default: ``"thuillier2003"``.
+            Default: ``"thuillier_2003"``.
 
         ``scale`` (float):
             Scaling factor.
 
             Default: 1.
-
-    .. list-table:: Solar irradiance models
-       :widths: 1 1 1
-       :header-rows: 1
-
-       * - Key
-         - Reference
-         - Spectral range [nm]
-       * - ``thuillier2003``
-         - :cite:`Thuillier2003SolarSpectralIrradiance`
-         - [200, 2397]
     """
 
     @classmethod
@@ -134,18 +125,13 @@ class SolarIrradianceSpectrum(SceneHelper):
         return dict({
             "dataset": {
                 "type": "string",
-                "allowed": ["thuillier2003"],
-                "default": "thuillier2003",
+                "allowed": list(SOLAR_IRRADIANCE_SPECTRA.keys()),
+                "default": "thuillier_2003",
             },
             "scale": {
                 "type": "number",
                 "min": 0.,
                 "default": 1.0,
-            },
-            "quantity": {
-                "type": "string",
-                "allowed": ["radiance", "irradiance"],
-                "default": "irradiance"
             }
         })
 
@@ -155,10 +141,10 @@ class SolarIrradianceSpectrum(SceneHelper):
         dataset = self.config["dataset"]
 
         # Select dataset
-        if dataset == "thuillier2003":
-            self.dataset = data.get("spectra/thuillier_2003.nc")
-        else:
-            raise ValueError(f"unsupported dataset {dataset}")
+        try:
+            self.dataset = data.get(SOLAR_IRRADIANCE_SPECTRA[dataset])
+        except KeyError:
+            raise ValueError(f"unknown dataset {dataset}")
 
     def kernel_dict(self, **kwargs):
         from eradiate import mode
@@ -183,16 +169,12 @@ class SolarIrradianceSpectrum(SceneHelper):
                 self.dataset["spectral_irradiance"].attrs["units"]
             )
 
-            if self.config["quantity"] == "irradiance":
-                irradiance = irradiance.to(kdu.get("irradiance")).magnitude
-            else:
-                raise NotImplementedError(f"Cannot convert to {self.config['quantity']}.")
-
-            # Apply unit conversion and scaling, build kernel dict
+            # Apply scaling, build kernel dict
             return {
                 "spectrum": {
                     "type": "uniform",
-                    "value": irradiance * self.config["scale"]
+                    "value": irradiance.to(kdu.get("irradiance")).magnitude *
+                             self.config["scale"]
                 }
             }
 

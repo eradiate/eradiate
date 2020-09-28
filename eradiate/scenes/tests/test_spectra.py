@@ -27,7 +27,7 @@ def test_irradiance_spectrum(mode_mono):
     assert load_dict(onedict_value(s.kernel_dict())) is not None
 
     # Check that the helper doesn't work out of the supported spectral range
-    s = SolarIrradianceSpectrum({"dataset": "thuillier2003"})
+    s = SolarIrradianceSpectrum({"dataset": "thuillier_2003"})
 
     with pytest.raises(ValueError):
         eradiate.mode.config["wavelength"] = 2400.
