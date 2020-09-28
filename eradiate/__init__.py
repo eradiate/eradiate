@@ -4,8 +4,8 @@ __version__ = "0.0.1"  #: Eradiate version number.
 
 import attr
 
-from .util.units import ureg
-from .util.collections import configdict
+from .util.units import ureg as _ureg
+from .util.collections import configdict as _configdict
 
 
 @attr.s
@@ -26,7 +26,7 @@ See also :func:`set_mode`.
 _mode_default_configs = {
     "mono": {
         "wavelength": 550.,
-        "wavelength_unit": ureg("nm")
+        "wavelength_unit": _ureg("nm")
     }
 }
 
@@ -62,5 +62,5 @@ def set_mode(mode_type, **kwargs):
         eradiate.kernel.set_variant("scalar_mono_double")
 
         mode.type = "mono"
-        mode.config = configdict(_mode_default_configs[mode_type])
+        mode.config = _configdict(_mode_default_configs[mode_type])
         mode.config.update(kwargs)
