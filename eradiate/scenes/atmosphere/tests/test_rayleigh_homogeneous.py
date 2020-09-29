@@ -3,8 +3,8 @@ import pytest
 
 import eradiate
 from eradiate.scenes.atmosphere.homogeneous import (
-    _IOR_DRY_AIR, _LOSCHMIDT, RayleighHomogeneousAtmosphere,
-    delta, kf, sigma_s_mixture,sigma_s_single
+    _LOSCHMIDT, RayleighHomogeneousAtmosphere,
+    kf, sigma_s_single
 )
 from eradiate.scenes.core import KernelDict
 from eradiate.util.collections import onedict_value
