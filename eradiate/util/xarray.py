@@ -3,7 +3,7 @@
 import xarray as xr
 
 
-def eo_dataarray(data, sza, saa, vza, vaa, wavelength):
+def eo_dataarray(data, sza, saa, vza, vaa, wavelength, result_type):
     """Creates a :class:`~xarray.DataArray` object with the typical coordinates
     and their attributes for EO applications.
 
@@ -25,6 +25,10 @@ def eo_dataarray(data, sza, saa, vza, vaa, wavelength):
     Parameter ``wavelength`` (float):
         Iterable container of wavelength values.
 
+    Parameter ``angular_domain`` (string):
+        Descriptor for different types of measures, e.g. `hemispherical` or
+        `principal_plane`.
+
     Returns → :class:`xarray.DataArray`:
         A data array with coordinates and attributes set to match typical
         EO applications.
@@ -36,6 +40,7 @@ def eo_dataarray(data, sza, saa, vza, vaa, wavelength):
                               "wavelength": wavelength})
 
     da.attrs["angle_convention"] = "eo_scene"
+    da.attrs["result_type"] = result_type
 
     da.sza.attrs["unit"] = "deg"
     da.sza.attrs["long_name"] = "Sun zenith angle"

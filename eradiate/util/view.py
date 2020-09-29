@@ -98,7 +98,7 @@ def plane(hdata, phi=0.):
     """
 
     # Check if source is a hemispherical data set (2 angular dimensions)
-    if not hdata.ert.is_hemispherical():
+    if not hdata.ert.is_hemispherical(exclude_scalar_dims=True):
         raise ValueError("hdata must be a hemispherical data set")
 
     # Support for angular dimension naming conventions
@@ -220,7 +220,7 @@ class EradiateAccessor:
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
 
-    def _num_angular_dimensions(self):
+    def _num_angular_dimensions(self, exclude_scalar_dims=False):
         """Determine the number of angular dimensions by their unit.
         Recognized angular dimensions are given in one of the following units:
 
@@ -230,14 +230,18 @@ class EradiateAccessor:
         num_angdims = 0
         for dim in self._obj.dims:
             if self._obj.coords[dim].attrs["unit"] in ("radians", "rad", "degrees", "deg"):
-                num_angdims += 1
+                if exclude_scalar_dims:
+                    if len(self._obj.coords[dim]) > 1:
+                        num_angdims += 1
+                else:
+                    num_angdims += 1
         return num_angdims
 
-    def is_hemispherical(self):
-        return self._num_angular_dimensions() == 2
+    def is_hemispherical(self, exclude_scalar_dims=False):
+        return self._num_angular_dimensions(exclude_scalar_dims) == 2
 
-    def is_bihemispherical(self):
-        return self._num_angular_dimensions() == 4
+    def is_bihemispherical(self, exclude_scalar_dims=False):
+        return self._num_angular_dimensions(exclude_scalar_dims) == 4
 
     def _adjust_kwargs_for_convention(self, **kwargs):
         """Translates the given keyword arguments to the respective naming convention in the
@@ -330,7 +334,7 @@ class EradiateAccessor:
                           f"redirecting to xarray's plotting function")
             return self._obj.plot(ax=ax, **kwargs)
 
-        if self._num_angular_dimensions() != 2:
+        if self._num_angular_dimensions(exclude_scalar_dims=True) != 2:
             warnings.warn(f"Dimensions {self._obj.dims} unsuitable for plotting, "
                           f"redirecting to xarray's plotting function")
             return self._obj.plot(ax=ax, **kwargs)
@@ -338,42 +342,39 @@ class EradiateAccessor:
         if ax is None:
             ax = plt.gca(projection="polar")
 
-            theta_o_dim = self.get_angular_dim("theta_o")
-            phi_o_dim = self.get_angular_dim("phi_o")
+        theta_o_dim = self.get_angular_dim("theta_o")
+        phi_o_dim = self.get_angular_dim("phi_o")
 
-            # TODO: center mesh grid on data points
-            r, th = np.meshgrid(
-                np.deg2rad(self._obj[theta_o_dim]),
-                np.deg2rad(self._obj[phi_o_dim])
+        # TODO: center mesh grid on data points
+        r, th = np.meshgrid(
+            np.deg2rad(self._obj[theta_o_dim]),
+            np.deg2rad(self._obj[phi_o_dim])
+        )
+
+        # TODO: make colorbar settings more flexible
+        if kind == "polar_pcolormesh":
+            cmap_data = ax.pcolormesh(
+                # th, r, self._obj.values,
+                th, r, np.transpose(self._obj.values),
+                cmap="BuPu_r", **kwargs
             )
 
-            # TODO: make colorbar settings more flexible
-            if kind == "polar_pcolormesh":
-                cmap_data = ax.pcolormesh(
-                    th, r, np.transpose(self._obj.values),
-                    cmap="BuPu_r", **kwargs
-                )
-
-            elif kind == "polar_contourf":
-                cmap_data = ax.contourf(
-                    th, r, np.transpose(self._obj.values),
-                    cmap="BuPu_r", **kwargs
-                )
-
-            else:
-                raise ValueError(f"unsupported plot kind {kind}")
-
-            ticks, labels = generate_ticks(5, (0, np.pi / 2.))
-            ax.set_yticks(ticks)
-            ax.set_yticklabels(labels)
-            ax.grid(True)
-            plt.colorbar(cmap_data)
-
-            return ax
+        elif kind == "polar_contourf":
+            cmap_data = ax.contourf(
+                th, r, np.transpose(self._obj.values),
+                cmap="BuPu_r", **kwargs
+            )
 
         else:
-            warnings.warn(f"Dimensions {self._obj.dims} are unsuitable for plotting")
-            self._obj.plot()
+            raise ValueError(f"unsupported plot kind {kind}")
+
+        ticks, labels = generate_ticks(5, (0, np.pi / 2.))
+        ax.set_yticks(ticks)
+        ax.set_yticklabels(labels)
+        ax.grid(True)
+        plt.colorbar(cmap_data)
+
+        return ax
 
 
 def generate_ticks(num_ticks, limits):

@@ -5,7 +5,7 @@ import pytest
 
 
 @pytest.mark.parametrize("illumination,spp", [("directional", 1),
-                                              ("constant", 32000)])
+                                              ("constant", 256000)])
 @pytest.mark.parametrize("li", [0.1, 1.0, 10.0])
 @pytest.mark.slow
 def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
@@ -46,13 +46,38 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
     from eradiate.solvers.onedim.runner import OneDimRunner
 
     # Basic configuration
-    vza = np.linspace(0, 90, 11)
+    vza = np.linspace(0, 80, 10)
     rho = 0.5
+
+    directions = ", ".join(
+        ", ".join(str(y) for y in x) for x in [[-np.sin(theta), -np.sin(theta), -np.cos(theta)]
+                                               for theta in np.deg2rad(vza)]
+    )
+    origins = ", ".join(str(x) for x in [0, 0, 0.01] * len(vza))
 
     solver = OneDimRunner()
     solver.kernel_dict["brdf_surface"] = {
         "type": "diffuse",
         "reflectance": {"type": "uniform", "value": rho}
+    }
+
+    solver.kernel_dict["measure"] = {
+        "type": "radiancemeterarray",
+        "origins": origins,
+        "directions": directions,
+        "id": "measure",
+        "sampler": {
+            "type": "independent",
+            "sample_count": spp
+        },
+        "film": {
+            "type": "hdrfilm",
+            "width": len(vza),
+            "height": 1,
+            "pixel_format": "luminance",
+            "component_format": "float32",
+            "rfilter": {"type": "box"}
+        }
     }
 
     if illumination == "directional":
@@ -70,5 +95,5 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
         }
         theoretical_solution = np.full_like(vza, rho * li)
 
-    result = solver.run(vza=vza, vaa=0., spp=spp)
+    result = solver.run()["measure"]
     assert np.allclose(result, theoretical_solution, rtol=1e-3)

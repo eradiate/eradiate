@@ -2,13 +2,10 @@
 
 import attr
 import numpy as np
-from tqdm.notebook import tqdm
 
 import eradiate.kernel
 
-from ...scenes import measure
 from ...scenes.core import KernelDict
-from ...util import ensure_array
 from ...util.collections import frozendict
 from ...util.exceptions import KernelVariantError
 
@@ -39,7 +36,9 @@ class OneDimRunner:
             consists of a square covering :math:`[-1, 1]^2` with normal vector
             :math:`+Z` and a Lambertian BRDF (reflectance :math:`\rho = 0.5`)
             illuminated by a directional emitter with direction vector
-            :math:`-Z` and constant irradiance equal to 1. If set to `None`,
+            :math:`-Z` and constant irradiance equal to 1. By default the
+            sensor will record four points, coressponding to a zenith angle of
+            :math:`45°` and azimuth angles of :math:`[0°, 90°, 180°, 270°]`, If set to `None`,
             defaults to :data:`DEFAULT_KERNEL_DICT`.
     """
 
@@ -58,6 +57,24 @@ class OneDimRunner:
             "type": "directional",
             "direction": [0, 0, -1],
             "irradiance": {"type": "uniform", "value": 1.0}
+        },
+        "measure": {
+            "type": "radiancemeterarray",
+            "origins": "0, 0, 0.1, 0, 0, 0.1, 0, 0, 0.1, 0, 0, 0.1",
+            "directions": "1, 0, -1, -1, 0, -1, 0, 1, -1, 0, -1, -1",
+            "id": "measure",
+            "sampler": {
+                "type": "independent",
+                "sample_count": 32
+            },
+            "film": {
+                "type": "hdrfilm",
+                "width": 4,
+                "height": 1,
+                "pixel_format": "luminance",
+                "component_format": "float32",
+                "rfilter": {"type": "box"}
+            }
         },
         "integrator": {"type": "path"}
     })
@@ -79,68 +96,37 @@ class OneDimRunner:
         """(Re)initialise internal state. Currently a placeholder."""
         pass
 
-    def run(self, vza=0., vaa=0., spp=3200, squeeze=True, show_progress=True):
+    def run(self, show_progress=True):
         """Run the simulation for a set of specified sensor angular
         configurations.
 
         The solver uses the variant stored in its :data:`variant` instance
         attribute.
 
-        Parameter ``vza`` (float or array-like):
-            Viewing zenith angles [deg].
-
-        Parameter ``vaa`` (float or array-like):
-            Viewing azimuth angles [deg].
-
-        Parameter ``spp`` (int):
-            Number of samples taken for each angular configuration.
-
         Parameter ``show_progress`` (bool):
             If `True`, display a progress bar while running the simulation.
+            This option is currently not available.
 
-        Returns → float or array:
-            Recorded leaving radiance.
+        Returns → dict:
+            Maps the sensor's ids to their recorded leaving radiance.
         """
         self._check_variant()
-
-        # Ensure that vza and vaa are numpy arrays
-        vza = ensure_array(vza)
-        vaa = ensure_array(vaa)
 
         # Basic setup
         from eradiate.kernel.core import Thread
         Thread.thread().logger().clear_appenders()
 
-        reflected_radiance = np.empty((len(vza), len(vaa)))
+        results = dict()
 
-        with tqdm(total=reflected_radiance.size,
-                  disable=not show_progress) as progressbar:
-            for i, theta in enumerate(vza):
-                for j, phi in enumerate(vaa):
-                    # Adjust scene setup
-                    self.kernel_dict.add(measure.DistantMeasure(
-                        zenith=theta, azimuth=phi, spp=spp
-                    ))
+        # Run computation
+        kernel_scene = self.kernel_dict.load()
+        for sensor in kernel_scene.sensors():
+            kernel_scene.integrator().render(kernel_scene, sensor)
 
-                    # Run computation
-                    kernel_scene = self.kernel_dict.load()
-                    sensor = kernel_scene.sensors()[0]
-                    kernel_scene.integrator().render(kernel_scene, sensor)
+            # Collect results
+            film = sensor.film()
+            result = np.array(film.bitmap(), dtype=float)
 
-                    # Collect results
-                    film = sensor.film()
-                    result = float(np.array(film.bitmap(), dtype=float))
-                    reflected_radiance[i, j] = result
+            results[f"{sensor.id()}"] = result
 
-                    progressbar.desc = \
-                        f"Processing | Z:{theta:4.1f} | A:{phi:5.1f}"
-                    progressbar.update()
-
-        if squeeze:
-            # Fix result dimensionality (remove useless dims)
-            try:
-                return float(reflected_radiance)
-            except TypeError:
-                return np.squeeze(reflected_radiance)
-        else:
-            return reflected_radiance
+        return results

@@ -2,7 +2,6 @@ import pytest
 
 import eradiate
 from eradiate.solvers.onedim.rayleigh import RayleighSolverApp
-from eradiate.util.units import ureg
 
 
 def test_rayleigh_solver_app():
@@ -11,12 +10,13 @@ def test_rayleigh_solver_app():
     assert app.config == {
         "atmosphere": {"type": "rayleigh_homogeneous"},
         "illumination": {"type": "directional"},
-        "measure": {
-            "type": "hemispherical",
+        "measure": [{
+            "type": "toa_lo_hsphere",
             "azimuth_res": 10.0,
             "zenith_res": 10.0,
-            "spp": 1000
-        },
+            "origin": [0, 0, 100.1],
+            "spp": 32
+        }],
         "mode": {"type": "mono", "wavelength": 550.0},
         "surface": {"type": "lambertian"}
     }
@@ -39,12 +39,12 @@ def test_rayleigh_solver_app():
             "azimuth": 0.,
             "irradiance": {"type": "uniform", "value": 1.}
         },
-        "measure": {
-            "type": "hemispherical",
+        "measure": [{
+            "type": "toa_lo_hsphere",
             "zenith_res": 5.,
             "azimuth_res": 10.,
             "spp": 1000,
-        },
+        }],
         "surface": {
             "type": "lambertian",
             "reflectance": {"type": "uniform", "value": 0.35},
@@ -66,12 +66,12 @@ def test_rayleigh_solver_app():
             "azimuth": 0.,
             "irradiance": {"type": "uniform", "value": 1.}
         },
-        "measure": {
-            "type": "hemispherical",
+        "measure": [{
+            "type": "toa_lo_hsphere",
             "zenith_res": 5.,
             "azimuth_res": 10.,
             "spp": 1000,
-        },
+        }],
         "surface": {
             "type": "lambertian",
             "reflectance": {"type": "uniform", "value": 0.5}
@@ -99,30 +99,33 @@ def test_rayleigh_solver_app_run():
     import numpy as np
 
     config = {
-        "measure": {
-            "type": "hemispherical",
-            "zenith_res": 5.,
-            "azimuth_res": 10.,
+        "measure": [{
+            "type": "toa_lo_hsphere",
+            "zenith_res": 45.,
+            "azimuth_res": 180.,
             "spp": 1000,
-        }
+            "hemisphere": "back"
+        }]
     }
 
     app = RayleighSolverApp(config)
+    # Assert the correct mode of operation to be set by the application
     assert eradiate.mode.type == "mono"
 
     app.compute()
 
-    assert set(app.results["lo"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
+    # Assert the correct dimensions of the application's results
+    assert set(app.results["toa_lo_hsphere"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
 
-    assert app.results["lo"].attrs["angle_convention"] == "eo_scene"
+    assert app.results["toa_lo_hsphere"].attrs["angle_convention"] == "eo_scene"
 
     # We expect the whole [0, 360] to be covered
-    assert len(app.results["lo"].coords["vaa"]) == 360 / 10 + 1
-    # We expect [0, 90[ to be covered (90° should be missing)
-    assert len(app.results["lo"].coords["vza"]) == 90 / 5
+    assert len(app.results["toa_lo_hsphere"].coords["vaa"]) == 360 / 180 + 1
+    # # We expect [0, 90[ to be covered (90° should be missing)
+    assert len(app.results["toa_lo_hsphere"].coords["vza"]) == 90 / 45
 
     # We just check that we record something as expected
-    assert np.all(app.results["lo"].data > 0)
+    assert np.all(app.results["toa_lo_hsphere"].data > 0)
 
 
 def test_rayleigh_solver_app_postprocessing():
@@ -131,12 +134,13 @@ def test_rayleigh_solver_app_postprocessing():
 
     import numpy as np
     config = {
-        "measure": {
-            "type": "hemispherical",
+        "measure": [{
+            "type": "toa_lo_hsphere",
             "zenith_res": 5.,
             "azimuth_res": 10.,
             "spp": 1000,
-        },
+            "hemisphere": "back"
+        }],
         "illumination": {
             "type": "directional",
             "zenith": 0,
@@ -146,15 +150,18 @@ def test_rayleigh_solver_app_postprocessing():
     }
 
     app = RayleighSolverApp(config)
+    # Assert the correct mode of operation to be set by the application
     assert eradiate.mode.type == "mono"
     app.compute()
-    app.postprocess()
 
+    # Assert the correct computation of the BRDF and BRF values
+    # BRDF
     assert np.allclose(
-        app.results["brdf"],
-        app.results["lo"] / config["illumination"]["irradiance"]["value"]
+        app.results["toa_brdf_hsphere"],
+        app.results["toa_lo_hsphere"] / config["illumination"]["irradiance"]["value"]
     )
+    # BRF
     assert np.allclose(
-        app.results["brf"],
-        app.results["brdf"] / np.pi
+        app.results["toa_brf_hsphere"],
+        app.results["toa_brdf_hsphere"] / np.pi
     )

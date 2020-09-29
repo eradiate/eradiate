@@ -3,6 +3,7 @@ import pytest
 
 
 @pytest.mark.slow
+@pytest.mark.skip(reason="This test case only made sense for the original radiancemeter setup.")
 def test_onedimsolver_large_size(variant_scalar_mono_double, json_metadata):
     r"""
     Maximum scene size (``path``)

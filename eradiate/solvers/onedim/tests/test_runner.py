@@ -14,16 +14,9 @@ def test_onedimsolver(mode_mono):
     assert load_dict(solver.kernel_dict) is not None
 
     # Run simulation with default parameters (and check if result array is cast to scalar)
-    assert np.allclose(solver.run(), 1. / (2. * np.pi), rtol=1e-3)
-
-    # Run simulation with array of vzas (and check if result array is squeezed)
-    result = solver.run(vza=np.linspace(0, 90, 91), spp=32)
-    assert result.shape == (91,)
-    assert np.allclose(result, 1. / (2. * np.pi), rtol=1e-3)
+    assert np.allclose(solver.run()["measure"], 1. / (2. * np.pi), rtol=1e-3)
 
     # Run simulation with array of vzas and vaas
-    result = solver.run(vza=np.linspace(0, 90, 11),
-                        vaa=np.linspace(0, 180, 11),
-                        spp=32)
-    assert result.shape == (11, 11)
+    result = solver.run()["measure"]
+    assert result.shape == (1, 4, 1)
     assert np.allclose(result, 1. / (2. * np.pi), rtol=1e-3)
