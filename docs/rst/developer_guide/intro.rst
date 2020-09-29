@@ -10,5 +10,6 @@ This section includes content about how to modify Eradiate.
     :hidden:
 
     documentation
+    conventions_practices
     testing
     plugin_development
