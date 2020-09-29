@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 
 import attr
 import cerberus
-import pint
 
 from .collections import configdict
 

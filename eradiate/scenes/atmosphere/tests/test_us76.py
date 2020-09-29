@@ -1,4 +1,5 @@
 import pytest
+
 from eradiate.scenes.atmosphere.us76 import *
 from eradiate.util.units import ureg
 

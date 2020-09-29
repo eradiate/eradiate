@@ -5,6 +5,7 @@ import numpy as np
 from tqdm.notebook import tqdm
 
 import eradiate.kernel
+
 from ...scenes import measure
 from ...scenes.core import KernelDict
 from ...util import ensure_array

@@ -7,5 +7,5 @@
         :modules: atmosphere
 """
 
-from .rayleigh import RayleighHomogeneousAtmosphere
 from .heterogeneous import HeterogeneousAtmosphere
+from .rayleigh import RayleighHomogeneousAtmosphere

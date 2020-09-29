@@ -10,9 +10,10 @@
 import attr
 import numpy as np
 
-from .core import Factory, SceneHelper
-from ..util.units import kernel_default_units as kdu, config_default_units as cdu
 from ..util.frame import angles_to_direction
+from ..util.units import config_default_units as cdu
+from ..util.units import kernel_default_units as kdu
+from .core import Factory, SceneHelper
 
 
 @attr.s

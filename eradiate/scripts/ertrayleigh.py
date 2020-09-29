@@ -1,6 +1,6 @@
 import click
-import yaml
 import matplotlib.pyplot as plt
+import yaml
 
 from eradiate.solvers.onedim.rayleigh import RayleighSolverApp
 

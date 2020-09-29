@@ -10,11 +10,13 @@
 import attr
 import numpy as np
 
-from .core import Factory, SceneHelper
 from .. import data
 from ..data import SOLAR_IRRADIANCE_SPECTRA
 from ..util.exceptions import ModeError
-from ..util.units import ureg, kernel_default_units as kdu, config_default_units as cdu
+from ..util.units import config_default_units as cdu
+from ..util.units import kernel_default_units as kdu
+from ..util.units import ureg
+from .core import Factory, SceneHelper
 
 
 @attr.s

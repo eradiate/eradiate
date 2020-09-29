@@ -11,13 +11,15 @@ import numpy as np
 import xarray as xr
 
 import eradiate.kernel
-from .runner import OneDimRunner
+
 from ...scenes.core import Factory, KernelDict
-from ...util.units import kernel_default_units as kdu, config_default_units as cdu
 from ...util import ensure_array, view
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
+from ...util.units import config_default_units as cdu
+from ...util.units import kernel_default_units as kdu
 from ...util.xarray import eo_dataarray
+from .runner import OneDimRunner
 
 
 @attr.s

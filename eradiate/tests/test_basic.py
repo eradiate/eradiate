@@ -1,7 +1,6 @@
 """A series of basic one-dimensional test cases."""
 
 import numpy as np
-
 import pytest
 
 

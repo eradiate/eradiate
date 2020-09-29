@@ -4,9 +4,10 @@ import attr
 import numpy as np
 import xarray as xr
 
-from .base import Atmosphere
+from ...util.units import config_default_units as cdu
+from ...util.units import kernel_default_units as kdu
 from ..core import Factory
-from ...util.units import kernel_default_units as kdu, config_default_units as cdu
+from .base import Atmosphere
 
 
 def write_binary_grid3d(filename, values):

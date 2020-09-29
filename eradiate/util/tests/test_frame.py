@@ -1,5 +1,6 @@
 from eradiate.util.frame import *
 
+
 def test_spherical_to_cartesian():
     r = 2.
     theta = np.deg2rad(30)

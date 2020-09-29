@@ -1,8 +1,8 @@
-import enoki as ek
 import numpy as np
 import pytest
 import xarray as xr
 
+import enoki as ek
 import eradiate.util.view as view
 
 

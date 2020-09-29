@@ -2,13 +2,13 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.scenes.core import KernelDict
 from eradiate.scenes.atmosphere.rayleigh import (
-    _LOSCHMIDT, _IOR_DRY_AIR, kf, sigma_s_single,
-    sigma_s_mixture, delta, RayleighHomogeneousAtmosphere
+    _IOR_DRY_AIR, _LOSCHMIDT, RayleighHomogeneousAtmosphere,
+    delta, kf, sigma_s_mixture,sigma_s_single
 )
+from eradiate.scenes.core import KernelDict
 from eradiate.util.collections import onedict_value
-from eradiate.util.units import ureg, config_default_units
+from eradiate.util.units import config_default_units, ureg
 
 
 def test_king_correction_factor():
@@ -103,12 +103,11 @@ def test_rayleigh_homogeneous(mode_mono, ref):
     r = RayleighHomogeneousAtmosphere({"height": 10.})
 
     # check if sigma_s was correctly computed using the mode wavelength value
-    assert np.isclose(r._sigma_s,
-                      sigma_s_single(wavelength=eradiate.mode.config["wavelength"]*eradiate.mode.config["wavelength_unit"]))
+    wavelength = ureg.Quantity(eradiate.mode.config["wavelength"], eradiate.mode.config["wavelength_unit"])
+    assert np.isclose(r._sigma_s, sigma_s_single(wavelength=wavelength))
 
     # check if automatic scene width works as intended
-    assert np.isclose(r._width,
-                      10. / sigma_s_single(wavelength=eradiate.mode.config["wavelength"]*eradiate.mode.config["wavelength_unit"]))
+    assert np.isclose(r._width, 10. / sigma_s_single(wavelength=wavelength))
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(r).load() is not None
@@ -127,11 +126,11 @@ def test_rayleigh_homogeneous(mode_mono, ref):
         "king_factor": 1.05
     }
     params_pint = {
-        "number_density": params["number_density"]*ureg(params["number_density_unit"]),
+        "number_density": params["number_density"] * ureg(params["number_density_unit"]),
         "refractive_index": params["refractive_index"],
         "king_factor": params["king_factor"]
     }
     r = RayleighHomogeneousAtmosphere({"sigma_s": params})
     assert r._sigma_s == sigma_s_single(
-        wavelength=eradiate.mode.config["wavelength"]*eradiate.mode.config["wavelength_unit"], **params_pint
+        wavelength=eradiate.mode.config["wavelength"] * eradiate.mode.config["wavelength_unit"], **params_pint
     )

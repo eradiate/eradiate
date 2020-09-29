@@ -11,8 +11,10 @@ from abc import abstractmethod
 
 import attr
 
+from ..util.units import config_default_units as cdu
+from ..util.units import kernel_default_units as kdu
+from ..util.units import ureg
 from .core import Factory, SceneHelper
-from ..util.units import ureg, kernel_default_units as kdu, config_default_units as cdu
 
 
 @attr.s

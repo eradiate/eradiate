@@ -1,14 +1,15 @@
 """A tool for handling and plotting subsets of data."""
 
+import warnings
 from abc import ABC, abstractmethod
 
 import attr
 import matplotlib.pyplot as plt
 import numpy as np
-import warnings
 import xarray as xr
 
 import eradiate.kernel
+
 from ..util import frame
 from .xarray import eo_dataarray
 

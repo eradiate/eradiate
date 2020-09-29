@@ -33,4 +33,3 @@ def test_irradiance_spectrum(mode_mono):
         eradiate.mode.config["wavelength"] = 2400.
         print(eradiate.mode)
         s.kernel_dict()
-

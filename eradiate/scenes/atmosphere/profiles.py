@@ -29,8 +29,8 @@ from datetime import datetime
 
 import numpy as np
 
-from .us76 import create
 from ...util.units import ureg
+from .us76 import create
 
 
 def check(profile):

@@ -6,10 +6,13 @@ import numpy as np
 from scipy.constants import physical_constants
 
 import eradiate
-from .base import Atmosphere
-from ..core import Factory
+
 from ...util.exceptions import ConfigWarning, ModeError
-from ...util.units import ureg, config_default_units as cdu, kernel_default_units as kdu
+from ...util.units import config_default_units as cdu
+from ...util.units import kernel_default_units as kdu
+from ...util.units import ureg
+from ..core import Factory
+from .base import Atmosphere
 
 # Physical constants
 #: Loschmidt constant [km^-3].
@@ -280,7 +283,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             },
             "sigma_s_unit": {
                 "type": "string",
-                "default": str(f"{cdu.get('length')}^-1")
+                "default": f"{cdu.get_str('length')}^-1"
             }
         })
 

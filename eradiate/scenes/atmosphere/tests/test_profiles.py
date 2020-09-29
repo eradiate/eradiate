@@ -1,5 +1,6 @@
 import pytest
 import xarray as xr
+
 from eradiate.scenes.atmosphere.profiles import *
 from eradiate.util.units import ureg
 

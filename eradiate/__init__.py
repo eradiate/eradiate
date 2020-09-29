@@ -4,8 +4,8 @@ __version__ = "0.0.1"  #: Eradiate version number.
 
 import attr
 
-from .util.units import ureg as _ureg
 from .util.collections import configdict as _configdict
+from .util.units import ureg as _ureg
 
 
 @attr.s
