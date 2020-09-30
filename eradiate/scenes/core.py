@@ -29,13 +29,22 @@ class SceneHelper(ConfigObject):
         This class is designed to integrate with the :class:`Factory` class.
         See the corresponding documentation for a list of factory-enabled
         scene generation helper classes.
-
-    Instance attributes:
-        ``id`` (str)
-            Unique identifier used to prefix kernel dictionary objects.
     """
 
-    id = attr.ib(default=None)  #: Base identifier
+    @property
+    def id(self):
+        """Return the object's ID if any."""
+        return self.config.get("id", None)
+
+    @classmethod
+    def config_schema(cls):
+        return {
+            "id": {
+                "type": "string",
+                "required": False,
+                "nullable": True
+            }
+        }
 
     def __attrs_post_init__(self):
         super(SceneHelper, self).__attrs_post_init__()

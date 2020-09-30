@@ -10,10 +10,10 @@
 import attr
 import numpy as np
 
+from .core import Factory, SceneHelper
 from ..util.frame import angles_to_direction
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
-from .core import Factory, SceneHelper
 
 
 @attr.s
@@ -52,7 +52,9 @@ class ConstantIllumination(SceneHelper):
 
     @classmethod
     def config_schema(cls):
-        return dict({
+        d = super(ConstantIllumination, cls).config_schema()
+        d["id"]["default"] = "illumination"
+        d.update({
             "radiance": {
                 "type": "dict",
                 "default": {},
@@ -71,8 +73,7 @@ class ConstantIllumination(SceneHelper):
                 }
             },
         })
-
-    id = attr.ib(default="illumination")
+        return d
 
     def kernel_dict(self, **kwargs):
         radiance = Factory().create(self.config["radiance"])
@@ -145,7 +146,9 @@ class DirectionalIllumination(SceneHelper):
 
     @classmethod
     def config_schema(cls):
-        return dict({
+        d = super(DirectionalIllumination, cls).config_schema()
+        d["id"]["default"] = "illumination"
+        d.update({
             "zenith": {"type": "number", "default": 0.},
             "zenith_unit": {
                 "type": "string",
@@ -169,8 +172,7 @@ class DirectionalIllumination(SceneHelper):
                 }
             },
         })
-
-    id = attr.ib(default="illumination")
+        return d
 
     def kernel_dict(self, **kwargs):
         irradiance_ = Factory().create(self.config["irradiance"])

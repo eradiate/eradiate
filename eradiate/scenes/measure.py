@@ -10,15 +10,23 @@
 import attr
 import numpy as np
 
+from .core import Factory, SceneHelper
 from ..util.frame import angles_to_direction, spherical_to_cartesian
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
-from .core import Factory, SceneHelper
+
+
+class Measure(SceneHelper):
+    @classmethod
+    def config_schema(cls):
+        d = super(Measure, cls).config_schema()
+        d["id"]["default"] = "measure"
+        return d
 
 
 @attr.s
 @Factory.register(name="distant")
-class DistantMeasure(SceneHelper):
+class DistantMeasure(Measure):
     """Distant measure scene generation helper [:factorykey:`distant`].
 
     The sensor is oriented based on the classical angular convention used
@@ -57,7 +65,8 @@ class DistantMeasure(SceneHelper):
 
     @classmethod
     def config_schema(cls):
-        return dict({
+        d = super(DistantMeasure, cls).config_schema()
+        d.update({
             "zenith": {
                 "type": "number",
                 "min": 0.,
@@ -84,8 +93,7 @@ class DistantMeasure(SceneHelper):
                 "default": 10000
             }
         })
-
-    id = attr.ib(default="measure")
+        return d
 
     def kernel_dict(self, **kwargs):
         zenith = self.config.get_quantity("zenith").to(kdu.get("angle")).magnitude
@@ -117,7 +125,7 @@ class DistantMeasure(SceneHelper):
 
 @attr.s
 @Factory.register(name="perspective")
-class PerspectiveCameraMeasure(SceneHelper):
+class PerspectiveCameraMeasure(Measure):
     """Perspective camera scene generation helper [:factorykey:`perspective`].
 
     The sensor is oriented based on the classical angular convention used
@@ -177,7 +185,8 @@ class PerspectiveCameraMeasure(SceneHelper):
 
     @classmethod
     def config_schema(cls):
-        return dict({
+        d = super(PerspectiveCameraMeasure, cls).config_schema()
+        d.update({
             "target": {
                 "type": "list",
                 "items": [{"type": "number"}] * 3,
@@ -227,8 +236,7 @@ class PerspectiveCameraMeasure(SceneHelper):
                 "default": 32
             }
         })
-
-    id = attr.ib(default="measure")
+        return d
 
     def kernel_dict(self, **kwargs):
         from eradiate.kernel.core import ScalarTransform4f

@@ -144,7 +144,7 @@ class RayleighSolverApp(ConfigObject):
     #: Configuration validation schema
     @classmethod
     def config_schema(cls):
-        return dict({
+        return {
             "mode": {
                 "type": "dict",
                 "default": {},
@@ -220,7 +220,7 @@ class RayleighSolverApp(ConfigObject):
                     }
                 }
             }
-        })
+        }
 
     # Instance attributes
     _kernel_dict = attr.ib(default=None)

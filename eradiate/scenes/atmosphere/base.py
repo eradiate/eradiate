@@ -9,7 +9,11 @@ from ..core import SceneHelper
 class Atmosphere(SceneHelper):
     """An abstract base class defining common facilities for all atmospheres."""
 
-    id = attr.ib(default="atmosphere")
+    @classmethod
+    def config_schema(cls):
+        d = super(Atmosphere, cls).config_schema()
+        d["id"]["default"] = "atmosphere"
+        return d
 
     @abstractmethod
     def phase(self):
@@ -52,10 +56,10 @@ class Atmosphere(SceneHelper):
         kernel_dict = {"integrator": {"type": "volpath"}}  # Force volpath integrator
         
         if not ref:
-            kernel_dict["atmosphere"] = self.shapes()["shape_atmosphere"]
+            kernel_dict[self.id] = self.shapes()[f"shape_{self.id}"]
         else:
-            kernel_dict["phase_atmosphere"] = self.phase()["phase_atmosphere"]
-            kernel_dict["medium_atmosphere"] = self.media(ref=True)["medium_atmosphere"]
-            kernel_dict["atmosphere"] = self.shapes(ref=True)["shape_atmosphere"]
+            kernel_dict[f"phase_{self.id}"] = self.phase()[f"phase_{self.id}"]
+            kernel_dict[f"medium_{self.id}"] = self.media(ref=True)[f"medium_{self.id}"]
+            kernel_dict[f"{self.id}"] = self.shapes(ref=True)[f"shape_{self.id}"]
 
         return kernel_dict

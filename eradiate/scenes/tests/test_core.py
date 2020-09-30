@@ -52,7 +52,9 @@ def test_kernel_dict():
 class TinyDirectional(SceneHelper):
     @classmethod
     def config_schema(cls):
-        return dict({
+        d = super(TinyDirectional, cls).config_schema()
+        d["id"]["default"] = "illumination"
+        d.update({
             "direction": {
                 "type": "list",
                 "items": [{"type": "number"}] * 3,
@@ -63,10 +65,9 @@ class TinyDirectional(SceneHelper):
                 "default": 1.0
             }
         })
+        return d
 
-    id = attr.ib(default="illumination")
-
-    def kernel_dict(self, ref=True):
+    def kernel_dict(self, **kwargs):
         return {
             self.id: {
                 "type": "directional",
@@ -78,7 +79,7 @@ class TinyDirectional(SceneHelper):
 def test_scene_helper(mode_mono):
     # Default constructor (check if defaults are applied as intended)
     d = TinyDirectional()
-    assert d.config == {"direction": [0, 0, -1], "irradiance": 1.0}
+    assert d.config == {"id": "illumination", "direction": [0, 0, -1], "irradiance": 1.0}
 
     # Check that undesired params raise as intended
     with pytest.raises(ValueError):

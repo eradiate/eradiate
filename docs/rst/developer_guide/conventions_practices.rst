@@ -1,7 +1,7 @@
 .. _sec-developer_guide-conventions_practices:
 
-Conventions and Practices
-=========================
+Conventions and development practices
+=====================================
 
 This pages briefly explains a few conventions and practices in the Eradiate development team.
 

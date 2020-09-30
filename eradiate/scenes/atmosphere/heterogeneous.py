@@ -108,7 +108,8 @@ class HeterogeneousAtmosphere(Atmosphere):
     """
 
     def config_schema(cls):
-        return {
+        d = super(HeterogeneousAtmosphere, cls).config_schema()
+        d.update({
             "height": {
                 "type": "number",
                 "min": 0.,
@@ -144,7 +145,8 @@ class HeterogeneousAtmosphere(Atmosphere):
                 "type": "string",
                 "required": True,
             }
-        }
+        })
+        return d
 
     @property
     def _albedo(self):
@@ -171,7 +173,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             return width.to(kdu.get("length")).magnitude
 
     def phase(self):
-        return {"phase_atmosphere": {"type": "rayleigh"}}
+        return {f"phase_{self.id}": {"type": "rayleigh"}}
 
     def media(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f
@@ -189,7 +191,7 @@ class HeterogeneousAtmosphere(Atmosphere):
 
         # Output kernel dict
         return {
-            "medium_atmosphere": {
+            f"medium_{self.id}": {
                 "type": "heterogeneous",
                 "phase": {"type": "rayleigh"},
                 "sigma_t": {
@@ -209,15 +211,15 @@ class HeterogeneousAtmosphere(Atmosphere):
         from eradiate.kernel.core import ScalarTransform4f
 
         if ref:
-            medium = {"type": "ref", "id": "medium_atmosphere"}
+            medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
-            medium = self.media(ref=False)["medium_atmosphere"]
+            medium = self.media(ref=False)[f"medium_{self.id}"]
 
         width = self._width
         height, offset = self._height
 
         return {
-            "shape_atmosphere": {
+            f"shape_{self.id}": {
                 "type":
                     "cube",
                 "to_world":

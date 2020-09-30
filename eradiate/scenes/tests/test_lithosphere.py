@@ -6,6 +6,7 @@ def test_lambertian(mode_mono):
     # Default constructor
     ls = LambertianSurface()
     assert ls.config == {
+        "id": "surface",
         "reflectance": {"type": "uniform", "value": .5, "quantity": None},
         "width": 1.,
         "width_unit": "meter",

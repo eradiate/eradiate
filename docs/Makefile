@@ -12,7 +12,10 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help clean Makefile
+.PHONY: autobuild help clean Makefile
+
+autobuild:
+	sphinx-autobuild .  _build/html
 
 clean: clean_generated
 	rm -rf _build/*

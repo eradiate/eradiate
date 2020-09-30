@@ -43,7 +43,7 @@ class UniformSpectrum(SceneHelper):
 
     @classmethod
     def config_schema(cls):
-        return dict({
+        return {
             "value": {
                 "type": "number",
                 "min": 0.,
@@ -55,7 +55,7 @@ class UniformSpectrum(SceneHelper):
                 "default": "radiance",
                 "nullable": True
             }
-        })
+        }
 
     def kernel_dict(self, **kwargs):
         if self.config["quantity"] == "radiance":
@@ -124,7 +124,7 @@ class SolarIrradianceSpectrum(SceneHelper):
 
     @classmethod
     def config_schema(cls):
-        return dict({
+        return {
             "dataset": {
                 "type": "string",
                 "allowed": list(SOLAR_IRRADIANCE_SPECTRA.keys()),
@@ -135,7 +135,7 @@ class SolarIrradianceSpectrum(SceneHelper):
                 "min": 0.,
                 "default": 1.0,
             }
-        })
+        }
 
     dataset = attr.ib(default=None)
 

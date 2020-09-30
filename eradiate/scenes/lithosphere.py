@@ -11,10 +11,9 @@ from abc import abstractmethod
 
 import attr
 
+from .core import Factory, SceneHelper
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
-from ..util.units import ureg
-from .core import Factory, SceneHelper
 
 
 @attr.s
@@ -22,7 +21,11 @@ class Surface(SceneHelper):
     """An abstract base class defining common facilities for all surfaces.
     """
 
-    id = attr.ib(default="surface")
+    @classmethod
+    def config_schema(cls):
+        d = super(Surface, cls).config_schema()
+        d["id"]["default"] = "surface"
+        return d
 
     @abstractmethod
     def bsdfs(self):
@@ -103,7 +106,8 @@ class LambertianSurface(Surface):
 
     @classmethod
     def config_schema(cls):
-        return dict({
+        d = super(LambertianSurface, cls).config_schema()
+        d.update({
             "reflectance": {
                 "type": "dict",
                 "default": {},
@@ -140,6 +144,7 @@ class LambertianSurface(Surface):
                 "default": cdu.get_str("length")
             }
         })
+        return d
 
     def bsdfs(self):
         reflectance = Factory().create(self.config["reflectance"])
@@ -224,12 +229,14 @@ class RPVSurface(Surface):
 
             Default: 1.
     """
+
     # TODO: check if there are bounds to default parameters
     # TODO: add support for spectra
 
     @classmethod
     def config_schema(cls):
-        return dict({
+        d = super(RPVSurface, cls).config_schema()
+        d.update({
             "rho_0": {
                 "type": "number",
                 "default": 0.183,
@@ -252,6 +259,7 @@ class RPVSurface(Surface):
                 "default": cdu.get_str("length")
             }
         })
+        return d
 
     def bsdfs(self):
         return {

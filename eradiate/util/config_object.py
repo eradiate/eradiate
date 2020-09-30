@@ -18,12 +18,12 @@ class ConfigObject(ABC):
     Upon execution of the constructor, the dictionary passed as an argument
     is validated using the `Cerberus <https://docs.python-cerberus.org>`_
     validation library. :data:`config` is checked for compliance with a
-    validation schema stored in the :data:`CONFIG_SCHEMA` class constant.
+    validation schema returned by the :meth:`config_schema` class method.
     Should validation fail, a :class:`ValueError` is raised which contains the
     validation error report.
 
     If validation is successful, the constructor's :data:`config` argument is
-    normalised to apply defaults defined in :data:`CONFIG_SCHEMA`, then
+    normalised to apply defaults defined in :meth:`config_schema`, then
     converted to a :class:`~eradiate.util.collections.configdict`.
     """
 

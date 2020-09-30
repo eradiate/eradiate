@@ -6,13 +6,12 @@ import numpy as np
 from scipy.constants import physical_constants
 
 import eradiate
-
+from .base import Atmosphere
+from ..core import Factory
 from ...util.exceptions import ConfigWarning, ModeError
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
-from ..core import Factory
-from .base import Atmosphere
 
 # Physical constants
 #: Loschmidt constant [km^-3].
@@ -144,7 +143,8 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
     # Class attributes
     @classmethod
     def config_schema(cls):
-        return dict({
+        d = super(RayleighHomogeneousAtmosphere, cls).config_schema()
+        d.update({
             "height": {
                 "type": "number",
                 "min": 0.,
@@ -217,6 +217,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 "default": f"{cdu.get_str('length')}^-1"
             }
         })
+        return d
 
     @property
     def _albedo(self):
@@ -274,16 +275,16 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             return self.config.get_quantity("sigma_s")
 
     def phase(self):
-        return {"phase_atmosphere": {"type": "rayleigh"}}
+        return {f"phase_{self.id}": {"type": "rayleigh"}}
 
     def media(self, ref=False):
         if ref:
-            phase = {"type": "ref", "id": "phase_atmosphere"}
+            phase = {"type": "ref", "id": f"phase_{self.id}"}
         else:
-            phase = self.phase()["phase_atmosphere"]
+            phase = self.phase()[f"phase_{self.id}"]
 
         return {
-            "medium_atmosphere": {
+            f"medium_{self.id}": {
                 "type": "homogeneous",
                 "phase": phase,
                 "sigma_t": {
@@ -301,16 +302,16 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         from eradiate.kernel.core import ScalarTransform4f
 
         if ref:
-            medium = {"type": "ref", "id": "medium_atmosphere"}
+            medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
-            medium = self.media(ref=False)["medium_atmosphere"]
+            medium = self.media(ref=False)[f"medium_{self.id}"]
 
         width = self._width.to(kdu.get("length")).magnitude
         height = self.config.get_quantity("height").to(kdu.get("length")).magnitude
         height_offset = height * 0.01
 
         return {
-            "shape_atmosphere": {
+            f"shape_{self.id}": {
                 "type":
                     "cube",
                 "to_world":
