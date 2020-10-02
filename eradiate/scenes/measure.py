@@ -300,7 +300,8 @@ class RadianceMeterHemisphere(Measure):
                    "zenith_res": 10.,
                    "azimuth_res": 10.,
                    "origin": [0, 0, 0],
-                   "zenith_direction": [0, 0, 1],
+                   "direction": [0, 0, 1],
+                   "orientation": [1, 0, 0],
                    "hemisphere": "front"
                    "spp": 32,
                }
@@ -329,7 +330,7 @@ class RadianceMeterHemisphere(Measure):
             Default value: [0, 0, 1]
 
         ``orientation`` (list[float]):
-            Direction of the hemisphere's principal plane
+            Direction with which azimuth origin is aligned
 
             Default value: [1, 0, 0]
 
