@@ -61,7 +61,6 @@ html_logo = "fig/icon_eradiate.png"
 html_static_path = ["_static"]
 
 # Register the theme as an extension to generate a sitemap.xml
-extensions.append("guzzle_sphinx_theme")
 extensions.append("sphinx.ext.mathjax")
 
 extensions.append("sphinx.ext.autodoc")

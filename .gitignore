@@ -1,6 +1,9 @@
 # OS specific 
 .DS_Store
 
+# direnv config file
+.envrc
+
 # Text editors and IDEs
 .idea/
 .vscode/

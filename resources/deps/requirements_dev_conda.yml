@@ -3,7 +3,7 @@ channels:
   - default
 dependencies:
   - autopep8
-  - isort
+  - isort>=5
   - mock
   - pylint
   - pytest=5.3

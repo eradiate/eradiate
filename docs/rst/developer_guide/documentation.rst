@@ -26,7 +26,7 @@ After the build is completed, the html document is located in :code:`$ERADIATE_D
 Building the kernel documentation
 ---------------------------------
 
-Eradiate's Mitsuba kernel exposes a CMake target to build its documentation, which can be accessed once CMake is set up, as described in :ref:`sec-getting_started-building-mitsuba`.
+Eradiate's Mitsuba kernel exposes a CMake target to build its documentation, which can be accessed once CMake is set up, as described in :ref:`sec-getting_started-building_mitsuba`.
 
 Run the follwing commands:
 

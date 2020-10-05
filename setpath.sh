@@ -1,8 +1,4 @@
-if [[ "$#" -ge "1" ]]; then
-    BUILD_DIR="$1"
-else
-    BUILD_DIR="build"
-fi
+BUILD_DIR="build"
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     echo "The setpath.sh script must be sourced, not executed. In other words, run\n"
@@ -17,8 +13,6 @@ elif [ "$ZSH_VERSION" ]; then
     export ERADIATE_DIR=$(dirname "$0:A")
 fi
 
-# export PYTHONPATH="$ERADIATE_DIR/dist/python:$ERADIATE_DIR/$BUILD_DIR/dist/python:$PYTHONPATH"
-# export PATH="$ERADIATE_DIR/dist:$ERADIATE_DIR/$BUILD_DIR/dist:$PATH"
-export PYTHONPATH="$ERADIATE_DIR/$BUILD_DIR/dist/python:$PYTHONPATH"
-export PATH="$ERADIATE_DIR/$BUILD_DIR/dist:$PATH"
-export MITSUBA_DIR="$ERADIATE_DIR/ext/mitsuba2"
+export PYTHONPATH="${ERADIATE_DIR}/${BUILD_DIR}/dist/python:${PYTHONPATH}"
+export PATH="${ERADIATE_DIR}/${BUILD_DIR}/dist:${PATH}"
+export MITSUBA_DIR="${ERADIATE_DIR}/ext/mitsuba2"

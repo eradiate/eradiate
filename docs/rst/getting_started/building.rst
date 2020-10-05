@@ -8,8 +8,16 @@ instructions on :ref:`cloning Eradiate and its dependencies <sec-getting_started
 
 It is highly recommended to use Eradiate in an isolated Python environment. Eradiate is developed using Conda to manage environments, available *e.g.* from the minimal Python distribution `Miniconda 3 <https://docs.conda.io/en/latest/miniconda.html>`_. However, nothing currently prevents Eradiate from running in a regular pyenv environment.
 
+.. _sec-getting_started-building-python:
+
 Setting up your Python environment
 ----------------------------------
+
+.. note::
+
+   For automated environment setup, please `see below <sec-getting_started-setup_automation>`.
+
+.. _sec-getting_started-building-python-conda:
 
 Using Conda [Recommended]
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -26,6 +34,8 @@ Once your environment is ready, you can activate it:
 
     conda activate eradiate
 
+.. _sec-getting_started-building-python-conda-optional:
+
 Optional requirements
 """""""""""""""""""""
 
@@ -33,15 +43,9 @@ The requirement file ``requirements_conda.yml`` contains all modules that are re
 The optional modules can be installed from the following files:
 
 Developer requirements
-""""""""""""""""""""""
-
-The file ``requirements_dev_conda.yml`` contains modules that are necessary for the development of Eradiate. This includes ``pytest`` and ``sphinx``, including extensions for them.
-
+    The file ``requirements_dev_conda.yml`` contains modules that are necessary for the development of Eradiate. This includes ``pytest`` and ``sphinx``, including extensions for them.
 Jupyter lab extensions
-""""""""""""""""""""""
-
-The files ``requirements_jupyter_conda.yml`` contains jupyter lab and extensions for it, which enable interactive usage of Eradiate in jupyter notebooks. The ``ipywidgets`` module
-enables proper rendering of ``tdqm's`` progress bars inside the jupyter notebook browser.
+    The files ``requirements_jupyter_conda.yml`` contains jupyter lab and extensions for it, which enable interactive usage of Eradiate in jupyter notebooks. The ``ipywidgets`` module enables proper rendering of ``tdqm's`` progress bars inside the jupyter notebook browser.
 
 .. admonition:: Enabling jupyter extensions
 
@@ -52,13 +56,15 @@ enables proper rendering of ``tdqm's`` progress bars inside the jupyter notebook
         jupyter nbextension enable --py widgetsnbextension
         jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
+.. _sec-getting_started-building-python-without_conda:
+
 Installing without Conda
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 We provide requirements files for use with pip, for the basic and developer requirements. These files can be found under ``resources/deps/requirements_pip.txt`` and
 ``resources/deps/requirements_dev_pip.txt``.
 
-Additionally it is possible to directly :ref:`install the eradiate package <sec-getting_started-building-package_install>`. In this case the required packages will be installed through ``setup.py``.
+Additionally it is possible to directly :ref:`install the eradiate package <sec-getting_started-building-install_package>`. In this case the required packages will be installed through ``setup.py``.
 
 .. _sec-getting_started-building-environment_variables:
 
@@ -71,10 +77,10 @@ Eradiate requires that a few environment variables (``PATH``/``PYTHONPATH``) are
 
     source setpath.sh
 
-Note that this step is optional if you followed the instructions for :ref:`automated Conda environment setup <sec-getting_started-building-automated_conda>`
+Note that this step is optional if you followed the instructions for :ref:`automated Conda environment setup <sec-getting_started-building-setup_automation>`
 
 
-.. _sec-getting_started-building-mitsuba:
+.. _sec-getting_started-building_mitsuba:
 
 Building the Mitsuba kernel
 ---------------------------
@@ -182,7 +188,7 @@ where ``scene.xml`` is a Mitsuba scene file. Calling ``mitsuba --help`` will pri
 
         cmake -GNinja -D PYHTON_EXECUTABLE=<result of the query> CMAKE_C_COMPILER=<result of the query> CMAKE_CXX_COMPILER=<result of the query> ..
 
-.. _sec-getting_started-building-package_install:
+.. _sec-getting_started-building-install_package:
 
 Installing Eradiate
 -------------------
@@ -206,17 +212,32 @@ Once this is done, you can check if the installation is successful by printing t
 
     python -c "import eradiate.kernel; eradiate.kernel.set_variant('scalar_mono'); print(eradiate.kernel.core.MTS_VERSION)"
 
-.. _sec-getting_started-building-automated_conda:
+.. _sec-getting_started-building-setup_automation:
 
 Setup automation
 ----------------
 
-Conda environment creation can be automatically handled by executing the ``resources/envs/conda_create_env.sh`` script. *Be careful however as this will reset the existing environment!*
+Conda environment creation can be automatically handled by executing the ``resources/envs/conda_create_env.sh`` script at the root of the Eradiate source tree. *Be careful however as this will reset the existing environment!*
+
+The script automates by default the default Conda environment setup and the Eradiate package installation. Optional steps can also be automate using a series of flags:
+
+* ``-d``: perform `development dependency installation <sec-getting_started-building-python-conda-optional>`
+* ``-j``: perform `Jupyter lab installation and extension activation <sec-getting_started-building-python-conda-optional>`
+* ``-a``: add automatic environment variable setup to environment activation script (makes the :ref:`environment variable setup <sec-getting_started-building-environment_variables>` no longer necessary)
+* ``-e``: add a direnv ``.envrc`` file to the root of the Eradiate source tree (makes the :ref:`environment variable setup <sec-getting_started-building-environment_variables>` no longer necessary)
+
+A typical convenient user setup can be done with the command:
 
 .. code-block:: bash
 
-    bash resources/envs/conda_create_env.sh
+    bash resources/envs/conda_create_env.sh -j -a
 
-Note that we are not sourcing the script, we are executing it in a subshell.
+.. note::
 
-The script will install all optional dependencies for developers, jupyter lab and its required extensions and the Eradiate package in development mode. The created environment will also contain environment variable setup scripts which will make the :ref:`environment variable setup optional <sec-getting_started-building-environment_variables>`.
+   We are not sourcing the script, we are executing it in a subshell.
+
+A typical developer setup can be done with the command:
+
+.. code-block:: bash
+
+    bash resources/envs/conda_create_env.sh -d -j -a
