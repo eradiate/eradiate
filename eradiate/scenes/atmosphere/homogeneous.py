@@ -8,7 +8,6 @@ from scipy.constants import physical_constants
 import eradiate
 from .base import Atmosphere
 from ..core import Factory
-from ...util.exceptions import ConfigWarning, ModeError
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
@@ -173,44 +172,14 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 else cdu.get_str("length")
             },
             "sigma_s": {
-                "oneof": [{
+                "anyof": [{
                     "type": "number",
-                    "min": 0.,
+                    "min": 0.
                 }, {
-                    "type": "dict",
-                    "schema": {
-                        "wavelength": {
-                            "type": "number",
-                            "min": 0.0,
-                        },
-                        "wavelength_unit": {
-                            "type": "string",
-                            "default": cdu.get_str("wavelength")
-                        },
-                        "number_density": {
-                            "type": "number",
-                            "min": 0.0,
-                        },
-                        "number_density_unit": {
-                            "type": "string",
-                            "default": f"{cdu.get('length')}^-3"
-                        },
-                        "refractive_index": {
-                            "type": "number",
-                            "min": 0.0,
-                        },
-                        "king_factor": {
-                            "type": "number",
-                            "min": 0.0,
-                        },
-                        "depolarisation_ratio": {
-                            "type": "number",
-                            "min": 0.0,
-                            "nullable": True,
-                        },
-                    }
+                    "type": "string",
+                    "allowed": ["auto"]
                 }],
-                "default": {},
+                "default": "auto"
             },
             "sigma_s_unit": {
                 "type": "string",
@@ -227,7 +196,6 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
     @property
     def _width(self):
         """Return scene width based on configuration."""
-        # TODO: make this a cached property
 
         # If width is not set, compute a value corresponding to an optically
         # thick layer (10x scattering mean free path)
@@ -241,38 +209,14 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
     @property
     def _sigma_s(self):
         """Return scattering coefficient based on configuration."""
-        # TODO: make this a cached property
+        sigma_s = self.config.get("sigma_s")
 
-        if eradiate.mode.type != "mono":
-            raise ModeError(f"unsupported mode '{eradiate.mode.type}'")
-
-        sigma_s = deepcopy(self.config["sigma_s"])
-
-        if isinstance(sigma_s, dict):
-            try:
-                if sigma_s["wavelength"] != eradiate.mode.config["wavelength"]:
-                    warnings.warn("overriding 'sigma_s.wavelength' with "
-                                  "specified mode wavelength", ConfigWarning)
-            except KeyError:
-                pass
-
-            try:
-                sigma_s["number_density"] = ureg.Quantity(
-                    sigma_s["number_density"],
-                    sigma_s["number_density_unit"]
-                )
-                sigma_s.pop("number_density_unit")
-            except KeyError:
-                pass
-
-            sigma_s["wavelength"] = ureg.Quantity(
-                eradiate.mode.config["wavelength"],
-                eradiate.mode.config["wavelength_unit"]
-            )
-            return sigma_s_single(**sigma_s)
-
+        if sigma_s == "auto":
+            wavelength = eradiate.mode.config["wavelength"]
+            return sigma_s_single(wavelength=wavelength)
         else:
-            return self.config.get_quantity("sigma_s")
+            sigma_s_unit = self.config.get("sigma_s_unit")
+            return ureg.Quantity(sigma_s, sigma_s_unit)
 
     def phase(self):
         return {f"phase_{self.id}": {"type": "rayleigh"}}

@@ -72,25 +72,7 @@ def test_rayleigh_homogeneous(mode_mono, ref):
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(r).load() is not None
 
-    # Check that sigma_s wavelength specification is overridden
+    # Check that sigma_s wavelength specification is correctly taken from eradiate mode
     eradiate.mode.config["wavelength"] = 650.
-    r = RayleighHomogeneousAtmosphere({"sigma_s": 600.})
-    assert r._sigma_s != sigma_s_single(wavelength=600.)
-
-    # Check that we can set sigma_s_params with the other parameters of
-    # sigma_s_single
-    params = {
-        "number_density": 2.0e34,
-        "number_density_unit": "km^-3",
-        "refractive_index": 1.0003,
-        "king_factor": 1.05
-    }
-    params_pint = {
-        "number_density": params["number_density"] * ureg(params["number_density_unit"]),
-        "refractive_index": params["refractive_index"],
-        "king_factor": params["king_factor"]
-    }
-    r = RayleighHomogeneousAtmosphere({"sigma_s": params})
-    assert r._sigma_s == sigma_s_single(
-        wavelength=eradiate.mode.config["wavelength"] * eradiate.mode.config["wavelength_unit"], **params_pint
-    )
+    r = RayleighHomogeneousAtmosphere({"sigma_s": "auto"})
+    assert r._sigma_s != sigma_s_single(wavelength=550.)
