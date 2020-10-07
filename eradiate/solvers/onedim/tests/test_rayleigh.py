@@ -85,44 +85,6 @@ def test_rayleigh_solver_app():
     app = RayleighSolverApp(config)
     assert app._kernel_dict.load() is not None
 
-    # custom config (with custom refractive index)
-    config = {
-        "mode": {
-            "type": "mono",
-            "wavelength": 570.
-        },
-        "illumination": {
-            "type": "directional",
-            "zenith": 0.,
-            "azimuth": 0.,
-            "irradiance": {"type": "uniform", "value": 1.}
-        },
-        "measure": {
-            "type": "hemispherical",
-            "zenith_res": 5.,
-            "azimuth_res": 10.,
-            "spp": 1000,
-        },
-        "surface": {
-            "type": "lambertian",
-            "reflectance": {"type": "uniform", "value": 0.5}
-        },
-        "atmosphere": {
-            "type": "rayleigh_homogeneous",
-            "height": 1e5,
-            "sigma_s": {
-                "refractive_index": 1.0003
-            }
-        }
-    }
-    app = RayleighSolverApp(config)
-    assert app._kernel_dict.load() is not None
-
-    # check that the scattering coefficient is computed correctly
-    from eradiate.scenes.atmosphere.homogeneous import sigma_s_single
-    assert app._kernel_dict["medium_atmosphere"]["sigma_t"]["value"] == \
-           sigma_s_single(wavelength=ureg.Quantity(570., "nm"), refractive_index=1.0003).to("km^-1").magnitude
-
 
 @pytest.mark.slow
 def test_rayleigh_solver_app_run():
