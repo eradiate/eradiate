@@ -6,14 +6,14 @@ import pytest
 def test_onedimsolver_large_size(variant_scalar_mono_double, json_metadata):
     r"""
     Maximum scene size (``path``)
-    -----------------------------
+    =============================
 
     This test case asserts that the maximum scene size that can be rendered without
     breaking the limits of numerical precision is above a pre set limit.
 
 
     Rationale
-    ^^^^^^^^^
+    ---------
 
         - Geometry: a square surface with size in a series of powers of ten (1 through 9)
           and a Lambertian BRDF with reflectance :math:`\rho = 0.5`.
@@ -26,7 +26,7 @@ def test_onedimsolver_large_size(variant_scalar_mono_double, json_metadata):
           :math:`\mathrm{VZA} \in [0, \pi/2]` and :math:`\mathrm{VAA} \in [0, 2\pi]`.
 
     Expected behaviour
-    ^^^^^^^^^^^^^^^^^^
+    ------------------
 
     For all scene sizes below the parametrized size :code:`min_expected_size` the computational
     results must be equal to the theoretical prediction within a relative tolerance of 1e-3.

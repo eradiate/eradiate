@@ -11,14 +11,14 @@ import pytest
 def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
     r"""
     Radiometric check (``path``)
-    ----------------------------
+    ============================
 
     This simple test case compares simulated leaving radiance at a Lambertian
     surface with theoretical values.
 
 
     Rationale
-    ^^^^^^^^^
+    ---------
 
         - Geometry: a square surface with unit size and a Lambertian BRDF with 
           reflectance :math:`\rho = 0.5`. 
@@ -32,7 +32,7 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
 
 
     Expected behaviour
-    ^^^^^^^^^^^^^^^^^^
+    ------------------
 
         The computed solution is equal to the theoretical solution (relative 
         tolerance of 0.1%).

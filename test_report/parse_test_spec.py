@@ -105,7 +105,7 @@ def get_testcase_metric(report, name):
     except KeyError:
         return ""
         
-    returnstring = "\nMetrics\n^^^^^^^\n\n"
+    returnstring = "\nMetrics\n-------\n\n"
     for id in metric:
         returnstring += (
             metric[id]["name"]
@@ -134,7 +134,7 @@ def update_docstring(doc, name, report):
     metric = get_testcase_metric(report, name)
 
     doc = remove_indentation(doc)
-    splitstring = "\n\nRationale\n^^^^^^^^^\n\n"
+    splitstring = "\n\nRationale\n---------\n\n"
     [firstpart, lastpart] = doc.split(splitstring)
 
     result = ""
@@ -177,8 +177,9 @@ def write_to_file(test_dict, output_dir):
 
 .. _testspec:
 
+******************
 Test specification
-==================
+******************
 
 This section contains the specification for the integration and system tests in Eradiate.
 The tests are documented by presenting their general concept, e.g. what is tested, followed
@@ -200,7 +201,7 @@ the test is asserted.
 def generate():
     print("Parsing test specification and generating documents for report")
     eradiate_dir = pathlib.Path(os.environ["ERADIATE_DIR"])
-    test_dir = eradiate_dir / "eradiate" / "tests"
+    test_dir = eradiate_dir / "eradiate" / "tests" / "integration"
     output_dir = eradiate_dir / "test_report" / "generated"
     if not pathlib.Path.exists(output_dir):
         os.mkdir(output_dir)

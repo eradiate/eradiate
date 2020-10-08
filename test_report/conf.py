@@ -107,9 +107,10 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = "alabaster"
+# html_theme = "pydata_sphinx_theme"
 
 # Register the theme as an extension to generate a sitemap.xml
-extensions = ["alabaster"]
+extensions = ["alabaster", 'rst2pdf.pdfbuilder']
 extensions.append("sphinx.ext.mathjax")
 extensions.append("sphinxcontrib.bibtex")
 
@@ -215,8 +216,10 @@ latex_elements = {
 # The paper size ('letterpaper' or 'a4paper').
 #'papersize': 'letterpaper',
 
+'classoptions': ',oneside',
+
 # The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+'pointsize': '10pt',
 
 
 # Additional stuff for the LaTeX preamble.
@@ -225,6 +228,8 @@ latex_elements = {
 # Latex figure (float) alignment
 #'figure_align': 'htbp',
 }
+
+latex_engine = "pdflatex"
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
@@ -236,7 +241,7 @@ latex_elements = {
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-#latex_logo = 'eradiate-logo.png'
+latex_logo = '_static_html/eradiate-logo-dark-no_bg.png'
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.

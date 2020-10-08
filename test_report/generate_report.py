@@ -50,6 +50,27 @@ def create_html(eradiate_dir):
     execute(cmd)
 
 
+def create_pdf(eradiate_dir):
+    cmd_sphinx = [
+        "python",
+        "-m",
+        "sphinx",
+        "-b",
+        "latex",
+        os.path.join(eradiate_dir, "test_report"),
+        os.path.join(eradiate_dir, "build", "pdf_test-report"),
+    ]
+
+    cmd_make = [
+        "make",
+        "-C",
+        os.path.join(eradiate_dir, "build", "pdf_test-report"),
+    ]
+
+    execute(cmd_sphinx)
+    execute(cmd_make)
+
+
 def cli():
     helptext = \
         """
@@ -61,7 +82,6 @@ def cli():
         """
 
     eradiate_dir = os.environ["ERADIATE_DIR"]
-    kernel_dir = os.environ["MITSUBA_DIR"]
     build_dir = os.path.join(eradiate_dir, "test_report", "generated")
     special_dirs = [os.path.join(eradiate_dir, "resources", "deps", "tests")]
 
@@ -71,13 +91,19 @@ def cli():
         help="Skip pytest execution and only generate HTML report",
         action="store_true",
     )
+    parser.add_argument(
+        "--pdf",
+        help="Create a pdf report instead of html",
+        action="store_true"
+    )
     args = parser.parse_args()
 
     if args.no_pytest:
         pass
     else:
-        run_pytest(target_dir=os.path.join(kernel_dir, "src"),
-                   json_report_file=os.path.join(build_dir, 'report_kernel.json'))
+        # Currently the Mitsuba2 tests are not part of the test report
+        # run_pytest(target_dir=os.path.join(kernel_dir, "src"),
+        #            json_report_file=os.path.join(build_dir, 'report_kernel.json'))
         run_pytest(target_dir=os.path.join(eradiate_dir, "eradiate"),
                    json_report_file=os.path.join(build_dir, 'report_eradiate.json'))
         run_pytest(target_dir=special_dirs,
@@ -86,7 +112,10 @@ def cli():
     summaries.generate()
     ts.generate()
 
-    create_html(eradiate_dir)
+    if args.pdf:
+        create_pdf(eradiate_dir)
+    else:
+        create_html(eradiate_dir)
 
 
 if __name__ == "__main__":

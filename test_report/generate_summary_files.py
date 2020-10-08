@@ -47,9 +47,9 @@ def create_summary_table(report):
     time = datetime.fromtimestamp(report['created']).strftime('%H:%M:%S')
     commithash = get_git_revision_short_hash()
 
-    heading = """
+    heading = """*******************
 Test result summary
--------------------"""
+*******************"""
 
     try:
         passed = report['summary']['passed']
@@ -83,15 +83,16 @@ def create_passed_table(passed):
     heading = """
 .. _Tests passed:
 
+************
 Passed tests
-============
+************
 
 This page shows all passed tests. They are grouped by the file in which they are
 defined."""
 
     body = ""
     for key, value in passed.items():
-        underline = "-" * len(key)
+        underline = '=' * len(key)
         value_joined = "\n    ".join(value)
         body += f"""
 {key}
@@ -108,15 +109,16 @@ def create_failed_table(failed):
     heading = """
 .. _Tests failed:
     
+************
 Failed tests
-============
+************
 
 This page shows all failed tests. They are grouped by the file in which they are
 defined."""
 
     body = ""
     for key, value in failed.items():
-        underline = "-" * len(key)
+        underline = '=' * len(key)
         value_joined = "\n    ".join(value)
         body += f"""
 {key}
@@ -133,15 +135,16 @@ def create_skipped_table(skipped):
     heading = """
 .. _Tests skipped:
 
+*************
 Skipped tests
-=============
+*************
 
 This page shows all skipped tests. They are grouped by the file in which they are
 defined."""
 
     body = ""
     for key, value in skipped.items():
-        underline = "-" * len(key)
+        underline = '=' * len(key)
         value_joined = "\n    ".join(value)
         body += f"""
 {key}

@@ -23,21 +23,15 @@ with a detailed description of their setup and execution.
 
 The section **Benchmarks** contains the results of different benchmarking procedures.
 
-.. only:: not latex
 
 .. include:: generated/summary.rst
 
-.. toctree::
-    :hidden:
-    :maxdepth: 1
+.. include:: generated/passed.rst
 
-    generated/passed
-    generated/failed
-    generated/skipped
+.. include:: generated/failed.rst
 
-.. toctree::
-    :hidden:
-    :maxdepth: 2
+.. include:: generated/skipped.rst
 
-    generated/testspec
-    static/benchmarks
+.. include:: generated/testspec.rst
+
+.. include:: static/benchmarks.rst
