@@ -2,35 +2,13 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.scenes.atmosphere.homogeneous import (
-    _LOSCHMIDT, RayleighHomogeneousAtmosphere,
-    kf, sigma_s_single
-)
+from eradiate.scenes.atmosphere.homogeneous import \
+    RayleighHomogeneousAtmosphere
+from eradiate.scenes.atmosphere.radiative_properties.rayleigh import \
+    sigma_s_single
 from eradiate.scenes.core import KernelDict
 from eradiate.util.collections import onedict_value
 from eradiate.util.units import config_default_units, ureg
-
-
-def test_king_correction_factor():
-    """Test computation of King correction factor"""
-
-    # Compare default mean depolarisation ratio for dry air given by
-    # (Young, 1980) with corresponding value
-    assert np.allclose(kf(0.0279), 1.048, rtol=1.e-2)
-
-
-def test_sigma_s_single():
-    """Test computation of Rayleigh scattering coefficient with default values"""
-
-    ref_cross_section = ureg.Quantity(4.513e-27, "cm**2")
-    ref_sigmas = ref_cross_section * _LOSCHMIDT
-    expected = ref_sigmas
-
-    # Compare to reference value computed from scattering cross section in
-    # Bates (1984) Planetary and Space Science, Volume 32, No. 6.
-    print(expected.to("m^-1"))
-    print(sigma_s_single().to("m^-1"))
-    assert np.allclose(sigma_s_single(), expected, rtol=1e-2)
 
 
 @pytest.mark.parametrize("ref", (False, True))

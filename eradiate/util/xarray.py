@@ -53,3 +53,69 @@ def eo_dataarray(data, sza, saa, vza, vaa, wavelength):
     da.wavelength.attrs["unit"] = "nm"
 
     return da
+
+
+# TODO: transfer to xarray decorator
+def check_var_metadata(data_set, name, units, standard_name):
+    r"""Checks that a data variable/coordinate in a data set has the valid units
+    and standard name.
+
+    Raises a `ValueError` if the metadata is incorrect.
+
+    Parameter ``data_set`` (:class:`~xr.Dataset`):
+        Input data set.
+
+    Parameter ``name`` (str):
+        Data variable/coordinate name.
+
+    Parameter ``units`` (str):
+        Expected units.
+
+    Parameter ``standard_name`` (str):
+        Expected standard name.
+    """
+
+    try:
+        da = data_set[name]
+        metadata = da.attrs
+
+        try:
+            u = metadata["units"]
+            if u != units:
+                raise ValueError(f"{name} has the wrong units ({u} instead of"
+                                 f"{units}).")
+        except KeyError:
+            raise ValueError(f"{name} does not have units.")
+
+        try:
+            s = metadata["standard_name"]
+            if s != standard_name:
+                raise ValueError(f"{name} has the wrong standard name ({s} "
+                                 f"instead of {standard_name})")
+        except KeyError:
+            raise ValueError(f"{name} does not have a standard name.")
+
+    except AttributeError:
+        raise ValueError(f"{name} is not a data variable/coordinate of this "
+                         f"data set.")
+
+
+# TODO: transfer to xarray decorator
+def check_metadata(data_set):
+    r"""Checks that a data set has valid metadata.
+
+    Raises a ValueError if the data set's metadata are not valid.
+
+    Parameter ``data_set`` (:class:`xr.Dataset`):
+        Data set to check.
+    """
+
+    for x in ["convention", "title", "history", "source", "references"]:
+        try:
+            assert x in data_set.attrs
+            if data_set.attrs[x] == "":
+                raise ValueError(f"The metadata field {x} is empty.")
+        except AssertionError:
+            raise ValueError(f"The metadata field {x} is missing.")
+
+    # additional attributes are allowed

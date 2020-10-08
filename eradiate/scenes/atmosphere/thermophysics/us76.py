@@ -1,4 +1,4 @@
-r"""US Standard Atmosphere 1976 model, according to
+r"""US Standard Atmosphere 1976 thermophysical model, according to
 :cite:`NASA1976USStandardAtmosphere`.
 """
 
@@ -7,10 +7,74 @@ from datetime import datetime
 import numpy as np
 import numpy.ma as ma
 import xarray as xr
+from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 from eradiate import __version__
 from eradiate.util.units import ureg
+
+_Q = ureg.Quantity
+
+
+# ------------------------------------------------------------------------------
+#
+# Atmospheric vertical profile data set generator
+#
+# ------------------------------------------------------------------------------
+
+@ureg.wraps(ret=None, args="m", strict=False)
+def make_profile(levels=_Q(np.linspace(0., 1e5, 51), "m")):
+    r"""Makes an atmosphere vertical profile based on the
+    U.S. Standard Atmosphere 1976 thermophysical model.
+
+    .. note::
+
+        The pressure, temperature and number densities given in each layer of
+        the altitude mesh are computed at the altitude of the layers centers.
+        In other words, the layer's middle is taken as the altitude
+        representative of the whole layer. For example, in a layer with lower
+        and upper altitudes of 1000 and 2000 m, the thermophysical variables
+        are computed at the altitude of 1500 m.
+
+    Parameter ``levels`` (array):
+        Levels altitudes [m]. The values must be sorted by increasing order.
+
+        Valid range: 0 to 1e6 m.
+
+        Default value: Q_(np.linspace(0., 1e5, 51), "m")
+
+    Returns → :class:`~xarray.Dataset`:
+        Data set holding the values of the pressure, temperature,
+        total number density and number densities of the individual
+        gas species in each layer.
+    """
+
+    if np.any(levels > 1e6) or np.any(levels < 0.):
+        raise ValueError("Levels altitudes must be in [0, 1e6] m.")
+
+    z_layer = (levels[:-1] + levels[1:]) / 2
+
+    # create the US76 data set
+    ds = create(
+        _Q(z_layer, "m"),
+        variables=["p", "t", "n", "n_tot"],
+    )
+
+    # format the data set into an atmospheric vertical profile data set
+    ds = ds.rename_dims({"z": "z_layer"}).reset_coords("z", drop=True)
+    ds.coords["z_layer"] = (
+        "z_layer",
+        z_layer,
+        {"units": "m", "standard_name": "layer_altitude"}
+    )
+    ds.coords["z_level"] = (
+        "z_level",
+        levels,
+        {"units": "m", "standard_name": "level_altitude"}
+    )
+
+    return ds
+
 
 # ------------------------------------------------------------------------------
 #
@@ -206,70 +270,80 @@ SPECIES = ["N2", "O2", "Ar", "CO2", "Ne", "He", "Kr", "Xe", "CH4", "H2", "O",
 
 # List of variables computed by the model
 VARIABLES = [
-    "temperature",
-    "pressure",
-    "number_density",
-    "total_number_density",
-    "mass_density",
-    "mole_volume",
-    "scale_height",
-    "mean_air_particle_speed",
-    "mean_free_path",
-    "mean_collision_frequency",
-    "speed_of_sound",
-    "dynamic_viscosity",
-    "kinematic_viscosity",
-    "coefficient_of_thermal_conductivity"
+    "t",
+    "p",
+    "n",
+    "n_tot",
+    "rho",
+    "mv",
+    "hp",
+    "v",
+    "mfp",
+    "f",
+    "cs",
+    "mu",
+    "nu",
+    "kt"
 ]
 
 # Variables standard names with respect to the Climate and Forecast (CF)
 # convention
 STANDARD_NAME = {
-    "temperature": "air_temperature",
-    "pressure": "air_pressure",
-    "mass_density": "air_density",
-    "speed_of_sound": "speed_of_sound_in_air",
-    "altitude": "altitude",
-    "geopotential_height": "geopotential_height"
+    "t": "air_temperature",
+    "p": "air_pressure",
+    "n": "number_density",
+    "n_tot": "air_number_density",
+    "rho": "air_density",
+    "mv": "molar_volume",
+    "hp": "pressure_scale_height",
+    "v": "mean_air_particles_speed",
+    "mfp": "mean_free_path",
+    "f": "mean_collision_frequency",
+    "cs": "speed_of_sound_in_air",
+    "mu": "air_dynamic_viscosity",
+    "nu": "air_kinematic_viscosity",
+    "kt": "air_thermal_conductivity_coefficient",
+    "z": "altitude",
+    "h": "geopotential_height"
 }
 
 # Units of relevant quantities
 UNITS = {
-    "temperature": "K",
-    "pressure": "Pa",
-    "number_density": "m^-3",
-    "total_number_density": "m^-3",
-    "mass_density": "kg/m^3",
-    "mole_volume": "m^3",
-    "scale_height": "m",
-    "mean_air_particle_speed": "m/s",
-    "mean_free_path": "m",
-    "mean_collision_frequency": "s^-1",
-    "speed_of_sound": "m/s",
-    "dynamic_viscosity": "kg/(m*s)",
-    "kinematic_viscosity": "m^2/s",
-    "coefficient_of_thermal_conductivity": "J/m",
-    "altitude": "m",
-    "geopotential_height": "m",
-    "gas_species": ""
+    "t": "K",
+    "p": "Pa",
+    "n": "m^-3",
+    "n_tot": "m^-3",
+    "rho": "kg/m^3",
+    "mv": "m^3",
+    "hp": "m",
+    "v": "m/s",
+    "mfp": "m",
+    "f": "s^-1",
+    "cs": "m/s",
+    "mu": "kg/(m*s)",
+    "nu": "m^2/s",
+    "kt": "J/m",
+    "z": "m",
+    "h": "m",
+    "species": ""
 }
 
 # Variables dimensions
 DIMS = {
-    "temperature": "altitude",
-    "pressure": "altitude",
-    "number_density": ("species", "altitude"),
-    "total_number_density": "altitude",
-    "mass_density": "altitude",
-    "mole_volume": "altitude",
-    "scale_height": "altitude",
-    "mean_air_particle_speed": "altitude",
-    "mean_free_path": "altitude",
-    "mean_collision_frequency": "altitude",
-    "speed_of_sound": "altitude",
-    "dynamic_viscosity": "altitude",
-    "kinematic_viscosity": "altitude",
-    "coefficient_of_thermal_conductivity": "altitude"
+    "t": "z",
+    "p": "z",
+    "n": ("species", "z"),
+    "n_tot": "z",
+    "rho": "z",
+    "mv": "z",
+    "hp": "z",
+    "v": "z",
+    "mfp": "z",
+    "f": "z",
+    "cs": "z",
+    "mu": "z",
+    "nu": "z",
+    "kt": "z"
 }
 
 
@@ -291,6 +365,13 @@ DIMS = {
 def create(z, variables=None):
     r"""Creates a US Standard Atmosphere 1976 data set using specified altitudes
     values.
+
+    .. warning::
+        The returned U.S. Standard Atmosphere 1976 data set is not an
+        atmospheric vertical profile data set. See
+        :func:`eradiate.scenes.atmosphere.thermophysics.us76.make_profile`
+        if you are interested in generating an atmospheric vertical profile
+        based on the U.S. Standard Atmosphere 1976 model.
 
     Parameter ``z`` (array):
         1-D array with altitude values [m].
@@ -320,10 +401,15 @@ def create(z, variables=None):
     ds = init_data_set(ureg.Quantity(z, "m"))
 
     # compute the model in the low-altitude region
-    compute_low_altitude(ds, ds.coords['altitude'] <= 86000., inplace=True)
+    compute_low_altitude(ds, ds.coords["z"] <= 86000., inplace=True)
 
     # compute the model in the high-altitude region
-    compute_high_altitude(ds, ds.coords['altitude'] > 86000., inplace=True)
+    compute_high_altitude(ds, ds.coords["z"] > 86000., inplace=True)
+
+    # replace all np.nan with 0. in number densities values
+    n = ds.n.values
+    n[np.isnan(n)] = 0.
+    ds.n.values = n
 
     # list names of variables to drop from the data set
     names = []
@@ -356,14 +442,14 @@ def compute_low_altitude(data_set, mask=None, inplace=False):
     """
 
     if mask is None:
-        mask = xr.full_like(data_set.coords['altitude'], True, dtype=bool)
+        mask = xr.full_like(data_set.coords["z"], True, dtype=bool)
 
     if inplace:
         ds = data_set
     else:
         ds = data_set.copy(deep=True)
 
-    altitudes = ds.coords["altitude"][mask]
+    altitudes = ds.coords["z"][mask]
     z = altitudes.values
 
     # compute levels temperature and pressure values
@@ -381,31 +467,31 @@ def compute_low_altitude(data_set, mask=None, inplace=False):
     mu = BETA * np.power(t, 1.5) / (t + S)
 
     # assign data set with computed values
-    ds["temperature"].loc[dict(altitude=altitudes)] = t
-    ds["pressure"].loc[dict(altitude=altitudes)] = p
-    ds["total_number_density"].loc[dict(altitude=altitudes)] = n_tot
+    ds["t"].loc[dict(z=altitudes)] = t
+    ds["p"].loc[dict(z=altitudes)] = p
+    ds["n_tot"].loc[dict(z=altitudes)] = n_tot
 
     species = ["N2", "O2", "Ar", "CO2", "Ne", "He", "Kr", "Xe", "CH4", "H2"]
     for i, s in enumerate(SPECIES):
         if s in species:
-            ds["number_density"][i].loc[dict(altitude=altitudes)] = \
+            ds["n"][i].loc[dict(z=altitudes)] = \
                 F[s] * n_tot
 
-    ds["mass_density"].loc[dict(altitude=altitudes)] = rho
-    ds["mole_volume"].loc[dict(altitude=altitudes)] = NA / n_tot
-    ds["scale_height"].loc[dict(altitude=altitudes)] = R * t / (g * M0)
-    ds["mean_air_particle_speed"].loc[dict(altitude=altitudes)] = \
+    ds["rho"].loc[dict(z=altitudes)] = rho
+    ds["mv"].loc[dict(z=altitudes)] = NA / n_tot
+    ds["hp"].loc[dict(z=altitudes)] = R * t / (g * M0)
+    ds["v"].loc[dict(z=altitudes)] = \
         np.sqrt(8.0 * R * t / (np.pi * M0))
-    ds["mean_free_path"].loc[dict(altitude=altitudes)] = \
+    ds["mfp"].loc[dict(z=altitudes)] = \
         np.sqrt(2.0) / (2.0 * np.pi * np.power(SIGMA, 2.0) * n_tot)
-    ds["mean_collision_frequency"].loc[dict(altitude=altitudes)] = \
+    ds["f"].loc[dict(z=altitudes)] = \
         4.0 * NA * np.power(SIGMA, 2.0) * \
         np.sqrt(np.pi * np.power(p, 2.0) / (R * M0 * t))
-    ds["speed_of_sound"].loc[dict(altitude=altitudes)] = \
+    ds["cs"].loc[dict(z=altitudes)] = \
         np.sqrt(GAMMA * R * t / M0)
-    ds["dynamic_viscosity"].loc[dict(altitude=altitudes)] = mu
-    ds["kinematic_viscosity"].loc[dict(altitude=altitudes)] = mu / rho
-    ds["coefficient_of_thermal_conductivity"].loc[dict(altitude=altitudes)] = \
+    ds["mu"].loc[dict(z=altitudes)] = mu
+    ds["nu"].loc[dict(z=altitudes)] = mu / rho
+    ds["kt"].loc[dict(z=altitudes)] = \
         2.64638e-3 * np.power(t, 1.5) / (t + 245.4 * np.power(10.0, -12.0 / t))
 
     if not inplace:
@@ -433,14 +519,14 @@ def compute_high_altitude(data_set, mask=None, inplace=False):
     """
 
     if mask is None:
-        mask = xr.full_like(data_set.coords['altitude'], True, dtype=bool)
+        mask = xr.full_like(data_set.coords["z"], True, dtype=bool)
 
     if inplace:
         ds = data_set
     else:
         ds = data_set.copy(deep=True)
 
-    altitudes = ds.coords["altitude"][mask]
+    altitudes = ds.coords["z"][mask]
     if len(altitudes) == 0:
         return ds
 
@@ -458,22 +544,22 @@ def compute_high_altitude(data_set, mask=None, inplace=False):
     g = compute_gravity(z)
 
     # assign data set with computed values
-    ds["temperature"].loc[dict(altitude=altitudes)] = t
-    ds["pressure"].loc[dict(altitude=altitudes)] = p
-    ds["total_number_density"].loc[dict(altitude=altitudes)] = n_tot
+    ds["t"].loc[dict(z=altitudes)] = t
+    ds["p"].loc[dict(z=altitudes)] = p
+    ds["n_tot"].loc[dict(z=altitudes)] = n_tot
 
     for i, s in enumerate(SPECIES):
         if s in species:
-            ds["number_density"][i].loc[dict(altitude=altitudes)] = n[s]
+            ds["n"][i].loc[dict(z=altitudes)] = n[s]
 
-    ds["mass_density"].loc[dict(altitude=altitudes)] = rho
-    ds["mole_volume"].loc[dict(altitude=altitudes)] = NA / n_tot
-    ds["scale_height"].loc[dict(altitude=altitudes)] = R * t / (g * m)
-    ds["mean_air_particle_speed"].loc[dict(altitude=altitudes)] = \
+    ds["rho"].loc[dict(z=altitudes)] = rho
+    ds["mv"].loc[dict(z=altitudes)] = NA / n_tot
+    ds["hp"].loc[dict(z=altitudes)] = R * t / (g * m)
+    ds["v"].loc[dict(z=altitudes)] = \
         np.sqrt(8.0 * R * t / (np.pi * m))
-    ds["mean_free_path"].loc[dict(altitude=altitudes)] = \
+    ds["mfp"].loc[dict(z=altitudes)] = \
         np.sqrt(2.0) / (2.0 * np.pi * np.power(SIGMA, 2.0) * n_tot)
-    ds["mean_collision_frequency"].loc[dict(altitude=altitudes)] = \
+    ds["f"].loc[dict(z=altitudes)] = \
         4.0 * NA * np.power(SIGMA, 2.0) * \
         np.sqrt(np.pi * np.power(p, 2.0) / (R * m * t))
 
@@ -493,7 +579,7 @@ def init_data_set(z):
     """
     data_vars = {}
     for var in VARIABLES:
-        if var != "number_density":
+        if var != "n":
             try:
                 data_vars[var] = (
                     DIMS[var],
@@ -504,18 +590,18 @@ def init_data_set(z):
                 data_vars[var] = (
                     DIMS[var],
                     np.full(z.shape, np.nan),
-                    {"units": UNITS[var]}
+                    {"units": UNITS[var], "standard_name": STANDARD_NAME[var]}
                 )
         else:
             data_vars[var] = (
                 DIMS[var],
                 np.full((len(SPECIES), len(z)), np.nan),
-                {"units": UNITS[var]}
+                {"units": UNITS[var], "standard_name": STANDARD_NAME["n"]}
             )
 
     coords = {
-        'altitude': ('altitude', z, {'units': UNITS['altitude']}),
-        'species': ('species', SPECIES, {'units': 'none'})
+        "z": ("z", z, {"units": UNITS["z"]}),
+        "species": ("species", SPECIES, {"units": "", "standard_name": "species"})
     }
 
     # TODO: set function name in history field dynamically
@@ -524,7 +610,7 @@ def init_data_set(z):
         "title": "U.S. Standard Atmosphere 1976",
         "history":
             f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - data creation - "
-            f"eradiate.scenes.atmosphere.us76.model.compute",
+            f"eradiate.scenes.atmosphere.us76.create",
         "source": f"eradiate, version {__version__}",
         "references":
             "U.S. Standard Atmosphere, 1976, NASA-TM-X-74335, NOAA-S/T-76-1562",
@@ -608,7 +694,8 @@ def compute_number_densities_high_altitude(altitudes):
 
     # molecular nitrogen
     y = m * g / (R * t)  # [m^-1]
-    n_grid["N2"] = (N2_7 * (T7 / t) * np.exp(-integrate(y, 1e3 * grid)))  # the factor 1000 is to convert km to m
+    n_grid["N2"] = N2_7 * (T7 / t) * np.exp(
+        -cumtrapz(y, 1e3 * grid, initial=0.)) # the factor 1000 is to convert km to m
 
     # atomic oxygen
     d = thermal_diffusion_coefficient(
@@ -619,7 +706,7 @@ def compute_number_densities_high_altitude(altitudes):
     )
     y = thermal_diffusion_term_atomic_oxygen(grid, g, t, dt_dz, d, k) + \
         velocity_term_atomic_oxygen(grid)
-    n_grid["O"] = O_7 * (T7 / t) * np.exp(-integrate(y, 1e3 * grid))
+    n_grid["O"] = O_7 * (T7 / t) * np.exp(-cumtrapz(y, 1e3 * grid, initial=0.))
 
     # molecular oxygen
     d = thermal_diffusion_coefficient(
@@ -630,7 +717,7 @@ def compute_number_densities_high_altitude(altitudes):
     )
     y = thermal_diffusion_term("O2", grid, g, t, dt_dz, m, d, k) + \
         velocity_term("O2", grid)
-    n_grid["O2"] = O2_7 * (T7 / t) * np.exp(-integrate(y, 1e3 * grid))
+    n_grid["O2"] = O2_7 * (T7 / t) * np.exp(-cumtrapz(y, 1e3 * grid, initial=0.))
 
     # argon
     background = n_grid["N2"][below_115] + n_grid["O"][below_115] + \
@@ -643,7 +730,7 @@ def compute_number_densities_high_altitude(altitudes):
     )
     y = thermal_diffusion_term("Ar", grid, g, t, dt_dz, m, d, k) + \
         velocity_term("Ar", grid)
-    n_grid["Ar"] = AR_7 * (T7 / t) * np.exp(-integrate(y, 1e3 * grid))
+    n_grid["Ar"] = AR_7 * (T7 / t) * np.exp(-cumtrapz(y, 1e3 * grid, initial=0.))
 
     # helium
     background = n_grid["N2"][below_115] + n_grid["O"][below_115] + \
@@ -656,7 +743,7 @@ def compute_number_densities_high_altitude(altitudes):
     )
     y = thermal_diffusion_term("He", grid, g, t, dt_dz, m, d, k) + \
         velocity_term("He", grid)
-    n_grid["He"] = HE_7 * (T7 / t) * np.exp(-integrate(y, 1e3 * grid))
+    n_grid["He"] = HE_7 * (T7 / t) * np.exp(-cumtrapz(y, 1e3 * grid, initial=0.))
 
     # hydrogen
 
@@ -668,7 +755,7 @@ def compute_number_densities_high_altitude(altitudes):
     alpha = ALPHA["H"]
     _tau = tau_function(grid[mask], below_500=True)
     y = (PHI / d) * np.power(t[mask] / T11, 1 + alpha) * np.exp(_tau)
-    integral_values = integrate(y[::-1], 1e3 * grid[mask][::-1])
+    integral_values = cumtrapz(y[::-1], 1e3 * grid[mask][::-1], initial=0.)
     integral_values = integral_values[::-1]
     n_below_500 = \
         (H_11 - integral_values) * np.power(T11 / t[mask], 1 + alpha) * \
@@ -836,7 +923,7 @@ def eddy_diffusion_coefficient(z):
         "m/s^2", "K", "K/m", "kg/mol", "kg/mol", None, "m^2/s", "m^2/s"),
             strict=False)
 def f_below_115_km(g, t, dt_dz, m, mi, alpha, d, k):
-    r"""Evaluates the function :math:`f` defined by eq. (36) in
+    r"""Evaluates the function :math:`f` defined by equation (36) in
     :cite:`NASA1976USStandardAtmosphere` in the altitude region :math:`86
     <= z <= 115` km.
 
@@ -875,7 +962,7 @@ def f_below_115_km(g, t, dt_dz, m, mi, alpha, d, k):
 
 @ureg.wraps(ret=None, args=("m/s^2", "K", "K/m", "kg/mol", None), strict=False)
 def f_above_115_km(g, t, dt_dz, mi, alpha):
-    r"""Evaluates the function :math:`f` defined by eq. (36) in
+    r"""Evaluates the function :math:`f` defined by equation (36) in
     :cite:`NASA1976USStandardAtmosphere` in the altitude region :math:`115 <
     z <= 1000` km.
 
@@ -1007,7 +1094,7 @@ def thermal_diffusion_term_atomic_oxygen(grid, g, t, dt_dz, d, k):
             args=("m", "km^-3", "km^-3", "km", "km", "km^-3", "km^-3"),
             strict=False)
 def velocity_term_hump(z, q1, q2, u1, u2, w1, w2):
-    r"""Computes the transport term given by eq. (37) in
+    r"""Computes the transport term given by equation (37) in
     :cite:`NASA1976USStandardAtmosphere`.
 
     .. note::
@@ -1038,14 +1125,16 @@ def velocity_term_hump(z, q1, q2, u1, u2, w1, w2):
         Values of the transport term [km^-1].
     """
     return (
-        q1 * np.square(z - u1) * np.exp(-w1 * np.power(z - u1, 3.0)) +
-        q2 * np.square(u2 - z) * np.exp(-w2 * np.power(u2 - z, 3.0))
+       q1 * np.square(z - u1) * np.exp(
+           -w1 * np.power(z - u1, 3.0)
+        )
+       + q2 * np.square(u2 - z) * np.exp(-w2 * np.power(u2 - z, 3.0))
     ) / 1e3  # the factor 1e3 converts m^-1 to km^-1
 
 
 @ureg.wraps(ret=None, args=("km", "km^-3", "km^-3", "km^-3"), strict=False)
 def velocity_term_no_hump(z, q1, u1, w1):
-    r"""Computes the transport term given by eq. (37) in
+    r"""Computes the transport term given by equation (37) in
     :cite:`NASA1976USStandardAtmosphere` where the second term is zero.
 
     .. note::
@@ -1121,34 +1210,9 @@ def velocity_term_atomic_oxygen(grid):
     return np.concatenate((x1, x2))
 
 
-def integrate(y, x):
-    r"""Integrates :math:`y(x)` using the trapezoidal rule.
-
-    The values in ``x`` are used to define the lower and upper bounds of the
-    integral with the lower bound being fixed to the first value in ``x``.
-
-    Parameter ``y`` (array-like):
-        Input array to integrate.
-
-    Parameter ``x`` (array-like):
-        Sample points corresponding to the ``y`` values.
-
-    Returns → array:
-        Values of the definite integrals as approximated by the trapezoidal
-        rule.
-    """
-    i = np.zeros(len(x))
-    i[0] = 0.0
-    for k, _ in enumerate(x[1:], start=1):
-        dx = x[k] - x[k - 1]
-        i[k] = (((y[k] + y[k - 1]) * dx) / 2.0) + i[k - 1]
-
-    return i
-
-
 @ureg.wraps(ret=None, args=("km", None), strict=False)
 def tau_function(z_grid, below_500=True):
-    r"""Computes the integral given by eq. (40) in
+    r"""Computes the integral given by equation (40) in
     :cite:`NASA1976USStandardAtmosphere` at each point of an altitude grid.
 
     .. note::
@@ -1168,8 +1232,8 @@ def tau_function(z_grid, below_500=True):
 
     y = M["H"] * compute_gravity(ureg.Quantity(z_grid, "km")) / \
         (R * compute_temperature_high_altitude(z_grid))  # [m^-1]
-    integral_values = integrate(y, 1e3 * z_grid)  # the factor 1e3 converts
-    # z_grid to meters
+    integral_values = cumtrapz(y, 1e3 * z_grid, initial=0.)  # the factor 1e3
+    # converts z_grid to meters
 
     if below_500:
         return integral_values[::-1]

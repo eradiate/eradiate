@@ -1,27 +1,65 @@
 import pytest
 
-from eradiate.scenes.atmosphere.us76 import *
 from eradiate.util.units import ureg
+from eradiate.scenes.atmosphere.thermophysics import check_vertical_profile
+from eradiate.scenes.atmosphere.thermophysics.us76 import *
+
+_Q = ureg.Quantity
+
+
+def test_make_profile():
+    # default constructor
+    profile = make_profile()
+    check_vertical_profile(profile)
+    assert profile["z_level"].values[0] == 0.
+    assert profile["z_level"].values[-1] == 100000.
+    assert profile.dims["z_layer"] == 50
+    assert profile.dims["species"] == 12
+
+    # custom levels altitudes
+    profile = make_profile(levels=_Q(np.linspace(2., 15., 51), "km"))
+    check_vertical_profile(profile)
+    assert profile.dims["z_layer"] == 50
+    assert profile["z_level"].values[0] == 2000.
+    assert profile["z_level"].values[-1] == 15000.
+    assert profile.dims["species"] == 12
+
+    # custom number of layers
+    profile = make_profile(levels=_Q(np.linspace(0., 150., 37), "kilometers"))
+    check_vertical_profile(profile)
+    assert profile.dims["z_layer"] == 36
+    assert profile["z_level"].values[0] == 0.
+    assert profile["z_level"].values[-1] == 150000.
+    assert profile.dims["species"] == 12
+
+    profile = make_profile(levels=_Q(np.linspace(0., 80., 2), "kilometers"))
+    check_vertical_profile(profile)
+    assert profile.dims["z_layer"] == 1
+    assert profile["z_level"].values[0] == 0.
+    assert profile["z_level"].values[-1] == 80000.
+    assert profile.dims["species"] == 12
+
+    # invalid levels
+    with pytest.raises(ValueError):
+        make_profile(levels=np.linspace(-4000, 50000))
+
+    with pytest.raises(ValueError):
+        make_profile(levels=np.linspace(500., 5000000.))
 
 
 def test_create():
-    variables = [
-        "pressure",
-        "temperature",
-        "number_density",
-        "total_number_density",
-    ]
-    z = ureg.Quantity(np.linspace(0.0, 100000.0, 101), "meter")
+    z = _Q(np.linspace(0.0, 100000.0, 101), "meter")
+    variables = ["p", "t", "n", "n_tot"]
     ds = create(z, variables=variables)
 
     dims = ds.dims
     assert len(dims) == 2
-    assert "altitude" in dims
+    assert "z" in dims
     assert "species" in dims
 
     coords = ds.coords
     assert len(coords) == 2
-    assert (coords["altitude"] == z.magnitude).all()
+    assert (coords["z"] == z.magnitude).all()
     assert [s for s in coords["species"]] == [s for s in SPECIES]
 
     for var in variables:
@@ -35,7 +73,7 @@ def test_create():
     )
 
 
-def test_compute_below_86_km_layers_boundary_altitudes():
+def test_create_below_86_km_layers_boundary_altitudes():
     """
     We test the computation of the atmospheric variables (pressure,
     temperature and mass density) at the level altitudes, i.e. at the model
@@ -44,9 +82,7 @@ def test_compute_below_86_km_layers_boundary_altitudes():
     """
 
     z = to_altitude(np.array(H))
-    ds = create(
-        z, variables=["pressure", "temperature", "mass_density"]
-    )
+    ds = create(z, variables=["p", "t", "rho"])
 
     level_temperature = np.array(
         [288.15, 216.65, 216.65, 228.65, 270.65, 270.65, 214.65, 186.87])
@@ -65,12 +101,12 @@ def test_compute_below_86_km_layers_boundary_altitudes():
         ]
     )
 
-    assert np.allclose(ds["temperature"].values, level_temperature, rtol=1e-4)
-    assert np.allclose(ds["pressure"].values, level_pressure, rtol=1e-4)
-    assert np.allclose(ds["mass_density"].values, level_mass_density, rtol=1e-3)
+    assert np.allclose(ds["t"].values, level_temperature, rtol=1e-4)
+    assert np.allclose(ds["p"].values, level_pressure, rtol=1e-4)
+    assert np.allclose(ds["rho"].values, level_mass_density, rtol=1e-3)
 
 
-def test_compute_below_86_km_arbitrary_altitudes():
+def test_create_below_86_km_arbitrary_altitudes():
     """
     We test the computation of the atmospheric variables (pressure,
     temperature and mass density) at arbitrary altitudes. We assert correctness
@@ -148,12 +184,12 @@ def test_compute_below_86_km_arbitrary_altitudes():
 
     z = to_altitude(h)
     ds = create(
-        z, variables=["temperature", "pressure", "mass_density"]
+        z, variables=["t", "p", "rho"]
     )
 
-    assert np.allclose(temperatures, ds["temperature"].values, rtol=1e-4)
-    assert np.allclose(pressures, ds["pressure"].values, rtol=1e-4)
-    assert np.allclose(mass_densities, ds["mass_density"].values, rtol=1e-4)
+    assert np.allclose(temperatures, ds["t"].values, rtol=1e-4)
+    assert np.allclose(pressures, ds["p"].values, rtol=1e-4)
+    assert np.allclose(mass_densities, ds["rho"].values, rtol=1e-4)
 
 
 def test_init_data_set():
@@ -163,18 +199,18 @@ def test_init_data_set():
             assert var in ds
             assert np.isnan(ds[var].values).all()
 
-        assert ds["number_density"].values.ndim == 2
+        assert ds["n"].values.ndim == 2
         assert all(ds["species"].values == ['N2', 'O2', 'Ar', 'CO2', 'Ne', 'He', 'Kr', 'Xe', 'CH4', 'H2', 'O', 'H'])
 
-    z1 = ureg.Quantity(np.linspace(0., 50000.), "m")
+    z1 = _Q(np.linspace(0., 50000.), "meter")
     ds1 = init_data_set(z1)
     check_data_set(ds1)
 
-    z2 = ureg.Quantity(np.linspace(120000., 650000.), "m")
+    z2 = _Q(np.linspace(120000., 650000.), "meter")
     ds2 = init_data_set(z2)
     check_data_set(ds2)
 
-    z3 = ureg.Quantity(np.linspace(70000., 100000.), "m")
+    z3 = _Q(np.linspace(70000., 100000.), "meter")
     ds3 = init_data_set(z3)
     check_data_set(ds3)
 
@@ -355,9 +391,10 @@ def test_compute_mean_molar_mass():
     assert compute_mean_molar_mass_high_altitude(200.0) == M["N2"]
 
     # test call with array of altitudes
-    altitude = np.linspace(86, 1000, 915)
+    z = np.linspace(86, 1000, 915)
     assert np.allclose(
-        compute_mean_molar_mass_high_altitude(altitude), np.where(altitude <= 100.0, M0, M["N2"])
+        compute_mean_molar_mass_high_altitude(z),
+        np.where(z <= 100.0, M0, M["N2"])
     )
 
 
@@ -376,9 +413,3 @@ def test_compute_temperature_above_86_km():
         np.array([195.08, 240.00, 360.0, 469.27, 854.56, 999.24]),
         rtol=1e-3,
     )
-
-
-def test_integrate():
-    x = [0., 1., 3.]
-    y = [4., 12., -2.]
-    assert np.allclose(integrate(y, x), [0., 8., 18.])
