@@ -1,2 +1,1 @@
-"""Components to generate scenes.
-"""
+"""Components to generate scenes."""

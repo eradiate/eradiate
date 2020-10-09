@@ -10,18 +10,27 @@ from .util.units import ureg as _ureg
 
 @attr.s
 class EradiateMode:
-    """A very simple container for Eradiate mode configuration."""
-    type = attr.ib(default=None)  #: Mode type (str or None).
-    config = attr.ib(default=None)  #: Mode configuration (dict).
+    """A very simple container hosting configuration data of Eradiate's current
+    operational mode.
+
+    Constructor arguments / instance attributes:
+        Parameter ``type`` (str or None):
+            Mode type.
+
+        Parameter ``config`` (dict or None):
+            Mode configuration dictionary.
+    """
+
+    type = attr.ib(default=None)
+    config = attr.ib(default=None)
 
 
 mode = EradiateMode()
-"""Eradiate's mode configuration.
+"""Eradiate's operational mode configuration.
 
 This is the only instance of :class:`EradiateMode`. 
 See also :func:`set_mode`.
 """
-
 
 _mode_default_configs = {
     "mono": {

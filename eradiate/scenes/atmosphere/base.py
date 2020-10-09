@@ -1,19 +1,81 @@
-from abc import abstractmethod
+"""Basic facilities common to all atmosphere scene helpers."""
+
+from abc import ABC, abstractmethod
 
 import attr
 
 from ..core import SceneHelper
+from ...util.attrs import attrib, attrib_float_positive, attrib_unit
+from ...util.units import config_default_units as cdu
+from ...util.units import ureg
+
+
+def _validator_number_or_auto(_, attribute, value):
+    if value == "auto":
+        return
+
+    if isinstance(value, ureg.Quantity):
+        return
+
+    if not isinstance(value, (int, float)):
+        raise TypeError(f"{attribute.name} must be a 'float', 'int' or "
+                        f"str('auto'), got {value} which is a '{type(value)}'")
 
 
 @attr.s
-class Atmosphere(SceneHelper):
-    """An abstract base class defining common facilities for all atmospheres."""
+class Atmosphere(SceneHelper, ABC):
+    """An abstract base class defining common facilities for all atmospheres.
 
-    @classmethod
-    def config_schema(cls):
-        d = super(Atmosphere, cls).config_schema()
-        d["id"]["default"] = "atmosphere"
-        return d
+    See :class:`~eradiate.scenes.core.SceneHelper` for undocumented members.
+
+    Constructor arguments / instance attributes:
+
+        ``height`` (float):
+            Atmosphere height. Default: 100.
+
+            Unit-enabled field (default unit: cdu[length])
+
+
+        ``width`` (float or "auto"):
+            Atmosphere width. If set to ``"auto"``, a value will be estimated to
+            ensure that the medium is optically thick. The implementation of
+            this estimate depends on the concrete class inheriting from this
+            one. Default: ``"auto"``.
+
+            Unit-enabled field (default unit: cdu[length])
+
+    """
+
+    id = attrib(
+        default="atmosphere",
+        validator=attr.validators.optional(attr.validators.instance_of(str)),
+    )
+
+    height = attrib_float_positive(
+        default=1e2,
+        has_unit=True
+    )
+    height_unit = attrib_unit(
+        compatible_units=ureg.m,
+        default=attr.Factory(lambda: cdu.get("length"))
+    )
+
+    width = attrib(
+        default="auto",
+        converter=lambda x: x if x == "auto" or isinstance(x, ureg.Quantity) else float(x),
+        validator=_validator_number_or_auto,
+        has_unit=True
+    )
+    width_unit = attrib_unit(
+        compatible_units=ureg.m,
+        default=attr.Factory(lambda: cdu.get("length")),
+    )
+
+    @property
+    def _height(self):
+        height = self.get_quantity("height")
+        offset = height * 0.001  # TODO: maybe adjust offset based on medium profile
+        return height, offset
 
     @abstractmethod
     def phase(self):
@@ -50,11 +112,11 @@ class Atmosphere(SceneHelper):
         """
         # TODO: return a KernelDict
         pass
-    
+
     def kernel_dict(self, ref=True):
         # TODO: return a KernelDict
         kernel_dict = {"integrator": {"type": "volpath"}}  # Force volpath integrator
-        
+
         if not ref:
             kernel_dict[self.id] = self.shapes()[f"shape_{self.id}"]
         else:

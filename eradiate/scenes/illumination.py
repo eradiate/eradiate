@@ -7,190 +7,124 @@
         :modules: illumination
 """
 
-import attr
-import numpy as np
+from abc import ABC
 
-from .core import Factory, SceneHelper
+import attr
+
+from .core import SceneHelper, SceneHelperFactory
+from .spectra import SolarIrradianceSpectrum, UniformSpectrum
+from ..util.attrs import attrib, attrib_float_positive, attrib_unit
 from ..util.frame import angles_to_direction
 from ..util.units import config_default_units as cdu
-from ..util.units import kernel_default_units as kdu
+from ..util.units import ureg
 
 
 @attr.s
-@Factory.register(name="constant")
-class ConstantIllumination(SceneHelper):
-    """Constant illumination scene generation helper [:factorykey:`constant`].
+class Illumination(SceneHelper, ABC):
+    """Abstract base class for all illumination scene helpers.
 
-    .. admonition:: Configuration examples
-        :class: hint
-
-        Default:
-            .. code:: python
-
-               {"radiance": {"type": "uniform"}}
-
-        Fully specified:
-            .. code:: python
-
-               {"radiance": {"type": "uniform", "value": 10.}}
-
-    .. admonition:: Configuration format
-        :class: hint
-
-        ``radiance`` (dict):
-            Emitted radiance spectrum. This section must be a factory
-            configuration dictionary which will be passed to
-            :meth:`eradiate.scenes.core.Factory.create`.
-
-            Allowed scene generation helpers:
-            :factorykey:`uniform`,
-            :factorykey:`solar_irradiance`
-
-            Default:
-            :factorykey:`uniform`.
+    See :class:`~eradiate.scenes.core.SceneHelper` for undocumented members.
     """
 
-    @classmethod
-    def config_schema(cls):
-        d = super(ConstantIllumination, cls).config_schema()
-        d["id"]["default"] = "illumination"
-        d.update({
-            "radiance": {
-                "type": "dict",
-                "default": {},
-                "allow_unknown": True,
-                "schema": {
-                    "type": {
-                        "type": "string",
-                        "allowed": ["uniform", "solar_irradiance"],
-                        "default": "uniform"
-                    },
-                    "quantity": {
-                        "type": "string",
-                        "allowed": ["radiance"],
-                        "default": "radiance"
-                    }
-                }
-            },
-        })
-        return d
+    id = attr.ib(
+        default="illumination",
+        validator=attr.validators.optional((attr.validators.instance_of(str))),
+    )
+
+
+@SceneHelperFactory.register(name="constant")
+@attr.s
+class ConstantIllumination(Illumination):
+    """Constant illumination scene generation helper [:factorykey:`constant`].
+
+    See :class:`Illumination` for undocumented members.
+
+    Constructor arguments / instance attributes:
+        ``radiance`` (:class:`~eradiate.scenes.spectra.UniformSpectrum`):
+            Emitted radiance spectrum.
+
+            Default: :class:`~eradiate.scenes.spectra.UniformSpectrum`.
+    """
+    # TODO: reject non-radiance spectra
+
+    radiance = attrib(
+        default=attr.Factory(UniformSpectrum),
+        converter=SceneHelperFactory.convert,
+        validator=attr.validators.instance_of(UniformSpectrum),
+    )
 
     def kernel_dict(self, **kwargs):
-        radiance = Factory().create(self.config["radiance"])
         return {
             self.id: {
                 "type": "constant",
-                "radiance": radiance.kernel_dict()["spectrum"]
+                "radiance": self.radiance.kernel_dict()["spectrum"]
             }
         }
 
 
+@SceneHelperFactory.register(name="directional")
 @attr.s
-@Factory.register(name="directional")
-class DirectionalIllumination(SceneHelper):
+class DirectionalIllumination(Illumination):
     """Directional illumination scene generation helper [:factorykey:`directional`].
 
     The illumination is oriented based on the classical angular convention used
     in Earth observation.
 
-    .. admonition:: Configuration examples
-        :class: hint
+    See :class:`Illumination` for undocumented members.
 
-        Default:
-            .. code:: python
-
-               {
-                   "zenith": 0.,
-                   "azimuth": 0.,
-                   "irradiance": {"type": "solar_irradiance"}
-               }
-
-        Fully specified:
-            .. code:: python
-
-               {
-                   "zenith": 0.,
-                   "azimuth": 0.,
-                   "irradiance": {
-                       "type": "uniform",
-                       "value": 10.
-                   }
-               }
-
-    .. admonition:: Configuration format
-        :class: hint
-
+    Constructor arguments / instance attributes:
         ``zenith`` (float):
-             Zenith angle [deg].
+             Zenith angle. Default: 0.
 
-             Default: 0.
+            Unit-enabled field (default unit: cdu[angle]).
 
         ``azimuth`` (float):
-            Azimuth angle value [deg].
+            Azimuth angle value. Default: 0.
 
-            Default: 0.
+            Unit-enabled field (default unit: cdu[angle]).
 
-        ``irradiance`` (dict):
-            Emitted power flux in the plane orthogonal to the
-            illumination direction. This section must be a factory
-            configuration dictionary which will be passed to
-            :meth:`eradiate.scenes.core.Factory.create`.
-
-            Allowed scene generation helpers:
-            :factorykey:`uniform`,
-            :factorykey:`solar_irradiance`
-
-            Default:
-            :factorykey:`solar_irradiance`.
+        ``irradiance`` (:class:`~eradiate.scenes.spectra.UniformSpectrum` or :class:`~eradiate.scenes.spectra.SolarIrradianceSpectrum`):
+            Emitted power flux in the plane orthogonal to the illumination direction.
+            Default: :class:`~eradiate.scenes.spectra.SolarIrradianceSpectrum`.
     """
+    zenith = attrib_float_positive(
+        default=0.,
+        has_unit=True
+    )
+    zenith_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("angle")),
+        compatible_units=ureg.deg,
+    )
 
-    @classmethod
-    def config_schema(cls):
-        d = super(DirectionalIllumination, cls).config_schema()
-        d["id"]["default"] = "illumination"
-        d.update({
-            "zenith": {"type": "number", "default": 0.},
-            "zenith_unit": {
-                "type": "string",
-                "default": cdu.get_str("angle")
-            },
-            "azimuth": {"type": "number", "default": 0.},
-            "azimuth_unit": {
-                "type": "string",
-                "default": cdu.get_str("angle")
-            },
-            "irradiance": {
-                "type": "dict",
-                "default": {},
-                "allow_unknown": True,
-                "schema": {
-                    "type": {
-                        "type": "string",
-                        "allowed": ["uniform", "solar_irradiance"],
-                        "default": "solar_irradiance"
-                    }
-                }
-            },
-        })
-        return d
+    azimuth = attrib_float_positive(
+        default=0.,
+        has_unit=True
+    )
+    azimuth_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("angle")),
+        compatible_units=ureg.deg,
+    )
 
-    def kernel_dict(self, **kwargs):
-        irradiance_ = Factory().create(self.config["irradiance"])
+    irradiance = attrib(
+        default=attr.Factory(SolarIrradianceSpectrum),
+        converter=SceneHelperFactory.convert,
+        validator=[attr.validators.instance_of(
+            (UniformSpectrum, SolarIrradianceSpectrum)
+        )],
+    )
 
-        zenith = self.config.get_quantity("zenith").to(kdu.get("angle")).magnitude,
-        azimuth = self.config.get_quantity("azimuth").to(kdu.get("angle")).magnitude
-        irradiance = irradiance_.kernel_dict()["spectrum"]
+    def kernel_dict(self, ref=True):
+        zenith = self.get_quantity("zenith")
+        azimuth = self.get_quantity("azimuth")
+        irradiance = self.irradiance.kernel_dict()["spectrum"]
 
         return {
             self.id: {
                 "type": "directional",
                 "direction": list(-angles_to_direction(
-                    theta=np.deg2rad(zenith),
-                    phi=np.deg2rad(azimuth)
+                    theta=zenith.to(ureg.rad).magnitude,
+                    phi=azimuth.to(ureg.rad).magnitude
                 )),
-                "irradiance":
-                    {"type": "uniform", "value": irradiance}
-                    if isinstance(irradiance, float)
-                    else irradiance
+                "irradiance": irradiance
             }
         }

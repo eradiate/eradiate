@@ -6,26 +6,28 @@
     .. factorytable::
         :modules: measure
 """
+from abc import ABC
 
 import attr
 import numpy as np
 
-from .core import Factory, SceneHelper
+from .core import SceneHelperFactory, SceneHelper
+from ..util.attrs import attrib, attrib_float_positive, attrib_int_positive, attrib_unit, validator_has_len
 from ..util.frame import angles_to_direction, spherical_to_cartesian
-from ..util.units import config_default_units as cdu
+from ..util.units import config_default_units as cdu, ureg
 from ..util.units import kernel_default_units as kdu
 
 
-class Measure(SceneHelper):
-    @classmethod
-    def config_schema(cls):
-        d = super(Measure, cls).config_schema()
-        d["id"]["default"] = "measure"
-        return d
-
-
 @attr.s
-@Factory.register(name="distant")
+class Measure(SceneHelper, ABC):
+    id = attr.ib(
+        default="measure",
+        validator=attr.validators.optional((attr.validators.instance_of(str))),
+    )
+
+
+@SceneHelperFactory.register(name="distant")
+@attr.s
 class DistantMeasure(Measure):
     """Distant measure scene generation helper [:factorykey:`distant`].
 
@@ -63,48 +65,37 @@ class DistantMeasure(Measure):
             Default: 10000.
     """
 
-    @classmethod
-    def config_schema(cls):
-        d = super(DistantMeasure, cls).config_schema()
-        d.update({
-            "zenith": {
-                "type": "number",
-                "min": 0.,
-                "max": 90.,
-                "default": 0.0,
-            },
-            "zenith_unit": {
-                "type": "string",
-                "default": cdu.get_str("angle")
-            },
-            "azimuth": {
-                "type": "number",
-                "min": 0.,
-                "max": 360.,
-                "default": 0.0,
-            },
-            "azimuth_unit": {
-                "type": "string",
-                "default": cdu.get_str("angle")
-            },
-            "spp": {
-                "type": "integer",
-                "min": 0,
-                "default": 10000
-            }
-        })
-        return d
+    zenith = attrib_float_positive(
+        default=0.,
+        has_unit=True
+    )
+    zenith_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("angle")),
+        compatible_units=ureg.deg,
+    )
+
+    azimuth = attrib_float_positive(
+        default=0.,
+        has_unit=True
+    )
+    azimuth_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("angle")),
+        compatible_units=ureg.deg,
+    )
+
+    spp = attrib_int_positive(default=10000)
 
     def kernel_dict(self, **kwargs):
-        zenith = self.config.get_quantity("zenith").to(kdu.get("angle")).magnitude
-        azimuth = self.config.get_quantity("azimuth").to(kdu.get("angle")).magnitude
-        spp = self.config.get_quantity("spp")
+        zenith = self.get_quantity("zenith")
+        azimuth = self.get_quantity("azimuth")
+        spp = self.spp
+
         return {
             self.id: {
                 "type": "distant",
                 "direction": list(-angles_to_direction(
-                    theta=np.deg2rad(zenith),
-                    phi=np.deg2rad(azimuth)
+                    theta=zenith.to(ureg.rad).magnitude,
+                    phi=azimuth.to(ureg.rad).magnitude
                 )),
                 "target": [0, 0, 0],
                 "sampler": {
@@ -123,8 +114,8 @@ class DistantMeasure(Measure):
         }
 
 
+@SceneHelperFactory.register(name="perspective")
 @attr.s
-@Factory.register(name="perspective")
 class PerspectiveCameraMeasure(Measure):
     """Perspective camera scene generation helper [:factorykey:`perspective`].
 
@@ -183,70 +174,54 @@ class PerspectiveCameraMeasure(Measure):
             Default: 32.
     """
 
-    @classmethod
-    def config_schema(cls):
-        d = super(PerspectiveCameraMeasure, cls).config_schema()
-        d.update({
-            "target": {
-                "type": "list",
-                "items": [{"type": "number"}] * 3,
-                "default": [0, 0, 0]
-            },
-            "target_unit": {
-                "type": "string",
-                "default": cdu.get_str("length")
-            },
-            "zenith": {
-                "type": "number",
-                "min": 0.,
-                "max": 90.,
-                "default": 45.
-            },
-            "zenith_unit": {
-                "type": "string",
-                "default": cdu.get_str("angle")
-            },
-            "azimuth": {
-                "type": "number",
-                "min": 0.,
-                "max": 360.,
-                "default": 180.
-            },
-            "azimuth_unit": {
-                "type": "string",
-                "default": cdu.get_str("angle")
-            },
-            "distance": {
-                "type": "number",
-                "min": 0.,
-                "default": 1.,
-            },
-            "distance_unit": {
-                "type": "string",
-                "default": cdu.get_str("length")
-            },
-            "res": {
-                "type": "integer",
-                "min": 0,
-                "default": 64
-            },
-            "spp": {
-                "type": "integer",
-                "min": 0,
-                "default": 32
-            }
-        })
-        return d
+    target = attrib(
+        default=[0, 0, 0],
+        validator=validator_has_len(3),
+        has_unit=True
+    )
+    target_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("length")),
+        compatible_units=ureg.m,
+    )
+
+    zenith = attrib_float_positive(
+        default=0.,
+        has_unit=True
+    )
+    zenith_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("angle")),
+        compatible_units=ureg.deg,
+    )
+
+    azimuth = attrib_float_positive(
+        default=0.,
+        has_unit=True
+    )
+    azimuth_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("angle")),
+        compatible_units=ureg.deg,
+    )
+
+    distance = attrib_float_positive(
+        default=1.,
+        has_unit=True
+    )
+    distance_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("length")),
+        compatible_units=ureg.m
+    )
+
+    res = attrib_int_positive(default=64)
+
+    spp = attrib_int_positive(default=32)
 
     def kernel_dict(self, **kwargs):
         from eradiate.kernel.core import ScalarTransform4f
 
-        target = self.config.get_quantity("target").to(kdu.get("length")).magnitude
-        distance = self.config.get_quantity("distance").to(kdu.get("length")).magnitude
-        res = self.config["res"]
-        spp = self.config["spp"]
-        zenith = self.config.get_quantity("zenith").to("rad").magnitude
-        azimuth = self.config.get_quantity("azimuth").to("rad").magnitude
+        target = self.get_quantity("target").to(kdu.get("length")).magnitude
+        distance = self.get_quantity("distance").to(kdu.get("length")).magnitude
+        zenith = self.get_quantity("zenith").to("rad").magnitude
+        azimuth = self.get_quantity("azimuth").to("rad").magnitude
 
         origin = spherical_to_cartesian(distance, zenith, azimuth)
         direction = origin / np.linalg.norm(origin)
@@ -265,12 +240,12 @@ class PerspectiveCameraMeasure(Measure):
                 "to_world": ScalarTransform4f.look_at(origin=origin, target=target, up=up),
                 "sampler": {
                     "type": "independent",
-                    "sample_count": spp
+                    "sample_count": self.spp
                 },
                 "film": {
                     "type": "hdrfilm",
-                    "width": res,
-                    "height": res,
+                    "width": self.res,
+                    "height": self.res,
                     "pixel_format": "luminance",
                     "component_format": "float32",
                     "rfilter": {"type": "box"}
@@ -279,8 +254,8 @@ class PerspectiveCameraMeasure(Measure):
         }
 
 
+@SceneHelperFactory.register(name="radiance_hemi")
 @attr.s
-@Factory.register(name="radiance_hemi")
 class RadianceMeterHemisphere(Measure):
     """Distant hemispherical measure scene generation helper [:factorykey:`radiance_hemi`].
 
@@ -347,71 +322,62 @@ class RadianceMeterHemisphere(Measure):
             Default: 32.
     """
 
-    @classmethod
-    def config_schema(cls):
-        d = super(RadianceMeterHemisphere, cls).config_schema()
-        d.update({
-            "zenith_res": {
-                "type": "number",
-                "min": 1,
-                "default": 10,
-            },
-            "zenith_res_unit": {
-                "type": "string",
-                "default": str(cdu.get("angle"))
-            },
-            "azimuth_res": {
-                "type": "number",
-                "min": 1,
-                "default": 10,
-            },
-            "azimuth_res_unit": {
-                "type": "string",
-                "default": str(cdu.get("angle"))
-            },
-            "origin": {
-                "type": "list",
-                "items": [{"type": "number"}] * 3,
-                "default": [0, 0, 0]
-            },
-            "direction": {
-                "type": "list",
-                "items": [{"type": "number"}] * 3,
-                "default": [0, 0, 1]
-            },
-            "hemisphere": {
-                "type": "string",
-                "allowed": ["front", "back"],
-                "default": "front"
-            },
-            "orientation": {
-                "type": "list",
-                "items": [{"type": "number"}] * 3,
-                "default": [1, 0, 0]
-            },
-            "spp": {
-                "type": "integer",
-                "min": 1,
-                "default": 32
-            }
-        })
-        
-        return d
+    zenith_res = attrib_float_positive(
+        default=10.,
+        has_unit=True
+    )
+    zenith_res_unit = attrib_unit(
+        default=ureg.deg,
+        compatible_units=ureg.deg,
+    )
 
-    zenith_angles = attr.ib(default=[])
-    azimuth_angles = attr.ib(default=[])
+    azimuth_res = attrib_float_positive(
+        default=10.,
+        has_unit=True
+    )
+    azimuth_res_unit = attrib_unit(
+        default=ureg.deg,
+        compatible_units=ureg.deg,
+    )
 
-    def init(self):
-        """(Re)initialise internal state.
+    origin = attrib(
+        default=[0, 0, 0],
+        validator=validator_has_len(3),
+        has_unit=True
+    )
+    origin_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("length")),
+        compatible_units=ureg.m,
+    )
 
-        This method is automatically called by the constructor to initialise the
-        object."""
+    direction = attrib(
+        default=[0, 0, 1],
+        validator=validator_has_len(3),
+        has_unit=False
+    )
 
-        zenith_res = self.config.get_quantity("zenith_res").to("deg").magnitude
-        azimuth_res = self.config.get_quantity("azimuth_res").to("deg").magnitude
-        
-        self.zenith_angles = np.arange(0, 90, zenith_res)
-        self.azimuth_angles = np.arange(0, 360, azimuth_res)
+    orientation = attrib(
+        default=[1, 0, 0],
+        validator=validator_has_len(3),
+        has_unit=False
+    )
+
+    hemisphere = attrib(
+        default="front",
+        validator=attr.validators.in_(("front", "back")),
+    )
+
+    spp = attrib_int_positive(default=32)
+
+    _zenith_angles = attrib(default=None, init=False)  # Set during post-init
+    _azimuth_angles = attrib(default=None, init=False)  # Set during post-init
+
+    def __attrs_post_init__(self):
+        zenith_res = self.get_quantity("zenith_res").to(ureg.deg).magnitude
+        azimuth_res = self.get_quantity("azimuth_res").to(ureg.deg).magnitude
+
+        self._zenith_angles = ureg.Quantity(np.arange(0, 90, zenith_res), ureg.deg)
+        self._azimuth_angles = ureg.Quantity(np.arange(0, 360, azimuth_res), ureg.deg)
 
     def repack_results(self, results):
         """This method reshapes the 1D results returned by the
@@ -419,39 +385,39 @@ class RadianceMeterHemisphere(Measure):
         implied by the azimuth and zenith angle resolutions, such that
         the result complies with the format required to further process the results."""
 
-        return np.reshape(results, (len(self.zenith_angles), len(self.azimuth_angles)))
+        return np.reshape(results, (len(self._zenith_angles), len(self._azimuth_angles)))
 
-    def get_orientation_transform(self):
+    def _orientation_transform(self):
         from eradiate.kernel.core import Transform4f
-        origin = self.config.get_quantity("origin")
-        zenith_direction = self.config.get_quantity("direction")
-        orientation = self.config.get_quantity("orientation")
+        origin = self.get_quantity("origin").to(kdu.get("length")).magnitude
+        zenith_direction = self.direction
+        orientation = self.orientation
 
         return Transform4f.look_at(origin, zenith_direction, orientation)
 
-    def generate_directions(self):
-        hemisphere_transform = self.get_orientation_transform()
+    def directions(self):
+        hemisphere_transform = self._orientation_transform()
 
         directions = []
-        for theta in self.zenith_angles:
-            for phi in self.azimuth_angles:
+        for theta in self._zenith_angles.to(ureg.rad).magnitude:
+            for phi in self._azimuth_angles.to(ureg.rad).magnitude:
                 directions.append(hemisphere_transform.transform_vector(
                     angles_to_direction(theta=theta, phi=phi))
                 )
 
-        return -np.array(directions) if self.config.get("hemisphere") == "back" \
+        return -np.array(directions) if self.hemisphere == "back" \
             else np.array(directions)
 
     def kernel_dict(self, **kwargs):
-        spp = self.config.get_quantity("spp")
-        directions = self.generate_directions()
-        origin = self.config.get_quantity("origin")
+        spp = self.spp
+        directions = self.directions()
+        origin = self.get_quantity("origin").to(kdu.get("length")).magnitude
 
         return {
             self.id: {
                 "type": "radiancemeterarray",
                 "directions": ", ".join([str(x) for x in directions.flatten()]),
-                "origins": ", ".join([str(x) for x in origin]*len(directions)),
+                "origins": ", ".join([str(x) for x in origin] * len(directions)),
                 "sampler": {
                     "type": "independent",
                     "sample_count": spp

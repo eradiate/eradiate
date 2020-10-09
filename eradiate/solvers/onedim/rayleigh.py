@@ -12,7 +12,7 @@ import xarray as xr
 
 import eradiate.kernel
 
-from ...scenes.core import Factory, KernelDict
+from ...scenes.core import SceneHelperFactory, KernelDict
 from ...util import ensure_array, view
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
@@ -259,7 +259,6 @@ class RayleighSolverApp(ConfigObject):
             self._kernel_dict.check()
 
     def _configure_scene(self):
-        factory = Factory()
         config = deepcopy(self.config)
         self._helpers = {}
         self._kernel_dict = KernelDict.empty()
@@ -270,13 +269,13 @@ class RayleighSolverApp(ConfigObject):
                 wavelength = config["mode"]["wavelength"]
 
                 # Set illumination
-                self._helpers["illumination"] = factory.create(self.config["illumination"])
+                self._helpers["illumination"] = SceneHelperFactory.create(self.config["illumination"])
 
                 # Set atmosphere
                 config_atmosphere = config.get("atmosphere", None)
 
                 if config_atmosphere is not None:
-                    self._helpers["atmosphere"] = factory.create(config_atmosphere)
+                    self._helpers["atmosphere"] = SceneHelperFactory.create(config_atmosphere)
 
                 # Set surface
                 atmosphere = self._helpers.get("atmosphere", None)
@@ -289,7 +288,7 @@ class RayleighSolverApp(ConfigObject):
                     config["surface"]["width"] = atmosphere._width.magnitude
                     config["surface"]["width_unit"] = str(atmosphere._width.units)
 
-                self._helpers["surface"] = factory.create(config["surface"])
+                self._helpers["surface"] = SceneHelperFactory.create(config["surface"])
 
                 # Expand helpers to kernel scene dictionary
                 self._kernel_dict.add(list(self._helpers.values()))
@@ -298,8 +297,8 @@ class RayleighSolverApp(ConfigObject):
         # Ensure that scalar values used as xarray coordinates are arrays
         illumination = self._helpers["illumination"]
 
-        theta_i = ensure_array(illumination.config["zenith"], dtype=float)
-        phi_i = ensure_array(illumination.config["azimuth"], dtype=float)
+        theta_i = ensure_array(illumination.zenith, dtype=float)
+        phi_i = ensure_array(illumination.azimuth, dtype=float)
         wavelength = ensure_array(self.config["mode"]["wavelength"], dtype=float)
 
         # Process measure angles

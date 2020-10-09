@@ -119,7 +119,7 @@ class OneDimRunner:
                 for j, phi in enumerate(vaa):
                     # Adjust scene setup
                     self.kernel_dict.add(measure.DistantMeasure(
-                        {'zenith': theta, 'azimuth': phi, 'spp': spp}
+                        zenith=theta, azimuth=phi, spp=spp
                     ))
 
                     # Run computation

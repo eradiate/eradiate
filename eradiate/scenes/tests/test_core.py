@@ -1,11 +1,14 @@
 import importlib
 
 import attr
+import numpy as np
 import pytest
 
 import eradiate.kernel
-from eradiate.scenes.core import Factory, KernelDict, SceneHelper
+from eradiate.scenes.core import SceneHelperFactory, KernelDict, SceneHelper
+from eradiate.util.attrs import attrib, attrib_unit, validator_has_len, validator_is_number, validator_is_positive
 from eradiate.util.exceptions import KernelVariantError
+from eradiate.util.units import ureg
 
 
 def test_kernel_dict():
@@ -50,28 +53,35 @@ def test_kernel_dict():
 
 @attr.s
 class TinyDirectional(SceneHelper):
-    @classmethod
-    def config_schema(cls):
-        d = super(TinyDirectional, cls).config_schema()
-        d["id"]["default"] = "illumination"
-        d.update({
-            "direction": {
-                "type": "list",
-                "items": [{"type": "number"}] * 3,
-                "default": [0, 0, -1]
-            },
-            "irradiance": {
-                "type": "number",
-                "default": 1.0
-            }
-        })
-        return d
+    id = attrib(
+        default="illumination",
+        validator=attr.validators.instance_of(str),
+    )
+
+    direction = attrib(
+        default=[0, 0, -1],
+        validator=validator_has_len(3),
+        has_unit=True
+    )
+
+    direction_unit = attrib_unit(
+        compatible_units=ureg.m,
+        default=ureg.m
+    )
+
+    irradiance = attr.ib(
+        default=1.0,
+        validator=[validator_is_number, validator_is_positive],
+    )
 
     def kernel_dict(self, **kwargs):
+        direction = self.direction * self.direction_unit
+
         return {
             self.id: {
                 "type": "directional",
-                "irradiance": self.config["irradiance"]
+                "irradiance": self.irradiance,
+                "direction": direction.to("m").magnitude
             }
         }
 
@@ -79,40 +89,59 @@ class TinyDirectional(SceneHelper):
 def test_scene_helper(mode_mono):
     # Default constructor (check if defaults are applied as intended)
     d = TinyDirectional()
-    assert d.config == {"id": "illumination", "direction": [0, 0, -1], "irradiance": 1.0}
+    assert attr.asdict(d) == {
+        "id": "illumination",
+        "direction": [0, 0, -1],
+        "direction_unit": ureg.m,
+        "irradiance": 1.0
+    }
 
-    # Check that undesired params raise as intended
-    with pytest.raises(ValueError):
-        d = TinyDirectional({
-            "direction": [0, 0, -1],
-            "irradiance": 1.0,
-            "unexpected_param": 0
-        })
+    # Check that constructor from params works as intended
+    assert TinyDirectional(
+        direction=[0, 0, -100],
+        direction_unit=ureg.cm,
+        irradiance=1.0
+    ) is not None
+
+    # Check that unit handling is appropriately performed
+    d = TinyDirectional(
+        direction=ureg.Quantity([0, 0, -100], ureg.cm),
+        direction_unit=ureg.m
+    )
+    assert np.allclose(d.direction, [0, 0, -1])
+
+    # Check that constructor from dictionary works as intended
+    assert TinyDirectional(direction=[0, 0, -1], irradiance=1.0) == \
+        TinyDirectional.from_dict({"direction": [0, 0, -1], "irradiance": 1.0})
+    assert TinyDirectional() == TinyDirectional.from_dict({})
 
     # Check that created scene can be instantiated by the kernel
     kernel_dict = KernelDict.empty()
     kernel_dict.add(d)
     assert kernel_dict.load() is not None
 
-    # Construct using from_dict factory
-    assert d == TinyDirectional.from_dict({})
+    # Check that undesired parameters raise
+    with pytest.raises(TypeError):
+        TinyDirectional.from_dict({
+            "direction": [0, 0, -1],
+            "irradiance": 1.0,
+            "unexpected_param": 0
+        })
 
 
 def test_factory():
-    factory = Factory()
-
     # We expect that correct object specification will yield an object
-    assert factory.create({"type": "directional", "zenith": 45.}) is not None
+    assert SceneHelperFactory.create({"type": "directional", "zenith": 45.}) is not None
 
     # We expect that incorrect object specification will raise
     # (here, the 'direction' field is not part of the expected parameters)
-    with pytest.raises(ValueError):
-        factory.create({"type": "directional", "direction": [0, -1, -1]})
+    with pytest.raises(TypeError):
+        SceneHelperFactory.create({"type": "directional", "direction": [0, -1, -1]})
 
     # We expect that an empty dict will raise
     with pytest.raises(KeyError):
-        factory.create({})
+        SceneHelperFactory.create({})
 
     # We expect that an unregistered 'type' will raise
     with pytest.raises(ValueError):
-        factory.create({"type": "dzeiaticional"})
+        SceneHelperFactory.create({"type": "dzeiaticional"})

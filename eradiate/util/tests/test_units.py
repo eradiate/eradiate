@@ -1,6 +1,11 @@
 import pytest
 
-from eradiate.util.units import DefaultUnits, ureg
+from eradiate.util.units import DefaultUnits, compatible, ureg
+
+
+def test_compatible():
+    assert compatible(ureg.m, ureg.km)
+    assert not compatible(ureg.Unit("W/m^2/sr/nm"), ureg.Unit("W/m^2/nm"))
 
 
 def test_default_units():
@@ -18,6 +23,7 @@ def test_default_units():
 
     # Test evaluation method
     assert du.units() == {
+        "dimensionless": ureg.dimensionless,
         "length": ureg.m,
         "time": ureg.s,
         "mass": ureg.kg,
@@ -25,6 +31,7 @@ def test_default_units():
         "angle": ureg.deg,
         "irradiance": ureg.Quantity("W/m^2/nm"),
         "radiance": ureg.Quantity("W/m^2/nm/sr"),
+        "reflectance": ureg.dimensionless,
     }
 
     # Test updater (not part of the public API so we don't have a lot of safeguards there)

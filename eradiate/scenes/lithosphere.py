@@ -7,25 +7,35 @@
         :modules: lithosphere
 """
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import attr
 
-from .core import Factory, SceneHelper
-from ..util.units import config_default_units as cdu
+from .core import SceneHelperFactory, SceneHelper
+from .spectra import UniformSpectrum
+from ..util.attrs import attrib, attrib_float_positive, attrib_unit
+from ..util.units import config_default_units as cdu, ureg
 from ..util.units import kernel_default_units as kdu
 
 
 @attr.s
-class Surface(SceneHelper):
+class Surface(SceneHelper, ABC):
     """An abstract base class defining common facilities for all surfaces.
     """
 
-    @classmethod
-    def config_schema(cls):
-        d = super(Surface, cls).config_schema()
-        d["id"]["default"] = "surface"
-        return d
+    id = attrib(
+        default="surface",
+        validator=attr.validators.optional(attr.validators.instance_of(str)),
+    )
+
+    width = attrib_float_positive(
+        default=1.,
+        has_unit=True
+    )
+    width_unit = attrib_unit(
+        compatible_units=ureg.m,
+        default=attr.Factory(lambda: cdu.get("length"))
+    )
 
     @abstractmethod
     def bsdfs(self):
@@ -39,7 +49,6 @@ class Surface(SceneHelper):
         # TODO: return a KernelDict
         pass
 
-    @abstractmethod
     def shapes(self, ref=False):
         """Return shape plugin specifications only.
 
@@ -48,23 +57,39 @@ class Surface(SceneHelper):
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             attached to the surface.
         """
-        # TODO: return a KernelDict
-        pass
+        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+
+        if ref:
+            bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
+        else:
+            bsdf = self.bsdfs()[f"bsdf_{self.id}"]
+
+        width = self.get_quantity("width").to(kdu.get("length")).magnitude
+
+        return {
+            f"shape_{self.id}": {
+                "type": "rectangle",
+                "to_world": ScalarTransform4f.scale(ScalarVector3f(
+                    width * 0.5, width * 0.5, 1.)
+                ),
+                "bsdf": bsdf
+            }
+        }
 
     def kernel_dict(self, ref=True):
         kernel_dict = {}
 
         if not ref:
-            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
+            kernel_dict[self.id] = self.shapes(ref=False)[f"shape_{self.id}"]
         else:
-            kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
+            kernel_dict[f"bsdf_{self.id}"] = self.bsdfs()[f"bsdf_{self.id}"]
+            kernel_dict[self.id] = self.shapes(ref=True)[f"shape_{self.id}"]
 
         return kernel_dict
 
 
+@SceneHelperFactory.register(name="lambertian")
 @attr.s
-@Factory.register(name="lambertian")
 class LambertianSurface(Surface):
     """Lambertian surface scene generation helper [:factorykey:`lambertian`].
 
@@ -104,91 +129,23 @@ class LambertianSurface(Surface):
             :factorykey:`uniform` with ``value`` set to 0.5.
     """
 
-    @classmethod
-    def config_schema(cls):
-        d = super(LambertianSurface, cls).config_schema()
-        d.update({
-            "reflectance": {
-                "type": "dict",
-                "default": {},
-                "allow_unknown": True,
-                "schema": {
-                    "type": {
-                        "type": "string",
-                        "allowed": ["uniform"],
-                        "default": "uniform"
-                    },
-                    "value": {  # If selecting uniform, we check that this is a reflectance spectrum
-                        "type": "number",
-                        "dependencies": {"type": "uniform"},
-                        "required": False,
-                        "min": 0.,
-                        "max": 1.,
-                        "default": 0.5
-                    },
-                    "quantity": {
-                        "type": "string",
-                        "nullable": True,
-                        "allowed": [],
-                        "default": None
-                    }
-                },
-            },
-            "width": {
-                "type": "number",
-                "min": 0.,
-                "default": 1.,
-            },
-            "width_unit": {
-                "type": "string",
-                "default": cdu.get_str("length")
-            }
-        })
-        return d
+    reflectance = attrib(
+        default=attr.Factory(lambda: UniformSpectrum(quantity="reflectance", value=0.5)),
+        converter=SceneHelperFactory.convert,
+        validator=attr.validators.instance_of(UniformSpectrum),
+    )
 
     def bsdfs(self):
-        reflectance = Factory().create(self.config["reflectance"])
         return {
-            "bsdf_surface": {
+            f"bsdf_{self.id}": {
                 "type": "diffuse",
-                "reflectance": reflectance.kernel_dict()["spectrum"]
+                "reflectance": self.reflectance.kernel_dict()["spectrum"]
             }
         }
 
-    def shapes(self, ref=False):
-        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
-        if ref:
-            bsdf = {"type": "ref", "id": "bsdf_surface"}
-        else:
-            bsdf = self.bsdfs()["bsdf_surface"]
-
-        width = self.config.get_quantity("width").to(kdu.get("length")).magnitude
-
-        return {
-            "shape_surface": {
-                "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(ScalarVector3f(
-                    width * 0.5, width * 0.5, 1.)
-                ),
-                "bsdf": bsdf
-            }
-        }
-
-    def kernel_dict(self, ref=True):
-        kernel_dict = {}
-
-        if not ref:
-            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
-        else:
-            kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
-
-        return kernel_dict
-
-
+@SceneHelperFactory.register(name="rpv")
 @attr.s
-@Factory.register(name="rpv")
 class RPVSurface(Surface):
     """RPV surface scene generation helper [:factorykey:`rpv`].
 
@@ -233,80 +190,36 @@ class RPVSurface(Surface):
     # TODO: check if there are bounds to default parameters
     # TODO: add support for spectra
 
-    @classmethod
-    def config_schema(cls):
-        d = super(RPVSurface, cls).config_schema()
-        d.update({
-            "rho_0": {
-                "type": "number",
-                "default": 0.183,
-            },
-            "k": {
-                "type": "number",
-                "default": 0.780,
-            },
-            "ttheta": {
-                "type": "number",
-                "default": -0.1,
-            },
-            "width": {
-                "type": "number",
-                "min": 0.,
-                "default": 1.,
-            },
-            "width_unit": {
-                "type": "string",
-                "default": cdu.get_str("length")
-            }
-        })
-        return d
+    rho_0 = attrib(
+        default=0.183,
+        converter=float
+    )
+
+    k = attrib(
+        default=0.780,
+        converter=float
+    )
+
+    ttheta = attrib(
+        default=-0.1,
+        converter=float
+    )
 
     def bsdfs(self):
         return {
-            "bsdf_surface": {
+            f"bsdf_{self.id}": {
                 "type": "rpv",
                 "rho_0": {
                     "type": "uniform",
-                    "value": self.config["rho_0"]
+                    "value": self.rho_0
                 },
                 "k": {
                     "type": "uniform",
-                    "value": self.config["k"]
+                    "value": self.k
                 },
                 "ttheta": {
                     "type": "uniform",
-                    "value": self.config["ttheta"]
+                    "value": self.ttheta
                 }
             }
         }
-
-    def shapes(self, ref=False):
-        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
-
-        if ref:
-            bsdf = {"type": "ref", "id": "bsdf_surface"}
-        else:
-            bsdf = self.bsdfs()["bsdf_surface"]
-
-        width = self.config.get_quantity("width").to(kdu.get("length")).magnitude
-
-        return {
-            "shape_surface": {
-                "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(ScalarVector3f(
-                    width * 0.5, width * 0.5, 1.)
-                ),
-                "bsdf": bsdf
-            }
-        }
-
-    def kernel_dict(self, ref=True):
-        kernel_dict = {}
-
-        if not ref:
-            kernel_dict["surface"] = self.shapes(ref=False)["shape_surface"]
-        else:
-            kernel_dict["bsdf_surface"] = self.bsdfs()["bsdf_surface"]
-            kernel_dict["surface"] = self.shapes(ref=True)["shape_surface"]
-
-        return kernel_dict

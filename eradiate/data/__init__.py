@@ -34,10 +34,12 @@ SOLAR_IRRADIANCE_SPECTRA = {
     "blackbody_sun": "spectra/blackbody_sun.nc",
     "thuillier_2003": "spectra/thuillier_2003.nc",
 }
-"""This dictionary provides access to solar irradiance data sets shipped with 
-Eradiate. Keys are unique identifiers associated with shipped data sets, and
+"""Dictionary of solar irradiance data sets shipped with Eradiate. 
+
+Keys are unique identifiers associated with shipped data sets, and
 values are relative paths to the corresponding netCDF file in the Eradiate data
-directory. These relative paths can be used with :func:`get` to conveniently
+directory (typically ``$ERADIATE_DIR/resources/data``). 
+These relative paths can be used with :func:`get` to conveniently
 access the data sets.
 
 .. admonition:: Example

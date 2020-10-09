@@ -38,7 +38,7 @@ def test_rayleigh_homogeneous(mode_mono, ref):
     # Construct with parameters
     eradiate.mode.config["wavelength"] = 650.
     eradiate.mode.config["wavelength_unit"] = config_default_units.get("wavelength")
-    r = RayleighHomogeneousAtmosphere({"height": 10.})
+    r = RayleighHomogeneousAtmosphere(height=ureg.Quantity(10, ureg.km))
 
     # check if sigma_s was correctly computed using the mode wavelength value
     wavelength = ureg.Quantity(eradiate.mode.config["wavelength"], eradiate.mode.config["wavelength_unit"])
@@ -52,5 +52,5 @@ def test_rayleigh_homogeneous(mode_mono, ref):
 
     # Check that sigma_s wavelength specification is correctly taken from eradiate mode
     eradiate.mode.config["wavelength"] = 650.
-    r = RayleighHomogeneousAtmosphere({"sigma_s": "auto"})
+    r = RayleighHomogeneousAtmosphere(sigma_s="auto")
     assert r._sigma_s != sigma_s_single(wavelength=550.)

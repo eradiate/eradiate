@@ -1,13 +1,14 @@
 """ Heterogeneous atmosphere scene generation helpers """
+from pathlib import Path
 
 import attr
 import numpy as np
 import xarray as xr
 
-from ...util.units import config_default_units as cdu
-from ...util.units import kernel_default_units as kdu
-from ..core import Factory
 from .base import Atmosphere
+from ..core import SceneHelperFactory
+from ...util.attrs import attrib
+from ...util.units import kernel_default_units as kdu
 
 
 def write_binary_grid3d(filename, values):
@@ -54,8 +55,8 @@ def write_binary_grid3d(filename, values):
         f.write(values.ravel().astype(np.float32).tobytes())
 
 
+@SceneHelperFactory.register("heterogeneous")
 @attr.s
-@Factory.register("heterogeneous")
 class HeterogeneousAtmosphere(Atmosphere):
     r"""Heterogeneous atmosphere scene generation helper
     [:factorykey:`heterogeneous`].
@@ -70,107 +71,38 @@ class HeterogeneousAtmosphere(Atmosphere):
        Optical property data will not be scaled by default unit override:
        they must manually be specified in the appropriate kernel units.
 
-    .. admonition:: Configuration example
-        :class: hint
-
-        Default:
-            .. code:: python
-
-               {
-                   "height": 100.,
-                   "width": "auto",
-                   "sigma_t": "sigma_t.vol",
-                   "albedo": "albedo.vol",
-               }
-
-    .. admonition:: Configuration format
-        :class: hint
-
-        ``height`` (float):
-            Height of the atmosphere [km].
-
-            Default: 100.
-
-        ``width`` (float)
-            Width of the atmosphere [km].
-
-            Default: 100.
-
-        ``sigma_t`` (string):
+    Constructor arguments / instance attributes:
+        ``sigma_t`` (path-like):
             Path to the extinction coefficient volume data file.
 
             *Required* (no default).
 
-        ``albedo`` (string):
+        ``albedo`` (path-like):
             Path to the single scattering albedo volume data file.
 
             *Required* (no default).
     """
 
-    def config_schema(cls):
-        d = super(HeterogeneousAtmosphere, cls).config_schema()
-        d.update({
-            "height": {
-                "type": "number",
-                "min": 0.,
-                "default": 100.,
-            },
-            "height_unit": {
-                "type": "string",
-                "default": cdu.get_str("length")
-            },
-            "width": {
-                "anyof": [{
-                    "type": "number",
-                    "min": 0.
-                }, {
-                    "type": "string",
-                    "allowed": ["auto"]
-                }],
-                "default": 100.
-            },
-            "width_unit": {
-                "type": "string",
-                "required": False,
-                "nullable": True,
-                "default_setter": lambda doc:
-                None if isinstance(doc["width"], str)
-                else cdu.get_str("length")
-            },
-            "sigma_t": {
-                "type": "string",
-                "required": True,
-            },
-            "albedo": {
-                "type": "string",
-                "required": True,
-            }
-        })
-        return d
+    albedo = attrib(
+        default=None,
+        converter=Path,
+        validator=attr.validators.instance_of(Path)
+    )
 
-    @property
-    def _albedo(self):
-        return self.config["albedo"]
-
-    @property
-    def _height(self):
-        height = self.config.get_quantity("height").to(kdu.get("length")).magnitude
-        offset = height * 0.001  # TODO: maybe adjust offset based on medium profile
-        return height, offset
-
-    @property
-    def _sigma_t(self):
-        return self.config["sigma_t"]
+    sigma_t = attrib(
+        default=None,
+        converter=Path,
+        validator=attr.validators.instance_of(Path)
+    )
 
     @property
     def _width(self):
         """Return scene width based on configuration."""
-        width = self.config.get_quantity("width")
 
-        if width == "auto":  # Support for auto is currently disabled
+        if self.width == "auto":  # Support for auto is currently disabled
             raise NotImplementedError
         else:
-            return width.to(kdu.get("length")).magnitude
+            return self.get_quantity("width")
 
     def phase(self):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
@@ -178,8 +110,10 @@ class HeterogeneousAtmosphere(Atmosphere):
     def media(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f
 
-        width = self._width
+        width = self._width.to(kdu.get("length")).magnitude
         height, offset = self._height
+        height = height.to(kdu.get("length")).magnitude
+        offset = offset.to(kdu.get("length")).magnitude
 
         # First, transform the [0, 1]^3 cube to the right dimensions
         trafo = ScalarTransform4f([
@@ -196,12 +130,12 @@ class HeterogeneousAtmosphere(Atmosphere):
                 "phase": {"type": "rayleigh"},
                 "sigma_t": {
                     "type": "gridvolume",
-                    "filename": self._sigma_t,
+                    "filename": str(self.sigma_t),
                     "to_world": trafo
                 },
                 "albedo": {
                     "type": "gridvolume",
-                    "filename": self._albedo,
+                    "filename": str(self.albedo),
                     "to_world": trafo
                 },
             }
@@ -215,8 +149,10 @@ class HeterogeneousAtmosphere(Atmosphere):
         else:
             medium = self.media(ref=False)[f"medium_{self.id}"]
 
-        width = self._width
+        width = self._width.to(kdu.get("length")).magnitude
         height, offset = self._height
+        height = height.to(kdu.get("length")).magnitude
+        offset = offset.to(kdu.get("length")).magnitude
 
         return {
             f"shape_{self.id}": {

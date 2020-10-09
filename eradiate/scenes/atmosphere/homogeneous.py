@@ -1,20 +1,19 @@
-import warnings
-from copy import deepcopy
+"""Homogeneous atmosphere scene generation helpers."""
 
 import attr
 
 import eradiate
-from ...util.exceptions import ConfigWarning, ModeError
+from .base import Atmosphere, _validator_number_or_auto
+from .radiative_properties.rayleigh import sigma_s_single
+from ..core import SceneHelperFactory
+from ...util.attrs import attrib, attrib_unit
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
-from ..core import Factory
-from .base import Atmosphere
-from .radiative_properties.rayleigh import sigma_s_single
 
 
+@SceneHelperFactory.register("rayleigh_homogeneous")
 @attr.s()
-@Factory.register("rayleigh_homogeneous")
 class RayleighHomogeneousAtmosphere(Atmosphere):
     """Rayleigh homogeneous atmosphere scene generation helper
     [:factorykey:`rayleigh_homogeneous`].
@@ -23,96 +22,31 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
     homogeneous medium. Scattering uses the Rayleigh phase function and the
     Rayleigh scattering coefficient of a single gas.
 
-    .. admonition:: Configuration example
-        :class: hint
+    See :class:`~eradiate.scenes.atmosphere.base.Atmosphere` for undocumented
+    members.
 
-        Default:
-            .. code:: python
+    Constructor arguments / instance attributes:
+        ``sigma_s`` (float or "auto"):
+            Atmosphere scattering coefficient value. If set to ``"auto"``,
+            the scattering coefficient will be computed based on the current
+            operational mode configuration using the :func:`sigma_s_single`
+            function. Default: ``"auto"``.
 
-               {
-                   "height": 100.,
-                   "width": "auto",
-               }
 
-    .. admonition:: Configuration format
-        :class: hint
+            Unit-enabled field (default unit: cdu[length]^-1).
 
-        ``height`` (float):
-            Height of the atmosphere [km].
-
-            Default: 100.
-
-        ``width`` (float or string)
-            Width of the atmosphere [km].
-            If the string ``"auto"`` is passed, a value will be estimated to
-            ensure that the medium is optically thick.
-
-            Default: auto.
-
-        ``sigma_s`` (float or dict):
-            Atmosphere scattering coefficient value [km^-1] or keyword argument
-            dictionary to be passed to
-            :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`.
-            If a dictionary is passed and misses arguments,
-            :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`'s
-            defaults apply as usual.
-
-            Note that :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`
-            will always be evaluated according to mode configuration,
-            regardless any value which could be passed as the ``wavelength``
-            argument of :func:`~eradiate.scenes.atmosphere.rayleigh.sigma_s_single`.
-
-            Default: {}.
     """
 
-    # Class attributes
-    @classmethod
-    def config_schema(cls):
-        d = super(RayleighHomogeneousAtmosphere, cls).config_schema()
-        d.update({
-            "height": {
-                "type": "number",
-                "min": 0.,
-                "default": 1.e+2
-            },
-            "height_unit": {
-                "type": "string",
-                "default": cdu.get_str("length")
-            },
-            "width": {
-                "anyof": [{
-                    "type": "number",
-                    "min": 0.
-                }, {
-                    "type": "string",
-                    "allowed": ["auto"]
-                }],
-                "default": "auto"
-            },
-            "width_unit": {
-                "type": "string",
-                "required": False,
-                "nullable": True,
-                "default_setter": lambda doc:
-                None if isinstance(doc["width"], str)
-                else cdu.get_str("length")
-            },
-            "sigma_s": {
-                "anyof": [{
-                    "type": "number",
-                    "min": 0.
-                }, {
-                    "type": "string",
-                    "allowed": ["auto"]
-                }],
-                "default": "auto"
-            },
-            "sigma_s_unit": {
-                "type": "string",
-                "default": f"{cdu.get_str('length')}^-1"
-            }
-        })
-        return d
+    sigma_s = attrib(
+        default="auto",
+        converter=lambda x: x if x == "auto" else float(x),
+        validator=_validator_number_or_auto,
+        has_unit=True
+    )
+    sigma_s_unit = attrib_unit(
+        default=attr.Factory(lambda: cdu.get("length") ** -1),
+        compatible_units=ureg.m ** -1,
+    )
 
     @property
     def _albedo(self):
@@ -120,29 +54,24 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         return 1.
 
     @property
+    def _sigma_s(self):
+        """Return scattering coefficient based on configuration."""
+        if self.sigma_s == "auto":
+            wavelength = eradiate.mode.config["wavelength"]
+            return sigma_s_single(wavelength=wavelength)
+        else:
+            return self.get_quantity("sigma_s")
+
+    @property
     def _width(self):
         """Return scene width based on configuration."""
 
         # If width is not set, compute a value corresponding to an optically
         # thick layer (10x scattering mean free path)
-        width = self.config.get_quantity("width")
-
-        if width == "auto":
+        if self.width == "auto":
             return 10. / self._sigma_s
         else:
-            return width
-
-    @property
-    def _sigma_s(self):
-        """Return scattering coefficient based on configuration."""
-        sigma_s = self.config.get("sigma_s")
-
-        if sigma_s == "auto":
-            wavelength = eradiate.mode.config["wavelength"]
-            return sigma_s_single(wavelength=wavelength)
-        else:
-            sigma_s_unit = self.config.get("sigma_s_unit")
-            return ureg.Quantity(sigma_s, sigma_s_unit)
+            return self.get_quantity("width")
 
     def phase(self):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
@@ -159,7 +88,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 "phase": phase,
                 "sigma_t": {
                     "type": "uniform",
-                    "value": self._sigma_s.to(f"{kdu.get('length')}^-1").magnitude
+                    "value": self._sigma_s.to(kdu.get("length") ** -1).magnitude
                 },
                 "albedo": {
                     "type": "uniform",
@@ -177,8 +106,9 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             medium = self.media(ref=False)[f"medium_{self.id}"]
 
         width = self._width.to(kdu.get("length")).magnitude
-        height = self.config.get_quantity("height").to(kdu.get("length")).magnitude
-        height_offset = height * 0.01
+        height, offset = self._height
+        height = height.to(kdu.get("length")).magnitude
+        offset = offset.to(kdu.get("length")).magnitude
 
         return {
             f"shape_{self.id}": {
@@ -188,7 +118,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                     ScalarTransform4f([
                         [0.5 * width, 0., 0., 0.],
                         [0., 0.5 * width, 0., 0.],
-                        [0., 0., 0.5 * (height + height_offset), 0.5 * (height - height_offset)],
+                        [0., 0., 0.5 * (height + offset), 0.5 * (height - offset)],
                         [0., 0., 0., 1.],
                     ]),
                 "bsdf": {

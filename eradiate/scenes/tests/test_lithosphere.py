@@ -1,16 +1,14 @@
+import numpy as np
+
+
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.lithosphere import LambertianSurface, RPVSurface
+from eradiate.util.units import ureg
 
 
 def test_lambertian(mode_mono):
     # Default constructor
     ls = LambertianSurface()
-    assert ls.config == {
-        "id": "surface",
-        "reflectance": {"type": "uniform", "value": .5, "quantity": None},
-        "width": 1.,
-        "width_unit": "meter",
-    }
 
     # Check if produced scene can be instantiated
     kernel_dict = KernelDict.empty()
@@ -18,10 +16,7 @@ def test_lambertian(mode_mono):
     assert kernel_dict.load() is not None
 
     # Constructor with arguments
-    ls = LambertianSurface.from_dict({
-        "width": 1000.,
-        "reflectance": {"type": "uniform", "value": .3}
-    })
+    ls = LambertianSurface(width=1000., reflectance={"type": "uniform", "value": .3})
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(ls).load() is not None
@@ -39,7 +34,14 @@ def test_rpv(mode_mono):
     assert kernel_dict.load() is not None
 
     # Constructor with arguments
-    ls = RPVSurface.from_dict({"width": 1000., "rho_0": 0.3, "k": 1.4, "ttheta": -0.23})
+    ls = RPVSurface(
+        width=ureg.Quantity(1000., "km"),
+        width_unit=ureg.m,
+        rho_0=0.3,
+        k=1.4,
+        ttheta=-0.23
+    )
+    assert np.allclose(ls.width, 1e6)  # Check that unit conversion works as intended
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(ls).load() is not None

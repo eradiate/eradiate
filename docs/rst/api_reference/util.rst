@@ -15,6 +15,7 @@ Utility [eradiate.util]
    :recursive:
    :toctree: generated/
 
+    attrs
     collections
     config_object
     decorators

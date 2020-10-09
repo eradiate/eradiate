@@ -6,156 +6,178 @@
     .. factorytable::
         :modules: spectra
 """
+from abc import ABC
 
 import attr
 import numpy as np
+from pint import DimensionalityError
 
+from .core import SceneHelperFactory, SceneHelper
 from .. import data
 from ..data import SOLAR_IRRADIANCE_SPECTRA
+from ..util.attrs import attrib, attrib_float_positive, attrib_unit, validator_is_positive, validator_is_string
 from ..util.exceptions import ModeError
+from ..util.units import compatible
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
 from ..util.units import ureg
-from .core import Factory, SceneHelper
 
 
 @attr.s
-@Factory.register(name="uniform")
-class UniformSpectrum(SceneHelper):
+class Spectrum(SceneHelper, ABC):
+    """Spectrum abstract base class.
+
+    See :class:`SceneHelper` for undocumented members.
+    """
+    pass
+
+
+@SceneHelperFactory.register(name="uniform")
+@attr.s
+class UniformSpectrum(Spectrum):
     """Uniform spectrum scene generation helper [:factorykey:`uniform`].
 
-    .. admonition:: Configuration examples
-        :class: hint
+    See :class:`Spectrum` for undocumented members.
 
-        Default:
-            .. code:: python
-
-               {"value": 1.}
-
-    .. admonition:: Configuration format
-        :class: hint
+    Constructor arguments / instance attributes:
+        ``quantity`` ("radiance" or "irradiance" or "reflectance"):
+            Physical quantity represented by the current instance. This field is
+            used to automatically determine compatible units for the ``value``
+            field, as well as its default unit.
 
         ``value`` (float):
-            Spectrum constant value.
+            Spectrum constant value. Default: 1.
 
-            Default: 1.
+            Unit-enabled field (default: cdu[quantity]).
     """
 
-    @classmethod
-    def config_schema(cls):
-        return {
-            "value": {
-                "type": "number",
-                "min": 0.,
-                "default": 1.0,
-            },
-            "quantity": {
-                "type": "string",
-                "allowed": ["radiance", "irradiance"],
-                "default": "radiance",
-                "nullable": True
-            }
-        }
+    _valid_quantities = ("radiance", "irradiance", "reflectance")
+
+    quantity = attrib(
+        default="radiance",
+        validator=attr.validators.in_(_valid_quantities),
+    )
+
+    value = attrib_float_positive(
+        default=1.0,
+        has_unit=True
+    )
+
+    value_unit = attrib_unit(
+        default=None,  # Note: default is None here but handled in post-init step
+        compatible_units=[
+            cdu.get("radiance"), cdu.get("irradiance"), cdu.get("reflectance")
+        ],
+    )
+
+    def __attrs_post_init__(self):
+        # Check unit and quantity consistency
+        quantity_unit = cdu.get(self.quantity)
+
+        if self.value_unit is None:
+            # If no unit was specified, get default
+            self.value_unit = quantity_unit
+
+        else:
+            if not compatible(self.value_unit, quantity_unit):
+                raise DimensionalityError(
+                    self.value_unit,
+                    quantity_unit,
+                    extra_msg="inconsistent units between value and quantity "
+                              "fields"
+                )
+
+        # Apply parent class post-init (unit scaling)
+        super(UniformSpectrum, self).__attrs_post_init__()
 
     def kernel_dict(self, **kwargs):
-        if self.config["quantity"] == "radiance":
-            value = self.config["value"] * cdu.get("radiance")
-            value = value.to(kdu.get("radiance")).magnitude
-        elif self.config["quantity"] == "irradiance":
-            value = self.config["value"] * cdu.get("irradiance")
-            value = value.to(kdu.get("irradiance")).magnitude
-        elif self.config["quantity"] is None:
-            value = self.config["value"]
-        else:
-            raise ValueError(f"Unsupported quantity {self.config['quantity']}.")
+        value = self.get_quantity("value")
+        kernel_unit = kdu.get(self.quantity)
+
         return {
             "spectrum": {
                 "type": "uniform",
-                "value": value,
+                "value": value.to(kernel_unit).magnitude,
             }
         }
 
 
+@SceneHelperFactory.register(name="solar_irradiance")
 @attr.s
-@Factory.register(name="solar_irradiance")
-class SolarIrradianceSpectrum(SceneHelper):
+class SolarIrradianceSpectrum(Spectrum):
     """Solar irradiance spectrum scene generation helper
     [:factorykey:`solar_irradiance`].
 
     This scene generation helper produces the scene dictionary required to
     instantiate a kernel plugin using the Sun irradiance spectrum. The data set
-    used by this helper is controlled by the ``dataset`` configuration parameter
-    (see configuration format for the list of available data sets). The spectral
-    range of the data sets shipped can vary and an attempt for use outside of
-    the supported spectral range will raise a :class:`ValueError` upon calling
-    :meth:`kernel_dict`.
+    used by this helper is controlled by the ``dataset`` attribute (see
+    :data:`eradiate.data.SOLAR_IRRADIANCE_SPECTRA` for available data sets).
+
+    The spectral range of the data sets shipped can vary and an attempt for use
+    outside of the supported spectral range will raise a :class:`ValueError`
+    upon calling :meth:`kernel_dict`.
 
     The generated kernel dictionary varies based on the selected mode of
-    operation. By default, irradiance values are given in W/km^2/nm. The
-    ``scale`` parameter can be used to adjust the value based on unit conversion
-    or to account for variations of the Sun-planet distance.
+    operation. The ``scale`` parameter can be used to adjust the value based on
+    unit conversion or to account for variations of the Sun-planet distance.
 
-    .. admonition:: Configuration examples
-        :class: hint
+    The produced kernel dictionary automatically adjusts its irradiance units
+    depending on the selected kernel default units.
 
-        Default:
-            .. code:: python
-
-               {
-                   "dataset": "thuillier_2003",
-                   "scale": 1.
-               }
-
-    .. admonition:: Configuration format
-        :class: hint
-
+    Constructor arguments / instance attributes:
         ``dataset`` (str):
-            Dataset key.
-
-            Allowed values: see :attr:`eradiate.data.SOLAR_IRRADIANCE_SPECTRA`.
-
+            Dataset key. Allowed values: see
+            :attr:`eradiate.data.SOLAR_IRRADIANCE_SPECTRA`.
             Default: ``"thuillier_2003"``.
 
         ``scale`` (float):
-            Scaling factor.
-
-            Default: 1.
+            Scaling factor. Default: 1.
     """
 
-    @classmethod
-    def config_schema(cls):
-        return {
-            "dataset": {
-                "type": "string",
-                "allowed": list(SOLAR_IRRADIANCE_SPECTRA.keys()),
-                "default": "thuillier_2003",
-            },
-            "scale": {
-                "type": "number",
-                "min": 0.,
-                "default": 1.0,
-            }
-        }
+    #: Dataset identifier
+    dataset = attr.ib(
+        default="thuillier_2003",
+        validator=validator_is_string,
+    )
 
-    dataset = attr.ib(default=None)
+    scale = attr.ib(
+        default=1.,
+        converter=float,
+        validator=validator_is_positive,
+    )
 
-    def init(self):
-        dataset = self.config["dataset"]
+    @dataset.validator
+    def _dataset_validator(self, attribute, value):
+        if value not in SOLAR_IRRADIANCE_SPECTRA:
+            raise ValueError(f"while setting {attribute.name}: '{value}' not in "
+                             f"list of supported solar irradiance spectra "
+                             f"{str(list(SOLAR_IRRADIANCE_SPECTRA.keys()))}")
 
-        # Select dataset
+    @property
+    def quantity(self):
+        """Physical quantity associated to this spectrum.
+
+        Returns → str:
+            Always returns ``"irradiance"``."""
+        return "irradiance"
+
+    def __attrs_post_init__(self):
+        super(SolarIrradianceSpectrum, self).__attrs_post_init__()
+
+        # Load dataset
         try:
-            self.dataset = data.get(SOLAR_IRRADIANCE_SPECTRA[dataset])
+            self._data = data.get(SOLAR_IRRADIANCE_SPECTRA[self.dataset])
         except KeyError:
-            raise ValueError(f"unknown dataset {dataset}")
+            raise ValueError(f"unknown dataset {self.dataset}")
 
-    def kernel_dict(self, **kwargs):
+    def kernel_dict(self, ref=True):
         from eradiate import mode
 
         if mode.type == "mono":
             wavelength = mode.config.get("wavelength", None)
 
             irradiance_magnitude = float(
-                self.dataset["spectral_irradiance"].interp(
+                self._data["spectral_irradiance"].interp(
                     wavelength=wavelength,
                     method="linear",
                 ).values
@@ -168,7 +190,7 @@ class SolarIrradianceSpectrum(SceneHelper):
             # Apply units
             irradiance = ureg.Quantity(
                 irradiance_magnitude,
-                self.dataset["spectral_irradiance"].attrs["units"]
+                self._data["spectral_irradiance"].attrs["units"]
             )
 
             # Apply scaling, build kernel dict
@@ -176,7 +198,7 @@ class SolarIrradianceSpectrum(SceneHelper):
                 "spectrum": {
                     "type": "uniform",
                     "value": irradiance.to(kdu.get("irradiance")).magnitude *
-                             self.config["scale"]
+                             self.scale
                 }
             }
 

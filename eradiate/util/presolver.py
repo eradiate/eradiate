@@ -30,7 +30,8 @@ class PathResolver(metaclass=Singleton):
         return self.paths.__setitem__(key, value)
 
     def __repr__(self):
-        return f"FileResolver({[str(x) for x in self.paths]})"
+        s = ",\n".join(['  ' + str(x) for x in self.paths])
+        return f"FileResolver(path=[\n{s}\n])"
 
     def reset(self):
         """Reset path list to default value:

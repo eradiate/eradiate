@@ -9,6 +9,22 @@ import pint
 ureg = pint.UnitRegistry()
 
 
+def compatible(unit1, unit2):
+    """Check if two units are compatible. Accounts for angle units.
+
+    Parameter ``unit1`` (:class:`pint.Unit`):
+        First unit to check for compatibility.
+
+    Parameter ``unit2`` (:class:`pint.Unit`):
+        Second unit to check for compatibility.
+
+    Returns → bool
+        ``True`` if ``unit1`` and ``unit2`` have the same dimensionality,
+        ``False`` otherwise.
+    """
+    return (1. * unit1 / unit2).unitless
+
+
 class DefaultUnits:
     """An interface to flexibly access a set of units.
 
@@ -69,6 +85,8 @@ class DefaultUnits:
 
         if units is None:
             units = {
+                # We allow for dimensionless quantities
+                "dimensionless": lambda: ureg.dimensionless,
                 # Basic quantities must be named after their SI name
                 # https://en.wikipedia.org/wiki/International_System_of_Units
                 "length": lambda: ureg.m,
@@ -77,6 +95,7 @@ class DefaultUnits:
                 # Derived quantity names are more flexible
                 "wavelength": lambda: ureg.nm,
                 "angle": lambda: ureg.deg,
+                "reflectance": lambda: ureg.dimensionless,
                 # The following quantities will update automatically based on their parent units
                 "irradiance": lambda: ureg.watt / self.get("length") ** 2 / self.get("wavelength"),
                 "radiance": lambda: ureg.watt / self.get("length") ** 2 / ureg.steradian / self.get("wavelength"),
@@ -122,7 +141,8 @@ class DefaultUnits:
 
         for key, value in d.items():
             if isinstance(value, (str, ureg.Unit)):
-                to_update[key] = lambda value=value: ureg.Unit(value)  # https://stackoverflow.com/questions/11087047/deferred-evaluation-with-lambda-in-python
+                to_update[key] = lambda value=value: ureg.Unit(
+                    value)  # https://stackoverflow.com/questions/11087047/deferred-evaluation-with-lambda-in-python
             elif callable(value):
                 to_update[key] = value
             else:

@@ -78,6 +78,7 @@ intersphinx_mapping = {
     "xarray": ("http://xarray.pydata.org/en/stable/", None),
     "mitsuba": ("https://mitsuba2.readthedocs.io/en/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/latest/", None),
+    "attr": ("https://www.attrs.org/en/stable/", None),
 }
 
 # Activate todo notes

@@ -6,9 +6,7 @@ from sphinx.util import nested_parse_with_titles
 from tinydb import TinyDB, Query
 from tinydb.storages import MemoryStorage
 
-from eradiate.scenes.core import Factory
-
-factory = Factory()
+from eradiate.scenes.core import SceneHelperFactory
 
 factory_db = TinyDB(storage=MemoryStorage)
 factory_db.insert_multiple([
@@ -17,7 +15,7 @@ factory_db.insert_multiple([
         "module": str(value.__module__),
         "cls_name": str(value.__name__)
     }
-    for key, value in factory.table.items()
+    for key, value in SceneHelperFactory.registry.items()
 ])
 
 
@@ -47,15 +45,15 @@ class FactoryTable(Table):
         # Process list of modules for filtering
         modules = self.options.get("modules", None)
         if modules is None:
-            modules = factory.SUBMODULES
+            modules = SceneHelperFactory._submodules
         else:
             modules = [x.strip() for x in  modules.split(",")]
 
-        if not set(modules) <= set(factory.SUBMODULES):
+        if not set(modules) <= set(SceneHelperFactory._submodules):
             error = self.state_machine.reporter.error(
                 f"The following requested modules are not inspected by the " 
                 f"Eradiate factory: "
-                f"{', '.join(set(modules) - set(factory.SUBMODULES))}",
+                f"{', '.join(set(modules) - set(SceneHelperFactory._submodules))}",
                 nodes.literal_block(self.block_text, self.block_text),
                 line=self.lineno
             )

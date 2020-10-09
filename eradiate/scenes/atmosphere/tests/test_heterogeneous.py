@@ -2,23 +2,19 @@ from eradiate.data import presolver
 from eradiate.scenes.atmosphere.heterogeneous import HeterogeneousAtmosphere
 from eradiate.scenes.core import KernelDict
 from eradiate.util.collections import onedict_value
-from eradiate.util.units import kernel_default_units
+from eradiate.util.units import kernel_default_units, ureg
 
 
 def test_heterogeneous(mode_mono):
     from eradiate.kernel.core.xml import load_dict
 
     # Test default constructor
-    a = HeterogeneousAtmosphere({
-        "height": 100.,
-        "height_unit": "km",
-        "sigma_t": str(presolver.resolve(
-            "tests/textures/heterogeneous_atmosphere_mono/sigma_t.vol"
-        )),
-        "albedo": str(presolver.resolve(
-            "tests/textures/heterogeneous_atmosphere_mono/albedo.vol"
-        ))
-    })
+    a = HeterogeneousAtmosphere(
+        width=ureg.Quantity(100., ureg.km),
+        height=ureg.Quantity(100., ureg.km),
+        sigma_t=presolver.resolve("tests/textures/heterogeneous_atmosphere_mono/sigma_t.vol"),
+        albedo=presolver.resolve("tests/textures/heterogeneous_atmosphere_mono/albedo.vol")
+    )
 
     # Check if default output can be loaded
     p = a.phase()
