@@ -12,7 +12,7 @@ from eradiate.util.units import kernel_default_units as kdu
 def test_uniform(mode_mono):
     from eradiate.kernel.core.xml import load_dict
 
-    # Check if we can instantiate the helper
+    # Check if we can instantiate the element
     s = UniformSpectrum()
     assert s.value == 1.
     assert s.value_unit == cdu.get("radiance")
@@ -39,7 +39,7 @@ def test_uniform(mode_mono):
 def test_irradiance_spectrum(mode_mono):
     from eradiate.kernel.core.xml import load_dict
 
-    # Check if we can instantiate the helper
+    # Check if we can instantiate the element
     s = SolarIrradianceSpectrum()
 
     # Check that unsupported solar spectrum keywords raise
@@ -53,7 +53,7 @@ def test_irradiance_spectrum(mode_mono):
     s = SolarIrradianceSpectrum(scale=2.0)
     assert load_dict(onedict_value(s.kernel_dict())) is not None
 
-    # Check that the helper doesn't work out of the supported spectral range
+    # Check that the element doesn't work out of the supported spectral range
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
 
     with pytest.raises(ValueError):

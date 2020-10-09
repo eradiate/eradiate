@@ -70,13 +70,13 @@ class KernelDict(dict):
                                      f"with current variant '{variant}'")
 
     def add(self, content):
-        """Merge the content of a :class:`~eradiate.scenes.core.SceneHelper` or
+        """Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
         another dictionary object with the current :class:`KernelDict`.
 
-        Parameter ``content`` (:class:`~eradiate.scenes.core.SceneHelper` or list or dict)
+        Parameter ``content`` (:class:`~eradiate.scenes.core.SceneElement` or list or dict)
             Content to merge with the current scene. If ``content`` is a
-            :class:`~eradiate.scenes.core.SceneHelper` instance, its
-            :meth:`~eradiate.scenes.core.SceneHelper.kernel_dict` method will
+            :class:`~eradiate.scenes.core.SceneElement` instance, its
+            :meth:`~eradiate.scenes.core.SceneElement.kernel_dict` method will
             be called with ``ref`` set to `True`. If ``content`` is a list,
             :meth:`add` will be called for each element of it. If ``content`` is
             a dict, it will be merged without change.
@@ -86,7 +86,7 @@ class KernelDict(dict):
         # TODO: make variadic
         # TODO: accept merging KernelDict instances (after variant check)
 
-        if isinstance(content, SceneHelper):
+        if isinstance(content, SceneElement):
             for key, value in content.kernel_dict(ref=True).items():
                 self[key] = value
         elif isinstance(content, list):
@@ -109,18 +109,17 @@ class KernelDict(dict):
 
 @unit_enabled
 @attr.s
-class SceneHelper(ABC):
-    """Abstract class for all scene generation helpers.
+class SceneElement(ABC):
+    """Abstract class for all scene elements.
 
-    This abstract base class provides a basic template for all scene generation
-    helper classes. It is implemented using the
-    `attrs <https://www.attrs.org>`_ library.
+    This abstract base class provides a basic template for all scene element
+    classes. It is implemented using the `attrs <https://www.attrs.org>`_ library.
 
     .. note::
 
         This class is designed to integrate with the :class:`SceneFactory` class.
         See the corresponding documentation for a list of factory-enabled
-        scene generation helper classes.
+        scene element classes.
 
     Constructor arguments / public attributes
         ``id`` (str or None):
@@ -174,13 +173,13 @@ class SceneHelper(ABC):
         Parameter ``d`` (dict):
             Configuration dictionary used for initialisation.
 
-        Returns → :class:`~eradiate.scenes.core.SceneHelper`:
+        Returns → :class:`~eradiate.scenes.core.SceneElement`:
             Created object.
         """
         return cls(**d)
 
 
-class SceneHelperFactory(BaseFactory):
+class SceneElementFactory(BaseFactory):
     """This factory constructs objects whose classes are derived from
     :class:`SceneElement`. For optimal use, it needs to discover registered
     classes in modules listed in its :attr:`_submodules` class attribute.
@@ -192,7 +191,7 @@ class SceneHelperFactory(BaseFactory):
            :sections:
     """
 
-    _constructed_type = SceneHelper
+    _constructed_type = SceneElement
 
     #: List of submodules where to look for registered classes
     _submodules = [
@@ -206,11 +205,11 @@ class SceneHelperFactory(BaseFactory):
     @classmethod
     def _discover(cls):
         """Import submodules containing classes to be automatically added to
-        :class:`SceneHelperFactory`'s registry."""
+        :class:`SceneElementFactory`'s registry."""
         for module_name in cls._submodules:
             full_module_name = f"eradiate.scenes.{module_name}"
             importlib.import_module(full_module_name)
 
 
 # Trigger factory module discovery
-SceneHelperFactory._discover()
+SceneElementFactory._discover()

@@ -1,6 +1,6 @@
 """Illumination-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene generation helpers
+.. admonition:: Factory-enabled scene elements
     :class: hint
 
     .. factorytable::
@@ -11,7 +11,7 @@ from abc import ABC
 
 import attr
 
-from .core import SceneHelper, SceneHelperFactory
+from .core import SceneElement, SceneElementFactory
 from .spectra import SolarIrradianceSpectrum, UniformSpectrum
 from ..util.attrs import attrib, attrib_float_positive, attrib_unit
 from ..util.frame import angles_to_direction
@@ -20,10 +20,10 @@ from ..util.units import ureg
 
 
 @attr.s
-class Illumination(SceneHelper, ABC):
-    """Abstract base class for all illumination scene helpers.
+class Illumination(SceneElement, ABC):
+    """Abstract base class for all illumination scene elements.
 
-    See :class:`~eradiate.scenes.core.SceneHelper` for undocumented members.
+    See :class:`~eradiate.scenes.core.SceneElement` for undocumented members.
     """
 
     id = attr.ib(
@@ -32,10 +32,10 @@ class Illumination(SceneHelper, ABC):
     )
 
 
-@SceneHelperFactory.register(name="constant")
+@SceneElementFactory.register(name="constant")
 @attr.s
 class ConstantIllumination(Illumination):
-    """Constant illumination scene generation helper [:factorykey:`constant`].
+    """Constant illumination scene element [:factorykey:`constant`].
 
     See :class:`Illumination` for undocumented members.
 
@@ -49,7 +49,7 @@ class ConstantIllumination(Illumination):
 
     radiance = attrib(
         default=attr.Factory(UniformSpectrum),
-        converter=SceneHelperFactory.convert,
+        converter=SceneElementFactory.convert,
         validator=attr.validators.instance_of(UniformSpectrum),
     )
 
@@ -62,10 +62,10 @@ class ConstantIllumination(Illumination):
         }
 
 
-@SceneHelperFactory.register(name="directional")
+@SceneElementFactory.register(name="directional")
 @attr.s
 class DirectionalIllumination(Illumination):
-    """Directional illumination scene generation helper [:factorykey:`directional`].
+    """Directional illumination scene element [:factorykey:`directional`].
 
     The illumination is oriented based on the classical angular convention used
     in Earth observation.
@@ -107,7 +107,7 @@ class DirectionalIllumination(Illumination):
 
     irradiance = attrib(
         default=attr.Factory(SolarIrradianceSpectrum),
-        converter=SceneHelperFactory.convert,
+        converter=SceneElementFactory.convert,
         validator=[attr.validators.instance_of(
             (UniformSpectrum, SolarIrradianceSpectrum)
         )],

@@ -1,6 +1,6 @@
 """Measurement-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene generation helpers
+.. admonition:: Factory-enabled scene elements
     :class: hint
 
     .. factorytable::
@@ -12,7 +12,7 @@ from abc import abstractmethod
 import attr
 import numpy as np
 
-from .core import SceneHelperFactory, SceneHelper
+from .core import SceneElementFactory, SceneElement
 from ..util.attrs import attrib, attrib_float_positive, attrib_int_positive, attrib_unit, \
     validator_has_len
 from ..util.frame import angles_to_direction, spherical_to_cartesian
@@ -21,7 +21,7 @@ from ..util.units import kernel_default_units as kdu
 
 
 @attr.s
-class Measure(SceneHelper, ABC):
+class Measure(SceneElement, ABC):
     id = attr.ib(
         default="measure",
         validator=attr.validators.optional((attr.validators.instance_of(str))),
@@ -34,9 +34,9 @@ class Measure(SceneHelper, ABC):
         .. admonition:: Example
 
             The 1D application expects results to be packed such that the zenith and
-            azimuth angles form one dimension on the data each. The scene helpers which
-            are based on the :class:`~mitsuba.sensors.radiancemeterarray` sensor however
-            store the results in a one dimensional array, ignoring the arrangement of
+            azimuth angles form one dimension on the data each. Scene elements
+            based on the :class:`~mitsuba.sensors.radiancemeterarray` sensor however
+            store the results in a one-dimensional array, ignoring the arrangement of
             sensors.
 
         Parameter ``results`` (array):
@@ -50,10 +50,10 @@ class Measure(SceneHelper, ABC):
         pass
 
 
-@SceneHelperFactory.register(name="distant")
+@SceneElementFactory.register(name="distant")
 @attr.s
 class DistantMeasure(Measure):
-    """Distant measure scene generation helper [:factorykey:`distant`].
+    """Distant measure scene element [:factorykey:`distant`].
 
     The sensor is oriented based on the classical angular convention used
     in Earth observation.
@@ -141,10 +141,10 @@ class DistantMeasure(Measure):
         }
 
 
-@SceneHelperFactory.register(name="perspective")
+@SceneElementFactory.register(name="perspective")
 @attr.s
 class PerspectiveCameraMeasure(Measure):
-    """Perspective camera scene generation helper [:factorykey:`perspective`].
+    """Perspective camera scene element [:factorykey:`perspective`].
 
     The sensor is oriented based on the classical angular convention used
     in Earth observation.
@@ -284,10 +284,10 @@ class PerspectiveCameraMeasure(Measure):
         }
 
 
-@SceneHelperFactory.register(name="radiancemeter_hsphere")
+@SceneElementFactory.register(name="radiancemeter_hsphere")
 @attr.s
 class RadianceMeterHsphereMeasure(Measure):
-    """Distant hemispherical measure scene generation helper [:factorykey:`radiancemeter_hsphere`].
+    """Distant hemispherical measure scene element [:factorykey:`radiancemeter_hsphere`].
 
     This creates a :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin,
     covering the hemisphere defined by the "origin" point and the "direction" vector.

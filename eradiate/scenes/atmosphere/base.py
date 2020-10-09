@@ -1,10 +1,10 @@
-"""Basic facilities common to all atmosphere scene helpers."""
+"""Basic facilities common to all atmosphere scene elements."""
 
 from abc import ABC, abstractmethod
 
 import attr
 
-from ..core import SceneHelper
+from ..core import SceneElement
 from ...util.attrs import attrib, attrib_float_positive, attrib_unit
 from ...util.units import config_default_units as cdu
 from ...util.units import ureg
@@ -33,10 +33,10 @@ def _validator_number_or_auto(_, attribute, value):
 
 
 @attr.s
-class Atmosphere(SceneHelper, ABC):
+class Atmosphere(SceneElement, ABC):
     """An abstract base class defining common facilities for all atmospheres.
 
-    See :class:`~eradiate.scenes.core.SceneHelper` for undocumented members.
+    See :class:`~eradiate.scenes.core.SceneElement` for undocumented members.
 
     Constructor arguments / instance attributes:
 

@@ -6,7 +6,7 @@ from sphinx.util import nested_parse_with_titles
 from tinydb import TinyDB, Query
 from tinydb.storages import MemoryStorage
 
-from eradiate.scenes.core import SceneHelperFactory
+from eradiate.scenes.core import SceneElementFactory
 
 factory_db = TinyDB(storage=MemoryStorage)
 factory_db.insert_multiple([
@@ -15,7 +15,7 @@ factory_db.insert_multiple([
         "module": str(value.__module__),
         "cls_name": str(value.__name__)
     }
-    for key, value in SceneHelperFactory.registry.items()
+    for key, value in SceneElementFactory.registry.items()
 ])
 
 
@@ -45,15 +45,15 @@ class FactoryTable(Table):
         # Process list of modules for filtering
         modules = self.options.get("modules", None)
         if modules is None:
-            modules = SceneHelperFactory._submodules
+            modules = SceneElementFactory._submodules
         else:
             modules = [x.strip() for x in  modules.split(",")]
 
-        if not set(modules) <= set(SceneHelperFactory._submodules):
+        if not set(modules) <= set(SceneElementFactory._submodules):
             error = self.state_machine.reporter.error(
                 f"The following requested modules are not inspected by the " 
                 f"Eradiate factory: "
-                f"{', '.join(set(modules) - set(SceneHelperFactory._submodules))}",
+                f"{', '.join(set(modules) - set(SceneElementFactory._submodules))}",
                 nodes.literal_block(self.block_text, self.block_text),
                 line=self.lineno
             )
@@ -71,11 +71,11 @@ class FactoryTable(Table):
                                f":mod:`~eradiate.scenes.{submodule}`",
                                "—"])
 
-            for helper_info in factory_db.search(Query().module.matches(
+            for element_info in factory_db.search(Query().module.matches(
                     rf"^eradiate\.scenes\.{submodule}.*")):
-                factory_keyword = f"``{helper_info['key']}``"
-                class_module = helper_info["module"]
-                class_name = helper_info["cls_name"]
+                factory_keyword = f"``{element_info['key']}``"
+                class_module = element_info["module"]
+                class_name = element_info["cls_name"]
                 class_reference = f":class:`~{class_module}.{class_name}`"
                 member.append([factory_keyword, class_reference])
 

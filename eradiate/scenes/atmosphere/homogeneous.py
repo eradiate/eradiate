@@ -1,21 +1,21 @@
-"""Homogeneous atmosphere scene generation helpers."""
+"""Homogeneous atmosphere scene elements."""
 
 import attr
 
 import eradiate
 from .base import Atmosphere, _validator_number_or_auto
 from .radiative_properties.rayleigh import sigma_s_air
-from ..core import SceneHelperFactory
+from ..core import SceneElementFactory
 from ...util.attrs import attrib, attrib_unit
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
 
 
-@SceneHelperFactory.register("rayleigh_homogeneous")
+@SceneElementFactory.register("rayleigh_homogeneous")
 @attr.s()
 class RayleighHomogeneousAtmosphere(Atmosphere):
-    """Rayleigh homogeneous atmosphere scene generation helper
+    """Rayleigh homogeneous atmosphere scene element
     [:factorykey:`rayleigh_homogeneous`].
 
     This class builds an atmosphere consisting of a non-absorbing

@@ -1,6 +1,6 @@
 """Spectrum-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene generation helpers
+.. admonition:: Factory-enabled scene elements
     :class: hint
 
     .. factorytable::
@@ -12,7 +12,7 @@ import attr
 import numpy as np
 from pint import DimensionalityError
 
-from .core import SceneHelperFactory, SceneHelper
+from .core import SceneElementFactory, SceneElement
 from .. import data
 from ..data import SOLAR_IRRADIANCE_SPECTRA
 from ..util.attrs import attrib, attrib_float_positive, attrib_unit, validator_is_positive, validator_is_string
@@ -24,18 +24,18 @@ from ..util.units import ureg
 
 
 @attr.s
-class Spectrum(SceneHelper, ABC):
+class Spectrum(SceneElement, ABC):
     """Spectrum abstract base class.
 
-    See :class:`SceneHelper` for undocumented members.
+    See :class:`SceneElement` for undocumented members.
     """
     pass
 
 
-@SceneHelperFactory.register(name="uniform")
+@SceneElementFactory.register(name="uniform")
 @attr.s
 class UniformSpectrum(Spectrum):
-    """Uniform spectrum scene generation helper [:factorykey:`uniform`].
+    """Uniform spectrum scene element [:factorykey:`uniform`].
 
     See :class:`Spectrum` for undocumented members.
 
@@ -102,15 +102,15 @@ class UniformSpectrum(Spectrum):
         }
 
 
-@SceneHelperFactory.register(name="solar_irradiance")
+@SceneElementFactory.register(name="solar_irradiance")
 @attr.s
 class SolarIrradianceSpectrum(Spectrum):
-    """Solar irradiance spectrum scene generation helper
+    """Solar irradiance spectrum scene element
     [:factorykey:`solar_irradiance`].
 
-    This scene generation helper produces the scene dictionary required to
+    This scene element produces the scene dictionary required to
     instantiate a kernel plugin using the Sun irradiance spectrum. The data set
-    used by this helper is controlled by the ``dataset`` attribute (see
+    used by this element is controlled by the ``dataset`` attribute (see
     :data:`eradiate.data.SOLAR_IRRADIANCE_SPECTRA` for available data sets).
 
     The spectral range of the data sets shipped can vary and an attempt for use

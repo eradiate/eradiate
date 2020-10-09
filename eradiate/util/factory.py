@@ -31,7 +31,7 @@ class BaseFactory:
     .. admonition:: Example
 
         The following code snippet instantiates a
-        :class:`~eradiate.scenes.illumination.DirectionalIllumination` helper
+        :class:`~eradiate.scenes.illumination.DirectionalIllumination` element
         using its :factorykey:`directional` factory name:
 
         .. code:: python

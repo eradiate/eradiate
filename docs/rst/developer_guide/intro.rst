@@ -9,7 +9,7 @@ Developer guide
    conventions_practices
    documentation
    testing
-   scene_helper_guide
+   scene_element_guide
    adding_tutorials
 
 Eradiate's high-level components are written in Python 3. They rely on a kernel component which is a fork of the Mitsuba 2 rendering system, written in the C++17 programming language.

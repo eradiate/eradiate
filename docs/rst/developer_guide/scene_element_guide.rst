@@ -1,13 +1,13 @@
-.. _sec-developer_guide-scene_helper_guide:
+.. _sec-developer_guide-scene_element_guide:
 
-Writing a new scene helper
-==========================
+Writing a new scene element class
+=================================
 
 .. warning::
 
-   The entire helper architecture is built using the
+   The entire scene generation architecture is built using the
    `attrs <https://www.attrs.org>`_ library. It is strongly recommended to
-   read the ``attrs`` documentation prior to writing a new helper class. In
+   read the ``attrs`` documentation prior to writing a new element class. In
    particular, it is important to understand the ``attrs`` initialisation
    sequence, as well as how callables can be used to set defaults and to
    create converters and validators.
@@ -20,22 +20,22 @@ Writing a new scene helper
    `Pint <https://pint.readthedocs.io>`_, whose documentation is also a very
    helpful read.
 
-Scene helpers, deriving from the :class:`~eradiate.scenes.core.SceneHelper`
+Scene elements, deriving from the :class:`~eradiate.scenes.core.SceneElement`
 class, are the core of Eradiate's scene generation system. They provide an
 interface to quickly and safely generate kernel scene dictionary elements
 (see :class:`~eradiate.scenes.core.KernelDict`).
 
-The :class:`~eradiate.scenes.core.SceneHelper` base class
----------------------------------------------------------
+The :class:`~eradiate.scenes.core.SceneElement` base class
+----------------------------------------------------------
 
-:class:`~eradiate.scenes.core.SceneHelper` is the abstract base class for all
-scene helpers. We will see here how this class works, and then how to write a
-new scene helper subclass.
+:class:`~eradiate.scenes.core.SceneElement` is the abstract base class for all
+scene elements. We will see here how this class works, and then how to write a
+new scene element subclass.
 
-* :class:`~eradiate.scenes.core.SceneHelper` is decorated by :func:`attr.s`.
+* :class:`~eradiate.scenes.core.SceneElement` is decorated by :func:`attr.s`.
   This allows ``attrs`` to works nicely with its derived classes.
 
-* :class:`~eradiate.scenes.core.SceneHelper` is decorated by
+* :class:`~eradiate.scenes.core.SceneElement` is decorated by
   :func:`~eradiate.util.attrs.unit_enabled`. This activates a unit field
   association mechanism: each attribute defined with Eradiate's special
   :func:`~eradiate.util.attrs.attrib` wrapper (around :func:`attr.ib`) accepts a
@@ -48,12 +48,12 @@ new scene helper subclass.
 
   .. code-block:: python
 
-     from eradiate.scenes.core import SceneHelper
+     from eradiate.scenes.core import SceneElement
      from eradiate.util.units import ureg
      from eradiate.util.attrs import attrib, attrib_unit
 
      @attr.s
-     class MyHelper(SceneHelper):
+     class MyElement(SceneElement):
          # This field *must* have a corresponding unit field
          field = attrib(default=1., has_unit=True)
          # This is the corresponding unit field
@@ -61,14 +61,14 @@ new scene helper subclass.
 
          ...  # Rest of definition skipped
 
-* :class:`~eradiate.scenes.core.SceneHelper` works around unit quantities in
+* :class:`~eradiate.scenes.core.SceneElement` works around unit quantities in
   a convenient fashion. While all attributes are meant to be unitless and unit
   tracking done using the unit fields,
-  :class:`~eradiate.scenes.core.SceneHelper` and its derived classes can still
+  :class:`~eradiate.scenes.core.SceneElement` and its derived classes can still
   have their attributes initialised with :class:`pint.Quantity` instances (which
   *must* be created using Eradiate's unit registry
   :data:`eradiate.util.units.ureg`). When that happens,
-  :class:`~eradiate.scenes.core.SceneHelper`'s
+  :class:`~eradiate.scenes.core.SceneElement`'s
   `post-init hook <https://www.attrs.org/en/stable/init.html#post-init-hook>`_
   will strip units from the attribute, after converting it to the stored unit.
   An important consequence is that this post-init hook must be executed by
@@ -87,19 +87,19 @@ new scene helper subclass.
      .. code-block:: python
 
         # This is the basic way and will store 1 m
-        MyHelper(field=1)
+        MyElement(field=1)
         # This will store 1 m
-        MyHelper(field=Quantity(1, ureg.m))
+        MyElement(field=Quantity(1, ureg.m))
         # This will store 1 m
-        MyHelper(field=Quantity(100, ureg.cm), field_unit="m")
+        MyElement(field=Quantity(100, ureg.cm), field_unit="m")
         # This will store 100 cm
-        MyHelper(field=100, field_unit=ureg.cm)
+        MyElement(field=100, field_unit=ureg.cm)
         # This will store 1 m (default unit is meter)
-        MyHelper.from_dict(yaml.load("""
+        MyElement.from_dict(yaml.load("""
             field: 1.
         """))
         # This will store 100 cm
-        MyHelper.from_dict(yaml.load("""
+        MyElement.from_dict(yaml.load("""
             field: 100.
             field_unit: cm
         """))
@@ -107,46 +107,46 @@ new scene helper subclass.
      The last example initialises the object correctly without the need of any
      YAML post-processing, which is something Eradiate takes advantage of.
 
-* :class:`~eradiate.scenes.core.SceneHelper` has a single abstract method
-  :meth:`~eradiate.scenes.core.SceneHelper.kernel_dict` which must be
+* :class:`~eradiate.scenes.core.SceneElement` has a single abstract method
+  :meth:`~eradiate.scenes.core.SceneElement.kernel_dict` which must be
   implemented by its derived classes: it returns a dictionary which can be then
   used as an input of the Mitsuba kernel.
 
-Constructing helpers from the factory
--------------------------------------
+Constructing elements from the factory
+--------------------------------------
 
-The :class:`~eradiate.scenes.core.SceneHelperFactory` class can be used to
-construct registered :class:`~eradiate.scenes.core.SceneHelper` derived classes.
-Scene helpers can be made accessible through Eradiate's factory system very
+The :class:`~eradiate.scenes.core.SceneElementFactory` class can be used to
+construct registered :class:`~eradiate.scenes.core.SceneElement` derived classes.
+Scene elements can be made accessible through Eradiate's factory system very
 easily. The class definition simply has to be decorated using the
-:meth:`SceneHelperFactory.register() <eradiate.scenes.core.SceneHelperFactory.register>`
+:meth:`SceneElementFactory.register() <eradiate.scenes.core.SceneElementFactory.register>`
 decorator.
 
-At this point, it is also important to check if the module in which the helper
+At this point, it is also important to check if the module in which the element
 to be registered is located is properly registered as a search location in the
-:class:`~eradiate.scenes.core.SceneHelperFactory` class. By default,
-:class:`~eradiate.scenes.core.SceneHelperFactory` holds of list of submodules
+:class:`~eradiate.scenes.core.SceneElementFactory` class. By default,
+:class:`~eradiate.scenes.core.SceneElementFactory` holds of list of submodules
 where to search for factory-enabled classes; however, classes defined outside of
 Eradiate's codebase won't be included in that list and it's the user's
-responsibility to make sure that their custom helper classes are imported at
+responsibility to make sure that their custom element classes are imported at
 some point so as to be registered to the factory.
 
-In practice: Steps to write a new scene helper class
-----------------------------------------------------
+In practice: Steps to write a new scene element class
+-----------------------------------------------------
 
-Following the above description, a new scene helper class requires the following steps:
+Following the above description, a new scene element class requires the following steps:
 
-1. Derive a new class from :class:`~eradiate.scenes.core.SceneHelper`. Decorate
+1. Derive a new class from :class:`~eradiate.scenes.core.SceneElement`. Decorate
    it with :func:`attr.s`.
 2. Declare your custom attributes using :func:`~eradiate.util.attrs.attrib`.
    Don't hesitate to use the ``has_unit`` parameter to leverage the automatic
    unit handling system. If you do so, :func:`~eradiate.util.attrs.attrib_unit`
    will help you define your unit fields.
-3. Implement the :meth:`~eradiate.scenes.core.SceneHelper.kernel_dict` method.
+3. Implement the :meth:`~eradiate.scenes.core.SceneElement.kernel_dict` method.
    Things to keep in mind:
 
    * kernel imports must be local to the
-     :meth:`~eradiate.scenes.core.SceneHelper.kernel_dict` method;
+     :meth:`~eradiate.scenes.core.SceneElement.kernel_dict` method;
    * the function's signature should allow for the processing of a ``ref``
      keyword argument (but using it is not required).
 
@@ -154,7 +154,7 @@ The following steps are optional:
 
 * implement a post-init hook steps using the ``__attrs_post_init__()`` method
   (don't forget to call
-  :meth:`SceneHelper.__attrs_post_init__() <eradiate.scenes.core.SceneHelper.__attrs_post_init__()>`
+  :meth:`SceneElement.__attrs_post_init__() <eradiate.scenes.core.SceneElement.__attrs_post_init__()>`
   at some point or you'll lose the unit handling);
 * enable factory-based instantiation using the
-  :meth:`SceneHelperFactory.register() <eradiate.scenes.core.SceneHelperFactory.register>` decorator.
+  :meth:`SceneElementFactory.register() <eradiate.scenes.core.SceneElementFactory.register>` decorator.

@@ -12,7 +12,7 @@ import xarray as xr
 
 import eradiate.kernel
 
-from ...scenes.core import SceneHelperFactory, KernelDict
+from ...scenes.core import SceneElementFactory, KernelDict
 from ...util import ensure_array, view
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
@@ -83,7 +83,7 @@ class RayleighSolverApp(ConfigObject):
             This section must be a factory configuration dictionary which will
             be passed to :meth:`eradiate.scenes.core.Factory.create`.
 
-            Allowed scene generation helpers:
+            Allowed scene elements:
             :factorykey:`lambertian`,
             :factorykey:`rpv`
 
@@ -96,7 +96,7 @@ class RayleighSolverApp(ConfigObject):
             be passed to :meth:`eradiate.scenes.core.Factory.create`.
             If set to ``None``, no atmosphere is added to the scene.
 
-            Allowed scene generation helpers:
+            Allowed scene elements:
             :factorykey:`rayleigh_homogeneous`.
 
             Default:
@@ -107,7 +107,7 @@ class RayleighSolverApp(ConfigObject):
             This section must be a factory configuration dictionary which will
             be passed to :meth:`eradiate.scenes.core.Factory.create`.
 
-            Allowed scene generation helpers:
+            Allowed scene elements:
             :factorykey:`constant`,
             :factorykey:`directional`,
 
@@ -236,7 +236,7 @@ class RayleighSolverApp(ConfigObject):
 
     # Instance attributes
     _kernel_dict = attr.ib(default=None)
-    _helpers = attr.ib(default=None)
+    _elements = attr.ib(default=None)
     _runner = attr.ib(default=None)
     _measure_map = attr.ib(default=None)
     results = attr.ib(init=False, factory=xr.Dataset)
@@ -273,7 +273,7 @@ class RayleighSolverApp(ConfigObject):
 
     def _configure_scene(self):
         config = deepcopy(self.config)
-        self._helpers = {}
+        self._elements = {}
         self._kernel_dict = KernelDict.empty()
 
         with cdu.override({"length": "km"}):
@@ -282,17 +282,16 @@ class RayleighSolverApp(ConfigObject):
                 wavelength = config["mode"]["wavelength"]
 
                 # Set illumination
-                self._helpers["illumination"] = SceneHelperFactory.create(
-                    self.config["illumination"])
+                self._elements["illumination"] = SceneElementFactory.create(self.config["illumination"])
 
                 # Set atmosphere
                 config_atmosphere = config.get("atmosphere", None)
 
                 if config_atmosphere is not None:
-                    self._helpers["atmosphere"] = SceneHelperFactory.create(config_atmosphere)
+                    self._elements["atmosphere"] = SceneElementFactory.create(config_atmosphere)
 
                 # Set surface
-                atmosphere = self._helpers.get("atmosphere", None)
+                atmosphere = self._elements.get("atmosphere", None)
                 if atmosphere is not None:
                     if "width" in config["surface"].keys():
                         warnings.warn(
@@ -302,7 +301,7 @@ class RayleighSolverApp(ConfigObject):
                     config["surface"]["width"] = atmosphere._width.magnitude
                     config["surface"]["width_unit"] = str(atmosphere._width.units)
 
-                self._helpers["surface"] = SceneHelperFactory.create(config["surface"])
+                self._elements["surface"] = SceneElementFactory.create(config["surface"])
 
                 # Set measure
                 for measure in self.config["measure"]:
@@ -317,31 +316,31 @@ class RayleighSolverApp(ConfigObject):
 
                     if measure["type"] == "toa_lo_pplane":
                         if "orientation" not in measure:
-                            phi_i = self._helpers["illumination"].config["azimuth"]
+                            phi_i = self._elements["illumination"].config["azimuth"]
                             measure["orientation"] = [np.cos(phi_i), np.sin(phi_i), 0]
-                        helper_config = deepcopy(measure)
-                        helper_config["type"] = "radiance_pplane"
-                        helper_config["id"] = "toa_lo_pplane"
+                        element_config = deepcopy(measure)
+                        element_config["type"] = "radiance_pplane"
+                        element_config["id"] = "toa_lo_pplane"
                     else:
-                        helper_config = deepcopy(measure)
-                        helper_config["type"] = "radiancemeter_hsphere"
-                        helper_config["id"] = "toa_lo_hsphere"
+                        element_config = deepcopy(measure)
+                        element_config["type"] = "radiancemeter_hsphere"
+                        element_config["id"] = "toa_lo_hsphere"
 
-                    helper_config["hemisphere"] = "back"
-                    measure_obj = SceneHelperFactory.create(helper_config)
+                    element_config["hemisphere"] = "back"
+                    measure_obj = SceneElementFactory.create(element_config)
 
-                    if measure_obj.id in self._helpers:
+                    if measure_obj.id in self._elements:
                         raise AttributeError(f"Multiple measures with ID {measure_obj.id}"
                                              f" found.  Ensure unique IDs for all measures.")
                     else:
-                        self._helpers[measure_obj.id] = measure_obj
+                        self._elements[measure_obj.id] = measure_obj
 
-                # Expand helpers to kernel scene dictionary
-                self._kernel_dict.add(list(self._helpers.values()))
+                # Expand elements to kernel scene dictionary
+                self._kernel_dict.add(list(self._elements.values()))
 
     def compute(self):
         # Ensure that scalar values used as xarray coordinates are arrays
-        illumination = self._helpers["illumination"]
+        illumination = self._elements["illumination"]
 
         theta_i = ensure_array(illumination.zenith, dtype=float)
         phi_i = ensure_array(illumination.azimuth, dtype=float)
@@ -352,19 +351,19 @@ class RayleighSolverApp(ConfigObject):
 
         for key, data in data.items():
 
-            data = self._helpers[key].repack_results(data)
+            data = self._elements[key].repack_results(data)
 
             for dim in [0, 1, 4]:
                 data = np.expand_dims(data, dim)
 
-            zenith_res = self._helpers[key].zenith_res
-            azimuth_res = self._helpers[key].azimuth_res
+            zenith_res = self._elements[key].zenith_res
+            azimuth_res = self._elements[key].azimuth_res
 
             if key == "toa_lo_hsphere":
                 theta_o = np.arange(0., 90., zenith_res)
                 phi_o = np.arange(0., 360.001, azimuth_res)
                 result_type = "hemisphere"
-            # TODO: Fix this once the pplane scene helper is merged
+            # TODO: Fix this once the pplane scene element is merged
             # elif key == "toa_lo_pplane":
             #     theta_o = np.arange(0., 90., self.config["measure"]["zenith_res"])
             #     phi_o = np.array([0, 180])

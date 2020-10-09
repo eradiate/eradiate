@@ -1,6 +1,6 @@
 """Lithosphere-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene generation helpers
+.. admonition:: Factory-enabled scene elements
     :class: hint
 
     .. factorytable::
@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 
 import attr
 
-from .core import SceneHelperFactory, SceneHelper
+from .core import SceneElementFactory, SceneElement
 from .spectra import UniformSpectrum
 from ..util.attrs import attrib, attrib_float_positive, attrib_unit
 from ..util.units import config_default_units as cdu, ureg
@@ -19,7 +19,7 @@ from ..util.units import kernel_default_units as kdu
 
 
 @attr.s
-class Surface(SceneHelper, ABC):
+class Surface(SceneElement, ABC):
     """An abstract base class defining common facilities for all surfaces.
     """
 
@@ -88,10 +88,10 @@ class Surface(SceneHelper, ABC):
         return kernel_dict
 
 
-@SceneHelperFactory.register(name="lambertian")
+@SceneElementFactory.register(name="lambertian")
 @attr.s
 class LambertianSurface(Surface):
-    """Lambertian surface scene generation helper [:factorykey:`lambertian`].
+    """Lambertian surface scene element [:factorykey:`lambertian`].
 
     This class creates a square surface to which a Lambertian BRDF is attached.
 
@@ -122,7 +122,7 @@ class LambertianSurface(Surface):
             This section must be a factory configuration dictionary which will
             be passed to :meth:`.Factory.create`.
 
-            Allowed scene generation helpers:
+            Allowed scene elements:
             :factorykey:`uniform` (if selected, ``value`` must be in [0, 1]).
 
             Default:
@@ -131,7 +131,7 @@ class LambertianSurface(Surface):
 
     reflectance = attrib(
         default=attr.Factory(lambda: UniformSpectrum(quantity="reflectance", value=0.5)),
-        converter=SceneHelperFactory.convert,
+        converter=SceneElementFactory.convert,
         validator=attr.validators.instance_of(UniformSpectrum),
     )
 
@@ -144,10 +144,10 @@ class LambertianSurface(Surface):
         }
 
 
-@SceneHelperFactory.register(name="rpv")
+@SceneElementFactory.register(name="rpv")
 @attr.s
 class RPVSurface(Surface):
-    """RPV surface scene generation helper [:factorykey:`rpv`].
+    """RPV surface scene element [:factorykey:`rpv`].
 
     This class creates a square surface to which a RPV BRDF
     :cite:`Rahman1993CoupledSurfaceatmosphereReflectance`

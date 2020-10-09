@@ -1,6 +1,6 @@
 """Atmosphere-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene generation helpers
+.. admonition:: Factory-enabled scene generation elements
     :class: hint
 
     .. factorytable::

@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 import eradiate.kernel
-from eradiate.scenes.core import SceneHelperFactory, KernelDict, SceneHelper
+from eradiate.scenes.core import SceneElementFactory, KernelDict, SceneElement
 from eradiate.util.attrs import attrib, attrib_unit, validator_has_len, validator_is_number, validator_is_positive
 from eradiate.util.exceptions import KernelVariantError
 from eradiate.util.units import ureg
@@ -52,7 +52,7 @@ def test_kernel_dict():
 
 
 @attr.s
-class TinyDirectional(SceneHelper):
+class TinyDirectional(SceneElement):
     id = attrib(
         default="illumination",
         validator=attr.validators.instance_of(str),
@@ -86,7 +86,7 @@ class TinyDirectional(SceneHelper):
         }
 
 
-def test_scene_helper(mode_mono):
+def test_scene_element(mode_mono):
     # Default constructor (check if defaults are applied as intended)
     d = TinyDirectional()
     assert attr.asdict(d) == {
@@ -131,17 +131,17 @@ def test_scene_helper(mode_mono):
 
 def test_factory():
     # We expect that correct object specification will yield an object
-    assert SceneHelperFactory.create({"type": "directional", "zenith": 45.}) is not None
+    assert SceneElementFactory.create({"type": "directional", "zenith": 45.}) is not None
 
     # We expect that incorrect object specification will raise
     # (here, the 'direction' field is not part of the expected parameters)
     with pytest.raises(TypeError):
-        SceneHelperFactory.create({"type": "directional", "direction": [0, -1, -1]})
+        SceneElementFactory.create({"type": "directional", "direction": [0, -1, -1]})
 
     # We expect that an empty dict will raise
     with pytest.raises(KeyError):
-        SceneHelperFactory.create({})
+        SceneElementFactory.create({})
 
     # We expect that an unregistered 'type' will raise
     with pytest.raises(ValueError):
-        SceneHelperFactory.create({"type": "dzeiaticional"})
+        SceneElementFactory.create({"type": "dzeiaticional"})

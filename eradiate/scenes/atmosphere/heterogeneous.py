@@ -1,4 +1,4 @@
-""" Heterogeneous atmosphere scene generation helpers """
+""" Heterogeneous atmosphere scene generation elements """
 import tempfile
 from pathlib import Path
 
@@ -7,7 +7,7 @@ import numpy as np
 import xarray as xr
 
 from .base import Atmosphere
-from ..core import SceneHelperFactory
+from ..core import SceneElementFactory
 from ...util.attrs import attrib, attrib_unit, validator_is_file
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
@@ -65,10 +65,10 @@ def _dataarray_to_ndarray(value):
         return value
 
 
-@SceneHelperFactory.register("heterogeneous")
+@SceneElementFactory.register("heterogeneous")
 @attr.s
 class HeterogeneousAtmosphere(Atmosphere):
-    r"""Heterogeneous atmosphere scene generation helper
+    r"""Heterogeneous atmosphere scene generation element
     [:factorykey:`heterogeneous`].
 
     See :class:`~eradiate.scenes.atmosphere.base.Atmosphere` for undocumented
