@@ -24,8 +24,8 @@ def test_compute_monochromatic_radiative_properties():
         wavelength=wavelength,
         absorption_on=False
     )
-    from eradiate.scenes.atmosphere.radiative_properties.rayleigh import sigma_s_single
-    sigma_s = sigma_s_single(
+    from eradiate.scenes.atmosphere.radiative_properties.rayleigh import sigma_s_air
+    sigma_s = sigma_s_air(
         wavelength=wavelength,
         number_density=_Q(profile.n_tot.values, profile.n_tot.units)
     ).to("m^-1")

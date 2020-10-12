@@ -25,8 +25,10 @@ import numpy as np
 import xarray as xr
 
 from eradiate import __version__
+from ....util.units import ureg
+from .rayleigh import sigma_s_air
 
-from .rayleigh import _IOR_DRY_AIR, _Q, sigma_s_single
+_Q = ureg.Quantity
 
 
 def compute_monochromatic_radiative_properties(profile, wavelength=550.,
@@ -65,7 +67,7 @@ def compute_monochromatic_radiative_properties(profile, wavelength=550.,
     # compute scattering coefficient
     sigma_s = np.full(profile.n.shape, np.nan)
     if scattering_on:
-        sigma_s = sigma_s_single(
+        sigma_s = sigma_s_air(
             wavelength=wavelength,
             number_density=_Q(profile.n_tot.values, profile.n_tot.units)
         )

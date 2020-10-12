@@ -5,7 +5,7 @@ import eradiate
 from eradiate.scenes.atmosphere.homogeneous import \
     RayleighHomogeneousAtmosphere
 from eradiate.scenes.atmosphere.radiative_properties.rayleigh import \
-    sigma_s_single
+    sigma_s_air
 from eradiate.scenes.core import KernelDict
 from eradiate.util.collections import onedict_value
 from eradiate.util.units import config_default_units, ureg
@@ -42,10 +42,10 @@ def test_rayleigh_homogeneous(mode_mono, ref):
 
     # check if sigma_s was correctly computed using the mode wavelength value
     wavelength = ureg.Quantity(eradiate.mode.config["wavelength"], eradiate.mode.config["wavelength_unit"])
-    assert np.isclose(r._sigma_s, sigma_s_single(wavelength=wavelength))
+    assert np.isclose(r._sigma_s, sigma_s_air(wavelength=wavelength))
 
     # check if automatic scene width works as intended
-    assert np.isclose(r._width, 10. / sigma_s_single(wavelength=wavelength))
+    assert np.isclose(r._width, 10. / sigma_s_air(wavelength=wavelength))
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(r).load() is not None
@@ -53,4 +53,4 @@ def test_rayleigh_homogeneous(mode_mono, ref):
     # Check that sigma_s wavelength specification is correctly taken from eradiate mode
     eradiate.mode.config["wavelength"] = 650.
     r = RayleighHomogeneousAtmosphere(sigma_s="auto")
-    assert r._sigma_s != sigma_s_single(wavelength=550.)
+    assert r._sigma_s != sigma_s_air(wavelength=550.)

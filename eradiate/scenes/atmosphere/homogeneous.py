@@ -4,7 +4,7 @@ import attr
 
 import eradiate
 from .base import Atmosphere, _validator_number_or_auto
-from .radiative_properties.rayleigh import sigma_s_single
+from .radiative_properties.rayleigh import sigma_s_air
 from ..core import SceneHelperFactory
 from ...util.attrs import attrib, attrib_unit
 from ...util.units import config_default_units as cdu
@@ -20,7 +20,8 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
 
     This class builds an atmosphere consisting of a non-absorbing
     homogeneous medium. Scattering uses the Rayleigh phase function and the
-    Rayleigh scattering coefficient of a single gas.
+    Rayleigh scattering coefficient of air at standard number density (
+    see :func:`sigma_s_air`).
 
     See :class:`~eradiate.scenes.atmosphere.base.Atmosphere` for undocumented
     members.
@@ -29,7 +30,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         ``sigma_s`` (float or "auto"):
             Atmosphere scattering coefficient value. If set to ``"auto"``,
             the scattering coefficient will be computed based on the current
-            operational mode configuration using the :func:`sigma_s_single`
+            operational mode configuration using the :func:`sigma_s_air`
             function. Default: ``"auto"``.
 
 
@@ -58,7 +59,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         """Return scattering coefficient based on configuration."""
         if self.sigma_s == "auto":
             wavelength = eradiate.mode.config["wavelength"]
-            return sigma_s_single(wavelength=wavelength)
+            return sigma_s_air(wavelength=wavelength)
         else:
             return self.get_quantity("sigma_s")
 
