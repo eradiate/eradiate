@@ -23,15 +23,17 @@ def test_default_units():
 
     # Test evaluation method
     assert du.units() == {
-        "dimensionless": ureg.dimensionless,
-        "length": ureg.m,
-        "time": ureg.s,
-        "mass": ureg.kg,
-        "wavelength": ureg.nm,
+        "albedo": ureg.dimensionless,
         "angle": ureg.deg,
-        "irradiance": ureg.Quantity("W/m^2/nm"),
-        "radiance": ureg.Quantity("W/m^2/nm/sr"),
+        "collision_coefficient": ureg.Unit("m^-1"),
+        "dimensionless": ureg.dimensionless,
+        "irradiance": ureg.Unit("W/m^2/nm"),
+        "length": ureg.m,
+        "mass": ureg.kg,
+        "radiance": ureg.Unit("W/m^2/nm/sr"),
         "reflectance": ureg.dimensionless,
+        "time": ureg.s,
+        "wavelength": ureg.nm,
     }
 
     # Test updater (not part of the public API so we don't have a lot of safeguards there)

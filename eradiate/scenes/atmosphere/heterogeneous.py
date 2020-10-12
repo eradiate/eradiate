@@ -1,4 +1,5 @@
 """ Heterogeneous atmosphere scene generation helpers """
+import tempfile
 from pathlib import Path
 
 import attr
@@ -7,8 +8,10 @@ import xarray as xr
 
 from .base import Atmosphere
 from ..core import SceneHelperFactory
-from ...util.attrs import attrib
+from ...util.attrs import attrib, attrib_unit, validator_is_file
+from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
+from ...util.units import ureg
 
 
 def write_binary_grid3d(filename, values):
@@ -55,45 +58,196 @@ def write_binary_grid3d(filename, values):
         f.write(values.ravel().astype(np.float32).tobytes())
 
 
+def _dataarray_to_ndarray(value):
+    if isinstance(value, xr.DataArray):
+        return value.values
+    else:
+        return value
+
+
 @SceneHelperFactory.register("heterogeneous")
 @attr.s
 class HeterogeneousAtmosphere(Atmosphere):
     r"""Heterogeneous atmosphere scene generation helper
     [:factorykey:`heterogeneous`].
 
+    See :class:`~eradiate.scenes.atmosphere.base.Atmosphere` for undocumented
+    members.
+
     This class builds a one-dimensional heterogeneous atmosphere. The used
-    optical properties are specified as binary files. Binary data files can
-    be generated from :class:`~xarray.DataArray` s or :class:`~numpy.ndarray` s
-    using the :func:`write_binary_grid3d` function.
+    radiative properties can be specified two ways:
+
+    - if the ``albedo`` and ``sigma_t`` fields are specified, kernel volume data
+      files will be created using those data;
+    - if the ``albedo`` and ``sigma_t`` fields are not specified (_i.e._ set to
+      ``None``), kernel volume data files will be read from locations set in
+      the ``albedo_fname`` and ``sigma_t_fname`` attributes.
+
+    .. note::
+
+       It is possible to mix and match approaches (_e.g._ provide an array
+       for ``albedo`` and a file path for ``sigma_t``.
+
+    If ``albedo`` and ``sigma_t`` are specified:
+
+    - if ``albedo_fname`` and ``sigma_t_fname`` are specified, data files will
+      be written to those paths;
+    - if ``albedo_fname`` and ``sigma_t_fname`` are not specified (_i.e._ set
+      to ``None``), filenames will be generated based on ``cache_dir``.
+
+    .. note::
+
+       Generated files are not destroyed after execution and can be accessed
+       using paths saved in the ``albedo_fname`` and ``sigma_t_fname`` fields.
 
     .. warning::
 
-       Optical property data will not be scaled by default unit override:
-       they must manually be specified in the appropriate kernel units.
+       While radiative properties specified using the ``albedo`` and ``sigma_t``
+       fields will be scaled according by default unit override, existing volume
+       data will not.
 
     Constructor arguments / instance attributes:
-        ``sigma_t`` (path-like):
-            Path to the extinction coefficient volume data file.
+        ``albedo`` (:class:`~numpy.ndarray` or :class:`~xarray.DataArray` or None):
+            Array containing albedo values. If ``None``, volume data will be
+            directly loaded from ``albedo_fname``.
 
-            *Required* (no default).
+            Unit-enabled field (default unit: dimensionless).
 
-        ``albedo`` (path-like):
-            Path to the single scattering albedo volume data file.
+        ``albedo_fname`` (path-like or None):
+            Path to the single scattering albedo volume data file. If ``None``,
+            a value will be created when the file will be requested.
+            Default: ``None``.
 
-            *Required* (no default).
+        ``sigma_t`` (:class:`~numpy.ndarray` or :class:`~xarray.DataArray` or None):
+            Array containing scattering coefficient values. If ``None``, volume
+            data will be directly loaded from ``sigma_t_fname``.
+
+            Unit-enabled field (default unit: cdu[length]^-1).
+
+        ``sigma_t_fname`` (path-like or None):
+            Path to the extinction coefficient volume data file. If ``None``,
+            a value will be created when the file will be requested.
+            Default: ``None``.
+
+        ``cache_dir`` (path-like or None):
+            Path to a cache directory where volume data files will be created.
+            If ``None``, a temporary cache directory will be used.
     """
 
     albedo = attrib(
         default=None,
-        converter=Path,
-        validator=attr.validators.instance_of(Path)
+        converter=_dataarray_to_ndarray,
+        validator=attr.validators.optional(attr.validators.instance_of(np.ndarray)),
+        has_unit=True
     )
+
+    albedo_unit = attrib_unit(
+        compatible_units=ureg.dimensionless,
+        default=attr.Factory(lambda: cdu.get("dimensionless"))
+    )
+
+    albedo_fname = attrib(
+        default=None,
+        converter=attr.converters.optional(Path)
+    )
+
+    @albedo_fname.validator
+    def _albedo_fname_validator(self, attribute, value):
+        # The file should exist if no albedo value is provided to create it
+        if self.albedo is None:
+            if value is None:
+                raise ValueError("if 'albedo' is not set, "
+                                 "'albedo_fname' must be set")
+            try:
+                return validator_is_file(self, attribute, value)
+            except FileNotFoundError:
+                raise
+
+    @property
+    def _albedo_quantity(self):
+        """Returns → ``"albedo"``"""
+        return "albedo"
 
     sigma_t = attrib(
         default=None,
-        converter=Path,
-        validator=attr.validators.instance_of(Path)
+        converter=_dataarray_to_ndarray,
+        validator=attr.validators.optional(attr.validators.instance_of(np.ndarray)),
+        has_unit=True
     )
+
+    sigma_t_unit = attrib_unit(
+        compatible_units=ureg.m ** -1,
+        default=attr.Factory(lambda: cdu.get("length") ** -1)
+    )
+
+    sigma_t_fname = attrib(
+        default=None,
+        converter=attr.converters.optional(Path),
+    )
+
+    @sigma_t_fname.validator
+    def _sigma_t_fname_validator(self, attribute, value):
+        # The file should exist if no sigma_t value is provided to create it
+        if self.sigma_t is None:
+            if value is None:
+                raise ValueError("if 'sigma_t' is not set, "
+                                 "'sigma_t_fname' must be set")
+            try:
+                return validator_is_file(self, attribute, value)
+            except FileNotFoundError:
+                raise
+
+    @property
+    def _sigma_t_quantity(self):
+        """Returns → ``"collision_coefficient"``"""
+        return "collision_coefficient"
+
+    _cache_dir = attrib(
+        default=None,
+        converter=attr.converters.optional(Path)
+    )
+
+    def __attrs_post_init__(self):
+        super(HeterogeneousAtmosphere, self).__attrs_post_init__()
+
+        # Prepare cache directory in case we'd need it
+        if self._cache_dir is None:
+            self._cache_dir = Path(tempfile.mkdtemp())
+        else:
+            self._cache_dir.mkdir(parents=True, exist_ok=True)
+
+    def make_volume_data(self, fields=None):
+        supported_fields = {"albedo", "sigma_t"}
+        if fields is None:
+            fields = supported_fields
+        elif isinstance(fields, str):
+            fields = {fields}
+
+        for field in fields:
+            # Is the requested field supported?
+            if field not in supported_fields:
+                raise ValueError(f"field {field} cannot be used to create "
+                                 f"volume data")
+
+            # Does the considered field have values?
+            field_values = getattr(self, field)
+            if field_values is None:
+                raise ValueError(f"field {field} is empty, cannot create "
+                                 f"volume data")
+            field_unit = getattr(self, f"{field}_unit")
+            field_quantity = ureg.Quantity(field_values, field_unit)
+
+            # If file name is not specified, we create one
+            field_fname = getattr(self, f"{field}_fname")
+            if field_fname is None:
+                field_fname = self._cache_dir / f"{field}.vol"
+                setattr(self, f"{field}_fname", field_fname)
+
+            # We have the data and the filename: we can create the file
+            write_binary_grid3d(
+                field_fname,
+                field_quantity.to(kdu.get(getattr(self, f"_{field}_quantity"))).magnitude
+            )
 
     @property
     def _width(self):
@@ -123,6 +277,13 @@ class HeterogeneousAtmosphere(Atmosphere):
             [0., 0., 0., 1.],
         ])
 
+        # Create volume data files if possible
+        if self.albedo is not None:
+            self.make_volume_data("albedo")
+
+        if self.sigma_t is not None:
+            self.make_volume_data("sigma_t")
+
         # Output kernel dict
         return {
             f"medium_{self.id}": {
@@ -130,12 +291,12 @@ class HeterogeneousAtmosphere(Atmosphere):
                 "phase": {"type": "rayleigh"},
                 "sigma_t": {
                     "type": "gridvolume",
-                    "filename": str(self.sigma_t),
+                    "filename": str(self.sigma_t_fname),
                     "to_world": trafo
                 },
                 "albedo": {
                     "type": "gridvolume",
-                    "filename": str(self.albedo),
+                    "filename": str(self.albedo_fname),
                     "to_world": trafo
                 },
             }

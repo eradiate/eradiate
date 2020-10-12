@@ -304,6 +304,33 @@ def validator_is_positive(_, attribute, value):
                          f"got {value}")
 
 
+def validator_path_exists(_, attribute, value):
+    """Validates if ``value`` is a :class:`pathlib.Path` and points to
+    an existing target. Raises a ``FileNotFoundError`` otherwise.
+    """
+    if not value.exists():
+        raise FileNotFoundError(f"{attribute} points to '{str(value)}' "
+                                f"(path does not exist)")
+
+
+def validator_is_file(_, attribute, value):
+    """Validates if ``value`` is a :class:`pathlib.Path` and points to
+    an existing file. Raises a ``FileNotFoundError`` otherwise.
+    """
+    if not value.is_file():
+        raise FileNotFoundError(f"{attribute} points to '{str(value)}' "
+                                f"(not a file)")
+
+
+def validator_is_dir(_, attribute, value):
+    """Validates if ``value`` is a :class:`pathlib.Path` and points to
+    an existing file. Raises a ``FileNotFoundError`` otherwise.
+    """
+    if not value.is_dir():
+        raise FileNotFoundError(f"{attribute} points to '{str(value)}'"
+                                f"(not a directory)")
+
+
 def validator_has_len(size):
     """Generates a validator which validates if ``value`` is of length ``size``.
     The generated validator will raise a ``ValueError`` in

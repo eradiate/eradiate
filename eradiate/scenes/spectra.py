@@ -203,4 +203,4 @@ class SolarIrradianceSpectrum(Spectrum):
             }
 
         else:
-            raise ModeError(f"unsupported mode {mode.type}")
+            raise ModeError(f"unsupported mode '{mode.type}'")

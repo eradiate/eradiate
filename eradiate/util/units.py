@@ -93,10 +93,12 @@ class DefaultUnits:
                 "time": lambda: ureg.s,
                 "mass": lambda: ureg.kg,
                 # Derived quantity names are more flexible
-                "wavelength": lambda: ureg.nm,
+                "albedo": lambda: ureg.dimensionless,
                 "angle": lambda: ureg.deg,
                 "reflectance": lambda: ureg.dimensionless,
+                "wavelength": lambda: ureg.nm,
                 # The following quantities will update automatically based on their parent units
+                "collision_coefficient": lambda: self.get("length") ** -1,
                 "irradiance": lambda: ureg.watt / self.get("length") ** 2 / self.get("wavelength"),
                 "radiance": lambda: ureg.watt / self.get("length") ** 2 / ureg.steradian / self.get("wavelength"),
             }

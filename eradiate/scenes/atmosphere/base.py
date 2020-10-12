@@ -10,6 +10,16 @@ from ...util.units import config_default_units as cdu
 from ...util.units import ureg
 
 
+def _converter_number_or_auto(value):
+    if value == "auto":
+        return value
+
+    if isinstance(value, ureg.Quantity):
+        return value
+
+    return float(value)
+
+
 def _validator_number_or_auto(_, attribute, value):
     if value == "auto":
         return
@@ -35,7 +45,6 @@ class Atmosphere(SceneHelper, ABC):
 
             Unit-enabled field (default unit: cdu[length])
 
-
         ``width`` (float or "auto"):
             Atmosphere width. If set to ``"auto"``, a value will be estimated to
             ensure that the medium is optically thick. The implementation of
@@ -43,7 +52,6 @@ class Atmosphere(SceneHelper, ABC):
             one. Default: ``"auto"``.
 
             Unit-enabled field (default unit: cdu[length])
-
     """
 
     id = attrib(
@@ -62,7 +70,7 @@ class Atmosphere(SceneHelper, ABC):
 
     width = attrib(
         default="auto",
-        converter=lambda x: x if x == "auto" or isinstance(x, ureg.Quantity) else float(x),
+        converter=_converter_number_or_auto,
         validator=_validator_number_or_auto,
         has_unit=True
     )
