@@ -3,6 +3,14 @@
 Developing a plugin
 ===================
 
+.. warning::
+
+   This step-by-step plugin development guide was written in Eradiate's early
+   development phase, based on Mitsuba 2.0.0. Some of its content is addressed
+   in `Mitsuba's developer guide <https://mitsuba2.readthedocs.io/en/latest/src/developer_guide/intro.html>`_,
+   but not all of it. For this reason, while we're not maintaining it, we still
+   keep it for future reference.
+
 Eradiate implements several of its kernel components in the form of *plugins*. Plugins are autonomous library components which inherit from an interface defined in one of the kernel libraries and can be instantiated dynamically by Eradiate's plugin manager based on plugin parameters. Plugins do not have to be known to the Eradiate application at compile time: they are discovered at run time.
 
 Plugin development requires usage of macros which we will present in this guide.
