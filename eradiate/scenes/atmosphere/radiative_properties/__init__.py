@@ -77,7 +77,7 @@ def compute_monochromatic_radiative_properties(profile, wavelength=550.,
     if absorption_on:
         if scattering_on:
             sigma_t = sigma_a + sigma_s
-            properties.sigma_t.values = sigma_t
+            properties.sigma_t.values = sigma_t.magnitude
             properties.albedo.values = sigma_s / sigma_t
         else:
             properties.sigma_t.values = sigma_a
@@ -85,7 +85,7 @@ def compute_monochromatic_radiative_properties(profile, wavelength=550.,
 
     else:
         if scattering_on:
-            properties.sigma_t.values = sigma_s
+            properties.sigma_t.values = sigma_s.magnitude
             properties.albedo.values = np.full(sigma_s.shape, 1.)
         else:
             raise ValueError("absorption_on and scattering_on both False. At"
