@@ -1,15 +1,14 @@
 """Basic abstractions and utilities to assist with scene generation."""
 
 import importlib
-import warnings
 from abc import ABC, abstractmethod
-from copy import deepcopy
 
 import attr
 
 import eradiate.kernel
 from ..util.attrs import attrib, unit_enabled
 from ..util.exceptions import KernelVariantError
+from ..util.factory import BaseFactory
 from ..util.units import ureg
 
 
@@ -181,68 +180,19 @@ class SceneHelper(ABC):
         return cls(**d)
 
 
-class SceneHelperFactory:
-    """This class implements an object factory which creates objects based on
-    dictionaries. For optimal use, it needs to discover registered classes in
-    modules listed in its :attr:`_submodules` class attribute.
+class SceneHelperFactory(BaseFactory):
+    """This factory constructs objects whose classes are derived from
+    :class:`SceneElement`. For optimal use, it needs to discover registered
+    classes in modules listed in its :attr:`_submodules` class attribute.
 
-    Class registration to this factory is done using the :meth:`register`
-    declass decorator (which should be applied *after* the ``attr.s`` decorator.
-    Note that decorated classes must implement a ``from_dict()`` class method
-    which generates instances from a dictionary (all classes deriving from
-    :class:`~eradiate.scenes.core.SceneHelper` do).
-
-    Using the factory simply requires to import it and call its :meth:`create`
-    class method with a dictionary containing:
-
-    - a ``type`` key, whose value will be the name under which the class to
-      be instantiated is registered in the factory;
-    - dictionary contents which will be passed to the target class's
-      ``from_dict()`` class method.
-
-    .. note::
-
-        This class is designed to allow for runtime instantiation and
-        configuration of :class:`~eradiate.scenes.core.SceneHelper` child
-        classes from YAML fragments.
-
-    .. admonition:: Example
-
-        The following code snippet instantiates a
-        :class:`~eradiate.scenes.illumination.DirectionalIllumination` helper
-        using its :factorykey:`directional` factory name:
-
-        .. code:: python
-
-            from eradiate.scenes.core import Factory
-
-            illumination = Factory.create({
-                "type": "directional",
-                "irradiance": {"type": "uniform", "value": 1.0},
-                "zenith": 30.0,
-                "azimuth": 180.0
-            })
-
-        In practice, the ``type`` key is used to look up the class to
-        instantiate, then popped from the configuration dictionary. Therefore,
-        the corresponding object creation call is, in this particular case:
-
-        .. code:: python
-
-            DirectionalIllumination(
-                irradiance={"type": "uniform", "value": 1.0},
-                zenith=30.0,
-                azimuth=180.0
-            )
-
-    .. admonition:: List of factory-enabled scene generation helpers
+    .. admonition:: List of factory-enabled scene elements
         :class: hint
 
         .. factorytable::
            :sections:
     """
-    #: Internal registry for available scene helpers
-    registry = {}
+
+    _constructed_type = SceneHelper
 
     #: List of submodules where to look for registered classes
     _submodules = [
@@ -254,91 +204,13 @@ class SceneHelperFactory:
     ]
 
     @classmethod
-    def register(cls, name):
-        """This decorator function is used on a class to register it to the
-        factory.
-
-        Parameter ``name`` (str):
-            Name used to reference the registered class in the factory's
-            registry.
-
-        .. admonition:: Example
-            :class: hint
-
-            .. code:: python
-
-                # Note that the register() decorator is applied *after* attr.s()
-                @Factory.register(name="constant")
-                @attr.s
-                class ConstantIllumination(SceneHelper):
-                    radiance = attr.ib(
-                        validator=attr.validators.instance_of(float),
-                        default=1.
-                    )
-
-                    def kernel_dict(self, **kwargs):
-                        return {
-                            self.id: {
-                                "type": "constant",
-                                "radiance": {"type": "uniform", "value": self.radiance}
-                            }
-                        }
-        """
-
-        def inner_wrapper(wrapped_class):
-
-            if not hasattr(wrapped_class, "from_dict"):
-                raise ValueError(f"class {wrapped_class} is missing 'from_dict()' "
-                                 f"and cannot be registered")
-
-            if name in cls.registry:
-                warnings.warn(f"SceneHelper '{name}' already exists, will replace it")
-            cls.registry[name] = wrapped_class
-            return wrapped_class
-
-        return inner_wrapper
-
-    @classmethod
-    def create(cls, config_dict):
-        """Create an instance from a class registered to the factory based on
-        dictionary.
-
-        Parameter ``config_dict`` (dict):
-            Dictionary used to create an object. In addition to the parameters
-            expected by the created object, it must have a 'type' entry
-            containing the targeted object (lower-cased).
-
-        Returns → :class:`SceneHelper`:
-            Created object.
-
-        Raises → ValueError:
-            If ``type`` field does not map to a registered type.
-        """
-
-        # Retrieve relevant object from factory registry based on "type" key
-        config_dict = deepcopy(config_dict)
-        obj_type = config_dict.pop("type")
-
-        try:
-            return cls.registry[obj_type].from_dict(config_dict)
-        except KeyError:
-            raise ValueError(f"unregistered SceneHelper '{obj_type}'")
-
-    @classmethod
-    def convert(cls, value):
-        """Object converter method.
-
-        If ``value`` is a dictionary, this method forwards it to :meth:`create`.
-        Otherwise, it returns ``value``.
-        """
-        if isinstance(value, dict):
-            return cls.create(value)
-
-        return value
+    def _discover(cls):
+        """Import submodules containing classes to be automatically added to
+        :class:`SceneHelperFactory`'s registry."""
+        for module_name in cls._submodules:
+            full_module_name = f"eradiate.scenes.{module_name}"
+            importlib.import_module(full_module_name)
 
 
-# Import submodules containing classes to be automatically added to
-# SceneHelperFactory's registry
-for module_name in SceneHelperFactory._submodules:
-    full_module_name = f"eradiate.scenes.{module_name}"
-    importlib.import_module(full_module_name)
+# Trigger factory module discovery
+SceneHelperFactory._discover()
