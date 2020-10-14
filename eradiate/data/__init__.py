@@ -32,6 +32,7 @@ def get(path):
 
 SOLAR_IRRADIANCE_SPECTRA = {
     "blackbody_sun": "spectra/blackbody_sun.nc",
+    "meftah_2017": "spectra/meftah_2017.nc",
     "thuillier_2003": "spectra/thuillier_2003.nc",
     "whi_2008": "spectra/whi_2008_time_period_1.nc",  # alias
     "whi_2008_1": "spectra/whi_2008_time_period_1.nc",
@@ -70,6 +71,9 @@ identifiers.
    * - ``blackbody_sun``
      - :cite:`Liou2002IntroductionAtmosphericRadiation`
      - [280, 2400]
+   * - ``meftah_2017``
+     - :cite:`Meftah2017SOLARISSReference`
+     - [165, 3000.1]
    * - ``thuillier_2003``
      - :cite:`Thuillier2003SolarSpectralIrradiance`
      - [200, 2397]
