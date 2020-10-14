@@ -33,6 +33,10 @@ def get(path):
 SOLAR_IRRADIANCE_SPECTRA = {
     "blackbody_sun": "spectra/blackbody_sun.nc",
     "thuillier_2003": "spectra/thuillier_2003.nc",
+    "whi_2008": "spectra/whi_2008_time_period_1.nc",  # alias
+    "whi_2008_1": "spectra/whi_2008_time_period_1.nc",
+    "whi_2008_2": "spectra/whi_2008_time_period_2.nc",
+    "whi_2008_3": "spectra/whi_2008_time_period_3.nc",
 }
 """Dictionary of solar irradiance data sets shipped with Eradiate. 
 
@@ -69,4 +73,17 @@ identifiers.
    * - ``thuillier_2003``
      - :cite:`Thuillier2003SolarSpectralIrradiance`
      - [200, 2397]
+   * - ``whi_2008``
+     - :cite:`Woods2008SolarIrradianceReference`
+     - [116.05, 2399.95]
+   * - ``whi_2008_1``
+     - :cite:`Woods2008SolarIrradianceReference`
+     - [116.05, 2399.95]
+   * - ``whi_2008_2``
+     - :cite:`Woods2008SolarIrradianceReference`
+     - [116.05, 2399.95]
+   * - ``whi_2008_3``
+     - :cite:`Woods2008SolarIrradianceReference`
+     - [116.05, 2399.95]
+     
 """
