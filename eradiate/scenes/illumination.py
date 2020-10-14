@@ -13,7 +13,7 @@ import attr
 
 from .core import SceneElement, SceneElementFactory
 from .spectra import SolarIrradianceSpectrum, UniformSpectrum
-from ..util.attrs import attrib, attrib_float_positive, attrib_unit
+from ..util.attrs import attrib, attrib_float_positive, attrib_units
 from ..util.frame import angles_to_direction
 from ..util.units import config_default_units as cdu
 from ..util.units import ureg
@@ -89,18 +89,18 @@ class DirectionalIllumination(Illumination):
     """
     zenith = attrib_float_positive(
         default=0.,
-        has_unit=True
+        has_units=True
     )
-    zenith_unit = attrib_unit(
+    zenith_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("angle")),
         compatible_units=ureg.deg,
     )
 
     azimuth = attrib_float_positive(
         default=0.,
-        has_unit=True
+        has_units=True
     )
-    azimuth_unit = attrib_unit(
+    azimuth_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("angle")),
         compatible_units=ureg.deg,
     )

@@ -134,24 +134,16 @@ class SceneElement(ABC):
     def __attrs_post_init__(self):
         """This post-init step handles unit-enabled fields.
         Fields can be unit-enabled using :func:`~eradiate.util.attrs.attrib`'s
-        ``has_unit`` parameter. Unit-enabled fields are inspected.
+        ``has_units`` parameter. Unit-enabled fields are inspected.
         If a field ``field`` is a :class:`pint.Quantity`, it is
-        converted to ``field_unit`` and replaced with its magnitude (it is
+        converted to ``field_units`` and replaced with its magnitude (it is
         stripped from its unit).
 
         From this, it follows that all unit-enabled fields are stored as their
         magnitude. The unit in which these magnitudes are stored are contained
         in the corresponding unit fields.
         """
-        # TODO: transfer this to the unit_enabled decorator?
-
-        # Strip units after checking consistency and converting
-        for field in self._unit_enabled_field_names():
-            value = getattr(self, field)
-            if isinstance(value, ureg.Quantity):
-                unit = getattr(self, f"{field}_unit")
-                setattr(self, field, value.to(unit).magnitude)
-
+        self._strip_units()
     @abstractmethod
     def kernel_dict(self, ref=True):
         """Return a dictionary suitable for kernel scene configuration.

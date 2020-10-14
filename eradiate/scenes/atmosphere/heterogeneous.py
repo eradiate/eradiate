@@ -1,4 +1,4 @@
-""" Heterogeneous atmosphere scene generation elements """
+""" Heterogeneous atmosphere scene elements """
 import tempfile
 from pathlib import Path
 
@@ -8,7 +8,7 @@ import xarray as xr
 
 from .base import Atmosphere
 from ..core import SceneElementFactory
-from ...util.attrs import attrib, attrib_unit, validator_is_file
+from ...util.attrs import attrib, attrib_units, validator_is_file
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
@@ -68,7 +68,7 @@ def _dataarray_to_ndarray(value):
 @SceneElementFactory.register("heterogeneous")
 @attr.s
 class HeterogeneousAtmosphere(Atmosphere):
-    r"""Heterogeneous atmosphere scene generation element
+    r"""Heterogeneous atmosphere scene element
     [:factorykey:`heterogeneous`].
 
     See :class:`~eradiate.scenes.atmosphere.base.Atmosphere` for undocumented
@@ -138,10 +138,10 @@ class HeterogeneousAtmosphere(Atmosphere):
         default=None,
         converter=_dataarray_to_ndarray,
         validator=attr.validators.optional(attr.validators.instance_of(np.ndarray)),
-        has_unit=True
+        has_units=True
     )
 
-    albedo_unit = attrib_unit(
+    albedo_units = attrib_units(
         compatible_units=ureg.dimensionless,
         default=attr.Factory(lambda: cdu.get("dimensionless"))
     )
@@ -172,10 +172,10 @@ class HeterogeneousAtmosphere(Atmosphere):
         default=None,
         converter=_dataarray_to_ndarray,
         validator=attr.validators.optional(attr.validators.instance_of(np.ndarray)),
-        has_unit=True
+        has_units=True
     )
 
-    sigma_t_unit = attrib_unit(
+    sigma_t_units = attrib_units(
         compatible_units=ureg.m ** -1,
         default=attr.Factory(lambda: cdu.get("length") ** -1)
     )
@@ -234,8 +234,8 @@ class HeterogeneousAtmosphere(Atmosphere):
             if field_values is None:
                 raise ValueError(f"field {field} is empty, cannot create "
                                  f"volume data")
-            field_unit = getattr(self, f"{field}_unit")
-            field_quantity = ureg.Quantity(field_values, field_unit)
+            field_units = getattr(self, f"{field}_units")
+            field_quantity = ureg.Quantity(field_values, field_units)
 
             # If file name is not specified, we create one
             field_fname = getattr(self, f"{field}_fname")

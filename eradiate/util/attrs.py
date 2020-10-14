@@ -6,6 +6,7 @@ from functools import lru_cache
 import attr
 
 from . import always_iterable
+from .exceptions import UnitsError
 from .units import compatible, ureg
 
 
@@ -18,7 +19,7 @@ class MKey(enum.Enum):
 
     These Enum values should be used as metadata attribute keys.
     """
-    has_unit = enum.auto()  #: Field supports Pint units
+    has_units = enum.auto()  #: Field supports Pint units
 
 
 def unit_enabled(cls):
@@ -28,23 +29,55 @@ def unit_enabled(cls):
     as unit-enabled with :func:`attrib`'s ``has_unit`` parameter has a
     corresponding unit field with the same name and a ``_unit`` suffix.
 
-    In addition, this function attaches to the decorated class a
-    ``_unit_enabled_field_names()`` class method which returns the list of the
-    names of fields marked as unit-enabled.
+    In addition, this function attaches to the decorated class:
+
+    * a  ``_unit_enabled_field_names()`` class method which returns the list of
+      the names of fields marked as unit-enabled;
+    * a ``strip_units()`` instance method which removes units (after conversion)
+      for unit-enabled fields which are set to a :class:`pint.Quantity`;
+    * a ``get_quantity()`` method which returns a unit-enabled fields as a
+      :class:`pint.Quantity`.
     """
 
     # Attach a class method which returns the list of unit-enabled attributes
     @classmethod
     @lru_cache(maxsize=None)
-    def _unit_enabled_field_names(cls):
+    def unit_enabled_field_names(wrapped_cls):
         """Returns a list of unit-enabled fields for the current class.
-        Implemented using lru_cache to avoid repeatedly regenerating the list.
+        Implemented using :func:`functools.lru_cache()` to avoid repeatedly
+        regenerating the list.
         """
         return [field.name
-                for field in attr.fields(cls)
-                if field.metadata.get(MKey.has_unit)]
+                for field in attr.fields(wrapped_cls)
+                if field.metadata.get(MKey.has_units)]
 
-    cls._unit_enabled_field_names = _unit_enabled_field_names
+    setattr(cls, "_unit_enabled_field_names", unit_enabled_field_names)
+
+    # Attach an instance method which strips unit-enabled fields from their unit
+    # after a consistency check and conversion
+    def strip_units(instance, fields=None):
+        """Strip units of unit-enabled fields initialised as
+        :class:`pint.Quantity` objects.
+        """
+        # Process fields param
+        if fields is None:
+            fields = tuple(instance._unit_enabled_field_names())
+        if isinstance(fields, str):
+            fields = (fields,)
+
+        # For each field, convert to storage unit and remove unit if it is a
+        # Quantity, otherwise don't do anything
+        for field in fields:
+            value = getattr(instance, field)
+            if isinstance(value, ureg.Quantity):
+                units = getattr(instance, f"{field}_units")
+                if not compatible(value.units, units):
+                    raise UnitsError(f"field '{field}' [{value}] cannot be "
+                                     f"converted to '{units}'")
+
+                setattr(instance, field, value.to(units).magnitude)
+
+    setattr(cls, "_strip_units", strip_units)
 
     # Attach an instance method which provides convenient access to unit-enabled
     # quantities
@@ -58,22 +91,23 @@ def unit_enabled(cls):
         Returns → :class:`pint.Quantity`:
             Constructed :class:`pint.Quantity` object.
 
-        Raises → KeyError:
-            If the requested attribute is not unit-enabled.
+        Raises → AttributeError:
+            If the requested attribute cannot be returned as a
+            :class:`pint.Quantity` object (either it doesn't exist or it doesn't
+            have a unit field).
         """
-        if attribute not in instance._unit_enabled_field_names():
-            raise KeyError(f"attribute {attribute} cannot be returned as a "
-                           f"pint.Quantity object")
+        try:
+            return ureg.Quantity(getattr(instance, attribute),
+                                 getattr(instance, f"{attribute}_units"))
+        except AttributeError:
+            raise
 
-        return ureg.Quantity(getattr(instance, attribute),
-                             getattr(instance, f"{attribute}_unit"))
-
-    setattr(cls, get_quantity.__name__, get_quantity)
+    setattr(cls, "get_quantity", get_quantity)
 
     # Check if unit-enabled attributes have a corresponding unit field
     field_names = {field.name for field in attr.fields(cls)}
     for unit_enabled_field_name in cls._unit_enabled_field_names():
-        unit_field_name = f"{unit_enabled_field_name}_unit"
+        unit_field_name = f"{unit_enabled_field_name}_units"
         if unit_field_name not in field_names:
             raise AttributeError(
                 f"unit-enabled field '{unit_enabled_field_name}' misses its "
@@ -90,7 +124,7 @@ def unit_enabled(cls):
 def attrib(
         default=attr.NOTHING, validator=None, repr=True, eq=True, order=None,
         hash=None, init=True, metadata={}, type=None, converter=None,
-        factory=None, kw_only=False, on_setattr=None, has_unit=False
+        factory=None, kw_only=False, on_setattr=None, has_units=False
 ):
     """Create a new attribute on a class.
 
@@ -101,13 +135,13 @@ def attrib(
         Register the created attribute as unit-enabled and expect a
         corresponding unit field.
 
-    Returns → :class:`attr.Attribute`:
+    Returns → :class:`attr._make._CountingAttr`:
         Generated attribute field.
     """
     metadata = dict() if not metadata else metadata
 
-    if has_unit:
-        metadata[MKey.has_unit] = True
+    if has_units:
+        metadata[MKey.has_units] = True
 
     return attr.ib(
         default=default, validator=validator, repr=repr, eq=eq, order=order,
@@ -119,14 +153,14 @@ def attrib(
 def attrib_float_positive(
         default=attr.NOTHING, repr=True, eq=True, order=None, hash=None,
         init=True, metadata={}, factory=None, kw_only=False, on_setattr=None,
-        has_unit=False
+        has_units=False
 ):
     """Define an attribute storing a positive floating-point number.
 
     This wrapper extends :func:`attrib`: see its documentation for undocumented
     parameters.
 
-    Returns → :class:`attr.Attribute`:
+    Returns → :class:`attr._make._CountingAttr`:
         Generated attribute field.
     """
 
@@ -145,21 +179,21 @@ def attrib_float_positive(
         default=default, validator=validator, repr=repr, eq=eq, order=order,
         hash=hash, init=init, metadata=metadata, converter=converter,
         factory=factory, kw_only=kw_only, on_setattr=on_setattr,
-        has_unit=has_unit
+        has_units=has_units
     )
 
 
 def attrib_int_positive(
         default=attr.NOTHING, repr=True, eq=True, order=None, hash=None,
         init=True, metadata={}, factory=None, kw_only=False, on_setattr=None,
-        has_unit=False
+        has_units=False
 ):
     """Define an attribute storing a positive integer number.
 
     This wrapper extends :func:`attrib`: see its documentation for undocumented
     parameters.
 
-    Returns → :class:`attr.Attribute`:
+    Returns → :class:`attr._make._CountingAttr`:
         Generated attribute field.
     """
 
@@ -178,11 +212,11 @@ def attrib_int_positive(
         default=default, validator=validator, repr=repr, eq=eq, order=order,
         hash=hash, init=init, metadata=metadata, converter=converter,
         factory=factory, kw_only=kw_only, on_setattr=on_setattr,
-        has_unit=has_unit
+        has_units=has_units
     )
 
 
-def attrib_unit(
+def attrib_units(
         default=attr.NOTHING, repr=True, eq=True, order=None, hash=None,
         init=True, metadata={}, kw_only=False, on_setattr=None,
         compatible_units=None
@@ -208,10 +242,10 @@ def attrib_unit(
         All remaining keyword arguments are forwarded to :func:`attr.ib`
         function. The ``converter`` and ``validator`` are not allowed.
 
-    Returns → :class:`attr.Attribute`:
+    Returns → :class:`attr._make._CountingAttr`:
         Generated attribute field.
 
-    Raises → ValueError:
+    Raises → :class:`.UnitsError`:
         If the ``default`` keyword argument is set to a unit incompatible with
         ``compatible_units``.
     """
@@ -228,7 +262,7 @@ def attrib_unit(
 
             compatible_units = tuple(always_iterable(compatible_units))
             if not any([compatible(default_check, x) for x in compatible_units]):
-                raise ValueError(
+                raise UnitsError(
                     f"incompatible allowed units "
                     f"['{''', '''.join([str(x) for x in compatible_units])}'] "
                     f"and default '{default_check}'"
@@ -246,7 +280,7 @@ def attrib_unit(
     return attrib(
         default=default, validator=validator, repr=repr, eq=eq, order=order,
         hash=hash, init=init, metadata=metadata, type=type, converter=converter,
-        kw_only=kw_only, on_setattr=on_setattr, has_unit=False
+        kw_only=kw_only, on_setattr=on_setattr, has_units=False
     )
 
 
@@ -256,8 +290,8 @@ def attrib_unit(
 
 def validator_unit_compatible(units):
     """Generates a validator which validates if value is a unit compatible with
-    one of ``units``. The generated validator will raise a ``ValueError`` in
-    case of failure.
+    one of ``units``. The generated validator will raise a :class:`.UnitsError`
+    in case of failure.
 
     Parameter ``units`` (:class:`pint.Unit` or list[:class:`pint.Unit`]):
         Units against which validation is done.
@@ -269,7 +303,7 @@ def validator_unit_compatible(units):
 
     def f(instance, attribute, value):
         if not any([compatible(value, x) for x in units_iterable]):
-            raise ValueError(
+            raise UnitsError(
                 f"incompatible unit '{value}' used to set field '{attribute.name}' "
                 f"(allowed: [{', '.join([str(x) for x in units_iterable])}])"
             )

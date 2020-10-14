@@ -15,7 +15,7 @@ from pint import DimensionalityError
 from .core import SceneElementFactory, SceneElement
 from .. import data
 from ..data import SOLAR_IRRADIANCE_SPECTRA
-from ..util.attrs import attrib, attrib_float_positive, attrib_unit, validator_is_positive, validator_is_string
+from ..util.attrs import attrib, attrib_float_positive, attrib_units, validator_is_positive, validator_is_string
 from ..util.exceptions import ModeError
 from ..util.units import compatible
 from ..util.units import config_default_units as cdu
@@ -60,10 +60,10 @@ class UniformSpectrum(Spectrum):
 
     value = attrib_float_positive(
         default=1.0,
-        has_unit=True
+        has_units=True
     )
 
-    value_unit = attrib_unit(
+    value_units = attrib_units(
         default=None,  # Note: default is None here but handled in post-init step
         compatible_units=[
             cdu.get("radiance"), cdu.get("irradiance"), cdu.get("reflectance")
@@ -72,17 +72,17 @@ class UniformSpectrum(Spectrum):
 
     def __attrs_post_init__(self):
         # Check unit and quantity consistency
-        quantity_unit = cdu.get(self.quantity)
+        quantity_units = cdu.get(self.quantity)
 
-        if self.value_unit is None:
+        if self.value_units is None:
             # If no unit was specified, get default
-            self.value_unit = quantity_unit
+            self.value_units = quantity_units
 
         else:
-            if not compatible(self.value_unit, quantity_unit):
+            if not compatible(self.value_units, quantity_units):
                 raise DimensionalityError(
-                    self.value_unit,
-                    quantity_unit,
+                    self.value_units,
+                    quantity_units,
                     extra_msg="inconsistent units between value and quantity "
                               "fields"
                 )
@@ -92,12 +92,12 @@ class UniformSpectrum(Spectrum):
 
     def kernel_dict(self, **kwargs):
         value = self.get_quantity("value")
-        kernel_unit = kdu.get(self.quantity)
+        kernel_units = kdu.get(self.quantity)
 
         return {
             "spectrum": {
                 "type": "uniform",
-                "value": value.to(kernel_unit).magnitude,
+                "value": value.to(kernel_units).magnitude,
             }
         }
 

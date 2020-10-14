@@ -159,8 +159,8 @@ class configdict(dict):
             The requested key could not be found.
         """
         magnitude = self[key]
-        unit = self.get(f"{key}_unit", None)
-        if unit is None:
+        units = self.get(f"{key}_units", None)
+        if units is None:
             return magnitude
         else:
-            return ureg.Quantity(magnitude, unit)
+            return ureg.Quantity(magnitude, units)

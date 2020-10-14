@@ -15,18 +15,18 @@ def test_uniform(mode_mono):
     # Check if we can instantiate the element
     s = UniformSpectrum()
     assert s.value == 1.
-    assert s.value_unit == cdu.get("radiance")
+    assert s.value_units == cdu.get("radiance")
 
     # Check that produced kernel dict is valid
     assert load_dict(onedict_value(s.kernel_dict())) is not None
 
     # Check if inconsistent units are detected
     with pytest.raises(DimensionalityError):
-        UniformSpectrum(value=1., value_unit="W/m^2/sr/nm", quantity="irradiance")
+        UniformSpectrum(value=1., value_units="W/m^2/sr/nm", quantity="irradiance")
 
     # Check if default units are correctly applied
     s = UniformSpectrum(value=1., quantity="irradiance")
-    assert s.value_unit == cdu.get("irradiance")
+    assert s.value_units == cdu.get("irradiance")
 
     # Check if unit scaling is prorperly applied
     with cdu.override({"radiance": "W/m^2/sr/nm"}):

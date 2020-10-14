@@ -299,7 +299,7 @@ class RayleighSolverApp(ConfigObject):
                             ConfigWarning
                         )
                     config["surface"]["width"] = atmosphere._width.magnitude
-                    config["surface"]["width_unit"] = str(atmosphere._width.units)
+                    config["surface"]["width_units"] = str(atmosphere._width.units)
 
                 self._elements["surface"] = SceneElementFactory.create(config["surface"])
 

@@ -13,7 +13,7 @@ import attr
 
 from .core import SceneElementFactory, SceneElement
 from .spectra import UniformSpectrum
-from ..util.attrs import attrib, attrib_float_positive, attrib_unit
+from ..util.attrs import attrib, attrib_float_positive, attrib_units
 from ..util.units import config_default_units as cdu, ureg
 from ..util.units import kernel_default_units as kdu
 
@@ -30,9 +30,9 @@ class Surface(SceneElement, ABC):
 
     width = attrib_float_positive(
         default=1.,
-        has_unit=True
+        has_units=True
     )
-    width_unit = attrib_unit(
+    width_units = attrib_units(
         compatible_units=ureg.m,
         default=attr.Factory(lambda: cdu.get("length"))
     )

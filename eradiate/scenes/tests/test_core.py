@@ -6,7 +6,7 @@ import pytest
 
 import eradiate.kernel
 from eradiate.scenes.core import SceneElementFactory, KernelDict, SceneElement
-from eradiate.util.attrs import attrib, attrib_unit, validator_has_len, validator_is_number, validator_is_positive
+from eradiate.util.attrs import attrib, attrib_units, validator_has_len, validator_is_number, validator_is_positive
 from eradiate.util.exceptions import KernelVariantError
 from eradiate.util.units import ureg
 
@@ -61,10 +61,10 @@ class TinyDirectional(SceneElement):
     direction = attrib(
         default=[0, 0, -1],
         validator=validator_has_len(3),
-        has_unit=True
+        has_units=True
     )
 
-    direction_unit = attrib_unit(
+    direction_units = attrib_units(
         compatible_units=ureg.m,
         default=ureg.m
     )
@@ -75,7 +75,7 @@ class TinyDirectional(SceneElement):
     )
 
     def kernel_dict(self, **kwargs):
-        direction = self.direction * self.direction_unit
+        direction = self.direction * self.direction_units
 
         return {
             self.id: {
@@ -92,21 +92,21 @@ def test_scene_element(mode_mono):
     assert attr.asdict(d) == {
         "id": "illumination",
         "direction": [0, 0, -1],
-        "direction_unit": ureg.m,
+        "direction_units": ureg.m,
         "irradiance": 1.0
     }
 
     # Check that constructor from params works as intended
     assert TinyDirectional(
         direction=[0, 0, -100],
-        direction_unit=ureg.cm,
+        direction_units=ureg.cm,
         irradiance=1.0
     ) is not None
 
     # Check that unit handling is appropriately performed
     d = TinyDirectional(
         direction=ureg.Quantity([0, 0, -100], ureg.cm),
-        direction_unit=ureg.m
+        direction_units=ureg.m
     )
     assert np.allclose(d.direction, [0, 0, -1])
 

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import attr
 
 from ..core import SceneElement
-from ...util.attrs import attrib, attrib_float_positive, attrib_unit
+from ...util.attrs import attrib, attrib_float_positive, attrib_units
 from ...util.units import config_default_units as cdu
 from ...util.units import ureg
 
@@ -61,9 +61,9 @@ class Atmosphere(SceneElement, ABC):
 
     height = attrib_float_positive(
         default=1e2,
-        has_unit=True
+        has_units=True
     )
-    height_unit = attrib_unit(
+    height_units = attrib_units(
         compatible_units=ureg.m,
         default=attr.Factory(lambda: cdu.get("length"))
     )
@@ -72,9 +72,9 @@ class Atmosphere(SceneElement, ABC):
         default="auto",
         converter=_converter_number_or_auto,
         validator=_validator_number_or_auto,
-        has_unit=True
+        has_units=True
     )
-    width_unit = attrib_unit(
+    width_units = attrib_units(
         compatible_units=ureg.m,
         default=attr.Factory(lambda: cdu.get("length")),
     )

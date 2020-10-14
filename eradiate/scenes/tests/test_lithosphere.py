@@ -36,7 +36,7 @@ def test_rpv(mode_mono):
     # Constructor with arguments
     ls = RPVSurface(
         width=ureg.Quantity(1000., "km"),
-        width_unit=ureg.m,
+        width_units=ureg.m,
         rho_0=0.3,
         k=1.4,
         ttheta=-0.23

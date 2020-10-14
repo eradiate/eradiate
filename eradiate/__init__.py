@@ -35,7 +35,7 @@ See also :func:`set_mode`.
 _mode_default_configs = {
     "mono": {
         "wavelength": 550.,
-        "wavelength_unit": _ureg("nm")
+        "wavelength_units": _ureg("nm")
     }
 }
 

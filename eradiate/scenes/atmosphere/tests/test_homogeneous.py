@@ -37,11 +37,11 @@ def test_rayleigh_homogeneous(mode_mono, ref):
 
     # Construct with parameters
     eradiate.mode.config["wavelength"] = 650.
-    eradiate.mode.config["wavelength_unit"] = config_default_units.get("wavelength")
+    eradiate.mode.config["wavelength_units"] = config_default_units.get("wavelength")
     r = RayleighHomogeneousAtmosphere(height=ureg.Quantity(10, ureg.km))
 
     # check if sigma_s was correctly computed using the mode wavelength value
-    wavelength = ureg.Quantity(eradiate.mode.config["wavelength"], eradiate.mode.config["wavelength_unit"])
+    wavelength = ureg.Quantity(eradiate.mode.config["wavelength"], eradiate.mode.config["wavelength_units"])
     assert np.isclose(r._sigma_s, sigma_s_air(wavelength=wavelength))
 
     # check if automatic scene width works as intended

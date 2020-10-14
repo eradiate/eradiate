@@ -7,14 +7,16 @@
         :modules: measure
 """
 from abc import ABC
-
 from abc import abstractmethod
+
 import attr
 import numpy as np
 
-from .core import SceneElementFactory, SceneElement
-from ..util.attrs import attrib, attrib_float_positive, attrib_int_positive, attrib_unit, \
+from .core import SceneElement, SceneElementFactory
+from ..util.attrs import (
+    attrib, attrib_float_positive, attrib_int_positive, attrib_units,
     validator_has_len
+)
 from ..util.frame import angles_to_direction, spherical_to_cartesian
 from ..util.units import config_default_units as cdu, ureg
 from ..util.units import kernel_default_units as kdu
@@ -91,18 +93,18 @@ class DistantMeasure(Measure):
 
     zenith = attrib_float_positive(
         default=0.,
-        has_unit=True
+        has_units=True
     )
-    zenith_unit = attrib_unit(
+    zenith_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("angle")),
         compatible_units=ureg.deg,
     )
 
     azimuth = attrib_float_positive(
         default=0.,
-        has_unit=True
+        has_units=True
     )
-    azimuth_unit = attrib_unit(
+    azimuth_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("angle")),
         compatible_units=ureg.deg,
     )
@@ -204,36 +206,36 @@ class PerspectiveCameraMeasure(Measure):
     target = attrib(
         default=[0, 0, 0],
         validator=validator_has_len(3),
-        has_unit=True
+        has_units=True
     )
-    target_unit = attrib_unit(
+    target_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("length")),
         compatible_units=ureg.m,
     )
 
     zenith = attrib_float_positive(
         default=0.,
-        has_unit=True
+        has_units=True
     )
-    zenith_unit = attrib_unit(
+    zenith_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("angle")),
         compatible_units=ureg.deg,
     )
 
     azimuth = attrib_float_positive(
         default=0.,
-        has_unit=True
+        has_units=True
     )
-    azimuth_unit = attrib_unit(
+    azimuth_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("angle")),
         compatible_units=ureg.deg,
     )
 
     distance = attrib_float_positive(
         default=1.,
-        has_unit=True
+        has_units=True
     )
-    distance_unit = attrib_unit(
+    distance_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("length")),
         compatible_units=ureg.m
     )
@@ -343,18 +345,18 @@ class RadianceMeterHsphereMeasure(Measure):
 
     zenith_res = attrib_float_positive(
         default=10.,
-        has_unit=True
+        has_units=True
     )
-    zenith_res_unit = attrib_unit(
+    zenith_res_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("angle")),
         compatible_units=ureg.deg,
     )
 
     azimuth_res = attrib_float_positive(
         default=10.,
-        has_unit=True
+        has_units=True
     )
-    azimuth_res_unit = attrib_unit(
+    azimuth_res_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("angle")),
         compatible_units=ureg.deg,
     )
@@ -362,9 +364,9 @@ class RadianceMeterHsphereMeasure(Measure):
     origin = attrib(
         default=[0, 0, 0],
         validator=validator_has_len(3),
-        has_unit=True
+        has_units=True
     )
-    origin_unit = attrib_unit(
+    origin_units = attrib_units(
         default=attr.Factory(lambda: cdu.get("length")),
         compatible_units=ureg.m,
     )
@@ -372,13 +374,13 @@ class RadianceMeterHsphereMeasure(Measure):
     direction = attrib(
         default=[0, 0, 1],
         validator=validator_has_len(3),
-        has_unit=False
+        has_units=False
     )
 
     orientation = attrib(
         default=[1, 0, 0],
         validator=validator_has_len(3),
-        has_unit=False
+        has_units=False
     )
 
     hemisphere = attrib(

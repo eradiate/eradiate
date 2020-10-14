@@ -77,7 +77,7 @@ def test_configdict_get_quantity():
     })
     assert d.get_quantity("a") == 1
 
-    d["a_unit"] = "m"
+    d["a_units"] = "m"
     assert d.get_quantity("a") == ureg.Quantity(1, "m")
 
     with pytest.raises(KeyError):
