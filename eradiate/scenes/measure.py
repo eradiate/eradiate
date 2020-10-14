@@ -373,7 +373,7 @@ class RadianceMeterHsphereMeasure(Measure):
         super().__attrs_post_init__()
 
         self._zenith_angles = ureg.Quantity(np.arange(0, 90, self.zenith_res), ureg.deg)
-        self._azimuth_angles = ureg.Quantity(np.arange(0, 360.001, self.azimuth_res), ureg.deg)
+        self._azimuth_angles = ureg.Quantity(np.arange(0, 360., self.azimuth_res), ureg.deg)
 
     def repack_results(self, results):
         """This method reshapes the 1D results returned by the
@@ -399,7 +399,7 @@ class RadianceMeterHsphereMeasure(Measure):
         for theta in self._zenith_angles.to(ureg.rad).magnitude:
             for phi in self._azimuth_angles.to(ureg.rad).magnitude:
                 directions.append(hemisphere_transform.transform_vector(
-                    angles_to_direction(theta=np.deg2rad(theta), phi=np.deg2rad(phi)))
+                    angles_to_direction(theta=theta, phi=phi))
                 )
 
         return -np.array(directions) if self.hemisphere == "back" \

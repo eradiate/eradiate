@@ -25,12 +25,12 @@ def test_radiancemeter_hemispherical(mode_mono):
 
 def test_hemispherical_repack(mode_mono):
 
-    data = np.linspace(0, 1, 9*37)
+    data = np.linspace(0, 1, 9*36)
 
     d = RadianceMeterHsphereMeasure(zenith_res=10, azimuth_res=10)
     data_reshaped = d.repack_results(data)
 
-    assert np.shape(data_reshaped) == (9, 37)
+    assert np.shape(data_reshaped) == (9, 36)
 
 
 def test_hemispherical_hsphere_selection(mode_mono):

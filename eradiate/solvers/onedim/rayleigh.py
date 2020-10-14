@@ -361,7 +361,7 @@ class RayleighSolverApp(ConfigObject):
 
             if key == "toa_lo_hsphere":
                 theta_o = np.arange(0., 90., zenith_res)
-                phi_o = np.arange(0., 360.001, azimuth_res)
+                phi_o = np.arange(0., 360., azimuth_res)
                 result_type = "hemisphere"
             # TODO: Fix this once the pplane scene element is merged
             # elif key == "toa_lo_pplane":

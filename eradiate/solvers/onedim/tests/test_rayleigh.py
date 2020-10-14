@@ -120,7 +120,7 @@ def test_rayleigh_solver_app_run():
     assert app.results["toa_lo_hsphere"].attrs["angle_convention"] == "eo_scene"
 
     # We expect the whole [0, 360] to be covered
-    assert len(app.results["toa_lo_hsphere"].coords["vaa"]) == 360 / 180 + 1
+    assert len(app.results["toa_lo_hsphere"].coords["vaa"]) == 360 / 180
     # # We expect [0, 90[ to be covered (90° should be missing)
     assert len(app.results["toa_lo_hsphere"].coords["vza"]) == 90 / 45
 

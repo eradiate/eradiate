@@ -343,20 +343,21 @@ class EradiateAccessor:
             ax = plt.gca(projection="polar")
 
         theta_o_dim = self.get_angular_dim("theta_o")
+        theta_o_angles = self._obj[theta_o_dim].values
         phi_o_dim = self.get_angular_dim("phi_o")
+        phi_o_angles = self._obj[phi_o_dim].values
 
-        # TODO: center mesh grid on data points
         r, th = np.meshgrid(
-            np.deg2rad(self._obj[theta_o_dim]),
-            np.deg2rad(self._obj[phi_o_dim])
+            np.deg2rad(theta_o_angles),
+            np.deg2rad(phi_o_angles)
         )
+        # r, th = self._shifted_grid()
 
         # TODO: make colorbar settings more flexible
         if kind == "polar_pcolormesh":
             cmap_data = ax.pcolormesh(
-                # th, r, self._obj.values,
                 th, r, np.transpose(self._obj.values),
-                cmap="BuPu_r", **kwargs
+                cmap="BuPu_r", shading="nearest", **kwargs
             )
 
         elif kind == "polar_contourf":
