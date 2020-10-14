@@ -2,8 +2,7 @@ import numpy as np
 import pytest
 
 from eradiate.util.units import ureg
-from eradiate.scenes.atmosphere.radiative_properties import (
-    compute_monochromatic_radiative_properties)
+from eradiate.scenes.atmosphere.radiative_properties import compute_mono
 
 _Q = ureg.Quantity
 
@@ -12,14 +11,14 @@ def test_compute_monochromatic_radiative_properties():
     from eradiate.scenes.atmosphere.thermophysics.us76 import make_profile
     profile = make_profile()
     with pytest.raises(ValueError):
-        compute_monochromatic_radiative_properties(
+        compute_mono(
             profile=profile,
             scattering_on=False,
             absorption_on=False
         )
 
     wavelength = 500.
-    properties = compute_monochromatic_radiative_properties(
+    properties = compute_mono(
         profile=profile,
         wavelength=wavelength,
         absorption_on=False

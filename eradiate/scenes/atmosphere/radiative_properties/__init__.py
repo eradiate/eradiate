@@ -26,19 +26,34 @@ import xarray as xr
 
 from eradiate import __version__
 from ....util.units import ureg
+from .absorption import sigma_a
 from .rayleigh import sigma_s_air
 
 _Q = ureg.Quantity
 
 
-def compute_monochromatic_radiative_properties(profile, wavelength=550.,
-                                               scattering_on=True,
-                                               absorption_on=True):
+def compute_mono(profile, path=None, wavelength=550., scattering_on=True,
+                 absorption_on=False):
     r"""Compute the monochromatic radiative properties corresponding to a given
     atmospheric vertical profile (1D atmospheric thermophysical field).
 
+    The scattering coefficient is computed using :func:`.rayleigh.sigma_air`
+    for air.
+
+    The absorption coefficient is computed using the absorption cross section
+    data set ``narrowband_usa_mls`` that is interpolated in wavelength and
+    pressure.
+
+    .. note::
+        The ``narrowband_usa_mls`` data set covers a narrow range of wavelength,
+         approximately from 526.5 nm to 555.5 nm. For wavelength values outside
+         that range, the absorption cross section will be set to zero.
+
     Parameter ``profile`` (:class:`~xr.Dataset`):
         Atmospheric vertical profile.
+
+    Parameter ``path`` (str):
+        Path to the absorption cross section data set.
 
     Parameter ``wavelength`` (float):
         Wavelength [nm].
@@ -62,7 +77,14 @@ def compute_monochromatic_radiative_properties(profile, wavelength=550.,
     # compute absorption coefficient
     sigma_a = np.full(profile.n.shape, np.nan)
     if absorption_on:
-        raise NotImplementedError
+        if path is None:
+            raise ValueError("The path to the absorption data set must be"
+                             "provided when absorption is to be computed.")
+        if profile.title != "U.S. Standard Atmosphere 1976":
+            raise NotImplementedError("Absorption is not supported for that "
+                                      "profile.")
+        sigma_a = sigma_a(path, wavelength, profile)
+        properties.sigma_a.values = sigma_a.to("m^-1").magnitude
 
     # compute scattering coefficient
     sigma_s = np.full(profile.n.shape, np.nan)

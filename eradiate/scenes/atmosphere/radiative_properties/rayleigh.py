@@ -1,3 +1,6 @@
+"""Functions to compute Rayleigh scattering in the air.
+"""
+
 import numpy as np
 from scipy.constants import physical_constants
 
