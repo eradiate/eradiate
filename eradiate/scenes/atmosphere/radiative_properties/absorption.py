@@ -1,6 +1,7 @@
 """Functions to compute monochromatic absorption.
 """
 
+import os
 import numpy as np
 
 from ....data import get
@@ -77,7 +78,7 @@ def sigma_a(wavelength=550., profile=None, path=None):
     if path is None:
         dir_path = "resources/data/spectra"
         try:
-            ds = get(f"{dir_path}/narrowband_usa_mls.nc")
+            ds = get(os.path.join(dir_path, "narrowband_usa_mls.nc"))
         except ValueError:
             raise ValueError(f"The data set could not be opened. Did you "
                              f"download and place the narrowband_usa_mls.nc "
