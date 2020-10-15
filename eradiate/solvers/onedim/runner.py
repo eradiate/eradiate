@@ -29,17 +29,18 @@ class OneDimRunner:
             solver = OneDimSolver()
             solver.run()
 
-    Constructor arguments / public attributes:
-        ``kernel_dict`` (:class:`~eradiate.scenes.core.KernelDict`):
-            Dictionary used to generate the scene for which simulations will be
-            run. If no value is passed, a default scene is constructed. It
-            consists of a square covering :math:`[-1, 1]^2` with normal vector
-            :math:`+Z` and a Lambertian BRDF (reflectance :math:`\rho = 0.5`)
-            illuminated by a directional emitter with direction vector
-            :math:`-Z` and constant irradiance equal to 1. By default the
-            sensor will record four points, coressponding to a zenith angle of
-            :math:`45°` and azimuth angles of :math:`[0°, 90°, 180°, 270°]`, If set to `None`,
-            defaults to :data:`DEFAULT_KERNEL_DICT`.
+    .. rubric:: Constructor arguments / instance attributes
+
+    ``kernel_dict`` (:class:`~eradiate.scenes.core.KernelDict`):
+        Dictionary used to generate the scene for which simulations will be
+        run. If no value is passed, a default scene is constructed. It
+        consists of a square covering :math:`[-1, 1]^2` with normal vector
+        :math:`+Z` and a Lambertian BRDF (reflectance :math:`\rho = 0.5`)
+        illuminated by a directional emitter with direction vector
+        :math:`-Z` and constant irradiance equal to 1. By default the
+        sensor will record four points, coressponding to a zenith angle of
+        :math:`45°` and azimuth angles of :math:`[0°, 90°, 180°, 270°]`.
+        If set to `None`, defaults to :data:`DEFAULT_KERNEL_DICT`.
     """
 
     SUPPORTED_VARIANTS = frozenset({"scalar_mono", "scalar_mono_double"})

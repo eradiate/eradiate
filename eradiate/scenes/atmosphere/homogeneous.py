@@ -26,15 +26,16 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
     See :class:`~eradiate.scenes.atmosphere.base.Atmosphere` for undocumented
     members.
 
-    Constructor arguments / instance attributes:
-        ``sigma_s`` (float or "auto"):
-            Atmosphere scattering coefficient value. If set to ``"auto"``,
-            the scattering coefficient will be computed based on the current
-            operational mode configuration using the :func:`sigma_s_air`
-            function. Default: ``"auto"``.
+    .. rubric:: Constructor arguments / instance attributes
+
+    ``sigma_s`` (float or "auto"):
+        Atmosphere scattering coefficient value. If set to ``"auto"``,
+        the scattering coefficient will be computed based on the current
+        operational mode configuration using the :func:`sigma_s_air`
+        function. Default: ``"auto"``.
 
 
-            Unit-enabled field (default unit: cdu[length]^-1).
+        Unit-enabled field (default unit: cdu[length]^-1).
 
     """
 

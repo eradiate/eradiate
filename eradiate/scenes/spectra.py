@@ -39,16 +39,17 @@ class UniformSpectrum(Spectrum):
 
     See :class:`Spectrum` for undocumented members.
 
-    Constructor arguments / instance attributes:
-        ``quantity`` ("radiance" or "irradiance" or "reflectance"):
-            Physical quantity represented by the current instance. This field is
-            used to automatically determine compatible units for the ``value``
-            field, as well as its default unit.
+    .. rubric:: Constructor arguments / instance attributes
 
-        ``value`` (float):
-            Spectrum constant value. Default: 1.
+    ``quantity`` ("radiance" or "irradiance" or "reflectance"):
+        Physical quantity represented by the current instance. This field is
+        used to automatically determine compatible units for the ``value``
+        field, as well as its default unit.
 
-            Unit-enabled field (default: cdu[quantity]).
+    ``value`` (float):
+        Spectrum constant value. Default: 1.
+
+        Unit-enabled field (default: cdu[quantity]).
     """
 
     _valid_quantities = ("radiance", "irradiance", "reflectance")
@@ -120,14 +121,15 @@ class SolarIrradianceSpectrum(Spectrum):
     The produced kernel dictionary automatically adjusts its irradiance units
     depending on the selected kernel default units.
 
-    Constructor arguments / instance attributes:
-        ``dataset`` (str):
-            Dataset key. Allowed values: see
-            :attr:`eradiate.data.SOLAR_IRRADIANCE_SPECTRA`.
-            Default: ``"thuillier_2003"``.
+    .. rubric:: Constructor arguments / instance attributes
 
-        ``scale`` (float):
-            Scaling factor. Default: 1.
+    ``dataset`` (str):
+        Dataset key. Allowed values: see
+        :attr:`eradiate.data.SOLAR_IRRADIANCE_SPECTRA`.
+        Default: ``"thuillier_2003"``.
+
+    ``scale`` (float):
+        Scaling factor. Default: 1.
     """
 
     #: Dataset identifier

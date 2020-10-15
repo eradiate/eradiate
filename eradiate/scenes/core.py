@@ -120,9 +120,10 @@ class SceneElement(ABC):
         See the corresponding documentation for a list of factory-enabled
         scene element classes.
 
-    Constructor arguments / public attributes
-        ``id`` (str or None):
-            User-defined object identifier. Default: ``None``.
+    .. rubric:: Constructor arguments / instance attributes
+
+    ``id`` (str or None):
+        User-defined object identifier. Default: ``None``.
     """
 
     id = attrib(

@@ -27,10 +27,6 @@ class RayleighSolverApp(ConfigObject):
     r"""Application to run simulations in Rayleigh-scattering homogeneous
     one-dimensional scenes.
 
-    Constructor arguments / public attributes:
-        ``config`` (dict):
-            Configuration dictionary (see specification below).
-
     .. admonition:: Configuration examples
         :class: hint
 
@@ -166,6 +162,11 @@ class RayleighSolverApp(ConfigObject):
                 Number of samples taken for each viewing angle configuration.
 
                 Default: 32.
+
+    .. rubric:: Constructor arguments / instance attributes
+
+    ``config`` (dict):
+        Configuration dictionary (see specification below).
     """
 
     # Class attributes

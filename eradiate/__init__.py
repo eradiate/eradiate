@@ -13,12 +13,13 @@ class EradiateMode:
     """A very simple container hosting configuration data of Eradiate's current
     operational mode.
 
-    Constructor arguments / instance attributes:
-        Parameter ``type`` (str or None):
-            Mode type.
+    .. rubric:: Constructor arguments / instance attributes
 
-        Parameter ``config`` (dict or None):
-            Mode configuration dictionary.
+    Parameter ``type`` (str or None):
+        Mode type.
+
+    Parameter ``config`` (dict or None):
+        Mode configuration dictionary.
     """
 
     type = attr.ib(default=None)

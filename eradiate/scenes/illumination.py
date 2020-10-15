@@ -39,11 +39,12 @@ class ConstantIllumination(Illumination):
 
     See :class:`Illumination` for undocumented members.
 
-    Constructor arguments / instance attributes:
-        ``radiance`` (:class:`~eradiate.scenes.spectra.UniformSpectrum`):
-            Emitted radiance spectrum.
+    .. rubric:: Constructor arguments / instance attributes
 
-            Default: :class:`~eradiate.scenes.spectra.UniformSpectrum`.
+    ``radiance`` (:class:`~eradiate.scenes.spectra.UniformSpectrum`):
+        Emitted radiance spectrum.
+
+        Default: :class:`~eradiate.scenes.spectra.UniformSpectrum`.
     """
     # TODO: reject non-radiance spectra
 
@@ -72,20 +73,21 @@ class DirectionalIllumination(Illumination):
 
     See :class:`Illumination` for undocumented members.
 
-    Constructor arguments / instance attributes:
-        ``zenith`` (float):
-            Zenith angle. Default: 0 deg.
+    .. rubric:: Constructor arguments / instance attributes
 
-            Unit-enabled field (default unit: cdu[angle]).
+    ``zenith`` (float):
+         Zenith angle. Default: 0 deg.
 
-        ``azimuth`` (float):
-            Azimuth angle value. Default: 0 deg.
+        Unit-enabled field (default unit: cdu[angle]).
 
-            Unit-enabled field (default unit: cdu[angle]).
+    ``azimuth`` (float):
+        Azimuth angle value. Default: 0 deg.
 
-        ``irradiance`` (:class:`~eradiate.scenes.spectra.UniformSpectrum` or :class:`~eradiate.scenes.spectra.SolarIrradianceSpectrum`):
-            Emitted power flux in the plane orthogonal to the illumination direction.
-            Default: :class:`~eradiate.scenes.spectra.SolarIrradianceSpectrum`.
+        Unit-enabled field (default unit: cdu[angle]).
+
+    ``irradiance`` (:class:`~eradiate.scenes.spectra.UniformSpectrum` or :class:`~eradiate.scenes.spectra.SolarIrradianceSpectrum`):
+        Emitted power flux in the plane orthogonal to the illumination direction.
+        Default: :class:`~eradiate.scenes.spectra.SolarIrradianceSpectrum`.
     """
     zenith, zenith_units = attrib_float_positive(
         default=ureg.Quantity(0., ureg.deg),

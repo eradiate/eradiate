@@ -35,20 +35,20 @@ class Atmosphere(SceneElement, ABC):
 
     See :class:`~eradiate.scenes.core.SceneElement` for undocumented members.
 
-    Constructor arguments / instance attributes:
+    .. rubric:: Constructor arguments / instance attributes
 
         ``height`` (float):
             Atmosphere height. Default: 100 km.
 
-            Unit-enabled field (default unit: cdu[length])
+        Unit-enabled field (default unit: cdu[length])
 
-        ``width`` (float or "auto"):
-            Atmosphere width. If set to ``"auto"``, a value will be estimated to
-            ensure that the medium is optically thick. The implementation of
-            this estimate depends on the concrete class inheriting from this
-            one. Default: ``"auto"``.
+    ``width`` (float or "auto"):
+        Atmosphere width. If set to ``"auto"``, a value will be estimated to
+        ensure that the medium is optically thick. The implementation of
+        this estimate depends on the concrete class inheriting from this
+        one. Default: ``"auto"``.
 
-            Unit-enabled field (default unit: cdu[length])
+        Unit-enabled field (default unit: cdu[length])
     """
 
     id = attrib(

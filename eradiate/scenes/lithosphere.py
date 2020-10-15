@@ -21,6 +21,16 @@ from ..util.units import kernel_default_units as kdu
 @attr.s
 class Surface(SceneElement, ABC):
     """An abstract base class defining common facilities for all surfaces.
+    All these surfaces consist of a square parametrised by its width.
+
+    See :class:`~eradiate.scenes.core.SceneElement` for undocumented members.
+
+    .. rubric:: Constructor arguments / instance attributes
+
+    ``width`` (float):
+        Surface size. Default: 1.
+
+        Unit-enabled field (default: cdu[length]).
     """
 
     id = attrib(
@@ -92,38 +102,16 @@ class LambertianSurface(Surface):
 
     This class creates a square surface to which a Lambertian BRDF is attached.
 
-    .. admonition:: Configuration examples
-        :class: hint
+    See :class:`.Surface` for undocumented members.
 
-        Default:
-            .. code:: python
+    .. rubric:: Constructor arguments / instance attributes
 
-               {
-                   "width": 1.,
-                   "reflectance": {
-                       "type": "uniform",
-                       "value": 0.5
-                   }
-               }
+    ``reflectance`` (:class:`.UniformSpectrum`):
+        Reflectance spectrum.
+        Default: ``UniformSpectrum(quantity="reflectance", value=0.5)``.
 
-    .. admonition:: Configuration format
-        :class: hint
-
-        ``width`` (float):
-            Size of the square surface [u_length].
-
-            Default: 1.
-
-        ``reflectance`` (dict):
-            Reflectance spectrum [dimensionless].
-            This section must be a factory configuration dictionary which will
-            be passed to :meth:`.Factory.create`.
-
-            Allowed scene elements:
-            :factorykey:`uniform` (if selected, ``value`` must be in [0, 1]).
-
-            Default:
-            :factorykey:`uniform` with ``value`` set to 0.5.
+        Can be initialised with a dictionary processed by
+        :class:`.SceneElementFactory`.
     """
 
     reflectance = attrib(
@@ -153,35 +141,18 @@ class RPVSurface(Surface):
     The default configuration corresponds to grassland (visible light)
     (:cite:`Rahman1993CoupledSurfaceatmosphereReflectance`, Table 1).
 
-    .. admonition:: Configuration example
-        :class: hint
+    See :class:`.Surface` for undocumented members.
 
-        Default:
-            .. code:: python
+    .. rubric:: Constructor arguments / instance attributes
 
-               {
-                   "width": 1.,
-                   "rho_0": 0.183,
-                   "k": 0.78,
-                   "ttheta": -0.1,
-               }
+    ``rho_0`` (float):
+        Default: 0.183.
 
-    .. admonition:: Configuration format
-        :class: hint
+    ``k`` (float):
+        Default: 0.780.
 
-        ``rho_0`` (float):
-            Default: 0.183.
-
-        ``k`` (float):
-            Default: 0.780.
-
-        ``ttheta`` (float):
-            Default: -0.1.
-
-        ``width`` (float):
-            Size of the square surface [u_length].
-
-            Default: 1.
+    ``ttheta`` (float):
+        Default: -0.1.
     """
 
     # TODO: check if there are bounds to default parameters

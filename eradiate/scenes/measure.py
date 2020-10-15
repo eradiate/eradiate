@@ -24,6 +24,11 @@ from ..util.units import kernel_default_units as kdu
 
 @attr.s
 class Measure(SceneElement, ABC):
+    """Abstract class for all measure scene elements.
+
+    See :class:`.SceneElement` for undocumented members.
+    """
+
     id = attr.ib(
         default="measure",
         validator=attr.validators.optional((attr.validators.instance_of(str))),
@@ -57,38 +62,24 @@ class Measure(SceneElement, ABC):
 class DistantMeasure(Measure):
     """Distant measure scene element [:factorykey:`distant`].
 
-    The sensor is oriented based on the classical angular convention used
-    in Earth observation.
+    This scene element is a thin wrapper around the ``distant`` sensor kernel
+    plugin. It parametrises the sensor is oriented based on the a pair of zenith
+    and azimuth angles, following the convention used in Earth observation.
 
-    .. admonition:: Configuration example
-        :class: hint
+    .. rubric:: Constructor arguments / instance attributes
 
-        Default:
-            .. code:: python
+    ``zenith`` (float):
+        Zenith angle. Default value: 0 deg.
 
-               {
-                   "zenith": 0.,
-                   "azimuth": 0.,
-                   "spp": 10000,
-               }
+        Unit-enabled field (default: cdu[angle]).
 
-    .. admonition:: Configuration format
-        :class: hint
+    ``azimuth`` (float):
+        Azimuth angle value. Default value: 0 deg.
 
-        ``zenith`` (float):
-            Zenith angle [deg].
+        Unit-enabled field (default: cdu[angle]).
 
-            Default value: 0 deg.
-
-        ``azimuth`` (float):
-            Azimuth angle value [deg].
-
-            Default value: 0 deg.
-
-        ``spp`` (int):
-            Number of samples.
-
-            Default: 10000.
+    ``spp`` (int):
+        Number of samples. Default: 10000.
     """
 
     zenith, zenith_units = attrib_float_positive(
@@ -142,59 +133,40 @@ class DistantMeasure(Measure):
 class PerspectiveCameraMeasure(Measure):
     """Perspective camera scene element [:factorykey:`perspective`].
 
-    The sensor is oriented based on the classical angular convention used
-    in Earth observation.
+    This scene element is a thin wrapper around the ``perspective`` sensor
+    kernel plugin. It positions a perspective camera based on the a pair of
+    zenith and azimuth angles, following the convention used in Earth
+    observation. The film is a square.
 
-    The film is a square.
+    .. rubric:: Constructor arguments / instance attributes
 
-    .. admonition:: Configuration example
-        :class: hint
+    ``target`` (array[float]):
+        A 3-element vector specifying the location targeted by the camera.
+        Default: [0, 0, 0] m.
 
-        Default:
-            .. code:: python
+        Unit-enabled field (default: cdu[length]).
 
-               {
-                   "target": [0, 0, 0],
-                   "zenith": 0.,
-                   "azimuth": 0.,
-                   "distance": 1.,
-                   "res": 64,
-                   "spp": 32,
-               }
+    ``zenith`` (float):
+        Zenith angle. Default value: 0 deg.
 
-    .. admonition:: Configuration format
-        :class: hint
+        Unit-enabled field (default: cdu[angle]).
 
-        ``target`` (list[float]):
-            A 3-element vector specifying the location targeted by the camera
-            [u_length].
+    ``azimuth`` (float):
+        Azimuth angle value. Default value: 0 deg.
 
-            Default: [0, 0, 0] m.
+        Unit-enabled field (default: cdu[angle]).
 
-        ``zenith`` (float):
-            Zenith angle [deg].
+    ``distance`` (float):
+        Distance from the ``target`` point to the camera.
+        Default: 1 km.
 
-            Default value: 0 deg.
+        Unit-enabled field (default: cdu[length]).
 
-        ``azimuth`` (float):
-            Azimuth angle value [deg].
+    ``res`` (int):
+        Resolution of the film in pixels. Default: 64.
 
-            Default value: 0 deg.
-
-        ``distance`` (float):
-            Distance from the ``target`` point to the camera [u_length].
-
-            Default: 1 km.
-
-        ``res`` (int):
-            Resolution of the film in pixels.
-
-            Default: 64.
-
-        ``spp`` (int):
-            Number of samples per pixel.
-
-            Default: 32.
+    ``spp`` (int):
+        Number of samples per pixel. Default: 32.
     """
 
     target, target_units = attrib(
@@ -271,59 +243,56 @@ class PerspectiveCameraMeasure(Measure):
 @SceneElementFactory.register(name="radiancemeter_hsphere")
 @attr.s
 class RadianceMeterHsphereMeasure(Measure):
-    """Distant hemispherical measure scene element [:factorykey:`radiancemeter_hsphere`].
+    """Hemispherical radiancemeter measure scene element
+    [:factorykey:`radiancemeter_hsphere`].
 
-    This creates a :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin,
-    covering the hemisphere defined by the "origin" point and the "direction" vector.
+    This scene element creates a ``radiancemeterarray`` sensor kernel plugin
+    covering the hemisphere defined by an ``origin`` point and a ``direction``
+    vector.
 
-    The sensor is oriented based on the classical angular convention used
-    in Earth observation.
+    See :class:`Measure` for undocumented members.
 
-    .. admonition:: Configuration format
-        :class: hint
+    .. rubric:: Constructor arguments / instance attributes
 
-        ``zenith_res`` (float):
-            Zenith angle resolution. Default. 10 deg.
+    ``zenith_res`` (float):
+        Zenith angle resolution. Default:  10 deg.
 
-            Unit-enabled field (default unit: cdu[angle])
+        Unit-enabled field (default unit: cdu[angle]).
 
-        ``azimuth_res`` (float):
-            Azimuth angle resolution. Default: 10 deg.
+    ``azimuth_res`` (float):
+        Azimuth angle resolution. Default: 10 deg.
 
-            <Unit-enabled field (default unit: cdu[angle])>
+        Unit-enabled field (default unit: cdu[angle]).
 
-        ``origin`` (list[float]):
-            Position of the sensor. Default: [0, 0, 0] m.
+    ``origin`` (list[float]):
+        Position of the sensor. Default: [0, 0, 0] m.
 
-            Unit-enabled field (default unit: cdu[length])
+        Unit-enabled field (default unit: cdu[length]).
 
-        ``direction`` (list[float]):
-            Direction of the hemisphere's zenith.
+    ``direction`` (list[float]):
+        Direction of the hemisphere's zenith. Default: [0, 0, 1].
 
-            Default value: [0, 0, 1]
+        Unit-enabled field (default unit: cdu[length]).
 
-        ``orientation`` (list[float]):
-            Direction with which azimuth origin is aligned
 
-            Default value: [1, 0, 0]
+    ``orientation`` (list[float]):
+        Direction with which azimuth origin is aligned.
+        Default value: [1, 0, 0].
 
-        ``hemisphere`` (str):
-            "front" sets the sensors to point into the hemisphere that holds
-            the "direction" vector, while "back" sets them to point into the
-            opposite hemisphere.
+        Unit-enabled field (default unit: cdu[length]).
 
-            Default value: "front"
 
-        ``spp`` (int):
-            Number of samples per (zenith, azimuth) pair.
+    ``hemisphere`` ("front" or "back"):
+        If set to ``"front"``, the created radiancemeter array directions will
+        point to the hemisphere defined by ``direction``.
+        If set to ``"back"``, the created radiancemeter array directions will
+        point to the hemisphere defined by ``-direction``.
+        Default value: ``"front"``.
 
-            Default: 32.
-
-        ``id`` (str):
-            Identifier to allow mapping of results to the measure inside an application.
-
-            Default: "radiancemeter_hemisphere"
+    ``spp`` (int):
+        Number of samples per (zenith, azimuth) pair. Default: 32.
     """
+    # TODO: add figure to explain what "hemisphere" does
 
     zenith_res, zenith_res_units = attrib_float_positive(
         default=ureg.Quantity(10., ureg.deg),
