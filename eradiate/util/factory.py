@@ -74,7 +74,7 @@ class BaseFactory:
             The decorated class cannot be registered because it is not supported
             by the factory.
 
-         Raises → AttributeError:
+        Raises → AttributeError:
             The decorated class cannot be registered because it is missing
             a ``from_dict()`` method.
 

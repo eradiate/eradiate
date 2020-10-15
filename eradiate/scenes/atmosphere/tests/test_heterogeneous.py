@@ -47,8 +47,11 @@ def test_heterogeneous_write(mode_mono, tmpdir):
         a = HeterogeneousAtmosphere(
             width=100.,
             height=1000.,
-            sigma_t=np.ones((3, 3, 3)),
-            albedo=np.ones((3, 3, 3)),
+            profile={
+                "type": "array",
+                "sigma_t_values": np.ones((3, 3, 3)),
+                "albedo_values": np.ones((3, 3, 3)),
+            },
             cache_dir=tmpdir
         )
 
@@ -65,8 +68,7 @@ def test_heterogeneous_write(mode_mono, tmpdir):
 
     with pytest.raises(FileNotFoundError):
         a = HeterogeneousAtmosphere(
-            albedo=None,
-            sigma_t=None,
+            profile=None,
             albedo_fname=tmpdir / "doesnt_exist.vol",
             sigma_t_fname=tmpdir / "doesnt_exist.vol",
         )

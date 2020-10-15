@@ -7,9 +7,9 @@ import numpy as np
 import xarray as xr
 
 from .base import Atmosphere
+from .radiative_properties.rad_profile import RadProfile, RadProfileFactory
 from ..core import SceneElementFactory
-from ...util.attrs import attrib, attrib_units, validator_is_file
-from ...util.units import config_default_units as cdu
+from ...util.attrs import attrib, validator_is_file
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
 
@@ -74,21 +74,19 @@ class HeterogeneousAtmosphere(Atmosphere):
     See :class:`~eradiate.scenes.atmosphere.base.Atmosphere` for undocumented
     members.
 
-    This class builds a one-dimensional heterogeneous atmosphere. The used
-    radiative properties can be specified two ways:
+    This class builds a one-dimensional heterogeneous atmosphere. It expands as
+    a ``heterogeneous`` kernel plugin, which takes as parameters a set of
+    paths to volume data files. The radiative properties used to configure
+    :class:`.HeterogeneousAtmosphere` can be specified two ways:
 
-    - if the ``albedo`` and ``sigma_t`` fields are specified, kernel volume data
-      files will be created using those data;
-    - if the ``albedo`` and ``sigma_t`` fields are not specified (_i.e._ set to
-      ``None``), kernel volume data files will be read from locations set in
-      the ``albedo_fname`` and ``sigma_t_fname`` attributes.
+    - if the ``profile`` field is specified, kernel volume data files will be
+      created using those data;
+    - if the ``profile`` field is not specified (_i.e._ set to ``None``), kernel
+      volume data files will be read from locations set in the ``albedo_fname``
+      and ``sigma_t_fname`` attributes (which then must be set to paths
+      pointing to existing files).
 
-    .. note::
-
-       It is possible to mix and match approaches (_e.g._ provide an array
-       for ``albedo`` and a file path for ``sigma_t``.
-
-    If ``albedo`` and ``sigma_t`` are specified:
+    If ``profile`` is specified:
 
     - if ``albedo_fname`` and ``sigma_t_fname`` are specified, data files will
       be written to those paths;
@@ -102,48 +100,37 @@ class HeterogeneousAtmosphere(Atmosphere):
 
     .. warning::
 
-       While radiative properties specified using the ``albedo`` and ``sigma_t``
-       fields will be scaled according by default unit override, existing volume
-       data will not.
+       While radiative properties specified using the ``profile`` field will be
+       scaled according to kernel default unit override, existing volume data
+       will not.
 
-    Constructor arguments / instance attributes:
-        ``albedo`` (:class:`~numpy.ndarray` or :class:`~xarray.DataArray` or None):
-            Array containing albedo values. If ``None``, volume data will be
-            directly loaded from ``albedo_fname``.
+    .. rubric:: Constructor arguments / instance attributes
 
-            Unit-enabled field (default unit: dimensionless).
+    ``profile`` (:class:`~eradiate.scenes.atmosphere.radiative_properties.rad_profile.RadProfile` or None):
+        Radiative property profile used. If set, volume data files will be
+        created from profile data to initialise the corresponding kernel
+        plugin. If ``None``, :class:`.HeterogeneousAtmosphere` will assume
+        that volume data files already exist.
 
-        ``albedo_fname`` (path-like or None):
-            Path to the single scattering albedo volume data file. If ``None``,
-            a value will be created when the file will be requested.
-            Default: ``None``.
+    ``albedo_fname`` (path-like or None):
+        Path to the single scattering albedo volume data file. If ``None``,
+        a value will be created when the file will be requested.
+        Default: ``None``.
 
-        ``sigma_t`` (:class:`~numpy.ndarray` or :class:`~xarray.DataArray` or None):
-            Array containing scattering coefficient values. If ``None``, volume
-            data will be directly loaded from ``sigma_t_fname``.
+    ``sigma_t_fname`` (path-like or None):
+        Path to the extinction coefficient volume data file. If ``None``,
+        a value will be created when the file will be requested.
+        Default: ``None``.
 
-            Unit-enabled field (default unit: cdu[length]^-1).
-
-        ``sigma_t_fname`` (path-like or None):
-            Path to the extinction coefficient volume data file. If ``None``,
-            a value will be created when the file will be requested.
-            Default: ``None``.
-
-        ``cache_dir`` (path-like or None):
-            Path to a cache directory where volume data files will be created.
-            If ``None``, a temporary cache directory will be used.
+    ``cache_dir`` (path-like or None):
+        Path to a cache directory where volume data files will be created.
+        If ``None``, a temporary cache directory will be used.
     """
 
-    albedo = attrib(
+    profile = attrib(
         default=None,
-        converter=_dataarray_to_ndarray,
-        validator=attr.validators.optional(attr.validators.instance_of(np.ndarray)),
-        has_units=True
-    )
-
-    albedo_units = attrib_units(
-        compatible_units=ureg.dimensionless,
-        default=attr.Factory(lambda: cdu.get("dimensionless"))
+        converter=RadProfileFactory.convert,
+        validator=attr.validators.optional(attr.validators.instance_of(RadProfile))
     )
 
     albedo_fname = attrib(
@@ -154,31 +141,14 @@ class HeterogeneousAtmosphere(Atmosphere):
     @albedo_fname.validator
     def _albedo_fname_validator(self, attribute, value):
         # The file should exist if no albedo value is provided to create it
-        if self.albedo is None:
+        if self.profile is None:
             if value is None:
-                raise ValueError("if 'albedo' is not set, "
+                raise ValueError("if 'profile' is not set, "
                                  "'albedo_fname' must be set")
             try:
                 return validator_is_file(self, attribute, value)
             except FileNotFoundError:
                 raise
-
-    @property
-    def _albedo_quantity(self):
-        """Returns → ``"albedo"``"""
-        return "albedo"
-
-    sigma_t = attrib(
-        default=None,
-        converter=_dataarray_to_ndarray,
-        validator=attr.validators.optional(attr.validators.instance_of(np.ndarray)),
-        has_units=True
-    )
-
-    sigma_t_units = attrib_units(
-        compatible_units=ureg.m ** -1,
-        default=attr.Factory(lambda: cdu.get("length") ** -1)
-    )
 
     sigma_t_fname = attrib(
         default=None,
@@ -188,24 +158,24 @@ class HeterogeneousAtmosphere(Atmosphere):
     @sigma_t_fname.validator
     def _sigma_t_fname_validator(self, attribute, value):
         # The file should exist if no sigma_t value is provided to create it
-        if self.sigma_t is None:
+        if self.profile is None:
             if value is None:
-                raise ValueError("if 'sigma_t' is not set, "
+                raise ValueError("if 'profile' is not set, "
                                  "'sigma_t_fname' must be set")
             try:
                 return validator_is_file(self, attribute, value)
             except FileNotFoundError:
                 raise
 
-    @property
-    def _sigma_t_quantity(self):
-        """Returns → ``"collision_coefficient"``"""
-        return "collision_coefficient"
-
     _cache_dir = attrib(
         default=None,
         converter=attr.converters.optional(Path)
     )
+
+    _quantities = {
+        "albedo": "albedo",
+        "sigma_t": "collision_coefficient"
+    }
 
     def __attrs_post_init__(self):
         super(HeterogeneousAtmosphere, self).__attrs_post_init__()
@@ -217,11 +187,24 @@ class HeterogeneousAtmosphere(Atmosphere):
             self._cache_dir.mkdir(parents=True, exist_ok=True)
 
     def make_volume_data(self, fields=None):
-        supported_fields = {"albedo", "sigma_t"}
+        """Create volume data files for requested fields.
+
+        Parameter ``fields`` (str or list or None):
+            If str, field for which to create volume data file. If list,
+            fields for which to create volume data files. If ``None``,
+            all supported fields are processed (``{"albedo", "sigma_t"}``).
+            Default: ``None``.
+        """
+        supported_fields = set(self._quantities.keys())
+
         if fields is None:
             fields = supported_fields
         elif isinstance(fields, str):
             fields = {fields}
+
+        if self.profile is None:
+            raise ValueError("'profile' is not set, cannot write volume data "
+                             "files")
 
         for field in fields:
             # Is the requested field supported?
@@ -230,12 +213,11 @@ class HeterogeneousAtmosphere(Atmosphere):
                                  f"volume data")
 
             # Does the considered field have values?
-            field_values = getattr(self, field)
-            if field_values is None:
+            field_quantity = getattr(self.profile, field)()
+
+            if field_quantity is None:
                 raise ValueError(f"field {field} is empty, cannot create "
                                  f"volume data")
-            field_units = getattr(self, f"{field}_units")
-            field_quantity = ureg.Quantity(field_values, field_units)
 
             # If file name is not specified, we create one
             field_fname = getattr(self, f"{field}_fname")
@@ -246,7 +228,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             # We have the data and the filename: we can create the file
             write_binary_grid3d(
                 field_fname,
-                field_quantity.to(kdu.get(getattr(self, f"_{field}_quantity"))).magnitude
+                field_quantity.to(kdu.get(self._quantities[field])).magnitude
             )
 
     @property
@@ -278,10 +260,8 @@ class HeterogeneousAtmosphere(Atmosphere):
         ])
 
         # Create volume data files if possible
-        if self.albedo is not None:
+        if self.profile is not None:
             self.make_volume_data("albedo")
-
-        if self.sigma_t is not None:
             self.make_volume_data("sigma_t")
 
         # Output kernel dict

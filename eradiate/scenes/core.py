@@ -184,6 +184,7 @@ class SceneElementFactory(BaseFactory):
     """
 
     _constructed_type = SceneElement
+    registry = {}
 
     #: List of submodules where to look for registered classes
     _submodules = [
