@@ -330,8 +330,6 @@ class EradiateAccessor:
 
         # TODO: improve that check (shouldn't fail when extra dimensions are scalar or of size 1)
         if kind not in {"polar_pcolormesh", "polar_contourf"}:
-            warnings.warn(f"Unsupported plot kind {kind}, "
-                          f"redirecting to xarray's plotting function")
             return self._obj.plot(ax=ax, **kwargs)
 
         if self._num_angular_dimensions(exclude_scalar_dims=True) != 2:

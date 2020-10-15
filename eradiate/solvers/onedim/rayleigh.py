@@ -16,7 +16,7 @@ from ...scenes.core import SceneElementFactory, KernelDict
 from ...util import ensure_array, view
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
-from ...util.units import config_default_units as cdu
+from ...util.units import config_default_units as cdu, ureg
 from ...util.units import kernel_default_units as kdu
 from ...util.xarray import eo_dataarray
 from .runner import OneDimRunner
@@ -317,10 +317,10 @@ class RayleighSolverApp(ConfigObject):
 
                     if measure["type"] == "toa_lo_pplane":
                         if "orientation" not in measure:
-                            phi_i = self._elements["illumination"].config["azimuth"]
+                            phi_i = self._elements["illumination"].get_quantity("azimuth").to(ureg.rad).magnitude
                             measure["orientation"] = [np.cos(phi_i), np.sin(phi_i), 0]
                         element_config = deepcopy(measure)
-                        element_config["type"] = "radiance_pplane"
+                        element_config["type"] = "radiancemeter_pplane"
                         element_config["id"] = "toa_lo_pplane"
                     else:
                         element_config = deepcopy(measure)
@@ -358,16 +358,16 @@ class RayleighSolverApp(ConfigObject):
                 data = np.expand_dims(data, dim)
 
             zenith_res = self._elements[key].zenith_res
-            azimuth_res = self._elements[key].azimuth_res
 
             if key == "toa_lo_hsphere":
+                azimuth_res = self._elements[key].azimuth_res
                 theta_o = np.arange(0., 90., zenith_res)
                 phi_o = np.arange(0., 360., azimuth_res)
                 result_type = "hemisphere"
-            # TODO: Fix this once the pplane scene element is merged
-            # elif key == "toa_lo_pplane":
-            #     theta_o = np.arange(0., 90., self.config["measure"]["zenith_res"])
-            #     phi_o = np.array([0, 180])
+            elif key == "toa_lo_pplane":
+                theta_o = np.arange(0., 90., zenith_res)
+                phi_o = np.array([0, 180])
+                result_type = "pplane"
             else:
                 raise ValueError(f"Unsupported measure type {key}")
 
@@ -443,8 +443,8 @@ class RayleighSolverApp(ConfigObject):
             plt.title("Hemispherical view")
 
             hdata = np.squeeze(self.results[result_name].ert.sel(
-                theta_i=self.results["irradiance"]["sza"],
-                phi_i=self.results["irradiance"]["saa"],
+                theta_i=self.results["irradiance"]["sza"].data[0],
+                phi_i=self.results["irradiance"]["saa"].data[0],
                 wavelength=self.config["mode"]["wavelength"]
             ))
 
@@ -457,8 +457,8 @@ class RayleighSolverApp(ConfigObject):
 
             bhdata = self.results[result_name].ert.sel(wavelength=self.config['mode']['wavelength'])
             plane = view.pplane(bhdata,
-                                theta_i=self.results["irradiance"]["sza"],
-                                phi_i=self.results['irradiance']['saa'])
+                                theta_i=float(self.results["irradiance"]["sza"].data),
+                                phi_i=float(self.results['irradiance']['saa'].data))
 
             plane.ert.plot(kind="linear", ax=ax)
 

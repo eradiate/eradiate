@@ -289,8 +289,17 @@ class RadianceMeterHsphereMeasure(Measure):
         point to the hemisphere defined by ``-direction``.
         Default value: ``"front"``.
 
+<<<<<<< HEAD
     ``spp`` (int):
         Number of samples per (zenith, azimuth) pair. Default: 32.
+=======
+            Default: 32.
+
+        ``id`` (str):
+            Identifier to allow mapping of results to the measure inside an application.
+
+            Default: "radiancemeter_hsphere"
+>>>>>>> 78507d2... Added the principal plane measure and updated the plotting framework and RayleighSolverApp accordingly
     """
     # TODO: add figure to explain what "hemisphere" does
 
@@ -340,9 +349,11 @@ class RadianceMeterHsphereMeasure(Measure):
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
+        zenith_res = self.get_quantity("zenith_res").to(ureg.deg).magnitude
+        azimuth_res = self.get_quantity("azimuth_res").to(ureg.deg).magnitude
 
-        self._zenith_angles = ureg.Quantity(np.arange(0, 90, self.zenith_res), ureg.deg)
-        self._azimuth_angles = ureg.Quantity(np.arange(0, 360., self.azimuth_res), ureg.deg)
+        self._zenith_angles = ureg.Quantity(np.arange(0, 90, zenith_res), ureg.deg)
+        self._azimuth_angles = ureg.Quantity(np.arange(0, 360., azimuth_res), ureg.deg)
 
     def repack_results(self, results):
         """This method reshapes the 1D results returned by the
@@ -353,6 +364,7 @@ class RadianceMeterHsphereMeasure(Measure):
         return np.reshape(results, (len(self._zenith_angles), len(self._azimuth_angles)))
 
     def _orientation_transform(self):
+        """Compute matrix that transforms vectors between object and world space."""
         from eradiate.kernel.core import Transform4f, Vector3f, Point3f
         origin = Point3f(self.get_quantity("origin").to(kdu.get("length")).magnitude)
         zenith_direction = Vector3f(self.direction)
@@ -361,7 +373,9 @@ class RadianceMeterHsphereMeasure(Measure):
 
         return Transform4f.look_at(origin, origin + zenith_direction, up)
 
-    def directions(self):
+    def _directions(self):
+        """Generate the array of direction vectors to configure the kernel plugin.
+        Directions are returned as a flattened list of 3-component vectors."""
         hemisphere_transform = self._orientation_transform()
 
         directions = []
@@ -376,7 +390,7 @@ class RadianceMeterHsphereMeasure(Measure):
 
     def kernel_dict(self, **kwargs):
         spp = self.spp
-        directions = self.directions()
+        directions = self._directions()
         origin = self.get_quantity("origin").to(kdu.get("length")).magnitude
 
         return {
@@ -384,6 +398,183 @@ class RadianceMeterHsphereMeasure(Measure):
                 "type": "radiancemeterarray",
                 "directions": ", ".join([str(x) for x in directions.flatten()]),
                 "origins": ", ".join([str(x) for x in origin] * len(directions)),
+                "id": self.id,
+                "sampler": {
+                    "type": "independent",
+                    "sample_count": spp
+                },
+                "film": {
+                    "type": "hdrfilm",
+                    "width": len(directions),
+                    "height": 1,
+                    "pixel_format": "luminance",
+                    "component_format": "float32",
+                    "rfilter": {"type": "box"}
+                }
+            }
+        }
+
+
+@attr.s
+@SceneElementFactory.register(name="radiancemeter_pplane")
+class RadianceMeterPPlaneMeasure(Measure):
+    """Distant principal plane measure scene generation helper [:factorykey:`radiancemeter_pplane`].
+
+    This creates a :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin,
+    covering the plane defined by the "origin" point, the "direction" vector as the apex
+    of the hemisphere and the "orientation" vector to select the plane inside this hemisphere.
+
+    The "hemisphere" parameter can be used to invert the sensor's orientation: Setting it to
+    "front" lets the sensor observe the hemisphere defined by the origin and the direction,
+    which can be thought of as looking upwards. Setting the parameter to "back" lets the sensor
+    observe the opposite hemisphere, or look downwards.
+
+    The sensor is oriented based on the classical angular convention used
+    in Earth observation.
+
+    .. admonition:: Configuration format
+        :class: hint
+
+        ``zenith_res`` (float):
+            Zenith angle resolution. Default. 10.
+
+            Unit-enabled field (default unit: cdu[angle])
+
+        ``origin`` (list[float]):
+            Position of the sensor. Default: [0, 0, 0]
+
+            Unit-enabled field (default unit: cdu[length])
+
+        ``direction`` (list[float]):
+            Direction of the hemisphere's zenith
+
+            Default value: [0, 0, 1]
+
+        ``orientation`` (list[float]):
+            Direction with which azimuth origin is aligned
+
+            Default value: [1, 0, 0]
+
+        ``hemisphere`` (str):
+            "front" sets the sensors to point into the hemisphere that holds
+            the "direction" vector, while "back" sets them to point into the
+            opposite hemisphere.
+
+            Default value: "front"
+
+        ``spp`` (int):
+            Number of samples per (zenith, azimuth) pair.
+
+            Default: 32.
+
+        ``id`` (str):
+            Identifier to allow mapping of results to the measure inside an application.
+
+            Default: "radiancemeter_pplane"
+    """
+    zenith_res = attrib_float_positive(
+        default=10.,
+        has_units=True
+    )
+    zenith_res_units = attrib_units(
+        default=attr.Factory(lambda: cdu.get("angle")),
+        compatible_units=ureg.deg,
+    )
+
+    origin = attrib(
+        default=[0, 0, 0],
+        validator=validator_has_len(3),
+        has_units=True
+    )
+    origin_units = attrib_units(
+        default=attr.Factory(lambda: cdu.get("length")),
+        compatible_units=ureg.m,
+    )
+
+    direction = attrib(
+        default=[0, 0, 1],
+        validator=validator_has_len(3),
+        has_units=False
+    )
+
+    orientation = attrib(
+        default=[1, 0, 0],
+        validator=validator_has_len(3),
+        has_units=False
+    )
+
+    hemisphere = attrib(
+        default="front",
+        validator=attr.validators.in_(("front", "back")),
+    )
+
+    id = attr.ib(
+        default="radiancemeter_pplane",
+        validator=attr.validators.optional((attr.validators.instance_of(str))),
+    )
+
+    spp = attrib_int_positive(default=32)
+
+    _zenith_angles = attrib(default=None, init=False)  # Set during post-init
+    _azimuth_angles = attrib(default=None, init=False)  # Set during post-init
+
+    def __attrs_post_init__(self):
+        """(Re)initialise internal state.
+
+        This method is automatically called by the constructor to initialise the
+        object."""
+        super().__attrs_post_init__()
+        zenith_res = self.get_quantity("zenith_res").to(ureg.deg).magnitude
+
+        self.zenith_angles = ureg.Quantity(np.arange(0, 90, zenith_res), ureg.deg)
+        self.azimuth_angles = ureg.Quantity(np.array([0, 180]), ureg.deg)
+
+    def repack_results(self, results):
+        """This method reshapes the 1D results returned by the
+        :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin into the shape
+        implied by the azimuth and zenith angle resolutions, such that
+        the result complies with the format required to further process the results."""
+
+        return np.reshape(results, (len(self.zenith_angles), 2))
+
+    def _orientation_transform(self):
+        """Compute matrix that transforms vectors between object and world space."""
+        from eradiate.kernel.core import Transform4f, Point3f, Vector3f
+        origin = Point3f(self.get_quantity("origin").to(kdu.get("length")).magnitude)
+        zenith_direction = Vector3f(self.direction)
+        orientation = Vector3f(self.orientation)
+
+        up = Transform4f.rotate(zenith_direction, 90).transform_vector(orientation)
+        if not np.any(np.cross(zenith_direction, up)):
+            raise ValueError("Zenith direction and orientation must not be parallel!")
+
+        return Transform4f.look_at(origin, [sum(x) for x in zip(origin, zenith_direction)], up)
+
+    def _directions(self):
+        """Generate the array of direction vectors to configure the kernel plugin.
+        Directions are returned as a flattened list of 3-component vectors."""
+        hemisphere_transform = self._orientation_transform()
+
+        directions = []
+        for theta in self.zenith_angles.to(ureg.rad).magnitude:
+            for phi in self.azimuth_angles.to(ureg.rad).magnitude:
+                directions.append(hemisphere_transform.transform_vector(
+                    angles_to_direction(theta=theta, phi=phi))
+                )
+
+        return -np.array(directions) if self.hemisphere == "back" \
+            else np.array(directions)
+
+    def kernel_dict(self, **kwargs):
+        spp = self.spp
+        directions = self._directions()
+        origin = list(self.get_quantity("origin").to(kdu.get("length")).magnitude)
+
+        return {
+            self.id: {
+                "type": "radiancemeterarray",
+                "directions": ", ".join([str(x) for x in directions.flatten()]),
+                "origins": ", ".join([str(x) for x in origin]*len(directions)),
                 "id": self.id,
                 "sampler": {
                     "type": "independent",
