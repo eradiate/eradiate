@@ -181,9 +181,13 @@ nbsphinx_execute = "never"
 # Autodoc options
 autosummary_generate = True
 autosummary_members = True
-autodoc_default_flags = ["members", "undoc-members", "show-inheritance", "inherited-members"]
-autodoc_mock_imports = ["eradiate.kernel"]
-
-# Set Mitsuba variant for autodoc (not required anymore)
-# import eradiate.kernel
-# eradiate.kernel.set_variant("scalar_mono_double")
+autodoc_default_flags = [
+    "members", "undoc-members", "show-inheritance", "inherited-members"
+]
+# Mitsuba modules must be mocked in order to allow compiling docs even if they're not here;
+# this mocking is also done in the ertdocs extension
+autodoc_mock_imports = [
+    "mitsuba", "mitsuba.core", "mitsuba.core.math", "mitsuba.core.spline",
+    "mitsuba.core.warp", "mitsuba.core.xml", "mitsuba.render",
+    "mitsuba.render.mueller"
+]

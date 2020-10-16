@@ -1,3 +1,15 @@
+import sys
+
+import mock
+
+MOCK_MODULES = [
+    "mitsuba", "mitsuba.core", "mitsuba.core.math", "mitsuba.core.spline",
+    "mitsuba.core.warp", "mitsuba.core.xml", "mitsuba.render",
+    "mitsuba.render.mueller"
+]
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
+
 from docutils import nodes
 from docutils.parsers.rst import directives
 from docutils.parsers.rst.directives.tables import Table
@@ -47,11 +59,11 @@ class FactoryTable(Table):
         if modules is None:
             modules = SceneElementFactory._submodules
         else:
-            modules = [x.strip() for x in  modules.split(",")]
+            modules = [x.strip() for x in modules.split(",")]
 
         if not set(modules) <= set(SceneElementFactory._submodules):
             error = self.state_machine.reporter.error(
-                f"The following requested modules are not inspected by the " 
+                f"The following requested modules are not inspected by the "
                 f"Eradiate factory: "
                 f"{', '.join(set(modules) - set(SceneElementFactory._submodules))}",
                 nodes.literal_block(self.block_text, self.block_text),
