@@ -118,14 +118,14 @@ class RayleighSolverApp(ConfigObject):
 
             - Top of atmosphere leaving radiance in principal plane
 
-            Both measures record the leaving radiance at the top of the configured
+            Both measures record the outgoing radiance at the top of the configured
             atmosphere. Their central difference is that the principal plane measure
             records radiance for only one azimuth value, opposed to the hemispherical
             measure, which covers the entire hemisphere.
 
             .. admonition:: Note
 
-                BRDF and BRF measures are created from the leaving radiance in
+                BRDF and BRF measures are computed from the outgoing radiance in
                 post-procressing and do not require dedicated scene elements.
 
 
@@ -363,16 +363,16 @@ class RayleighSolverApp(ConfigObject):
                 azimuth_res = self._elements[key].azimuth_res
                 theta_o = np.arange(0., 90., zenith_res)
                 phi_o = np.arange(0., 360., azimuth_res)
-                result_type = "hemisphere"
+                angular_domain = "hemisphere"
             elif key == "toa_lo_pplane":
                 theta_o = np.arange(0., 90., zenith_res)
                 phi_o = np.array([0, 180])
-                result_type = "pplane"
+                angular_domain = "pplane"
             else:
                 raise ValueError(f"Unsupported measure type {key}")
 
             self.results[key] = eo_dataarray(data, theta_i, phi_i, theta_o, phi_o,
-                                             wavelength, result_type=result_type)
+                                             wavelength, angular_domain=angular_domain)
             self.results[f"irradiance"] = (
                 ("sza", "saa", "wavelength"),
                 np.array(self._kernel_dict["illumination"]["irradiance"]["value"]).reshape(1, 1, 1),
@@ -429,11 +429,11 @@ class RayleighSolverApp(ConfigObject):
             Optional Axes object to embed the plot in a separate plotting script
 
         """
-        result_type = self.results[result_name].attrs["result_type"]
+        angular_domain = self.results[result_name].attrs["angular_domain"]
 
         if plot_type is None:
-            plot_type = result_type
-        elif plot_type == "hemisphere" and result_type != "hemisphere":
+            plot_type = angular_domain
+        elif plot_type == "hemisphere" and angular_domain != "hemisphere":
             raise ValueError("hemispherical plot type requires hemispherical measure type")
 
         # Select plot based on requested measure type

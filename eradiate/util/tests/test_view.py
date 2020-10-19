@@ -96,8 +96,8 @@ def test_accessor_angular_dimensions(variant_scalar_mono):
     arr.w.attrs["unit"] = "radians"
 
     assert arr.ert._num_angular_dimensions() == 4
-    assert arr.ert.is_bihemispherical() == True
-    assert arr.ert.is_hemispherical() == False
+    assert arr.ert.is_bihemispherical()
+    assert not arr.ert.is_hemispherical()
 
     # array without angular dimensions
     arr.x.attrs["unit"] = "degert"
@@ -106,8 +106,8 @@ def test_accessor_angular_dimensions(variant_scalar_mono):
     arr.w.attrs["unit"] = "radian"
 
     assert arr.ert._num_angular_dimensions() == 0
-    assert arr.ert.is_bihemispherical() == False
-    assert arr.ert.is_hemispherical() == False
+    assert not arr.ert.is_bihemispherical()
+    assert not arr.ert.is_hemispherical()
 
     # hemispherical array
     arr.x.attrs["unit"] = "deg"
@@ -116,8 +116,8 @@ def test_accessor_angular_dimensions(variant_scalar_mono):
     arr.w.attrs["unit"] = "radian"
 
     assert arr.ert._num_angular_dimensions() == 2
-    assert arr.ert.is_bihemispherical() == False
-    assert arr.ert.is_hemispherical() == True
+    assert not arr.ert.is_bihemispherical()
+    assert arr.ert.is_hemispherical()
 
 
 def test_accessor_sel(variant_scalar_mono):

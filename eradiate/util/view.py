@@ -24,12 +24,12 @@ class SampledAdapter(ABC):
         outgoing directions and wavelength.
 
         Parameter ``wo`` (array)
-            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`
-            and :math:`\phi` values in degrees.
+            Direction of outgoing radiation, given as a 2-vector of zenith
+            and azimuth values in degrees.
 
         Parameter ``wi`` (array)
-            Direction of outgoing radiation, given as a 2-vector of :math:`\theta`
-            and :math:`\phi` values in degrees.
+            Direction of outgoing radiation, given as a 2-vector of zenith
+            and azimuth values in degrees.
 
         Parameter ``wavelength`` (float)
             Wavelength to query the BSDF plugin at.
@@ -79,8 +79,8 @@ def plane(hdata, phi=0.):
     ``phi`` and its complementary ``phi`` + 180°, and stitch the two subsets
     together.
 
-    Positive zenith values will be mapped to ``phi``, while negative zenith
-    values will be mapeed to ``phi`` + 180°.
+    Data at azimuth angle ``phi`` will be mapped to positive zenith values, while
+    data at ``phi`` + 180° will be mapped to negative zenith values.
 
     .. note::
         If ``hdata`` contains other non-angular dimensions (_e.g._ wavelength),
@@ -184,7 +184,7 @@ def bhdata_from_plugin(source, sza, saa, vza_res, vaa_res, wavelength):
             data[j, i] = bsdf.evaluate((theta, phi), wi, wavelength)
 
     data = np.expand_dims(data, [0, 1, 4])
-    arr = eo_dataarray(data, [sza], [saa], vza, vaa, wavelength)
+    arr = eo_dataarray(data, [sza], [saa], vza, vaa, wavelength, "hemispherical")
 
     return arr
 
@@ -253,7 +253,7 @@ class EradiateAccessor:
             Keyword arguments adjusted for the angular naming convention in the DataArray.
         """
         for arg in kwargs:
-            if not arg in self._obj.dims:
+            if arg not in self._obj.dims:
                 break
         else:
             return kwargs

@@ -1,4 +1,4 @@
-r"""Atmospheric thermophysical field data sets definition and creation.
+"""Atmospheric thermophysical field data sets definition and creation.
 
 .. note::
     The data sets defined here do not represent the point values of the

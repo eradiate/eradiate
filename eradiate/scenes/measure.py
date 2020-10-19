@@ -437,6 +437,11 @@ class RadianceMeterPPlaneMeasure(Measure):
 
             Unit-enabled field (default unit: cdu[angle])
 
+        ``azimuth_res`` (float):
+            Azimuth angle resolution. Default: 10.
+
+            Unit-enabled field (default unit: cdu[angle])
+
         ``origin`` (list[float]):
             Position of the sensor. Default: [0, 0, 0]
 
