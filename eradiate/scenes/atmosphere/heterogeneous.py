@@ -11,7 +11,6 @@ from .radiative_properties.rad_profile import RadProfile, RadProfileFactory
 from ..core import SceneElementFactory
 from ...util.attrs import attrib, validator_is_file
 from ...util.units import kernel_default_units as kdu
-from ...util.units import ureg
 
 
 def write_binary_grid3d(filename, values):

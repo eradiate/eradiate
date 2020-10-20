@@ -78,12 +78,12 @@ class DistantMeasure(Measure):
         ``zenith`` (float):
             Zenith angle [deg].
 
-            Default value: 0.
+            Default value: 0 deg.
 
         ``azimuth`` (float):
             Azimuth angle value [deg].
 
-            Default value: 0.
+            Default value: 0 deg.
 
         ``spp`` (int):
             Number of samples.
@@ -91,22 +91,16 @@ class DistantMeasure(Measure):
             Default: 10000.
     """
 
-    zenith = attrib_float_positive(
-        default=0.,
-        has_units=True
-    )
-    zenith_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("angle")),
-        compatible_units=ureg.deg,
+    zenith, zenith_units = attrib_float_positive(
+        default=ureg.Quantity(0., ureg.deg),
+        units_compatible=ureg.deg,
+        units_default=attr.Factory(lambda: cdu.get("angle")),
     )
 
-    azimuth = attrib_float_positive(
-        default=0.,
-        has_units=True
-    )
-    azimuth_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("angle")),
-        compatible_units=ureg.deg,
+    azimuth, azimuth_units = attrib_float_positive(
+        default=ureg.Quantity(0., ureg.deg),
+        units_default=attr.Factory(lambda: cdu.get("angle")),
+        units_compatible=ureg.deg,
     )
 
     spp = attrib_int_positive(default=10000)
@@ -175,22 +169,22 @@ class PerspectiveCameraMeasure(Measure):
             A 3-element vector specifying the location targeted by the camera
             [u_length].
 
-            Default: [0, 0, 0].
+            Default: [0, 0, 0] m.
 
         ``zenith`` (float):
             Zenith angle [deg].
 
-            Default value: 0.
+            Default value: 0 deg.
 
         ``azimuth`` (float):
             Azimuth angle value [deg].
 
-            Default value: 0.
+            Default value: 0 deg.
 
         ``distance`` (float):
             Distance from the ``target`` point to the camera [u_length].
 
-            Default: 1.
+            Default: 1 km.
 
         ``res`` (int):
             Resolution of the film in pixels.
@@ -203,41 +197,29 @@ class PerspectiveCameraMeasure(Measure):
             Default: 32.
     """
 
-    target = attrib(
-        default=[0, 0, 0],
+    target, target_units = attrib(
+        default=ureg.Quantity([0, 0, 0], ureg.m),
         validator=validator_has_len(3),
-        has_units=True
-    )
-    target_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("length")),
-        compatible_units=ureg.m,
+        units_compatible=ureg.m,
+        units_default=attr.Factory(lambda: cdu.get("length")),
     )
 
-    zenith = attrib_float_positive(
-        default=0.,
-        has_units=True
-    )
-    zenith_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("angle")),
-        compatible_units=ureg.deg,
+    zenith, zenith_units = attrib_float_positive(
+        default=ureg.Quantity(0., ureg.deg),
+        units_compatible=ureg.deg,
+        units_default=attr.Factory(lambda: cdu.get("angle")),
     )
 
-    azimuth = attrib_float_positive(
-        default=0.,
-        has_units=True
-    )
-    azimuth_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("angle")),
-        compatible_units=ureg.deg,
+    azimuth, azimuth_units = attrib_float_positive(
+        default=ureg.Quantity(0., ureg.deg),
+        units_compatible=ureg.deg,
+        units_default=attr.Factory(lambda: cdu.get("angle")),
     )
 
-    distance = attrib_float_positive(
-        default=1.,
-        has_units=True
-    )
-    distance_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("length")),
-        compatible_units=ureg.m
+    distance, distance_units = attrib_float_positive(
+        default=ureg.Quantity(1., ureg.km),
+        units_compatible=ureg.m,
+        units_default=attr.Factory(lambda: cdu.get("length")),
     )
 
     res = attrib_int_positive(default=64)
@@ -301,22 +283,22 @@ class RadianceMeterHsphereMeasure(Measure):
         :class: hint
 
         ``zenith_res`` (float):
-            Zenith angle resolution. Default. 10.
+            Zenith angle resolution. Default. 10 deg.
 
             Unit-enabled field (default unit: cdu[angle])
 
         ``azimuth_res`` (float):
-            Azimuth angle resolution. Default: 10.
+            Azimuth angle resolution. Default: 10 deg.
 
             <Unit-enabled field (default unit: cdu[angle])>
 
         ``origin`` (list[float]):
-            Position of the sensor. Default: [0, 0, 0]
+            Position of the sensor. Default: [0, 0, 0] m.
 
             Unit-enabled field (default unit: cdu[length])
 
         ``direction`` (list[float]):
-            Direction of the hemisphere's zenith
+            Direction of the hemisphere's zenith.
 
             Default value: [0, 0, 1]
 
@@ -343,44 +325,33 @@ class RadianceMeterHsphereMeasure(Measure):
             Default: "radiancemeter_hemisphere"
     """
 
-    zenith_res = attrib_float_positive(
-        default=10.,
-        has_units=True
-    )
-    zenith_res_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("angle")),
-        compatible_units=ureg.deg,
+    zenith_res, zenith_res_units = attrib_float_positive(
+        default=ureg.Quantity(10., ureg.deg),
+        units_compatible=ureg.deg,
+        units_default=attr.Factory(lambda: cdu.get("angle")),
     )
 
-    azimuth_res = attrib_float_positive(
-        default=10.,
-        has_units=True
-    )
-    azimuth_res_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("angle")),
-        compatible_units=ureg.deg,
+    azimuth_res, azimuth_res_units = attrib_float_positive(
+        default=ureg.Quantity(10., ureg.deg),
+        units_compatible=ureg.deg,
+        units_default=attr.Factory(lambda: cdu.get("angle")),
     )
 
-    origin = attrib(
-        default=[0, 0, 0],
+    origin, origin_units = attrib(
+        default=ureg.Quantity([0, 0, 0], ureg.m),
         validator=validator_has_len(3),
-        has_units=True
-    )
-    origin_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("length")),
-        compatible_units=ureg.m,
+        units_compatible=ureg.m,
+        units_default=attr.Factory(lambda: cdu.get("length")),
     )
 
     direction = attrib(
         default=[0, 0, 1],
-        validator=validator_has_len(3),
-        has_units=False
+        validator=validator_has_len(3)
     )
 
     orientation = attrib(
         default=[1, 0, 0],
         validator=validator_has_len(3),
-        has_units=False
     )
 
     hemisphere = attrib(

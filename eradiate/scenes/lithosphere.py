@@ -28,13 +28,10 @@ class Surface(SceneElement, ABC):
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
-    width = attrib_float_positive(
+    width, width_units = attrib_float_positive(
         default=1.,
-        has_units=True
-    )
-    width_units = attrib_units(
-        compatible_units=ureg.m,
-        default=attr.Factory(lambda: cdu.get("length"))
+        units_compatible=ureg.m,
+        units_default=attr.Factory(lambda: cdu.get("length"))
     )
 
     @abstractmethod

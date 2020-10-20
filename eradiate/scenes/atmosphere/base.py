@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import attr
 
 from ..core import SceneElement
-from ...util.attrs import attrib, attrib_float_positive, attrib_units
+from ...util.attrs import attrib, attrib_float_positive, converter_quantity
 from ...util.units import config_default_units as cdu
 from ...util.units import ureg
 
@@ -14,10 +14,7 @@ def _converter_number_or_auto(value):
     if value == "auto":
         return value
 
-    if isinstance(value, ureg.Quantity):
-        return value
-
-    return float(value)
+    return converter_quantity(float)(value)
 
 
 def _validator_number_or_auto(_, attribute, value):
@@ -41,7 +38,7 @@ class Atmosphere(SceneElement, ABC):
     Constructor arguments / instance attributes:
 
         ``height`` (float):
-            Atmosphere height. Default: 100.
+            Atmosphere height. Default: 100 km.
 
             Unit-enabled field (default unit: cdu[length])
 
@@ -59,24 +56,18 @@ class Atmosphere(SceneElement, ABC):
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
-    height = attrib_float_positive(
-        default=1e2,
-        has_units=True
-    )
-    height_units = attrib_units(
-        compatible_units=ureg.m,
-        default=attr.Factory(lambda: cdu.get("length"))
+    height, height_units = attrib_float_positive(
+        default=ureg.Quantity(100., ureg.km),
+        units_compatible=ureg.m,
+        units_default=attr.Factory(lambda: cdu.get("length"))
     )
 
-    width = attrib(
+    width, width_units = attrib(
         default="auto",
         converter=_converter_number_or_auto,
         validator=_validator_number_or_auto,
-        has_units=True
-    )
-    width_units = attrib_units(
-        compatible_units=ureg.m,
-        default=attr.Factory(lambda: cdu.get("length")),
+        units_compatible=ureg.m,
+        units_default=attr.Factory(lambda: cdu.get("length")),
     )
 
     @property

@@ -74,12 +74,12 @@ class DirectionalIllumination(Illumination):
 
     Constructor arguments / instance attributes:
         ``zenith`` (float):
-             Zenith angle. Default: 0.
+            Zenith angle. Default: 0 deg.
 
             Unit-enabled field (default unit: cdu[angle]).
 
         ``azimuth`` (float):
-            Azimuth angle value. Default: 0.
+            Azimuth angle value. Default: 0 deg.
 
             Unit-enabled field (default unit: cdu[angle]).
 
@@ -87,22 +87,16 @@ class DirectionalIllumination(Illumination):
             Emitted power flux in the plane orthogonal to the illumination direction.
             Default: :class:`~eradiate.scenes.spectra.SolarIrradianceSpectrum`.
     """
-    zenith = attrib_float_positive(
-        default=0.,
-        has_units=True
-    )
-    zenith_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("angle")),
-        compatible_units=ureg.deg,
+    zenith, zenith_units = attrib_float_positive(
+        default=ureg.Quantity(0., ureg.deg),
+        units_compatible=ureg.deg,
+        units_default=attr.Factory(lambda: cdu.get("angle")),
     )
 
-    azimuth = attrib_float_positive(
-        default=0.,
-        has_units=True
-    )
-    azimuth_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("angle")),
-        compatible_units=ureg.deg,
+    azimuth, azimuth_units = attrib_float_positive(
+        default=ureg.Quantity(0., ureg.deg),
+        units_compatible=ureg.deg,
+        units_default=attr.Factory(lambda: cdu.get("angle")),
     )
 
     irradiance = attrib(

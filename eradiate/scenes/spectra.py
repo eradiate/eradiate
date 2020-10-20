@@ -12,10 +12,10 @@ import attr
 import numpy as np
 from pint import DimensionalityError
 
-from .core import SceneElementFactory, SceneElement
+from .core import SceneElement, SceneElementFactory
 from .. import data
 from ..data import SOLAR_IRRADIANCE_SPECTRA
-from ..util.attrs import attrib, attrib_float_positive, attrib_units, validator_is_positive, validator_is_string
+from ..util.attrs import attrib, attrib_float_positive, validator_is_positive, validator_is_string
 from ..util.exceptions import ModeError
 from ..util.units import compatible
 from ..util.units import config_default_units as cdu
@@ -58,16 +58,12 @@ class UniformSpectrum(Spectrum):
         validator=attr.validators.in_(_valid_quantities),
     )
 
-    value = attrib_float_positive(
+    value, value_units = attrib_float_positive(
         default=1.0,
-        has_units=True
-    )
-
-    value_units = attrib_units(
-        default=None,  # Note: default is None here but handled in post-init step
-        compatible_units=[
+        units_compatible=[
             cdu.get("radiance"), cdu.get("irradiance"), cdu.get("reflectance")
         ],
+        units_default=None
     )
 
     def __attrs_post_init__(self):

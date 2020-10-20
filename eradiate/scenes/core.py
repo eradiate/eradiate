@@ -9,7 +9,6 @@ import eradiate.kernel
 from ..util.attrs import attrib, unit_enabled
 from ..util.exceptions import KernelVariantError
 from ..util.factory import BaseFactory
-from ..util.units import ureg
 
 
 class KernelDict(dict):

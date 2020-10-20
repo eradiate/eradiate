@@ -96,26 +96,18 @@ class ArrayRadProfile(RadProfile):
 
         Unit-enabled field (default: cdu[length]^-1).
     """
-    albedo_values = attrib(
+    albedo_values, albedo_values_units = attrib(
         default=None,
         converter=np.array,
-        has_units=True
+        units_compatible=ureg.dimensionless,
+        units_default=cdu.get("dimensionless")
     )
 
-    albedo_values_units = attrib_units(
-        compatible_units=ureg.dimensionless,
-        default=cdu.get("dimensionless")
-    )
-
-    sigma_t_values = attrib(
+    sigma_t_values, sigma_t_values_units = attrib(
         default=None,
         converter=np.array,
-        has_units=True
-    )
-
-    sigma_t_values_units = attrib_units(
-        compatible_units=ureg.m ** -1,
-        default=cdu.get("collision_coefficient")
+        units_compatible=ureg.m ** -1,
+        units_default=cdu.get("collision_coefficient")
     )
 
     def __attrs_post_init__(self):

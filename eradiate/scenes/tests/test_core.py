@@ -58,15 +58,11 @@ class TinyDirectional(SceneElement):
         validator=attr.validators.instance_of(str),
     )
 
-    direction = attrib(
+    direction, direction_units = attrib(
         default=[0, 0, -1],
         validator=validator_has_len(3),
-        has_units=True
-    )
-
-    direction_units = attrib_units(
-        compatible_units=ureg.m,
-        default=ureg.m
+        units_compatible=ureg.m,
+        units_default=ureg.m
     )
 
     irradiance = attr.ib(

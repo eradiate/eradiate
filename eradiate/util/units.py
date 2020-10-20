@@ -5,7 +5,7 @@ from copy import deepcopy
 
 import pint
 
-#: Unit registry common to all Eradiate components.
+#: Unit registry common to all Eradiate components
 ureg = pint.UnitRegistry()
 
 
