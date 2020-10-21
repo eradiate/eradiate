@@ -18,7 +18,7 @@ results. Through the navigation bar and by clicking on the result category in th
 table, you can access additional detailed information
 on the number of passed, failed and skipped tests.
 
-The section **Test specification** contains the list of system tests, shown individually
+The section **Detailed system-test results** contains the list of system tests, shown individually
 with a detailed description of their setup and execution.
 
 The section **Benchmarks** contains the results of different benchmarking procedures.

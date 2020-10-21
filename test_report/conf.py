@@ -44,7 +44,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Eradiate'
+project = 'Test report'
 copyright = '2020 The Eradiate Team'
 author = 'The Eradiate Team'
 

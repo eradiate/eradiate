@@ -49,7 +49,12 @@ def create_summary_table(report):
 
     heading = """*******************
 Test result summary
-*******************"""
+*******************
+
+This table contains the results of all tests that were executed in the creation of this test report. Additionally
+it contains the git revision that was used as well as the time of execution.
+
+"""
 
     try:
         passed = report['summary']['passed']
@@ -65,14 +70,15 @@ Test result summary
         skipped = 0
     table = [["Execution date", " ".join([date, time])],
              ["Git revision", commithash],
-             [":ref:`Tests passed`", passed],
-             [":ref:`Tests failed`", failed],
-             [":ref:`Tests skipped`", skipped],
+             [":ref:`Tests passed <Tests passed>`", passed],
+             [":ref:`Tests failed <Tests failed>`", failed],
+             [":ref:`Tests skipped <Tests skipped>`", skipped],
              ["Tests total", report['summary']['total']]]
     tabulated = tabulate(table, tablefmt='rst')
 
     footer = """
-Click the passed, failed and skipped sections above, to get detailed information."""
+Click the passed, failed and skipped sections in the table, to skip directly to the corresponding section in the list below.
+"""
 
     return "\n".join([heading, tabulated, footer])
 
@@ -83,22 +89,15 @@ def create_passed_table(passed):
     heading = """
 .. _Tests passed:
 
-************
-Passed tests
-************
-
-This page shows all passed tests. They are grouped by the file in which they are
-defined."""
+* Passed tests"""
 
     body = ""
     for key, value in passed.items():
-        underline = '=' * len(key)
-        value_joined = "\n    ".join(value)
+        value_joined = "\n    * ".join(value)
         body += f"""
-{key}
-{underline}
+  * {key}
 
-    {value_joined}
+    * {value_joined}
 """
     return "\n".join([heading, body])
 
@@ -109,23 +108,16 @@ def create_failed_table(failed):
     heading = """
 .. _Tests failed:
     
-************
-Failed tests
-************
-
-This page shows all failed tests. They are grouped by the file in which they are
-defined."""
+* Failed tests"""
 
     body = ""
     for key, value in failed.items():
-        underline = '=' * len(key)
-        value_joined = "\n    ".join(value)
+        value_joined = "\n    * ".join(value)
         body += f"""
-{key}
-{underline}
+      * {key}
 
-    {value_joined}
-"""
+        * {value_joined}
+    """
     return "\n".join([heading, body])
 
 
@@ -135,23 +127,16 @@ def create_skipped_table(skipped):
     heading = """
 .. _Tests skipped:
 
-*************
-Skipped tests
-*************
-
-This page shows all skipped tests. They are grouped by the file in which they are
-defined."""
+* Skipped tests"""
 
     body = ""
     for key, value in skipped.items():
-        underline = '=' * len(key)
-        value_joined = "\n    ".join(value)
+        value_joined = "\n    * ".join(value)
         body += f"""
-{key}
-{underline}
+      * {key}
 
-    {value_joined}
-"""
+        * {value_joined}
+    """
     return "\n".join([heading, body])
 
 

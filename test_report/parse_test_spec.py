@@ -152,11 +152,16 @@ def update_docstring(doc, name, report):
                 outcomes[variant] = f":green:`{outcome}`"
             elif outcome == "failed":
                 outcomes[variant] = f":red:`{outcome}`"
-        result = ", ".join(
+        result = "\n* ".join(
             [f"{variant}: {outcomes[variant]}" for variant in sorted(outcomes)]
         )
 
-    resultstring = f":Test result: {result}"
+    resultstring = f"""
+:Test result: 
+
+* {result}
+
+"""
     locationstring = f":Test location: {location}"
 
     firstpart = "\n".join([firstpart, resultstring, locationstring])
@@ -167,7 +172,7 @@ def update_docstring(doc, name, report):
 
 def write_to_file(test_dict, output_dir):
     """
-    Write the rst file containing the updated documentation for all integration tests.
+    Write the rst file containing the updated documentation for all system tests.
     """
 
     header = """
@@ -177,11 +182,11 @@ def write_to_file(test_dict, output_dir):
 
 .. _testspec:
 
-******************
-Test specification
-******************
+*********************************
+Detailed system-test results
+*********************************
 
-This section contains the specification for the integration and system tests in Eradiate.
+This section contains the specification for the system and system tests in Eradiate.
 The tests are documented by presenting their general concept, e.g. what is tested, followed
 by the test setup and execution, which includes critical points about the implementation and
 finally the expected behaviour of the software under test and how the success or failure of
@@ -201,7 +206,7 @@ the test is asserted.
 def generate():
     print("Parsing test specification and generating documents for report")
     eradiate_dir = pathlib.Path(os.environ["ERADIATE_DIR"])
-    test_dir = eradiate_dir / "eradiate" / "tests" / "integration"
+    test_dir = eradiate_dir / "eradiate" / "tests" / "system"
     output_dir = eradiate_dir / "test_report" / "generated"
     if not pathlib.Path.exists(output_dir):
         os.mkdir(output_dir)
