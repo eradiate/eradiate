@@ -65,6 +65,7 @@ extensions.append("sphinx.ext.mathjax")
 
 extensions.append("sphinx.ext.autodoc")
 extensions.append("sphinx.ext.autosummary")
+extensions.append("sphinx.ext.viewcode")
 extensions.append("sphinxcontrib.bibtex")
 extensions.append("nbsphinx")
 extensions.append("sphinx_copybutton")
