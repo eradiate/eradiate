@@ -39,8 +39,8 @@ def test_hemispherical_hsphere_selection(mode_mono):
     d = RadianceMeterHsphereMeasure()
     d_back = RadianceMeterHsphereMeasure(hemisphere="back")
 
-    directions_front = d.directions()
-    directions_back = d_back.directions()
+    directions_front = d._directions()
+    directions_back = d_back._directions()
 
     assert np.allclose(-directions_front, directions_back)
 
@@ -78,7 +78,7 @@ def test_pplane_orientation(mode_mono):
     }
     hemisphere_config = {
         "type": "radiancemeter_hsphere",
-        "zenith_res": 1,
+        "zenith_res": 9,
         "azimuth_res": 1,
         "origin": [0, 0, 1],
         "direction": [0, 0, 1],
@@ -88,7 +88,7 @@ def test_pplane_orientation(mode_mono):
     }
     pplane_config = {
         "type": "radiancemeter_pplane",
-        "zenith_res": 1,
+        "zenith_res": 9,
         "origin": [0, 0, 1],
         "direction": [0, 0, 1],
         "orientation": [1, 0 ,0],
@@ -122,7 +122,7 @@ def test_pplane_orientation(mode_mono):
 
     # select the data to compare
     reshaped_hemi = np.concatenate([np.squeeze(result_hemi[::-1, 180, ]), np.squeeze(result_hemi[:, 0])])
-    reshaped_pplane = np.concatenate([np.squeeze(result_hemi[::-1, 180, ]), np.squeeze(result_hemi[:, 0])])
+    reshaped_pplane = np.concatenate([np.squeeze(result_pplane[::-1, 1]), np.squeeze(result_pplane[:, 0])])
 
     assert np.allclose(reshaped_hemi, reshaped_pplane, rtol=1e-9)
 

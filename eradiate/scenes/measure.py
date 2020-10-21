@@ -289,17 +289,14 @@ class RadianceMeterHsphereMeasure(Measure):
         point to the hemisphere defined by ``-direction``.
         Default value: ``"front"``.
 
-<<<<<<< HEAD
     ``spp`` (int):
         Number of samples per (zenith, azimuth) pair. Default: 32.
-=======
             Default: 32.
 
-        ``id`` (str):
-            Identifier to allow mapping of results to the measure inside an application.
+    ``id`` (str):
+        Identifier to allow mapping of results to the measure inside an application.
 
-            Default: "radiancemeter_hsphere"
->>>>>>> 78507d2... Added the principal plane measure and updated the plotting framework and RayleighSolverApp accordingly
+        Default: "radiancemeter_hsphere"
     """
     # TODO: add figure to explain what "hemisphere" does
 
@@ -472,35 +469,27 @@ class RadianceMeterPPlaneMeasure(Measure):
 
             Default: "radiancemeter_pplane"
     """
-    zenith_res = attrib_float_positive(
-        default=10.,
-        has_units=True
-    )
-    zenith_res_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("angle")),
-        compatible_units=ureg.deg,
+    zenith_res, zenith_res_units = attrib_float_positive(
+        default=ureg.Quantity(10., ureg.deg),
+        units_compatible=ureg.deg,
+        units_default=attr.Factory(lambda: cdu.get("angle")),
     )
 
-    origin = attrib(
-        default=[0, 0, 0],
+    origin, origin_units = attrib(
+        default=ureg.Quantity([0, 0, 0], ureg.m),
         validator=validator_has_len(3),
-        has_units=True
-    )
-    origin_units = attrib_units(
-        default=attr.Factory(lambda: cdu.get("length")),
-        compatible_units=ureg.m,
+        units_compatible=ureg.m,
+        units_default=attr.Factory(lambda: cdu.get("length")),
     )
 
     direction = attrib(
         default=[0, 0, 1],
         validator=validator_has_len(3),
-        has_units=False
     )
 
     orientation = attrib(
         default=[1, 0, 0],
         validator=validator_has_len(3),
-        has_units=False
     )
 
     hemisphere = attrib(
