@@ -1,3 +1,5 @@
+"""Eradiate's computational kernel, based on the Mitsuba 2 rendering system."""
+
 import sys
 from importlib import import_module as _import
 

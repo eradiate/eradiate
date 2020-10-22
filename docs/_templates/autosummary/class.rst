@@ -7,14 +7,14 @@
 
    {% block attributes %}
    {% if attributes %}
-   .. rubric:: Class attributes
+   .. rubric:: Attributes
 
    {% for item in attributes %}
    .. autoattribute:: {{ name }}.{{ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}
-   
+
    {% block methods %}
    {% if methods %}
    .. rubric:: Methods

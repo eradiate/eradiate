@@ -1,22 +1,26 @@
 """Atmospheric radiative properties calculation package.
 
-.. admonition:: Atmospheric radiative properties data set specification (1D).
+.. admonition:: Atmospheric radiative properties data set specification (1D)
 
-    The data structure is a :class:`~xarray.Dataset` with specific data
-    variables, dimensions and data coordinates.
+   The data structure is a :class:`~xarray.Dataset` with specific data
+   variables, dimensions and data coordinates.
 
-    Data variables must be:
-    - ``sigma_a``: absorption coefficient [m^-1],
-    - ``sigma_s``: scattering coefficient [m^-1],
-    - ``sigma_t``: extinction coefficient [m^-1],
-    - ``albedo``: albedo [dimensionless]
+   Data variables must be:
 
-    The dimensions are ``z_layer`` and ``z_level``. All data variables depend
-    on ``z_layer``.
+   - ``sigma_a``: absorption coefficient [m^-1],
+   - ``sigma_s``: scattering coefficient [m^-1],
+   - ``sigma_t``: extinction coefficient [m^-1],
+   - ``albedo``: albedo [dimensionless]
 
-    The data coordinates are:
-    - ``z_layer``: layer altitude [m]. The layer altitude is an altitude representative of the given layer, e.g. the middle of the layer.
-    - ``z_level``: level altitude [m]. The sole purpose of this data coordinate is to store the information on the layers sizes.
+   The dimensions are ``z_layer`` and ``z_level``. All data variables depend
+   on ``z_layer``.
+
+   The data coordinates are:
+
+   - ``z_layer``: layer altitude [m]. The layer altitude is an altitude
+     representative of the given layer, e.g. the middle of the layer.
+   - ``z_level``: level altitude [m]. The sole purpose of this data coordinate
+     is to store the information on the layers sizes.
 """
 
 from datetime import datetime

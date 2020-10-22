@@ -3,4 +3,8 @@
 Kernel [eradiate.kernel]
 ========================
 
-.. automodule:: eradiate.kernel
+Eradiate's computational kernel, based on the Mitsuba 2 rendering system.
+
+.. todo::
+
+   Add reference to kernel documentation website.
