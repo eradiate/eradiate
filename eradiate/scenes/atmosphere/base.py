@@ -37,8 +37,8 @@ class Atmosphere(SceneElement, ABC):
 
     .. rubric:: Constructor arguments / instance attributes
 
-        ``height`` (float):
-            Atmosphere height. Default: 100 km.
+    ``height`` (float):
+        Atmosphere height. Default: 100 km.
 
         Unit-enabled field (default unit: cdu[length])
 
