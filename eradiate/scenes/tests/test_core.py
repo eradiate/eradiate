@@ -6,6 +6,7 @@ import pytest
 
 import eradiate.kernel
 from eradiate.scenes.core import KernelDict, SceneElement, SceneElementFactory
+from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.util.attrs import (
     attrib_quantity, validator_has_len, validator_is_number,
     validator_is_positive
@@ -155,7 +156,11 @@ def test_factory():
         SceneElementFactory.create({"type": "dzeiaticional"})
 
     # Test converter
-    assert isinstance(SceneElementFactory.convert({"type": "directional", "zenith": 45.}),
-                      DirectionalIllumination)
-    assert isinstance(SceneElementFactory.convert(DirectionalIllumination()),
-                      DirectionalIllumination)
+    assert isinstance(
+        SceneElementFactory.convert({"type": "directional", "zenith": 45.}),
+        DirectionalIllumination
+    )
+    assert isinstance(
+        SceneElementFactory.convert(DirectionalIllumination()),
+        DirectionalIllumination
+    )

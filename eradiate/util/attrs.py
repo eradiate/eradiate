@@ -28,18 +28,19 @@ class MKey(enum.Enum):
 def unit_enabled(cls):
     """This decorator marks a class as unit-enabled.
 
-    Upon class definition (import), this function checks that every field marked
-    as unit-enabled with :func:`attrib`'s ``has_unit`` parameter has a
-    corresponding unit field with the same name and a ``_unit`` suffix.
+    Upon class definition (import), this function attaches to the decorated class:
 
-    In addition, this function attaches to the decorated class:
+    * a ``_fields_with_units()`` class method which returns a dictionary
+      mapping the names of fields marked as unit-enabled with their compatible
+      units;
+    * a ``from_dict()`` class method which enables instantiation from a
+      dictionary with automatic handling of an associated unit field.
 
-    * a  ``_unit_enabled_field_names()`` class method which returns the list of
-      the names of fields marked as unit-enabled;
-    * a ``strip_units()`` instance method which removes units (after conversion)
-      for unit-enabled fields which are set to a :class:`pint.Quantity`;
-    * a ``get_quantity()`` method which returns a unit-enabled fields as a
-      :class:`pint.Quantity`.
+    This decorator must be applied to take advantage of the
+    :func:`attrib_quantity` helper function.
+
+    Returns → type:
+        Updated class.
     """
 
     # Attach a class method which returns a map with unit-enabled attribute
@@ -60,7 +61,7 @@ def unit_enabled(cls):
     def from_dict(wrapped_cls, d):
         """Create from a dictionary. This class method will additionally
         pre-process the passed dictionary to merge any field with an
-        associated ``"_unit"`` field into a :class:`pint.Quantity` container.
+        associated ``"_units"`` field into a :class:`pint.Quantity` container.
 
         Parameter ``d`` (dict):
             Configuration dictionary used for initialisation.
