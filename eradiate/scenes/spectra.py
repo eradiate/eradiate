@@ -1,10 +1,11 @@
 """Spectrum-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene elements
+.. admonition:: Registered factory members
     :class: hint
 
     .. factorytable::
-        :modules: spectra
+       :factory: SceneElementFactory
+       :modules: eradiate.scenes.spectra
 """
 from abc import ABC
 

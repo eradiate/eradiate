@@ -19,21 +19,31 @@ from tinydb import TinyDB, Query
 from tinydb.storages import MemoryStorage
 
 from eradiate.scenes.core import SceneElementFactory
+from eradiate.scenes.atmosphere.radiative_properties.rad_profile import RadProfileFactory
+
+factory_classes = {
+    "SceneElementFactory": SceneElementFactory,
+    "RadProfileFactory": RadProfileFactory
+}
 
 factory_db = TinyDB(storage=MemoryStorage)
-factory_db.insert_multiple([
-    {
-        "key": key,
-        "module": str(value.__module__),
-        "cls_name": str(value.__name__)
-    }
-    for key, value in SceneElementFactory.registry.items()
-])
+
+for factory_name, cls in factory_classes.items():
+    factory_db.insert_multiple([
+        {
+            "factory": factory_name,
+            "key": key,
+            "module": str(value.__module__),
+            "cls_name": str(value.__name__)
+        }
+        for key, value in cls.registry.items()
+    ])
 
 
 class FactoryTable(Table):
     # https://github.com/sphinx-contrib/documentedlist/blob/master/sphinxcontrib/documentedlist.py
     option_spec = {
+        "factory": directives.unchanged,
         "modules": directives.unchanged,
         "sections": directives.flag
     }
@@ -54,37 +64,66 @@ class FactoryTable(Table):
             )
             return [error]
 
+        # Gather basic factory data
+        factory_name = self.options.get("factory")
+        if factory_name is None:
+            error = self.state_machine.reporter.error(
+                f"Unknown factory {factory_name}",
+                nodes.literal_block(self.block_text, self.block_text),
+                line=self.lineno
+            )
+            return [error]
+
+        factory_cls = factory_classes[factory_name]
+
         # Process list of modules for filtering
         modules = self.options.get("modules", None)
+
         if modules is None:
-            modules = SceneElementFactory._submodules
+            try:
+                modules = factory_cls._modules
+            except AttributeError:
+                pass
         else:
             modules = [x.strip() for x in modules.split(",")]
 
-        if not set(modules) <= set(SceneElementFactory._submodules):
+        if modules is not None and not set(modules) <= set(factory_cls._modules):
             error = self.state_machine.reporter.error(
-                f"The following requested modules are not inspected by the "
-                f"Eradiate factory: "
-                f"{', '.join(set(modules) - set(SceneElementFactory._submodules))}",
+                f"The following requested modules are not inspected by "
+                f"{factory_name}: "
+                f"{', '.join(set(modules) - set(factory_cls._modules))}",
                 nodes.literal_block(self.block_text, self.block_text),
                 line=self.lineno
             )
             return [error]
 
         # Get the list containing the documentation
-        factory_submodules = modules
         show_sections = "sections" in self.options
 
         member = []
 
-        for submodule in factory_submodules:
-            if show_sections:
-                member.append([f":bolditalic:`In submodule` "
-                               f":mod:`~eradiate.scenes.{submodule}`",
-                               "—"])
+        # Query DB to get data eligible to printing
+        if modules is not None:
+            for module in modules:
+                if show_sections:
+                    member.append([f":bolditalic:`In submodule` "
+                                   f":mod:`~{module}`",
+                                   "—"])
 
-            for element_info in factory_db.search(Query().module.matches(
-                    rf"^eradiate\.scenes\.{submodule}.*")):
+                for element_info in factory_db.search(
+                        (Query().module.matches(rf"^{module}.*")) &
+                        (Query().factory == factory_name)
+                ):
+                    factory_keyword = f"``{element_info['key']}``"
+                    class_module = element_info["module"]
+                    class_name = element_info["cls_name"]
+                    class_reference = f":class:`~{class_module}.{class_name}`"
+                    member.append([factory_keyword, class_reference])
+
+        else:  # Disregard module-based query and sorting
+            for element_info in factory_db.search(
+                    Query().factory == factory_name
+            ):
                 factory_keyword = f"``{element_info['key']}``"
                 class_module = element_info["module"]
                 class_name = element_info["cls_name"]
@@ -92,7 +131,7 @@ class FactoryTable(Table):
                 member.append([factory_keyword, class_reference])
 
         # Set headers
-        self.headers = ["Factory keyword", "Class"]
+        self.headers = ["Factory ID", "Class"]
         self.max_cols = len(self.headers)
 
         # This works around an apparently poorly documented change in docutils
@@ -176,11 +215,44 @@ def factory_key(name, rawtext, text, lineno, inliner, options={}, content=[]):
     :param options: Directive options for customization.
     :param content: The directive content for customization.
     """
-    key = text
-    db_entries = factory_db.search(Query().key == key)
+    # Detect factory specifier if any
+    split = text.split("::")
+    factory_name = None
+
+    if len(split) == 1:
+        key = split[0]
+
+    elif len(split) == 2:
+        factory_name = split[0]
+        key = split[1]
+
+    else:
+        msg = inliner.reporter.error(
+            f"factory key {text} could not be interpreted",
+            line=lineno
+        )
+        prb = inliner.problematic(rawtext, rawtext, msg)
+        return [prb], [msg]
+
+    if factory_name is None:
+        db_entries = factory_db.search(Query().key == key)
+    else:
+        db_entries = factory_db.search(
+            (Query().factory == factory_name) &
+            (Query().key == key)
+        )
+
     if len(db_entries) == 0:
         msg = inliner.reporter.error(
-            f"could not find factory key {key}",
+            f"could not find factory key {text}",
+            line=lineno
+        )
+        prb = inliner.problematic(rawtext, rawtext, msg)
+        return [prb], [msg]
+
+    if len(db_entries) > 1:
+        msg = inliner.reporter.error(
+            f"ambiguous factory key {key}",
             line=lineno
         )
         prb = inliner.problematic(rawtext, rawtext, msg)

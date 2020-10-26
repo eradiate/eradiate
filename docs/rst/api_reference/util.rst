@@ -15,14 +15,15 @@ Utility [eradiate.util]
    :recursive:
    :toctree: generated/
 
-    attrs
-    collections
-    config_object
-    decorators
-    exceptions
-    frame
-    metaclasses
-    presolver
-    units
-    view
-    xarray
+   attrs
+   collections
+   config_object
+   decorators
+   exceptions
+   factory
+   frame
+   metaclasses
+   presolver
+   units
+   view
+   xarray

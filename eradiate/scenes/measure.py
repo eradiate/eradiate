@@ -1,10 +1,11 @@
 """Measurement-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene elements
+.. admonition:: Registered factory members
     :class: hint
 
     .. factorytable::
-        :modules: measure
+       :factory: SceneElementFactory
+       :modules: eradiate.scenes.measure
 """
 from abc import ABC
 from abc import abstractmethod

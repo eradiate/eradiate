@@ -1,10 +1,11 @@
 """Lithosphere-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene elements
+.. admonition:: Registered factory members
     :class: hint
 
     .. factorytable::
-        :modules: lithosphere
+       :factory: SceneElementFactory
+       :modules: eradiate.scenes.lithosphere
 """
 
 from abc import ABC, abstractmethod

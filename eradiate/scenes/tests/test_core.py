@@ -141,3 +141,9 @@ def test_factory():
     # We expect that an unregistered 'type' will raise
     with pytest.raises(ValueError):
         SceneElementFactory.create({"type": "dzeiaticional"})
+
+    # Test converter
+    assert isinstance(SceneElementFactory.convert({"type": "directional", "zenith": 45.}),
+                      DirectionalIllumination)
+    assert isinstance(SceneElementFactory.convert(DirectionalIllumination()),
+                      DirectionalIllumination)

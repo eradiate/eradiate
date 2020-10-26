@@ -3,13 +3,17 @@ from copy import deepcopy
 
 
 class BaseFactory:
-    """This class can be used to create object factories which instantiate
+    """Base class for factories.
+
+    This class can be used to create object factories which instantiate
     objects based on dictionaries. Created factories handle only one type
     of object (and child classes), specified in a ``_constructed_type`` class
-    attribute.
+    attribute. By default, this member is set to ``object``: without any
+    particular precaution, a factory deriving from this one accepts registration
+    from any class, provided that it implements the required interface.
 
     Class registration to factory objects is done using the :meth:`register`
-    class decorator (which should be applied *after* the ``attr.s`` decorator).
+    class decorator (which should be applied *after* the :func:`attr.s` decorator).
     Note that decorated classes must implement a ``from_dict()`` class method
     which generates instances from a dictionary. If a class with an unsupported
     type is decorated with :meth:`register`, a ``TypeError`` will be raised
@@ -23,42 +27,18 @@ class BaseFactory:
     - dictionary contents which will be passed to the target class's
       ``from_dict()`` class method.
 
-    .. note::
+    .. seealso::
 
-        This class is designed to allow for runtime instantiation and
-        configuration of classes from YAML or JSON fragments.
-
-    .. admonition:: Example
-
-        The following code snippet instantiates a
-        :class:`~eradiate.scenes.illumination.DirectionalIllumination` element
-        using its :factorykey:`directional` factory name:
-
-        .. code:: python
-
-            from eradiate.scenes.core import SceneElementFactory
-
-            illumination = SceneElementFactory.create({
-                "type": "directional",
-                "irradiance": {"type": "uniform", "value": 1.0},
-                "zenith": 30.0,
-                "azimuth": 180.0
-            })
-
-        In practice, the ``type`` key is used to look up the class to
-        instantiate, then popped from the configuration dictionary. Therefore,
-        the corresponding object creation call is, in this particular case:
-
-        .. code:: python
-
-            DirectionalIllumination(
-                irradiance={"type": "uniform", "value": 1.0},
-                zenith=30.0,
-                azimuth=180.0
-            )
+       :ref:`sec-developer_guide-factory_guide`
+           This guide gives an overview of the factory system and presents its
+           usage.
     """
+    #: By default, any object can be constructed by the factory
+    _constructed_type = object
+
     #: Internal registry for available types
     registry = {}
+
 
     @classmethod
     def register(cls, name):
@@ -153,11 +133,6 @@ class BaseFactory:
 
         If ``value`` is a dictionary, this method forwards it to :meth:`create`.
         Otherwise, it returns ``value``.
-
-        .. note::
-
-           This method is used to cascade object creation from nested
-           dictionaries.
         """
         if isinstance(value, dict):
             return cls.create(value)

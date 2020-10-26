@@ -131,6 +131,8 @@ Eradiate's codebase won't be included in that list and it's the user's
 responsibility to make sure that their custom element classes are imported at
 some point so as to be registered to the factory.
 
+.. TODO: Add Factory.convert tutorial
+
 In practice: Steps to write a new scene element class
 -----------------------------------------------------
 

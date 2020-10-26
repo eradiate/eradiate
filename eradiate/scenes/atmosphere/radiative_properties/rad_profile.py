@@ -69,6 +69,12 @@ class RadProfile(ABC):
 class RadProfileFactory(BaseFactory):
     """This factory constructs objects whose classes are derived from
     :class:`RadProfile`.
+
+    .. admonition:: Registered factory members
+       :class: hint
+
+       .. factorytable::
+          :factory: RadProfileFactory
     """
     # TODO: add a table with factory key-class associations
     _constructed_type = RadProfile

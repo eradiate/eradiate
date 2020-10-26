@@ -1,10 +1,11 @@
 """Illumination-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene elements
+.. admonition:: Registered factory members
     :class: hint
 
     .. factorytable::
-        :modules: illumination
+       :factory: SceneElementFactory
+       :modules: eradiate.scenes.illumination
 """
 
 from abc import ABC

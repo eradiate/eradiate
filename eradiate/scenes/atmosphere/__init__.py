@@ -1,10 +1,11 @@
 """Atmosphere-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene generation elements
+.. admonition:: Registered factory members
     :class: hint
 
     .. factorytable::
-        :modules: atmosphere
+       :factory: SceneElementFactory
+       :modules: eradiate.scenes.atmosphere
 """
 
 from .heterogeneous import HeterogeneousAtmosphere

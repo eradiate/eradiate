@@ -116,8 +116,8 @@ class SceneElement(ABC):
 
     .. note::
 
-        This class is designed to integrate with the :class:`SceneFactory` class.
-        See the corresponding documentation for a list of factory-enabled
+        This class is designed to integrate with the :class:`SceneElementFactory`
+        class. See the corresponding documentation for a list of factory-enabled
         scene element classes.
 
     .. rubric:: Constructor arguments / instance attributes
@@ -174,12 +174,13 @@ class SceneElement(ABC):
 class SceneElementFactory(BaseFactory):
     """This factory constructs objects whose classes are derived from
     :class:`SceneElement`. For optimal use, it needs to discover registered
-    classes in modules listed in its :attr:`_submodules` class attribute.
+    classes in modules listed in its :attr:`_modules` class attribute.
 
-    .. admonition:: List of factory-enabled scene elements
+    .. admonition:: Registered factory members
         :class: hint
 
         .. factorytable::
+           :factory: SceneElementFactory
            :sections:
     """
 
@@ -187,21 +188,20 @@ class SceneElementFactory(BaseFactory):
     registry = {}
 
     #: List of submodules where to look for registered classes
-    _submodules = [
-        "atmosphere",
-        "illumination",
-        "lithosphere",
-        "measure",
-        "spectra"
+    _modules = [
+        "eradiate.scenes.atmosphere",
+        "eradiate.scenes.illumination",
+        "eradiate.scenes.lithosphere",
+        "eradiate.scenes.measure",
+        "eradiate.scenes.spectra"
     ]
 
     @classmethod
     def _discover(cls):
         """Import submodules containing classes to be automatically added to
         :class:`SceneElementFactory`'s registry."""
-        for module_name in cls._submodules:
-            full_module_name = f"eradiate.scenes.{module_name}"
-            importlib.import_module(full_module_name)
+        for module_name in cls._modules:
+            importlib.import_module(module_name)
 
 
 # Trigger factory module discovery
