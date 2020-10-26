@@ -4,7 +4,7 @@
 import os
 import numpy as np
 
-from ....data import get
+from ....data import load
 from ....util.units import ureg
 
 _Q = ureg.Quantity

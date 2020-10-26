@@ -14,11 +14,13 @@ Data handling facilities [eradiate.data]
 .. autosummary::
    :toctree: generated/
 
-   get
+   load
+   registered
 
-.. rubric:: Attributes
+.. rubric:: Modules
 
 .. autosummary::
+   :recursive:
    :toctree: generated/
 
-   SOLAR_IRRADIANCE_SPECTRA
+   solar_irradiance_spectra

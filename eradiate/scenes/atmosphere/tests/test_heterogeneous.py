@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from eradiate.data import presolver
+from eradiate.data import _presolver
 from eradiate.scenes.atmosphere.heterogeneous import HeterogeneousAtmosphere
 from eradiate.scenes.core import KernelDict
 from eradiate.util.collections import onedict_value
@@ -15,10 +15,10 @@ def test_heterogeneous_nowrite(mode_mono):
     a = HeterogeneousAtmosphere(
         width=ureg.Quantity(100., ureg.km),
         height=ureg.Quantity(100., ureg.km),
-        sigma_t_fname=presolver.resolve(
+        sigma_t_fname=_presolver.resolve(
             "tests/textures/heterogeneous_atmosphere_mono/sigma_t.vol"
         ),
-        albedo_fname=presolver.resolve(
+        albedo_fname=_presolver.resolve(
             "tests/textures/heterogeneous_atmosphere_mono/albedo.vol"
         )
     )

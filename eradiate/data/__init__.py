@@ -1,27 +1,95 @@
-"""Data handling facilities."""
+"""Data handling facilities.
+
+A typical data loading pattern uses the :func:`load` function.
+This function can be called either through its first two parameters
+``category`` and ``id``, or through its third parameter ``path``. The first
+kind of call will search Eradiate's data registry for a valid data set;
+the second kind of call will try and resolve directly a path using the
+:class:`.PathResolver`.
+
+.. admonition:: Example: first-kind call to ``load()``
+
+   The following code accesses the Thuillier irradiance spectrum
+   :cite:`Thuillier2003SolarSpectralIrradiance`:
+
+   .. code:: python
+
+      import eradiate.data as data
+
+      ds = data.load("solar_irradiance_spectrum", "thuillier_2003")
+
+
+.. admonition:: Example: second-kind call to ``load()``
+
+   The following code accesses the Thuillier irradiance spectrum
+   :cite:`Thuillier2003SolarSpectralIrradiance`:
+
+   .. code:: python
+
+      import eradiate.data as data
+
+      ds = data.load(path="spectra/thuillier_2003.nc")
+"""
 
 import functools
 import os
 
 import xarray as xr
 
+from .solar_irradiance_spectra import _SolarIrradianceGetter
 from ..util.presolver import PathResolver
 
-presolver = PathResolver()
+_presolver = PathResolver()
+
+_getters = {
+    "solar_irradiance_spectrum": _SolarIrradianceGetter
+}
 
 
 @functools.lru_cache(maxsize=32)
-def get(path):
-    """Return a data set based on queried path. Results produce by this function
-    are cached using an
+def load(category=None, id=None, path=None):
+    """Load a data set. Results produced by this
+    function are cached using an
     `LRU <https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)>`_
     policy to minimise hard drive access.
 
-    Parameter ``path`` (path-like):
-        Path to the requested resource, resolved by the :class:`.FileResolver`.
-    """
+    Parameter ``category`` (str or None):
+        If ``None``, ``path`` must not be ``None`` .
+        Dataset category identifier. Valid data set categories are:
 
-    fname = presolver.resolve(path)
+        * :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
+
+    Parameter ``id`` (str or None):
+        If ``None``, ``path`` must not be ``None`` .
+        Dataset identifier inside a given category. See category documentation
+        for valid ID values.
+
+    Parameter ``path`` (path-like or None):
+        If not ``None``, takes precedence over ``category`` and ``id``.
+        Path to the requested resource, resolved by the :class:`.PathResolver`.
+
+    Returns → :class:`xarray.Dataset`:
+        Loaded dataset.
+
+    Raises → ValueError:
+        The requested resource is not handled by this loader.
+    """
+    if path is None:
+        if category is None or id is None:
+            raise ValueError("if 'path' is None, 'category' and 'id' must not "
+                             "be None")
+
+        try:
+            getter = _getters[category]
+        except KeyError:
+            raise ValueError(f"invalid data category '{category}'")
+
+        try:
+            path = getter.path(id)
+        except ValueError:
+            raise
+
+    fname = _presolver.resolve(path)
     ext = os.path.splitext(fname)[1]
 
     if ext == ".nc":
@@ -30,64 +98,23 @@ def get(path):
     raise ValueError(f"cannot load resource {fname}")
 
 
-SOLAR_IRRADIANCE_SPECTRA = {
-    "blackbody_sun": "spectra/blackbody_sun.nc",
-    "meftah_2017": "spectra/meftah_2017.nc",
-    "thuillier_2003": "spectra/thuillier_2003.nc",
-    "whi_2008": "spectra/whi_2008_time_period_1.nc",  # alias
-    "whi_2008_1": "spectra/whi_2008_time_period_1.nc",
-    "whi_2008_2": "spectra/whi_2008_time_period_2.nc",
-    "whi_2008_3": "spectra/whi_2008_time_period_3.nc",
-}
-"""Dictionary of solar irradiance data sets shipped with Eradiate. 
+def registered(category):
+    """Get a list of registered dataset IDs for a given data set category.
 
-Keys are unique identifiers associated with shipped data sets, and
-values are relative paths to the corresponding netCDF file in the Eradiate data
-directory (typically ``$ERADIATE_DIR/resources/data``). 
-These relative paths can be used with :func:`get` to conveniently
-access the data sets.
+    Parameter ``category`` (str):
+        Dataset category identifier. See :func:`load` for valid categories.
 
-.. admonition:: Example
+    Returns → list[str]:
+        List of registered data set IDs for the selected category.
 
-   To access the Thuillier irradiance spectrum :cite:`Thuillier2003SolarSpectralIrradiance`,
-   the following can be done:
-   
-   .. code:: python
-   
-      import eradiate.data as data
-      
-      ds = data.get(data.SOLAR_IRRADIANCE_SPECTRA["thuillier_2003"])
+    Raises → ValueError:
+        Unknown requested category.
+    """
+    try:
+        getter = _getters[category]
+    except KeyError:
+        raise ValueError(f"invalid data category '{category}'")
 
-The following table lists available data sets and their corresponding 
-identifiers.
+    return getter.registered()
 
-.. list-table::
-   :widths: 1 1 1
-   :header-rows: 1
-   
-   * - Key
-     - Reference
-     - Spectral range [nm]
-   * - ``blackbody_sun``
-     - :cite:`Liou2002IntroductionAtmosphericRadiation`
-     - [280, 2400]
-   * - ``meftah_2017``
-     - :cite:`Meftah2017SOLARISSReference`
-     - [165, 3000.1]
-   * - ``thuillier_2003``
-     - :cite:`Thuillier2003SolarSpectralIrradiance`
-     - [200, 2397]
-   * - ``whi_2008``
-     - :cite:`Woods2008SolarIrradianceReference`
-     - [116.05, 2399.95]
-   * - ``whi_2008_1``
-     - :cite:`Woods2008SolarIrradianceReference`
-     - [116.05, 2399.95]
-   * - ``whi_2008_2``
-     - :cite:`Woods2008SolarIrradianceReference`
-     - [116.05, 2399.95]
-   * - ``whi_2008_3``
-     - :cite:`Woods2008SolarIrradianceReference`
-     - [116.05, 2399.95]
-     
-"""
+# TODO: add functions to check if data is missing

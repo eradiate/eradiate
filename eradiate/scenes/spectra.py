@@ -14,7 +14,6 @@ from pint import DimensionalityError
 
 from .core import SceneElement, SceneElementFactory
 from .. import data
-from ..data import SOLAR_IRRADIANCE_SPECTRA
 from ..util.attrs import attrib, attrib_float_positive, validator_is_positive, validator_is_string
 from ..util.exceptions import ModeError
 from ..util.units import compatible
@@ -146,10 +145,10 @@ class SolarIrradianceSpectrum(Spectrum):
 
     @dataset.validator
     def _dataset_validator(self, attribute, value):
-        if value not in SOLAR_IRRADIANCE_SPECTRA:
+        if value not in data.registered("solar_irradiance_spectrum"):
             raise ValueError(f"while setting {attribute.name}: '{value}' not in "
                              f"list of supported solar irradiance spectra "
-                             f"{str(list(SOLAR_IRRADIANCE_SPECTRA.keys()))}")
+                             f"{data.registered('solar_irradiance_spectrum')}")
 
     @property
     def quantity(self):
@@ -164,7 +163,7 @@ class SolarIrradianceSpectrum(Spectrum):
 
         # Load dataset
         try:
-            self._data = data.get(SOLAR_IRRADIANCE_SPECTRA[self.dataset])
+            self._data = data.load("solar_irradiance_spectrum", self.dataset)
         except KeyError:
             raise ValueError(f"unknown dataset {self.dataset}")
 
