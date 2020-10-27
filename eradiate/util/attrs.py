@@ -1,6 +1,7 @@
 """attrs-based utility classes and functions"""
 
 import enum
+from copy import copy
 from functools import lru_cache
 
 import attr
@@ -8,7 +9,8 @@ import pint
 
 from . import always_iterable
 from .exceptions import UnitsError
-from .units import compatible as iscompatible, ureg
+from .units import compatible as iscompatible
+from .units import ensure_units, ureg
 
 
 # ------------------------------------------------------------------------------
@@ -20,7 +22,7 @@ class MKey(enum.Enum):
 
     These Enum values should be used as metadata attribute keys.
     """
-    has_units = enum.auto()  #: Field supports Pint units
+    compatible_units = enum.auto()  #: Field has units
 
 
 def unit_enabled(cls):
@@ -40,80 +42,55 @@ def unit_enabled(cls):
       :class:`pint.Quantity`.
     """
 
-    # Attach a class method which returns the list of unit-enabled attributes
+    # Attach a class method which returns a map with unit-enabled attribute
+    # field names and associated compatible units
     @classmethod
     @lru_cache(maxsize=None)
-    def unit_enabled_field_names(wrapped_cls):
-        """Returns a list of unit-enabled fields for the current class.
-        Implemented using :func:`functools.lru_cache()` to avoid repeatedly
-        regenerating the list.
-        """
-        return [field.name
+    def fields_with_units(wrapped_cls):
+        """Return a map with unit-enabled attribute field names and associated
+        compatible units. Implemented using :func:`functools.lru_cache()`
+        to avoid repeatedly regenerating the list."""
+        return {field.name: field.metadata.get(MKey.compatible_units)
                 for field in attr.fields(wrapped_cls)
-                if field.metadata.get(MKey.has_units)]
+                if field.metadata.get(MKey.compatible_units)}
 
-    setattr(cls, "_unit_enabled_field_names", unit_enabled_field_names)
+    setattr(cls, "_fields_with_units", fields_with_units)
 
-    # Attach an instance method which strips unit-enabled fields from their unit
-    # after a consistency check and conversion
-    def strip_units(instance, fields=None):
-        """Strip units of unit-enabled fields initialised as
-        :class:`pint.Quantity` objects.
+    @classmethod
+    def from_dict(wrapped_cls, d):
+        """Create from a dictionary. This class method will additionally
+        pre-process the passed dictionary to merge any field with an
+        associated ``"_unit"`` field into a :class:`pint.Quantity` container.
+
+        Parameter ``d`` (dict):
+            Configuration dictionary used for initialisation.
+
+        Returns → wrapped_cls:
+            Created object.
         """
-        # Process fields param
-        if fields is None:
-            fields = tuple(instance._unit_enabled_field_names())
-        if isinstance(fields, str):
-            fields = (fields,)
 
-        # For each field, convert to storage unit and remove unit if it is a
-        # Quantity, otherwise don't do anything
-        for field in fields:
-            value = getattr(instance, field)
-            if isinstance(value, ureg.Quantity):
-                units = getattr(instance, f"{field}_units")
-                if not iscompatible(value.units, units):
-                    raise UnitsError(f"field '{field}' [{value}] cannot be "
-                                     f"converted to '{units}'")
+        # Pre-process dict: apply units to unit-enabled fields
+        d_copy = copy(d)
 
-                setattr(instance, field, value.to(units).magnitude)
+        for field in wrapped_cls._fields_with_units().keys():
+            # Fetch user-specified unit if any
+            try:
+                field_units = d_copy.pop(f"{field}_units")
+            except KeyError:
+                # If no unit is specified, don't attempt conversion and let the
+                # constructor take care of it
+                continue
 
-    setattr(cls, "_strip_units", strip_units)
+            # If a unit is found, try to apply it
+            # Bonus: if a unit field *and* a quantity were found, we convert the
+            # quantity to the unit
+            field_value = d_copy[field]
+            d_copy[field] = ensure_units(field_value, field_units, convert=True)
 
-    # Attach an instance method which provides convenient access to unit-enabled
-    # quantities
-    def get_quantity(instance, attribute):
-        """Construct a :class:`pint.Quantity` from a unit-enabled attribute and
-        its corresponding unit.
+        # Perform object creation
+        return wrapped_cls(**d_copy)
 
-        Parameter ``field`` (str):
-            Unit-enabled attribute to query.
-
-        Returns → :class:`pint.Quantity`:
-            Constructed :class:`pint.Quantity` object.
-
-        Raises → AttributeError:
-            If the requested attribute cannot be returned as a
-            :class:`pint.Quantity` object (either it doesn't exist or it doesn't
-            have a unit field).
-        """
-        try:
-            return ureg.Quantity(getattr(instance, attribute),
-                                 getattr(instance, f"{attribute}_units"))
-        except AttributeError:
-            raise
-
-    setattr(cls, "get_quantity", get_quantity)
-
-    # Check if unit-enabled attributes have a corresponding unit field
-    field_names = {field.name for field in attr.fields(cls)}
-    for unit_enabled_field_name in cls._unit_enabled_field_names():
-        unit_field_name = f"{unit_enabled_field_name}_units"
-        if unit_field_name not in field_names:
-            raise AttributeError(
-                f"unit-enabled field '{unit_enabled_field_name}' misses its "
-                f"corresponding unit field '{unit_field_name}'"
-            )
+    setattr(cls, "from_dict", from_dict)
 
     return cls
 
@@ -122,168 +99,93 @@ def unit_enabled(cls):
 #                             Attribute wrappers
 # ------------------------------------------------------------------------------
 
-def attrib(
+
+def attrib_quantity(
         default=attr.NOTHING, validator=None, repr=True, eq=True, order=None,
         hash=None, init=True, metadata={}, type=None, converter=None,
-        factory=None, kw_only=False, on_setattr=None,
-        units_compatible=None, units_default=None
+        factory=None, kw_only=False, on_setattr=attr.NOTHING,
+        units_compatible=None, units_add_converter=True, units_add_validator=True
 ):
     """Create a new attribute on a class.
 
     This wrapper extends :func:`attr.ib`: see its documentation for undocumented
     parameters.
 
-    Parameter ``units_compatible`` (:class:`pint.Unit` or list[:class:`pint.Unit`] or None):
-        If a unit or a list of units is passed, an additional unit field will
-        be created and this function will return a tuple of attribute
-        definition. The ``units_compatible`` parameter will be forwarded to
-        :func:`attrib_units`. If ``None`` is passed, the function will behave as
-        :func:`attr.ib` and the ``units_default`` parameter will be ignored.
+    Parameter ``on_setattr`` (callable or None):
+        If unset and ``units_compatible`` is not ``None``, ``on_setattr`` is
+        automatically set to ``attr.setters.pipe(attr.setters.convert, attr.setters.validate)``.
+        Otherwise, it is redirected to :func:`attr.ib` without change.
 
-    Parameter ``units_default`` (:class:`pint.Unit` or callable):
-        If ``units_compatible``, default value or factory to use for the
-        unit attribute.
+    Parameter ``units_compatible`` (callable or :class:`pint.Unit` or str or None):
+        If a :class:`pint.Unit` or a string is passed, the field will be marked
+        as unit-enabled and its compatible units will be ``units_compatible``.
+        If a callable is passed, the the field will be marked
+        as unit-enabled and its compatible units will be ``units_compatible()``.
+        If ``None`` is passed, this function is equivalent to :func:`attr.ib`.
 
-    Returns → :class:`attr._make._CountingAttr` or tuple[:class:`attr._make._CountingAttr`, :class:`attr._make._CountingAttr`]:
-        If ``units_compatible`` is ``None``, generated attribute field.
-        Otherwise, generated attribute field and its corresponding unit field.
-    """
-    metadata = dict() if not metadata else metadata
+    Parameter ``units_add_converter`` (bool):
+        If ``True``, a simple converter is appended to the conversion pipeline
+        define with the ``converter`` parameter. This converter ensures that the
+        field is wrapped in ``units_compatible`` (using :func:`.ensure_units`).
+        If ``units_compatible`` is a callable (*e.g.* created using
+        :meth:`.DefaultUnits.generator`),
 
-    if units_compatible is not None:
-        metadata[MKey.has_units] = True
+        .. warning::
 
-    field_attrib = attr.ib(
-        default=default, validator=validator, repr=repr, eq=eq, order=order,
-        hash=hash, init=init, metadata=metadata, type=type, converter=converter,
-        factory=factory, kw_only=kw_only, on_setattr=on_setattr
-    )
+           The unit converter is appended **at the end** of the conversion
+           pipeline: unit conversion is the last conversion operation performed.
+           If this is not suitable, this argument should be set to ``False`` and
+           a customised converter should be used as the ``converter`` parameter.
 
-    if units_compatible is not None:
-        # Construct units attribute definition
-        field_units_attrib = attrib_units(compatible=units_compatible,
-                                          default=units_default)
-        return field_attrib, field_units_attrib
-
-    else:
-        return field_attrib
-
-
-def attrib_units(
-        default=attr.NOTHING, repr=True, eq=True, order=None, hash=None,
-        init=True, metadata={}, kw_only=False, on_setattr=None,
-        compatible=None
-):
-    """Define an attribute dedicated to storing a unit.
-    This definition allows for setting a list a compatible units to specify the
-    dimensionality of the expected unit.
-
-    This wrapper extends :func:`attrib`: see its documentation for undocumented
-    parameters.
-
-    .. note::
-
-       All units must originate from Eradiate's unit registry
-       :data:`eradiate.util.units.ureg`.
-
-    Parameter ``compatible`` (:class:`pint.Unit` or list[:class:`pint.Unit`] or None):
-        If a unit or a list of units is passed, the generated attribute will
-        validate against compatibility with those units. If ``None`` is passed,
-        no unit compatibility check will be performed.
+    Parameter ``units_add_validator`` (bool):
+        If ``True``,  :func:`validator_has_compatible_units` is appended to the
+        list of validators.
 
     Returns → :class:`attr._make._CountingAttr`:
         Generated attribute field.
-
-    Raises → :class:`.UnitsError`:
-        If the ``default`` keyword argument is set to a unit incompatible with
-        ``compatible_units``.
     """
 
+    # Initialise attr.ib arguments
     metadata = dict() if not metadata else metadata
 
-    # Check that compatible units and defaults are compatible
-    if compatible is not None:
-        if default not in [None, attr.NOTHING]:
-            if isinstance(default, attr.Factory):
-                default_check = default.factory()
-            else:
-                default_check = ureg.Unit(default)
+    converters = []
+    if converter is not None:
+        converters.extend(always_iterable(converter))
 
-            compatible = tuple(always_iterable(compatible))
-            if not any([iscompatible(default_check, x) for x in compatible]):
-                raise UnitsError(
-                    f"incompatible allowed units "
-                    f"['{''', '''.join([str(x) for x in compatible])}'] "
-                    f"and default '{default_check}'"
-                )
+    validators = []
+    if validator is not None:
+        validators.extend(always_iterable(validator))
 
-    # Construct attribute definition
-    validators = [attr.validators.instance_of(ureg.Unit)]
+    if units_compatible is not None:
+        # Set field metadata
+        if callable(units_compatible):
+            metadata[MKey.compatible_units] = ureg.Unit(units_compatible())
+        else:
+            metadata[MKey.compatible_units] = ureg.Unit(units_compatible)
 
-    if compatible is not None:
-        validators.append(validator_unit_compatible(compatible))
+        # Set field converter
+        if units_add_converter:
+            converters.append(lambda x: ensure_units(x, units_compatible))
 
-    converter = attr.converters.optional(ureg.Unit)
-    validator = attr.validators.optional(attr.validators.and_(*validators))
+        # Set field validator
+        if units_add_validator:
+            validators.append(validator_has_compatible_units)
+
+        # Ensure that unit conversion and validation is carried out upon setting
+        if on_setattr is attr.NOTHING:
+            on_setattr = attr.setters.pipe(attr.setters.convert, attr.setters.validate)
+
+    # If on_setattr hasn't been set because units_compatible is unset, we set it
+    # to a valid value
+    if on_setattr is attr.NOTHING:
+        on_setattr = None
 
     return attr.ib(
-        default=default, validator=validator, repr=repr, eq=eq, order=order,
-        hash=hash, init=init, metadata=metadata, type=type, converter=converter,
-        kw_only=kw_only, on_setattr=on_setattr
-    )
-
-
-def attrib_float_positive(
-        default=attr.NOTHING, repr=True, eq=True, order=None, hash=None,
-        init=True, metadata={}, factory=None, kw_only=False, on_setattr=None,
-        units_compatible=None, units_default=None
-):
-    """Define an attribute storing a positive floating-point number.
-
-    This wrapper extends :func:`attrib`: see its documentation for undocumented
-    parameters.
-
-    Returns → :class:`attr._make._CountingAttr`:
-        Generated attribute field.
-    """
-
-    metadata = dict() if not metadata else metadata
-
-    converter = converter_quantity(float)
-    validator = validator_is_positive  # No need to recurse into pint.Quantity
-
-    return attrib(
-        default=default, validator=validator, repr=repr, eq=eq, order=order,
-        hash=hash, init=init, metadata=metadata, converter=converter,
-        factory=factory, kw_only=kw_only, on_setattr=on_setattr,
-        units_compatible=units_compatible, units_default=units_default
-    )
-
-
-def attrib_int_positive(
-        default=attr.NOTHING, repr=True, eq=True, order=None, hash=None,
-        init=True, metadata={}, factory=None, kw_only=False, on_setattr=None,
-        units_compatible=None, units_default=None
-):
-    """Define an attribute storing a positive integer number.
-
-    This wrapper extends :func:`attrib`: see its documentation for undocumented
-    parameters.
-
-    Returns → :class:`attr._make._CountingAttr`:
-        Generated attribute field.
-    """
-
-    metadata = dict() if not metadata else metadata
-
-    converter = converter_quantity(int)
-    validator = validator_is_positive  # No need to recurse into pint.Quantity
-
-    return attrib(
-        default=default, validator=validator, repr=repr, eq=eq, order=order,
-        hash=hash, init=init, metadata=metadata, converter=converter,
-        factory=factory, kw_only=kw_only, on_setattr=on_setattr,
-        units_compatible=units_compatible, units_default=units_default
+        default=default, validator=validators if validators else validator,
+        repr=repr, eq=eq, order=order, hash=hash, init=init, metadata=metadata,
+        type=type,
+        converter=converters if converters else converter,
+        factory=factory, kw_only=kw_only, on_setattr=on_setattr
     )
 
 
@@ -303,11 +205,36 @@ def converter_quantity(wrapped_converter):
     return f
 
 
+def converter_to_units(units):
+    """Returns a converter which ensures that its passed value has units
+    ``units``.
+
+    .. seealso::
+
+       :func:`ensure_units`
+    """
+    return lambda x: ensure_units(x, units)
+
+
 # ------------------------------------------------------------------------------
 #                                 Validators
 # ------------------------------------------------------------------------------
 
-def validator_unit_compatible(units):
+def validator_has_compatible_units(instance, attribute, value):
+    compatible_units = instance._fields_with_units()[attribute.name]
+
+    try:
+        if not iscompatible(value.units, compatible_units):
+            raise UnitsError(f"incompatible unit '{value.units}' "
+                             f"used to set field '{attribute.name}' "
+                             f"(allowed: '{compatible_units}')")
+    except AttributeError:  # value.units doesn't exist
+        raise UnitsError(f"unitless value '{value}' "
+                         f"used to set field '{attribute.name}' "
+                         f"(requires units '{compatible_units}')")
+
+
+def validator_units_compatible(units):
     """Generates a validator which validates if value is a unit compatible with
     one of ``units``. The generated validator will raise a :class:`.UnitsError`
     in case of failure.

@@ -5,28 +5,30 @@ from abc import ABC, abstractmethod
 import attr
 
 from ..core import SceneElement
-from ...util.attrs import attrib, attrib_float_positive, converter_quantity
+from ...util.attrs import (
+    attrib_quantity, converter_to_units, validator_is_positive,
+    validator_units_compatible
+)
 from ...util.units import config_default_units as cdu
 from ...util.units import ureg
 
 
-def _converter_number_or_auto(value):
-    if value == "auto":
-        return value
+def _converter_or_auto(wrapped_converter):
+    def f(value):
+        if value == "auto":
+            return value
 
-    return converter_quantity(float)(value)
+        return wrapped_converter(value)
+
+    return f
 
 
-def _validator_number_or_auto(_, attribute, value):
-    if value == "auto":
-        return
+def _validator_or_auto(wrapped_validator):
+    def f(instance, attribute, value):
+        if value == "auto":
+            return
 
-    if isinstance(value, ureg.Quantity):
-        return
-
-    if not isinstance(value, (int, float)):
-        raise TypeError(f"{attribute.name} must be a 'float', 'int' or "
-                        f"str('auto'), got {value} which is a '{type(value)}'")
+    return f
 
 
 @attr.s
@@ -51,29 +53,30 @@ class Atmosphere(SceneElement, ABC):
         Unit-enabled field (default unit: cdu[length])
     """
 
-    id = attrib(
+    id = attr.ib(
         default="atmosphere",
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
-    height, height_units = attrib_float_positive(
+    height = attrib_quantity(
         default=ureg.Quantity(100., ureg.km),
-        units_compatible=ureg.m,
-        units_default=attr.Factory(lambda: cdu.get("length"))
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("length"),
     )
 
-    width, width_units = attrib(
+    width = attrib_quantity(
         default="auto",
-        converter=_converter_number_or_auto,
-        validator=_validator_number_or_auto,
+        converter=_converter_or_auto(converter_to_units(cdu.generator("length"))),
+        validator=_validator_or_auto(validator_units_compatible(ureg.m)),
         units_compatible=ureg.m,
-        units_default=attr.Factory(lambda: cdu.get("length")),
+        units_add_converter=False,
+        units_add_validator=False
     )
 
     @property
     def _height(self):
-        height = self.get_quantity("height")
-        offset = height * 0.001  # TODO: maybe adjust offset based on medium profile
+        height = self.height
+        offset = height * 0.001  # TODO: adjust offset based on medium profile
         return height, offset
 
     @abstractmethod
@@ -114,6 +117,7 @@ class Atmosphere(SceneElement, ABC):
 
     def kernel_dict(self, ref=True):
         # TODO: return a KernelDict
+        # TODO: extract integrator setup
         kernel_dict = {"integrator": {"type": "volpath"}}  # Force volpath integrator
 
         if not ref:

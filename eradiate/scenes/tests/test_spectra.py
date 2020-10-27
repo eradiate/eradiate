@@ -1,42 +1,64 @@
 import numpy as np
 import pytest
-from pint import DimensionalityError
 
 import eradiate
-from eradiate.scenes.spectra import SolarIrradianceSpectrum, UniformSpectrum
+from eradiate.scenes.spectra import \
+    SolarIrradianceSpectrum, Spectrum, \
+    UniformIrradianceSpectrum, UniformRadianceSpectrum
 from eradiate.util.collections import onedict_value
+from eradiate.util.exceptions import UnitsError
 from eradiate.util.units import config_default_units as cdu
 from eradiate.util.units import kernel_default_units as kdu
+from eradiate.util.units import ureg
+
+
+def test_converter(mode_mono):
+    # Check if dicts are correctly processed
+    s = Spectrum.converter("radiance")({"type": "uniform"})
+    assert s == UniformRadianceSpectrum(value=1.0)
+    s = Spectrum.converter("irradiance")({"type": "uniform"})
+    assert s == UniformIrradianceSpectrum(value=1.0)
+
+    # Check if floats and quantities are correctly processed
+    s = Spectrum.converter("radiance")(1.0)
+    assert s == UniformRadianceSpectrum(value=1.0)
+    s = Spectrum.converter("radiance")(ureg.Quantity(1e6, "W/km^2/sr/nm"))
+    assert s == UniformRadianceSpectrum(value=1.0)
+    with pytest.raises(UnitsError):
+        s = Spectrum.converter("irradiance")(ureg.Quantity(1, "W/m^2/sr/nm"))
 
 
 def test_uniform(mode_mono):
     from eradiate.kernel.core.xml import load_dict
 
     # Check if we can instantiate the element
-    s = UniformSpectrum()
-    assert s.value == 1.
-    assert s.value_units == cdu.get("radiance")
+    s = UniformRadianceSpectrum()
+    assert s.value == ureg.Quantity(1., "W/m^2/sr/nm")
 
     # Check that produced kernel dict is valid
     assert load_dict(onedict_value(s.kernel_dict())) is not None
 
     # Check if inconsistent units are detected
-    with pytest.raises(DimensionalityError):
-        UniformSpectrum(value=1., value_units="W/m^2/sr/nm", quantity="irradiance")
+    with pytest.raises(UnitsError):
+        s.value = ureg.Quantity(1., ureg.m)
 
     # Check if default units are correctly applied
-    s = UniformSpectrum(value=1., quantity="irradiance")
-    assert s.value_units == cdu.get("irradiance")
+    with cdu.override({"radiance": "W/km^2/sr/nm"}):
+        s = UniformRadianceSpectrum(value=1.)
+    assert s.value == ureg.Quantity(1., "W/km^2/sr/nm")
 
     # Check if unit scaling is prorperly applied
     with cdu.override({"radiance": "W/m^2/sr/nm"}):
-        s = UniformSpectrum(value=1., quantity="radiance")
+        s = UniformRadianceSpectrum(value=1.)
     with kdu.override({"radiance": "kW/m^2/sr/nm"}):
         d = s.kernel_dict()
         assert np.allclose(d["spectrum"]["value"], 1e-3)
 
+    # Check if unit-enabled fields are correctly listed
+    assert UniformRadianceSpectrum._fields_with_units() == {"value": ureg.Unit("W/m^2/sr/nm")}
 
-def test_irradiance_spectrum(mode_mono):
+
+def test_solar(mode_mono):
     from eradiate.kernel.core.xml import load_dict
 
     # Check if we can instantiate the element
@@ -57,5 +79,5 @@ def test_irradiance_spectrum(mode_mono):
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
 
     with pytest.raises(ValueError):
-        eradiate.mode.config["wavelength"] = 2400.
+        eradiate.set_mode("mono", wavelength=2400.)
         s.kernel_dict()

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import attr
 
 import eradiate.kernel
-from ..util.attrs import attrib, unit_enabled
+from ..util.attrs import unit_enabled
 from ..util.exceptions import KernelVariantError
 from ..util.factory import BaseFactory
 
@@ -126,24 +126,11 @@ class SceneElement(ABC):
         User-defined object identifier. Default: ``None``.
     """
 
-    id = attrib(
+    id = attr.ib(
         default=None,
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
-    def __attrs_post_init__(self):
-        """This post-init step handles unit-enabled fields.
-        Fields can be unit-enabled using :func:`~eradiate.util.attrs.attrib`'s
-        ``has_units`` parameter. Unit-enabled fields are inspected.
-        If a field ``field`` is a :class:`pint.Quantity`, it is
-        converted to ``field_units`` and replaced with its magnitude (it is
-        stripped from its unit).
-
-        From this, it follows that all unit-enabled fields are stored as their
-        magnitude. The unit in which these magnitudes are stored are contained
-        in the corresponding unit fields.
-        """
-        self._strip_units()
     @abstractmethod
     def kernel_dict(self, ref=True):
         """Return a dictionary suitable for kernel scene configuration.
@@ -157,18 +144,6 @@ class SceneElement(ABC):
         """
         # TODO: return a KernelDict
         pass
-
-    @classmethod
-    def from_dict(cls, d):
-        """Create from a dictionary.
-
-        Parameter ``d`` (dict):
-            Configuration dictionary used for initialisation.
-
-        Returns → :class:`~eradiate.scenes.core.SceneElement`:
-            Created object.
-        """
-        return cls(**d)
 
 
 class SceneElementFactory(BaseFactory):

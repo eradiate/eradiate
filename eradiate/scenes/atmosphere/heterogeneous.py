@@ -9,7 +9,7 @@ import xarray as xr
 from .base import Atmosphere
 from .radiative_properties.rad_profile import RadProfile, RadProfileFactory
 from ..core import SceneElementFactory
-from ...util.attrs import attrib, validator_is_file
+from ...util.attrs import validator_is_file
 from ...util.units import kernel_default_units as kdu
 
 
@@ -126,13 +126,13 @@ class HeterogeneousAtmosphere(Atmosphere):
         If ``None``, a temporary cache directory will be used.
     """
 
-    profile = attrib(
+    profile = attr.ib(
         default=None,
         converter=RadProfileFactory.convert,
         validator=attr.validators.optional(attr.validators.instance_of(RadProfile))
     )
 
-    albedo_fname = attrib(
+    albedo_fname = attr.ib(
         default=None,
         converter=attr.converters.optional(Path)
     )
@@ -149,7 +149,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             except FileNotFoundError:
                 raise
 
-    sigma_t_fname = attrib(
+    sigma_t_fname = attr.ib(
         default=None,
         converter=attr.converters.optional(Path),
     )
@@ -166,7 +166,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             except FileNotFoundError:
                 raise
 
-    _cache_dir = attrib(
+    _cache_dir = attr.ib(
         default=None,
         converter=attr.converters.optional(Path)
     )
@@ -177,8 +177,6 @@ class HeterogeneousAtmosphere(Atmosphere):
     }
 
     def __attrs_post_init__(self):
-        super(HeterogeneousAtmosphere, self).__attrs_post_init__()
-
         # Prepare cache directory in case we'd need it
         if self._cache_dir is None:
             self._cache_dir = Path(tempfile.mkdtemp())
@@ -212,7 +210,7 @@ class HeterogeneousAtmosphere(Atmosphere):
                                  f"volume data")
 
             # Does the considered field have values?
-            field_quantity = getattr(self.profile, field)()
+            field_quantity = getattr(self.profile, field)
 
             if field_quantity is None:
                 raise ValueError(f"field {field} is empty, cannot create "
@@ -237,7 +235,7 @@ class HeterogeneousAtmosphere(Atmosphere):
         if self.width == "auto":  # Support for auto is currently disabled
             raise NotImplementedError
         else:
-            return self.get_quantity("width")
+            return self.width
 
     def phase(self):
         return {f"phase_{self.id}": {"type": "rayleigh"}}

@@ -18,10 +18,10 @@ def test_rad_props_profile_factory(mode_mono):
 def test_array_rad_props_profile(mode_mono):
     p = ArrayRadProfile(albedo_values=np.linspace(0., 1., 11),
                         sigma_t_values=np.linspace(0., 1e-5, 11))
-    assert isinstance(p.albedo(), ureg.Quantity)
-    assert isinstance(p.sigma_t(), ureg.Quantity)
-    assert isinstance(p.sigma_a(), ureg.Quantity)
-    assert isinstance(p.sigma_s(), ureg.Quantity)
+    assert np.allclose(p.albedo, ureg.Quantity(np.linspace(0., 1., 11), ureg.dimensionless))
+    assert np.allclose(p.sigma_t, ureg.Quantity(np.linspace(0., 1e-5, 11), ureg.m ** -1))
+    assert isinstance(p.sigma_a, ureg.Quantity)
+    assert isinstance(p.sigma_s, ureg.Quantity)
 
     with pytest.raises(ValueError):
         p = ArrayRadProfile(albedo_values=np.linspace(0., 1., 11),

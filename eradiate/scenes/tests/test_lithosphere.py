@@ -36,13 +36,11 @@ def test_rpv(mode_mono):
     # Constructor with arguments
     ls = RPVSurface(
         width=ureg.Quantity(1000., "km"),
-        width_units=ureg.m,
         rho_0=0.3,
         k=1.4,
         ttheta=-0.23
     )
-    assert np.allclose(ls.width, 1e6)  # Check that unit conversion works as intended
+    assert np.allclose(ls.width, ureg.Quantity(1e6, ureg.m))
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(ls).load() is not None
-    assert load_dict(kernel_dict) is not None

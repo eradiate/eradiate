@@ -22,7 +22,7 @@ def test_rayleigh_solver_app():
     }
 
     # Check that the appropriate variant is selected
-    assert eradiate.mode.type == "mono"
+    assert eradiate.mode.id == "mono"
 
     # Check that the default scene can be instantiated
     assert app._kernel_dict.load() is not None
@@ -110,7 +110,7 @@ def test_rayleigh_solver_app_run():
 
     app = RayleighSolverApp(config)
     # Assert the correct mode of operation to be set by the application
-    assert eradiate.mode.type == "mono"
+    assert eradiate.mode.id == "mono"
 
     app.compute()
 
@@ -151,7 +151,7 @@ def test_rayleigh_solver_app_postprocessing():
 
     app = RayleighSolverApp(config)
     # Assert the correct mode of operation to be set by the application
-    assert eradiate.mode.type == "mono"
+    assert eradiate.mode.id == "mono"
     app.compute()
 
     # Assert the correct computation of the BRDF and BRF values

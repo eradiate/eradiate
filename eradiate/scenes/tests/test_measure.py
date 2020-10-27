@@ -2,7 +2,11 @@ import numpy as np
 import pytest
 
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.measure import DistantMeasure, PerspectiveCameraMeasure, RadianceMeterHsphereMeasure, RadianceMeterPPlaneMeasure
+from eradiate.scenes.illumination import DirectionalIllumination
+from eradiate.scenes.lithosphere import RPVSurface
+from eradiate.scenes.measure import DistantMeasure, PerspectiveCameraMeasure, \
+    RadianceMeterHsphereMeasure, RadianceMeterPPlaneMeasure
+from eradiate.scenes.spectra import SolarIrradianceSpectrum
 from eradiate.util.units import ureg
 
 
@@ -25,8 +29,7 @@ def test_radiancemeter_hemispherical(mode_mono):
 
 
 def test_hemispherical_repack(mode_mono):
-
-    data = np.linspace(0, 1, 9*36)
+    data = np.linspace(0, 1, 9 * 36)
 
     d = RadianceMeterHsphereMeasure(zenith_res=10, azimuth_res=10)
     data_reshaped = d.repack_results(data)
@@ -64,43 +67,19 @@ def test_pplane_orientation(mode_mono):
 
     from eradiate.scenes.core import SceneElementFactory, KernelDict
 
-    surface_config = {
-        "type": "rpv",
-        "width": 800,
-        "width_units": "km"
-    }
-    illumination_config = {
-        "type": "directional",
-        "zenith": 45,
-        "irradiance": {
-            "type": "solar_irradiance"
-        }
-    }
-    hemisphere_config = {
-        "type": "radiancemeter_hsphere",
+    measure_config = {
         "zenith_res": 9,
-        "azimuth_res": 1,
         "origin": [0, 0, 1],
         "direction": [0, 0, 1],
         "orientation": [1, 0, 0],
         "hemisphere": "back",
         "spp": 32
     }
-    pplane_config = {
-        "type": "radiancemeter_pplane",
-        "zenith_res": 9,
-        "origin": [0, 0, 1],
-        "direction": [0, 0, 1],
-        "orientation": [1, 0 ,0],
-        "hemisphere": "back",
-        "spp" : 32
-    }
-    factory = SceneElementFactory()
 
-    surface = factory.create(surface_config)
-    illumination = factory.create(illumination_config)
-    hemisphere = factory.create(hemisphere_config)
-    pplane = factory.create(pplane_config)
+    surface = RPVSurface(width=ureg.Quantity(800., ureg.km))
+    illumination = DirectionalIllumination(zenith=45., irradiance=SolarIrradianceSpectrum())
+    hemisphere = RadianceMeterHsphereMeasure(azimuth_res=1, **measure_config)
+    pplane = RadianceMeterPPlaneMeasure(**measure_config)
 
     # prepare the scene with hemispherical sensor and render
     kernel_dict_hemi = KernelDict.empty()

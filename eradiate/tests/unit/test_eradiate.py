@@ -1,4 +1,8 @@
 """Root module testing."""
+import pytest
+from attr.exceptions import FrozenInstanceError
+
+from eradiate.util.units import ureg
 
 
 def test_modes():
@@ -9,8 +13,12 @@ def test_modes():
     # We expect that the kernel variant is appropriately selected
     assert eradiate.kernel.variant() == "scalar_mono_double"
     # We check for defaults
-    assert eradiate.mode.config["wavelength"] == 550.
+    assert eradiate.mode.wavelength == ureg.Quantity(550., ureg.nm)
 
-    # Check that defaults are correctly applied
+    # Check for unit conversion
     eradiate.set_mode("mono", wavelength=300.)
-    assert eradiate.mode.config["wavelength"] == 300.
+    assert eradiate.mode.wavelength == ureg.Quantity(300., ureg.nm)
+
+    # Check that mode instances are frozen
+    with pytest.raises(FrozenInstanceError):
+        eradiate.mode.wavelength = 100

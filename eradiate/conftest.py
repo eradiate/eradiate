@@ -34,7 +34,7 @@ def generate_fixture(mode):
     globals()['mode_' + mode] = fixture
 
 
-for mode in eradiate._mode_default_configs.keys():
+for mode in eradiate._registered_modes:
     generate_fixture(mode)
 del generate_fixture
 

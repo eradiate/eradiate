@@ -21,20 +21,3 @@ Top-level module [eradiate]
    :toctree: generated/
 
    set_mode
-
-.. rubric:: Classes
-
-.. autosummary::
-   :toctree: generated/
-
-   EradiateMode
-
-.. rubric:: Modules
-
-.. autosummary::
-
-   kernel
-   scenes
-   solvers
-   data
-   util

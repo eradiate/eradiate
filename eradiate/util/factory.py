@@ -72,7 +72,7 @@ class BaseFactory:
                         default=1.
                     )
 
-                    def kernel_dict(self, **kwargs):
+                    def kernel_dict(self, ref=True):
                         return {
                             self.id: {
                                 "type": "constant",

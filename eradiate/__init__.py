@@ -4,49 +4,75 @@ __version__ = "0.0.1"  #: Eradiate version number.
 
 import attr
 
+from .util.attrs import attrib_quantity as _attrib_quantity
+from .util.attrs import converter_to_units as _converter_to_units
+from .util.attrs import unit_enabled as _unit_enabled
 from .util.collections import configdict as _configdict
+from .util.units import config_default_units as _cdu
 from .util.units import ureg as _ureg
 
-
-@attr.s
-class EradiateMode:
-    """A very simple container hosting configuration data of Eradiate's current
-    operational mode.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    Parameter ``type`` (str or None):
-        Mode type.
-
-    Parameter ``config`` (dict or None):
-        Mode configuration dictionary.
-    """
-
-    type = attr.ib(default=None)
-    config = attr.ib(default=None)
-
-
-mode = EradiateMode()
+mode = None
 """Eradiate's operational mode configuration.
 
-This is the only instance of :class:`EradiateMode`. 
-See also :func:`set_mode`.
+.. seealso::
+
+   :func:`set_mode`.
 """
 
-_mode_default_configs = {
-    "mono": {
-        "wavelength": 550.,
-        "wavelength_units": _ureg("nm")
-    }
-}
+# Map associating a mode ID string to the corresponding class
+_registered_modes = {}
 
 
-def set_mode(mode_type, **kwargs):
+def _register_mode(mode_id):
+    # This decorator is meant to be added to added to an _EradiateMode child
+    # class. It adds it to _registered_modes.
+
+    def decorator(cls):
+        _registered_modes[mode_id] = cls
+        cls.id = mode_id
+        return cls
+
+    return decorator
+
+
+@_unit_enabled
+@attr.s(frozen=True)
+class _EradiateMode:
+    # Parent class for all operational modes
+    # All derived classes will be frozen
+    # Side-effect: they will also implement from_dict()
+    id = None
+
+    @staticmethod
+    def new(mode_id, **kwargs):
+        try:
+            mode_cls = _registered_modes[mode_id]
+        except KeyError:
+            raise ValueError(f"unknown mode '{mode_id}'")
+        return mode_cls(**kwargs)
+
+
+@_register_mode("mono")
+@attr.s
+class _EradiateModeMono(_EradiateMode):
+    # Monochromatic mode
+    wavelength = _attrib_quantity(
+        default=_ureg.Quantity(550., _ureg.nm),
+        units_compatible=_cdu.generator("wavelength"),
+        on_setattr=None
+    )
+
+    def __attrs_post_init__(self):
+        import eradiate.kernel
+        eradiate.kernel.set_variant("scalar_mono_double")
+
+
+def set_mode(mode_id, **kwargs):
     """Set Eradiate's mode of operation.
 
     This function sets and configures Eradiate's mode of operation. In addition,
-    it invokes :func:`~mitsuba.set_variant` to select the kernel variant
-    corresponding to the selected mode.
+    it invokes the :func:`~mitsuba.set_variant` kernel function to select the
+    kernel variant corresponding to the selected mode.
 
     The main argument ``mode_type`` defines which mode is selected. Then,
     keyword arguments are used to pass additional configuration details for the
@@ -59,18 +85,9 @@ def set_mode(mode_type, **kwargs):
 
     Valid keyword arguments for ``mono`` (monochromatic mode):
         ``wavelength`` (float):
-            Wavelength selected for monochromatic operation [nm].
-            Default: 550 nm.
+            Wavelength selected for monochromatic operation. Default: 550 nm.
+
+            Unit-enabled field (default: cdu[wavelength]).
     """
     global mode
-
-    if mode_type not in _mode_default_configs.keys():
-        raise ValueError(f"unsupported mode {mode_type}")
-
-    if mode_type == "mono":
-        import eradiate.kernel
-        eradiate.kernel.set_variant("scalar_mono_double")
-
-        mode.type = "mono"
-        mode.config = _configdict(_mode_default_configs[mode_type])
-        mode.config.update(kwargs)
+    mode = _EradiateMode.new(mode_id, **kwargs)

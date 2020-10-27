@@ -3,11 +3,11 @@
 from abc import ABC, abstractmethod
 
 import attr
-import numpy as np
 
-from ....util.attrs import attrib, attrib_units, unit_enabled
+from ....util.attrs import attrib_quantity, unit_enabled
 from ....util.factory import BaseFactory
-from ....util.units import config_default_units as cdu, ureg
+from ....util.units import config_default_units as cdu
+from ....util.units import ureg
 
 
 @unit_enabled
@@ -26,6 +26,7 @@ class RadProfile(ABC):
         """Initialise a :class:`RadPropsProfile` from a dictionary."""
         return cls(**d)
 
+    @property
     @abstractmethod
     def albedo(self):
         """Return albedo.
@@ -35,6 +36,7 @@ class RadProfile(ABC):
         """
         pass
 
+    @property
     @abstractmethod
     def sigma_t(self):
         """Return extinction coefficient.
@@ -44,6 +46,7 @@ class RadProfile(ABC):
         """
         pass
 
+    @property
     @abstractmethod
     def sigma_a(self):
         """Return absorption coefficient.
@@ -53,6 +56,7 @@ class RadProfile(ABC):
         """
         pass
 
+    @property
     @abstractmethod
     def sigma_s(self):
         """Return scattering coefficient.
@@ -61,9 +65,6 @@ class RadProfile(ABC):
             Profile scattering coefficient.
         """
         pass
-
-    def __attrs_post_init__(self):
-        self._strip_units()
 
 
 class RadProfileFactory(BaseFactory):
@@ -76,7 +77,7 @@ class RadProfileFactory(BaseFactory):
        .. factorytable::
           :factory: RadProfileFactory
     """
-    # TODO: add a table with factory key-class associations
+    # TODO: add to docs a table with factory key-class associations
     _constructed_type = RadProfile
     registry = {}
 
@@ -102,34 +103,37 @@ class ArrayRadProfile(RadProfile):
 
         Unit-enabled field (default: cdu[length]^-1).
     """
-    albedo_values, albedo_values_units = attrib(
+
+    albedo_values = attrib_quantity(
         default=None,
-        converter=np.array,
         units_compatible=ureg.dimensionless,
-        units_default=cdu.get("dimensionless")
     )
 
-    sigma_t_values, sigma_t_values_units = attrib(
+    sigma_t_values = attrib_quantity(
         default=None,
-        converter=np.array,
-        units_compatible=ureg.m ** -1,
-        units_default=cdu.get("collision_coefficient")
+        units_compatible=cdu.generator("collision_coefficient"),
     )
 
-    def __attrs_post_init__(self):
-        super(ArrayRadProfile, self).__attrs_post_init__()
-        if self.albedo_values.shape != self.sigma_t_values.shape:
-            raise ValueError("'albedo_values' and 'sigma_t_values' must have "
-                             "the same length")
+    @albedo_values.validator
+    @sigma_t_values.validator
+    def _validator_values(instance, attribute, value):
+        if instance.albedo_values.shape != instance.sigma_t_values.shape:
+            raise ValueError(f"while setting {attribute.name}: "
+                             f"'albedo_values' and 'sigma_t_values' must have "
+                             f"the same length")
 
+    @property
     def albedo(self):
-        return ureg.Quantity(self.albedo_values, self.albedo_values_units)
+        return self.albedo_values
 
+    @property
     def sigma_t(self):
-        return ureg.Quantity(self.sigma_t_values, self.sigma_t_values_units)
+        return self.sigma_t_values
 
+    @property
     def sigma_a(self):
-        return self.sigma_t() * (1. - self.albedo())
+        return self.sigma_t * (1. - self.albedo)
 
+    @property
     def sigma_s(self):
-        return self.sigma_t() * self.albedo()
+        return self.sigma_t * self.albedo

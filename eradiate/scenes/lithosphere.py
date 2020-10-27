@@ -12,11 +12,13 @@ from abc import ABC, abstractmethod
 
 import attr
 
-from .core import SceneElementFactory, SceneElement
-from .spectra import UniformSpectrum
-from ..util.attrs import attrib, attrib_float_positive, attrib_units
-from ..util.units import config_default_units as cdu, ureg
+from .core import SceneElement, SceneElementFactory
+from .illumination import _validator_has_quantity
+from .spectra import Spectrum, UniformReflectanceSpectrum
+from ..util.attrs import attrib_quantity, validator_is_positive
+from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
+from ..util.units import ureg
 
 
 @attr.s
@@ -29,20 +31,20 @@ class Surface(SceneElement, ABC):
     .. rubric:: Constructor arguments / instance attributes
 
     ``width`` (float):
-        Surface size. Default: 1.
+        Surface size. Default: 100 km.
 
         Unit-enabled field (default: cdu[length]).
     """
 
-    id = attrib(
+    id = attr.ib(
         default="surface",
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
-    width, width_units = attrib_float_positive(
-        default=1.,
-        units_compatible=ureg.m,
-        units_default=attr.Factory(lambda: cdu.get("length"))
+    width = attrib_quantity(
+        default=ureg.Quantity(100., ureg.km),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("length")
     )
 
     @abstractmethod
@@ -72,7 +74,7 @@ class Surface(SceneElement, ABC):
         else:
             bsdf = self.bsdfs()[f"bsdf_{self.id}"]
 
-        width = self.get_quantity("width").to(kdu.get("length")).magnitude
+        width = self.width.to(kdu.get("length")).magnitude
 
         return {
             f"shape_{self.id}": {
@@ -109,16 +111,17 @@ class LambertianSurface(Surface):
 
     ``reflectance`` (:class:`.UniformSpectrum`):
         Reflectance spectrum.
-        Default: ``UniformSpectrum(quantity="reflectance", value=0.5)``.
+        Default: ``UniformReflectanceSpectrum(value=0.5)``.
 
         Can be initialised with a dictionary processed by
         :class:`.SceneElementFactory`.
     """
 
-    reflectance = attrib(
-        default=attr.Factory(lambda: UniformSpectrum(quantity="reflectance", value=0.5)),
-        converter=SceneElementFactory.convert,
-        validator=attr.validators.instance_of(UniformSpectrum),
+    reflectance = attr.ib(
+        default=attr.Factory(lambda: UniformReflectanceSpectrum(value=0.5)),
+        converter=Spectrum.converter("reflectance"),
+        validator=[attr.validators.instance_of(Spectrum),
+                   _validator_has_quantity("reflectance")]
     )
 
     def bsdfs(self):
@@ -159,17 +162,17 @@ class RPVSurface(Surface):
     # TODO: check if there are bounds to default parameters
     # TODO: add support for spectra
 
-    rho_0 = attrib(
+    rho_0 = attr.ib(
         default=0.183,
         converter=float
     )
 
-    k = attrib(
+    k = attr.ib(
         default=0.780,
         converter=float
     )
 
-    ttheta = attrib(
+    ttheta = attr.ib(
         default=-0.1,
         converter=float
     )

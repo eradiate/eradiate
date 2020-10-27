@@ -14,13 +14,14 @@ import attr
 import numpy as np
 
 from .core import SceneElement, SceneElementFactory
+from ..util import always_iterable
 from ..util.attrs import (
-    attrib, attrib_float_positive, attrib_int_positive, attrib_units,
-    validator_has_len
+    attrib_quantity, validator_has_len, validator_is_positive
 )
 from ..util.frame import angles_to_direction, spherical_to_cartesian
-from ..util.units import config_default_units as cdu, ureg
+from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
+from ..util.units import ureg
 
 
 @attr.s
@@ -83,39 +84,39 @@ class DistantMeasure(Measure):
         Number of samples. Default: 10000.
     """
 
-    zenith, zenith_units = attrib_float_positive(
+    zenith = attrib_quantity(
         default=ureg.Quantity(0., ureg.deg),
-        units_compatible=ureg.deg,
-        units_default=attr.Factory(lambda: cdu.get("angle")),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("angle"),
     )
 
-    azimuth, azimuth_units = attrib_float_positive(
+    azimuth = attrib_quantity(
         default=ureg.Quantity(0., ureg.deg),
-        units_default=attr.Factory(lambda: cdu.get("angle")),
-        units_compatible=ureg.deg,
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("angle"),
     )
 
-    spp = attrib_int_positive(default=10000)
+    spp = attr.ib(
+        default=10000,
+        converter=int,
+        validator=validator_is_positive
+    )
 
     def repack_results(self, results):
         return results
 
-    def kernel_dict(self, **kwargs):
-        zenith = self.get_quantity("zenith")
-        azimuth = self.get_quantity("azimuth")
-        spp = self.spp
-
+    def kernel_dict(self, ref=True):
         return {
             self.id: {
                 "type": "distant",
                 "direction": list(-angles_to_direction(
-                    theta=zenith.to(ureg.rad).magnitude,
-                    phi=azimuth.to(ureg.rad).magnitude
+                    theta=self.zenith.to(ureg.rad).magnitude,
+                    phi=self.azimuth.to(ureg.rad).magnitude
                 )),
                 "target": [0, 0, 0],
                 "sampler": {
                     "type": "independent",
-                    "sample_count": spp
+                    "sample_count": self.spp
                 },
                 "film": {
                     "type": "hdrfilm",
@@ -170,45 +171,52 @@ class PerspectiveCameraMeasure(Measure):
         Number of samples per pixel. Default: 32.
     """
 
-    target, target_units = attrib(
+    target = attrib_quantity(
         default=ureg.Quantity([0, 0, 0], ureg.m),
         validator=validator_has_len(3),
-        units_compatible=ureg.m,
-        units_default=attr.Factory(lambda: cdu.get("length")),
+        units_compatible=cdu.generator("length"),
     )
 
-    zenith, zenith_units = attrib_float_positive(
+    zenith = attrib_quantity(
         default=ureg.Quantity(0., ureg.deg),
-        units_compatible=ureg.deg,
-        units_default=attr.Factory(lambda: cdu.get("angle")),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("angle"),
     )
 
-    azimuth, azimuth_units = attrib_float_positive(
+    azimuth = attrib_quantity(
         default=ureg.Quantity(0., ureg.deg),
-        units_compatible=ureg.deg,
-        units_default=attr.Factory(lambda: cdu.get("angle")),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("angle"),
     )
 
-    distance, distance_units = attrib_float_positive(
+    distance = attrib_quantity(
         default=ureg.Quantity(1., ureg.km),
-        units_compatible=ureg.m,
-        units_default=attr.Factory(lambda: cdu.get("length")),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("length"),
     )
 
-    res = attrib_int_positive(default=64)
+    res = attr.ib(
+        default=64,
+        converter=int,
+        validator=validator_is_positive
+    )
 
-    spp = attrib_int_positive(default=32)
+    spp = attr.ib(
+        default=32,
+        converter=int,
+        validator=validator_is_positive
+    )
 
     def repack_results(self, results):
         return results
 
-    def kernel_dict(self, **kwargs):
+    def kernel_dict(self, ref=True):
         from eradiate.kernel.core import ScalarTransform4f
 
-        target = self.get_quantity("target").to(kdu.get("length")).magnitude
-        distance = self.get_quantity("distance").to(kdu.get("length")).magnitude
-        zenith = self.get_quantity("zenith").to("rad").magnitude
-        azimuth = self.get_quantity("azimuth").to("rad").magnitude
+        target = self.target.to(kdu.get("length")).magnitude
+        distance = self.distance.to(kdu.get("length")).magnitude
+        zenith = self.zenith.to("rad").magnitude
+        azimuth = self.azimuth.to("rad").magnitude
 
         origin = spherical_to_cartesian(distance, zenith, azimuth)
         direction = origin / np.linalg.norm(origin)
@@ -273,15 +281,9 @@ class RadianceMeterHsphereMeasure(Measure):
     ``direction`` (list[float]):
         Direction of the hemisphere's zenith. Default: [0, 0, 1].
 
-        Unit-enabled field (default unit: cdu[length]).
-
-
     ``orientation`` (list[float]):
         Direction with which azimuth origin is aligned.
         Default value: [1, 0, 0].
-
-        Unit-enabled field (default unit: cdu[length]).
-
 
     ``hemisphere`` ("front" or "back"):
         If set to ``"front"``, the created radiancemeter array directions will
@@ -301,57 +303,62 @@ class RadianceMeterHsphereMeasure(Measure):
     """
     # TODO: add figure to explain what "hemisphere" does
 
-    zenith_res, zenith_res_units = attrib_float_positive(
+    zenith_res = attrib_quantity(
         default=ureg.Quantity(10., ureg.deg),
-        units_compatible=ureg.deg,
-        units_default=attr.Factory(lambda: cdu.get("angle")),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("angle"),
     )
 
-    azimuth_res, azimuth_res_units = attrib_float_positive(
+    azimuth_res = attrib_quantity(
         default=ureg.Quantity(10., ureg.deg),
-        units_compatible=ureg.deg,
-        units_default=attr.Factory(lambda: cdu.get("angle")),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("angle"),
     )
 
-    origin, origin_units = attrib(
+    origin = attrib_quantity(
         default=ureg.Quantity([0, 0, 0], ureg.m),
         validator=validator_has_len(3),
-        units_compatible=ureg.m,
-        units_default=attr.Factory(lambda: cdu.get("length")),
+        units_compatible=cdu.generator("length"),
     )
 
-    direction = attrib(
+    direction = attr.ib(
         default=[0, 0, 1],
         validator=validator_has_len(3)
     )
 
-    orientation = attrib(
+    orientation = attr.ib(
         default=[1, 0, 0],
         validator=validator_has_len(3),
     )
 
-    hemisphere = attrib(
+    hemisphere = attr.ib(
         default="front",
         validator=attr.validators.in_(("front", "back")),
     )
 
     id = attr.ib(
         default="radiancemeter_hsphere",
-        validator=attr.validators.optional((attr.validators.instance_of(str))),
+        validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
-    spp = attrib_int_positive(default=32)
+    spp = attr.ib(
+        default=32,
+        converter=int,
+        validator=validator_is_positive
+    )
 
-    _zenith_angles = attrib(default=None, init=False)  # Set during post-init
-    _azimuth_angles = attrib(default=None, init=False)  # Set during post-init
+    _zenith_angles = attr.ib(default=None, init=False)  # Set during post-init
+    _azimuth_angles = attr.ib(default=None, init=False)  # Set during post-init
 
     def __attrs_post_init__(self):
-        super().__attrs_post_init__()
-        zenith_res = self.get_quantity("zenith_res").to(ureg.deg).magnitude
-        azimuth_res = self.get_quantity("azimuth_res").to(ureg.deg).magnitude
-
-        self._zenith_angles = ureg.Quantity(np.arange(0, 90, zenith_res), ureg.deg)
-        self._azimuth_angles = ureg.Quantity(np.arange(0, 360., azimuth_res), ureg.deg)
+        self._zenith_angles = ureg.Quantity(
+            np.arange(0, 90., self.zenith_res.to(ureg.deg).magnitude),
+            ureg.deg
+        )
+        self._azimuth_angles = ureg.Quantity(
+            np.arange(0, 360., self.azimuth_res.to(ureg.deg).magnitude),
+            ureg.deg
+        )
 
     def repack_results(self, results):
         """This method reshapes the 1D results returned by the
@@ -364,7 +371,7 @@ class RadianceMeterHsphereMeasure(Measure):
     def _orientation_transform(self):
         """Compute matrix that transforms vectors between object and world space."""
         from eradiate.kernel.core import Transform4f, Vector3f, Point3f
-        origin = Point3f(self.get_quantity("origin").to(kdu.get("length")).magnitude)
+        origin = Point3f(self.origin.to(kdu.get("length")).magnitude)
         zenith_direction = Vector3f(self.direction)
         orientation = Vector3f(self.orientation)
         up = Transform4f.rotate(zenith_direction, 90).transform_vector(orientation)
@@ -386,10 +393,10 @@ class RadianceMeterHsphereMeasure(Measure):
         return -np.array(directions) if self.hemisphere == "back" \
             else np.array(directions)
 
-    def kernel_dict(self, **kwargs):
+    def kernel_dict(self, ref=True):
         spp = self.spp
         directions = self._directions()
-        origin = self.get_quantity("origin").to(kdu.get("length")).magnitude
+        origin = self.origin.to(kdu.get("length")).magnitude
 
         return {
             self.id: {
@@ -475,30 +482,29 @@ class RadianceMeterPPlaneMeasure(Measure):
 
             Default: "radiancemeter_pplane"
     """
-    zenith_res, zenith_res_units = attrib_float_positive(
+    zenith_res = attrib_quantity(
         default=ureg.Quantity(10., ureg.deg),
-        units_compatible=ureg.deg,
-        units_default=attr.Factory(lambda: cdu.get("angle")),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("angle"),
     )
 
-    origin, origin_units = attrib(
+    origin = attrib_quantity(
         default=ureg.Quantity([0, 0, 0], ureg.m),
         validator=validator_has_len(3),
-        units_compatible=ureg.m,
-        units_default=attr.Factory(lambda: cdu.get("length")),
+        units_compatible=cdu.generator("length"),
     )
 
-    direction = attrib(
+    direction = attr.ib(
         default=[0, 0, 1],
-        validator=validator_has_len(3),
+        validator=validator_has_len(3)
     )
 
-    orientation = attrib(
+    orientation = attr.ib(
         default=[1, 0, 0],
         validator=validator_has_len(3),
     )
 
-    hemisphere = attrib(
+    hemisphere = attr.ib(
         default="front",
         validator=attr.validators.in_(("front", "back")),
     )
@@ -508,21 +514,24 @@ class RadianceMeterPPlaneMeasure(Measure):
         validator=attr.validators.optional((attr.validators.instance_of(str))),
     )
 
-    spp = attrib_int_positive(default=32)
+    spp = attr.ib(
+        default=32,
+        converter=int,
+        validator=validator_is_positive
+    )
 
-    _zenith_angles = attrib(default=None, init=False)  # Set during post-init
-    _azimuth_angles = attrib(default=None, init=False)  # Set during post-init
+    _zenith_angles = attr.ib(default=None, init=False)  # Set during post-init
+    _azimuth_angles = attr.ib(default=None, init=False)  # Set during post-init
 
     def __attrs_post_init__(self):
-        """(Re)initialise internal state.
-
-        This method is automatically called by the constructor to initialise the
-        object."""
-        super().__attrs_post_init__()
-        zenith_res = self.get_quantity("zenith_res").to(ureg.deg).magnitude
-
-        self.zenith_angles = ureg.Quantity(np.arange(0, 90, zenith_res), ureg.deg)
-        self.azimuth_angles = ureg.Quantity(np.array([0, 180]), ureg.deg)
+        self._zenith_angles = ureg.Quantity(
+            np.arange(0, 90., self.zenith_res.to(ureg.deg).magnitude),
+            ureg.deg
+        )
+        self._azimuth_angles = ureg.Quantity(
+            np.array([0, 180]),
+            ureg.deg
+        )
 
     def repack_results(self, results):
         """This method reshapes the 1D results returned by the
@@ -530,12 +539,12 @@ class RadianceMeterPPlaneMeasure(Measure):
         implied by the azimuth and zenith angle resolutions, such that
         the result complies with the format required to further process the results."""
 
-        return np.reshape(results, (len(self.zenith_angles), 2))
+        return np.reshape(results, (len(self._zenith_angles), 2))
 
     def _orientation_transform(self):
         """Compute matrix that transforms vectors between object and world space."""
         from eradiate.kernel.core import Transform4f, Point3f, Vector3f
-        origin = Point3f(self.get_quantity("origin").to(kdu.get("length")).magnitude)
+        origin = Point3f(self.origin.to(kdu.get("length")).magnitude)
         zenith_direction = Vector3f(self.direction)
         orientation = Vector3f(self.orientation)
 
@@ -551,8 +560,8 @@ class RadianceMeterPPlaneMeasure(Measure):
         hemisphere_transform = self._orientation_transform()
 
         directions = []
-        for theta in self.zenith_angles.to(ureg.rad).magnitude:
-            for phi in self.azimuth_angles.to(ureg.rad).magnitude:
+        for theta in self._zenith_angles.to(ureg.rad).magnitude:
+            for phi in self._azimuth_angles.to(ureg.rad).magnitude:
                 directions.append(hemisphere_transform.transform_vector(
                     angles_to_direction(theta=theta, phi=phi))
                 )
@@ -563,13 +572,13 @@ class RadianceMeterPPlaneMeasure(Measure):
     def kernel_dict(self, **kwargs):
         spp = self.spp
         directions = self._directions()
-        origin = list(self.get_quantity("origin").to(kdu.get("length")).magnitude)
+        origin = always_iterable(self.origin.to(kdu.get("length")).magnitude)
 
         return {
             self.id: {
                 "type": "radiancemeterarray",
                 "directions": ", ".join([str(x) for x in directions.flatten()]),
-                "origins": ", ".join([str(x) for x in origin]*len(directions)),
+                "origins": ", ".join([str(x) for x in origin] * len(directions)),
                 "id": self.id,
                 "sampler": {
                     "type": "independent",

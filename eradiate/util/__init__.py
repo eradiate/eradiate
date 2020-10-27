@@ -1,5 +1,7 @@
 """ A collection of generic utilities. """
 
+import re
+
 import numpy as np
 
 
@@ -32,3 +34,9 @@ def ensure_array(x, dtype=None):
     kwargs = dict(dtype=dtype) if dtype is not None else {}
 
     return np.array(list(always_iterable(x)), **kwargs)
+
+
+def rstrip(s, sub):
+    """Simplistic function to strip a substring at the end of a string."""
+    if s.endswith(sub):
+        return s[:-len(sub)]

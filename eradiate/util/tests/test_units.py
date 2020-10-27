@@ -1,11 +1,23 @@
 import pytest
 
-from eradiate.util.units import DefaultUnits, compatible, ureg
+from eradiate.util.units import DefaultUnits, compatible, config_default_units, ensure_units, ureg
 
 
 def test_compatible():
     assert compatible(ureg.m, ureg.km)
     assert not compatible(ureg.Unit("W/m^2/sr/nm"), ureg.Unit("W/m^2/nm"))
+
+
+def test_ensure_units():
+    assert ensure_units(100, "km") == ureg.Quantity(100, "km")
+    assert ensure_units(ureg.Quantity(100, "m"), "km") == ureg.Quantity(100, "m")
+    assert ensure_units(ureg.Quantity(100, "m"), "km", convert=True) == ureg.Quantity(0.1, "km")
+
+    units = config_default_units.generator("length")
+    with config_default_units.override({"length": "m"}):
+        assert ensure_units(100, units) == ureg.Quantity(100, "m")
+    with config_default_units.override({"length": "km"}):
+        assert ensure_units(100, units) == ureg.Quantity(100, "km")
 
 
 def test_default_units():
@@ -51,6 +63,13 @@ def test_default_units():
         assert du.get("speed") == ureg.km / ureg.ms  # Dynamically evaluated, custom
     with du.override({"length": "km", "wavelength": "m"}):  # Override several units
         assert du.get("irradiance") == ureg.Unit("W/km^2/m")  # Dynamically evaluated, default
+
+    # Test generator
+    with du.override({"length": "m"}):
+        unit = du.generator("length")
+        assert unit() == ureg.m
+    with du.override({"length": "km"}):
+        assert unit() == ureg.km
 
     # We define a set of units from scratch and add a procedural override
     du = DefaultUnits({"length": "m", "time": "s"})

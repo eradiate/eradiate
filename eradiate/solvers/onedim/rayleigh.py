@@ -279,9 +279,6 @@ class RayleighSolverApp(ConfigObject):
 
         with cdu.override({"length": "km"}):
             with kdu.override({"length": "km"}):
-                # Gather mode information
-                wavelength = config["mode"]["wavelength"]
-
                 # Set illumination
                 self._elements["illumination"] = SceneElementFactory.create(self.config["illumination"])
 
@@ -299,8 +296,7 @@ class RayleighSolverApp(ConfigObject):
                             "overriding 'surface.width' with 'atmosphere.width'",
                             ConfigWarning
                         )
-                    config["surface"]["width"] = atmosphere._width.magnitude
-                    config["surface"]["width_units"] = str(atmosphere._width.units)
+                    config["surface"]["width"] = atmosphere._width
 
                 self._elements["surface"] = SceneElementFactory.create(config["surface"])
 
@@ -361,12 +357,12 @@ class RayleighSolverApp(ConfigObject):
 
             if key == "toa_lo_hsphere":
                 azimuth_res = self._elements[key].azimuth_res
-                theta_o = np.arange(0., 90., zenith_res)
-                phi_o = np.arange(0., 360., azimuth_res)
+                theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
+                phi_o = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
                 angular_domain = "hemisphere"
             elif key == "toa_lo_pplane":
-                theta_o = np.arange(0., 90., zenith_res)
-                phi_o = np.array([0, 180])
+                theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
+                phi_o = np.array([0., 180.])
                 angular_domain = "pplane"
             else:
                 raise ValueError(f"Unsupported measure type {key}")

@@ -3,10 +3,10 @@
 import attr
 
 import eradiate
-from .base import Atmosphere, _converter_number_or_auto, _validator_number_or_auto
+from .base import Atmosphere, _converter_or_auto, _validator_or_auto
 from .radiative_properties.rayleigh import sigma_s_air
 from ..core import SceneElementFactory
-from ...util.attrs import attrib
+from ...util.attrs import attrib_quantity, converter_to_units, validator_units_compatible
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
@@ -34,18 +34,18 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         operational mode configuration using the :func:`sigma_s_air`
         function. Default: ``"auto"``.
 
-
-        Unit-enabled field (default unit: cdu[length]^-1).
+        Unit-enabled field (default unit: cdu[collision_coefficient]).
 
     """
 
-    sigma_s, sigma_s_units = attrib(
+    sigma_s = attrib_quantity(
         default="auto",
-        converter=_converter_number_or_auto,
-        validator=_validator_number_or_auto,
+        converter=_converter_or_auto(converter_to_units(cdu.generator("collision_coefficient"))),
+        validator=_validator_or_auto(validator_units_compatible(ureg.m ** -1)),
         units_compatible=ureg.m ** -1,
-        units_default=attr.Factory(lambda: cdu.get("length") ** -1),
-    )
+        units_add_converter=False,
+        units_add_validator=False,
+    )  # TODO: turn into a Spectrum
 
     @property
     def _albedo(self):
@@ -56,10 +56,9 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
     def _sigma_s(self):
         """Return scattering coefficient based on configuration."""
         if self.sigma_s == "auto":
-            wavelength = eradiate.mode.config["wavelength"]
-            return sigma_s_air(wavelength=wavelength)
+            return sigma_s_air(wavelength=eradiate.mode.wavelength)
         else:
-            return self.get_quantity("sigma_s")
+            return self.sigma_s
 
     @property
     def _width(self):
@@ -70,7 +69,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         if self.width == "auto":
             return 10. / self._sigma_s
         else:
-            return self.get_quantity("width")
+            return self.width
 
     def phase(self):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
@@ -87,7 +86,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
                 "phase": phase,
                 "sigma_t": {
                     "type": "uniform",
-                    "value": self._sigma_s.to(kdu.get("length") ** -1).magnitude
+                    "value": self._sigma_s.to(kdu.get("collision_coefficient")).magnitude
                 },
                 "albedo": {
                     "type": "uniform",

@@ -5,15 +5,20 @@ import numpy as np
 import pytest
 
 import eradiate.kernel
-from eradiate.scenes.core import SceneElementFactory, KernelDict, SceneElement
-from eradiate.util.attrs import attrib, attrib_units, validator_has_len, validator_is_number, validator_is_positive
-from eradiate.util.exceptions import KernelVariantError
+from eradiate.scenes.core import KernelDict, SceneElement, SceneElementFactory
+from eradiate.util.attrs import (
+    attrib_quantity, validator_has_len, validator_is_number,
+    validator_is_positive
+)
+from eradiate.util.exceptions import KernelVariantError, UnitsError
+from eradiate.util.units import config_default_units as cdu
 from eradiate.util.units import ureg
 
 
 def test_kernel_dict():
     # Check that object creation is possible only if a variant is set
-    importlib.reload(eradiate.kernel)  # Required to ensure that any variant set by another test is unset
+    importlib.reload(
+        eradiate.kernel)  # Required to ensure that any variant set by another test is unset
     with pytest.raises(KernelVariantError):
         KernelDict()
     eradiate.kernel.set_variant("scalar_mono")
@@ -51,65 +56,72 @@ def test_kernel_dict():
     assert kernel_dict == {"type": "scene", "shape": {"type": "sphere"}}
 
 
-@attr.s
-class TinyDirectional(SceneElement):
-    id = attrib(
-        default="illumination",
-        validator=attr.validators.instance_of(str),
-    )
-
-    direction, direction_units = attrib(
-        default=[0, 0, -1],
-        validator=validator_has_len(3),
-        units_compatible=ureg.m,
-        units_default=ureg.m
-    )
-
-    irradiance = attr.ib(
-        default=1.0,
-        validator=[validator_is_number, validator_is_positive],
-    )
-
-    def kernel_dict(self, **kwargs):
-        direction = self.direction * self.direction_units
-
-        return {
-            self.id: {
-                "type": "directional",
-                "irradiance": self.irradiance,
-                "direction": direction.to("m").magnitude
-            }
-        }
-
-
 def test_scene_element(mode_mono):
-    # Default constructor (check if defaults are applied as intended)
-    d = TinyDirectional()
-    assert attr.asdict(d) == {
-        "id": "illumination",
+    @attr.s
+    class TinyDirectional(SceneElement):
+        id = attr.ib(
+            default="illumination",
+            validator=attr.validators.instance_of(str),
+        )
+
+        direction = attrib_quantity(
+            default=ureg.Quantity([0, 0, -1], ureg.m),
+            validator=validator_has_len(3),
+            units_compatible=cdu.generator("length"),
+        )
+
+        irradiance = attr.ib(
+            default=1.0,
+            validator=[validator_is_number, validator_is_positive],
+        )
+
+        def kernel_dict(self, ref=True):
+            return {
+                self.id: {
+                    "type": "directional",
+                    "irradiance": self.irradiance,
+                    "direction": self.direction.to("m").magnitude
+                }
+            }
+
+    # Dict initialiser tests
+    # -- Check if scalar + units yields proper field value
+    d = TinyDirectional.from_dict({
         "direction": [0, 0, -1],
-        "direction_units": ureg.m,
-        "irradiance": 1.0
-    }
+        "direction_units": "km"
+    })
+    assert np.allclose(d.direction, ureg.Quantity([0, 0, -1], ureg.km))
+    # -- Check if scalar is attached default units as expected
+    d = TinyDirectional.from_dict({
+        "direction": [0, 0, -1]
+    })
+    assert np.allclose(d.direction, ureg.Quantity([0, 0, -1], ureg.m))
+    # -- Check if quantity is attached default units as expected
+    d = TinyDirectional.from_dict({
+        "direction": ureg.Quantity([0, 0, -1], "km")
+    })
+    assert np.allclose(d.direction, ureg.Quantity([0, 0, -1], ureg.km))
+    # -- Check if the unit field can be used to force conversion of quantity
+    d = TinyDirectional.from_dict({
+        "direction": ureg.Quantity([0, 0, -1], "km"),
+        "direction_units": "m"
+    })
+    assert np.allclose(d.direction, ureg.Quantity([0, 0, -1], ureg.km))
+    assert d.direction.units == ureg.m
 
-    # Check that constructor from params works as intended
-    assert TinyDirectional(
-        direction=[0, 0, -100],
-        direction_units=ureg.cm,
-        irradiance=1.0
-    ) is not None
-
-    # Check that unit handling is appropriately performed
-    d = TinyDirectional(
-        direction=ureg.Quantity([0, 0, -100], ureg.cm),
-        direction_units=ureg.m
-    )
-    assert np.allclose(d.direction, [0, 0, -1])
-
-    # Check that constructor from dictionary works as intended
-    assert TinyDirectional(direction=[0, 0, -1], irradiance=1.0) == \
-        TinyDirectional.from_dict({"direction": [0, 0, -1], "irradiance": 1.0})
-    assert TinyDirectional() == TinyDirectional.from_dict({})
+    # Setter tests
+    d = TinyDirectional()
+    # -- Check that assigned non-quantity gets wrapped into quantity
+    d.direction = [0, 0, -1]
+    assert d.direction.units == ureg.m
+    # -- Check that default units get applied when overridden
+    with cdu.override({"length": "km"}):
+        d.direction = [0, 0, -1]
+    assert np.allclose(d.direction, [0, 0, -1000] * ureg.m)
+    assert d.direction.units == ureg.km
+    # -- Setting with incompatible units should raise
+    with pytest.raises(UnitsError):
+        d.direction = [0, 0, -1] * ureg.s
 
     # Check that created scene can be instantiated by the kernel
     kernel_dict = KernelDict.empty()
