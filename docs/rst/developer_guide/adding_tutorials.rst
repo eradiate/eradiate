@@ -46,6 +46,12 @@ where the notebook is stored, create a relative symbolic link as follows:
 
    ln -s ../../ipython_config.py
 
+.. note::
+
+   The `nbsphinx <https://nbsphinx.readthedocs.io>`_ extension is used to
+   integrate notebooks into this documentation. The
+   `Markdown Cells <https://nbsphinx.readthedocs.io/en/latest/markdown-cells.html>`_.
+   section is, in particular, a very useful read.
 
 Adding the tutorial to the docs
 -------------------------------
