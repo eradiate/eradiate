@@ -240,7 +240,7 @@ class RayleighSolverApp(ConfigObject):
     _elements = attr.ib(default=None)
     _runner = attr.ib(default=None)
     _measure_map = attr.ib(default=None)
-    results = attr.ib(init=False, factory=xr.Dataset)
+    results = attr.ib(init=False, factory=list)
 
     def __attrs_post_init__(self):
         super(RayleighSolverApp, self).__attrs_post_init__()
@@ -313,7 +313,7 @@ class RayleighSolverApp(ConfigObject):
 
                     if measure["type"] == "toa_lo_pplane":
                         if "orientation" not in measure:
-                            phi_i = self._elements["illumination"].get_quantity("azimuth").to(ureg.rad).magnitude
+                            phi_i = self._elements["illumination"].azimuth.to(ureg.rad).magnitude
                             measure["orientation"] = [np.cos(phi_i), np.sin(phi_i), 0]
                         element_config = deepcopy(measure)
                         element_config["type"] = "radiancemeter_pplane"
@@ -335,11 +335,20 @@ class RayleighSolverApp(ConfigObject):
                 # Expand elements to kernel scene dictionary
                 self._kernel_dict.add(list(self._elements.values()))
 
-    def compute(self):
+    def run(self, fname_results=None):
+        """Execute the computation and postprocess the results.
+
+        Parameter ``fname_results`` (str):
+            Filename for result storage. If multiple measures are defined, a separate
+            NetCDF file will be created for each measure.
+
+        Returns → list[:class:`~xarray.DataSet`]:
+            List of Datasets holding the results for each measure defined in the configuration.
+        """
         # Ensure that scalar values used as xarray coordinates are arrays
         illumination = self._elements["illumination"]
 
-        theta_i = ensure_array(illumination.zenith, dtype=float)
+        theta_i = ensure_array(illumination.zenith.magnitude, dtype=float)
         phi_i = ensure_array(illumination.azimuth, dtype=float)
         wavelength = ensure_array(self.config["mode"]["wavelength"], dtype=float)
 
@@ -347,6 +356,7 @@ class RayleighSolverApp(ConfigObject):
         data = self._runner.run()
 
         for key, data in data.items():
+            results = xr.Dataset()
 
             data = self._elements[key].repack_results(data)
 
@@ -359,7 +369,7 @@ class RayleighSolverApp(ConfigObject):
                 azimuth_res = self._elements[key].azimuth_res
                 theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 phi_o = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
-                angular_domain = "hemisphere"
+                angular_domain = "hsphere"
             elif key == "toa_lo_pplane":
                 theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 phi_o = np.array([0., 180.])
@@ -367,9 +377,9 @@ class RayleighSolverApp(ConfigObject):
             else:
                 raise ValueError(f"Unsupported measure type {key}")
 
-            self.results[key] = eo_dataarray(data, theta_i, phi_i, theta_o, phi_o,
+            results[key] = eo_dataarray(data, theta_i, phi_i, theta_o, phi_o,
                                              wavelength, angular_domain=angular_domain)
-            self.results[f"irradiance"] = (
+            results[f"irradiance"] = (
                 ("sza", "saa", "wavelength"),
                 np.array(self._kernel_dict["illumination"]["irradiance"]["value"]).reshape(1, 1, 1),
                 {
@@ -378,87 +388,17 @@ class RayleighSolverApp(ConfigObject):
                     "angles_convention": "eo_scene"
                 }
             )
-            self._postprocess(key)
 
-            self.results.attrs = self.results[key].attrs
+            # TODO: make metadata handling more robust
+            # TODO: add support of CF convention-style metadata (discuss fields to include with Yvan)
+            results[key.replace("lo", "brdf")] = results[key] / results["irradiance"]
+            results[key.replace("lo", "brdf")].attrs = results[key].attrs
+            results[key.replace("lo", "brf")] = results[key.replace("lo", "brdf")] / np.pi
+            results[key.replace("lo", "brf")].attrs = results[key.replace("lo", "brdf")].attrs
 
-    def _postprocess(self, key):
-        """Compute the TOA BRDF and TOA BRF from the raw results.
-        The BRDF is computed by dividing the raw result by the incident radiance, while
-        the BRF is computed by further dividing that result by the BRDF of a
-        homogeneously reflecting (lambertian) surface.
+            results.attrs = results[key].attrs
 
-        Parameter ``key`` (str)
-            Key has to be one of the sensors' `id` attributes and identifies the result
-            data to be processed.
-        """
-        # TODO: make metadata handling more robust
-        # TODO: add support of CF convention-style metadata (discuss fields to include with Yvan)
-        self.results[key.replace("lo", "brdf")] = self.results[key] / self.results["irradiance"]
-        self.results[key.replace("lo", "brdf")].attrs = self.results[key].attrs
-        self.results[key.replace("lo", "brf")] = self.results[key.replace("lo", "brdf")] / np.pi
-        self.results[key.replace("lo", "brf")].attrs = self.results[key.replace("lo", "brdf")].attrs
-
-    def plot(self, result_name, plot_type=None, ax=None):
-        """Generate the requested plot type with the :class:`BRDFView` and store
-        the resulting figure in a file under the given path.
-
-        Parameter ``result_name`` (str)
-            Chooses the result to plot. Result names depend on the measures configured
-            in the scene.
-
-
-        Parameter ``plot_type`` (str or None)
-            Sets the plot type to request from the :class:`BRDFView`. If set to
-            `None`, the plot type is selected based on the ``measure.type``
-            configuration parameter.
-
-            Currently supported options are:
-
-            - ``hemispherical``: Plot scattering into the hemisphere around the
-              scattering surface normal (available only if ``measure.type`` is
-              ``hemispherical``).
-            - ``pplane``: Plot scattering into the plane defined by the
-              surface normal and the incoming light direction.
-
-        Parameter ``ax`` (:class:`~matplotlib.Axes`)
-            Optional Axes object to embed the plot in a separate plotting script
-
-        """
-        angular_domain = self.results[result_name].attrs["angular_domain"]
-
-        if plot_type is None:
-            plot_type = angular_domain
-        elif plot_type == "hemisphere" and angular_domain != "hemisphere":
-            raise ValueError("hemispherical plot type requires hemispherical measure type")
-
-        # Select plot based on requested measure type
-        if plot_type == "hemisphere":
-            if ax is None:
-                ax = plt.subplot(111, projection="polar")
-            plt.title("Hemispherical view")
-
-            hdata = np.squeeze(self.results[result_name].ert.sel(
-                theta_i=self.results["irradiance"]["sza"].data[0],
-                phi_i=self.results["irradiance"]["saa"].data[0],
-                wavelength=self.config["mode"]["wavelength"]
-            ))
-
-            hdata.ert.plot(kind="polar_pcolormesh", ax=ax)
-
-        elif plot_type == "pplane":
-            if ax is None:
-                ax = plt.subplot(111)
-            plt.title("Principal plane view")
-
-            bhdata = self.results[result_name].ert.sel(wavelength=self.config['mode']['wavelength'])
-            plane = view.pplane(bhdata,
-                                theta_i=float(self.results["irradiance"]["sza"].data),
-                                phi_i=float(self.results['irradiance']['saa'].data))
-
-            plane.ert.plot(kind="linear", ax=ax)
-
-        else:
-            raise ValueError(f"unsupported measure.type {plot_type}")
-
-        return ax
+            if fname_results is not None:
+                print(f"Saving results in {fname_results}_{key}.nc")
+                results.to_netcdf(path=f"{fname_results}_{key}.nc")
+            self.results.append(results)

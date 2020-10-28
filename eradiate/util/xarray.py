@@ -26,8 +26,8 @@ def eo_dataarray(data, sza, saa, vza, vaa, wavelength, angular_domain):
         Iterable container of wavelength values.
 
     Parameter ``angular_domain`` (string):
-        Descriptor for different types of measures, e.g. `hemispherical` or
-        `principal_plane`.
+        Descriptor for different types of measures, e.g. `hsphere` or
+        `pplane`.
 
     Returns → :class:`xarray.DataArray`:
         A data array with coordinates and attributes set to match typical

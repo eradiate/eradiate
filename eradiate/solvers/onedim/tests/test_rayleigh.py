@@ -112,20 +112,22 @@ def test_rayleigh_solver_app_run():
     # Assert the correct mode of operation to be set by the application
     assert eradiate.mode.id == "mono"
 
-    app.compute()
+    app.run()
+
+    results = app.results[0]
 
     # Assert the correct dimensions of the application's results
-    assert set(app.results["toa_lo_hsphere"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
+    assert set(results["toa_lo_hsphere"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
 
-    assert app.results["toa_lo_hsphere"].attrs["angle_convention"] == "eo_scene"
+    assert results["toa_lo_hsphere"].attrs["angle_convention"] == "eo_scene"
 
     # We expect the whole [0, 360] to be covered
-    assert len(app.results["toa_lo_hsphere"].coords["vaa"]) == 360 / 180
+    assert len(results["toa_lo_hsphere"].coords["vaa"]) == 360 / 180
     # # We expect [0, 90[ to be covered (90° should be missing)
-    assert len(app.results["toa_lo_hsphere"].coords["vza"]) == 90 / 45
+    assert len(results["toa_lo_hsphere"].coords["vza"]) == 90 / 45
 
     # We just check that we record something as expected
-    assert np.all(app.results["toa_lo_hsphere"].data > 0)
+    assert np.all(results["toa_lo_hsphere"].data > 0)
 
 
 def test_rayleigh_solver_app_postprocessing():
@@ -152,16 +154,18 @@ def test_rayleigh_solver_app_postprocessing():
     app = RayleighSolverApp(config)
     # Assert the correct mode of operation to be set by the application
     assert eradiate.mode.id == "mono"
-    app.compute()
+    app.run()
+
+    results = app.results[0]
 
     # Assert the correct computation of the BRDF and BRF values
     # BRDF
     assert np.allclose(
-        app.results["toa_brdf_hsphere"],
-        app.results["toa_lo_hsphere"] / config["illumination"]["irradiance"]["value"]
+        results["toa_brdf_hsphere"],
+        results["toa_lo_hsphere"] / config["illumination"]["irradiance"]["value"]
     )
     # BRF
     assert np.allclose(
-        app.results["toa_brf_hsphere"],
-        app.results["toa_brdf_hsphere"] / np.pi
+        results["toa_brf_hsphere"],
+        results["toa_brdf_hsphere"] / np.pi
     )

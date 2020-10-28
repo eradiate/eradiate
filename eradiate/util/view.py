@@ -73,7 +73,7 @@ class MitsubaBSDFPluginAdapter(SampledAdapter):
         return self.bsdf.eval(ctx, si, wo)[0] / wo[2]
 
 
-def plane(hdata, phi=0.):
+def plane(hdata, phi=0):
     """Extract a plane data set from a hemispherical data set.
     This method will select data on a plane oriented along the azimuth direction
     ``phi`` and its complementary ``phi`` + 180°, and stitch the two subsets
@@ -87,11 +87,11 @@ def plane(hdata, phi=0.):
         they will persist in the returned array.
 
     Parameter ``hdata`` (:class:`~xarray.DataArray`)
-        Hemispherical data set (with two angular coordinates) from which to the
-        create the plane data set.
+        Data set from which to the create the plane data set.
 
     Parameter ``phi`` (float)
-        Viewing azimuth angle to orient the plane view.
+        Viewing azimuth angle to orient the plane view. If set to None,
+        phi will be set to be equal to ``phi_i``, providing the principal plane.
 
     Returns → :class:`~xarray.DataArray`
         Extracted plane data set for the requested azimuth angle.
@@ -112,7 +112,7 @@ def plane(hdata, phi=0.):
         method="nearest"
     )
 
-    # Retrieve values for negative half-plane
+    # Retrieve values for negative half-plane   
     theta_neg = hdata.coords[theta_dim][1:]
     values_neg = hdata.ert.sel(
         phi_o=(phi + 180.) % 360.,
@@ -127,7 +127,6 @@ def plane(hdata, phi=0.):
     arr.coords[theta_dim].attrs = hdata.coords[theta_dim].attrs  # We don't forget to copy metadata
 
     return arr
-
 
 def pplane(bhdata, theta_i=None, phi_i=None):
     """Extract a principal plane view from a bi-hemispherical data set. This
@@ -170,9 +169,32 @@ def pplane(bhdata, theta_i=None, phi_i=None):
     return plane(bhdata.ert.sel(theta_i=theta_i, phi_i=phi_i), phi=phi_i)
 
 
-def bhdata_from_plugin(source, sza, saa, vza_res, vaa_res, wavelength):
-    # TODO: add docs
-    # TODO: rename to make more explicit
+def bihemispherical_data_from_plugin(source, sza, saa, vza_res, vaa_res, wavelength):
+    """Sample a BSDF plugin to create a data array containing scattering information for a given incoming radiation direction
+    and a given resolution for the outgoing radiation.
+    
+    Parameter ``source`` (:class:`~mitsuba.render.BSDF`):
+        Eradiate kernel bsdf plugin.
+        
+    Parameter ``sza`` (float):
+        Illumination zenith angle.
+    
+    Parameter ``saa`` (float):
+        Illumination azimuth angle.
+
+    Parameter ``vza_res`` (float):
+        Viewing zenith angle resolution
+
+    Parameter ``vaa_res`` (float):
+        Viewing azimuth angle resolution.
+
+    Parameter ``wavelength`` (float):
+        Wavelength to evaluate the bsdf plugin at.
+
+    Returns → :class:`~xarray.DataArray`
+        Data array holding scattering values into the observed hemisphere for a given incoming radiation
+        configuration and wavelength.
+    """
     bsdf = MitsubaBSDFPluginAdapter(source)
     wi = (sza, saa)
     vza = np.linspace(0, 90, int(90 / vza_res))
@@ -210,7 +232,7 @@ class EradiateAccessor:
     }
 
     def get_angular_dim(self, dim):
-        """Return the angle dimension corresponding to the chosen angular """
+        """Return the angle dimension corresponding to the angular naming convention in the data."""
         if dim not in ("theta_i", "phi_i", "theta_o", "phi_o"):
             raise ValueError("dim must be in ('theta_i', 'phi_i', 'theta_o', 'phi_o')")
 
@@ -298,15 +320,13 @@ class EradiateAccessor:
         new_kwargs = self._adjust_kwargs_for_convention(**kwargs)
         return self._obj.drop_sel(**new_kwargs)
 
-    def plot(self, kind=None, ax=None, **kwargs):
-        """Create a plot suitable for Eradiate result data. If the data are
-        one-dimensional a line plot is created.
-        If the data are two dimensional, a polar plot is created.
+    def plot(self, kind=None, ax=None, title="", **kwargs):
+        """Create a plot suitable for Eradiate result data.
 
         .. note::
 
-            Non-angular dimensions, such as wavelength dependency of
-            computational data must be collapsed by selecting a value from them.
+            Dimensions of illumination angles and wavelength must be collapsed by selecting a
+            value from them, if they contain more than one value.
 
         Parameter ``kind`` (str):
             Kind of the plot to be generated.
@@ -321,21 +341,46 @@ class EradiateAccessor:
         Parameter ``ax`` (:class:`~matplotlib.axes`):
             Optional Axes object to integrate the view into a custom plotting script.
 
+        Parameter ``title`` (str):
+            Optional title for the generated plot.
+
         Parameter ``kwargs``:
             Other keyword arguments passed to the underlying plotting routine.
         """
 
-        if kind is None:
-            return self._obj.plot(ax=ax, **kwargs)
-
-        # TODO: improve that check (shouldn't fail when extra dimensions are scalar or of size 1)
         if kind not in {"polar_pcolormesh", "polar_contourf"}:
             return self._obj.plot(ax=ax, **kwargs)
 
+        # TODO: improve that check (shouldn't fail when extra dimensions are scalar or of size 1)
         if self._num_angular_dimensions(exclude_scalar_dims=True) != 2:
             warnings.warn(f"Dimensions {self._obj.dims} unsuitable for plotting, "
                           f"redirecting to xarray's plotting function")
             return self._obj.plot(ax=ax, **kwargs)
+
+        theta_i_dim = self.get_angular_dim("theta_i")
+        phi_i_dim = self.get_angular_dim("phi_i")
+        try:
+            len_theta = len(self._obj.coords[theta_i_dim])
+        except TypeError:
+            len_theta = 0
+
+        try:
+            len_phi = len(self._obj.coords[phi_i_dim])
+        except TypeError:
+            len_phi=0
+
+        if len_theta > 1 or len_phi > 1:
+            raise IndexError("Angular configuration for incoming light is ambiguous."
+                             "Please select an angular configuration before plotting.")
+
+        try:
+            len_wavelength = len(self._obj.coords["wavelength"])
+        except TypeError:
+            len_wavelength = 0
+        if len_wavelength > 1:
+            raise IndexError("Multiple wavelengths are present in the dataset. Please select one wavelength before plotting.")
+
+        data = np.squeeze(self._obj.values)
 
         if ax is None:
             ax = plt.gca(projection="polar")
@@ -349,18 +394,17 @@ class EradiateAccessor:
             np.deg2rad(theta_o_angles),
             np.deg2rad(phi_o_angles)
         )
-        # r, th = self._shifted_grid()
 
         # TODO: make colorbar settings more flexible
         if kind == "polar_pcolormesh":
             cmap_data = ax.pcolormesh(
-                th, r, np.transpose(self._obj.values),
+                th, r, np.transpose(data),
                 cmap="BuPu_r", shading="nearest", **kwargs
             )
 
         elif kind == "polar_contourf":
             cmap_data = ax.contourf(
-                th, r, np.transpose(self._obj.values),
+                th, r, np.transpose(data),
                 cmap="BuPu_r", **kwargs
             )
 
@@ -372,6 +416,7 @@ class EradiateAccessor:
         ax.set_yticklabels(labels)
         ax.grid(True)
         plt.colorbar(cmap_data)
+        plt.title("\n".join([title, self._obj._title_for_slice()]))
 
         return ax
 
