@@ -348,8 +348,8 @@ class RayleighSolverApp(ConfigObject):
         # Ensure that scalar values used as xarray coordinates are arrays
         illumination = self._elements["illumination"]
 
-        theta_i = ensure_array(illumination.zenith.magnitude, dtype=float)
-        phi_i = ensure_array(illumination.azimuth, dtype=float)
+        theta_i = ensure_array(illumination.zenith.to(ureg.deg).magnitude, dtype=float)
+        phi_i = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
         wavelength = ensure_array(self.config["mode"]["wavelength"], dtype=float)
 
         # Run simulation
