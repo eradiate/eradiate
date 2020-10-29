@@ -32,7 +32,7 @@ setup(
     install_requires=[get_requirements("resources/deps/requirements_pip.txt")],
     entry_points={
         "console_scripts": [
-            "ertrayleigh = eradiate.scripts.ertrayleigh:cli"
+            "ertonedim = eradiate.scripts.ertonedim:cli"
         ]
     }
 )

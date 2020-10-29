@@ -114,8 +114,8 @@ class OneDimRunner:
         self._check_variant()
 
         # Basic setup
-        from eradiate.kernel.core import Thread
-        Thread.thread().logger().clear_appenders()
+        from eradiate.kernel.core import LogLevel, Thread
+        Thread.thread().logger().set_log_level(LogLevel.Warn)
 
         results = dict()
 

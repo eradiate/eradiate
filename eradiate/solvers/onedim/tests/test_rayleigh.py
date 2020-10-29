@@ -1,21 +1,23 @@
 import pytest
 
 import eradiate
-from eradiate.solvers.onedim.rayleigh import RayleighSolverApp
+from eradiate.solvers.onedim.app import OneDimSolverApp
 
 
 def test_rayleigh_solver_app():
     # Test default configuration handling
-    app = RayleighSolverApp()
+    app = OneDimSolverApp()
     assert app.config == {
         "atmosphere": {"type": "rayleigh_homogeneous"},
         "illumination": {"type": "directional"},
         "measure": [{
-            "type": "toa_lo_hsphere",
-            "azimuth_res": 10.0,
-            "zenith_res": 10.0,
+            "azimuth_res": 10,
+            "hemisphere": "back",
+            "id": "toa_lo_hsphere",
             "origin": [0, 0, 100.1],
-            "spp": 32
+            "spp": 32,
+            "type": "radiancemeter_hsphere",
+            "zenith_res": 10
         }],
         "mode": {"type": "mono", "wavelength": 550.0},
         "surface": {"type": "lambertian"}
@@ -51,7 +53,7 @@ def test_rayleigh_solver_app():
         },
         "atmosphere": None,
     }
-    app = RayleighSolverApp(config)
+    app = OneDimSolverApp(config)
     assert app._kernel_dict.load() is not None
 
     # Pass a well-formed custom configuration object (with an atmosphere)
@@ -82,7 +84,7 @@ def test_rayleigh_solver_app():
             "sigma_s": 1e-6
         }
     }
-    app = RayleighSolverApp(config)
+    app = OneDimSolverApp(config)
     assert app._kernel_dict.load() is not None
 
 
@@ -108,13 +110,13 @@ def test_rayleigh_solver_app_run():
         }]
     }
 
-    app = RayleighSolverApp(config)
+    app = OneDimSolverApp(config)
     # Assert the correct mode of operation to be set by the application
     assert eradiate.mode.id == "mono"
 
     app.run()
 
-    results = app.results[0]
+    results = app.results["toa_lo_hsphere"]
 
     # Assert the correct dimensions of the application's results
     assert set(results["toa_lo_hsphere"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
@@ -151,12 +153,12 @@ def test_rayleigh_solver_app_postprocessing():
         }
     }
 
-    app = RayleighSolverApp(config)
+    app = OneDimSolverApp(config)
     # Assert the correct mode of operation to be set by the application
     assert eradiate.mode.id == "mono"
     app.run()
 
-    results = app.results[0]
+    results = app.results["toa_lo_hsphere"]
 
     # Assert the correct computation of the BRDF and BRF values
     # BRDF

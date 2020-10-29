@@ -1,9 +1,10 @@
-"""Rayleigh solver application class and related facilities."""
+"""One dimensional solver application class and related facilities."""
 
 # TODO: refactor into apps module?
 
 import warnings
 from copy import deepcopy
+from pathlib import Path
 
 import attr
 import matplotlib.pyplot as plt
@@ -11,21 +12,19 @@ import numpy as np
 import xarray as xr
 
 import eradiate.kernel
-
-from ...scenes.core import SceneElementFactory, KernelDict
+from .runner import OneDimRunner
+from ...scenes.core import KernelDict, SceneElementFactory
 from ...util import ensure_array, view
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
 from ...util.units import config_default_units as cdu, ureg
 from ...util.units import kernel_default_units as kdu
 from ...util.xarray import eo_dataarray
-from .runner import OneDimRunner
 
 
 @attr.s
-class RayleighSolverApp(ConfigObject):
-    r"""Application to run simulations in Rayleigh-scattering homogeneous
-    one-dimensional scenes.
+class OneDimSolverApp(ConfigObject):
+    r"""Application to run simulations in one-dimensional scenes.
 
     .. admonition:: Configuration examples
         :class: hint
@@ -93,7 +92,8 @@ class RayleighSolverApp(ConfigObject):
             If set to ``None``, no atmosphere is added to the scene.
 
             Allowed scene elements:
-            :factorykey:`rayleigh_homogeneous`.
+            :factorykey:`rayleigh_homogeneous`,
+            :factorykey:`heterogeneous`.
 
             Default:
             :factorykey:`rayleigh_homogeneous`.
@@ -111,7 +111,7 @@ class RayleighSolverApp(ConfigObject):
             :factorykey:`directional`.
 
         ``measure`` (list[dict]):
-            Section dedicated to measure definition. The rayleigh one-dimensional solver
+            Section dedicated to measure definition. The one-dimensional solver
             currently supports two kinds of measurements:
 
             - Top of atmosphere leaving radiance over hemisphere
@@ -206,7 +206,7 @@ class RayleighSolverApp(ConfigObject):
                 "schema": {
                     "type": {
                         "type": "string",
-                        "allowed": ["rayleigh_homogeneous"],
+                        "allowed": ["rayleigh_homogeneous", "heterogeneous"],
                         "default": "rayleigh_homogeneous",
                     },
                 }
@@ -240,14 +240,14 @@ class RayleighSolverApp(ConfigObject):
     _elements = attr.ib(default=None)
     _runner = attr.ib(default=None)
     _measure_map = attr.ib(default=None)
-    results = attr.ib(init=False, factory=list)
+    results = attr.ib(init=False, factory=dict)
 
     def __attrs_post_init__(self):
-        super(RayleighSolverApp, self).__attrs_post_init__()
+        super(OneDimSolverApp, self).__attrs_post_init__()
         self.init()
 
     def init(self):
-        r"""(Re)initialise hidden internal state.
+        """(Re)initialise hidden internal state.
         """
         # Select spectral mode based on configuration
         self._set_mode()
@@ -280,7 +280,8 @@ class RayleighSolverApp(ConfigObject):
         with cdu.override({"length": "km"}):
             with kdu.override({"length": "km"}):
                 # Set illumination
-                self._elements["illumination"] = SceneElementFactory.create(self.config["illumination"])
+                self._elements["illumination"] = SceneElementFactory.create(
+                    self.config["illumination"])
 
                 # Set atmosphere
                 config_atmosphere = config.get("atmosphere", None)
@@ -301,7 +302,7 @@ class RayleighSolverApp(ConfigObject):
                 self._elements["surface"] = SceneElementFactory.create(config["surface"])
 
                 # Set measure
-                for measure in self.config["measure"]:
+                for config_measure in self.config["measure"]:
                     if atmosphere is not None:
                         height, offset = atmosphere._height
                         height = height.to(kdu.get("length")).magnitude
@@ -309,42 +310,40 @@ class RayleighSolverApp(ConfigObject):
                     else:
                         height = 0.1
                         offset = 0.001
-                    measure["origin"] = [0, 0, height + offset]
+                    config_measure["origin"] = [0, 0, height + offset]
 
-                    if measure["type"] == "toa_lo_pplane":
-                        if "orientation" not in measure:
+                    if config_measure["type"] == "toa_lo_pplane":
+                        if "orientation" not in config_measure:
                             phi_i = self._elements["illumination"].azimuth.to(ureg.rad).magnitude
-                            measure["orientation"] = [np.cos(phi_i), np.sin(phi_i), 0]
-                        element_config = deepcopy(measure)
-                        element_config["type"] = "radiancemeter_pplane"
-                        element_config["id"] = "toa_lo_pplane"
-                    else:
-                        element_config = deepcopy(measure)
-                        element_config["type"] = "radiancemeter_hsphere"
-                        element_config["id"] = "toa_lo_hsphere"
+                            config_measure["orientation"] = [np.cos(phi_i), np.sin(phi_i), 0]
 
-                    element_config["hemisphere"] = "back"
-                    measure_obj = SceneElementFactory.create(element_config)
+                        config_measure["type"] = "radiancemeter_pplane"
+                        config_measure["id"] = "toa_lo_pplane"
 
-                    if measure_obj.id in self._elements:
-                        raise AttributeError(f"Multiple measures with ID {measure_obj.id}"
-                                             f" found.  Ensure unique IDs for all measures.")
+                    elif config_measure["type"] == "toa_lo_hsphere":
+                        config_measure["type"] = "radiancemeter_hsphere"
+                        config_measure["id"] = "toa_lo_hsphere"
+
                     else:
-                        self._elements[measure_obj.id] = measure_obj
+                        raise ValueError(f"unsupported measure type '{config_measure['type']}'")
+
+                    config_measure["hemisphere"] = "back"
+
+                    if config_measure["id"] in self._elements:
+                        raise AttributeError(
+                            f"found multiple measures with ID {config_measure['id']}; "
+                            f"measure IDs must be unique"
+                        )
+
+                    self._elements[config_measure["id"]] = SceneElementFactory.create(
+                        config_measure)
 
                 # Expand elements to kernel scene dictionary
                 self._kernel_dict.add(list(self._elements.values()))
 
-    def run(self, fname_results=None):
-        """Execute the computation and postprocess the results.
+    def run(self):
+        """Execute the computation and postprocess the results."""
 
-        Parameter ``fname_results`` (str):
-            Filename for result storage. If multiple measures are defined, a separate
-            NetCDF file will be created for each measure.
-
-        Returns → list[:class:`~xarray.DataSet`]:
-            List of Datasets holding the results for each measure defined in the configuration.
-        """
         # Ensure that scalar values used as xarray coordinates are arrays
         illumination = self._elements["illumination"]
 
@@ -378,7 +377,7 @@ class RayleighSolverApp(ConfigObject):
                 raise ValueError(f"Unsupported measure type {key}")
 
             results[key] = eo_dataarray(data, theta_i, phi_i, theta_o, phi_o,
-                                             wavelength, angular_domain=angular_domain)
+                                        wavelength, angular_domain=angular_domain)
             results[f"irradiance"] = (
                 ("sza", "saa", "wavelength"),
                 np.array(self._kernel_dict["illumination"]["irradiance"]["value"]).reshape(1, 1, 1),
@@ -397,8 +396,41 @@ class RayleighSolverApp(ConfigObject):
             results[key.replace("lo", "brf")].attrs = results[key.replace("lo", "brdf")].attrs
 
             results.attrs = results[key].attrs
+            self.results[key] = results
 
-            if fname_results is not None:
-                print(f"Saving results in {fname_results}_{key}.nc")
-                results.to_netcdf(path=f"{fname_results}_{key}.nc")
-            self.results.append(results)
+    def save_results(self, fname_prefix):
+        """Save results to netCDF files.
+
+        Parameter ``fname_prefix`` (str):
+            Filename prefix for result storage. A netCDF file is created for
+            each measure.
+        """
+        fname_prefix = Path(fname_prefix)
+        for key, results in self.results.items():
+            print(f"Saving results to {fname_prefix}_{key}.nc")
+            results.to_netcdf(path=f"{fname_prefix}_{key}.nc")
+
+    def plot_results(self, fname_prefix):
+        """Make default plots for stored results and save them to the hard
+        drive.
+
+        Parameter ``fname_prefix`` (str):
+            Filename prefix for plot files. A plot file is create for each
+            computed quantity of each measure.
+        """
+        for key, result in self.results.items():
+            for quantity, data in result.items():
+                if quantity == "irradiance":
+                    continue
+
+                if data.attrs["angular_domain"] == "hsphere":
+                    ax = plt.subplot(111, projection="polar")
+                    data.ert.plot(kind="polar_pcolormesh", title=quantity, ax=ax)
+
+                elif data.attrs["angular_domain"] == "pplane":
+                    ax = plt.subplot(111)
+                    plane = view.plane(data)
+                    plane.ert.plot(kind="linear", title=quantity, ax=ax)
+
+                plt.savefig(f"{fname_prefix}_{quantity}.png", bbox_inches="tight")
+                plt.close()
