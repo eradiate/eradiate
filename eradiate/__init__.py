@@ -74,16 +74,18 @@ def set_mode(mode_id, **kwargs):
     it invokes the :func:`~mitsuba.set_variant` kernel function to select the
     kernel variant corresponding to the selected mode.
 
-    The main argument ``mode_type`` defines which mode is selected. Then,
+    The main argument ``mode_id`` defines which mode is selected. Then,
     keyword arguments are used to pass additional configuration details for the
     selected mode. The mode configuration is critical since many code components
-    (_e.g._ spectrum-related components) adapt their behaviour based on the
+    (*e.g.* spectrum-related components) adapt their behaviour based on the
     selected mode.
 
-    Parameter ``mode_type`` (str):
+    Parameter ``mode_id`` (str):
         Mode to be selected (see list below).
 
-    Valid keyword arguments for ``mono`` (monochromatic mode):
+    .. rubric:: Available modes and corresponding keyword arguments
+
+    ``mono`` (monochromatic mode)
         ``wavelength`` (float):
             Wavelength selected for monochromatic operation. Default: 550 nm.
 

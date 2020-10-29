@@ -80,7 +80,7 @@ class HeterogeneousAtmosphere(Atmosphere):
 
     - if the ``profile`` field is specified, kernel volume data files will be
       created using those data;
-    - if the ``profile`` field is not specified (_i.e._ set to ``None``), kernel
+    - if the ``profile`` field is not specified (*i.e.* set to ``None``), kernel
       volume data files will be read from locations set in the ``albedo_fname``
       and ``sigma_t_fname`` attributes (which then must be set to paths
       pointing to existing files).
@@ -89,7 +89,7 @@ class HeterogeneousAtmosphere(Atmosphere):
 
     - if ``albedo_fname`` and ``sigma_t_fname`` are specified, data files will
       be written to those paths;
-    - if ``albedo_fname`` and ``sigma_t_fname`` are not specified (_i.e._ set
+    - if ``albedo_fname`` and ``sigma_t_fname`` are not specified (*i.e.* set
       to ``None``), filenames will be generated based on ``cache_dir``.
 
     .. note::
