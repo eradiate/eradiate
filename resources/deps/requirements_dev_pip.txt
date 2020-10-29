@@ -4,14 +4,14 @@ mock
 nbsphinx~=0.7
 pydata-sphinx-theme~=0.4
 pylint
-pytest==5.3
 pytest-json-report~=1.2
 pytest-metadata==1.8
 pytest-xdist==1.30
+pytest==5.3
 rst2pdf>=0.98
-sphinx>=3.1
-sphinxcontrib-bibtex~=1.0
 sphinx-autobuild
 sphinx-copybutton~=0.3
+sphinx>=3.1
+sphinxcontrib-bibtex~=1.0
 tabulate==0.8
 tinydb

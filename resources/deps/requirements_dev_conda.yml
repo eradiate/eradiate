@@ -6,9 +6,9 @@ dependencies:
   - isort>=5
   - mock
   - pylint
-  - pytest=5.3
   - pytest-metadata=1.8
   - pytest-xdist=1.30
+  - pytest=5.3
   - sphinx>=3.1
   - tabulate=0.8
   - pip
