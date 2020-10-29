@@ -8,7 +8,7 @@ User guide
 
    ../../notebooks/tutorials/quick_overview/quick_overview.ipynb
    basic_concepts
+   onedim_solver_app
    package_structure
-   onedim_application
    post_processing
    unit_guide_user

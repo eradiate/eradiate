@@ -70,6 +70,10 @@ extensions.append("sphinxcontrib.bibtex")
 extensions.append("nbsphinx")
 extensions.append("sphinx_copybutton")
 
+# Sphinx-panels extension: don't load Bootstrap CSS again
+extensions.append("sphinx_panels")
+panels_add_bootstrap_css = False
+
 # Intersphinx configuration for cross-project referencing
 extensions.append("sphinx.ext.intersphinx")
 intersphinx_mapping = {

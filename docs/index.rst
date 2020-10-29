@@ -42,7 +42,6 @@ Eradiate uses as its computational kernel a modified copy of the `Mitsuba 2 <htt
 
    rst/getting_started/intro
    rst/user_guide/intro
-   rst/tutorials/intro
    rst/developer_guide/intro
    rst/api_reference/intro
    rst/miscellaneous/intro

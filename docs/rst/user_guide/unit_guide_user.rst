@@ -129,6 +129,8 @@ appropriate units.
 
       my_atmosphere.height = ureg.Quantity(100., "s")  # This will raise a UnitsError
 
+.. _sec-user_guide-unit_guide_user-field_unit_documentation:
+
 Field unit documentation
 ------------------------
 
