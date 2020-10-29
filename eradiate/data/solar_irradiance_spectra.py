@@ -32,11 +32,15 @@
      - [116.05, 2399.95]
 """
 
+import xarray as xr
+
 from .core import DataGetter
+from ..util.presolver import PathResolver
+
+_presolver = PathResolver()
 
 
 class _SolarIrradianceGetter(DataGetter):
-
     _PATHS = {
         "blackbody_sun": "spectra/blackbody_sun.nc",
         "meftah_2017": "spectra/meftah_2017.nc",
@@ -46,3 +50,8 @@ class _SolarIrradianceGetter(DataGetter):
         "whi_2008_2": "spectra/whi_2008_time_period_2.nc",
         "whi_2008_3": "spectra/whi_2008_time_period_3.nc",
     }
+
+    @classmethod
+    def open(cls, id):
+        path = _presolver.resolve(cls.path(id))
+        return xr.open_dataset(path)

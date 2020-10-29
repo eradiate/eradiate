@@ -1,13 +1,13 @@
 """Data handling facilities.
 
-A typical data loading pattern uses the :func:`load` function.
+A typical data handling pattern uses the :func:`open` function.
 This function can be called either through its first two parameters
 ``category`` and ``id``, or through its third parameter ``path``. The first
 kind of call will search Eradiate's data registry for a valid data set;
 the second kind of call will try and resolve directly a path using the
 :class:`.PathResolver`.
 
-.. admonition:: Example: first-kind call to ``load()``
+.. admonition:: Example: first-kind call to ``open()``
 
    The following code accesses the Thuillier irradiance spectrum
    :cite:`Thuillier2003SolarSpectralIrradiance`:
@@ -16,10 +16,10 @@ the second kind of call will try and resolve directly a path using the
 
       import eradiate.data as data
 
-      ds = data.load("solar_irradiance_spectrum", "thuillier_2003")
+      ds = data.open("solar_irradiance_spectrum", "thuillier_2003")
 
 
-.. admonition:: Example: second-kind call to ``load()``
+.. admonition:: Example: second-kind call to ``open()``
 
    The following code accesses the Thuillier irradiance spectrum
    :cite:`Thuillier2003SolarSpectralIrradiance`:
@@ -28,36 +28,34 @@ the second kind of call will try and resolve directly a path using the
 
       import eradiate.data as data
 
-      ds = data.load(path="spectra/thuillier_2003.nc")
+      ds = data.open(path="spectra/thuillier_2003.nc")
 """
 
-import functools
 import os
 
 import xarray as xr
 
+from .absorption_spectra import _AbsorptionGetter
 from .solar_irradiance_spectra import _SolarIrradianceGetter
 from ..util.presolver import PathResolver
 
 _presolver = PathResolver()
 
 _getters = {
+    "absorption_spectrum": _AbsorptionGetter,
     "solar_irradiance_spectrum": _SolarIrradianceGetter
 }
 
 
-@functools.lru_cache(maxsize=32)
-def load(category=None, id=None, path=None):
-    """Load a data set. Results produced by this
-    function are cached using an
-    `LRU <https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)>`_
-    policy to minimise hard drive access.
+def open(category=None, id=None, path=None):
+    """Opens a data set.
 
     Parameter ``category`` (str or None):
         If ``None``, ``path`` must not be ``None`` .
         Dataset category identifier. Valid data set categories are:
 
         * :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
+        * :class:`absorption_cross_section_spectrum <eradiate.data.absorption_spectra>`
 
     Parameter ``id`` (str or None):
         If ``None``, ``path`` must not be ``None`` .
@@ -69,10 +67,10 @@ def load(category=None, id=None, path=None):
         Path to the requested resource, resolved by the :class:`.PathResolver`.
 
     Returns → :class:`xarray.Dataset`:
-        Loaded dataset.
+        Dataset.
 
     Raises → ValueError:
-        The requested resource is not handled by this loader.
+        The requested resource is not handled.
     """
     if path is None:
         if category is None or id is None:
@@ -85,15 +83,16 @@ def load(category=None, id=None, path=None):
             raise ValueError(f"invalid data category '{category}'")
 
         try:
-            path = getter.path(id)
+            return getter.open(id)
         except ValueError:
             raise
 
+    # path is not None: we open the data
     fname = _presolver.resolve(path)
     ext = os.path.splitext(fname)[1]
 
     if ext == ".nc":
-        return xr.load_dataset(fname)
+        return xr.open_dataset(fname)
 
     raise ValueError(f"cannot load resource {fname}")
 

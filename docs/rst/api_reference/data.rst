@@ -14,7 +14,7 @@ Data handling facilities [eradiate.data]
 .. autosummary::
    :toctree: generated/
 
-   load
+   open
    registered
 
 .. rubric:: Modules
@@ -24,3 +24,4 @@ Data handling facilities [eradiate.data]
    :toctree: generated/
 
    solar_irradiance_spectra
+   absorption_spectra

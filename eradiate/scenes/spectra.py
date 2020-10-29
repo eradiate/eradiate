@@ -304,7 +304,7 @@ class SolarIrradianceSpectrum(Spectrum):
     def _data_factory(self):
         # Load dataset
         try:
-            return data.load("solar_irradiance_spectrum", self.dataset)
+            return data.open("solar_irradiance_spectrum", self.dataset)
         except KeyError:
             raise ValueError(f"unknown dataset {self.dataset}")
 

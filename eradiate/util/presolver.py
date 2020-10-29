@@ -122,3 +122,11 @@ class PathResolver(metaclass=Singleton):
                 if path_full.exists():
                     return path_full
         return path
+
+    def glob(self, pattern):
+        """Glob the given relative ``pattern`` in all search paths, yielding all
+        matching files (of any kind). This function internally uses
+        :func:`pathlib.Path.glob` and returns a generator.
+         """
+        for path_base in self.paths:
+            yield from path_base.glob(pattern)

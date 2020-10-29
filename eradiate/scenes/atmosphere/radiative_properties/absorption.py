@@ -1,10 +1,59 @@
 """Functions to compute monochromatic absorption.
+
+.. admonition:: Absorption cross section data set format:
+
+    The data structure is a :class:`~xarray.Dataset` with specific data
+    variables, dimensions and data coordinates.
+
+    Data variables:
+
+    - ``xs``: absorption cross section [cm^2]
+
+    If the absorber is a mixture, an additional data variable is required:
+
+    - ``mr``: mixing ratio []
+
+    The dimensions of ``xs`` should be one of the following:
+
+    - ``w``
+    - (``w``, ``p``)
+    - (``w``, ``t``)
+    - (``w``, ``p``, ``t``)
+
+    What dimensions are included indicate the relationship between the current dataset to other datasets and allow to combine these datasets together.
+    Datasets with identical dimensions can be combined together along those dimensions, provided the absorber is the same.
+    For example, a dataset with the dimensions (``w``, ``p``) for the ``us76`` absorber can be combined with other ``us76`` datasets with dimensions (``w``, ``p``), along the ``p`` dimension.
+
+    The dimension of ``mr`` is ``m``.
+
+    Data coordinates:
+
+    - ``m``: absorbing molecule(s) []
+    - ``w``: wavenumber [cm^-1]
+    - ``p``: pressure [Pa]
+    - ``t``: temperature [K]
+
+    All these data coordinates are required even, if the corresponding dimensions do not not appear in the ``xs`` and ``mr``.
+    In the latter case however, the data coordinates must be renamed by adding a ``c`` to the data coordinate name.
+    This is to indicate that the data coordinate is a non-dimension data coordinate.
+    See the difference between dimension coordinate and non-dimension coordinate at http://xarray.pydata.org/en/stable/data-structures.html
+
+    Attributes:
+
+    - ``convention``
+    - ``title``
+    - ``history``
+    - ``source``
+    - ``references``
+    - ``absorber``: name of the absorbing molecule/mixture
+
+    The meaning of the first 5 attributes is explained in the C.F. 1.8
+    convention (http://cfconventions.org/).
 """
 
 import os
 import numpy as np
 
-from ....data import load
 from ....util.units import ureg
 
 _Q = ureg.Quantity
