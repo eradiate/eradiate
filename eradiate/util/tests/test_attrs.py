@@ -2,7 +2,7 @@ import attr
 import pytest
 
 from eradiate.util.attrs import (
-    attrib_quantity, unit_enabled, validator_has_len, validator_quantity
+    attrib_quantity, converter_quantity, unit_enabled, validator_has_len, validator_quantity
 )
 from eradiate.util.exceptions import UnitsError
 from eradiate.util.units import config_default_units as cdu, ureg
@@ -139,6 +139,28 @@ def test_unit_support():
         o.field_multi_validator = ureg.Quantity([0, 0], "m")
     with pytest.raises(ValueError):  # Wrong and unit (unit is validated last)
         o.field_multi_validator = ureg.Quantity([0, 0], "s")
+
+    # None default support
+    # -- Check that field with None default behaves as expected
+    @unit_enabled
+    @attr.s
+    class MyClass:
+        field = attrib_quantity(
+            default=None,
+            converter=attr.converters.optional(converter_quantity(float)),
+            units_compatible=ureg.m
+        )
+    o = MyClass()
+    o = MyClass(ureg.Quantity(1., "m"))
+    o.field = None
+    assert o.field is None
+    o.field = 1.
+    assert o.field == ureg.Quantity(1., "m")
+    o.field = ureg.Quantity(1., "m")
+    assert o.field == ureg.Quantity(1., "m")
+    with pytest.raises(ValueError):
+        o.field = "a"
+
 
 
 def test_unit_enabled():

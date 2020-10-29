@@ -129,7 +129,9 @@ def attrib_quantity(
         define with the ``converter`` parameter. This converter ensures that the
         field is wrapped in ``units_compatible`` (using :func:`.ensure_units`).
         If ``units_compatible`` is a callable (*e.g.* created using
-        :meth:`.DefaultUnits.generator`),
+        :meth:`.DefaultUnits.generator`), it will be evaluated by
+        :func:`.ensure_units`. If ``default`` is ``None``, this converter will
+        also be made :func:`~attr.converters.optional`.
 
         .. warning::
 
@@ -140,7 +142,8 @@ def attrib_quantity(
 
     Parameter ``units_add_validator`` (bool):
         If ``True``,  :func:`validator_has_compatible_units` is appended to the
-        list of validators.
+        list of validators. If ``default`` is ``None``, this validator will
+        also be made :func:`~attr.validators.optional`.
 
     Returns → :class:`attr._make._CountingAttr`:
         Generated attribute field.
@@ -166,11 +169,21 @@ def attrib_quantity(
 
         # Set field converter
         if units_add_converter:
-            converters.append(lambda x: ensure_units(x, units_compatible))
+            if default is None:
+                converters.append(attr.converters.optional(
+                    lambda x: ensure_units(x, units_compatible)
+                ))
+            else:
+                converters.append(lambda x: ensure_units(x, units_compatible))
 
         # Set field validator
         if units_add_validator:
-            validators.append(validator_has_compatible_units)
+            if default is None:
+                validators.append(attr.validators.optional(
+                    validator_has_compatible_units
+                ))
+            else:
+                validators.append(validator_has_compatible_units)
 
         # Ensure that unit conversion and validation is carried out upon setting
         if on_setattr is attr.NOTHING:
