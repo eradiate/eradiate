@@ -314,11 +314,15 @@ class OneDimSolverApp(ConfigObject):
 
                     if config_measure["type"] == "toa_lo_pplane":
                         if "orientation" not in config_measure:
+                            # TODO: fix this behaviour (will crash if illumination.type is not directional)
+                            #  Suggested change: raise if no orientation and illumination.type is not directional
                             phi_i = self._elements["illumination"].azimuth.to(ureg.rad).magnitude
                             config_measure["orientation"] = [np.cos(phi_i), np.sin(phi_i), 0]
 
                         config_measure["type"] = "radiancemeter_pplane"
                         config_measure["id"] = "toa_lo_pplane"
+                        # TODO: allow custom ID definition and multiple definitions of the same measure
+                        #  Use case: run the same measure with different SPP for comparison
 
                     elif config_measure["type"] == "toa_lo_hsphere":
                         config_measure["type"] = "radiancemeter_hsphere"
@@ -328,11 +332,12 @@ class OneDimSolverApp(ConfigObject):
                         raise ValueError(f"unsupported measure type '{config_measure['type']}'")
 
                     config_measure["hemisphere"] = "back"
+                    # TODO: warn when overriding parameters set by user
 
                     if config_measure["id"] in self._elements:
                         raise AttributeError(
-                            f"found multiple measures with ID {config_measure['id']}; "
-                            f"measure IDs must be unique"
+                            f"found multiple measures with identifier {config_measure['id']}; "
+                            f"measure identifiers must be unique"
                         )
 
                     self._elements[config_measure["id"]] = SceneElementFactory.create(
@@ -344,16 +349,21 @@ class OneDimSolverApp(ConfigObject):
     def run(self):
         """Execute the computation and postprocess the results."""
 
-        # Ensure that scalar values used as xarray coordinates are arrays
-        illumination = self._elements["illumination"]
-
-        theta_i = ensure_array(illumination.zenith.to(ureg.deg).magnitude, dtype=float)
-        phi_i = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
-        wavelength = ensure_array(self.config["mode"]["wavelength"], dtype=float)
-
         # Run simulation
         data = self._runner.run()
 
+        # Post-processing
+        # TODO: put that in a separate method
+        # -- Ensure that scalar values used as xarray coordinates are arrays
+        illumination = self._elements["illumination"]
+
+        # -- Collect illumination parameters
+        theta_i = ensure_array(illumination.zenith.to(ureg.deg).magnitude, dtype=float)
+        phi_i = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
+        wavelength = ensure_array(self.config["mode"]["wavelength"], dtype=float)
+        # TODO: This will raise if illumination.type is not directional; handle that
+
+        # -- Post-process TOA radiance arrays and compute BRDF/BRF
         for key, data in data.items():
             results = xr.Dataset()
 
@@ -369,10 +379,12 @@ class OneDimSolverApp(ConfigObject):
                 theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 phi_o = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
                 angular_domain = "hsphere"
+
             elif key == "toa_lo_pplane":
                 theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 phi_o = np.array([0., 180.])
                 angular_domain = "pplane"
+
             else:
                 raise ValueError(f"Unsupported measure type {key}")
 
