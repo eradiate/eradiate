@@ -1,6 +1,6 @@
 .. only:: html or text
 
-    Bibliography
-    ============
+   Bibliography
+   ============
 
-    .. bibliography:: ../../references.bib
+.. bibliography:: ../../references.bib

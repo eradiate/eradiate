@@ -3,13 +3,12 @@
 Getting started
 ===============
 
-
 .. toctree::
-    :maxdepth: 1
-    :hidden:
+   :maxdepth: 1
+   :hidden:
 
-    getting_code
-    building
+   getting_code
+   building
 
 What is Eradiate?
 -----------------
