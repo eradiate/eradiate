@@ -205,21 +205,28 @@ latex_elements = {
     # The font size ("10pt", "11pt" or "12pt").
     "pointsize": "10pt",
 
+    # Fonts
+    "fontpkg": r"""
+        \setmainfont{Charis SIL}[Scale=.98]
+        \setsansfont{Source Sans Pro}[Scale=MatchLowercase]
+        \setmonofont{Hack}[Scale=MatchLowercase]
+    """,
+
     # Additional stuff for the LaTeX preamble.
-    "preamble": "\\DeclareUnicodeCharacter{00A0}{}",
+    "preamble": "",
 
     # Latex figure (float) alignment
     # 'figure_align': 'htbp',
 }
 
-latex_engine = "pdflatex"
+latex_engine = "xelatex"
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ("index_latex", "eradiate.tex", "Eradiate Documentation",
-   "The Eradiate Team", "manual"),
+    ("index_latex", "eradiate.tex", "Eradiate Documentation",
+     "The Eradiate Team", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

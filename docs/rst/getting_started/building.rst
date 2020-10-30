@@ -259,8 +259,8 @@ The script automates by default the default Conda environment setup and the
 Eradiate package installation. Optional steps can also be automate using a
 series of flags:
 
-* ``-d``: perform `development dependency installation <sec-getting_started-building-python-conda-optional>`
-* ``-j``: perform `Jupyter lab installation and extension activation <sec-getting_started-building-python-conda-optional>`
+* ``-d``: perform :ref:`development dependency installation <sec-getting_started-building-python-conda-optional>`
+* ``-j``: perform :ref:`Jupyter lab installation and extension activation <sec-getting_started-building-python-conda-optional>`
 * ``-a``: add automatic environment variable setup to environment activation script (makes the :ref:`environment variable setup <sec-getting_started-building-environment_variables>` no longer necessary)
 * ``-e``: add a direnv ``.envrc`` file to the root of the Eradiate source tree (makes the :ref:`environment variable setup <sec-getting_started-building-environment_variables>` no longer necessary)
 

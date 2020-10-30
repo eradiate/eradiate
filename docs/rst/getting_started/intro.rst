@@ -5,7 +5,6 @@ Getting started
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    getting_code
    building

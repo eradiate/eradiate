@@ -83,7 +83,7 @@ def plane(hdata, phi=0):
     data at ``phi`` + 180° will be mapped to negative zenith values.
 
     .. note::
-        If ``hdata`` contains other non-angular dimensions (_e.g._ wavelength),
+        If ``hdata`` contains other non-angular dimensions (*e.g.* wavelength),
         they will persist in the returned array.
 
     Parameter ``hdata`` (:class:`~xarray.DataArray`)

@@ -38,7 +38,8 @@ The ``--init`` flag will ensure that any new submodule will be initialised.
 
 .. admonition:: Aliasing the update command for convenience
 
-   The following command installs a git alias named ``pullall`` that automates these two steps.
+   The following command installs a git alias named ``pullall`` that automates
+   these two steps.
 
    .. code-block:: bash
 
@@ -50,4 +51,5 @@ The ``--init`` flag will ensure that any new submodule will be initialised.
 
       git pullall
 
-   to fetch the latest version of Eradiate and the appropriate versions of its nested submodules.
+   to fetch the latest version of Eradiate and the appropriate versions of its
+   nested submodules.
