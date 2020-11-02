@@ -27,7 +27,7 @@ When instructed to, the kernel loads the scene, performs the requested
 computation and yields the results.
 
 Eradiate's higher-level components are designed as abstractions of its kernel
-and most users do not have to manipulate by themselves.
+and most users do not have to manipulate it by themselves.
 
 Scene elements
 --------------
@@ -83,7 +83,7 @@ specification of scene elements in a configuration file.
 
 .. admonition:: Example
 
-   The one-dimensional solver application (:class:`~eradiate.solvers.onedime.RayleighSolverApp`)
+   The one-dimensional solver application (:class:`~eradiate.solvers.onedime.OneDimSolverApp`)
    lets the user choose from two different measures. The application offers a
    top-of-atmosphere leaving radiance measure either recording the entire
    hemisphere or only the principal plane. The user specifies only the kind of

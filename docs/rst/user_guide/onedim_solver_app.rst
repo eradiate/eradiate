@@ -7,7 +7,7 @@ Eradiate ships with a solver application dedicated to the simulation of
 radiative transfer on one-dimensional geometries. While the computation is not
 actually one-dimensional (Eradiate's kernel is a 3D Monte Carlo ray tracer),
 scene setup ensures that the computed quantities are equivalent to what would
-be obtained with a properly 1D code.
+be obtained with a proper 1D code.
 
 As mentioned in the `Quick overview`_ tutorial, the
 one-dimensional solver application can be used either through its command-line
@@ -30,17 +30,6 @@ features, configuration format and usage of this application.
 
 Available features
 ------------------
-
-.. admonition:: Stuff that should go here
-
-    - Lambertian Surface
-    - RPV Surface [should we mention our reference for implementation here?]
-    - Directional Illumination
-    - Constant Illumination
-    - Homogeneous rayleigh scattering only atmosphere
-    - Heterogeneous atmosphere with absorption
-    - Top of atmosphere measure hemisphere and principal plane
-    - Outgoing radiance, BRDF, BRF
 
 Illumination
 ^^^^^^^^^^^^
