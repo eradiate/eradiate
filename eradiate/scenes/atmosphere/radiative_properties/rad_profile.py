@@ -242,7 +242,6 @@ class US76ApproxRadProfile(RadProfile):
             This attribute serves as debugging tool. Do not modify it unless
             you know what you are doing.
     """
-    # TODO: refactor attributes declaration
     n_layers = attr.ib(
         default=50,
         converter=int,
@@ -305,7 +304,7 @@ class US76ApproxRadProfile(RadProfile):
         )
 
         # Compute absorption coefficient
-        ds = data.open(category="absorption_spectrum", id="us76_u86_4-fullrange")
+        ds = data.open(category="absorption_spectrum", id=self.dataset)
 
         # interpolate dataset in wavenumber
         wavenumber = (1 / wavelength).to("cm^-1")
