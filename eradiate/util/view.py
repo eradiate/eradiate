@@ -236,8 +236,12 @@ class EradiateAccessor:
         if dim not in ("theta_i", "phi_i", "theta_o", "phi_o"):
             raise ValueError("dim must be in ('theta_i', 'phi_i', 'theta_o', 'phi_o')")
 
-        return self._ANGLE_CONVENTIONS[self._obj.attrs["angle_convention"]][dim]
-        # TODO: raise appropriate exception if data set doesn't have an angular convention
+        try:
+            convention = self._obj.attrs["angle_convention"]
+        except KeyError:
+            raise KeyError("No angle naming convention is set. Cannot convert dimension names.")
+
+        return self._ANGLE_CONVENTIONS[convention][dim]
 
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
@@ -248,7 +252,6 @@ class EradiateAccessor:
 
         'radians', 'rad', 'degrees', 'deg'
         """
-        # TODO: add 'exclude_scalar_dims' switch to exclude scalar or 1-element dimensions (check self._obj.sizes)
         num_angdims = 0
         for dim in self._obj.dims:
             if self._obj.coords[dim].attrs["unit"] in ("radians", "rad", "degrees", "deg"):
@@ -320,7 +323,7 @@ class EradiateAccessor:
         new_kwargs = self._adjust_kwargs_for_convention(**kwargs)
         return self._obj.drop_sel(**new_kwargs)
 
-    def plot(self, kind=None, ax=None, title="", **kwargs):
+    def plot(self, kind=None, ax=None, title="", cmap="BuPu_r", cbar_kwargs={}, **kwargs):
         """Create a plot suitable for Eradiate result data.
 
         .. note::
@@ -344,18 +347,24 @@ class EradiateAccessor:
         Parameter ``title`` (str):
             Optional title for the generated plot.
 
+        Parameter ``cmap`` (str or matplotlib colormap):
+            Optional colormap to style the plot.
+
+        Parameter ``cbar_kwargs`` (dict):
+            Optional parameters to tweak the color bar.
+
         Parameter ``kwargs``:
             Other keyword arguments passed to the underlying plotting routine.
         """
 
-        if kind not in {"polar_pcolormesh", "polar_contourf"}:
-            return self._obj.plot(ax=ax, **kwargs)
+        with xr.set_options(cmap_sequential=cmap):
+            if kind not in {"polar_pcolormesh", "polar_contourf"}:
+                return self._obj.plot(ax=ax, **kwargs)
 
-        # TODO: improve that check (shouldn't fail when extra dimensions are scalar or of size 1)
-        if self._num_angular_dimensions(exclude_scalar_dims=True) != 2:
-            warnings.warn(f"Dimensions {self._obj.dims} unsuitable for plotting, "
-                          f"redirecting to xarray's plotting function")
-            return self._obj.plot(ax=ax, **kwargs)
+            if self._num_angular_dimensions(exclude_scalar_dims=True) != 2:
+                warnings.warn(f"Dimensions {self._obj.dims} unsuitable for plotting, "
+                              f"redirecting to xarray's plotting function")
+                return self._obj.plot(ax=ax, **kwargs)
 
         theta_i_dim = self.get_angular_dim("theta_i")
         phi_i_dim = self.get_angular_dim("phi_i")
@@ -395,17 +404,16 @@ class EradiateAccessor:
             np.deg2rad(phi_o_angles)
         )
 
-        # TODO: make colorbar settings more flexible
         if kind == "polar_pcolormesh":
             cmap_data = ax.pcolormesh(
                 th, r, np.transpose(data),
-                cmap="BuPu_r", shading="nearest", **kwargs
+                cmap=cmap, shading="nearest", **kwargs
             )
 
         elif kind == "polar_contourf":
             cmap_data = ax.contourf(
                 th, r, np.transpose(data),
-                cmap="BuPu_r", **kwargs
+                cmap=cmap, **kwargs
             )
 
         else:
@@ -415,7 +423,7 @@ class EradiateAccessor:
         ax.set_yticks(ticks)
         ax.set_yticklabels(labels)
         ax.grid(True)
-        plt.colorbar(cmap_data)
+        plt.colorbar(cmap_data, **cbar_kwargs)
         plt.title("\n".join([title, self._obj._title_for_slice()]))
 
         return ax
