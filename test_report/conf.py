@@ -70,7 +70,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['.build', 'release.rst', 'section_bsdf.rst', 'section_emitter.rst']
+exclude_patterns = ['.build', 'generated', 'release.rst', 'section_bsdf.rst', 'section_emitter.rst']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
