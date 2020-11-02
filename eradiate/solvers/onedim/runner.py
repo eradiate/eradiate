@@ -4,9 +4,7 @@ import attr
 import numpy as np
 
 import eradiate.kernel
-
 from ...scenes.core import KernelDict
-from ...util.collections import frozendict
 from ...util.exceptions import KernelVariantError
 
 
@@ -44,69 +42,23 @@ class OneDimRunner:
     """
 
     SUPPORTED_VARIANTS = frozenset({"scalar_mono", "scalar_mono_double"})
-    DEFAULT_KERNEL_DICT = frozendict({
-        "type": "scene",
-        "bsdf_surface": {
-            "type": "diffuse",
-            "reflectance": {"type": "uniform", "value": 0.5}
-        },
-        "surface": {
-            "type": "rectangle",
-            "bsdf": {"type": "ref", "id": "bsdf_surface"}
-        },
-        "illumination": {
-            "type": "directional",
-            "direction": [0, 0, -1],
-            "irradiance": {"type": "uniform", "value": 1.0}
-        },
-        "measure": {
-            "type": "radiancemeterarray",
-            "origins": "0, 0, 0.1, 0, 0, 0.1, 0, 0, 0.1, 0, 0, 0.1",
-            "directions": "1, 0, -1, -1, 0, -1, 0, 1, -1, 0, -1, -1",
-            "id": "measure",
-            "sampler": {
-                "type": "independent",
-                "sample_count": 32
-            },
-            "film": {
-                "type": "hdrfilm",
-                "width": 4,
-                "height": 1,
-                "pixel_format": "luminance",
-                "component_format": "float32",
-                "rfilter": {"type": "box"}
-            }
-        },
-        "integrator": {"type": "path"}
-    })
 
-    kernel_dict = attr.ib(default=None)
+    kernel_dict = attr.ib(
+        factory=KernelDict.empty,
+        converter=KernelDict,
+    )
 
     def _check_variant(self):
         variant = eradiate.kernel.variant()
         if variant not in self.SUPPORTED_VARIANTS:
             raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
-    def __attrs_post_init__(self):
-        if self.kernel_dict is None:
-            self.kernel_dict = KernelDict(self.DEFAULT_KERNEL_DICT)
-
-        self.init()
-
-    def init(self):
-        """(Re)initialise internal state. Currently a placeholder."""
-        pass
-
-    def run(self, show_progress=True):
+    def run(self):
         """Run the simulation for a set of specified sensor angular
         configurations.
 
         The solver uses the variant stored in its :data:`variant` instance
         attribute.
-
-        Parameter ``show_progress`` (bool):
-            If `True`, display a progress bar while running the simulation.
-            This option is currently not available.
 
         Returns → dict:
             Maps the sensor's ids to their recorded leaving radiance.

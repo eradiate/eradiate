@@ -1,7 +1,5 @@
 """ A collection of generic utilities. """
 
-import re
-
 import numpy as np
 
 
