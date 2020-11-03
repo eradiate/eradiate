@@ -292,13 +292,18 @@ class RadianceMeterHsphereMeasure(Measure):
         point to the hemisphere defined by ``-direction``.
         Default value: ``"front"``.
 
-        .. figure:: ../../../fig/radiancemeter_hemisphere.svg
+        .. only:: latex
 
-            Convention for the ``hemisphere`` parameter
+           .. figure:: ../../../fig/radiancemeter_hsphere.png
+
+        .. only:: not latex
+
+           .. figure:: ../../../fig/radiancemeter_hsphere.svg
+
 
     ``spp`` (int):
-        Number of samples per (zenith, azimuth) pair. Default: 32.
-            Default: 32.
+        Number of samples per (zenith, azimuth) pair.
+        Default: 32.
 
     ``id`` (str):
         Identifier to allow mapping of results to the measure inside an application.
