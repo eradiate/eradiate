@@ -307,11 +307,9 @@ class RadianceMeterHsphereMeasure(Measure):
 
     ``id`` (str):
         Identifier to allow mapping of results to the measure inside an application.
-
-        Default: "radiancemeter_hsphere"
+        Default value: "radiancemeter_hsphere".
 
     """
-    # TODO: add figure to explain what "hemisphere" does
 
     zenith_res = attrib_quantity(
         default=ureg.Quantity(10., ureg.deg),

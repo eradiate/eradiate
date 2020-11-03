@@ -3,7 +3,8 @@
 Getting the code
 ================
 
-Eradiate depends on multiple external dependencies, some of which (*e.g.* its
+Eradiate relies on the `Git source code management tool <https://git-scm.com/>`_.
+It also depends on multiple external dependencies, some of which (*e.g.* its
 computational kernel based on
 `Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_) are directly
 referred to using
@@ -28,7 +29,7 @@ Staying up-to-date
 Unfortunately, pulling from the main repository won't automatically keep the
 submodules in sync, which can lead to various problems. After pulling the
 repository itself, it is essential to update the submodules. This is done using
-the following command:
+the following command in the cloned source directory:
 
 .. code-block:: bash
 

@@ -22,7 +22,7 @@ Setting up your Python environment
 .. note::
 
    For automated environment setup, please
-   `see below <sec-getting_started-setup_automation>`.
+   `see below <sec-getting_started-building-setup_automation>`_.
 
 .. _sec-getting_started-building-python-conda:
 
@@ -31,7 +31,8 @@ Using Conda [Recommended]
 
 Eradiate requires a recent version of Python (at least **3.6**). A Conda
 environment file is provided in the ``resources/deps/`` directory and can be
-used to create a new environment:
+used to create a new environment (run this command at the root of the cloned
+repository):
 
 .. code-block:: bash
 
@@ -55,23 +56,32 @@ by developers. The optional modules can be installed from the following files:
 Developer requirements
     The file ``requirements_dev_conda.yml`` contains modules that are necessary
     for the development of Eradiate. This includes ``pytest`` and ``sphinx``,
-    including extensions for them.
+    including extensions for them. To install these additional dependencies, run:
+
+    .. code-block:: bash
+
+       conda env update --file resources/deps/requirements_dev_conda.yml --name eradiate
 
 Jupyter lab extensions
-    The files ``requirements_jupyter_conda.yml`` contains jupyter lab and
+    The file ``requirements_jupyter_conda.yml`` contains jupyter lab and
     extensions for it, which enable interactive usage of Eradiate in jupyter
     notebooks. The ``ipywidgets`` module enables proper rendering of HTML
-    progress bars inside the jupyter notebook browser.
+    progress bars inside the jupyter notebook browser. To install these
+    additional dependencies, run:
 
-.. admonition:: Enabling jupyter extensions
+    .. code-block:: bash
 
-   The jupyter extensions require two extra setup steps. These steps are
-   necessary irrespective of the type of environment users employ.
+       conda env update --file resources/deps/requirements_jupyter_conda.yml --name eradiate
 
-   .. code-block:: bash
+    .. admonition:: Enabling jupyter extensions
 
-      jupyter nbextension enable --py widgetsnbextension
-      jupyter labextension install @jupyter-widgets/jupyterlab-manager
+       The jupyter extensions require two extra setup steps. These steps are
+       necessary irrespective of the type of environment users employ.
+
+       .. code-block:: bash
+
+          jupyter nbextension enable --py widgetsnbextension
+          jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 .. _sec-getting_started-building-python-without_conda:
 
@@ -84,7 +94,8 @@ and ``resources/deps/requirements_dev_pip.txt``.
 
 Additionally it is possible to directly
 :ref:`install the eradiate package <sec-getting_started-building-install_package>`.
-In this case the required packages will be installed through ``setup.py``.
+In this case, missing dependencies will be automatically installed through
+``pip``.
 
 .. _sec-getting_started-building-environment_variables:
 
@@ -92,7 +103,8 @@ Configuring environment variables
 ---------------------------------
 
 Eradiate requires that a few environment variables (``PATH``/``PYTHONPATH``) are
-set. Run ``setpath.sh`` script to perform this setup:
+set. At the root of the Eradiate source repository, run the ``setpath.sh``
+script to perform this setup:
 
 .. code-block:: bash
 
@@ -110,65 +122,77 @@ Compiling Mitsuba 2 requires a recent version of CMake (at least **3.9.0**).
 Further platform-specific dependencies and compilation instructions are provided
 below for each operating system.
 
-Linux prerequisites
-^^^^^^^^^^^^^^^^^^^
+Prerequisites
+^^^^^^^^^^^^^
 
-The following table lists software that was installed on a fresh setup of Linux
-(Ubuntu 20.04.1).
+.. tabbed:: Linux
 
- ============= =================
-  Requirement   tested version
- ============= =================
-  git           2.25.1
-  cmake         3.16.3
-  ninja         1.10.0
-  Conda         4.8.3
-  clang         10.0.0-4ubuntu1
-  libc++        10
-  libc++abi     10
-  libpng
-  zlib
-  libjpeg
- ============= =================
+   .. dropdown:: Tested configuration
 
-.. admonition:: Installing packages
+      Operating system: Ubuntu Linux 20.04.1.
 
-   All prerequisites except for conda can be installed through the usual Linux
-   package managers. For example, using the APT package manager, which is used
-   in most Debian based distributions, like Ubuntu:
+      .. csv-table::
+         :header: Requirement, Tested version
+         :widths: 10, 10
+         :stub-columns: 1
 
-   .. code-block:: bash
+         git,       2.25.1
+         cmake,     3.16.3
+         ninja,     1.10.0
+         clang,     10.0.0-4ubuntu1
+         libc++,    10
+         libc++abi, 10
 
-      # Install build tools, compiler and libc++
-      sudo apt install -y git cmake ninja-build clang-10 libc++-dev libc++abi-dev
+   .. admonition:: Installing packages
 
-      # Install libraries for image I/O
-      sudo apt install -y libpng-dev zlib1g-dev libjpeg-dev
+      All prerequisites except for conda can be installed through the usual Linux
+      package managers. For example, using the APT package manager, which is used
+      in most Debian based distributions, like Ubuntu:
 
-   If your Linux distribution does not include APT, please consult your package
-   manager's repositories for the respective packages.
+      .. code-block:: bash
 
-Miniconda does not provide packages for the usual Linux package managers as of
-the writing of this document. However installers and installation instructions
-can be found on their `website <https://docs.conda.io/en/latest/miniconda.html>`_.
+         # Install build tools, compiler and libc++
+         sudo apt install -y git cmake ninja-build clang-10 libc++-dev libc++abi-dev
 
-macOS prerequisites
-^^^^^^^^^^^^^^^^^^^
+         # Install libraries for image I/O
+         sudo apt install -y libpng-dev zlib1g-dev libjpeg-dev
 
-On macOS, you will need to install Xcode, CMake, and
-`Ninja <https://ninja-build.org/>`_. Additionally, running the Xcode command
-line tools once might be necessary:
+      If your Linux distribution does not include APT, please consult your package
+      manager's repositories for the respective packages.
 
-.. code-block:: bash
+.. tabbed:: macOS
 
-   xcode-select --install
+   .. dropdown:: Tested configuration
 
-.. admonition:: Tested configuration
+      Operating system: macOS Catalina 10.15.2.
 
-   * macOS Catalina 10.15.2
-   * Xcode 11.3.1
-   * cmake 3.16.4
-   * Python 3.7.3
+      .. csv-table::
+         :header: Requirement, Tested version
+         :widths: 10, 20
+         :stub-columns: 1
+
+         git,    2.24.2 (Apple Git-127)
+         cmake,  3.18.4
+         ninja,  1.10.1
+         clang,  Apple clang version 11.0.3 (clang-1103.0.32.59)
+         python, 3.7.9 (miniconda3)
+
+   .. admonition:: Installing packages
+
+      On macOS, you will need to install XCode, CMake, and
+      `Ninja <https://ninja-build.org/>`_. XCode can be install from the App
+      Store. CMake and Ninja can be installed with the
+      `Homebrew package manager <https://brew.sh/>`_:
+
+      .. code-block:: bash
+
+         brew install cmake ninja
+
+      Additionally, running the Xcode command line tools once might be necessary:
+
+      .. code-block:: bash
+
+         xcode-select --install
 
 Compiling
 ^^^^^^^^^
@@ -195,8 +219,11 @@ print additional information about various command line arguments.
 
 .. admonition:: Tips & Tricks
 
-   Mitsuba compilation can fail due to CMake not accessing the correct Python interpreter and/or C/C++ compiler.
-   In this case, the interpreter and compiler can be specified manually through CMake variables. To determine the path to the python interpreter run the following command in your terminal
+   Mitsuba compilation can fail due to CMake not accessing the correct Python
+   interpreter and/or C/C++ compiler.
+   In this case, the interpreter and compiler can be specified manually through
+   CMake variables. To determine the path to the python interpreter run the
+   following command in your terminal
 
    .. code-block:: bash
 
@@ -204,9 +231,17 @@ print additional information about various command line arguments.
 
    The response should be a path, similar to this:
 
-   .. code-block::
+   .. tabbed:: Linux
 
-      /home/<username>/miniconda3/envs/eradiate/bin/python
+      .. code-block::
+
+         /home/<username>/miniconda3/envs/eradiate/bin/python
+
+   .. tabbed:: macOS
+
+      .. code-block::
+
+         /Users/<username>/miniconda3/envs/eradiate/bin/python
 
    For the C and C++ compilers, run the following commands respectively.
 
@@ -219,7 +254,7 @@ print additional information about various command line arguments.
 
    .. code-block:: bash
 
-      cmake -GNinja -D PYHTON_EXECUTABLE=<result of the query> CMAKE_C_COMPILER=<result of the query> CMAKE_CXX_COMPILER=<result of the query> ..
+      cmake -GNinja -D PYHTON_EXECUTABLE=<result of query> CMAKE_C_COMPILER=<result of query> CMAKE_CXX_COMPILER=<result of query> ..
 
 .. _sec-getting_started-building-install_package:
 
@@ -253,29 +288,39 @@ Setup automation
 
 Conda environment creation can be automatically handled by executing the
 ``resources/envs/conda_create_env.sh`` script at the root of the Eradiate source
-tree. *Be careful however as this will reset the existing environment!*
+tree.
+
+.. warning::
+
+   Executing the Conda environment setup script will reset the existing
+   environment!
 
 The script automates by default the default Conda environment setup and the
 Eradiate package installation. Optional steps can also be automate using a
 series of flags:
 
-* ``-d``: perform :ref:`development dependency installation <sec-getting_started-building-python-conda-optional>`
-* ``-j``: perform :ref:`Jupyter lab installation and extension activation <sec-getting_started-building-python-conda-optional>`
-* ``-a``: add automatic environment variable setup to environment activation script (makes the :ref:`environment variable setup <sec-getting_started-building-environment_variables>` no longer necessary)
-* ``-e``: add a direnv ``.envrc`` file to the root of the Eradiate source tree (makes the :ref:`environment variable setup <sec-getting_started-building-environment_variables>` no longer necessary)
+-d    Perform :ref:`development dependency installation <sec-getting_started-building-python-conda-optional>`
+-j    Perform :ref:`Jupyter lab installation and extension activation <sec-getting_started-building-python-conda-optional>`
+-a    Add automatic environment variable setup to environment activation script
+      (makes the :ref:`environment variable setup <sec-getting_started-building-environment_variables>`
+      no longer necessary)
+-e    Add a `direnv <https://direnv.net/>`_  ``.envrc`` file to the root of the
+      Eradiate source tree (makes the
+      :ref:`environment variable setup <sec-getting_started-building-environment_variables>`
+      no longer necessary)
 
-A typical convenient user setup can be done with the command:
+.. tabbed:: Typical user setup
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   bash resources/envs/conda_create_env.sh -j -a
+      bash resources/envs/conda_create_env.sh -j -a
+
+.. tabbed:: Typical developer setup
+
+   .. code-block:: bash
+
+      bash resources/envs/conda_create_env.sh -d -j -a
 
 .. note::
 
    We are not sourcing the script, we are executing it in a subshell.
-
-A typical developer setup can be done with the command:
-
-.. code-block:: bash
-
-   bash resources/envs/conda_create_env.sh -d -j -a
