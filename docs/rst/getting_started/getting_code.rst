@@ -15,7 +15,7 @@ have to use Git's ``--recursive`` flag:
 
 .. code-block:: bash
 
-   git clone --recursive git@europa.local:rtm/eradiate.git
+   git clone --recursive https://github.com/eradiate/eradiate
 
 .. note::
 

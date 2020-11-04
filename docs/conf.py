@@ -77,7 +77,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "matplotlib": ("https://matplotlib.org/", None),
     "xarray": ("http://xarray.pydata.org/en/stable/", None),
-    "mitsuba": ("https://mitsuba2.readthedocs.io/en/latest/", None),
+    "mitsuba": ("https://eradiate-kernel.readthedocs.io/en/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/latest/", None),
     "attr": ("https://www.attrs.org/en/stable/", None),
 }
@@ -107,7 +107,9 @@ autodoc_mock_imports = [
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {}
+html_theme_options = {
+    "github_url": "https://github.com/eradiate/eradiate"
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
