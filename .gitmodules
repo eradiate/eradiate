@@ -1,6 +1,6 @@
 [submodule "ext/mitsuba2"]
 	path = ext/mitsuba2
-	url = http://europa.local/gitlab/rtm/mitsuba2.git
+	url = https://github.com/eradiate/eradiate-kernel.git
 [submodule "resources/data"]
 	path = resources/data
-	url = git@europa.local:rtm/eradiate-data.git
+	url = https://github.com/eradiate/eradiate-data.git

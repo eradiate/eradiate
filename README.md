@@ -1,41 +1,26 @@
-# Eradiate Radiative Transfer Model
-
 ![Eradiate logo](docs/fig/eradiate-logo-dark-no_bg.png "Eradiate — A new-generation radiative transfer simulation package")
 
-**TODO:** Add badges.
+# Eradiate Radiative Transfer Model
 
-**TODO:** Add software package and project description.
-
-## Documentation
-
-Eradiate's documentation can currently only be browsed offline and has to be built from project sources.
+| Documentation   |
+|      :---:      |
+| [![docs][1]][2] |
 
 
-1. Clone the source repository
-2. Navigate to the source repository's root directory.
-3. Create a build directory, *e.g.*
-   ```
-   $ mkdir build
-   ```
-4. Set up the conda environment and set the relevant environment variables
-    ```
-    $ source conda_create_env.sh
-    $ conda activate eradiate
-    $ source setpath.sh
-    ```
-6. Generate the documentation using using Sphinx:
-   ```
-   $ python -m sphinx html docs build/html
-   ```
-7. The documentation is generated a `html` subdirectory and can be viewed in a browser
+[1]: https://readthedocs.org/projects/eradiate/badge/?version=latest
+[2]: https://eradiate.readthedocs.io/en/latest/
 
-## Building
+Eradiate is a next-generation radiative transfer simulation software package for Earth observation applications. It uses advanced Monte Carlo ray tracing techniques and offers a flexible Python interface to simulate radiative transfer on a broad variety of scenes with high accuracy.
 
-For build instructions, refer to the [documentation](#documentation). 
+**Eradiate is currently in beta stage and is missing many features.**
+
+## Building and using Eradiate
+
+For build and usage instructions, refer to the [documentation](https://eradiate.readthedocs.org).
 
 ## About
 
-Eradiate's development is funded by a European Space Agency project funded by the European Commission's Copernicus programme. The design phase was funded by the MetEOC-3 project.
+Eradiate's development is funded by a European Space Agency project supported by the European Commission's Copernicus programme. The design phase was funded by the MetEOC-3 project.
 
 Eradiate's core development team consists of Yves Govaerts, Vincent Leroy, Yvan Nollet and Sebastian Schunke.
 
