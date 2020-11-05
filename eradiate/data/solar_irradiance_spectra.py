@@ -55,3 +55,13 @@ class _SolarIrradianceGetter(DataGetter):
     def open(cls, id):
         path = _presolver.resolve(cls.path(id))
         return xr.open_dataset(path)
+
+    @classmethod
+    def find(cls):
+        result = {}
+
+        for id in cls._PATHS.keys():
+            path = _presolver.resolve(cls.path(id))
+            result[id] = path.is_file()
+
+        return result

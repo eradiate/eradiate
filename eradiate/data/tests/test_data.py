@@ -17,3 +17,9 @@ def test_open():
     # Check that unknown ID raises
     with pytest.raises(ValueError):
         ds = data.open("solar_irradiance_spectrum", "doesnt_exist")
+
+
+def test_required_data_sets():
+    # Check that data sets required for testing are found
+    assert all(data.find("solar_irradiance_spectrum").values())
+    assert data.find("absorption_spectrum")["test"]

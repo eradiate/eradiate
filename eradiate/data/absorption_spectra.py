@@ -44,3 +44,13 @@ class _AbsorptionGetter(DataGetter):
     def open(cls, id):
         paths = _presolver.glob(cls.path(id))
         return xr.open_mfdataset(paths)
+
+    @classmethod
+    def find(cls):
+        result = {}
+
+        for id in cls._PATHS.keys():
+            paths = _presolver.glob(cls.path(id))
+            result[id] = bool(len(list(paths)))
+
+        return result

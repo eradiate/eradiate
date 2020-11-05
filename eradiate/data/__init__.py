@@ -101,7 +101,7 @@ def registered(category):
     """Get a list of registered dataset IDs for a given data set category.
 
     Parameter ``category`` (str):
-        Dataset category identifier. See :func:`load` for valid categories.
+        Dataset category identifier. See :func:`open` for valid categories.
 
     Returns → list[str]:
         List of registered data set IDs for the selected category.
@@ -116,4 +116,20 @@ def registered(category):
 
     return getter.registered()
 
-# TODO: add functions to check if data is missing
+
+def find(category):
+    """Check if the data referenced for a given category exists.
+
+    Parameter ``category`` (str):
+        Dataset category identifier. See :func:`open` for valid categories.
+
+    Returns → dict[str, bool]:
+        Report dictionary containing data set identifiers as keys and Boolean
+        values (``True`` if a file exists for this ID, ``False`` otherwise).
+    """
+    try:
+        getter = _getters[category]
+    except KeyError:
+        raise ValueError(f"invalid data category '{category}'")
+
+    return getter.find()
