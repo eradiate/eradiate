@@ -56,9 +56,12 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
     origins = ", ".join(str(x) for x in [0, 0, 0.01] * len(vza))
 
     solver = OneDimRunner()
-    solver.kernel_dict["brdf_surface"] = {
-        "type": "diffuse",
-        "reflectance": {"type": "uniform", "value": rho}
+    solver.kernel_dict["surface"] = {
+        "type": "rectangle",
+        "bsdf": {
+            "type": "diffuse",
+            "reflectance": {"type": "uniform", "value": rho}
+        }
     }
 
     solver.kernel_dict["measure"] = {
