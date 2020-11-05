@@ -42,13 +42,13 @@ _presolver = PathResolver()
 
 class _SolarIrradianceGetter(DataGetter):
     _PATHS = {
-        "blackbody_sun": "spectra/blackbody_sun.nc",
-        "meftah_2017": "spectra/meftah_2017.nc",
-        "thuillier_2003": "spectra/thuillier_2003.nc",
-        "whi_2008": "spectra/whi_2008_time_period_1.nc",  # alias
-        "whi_2008_1": "spectra/whi_2008_time_period_1.nc",
-        "whi_2008_2": "spectra/whi_2008_time_period_2.nc",
-        "whi_2008_3": "spectra/whi_2008_time_period_3.nc",
+        "blackbody_sun": "spectra/solar_irradiance/blackbody_sun.nc",
+        "meftah_2017": "spectra/solar_irradiance/meftah_2017.nc",
+        "thuillier_2003": "spectra/solar_irradiance/thuillier_2003.nc",
+        "whi_2008": "spectra/solar_irradiance/whi_2008_time_period_1.nc",  # alias
+        "whi_2008_1": "spectra/solar_irradiance/whi_2008_time_period_1.nc",
+        "whi_2008_2": "spectra/solar_irradiance/whi_2008_time_period_2.nc",
+        "whi_2008_3": "spectra/solar_irradiance/whi_2008_time_period_3.nc",
     }
 
     @classmethod
