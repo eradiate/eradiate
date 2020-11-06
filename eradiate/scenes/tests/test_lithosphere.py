@@ -2,7 +2,7 @@ import numpy as np
 
 
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.lithosphere import LambertianSurface, RPVSurface
+from eradiate.scenes.lithosphere import LambertianSurface, RPVSurface, BlackSurface
 from eradiate.util.units import ureg
 
 
@@ -23,8 +23,6 @@ def test_lambertian(mode_mono):
 
 
 def test_rpv(mode_mono):
-    from eradiate.kernel.core.xml import load_dict
-
     # Default constructor
     ls = RPVSurface()
 
@@ -44,3 +42,18 @@ def test_rpv(mode_mono):
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(ls).load() is not None
+
+
+def test_black(mode_mono):
+    # Default constructor
+    bs = BlackSurface()
+
+    # Check if produced scene can be instantiated
+    kernel_dict = KernelDict.empty()
+    kernel_dict.add(bs)
+    assert kernel_dict.load() is not None
+
+    # Check if the correct kernel dict is created
+    ls = LambertianSurface(reflectance={"type": "uniform", "value": 0})
+
+    assert KernelDict.empty().add(ls) == KernelDict.empty().add(bs)

@@ -79,7 +79,8 @@ class OneDimSolverApp(ConfigObject):
 
             Allowed scene elements:
             :factorykey:`lambertian`,
-            :factorykey:`rpv`
+            :factorykey:`rpv`,
+            :factorykey:`black`
 
             Default:
             :factorykey:`lambertian`.
@@ -192,7 +193,7 @@ class OneDimSolverApp(ConfigObject):
                 "schema": {
                     "type": {
                         "type": "string",
-                        "allowed": ["lambertian", "rpv"],
+                        "allowed": ["lambertian", "rpv", "black"],
                         "default": "lambertian"
                     },
                 }

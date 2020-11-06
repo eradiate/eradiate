@@ -133,6 +133,25 @@ class LambertianSurface(Surface):
         }
 
 
+@SceneElementFactory.register(name="black")
+@attr.s
+class BlackSurface(Surface):
+    """Black surface scene element [:factorykey:`black`].
+
+    This class creates a square surface with a non reflecting BRDF attached.
+
+    See :class:`.Surface` for undocumented members.
+    """
+
+    def bsdfs(self):
+        return {
+            f"bsdf_{self.id}": {
+                "type": "diffuse",
+                "reflectance": {"type": "uniform", "value": 0}
+            }
+        }
+
+
 @SceneElementFactory.register(name="rpv")
 @attr.s
 class RPVSurface(Surface):

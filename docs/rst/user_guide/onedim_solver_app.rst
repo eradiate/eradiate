@@ -112,6 +112,10 @@ Rahman-Pinty-Verstraete (RPV) surface
     used for land surface reflection modelling. Eradiate implements several
     variants of it with 3 or 4 parameters.
 
+Black surface
+    The black surface absorbs all incoming radiation, irrespective of
+    incident angle or wavelength.
+
 Configuring the application
 ---------------------------
 
