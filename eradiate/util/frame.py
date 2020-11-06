@@ -1,8 +1,12 @@
 """ Frame and angle manipulation utilities. """
 
 import numpy as np
+import pint
+
+from eradiate.util.units import ureg
 
 
+@ureg.wraps(ret=None, args=("dimensionless", "rad"), strict=False)
 def cos_angle_to_direction(cos_theta, phi):
     r"""Convert a zenith cosine and azimuth angle pair to a direction.
 
@@ -14,14 +18,15 @@ def cos_angle_to_direction(cos_theta, phi):
         Azimuth angle [radian].
         Convention: :math:`2 \pi` corresponds to the X axis.
 
-    Returns → array:
-        Direction corresponding to the angular parameters.
+    Returns → array[float]:
+        Direction corresponding to the angular parameters [unitless].
     """
     sin_theta = np.sqrt(1.0 - cos_theta * cos_theta)
     sin_phi, cos_phi = np.sin(phi), np.cos(phi)
     return np.array([sin_theta * cos_phi, sin_theta * sin_phi, cos_theta])
 
 
+@ureg.wraps(ret=None, args=("rad", "rad"), strict=False)
 def angles_to_direction(theta, phi):
     r"""Convert a zenith and azimuth angle pair to a direction.
 
@@ -34,20 +39,21 @@ def angles_to_direction(theta, phi):
         Convention: :math:`2 \pi` corresponds to the X axis.
 
     Returns → array:
-        Direction corresponding to the angular parameters.
+        Direction corresponding to the angular parameters [unitless].
     """
     return cos_angle_to_direction(np.cos(theta), phi)
 
 
+@ureg.wraps(ret=["rad", "rad"], args=None, strict=False)
 def direction_to_angles(wi):
     """Converts a cartesian 3-vector to a pair of theta and phi values
     in spherical coordinates
 
     Parameter ``wi`` (array):
-        3-vector designating a direction in cartesian coordinates
+        3-vector designating a direction in cartesian coordinates [unitless].
 
     Returns → list[float]:
-        Zenith and azimuth angles in radians, where zenith=0 corresponds to
+        Zenith and azimuth angles in radians, where zenith = 0 corresponds to
         +z direction
     """
     wi = wi / np.linalg.norm(wi)
@@ -57,6 +63,7 @@ def direction_to_angles(wi):
     return [theta, phi]
 
 
+@ureg.wraps(ret=None, args=(None, "rad", "rad"), strict=False)
 def spherical_to_cartesian(r, theta, phi):
     r"""Convert spherical coordinates to cartesian coordinates
 
@@ -71,12 +78,19 @@ def spherical_to_cartesian(r, theta, phi):
         Azimuth angle coordinate [radian].
         Convention: :math:`2 \pi` corresponds to the X axis.
 
-    Returns → tuple:
+    Returns → array[float]:
         Cartesian coordinates x, y, z.
     """
 
-    x = r * np.sin(theta) * np.cos(phi)
-    y = r * np.sin(theta) * np.sin(phi)
-    z = r * np.cos(theta)
-
-    return x, y, z
+    if isinstance(r, pint.Quantity):
+        return np.array([
+            r.magnitude * np.sin(theta) * np.cos(phi),
+            r.magnitude * np.sin(theta) * np.sin(phi),
+            r.magnitude * np.cos(theta)
+        ]) * r.units
+    else:
+        return np.array([
+            r * np.sin(theta) * np.cos(phi),
+            r * np.sin(theta) * np.sin(phi),
+            r * np.cos(theta)
+        ])
