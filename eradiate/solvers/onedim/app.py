@@ -1,7 +1,6 @@
 """One dimensional solver application class and related facilities."""
 
-# TODO: refactor into apps module?
-
+import os
 import warnings
 from copy import deepcopy
 from pathlib import Path
@@ -419,8 +418,10 @@ class OneDimSolverApp(ConfigObject):
         """
         fname_prefix = Path(fname_prefix)
         for key, results in self.results.items():
-            print(f"Saving results to {fname_prefix}_{key}.nc")
-            results.to_netcdf(path=f"{fname_prefix}_{key}.nc")
+            fname_results = f"{fname_prefix}_{key}.nc"
+            os.makedirs(os.path.dirname(fname_results), exist_ok=True)
+            print(f"Saving results to {fname_results}")
+            results.to_netcdf(path=fname_results)
 
     def plot_results(self, fname_prefix):
         """Make default plots for stored results and save them to the hard
@@ -444,5 +445,7 @@ class OneDimSolverApp(ConfigObject):
                     plane = view.plane(data)
                     plane.ert.plot(kind="linear", title=quantity, ax=ax)
 
-                plt.savefig(f"{fname_prefix}_{quantity}.png", bbox_inches="tight")
+                fname_plots = f"{fname_prefix}_{quantity}.png"
+                os.makedirs(os.path.dirname(fname_plots), exist_ok=True)
+                plt.savefig(fname_plots, bbox_inches="tight")
                 plt.close()
