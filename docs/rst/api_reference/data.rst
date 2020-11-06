@@ -1,7 +1,7 @@
 .. _sec-api_reference-data:
 
-Data handling facilities [eradiate.data]
-========================================
+Data handling [eradiate.data]
+=============================
 
 .. rubric:: Description
 

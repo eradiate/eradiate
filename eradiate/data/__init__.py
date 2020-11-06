@@ -7,7 +7,7 @@ kind of call will search Eradiate's data registry for a valid data set;
 the second kind of call will try and resolve directly a path using the
 :class:`.PathResolver`.
 
-.. admonition:: Example: first-kind call to ``open()``
+.. admonition:: Examples
 
    The following code accesses the Thuillier irradiance spectrum
    :cite:`Thuillier2003SolarSpectralIrradiance`:
@@ -15,20 +15,22 @@ the second kind of call will try and resolve directly a path using the
    .. code:: python
 
       import eradiate.data as data
-
+      # first-kind call to ``open()``
       ds = data.open("solar_irradiance_spectrum", "thuillier_2003")
-
-
-.. admonition:: Example: second-kind call to ``open()``
-
-   The following code accesses the Thuillier irradiance spectrum
-   :cite:`Thuillier2003SolarSpectralIrradiance`:
-
-   .. code:: python
-
-      import eradiate.data as data
-
+      # second-kind call to ``open()``
       ds = data.open(path="spectra/thuillier_2003.nc")
+
+
+.. admonition:: Valid data set categories
+
+   .. list-table::
+      :widths: 1 1
+
+      * - :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
+        - Solar irradiance spectrum
+      * - :class:`absorption_cross_section_spectrum <eradiate.data.absorption_spectra>`
+        - Gas absorption coefficient spectrum
+
 """
 
 import os
@@ -52,10 +54,8 @@ def open(category=None, id=None, path=None):
 
     Parameter ``category`` (str or None):
         If ``None``, ``path`` must not be ``None`` .
-        Dataset category identifier. Valid data set categories are:
-
-        * :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
-        * :class:`absorption_cross_section_spectrum <eradiate.data.absorption_spectra>`
+        Dataset category identifier. Valid data set categories are listed in the
+        documentation of the :mod:`~eradiate.data` module.
 
     Parameter ``id`` (str or None):
         If ``None``, ``path`` must not be ``None`` .

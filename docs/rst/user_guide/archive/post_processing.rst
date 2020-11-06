@@ -3,6 +3,13 @@
 Data post-processing and visualization
 ======================================
 
+.. warning::
+
+   This documentation page was written in Eradiate's early development phase.
+   The data handling documentation has been partly updated but a tutorial for
+   the usage of the xarray accessor is still missing. Until this tutorial is
+   written and covers all the features presented here, this page will be kept.
+
 The :code:`eradiate.util.view` module provides utilities for viewing and plotting data.
 
 EradiateAccessor

@@ -10,5 +10,15 @@ User guide
    basic_concepts
    onedim_solver_app
    package_structure
-   post_processing
+   data_guide
    unit_guide_user
+
+Archived content
+----------------
+
+The following content is kept for archival purposes but is not maintained anymore.
+
+.. toctree::
+   :maxdepth: 1
+
+   archive/post_processing
