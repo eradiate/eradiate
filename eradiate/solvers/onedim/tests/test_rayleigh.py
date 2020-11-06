@@ -121,7 +121,7 @@ def test_rayleigh_solver_app_run():
     # Assert the correct dimensions of the application's results
     assert set(results["toa_lo_hsphere"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
 
-    assert results["toa_lo_hsphere"].attrs["angle_convention"] == "eo_scene"
+    assert results["toa_lo_hsphere"].attrs["angular_type"] == "observation"
 
     # We expect the whole [0, 360] to be covered
     assert len(results["toa_lo_hsphere"].coords["vaa"]) == 360 / 180

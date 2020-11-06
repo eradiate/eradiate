@@ -39,23 +39,23 @@ def eo_dataarray(data, sza, saa, vza, vaa, wavelength, angular_domain):
                               "vza": vza, "vaa": vaa,
                               "wavelength": wavelength})
 
-    da.attrs["angle_convention"] = "eo_scene"
+    da.attrs["angular_type"] = "observation"
     da.attrs["angular_domain"] = angular_domain
 
-    da.sza.attrs["unit"] = "deg"
+    da.sza.attrs["units"] = "deg"
     da.sza.attrs["long_name"] = "Sun zenith angle"
 
-    da.saa.attrs["unit"] = "deg"
+    da.saa.attrs["units"] = "deg"
     da.saa.attrs["long_name"] = "Sun azimuth angle"
 
-    da.vza.attrs["unit"] = "deg"
+    da.vza.attrs["units"] = "deg"
     da.vza.attrs["long_name"] = "Viewing zenith angle"
 
-    da.vaa.attrs["unit"] = "deg"
+    da.vaa.attrs["units"] = "deg"
     da.vaa.attrs["long_name"] = "Viewing azimuth angle"
 
     da.wavelength.attrs["long_name"] = "Wavelength"
-    da.wavelength.attrs["unit"] = "nm"
+    da.wavelength.attrs["units"] = "nm"
 
     return da
 

@@ -396,7 +396,7 @@ class OneDimSolverApp(ConfigObject):
                 {
                     "long_name": "illumination spectral irradiance",
                     "units": "W/km^2/nm",
-                    "angles_convention": "eo_scene"
+                    "angles_convention": "observation"
                 }
             )
 

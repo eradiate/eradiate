@@ -48,12 +48,12 @@ def test_plane(variant_scalar_mono):
                        dims=["theta_o", "phi_o"],
                        coords={"theta_o": [0, 30, 60, 90], "phi_o": [0, 90, 180, 270]})
 
-    arr.theta_o.attrs["unit"] = "deg"
-    arr.phi_o.attrs["unit"] = "deg"
-    arr.attrs["angle_convention"] = "local"
+    arr.theta_o.attrs["units"] = "deg"
+    arr.phi_o.attrs["units"] = "deg"
+    arr.attrs["angular_type"] = "intrinsic"
     plane = view.plane(arr, phi=90)
 
-    assert plane.attrs["angle_convention"] == "local"
+    assert plane.attrs["angular_type"] == "intrinsic"
     assert np.all(plane["theta_o"] == [-90, -60, -30, 0, 30, 60, 90])
     assert np.all(plane.values == [16, 12, 8, 2, 6, 10, 14])
 
@@ -67,11 +67,11 @@ def test_pplane(variant_scalar_mono):
     arr = xr.DataArray(data, dims=["theta_i", "phi_i", "theta_o", "phi_o"],
                        coords={"theta_i": [0, 30, 60, 90], "phi_i": [0, 90, 180, 270],
                                "theta_o": [0, 30, 60, 90], "phi_o": [0, 90, 180, 270]})
-    arr.theta_o.attrs["unit"] = "deg"
-    arr.phi_o.attrs["unit"] = "deg"
-    arr.theta_i.attrs["unit"] = "deg"
-    arr.phi_i.attrs["unit"] = "deg"
-    arr.attrs["angle_convention"] = "local"
+    arr.theta_o.attrs["units"] = "deg"
+    arr.phi_o.attrs["units"] = "deg"
+    arr.theta_i.attrs["units"] = "deg"
+    arr.phi_i.attrs["units"] = "deg"
+    arr.attrs["angular_type"] = "intrinsic"
 
     pplane = view.pplane(arr, theta_i=60, phi_i=90)
     hdata = arr.ert.sel(theta_i=60, phi_i=90)
@@ -90,30 +90,30 @@ def test_accessor_angular_dimensions(variant_scalar_mono):
                        coords={"x": [1, 2, 3], "y": [1, 2, 3], "z": [1, 2, 3], "w": [1, 2, 3]})
 
     # bi-hemispherical array
-    arr.x.attrs["unit"] = "deg"
-    arr.y.attrs["unit"] = "degrees"
-    arr.z.attrs["unit"] = "rad"
-    arr.w.attrs["unit"] = "radians"
+    arr.x.attrs["units"] = "deg"
+    arr.y.attrs["units"] = "degrees"
+    arr.z.attrs["units"] = "rad"
+    arr.w.attrs["units"] = "radians"
 
     assert arr.ert._num_angular_dimensions() == 4
     assert arr.ert.is_bihemispherical()
     assert not arr.ert.is_hemispherical()
 
     # array without angular dimensions
-    arr.x.attrs["unit"] = "degert"
-    arr.y.attrs["unit"] = "angle"
-    arr.z.attrs["unit"] = "rod"
-    arr.w.attrs["unit"] = "radian"
+    arr.x.attrs["units"] = "degert"
+    arr.y.attrs["units"] = "angle"
+    arr.z.attrs["units"] = "rod"
+    arr.w.attrs["units"] = "radian"
 
     assert arr.ert._num_angular_dimensions() == 0
     assert not arr.ert.is_bihemispherical()
     assert not arr.ert.is_hemispherical()
 
     # hemispherical array
-    arr.x.attrs["unit"] = "deg"
-    arr.y.attrs["unit"] = "angle"
-    arr.z.attrs["unit"] = "rad"
-    arr.w.attrs["unit"] = "radian"
+    arr.x.attrs["units"] = "deg"
+    arr.y.attrs["units"] = "angle"
+    arr.z.attrs["units"] = "rad"
+    arr.w.attrs["units"] = "radian"
 
     assert arr.ert._num_angular_dimensions() == 2
     assert not arr.ert.is_bihemispherical()
@@ -121,24 +121,24 @@ def test_accessor_angular_dimensions(variant_scalar_mono):
 
 
 def test_accessor_sel(variant_scalar_mono):
-    """Test the sel method wrapper by creating DataArrays with different angle naming conventions.
-    Each array is accessed with dimension names from the other supported conventions and
-    the correct reaction is asserted. An unsupported convention is instantiated and the
+    """Test the sel method wrapper by creating DataArrays with different angular data types.
+    Each array is accessed with dimension names from the other supported type and
+    the correct reaction is asserted. An unsupported type is instantiated and the
     raising of correct exceptions is asserted.
     """
 
     data = np.ones((2, 2))
     arr_local = xr.DataArray(data, dims=["theta_i", "phi_i"],
                              coords={"theta_i": [0, 90], "phi_i": [0, 180]})
-    arr_local.attrs["angle_convention"] = "local"
+    arr_local.attrs["angular_type"] = "intrinsic"
 
     arr_eo = xr.DataArray(data, dims=["sza", "saa"],
                           coords={"sza": [0, 90], "saa": [0, 180]})
-    arr_eo.attrs["angle_convention"] = "eo_scene"
+    arr_eo.attrs["angular_type"] = "observation"
 
     arr_wrong = xr.DataArray(data, dims=["hans", "helm"],
                              coords={"hans": [0, 90], "helm": [0, 180]})
-    arr_wrong.attrs["angle_convention"] = "weird"
+    arr_wrong.attrs["angular_type"] = "weird"
 
     arr_missing = xr.DataArray(data, dims=["sza", "saa"],
                                coords={"sza": [0, 90], "saa": [0, 180]})
@@ -152,8 +152,8 @@ def test_accessor_sel(variant_scalar_mono):
 
     with pytest.raises(KeyError) as exc:
         arr_wrong.ert.sel(theta_o=0, phi_o=0)
-    assert "Unknown angle naming convention: weird" in str(exc.value)
+    assert "Unknown angular type: weird" in str(exc.value)
 
     with pytest.raises(KeyError) as exc:
         arr_missing.ert.sel(theta_o=0, phi_o=0)
-    assert "No angle convention was set. Cannot identify data nomenclature." in str(exc.value)
+    assert "No angular data type was set. Cannot identify data nomenclature." in str(exc.value)

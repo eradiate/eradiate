@@ -101,7 +101,7 @@ def plane(hdata, phi=0):
     if not hdata.ert.is_hemispherical(exclude_scalar_dims=True):
         raise ValueError("hdata must be a hemispherical data set")
 
-    # Support for angular dimension naming conventions
+    # Support for angular data types
     theta_dim = hdata.ert.get_angular_dim("theta_o")
 
     # Retrieve values for positive half-plane
@@ -216,14 +216,14 @@ class EradiateAccessor:
     """Custom :class:`xarray.DataArray` accessor to process Eradiate results.
     """
 
-    _ANGLE_CONVENTIONS = {
-        "local": {
+    _ANGULAR_TYPES = {
+        "intrinsic": {
             "theta_i": "theta_i",
             "phi_i": "phi_i",
             "theta_o": "theta_o",
             "phi_o": "phi_o"
         },
-        "eo_scene": {
+        "observation": {
             "theta_i": "sza",
             "phi_i": "saa",
             "theta_o": "vza",
@@ -232,16 +232,16 @@ class EradiateAccessor:
     }
 
     def get_angular_dim(self, dim):
-        """Return the angle dimension corresponding to the angular naming convention in the data."""
+        """Return the angle dimension corresponding to the angular data type."""
         if dim not in ("theta_i", "phi_i", "theta_o", "phi_o"):
             raise ValueError("dim must be in ('theta_i', 'phi_i', 'theta_o', 'phi_o')")
 
         try:
-            convention = self._obj.attrs["angle_convention"]
+            angular_type = self._obj.attrs["angular_type"]
         except KeyError:
-            raise KeyError("No angle naming convention is set. Cannot convert dimension names.")
+            raise KeyError("No angular data type is set. Cannot convert dimension names.")
 
-        return self._ANGLE_CONVENTIONS[convention][dim]
+        return self._ANGULAR_TYPES[angular_type][dim]
 
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
@@ -254,7 +254,7 @@ class EradiateAccessor:
         """
         num_angdims = 0
         for dim in self._obj.dims:
-            if self._obj.coords[dim].attrs["unit"] in ("radians", "rad", "degrees", "deg"):
+            if self._obj.coords[dim].attrs["units"] in ("radians", "rad", "degrees", "deg"):
                 if exclude_scalar_dims:
                     if len(self._obj.coords[dim]) > 1:
                         num_angdims += 1
@@ -268,14 +268,14 @@ class EradiateAccessor:
     def is_bihemispherical(self, exclude_scalar_dims=False):
         return self._num_angular_dimensions(exclude_scalar_dims) == 4
 
-    def _adjust_kwargs_for_convention(self, **kwargs):
-        """Translates the given keyword arguments to the respective naming convention in the
+    def _adjust_kwargs_for_angular_type(self, **kwargs):
+        """Translates the given keyword arguments to the respective angular data type in the
         DataArray. If all requested dimensions are present in the array, no change is performed.
-        Otherwise the angle convention attribute of the array is looked up and the
+        Otherwise the angular type attribute of the array is looked up and the
         requested dimensions are translated accordingly.
 
-        Returns → dict
-            Keyword arguments adjusted for the angular naming convention in the DataArray.
+        Returns → dict:
+            Keyword arguments adjusted for the angular type in the DataArray.
         """
         for arg in kwargs:
             if arg not in self._obj.dims:
@@ -284,18 +284,18 @@ class EradiateAccessor:
             return kwargs
 
         try:
-            convention = self._obj.attrs["angle_convention"]
+            angular_type = self._obj.attrs["angular_type"]
         except KeyError:
-            raise KeyError("No angle convention was set. Cannot identify data nomenclature.")
+            raise KeyError("No angular data type was set. Cannot identify data nomenclature.")
         try:
-            convention_map = self._ANGLE_CONVENTIONS[convention]
+            angular_type_map = self._ANGULAR_TYPES[angular_type]
         except KeyError:
-            raise KeyError(f"Unknown angle naming convention: {convention}")
+            raise KeyError(f"Unknown angular type: {angular_type}")
 
         newargs = dict()
         for oldkey in kwargs:
-            if oldkey in convention_map:
-                newargs[convention_map[oldkey]] = kwargs[oldkey]
+            if oldkey in angular_type_map:
+                newargs[angular_type_map[oldkey]] = kwargs[oldkey]
             else:
                 newargs[oldkey] = kwargs[oldkey]
 
@@ -303,24 +303,24 @@ class EradiateAccessor:
 
     def sel(self, **kwargs):
         """Wraps the :meth:`xarray.DataArray.sel` method to account for
-        different naming conventions for angle dimensions.
+        different angular data types.
         If the presented args are present in the :class:`~xarray.DataArray`,
         they are passed on unchanged.
-        Otherwise a naming convention lookup is performed and the corresponding
+        Otherwise a angular type lookup is performed and the corresponding
         dimension names are used.
 
         Returns → :class:`xarray.DataArray`
             View to the original xarray with data selected as given by the
             arguments.
         """
-        new_kwargs = self._adjust_kwargs_for_convention(**kwargs)
+        new_kwargs = self._adjust_kwargs_for_angular_type(**kwargs)
         return self._obj.sel(**new_kwargs)
 
     def drop_sel(self, **kwargs):
         """Wraps the :meth:`xarray.DataArray.drop_sel` method to account for
-        the angular dimension naming conventions.
+        angular data type.
         """
-        new_kwargs = self._adjust_kwargs_for_convention(**kwargs)
+        new_kwargs = self._adjust_kwargs_for_angular_type(**kwargs)
         return self._obj.drop_sel(**new_kwargs)
 
     def plot(self, kind=None, ax=None, title="", cmap="BuPu_r", cbar_kwargs={}, **kwargs):

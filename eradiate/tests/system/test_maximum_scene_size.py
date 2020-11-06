@@ -112,6 +112,6 @@ def test_maximum_scene_size(variant_scalar_mono_double, json_metadata):
             "name": "OneDimSolver maximum scene size",
             "description": "The maximum size for OneDimSolver scenes is:",
             "value": f"{float(maxsize):1.1e}",
-            "unit": "length units",
+            "units": "length units",
         }
     }
