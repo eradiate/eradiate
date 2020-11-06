@@ -13,7 +13,7 @@ def test_rayleigh_solver_app():
         "measure": [{
             "azimuth_res": 10,
             "hemisphere": "back",
-            "id": "toa_lo_hsphere",
+            "id": "toa_hsphere",
             "origin": [0, 0, 100.1],
             "spp": 32,
             "type": "radiancemeter_hsphere",
@@ -42,7 +42,7 @@ def test_rayleigh_solver_app():
             "irradiance": {"type": "uniform", "value": 1.}
         },
         "measure": [{
-            "type": "toa_lo_hsphere",
+            "type": "toa_hsphere_lo",
             "zenith_res": 5.,
             "azimuth_res": 10.,
             "spp": 1000,
@@ -69,7 +69,7 @@ def test_rayleigh_solver_app():
             "irradiance": {"type": "uniform", "value": 1.}
         },
         "measure": [{
-            "type": "toa_lo_hsphere",
+            "type": "toa_hsphere_lo",
             "zenith_res": 5.,
             "azimuth_res": 10.,
             "spp": 1000,
@@ -87,6 +87,15 @@ def test_rayleigh_solver_app():
     app = OneDimSolverApp(config)
     assert app._kernel_dict.load() is not None
 
+    # Test measure aliasing
+    app1 = OneDimSolverApp({"measure": [{"type": "toa_hsphere", "id": "test_measure"}]})
+    app2 = OneDimSolverApp({"measure": [{"type": "toa_hsphere_lo", "id": "test_measure"}]})
+    app3 = OneDimSolverApp({"measure": [{"type": "toa_hsphere_brdf", "id": "test_measure"}]})
+    app4 = OneDimSolverApp({"measure": [{"type": "toa_hsphere_brf", "id": "test_measure"}]})
+    assert app1._kernel_dict == app2._kernel_dict
+    assert app1._kernel_dict == app3._kernel_dict
+    assert app1._kernel_dict == app4._kernel_dict
+
 
 @pytest.mark.slow
 def test_rayleigh_solver_app_run():
@@ -102,7 +111,7 @@ def test_rayleigh_solver_app_run():
 
     config = {
         "measure": [{
-            "type": "toa_lo_hsphere",
+            "type": "toa_hsphere",
             "zenith_res": 45.,
             "azimuth_res": 180.,
             "spp": 1000,
@@ -116,20 +125,19 @@ def test_rayleigh_solver_app_run():
 
     app.run()
 
-    results = app.results["toa_lo_hsphere"]
+    results = app.results["toa_hsphere"]
 
     # Assert the correct dimensions of the application's results
-    assert set(results["toa_lo_hsphere"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
+    assert set(results["lo"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
 
-    assert results["toa_lo_hsphere"].attrs["angular_type"] == "observation"
+    assert results["lo"].attrs["angular_type"] == "observation"
 
     # We expect the whole [0, 360] to be covered
-    assert len(results["toa_lo_hsphere"].coords["vaa"]) == 360 / 180
+    assert len(results["lo"].coords["vaa"]) == 360 / 180
     # # We expect [0, 90[ to be covered (90° should be missing)
-    assert len(results["toa_lo_hsphere"].coords["vza"]) == 90 / 45
-
+    assert len(results["lo"].coords["vza"]) == 90 / 45
     # We just check that we record something as expected
-    assert np.all(results["toa_lo_hsphere"].data > 0)
+    assert np.all(results["lo"].data > 0)
 
 
 def test_rayleigh_solver_app_postprocessing():
@@ -139,7 +147,7 @@ def test_rayleigh_solver_app_postprocessing():
     import numpy as np
     config = {
         "measure": [{
-            "type": "toa_lo_hsphere",
+            "type": "toa_hsphere",
             "zenith_res": 5.,
             "azimuth_res": 10.,
             "spp": 1000,
@@ -158,16 +166,16 @@ def test_rayleigh_solver_app_postprocessing():
     assert eradiate.mode.id == "mono"
     app.run()
 
-    results = app.results["toa_lo_hsphere"]
+    results = app.results["toa_hsphere"]
 
     # Assert the correct computation of the BRDF and BRF values
     # BRDF
     assert np.allclose(
-        results["toa_brdf_hsphere"],
-        results["toa_lo_hsphere"] / config["illumination"]["irradiance"]["value"]
+        results["brdf"],
+        results["lo"] / config["illumination"]["irradiance"]["value"]
     )
     # BRF
     assert np.allclose(
-        results["toa_brf_hsphere"],
-        results["toa_brdf_hsphere"] * np.pi
+        results["brf"],
+        results["brdf"] * np.pi
     )

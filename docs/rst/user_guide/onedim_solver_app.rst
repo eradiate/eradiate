@@ -154,7 +154,7 @@ configuration dictionary and its equivalent YAML specification:
               },
           },
           "measure": [{
-              "type": "toa_lo_hsphere",
+              "type": "toa_hsphere",
               "spp": 32000,
               "zenith_res": 5.,
               "azimuth_res": 5.
@@ -184,7 +184,7 @@ configuration dictionary and its equivalent YAML specification:
           value: 1.8e+6
           value_units: W/km**2/nm
       measure:
-      - type: toa_lo_hsphere
+      - type: toa_hsphere
         spp: 32000
         zenith_res: 5.
         azimuth_res: 5.
@@ -305,10 +305,15 @@ is a dictionary defined the usual way (``type`` and other parameters).
 
 The following ``type`` parameter values are supported:
 
-* ``toa_lo_pplane``: top-of-atmosphere leaving radiance in a plane
-  [:class:`.RadianceMeterPPlaneMeasure`];
-* ``toa_lo_hsphere``: top-of-atmosphere leaving radiance in the entire
-  hemisphere [:class:`.RadianceMeterHsphereMeasure`].
+* ``toa_pplane``: top-of-atmosphere leaving radiance in a plane
+  [:class:`.RadianceMeterPPlaneMeasure`]
+
+  Valid aliases: ``toa_pplane_lo``, ``toa_pplane_brdf``, ``toa_pplane_brf``
+
+* ``toa_hsphere``: top-of-atmosphere leaving radiance in the entire
+  hemisphere [:class:`.RadianceMeterHsphereMeasure`]
+
+  Valid aliases: ``toa_hsphere_lo``, ``toa_hsphere_brdf``, ``toa_hsphere_brf``
 
 These TOA leaving radiance measures are automatically post-processed to compute
 the BRDF and BRF.
@@ -338,8 +343,8 @@ Data output depends on the way the application is accessed:
 * When using the :class:`.OneDimSolverApp` class directly, the
   :meth:`~.OneDimSolverApp.run()` method stores the computed results in the
   ``results`` attribute as a dictionary mapping measure identifiers to a
-  :class:`xarray.Dataset` object. Each data set has one variable for computed
-  physical quantity (*e.g.* TOA radiance, BRDF and BRF for the ``toa_lo_*``
+  :class:`xarray.Dataset` object. Each data set has one variable for each computed
+  physical quantity (*e.g.* TOA radiance, BRDF and BRF for the ``toa_hsphere_*`` and ``toa_pplane_*``
   measures).
 
 Visualisation

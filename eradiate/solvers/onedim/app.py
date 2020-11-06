@@ -13,6 +13,7 @@ import xarray as xr
 import eradiate.kernel
 from .runner import OneDimRunner
 from ...scenes.core import KernelDict, SceneElementFactory
+from ...scenes.measure import RadianceMeterHsphereMeasure, RadianceMeterPPlaneMeasure
 from ...util import ensure_array, view
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
@@ -46,7 +47,7 @@ class OneDimSolverApp(ConfigObject):
                        "type": "directional"
                    },
                    "measure": {
-                       "type": "toa_lo_hsphere",
+                       "type": "toa_hsphere",
                        "zenith_res": 10.,
                        "azimuth_res": 10.,
                        "spp": 32
@@ -120,23 +121,24 @@ class OneDimSolverApp(ConfigObject):
 
             Both measures record the outgoing radiance at the top of the configured
             atmosphere. Their central difference is that the principal plane measure
-            records radiance for only one azimuth value, opposed to the hemispherical
+            records radiance for only two azimuth values, opposed to the hemispherical
             measure, which covers the entire hemisphere.
 
             .. admonition:: Note
 
-                BRDF and BRF measures are computed from the outgoing radiance in
-                post-procressing and do not require dedicated scene elements.
-
+                This application records top-of-atmosphere radiance values and automatically computes the
+                top-of-atmosphere BRDF and BRF from them. For convenience, these measures'
+                types can be referred to using multiple aliases (see the type below).
 
             ``type`` (str):
                 Selected measure type.
 
                 Allowed values:
-                ``toa_lo_hsphere`` (hemispherical),
-                ``toa_lo_pplane`` (principal plane).
 
-                Default: ``toa_lo_hsphere``.
+                * ``toa_hsphere``, ``toa_hsphere_brf``, ``toa_hsphere_lo``, ``toa_hsphere_brdf``: TOA leaving radiance, BRF and BRDF in the whole hemisphere;
+                * ``toa_pplane``, ``toa_pplane_brf``, ``toa_pplane_lo``, ``toa_pplane_brdf``: TOA leaving radiance, BRF and BRDF in the principal plane.
+
+                Default: ``toa_hsphere``.
 
             ``zenith_res`` (float):
                 Zenith angle grid resolution [deg]. Default: 10.
@@ -157,6 +159,13 @@ class OneDimSolverApp(ConfigObject):
                 If not set, will match the direction of incoming radiation.
 
                 Default: None
+
+            ``id`` (str):
+                Identifier for the measure. Can be set arbitrarily to help users identify
+                results in case of multiple measures in one computation. Will be used in
+                the ``results`` attribute.
+
+                Default: This value defaults to the value of the ``type`` attribute.
 
             ``spp`` (int):
                 Number of samples taken for each viewing angle configuration.
@@ -227,13 +236,18 @@ class OneDimSolverApp(ConfigObject):
                 "type": "list",
                 "default":
                     [{
-                        "type": "toa_lo_hsphere",
+                        "type": "toa_hsphere",
                         "zenith_res": 10,
                         "azimuth_res": 10,
                         "spp": 32
                     }],
             }
         }
+
+    _measure_aliases = {
+        "toa_hsphere": ["toa_hsphere", "toa_hsphere_lo", "toa_hsphere_brdf", "toa_hsphere_brf"],
+        "toa_pplane": ["toa_pplane", "toa_pplane_lo", "toa_pplane_brdf", "toa_pplane_brf"]
+    }
 
     # Instance attributes
     _kernel_dict = attr.ib(default=None)
@@ -312,21 +326,21 @@ class OneDimSolverApp(ConfigObject):
                         offset = 0.001
                     config_measure["origin"] = [0, 0, height + offset]
 
-                    if config_measure["type"] == "toa_lo_pplane":
+                    if config_measure["type"] in self._measure_aliases["toa_pplane"]:
                         if "orientation" not in config_measure:
                             # TODO: fix this behaviour (will crash if illumination.type is not directional)
                             #  Suggested change: raise if no orientation and illumination.type is not directional
                             phi_i = self._elements["illumination"].azimuth.to(ureg.rad).magnitude
                             config_measure["orientation"] = [np.cos(phi_i), np.sin(phi_i), 0]
 
+                        if not config_measure.get("id", None):
+                            config_measure["id"] = config_measure["type"]
                         config_measure["type"] = "radiancemeter_pplane"
-                        config_measure["id"] = "toa_lo_pplane"
-                        # TODO: allow custom ID definition and multiple definitions of the same measure
-                        #  Use case: run the same measure with different SPP for comparison
 
-                    elif config_measure["type"] == "toa_lo_hsphere":
+                    elif config_measure["type"] in self._measure_aliases["toa_hsphere"]:
+                        if not config_measure.get("id", None):
+                            config_measure["id"] = config_measure["type"]
                         config_measure["type"] = "radiancemeter_hsphere"
-                        config_measure["id"] = "toa_lo_hsphere"
 
                     else:
                         raise ValueError(f"unsupported measure type '{config_measure['type']}'")
@@ -347,7 +361,11 @@ class OneDimSolverApp(ConfigObject):
                 self._kernel_dict.add(list(self._elements.values()))
 
     def run(self):
-        """Execute the computation and postprocess the results."""
+        """Execute the computation and postprocess the results.
+
+        Results will be stored in the `results` attribute as a dictionary mapping each
+        declared measure ID to a :class:`~xarray.Dataset` holding one variable per
+        physical quantity computed by the measure."""
 
         # Run simulation
         data = self._runner.run()
@@ -374,13 +392,12 @@ class OneDimSolverApp(ConfigObject):
 
             zenith_res = self._elements[key].zenith_res
 
-            if key == "toa_lo_hsphere":
+            if isinstance(self._elements[key], RadianceMeterHsphereMeasure):
                 azimuth_res = self._elements[key].azimuth_res
                 theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 phi_o = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
                 angular_domain = "hsphere"
-
-            elif key == "toa_lo_pplane":
+            elif isinstance(self._elements[key], RadianceMeterPPlaneMeasure):
                 theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 phi_o = np.array([0., 180.])
                 angular_domain = "pplane"
@@ -388,8 +405,8 @@ class OneDimSolverApp(ConfigObject):
             else:
                 raise ValueError(f"Unsupported measure type {key}")
 
-            results[key] = eo_dataarray(data, theta_i, phi_i, theta_o, phi_o,
-                                        wavelength, angular_domain=angular_domain)
+            results["lo"] = eo_dataarray(data, theta_i, phi_i, theta_o, phi_o, wavelength,
+                                         angular_domain=angular_domain)
             results[f"irradiance"] = (
                 ("sza", "saa", "wavelength"),
                 np.array(self._kernel_dict["illumination"]["irradiance"]["value"]).reshape(1, 1, 1),
@@ -402,12 +419,12 @@ class OneDimSolverApp(ConfigObject):
 
             # TODO: make metadata handling more robust
             # TODO: add support of CF convention-style metadata (discuss fields to include with Yvan)
-            results[key.replace("lo", "brdf")] = results[key] / results["irradiance"]
-            results[key.replace("lo", "brdf")].attrs = results[key].attrs
-            results[key.replace("lo", "brf")] = results[key.replace("lo", "brdf")] * np.pi
-            results[key.replace("lo", "brf")].attrs = results[key.replace("lo", "brdf")].attrs
+            results["brdf"] = results["lo"] / results["irradiance"]
+            results["brdf"].attrs = results["lo"].attrs
+            results["brf"] = results["brdf"] * np.pi
+            results["brf"].attrs = results["brdf"].attrs
 
-            results.attrs = results[key].attrs
+            results.attrs = results["lo"].attrs
             self.results[key] = results
 
     def save_results(self, fname_prefix):
