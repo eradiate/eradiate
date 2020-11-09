@@ -116,7 +116,7 @@ def get_testcase_metric(report, name):
             + " "
             + metric[id]["value"]
             + " "
-            + metric[id]["unit"]
+            + metric[id]["units"]
             + "\n\n"
         )
 

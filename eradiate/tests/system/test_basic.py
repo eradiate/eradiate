@@ -16,7 +16,6 @@ def test_radiometric_accuracy(variant_scalar_mono, illumination, spp, li):
     This simple test case compares simulated leaving radiance at a Lambertian
     surface with theoretical values.
 
-
     Rationale
     ---------
 
