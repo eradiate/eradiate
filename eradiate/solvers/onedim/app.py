@@ -419,7 +419,7 @@ class OneDimSolverApp(ConfigObject):
         """
         fname_prefix = Path(fname_prefix)
         for key, results in self.results.items():
-            fname_results = f"{fname_prefix}_{key}.nc"
+            fname_results = os.path.abspath(f"{fname_prefix}_{key}.nc")
             os.makedirs(os.path.dirname(fname_results), exist_ok=True)
             print(f"Saving results to {fname_results}")
             results.to_netcdf(path=fname_results)
@@ -446,7 +446,7 @@ class OneDimSolverApp(ConfigObject):
                     plane = view.plane(data)
                     plane.ert.plot(kind="linear", title=quantity, ax=ax)
 
-                fname_plots = f"{fname_prefix}_{quantity}.png"
+                fname_plots = os.path.abspath(f"{fname_prefix}_{quantity}.png")
                 os.makedirs(os.path.dirname(fname_plots), exist_ok=True)
                 plt.savefig(fname_plots, bbox_inches="tight")
                 plt.close()
