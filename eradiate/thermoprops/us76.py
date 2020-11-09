@@ -26,7 +26,7 @@ _Q = ureg.Quantity
 @ureg.wraps(ret=None, args="m", strict=False)
 def make_profile(levels=_Q(np.linspace(0., 1e5, 51), "m")):
     r"""Makes an atmosphere vertical profile based on the
-    U.S. Standard Atmosphere 1976 thermophysical model.
+    US Standard Atmosphere 1976 thermophysical model.
 
     .. note::
 

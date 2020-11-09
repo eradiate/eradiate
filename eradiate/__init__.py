@@ -144,7 +144,7 @@ def set_mode(mode_id, **kwargs):
 
     .. rubric:: Available modes and corresponding keyword arguments
 
-    ``mono`` (monochromatic mode)
+    ``mono`` (monochromatic mode, single precision)
         ``wavelength`` (float):
             Wavelength selected for monochromatic operation. Default: 550 nm.
 

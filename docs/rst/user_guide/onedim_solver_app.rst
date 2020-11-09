@@ -12,7 +12,7 @@ be obtained with a proper 1D code.
 As mentioned in the `Quick overview`_ tutorial, the
 one-dimensional solver application can be used either through its command-line
 interface ``ertonedim`` or through its Python API (see
-:class:`.OneDimSolverApp`). This guide goes elaborates in more detail on the
+:class:`.OneDimSolverApp`). This guide goes in more detail on the
 features, configuration format and usage of this application.
 
 .. _Quick overview: ../../notebooks/tutorials/quick_overview/quick_overview.ipynb
@@ -87,9 +87,7 @@ An atmosphere can be optionally added to the scene. Currently, two types of
 atmosphere are supported.
 
 Homogeneous atmosphere
-    The atmosphere has spatially invariant radiative properties. Currently,
-    this application only supports a homogeneous atmosphere with Rayleigh
-    scattering.
+    The atmosphere has spatially invariant radiative properties.
 
 Heterogeneous atmosphere
     The atmosphere has spatially varying radiative properties along the
@@ -103,7 +101,7 @@ In this application, surfaces are plane and their geometry cannot be adjusted.
 Only the surface's radiative properties can be selected.
 
 Diffuse surface
-    A diffuse or Lambertian surfaces reflects incoming radiation isotropically,
+    A diffuse or Lambertian surface reflects incoming radiation isotropically,
     regardless the incoming direction. This behaviour is modelled by the Lambert
     BRDF, parametrised by a reflectance parameter.
 
@@ -204,10 +202,10 @@ parameter which selects a programmatic component in Eradiate. In addition to the
 ``type`` parameter, a section should contain the parameters required to
 initialise the corresponding programmatic element. Each allowed option is
 referenced, as well as the corresponding class in the Eradiate codebase. Class
-documentation detail all their parameters and allowed values.
+documentation details all their parameters and allowed values.
 
 Sections and parameters can be omitted; in that case, they will be assigned
-default default values. Default section values are documented in the reference
+default values. Default section values are documented in the reference
 documentation of the :class:`.OneDimSolverApp` class and the other Eradiate
 classes.
 
@@ -255,13 +253,12 @@ parameters.
 The two supported atmosphere models are referenced with the following ``type``
 values:
 
-* ``homogeneous``: homogeneous atmosphere with no absorption and
-  Rayleigh scattering [:class:`.HomogeneousAtmosphere`];
+* ``homogeneous``: homogeneous atmosphere [:class:`.HomogeneousAtmosphere`];
 * ``heterogeneous``: heterogeneous atmosphere with selectable atmospheric
   profile (defaults to a profile derived from the US76 standard profile)
   [:class:`.HeterogeneousAtmosphere`].
 
-In this example, the a homogeneous atmosphere is selected, with a height of 120
+In this example, a homogeneous atmosphere is selected, with a height of 120
 kilometers. Its scattering coefficient is forced to
 :math:`10^{-4} \mathrm{m}^{-1}`.
 
@@ -365,5 +362,5 @@ Visualisation also depends on how the application is accessed:
   naming pattern is controlled by a positional argument ``fname_plots``, used as
   a file name prefix for all plot files.
 * When using the :class:`.OneDimSolverApp` class directly, the
-  :meth:`~.OneDimSolverApp.run()` does not produce plots. The plotting is left
+  :meth:`~.OneDimSolverApp.run()` method does not produce plots. The plotting is left
   to the user. Eradiate provides facilities to help with plotting.
