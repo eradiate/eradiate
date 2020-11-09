@@ -404,7 +404,7 @@ class OneDimSolverApp(ConfigObject):
             # TODO: add support of CF convention-style metadata (discuss fields to include with Yvan)
             results[key.replace("lo", "brdf")] = results[key] / results["irradiance"]
             results[key.replace("lo", "brdf")].attrs = results[key].attrs
-            results[key.replace("lo", "brf")] = results[key.replace("lo", "brdf")] / np.pi
+            results[key.replace("lo", "brf")] = results[key.replace("lo", "brdf")] * np.pi
             results[key.replace("lo", "brf")].attrs = results[key.replace("lo", "brdf")].attrs
 
             results.attrs = results[key].attrs

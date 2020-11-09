@@ -169,5 +169,5 @@ def test_rayleigh_solver_app_postprocessing():
     # BRF
     assert np.allclose(
         results["toa_brf_hsphere"],
-        results["toa_brdf_hsphere"] / np.pi
+        results["toa_brdf_hsphere"] * np.pi
     )
