@@ -1,0 +1,3 @@
+/* Prevent Bootstrap from hiding xarray's HTML output
+   https://github.com/executablebooks/sphinx-book-theme/issues/238 */
+.xr-wrap { display: block !important }
