@@ -61,7 +61,7 @@ class OneDimRunner:
         attribute.
 
         Returns → dict:
-            Maps the sensor's ids to their recorded leaving radiance.
+            Maps the sensor's IDs to their recorded leaving radiance.
         """
         self._check_variant()
 

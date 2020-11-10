@@ -368,7 +368,7 @@ class OneDimSolverApp(ConfigObject):
         physical quantity computed by the measure."""
 
         # Run simulation
-        data = self._runner.run()
+        runner_results = self._runner.run()
 
         # Post-processing
         # TODO: put that in a separate method
@@ -377,41 +377,49 @@ class OneDimSolverApp(ConfigObject):
 
         # -- Collect illumination parameters
         theta_i = ensure_array(illumination.zenith.to(ureg.deg).magnitude, dtype=float)
+        cos_theta_i = np.cos(illumination.zenith.to(ureg.rad).magnitude)
         phi_i = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
         wavelength = ensure_array(self.config["mode"]["wavelength"], dtype=float)
         # TODO: This will raise if illumination.type is not directional; handle that
 
         # -- Post-process TOA radiance arrays and compute BRDF/BRF
-        for key, data in data.items():
+        for sensor_id, data in runner_results.items():
             results = xr.Dataset()
 
-            data = self._elements[key].repack_results(data)
+            data = self._elements[sensor_id].repack_results(data)
 
             for dim in [0, 1, 4]:
                 data = np.expand_dims(data, dim)
 
-            zenith_res = self._elements[key].zenith_res
+            zenith_res = self._elements[sensor_id].zenith_res
 
-            if isinstance(self._elements[key], RadianceMeterHsphereMeasure):
-                azimuth_res = self._elements[key].azimuth_res
+            if isinstance(self._elements[sensor_id], RadianceMeterHsphereMeasure):
+                azimuth_res = self._elements[sensor_id].azimuth_res
                 theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 phi_o = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
                 angular_domain = "hsphere"
-            elif isinstance(self._elements[key], RadianceMeterPPlaneMeasure):
+
+            elif isinstance(self._elements[sensor_id], RadianceMeterPPlaneMeasure):
                 theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 phi_o = np.array([0., 180.])
                 angular_domain = "pplane"
 
             else:
-                raise ValueError(f"Unsupported measure type {key}")
+                raise ValueError(f"Unsupported measure type {sensor_id}")
 
-            results["lo"] = eo_dataarray(data, theta_i, phi_i, theta_o, phi_o, wavelength,
-                                         angular_domain=angular_domain)
-            results[f"irradiance"] = (
+            results["lo"] = eo_dataarray(
+                data, theta_i, phi_i, theta_o, phi_o, wavelength,
+                angular_domain=angular_domain
+            )
+
+            results["irradiance"] = (
                 ("sza", "saa", "wavelength"),
-                np.array(self._kernel_dict["illumination"]["irradiance"]["value"]).reshape(1, 1, 1),
+                np.array(
+                    self._kernel_dict["illumination"]["irradiance"]["value"] *
+                    cos_theta_i
+                ).reshape((1, 1, 1)),
                 {
-                    "long_name": "illumination spectral irradiance",
+                    "long_name": "spectral top-of-atmosphere horizontal irradiance",
                     "units": "W/km^2/nm",
                     "angles_convention": "observation"
                 }
@@ -425,7 +433,7 @@ class OneDimSolverApp(ConfigObject):
             results["brf"].attrs = results["brdf"].attrs
 
             results.attrs = results["lo"].attrs
-            self.results[key] = results
+            self.results[sensor_id] = results
 
     def save_results(self, fname_prefix):
         """Save results to netCDF files.

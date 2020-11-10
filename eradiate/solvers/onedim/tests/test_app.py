@@ -4,7 +4,7 @@ import eradiate
 from eradiate.solvers.onedim.app import OneDimSolverApp
 
 
-def test_rayleigh_solver_app():
+def test_onedim_solver_app_app():
     # Test default configuration handling
     app = OneDimSolverApp()
     assert app.config == {
@@ -98,7 +98,7 @@ def test_rayleigh_solver_app():
 
 
 @pytest.mark.slow
-def test_rayleigh_solver_app_run():
+def test_onedim_solver_app_run():
     """Test the creation of a DataArray from the solver result
 
     We create a default scene with a set of zenith and azimuth angles,
