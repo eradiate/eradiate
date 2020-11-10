@@ -18,7 +18,13 @@ from ....util.units import ureg
 class RadProfile(ABC):
     """An abstract base class for radiative property profiles. Classes deriving
     from this one must implement methods which return the albedo and collision
-    coefficients as Pint-wrapped Numpy arrays.
+    coefficients as Pint-wrapped 3D Numpy arrays.
+
+    .. warning::
+
+       Arrays returned by the :data:`albedo`, :data:`sigma_a`, :data:`sigma_s`
+       and :data:`sigma_t` properties **must** be 3D. Should the profile
+       be one-dimensional, the invariant dimensions can be set to 1.
 
     .. seealso::
 
@@ -82,7 +88,6 @@ class RadProfileFactory(BaseFactory):
        .. factorytable::
           :factory: RadProfileFactory
     """
-    # TODO: add to docs a table with factory key-class associations
     _constructed_type = RadProfile
     registry = {}
 
@@ -93,6 +98,11 @@ class ArrayRadProfile(RadProfile):
     """A flexible radiative property profile whose albedo and extinction
     coefficient are specified as numpy arrays. Both constructor arguments must
     have the same shape.
+
+    .. warning::
+
+       The ``albedo_values`` and ``sigma_t_values`` parameters must be 3D
+       arrays.
 
     .. rubric:: Constructor arguments / instance attributes
 
@@ -122,6 +132,11 @@ class ArrayRadProfile(RadProfile):
     @albedo_values.validator
     @sigma_t_values.validator
     def _validator_values(instance, attribute, value):
+        if value.ndim != 3:
+            raise ValueError(f"while setting {attribute.name}: "
+                             f"must have 3 dimensions "
+                             f"(got shape {value.shape})")
+
         if instance.albedo_values.shape != instance.sigma_t_values.shape:
             raise ValueError(f"while setting {attribute.name}: "
                              f"'albedo_values' and 'sigma_t_values' must have "
@@ -336,11 +351,11 @@ class US76ApproxRadProfile(RadProfile):
 
     @property
     def sigma_a(self):
-        return self._sigma_a_values
+        return self._sigma_a_values[np.newaxis, np.newaxis, ...]
 
     @property
     def sigma_s(self):
-        return self._sigma_s_values
+        return self._sigma_s_values[np.newaxis, np.newaxis, ...]
 
     @property
     def sigma_t(self):

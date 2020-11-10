@@ -72,3 +72,22 @@ def test_heterogeneous_write(mode_mono, tmpdir):
             albedo_fname=tmpdir / "doesnt_exist.vol",
             sigma_t_fname=tmpdir / "doesnt_exist.vol",
         )
+
+
+def test_heterogeneous_us76(mode_mono, tmpdir):
+    # Check if volume data file creation works as expected
+    a = HeterogeneousAtmosphere(
+        width=ureg.Quantity(1000., "km"),
+        profile={
+            "type": "us76_approx",
+            "dataset": "test",
+        },
+        cache_dir=tmpdir
+    )
+
+    a.kernel_dict()
+    # If file creation is successful, volume data files must exist
+    assert a.albedo_fname.is_file()
+    assert a.sigma_t_fname.is_file()
+    # Check if written files can be loaded
+    assert KernelDict.empty().add(a).load() is not None

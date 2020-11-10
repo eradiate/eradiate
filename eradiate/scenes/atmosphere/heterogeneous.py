@@ -32,6 +32,10 @@ def write_binary_grid3d(filename, values):
         raise TypeError(f"unsupported data type {type(values)} "
                         f"(expected numpy array or xarray DataArray)")
 
+    if values.ndim not in {3, 4}:
+        raise ValueError(f"'values' must have 3 or 4 dimensions "
+                         f"(got shape {values.shape})")
+
     # note: this is an exact copy of the function write_binary_grid3d from
     # https://github.com/mitsuba-renderer/mitsuba-data/blob/master/tests/scenes/participating_media/create_volume_data.py
 
@@ -186,7 +190,7 @@ class HeterogeneousAtmosphere(Atmosphere):
     def make_volume_data(self, fields=None):
         """Create volume data files for requested fields.
 
-        Parameter ``fields`` (str or list or None):
+        Parameter ``fields`` (str or list[str] or None):
             If str, field for which to create volume data file. If list,
             fields for which to create volume data files. If ``None``,
             all supported fields are processed (``{"albedo", "sigma_t"}``).
