@@ -69,7 +69,7 @@ def test_symmetry_zenith(variant_scalar_mono, surface, atmosphere):
                                   "type": "uniform",
                                   "value": 1.e6
                               }}
-    config["measure"] = [{"type": "toa_lo_pplane",
+    config["measure"] = [{"type": "toa_pplane_lo",
                           "zenith_res": 10,
                           "spp": 1000000}]
 
@@ -94,7 +94,7 @@ def test_symmetry_zenith(variant_scalar_mono, surface, atmosphere):
     app = OneDimSolverApp(config)
     app.run()
 
-    results = app.results["toa_lo_pplane"]["toa_lo_pplane"]
+    results = app.results["toa_pplane_lo"]["lo"]
     results_zero = np.squeeze(results.ert.sel(vaa=0).values)
     results_pi = np.squeeze(results.ert.sel(vaa=180).values)
     results_diff = []
