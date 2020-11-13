@@ -6,9 +6,6 @@ from scipy.constants import physical_constants
 
 from ....util.units import ureg
 
-_Q = ureg.Quantity
-
-
 # Physical constants
 #: Loschmidt constant [km^-3].
 _LOSCHMIDT = ureg.Quantity(
@@ -35,10 +32,10 @@ def kf(ratio=0.0279):
 
 
 @ureg.wraps(ret="km^-1", args=("nm", "km^-3", None, None), strict=False)
-def sigma_s_air(wavelength=550.,
-                number_density=_STANDARD_AIR_NUMBER_DENSITY.magnitude,
-                king_factor=1.049,
-                depolarisation_ratio=None):
+def compute_sigma_s_air(wavelength=550.,
+                        number_density=_STANDARD_AIR_NUMBER_DENSITY.magnitude,
+                        king_factor=1.049,
+                        depolarisation_ratio=None):
     """Compute the Rayleigh scattering coefficient of air.
 
     When default values are used, this provides the Rayleigh scattering
@@ -70,7 +67,7 @@ def sigma_s_air(wavelength=550.,
 
     refractive_index = air_refractive_index(
         wavelength=wavelength,
-        number_density=_Q(number_density, "km^-3")
+        number_density=ureg.Quantity(number_density, "km^-3")
     )
 
     return \
@@ -105,7 +102,7 @@ def air_refractive_index(wavelength=550.,
     """
 
     # wavenumber in inverse micrometer
-    sigma = 1 / _Q(wavelength, "nm").to("micrometer").magnitude
+    sigma = 1 / ureg.Quantity(wavelength, "nm").to("micrometer").magnitude
     sigma2 = np.square(sigma)
 
     # refractivity in parts per 1e8

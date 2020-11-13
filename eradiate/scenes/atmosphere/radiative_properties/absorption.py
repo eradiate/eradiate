@@ -51,50 +51,25 @@
     convention (http://cfconventions.org/).
 """
 
-import os
-import numpy as np
-
+import eradiate.data as data
 from ....util.units import ureg
-
-_Q = ureg.Quantity
-
-
-def get_mixture_name(species_set):
-    """Returns the name of a gas mixture corresponding to a set of individual
-    gas species.
-
-    Parameter ``species_names`` (set):
-        Set of absorbing gas species names.
-
-    Raises → ``ValueError``:
-        If the mixture is unknown.
-
-    Returns → str:
-        Mixture name.
-    """
-    us76 = {'N2', 'O2', 'Ar', 'CO2', 'Ne', 'He', 'Kr', 'Xe', 'CH4', 'H2', 'O',
-            'H'}
-    if species_set == us76:
-        return "us76"
-    else:
-        raise ValueError("Unknown gas mixture.")
 
 
 @ureg.wraps(ret="m^-1", args=("nm", None, None), strict=False)
-def sigma_a(wavelength=550., profile=None, path=None):
+def compute_sigma_a(wavelength=550., profile=None, dataset_id=None):
     """Computes the monochromatic absorption coefficient in the thermophysical
     conditions given by a thermophysical ``profile``.
 
     .. note::
-        This function requires that an absorption cross section data set
-        corresponding to the absorbing gas species or gas mixture is
-        present in the resources/data/spectra directory, or at a custom
-        location if ``path`` set.
+        This function requires that the absorption cross section datasets
+        corresponding to ``dataset_id`` are downloaded and placed at the
+        appropriate location. See :mod:`~eradiate.data` module for more
+        information about the registered dataset ids and the corresponding
+        paths.
 
     .. note::
         So far, this function only supports the U.S. Standard Atmosphere 1976
-        profile and as a results is able to compute the absorption coefficient
-        only for the gas mixture included in that profile.
+        profile.
 
     Parameter ``wavelength`` (float or array):
         Wavelength value [nm].
@@ -105,66 +80,55 @@ def sigma_a(wavelength=550., profile=None, path=None):
         Default value: U.S. Standard Atmosphere 1976 profile with 50 regular
         layers between 0 and 100 km.
 
-    Parameter ``path`` (str):
-        Path to the absorption cross section data set.
+    Parameter ``dataset_id`` (str):
+        Dataset identifier.
+
+        .. warning::
+
+            This parameter serves as debugging tool.
+            The dataset identifier is determined automatically, based upon the
+            atmospheric thermophysical profile. Use only if you know
+            what you are doing.
 
     Returns → float or array:
         Absorption coefficient [m^-1].
     """
+    wavenumber = (1 / ureg.Quantity(wavelength, "nm")).to("cm^-1")
 
     # make default profile
     if profile is None:
         from ..thermophysics.us76 import make_profile
         profile = make_profile()
 
-    # check that profile is supported
-    if profile.attrs["title"] != "U.S. Standard Atmosphere 1976":
+    n_tot = ureg.Quantity(profile.n_tot.values, profile.n_tot.units)
+    p = ureg.Quantity(profile.p.values, profile.p.units)
+
+    # open the absorption cross section dataset and interpolate
+    if profile.attrs["title"] == "U.S. Standard Atmosphere 1976":
+        if dataset_id is None:
+            dataset_id = "us76_u86_4-fullrange"
+        ds = data.open(category="absorption_spectrum", id=dataset_id)
+        xsw = ds.xs.interp(w=wavenumber.magnitude)
+
+        # interpolate dataset in pressure
+        xsp = xsw.interp(
+            p=p.magnitude,
+            kwargs=dict(fill_value=0.)  # this is required to handle the
+            # pressure values that are smaller than 0.101325 Pa (the pressure
+            # point with the smallest value in the absorption datasets) in the
+            # US76 profile. These small pressure values occur above the
+            # altitude of 93 km. Considering that the air number density at
+            # these altitudes is small than the air number density at the
+            # surface by a factor larger than 1e5, we assume that the
+            # corresponding absorption coefficient is negligible compared to
+            # 0.01 km^-1.
+        )
+        xs = ureg.Quantity(xsp.values, xsp.units)
+    else:
         raise NotImplementedError(
             "Only the U.S. Standard Atmosphere 1976 profile is supported so "
             "far.")
 
-    # load the absorption cross section data set
-    if path is None:
-        dir_path = "resources/data/spectra"
-        try:
-            ds = get(os.path.join(dir_path, "narrowband_usa_mls.nc"))
-        except ValueError:
-            raise ValueError(f"The data set could not be opened. Did you "
-                             f"download and place the narrowband_usa_mls.nc "
-                             f"data set in the {dir_path} repository?")
-    else:
-        ds = get(path)
-    da = ds["absorption_cross_section"]
-
-    # identify gas mixture in atmospheric thermophysical profile
-    mixture = get_mixture_name(set(profile.species.values))
-
-    # approximate us76 mixture to usa_mls mixture
-    # TODO: fix that rough approximation
-    if "usa_mls" in da.species.values:
-        mixture = "usa_mls"
-
-    # check that the gas mixture in the thermophysical profile matches
-    # the species dimension of the absorption cross section data array
-    if mixture not in da.species.values:
-        raise ValueError(f"The gas mixture in the absorption cross section "
-                         f"data set ({da.species.values[0]}) does not include "
-                         f"that in the atmosphere thermophysical profile ("
-                         f"{mixture})")
-
-    # Compute absorption coefficient
-    pressures = profile.p.values
-    wavenumber = _Q(1. / wavelength, "nm^-1").to("cm^-1").magnitude
-    cross_section = _Q(np.squeeze(
-        da.interp(
-            pressure=pressures,
-            kwargs=dict(fill_value=0.)
-        ).interp(
-            wavenumber=wavenumber,
-            kwargs=dict(fill_value=0.)
-        ).values
-    ), "cm^2")
-    number_density = _Q(profile.n_tot.values, profile.n_tot.units)
-    sigma = (number_density * cross_section).to("m^-1").magnitude
+    sigma = (n_tot * xs).to("m^-1").magnitude
 
     return sigma

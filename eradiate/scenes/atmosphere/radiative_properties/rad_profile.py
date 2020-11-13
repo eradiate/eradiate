@@ -1,16 +1,147 @@
-"""Radiative property profile definitions."""
+"""Radiative property profile definitions.
+
+.. admonition:: Atmospheric radiative properties data set specification (1D)
+
+   The data structure is a :class:`~xarray.Dataset` with specific data
+   variables, dimensions and data coordinates.
+
+   Data variables must be:
+
+   - ``sigma_a``: absorption coefficient [m^-1],
+   - ``sigma_s``: scattering coefficient [m^-1],
+   - ``sigma_t``: extinction coefficient [m^-1],
+   - ``albedo``: albedo [dimensionless]
+
+   The dimensions are ``z_layer`` and ``z_level``. All data variables depend
+   on ``z_layer``.
+
+   The optional data coordinates are:
+
+   - ``z_layer``: layer altitude [m]. The layer altitude is an altitude
+     representative of the given layer, e.g. the middle of the layer.
+   - ``z_level``: level altitude [m]. The sole purpose of this data coordinate
+     is to store the information on the layers sizes.
+
+   In addition, the data set must include the following metadata attributes:
+   ``convention``, ``title``, ``history``, ``source`` and ``reference``.
+   Please refer to the `NetCDF Climate and Forecast (CF) Metadata Conventions <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_
+   for a description of these attributes.
+   Additional attributes are allowed.
+"""
 
 from abc import ABC, abstractmethod
 
 import attr
+import datetime
 import numpy as np
+import xarray as xr
 
-from . import sigma_s_air
-from .... import data
+from eradiate import __version__
+from .absorption import compute_sigma_a
+from .rayleigh import compute_sigma_s_air
+from ..thermophysics import us76
 from ....util.attrs import attrib_quantity, unit_enabled, validator_is_positive
 from ....util.factory import BaseFactory
 from ....util.units import config_default_units as cdu
 from ....util.units import ureg
+
+
+def make_dataset(sigma_a=None, sigma_s=None, sigma_t=None, albedo=None, profile=None):
+    r"""Makes an atmospheric radiative properties data set.
+
+    Parameter ``sigma_a`` (:class:`pint.Quantity`):
+        Absorption coefficient values.
+
+    Parameter ``sigma_s`` (:class:`pint.Quantity`):
+        Scattering coefficient values.
+
+    Parameter ``sigma_t`` (:class:`pint.Quantity`):
+        Extinction coefficient values.
+
+    Parameter ``sigma_s`` (:class:`pint.Quantity`):
+        Albedo values.
+
+    Parameter ``profile`` (:class:`~xr.Dataset`):
+        Atmospheric vertical profile.
+
+    Returns → :class:`~xarray.Dataset`:
+        Data set.
+    """
+
+    if sigma_a is not None and sigma_s is not None:
+        sigma_a = sigma_a.to("m^-1").magnitude
+        sigma_s = sigma_s.to("m^-1").magnitude
+        sigma_t = sigma_a + sigma_s
+        albedo = sigma_s / sigma_t
+    elif sigma_t is not None and albedo is not None:
+        sigma_t = sigma_t.to("m^-1").magnitude
+        albedo = albedo.to(ureg.dimensionless).magnitude
+        sigma_s = albedo * sigma_t
+        sigma_a = sigma_t - sigma_s
+    else:
+        raise ValueError("You must provide either one of the two pairs of arguments 'sigma_a' and 'sigma_s' or "
+                         "'sigma_t' and 'albedo'.")
+
+    data_vars = {
+        "sigma_a": (
+            "z_layer",
+            sigma_a,
+            {
+                "units": "m^-1",
+                "standard_name": "absorption_coefficient"
+            }
+        ),
+        "sigma_s": (
+            "z_layer",
+            sigma_s,
+            {
+                "units": "m^-1",
+                "standard_name": "scattering_coefficient"
+            }
+        ),
+        "sigma_t": (
+            "z_layer",
+            sigma_t,
+            {
+                "units": "m^-1",
+                "standard_name": "extinction_coefficient"
+            }
+        ),
+        "albedo": (
+            "z_layer",
+            albedo,
+            {
+                "units": "",
+                "standard_name": "albedo"
+            }
+        )
+    }
+
+    if profile is not None:
+        z_layer = ureg.Quantity(
+            profile.z_layer.values, profile.z_layer.units).to("m").magnitude
+        z_level = ureg.Quantity(
+            profile.z_level.values, profile.z_level.units).to("m").magnitude
+        coords = {
+            "z_layer": ("z_layer", z_layer, {"units": "m"}),
+            "z_level": ("z_level", z_level, {"units": "m"}),
+        }
+    else:
+        coords = {}
+
+    # TODO: set function name in history field dynamically
+    attrs = {
+        "convention": "CF-1.8",
+        "title": "Atmospheric monochromatic radiative properties",
+        "history":
+            f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+            f"data set creation - "
+            f"{__name__}.make_dataset",
+        "source": f"eradiate, version {__version__}",
+        "references": "",
+    }
+
+    return xr.Dataset(data_vars, coords, attrs)
 
 
 @unit_enabled
@@ -74,6 +205,16 @@ class RadProfile(ABC):
 
         Returns → :class:`pint.Quantity`:
             Profile scattering coefficient.
+        """
+        pass
+
+    @abstractmethod
+    def to_dataset(self):
+        """Return a dataset that holds the radiative properties of the
+        corresponding atmospheric profile.
+
+        Returns → :class:`xarray.Dataset`:
+            Radiative properties dataset.
         """
         pass
 
@@ -157,6 +298,9 @@ class ArrayRadProfile(RadProfile):
     @property
     def sigma_s(self):
         return self.sigma_t * self.albedo
+
+    def to_dataset(self):
+        return make_dataset(sigma_t=self.sigma_t, albedo=self.albedo)
 
 
 @RadProfileFactory.register(name="us76_approx")
@@ -284,6 +428,12 @@ class US76ApproxRadProfile(RadProfile):
         repr=False,
     )
 
+    _thermo_profile = attr.ib(
+        default=None,
+        init=False,
+        repr=False,
+    )
+
     dataset = attr.ib(
         default="us76_u86_4-fullrange",
         validator=attr.validators.in_({"us76_u86_4-fullrange", "test"}),
@@ -298,7 +448,12 @@ class US76ApproxRadProfile(RadProfile):
         is modified.
         """
         from eradiate import mode
-        from ..thermophysics import us76
+        from eradiate.util.exceptions import ModeError
+
+        if mode.id != "mono":
+            raise ModeError(f"unsupported mode {mode.id}")
+        else:
+            wavelength = mode.wavelength
 
         # Compute total number density and pressure values
         altitude_mesh = np.linspace(
@@ -306,44 +461,23 @@ class US76ApproxRadProfile(RadProfile):
             stop=self.height,
             num=self.n_layers + 1
         )
-        profile = us76.make_profile(altitude_mesh)
-        n_tot = ureg.Quantity(profile.n_tot.values, profile.n_tot.units)
-        p = ureg.Quantity(profile.p.values, profile.p.units)
 
-        wavelength = mode.wavelength
+        # make US76 atmospheric profile
+        profile = us76.make_profile(altitude_mesh)
+        self._thermo_profile = profile
 
         # Compute scattering coefficient
-        self._sigma_s_values = sigma_s_air(
+        self._sigma_s_values = compute_sigma_s_air(
             wavelength=wavelength,
-            number_density=n_tot,
+            number_density=ureg.Quantity(profile.n_tot.values, profile.n_tot.units),
         )
 
         # Compute absorption coefficient
-        ds = data.open(category="absorption_spectrum", id=self.dataset)
-
-        # interpolate dataset in wavenumber
-        wavenumber = (1 / wavelength).to("cm^-1")
-        xsw = ds.xs.interp(w=wavenumber.magnitude)
-
-        # interpolate dataset in pressure
-        xsp = xsw.interp(
-            p=p.magnitude,
-            kwargs=dict(fill_value=0.)  # this is required to handle the
-            # pressure values that are smaller than 0.101325 Pa (the pressure
-            # point with the smallest value in the absorption datasets) in the
-            # US76 profile. These small pressure values occur above the
-            # altitude of 93 km. Considering that the air number density at
-            # these altitudes is small than the air number density at the
-            # surface by a factor larger than 1e5, we assume that the
-            # corresponding absorption coefficient is negligible compared to
-            # 0.01 km^-1.
+        self._sigma_a_values = compute_sigma_a(
+            wavelength=wavelength,
+            profile=profile,
+            dataset_id=self.dataset,
         )
-
-        # attach units
-        xs = ureg.Quantity(xsp.values, xsp.units)
-
-        # absorption coefficient
-        self._sigma_a_values = (n_tot * xs).to("km^-1")
 
     @property
     def albedo(self):
@@ -360,3 +494,10 @@ class US76ApproxRadProfile(RadProfile):
     @property
     def sigma_t(self):
         return self.sigma_a + self.sigma_s
+
+    def to_dataset(self):
+        return make_dataset(
+            profile=self._thermo_profile,
+            sigma_a=self.sigma_a.flatten(),
+            sigma_s=self.sigma_s.flatten(),
+        )

@@ -4,7 +4,7 @@ import attr
 
 import eradiate
 from .base import Atmosphere, _converter_or_auto, _validator_or_auto
-from .radiative_properties.rayleigh import sigma_s_air
+from .radiative_properties.rayleigh import compute_sigma_s_air
 from ..core import SceneElementFactory
 from ...util.attrs import attrib_quantity, converter_to_units, validator_units_compatible
 from ...util.units import config_default_units as cdu
@@ -56,7 +56,7 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
     def _sigma_s(self):
         """Return scattering coefficient based on configuration."""
         if self.sigma_s == "auto":
-            return sigma_s_air(wavelength=eradiate.mode.wavelength)
+            return compute_sigma_s_air(wavelength=eradiate.mode.wavelength)
         else:
             return self.sigma_s
 

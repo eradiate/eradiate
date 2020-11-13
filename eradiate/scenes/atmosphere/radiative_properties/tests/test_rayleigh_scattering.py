@@ -3,7 +3,7 @@ import numpy as np
 from eradiate.scenes.atmosphere.radiative_properties.rayleigh import (
     _LOSCHMIDT,
     air_refractive_index,
-    sigma_s_air
+    compute_sigma_s_air
 )
 from eradiate.util.units import ureg
 
@@ -20,7 +20,7 @@ def test_sigma_s_air():
 
     # Compare to reference value computed from scattering cross section in
     # Bates (1984) Planetary and Space Science, Volume 32, No. 6.
-    assert np.allclose(sigma_s_air(number_density=_LOSCHMIDT), expected, rtol=1e-2)
+    assert np.allclose(compute_sigma_s_air(number_density=_LOSCHMIDT), expected, rtol=1e-2)
 
 
 def test_sigma_s_air_wavelength_dependence():
@@ -28,7 +28,7 @@ def test_sigma_s_air_wavelength_dependence():
     of wavelength."""
 
     wavelength = np.linspace(240., 2400.)
-    sigma_s = sigma_s_air(wavelength)
+    sigma_s = compute_sigma_s_air(wavelength)
     prod = sigma_s.magnitude * np.power(wavelength, 4)
     assert np.allclose(prod, prod[0], rtol=0.2)
 
@@ -44,7 +44,7 @@ def test_sigma_s_air_optical_thickness():
     n = profile.n_tot.values
     z = profile.z_level.values
     dz = z[1:] - z[:-1]
-    sigma_s = sigma_s_air(
+    sigma_s = compute_sigma_s_air(
         number_density=_Q(n, "m^-3"),
         depolarisation_ratio=0.031
     )

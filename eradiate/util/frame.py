@@ -44,7 +44,7 @@ def angles_to_direction(theta, phi):
     return cos_angle_to_direction(np.cos(theta), phi)
 
 
-@ureg.wraps(ret=["rad", "rad"], args=None, strict=False)
+@ureg.wraps(ret="rad", args=None, strict=False)
 def direction_to_angles(wi):
     """Converts a cartesian 3-vector to a pair of theta and phi values
     in spherical coordinates
@@ -52,9 +52,9 @@ def direction_to_angles(wi):
     Parameter ``wi`` (array):
         3-vector designating a direction in cartesian coordinates [unitless].
 
-    Returns → list[float]:
-        Zenith and azimuth angles in radians, where zenith = 0 corresponds to
-        +z direction
+    Returns → :class:`pint.Quantity`:
+        2-vector containing zenith and azimuth angles, where zenith = 0
+        corresponds to +z direction [rad].
     """
     wi = wi / np.linalg.norm(wi)
     theta = np.arccos(wi[2])
