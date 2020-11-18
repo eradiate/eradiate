@@ -63,7 +63,7 @@ def test_symmetry_zenith(variant_scalar_mono, surface, atmosphere):
 
     config = {}
 
-    config["mode"] = {"type": "mono",
+    config["mode"] = {"type": "mono_double",
                       "wavelength": 550.}
 
     config["illumination"] = {"type": "directional",

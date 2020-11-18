@@ -28,11 +28,19 @@ def test_radiancemeter_hemispherical(mode_mono):
     assert KernelDict.empty().add(d).load() is not None
 
 
-def test_hemispherical_repack(mode_mono):
-    data = np.linspace(0, 1, 9 * 36)
+def test_hemispherical_postprocess(mode_mono):
+    """To test the postprocess method, we create a data dictionary, mapping
+    a two sensor_ids to results. One ID will map to the expected results,
+     the other will map to results of a different shape, prompting the test to
+     fail, should these results be read. This way we can assert that the correct
+    data are looked up and then reshaped, as expected."""
+    sensor_id = ["test_sensor"]
+    spp = [1]
+    data = {"test_sensor": np.linspace(0, 1, 9 * 36),
+            "test_wrong_sensor": np.linspace(0, 1, 18 * 72)}
 
     d = RadianceMeterHsphereMeasure(zenith_res=10, azimuth_res=10)
-    data_reshaped = d.repack_results(data)
+    data_reshaped = d.postprocess_results(sensor_id, spp, data)
 
     assert np.shape(data_reshaped) == (9, 36)
 
@@ -52,10 +60,19 @@ def test_pplane_class(mode_mono):
     assert KernelDict.empty().add(d).load() is not None
 
 
-def test_pplane_repack(mode_mono):
-    data = np.array([0, 1, 2, 3])
+def test_pplane_postprocess(mode_mono):
+    """To test the postprocess method, we create a data dictionary, mapping
+    a three sensor_ids to results. Two IDs will map to the expected results,
+     the other will map to results of a different shape, prompting the test to
+     fail, should these results be read. This way we can assert that the correct
+    data are looked up and then reshaped, as expected."""
+    sensor_id = ["test_sensor", "test_sensor2"]
+    spp = [1,1]
+    data = {"test_sensor": np.linspace(0, 3, 2 * 2),
+            "test_sensor2": np.linspace(0, 3, 2 * 2),
+            "test_sensor_wrong": np.linspace(0, 1, 18 * 72)}
     d = RadianceMeterPPlaneMeasure(zenith_res=45)
-    data_repacked = d.repack_results(data)
+    data_repacked = d.postprocess_results(sensor_id, spp, data)
     assert np.allclose(data_repacked, [[0, 1], [2, 3]], atol=0)
 
 
@@ -88,7 +105,8 @@ def test_pplane_orientation(mode_mono):
     sensor_hemi = scene_hemi.sensors()[0]
     scene_hemi.integrator().render(scene_hemi, sensor_hemi)
     film_hemi = sensor_hemi.film()
-    result_hemi = hemisphere.repack_results(np.array(film_hemi.bitmap(), dtype=float))
+    data_hemi = {"hemi": np.array(film_hemi.bitmap(), dtype=float)}
+    result_hemi = hemisphere.postprocess_results(["hemi"], [1], data_hemi)
 
     # prepare the scene with pplane sensor and render
     kernel_dict_pplane = KernelDict.empty()
@@ -97,7 +115,8 @@ def test_pplane_orientation(mode_mono):
     sensor_pplane = scene_pplane.sensors()[0]
     scene_pplane.integrator().render(scene_pplane, sensor_pplane)
     film_pplane = sensor_pplane.film()
-    result_pplane = pplane.repack_results(np.squeeze(np.array(film_pplane.bitmap(), dtype=float)))
+    data_pplane = {"pplane": np.squeeze(np.array(film_pplane.bitmap(), dtype=float))}
+    result_pplane = pplane.postprocess_results(["pplane"], [1], data_pplane)
 
     # select the data to compare
     reshaped_hemi = np.concatenate([np.squeeze(result_hemi[::-1, 180, ]), np.squeeze(result_hemi[:, 0])])

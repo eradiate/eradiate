@@ -3,6 +3,7 @@
 __version__ = "0.0.1"  #: Eradiate version number.
 
 import attr
+import enum
 
 from .util.attrs import attrib_quantity as _attrib_quantity
 from .util.attrs import converter_to_units as _converter_to_units
@@ -24,13 +25,33 @@ mode = None
 _registered_modes = {}
 
 
-def _register_mode(mode_id):
+class Precision(enum.Enum):
+    SINGLE = enum.auto()
+    DOUBLE = enum.auto()
+
+    @staticmethod
+    def from_str(label):
+        if label.lower() == "single":
+            return Precision.SINGLE
+        elif label.lower() == "double":
+            return Precision.DOUBLE
+        else:
+            raise NotImplementedError
+
+
+def _register_mode(mode_id, precision="single"):
     # This decorator is meant to be added to added to an _EradiateMode child
     # class. It adds it to _registered_modes.
+
+    if isinstance(precision, str):
+        precision = Precision.from_str(precision)
+    else:
+        raise ValueError(f"Can not set precision from {type(precision)} object.")
 
     def decorator(cls):
         _registered_modes[mode_id] = cls
         cls.id = mode_id
+        cls.precision = precision
         return cls
 
     return decorator
@@ -53,10 +74,25 @@ class _EradiateMode:
         return mode_cls(**kwargs)
 
 
-@_register_mode("mono")
+@_register_mode("mono", precision="single")
 @attr.s
 class _EradiateModeMono(_EradiateMode):
-    # Monochromatic mode
+    # Monochromatic mode, single precision
+    wavelength = _attrib_quantity(
+        default=_ureg.Quantity(550., _ureg.nm),
+        units_compatible=_cdu.generator("wavelength"),
+        on_setattr=None
+    )
+
+    def __attrs_post_init__(self):
+        import eradiate.kernel
+        eradiate.kernel.set_variant("scalar_mono")
+
+
+@_register_mode("mono_double", precision="double")
+@attr.s
+class _EradiateModeMonoDouble(_EradiateMode):
+    # Monochromatic mode, double precision
     wavelength = _attrib_quantity(
         default=_ureg.Quantity(550., _ureg.nm),
         units_compatible=_cdu.generator("wavelength"),

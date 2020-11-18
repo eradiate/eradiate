@@ -11,8 +11,10 @@ from abc import ABC
 from abc import abstractmethod
 
 import attr
+from copy import deepcopy
 import numpy as np
 
+import eradiate.kernel
 from .core import SceneElement, SceneElementFactory
 from ..util import always_iterable
 from ..util.attrs import (
@@ -37,25 +39,30 @@ class Measure(SceneElement, ABC):
     )
 
     @abstractmethod
-    def repack_results(self, results):
-        """Pack the results into a format that is understood by the runner and application.
+    def postprocess_results(self, sensor_id, sensor_spp, results):
+        """Process sensor data to extract measure results. These post-processing
+        operations can include (but are not limited to) array reshaping and
+        sensor data aggregation and data transformation operations.
 
-        .. admonition:: Example
+        Parameter ``sensor_id`` (list):
+            List of sensor_ids that belong to this measure
 
-            The 1D application expects results to be packed such that the zenith and
-            azimuth angles form one dimension on the data each. Scene elements
-            based on the :class:`~mitsuba.sensors.radiancemeterarray` sensor however
-            store the results in a one-dimensional array, ignoring the arrangement of
-            sensors.
+        Parameter ``sensor_spp`` (list):
+            List of spp values that belong to this measure's sensors.
 
-        Parameter ``results`` (array):
-            The data array as it is returned by the kernel plugin underlying the
-            scene element
+        Parameter ``results`` (dict):
+            Dictionary, mapping sensor IDs to their respective results.
 
-        Returns → array:
-            The data reshaped to dimensions as expected by the application in which
-            the scene element is used.
+        Returns → dict:
+            Recombined an reshaped results.
         """
+        pass
+
+    @abstractmethod
+    def sensor_info(self):
+        """This method returns a tuple of sensor IDs and the corresponding SPP
+        values. If applicable this method will ensure sensors do not exceed
+        SPP levels that lead to numerical precision loss in results."""
         pass
 
 
@@ -102,8 +109,30 @@ class DistantMeasure(Measure):
         validator=validator_is_positive
     )
 
-    def repack_results(self, results):
-        return results
+    def sensor_info(self):
+        """This method returns a tuple of sensor IDs and the corresponding SPP
+        values. If applicable this method will ensure sensors do not exceed
+        SPP levels that lead to numerical precision loss in results."""
+        return [(self.id, self.spp)]
+
+    def postprocess_results(self, sensor_id, sensor_spp, results):
+        """Process sensor data to extract measure results. These post-processing
+        operations can include (but are not limited to) array reshaping and
+        sensor data aggregation and data transformation operations.
+
+        Parameter ``sensor_id`` (list):
+            List of sensor_ids that belong to this measure
+
+        Parameter ``sensor_spp`` (list):
+            List of spp values that belong to this measure's sensors.
+
+        Parameter ``results`` (dict):
+            Dictionary, mapping sensor IDs to their respective results.
+
+        Returns → dict:
+            Recombined an reshaped results.
+        """
+        return results["sensor_id"]
 
     def kernel_dict(self, ref=True):
         return {
@@ -207,8 +236,30 @@ class PerspectiveCameraMeasure(Measure):
         validator=validator_is_positive
     )
 
-    def repack_results(self, results):
-        return results
+    def postprocess_results(self, sensor_id, sensor_spp, results):
+        """Process sensor data to extract measure results. These post-processing
+        operations can include (but are not limited to) array reshaping and
+        sensor data aggregation and data transformation operations.
+
+        Parameter ``sensor_id`` (list):
+            List of sensor_ids that belong to this measure
+
+        Parameter ``sensor_spp`` (list):
+            List of spp values that belong to this measure's sensors.
+
+        Parameter ``results`` (dict):
+            Dictionary, mapping sensor IDs to their respective results.
+
+        Returns → dict:
+            Recombined an reshaped results.
+        """
+        return results["sensor_id"]
+
+    def sensor_info(self):
+        """This method returns a tuple of sensor IDs and the corresponding SPP
+        values. If applicable this method will ensure sensors do not exceed
+        SPP levels that lead to numerical precision loss in results."""
+        return [(self.id, self.spp)]
 
     def kernel_dict(self, ref=True):
         from eradiate.kernel.core import ScalarTransform4f
@@ -368,11 +419,33 @@ class RadianceMeterHsphereMeasure(Measure):
             ureg.deg
         )
 
-    def repack_results(self, results):
+    def postprocess_results(self, sensor_id, sensor_spp, results):
         """This method reshapes the 1D results returned by the
         :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin into the shape
         implied by the azimuth and zenith angle resolutions, such that
-        the result complies with the format required to further process the results."""
+        the result complies with the format required to further process the results.
+
+        Additionally, if the measure's sensor was split up in order to limit
+        the SPP per sensor, this method will recombine the results from each
+        sensor.
+
+        Parameter ``sensor_id`` (list):
+            List of sensor_ids that belong to this measure
+
+        Parameter ``sensor_spp`` (list):
+            List of spp values that belong to this measure's sensors.
+
+        Parameter ``results`` (dict):
+            Dictionary, mapping sensor IDs to their respective results.
+
+        Returns → dict:
+            Recombined an reshaped results.
+        """
+        sensors = np.array([results[x] for x in sensor_id])
+        spp_sum = np.sum(sensor_spp)
+
+        # multiply each sensor's result by its relative SPP and sum all results
+        results = np.dot(sensors.transpose(), sensor_spp/spp_sum).transpose()
 
         return np.reshape(results, (len(self._zenith_angles), len(self._azimuth_angles)))
 
@@ -401,31 +474,54 @@ class RadianceMeterHsphereMeasure(Measure):
         return -np.array(directions) if self.hemisphere == "back" \
             else np.array(directions)
 
-    def kernel_dict(self, ref=True):
-        spp = self.spp
-        directions = self._directions()
-        origin = self.origin.to(kdu.get("length")).magnitude
+    def sensor_info(self):
+        """This method generates the sensor_id for the kernel_scene sensor
+        implementation. On top of that, it will perform the SPP-split if conditions
+        are met. In single precision computation the SPP should not become too
+        large, otherwise the results will degrade due to precision limitations.
+        In this case, this method will create multiple sensor_ids.
+        It returns a list of tuples, each holding a sensor_id and the corresponding
+        SPP value. In the case of a SPP-split, none of the SPP values will
+        exceed the threshold."""
+        if eradiate.mode.precision == eradiate.Precision.SINGLE and self.spp > 1e5:
+            sensor_info = [(f"{self.id}_{i}", int(1e5)) for i in range(int(self.spp / 1e5))]
+            if self.spp % 1e5 != 0:
+                sensor_info += [(f"{self.id}_{int(self.spp / 1e5)}", self.spp % 1e5)]
+            return sensor_info
+        else:
+            return [(self.id, self.spp)]
 
-        return {
-            self.id: {
-                "type": "radiancemeterarray",
-                "directions": ", ".join([str(x) for x in directions.flatten()]),
-                "origins": ", ".join([str(x) for x in origin] * len(directions)),
-                "id": self.id,
-                "sampler": {
-                    "type": "independent",
-                    "sample_count": spp
-                },
-                "film": {
-                    "type": "hdrfilm",
-                    "width": len(directions),
-                    "height": 1,
-                    "pixel_format": "luminance",
-                    "component_format": "float32",
-                    "rfilter": {"type": "box"}
-                }
+    def kernel_dict(self, **kwargs):
+        directions = self._directions()
+        origin = always_iterable(self.origin.to(kdu.get("length")).magnitude)
+        kernel_dict = {}
+
+        base_dict = {
+            "type": "radiancemeterarray",
+            "directions": ", ".join([str(x) for x in directions.flatten()]),
+            "origins": ", ".join([str(x) for x in origin] * len(directions)),
+            "id": self.id,
+            "sampler": {
+                "type": "independent",
+                "sample_count": 0
+            },
+            "film": {
+                "type": "hdrfilm",
+                "width": len(directions),
+                "height": 1,
+                "pixel_format": "luminance",
+                "component_format": "float32",
+                "rfilter": {"type": "box"}
             }
         }
+
+        for (sensor_id, spp) in self.sensor_info():
+            sensor_dict = deepcopy(base_dict)
+            sensor_dict["id"] = sensor_id
+            sensor_dict["sampler"]["sample_count"] = spp
+            kernel_dict[sensor_id] = sensor_dict
+
+        return kernel_dict
 
 
 @attr.s
@@ -541,11 +637,35 @@ class RadianceMeterPPlaneMeasure(Measure):
             ureg.deg
         )
 
-    def repack_results(self, results):
+    def postprocess_results(self, sensor_id, sensor_spp, results):
         """This method reshapes the 1D results returned by the
         :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin into the shape
         implied by the azimuth and zenith angle resolutions, such that
-        the result complies with the format required to further process the results."""
+        the result complies with the format required to further process the results.
+
+        Additionally, if the measure's sensor was split up in order to limit
+        the SPP per sensor, this method will recombine the results from each
+        sensor.
+
+        Parameter ``sensor_id`` (list):
+            List of sensor_ids that belong to this measure
+
+        Parameter ``sensor_spp`` (list):
+            List of spp values that belong to this measure's sensors.
+
+        Parameter ``results`` (dict):
+            Dictionary, mapping sensor IDs to their respective results.
+
+        Returns → dict:
+            Recombined an reshaped results.
+        """
+
+        sensors = np.array([results[x] for x in sensor_id])
+        spp_sum = np.sum(sensor_spp)
+
+        # multiply each sensor's result by its relative SPP and sum all results
+        results = np.dot(sensors.transpose(), sensor_spp/spp_sum).transpose()
+        print(results)
 
         return np.reshape(results, (len(self._zenith_angles), 2))
 
@@ -577,28 +697,51 @@ class RadianceMeterPPlaneMeasure(Measure):
         return -np.array(directions) if self.hemisphere == "back" \
             else np.array(directions)
 
+    def sensor_info(self):
+        """This method generates the sensor_id for the kernel_scene sensor
+        implementation. On top of that, it will perform the SPP-split if conditions
+        are met. In single precision computation the SPP should not become too
+        large, otherwise the results will degrade due to precision limitations.
+        In this case, this method will create multiple sensor_ids.
+        It returns a list of tuples, each holding a sensor_id and the corresponding
+        SPP value. In the case of a SPP-split, none of the SPP values will
+        exceed the threshold."""
+        if eradiate.mode.precision == eradiate.Precision.SINGLE and self.spp > 1e5:
+            sensor_info = [(f"{self.id}_{i}", int(1e5)) for i in range(int(self.spp / 1e5))]
+            if self.spp % 1e5 != 0:
+                sensor_info += [(f"{self.id}_{int(self.spp / 1e5)}", self.spp % 1e5)]
+            return sensor_info
+        else:
+            return [(self.id, self.spp)]
+
     def kernel_dict(self, **kwargs):
-        spp = self.spp
         directions = self._directions()
         origin = always_iterable(self.origin.to(kdu.get("length")).magnitude)
+        kernel_dict = {}
 
-        return {
-            self.id: {
-                "type": "radiancemeterarray",
-                "directions": ", ".join([str(x) for x in directions.flatten()]),
-                "origins": ", ".join([str(x) for x in origin] * len(directions)),
-                "id": self.id,
-                "sampler": {
-                    "type": "independent",
-                    "sample_count": spp
-                },
-                "film": {
-                    "type": "hdrfilm",
-                    "width": len(directions),
-                    "height": 1,
-                    "pixel_format": "luminance",
-                    "component_format": "float32",
-                    "rfilter": {"type": "box"}
-                }
+        base_dict = {
+            "type": "radiancemeterarray",
+            "directions": ", ".join([str(x) for x in directions.flatten()]),
+            "origins": ", ".join([str(x) for x in origin] * len(directions)),
+            "id": self.id,
+            "sampler": {
+                "type": "independent",
+                "sample_count": 0
+            },
+            "film": {
+                "type": "hdrfilm",
+                "width": len(directions),
+                "height": 1,
+                "pixel_format": "luminance",
+                "component_format": "float32",
+                "rfilter": {"type": "box"}
             }
         }
+
+        for (sensor_id, spp) in self.sensor_info():
+            sensor_dict = deepcopy(base_dict)
+            sensor_dict["id"] = sensor_id
+            sensor_dict["sampler"]["sample_count"] = spp
+            kernel_dict[sensor_id] = sensor_dict
+
+        return kernel_dict

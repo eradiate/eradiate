@@ -4,6 +4,8 @@ import os
 import warnings
 from copy import deepcopy
 from pathlib import Path
+from tinydb import TinyDB, Query
+from tinydb.storages import MemoryStorage
 
 import attr
 import matplotlib.pyplot as plt
@@ -191,7 +193,7 @@ class OneDimSolverApp(ConfigObject):
                 "schema": {
                     "type": {
                         "type": "string",
-                        "allowed": ["mono"],
+                        "allowed": ["mono", "mono_double"],
                         "default": "mono"
                     },
                     "wavelength": {"type": "number", "min": 0.0, "default": 550.0},
@@ -255,6 +257,8 @@ class OneDimSolverApp(ConfigObject):
     _kernel_dict = attr.ib(default=None)
     _elements = attr.ib(default=None)
     _runner = attr.ib(default=None)
+    _measure_registry = attr.ib(init=False,
+                                factory=lambda: TinyDB(storage=MemoryStorage))
     results = attr.ib(init=False, factory=dict)
 
     def __attrs_post_init__(self):
@@ -348,14 +352,17 @@ class OneDimSolverApp(ConfigObject):
                     config_measure["hemisphere"] = "back"
                     # TODO: warn when overriding parameters set by user
 
-                    if config_measure["id"] in self._elements:
-                        raise AttributeError(
-                            f"found multiple measures with identifier {config_measure['id']}; "
-                            f"measure identifiers must be unique"
-                        )
-
                     self._elements[config_measure["id"]] = SceneElementFactory.create(
                         config_measure)
+                    sensor_info = self._elements[config_measure["id"]].sensor_info()
+                    for sensor_id, sensor_spp in sensor_info:
+                        self._measure_registry.insert(
+                            {
+                                "measure_id": config_measure["id"],
+                                "sensor_id": sensor_id,
+                                "sensor_spp": sensor_spp
+                            }
+                        )
 
                 # Expand elements to kernel scene dictionary
                 self._kernel_dict.add(list(self._elements.values()))
@@ -382,30 +389,33 @@ class OneDimSolverApp(ConfigObject):
         wavelength = ensure_array(self.config["mode"]["wavelength"], dtype=float)
         # TODO: This will raise if illumination.type is not directional; handle that
 
-        # -- Post-process TOA radiance arrays and compute BRDF/BRF
-        for sensor_id, data in runner_results.items():
+        sensor_query = Query()
+        measure_ids = set(measure["measure_id"] for measure in self._measure_registry)
+        for measure_id in measure_ids:
+            related_entries = self._measure_registry.search(sensor_query.measure_id == measure_id)
+            sensor_ids = [db_entry["sensor_id"] for db_entry in related_entries]
+            sensor_spp = [db_entry["sensor_spp"] for db_entry in related_entries]
+            data = self._elements[measure_id].postprocess_results(sensor_ids,
+                                                                  sensor_spp,
+                                                                  runner_results)
             results = xr.Dataset()
-
-            data = self._elements[sensor_id].repack_results(data)
-
             for dim in [0, 1, 4]:
                 data = np.expand_dims(data, dim)
 
-            zenith_res = self._elements[sensor_id].zenith_res
+            zenith_res = self._elements[measure_id].zenith_res
 
-            if isinstance(self._elements[sensor_id], RadianceMeterHsphereMeasure):
-                azimuth_res = self._elements[sensor_id].azimuth_res
+            if isinstance(self._elements[measure_id], RadianceMeterHsphereMeasure):
+                azimuth_res = self._elements[measure_id].azimuth_res
                 vza = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 vaa = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
                 coord_specs_id = "angular_observation"
 
-            elif isinstance(self._elements[sensor_id], RadianceMeterPPlaneMeasure):
+            elif isinstance(self._elements[measure_id], RadianceMeterPPlaneMeasure):
                 vza = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 vaa = np.array([0., 180.])
                 coord_specs_id = "angular_observation_pplane"
-
             else:
-                raise ValueError(f"Unsupported measure type {sensor_id}")
+                raise ValueError(f"Unsupported measure type {type(self._elements[measure_id])}")
 
             results["lo"] = xr.DataArray(
                 data,
@@ -460,7 +470,7 @@ class OneDimSolverApp(ConfigObject):
             )
             results.ert.normalize_metadata(dataset_spec)
 
-            self.results[sensor_id] = results
+            self.results[measure_id] = results
 
     def save_results(self, fname_prefix):
         """Save results to netCDF files.

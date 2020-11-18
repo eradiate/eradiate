@@ -1,3 +1,4 @@
+from copy import deepcopy
 import pytest
 
 import eradiate
@@ -136,6 +137,36 @@ def test_onedim_solver_app_run():
     assert len(results["lo"].coords["vza"]) == 90 / 45
     # We just check that we record something as expected
     assert np.all(results["lo"].data > 0)
+
+
+@pytest.mark.slow
+def test_onedim_solver_app_spp_splitting():
+    """Test the spp splitting mechanism by running the same scene, once with
+    single and double precision each. The scene config contains an SPP value
+    high enough for a sensor split up to occur in the single precision mode."""
+    import numpy as np
+
+    config = {
+        "measure": [{
+            "type": "toa_hsphere",
+            "zenith_res": 45.,
+            "azimuth_res": 180.,
+            "spp": 1000000,
+            "hemisphere": "back"
+        }]
+    }
+
+    eradiate.set_mode("mono_double")
+    app = OneDimSolverApp(deepcopy(config))
+    app.run()
+    results_double = app.results["toa_hsphere"]
+
+    eradiate.set_mode("mono")
+    app = OneDimSolverApp(deepcopy(config))
+    app.run()
+    results_single = app.results["toa_hsphere"]
+
+    assert np.allclose(results_single["lo"], results_double["lo"], rtol=1e-5)
 
 
 def test_rayleigh_solver_app_postprocessing():
