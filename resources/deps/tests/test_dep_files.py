@@ -1,6 +1,6 @@
 import pytest
 import os
-import yaml
+import ruamel.yaml as yaml
 
 ROOTDIR = os.getenv("ERADIATE_DIR")
 DEPDIR = os.path.join(ROOTDIR, "resources", "deps")

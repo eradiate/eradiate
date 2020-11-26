@@ -1,5 +1,5 @@
 import click
-import yaml
+import ruamel.yaml as yaml
 
 from eradiate.solvers.onedim.app import OneDimSolverApp
 

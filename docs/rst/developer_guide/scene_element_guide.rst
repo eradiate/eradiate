@@ -49,7 +49,7 @@ new scene element subclass.
   .. code-block:: python
 
      import attr
-     import yaml
+     import ruamel.yaml as yaml
      from eradiate.scenes.core import SceneElement
      from eradiate.util.units import ureg
      from eradiate.util.attrs import attrib_quantity
