@@ -2,15 +2,11 @@
 name: Other question ❓
 about: Ask away
 title: ''
-labels: 
+labels: ['question ❓']
 assignees: ''
 ---
 
 # Other question
-
-*Please add the following label to your issue's title and delete this section:*
-
-[❓ other question]
 
 ## Summary
 

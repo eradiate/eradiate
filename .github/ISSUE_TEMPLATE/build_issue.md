@@ -1,16 +1,12 @@
 ---
-name: Build issue 🏗️
-about: Get help if you can't build Eradiate
+name: Setup issue 🏗️
+about: Get help if you can't build or install Eradiate
 title: ''
-labels: 
+labels: ['infrastructure 🏗️']
 assignees: ''
 ---
 
 # Build issue
-
-*Please add the following label to your issue's title and delete this section:*
-
-[🏗️ build issue]
 
 ## Summary
 

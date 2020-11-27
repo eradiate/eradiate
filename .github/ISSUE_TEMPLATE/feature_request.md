@@ -2,15 +2,11 @@
 name: Feature request 🦾
 about: Tell us about features that are missing
 title: ''
-labels: 
+labels: ['enhancement 🦾']
 assignees: ''
 ---
 
 # Feature request
-
-*Please add the following label to your issue's title, and delete this section:*
-
-[🦾 feature request]
 
 ## Summary
 
