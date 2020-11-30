@@ -9,7 +9,6 @@ import numpy as np
 
 def app_config(surface="lambertian", atmosphere=None, illumination="directional", spp=1000):
     """Return a valid config file for the OneDimSolverApp.
-    To set constant illumination, set the illumination_direction to [0, 0, 0].
     """
     config = {}
 
@@ -40,14 +39,14 @@ def app_config(surface="lambertian", atmosphere=None, illumination="directional"
         }
 
     # create atmosphere config section
-    if atmosphere is None:
-        pass
+    if atmosphere is "None":
+        config["atmosphere"] = None
     elif atmosphere == "rayleigh":
         config["atmosphere"] = {
-        "type": "rayleigh_homogeneous",
-        "height": 120.,
-        "height_units": "km",
-        "sigma_s": 1.e-4
+            "type": "rayleigh_homogeneous",
+            "height": 120.,
+            "height_units": "km",
+            "sigma_s": 1.e-4
     }
 
     # illumination config section
@@ -73,36 +72,40 @@ def app_config(surface="lambertian", atmosphere=None, illumination="directional"
 
     # measure section
     config["measure"] = [{
-        "type": "toa_hsphere",
+        "type": "toa_pplane",
         "spp": spp,
         "zenith_res": 5.,
-        "azimuth_res": 5.
+        # "azimuth_res": 5.
     }]
     return config
 
 
-@pytest.mark.parametrize("surface", ["lambertian", "rpv"])
-@pytest.mark.parametrize("atmosphere", [None, "rayleigh"])
-@pytest.mark.parametrize("illumination", ["constant", "directional"])
-@pytest.mark.slow
+# @pytest.mark.parametrize("surface", ["lambertian", "rpv"])
+# @pytest.mark.parametrize("atmosphere", [None, "rayleigh"])
+# @pytest.mark.parametrize("illumination", ["constant", "directional"])
+# @pytest.mark.slow
 def test_render_onedim(surface, atmosphere, illumination):
+    from eradiate.kernel.core.xml import load_dict
 
-    bmp = []
+    res = []
     for spp in [10**i for i in range(5)]:
         config = app_config(surface, atmosphere, illumination, spp)
 
         app = OneDimSolverApp(config)
 
         integrator_dict = {
+            "type": "moment",
             "integrator": {
-                "type": "moment",
-                "integrator": {
-                    "type": "path"
-                }
+                "type": "path"
             }
         }
         app._kernel_dict["integrator"] = integrator_dict
-        app.run()
+        scene = load_dict(app._kernel_dict)
+        sensor = scene.sensors()[0]
+        scene.integrator().render(scene, sensor)
+        bmp = sensor.film().bitmap(raw=False)
 
-        bmp.append(app.results["toa_hsphere"]["lo"])
+        variance = aov_to_variance(bmp)
+
+        res.append(variance)
     return bmp
