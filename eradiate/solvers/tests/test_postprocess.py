@@ -19,5 +19,5 @@ def test_apply_srf():
     weighted_sum = weighted.sum(dim="w")
 
     assert "another" in output_da.dims
-    assert "w" not in output_da
+    assert "w" not in output_da.dims
     assert np.allclose(output_da, weighted_sum)
