@@ -113,6 +113,7 @@ class DefaultUnits:
                    "albedo": lambda: ureg.dimensionless,
                    "angle": lambda: ureg.deg,
                    "reflectance": lambda: ureg.dimensionless,
+                   "transmittance": lambda: ureg.dimensionless,
                    "wavelength": lambda: ureg.nm,
                    # The following quantities will update automatically based on their parent units
                    "collision_coefficient": lambda: self.get("length") ** -1,
@@ -137,6 +138,7 @@ class DefaultUnits:
                 "albedo": lambda: ureg.dimensionless,
                 "angle": lambda: ureg.deg,
                 "reflectance": lambda: ureg.dimensionless,
+                "transmittance": lambda: ureg.dimensionless,
                 "wavelength": lambda: ureg.nm,
                 # The following quantities will update automatically based on their parent units
                 "collision_coefficient": lambda: self.get("length") ** -1,

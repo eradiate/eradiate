@@ -53,6 +53,7 @@ class Spectrum(SceneElement, ABC):
             * ``"radiance"``
             * ``"irradiance"``
             * ``"reflectance"``
+            * ``"transmittance"``
 
         Returns → callable:
             Generated converter.
@@ -167,6 +168,17 @@ class ReflectanceMixin:
         return ensure_units(val, cdu.generator("reflectance"))
 
 
+@attr.s
+class TransmittanceMixin:
+    """Transmittance quantity mixin."""
+    _quantity = "transmittance"
+    _units_compatible = ureg.dimensionless
+
+    @staticmethod
+    def _value_converter(val):
+        return ensure_units(val, cdu.generator("transmittance"))
+
+
 def create_specialized_spectrum(mixin, cls, register_as=None, return_value=False,
                                 docstring=""):
     """This function generates a new spectrum class based on a generic spectrum
@@ -219,7 +231,8 @@ def create_specialized_spectrum(mixin, cls, register_as=None, return_value=False
 uniform_spectra_definitions = {
     ("radiance", RadianceMixin),
     ("irradiance", IrradianceMixin),
-    ("reflectance", ReflectanceMixin)
+    ("reflectance", ReflectanceMixin),
+    ("transmittance", TransmittanceMixin)
 }
 
 for quantity, mixin in uniform_spectra_definitions:
