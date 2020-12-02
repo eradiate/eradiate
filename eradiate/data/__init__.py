@@ -29,7 +29,9 @@ the second kind of call will try and resolve directly a path using the
       * - :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
         - Solar irradiance spectrum
       * - :class:`absorption_cross_section_spectrum <eradiate.data.absorption_spectra>`
-        - Gas absorption coefficient spectrum
+        - Absorption cross section spectrum
+      * - :class:`spectral_response_function <eradiate.data.spectral_response_function>`
+        - Spectral response function
 
 """
 
@@ -39,13 +41,15 @@ import xarray as xr
 
 from .absorption_spectra import _AbsorptionGetter
 from .solar_irradiance_spectra import _SolarIrradianceGetter
+from .spectral_response_function import  _SpectralResponseFunctionGetter
 from ..util.presolver import PathResolver
 
 _presolver = PathResolver()
 
 _getters = {
     "absorption_spectrum": _AbsorptionGetter,
-    "solar_irradiance_spectrum": _SolarIrradianceGetter
+    "solar_irradiance_spectrum": _SolarIrradianceGetter,
+    "spectral_response_function": _SpectralResponseFunctionGetter,
 }
 
 

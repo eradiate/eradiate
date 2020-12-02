@@ -25,3 +25,4 @@ Data handling [eradiate.data]
 
    solar_irradiance_spectra
    absorption_spectra
+   spectral_response_function
