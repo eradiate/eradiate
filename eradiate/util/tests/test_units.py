@@ -44,6 +44,7 @@ def test_default_units():
         "mass": ureg.kg,
         "radiance": ureg.Unit("W/m^2/nm/sr"),
         "reflectance": ureg.dimensionless,
+        "transmittance": ureg.dimensionless,
         "time": ureg.s,
         "wavelength": ureg.nm,
     }
