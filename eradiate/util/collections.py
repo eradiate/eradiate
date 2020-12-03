@@ -6,8 +6,6 @@ import collections
 from dpath import util as dpu
 from dpath.exceptions import PathNotFound
 
-from .units import ureg
-
 
 def onedict_value(d):
     """Get the value of a single-entry dictionary."""
@@ -81,9 +79,9 @@ def update(d, u):
     return d
 
 
-class configdict(dict):
-    """A nested dict structure suitable to hold configuration contents. Keys
-    are expected to be strings (untested with different key types).
+class ndict(dict):
+    """A nested dict structure. Keys are expected to be strings (untested with
+    different key types).
     """
 
     # Requires dpath [https://github.com/akesterson/dpath-python]
@@ -139,28 +137,3 @@ class configdict(dict):
             dpu.new(self, key, value, separator=self.separator)
         except PathNotFound:
             raise KeyError(key)
-
-    def get_quantity(self, key):
-        """Get a quantity from the dictionary. The ``key`` item is first looked
-        up as with a regular dictionary. If it is found, this method looks
-        for the corresponding ``_unit``-suffixed entry. If a corresponding unit
-        field is found, the retrieved value is turned into a
-        :class:`pint.Quantity` object using the unit found bby the method.
-
-        Parameter ``key``
-            Key to lookup from the dictionary.
-
-        Returns
-            The ``key`` item. In addition, if a unit
-            field is found, the ``key`` item is returned as a
-            :class:`pint.Quantity`.
-
-        Raises → ``KeyError``
-            The requested key could not be found.
-        """
-        magnitude = self[key]
-        units = self.get(f"{key}_units", None)
-        if units is None:
-            return magnitude
-        else:
-            return ureg.Quantity(magnitude, units)

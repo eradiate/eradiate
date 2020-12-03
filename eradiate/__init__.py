@@ -7,9 +7,10 @@ import attr
 from .util.attrs import attrib_quantity as _attrib_quantity
 from .util.attrs import converter_to_units as _converter_to_units
 from .util.attrs import unit_enabled as _unit_enabled
-from .util.collections import configdict as _configdict
 from .util.units import config_default_units as _cdu
 from .util.units import ureg as _ureg
+
+# -- Operational mode definition -----------------------------------------------
 
 mode = None
 """Eradiate's operational mode configuration.
@@ -93,3 +94,8 @@ def set_mode(mode_id, **kwargs):
     """
     global mode
     mode = _EradiateMode.new(mode_id, **kwargs)
+
+
+# -- Required imports ----------------------------------------------------------
+
+from .util.xarray import EradiateDataArrayAccessor, EradiateDatasetAccessor

@@ -1,8 +1,7 @@
 import pytest
 
-from eradiate.util.units import ureg
-from eradiate.scenes.atmosphere.thermophysics import check_vertical_profile
 from eradiate.scenes.atmosphere.thermophysics.us76 import *
+from eradiate.scenes.atmosphere.thermophysics.util import profile_dataset_spec
 
 _Q = ureg.Quantity
 
@@ -10,7 +9,7 @@ _Q = ureg.Quantity
 def test_make_profile():
     # default constructor
     profile = make_profile()
-    check_vertical_profile(profile)
+    profile.ert.validate_metadata(profile_dataset_spec)
     assert profile["z_level"].values[0] == 0.
     assert profile["z_level"].values[-1] == 100000.
     assert profile.dims["z_layer"] == 50
@@ -18,7 +17,7 @@ def test_make_profile():
 
     # custom levels altitudes
     profile = make_profile(levels=_Q(np.linspace(2., 15., 51), "km"))
-    check_vertical_profile(profile)
+    profile.ert.validate_metadata(profile_dataset_spec)
     assert profile.dims["z_layer"] == 50
     assert profile["z_level"].values[0] == 2000.
     assert profile["z_level"].values[-1] == 15000.
@@ -26,14 +25,14 @@ def test_make_profile():
 
     # custom number of layers
     profile = make_profile(levels=_Q(np.linspace(0., 150., 37), "kilometers"))
-    check_vertical_profile(profile)
+    profile.ert.validate_metadata(profile_dataset_spec)
     assert profile.dims["z_layer"] == 36
     assert profile["z_level"].values[0] == 0.
     assert profile["z_level"].values[-1] == 150000.
     assert profile.dims["species"] == 12
 
     profile = make_profile(levels=_Q(np.linspace(0., 80., 2), "kilometers"))
-    check_vertical_profile(profile)
+    profile.ert.validate_metadata(profile_dataset_spec)
     assert profile.dims["z_layer"] == 1
     assert profile["z_level"].values[0] == 0.
     assert profile["z_level"].values[-1] == 80000.
@@ -193,14 +192,17 @@ def test_create_below_86_km_arbitrary_altitudes():
 
 
 def test_init_data_set():
-
     def check_data_set(ds):
         for var in VARIABLES:
             assert var in ds
             assert np.isnan(ds[var].values).all()
 
         assert ds["n"].values.ndim == 2
-        assert all(ds["species"].values == ['N2', 'O2', 'Ar', 'CO2', 'Ne', 'He', 'Kr', 'Xe', 'CH4', 'H2', 'O', 'H'])
+        assert all(
+            ds["species"].values == [
+                'N2', 'O2', 'Ar', 'CO2', 'Ne', 'He', 'Kr', 'Xe', 'CH4', 'H2',
+                'O', 'H'
+            ])
 
     z1 = _Q(np.linspace(0., 50000.), "meter")
     ds1 = init_data_set(z1)

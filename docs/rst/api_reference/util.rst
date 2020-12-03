@@ -18,12 +18,11 @@ Utility [eradiate.util]
    attrs
    collections
    config_object
-   decorators
    exceptions
    factory
    frame
    metaclasses
+   plot
    presolver
    units
-   view
    xarray

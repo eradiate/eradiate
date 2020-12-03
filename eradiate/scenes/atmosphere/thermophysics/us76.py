@@ -12,6 +12,7 @@ from scipy.interpolate import interp1d
 
 from eradiate import __version__
 from eradiate.util.units import ureg
+from .util import profile_dataset_spec
 
 _Q = ureg.Quantity
 
@@ -65,13 +66,13 @@ def make_profile(levels=_Q(np.linspace(0., 1e5, 51), "m")):
     ds.coords["z_layer"] = (
         "z_layer",
         z_layer,
-        {"units": "m", "standard_name": "layer_altitude"}
     )
     ds.coords["z_level"] = (
         "z_level",
         levels,
-        {"units": "m", "standard_name": "level_altitude"}
     )
+
+    ds.ert.normalize_metadata(profile_dataset_spec)
 
     return ds
 
@@ -601,7 +602,7 @@ def init_data_set(z):
 
     coords = {
         "z": ("z", z, {"units": UNITS["z"]}),
-        "species": ("species", SPECIES, {"units": "", "standard_name": "species"})
+        "species": ("species", SPECIES)
     }
 
     # TODO: set function name in history field dynamically
@@ -695,7 +696,7 @@ def compute_number_densities_high_altitude(altitudes):
     # molecular nitrogen
     y = m * g / (R * t)  # [m^-1]
     n_grid["N2"] = N2_7 * (T7 / t) * np.exp(
-        -cumtrapz(y, 1e3 * grid, initial=0.)) # the factor 1000 is to convert km to m
+        -cumtrapz(y, 1e3 * grid, initial=0.))  # the factor 1000 is to convert km to m
 
     # atomic oxygen
     d = thermal_diffusion_coefficient(
@@ -1124,12 +1125,14 @@ def velocity_term_hump(z, q1, q2, u1, u2, w1, w2):
     Returns → float or array-like:
         Values of the transport term [km^-1].
     """
+    # @formatter:off
     return (
        q1 * np.square(z - u1) * np.exp(
            -w1 * np.power(z - u1, 3.0)
         )
        + q2 * np.square(u2 - z) * np.exp(-w2 * np.power(u2 - z, 3.0))
     ) / 1e3  # the factor 1e3 converts m^-1 to km^-1
+    # @formatter:on
 
 
 @ureg.wraps(ret=None, args=("km", "km^-3", "km^-3", "km^-3"), strict=False)
@@ -1155,9 +1158,11 @@ def velocity_term_no_hump(z, q1, u1, w1):
     Returns → float or array-like:
         Values of the transport term [km^-1].
     """
+    # @formatter:off
     return (
         q1 * np.square(z - u1) * np.exp(-w1 * np.power(z - u1, 3.0))
     ) / 1e3  # the factor 1e3 converts m^-1 to km^-1
+    # @formatter:on
 
 
 @ureg.wraps(ret=None, args=(None, "km"), strict=False)

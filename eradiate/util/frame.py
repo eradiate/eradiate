@@ -3,7 +3,7 @@
 import numpy as np
 import pint
 
-from eradiate.util.units import ureg
+from .units import ureg
 
 
 @ureg.wraps(ret=None, args=("dimensionless", "rad"), strict=False)

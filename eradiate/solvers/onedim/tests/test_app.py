@@ -130,8 +130,6 @@ def test_onedim_solver_app_run():
     # Assert the correct dimensions of the application's results
     assert set(results["lo"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
 
-    assert results["lo"].attrs["angular_type"] == "observation"
-
     # We expect the whole [0, 360] to be covered
     assert len(results["lo"].coords["vaa"]) == 360 / 180
     # # We expect [0, 90[ to be covered (90° should be missing)

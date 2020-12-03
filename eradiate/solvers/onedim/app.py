@@ -1,5 +1,5 @@
 """One dimensional solver application class and related facilities."""
-
+import datetime
 import os
 import warnings
 from copy import deepcopy
@@ -14,12 +14,14 @@ import eradiate.kernel
 from .runner import OneDimRunner
 from ...scenes.core import KernelDict, SceneElementFactory
 from ...scenes.measure import RadianceMeterHsphereMeasure, RadianceMeterPPlaneMeasure
-from ...util import ensure_array, view
+from ...util import ensure_array
+from ...util import plot as ertplt
+from ...util import xarray as ertxr
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
-from ...util.units import config_default_units as cdu, ureg
+from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
-from ...util.xarray import eo_dataarray
+from ...util.units import ureg
 
 
 @attr.s
@@ -253,7 +255,6 @@ class OneDimSolverApp(ConfigObject):
     _kernel_dict = attr.ib(default=None)
     _elements = attr.ib(default=None)
     _runner = attr.ib(default=None)
-    _measure_map = attr.ib(default=None)
     results = attr.ib(init=False, factory=dict)
 
     def __attrs_post_init__(self):
@@ -376,9 +377,9 @@ class OneDimSolverApp(ConfigObject):
         illumination = self._elements["illumination"]
 
         # -- Collect illumination parameters
-        theta_i = ensure_array(illumination.zenith.to(ureg.deg).magnitude, dtype=float)
-        cos_theta_i = np.cos(illumination.zenith.to(ureg.rad).magnitude)
-        phi_i = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
+        sza = ensure_array(illumination.zenith.to(ureg.deg).magnitude, dtype=float)
+        cos_sza = np.cos(illumination.zenith.to(ureg.rad).magnitude)
+        saa = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
         wavelength = ensure_array(self.config["mode"]["wavelength"], dtype=float)
         # TODO: This will raise if illumination.type is not directional; handle that
 
@@ -395,44 +396,71 @@ class OneDimSolverApp(ConfigObject):
 
             if isinstance(self._elements[sensor_id], RadianceMeterHsphereMeasure):
                 azimuth_res = self._elements[sensor_id].azimuth_res
-                theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
-                phi_o = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
-                angular_domain = "hsphere"
+                vza = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
+                vaa = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
+                coord_specs_id = "angular_observation"
 
             elif isinstance(self._elements[sensor_id], RadianceMeterPPlaneMeasure):
-                theta_o = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
-                phi_o = np.array([0., 180.])
-                angular_domain = "pplane"
+                vza = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
+                vaa = np.array([0., 180.])
+                coord_specs_id = "angular_observation_pplane"
 
             else:
                 raise ValueError(f"Unsupported measure type {sensor_id}")
 
-            results["lo"] = eo_dataarray(
-                data, theta_i, phi_i, theta_o, phi_o, wavelength,
-                angular_domain=angular_domain
+            results["lo"] = xr.DataArray(
+                data,
+                coords=(("sza", sza), ("saa", saa), ("vza", vza),
+                        ("vaa", vaa), ("wavelength", wavelength))
             )
-
             results["irradiance"] = (
                 ("sza", "saa", "wavelength"),
                 np.array(
                     self._kernel_dict["illumination"]["irradiance"]["value"] *
-                    cos_theta_i
-                ).reshape((1, 1, 1)),
-                {
-                    "long_name": "spectral top-of-atmosphere horizontal irradiance",
-                    "units": "W/km^2/nm",
-                    "angles_convention": "observation"
-                }
+                    cos_sza
+                ).reshape((1, 1, 1))
             )
 
-            # TODO: make metadata handling more robust
-            # TODO: add support of CF convention-style metadata (discuss fields to include with Yvan)
             results["brdf"] = results["lo"] / results["irradiance"]
-            results["brdf"].attrs = results["lo"].attrs
             results["brf"] = results["brdf"] * np.pi
-            results["brf"].attrs = results["brdf"].attrs
 
-            results.attrs = results["lo"].attrs
+            if coord_specs_id.endswith("_pplane"):
+                results = ertxr.pplane(results)
+
+            # Add missing metadata
+            dataset_spec = ertxr.DatasetSpec(
+                convention="CF-1.8",
+                title="Top-of-atmosphere simulation results",
+                history=f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+                        f"data creation - {__name__}.OneDimeSolverApp.run",
+                source=f"eradiate, version {eradiate.__version__}",
+                references="",
+                var_specs={
+                    "irradiance": ertxr.VarSpec(
+                        standard_name="toa_horizontal_solar_irradiance_per_unit_wavelength",
+                        units="W/km^2/nm",
+                        long_name="top-of-atmosphere horizontal spectral irradiance"
+                    ),
+                    "lo": ertxr.VarSpec(
+                        standard_name="toa_outgoing_radiance_per_unit_wavelength",
+                        units="W/km^2/sr/nm",
+                        long_name="top-of-atmosphere outgoing spectral radiance"
+                    ),
+                    "brf": ertxr.VarSpec(
+                        standard_name="toa_brf",
+                        units="dimensionless",
+                        long_name="top-of-atmosphere bi-directional reflectance factor"
+                    ),
+                    "brdf": ertxr.VarSpec(
+                        standard_name="toa_brdf",
+                        units="1/sr",
+                        long_name="top-of-atmosphere bi-directional reflection distribution function"
+                    )
+                },
+                coord_specs=coord_specs_id
+            )
+            results.ert.normalize_metadata(dataset_spec)
+
             self.results[sensor_id] = results
 
     def save_results(self, fname_prefix):
@@ -443,8 +471,8 @@ class OneDimSolverApp(ConfigObject):
             each measure.
         """
         fname_prefix = Path(fname_prefix)
-        for key, results in self.results.items():
-            fname_results = os.path.abspath(f"{fname_prefix}_{key}.nc")
+        for measure_id, results in self.results.items():
+            fname_results = os.path.abspath(f"{fname_prefix}_{measure_id}.nc")
             os.makedirs(os.path.dirname(fname_results), exist_ok=True)
             print(f"Saving results to {fname_results}")
             results.to_netcdf(path=fname_results)
@@ -457,21 +485,29 @@ class OneDimSolverApp(ConfigObject):
             Filename prefix for plot files. A plot file is create for each
             computed quantity of each measure.
         """
-        for key, result in self.results.items():
+        for measure_id, result in self.results.items():
+            # Is the data hemispherical or plane?
+            dataset_spec = ertxr.DatasetSpec(coord_specs="angular_observation")
+            try:
+                result.ert.validate_metadata(dataset_spec)
+                is_hemispherical = True
+            except ValueError:
+                is_hemispherical = False
+
             for quantity, data in result.items():
                 if quantity == "irradiance":
                     continue
 
-                if data.attrs["angular_domain"] == "hsphere":
-                    ax = plt.subplot(111, projection="polar")
-                    data.ert.plot(kind="polar_pcolormesh", title=quantity, ax=ax)
+                if is_hemispherical:
+                    data.squeeze().ert.plot_pcolormesh_polar(r="vza", theta="vaa")
+                    ax = plt.gca()
+                    ertplt.remove_xylabels(ax)
 
-                elif data.attrs["angular_domain"] == "pplane":
-                    ax = plt.subplot(111)
-                    plane = view.plane(data)
-                    plane.ert.plot(kind="linear", title=quantity, ax=ax)
+                else:
+                    data.squeeze().plot()
 
-                fname_plots = os.path.abspath(f"{fname_prefix}_{quantity}.png")
-                os.makedirs(os.path.dirname(fname_plots), exist_ok=True)
-                plt.savefig(fname_plots, bbox_inches="tight")
+                fname_plot = os.path.abspath(f"{fname_prefix}_{measure_id}_{quantity}.png")
+                os.makedirs(os.path.dirname(fname_plot), exist_ok=True)
+                print(f"Saving plot to {fname_plot}")
+                plt.savefig(fname_plot, bbox_inches="tight")
                 plt.close()

@@ -1,11 +1,22 @@
 """Utility functions to manipulate atmospheric profiles. """
 
-
 from datetime import datetime
+
 import numpy as np
 import xarray as xr
 
-from . import check_vertical_profile
+from eradiate.util.xarray import DatasetSpec, VarSpec
+
+profile_dataset_spec = DatasetSpec(
+    var_specs={
+        "p": VarSpec(standard_name="air_pressure", units="Pa", long_name="air pressure"),
+        "t": VarSpec(standard_name="air_temperature", units="K", long_name="air temperature"),
+        "n": VarSpec(standard_name="number_density", units="m^-3", long_name="number density"),
+        "n_tot": VarSpec(standard_name="air_number_density", units="m^-3",
+                         long_name="air number density"),
+    },
+    coord_specs="atmospheric_profile"
+)
 
 
 def rescale_co2(profile, surf_ppmv, inplace=False):
@@ -104,8 +115,7 @@ def make_profile_regular(profile, atol):
     Returns -> :class:`~xr.Dataset`:
         Converted atmospheric profile, defined over a regular altitude mesh.
     """
-
-    check_vertical_profile(profile)
+    profile.ert.validate_metadata(profile_dataset_spec)
 
     # compute the regular altitude nodes mesh
     regular_z_level = _to_regular(mesh=profile.z_level.values, atol=atol)
@@ -144,20 +154,23 @@ def make_profile_regular(profile, atol):
                f".make_profile_regular "
     attrs["history"] += f"\n{new_line}"
 
-    return xr.Dataset(
+    dataset = xr.Dataset(
         data_vars={
-            "p": ("z_layer", p, {"standard_name": "air_pressure", "units": "Pa"}),
-            "t": ("z_layer", t, {"standard_name": "air_temperature", "units": "K"}),
-            "n_tot": ("z_layer", n_tot, {"standard_name": "air_number_density", "units": "m^-3"}),
-            "n": (("species", "z_layer"), n, {"standard_name": "number_density", "units": "m^-3"})
+            "p": ("z_layer", p),
+            "t": ("z_layer", t),
+            "n_tot": ("z_layer", n_tot),
+            "n": (("species", "z_layer"), n)
         },
         coords={
-            "z_layer": ("z_layer", regular_z_layer, {"standard_name": "layer_altitude", "units": "m"}),
-            "z_level": ("z_level", regular_z_level, {"standard_name": "level_altitude", "units": "m"}),
-            "species": ("species", species, {"standard_name": "species", "units": ""})
+            "z_layer": ("z_layer", regular_z_layer),
+            "z_level": ("z_level", regular_z_level),
+            "species": ("species", species)
         },
         attrs=attrs
     )
+    dataset.ert.normalize_metadata(profile_dataset_spec)
+
+    return dataset
 
 
 def _to_regular(mesh, atol):
@@ -236,7 +249,6 @@ def _find_regular_params_gcd(mesh, unit_number=1.):
     n = total_width // w + 1
 
     return n, float(w) * unit_number
-
 
 # def find_regular_params_tol(mesh, rtol=1e-3, n_cells_max=10000):
 #     r"""Finds the number of cells and constant cell width of the regular 1-D

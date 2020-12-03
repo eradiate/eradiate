@@ -5,9 +5,9 @@ from eradiate.scenes.atmosphere.thermophysics.us76 import make_profile
 from eradiate.scenes.atmosphere.thermophysics.util import (
     make_profile_regular,
     _find_regular_params_gcd,
-    _to_regular
+    _to_regular,
+    profile_dataset_spec
 )
-from eradiate.scenes.atmosphere.thermophysics import check_vertical_profile
 from eradiate.util.units import ureg
 Q_ = ureg.Quantity
 
@@ -40,7 +40,6 @@ def test_make_profile_regular():
         levels=Q_([0., 2., 8., 10., 16., 23., 32., 47., 50.], "km"))
 
     regular_profile = make_profile_regular(irregular_profile, atol=1000.)
-
-    check_vertical_profile(regular_profile)
+    regular_profile.ert.validate_metadata(profile_dataset_spec)
 
 # TODO: test rescale_co2

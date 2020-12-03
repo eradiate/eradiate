@@ -1,9 +1,13 @@
 """A series of test cases the assert the plausibility of Eradiate's computation."""
 
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import os
+import xarray as xr
+
+from eradiate.util.plot import remove_xylabels
 
 eradiate_dir = os.environ["ERADIATE_DIR"]
 output_dir = os.path.join(eradiate_dir, "test_report", "generated")
@@ -94,24 +98,29 @@ def test_symmetry_zenith(variant_scalar_mono, surface, atmosphere):
     app = OneDimSolverApp(config)
     app.run()
 
+    # Fold negative VZA onto the positive half-space
     results = app.results["toa_pplane_lo"]["lo"]
-    results_zero = np.squeeze(results.ert.sel(vaa=0).values)
-    results_pi = np.squeeze(results.ert.sel(vaa=180).values)
-    results_diff = []
-    for i in range(len(results_zero)):
-        if results_zero[i] + results_pi[i] == 0:
-            results_diff.append(0)
-        else:
-            results_diff.append(
-                2 * (results_zero[i] - results_pi[i]) /
-                (results_zero[i] + results_pi[i])
-            )
-    ordinate = results.vza.values
+    lo_zero = np.squeeze(results.where(results.vza >= 0., drop=True).values)[1:]
+    lo_pi = np.squeeze(results.where(results.vza < 0., drop=True).values)[::-1]
+    vza_values = results.where(results.vza > 0., drop=True).vza.values
+    results_postprocessed = xr.Dataset(
+        data_vars={
+            "lo_zero": ("vza", lo_zero),
+            "lo_pi": ("vza", lo_pi),
+        },
+        coords={
+            "vza": ("vza", vza_values)
+        }
+    )
+    results_postprocessed["diff"] = \
+        2. * (results_postprocessed["lo_zero"] - results_postprocessed["lo_pi"]) / \
+        (results_postprocessed["lo_zero"] + results_postprocessed["lo_pi"])
 
     fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(5, 2.5))
-    ax1.plot(ordinate, results_zero)
-    ax1.plot(ordinate, results_pi)
-    ax2.plot(ordinate, results_diff)
+    results_postprocessed["lo_zero"].plot(ax=ax1)
+    results_postprocessed["lo_pi"].plot(ax=ax1)
+    results_postprocessed["diff"].plot(ax=ax2)
+    remove_xylabels(from_=[ax1, ax2])
     ax2.yaxis.tick_right()
     plt.suptitle(f"Surface: {surface}, Atmosphere: {str(atmosphere)}")
     plt.tight_layout()
@@ -123,4 +132,6 @@ def test_symmetry_zenith(variant_scalar_mono, surface, atmosphere):
     fig.savefig(fname_plot, dpi=200)
     plt.close()
 
-    assert np.allclose(results_zero, results_pi, rtol=5.e-3)
+    assert np.allclose(results_postprocessed["lo_zero"],
+                       results_postprocessed["lo_pi"],
+                       rtol=5.e-3)

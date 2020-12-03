@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import attr
 import cerberus
 
-from .collections import configdict
+from .collections import ndict
 
 
 @attr.s
@@ -51,4 +51,4 @@ class ConfigObject(ABC):
         if not v.validate(self.config):
             raise ValueError(v.errors)
 
-        self.config = configdict(v.normalized(self.config))
+        self.config = ndict(v.normalized(self.config))

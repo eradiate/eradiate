@@ -279,7 +279,7 @@ class SolarIrradianceSpectrum(Spectrum):
 
     ``dataset`` (str):
         Dataset key. Allowed values: see
-        :attr:`solar irradiance dataset documentation <eradiate.data.SOLAR_IRRADIANCE_SPECTRA>`.
+        :attr:`solar irradiance dataset documentation <eradiate.data.solar_irradiance_spectra>`.
         Default: ``"thuillier_2003"``.
 
     ``scale`` (float):
