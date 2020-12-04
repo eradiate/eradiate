@@ -8,6 +8,7 @@ from eradiate.scenes.atmosphere.radiative_properties.rayleigh import \
     compute_sigma_s_air
 from eradiate.scenes.core import KernelDict
 from eradiate.util.collections import onedict_value
+from eradiate.util.exceptions import UnitsError
 from eradiate.util.units import config_default_units, ureg
 
 
@@ -48,7 +49,7 @@ def test_rayleigh_homogeneous(mode_mono, ref):
     assert np.isclose(r._sigma_s, compute_sigma_s_air(wavelength=wavelength))
 
     # check if automatic scene width works as intended
-    assert np.isclose(r._width, 10. / compute_sigma_s_air(wavelength=wavelength))
+    assert np.isclose(r.kernel_width, 10. / compute_sigma_s_air(wavelength=wavelength))
 
     # Check if produced scene can be instantiated
     assert KernelDict.empty().add(r).load() is not None
@@ -57,3 +58,22 @@ def test_rayleigh_homogeneous(mode_mono, ref):
     eradiate.set_mode("mono", wavelength=650.)
     r = RayleighHomogeneousAtmosphere(sigma_s="auto")
     assert r._sigma_s != compute_sigma_s_air(wavelength=550.)
+
+    # Check that attributes wrong units or invalid values raise an error
+    with pytest.raises(UnitsError):
+        RayleighHomogeneousAtmosphere(height=ureg.Quantity(10, "second"))
+
+    with pytest.raises(UnitsError):
+        RayleighHomogeneousAtmosphere(width=ureg.Quantity(5, "m^2"))
+
+    with pytest.raises(UnitsError):
+        RayleighHomogeneousAtmosphere(sigma_s=ureg.Quantity(1e-7, "m"))
+
+    with pytest.raises(ValueError):
+        RayleighHomogeneousAtmosphere(height=-100.)
+
+    with pytest.raises(ValueError):
+        RayleighHomogeneousAtmosphere(width=-50.)
+
+    with pytest.raises(ValueError):
+        RayleighHomogeneousAtmosphere(sigma_s=-1e-7)

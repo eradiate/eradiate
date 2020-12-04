@@ -1,6 +1,7 @@
 """ Heterogeneous atmosphere scene elements """
 import tempfile
 from pathlib import Path
+import struct
 
 import attr
 import numpy as np
@@ -10,7 +11,7 @@ from .base import Atmosphere
 from .radiative_properties.rad_profile import RadProfile, RadProfileFactory
 from ..core import SceneElementFactory
 from ...util.attrs import validator_is_file
-from ...util.units import kernel_default_units as kdu
+from ...util.units import ureg, kernel_default_units as kdu, config_default_units as cdu
 
 
 def write_binary_grid3d(filename, values):
@@ -59,6 +60,30 @@ def write_binary_grid3d(filename, values):
         f.write(np.float32(1.0).tobytes())
         f.write(np.float32(1.0).tobytes())
         f.write(values.ravel().astype(np.float32).tobytes())
+
+
+def read_binary_grid3d(filename):
+    """Reads a volume data binary file.
+
+    Parameter ``filename`` (str):
+        File name.
+
+    Returns → :class:`~numpy.ndarray`:
+        Values.
+    """
+
+    with open(filename, 'rb') as f:
+        file_content = f.read()
+        _shape = struct.unpack("iii", file_content[8:20])  # shape of the values array
+        _num = np.prod(np.array(_shape))  # number of values
+        values = np.array(struct.unpack("f" * _num, file_content[48:]))
+        # file_type = struct.unpack("ccc", file_content[:3]),
+        # version = struct.unpack("B", file_content[3:4]),
+        # type = struct.unpack("i", file_content[4:8]),
+        # channels = struct.unpack("i", file_content[20:24]),
+        # bbox = struct.unpack("ffffff", file_content[24:48]),
+
+    return values
 
 
 def _dataarray_to_ndarray(value):
@@ -181,11 +206,64 @@ class HeterogeneousAtmosphere(Atmosphere):
     }
 
     def __attrs_post_init__(self):
+        # checks for width and height automatic computation
+        if self.profile is not None:
+            if self.height != "auto":
+                raise ValueError("height must be set to 'auto' when profile is set")
+        else:
+            if self.height == "auto":
+                raise ValueError("height cannot be set to 'auto' when profile is none")
+            if self.width == "auto":
+                raise ValueError("width cannot be set to 'auto' when profile is none")
+
         # Prepare cache directory in case we'd need it
         if self._cache_dir is None:
             self._cache_dir = Path(tempfile.mkdtemp())
         else:
             self._cache_dir.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def kernel_height(self):
+        if self.height == "auto":
+            ds = self.profile.to_dataset()
+            height = ureg.Quantity(ds.z_level.values.max(), ds.z_level.units)
+        else:
+            height = self.height
+
+        return height.to(kdu.get("length"))
+
+    @property
+    def kernel_width(self):
+        """Return scene width based on configuration."""
+
+        if self.width == "auto":
+            if self.profile is None:
+                albedo = ureg.Quantity(
+                    read_binary_grid3d(self.albedo_fname),
+                    ureg.dimensionless
+                )
+                sigma_t = ureg.Quantity(
+                    read_binary_grid3d(self.sigma_t_fname),
+                    kdu.get("collision_coefficient")
+                )
+            else:
+                albedo = self.profile.albedo
+                sigma_t = self.profile.sigma_t
+
+            sigma_s = sigma_t * albedo
+            min_sigma_s = sigma_s.min()
+            if min_sigma_s > 0.:
+                width = 10. / min_sigma_s
+                if width > ureg.Quantity(1e5, "km"):
+                    width = ureg.Quantity(1e5, "km")
+            else:
+                raise ValueError("cannot automatically determine the width"
+                                 "when the scattering coefficient reaches"
+                                 "zero.")
+        else:
+            width = self.width
+
+        return width.to(kdu.get("length"))
 
     def make_volume_data(self, fields=None):
         """Create volume data files for requested fields.
@@ -232,25 +310,15 @@ class HeterogeneousAtmosphere(Atmosphere):
                 field_quantity.to(kdu.get(self._quantities[field])).magnitude
             )
 
-    @property
-    def _width(self):
-        """Return scene width based on configuration."""
-
-        if self.width == "auto":  # Support for auto is currently disabled
-            raise NotImplementedError
-        else:
-            return self.width
-
     def phase(self):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
 
     def media(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f
 
-        width = self._width.to(kdu.get("length")).magnitude
-        height, offset = self._height
-        height = height.to(kdu.get("length")).magnitude
-        offset = offset.to(kdu.get("length")).magnitude
+        width = self.kernel_width.magnitude
+        height = self.kernel_height.magnitude
+        offset = self.kernel_offset.magnitude
 
         # First, transform the [0, 1]^3 cube to the right dimensions
         trafo = ScalarTransform4f([
@@ -291,10 +359,9 @@ class HeterogeneousAtmosphere(Atmosphere):
         else:
             medium = self.media(ref=False)[f"medium_{self.id}"]
 
-        width = self._width.to(kdu.get("length")).magnitude
-        height, offset = self._height
-        height = height.to(kdu.get("length")).magnitude
-        offset = offset.to(kdu.get("length")).magnitude
+        width = self.kernel_width.magnitude
+        height = self.kernel_height.magnitude
+        offset = self.kernel_offset.magnitude
 
         return {
             f"shape_{self.id}": {

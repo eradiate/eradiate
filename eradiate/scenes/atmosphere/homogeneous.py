@@ -3,10 +3,10 @@
 import attr
 
 import eradiate
-from .base import Atmosphere, _converter_or_auto, _validator_or_auto
+from .base import Atmosphere, _converter_or_auto, _validators_or_auto
 from .radiative_properties.rayleigh import compute_sigma_s_air
 from ..core import SceneElementFactory
-from ...util.attrs import attrib_quantity, converter_to_units, validator_units_compatible
+from ...util.attrs import attrib_quantity, converter_to_units, validator_units_compatible, validator_is_positive
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
@@ -41,11 +41,20 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
     sigma_s = attrib_quantity(
         default="auto",
         converter=_converter_or_auto(converter_to_units(cdu.generator("collision_coefficient"))),
-        validator=_validator_or_auto(validator_units_compatible(ureg.m ** -1)),
+        validator=_validators_or_auto([validator_units_compatible(ureg.m ** -1), validator_is_positive]),
         units_compatible=ureg.m ** -1,
         units_add_converter=False,
         units_add_validator=False,
     )  # TODO: turn into a Spectrum
+
+    @property
+    def kernel_height(self):
+        if self.height == "auto":
+            height = ureg.Quantity(100, "km")
+        else:
+            height = self.height
+
+        return height.to(kdu.get("length"))
 
     @property
     def _albedo(self):
@@ -61,15 +70,13 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             return self.sigma_s
 
     @property
-    def _width(self):
-        """Return scene width based on configuration."""
-
-        # If width is not set, compute a value corresponding to an optically
-        # thick layer (10x scattering mean free path)
+    def kernel_width(self):
         if self.width == "auto":
-            return 10. / self._sigma_s
+            width = 10. / self._sigma_s
         else:
-            return self.width
+            width = self.width
+
+        return width.to(kdu.get("length"))
 
     def phase(self):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
@@ -79,14 +86,14 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             phase = {"type": "ref", "id": f"phase_{self.id}"}
         else:
             phase = self.phase()[f"phase_{self.id}"]
-
+        sigma_s = self._sigma_s.to(kdu.get("collision_coefficient")).magnitude
         return {
             f"medium_{self.id}": {
                 "type": "homogeneous",
                 "phase": phase,
                 "sigma_t": {
                     "type": "uniform",
-                    "value": self._sigma_s.to(kdu.get("collision_coefficient")).magnitude
+                    "value": sigma_s
                 },
                 "albedo": {
                     "type": "uniform",
@@ -103,10 +110,9 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
         else:
             medium = self.media(ref=False)[f"medium_{self.id}"]
 
-        width = self._width.to(kdu.get("length")).magnitude
-        height, offset = self._height
-        height = height.to(kdu.get("length")).magnitude
-        offset = offset.to(kdu.get("length")).magnitude
+        width = self.kernel_width.magnitude
+        height = self.kernel_height.magnitude
+        offset = self.kernel_offset.magnitude
 
         return {
             f"shape_{self.id}": {

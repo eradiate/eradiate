@@ -15,7 +15,7 @@
    The dimensions are ``z_layer`` and ``z_level``. All data variables depend
    on ``z_layer``.
 
-   The optional data coordinates are:
+   The data coordinates are:
 
    - ``z_layer``: layer altitude [m]. The layer altitude is an altitude
      representative of the given layer, e.g. the middle of the layer.
@@ -40,26 +40,36 @@ from eradiate import __version__
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
 from ..thermophysics import us76
-from ....util.attrs import attrib_quantity, unit_enabled, validator_is_positive
+from ....util.attrs import attrib_quantity, unit_enabled, validator_is_positive, validator_all_positive
 from ....util.factory import BaseFactory
 from ....util.units import config_default_units as cdu
 from ....util.units import ureg
 
 
-def make_dataset(sigma_a=None, sigma_s=None, sigma_t=None, albedo=None, profile=None):
+@ureg.wraps(ret=None, args=("m", "m", "m^-1", "m^-1", "m^-1", None), strict=False)
+def make_dataset(z_level, z_layer=None, sigma_a=None, sigma_s=None, sigma_t=None, albedo=None):
     r"""Makes an atmospheric radiative properties data set.
 
-    Parameter ``sigma_a`` (:class:`pint.Quantity`):
-        Absorption coefficient values.
+    Parameter ``z_level`` (:class:numpy.ndarray or :class:`pint.Quantity`):
+        Level altitudes [m].
 
-    Parameter ``sigma_s`` (:class:`pint.Quantity`):
-        Scattering coefficient values.
+    Parameter ``z_layer`` (:class:numpy.ndarray or :class:`pint.Quantity`):
+        Layer altitudes [m].
 
-    Parameter ``sigma_t`` (:class:`pint.Quantity`):
-        Extinction coefficient values.
+        If ``None``, the layer altitudes are computed automatically, so that
+        they are halfway between the adjacent altitude levels.
 
-    Parameter ``sigma_s`` (:class:`pint.Quantity`):
-        Albedo values.
+    Parameter ``sigma_a`` (:class:numpy.ndarray or :class:`pint.Quantity`):
+        Absorption coefficient values [m^-1].
+
+    Parameter ``sigma_s`` (:class:numpy.ndarray or :class:`pint.Quantity`):
+        Scattering coefficient values [m^-1].
+
+    Parameter ``sigma_t`` (:class:numpy.ndarray or :class:`pint.Quantity`):
+        Extinction coefficient values [m^-1].
+
+    Parameter ``sigma_s`` (:class:numpy.ndarray or :class:`pint.Quantity`):
+        Albedo values [/].
 
     Parameter ``profile`` (:class:`~xr.Dataset`):
         Atmospheric vertical profile.
@@ -67,81 +77,83 @@ def make_dataset(sigma_a=None, sigma_s=None, sigma_t=None, albedo=None, profile=
     Returns → :class:`~xarray.Dataset`:
         Data set.
     """
+    if z_layer is None:
+        z_layer = (z_level[1:] + z_level[:-1]) / 2.
 
     if sigma_a is not None and sigma_s is not None:
-        sigma_a = sigma_a.to("m^-1").magnitude
-        sigma_s = sigma_s.to("m^-1").magnitude
         sigma_t = sigma_a + sigma_s
         albedo = sigma_s / sigma_t
     elif sigma_t is not None and albedo is not None:
-        sigma_t = sigma_t.to("m^-1").magnitude
-        albedo = albedo.to(ureg.dimensionless).magnitude
         sigma_s = albedo * sigma_t
         sigma_a = sigma_t - sigma_s
     else:
         raise ValueError("You must provide either one of the two pairs of arguments 'sigma_a' and 'sigma_s' or "
                          "'sigma_t' and 'albedo'.")
 
-    data_vars = {
-        "sigma_a": (
-            "z_layer",
-            sigma_a,
-            {
-                "units": "m^-1",
-                "standard_name": "absorption_coefficient"
-            }
-        ),
-        "sigma_s": (
-            "z_layer",
-            sigma_s,
-            {
-                "units": "m^-1",
-                "standard_name": "scattering_coefficient"
-            }
-        ),
-        "sigma_t": (
-            "z_layer",
-            sigma_t,
-            {
-                "units": "m^-1",
-                "standard_name": "extinction_coefficient"
-            }
-        ),
-        "albedo": (
-            "z_layer",
-            albedo,
-            {
-                "units": "",
-                "standard_name": "albedo"
-            }
-        )
-    }
-
-    if profile is not None:
-        z_layer = ureg.Quantity(
-            profile.z_layer.values, profile.z_layer.units).to("m").magnitude
-        z_level = ureg.Quantity(
-            profile.z_level.values, profile.z_level.units).to("m").magnitude
-        coords = {
-            "z_layer": ("z_layer", z_layer, {"units": "m"}),
-            "z_level": ("z_level", z_level, {"units": "m"}),
+    return xr.Dataset(
+        data_vars={
+            "sigma_a": (
+                "z_layer",
+                sigma_a,
+                {
+                    "units": "m^-1",
+                    "standard_name": "absorption_coefficient"
+                }
+            ),
+            "sigma_s": (
+                "z_layer",
+                sigma_s,
+                {
+                    "units": "m^-1",
+                    "standard_name": "scattering_coefficient"
+                }
+            ),
+            "sigma_t": (
+                "z_layer",
+                sigma_t,
+                {
+                    "units": "m^-1",
+                    "standard_name": "extinction_coefficient"
+                }
+            ),
+            "albedo": (
+                "z_layer",
+                albedo,
+                {
+                    "units": "",
+                    "standard_name": "albedo"
+                }
+            )
+        },
+        coords={
+            "z_level": (
+                "z_level",
+                z_level,
+                {
+                    "units": "m",
+                    "standard_name": "level_altitude",
+                }
+            ),
+            "z_layer": (
+                "z_layer",
+                z_layer,
+                {
+                    "units": "m",
+                    "standard_name": "layer_altitude",
+                }
+            )
+        },
+        attrs={
+            "convention": "CF-1.8",
+            "title": "Atmospheric monochromatic radiative properties",
+            "history":
+                f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+                f"data set creation - "
+                f"{__name__}.make_dataset",
+            "source": f"eradiate, version {__version__}",
+            "references": "",
         }
-    else:
-        coords = {}
-
-    # TODO: set function name in history field dynamically
-    attrs = {
-        "convention": "CF-1.8",
-        "title": "Atmospheric monochromatic radiative properties",
-        "history":
-            f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
-            f"data set creation - "
-            f"{__name__}.make_dataset",
-        "source": f"eradiate, version {__version__}",
-        "references": "",
-    }
-
-    return xr.Dataset(data_vars, coords, attrs)
+    )
 
 
 @unit_enabled
@@ -237,13 +249,36 @@ class RadProfileFactory(BaseFactory):
 @attr.s
 class ArrayRadProfile(RadProfile):
     """A flexible radiative property profile whose albedo and extinction
-    coefficient are specified as numpy arrays. Both constructor arguments must
-    have the same shape.
+    coefficient are specified as numpy arrays. The underlying altitude
+    mesh is assumed regular and specified by a single ``height`` parameter,
+    which corresponds to the height of the atmosphere.
 
     .. warning::
 
        The ``albedo_values`` and ``sigma_t_values`` parameters must be 3D
-       arrays.
+       arrays even if the profile is 1D, and have the same shape.
+
+    .. admonition:: Example
+
+       The following creates a radiative property profile with 3 layers between
+       0 and 5 kilometers, corresponding to a purely scattering atmosphere
+       (albedo = 1) with scattering coefficient values of :code:`9e-6`,
+       :code:`5e-6` and :code:`1e-6` in units of :code:`cdu[length]^-1`:
+
+        .. code:: python
+
+            import numpy as np
+
+            rad_profile = ArrayRadProfile(
+                sigma_t_values=np.array([9e-6, 5e-6, 1e-6]).reshape(1, 1, 3),
+                albedo_values=np.ones((1, 1, 3)),
+                height=ureg.Quantity(5, "km")
+            )
+
+        Note that the shape of the ``sigma_t_values`` and ``albedo_values``
+        arrays is :code:`(1, 1, 3)`, where the last dimension corresponds
+        to the ``z`` dimension.
+
 
     .. rubric:: Constructor arguments / instance attributes
 
@@ -252,6 +287,13 @@ class ArrayRadProfile(RadProfile):
         **Required, no default**.
 
         Unit-enabled field (dimensionless).
+
+    ``height`` (float):
+        Height of the atmosphere
+
+        Default: 100 km.
+
+        Unit-enabled field (default: cdu[length]).
 
     ``sigma_t_values`` (array):
         An array specifying extinction coefficient values.
@@ -262,11 +304,19 @@ class ArrayRadProfile(RadProfile):
 
     albedo_values = attrib_quantity(
         default=None,
+        validator=validator_all_positive,
         units_compatible=ureg.dimensionless,
+    )
+
+    height = attrib_quantity(
+        default=ureg.Quantity(100, "km").to(cdu.get_str("length")),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("length")
     )
 
     sigma_t_values = attrib_quantity(
         default=None,
+        validator=validator_all_positive,
         units_compatible=cdu.generator("collision_coefficient"),
     )
 
@@ -300,7 +350,12 @@ class ArrayRadProfile(RadProfile):
         return self.sigma_t * self.albedo
 
     def to_dataset(self):
-        return make_dataset(sigma_t=self.sigma_t, albedo=self.albedo)
+        n_layers = self.sigma_t.size
+        return make_dataset(
+            z_level=np.linspace(0., self.height.to("m"), n_layers + 1),
+            sigma_t=self.sigma_t.flatten(),
+            albedo=self.albedo.flatten()
+        )
 
 
 @RadProfileFactory.register(name="us76_approx")
@@ -497,7 +552,8 @@ class US76ApproxRadProfile(RadProfile):
 
     def to_dataset(self):
         return make_dataset(
-            profile=self._thermo_profile,
+            z_level=self._thermo_profile.z_level.values,
+            z_layer=self._thermo_profile.z_layer.values,
             sigma_a=self.sigma_a.flatten(),
             sigma_s=self.sigma_s.flatten(),
         )

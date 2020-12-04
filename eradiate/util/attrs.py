@@ -3,6 +3,7 @@
 import enum
 from copy import copy
 from functools import lru_cache
+import numpy as np
 
 import attr
 import pint
@@ -295,6 +296,16 @@ def validator_is_positive(_, attribute, value):
     """
     if value < 0.:
         raise ValueError(f"{attribute} must be positive or zero, got {value}")
+
+
+def validator_all_positive(_, attribute, value):
+    """Validates if all elements in ``value`` are positive number.
+    Raises a ``ValueError`` in case of failure.
+    """
+    if isinstance(value, ureg.Quantity):
+        value = value.magnitude
+    if not np.all(np.array(value) >= 0):
+        raise ValueError(f"{attribute} must be all positive or zero, got {value}")
 
 
 def validator_path_exists(_, attribute, value):

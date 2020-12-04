@@ -23,10 +23,13 @@ def _converter_or_auto(wrapped_converter):
     return f
 
 
-def _validator_or_auto(wrapped_validator):
+def _validators_or_auto(wrapped_validators):
     def f(instance, attribute, value):
         if value == "auto":
             return
+
+        for validator in wrapped_validators:
+            validator(instance, attribute, value)
 
     return f
 
@@ -39,8 +42,10 @@ class Atmosphere(SceneElement, ABC):
 
     .. rubric:: Constructor arguments / instance attributes
 
-    ``height`` (float):
-        Atmosphere height. Default: 100 km.
+    ``height`` (float or "auto"):
+        Atmosphere height. If set to ``"auto"``, the atmosphere height is taken
+        from the radiative properties profile provided it has one. Otherwise,
+        a default value of 100 km is used.
 
         Unit-enabled field (default unit: cdu[length])
 
@@ -59,25 +64,49 @@ class Atmosphere(SceneElement, ABC):
     )
 
     height = attrib_quantity(
-        default=ureg.Quantity(100., ureg.km),
-        validator=validator_is_positive,
+        default="auto",
+        converter=_converter_or_auto(converter_to_units(cdu.generator("length"))),
+        validator=_validators_or_auto([validator_units_compatible(ureg.m), validator_is_positive]),
         units_compatible=cdu.generator("length"),
+        units_add_converter=False,
+        units_add_validator=False
     )
 
     width = attrib_quantity(
         default="auto",
         converter=_converter_or_auto(converter_to_units(cdu.generator("length"))),
-        validator=_validator_or_auto(validator_units_compatible(ureg.m)),
-        units_compatible=ureg.m,
+        validator=_validators_or_auto([validator_units_compatible(ureg.m), validator_is_positive]),
+        units_compatible=cdu.generator("length"),
         units_add_converter=False,
         units_add_validator=False
     )
 
     @property
-    def _height(self):
-        height = self.height
-        offset = height * 0.001  # TODO: adjust offset based on medium profile
-        return height, offset
+    @abstractmethod
+    def kernel_height(self):
+        """Returns the height of the kernel object delimiting the
+        atmosphere."""
+        pass
+
+    @property
+    def kernel_offset(self):
+        """Vertical offset used to position the kernel object delimiting the
+        atmosphere. The created cuboid shape will be shifted towards negative
+        Z values by this amount.
+
+        .. note::
+
+           This is required to ensure that the surface is the only shape
+           which can be intersected at ground level during ray tracing.
+        """
+        return self.kernel_height * 1e-3  # TODO: adjust offset based on medium profile
+
+    @property
+    @abstractmethod
+    def kernel_width(self):
+        """Returns the width of the kernel object delimiting the
+        atmosphere."""
+        pass
 
     @abstractmethod
     def phase(self):

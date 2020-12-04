@@ -24,6 +24,9 @@ def test_array_rad_props_profile(mode_mono):
     assert isinstance(p.sigma_a, ureg.Quantity)
     assert isinstance(p.sigma_s, ureg.Quantity)
 
+    # check that to_dataset method does not fail
+    assert p.to_dataset()
+
     with pytest.raises(ValueError):
         p = ArrayRadProfile(albedo_values=np.linspace(0., 1., 11),
                             sigma_t_values=np.linspace(0., 1e-5, 10))

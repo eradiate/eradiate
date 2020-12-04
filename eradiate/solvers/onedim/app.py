@@ -312,16 +312,15 @@ class OneDimSolverApp(ConfigObject):
                             "overriding 'surface.width' with 'atmosphere.width'",
                             ConfigWarning
                         )
-                    config["surface"]["width"] = atmosphere._width
+                    config["surface"]["width"] = atmosphere.kernel_width
 
                 self._elements["surface"] = SceneElementFactory.create(config["surface"])
 
                 # Set measure
                 for config_measure in self.config["measure"]:
                     if atmosphere is not None:
-                        height, offset = atmosphere._height
-                        height = height.to(kdu.get("length")).magnitude
-                        offset = offset.to(kdu.get("length")).magnitude
+                        height = atmosphere.kernel_height.magnitude
+                        offset = atmosphere.kernel_offset.magnitude
                     else:
                         height = 0.1
                         offset = 0.001
