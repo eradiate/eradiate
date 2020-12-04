@@ -231,11 +231,26 @@ def converter_to_units(units):
     return lambda x: ensure_units(x, units)
 
 
+def converter_or_auto(wrapped_converter):
+    """Returns a converter which executes the wrapped converter if the converted
+    value is not equal to ``"auto"``; otherwise returns ``"auto"``.
+    """
+    def f(value):
+        if value == "auto":
+            return value
+
+        return wrapped_converter(value)
+
+    return f
+
+
 # ------------------------------------------------------------------------------
 #                                 Validators
 # ------------------------------------------------------------------------------
 
 def validator_has_compatible_units(instance, attribute, value):
+    """Validates if ``value`` has units compatible with ``attribute``. Only
+    works with unit-enabled fields created with :func:`attrib_quantity`."""
     compatible_units = instance._fields_with_units()[attribute.name]
 
     try:
@@ -371,5 +386,23 @@ def validator_quantity(wrapped_validator):
             return wrapped_validator(instance, attribute, value.magnitude)
         else:
             return wrapped_validator(instance, attribute, value)
+
+    return f
+
+
+def validator_or_auto(*wrapped_validators):
+    """Validates if the validated value is ``"auto"`` or if all wrapped
+    validators validate.
+
+    .. note::
+       ``wrapped_validators`` is variadic and can therefore be an arbitrary
+       number of validators.
+    """
+    def f(instance, attribute, value):
+        if value == "auto":
+            return
+
+        for validator in wrapped_validators:
+            validator(instance, attribute, value)
 
     return f

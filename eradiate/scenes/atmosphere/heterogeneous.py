@@ -1,7 +1,7 @@
 """ Heterogeneous atmosphere scene elements """
+import struct
 import tempfile
 from pathlib import Path
-import struct
 
 import attr
 import numpy as np
@@ -11,7 +11,7 @@ from .base import Atmosphere
 from .radiative_properties.rad_profile import RadProfile, RadProfileFactory
 from ..core import SceneElementFactory
 from ...util.attrs import validator_is_file
-from ...util.units import ureg, kernel_default_units as kdu, config_default_units as cdu
+from ...util.units import kernel_default_units as kdu, ureg
 
 
 def write_binary_grid3d(filename, values):
@@ -230,7 +230,7 @@ class HeterogeneousAtmosphere(Atmosphere):
         else:
             height = self.height
 
-        return height.to(kdu.get("length"))
+        return height
 
     @property
     def kernel_width(self):
@@ -263,7 +263,7 @@ class HeterogeneousAtmosphere(Atmosphere):
         else:
             width = self.width
 
-        return width.to(kdu.get("length"))
+        return width
 
     def make_volume_data(self, fields=None):
         """Create volume data files for requested fields.
@@ -316,9 +316,9 @@ class HeterogeneousAtmosphere(Atmosphere):
     def media(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f
 
-        width = self.kernel_width.magnitude
-        height = self.kernel_height.magnitude
-        offset = self.kernel_offset.magnitude
+        width = self.kernel_width.to(kdu.get("length")).magnitude
+        height = self.kernel_height.to(kdu.get("length")).magnitude
+        offset = self.kernel_offset.to(kdu.get("length")).magnitude
 
         # First, transform the [0, 1]^3 cube to the right dimensions
         trafo = ScalarTransform4f([
@@ -359,9 +359,9 @@ class HeterogeneousAtmosphere(Atmosphere):
         else:
             medium = self.media(ref=False)[f"medium_{self.id}"]
 
-        width = self.kernel_width.magnitude
-        height = self.kernel_height.magnitude
-        offset = self.kernel_offset.magnitude
+        width = self.kernel_width.to(kdu.get("length")).magnitude
+        height = self.kernel_height.to(kdu.get("length")).magnitude
+        offset = self.kernel_offset.to(kdu.get("length")).magnitude
 
         return {
             f"shape_{self.id}": {

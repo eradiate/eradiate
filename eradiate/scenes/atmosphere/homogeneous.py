@@ -3,10 +3,17 @@
 import attr
 
 import eradiate
-from .base import Atmosphere, _converter_or_auto, _validators_or_auto
+from .base import Atmosphere
 from .radiative_properties.rayleigh import compute_sigma_s_air
 from ..core import SceneElementFactory
-from ...util.attrs import attrib_quantity, converter_to_units, validator_units_compatible, validator_is_positive
+from ...util.attrs import (
+    converter_or_auto,
+    validator_or_auto,
+    attrib_quantity,
+    converter_to_units,
+    validator_units_compatible,
+    validator_is_positive
+)
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
@@ -40,8 +47,8 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
 
     sigma_s = attrib_quantity(
         default="auto",
-        converter=_converter_or_auto(converter_to_units(cdu.generator("collision_coefficient"))),
-        validator=_validators_or_auto([validator_units_compatible(ureg.m ** -1), validator_is_positive]),
+        converter=converter_or_auto(converter_to_units(cdu.generator("collision_coefficient"))),
+        validator=validator_or_auto(validator_units_compatible(ureg.m ** -1), validator_is_positive),
         units_compatible=ureg.m ** -1,
         units_add_converter=False,
         units_add_validator=False,

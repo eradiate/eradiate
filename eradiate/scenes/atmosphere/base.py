@@ -6,32 +6,15 @@ import attr
 
 from ..core import SceneElement
 from ...util.attrs import (
-    attrib_quantity, converter_to_units, validator_is_positive,
+    converter_or_auto,
+    validator_or_auto,
+    attrib_quantity,
+    converter_to_units,
+    validator_is_positive,
     validator_units_compatible
 )
 from ...util.units import config_default_units as cdu
 from ...util.units import ureg
-
-
-def _converter_or_auto(wrapped_converter):
-    def f(value):
-        if value == "auto":
-            return value
-
-        return wrapped_converter(value)
-
-    return f
-
-
-def _validators_or_auto(wrapped_validators):
-    def f(instance, attribute, value):
-        if value == "auto":
-            return
-
-        for validator in wrapped_validators:
-            validator(instance, attribute, value)
-
-    return f
 
 
 @attr.s
@@ -65,8 +48,8 @@ class Atmosphere(SceneElement, ABC):
 
     height = attrib_quantity(
         default="auto",
-        converter=_converter_or_auto(converter_to_units(cdu.generator("length"))),
-        validator=_validators_or_auto([validator_units_compatible(ureg.m), validator_is_positive]),
+        converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
+        validator=validator_or_auto(validator_units_compatible(ureg.m), validator_is_positive),
         units_compatible=cdu.generator("length"),
         units_add_converter=False,
         units_add_validator=False
@@ -74,8 +57,8 @@ class Atmosphere(SceneElement, ABC):
 
     width = attrib_quantity(
         default="auto",
-        converter=_converter_or_auto(converter_to_units(cdu.generator("length"))),
-        validator=_validators_or_auto([validator_units_compatible(ureg.m), validator_is_positive]),
+        converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
+        validator=validator_or_auto(validator_units_compatible(ureg.m), validator_is_positive),
         units_compatible=cdu.generator("length"),
         units_add_converter=False,
         units_add_validator=False
