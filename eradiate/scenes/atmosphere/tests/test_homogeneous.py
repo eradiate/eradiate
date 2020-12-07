@@ -3,7 +3,7 @@ import pytest
 
 import eradiate
 from eradiate.scenes.atmosphere.homogeneous import \
-    RayleighHomogeneousAtmosphere
+    HomogeneousAtmosphere
 from eradiate.scenes.atmosphere.radiative_properties.rayleigh import \
     compute_sigma_s_air
 from eradiate.scenes.core import KernelDict
@@ -13,13 +13,13 @@ from eradiate.util.units import config_default_units, ureg
 
 
 @pytest.mark.parametrize("ref", (False, True))
-def test_rayleigh_homogeneous(mode_mono, ref):
-    # This test checks the functionality of RayleighHomogeneousAtmosphere
+def test_homogeneous(mode_mono, ref):
+    # This test checks the functionality of HomogeneousAtmosphere
 
     from eradiate.kernel.core.xml import load_dict
 
     # Check if default constructor works
-    r = RayleighHomogeneousAtmosphere()
+    r = HomogeneousAtmosphere()
 
     # Check if default constructs can be loaded by the kernel
     dict_phase = onedict_value(r.phase())
@@ -37,16 +37,16 @@ def test_rayleigh_homogeneous(mode_mono, ref):
     assert kernel_dict.load() is not None
 
     # Construct with parameters
-    r = RayleighHomogeneousAtmosphere(sigma_s=1e-5)
-    assert r.sigma_s == ureg.Quantity(1e-5, ureg.m ** -1)
+    r = HomogeneousAtmosphere(sigma_s=1e-5)
+    assert r.sigma_s.value == ureg.Quantity(1e-5, ureg.m ** -1)
 
     eradiate.set_mode("mono", wavelength=650.)
-    r = RayleighHomogeneousAtmosphere(height=ureg.Quantity(10, ureg.km))
+    r = HomogeneousAtmosphere(height=ureg.Quantity(10, ureg.km))
     assert r.height == ureg.Quantity(10, ureg.km)
 
     # check if sigma_s was correctly computed using the mode wavelength value
     wavelength = eradiate.mode.wavelength
-    assert np.isclose(r._sigma_s, compute_sigma_s_air(wavelength=wavelength))
+    assert np.isclose(r._sigma_s.value, compute_sigma_s_air(wavelength=wavelength))
 
     # check if automatic scene width works as intended
     assert np.isclose(r.kernel_width, 10. / compute_sigma_s_air(wavelength=wavelength))
@@ -56,24 +56,21 @@ def test_rayleigh_homogeneous(mode_mono, ref):
 
     # Check that sigma_s wavelength specification is correctly taken from eradiate mode
     eradiate.set_mode("mono", wavelength=650.)
-    r = RayleighHomogeneousAtmosphere(sigma_s="auto")
+    r = HomogeneousAtmosphere(sigma_s="auto")
     assert r._sigma_s != compute_sigma_s_air(wavelength=550.)
 
     # Check that attributes wrong units or invalid values raise an error
     with pytest.raises(UnitsError):
-        RayleighHomogeneousAtmosphere(height=ureg.Quantity(10, "second"))
+        HomogeneousAtmosphere(height=ureg.Quantity(10, "second"))
 
     with pytest.raises(UnitsError):
-        RayleighHomogeneousAtmosphere(width=ureg.Quantity(5, "m^2"))
+        HomogeneousAtmosphere(width=ureg.Quantity(5, "m^2"))
 
     with pytest.raises(UnitsError):
-        RayleighHomogeneousAtmosphere(sigma_s=ureg.Quantity(1e-7, "m"))
+        HomogeneousAtmosphere(sigma_s=ureg.Quantity(1e-7, "m"))
 
     with pytest.raises(ValueError):
-        RayleighHomogeneousAtmosphere(height=-100.)
+        HomogeneousAtmosphere(height=-100.)
 
     with pytest.raises(ValueError):
-        RayleighHomogeneousAtmosphere(width=-50.)
-
-    with pytest.raises(ValueError):
-        RayleighHomogeneousAtmosphere(sigma_s=-1e-7)
+        HomogeneousAtmosphere(width=-50.)

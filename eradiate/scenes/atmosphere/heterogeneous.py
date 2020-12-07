@@ -209,12 +209,15 @@ class HeterogeneousAtmosphere(Atmosphere):
         # checks for width and height automatic computation
         if self.profile is not None:
             if self.height != "auto":
-                raise ValueError("height must be set to 'auto' when profile is set")
+                raise ValueError("height must be set to 'auto' when profile is "
+                                 "set")
         else:
             if self.height == "auto":
-                raise ValueError("height cannot be set to 'auto' when profile is none")
+                raise ValueError("height cannot be set to 'auto' when profile "
+                                 "is None")
             if self.width == "auto":
-                raise ValueError("width cannot be set to 'auto' when profile is none")
+                raise ValueError("width cannot be set to 'auto' when profile "
+                                 "is None")
 
         # Prepare cache directory in case we'd need it
         if self._cache_dir is None:
@@ -226,11 +229,9 @@ class HeterogeneousAtmosphere(Atmosphere):
     def kernel_height(self):
         if self.height == "auto":
             ds = self.profile.to_dataset()
-            height = ureg.Quantity(ds.z_level.values.max(), ds.z_level.units)
+            return ureg.Quantity(ds.z_level.values.max(), ds.z_level.units)
         else:
-            height = self.height
-
-        return height
+            return self.height
 
     @property
     def kernel_width(self):

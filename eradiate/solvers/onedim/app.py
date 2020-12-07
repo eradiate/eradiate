@@ -43,7 +43,7 @@ class OneDimSolverApp(ConfigObject):
                        "type": "lambertian"
                    },
                    "atmosphere": {
-                       "type": "rayleigh_homogeneous"
+                       "type": "homogeneous"
                    },
                    "illumination": {
                        "type": "directional"
@@ -95,11 +95,11 @@ class OneDimSolverApp(ConfigObject):
             If set to ``None``, no atmosphere is added to the scene.
 
             Allowed scene elements:
-            :factorykey:`rayleigh_homogeneous`,
+            :factorykey:`homogeneous`,
             :factorykey:`heterogeneous`.
 
             Default:
-            :factorykey:`rayleigh_homogeneous`.
+            :factorykey:`homogeneous`.
 
         ``illumination`` (dict):
             Section dedicated to configuring the scene's illumination.
@@ -217,8 +217,8 @@ class OneDimSolverApp(ConfigObject):
                 "schema": {
                     "type": {
                         "type": "string",
-                        "allowed": ["rayleigh_homogeneous", "heterogeneous"],
-                        "default": "rayleigh_homogeneous",
+                        "allowed": ["homogeneous", "heterogeneous"],
+                        "default": "homogeneous",
                     },
                 }
             },

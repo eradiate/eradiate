@@ -9,4 +9,4 @@
 """
 
 from .heterogeneous import HeterogeneousAtmosphere
-from .homogeneous import RayleighHomogeneousAtmosphere
+from .homogeneous import HomogeneousAtmosphere

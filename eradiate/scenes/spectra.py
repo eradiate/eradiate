@@ -17,7 +17,10 @@ from .core import SceneElement, SceneElementFactory
 from .. import data
 from ..util import rstrip
 from ..util.attrs import (
-    MKey, validator_is_positive, validator_is_string, validator_units_compatible
+    MKey,
+    validator_is_positive,
+    validator_is_string,
+    validator_units_compatible
 )
 from ..util.exceptions import ModeError
 from ..util.units import config_default_units as cdu
@@ -52,6 +55,8 @@ class Spectrum(SceneElement, ABC):
 
             * ``"radiance"``
             * ``"irradiance"``
+            * ``"collision_coefficient"``
+            * ``"albedo"``
             * ``"reflectance"``
             * ``"transmittance"``
 
@@ -158,6 +163,28 @@ class IrradianceMixin:
 
 
 @attr.s
+class CollisionCoefficientMixin:
+    """Collision coefficient quantity mixin."""
+    _quantity = "collision_coefficient"
+    _units_compatible = ureg.Unit("m^-1")
+
+    @staticmethod
+    def _value_converter(val):
+        return ensure_units(val, cdu.generator("collision_coefficient"))
+
+
+@attr.s
+class AlbedoMixin:
+    """Albedo quantity mixin."""
+    _quantity = "albedo"
+    _units_compatible = ureg.Unit("dimensionless")
+
+    @staticmethod
+    def _value_converter(val):
+        return ensure_units(val, cdu.generator("albedo"))
+
+
+@attr.s
 class ReflectanceMixin:
     """Reflectance quantity mixin."""
     _quantity = "reflectance"
@@ -211,7 +238,7 @@ def create_specialized_spectrum(mixin, cls, register_as=None, return_value=False
     new_cls = attr.make_class(
         name=new_cls_name,
         attrs={
-            "value": UniformSpectrum._attrib_value(mixin)
+            "value": cls._attrib_value(mixin)
         },
         bases=(mixin, cls)
     )
@@ -231,6 +258,8 @@ def create_specialized_spectrum(mixin, cls, register_as=None, return_value=False
 uniform_spectra_definitions = {
     ("radiance", RadianceMixin),
     ("irradiance", IrradianceMixin),
+    ("collision_coefficient", CollisionCoefficientMixin),
+    ("albedo", AlbedoMixin),
     ("reflectance", ReflectanceMixin),
     ("transmittance", TransmittanceMixin)
 }
@@ -355,3 +384,15 @@ class SolarIrradianceSpectrum(Spectrum):
 
         else:
             raise ModeError(f"unsupported mode '{mode.type}'")
+
+
+def validator_has_quantity(quantity):
+    """Validates if the validated value has a quantity field matching the
+    ``quantity`` parameter."""
+    def f(_, attribute, value):
+        if value._quantity != quantity:
+            raise ValueError(f"incompatible quantity '{value._quantity}' "
+                             f"used to set field '{attribute.name}' "
+                             f"(allowed: '{quantity}')")
+
+    return f

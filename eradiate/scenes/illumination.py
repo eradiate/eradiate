@@ -13,21 +13,16 @@ from abc import ABC
 import attr
 
 from .core import SceneElement, SceneElementFactory
-from .spectra import Spectrum, UniformIrradianceSpectrum, UniformRadianceSpectrum
+from .spectra import (
+    Spectrum,
+    UniformIrradianceSpectrum,
+    UniformRadianceSpectrum,
+    validator_has_quantity
+)
 from ..util.attrs import attrib_quantity, validator_is_positive
 from ..util.frame import angles_to_direction
 from ..util.units import config_default_units as cdu
 from ..util.units import ureg
-
-
-def _validator_has_quantity(quantity):
-    def f(_, attribute, value):
-        if value._quantity != quantity:
-            raise ValueError(f"incompatible quantity '{value._quantity}' "
-                             f"used to set field '{attribute.name}' "
-                             f"(allowed: '{quantity}')")
-
-    return f
 
 
 @attr.s
@@ -65,7 +60,7 @@ class ConstantIllumination(Illumination):
         default=attr.Factory(UniformRadianceSpectrum),
         converter=Spectrum.converter("radiance"),
         validator=[attr.validators.instance_of(Spectrum),
-                   _validator_has_quantity("radiance")]
+                   validator_has_quantity("radiance")]
     )
 
     def kernel_dict(self, ref=True):
@@ -124,7 +119,7 @@ class DirectionalIllumination(Illumination):
         default=attr.Factory(UniformIrradianceSpectrum),
         converter=Spectrum.converter("irradiance"),
         validator=[attr.validators.instance_of(Spectrum),
-                   _validator_has_quantity("irradiance")]
+                   validator_has_quantity("irradiance")]
     )
 
     def kernel_dict(self, ref=True):

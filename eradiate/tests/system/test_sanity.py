@@ -92,7 +92,7 @@ def test_symmetry_zenith(variant_scalar_mono, surface, atmosphere):
     if atmosphere is None:
         config["atmosphere"] = None
     elif atmosphere == "homogeneous":
-        config["atmosphere"] = {"type": "rayleigh_homogeneous",
+        config["atmosphere"] = {"type": "homogeneous",
                                 "sigma_s": 1.e-2}
 
     app = OneDimSolverApp(config)
