@@ -6,84 +6,105 @@ import eradiate
 from .base import Atmosphere
 from .radiative_properties.rayleigh import compute_sigma_s_air
 from ..core import SceneElementFactory
+from ..spectra import (
+    Spectrum,
+    UniformAlbedoSpectrum,
+    UniformCollisionCoefficientSpectrum,
+    validator_has_quantity
+)
 from ...util.attrs import (
     converter_or_auto,
-    validator_or_auto,
-    attrib_quantity,
-    converter_to_units,
-    validator_units_compatible,
-    validator_is_positive
+    validator_or_auto
 )
-from ...util.units import config_default_units as cdu
-from ...util.units import kernel_default_units as kdu
+from ...util.collections import onedict_value
 from ...util.units import ureg
 
 
-@SceneElementFactory.register("rayleigh_homogeneous")
+@SceneElementFactory.register("homogeneous")
 @attr.s()
-class RayleighHomogeneousAtmosphere(Atmosphere):
-    """Rayleigh homogeneous atmosphere scene element
-    [:factorykey:`rayleigh_homogeneous`].
+class HomogeneousAtmosphere(Atmosphere):
+    """Homogeneous atmosphere scene element [:factorykey:`homogeneous`].
 
-    This class builds an atmosphere consisting of a non-absorbing
-    homogeneous medium. Scattering uses the Rayleigh phase function and the
-    Rayleigh scattering coefficient of air at standard number density (
-    see :func:`sigma_s_air`).
+    This class builds an atmosphere consisting of a homogeneous medium.
+    Scattering uses the Rayleigh phase function.
 
     See :class:`~eradiate.scenes.atmosphere.base.Atmosphere` for undocumented
     members.
 
     .. rubric:: Constructor arguments / instance attributes
 
-    ``sigma_s`` (float or "auto"):
+    ``sigma_s`` (:class:`~eradiate.scenes.spectra.Spectrum` or "auto"):
         Atmosphere scattering coefficient value. If set to ``"auto"``,
         the scattering coefficient will be computed based on the current
         operational mode configuration using the :func:`sigma_s_air`
         function. Default: ``"auto"``.
 
-        Unit-enabled field (default unit: cdu[collision_coefficient]).
+        Can be initialised with a dictionary processed by
+        :class:`.SceneElementFactory`.
+
+    ``sigma_a`` (:class:`~eradiate.scenes.spectra.Spectrum`):
+        Atmosphere absorption coefficient value. Default: 0 (no absorption).
+
+        Can be initialised with a dictionary processed by
+        :class:`.SceneElementFactory`.
 
     """
 
-    sigma_s = attrib_quantity(
+    sigma_s = attr.ib(
         default="auto",
-        converter=converter_or_auto(converter_to_units(cdu.generator("collision_coefficient"))),
-        validator=validator_or_auto(validator_units_compatible(ureg.m ** -1), validator_is_positive),
-        units_compatible=ureg.m ** -1,
-        units_add_converter=False,
-        units_add_validator=False,
-    )  # TODO: turn into a Spectrum
+        converter=converter_or_auto(
+            Spectrum.converter("collision_coefficient")
+        ),
+        validator=validator_or_auto(
+            attr.validators.instance_of(Spectrum),
+            validator_has_quantity("collision_coefficient")
+        ),
+    )
+
+    sigma_a = attr.ib(
+        factory=lambda: UniformCollisionCoefficientSpectrum(value=0.),
+        converter=Spectrum.converter("collision_coefficient"),
+        validator=[attr.validators.instance_of(Spectrum),
+                   validator_has_quantity("collision_coefficient")]
+    )
 
     @property
     def kernel_height(self):
         if self.height == "auto":
-            height = ureg.Quantity(100, "km")
+            return ureg.Quantity(100, "km")
         else:
-            height = self.height
+            return self.height
 
-        return height.to(kdu.get("length"))
+    @property
+    def kernel_width(self):
+        if self.width == "auto":
+            return 10. / self._sigma_s.value
+        else:
+            return self.width
 
     @property
     def _albedo(self):
         """Return albedo."""
-        return 1.
+        return UniformAlbedoSpectrum(
+            value=self._sigma_s.value / (self._sigma_s.value + self.sigma_a.value)
+        )
 
     @property
     def _sigma_s(self):
         """Return scattering coefficient based on configuration."""
         if self.sigma_s == "auto":
-            return compute_sigma_s_air(wavelength=eradiate.mode.wavelength)
+            return UniformCollisionCoefficientSpectrum(
+                value=compute_sigma_s_air(wavelength=eradiate.mode.wavelength)
+            )
         else:
             return self.sigma_s
 
     @property
-    def kernel_width(self):
-        if self.width == "auto":
-            width = 10. / self._sigma_s
-        else:
-            width = self.width
-
-        return width.to(kdu.get("length"))
+    def _sigma_t(self):
+        """Return extinction coefficient."""
+        return UniformCollisionCoefficientSpectrum(
+            value=self.sigma_a.value + self._sigma_s.value
+        )
 
     def phase(self):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
@@ -93,19 +114,13 @@ class RayleighHomogeneousAtmosphere(Atmosphere):
             phase = {"type": "ref", "id": f"phase_{self.id}"}
         else:
             phase = self.phase()[f"phase_{self.id}"]
-        sigma_s = self._sigma_s.to(kdu.get("collision_coefficient")).magnitude
+
         return {
             f"medium_{self.id}": {
                 "type": "homogeneous",
                 "phase": phase,
-                "sigma_t": {
-                    "type": "uniform",
-                    "value": sigma_s
-                },
-                "albedo": {
-                    "type": "uniform",
-                    "value": self._albedo
-                },
+                "sigma_t": onedict_value(self._sigma_t.kernel_dict()),
+                "albedo": onedict_value(self._albedo.kernel_dict()),
             }
         }
 

@@ -8,7 +8,7 @@ def test_onedim_solver_app_app():
     # Test default configuration handling
     app = OneDimSolverApp()
     assert app.config == {
-        "atmosphere": {"type": "rayleigh_homogeneous"},
+        "atmosphere": {"type": "homogeneous"},
         "illumination": {"type": "directional"},
         "measure": [{
             "azimuth_res": 10,
@@ -79,7 +79,7 @@ def test_onedim_solver_app_app():
             "reflectance": {"type": "uniform", "value": 0.5}
         },
         "atmosphere": {
-            "type": "rayleigh_homogeneous",
+            "type": "homogeneous",
             "height": 1e5,
             "sigma_s": 1e-6
         }

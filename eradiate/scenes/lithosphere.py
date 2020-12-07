@@ -13,8 +13,7 @@ from abc import ABC, abstractmethod
 import attr
 
 from .core import SceneElement, SceneElementFactory
-from .illumination import _validator_has_quantity
-from .spectra import Spectrum, UniformReflectanceSpectrum
+from .spectra import Spectrum, UniformReflectanceSpectrum, validator_has_quantity
 from ..util.attrs import attrib_quantity, validator_is_positive
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
@@ -121,7 +120,7 @@ class LambertianSurface(Surface):
         default=attr.Factory(lambda: UniformReflectanceSpectrum(value=0.5)),
         converter=Spectrum.converter("reflectance"),
         validator=[attr.validators.instance_of(Spectrum),
-                   _validator_has_quantity("reflectance")]
+                   validator_has_quantity("reflectance")]
     )
 
     def bsdfs(self):

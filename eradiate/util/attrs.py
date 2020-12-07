@@ -3,9 +3,9 @@
 import enum
 from copy import copy
 from functools import lru_cache
-import numpy as np
 
 import attr
+import numpy as np
 import pint
 
 from . import always_iterable
@@ -235,6 +235,7 @@ def converter_or_auto(wrapped_converter):
     """Returns a converter which executes the wrapped converter if the converted
     value is not equal to ``"auto"``; otherwise returns ``"auto"``.
     """
+
     def f(value):
         if value == "auto":
             return value
@@ -398,6 +399,7 @@ def validator_or_auto(*wrapped_validators):
        ``wrapped_validators`` is variadic and can therefore be an arbitrary
        number of validators.
     """
+
     def f(instance, attribute, value):
         if value == "auto":
             return
