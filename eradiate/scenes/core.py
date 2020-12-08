@@ -165,6 +165,7 @@ class SceneElementFactory(BaseFactory):
     #: List of submodules where to look for registered classes
     _modules = [
         "eradiate.scenes.atmosphere",
+        "eradiate.scenes.biosphere",
         "eradiate.scenes.illumination",
         "eradiate.scenes.lithosphere",
         "eradiate.scenes.measure",
