@@ -67,8 +67,7 @@ class Atmosphere(SceneElement, ABC):
     @property
     @abstractmethod
     def kernel_height(self):
-        """Returns the height of the kernel object delimiting the
-        atmosphere."""
+        """Height of the kernel object delimiting the atmosphere."""
         pass
 
     @property
@@ -87,8 +86,7 @@ class Atmosphere(SceneElement, ABC):
     @property
     @abstractmethod
     def kernel_width(self):
-        """Returns the width of the kernel object delimiting the
-        atmosphere."""
+        """Width of the kernel object delimiting the atmosphere."""
         pass
 
     @abstractmethod
