@@ -13,8 +13,10 @@ from abc import ABC, abstractmethod
 import attr
 
 from .core import SceneElement, SceneElementFactory
-from .spectra import Spectrum, UniformReflectanceSpectrum, validator_has_quantity
-from ..util.attrs import attrib_quantity, validator_is_positive
+from .spectra import Spectrum
+from ..util.attrs import (
+    attrib_quantity, validator_has_quantity, validator_is_positive
+)
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
 from ..util.units import ureg
@@ -109,15 +111,14 @@ class LambertianSurface(Surface):
     .. rubric:: Constructor arguments / instance attributes
 
     ``reflectance`` (:class:`.UniformSpectrum`):
-        Reflectance spectrum.
-        Default: ``UniformReflectanceSpectrum(value=0.5)``.
+        Reflectance spectrum. Default: 0.5.
 
         Can be initialised with a dictionary processed by
         :class:`.SceneElementFactory`.
     """
 
     reflectance = attr.ib(
-        default=attr.Factory(lambda: UniformReflectanceSpectrum(value=0.5)),
+        default=0.5,
         converter=Spectrum.converter("reflectance"),
         validator=[attr.validators.instance_of(Spectrum),
                    validator_has_quantity("reflectance")]
@@ -137,7 +138,7 @@ class LambertianSurface(Surface):
 class BlackSurface(Surface):
     """Black surface scene element [:factorykey:`black`].
 
-    This class creates a square surface with a non reflecting BRDF attached.
+    This class creates a square surface with a non-reflecting BRDF attached.
 
     See :class:`.Surface` for undocumented members.
     """
@@ -146,7 +147,7 @@ class BlackSurface(Surface):
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",
-                "reflectance": {"type": "uniform", "value": 0}
+                "reflectance": {"type": "uniform", "value": 0.}
             }
         }
 

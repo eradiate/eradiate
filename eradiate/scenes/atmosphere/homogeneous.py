@@ -6,16 +6,8 @@ import eradiate
 from .base import Atmosphere
 from .radiative_properties.rayleigh import compute_sigma_s_air
 from ..core import SceneElementFactory
-from ..spectra import (
-    Spectrum,
-    UniformAlbedoSpectrum,
-    UniformCollisionCoefficientSpectrum,
-    validator_has_quantity
-)
-from ...util.attrs import (
-    converter_or_auto,
-    validator_or_auto
-)
+from ..spectra import Spectrum, UniformSpectrum
+from ...util.attrs import converter_or_auto, validator_has_quantity, validator_or_auto
 from ...util.collections import onedict_value
 from ...util.units import ureg
 
@@ -43,7 +35,8 @@ class HomogeneousAtmosphere(Atmosphere):
         :class:`.SceneElementFactory`.
 
     ``sigma_a`` (:class:`~eradiate.scenes.spectra.Spectrum`):
-        Atmosphere absorption coefficient value. Default: 0 (no absorption).
+        Atmosphere absorption coefficient value.
+        Default: 0 cdu[collision_coefficient] (no absorption).
 
         Can be initialised with a dictionary processed by
         :class:`.SceneElementFactory`.
@@ -62,7 +55,7 @@ class HomogeneousAtmosphere(Atmosphere):
     )
 
     sigma_a = attr.ib(
-        factory=lambda: UniformCollisionCoefficientSpectrum(value=0.),
+        default=0.,
         converter=Spectrum.converter("collision_coefficient"),
         validator=[attr.validators.instance_of(Spectrum),
                    validator_has_quantity("collision_coefficient")]
@@ -87,7 +80,8 @@ class HomogeneousAtmosphere(Atmosphere):
     @property
     def _albedo(self):
         """Return albedo."""
-        return UniformAlbedoSpectrum(
+        return UniformSpectrum(
+            quantity="albedo",
             value=self._sigma_s.value / (self._sigma_s.value + self.sigma_a.value)
         )
 
@@ -95,7 +89,8 @@ class HomogeneousAtmosphere(Atmosphere):
     def _sigma_s(self):
         """Return scattering coefficient based on configuration."""
         if self.sigma_s == "auto":
-            return UniformCollisionCoefficientSpectrum(
+            return UniformSpectrum(
+                quantity="collision_coefficient",
                 value=compute_sigma_s_air(wavelength=eradiate.mode.wavelength)
             )
         else:
@@ -104,7 +99,8 @@ class HomogeneousAtmosphere(Atmosphere):
     @property
     def _sigma_t(self):
         """Return extinction coefficient."""
-        return UniformCollisionCoefficientSpectrum(
+        return UniformSpectrum(
+            quantity="collision_coefficient",
             value=self.sigma_a.value + self._sigma_s.value
         )
 

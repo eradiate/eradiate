@@ -12,21 +12,15 @@ from abc import ABC
 import attr
 import numpy as np
 import pint
+from pint import DimensionalityError
 
 from .core import SceneElement, SceneElementFactory
 from .. import data
-from ..util import rstrip
-from ..util.attrs import (
-    MKey,
-    validator_is_positive,
-    validator_is_string,
-    validator_units_compatible
-)
-from ..util.exceptions import ModeError
+from ..util.attrs import attrib_quantity, validator_is_positive, validator_is_string
+from ..util.exceptions import ModeError, UnitsError
+from ..util.units import PhysicalQuantity, compatible, ensure_units, ureg
 from ..util.units import config_default_units as cdu
-from ..util.units import ensure_units
 from ..util.units import kernel_default_units as kdu
-from ..util.units import ureg
 
 
 @attr.s
@@ -34,48 +28,72 @@ class Spectrum(SceneElement, ABC):
     """Spectrum abstract base class.
 
     See :class:`SceneElement` for undocumented members.
-    """
 
-    @staticmethod
-    def converter(quantity):
-        """This function generates a converter wrapping
-        :meth:`SceneElementFactory.convert` to handle defaults for shortened
-        spectrum defintions. The produced converter processes a parameter
-        ``value`` as follows:
+    .. rubric:: Constructor arguments / instance attributes
+
+    Parameter ``quantity`` (str or :class:`PhysicalQuantity` or None):
+        Physical quantity which the spectrum represents. If not ``None``,
+        the specified quantity must be one which varies with wavelength.
+        See :meth:`PhysicalQuantity.spectrum` for allowed values.
+
+        Child classes should implement value units validation and conversion
+        based on ``quantity``. In particular, no unit validation or conversion
+        should occur if ``quantity`` is ``None``.
+    """
+    quantity = attr.ib(
+        default=None,
+        converter=attr.converters.optional(PhysicalQuantity.from_any),
+    )
+
+    @quantity.validator
+    def _quantity_validator(self, attribute, value):
+        if value is None:
+            return
+
+        if value not in PhysicalQuantity.spectrum():
+            raise ValueError(f"while validating {attribute.name}: "
+                             f"got value '{value}', expected one of {str()}")
+
+    @property
+    def _values(self):
+        raise NotImplementedError
+
+    @classmethod
+    def converter(cls, quantity):
+        """Generate a converter wrapping :meth:`SceneElementFactory.convert` to
+        handle defaults for shortened spectrum definitions. The produced
+        converter processes a parameter ``value`` as follows:
 
         * if ``value`` is a float or a :class:`pint.Quantity`, the converter
-          calls itself using a dictionary ``{"type": "uniform", "value": value}``;
-        * if ``value`` is a dictionary, it replaces a ``"type": "uniform"``
-          entry with ``"type": f"uniform_{quantity}"`` and hands the resulting
-          dictionary to :meth:`.SceneElementFactory.convert`;
-        * otherwise, it calls :meth:`.SceneElementFactory.convert`.
+          calls itself using a dictionary
+          ``{"type": "uniform", "quantity": quantity, "value": value}``;
+        * if ``value`` is a dictionary, it adds a ``"quantity": quantity`` entry
+          for the following values of the ``"type"`` entry:
+          * ``"uniform"``;
+        * otherwise, it forwards ``value`` to
+          :meth:`.SceneElementFactory.convert`.
 
-        Parameter ``quantity`` (str):
-            Quantity string. Supported values:
-
-            * ``"radiance"``
-            * ``"irradiance"``
-            * ``"collision_coefficient"``
-            * ``"albedo"``
-            * ``"reflectance"``
-            * ``"transmittance"``
+        Parameter ``quantity`` (str or :class:`PhysicalQuantity`):
+            Quantity specifier (converted by :meth:`SpectrumQuantity.from_any`).
+            See :meth:`PhysicalQuantity.spectrum` for suitable values.
 
         Returns → callable:
             Generated converter.
         """
 
-        # TODO: remove when specialised factories will be implemented
-        #  (merge into SpectrumFactory.convert())
-
         def f(value):
             if isinstance(value, (float, pint.Quantity)):
-                return f({"type": "uniform", "value": value})
+                return f({
+                    "type": "uniform",
+                    "quantity": quantity,
+                    "value": value
+                })
 
             if isinstance(value, dict):
                 try:
-                    if value["type"] == "uniform":
+                    if value["type"] == "uniform" and "quantity" not in value:
                         return SceneElementFactory.convert(
-                            {**value, "type": f"uniform_{quantity}"}
+                            {**value, "quantity": quantity}
                         )
                 except KeyError:
                     pass
@@ -84,24 +102,109 @@ class Spectrum(SceneElement, ABC):
 
         return f
 
-    _quantity = None  # String containing the physical quantity held by the spectrum
-    _units_compatible = None  # Associated basic units
 
-
+@SceneElementFactory.register(name="uniform")
 @attr.s
 class UniformSpectrum(Spectrum):
-    """Base class for uniform spectra. This class must be subclassed to a
-    child class also inheriting from a quantity mixin class; otherwise, its
-    initialisation will be incomplete.
+    """Uniform spectrum (*i.e.* constant against wavelength). Supports basic
+    arithmetics.
+
+    .. rubric:: Constructor arguments / instance attributes
+
+    Parameter ``value`` (float or :class:`~pint.Quantity`):
+        Uniform spectrum value. If a float is passed and ``quantity`` is not
+        ``None``, it is automatically converted to appropriate configuration
+        default units. If a :class:`~pint.Quantity` is passed and ``quantity``
+        is not ``None``, units will be checked for consistency.
 
     See :class:`Spectrum` for undocumented members.
     """
-    _quantity = None
-    _units_compatible = None
-    value = attr.ib(default=None, init=False, repr=True)
+    value = attrib_quantity(default=1.0)
+
+    @value.validator
+    def value_validator(self, attribute, value):
+        if self.quantity is not None and isinstance(value, pint.Quantity):
+            expected_units = cdu.get(self.quantity)
+
+            if not compatible(expected_units, value.units):
+                raise UnitsError(
+                    f"while validating {attribute.name}, got units "
+                    f"'{value.units}' incompatible with quantity {self.quantity} "
+                    f"(expected '{expected_units}')"
+                )
+
+        validator_is_positive(self, attribute, value)
+
+    def __attrs_post_init__(self):
+        if self.quantity is not None and self.value is not None:
+            self.value = ensure_units(self.value, cdu.get(self.quantity))
+
+    @property
+    def _values(self):
+        return self.value
+
+    def __add__(self, other):
+        # Preserve quantity field only if it is the same for both operands
+        if self.quantity is other.quantity:
+            quantity = self.quantity
+        else:
+            quantity = None
+
+        try:
+            value = self.value + other.value
+        except DimensionalityError as e:
+            raise UnitsError(str(e))
+
+        return UniformSpectrum(quantity=quantity, value=value)
+
+    def __sub__(self, other):
+        # Preserve quantity field only if it is the same for both
+        # operands
+        if self.quantity is other.quantity:
+            quantity = self.quantity
+        else:
+            quantity = None
+
+        try:
+            value = self.value - other.value
+        except DimensionalityError as e:
+            raise UnitsError(str(e))
+
+        return UniformSpectrum(quantity=quantity, value=value)
+
+    def __mul__(self, other):
+        # We can only preserve 'dimensionless', other quantities are much
+        # more challenging to infer
+        if self.quantity is PhysicalQuantity.DIMENSIONLESS \
+                and other.quantity is PhysicalQuantity.DIMENSIONLESS:
+            quantity = PhysicalQuantity.DIMENSIONLESS
+        else:
+            quantity = None
+
+        try:
+            value = self.value * other.value
+        except DimensionalityError as e:
+            raise UnitsError(str(e))
+
+        return UniformSpectrum(quantity=quantity, value=value)
+
+    def __truediv__(self, other):
+        # We can only infer 'dimensionless' if both operands have the same
+        # quantity field, other cases are much more challenging
+        if self.quantity is other.quantity and self.quantity is not None:
+            quantity = PhysicalQuantity.DIMENSIONLESS
+        else:
+            quantity = None
+
+        try:
+            value = self.value / other.value
+        except DimensionalityError as e:
+            raise UnitsError(str(e))
+
+        return UniformSpectrum(quantity=quantity, value=value)
 
     def kernel_dict(self, ref=True):
-        kernel_units = kdu.get(self._quantity)
+        kernel_units = kdu.get(self.quantity)
 
         return {
             "spectrum": {
@@ -109,177 +212,6 @@ class UniformSpectrum(Spectrum):
                 "value": self.value.to(kernel_units).magnitude,
             }
         }
-
-    @staticmethod
-    def _value_validator(instance, attribute, val):
-        """This static method defines a validator to attach to the definition
-        of the child class.
-        """
-        v = validator_units_compatible(instance._units_compatible)
-        return v(instance, attribute, val)
-
-    @staticmethod
-    def _attrib_value(mixin):
-        """This static method creates an attribute specification for the
-        ``value`` field. It should be used to override the ``value`` field
-        in the definition of the child class.
-
-        Parameter ``mixin`` (type):
-            The quantity mixin class from which the child class inherits.
-
-        Returns → :class:`attr._make._CountingAttr`:
-            Generated attribute field.
-        """
-        return attr.ib(
-            default=attr.Factory(lambda self: ureg.Quantity(1., mixin._units_compatible),
-                                 takes_self=True),
-            converter=mixin._value_converter,
-            validator=UniformSpectrum._value_validator,
-            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
-            metadata={MKey.compatible_units: mixin._units_compatible}
-        )
-
-
-@attr.s
-class RadianceMixin:
-    """Radiance quantity mixin."""
-    _quantity = "radiance"
-    _units_compatible = ureg.Unit("W/m^2/sr/nm")
-
-    @staticmethod
-    def _value_converter(val):
-        return ensure_units(val, cdu.generator("radiance"))
-
-
-@attr.s
-class IrradianceMixin:
-    """Irradiance quantity mixin."""
-    _quantity = "irradiance"
-    _units_compatible = ureg.Unit("W/m^2/nm")
-
-    @staticmethod
-    def _value_converter(val):
-        return ensure_units(val, cdu.generator("irradiance"))
-
-
-@attr.s
-class CollisionCoefficientMixin:
-    """Collision coefficient quantity mixin."""
-    _quantity = "collision_coefficient"
-    _units_compatible = ureg.Unit("m^-1")
-
-    @staticmethod
-    def _value_converter(val):
-        return ensure_units(val, cdu.generator("collision_coefficient"))
-
-
-@attr.s
-class AlbedoMixin:
-    """Albedo quantity mixin."""
-    _quantity = "albedo"
-    _units_compatible = ureg.Unit("dimensionless")
-
-    @staticmethod
-    def _value_converter(val):
-        return ensure_units(val, cdu.generator("albedo"))
-
-
-@attr.s
-class ReflectanceMixin:
-    """Reflectance quantity mixin."""
-    _quantity = "reflectance"
-    _units_compatible = ureg.dimensionless
-
-    @staticmethod
-    def _value_converter(val):
-        return ensure_units(val, cdu.generator("reflectance"))
-
-
-@attr.s
-class TransmittanceMixin:
-    """Transmittance quantity mixin."""
-    _quantity = "transmittance"
-    _units_compatible = ureg.dimensionless
-
-    @staticmethod
-    def _value_converter(val):
-        return ensure_units(val, cdu.generator("transmittance"))
-
-
-def create_specialized_spectrum(mixin, cls, register_as=None, return_value=False,
-                                docstring=""):
-    """This function generates a new spectrum class based on a generic spectrum
-    type and a quantity mixin.
-
-    Parameter ``mixin`` (type):
-        Quantity mixin attached to the spectrum.
-
-    Parameter ``cls`` (type):
-        Generic spectrum class.
-
-    Parameter ``register_as`` (str or None):
-        If not ``None``, string used to register the created class to the
-        :class:`.SceneElementFactory`. Otherwise, the created class is not
-        registered to the factory.
-
-    Parameter ``return_value`` (bool):
-        If ``True``, return the created class. Otherwise, register it to the
-        current module's namespace.
-
-    Returns → type:
-        If ``return_value`` is ``True``, created class.
-    """
-    # Create class name
-    mixin_basename = rstrip(mixin.__name__, "Mixin")
-    cls_basename = rstrip(cls.__name__, "Spectrum")
-    new_cls_name = f"{cls_basename}{mixin_basename}Spectrum"
-
-    # Create class
-    new_cls = attr.make_class(
-        name=new_cls_name,
-        attrs={
-            "value": cls._attrib_value(mixin)
-        },
-        bases=(mixin, cls)
-    )
-    new_cls.__doc__ = docstring
-
-    if register_as is not None:
-        # Apply factory decorator
-        new_cls = SceneElementFactory.register(name=register_as)(new_cls)
-
-    if return_value:
-        return new_cls
-    else:
-        # Register class to current module
-        globals()[new_cls_name] = new_cls
-
-
-uniform_spectra_definitions = {
-    ("radiance", RadianceMixin),
-    ("irradiance", IrradianceMixin),
-    ("collision_coefficient", CollisionCoefficientMixin),
-    ("albedo", AlbedoMixin),
-    ("reflectance", ReflectanceMixin),
-    ("transmittance", TransmittanceMixin)
-}
-
-for quantity, mixin in uniform_spectra_definitions:
-    create_specialized_spectrum(
-        mixin, UniformSpectrum,
-        register_as=f"uniform_{quantity}", return_value=False,
-        docstring= \
-            f"""Uniform spectrum scene element distribution ({quantity})
-            [:factorykey:`uniform_{quantity}`].
-
-            .. rubric:: Constructor arguments / instance attributes
-
-            ``value`` (float):
-                Uniform distribution value. Default: 1 cdu[{quantity}].
-
-                Unit-enabled field (default: cdu[{quantity}]).
-            """
-    )
 
 
 @SceneElementFactory.register(name="solar_irradiance")
@@ -315,8 +247,12 @@ class SolarIrradianceSpectrum(Spectrum):
         Scaling factor. Default: 1.
     """
 
-    _quantity = "irradiance"
-    _units_compatible = ureg.Unit("W/m^2/nm")
+    #: Physical quantity
+    quantity = attr.ib(
+        default=PhysicalQuantity.IRRADIANCE,
+        init=False,
+        repr=False
+    )
 
     #: Dataset identifier
     dataset = attr.ib(
@@ -384,15 +320,3 @@ class SolarIrradianceSpectrum(Spectrum):
 
         else:
             raise ModeError(f"unsupported mode '{mode.type}'")
-
-
-def validator_has_quantity(quantity):
-    """Validates if the validated value has a quantity field matching the
-    ``quantity`` parameter."""
-    def f(_, attribute, value):
-        if value._quantity != quantity:
-            raise ValueError(f"incompatible quantity '{value._quantity}' "
-                             f"used to set field '{attribute.name}' "
-                             f"(allowed: '{quantity}')")
-
-    return f
