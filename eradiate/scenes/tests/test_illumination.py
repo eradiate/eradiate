@@ -16,7 +16,7 @@ def test_constant(mode_mono):
     assert KernelDict.empty().add(c).load() is not None
 
     # Check if a more detailed spec is valid
-    c = ConstantIllumination(radiance={"type": "uniform_radiance", "value": 1.0})
+    c = ConstantIllumination(radiance={"type": "uniform", "value": 1.0})
     assert KernelDict.empty().add(c).load() is not None
 
     # Check if 'uniform' shortcut works

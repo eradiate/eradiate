@@ -13,13 +13,12 @@ from abc import ABC
 import attr
 
 from .core import SceneElement, SceneElementFactory
-from .spectra import (
-    Spectrum,
-    UniformIrradianceSpectrum,
-    UniformRadianceSpectrum,
-    validator_has_quantity
+from .spectra import SolarIrradianceSpectrum, Spectrum
+from ..util.attrs import (
+    attrib_quantity,
+    validator_has_quantity,
+    validator_is_positive
 )
-from ..util.attrs import attrib_quantity, validator_is_positive
 from ..util.frame import angles_to_direction
 from ..util.units import config_default_units as cdu
 from ..util.units import ureg
@@ -47,17 +46,14 @@ class ConstantIllumination(Illumination):
 
     .. rubric:: Constructor arguments / instance attributes
 
-    ``radiance`` (:class:`~eradiate.scenes.spectra.Spectrum`):
+    ``radiance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
         Emitted radiance spectrum. Must be a radiance spectrum (in W/m^2/sr/nm
-        or compatible unit).
-        Default: :class:`~eradiate.scenes.spectra.UniformRadianceSpectrum`.
-
-        Can be initialised with a dictionary processed by
-        :class:`.SceneElementFactory`.
+        or compatible units).
+        Default: 1 cdu[radiance].
     """
 
     radiance = attr.ib(
-        default=attr.Factory(UniformRadianceSpectrum),
+        default=1.,
         converter=Spectrum.converter("radiance"),
         validator=[attr.validators.instance_of(Spectrum),
                    validator_has_quantity("radiance")]
@@ -87,12 +83,12 @@ class DirectionalIllumination(Illumination):
     ``zenith`` (float):
          Zenith angle. Default: 0 deg.
 
-        Unit-enabled field (default unit: cdu[angle]).
+        Unit-enabled field (default units: cdu[angle]).
 
     ``azimuth`` (float):
         Azimuth angle value. Default: 0 deg.
 
-        Unit-enabled field (default unit: cdu[angle]).
+        Unit-enabled field (default units: cdu[angle]).
 
     ``irradiance`` (:class:`~eradiate.scenes.spectra.Spectrum`):
         Emitted power flux in the plane orthogonal to the illumination direction.
@@ -116,7 +112,7 @@ class DirectionalIllumination(Illumination):
     )
 
     irradiance = attr.ib(
-        default=attr.Factory(UniformIrradianceSpectrum),
+        factory=SolarIrradianceSpectrum,
         converter=Spectrum.converter("irradiance"),
         validator=[attr.validators.instance_of(Spectrum),
                    validator_has_quantity("irradiance")]

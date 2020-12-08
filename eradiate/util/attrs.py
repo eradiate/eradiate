@@ -10,7 +10,7 @@ import pint
 
 from . import always_iterable
 from .exceptions import UnitsError
-from .units import compatible as iscompatible
+from .units import PhysicalQuantity, compatible as iscompatible
 from .units import ensure_units, ureg
 
 
@@ -23,7 +23,8 @@ class MKey(enum.Enum):
 
     These Enum values should be used as metadata attribute keys.
     """
-    compatible_units = enum.auto()  #: Field has units
+    SUPPORTS_UNITS = enum.auto()  #: Field supports units (used for dict-based units specification)
+    COMPATIBLE_UNITS = enum.auto()  #: Units compatible with this field
 
 
 def unit_enabled(cls):
@@ -31,7 +32,7 @@ def unit_enabled(cls):
 
     Upon class definition (import), this function attaches to the decorated class:
 
-    * a ``_fields_with_units()`` class method which returns a dictionary
+    * a ``_fields_supporting_units()`` class method which returns a dictionary
       mapping the names of fields marked as unit-enabled with their compatible
       units;
     * a ``from_dict()`` class method which enables instantiation from a
@@ -44,19 +45,28 @@ def unit_enabled(cls):
         Updated class.
     """
 
-    # Attach a class method which returns a map with unit-enabled attribute
-    # field names and associated compatible units
     @classmethod
     @lru_cache(maxsize=None)
-    def fields_with_units(wrapped_cls):
+    def fields_supporting_units(wrapped_cls):
+        """Return a tuple with names of attributes supporting units. Implemented
+        using :func:`functools.lru_cache()` to avoid repeatedly regenerating the
+        list."""
+        return tuple(field.name for field in attr.fields(wrapped_cls)
+                     if field.metadata.get(MKey.SUPPORTS_UNITS))
+
+    setattr(cls, "_fields_supporting_units", fields_supporting_units)
+
+    @classmethod
+    @lru_cache(maxsize=None)
+    def fields_compatible_units(wrapped_cls):
         """Return a map with unit-enabled attribute field names and associated
         compatible units. Implemented using :func:`functools.lru_cache()`
         to avoid repeatedly regenerating the list."""
-        return {field.name: field.metadata.get(MKey.compatible_units)
+        return {field.name: field.metadata.get(MKey.COMPATIBLE_UNITS)
                 for field in attr.fields(wrapped_cls)
-                if field.metadata.get(MKey.compatible_units)}
+                if field.metadata.get(MKey.COMPATIBLE_UNITS)}
 
-    setattr(cls, "_fields_with_units", fields_with_units)
+    setattr(cls, "_fields_compatible_units", fields_compatible_units)
 
     @classmethod
     def from_dict(wrapped_cls, d):
@@ -74,7 +84,7 @@ def unit_enabled(cls):
         # Pre-process dict: apply units to unit-enabled fields
         d_copy = copy(d)
 
-        for field in wrapped_cls._fields_with_units().keys():
+        for field in wrapped_cls._fields_supporting_units():
             # Fetch user-specified unit if any
             try:
                 field_units = d_copy.pop(f"{field}_units")
@@ -110,20 +120,28 @@ def attrib_quantity(
 ):
     """Create a new attribute on a class.
 
+    .. warning::
+
+       This function only works with attrs classes decorated with
+       :func:`unit_enabled`.
+
+    The created attribute is marked as
+    supporting units and can therefore can applied units when created from a
+    dictionary. See :meth:`.SceneElement.from_dict` for additional information.
+
     This wrapper extends :func:`attr.ib`: see its documentation for undocumented
     parameters.
 
-    Parameter ``on_setattr`` (callable or None):
-        If unset and ``units_compatible`` is not ``None``, ``on_setattr`` is
-        automatically set to ``attr.setters.pipe(attr.setters.convert, attr.setters.validate)``.
-        Otherwise, it is redirected to :func:`attr.ib` without change.
-
     Parameter ``units_compatible`` (callable or :class:`pint.Unit` or str or None):
-        If a :class:`pint.Unit` or a string is passed, the field will be marked
-        as unit-enabled and its compatible units will be ``units_compatible``.
-        If a callable is passed, the the field will be marked
-        as unit-enabled and its compatible units will be ``units_compatible()``.
-        If ``None`` is passed, this function is equivalent to :func:`attr.ib`.
+        If a :class:`pint.Unit` or a string is passed, the field will be
+        attached  ``units_compatible`` as compatible units. If a callable is
+        passed, the field will be  attached ``units_compatible()`` as compatible
+        units. If ``None`` is passed, no compatible units will be attached to
+        the field.
+
+        In practice, compatible units are use to automatically generate
+        converters and validators. See the ``units_add_converter`` and
+        ``units_add_validator`` parameters.
 
     Parameter ``units_add_converter`` (bool):
         If ``True``, a simple converter is appended to the conversion pipeline
@@ -146,6 +164,12 @@ def attrib_quantity(
         list of validators. If ``default`` is ``None``, this validator will
         also be made :func:`~attr.validators.optional`.
 
+    Parameter ``on_setattr`` (callable or None):
+        If unset and ``units_compatible`` is not ``None``, ``on_setattr`` is
+        automatically set to
+        ``attr.setters.pipe(attr.setters.convert, attr.setters.validate)``.
+        Otherwise, it is redirected to :func:`attr.ib` without change.
+
     Returns → :class:`attr._make._CountingAttr`:
         Generated attribute field.
     """
@@ -161,12 +185,16 @@ def attrib_quantity(
     if validator is not None:
         validators.extend(always_iterable(validator))
 
+    # Mark the field as having units
+    metadata[MKey.SUPPORTS_UNITS] = True
+
+    # Process declared compatible units
     if units_compatible is not None:
         # Set field metadata
         if callable(units_compatible):
-            metadata[MKey.compatible_units] = ureg.Unit(units_compatible())
+            metadata[MKey.COMPATIBLE_UNITS] = ureg.Unit(units_compatible())
         else:
-            metadata[MKey.compatible_units] = ureg.Unit(units_compatible)
+            metadata[MKey.COMPATIBLE_UNITS] = ureg.Unit(units_compatible)
 
         # Set field converter
         if units_add_converter:
@@ -252,7 +280,7 @@ def converter_or_auto(wrapped_converter):
 def validator_has_compatible_units(instance, attribute, value):
     """Validates if ``value`` has units compatible with ``attribute``. Only
     works with unit-enabled fields created with :func:`attrib_quantity`."""
-    compatible_units = instance._fields_with_units()[attribute.name]
+    compatible_units = instance._fields_compatible_units()[attribute.name]
 
     try:
         if not iscompatible(value.units, compatible_units):
@@ -367,6 +395,21 @@ def validator_has_len(size):
         if len(value) != size:
             raise ValueError(f"{attribute} must be have length {size}, "
                              f"got {value} of length {len(value)}")
+
+    return f
+
+
+def validator_has_quantity(quantity):
+    """Validates if the validated value has a quantity field matching the
+    ``quantity`` parameter."""
+
+    quantity = PhysicalQuantity.from_any(quantity)
+
+    def f(_, attribute, value):
+        if value.quantity != quantity:
+            raise ValueError(f"incompatible quantity '{value.quantity}' "
+                             f"used to set field '{attribute.name}' "
+                             f"(allowed: '{quantity}')")
 
     return f
 

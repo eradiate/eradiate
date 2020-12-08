@@ -30,8 +30,14 @@ def test_unit_support():
             default=ureg.Quantity(0, "m"),
         )
 
-    # -- This also tests if _fields_with_units() returns the expected value
-    assert MyClass._fields_with_units() == {
+    # -- This also tests if bound class methods return the expected value
+    assert MyClass._fields_supporting_units() == (
+        "field_distance",
+        "field_angle",
+        "field_no_quantity"
+    )
+
+    assert MyClass._fields_compatible_units() == {
         "field_distance": ureg.m,
         "field_angle": ureg.deg
     }
@@ -173,7 +179,7 @@ def test_unit_enabled():
         c = attrib_quantity()
 
     # Check that field metadata is correct
-    assert MyClass._fields_with_units() == {
+    assert MyClass._fields_compatible_units() == {
         "a": ureg.km,
         "b": ureg.s
     }

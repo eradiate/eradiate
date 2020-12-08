@@ -10,9 +10,10 @@ __all__ = [
     "kernel_default_units"
 ]
 
+import enum
 from contextlib import contextmanager
 from copy import deepcopy
-import enum
+from functools import lru_cache
 
 import pint
 
@@ -85,6 +86,23 @@ class PhysicalQuantity(enum.Enum):
     TIME = enum.auto()
     TRANSMITTANCE = enum.auto()
     WAVELENGTH = enum.auto()
+
+    @classmethod
+    @lru_cache(maxsize=32)
+    def spectrum(cls):
+        """Return a tuple containing a subset of :class:`PhysicalQuantity`
+        members suitable for :class:`.Spectrum` initialisation. This function
+        caches its results for improved efficiency.
+        """
+        return (
+            cls.ALBEDO,
+            cls.COLLISION_COEFFICIENT,
+            cls.DIMENSIONLESS,
+            cls.IRRADIANCE,
+            cls.RADIANCE,
+            cls.REFLECTANCE,
+            cls.TRANSMITTANCE
+        )
 
     @classmethod
     def from_str(cls, s):
