@@ -89,7 +89,8 @@ The technical motivation for this design is given in
 
 .. admonition:: Example
 
-   The following code snippet will use kilometres to represent the height of the atmosphere without changing configuration default units:
+   The following code snippet will use kilometres to represent the height of the
+   atmosphere without changing configuration default units:
 
    .. code-block:: python
 

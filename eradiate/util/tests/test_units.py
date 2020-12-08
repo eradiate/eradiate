@@ -1,6 +1,6 @@
 import pytest
 
-from eradiate.util.units import DefaultUnits, compatible, config_default_units, ensure_units, ureg
+from eradiate.util.units import *
 
 
 def test_compatible():
@@ -35,25 +35,26 @@ def test_default_units():
 
     # Test evaluation method
     assert du.units() == {
-        "albedo": ureg.dimensionless,
-        "angle": ureg.deg,
-        "collision_coefficient": ureg.Unit("m^-1"),
-        "dimensionless": ureg.dimensionless,
-        "irradiance": ureg.Unit("W/m^2/nm"),
-        "length": ureg.m,
-        "mass": ureg.kg,
-        "radiance": ureg.Unit("W/m^2/nm/sr"),
-        "reflectance": ureg.dimensionless,
-        "transmittance": ureg.dimensionless,
-        "time": ureg.s,
-        "wavelength": ureg.nm,
+        PhysicalQuantity.ALBEDO: ureg.dimensionless,
+        PhysicalQuantity.ANGLE: ureg.deg,
+        PhysicalQuantity.COLLISION_COEFFICIENT: ureg.Unit("m^-1"),
+        PhysicalQuantity.DIMENSIONLESS: ureg.dimensionless,
+        PhysicalQuantity.IRRADIANCE: ureg.Unit("W/m^2/nm"),
+        PhysicalQuantity.LENGTH: ureg.m,
+        PhysicalQuantity.MASS: ureg.kg,
+        PhysicalQuantity.RADIANCE: ureg.Unit("W/m^2/nm/sr"),
+        PhysicalQuantity.REFLECTANCE: ureg.dimensionless,
+        PhysicalQuantity.TRANSMITTANCE: ureg.dimensionless,
+        PhysicalQuantity.TIME: ureg.s,
+        PhysicalQuantity.WAVELENGTH: ureg.nm,
     }
 
     # Test updater (not part of the public API so we don't have a lot of safeguards there)
     du.update({"length": "km"})
     assert du.get("length") == ureg.km  # Check the updated item
     assert du.get("irradiance") == ureg.Unit("W/km^2/nm")  # Check a dynamically evaluated item
-    du.update({"speed": lambda: du.get("length") / du.get("time")})  # Use a more sophisticated callable
+    du.update(
+        {"speed": lambda: du.get("length") / du.get("time")})  # Use a more sophisticated callable
     assert du.get("speed") == ureg.km / ureg.s
 
     # Test override

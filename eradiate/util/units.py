@@ -1,7 +1,18 @@
 """ Unit system-related components. """
 
+__all__ = [
+    "ureg",
+    "compatible",
+    "ensure_units",
+    "PhysicalQuantity",
+    "DefaultUnits",
+    "config_default_units",
+    "kernel_default_units"
+]
+
 from contextlib import contextmanager
 from copy import deepcopy
+import enum
 
 import pint
 
@@ -59,6 +70,58 @@ def ensure_units(value, default_units, convert=False, ureg=ureg):
         return ureg.Quantity(value, default_units)
 
 
+class PhysicalQuantity(enum.Enum):
+    """An enumeration defining physical quantities known to Eradiate."""
+    ALBEDO = enum.auto()
+    ANGLE = enum.auto()
+    COLLISION_COEFFICIENT = enum.auto()
+    DIMENSIONLESS = enum.auto()
+    IRRADIANCE = enum.auto()
+    LENGTH = enum.auto()
+    MASS = enum.auto()
+    RADIANCE = enum.auto()
+    REFLECTANCE = enum.auto()
+    SPEED = enum.auto()
+    TIME = enum.auto()
+    TRANSMITTANCE = enum.auto()
+    WAVELENGTH = enum.auto()
+
+    @classmethod
+    def from_str(cls, s):
+        """Get a member from a string.
+
+        Parameter ``s`` (str):
+            String to convert to :class:`.PhysicalQuantity`. ``s`` will first be
+            converted to upper case.
+
+        Returns → :class:`.PhysicalQuantity`:
+            Retrieved enum member.
+        """
+        return cls[s.upper()]
+
+    @classmethod
+    def from_any(cls, value):
+        """Get a member from a many types.
+
+        Parameter ``value`` (:class:`.PhysicalQuantity` or str or int):
+            Value to convert to :class:`.PhysicalQuantity`.
+
+        Returns → :class:`.PhysicalQuantity`:
+            Retrieved enum member.
+
+        Raises → TypeError:
+            If ``value`` is of unsupported type.
+        """
+        if isinstance(value, cls):
+            return value
+        elif isinstance(value, str):
+            return cls.from_str(value)
+        elif isinstance(value, int):
+            return cls(value)
+        else:
+            raise TypeError(str(value))
+
+
 class DefaultUnits:
     """An interface to flexibly access a set of units.
 
@@ -82,7 +145,9 @@ class DefaultUnits:
 
     ``units`` (dict or None):
         This parameter is used to initialise the unit map using :meth:`update`.
-        If therefore allows for regular Pint unit definitions.
+        If therefore allows for regular Pint unit definitions. Keys should be
+        convertible to :class:`.PhysicalQuantity` (see
+        :meth:`.PhysicalQuantity.from_any` for accepted types).
 
         .. admonition:: Example
 
@@ -92,6 +157,8 @@ class DefaultUnits:
               du = DefaultUnits({"length": "m", "time": "s"})
               # Directly using Pint objects
               du = DefaultUnits({"length": ureg.m, "time": ureg.s})
+              # Directly using PhysicalQuantity enum members
+              du = DefaultUnits({PhysicalQuantity.LENGTH: ureg.m, PhysicalQuantity.TIME: ureg.s})
 
         If ``units`` is set to ``None``, a default set of units is used. Some
         units are defined so as to dynamically update when the units from which
@@ -103,22 +170,22 @@ class DefaultUnits:
            if units is None:
                units = {
                    # We allow for dimensionless quantities
-                   "dimensionless": lambda: ureg.dimensionless,
+                   PhysicalQuantity.DIMENSIONLESS: lambda: ureg.dimensionless,
                    # Basic quantities must be named after their SI name
                    # https://en.wikipedia.org/wiki/International_System_of_Units
-                   "length": lambda: ureg.m,
-                   "time": lambda: ureg.s,
-                   "mass": lambda: ureg.kg,
+                   PhysicalQuantity.LENGTH: lambda: ureg.m,
+                   PhysicalQuantity.TIME: lambda: ureg.s,
+                   PhysicalQuantity.MASS: lambda: ureg.kg,
                    # Derived quantity names are more flexible
-                   "albedo": lambda: ureg.dimensionless,
-                   "angle": lambda: ureg.deg,
-                   "reflectance": lambda: ureg.dimensionless,
-                   "transmittance": lambda: ureg.dimensionless,
-                   "wavelength": lambda: ureg.nm,
+                   PhysicalQuantity.ALBEDO: lambda: ureg.dimensionless,
+                   PhysicalQuantity.ANGLE: lambda: ureg.deg,
+                   PhysicalQuantity.REFLECTANCE: lambda: ureg.dimensionless,
+                   PhysicalQuantity.TRANSMITTANCE: lambda: ureg.dimensionless,
+                   PhysicalQuantity.WAVELENGTH: lambda: ureg.nm,
                    # The following quantities will update automatically based on their parent units
-                   "collision_coefficient": lambda: self.get("length") ** -1,
-                   "irradiance": lambda: ureg.watt / self.get("length") ** 2 / self.get("wavelength"),
-                   "radiance": lambda: ureg.watt / self.get("length") ** 2 / ureg.steradian / self.get("wavelength"),
+                   PhysicalQuantity.COLLISION_COEFFICIENT: lambda: self.get("length") ** -1,
+                   PhysicalQuantity.IRRADIANCE: lambda: ureg.watt / self.get("length") ** 2 / self.get("wavelength"),
+                   PhysicalQuantity.RADIANCE: lambda: ureg.watt / self.get("length") ** 2 / ureg.steradian / self.get("wavelength"),
                }
     """
 
@@ -128,22 +195,24 @@ class DefaultUnits:
         if units is None:
             units = {
                 # We allow for dimensionless quantities
-                "dimensionless": lambda: ureg.dimensionless,
+                PhysicalQuantity.DIMENSIONLESS: lambda: ureg.dimensionless,
                 # Basic quantities must be named after their SI name
                 # https://en.wikipedia.org/wiki/International_System_of_Units
-                "length": lambda: ureg.m,
-                "time": lambda: ureg.s,
-                "mass": lambda: ureg.kg,
+                PhysicalQuantity.LENGTH: lambda: ureg.m,
+                PhysicalQuantity.TIME: lambda: ureg.s,
+                PhysicalQuantity.MASS: lambda: ureg.kg,
                 # Derived quantity names are more flexible
-                "albedo": lambda: ureg.dimensionless,
-                "angle": lambda: ureg.deg,
-                "reflectance": lambda: ureg.dimensionless,
-                "transmittance": lambda: ureg.dimensionless,
-                "wavelength": lambda: ureg.nm,
+                PhysicalQuantity.ALBEDO: lambda: ureg.dimensionless,
+                PhysicalQuantity.ANGLE: lambda: ureg.deg,
+                PhysicalQuantity.REFLECTANCE: lambda: ureg.dimensionless,
+                PhysicalQuantity.TRANSMITTANCE: lambda: ureg.dimensionless,
+                PhysicalQuantity.WAVELENGTH: lambda: ureg.nm,
                 # The following quantities will update automatically based on their parent units
-                "collision_coefficient": lambda: self.get("length") ** -1,
-                "irradiance": lambda: ureg.watt / self.get("length") ** 2 / self.get("wavelength"),
-                "radiance": lambda: ureg.watt / self.get("length") ** 2 / ureg.steradian / self.get("wavelength"),
+                PhysicalQuantity.COLLISION_COEFFICIENT: lambda: self.get("length") ** -1,
+                PhysicalQuantity.IRRADIANCE: lambda: ureg.watt / self.get("length") ** 2 / self.get(
+                    "wavelength"),
+                PhysicalQuantity.RADIANCE: lambda: ureg.watt / self.get(
+                    "length") ** 2 / ureg.steradian / self.get("wavelength"),
             }
 
         self.update(units)
@@ -170,7 +239,15 @@ class DefaultUnits:
            strings and unit objects.
 
         Parameter ``d`` (dict)
-            Dictionary used to update the unit map. Dictionary values can be:
+            Dictionary used to update the unit map. Dictionary keys can be:
+
+            * :class:`.PhysicalQuantity` enum members;
+            * strings: if a string is used, it will first be converted to an
+              :class:`.PhysicalQuantity` enum member;
+            * integers: if an integer is used, it will first be converted to an
+              :class:`.PhysicalQuantity` enum member.
+
+            Dictionary values can be:
 
             * callables: if a callable is found, it is directly used to update
               the unit map;
@@ -179,12 +256,14 @@ class DefaultUnits:
 
             The latter two types of objects are then used to generate callables
             inserted into the unit map.
-
         """
 
         to_update = dict()
 
         for key, value in d.items():
+            if not isinstance(key, PhysicalQuantity):
+                key = PhysicalQuantity.from_any(key)
+
             if isinstance(value, (str, ureg.Unit)):
                 to_update[key] = lambda value=value: ureg.Unit(
                     value)  # https://stackoverflow.com/questions/11087047/deferred-evaluation-with-lambda-in-python
@@ -192,7 +271,7 @@ class DefaultUnits:
                 to_update[key] = value
             else:
                 raise ValueError(
-                    f"Items must be either strings or callables; "
+                    f"Items must be either strings, Pint units or callables; "
                     f"found: {key}: {type(value)}"
                 )
 
@@ -201,36 +280,39 @@ class DefaultUnits:
     def units(self):
         """Evaluate all callables in the internal unit map.
 
-        Returns → dict
+        Returns → dict:
             A dictionary with the same keys as the internal unit map and the
             evaluation of the unit map's callables as values.
         """
         return {key: value() for key, value in self._units.items()}
 
     def get(self, key):
-        """Get default unit for a given quantity.
+        """Get default units for a given quantity.
 
-        Parameter ``key`` (str)
-            Quantity to get the unit of.
+        Parameter ``key`` (:class:`PhysicalQuantity` or str):
+            Quantity to get the units of.
 
-        Returns → :class:`pint.Unit`
+        Returns → :class:`pint.Unit`:
             Requested unit.
 
-        Raises → ``KeyError``
+        Raises → TypeError:
+            The requested ``key`` was of unhandled type.
+
+        Raises → KeyError:
             The requested ``key`` could not be found in the unit map.
         """
         try:
-            return self._units[key]()
+            return self._units[PhysicalQuantity.from_any(key)]()
         except KeyError:
             raise
 
     def get_str(self, key):
-        """Get default unit for a given quantity and return it as a string.
+        """Get default units for a given quantity and return it as a string.
 
-        Returns → str
-            Requested unit as a string.
+        Returns → (:class:`PhysicalQuantity` or str):
+            Quantity to get the units of.
 
-        Raises → ``KeyError``
+        Raises → ``KeyError``:
             The requested ``key`` could not be found in the unit map.
         """
         try:
@@ -284,7 +366,7 @@ class DefaultUnits:
                print(defaults.get("speed"))  # We get m/s
 
         Parameter ``d`` (dict)
-            Dictionary of units to add to overwrite the defaults with.
+            Dictionary of units to override the defaults with.
 
             Overrides are specified using the same input as for the
             :meth:`update` method. It follows that:
