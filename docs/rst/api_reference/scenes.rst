@@ -17,6 +17,7 @@ Scene generation [eradiate.scenes]
 
    core
    atmosphere
+   biosphere
    illumination
    lithosphere
    measure

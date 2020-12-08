@@ -4,7 +4,8 @@
     :class: hint
 
     .. factorytable::
-        :modules: biosphere
+       :factory: SceneElementFactory
+       :modules: eradiate.scenes.biosphere
 """
 
 import aabbtree
