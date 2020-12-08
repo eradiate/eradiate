@@ -9,7 +9,7 @@ from eradiate.scenes.atmosphere.radiative_properties.rayleigh import \
 from eradiate.scenes.core import KernelDict
 from eradiate.util.collections import onedict_value
 from eradiate.util.exceptions import UnitsError
-from eradiate.util.units import config_default_units, ureg
+from eradiate.util.units import ureg
 
 
 @pytest.mark.parametrize("ref", (False, True))
@@ -44,11 +44,11 @@ def test_homogeneous(mode_mono, ref):
     r = HomogeneousAtmosphere(height=ureg.Quantity(10, ureg.km))
     assert r.height == ureg.Quantity(10, ureg.km)
 
-    # check if sigma_s was correctly computed using the mode wavelength value
+    # Check if sigma_s was correctly computed using the mode wavelength value
     wavelength = eradiate.mode.wavelength
     assert np.isclose(r._sigma_s.value, compute_sigma_s_air(wavelength=wavelength))
 
-    # check if automatic scene width works as intended
+    # Check if automatic scene width works as intended
     assert np.isclose(r.kernel_width, 10. / compute_sigma_s_air(wavelength=wavelength))
 
     # Check if produced scene can be instantiated
@@ -57,7 +57,7 @@ def test_homogeneous(mode_mono, ref):
     # Check that sigma_s wavelength specification is correctly taken from eradiate mode
     eradiate.set_mode("mono", wavelength=650.)
     r = HomogeneousAtmosphere(sigma_s="auto")
-    assert r._sigma_s != compute_sigma_s_air(wavelength=550.)
+    assert np.allclose(r._sigma_s.value, compute_sigma_s_air(wavelength=650.))
 
     # Check that attributes wrong units or invalid values raise an error
     with pytest.raises(UnitsError):
