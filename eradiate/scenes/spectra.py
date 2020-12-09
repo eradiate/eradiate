@@ -1,11 +1,10 @@
 """Spectrum-related scene generation facilities.
 
-.. admonition:: Registered factory members
-    :class: hint
+.. admonition:: Registered factory members [:class:`SpectrumFactory`]
+   :class: hint
 
-    .. factorytable::
-       :factory: SceneElementFactory
-       :modules: eradiate.scenes.spectra
+   .. factorytable::
+      :factory: SpectrumFactory
 """
 from abc import ABC
 
@@ -14,10 +13,11 @@ import numpy as np
 import pint
 from pint import DimensionalityError
 
-from .core import SceneElement, SceneElementFactory
+from .core import SceneElement
 from .. import data
 from ..util.attrs import attrib_quantity, validator_is_positive, validator_is_string
 from ..util.exceptions import ModeError, UnitsError
+from ..util.factory import BaseFactory
 from ..util.units import PhysicalQuantity, compatible, ensure_units, ureg
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
@@ -58,9 +58,23 @@ class Spectrum(SceneElement, ABC):
     def _values(self):
         raise NotImplementedError
 
-    @classmethod
-    def converter(cls, quantity):
-        """Generate a converter wrapping :meth:`SceneElementFactory.convert` to
+
+class SpectrumFactory(BaseFactory):
+    """This factory constructs objects whose classes are derived from
+    :class:`Spectrum`.
+
+    .. admonition:: Registered factory members
+       :class: hint
+
+       .. factorytable::
+          :factory: SpectrumFactory
+    """
+    _constructed_type = Spectrum
+    registry = {}
+
+    @staticmethod
+    def converter(quantity):
+        """Generate a converter wrapping :meth:`SpectrumFactory.convert` to
         handle defaults for shortened spectrum definitions. The produced
         converter processes a parameter ``value`` as follows:
 
@@ -71,7 +85,7 @@ class Spectrum(SceneElement, ABC):
           for the following values of the ``"type"`` entry:
           * ``"uniform"``;
         * otherwise, it forwards ``value`` to
-          :meth:`.SceneElementFactory.convert`.
+          :meth:`.SpectrumFactory.convert`.
 
         Parameter ``quantity`` (str or :class:`PhysicalQuantity`):
             Quantity specifier (converted by :meth:`SpectrumQuantity.from_any`).
@@ -92,18 +106,18 @@ class Spectrum(SceneElement, ABC):
             if isinstance(value, dict):
                 try:
                     if value["type"] == "uniform" and "quantity" not in value:
-                        return SceneElementFactory.convert(
+                        return SpectrumFactory.convert(
                             {**value, "quantity": quantity}
                         )
                 except KeyError:
                     pass
 
-            return SceneElementFactory.convert(value)
+            return SpectrumFactory.convert(value)
 
         return f
 
 
-@SceneElementFactory.register(name="uniform")
+@SpectrumFactory.register(name="uniform")
 @attr.s
 class UniformSpectrum(Spectrum):
     """Uniform spectrum (*i.e.* constant against wavelength). Supports basic
@@ -214,7 +228,7 @@ class UniformSpectrum(Spectrum):
         }
 
 
-@SceneElementFactory.register(name="solar_irradiance")
+@SpectrumFactory.register(name="solar_irradiance")
 @attr.s(frozen=True)
 class SolarIrradianceSpectrum(Spectrum):
     """Solar irradiance spectrum scene element

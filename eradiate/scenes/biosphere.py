@@ -1,30 +1,46 @@
 """Biosphere-related scene generation facilities.
 
-.. admonition:: Factory-enabled scene elements
+.. admonition:: Registered factory members [:class:`BiosphereFactory`]
     :class: hint
 
     .. factorytable::
-       :factory: SceneElementFactory
-       :modules: eradiate.scenes.biosphere
+       :factory: BiosphereFactory
 """
 
 import aabbtree
 import attr
 import numpy as np
 
-from .core import SceneElement, SceneElementFactory
-from .spectra import Spectrum
+from .core import SceneElement
+from .spectra import Spectrum, SpectrumFactory
 from ..util.attrs import (
     attrib_quantity,
     validator_has_len,
     validator_has_quantity,
     validator_is_positive
 )
-from ..util.units import config_default_units as cdu, ureg
+from ..util.factory import BaseFactory
+from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
+from ..util.units import ureg
 
 
-@SceneElementFactory.register(name="homogeneous_discrete_canopy")
+class BiosphereFactory(BaseFactory):
+    """This factory constructs objects whose classes are derived from
+    :class:`.SceneElement`.
+
+    .. admonition:: Registered factory members
+       :class: hint
+
+       .. factorytable::
+          :factory: BiosphereFactory
+    """
+
+    _constructed_type = SceneElement
+    registry = {}
+
+
+@BiosphereFactory.register(name="homogeneous_discrete_canopy")
 @attr.s
 class HomogeneousDiscreteCanopy(SceneElement):
     """A generator for the `homogenous discrete canopy used in the RAMI benchmark
@@ -181,7 +197,7 @@ class HomogeneousDiscreteCanopy(SceneElement):
 
     leaf_reflectance = attr.ib(
         default=0.5,
-        converter=Spectrum.converter("reflectance"),
+        converter=SpectrumFactory.converter("reflectance"),
         validator=[
             attr.validators.instance_of(Spectrum),
             validator_has_quantity("reflectance")
@@ -190,7 +206,7 @@ class HomogeneousDiscreteCanopy(SceneElement):
 
     leaf_transmittance = attr.ib(
         default=0.5,
-        converter=Spectrum.converter("transmittance"),
+        converter=SpectrumFactory.converter("transmittance"),
         validator=[
             attr.validators.instance_of(Spectrum),
             validator_has_quantity("transmittance")

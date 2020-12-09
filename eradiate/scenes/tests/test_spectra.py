@@ -3,7 +3,7 @@ import pytest
 
 import eradiate
 from eradiate.scenes.spectra import (
-    SolarIrradianceSpectrum, Spectrum, UniformSpectrum
+    SolarIrradianceSpectrum, SpectrumFactory, UniformSpectrum
 )
 from eradiate.util.collections import onedict_value
 from eradiate.util.exceptions import UnitsError
@@ -14,18 +14,18 @@ from eradiate.util.units import kernel_default_units as kdu
 
 def test_converter(mode_mono):
     # Check if dicts are correctly processed
-    s = Spectrum.converter("radiance")({"type": "uniform"})
+    s = SpectrumFactory.converter("radiance")({"type": "uniform"})
     assert s == UniformSpectrum(quantity="radiance", value=1.0)
-    s = Spectrum.converter("irradiance")({"type": "uniform"})
+    s = SpectrumFactory.converter("irradiance")({"type": "uniform"})
     assert s == UniformSpectrum(quantity="irradiance", value=1.0)
 
     # Check if floats and quantities are correctly processed
-    s = Spectrum.converter("radiance")(1.0)
+    s = SpectrumFactory.converter("radiance")(1.0)
     assert s == UniformSpectrum(quantity="radiance", value=1.0)
-    s = Spectrum.converter("radiance")(ureg.Quantity(1e6, "W/km^2/sr/nm"))
+    s = SpectrumFactory.converter("radiance")(ureg.Quantity(1e6, "W/km^2/sr/nm"))
     assert s == UniformSpectrum(quantity="radiance", value=1.0)
     with pytest.raises(UnitsError):
-        Spectrum.converter("irradiance")(ureg.Quantity(1, "W/m^2/sr/nm"))
+        SpectrumFactory.converter("irradiance")(ureg.Quantity(1, "W/m^2/sr/nm"))
 
 
 def test_uniform(mode_mono):

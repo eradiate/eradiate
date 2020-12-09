@@ -3,16 +3,15 @@
 import attr
 
 import eradiate
-from .base import Atmosphere
+from .base import Atmosphere, AtmosphereFactory
 from .radiative_properties.rayleigh import compute_sigma_s_air
-from ..core import SceneElementFactory
-from ..spectra import Spectrum, UniformSpectrum
+from ..spectra import Spectrum, SpectrumFactory, UniformSpectrum
 from ...util.attrs import converter_or_auto, validator_has_quantity, validator_or_auto
 from ...util.collections import onedict_value
 from ...util.units import ureg
 
 
-@SceneElementFactory.register("homogeneous")
+@AtmosphereFactory.register("homogeneous")
 @attr.s()
 class HomogeneousAtmosphere(Atmosphere):
     """Homogeneous atmosphere scene element [:factorykey:`homogeneous`].
@@ -32,21 +31,21 @@ class HomogeneousAtmosphere(Atmosphere):
         function. Default: ``"auto"``.
 
         Can be initialised with a dictionary processed by
-        :class:`.SceneElementFactory`.
+        :class:`.SpectrumFactory`.
 
     ``sigma_a`` (:class:`~eradiate.scenes.spectra.Spectrum`):
         Atmosphere absorption coefficient value.
         Default: 0 cdu[collision_coefficient] (no absorption).
 
         Can be initialised with a dictionary processed by
-        :class:`.SceneElementFactory`.
+        :class:`.SpectrumFactory`.
 
     """
 
     sigma_s = attr.ib(
         default="auto",
         converter=converter_or_auto(
-            Spectrum.converter("collision_coefficient")
+            SpectrumFactory.converter("collision_coefficient")
         ),
         validator=validator_or_auto(
             attr.validators.instance_of(Spectrum),
@@ -56,7 +55,7 @@ class HomogeneousAtmosphere(Atmosphere):
 
     sigma_a = attr.ib(
         default=0.,
-        converter=Spectrum.converter("collision_coefficient"),
+        converter=SpectrumFactory.converter("collision_coefficient"),
         validator=[attr.validators.instance_of(Spectrum),
                    validator_has_quantity("collision_coefficient")]
     )

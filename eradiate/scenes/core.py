@@ -116,9 +116,8 @@ class SceneElement(ABC):
 
     .. note::
 
-        This class is designed to integrate with the :class:`SceneElementFactory`
-        class. See the corresponding documentation for a list of factory-enabled
-        scene element classes.
+        This class is designed to integrate with factory classes derived from
+        :class:`.Factory`.
 
     .. rubric:: Constructor arguments / instance attributes
 
@@ -144,41 +143,3 @@ class SceneElement(ABC):
         """
         # TODO: return a KernelDict
         pass
-
-
-class SceneElementFactory(BaseFactory):
-    """This factory constructs objects whose classes are derived from
-    :class:`SceneElement`. For optimal use, it needs to discover registered
-    classes in modules listed in its :attr:`_modules` class attribute.
-
-    .. admonition:: Registered factory members
-        :class: hint
-
-        .. factorytable::
-           :factory: SceneElementFactory
-           :sections:
-    """
-
-    _constructed_type = SceneElement
-    registry = {}
-
-    #: List of submodules where to look for registered classes
-    _modules = [
-        "eradiate.scenes.atmosphere",
-        "eradiate.scenes.biosphere",
-        "eradiate.scenes.illumination",
-        "eradiate.scenes.lithosphere",
-        "eradiate.scenes.measure",
-        "eradiate.scenes.spectra"
-    ]
-
-    @classmethod
-    def _discover(cls):
-        """Import submodules containing classes to be automatically added to
-        :class:`SceneElementFactory`'s registry."""
-        for module_name in cls._modules:
-            importlib.import_module(module_name)
-
-
-# Trigger factory module discovery
-SceneElementFactory._discover()

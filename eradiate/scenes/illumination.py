@@ -1,24 +1,24 @@
 """Illumination-related scene generation facilities.
 
-.. admonition:: Registered factory members
-    :class: hint
+.. admonition:: Registered factory members [:class:`IlluminationFactory`]
+   :class: hint
 
-    .. factorytable::
-       :factory: SceneElementFactory
-       :modules: eradiate.scenes.illumination
+   .. factorytable::
+      :factory: IlluminationFactory
 """
 
 from abc import ABC
 
 import attr
 
-from .core import SceneElement, SceneElementFactory
-from .spectra import SolarIrradianceSpectrum, Spectrum
+from .core import SceneElement
+from .spectra import SolarIrradianceSpectrum, Spectrum, SpectrumFactory
 from ..util.attrs import (
     attrib_quantity,
     validator_has_quantity,
     validator_is_positive
 )
+from ..util.factory import BaseFactory
 from ..util.frame import angles_to_direction
 from ..util.units import config_default_units as cdu
 from ..util.units import ureg
@@ -37,7 +37,21 @@ class Illumination(SceneElement, ABC):
     )
 
 
-@SceneElementFactory.register(name="constant")
+class IlluminationFactory(BaseFactory):
+    """This factory constructs objects whose classes are derived from
+    :class:`Illumination`.
+
+    .. admonition:: Registered factory members
+       :class: hint
+
+       .. factorytable::
+          :factory: IlluminationFactory
+    """
+    _constructed_type = Illumination
+    registry = {}
+
+
+@IlluminationFactory.register(name="constant")
 @attr.s
 class ConstantIllumination(Illumination):
     """Constant illumination scene element [:factorykey:`constant`].
@@ -54,7 +68,7 @@ class ConstantIllumination(Illumination):
 
     radiance = attr.ib(
         default=1.,
-        converter=Spectrum.converter("radiance"),
+        converter=SpectrumFactory.converter("radiance"),
         validator=[attr.validators.instance_of(Spectrum),
                    validator_has_quantity("radiance")]
     )
@@ -68,7 +82,7 @@ class ConstantIllumination(Illumination):
         }
 
 
-@SceneElementFactory.register(name="directional")
+@IlluminationFactory.register(name="directional")
 @attr.s
 class DirectionalIllumination(Illumination):
     """Directional illumination scene element [:factorykey:`directional`].
@@ -96,7 +110,7 @@ class DirectionalIllumination(Illumination):
         Default: :class:`~eradiate.scenes.spectra.SolarIrradianceSpectrum`.
 
         Can be initialised with a dictionary processed by
-        :class:`.SceneElementFactory`.
+        :meth:`.SpectrumFactory.convert`.
     """
 
     zenith = attrib_quantity(
@@ -113,7 +127,7 @@ class DirectionalIllumination(Illumination):
 
     irradiance = attr.ib(
         factory=SolarIrradianceSpectrum,
-        converter=Spectrum.converter("irradiance"),
+        converter=SpectrumFactory.converter("irradiance"),
         validator=[attr.validators.instance_of(Spectrum),
                    validator_has_quantity("irradiance")]
     )

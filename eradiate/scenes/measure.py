@@ -1,25 +1,25 @@
 """Measurement-related scene generation facilities.
 
-.. admonition:: Registered factory members
+.. admonition:: Registered factory members [:class:`MeasureFactory`]
     :class: hint
 
     .. factorytable::
-       :factory: SceneElementFactory
-       :modules: eradiate.scenes.measure
+       :factory: MeasureFactory
 """
 from abc import ABC
 from abc import abstractmethod
+from copy import deepcopy
 
 import attr
-from copy import deepcopy
 import numpy as np
 
 import eradiate.kernel
-from .core import SceneElement, SceneElementFactory
+from .core import SceneElement
 from ..util import always_iterable
 from ..util.attrs import (
     attrib_quantity, validator_has_len, validator_is_positive
 )
+from ..util.factory import BaseFactory
 from ..util.frame import angles_to_direction, spherical_to_cartesian
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
@@ -66,7 +66,21 @@ class Measure(SceneElement, ABC):
         pass
 
 
-@SceneElementFactory.register(name="distant")
+class MeasureFactory(BaseFactory):
+    """This factory constructs objects whose classes are derived from
+    :class:`Measure`.
+
+    .. admonition:: Registered factory members
+       :class: hint
+
+       .. factorytable::
+          :factory: MeasureFactory
+    """
+    _constructed_type = Measure
+    registry = {}
+
+
+@MeasureFactory.register(name="distant")
 @attr.s
 class DistantMeasure(Measure):
     """Distant measure scene element [:factorykey:`distant`].
@@ -159,7 +173,7 @@ class DistantMeasure(Measure):
         }
 
 
-@SceneElementFactory.register(name="perspective")
+@MeasureFactory.register(name="perspective")
 @attr.s
 class PerspectiveCameraMeasure(Measure):
     """Perspective camera scene element [:factorykey:`perspective`].
@@ -300,7 +314,7 @@ class PerspectiveCameraMeasure(Measure):
         }
 
 
-@SceneElementFactory.register(name="radiancemeter_hsphere")
+@MeasureFactory.register(name="radiancemeter_hsphere")
 @attr.s
 class RadianceMeterHsphereMeasure(Measure):
     """Hemispherical radiancemeter measure scene element
@@ -445,7 +459,7 @@ class RadianceMeterHsphereMeasure(Measure):
         spp_sum = np.sum(sensor_spp)
 
         # multiply each sensor's result by its relative SPP and sum all results
-        results = np.dot(sensors.transpose(), sensor_spp/spp_sum).transpose()
+        results = np.dot(sensors.transpose(), sensor_spp / spp_sum).transpose()
 
         return np.reshape(results, (len(self._zenith_angles), len(self._azimuth_angles)))
 
@@ -525,7 +539,7 @@ class RadianceMeterHsphereMeasure(Measure):
 
 
 @attr.s
-@SceneElementFactory.register(name="radiancemeter_pplane")
+@MeasureFactory.register(name="radiancemeter_pplane")
 class RadianceMeterPPlaneMeasure(Measure):
     """Distant principal plane measure scene generation helper [:factorykey:`radiancemeter_pplane`].
 
@@ -664,7 +678,7 @@ class RadianceMeterPPlaneMeasure(Measure):
         spp_sum = np.sum(sensor_spp)
 
         # multiply each sensor's result by its relative SPP and sum all results
-        results = np.dot(sensors.transpose(), sensor_spp/spp_sum).transpose()
+        results = np.dot(sensors.transpose(), sensor_spp / spp_sum).transpose()
         print(results)
 
         return np.reshape(results, (len(self._zenith_angles), 2))

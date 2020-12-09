@@ -1,22 +1,22 @@
 """Lithosphere-related scene generation facilities.
 
-.. admonition:: Registered factory members
-    :class: hint
+.. admonition:: Registered factory members [:class:`SurfaceFactory`]
+   :class: hint
 
-    .. factorytable::
-       :factory: SceneElementFactory
-       :modules: eradiate.scenes.lithosphere
+   .. factorytable::
+      :factory: SurfaceFactory
 """
 
 from abc import ABC, abstractmethod
 
 import attr
 
-from .core import SceneElement, SceneElementFactory
-from .spectra import Spectrum
+from .core import SceneElement
+from .spectra import Spectrum, SpectrumFactory
 from ..util.attrs import (
     attrib_quantity, validator_has_quantity, validator_is_positive
 )
+from ..util.factory import BaseFactory
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
 from ..util.units import ureg
@@ -99,7 +99,21 @@ class Surface(SceneElement, ABC):
         return kernel_dict
 
 
-@SceneElementFactory.register(name="lambertian")
+class SurfaceFactory(BaseFactory):
+    """This factory constructs objects whose classes are derived from
+    :class:`Surface`.
+
+    .. admonition:: Registered factory members
+       :class: hint
+
+       .. factorytable::
+          :factory: SurfaceFactory
+    """
+    _constructed_type = Surface
+    registry = {}
+
+
+@SurfaceFactory.register(name="lambertian")
 @attr.s
 class LambertianSurface(Surface):
     """Lambertian surface scene element [:factorykey:`lambertian`].
@@ -114,12 +128,12 @@ class LambertianSurface(Surface):
         Reflectance spectrum. Default: 0.5.
 
         Can be initialised with a dictionary processed by
-        :class:`.SceneElementFactory`.
+        :class:`.SpectrumFactory`.
     """
 
     reflectance = attr.ib(
         default=0.5,
-        converter=Spectrum.converter("reflectance"),
+        converter=SpectrumFactory.converter("reflectance"),
         validator=[attr.validators.instance_of(Spectrum),
                    validator_has_quantity("reflectance")]
     )
@@ -133,7 +147,7 @@ class LambertianSurface(Surface):
         }
 
 
-@SceneElementFactory.register(name="black")
+@SurfaceFactory.register(name="black")
 @attr.s
 class BlackSurface(Surface):
     """Black surface scene element [:factorykey:`black`].
@@ -152,7 +166,7 @@ class BlackSurface(Surface):
         }
 
 
-@SceneElementFactory.register(name="rpv")
+@SurfaceFactory.register(name="rpv")
 @attr.s
 class RPVSurface(Surface):
     """RPV surface scene element [:factorykey:`rpv`].

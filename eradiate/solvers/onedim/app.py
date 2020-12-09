@@ -14,8 +14,12 @@ import xarray as xr
 
 import eradiate.kernel
 from .runner import OneDimRunner
-from ...scenes.core import KernelDict, SceneElementFactory
-from ...scenes.measure import RadianceMeterHsphereMeasure, RadianceMeterPPlaneMeasure
+from ...scenes.atmosphere import AtmosphereFactory
+from ...scenes.core import KernelDict
+from ...scenes.illumination import IlluminationFactory
+from ...scenes.lithosphere import SurfaceFactory
+from ...scenes.measure import MeasureFactory, RadianceMeterHsphereMeasure, \
+    RadianceMeterPPlaneMeasure
 from ...util import ensure_array
 from ...util import plot as ertplt
 from ...util import xarray as ertxr
@@ -298,14 +302,15 @@ class OneDimSolverApp(ConfigObject):
 
         with cdu.override({"length": "km"}), kdu.override({"length": "km"}):
                 # Set illumination
-                self._elements["illumination"] = SceneElementFactory.create(
-                    self.config["illumination"])
+                self._elements["illumination"] = \
+                    IlluminationFactory.create(self.config["illumination"])
 
                 # Set atmosphere
                 config_atmosphere = config.get("atmosphere", None)
 
                 if config_atmosphere is not None:
-                    self._elements["atmosphere"] = SceneElementFactory.create(config_atmosphere)
+                    self._elements["atmosphere"] = \
+                        AtmosphereFactory.create(config_atmosphere)
 
                 # Set surface
                 atmosphere = self._elements.get("atmosphere", None)
@@ -317,7 +322,7 @@ class OneDimSolverApp(ConfigObject):
                         )
                     config["surface"]["width"] = atmosphere.kernel_width
 
-                self._elements["surface"] = SceneElementFactory.create(config["surface"])
+                self._elements["surface"] = SurfaceFactory.create(config["surface"])
 
                 # Set measure
                 for config_measure in self.config["measure"]:
@@ -351,8 +356,8 @@ class OneDimSolverApp(ConfigObject):
                     config_measure["hemisphere"] = "back"
                     # TODO: warn when overriding parameters set by user
 
-                    self._elements[config_measure["id"]] = SceneElementFactory.create(
-                        config_measure)
+                    self._elements[config_measure["id"]] = \
+                        MeasureFactory.create(config_measure)
                     sensor_info = self._elements[config_measure["id"]].sensor_info()
                     for sensor_id, sensor_spp in sensor_info:
                         self._measure_registry.insert(

@@ -1,12 +1,12 @@
 """Atmosphere-related scene generation facilities.
 
-.. admonition:: Registered factory members
+.. admonition:: Registered factory members [:class:`.AtmosphereFactory`]
     :class: hint
 
     .. factorytable::
-       :factory: SceneElementFactory
-       :modules: eradiate.scenes.atmosphere
+       :factory: AtmosphereFactory
 """
 
+from .base import AtmosphereFactory
 from .heterogeneous import HeterogeneousAtmosphere
 from .homogeneous import HomogeneousAtmosphere

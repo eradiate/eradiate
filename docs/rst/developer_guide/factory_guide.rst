@@ -31,8 +31,9 @@ interface.
    Factories deriving from :class:`~eradiate.util.factory.BaseFactory` are not
    meant to be instantiated and only implement class methods.
 
-Class registration to factory objects is done using the :meth:`~eradiate.util.factory.register`
-class decorator (see _`Registering a class to a factory`).
+Class registration to factory objects is done using the
+:meth:`~eradiate.util.factory.register` class decorator (see
+_`Registering a class to a factory`).
 
 Using a factory created from this base class simply requires to import it and
 call its :meth:`~eradiate.util.factory.BaseFactory.create` class method with a
@@ -58,13 +59,13 @@ YAML or JSON fragments.
 
    The following code snippet instantiates a
    :class:`~eradiate.scenes.illumination.DirectionalIllumination` element
-   using its :factorykey:`SceneElementFactory::directional` factory name:
+   using its :factorykey:`IlluminationFactory::directional` factory name:
 
    .. code:: python
 
-       from eradiate.scenes.core import SceneElementFactory
+       from eradiate.scenes.illumination import IlluminationFactory
 
-       illumination = SceneElementFactory.create({
+       illumination = IlluminationFactory.create({
            "type": "directional",
            "irradiance": {"type": "uniform", "value": 1.0},
            "zenith": 30.0,
@@ -85,12 +86,12 @@ YAML or JSON fragments.
 
    Under the hood, this call creates a both
    :class:`~eradiate.scenes.illumination.DirectionalIllumination` and
-   :class:`~eradiate.scenes.spectral.UniformIrradianceSpectrum`: the former
+   :class:`~eradiate.scenes.spectra.UniformSpectrum`: the former
    is instantiated directly (either implicitly using
-   :meth:`~eradiate.util.factory.BaseFactory.create`, explicitly using the
-   :class:`~eradiate.scenes.illumination.DirectionalIllumination` constructor;
+   :meth:`~eradiate.util.factory.BaseFactory.create`, or explicitly using the
+   :class:`~eradiate.scenes.illumination.DirectionalIllumination` constructor);
    the latter is instantiated when the dictionary passed as the ``irradiance``
-   parameter is passed to :meth:`~eradiate.util.factory.BaseFactory.convert`.
+   parameter is forwarded to :meth:`~eradiate.util.factory.BaseFactory.convert`.
 
 Enabling a class for factory usage
 ----------------------------------
@@ -112,13 +113,16 @@ is automatic (mind, however, that the declaration order is critical, so the
 factory declaration must be placed before any call to its
 :meth:`~eradiate.util.factory.BaseFactory.register` decorator).
 
-If a factory and classes to be registered to it are placed in different modules,
-importing the factory won't necessary result in its register to be properly
-populated. For this reason, some factories can benefit from some additional
-registration code, which will make sure that modules containing classes to
-register will be discovered automatically when the factory will be imported.
-The :class:`~eradiate.scenes.core.SceneElementFactory` factory implements this
-kind of discovery system.
+.. note::
+
+   If a factory and classes to be registered to it are placed in different
+   modules, importing the factory won't necessary result in its register to be
+   properly populated. For this reason, some factories can benefit from some
+   additional registration code, which will make sure that modules containing
+   classes to register will be discovered automatically when the factory will be
+   imported. However, this can result in unreliable import sequence, since
+   discovery will inevitably introduce an import loop. For this reason,
+   automatic module discovery is not performed by Eradiate's factories.
 
 Documenting factories
 ---------------------
@@ -129,33 +133,20 @@ Printing a table of registered types
 A ``.. factorytable::`` directive prints a table mapping a factory's keys to
 the corresponding registered types:
 
-::
+.. tabbed:: ReST
 
-  .. factorytable::
-     :factory: eradiate.scenes.core.SceneElementFactory
+   .. code-block:: restructuredtext
+
+      .. factorytable::
+         :factory: IlluminationFactory
+
+.. tabbed:: Output
+
+   .. factorytable::
+        :factory: IlluminationFactory
 
 This will create a factory key mapping table for the
-:class:`eradiate.scenes.core.SceneElementFactory` class.
-
-A ``sections`` option groups registered classes with respect to the module where
-they are defined:
-
-::
-
-  .. factorytable::
-     :factory: eradiate.scenes.core.SceneElementFactory
-     :sections:
-
-A ``modules`` option restricts the table to registered classes lying in a
-specified set of modules and their submodules:
-
-::
-
-  .. factorytable::
-       :factory: eradiate.scenes.core.SceneElementFactory
-       :modules: eradiate.scenes.atmosphere
-
-Multiple modules can be passed as a comma-separated list.
+:class:`eradiate.scenes.illumination.IlluminationFactory` class.
 
 Referencing registered classes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -163,14 +154,28 @@ Referencing registered classes
 A registered class can be referenced by its factory key using the ``:factorykey:``
 role.
 
-::
+.. tabbed:: ReST
 
-  The directional illumination scene element [:factorykey:`directional`] ...
+   .. code-block:: restructuredtext
+
+      The directional illumination scene element [:factorykey:`directional`] ...
+
+.. tabbed:: Output
+
+   The directional illumination scene element [:factorykey:`directional`] ...
 
 This role takes a single argument, interpreted as the requested factory key.
 If multiple factories use the same key to reference different types, the
 referenced factory can be specified as a prefix, and using a ``::`` separator:
 
-::
+.. tabbed:: ReST
 
-  :factorykey:`SceneElementFactory::directional`
+   .. code-block:: restructuredtext
+
+      The directional illumination scene element
+      [:factorykey:`IlluminationFactory::directional`] ...
+
+.. tabbed:: Output
+
+   The directional illumination scene element
+   [:factorykey:`IlluminationFactory::directional`] ...

@@ -82,8 +82,6 @@ def test_pplane_orientation(mode_mono):
     Once with a hemispherical view and once with a pplane view. Select the values corresponding to
     the pplane from the hemispherical dataset and compare with the pplane data."""
 
-    from eradiate.scenes.core import SceneElementFactory, KernelDict
-
     measure_config = {
         "zenith_res": 9,
         "origin": [0, 0, 1],

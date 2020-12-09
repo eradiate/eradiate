@@ -13,6 +13,7 @@ from ...util.attrs import (
     validator_is_positive,
     validator_units_compatible
 )
+from ...util.factory import BaseFactory
 from ...util.units import config_default_units as cdu
 from ...util.units import ureg
 
@@ -138,3 +139,17 @@ class Atmosphere(SceneElement, ABC):
             kernel_dict[f"{self.id}"] = self.shapes(ref=True)[f"shape_{self.id}"]
 
         return kernel_dict
+
+
+class AtmosphereFactory(BaseFactory):
+    """This factory constructs objects whose classes are derived from
+    :class:`Atmosphere`.
+
+    .. admonition:: Registered factory members
+       :class: hint
+
+       .. factorytable::
+          :factory: AtmosphereFactory
+    """
+    _constructed_type = Atmosphere
+    registry = {}
