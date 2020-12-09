@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 import eradiate.kernel
-from eradiate.scenes.core import KernelDict, SceneElement, SceneElementFactory
+from eradiate.scenes.core import KernelDict, SceneElement
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.util.attrs import (
     attrib_quantity, validator_has_len, validator_is_number,
@@ -136,31 +136,3 @@ def test_scene_element(mode_mono):
             "irradiance": 1.0,
             "unexpected_param": 0
         })
-
-
-def test_factory():
-    # We expect that correct object specification will yield an object
-    assert SceneElementFactory.create({"type": "directional", "zenith": 45.}) is not None
-
-    # We expect that incorrect object specification will raise
-    # (here, the 'direction' field is not part of the expected parameters)
-    with pytest.raises(TypeError):
-        SceneElementFactory.create({"type": "directional", "direction": [0, -1, -1]})
-
-    # We expect that an empty dict will raise
-    with pytest.raises(KeyError):
-        SceneElementFactory.create({})
-
-    # We expect that an unregistered 'type' will raise
-    with pytest.raises(ValueError):
-        SceneElementFactory.create({"type": "dzeiaticional"})
-
-    # Test converter
-    assert isinstance(
-        SceneElementFactory.convert({"type": "directional", "zenith": 45.}),
-        DirectionalIllumination
-    )
-    assert isinstance(
-        SceneElementFactory.convert(DirectionalIllumination()),
-        DirectionalIllumination
-    )

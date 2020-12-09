@@ -18,11 +18,21 @@ from sphinx.util import nested_parse_with_titles
 from tinydb import TinyDB, Query
 from tinydb.storages import MemoryStorage
 
-from eradiate.scenes.core import SceneElementFactory
+from eradiate.scenes.atmosphere import AtmosphereFactory
+from eradiate.scenes.biosphere import BiosphereFactory
+from eradiate.scenes.illumination import IlluminationFactory
+from eradiate.scenes.measure import MeasureFactory
+from eradiate.scenes.spectra import SpectrumFactory
+from eradiate.scenes.lithosphere import SurfaceFactory
 from eradiate.scenes.atmosphere.radiative_properties.rad_profile import RadProfileFactory
 
 factory_classes = {
-    "SceneElementFactory": SceneElementFactory,
+    "AtmosphereFactory": AtmosphereFactory,
+    "BiosphereFactory": BiosphereFactory,
+    "IlluminationFactory": IlluminationFactory,
+    "MeasureFactory": MeasureFactory,
+    "SpectrumFactory": SpectrumFactory,
+    "SurfaceFactory": SurfaceFactory,
     "RadProfileFactory": RadProfileFactory
 }
 

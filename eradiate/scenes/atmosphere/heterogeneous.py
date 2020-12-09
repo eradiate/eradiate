@@ -7,9 +7,8 @@ import attr
 import numpy as np
 import xarray as xr
 
-from .base import Atmosphere
+from .base import Atmosphere, AtmosphereFactory
 from .radiative_properties.rad_profile import RadProfile, RadProfileFactory
-from ..core import SceneElementFactory
 from ...util.attrs import validator_is_file
 from ...util.units import kernel_default_units as kdu, ureg
 
@@ -93,7 +92,7 @@ def _dataarray_to_ndarray(value):
         return value
 
 
-@SceneElementFactory.register("heterogeneous")
+@AtmosphereFactory.register("heterogeneous")
 @attr.s
 class HeterogeneousAtmosphere(Atmosphere):
     r"""Heterogeneous atmosphere scene element

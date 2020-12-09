@@ -64,7 +64,7 @@ class BaseFactory:
             .. code:: python
 
                 # Note that the register() decorator is applied *after* attr.s()
-                @SceneElementFactory.register(name="constant")
+                @IlluminationFactory.register(name="constant")
                 @attr.s
                 class ConstantIllumination(SceneElement):
                     radiance = attr.ib(
