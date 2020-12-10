@@ -14,6 +14,15 @@ Top-level module [eradiate]
 
    __version__
    mode
+   modes
+
+
+.. rubric:: Classes
+
+.. autosummary::
+   :toctree: generated/
+
+   ModePrecision
 
 .. rubric:: Functions
 

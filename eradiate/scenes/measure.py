@@ -497,7 +497,7 @@ class RadianceMeterHsphereMeasure(Measure):
         It returns a list of tuples, each holding a sensor_id and the corresponding
         SPP value. In the case of a SPP-split, none of the SPP values will
         exceed the threshold."""
-        if eradiate.mode.precision == eradiate.Precision.SINGLE and self.spp > 1e5:
+        if eradiate.mode.precision == eradiate.ModePrecision.SINGLE and self.spp > 1e5:
             sensor_info = [(f"{self.id}_{i}", int(1e5)) for i in range(int(self.spp / 1e5))]
             if self.spp % 1e5 != 0:
                 sensor_info += [(f"{self.id}_{int(self.spp / 1e5)}", self.spp % 1e5)]
@@ -720,7 +720,7 @@ class RadianceMeterPPlaneMeasure(Measure):
         It returns a list of tuples, each holding a sensor_id and the corresponding
         SPP value. In the case of a SPP-split, none of the SPP values will
         exceed the threshold."""
-        if eradiate.mode.precision == eradiate.Precision.SINGLE and self.spp > 1e5:
+        if eradiate.mode.precision == eradiate.ModePrecision.SINGLE and self.spp > 1e5:
             sensor_info = [(f"{self.id}_{i}", int(1e5)) for i in range(int(self.spp / 1e5))]
             if self.spp % 1e5 != 0:
                 sensor_info += [(f"{self.id}_{int(self.spp / 1e5)}", self.spp % 1e5)]
