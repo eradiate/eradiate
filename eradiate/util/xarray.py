@@ -419,7 +419,9 @@ for coord_spec_id, coord_spec in [
     ("wavelength", CoordSpec("wavelength", "nm", "wavelength")),
     ("z_layer", CoordSpec("layer_altitude", "m", "layer altitude")),
     ("z_level", CoordSpec("level_altitude", "m", "level altitude")),
-    ("species", CoordSpec("species", None, "species"))
+    ("species", CoordSpec("species", None, "species")),
+    ("w", CoordSpec("wavelength", "nm", "wavelength")),
+    ("t", CoordSpec("time", None, "time"))
 ]:
     CoordSpecRegistry.register(coord_spec_id, coord_spec)
 
@@ -428,9 +430,28 @@ for collection_id, coord_spec_ids in [
     ("angular_intrinsic", ("theta_i", "phi_i", "theta_o", "phi_o", "wavelength")),
     ("angular_observation", ("sza", "saa", "vza", "vaa", "wavelength")),
     ("angular_observation_pplane", ("sza", "saa", "vza", "wavelength")),
-    ("atmospheric_profile", ("z_layer", "z_level", "species"))
+    ("atmospheric_profile", ("z_layer", "z_level", "species")),
+    ("solar_irradiance_spectrum", ("w", "t"))
 ]:
     CoordSpecRegistry.register_collection(collection_id, coord_spec_ids)
+
+
+# Define solar irradiance spectra dataset specifications
+ssi_dataset_spec = DatasetSpec(
+    title="Untitled solar irradiance spectrum",
+    convention="CF-1.8",
+    source="Unknown",
+    history="Unknown",
+    references="Unknown",
+    var_specs={
+        "ssi": VarSpec(
+            standard_name="solar_irradiance_per_unit_wavelength",
+            units="W/m^2/nm",
+            long_name="solar spectral irradiance"
+        )
+    },
+    coord_specs="solar_irradiance_spectrum"
+)
 
 
 def make_dataarray(data, coords=None, dims=None, var_spec=None):

@@ -13,6 +13,7 @@ User guide
    package_structure
    data_guide
    unit_guide_user
+   solar_irradiance_spectra
 
 ..
   Archived content

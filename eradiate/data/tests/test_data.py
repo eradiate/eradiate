@@ -8,7 +8,10 @@ def test_open():
     ds = data.open(path="spectra/solar_irradiance/blackbody_sun.nc")
 
     # Check that loading registered dataset works
-    ds = data.open("solar_irradiance_spectrum", "blackbody_sun")
+    cat = "solar_irradiance_spectrum"
+    for dataset_id in data.registered(cat):
+        if dataset_id != "solid_2017":  # this dataset is not available in eradiate-data
+            data.open(category=cat, id=dataset_id)
 
     # Check that unknown category raises
     with pytest.raises(ValueError):
@@ -21,5 +24,6 @@ def test_open():
 
 def test_required_data_sets():
     # Check that data sets required for testing are found
-    assert all(data.find("solar_irradiance_spectrum").values())
+    assert data.find("solar_irradiance_spectrum")["thuillier_2003"]
+    assert data.find("solar_irradiance_spectrum")["blackbody_sun"]
     assert data.find("absorption_spectrum")["test"]
