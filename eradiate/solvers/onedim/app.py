@@ -296,8 +296,7 @@ class OneDimSolverApp(ConfigObject):
         self._elements = {}
         self._kernel_dict = KernelDict.empty()
 
-        with cdu.override({"length": "km"}):
-            with kdu.override({"length": "km"}):
+        with cdu.override({"length": "km"}), kdu.override({"length": "km"}):
                 # Set illumination
                 self._elements["illumination"] = SceneElementFactory.create(
                     self.config["illumination"])
