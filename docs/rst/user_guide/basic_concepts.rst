@@ -36,7 +36,7 @@ Scene elements provide abstractions used to create input for the Eradiate
 kernel. They let users easily create scenes of arbitrary complexity. Scene
 elements combine kernel-level abstractions (shapes, spectra, BSDFs, media, etc.)
 in a consistent way to describe physical items used to populate a scene. For
-instance, a :class:`~eradiate.scenes.lithosphere.Surface` scene element combines
+instance, a :class:`~eradiate.scenes.surface.Surface` scene element combines
 a kernel shape and a BSDF to describe the surface in a one-dimensional scene.
 
 All scene element components derive from the :class:`~eradiate.scenes.core.SceneElement`

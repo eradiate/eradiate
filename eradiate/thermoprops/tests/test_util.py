@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from eradiate.scenes.atmosphere.thermophysics.us76 import make_profile
-from eradiate.scenes.atmosphere.thermophysics.util import (
+from eradiate.thermoprops.us76 import make_profile
+from eradiate.thermoprops.util import (
     make_profile_regular,
     _find_regular_params_gcd,
     _to_regular,

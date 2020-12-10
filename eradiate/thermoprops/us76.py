@@ -11,8 +11,8 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 from eradiate import __version__
-from eradiate.util.units import ureg
 from .util import profile_dataset_spec
+from ..util.units import ureg
 
 _Q = ureg.Quantity
 
@@ -370,7 +370,7 @@ def create(z, variables=None):
     .. warning::
         The returned U.S. Standard Atmosphere 1976 data set is not an
         atmospheric vertical profile data set. See
-        :func:`eradiate.scenes.atmosphere.thermophysics.us76.make_profile`
+        :func:`eradiate.thermoprops.us76.make_profile`
         if you are interested in generating an atmospheric vertical profile
         based on the U.S. Standard Atmosphere 1976 model.
 

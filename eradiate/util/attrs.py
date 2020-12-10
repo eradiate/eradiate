@@ -8,8 +8,8 @@ import attr
 import numpy as np
 import pint
 
-from . import always_iterable
 from .exceptions import UnitsError
+from .misc import always_iterable
 from .units import PhysicalQuantity, compatible as iscompatible
 from .units import ensure_units, ureg
 

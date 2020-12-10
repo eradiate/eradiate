@@ -265,7 +265,7 @@ kilometers. Its scattering coefficient is forced to
 
    * Atmosphere reference documentation: :mod:`eradiate.scenes.atmosphere`
    * Atmospheric profile reference documentation:
-     :mod:`eradiate.scenes.atmosphere.radiative_properties.rad_profile`
+     :mod:`eradiate.radprops.rad_profile`
 
 ``illumination``
 ^^^^^^^^^^^^^^^^

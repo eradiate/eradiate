@@ -1,7 +1,7 @@
 import pytest
 
-from eradiate.scenes.atmosphere.thermophysics.us76 import *
-from eradiate.scenes.atmosphere.thermophysics.util import profile_dataset_spec
+from eradiate.thermoprops.us76 import *
+from eradiate.thermoprops.util import profile_dataset_spec
 
 _Q = ureg.Quantity
 

@@ -15,12 +15,12 @@ import numpy as np
 
 import eradiate.kernel
 from .core import SceneElement
-from ..util import always_iterable
 from ..util.attrs import (
     attrib_quantity, validator_has_len, validator_is_positive
 )
 from ..util.factory import BaseFactory
 from ..util.frame import angles_to_direction, spherical_to_cartesian
+from ..util.misc import always_iterable
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
 from ..util.units import ureg

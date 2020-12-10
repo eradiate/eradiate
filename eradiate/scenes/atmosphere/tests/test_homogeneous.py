@@ -2,10 +2,8 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.scenes.atmosphere.homogeneous import \
-    HomogeneousAtmosphere
-from eradiate.scenes.atmosphere.radiative_properties.rayleigh import \
-    compute_sigma_s_air
+from eradiate.radprops.rayleigh import compute_sigma_s_air
+from eradiate.scenes.atmosphere.homogeneous import HomogeneousAtmosphere
 from eradiate.scenes.core import KernelDict
 from eradiate.util.collections import onedict_value
 from eradiate.util.exceptions import UnitsError

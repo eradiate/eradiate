@@ -16,4 +16,6 @@ API reference
    scenes
    solvers
    data
+   thermoprops
+   radprops
    util

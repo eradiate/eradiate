@@ -1,4 +1,4 @@
-"""Lithosphere-related scene generation facilities.
+"""Surface-related scene generation facilities.
 
 .. admonition:: Registered factory members [:class:`SurfaceFactory`]
    :class: hint
