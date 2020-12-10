@@ -50,8 +50,9 @@ where the notebook is stored, create a relative symbolic link as follows:
 
    The `nbsphinx <https://nbsphinx.readthedocs.io>`_ extension is used to
    integrate notebooks into this documentation. The
-   `Markdown Cells <https://nbsphinx.readthedocs.io/en/latest/markdown-cells.html>`_.
-   section is, in particular, a very useful read.
+   `Markdown Cells <https://nbsphinx.readthedocs.io/en/latest/markdown-cells.html>`_
+   and `Raw Cells <https://nbsphinx.readthedocs.io/en/0.8.0/raw-cells.html>`_
+   sections are, in particular, a very useful read.
 
 Adding the tutorial to the docs
 -------------------------------
@@ -62,8 +63,8 @@ the tutorial contents. In there, create symbolic links to all the resources
 required for the tutorial, *i.e.* the notebook itself and all its ancillary
 files.
 
-Afterwards the notebook can be added in the root doc ``index.rst``
-in the section ``tutorials`` by referencing the path to the symbolic link.
+Afterwards the notebook can be added in the ``intro.rst`` file of the
+appropriate doc section by referencing the path to the symbolic link.
 
 .. note::
 

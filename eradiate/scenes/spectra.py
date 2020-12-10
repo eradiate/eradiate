@@ -237,7 +237,7 @@ class SolarIrradianceSpectrum(Spectrum):
     This scene element produces the scene dictionary required to
     instantiate a kernel plugin using the Sun irradiance spectrum. The data set
     used by this element is controlled by the ``dataset`` attribute (see
-    :data:`eradiate.data.SOLAR_IRRADIANCE_SPECTRA` for available data sets).
+    :mod:`eradiate.data.solar_irradiance_spectra` for available data sets).
 
     The spectral range of the data sets shipped can vary and an attempt for use
     outside of the supported spectral range will raise a :class:`ValueError`
@@ -306,8 +306,14 @@ class SolarIrradianceSpectrum(Spectrum):
         if mode.is_monochromatic():
             wavelength = mode.wavelength.to(ureg.nm).magnitude
 
+            if self.dataset == "solid_2017":
+                raise NotImplementedError(f"Solar irradiance spectrum datasets "
+                                          f"with a non-empty time coordinate "
+                                          f"are not supported yet.")
+            # TODO: add support to solar irradiance spectrum datasets with a non-empty time coordinate
+
             irradiance_magnitude = float(
-                self.data["ssi"].interp(
+                self.data.ssi.interp(
                     w=wavelength,
                     method="linear",
                 ).values
@@ -320,7 +326,7 @@ class SolarIrradianceSpectrum(Spectrum):
             # Apply units
             irradiance = ureg.Quantity(
                 irradiance_magnitude,
-                self.data["ssi"].attrs["units"]
+                self.data.ssi.attrs["units"]
             )
 
             # Apply scaling, build kernel dict
