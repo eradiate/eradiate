@@ -1,6 +1,6 @@
 import numpy as np
 
-from eradiate.scenes.atmosphere.radiative_properties.absorption import compute_sigma_a
+from eradiate.radprops.absorption import compute_sigma_a
 from eradiate.util.units import ureg
 
 

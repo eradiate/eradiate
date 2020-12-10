@@ -4,8 +4,8 @@ import attr
 
 import eradiate
 from .base import Atmosphere, AtmosphereFactory
-from .radiative_properties.rayleigh import compute_sigma_s_air
 from ..spectra import Spectrum, SpectrumFactory, UniformSpectrum
+from ...radprops.rayleigh import compute_sigma_s_air
 from ...util.attrs import converter_or_auto, validator_has_quantity, validator_or_auto
 from ...util.collections import onedict_value
 from ...util.units import ureg

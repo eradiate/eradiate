@@ -43,29 +43,26 @@ components based on the Earth system science nomenclature:
     This submodule contains scene elements used to add an atmosphere to the
     scene.
 
-:mod:`eradiate.scenes.lithosphere`
-    This submodule contains scene elements used to add a lithosphere surface to
-    the scene.
-
 :mod:`eradiate.scenes.biosphere` (upcoming)
     This submodule will contain scene elements used to add vegetation
     to the scene.
 
 :mod:`eradiate.scenes.cryosphere` (upcoming)
-    This submodule will contain scene elements used to add
-    cryosphere elements to the scene.
+    This submodule will contain scene elements used to add cryosphere elements
+    to the scene.
 
 :mod:`eradiate.scenes.hydrosphere` (upcoming)
-    This  submodule will contain scene elements used to add
-    water surfaces and bodies to the scene.
+    This  submodule will contain scene elements used to add water surfaces and
+    bodies to the scene.
 
-.. note::
-
-   Arguably, some abstractions currently defined in the lithosphere are
-   transverse, *e.g.* the :class:`.Surface` interface. It is likely that these
-   components will move to another location at some point.
+:mod:`eradiate.scenes.lithosphere` (upcoming)
+    This submodule will contain scene elements used to add mineral surfaces
+    to the scene.
 
 In addition, transverse components are defined in the following submodules:
+
+:mod:`eradiate.scenes.surface`
+    This submodule contains scene elements used to add a surface to the scene.
 
 :mod:`eradiate.scenes.illumination`
     This module defines scene elements used to illuminate the scene, _i.e._

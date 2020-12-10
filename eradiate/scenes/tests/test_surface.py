@@ -2,7 +2,7 @@ import numpy as np
 
 
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.lithosphere import LambertianSurface, RPVSurface, BlackSurface
+from eradiate.scenes.surface import LambertianSurface, RPVSurface, BlackSurface
 from eradiate.util.units import ureg
 
 

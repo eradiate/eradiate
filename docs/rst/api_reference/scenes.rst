@@ -19,6 +19,6 @@ Scene generation [eradiate.scenes]
    atmosphere
    biosphere
    illumination
-   lithosphere
    measure
    spectra
+   surface

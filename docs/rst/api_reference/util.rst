@@ -22,6 +22,7 @@ Utility [eradiate.util]
    factory
    frame
    metaclasses
+   misc
    plot
    presolver
    units

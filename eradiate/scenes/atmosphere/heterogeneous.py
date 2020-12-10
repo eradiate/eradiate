@@ -8,7 +8,8 @@ import numpy as np
 import xarray as xr
 
 from .base import Atmosphere, AtmosphereFactory
-from .radiative_properties.rad_profile import RadProfile, RadProfileFactory
+from ...radprops import RadProfileFactory
+from ...radprops.rad_profile import RadProfile
 from ...util.attrs import validator_is_file
 from ...util.units import kernel_default_units as kdu, ureg
 
@@ -133,7 +134,7 @@ class HeterogeneousAtmosphere(Atmosphere):
 
     .. rubric:: Constructor arguments / instance attributes
 
-    ``profile`` (:class:`~eradiate.scenes.atmosphere.radiative_properties.rad_profile.RadProfile` or None):
+    ``profile`` (:class:`~eradiate.radprops.rad_profile.RadProfile` or None):
         Radiative property profile used. If set, volume data files will be
         created from profile data to initialise the corresponding kernel
         plugin. If ``None``, :class:`.HeterogeneousAtmosphere` will assume

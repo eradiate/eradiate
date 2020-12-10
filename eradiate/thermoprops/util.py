@@ -5,7 +5,7 @@ from datetime import datetime
 import numpy as np
 import xarray as xr
 
-from eradiate.util.xarray import DatasetSpec, VarSpec
+from ..util.xarray import DatasetSpec, VarSpec
 
 profile_dataset_spec = DatasetSpec(
     var_specs={
@@ -35,7 +35,7 @@ def rescale_co2(profile, surf_ppmv, inplace=False):
 
     .. warning::
         This function is implemented for the user's convenience but may produce
-        atmosphere thermophysics with unphysical data.
+        atmosphere thermoprops with unphysical data.
 
         Scaling gas species number densities in an atmosphere profile can have
         undesired consequences. If the gas species volume fraction is not small
@@ -96,7 +96,7 @@ def rescale_co2(profile, surf_ppmv, inplace=False):
         f"\n" \
         f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - " \
         f"CO2 concentration rescaling - " \
-        f"eradiate.scenes.atmosphere.thermophysics.scale_co2()"
+        f"eradiate.thermoprops.scale_co2()"
 
     return ds
 
@@ -150,8 +150,7 @@ def make_profile_regular(profile, atol):
     # update history
     new_line = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - made " \
                f"profile altitude mesh regular - " \
-               f"eradiate.scenes.atmosphere.thermophysics.util" \
-               f".make_profile_regular "
+               f"eradiate.thermoprops.util.make_profile_regular "
     attrs["history"] += f"\n{new_line}"
 
     dataset = xr.Dataset(

@@ -52,7 +52,7 @@
 """
 
 import eradiate.data as data
-from ....util.units import ureg
+from ..util.units import ureg
 
 
 @ureg.wraps(ret="m^-1", args=("nm", None, None), strict=False)
@@ -97,7 +97,7 @@ def compute_sigma_a(wavelength=550., profile=None, dataset_id=None):
 
     # make default profile
     if profile is None:
-        from ..thermophysics.us76 import make_profile
+        from ..thermoprops.us76 import make_profile
         profile = make_profile()
 
     n_tot = ureg.Quantity(profile.n_tot.values, profile.n_tot.units)

@@ -1,6 +1,6 @@
 import numpy as np
 
-from eradiate.scenes.atmosphere.radiative_properties.rayleigh import (
+from eradiate.radprops.rayleigh import (
     _LOSCHMIDT,
     air_refractive_index,
     compute_sigma_s_air
@@ -38,7 +38,7 @@ def test_sigma_s_air_optical_thickness():
     air in a 100km high atmosphere. We compare the obtained result to the value
     given by :cite:`Hansen1974LightScatteringPlanetary` at page 544.
     """
-    from eradiate.scenes.atmosphere.thermophysics.us76 import make_profile
+    from eradiate.thermoprops.us76 import make_profile
 
     profile = make_profile(levels=np.linspace(0., 100000., 1001))
     n = profile.n_tot.values

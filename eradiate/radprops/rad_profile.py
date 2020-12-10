@@ -29,21 +29,23 @@
    Additional attributes are allowed.
 """
 
+import datetime
 from abc import ABC, abstractmethod
 
 import attr
-import datetime
 import numpy as np
 import xarray as xr
 
 from eradiate import __version__
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
-from ..thermophysics import us76
-from ....util.attrs import attrib_quantity, unit_enabled, validator_is_positive, validator_all_positive
-from ....util.factory import BaseFactory
-from ....util.units import config_default_units as cdu
-from ....util.units import ureg
+from ..thermoprops import us76
+from ..util.attrs import (
+    attrib_quantity, unit_enabled, validator_all_positive, validator_is_positive
+)
+from ..util.factory import BaseFactory
+from ..util.units import config_default_units as cdu
+from ..util.units import ureg
 
 
 @ureg.wraps(ret=None, args=("m", "m", "m^-1", "m^-1", "m^-1", None), strict=False)
@@ -87,8 +89,9 @@ def make_dataset(z_level, z_layer=None, sigma_a=None, sigma_s=None, sigma_t=None
         sigma_s = albedo * sigma_t
         sigma_a = sigma_t - sigma_s
     else:
-        raise ValueError("You must provide either one of the two pairs of arguments 'sigma_a' and 'sigma_s' or "
-                         "'sigma_t' and 'albedo'.")
+        raise ValueError(
+            "You must provide either one of the two pairs of arguments 'sigma_a' and 'sigma_s' or "
+            "'sigma_t' and 'albedo'.")
 
     return xr.Dataset(
         data_vars={
@@ -374,7 +377,7 @@ class US76ApproxRadProfile(RadProfile):
     The radiative properties are computed based upon the so-called US76
     atmospheric vertical profile.
     The scattering coefficient is computed with
-    :func:`sigma_s_air<eradiate.scenes.atmosphere.radiative_properties.rayleigh.sigma_s_air>`
+    :func:`sigma_s_air<eradiate.radprops.rayleigh.sigma_s_air>`
     using the total number density from the US76 atmospheric vertical
     profile.
     The absorption coefficient is computed in two steps. First, the

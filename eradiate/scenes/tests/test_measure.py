@@ -3,7 +3,7 @@ import pytest
 
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.illumination import DirectionalIllumination
-from eradiate.scenes.lithosphere import RPVSurface
+from eradiate.scenes.surface import RPVSurface
 from eradiate.scenes.measure import DistantMeasure, PerspectiveCameraMeasure, \
     RadianceMeterHsphereMeasure, RadianceMeterPPlaneMeasure
 from eradiate.scenes.spectra import SolarIrradianceSpectrum

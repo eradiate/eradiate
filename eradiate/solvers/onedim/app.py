@@ -17,10 +17,11 @@ from .runner import OneDimRunner
 from ...scenes.atmosphere import AtmosphereFactory
 from ...scenes.core import KernelDict
 from ...scenes.illumination import IlluminationFactory
-from ...scenes.lithosphere import SurfaceFactory
-from ...scenes.measure import MeasureFactory, RadianceMeterHsphereMeasure, \
-    RadianceMeterPPlaneMeasure
-from ...util import ensure_array
+from ...scenes.surface import SurfaceFactory
+from ...scenes.measure import (
+    MeasureFactory, RadianceMeterHsphereMeasure, RadianceMeterPPlaneMeasure
+)
+from ...util.misc import ensure_array
 from ...util import plot as ertplt
 from ...util import xarray as ertxr
 from ...util.config_object import ConfigObject

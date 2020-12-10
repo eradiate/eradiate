@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from eradiate.scenes.atmosphere.radiative_properties.rad_profile import (
+from eradiate.radprops import (
     ArrayRadProfile, RadProfileFactory, US76ApproxRadProfile
 )
 from eradiate.util.units import ureg

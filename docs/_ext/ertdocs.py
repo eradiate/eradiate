@@ -23,8 +23,8 @@ from eradiate.scenes.biosphere import BiosphereFactory
 from eradiate.scenes.illumination import IlluminationFactory
 from eradiate.scenes.measure import MeasureFactory
 from eradiate.scenes.spectra import SpectrumFactory
-from eradiate.scenes.lithosphere import SurfaceFactory
-from eradiate.scenes.atmosphere.radiative_properties.rad_profile import RadProfileFactory
+from eradiate.scenes.surface import SurfaceFactory
+from eradiate.radprops import RadProfileFactory
 
 factory_classes = {
     "AtmosphereFactory": AtmosphereFactory,
