@@ -4,7 +4,7 @@ import xarray as xr
 
 from eradiate.util.xarray import (
     CoordSpecRegistry, DatasetSpec, VarSpec, make_dataarray, plane,
-    pplane, validate_metadata
+    pplane, validate_metadata, CoordSpec
 )
 
 
@@ -224,3 +224,47 @@ def test_dataset_accessor_validate_metadata(dataset_without_metadata):
         "standard_name": "species",
         "long_name": "species"
     }
+
+    # check dataset specifications can be created to allow unknown attributes,
+    # variables and coordinates
+    ds_spec = DatasetSpec(
+        convention="CF-1.8",
+        title="My awesome test dataset",
+        history="None",
+        references="None",
+        source="Eradiate test suite",
+        var_specs={
+            "y": VarSpec(standard_name="my_variable",
+                         units=None,
+                         long_name="my variable")
+        },
+        coord_specs={
+            "x": CoordSpec(standard_name="my_coordinate",
+                           units=None,
+                           long_name="my coordinate")
+        }
+    )
+    ds_with_unknown_attr = xr.Dataset(
+        data_vars={
+            "y": ("x", [1, 2, 3], {
+                "standard_name": "my_variable",
+                "long_name": "my variable"})
+        },
+        coords={
+            "x": ("x", [1, 2, 3], {
+                "standard_name": "my_coordinate",
+                "long_name": "my coordinate"})
+        },
+        attrs={
+            "convention": "CF-1.8",
+            "title": "My awesome test dataset",
+            "history": "None",
+            "references": "None",
+            "source": "Eradiate test suite",
+            "unknown": "attributes are allowed"
+        }
+    )
+    ds_with_unknown_attr.ert.validate_metadata(ds_spec, allow_unknown=True)
+
+    with pytest.raises(ValueError):
+        ds_with_unknown_attr.ert.validate_metadata(ds_spec, allow_unknown=False)
