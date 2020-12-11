@@ -9,7 +9,7 @@ from . import plot
 
 # -- Metadata processing -------------------------------------------------------
 
-def validate_metadata(data, spec, normalize=False):
+def validate_metadata(data, spec, normalize=False, allow_unknown=False):
     """Validate (and possibly normalise) metadata fields of the ``data``
     parameter based on a data specification.
 
@@ -23,6 +23,9 @@ def validate_metadata(data, spec, normalize=False):
     Parameter ``normalize`` (bool):
         If ``True``, also normalise metadata.
 
+    Parameter ``allow_unknown`` (bool):
+        If ``True``, allows unknown keys.
+
     Returns:
         If ``normalize`` is ``True``, normalised metadata dictionary; otherwise,
         unmodified metadata dictionary.
@@ -30,7 +33,7 @@ def validate_metadata(data, spec, normalize=False):
     Raises → ValueError:
         Got errors during metadata validation.
     """
-    v = cerberus.Validator(schema=spec.schema)
+    v = cerberus.Validator(schema=spec.schema, allow_unknown=allow_unknown)
     v.validate(data.attrs, normalize=normalize)
     if not v.errors:
         if normalize:
@@ -595,7 +598,7 @@ class EradiateDataArrayAccessor:
         """Wraps :func:`pplane`."""
         return pplane(self._obj, sza=sza, saa=saa)
 
-    def validate_metadata(self, var_spec, normalize=False):
+    def validate_metadata(self, var_spec, normalize=False, allow_unknown=True):
         """Validate the metadata for the wrapped :class:`~xarray.DataArray`.
         This function wraps :func:`validate_metadata`.
 
@@ -613,13 +616,19 @@ class EradiateDataArrayAccessor:
         # Validate variable metadata
         if var_spec.standard_name is not None:
             dataarray.attrs = validate_metadata(
-                dataarray, var_spec, normalize=normalize
+                data=dataarray,
+                spec=var_spec,
+                normalize=normalize,
+                allow_unknown=allow_unknown
             )
 
         # Validate dimension coordinate metadata
         for dim, coord_spec in var_spec.coord_specs.items():
             dataarray.coords[dim].attrs = validate_metadata(
-                dataarray.coords[dim], coord_spec, normalize=normalize
+                data=dataarray.coords[dim],
+                spec=coord_spec,
+                normalize=normalize,
+                allow_unknown=allow_unknown
             )
 
     def normalize_metadata(self, var_spec):
@@ -627,7 +636,7 @@ class EradiateDataArrayAccessor:
         Basically a call to :meth:`validate_metadata` with ``normalize`` set to
         ``True``.
         """
-        self.validate_metadata(var_spec, normalize=True)
+        self.validate_metadata(var_spec, normalize=True, allow_unknown=False)
 
 
 @xr.register_dataset_accessor("ert")
@@ -638,7 +647,7 @@ class EradiateDatasetAccessor:
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
 
-    def validate_metadata(self, dataset_spec, normalize=False):
+    def validate_metadata(self, dataset_spec, normalize=False, allow_unknown=True):
         """Validate the metadata for the wrapped :class:`~xarray.Dataset`.
         This function wraps :func:`validate_metadata`.
 
@@ -650,13 +659,19 @@ class EradiateDatasetAccessor:
 
         Parameter ``normalize`` (bool):
             If ``True``, also normalise metadata in-place.
+
+        Parameter ``allow_unknown`` (bool):
+            If ``True``, unknown attributes are allowed.
         """
         dataset = self._obj
 
         # Validate dataset metadata
         if dataset_spec.title is not None:
             dataset.attrs = validate_metadata(
-                dataset, dataset_spec, normalize=normalize
+                data=dataset,
+                spec=dataset_spec,
+                normalize=normalize,
+                allow_unknown=allow_unknown
             )
 
         # Validate data variable metadata
@@ -665,7 +680,10 @@ class EradiateDatasetAccessor:
             if var_spec.standard_name is not None:
                 try:
                     dataarray.attrs = validate_metadata(
-                        dataarray, var_spec, normalize=normalize
+                        data=dataarray,
+                        spec=var_spec,
+                        normalize=normalize,
+                        allow_unknown=allow_unknown
                     )
                 except ValueError as e:
                     raise ValueError(f"data variable '{data_var}': {str(e)}")
@@ -674,7 +692,10 @@ class EradiateDatasetAccessor:
         for dim, coord_spec in dataset_spec.coord_specs.items():
             try:
                 dataset.coords[dim].attrs = validate_metadata(
-                    dataset.coords[dim], coord_spec, normalize=normalize
+                    data=dataset.coords[dim],
+                    spec=coord_spec,
+                    normalize=normalize,
+                    allow_unknown=allow_unknown
                 )
             except ValueError as e:
                 raise ValueError(f"coordinate '{dim}': {str(e)}")
@@ -684,4 +705,4 @@ class EradiateDatasetAccessor:
         Basically a call to :meth:`validate_metadata` with ``normalize`` set to
         ``True``.
         """
-        self.validate_metadata(dataset_spec, normalize=True)
+        self.validate_metadata(dataset_spec, normalize=True, allow_unknown=False)
