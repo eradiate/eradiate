@@ -80,7 +80,7 @@ class MeasureFactory(BaseFactory):
     registry = {}
 
 
-@MeasureFactory.register(name="distant")
+@MeasureFactory.register("distant")
 @attr.s
 class DistantMeasure(Measure):
     """Distant measure scene element [:factorykey:`distant`].
@@ -173,7 +173,7 @@ class DistantMeasure(Measure):
         }
 
 
-@MeasureFactory.register(name="perspective")
+@MeasureFactory.register("perspective")
 @attr.s
 class PerspectiveCameraMeasure(Measure):
     """Perspective camera scene element [:factorykey:`perspective`].
@@ -314,7 +314,7 @@ class PerspectiveCameraMeasure(Measure):
         }
 
 
-@MeasureFactory.register(name="radiancemeter_hsphere")
+@MeasureFactory.register("radiancemeter_hsphere")
 @attr.s
 class RadianceMeterHsphereMeasure(Measure):
     """Hemispherical radiancemeter measure scene element
@@ -539,7 +539,7 @@ class RadianceMeterHsphereMeasure(Measure):
 
 
 @attr.s
-@MeasureFactory.register(name="radiancemeter_pplane")
+@MeasureFactory.register("radiancemeter_pplane")
 class RadianceMeterPPlaneMeasure(Measure):
     """Distant principal plane measure scene generation helper [:factorykey:`radiancemeter_pplane`].
 

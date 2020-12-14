@@ -142,7 +142,7 @@ decorator.
    from eradiate.util.units import ureg
    from eradiate.util.attrs import attrib_quantity
 
-   @SceneElementFactory.register(name="my_element")
+   @SceneElementFactory.register("my_element")
    @attr.s
    class MyElement(SceneElement):
        field = attrib_quantity(default=1., units_compatible=ureg.m)

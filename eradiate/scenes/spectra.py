@@ -117,7 +117,7 @@ class SpectrumFactory(BaseFactory):
         return f
 
 
-@SpectrumFactory.register(name="uniform")
+@SpectrumFactory.register("uniform")
 @attr.s
 class UniformSpectrum(Spectrum):
     """Uniform spectrum (*i.e.* constant against wavelength). Supports basic
@@ -228,7 +228,7 @@ class UniformSpectrum(Spectrum):
         }
 
 
-@SpectrumFactory.register(name="solar_irradiance")
+@SpectrumFactory.register("solar_irradiance")
 @attr.s(frozen=True)
 class SolarIrradianceSpectrum(Spectrum):
     """Solar irradiance spectrum scene element

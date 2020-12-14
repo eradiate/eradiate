@@ -179,3 +179,18 @@ referenced factory can be specified as a prefix, and using a ``::`` separator:
 
    The directional illumination scene element
    [:factorykey:`IlluminationFactory::directional`] ...
+
+
+Advanced topics
+---------------
+
+Inheriting factory-registered types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The implementation chosen for factory registration makes it possible to safely
+inherit factory-enabled types. They can themselves be registered to a factory,
+possibly different from the one their parent class is registered to. The
+following script shows an example:
+
+.. literalinclude:: ../../examples/developer_guide/factory_guide/inheritance.py
+   :language: python

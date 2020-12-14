@@ -40,7 +40,7 @@ class BiosphereFactory(BaseFactory):
     registry = {}
 
 
-@BiosphereFactory.register(name="homogeneous_discrete_canopy")
+@BiosphereFactory.register("homogeneous_discrete_canopy")
 @attr.s
 class HomogeneousDiscreteCanopy(SceneElement):
     """A generator for the `homogenous discrete canopy used in the RAMI benchmark

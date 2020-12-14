@@ -113,7 +113,7 @@ class SurfaceFactory(BaseFactory):
     registry = {}
 
 
-@SurfaceFactory.register(name="lambertian")
+@SurfaceFactory.register("lambertian")
 @attr.s
 class LambertianSurface(Surface):
     """Lambertian surface scene element [:factorykey:`lambertian`].
@@ -147,7 +147,7 @@ class LambertianSurface(Surface):
         }
 
 
-@SurfaceFactory.register(name="black")
+@SurfaceFactory.register("black")
 @attr.s
 class BlackSurface(Surface):
     """Black surface scene element [:factorykey:`black`].
@@ -166,7 +166,7 @@ class BlackSurface(Surface):
         }
 
 
-@SurfaceFactory.register(name="rpv")
+@SurfaceFactory.register("rpv")
 @attr.s
 class RPVSurface(Surface):
     """RPV surface scene element [:factorykey:`rpv`].

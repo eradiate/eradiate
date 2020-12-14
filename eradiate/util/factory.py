@@ -41,14 +41,15 @@ class BaseFactory:
 
 
     @classmethod
-    def register(cls, name):
+    def register(cls, *names):
         """This decorator function is used on a class to register it to the
         factory. If the chosen registration name already exists in the factory's
         registry, this decorator will issue a warning.
 
-        Parameter ``name`` (str):
-            Name used to reference the registered class in the factory's
-            registry.
+        Parameter ``names`` (str):
+            Names used to reference the registered class in the factory's
+            registry. This parameter is variadic, meaning that multiple values
+            can be passed to register and alias a class with multiple keys.
 
         Raises → TypeError:
             The decorated class cannot be registered because it is not supported
@@ -64,7 +65,7 @@ class BaseFactory:
             .. code:: python
 
                 # Note that the register() decorator is applied *after* attr.s()
-                @IlluminationFactory.register(name="constant")
+                @IlluminationFactory.register("constant")
                 @attr.s
                 class ConstantIllumination(SceneElement):
                     radiance = attr.ib(
@@ -92,10 +93,12 @@ class BaseFactory:
                                      f"missing 'from_dict()' and cannot be "
                                      f"registered")
 
-            if name in cls.registry:
-                warnings.warn(f"class '{wrapped_class.__name__}' already "
-                              f"registered as '{name}', will be replaced")
-            cls.registry[name] = wrapped_class
+            for name in names:
+                if name in cls.registry:
+                    warnings.warn(f"class '{wrapped_class.__name__}' already "
+                                  f"registered as '{name}', will be replaced")
+                cls.registry[name] = wrapped_class
+
             return wrapped_class
 
         return inner_wrapper

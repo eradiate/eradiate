@@ -33,7 +33,7 @@ class Illumination(SceneElement, ABC):
 
     id = attr.ib(
         default="illumination",
-        validator=attr.validators.optional((attr.validators.instance_of(str))),
+        validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
 
@@ -51,7 +51,7 @@ class IlluminationFactory(BaseFactory):
     registry = {}
 
 
-@IlluminationFactory.register(name="constant")
+@IlluminationFactory.register("constant")
 @attr.s
 class ConstantIllumination(Illumination):
     """Constant illumination scene element [:factorykey:`constant`].
@@ -82,7 +82,7 @@ class ConstantIllumination(Illumination):
         }
 
 
-@IlluminationFactory.register(name="directional")
+@IlluminationFactory.register("directional")
 @attr.s
 class DirectionalIllumination(Illumination):
     """Directional illumination scene element [:factorykey:`directional`].

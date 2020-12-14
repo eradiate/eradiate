@@ -248,7 +248,7 @@ class RadProfileFactory(BaseFactory):
     registry = {}
 
 
-@RadProfileFactory.register(name="array")
+@RadProfileFactory.register("array")
 @attr.s
 class ArrayRadProfile(RadProfile):
     """A flexible radiative property profile whose albedo and extinction
@@ -361,7 +361,7 @@ class ArrayRadProfile(RadProfile):
         )
 
 
-@RadProfileFactory.register(name="us76_approx")
+@RadProfileFactory.register("us76_approx")
 @unit_enabled
 @attr.s
 class US76ApproxRadProfile(RadProfile):
