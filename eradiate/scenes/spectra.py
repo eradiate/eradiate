@@ -307,8 +307,8 @@ class SolarIrradianceSpectrum(Spectrum):
             wavelength = mode.wavelength.to(ureg.nm).magnitude
 
             irradiance_magnitude = float(
-                self.data["spectral_irradiance"].interp(
-                    wavelength=wavelength,
+                self.data["ssi"].interp(
+                    w=wavelength,
                     method="linear",
                 ).values
             )
@@ -320,7 +320,7 @@ class SolarIrradianceSpectrum(Spectrum):
             # Apply units
             irradiance = ureg.Quantity(
                 irradiance_magnitude,
-                self.data["spectral_irradiance"].attrs["units"]
+                self.data["ssi"].attrs["units"]
             )
 
             # Apply scaling, build kernel dict
