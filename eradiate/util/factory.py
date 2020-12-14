@@ -128,7 +128,8 @@ class BaseFactory:
         try:
             return cls.registry[obj_type].from_dict(config_dict)
         except KeyError:
-            raise ValueError(f"no class registered as '{obj_type}'")
+            raise ValueError(f"no class registered as '{obj_type}'; "
+                             f"registered: {list(cls.registry.keys())}")
 
     @classmethod
     def convert(cls, value):

@@ -306,7 +306,7 @@ is a dictionary defined the usual way (``type`` and other parameters).
 The following ``type`` parameter values are supported:
 
 * ``toa_pplane``: top-of-atmosphere leaving radiance in a plane
-  [:class:`.RadianceMeterPPlaneMeasure`]
+  [:class:`.RadianceMeterPlaneMeasure`]
 
   Valid aliases: ``toa_pplane_lo``, ``toa_pplane_brdf``, ``toa_pplane_brf``
 

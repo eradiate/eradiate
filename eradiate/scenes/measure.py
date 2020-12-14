@@ -348,14 +348,14 @@ class RadianceMeterHsphereMeasure(Measure):
 
     ``orientation`` (list[float]):
         Direction with which azimuth origin is aligned.
-        Default value: [1, 0, 0].
+        Default: [1, 0, 0].
 
     ``hemisphere`` ("front" or "back"):
         If set to ``"front"``, the created radiancemeter array directions will
         point to the hemisphere defined by ``direction``.
         If set to ``"back"``, the created radiancemeter array directions will
         point to the hemisphere defined by ``-direction``.
-        Default value: ``"front"``.
+        Default: ``"front"``.
 
         .. only:: latex
 
@@ -372,8 +372,7 @@ class RadianceMeterHsphereMeasure(Measure):
 
     ``id`` (str):
         Identifier to allow mapping of results to the measure inside an application.
-        Default value: "radiancemeter_hsphere".
-
+        Default: ``"radiancemeter_hsphere"``.
     """
 
     zenith_res = attrib_quantity(
@@ -435,9 +434,9 @@ class RadianceMeterHsphereMeasure(Measure):
 
     def postprocess_results(self, sensor_id, sensor_spp, results):
         """This method reshapes the 1D results returned by the
-        :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin into the shape
-        implied by the azimuth and zenith angle resolutions, such that
-        the result complies with the format required to further process the results.
+        ``radiancemeterarray`` kernel plugin into the shape implied by the
+        azimuth and zenith angle resolutions, such that the result complies with
+        the format required to further process the results.
 
         Additionally, if the measure's sensor was split up in order to limit
         the SPP per sensor, this method will recombine the results from each
@@ -453,7 +452,7 @@ class RadianceMeterHsphereMeasure(Measure):
             Dictionary, mapping sensor IDs to their respective results.
 
         Returns → dict:
-            Recombined an reshaped results.
+            Recombined and reshaped results.
         """
         sensors = np.array([results[x] for x in sensor_id])
         spp_sum = np.sum(sensor_spp)
@@ -464,7 +463,9 @@ class RadianceMeterHsphereMeasure(Measure):
         return np.reshape(results, (len(self._zenith_angles), len(self._azimuth_angles)))
 
     def _orientation_transform(self):
-        """Compute matrix that transforms vectors between object and world space."""
+        """Compute matrix that transforms vectors between object and world
+        space.
+        """
         from eradiate.kernel.core import Transform4f, Vector3f, Point3f
         origin = Point3f(self.origin.to(kdu.get("length")).magnitude)
         zenith_direction = Vector3f(self.direction)
@@ -474,8 +475,10 @@ class RadianceMeterHsphereMeasure(Measure):
         return Transform4f.look_at(origin, origin + zenith_direction, up)
 
     def _directions(self):
-        """Generate the array of direction vectors to configure the kernel plugin.
-        Directions are returned as a flattened list of 3-component vectors."""
+        """Generate the array of direction vectors to configure the kernel
+        plugin. Directions are returned as a flattened list of 3-component
+        vectors.
+        """
         hemisphere_transform = self._orientation_transform()
 
         directions = []
@@ -539,66 +542,58 @@ class RadianceMeterHsphereMeasure(Measure):
 
 
 @attr.s
-@MeasureFactory.register("radiancemeter_pplane")
-class RadianceMeterPPlaneMeasure(Measure):
-    """Distant principal plane measure scene generation helper [:factorykey:`radiancemeter_pplane`].
+@MeasureFactory.register("radiancemeter_plane")
+class RadianceMeterPlaneMeasure(Measure):
+    """Plane radiancemeter measure scene element
+    [:factorykey:`radiancemeter_plane`].
 
-    This creates a :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin,
-    covering the plane defined by the "origin" point, the "direction" vector as the apex
-    of the hemisphere and the "orientation" vector to select the plane inside this hemisphere.
+    This scene element creates a ``radiancemeterarray`` sensor kernel plugin
+    covering a plane defined by an ``origin`` point, a ``direction`` vector and
+    an ``orientation`` vector.
 
-    The "hemisphere" parameter can be used to invert the sensor's orientation: Setting it to
-    "front" lets the sensor observe the hemisphere defined by the origin and the direction,
-    which can be thought of as looking upwards. Setting the parameter to "back" lets the sensor
-    observe the opposite hemisphere, or look downwards.
+    See :class:`Measure` for undocumented members.
 
-    The sensor is oriented based on the classical angular convention used
-    in Earth observation.
+    .. rubric:: Constructor arguments / instance attributes
 
-    .. admonition:: Configuration format
-        :class: hint
+    ``zenith_res`` (float):
+        Zenith angle resolution. Default:  10 deg.
 
-        ``zenith_res`` (float):
-            Zenith angle resolution. Default. 10.
+        Unit-enabled field (default unit: cdu[angle]).
 
-            Unit-enabled field (default unit: cdu[angle])
+    ``origin`` (list[float]):
+        Position of the sensor. Default: [0, 0, 0] m.
 
-        ``azimuth_res`` (float):
-            Azimuth angle resolution. Default: 10.
+        Unit-enabled field (default unit: cdu[length]).
 
-            Unit-enabled field (default unit: cdu[angle])
+    ``direction`` (list[float]):
+        Direction of the hemisphere's zenith. Default: [0, 0, 1].
 
-        ``origin`` (list[float]):
-            Position of the sensor. Default: [0, 0, 0]
+    ``orientation`` (list[float]):
+        Direction with which azimuth origin is aligned.
+        Default value: [1, 0, 0].
 
-            Unit-enabled field (default unit: cdu[length])
+    ``hemisphere`` ("front" or "back"):
+        If set to ``"front"``, the created radiancemeter array directions will
+        point to the hemisphere defined by ``direction``.
+        If set to ``"back"``, the created radiancemeter array directions will
+        point to the hemisphere defined by ``-direction``.
+        Default value: ``"front"``.
 
-        ``direction`` (list[float]):
-            Direction of the hemisphere's zenith
+        .. only:: latex
 
-            Default value: [0, 0, 1]
+           .. figure:: ../../../fig/radiancemeter_plane.png
 
-        ``orientation`` (list[float]):
-            Direction with which azimuth origin is aligned
+        .. only:: not latex
 
-            Default value: [1, 0, 0]
+           .. figure:: ../../../fig/radiancemeter_plane.svg
 
-        ``hemisphere`` (str):
-            "front" sets the sensors to point into the hemisphere that holds
-            the "direction" vector, while "back" sets them to point into the
-            opposite hemisphere.
+    ``id`` (str):
+        Identifier to allow mapping of results to the measure inside an
+        application. Default: "radiancemeter_plane".
 
-            Default value: "front"
-
-        ``spp`` (int):
-            Number of samples per (zenith, azimuth) pair.
-
-            Default: 32.
-
-        ``id`` (str):
-            Identifier to allow mapping of results to the measure inside an application.
-
-            Default: "radiancemeter_pplane"
+    ``spp`` (int):
+        Number of samples per (zenith, azimuth) pair.
+        Default: 32.
     """
     zenith_res = attrib_quantity(
         default=ureg.Quantity(10., ureg.deg),
@@ -628,7 +623,7 @@ class RadianceMeterPPlaneMeasure(Measure):
     )
 
     id = attr.ib(
-        default="radiancemeter_pplane",
+        default="radiancemeter_plane",
         validator=attr.validators.optional((attr.validators.instance_of(str))),
     )
 
@@ -653,9 +648,9 @@ class RadianceMeterPPlaneMeasure(Measure):
 
     def postprocess_results(self, sensor_id, sensor_spp, results):
         """This method reshapes the 1D results returned by the
-        :class:`~mitsuba.sensors.radiancemeterarray` kernel plugin into the shape
-        implied by the azimuth and zenith angle resolutions, such that
-        the result complies with the format required to further process the results.
+        ``radiancemeterarray`` kernel plugin into the shape implied by the
+        azimuth and zenith angle resolutions, such that the result complies with
+        the format required to further process the results.
 
         Additionally, if the measure's sensor was split up in order to limit
         the SPP per sensor, this method will recombine the results from each
@@ -671,7 +666,7 @@ class RadianceMeterPPlaneMeasure(Measure):
             Dictionary, mapping sensor IDs to their respective results.
 
         Returns → dict:
-            Recombined an reshaped results.
+            Recombined and reshaped results.
         """
 
         sensors = np.array([results[x] for x in sensor_id])
@@ -697,8 +692,10 @@ class RadianceMeterPPlaneMeasure(Measure):
         return Transform4f.look_at(origin, [sum(x) for x in zip(origin, zenith_direction)], up)
 
     def _directions(self):
-        """Generate the array of direction vectors to configure the kernel plugin.
-        Directions are returned as a flattened list of 3-component vectors."""
+        """Generate the array of direction vectors to configure the kernel
+        plugin. Directions are returned as a flattened list of 3-component
+        vectors.
+        """
         hemisphere_transform = self._orientation_transform()
 
         directions = []
@@ -713,13 +710,14 @@ class RadianceMeterPPlaneMeasure(Measure):
 
     def sensor_info(self):
         """This method generates the sensor_id for the kernel_scene sensor
-        implementation. On top of that, it will perform the SPP-split if conditions
-        are met. In single precision computation the SPP should not become too
-        large, otherwise the results will degrade due to precision limitations.
-        In this case, this method will create multiple sensor_ids.
-        It returns a list of tuples, each holding a sensor_id and the corresponding
-        SPP value. In the case of a SPP-split, none of the SPP values will
-        exceed the threshold."""
+        implementation. On top of that, it will perform the SPP-split if
+        conditions are met. In single precision computation the SPP should not
+        become too large, otherwise the results will degrade due to precision
+        limitations. In this case, this method will create multiple sensor_ids.
+        It returns a list of tuples, each holding a sensor_id and the
+        corresponding SPP value. In the case of a SPP-split, none of the SPP
+        values will exceed the threshold.
+        """
         if eradiate.mode.precision == eradiate.ModePrecision.SINGLE and self.spp > 1e5:
             sensor_info = [(f"{self.id}_{i}", int(1e5)) for i in range(int(self.spp / 1e5))]
             if self.spp % 1e5 != 0:

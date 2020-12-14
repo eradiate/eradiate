@@ -19,6 +19,7 @@ Scene generation [eradiate.scenes]
    atmosphere
    biosphere
    illumination
+   integrators
    measure
    spectra
    surface

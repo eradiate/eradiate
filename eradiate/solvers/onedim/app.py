@@ -4,31 +4,225 @@ import os
 import warnings
 from copy import deepcopy
 from pathlib import Path
-from tinydb import TinyDB, Query
-from tinydb.storages import MemoryStorage
 
 import attr
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from tinydb import Query, TinyDB
+from tinydb.storages import MemoryStorage
 
 import eradiate.kernel
 from .runner import OneDimRunner
-from ...scenes.atmosphere import AtmosphereFactory
-from ...scenes.core import KernelDict
-from ...scenes.illumination import IlluminationFactory
-from ...scenes.surface import SurfaceFactory
-from ...scenes.measure import (
-    MeasureFactory, RadianceMeterHsphereMeasure, RadianceMeterPPlaneMeasure
+from ...scenes.atmosphere import AtmosphereFactory, HomogeneousAtmosphere
+from ...scenes.atmosphere.base import Atmosphere
+from ...scenes.core import KernelDict, SceneElement
+from ...scenes.illumination import (
+    DirectionalIllumination, Illumination, IlluminationFactory
 )
-from ...util.misc import ensure_array
+from ...scenes.integrators import (
+    Integrator, IntegratorFactory, VolPathIntegrator
+)
+from ...scenes.measure import (
+    MeasureFactory, RadianceMeterHsphereMeasure, RadianceMeterPlaneMeasure
+)
+from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
 from ...util import plot as ertplt
 from ...util import xarray as ertxr
 from ...util.config_object import ConfigObject
 from ...util.exceptions import ConfigWarning
+from ...util.misc import always_iterable, ensure_array
 from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
+
+
+@MeasureFactory.register(
+    "toa_hsphere", "toa_hsphere_lo", "toa_hsphere_brdf", "toa_hsphere_brf"
+)
+@attr.s
+class TOAHsphereMeasure(RadianceMeterHsphereMeasure):
+    """Top-of-atmosphere radiancemeter (hemisphere coverage). This class is a
+    lightweight specialisation of its :class:`RadianceMeterHsphereMeasure`
+    parent class and should only be used with :class:`OneDimScene`.
+    It is registered to :class:`.MeasureFactory` with the following keys:
+    ``"toa_hsphere"``, ``"toa_hsphere_lo"``, ``"toa_hsphere_brdf"``,
+    ``"toa_hsphere_brf"``.
+    """
+    id = attr.ib(default="toa_hsphere")
+
+    # Only the back hemisphere is supported
+    hemisphere = attr.ib(
+        default="back",
+        validator=attr.validators.in_(("back",)),
+    )
+
+
+@MeasureFactory.register(
+    "toa_pplane", "toa_pplane_lo", "toa_pplane_brdf", "toa_pplane_brf"
+)
+@attr.s
+class TOAPPlaneMeasure(RadianceMeterPlaneMeasure):
+    """Top-of-atmosphere radiancemeter (principal plane coverage).
+    This class is a lightweight specialisation of its
+    :class:`RadianceMeterPlaneMeasure` parent class and should only be used
+    with :class:`OneDimScene`.
+    It is registered to :class:`.MeasureFactory` with the following keys:
+    ``"toa_pplane"``, ``"toa_pplane_lo"``, ``"toa_pplane_brdf"``,
+    ``"toa_pplane_brf"``.
+    """
+    id = attr.ib(default="toa_pplane")
+
+    # Only the back hemisphere is supported
+    hemisphere = attr.ib(
+        default="back",
+        validator=attr.validators.in_(("back",)),
+    )
+
+
+@attr.s
+class OneDimScene(SceneElement):
+    """Scene abstraction suitable for radiative transfer simulation on
+    one-dimensional scenes.
+
+    .. rubric:: Constructor arguments / instance attributes
+
+    ``atmosphere`` (:class:`.Atmosphere` or dict):
+        Atmosphere specification.
+        This parameter can be specified as a dictionary which will be
+        interpreted by
+        :meth:`AtmosphereFactory.convert() <.AtmosphereFactory.convert>`.
+        Default: :class:`.HomogeneousAtmosphere`.
+
+    ``surface`` (:class:`.Surface` or dict):
+        Surface specification.
+        This parameter can be specified as a dictionary which will be
+        interpreted by
+        :meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`.
+        Default: :class:`.LambertianSurface`.
+
+    ``illumination`` (:class:`.Illumination` or dict):
+        Illumination specification.
+        This parameter can be specified as a dictionary which will be
+        interpreted by
+        :meth:`IlluminationFactory.convert() <.IlluminationFactory.convert>`.
+        Default: :class:`.DirectionalIllumination`.
+
+    ``measures`` (list[:class:`.Measure`] or list[dict] or :class:`.Measure` or dict):
+        List of measure specifications. The passed list may contain dictionary,
+        which will be interpreted by
+        :meth:`MeasureFactory.convert() <.MeasureFactory.convert>`.
+        Optionally, a single :class:`.Measure` or dictionary specification
+        may be passed and will automatically be wrapped into a list.
+        Allowed values: :class:`TOAHsphereMeasure`, :class:`TOAPPlaneMeasure`.
+        Default: :class:`TOAHsphereMeasure`.
+
+    ``integrator`` (:class:`.Integrator` or dict):
+        Monte Carlo integration algorithm specification.
+        This parameter can be specified as a dictionary which will be
+        interpreted by
+        :meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`.
+        Default: :class:`.VolPathIntegrator`.
+    """
+    atmosphere = attr.ib(
+        factory=HomogeneousAtmosphere,
+        converter=AtmosphereFactory.convert,
+        validator=attr.validators.instance_of(Atmosphere),
+    )
+
+    surface = attr.ib(
+        factory=LambertianSurface,
+        converter=SurfaceFactory.convert,
+        validator=attr.validators.instance_of(Surface)
+    )
+
+    illumination = attr.ib(
+        factory=DirectionalIllumination,
+        converter=IlluminationFactory.convert,
+        validator=attr.validators.instance_of(Illumination)
+    )
+
+    measures = attr.ib(
+        factory=lambda: [TOAHsphereMeasure()],
+        converter=lambda value:
+        [MeasureFactory.convert(x) for x in always_iterable(value)]
+        if not isinstance(value, dict)
+        else [MeasureFactory.convert(value)]
+    )
+
+    @measures.validator
+    def _measures_validator(self, attribute, value):
+        for element in value:
+            # Check measure type
+            if not isinstance(element, (TOAPPlaneMeasure, TOAHsphereMeasure)):
+                raise TypeError(
+                    f"while validating {attribute.name}: must be a list of "
+                    f"objects of one of the following types: "
+                    f"(TOAPPlaneMeasure, TOAHSphereMeasure)"
+                )
+
+            # Principal plane measures only work with directional illumination
+            if isinstance(element, TOAPPlaneMeasure) and \
+                    not isinstance(self.illumination, DirectionalIllumination):
+                raise ValueError(
+                    f"while validating {attribute.name}: found measure of type "
+                    f"{element.__class__.__name__}, incompatible with "
+                    f"illumination of type "
+                    f"{self.illumination.__class__.__name__}"
+                )
+
+    integrator = attr.ib(
+        factory=VolPathIntegrator,
+        converter=IntegratorFactory.convert,
+        validator=attr.validators.instance_of(Integrator)
+    )
+
+    _measure_registry = attr.ib(
+        init=False,
+        repr=False,
+        factory=lambda: TinyDB(storage=MemoryStorage)
+    )
+
+    def __attrs_post_init__(self):
+        # Parts of the init sequence we could take care of using converters
+
+        # Override surface width with atmosphere width
+        self.surface.width = self.atmosphere.kernel_width
+
+        # Process measures
+        for measure in self.measures:
+            if isinstance(measure, (TOAHsphereMeasure, TOAPPlaneMeasure)):
+                # Override ray origin
+                if self.atmosphere is not None:
+                    sensor_height = self.atmosphere.kernel_height.to(cdu.get("length")).magnitude
+                    measure.origin = [0., 0., sensor_height]
+
+            if isinstance(measure, TOAPPlaneMeasure):
+                # Set principal plane measure orientation if any
+                phi_i = self.illumination.azimuth.to(ureg.rad).magnitude
+                measure.orientation = [np.cos(phi_i), np.sin(phi_i), 0.]
+
+        # Populate measure registry
+        for measure in self.measures:
+            for sensor_id, sensor_spp in measure.sensor_info():
+                self._measure_registry.insert(
+                    {
+                        "measure_id": measure.id,
+                        "sensor_id": sensor_id,
+                        "sensor_spp": sensor_spp
+                    }
+                )
+
+    def kernel_dict(self, ref=True):
+        result = KernelDict.empty()
+        result.add([
+            self.atmosphere,
+            self.surface,
+            self.illumination,
+            *self.measures,
+            self.integrator
+        ])
+        return result
 
 
 @attr.s
@@ -302,75 +496,79 @@ class OneDimSolverApp(ConfigObject):
         self._kernel_dict = KernelDict.empty()
 
         with cdu.override({"length": "km"}), kdu.override({"length": "km"}):
-                # Set illumination
-                self._elements["illumination"] = \
-                    IlluminationFactory.create(self.config["illumination"])
+            # Set illumination
+            self._elements["illumination"] = \
+                IlluminationFactory.create(self.config["illumination"])
 
-                # Set atmosphere
-                config_atmosphere = config.get("atmosphere", None)
+            # Set atmosphere
+            config_atmosphere = config.get("atmosphere", None)
 
-                if config_atmosphere is not None:
-                    self._elements["atmosphere"] = \
-                        AtmosphereFactory.create(config_atmosphere)
+            if config_atmosphere is not None:
+                self._elements["atmosphere"] = \
+                    AtmosphereFactory.create(config_atmosphere)
 
-                # Set surface
-                atmosphere = self._elements.get("atmosphere", None)
+            # Set surface
+            atmosphere = self._elements.get("atmosphere", None)
+            if atmosphere is not None:
+                if "width" in config["surface"].keys():
+                    warnings.warn(
+                        "overriding 'surface.width' with 'atmosphere.width'",
+                        ConfigWarning
+                    )
+                config["surface"]["width"] = atmosphere.kernel_width
+
+            self._elements["surface"] = SurfaceFactory.create(config["surface"])
+
+            # Set measure
+            for config_measure in self.config["measure"]:
                 if atmosphere is not None:
-                    if "width" in config["surface"].keys():
-                        warnings.warn(
-                            "overriding 'surface.width' with 'atmosphere.width'",
-                            ConfigWarning
-                        )
-                    config["surface"]["width"] = atmosphere.kernel_width
+                    offset = atmosphere.kernel_offset.to(cdu.get("length")).magnitude
+                    height = atmosphere.kernel_height.to(cdu.get("length")).magnitude - offset
 
-                self._elements["surface"] = SurfaceFactory.create(config["surface"])
+                else:
+                    height = 0.1
+                    offset = 1e-3
+                config_measure["origin"] = [0, 0, height + offset]
 
-                # Set measure
-                for config_measure in self.config["measure"]:
-                    if atmosphere is not None:
-                        height = atmosphere.kernel_height.magnitude
-                        offset = atmosphere.kernel_offset.magnitude
-                    else:
-                        height = 0.1
-                        offset = 0.001
-                    config_measure["origin"] = [0, 0, height + offset]
+                if config_measure["type"] in self._measure_aliases["toa_pplane"]:
+                    if "orientation" not in config_measure:
+                        # TODO: fix this behaviour (will crash if illumination.type is not directional)
+                        #  Suggested change: raise if no orientation and illumination.type is not directional
+                        phi_i = self._elements["illumination"].azimuth.to(ureg.rad).magnitude
+                        config_measure["orientation"] = [np.cos(phi_i), np.sin(phi_i), 0]
 
-                    if config_measure["type"] in self._measure_aliases["toa_pplane"]:
-                        if "orientation" not in config_measure:
-                            # TODO: fix this behaviour (will crash if illumination.type is not directional)
-                            #  Suggested change: raise if no orientation and illumination.type is not directional
-                            phi_i = self._elements["illumination"].azimuth.to(ureg.rad).magnitude
-                            config_measure["orientation"] = [np.cos(phi_i), np.sin(phi_i), 0]
+                    if not config_measure.get("id", None):
+                        config_measure["id"] = config_measure["type"]
+                    config_measure["type"] = "radiancemeter_plane"
 
-                        if not config_measure.get("id", None):
-                            config_measure["id"] = config_measure["type"]
-                        config_measure["type"] = "radiancemeter_pplane"
+                elif config_measure["type"] in self._measure_aliases["toa_hsphere"]:
+                    if not config_measure.get("id", None):
+                        config_measure["id"] = config_measure["type"]
+                    config_measure["type"] = "radiancemeter_hsphere"
 
-                    elif config_measure["type"] in self._measure_aliases["toa_hsphere"]:
-                        if not config_measure.get("id", None):
-                            config_measure["id"] = config_measure["type"]
-                        config_measure["type"] = "radiancemeter_hsphere"
+                else:
+                    raise ValueError(f"unsupported measure type '{config_measure['type']}'")
 
-                    else:
-                        raise ValueError(f"unsupported measure type '{config_measure['type']}'")
+                config_measure["hemisphere"] = "back"
+                # TODO: warn when overriding parameters set by user
 
-                    config_measure["hemisphere"] = "back"
-                    # TODO: warn when overriding parameters set by user
+                self._elements[config_measure["id"]] = \
+                    MeasureFactory.create(config_measure)
+                sensor_info = self._elements[config_measure["id"]].sensor_info()
+                for sensor_id, sensor_spp in sensor_info:
+                    self._measure_registry.insert(
+                        {
+                            "measure_id": config_measure["id"],
+                            "sensor_id": sensor_id,
+                            "sensor_spp": sensor_spp
+                        }
+                    )
 
-                    self._elements[config_measure["id"]] = \
-                        MeasureFactory.create(config_measure)
-                    sensor_info = self._elements[config_measure["id"]].sensor_info()
-                    for sensor_id, sensor_spp in sensor_info:
-                        self._measure_registry.insert(
-                            {
-                                "measure_id": config_measure["id"],
-                                "sensor_id": sensor_id,
-                                "sensor_spp": sensor_spp
-                            }
-                        )
+            # Expand elements to kernel scene dictionary
+            self._kernel_dict.add(list(self._elements.values()))
 
-                # Expand elements to kernel scene dictionary
-                self._kernel_dict.add(list(self._elements.values()))
+            # Add integrator
+            self._kernel_dict.add({"integrator": {"type": "volpath"}})
 
     def run(self):
         """Execute the computation and postprocess the results.
@@ -415,7 +613,7 @@ class OneDimSolverApp(ConfigObject):
                 vaa = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
                 coord_specs_id = "angular_observation"
 
-            elif isinstance(self._elements[measure_id], RadianceMeterPPlaneMeasure):
+            elif isinstance(self._elements[measure_id], RadianceMeterPlaneMeasure):
                 vza = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
                 vaa = np.array([0., 180.])
                 coord_specs_id = "angular_observation_pplane"

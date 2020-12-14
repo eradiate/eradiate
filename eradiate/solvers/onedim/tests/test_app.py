@@ -1,8 +1,76 @@
 from copy import deepcopy
+
+import numpy as np
 import pytest
 
 import eradiate
-from eradiate.solvers.onedim.app import OneDimSolverApp
+from eradiate.scenes.atmosphere import HomogeneousAtmosphere
+from eradiate.scenes.illumination import \
+    ConstantIllumination, DirectionalIllumination
+from eradiate.solvers.onedim.app import \
+    OneDimScene, OneDimSolverApp, TOAHsphereMeasure, TOAPPlaneMeasure
+from eradiate.util.units import ureg
+
+
+def test_onedim_scene(mode_mono):
+    # Construct with default parameters
+    s = OneDimScene()
+    assert s.kernel_dict().load() is not None
+
+    # Test non-trivial init sequence steps
+
+    # -- Init with a single measure (not wrapped in a sequence)
+    s = OneDimScene(measures=TOAHsphereMeasure())
+    assert s.kernel_dict().load() is not None
+    # -- Init from a dict-based measure spec
+    # ---- Correctly wrapped in a sequence
+    s = OneDimScene(measures=[{"type": "toa_hsphere"}])
+    assert s.kernel_dict().load() is not None
+    # ---- Not wrapped in a sequence
+    s = OneDimScene(measures={"type": "toa_hsphere"})
+    assert s.kernel_dict().load() is not None
+
+    # -- Check that unsupported measure-illumination configurations are rejected
+    with pytest.raises(ValueError):
+        OneDimScene(
+            measures=TOAPPlaneMeasure(),
+            illumination=ConstantIllumination()
+        )
+
+    # -- Check that surface is appropriately inherited from atmosphere
+    s = OneDimScene(atmosphere=HomogeneousAtmosphere(width=ureg.Quantity(42., "km")))
+    assert s.surface.width == ureg.Quantity(42., "km")
+
+    # -- Check that principal plane measure is correctly oriented
+    saa = ureg.Quantity(45., "deg")
+    sza = ureg.Quantity(45., "deg")
+    s = OneDimScene(
+        measures=TOAPPlaneMeasure(),
+        illumination=DirectionalIllumination(zenith=sza, azimuth=saa)
+    )
+    assert np.allclose(
+        s.measures[0].orientation,
+        [np.cos(saa.to(ureg.rad).m), np.sin(saa.to(ureg.rad).m), 0.]
+    )
+
+    # -- Check that TOA sensors are appropriately positioned
+    s = OneDimScene(
+        atmosphere=HomogeneousAtmosphere(height=ureg.Quantity(2., "km")),
+        measures=TOAPPlaneMeasure()
+    )
+    assert np.allclose(s.measures[0].origin, ureg.Quantity([0., 0., 2.002], "km"))
+
+
+@pytest.mark.slow
+def test_onedim_scene_real_life(mode_mono):
+    # Construct with typical parameters
+    s = OneDimScene(
+        surface={"type": "rpv"},
+        atmosphere={"type": "heterogeneous", "profile": {"type": "us76_approx"}},
+        illumination={"type": "directional", "zenith": 45.},
+        measures={"type": "toa_hsphere"}
+    )
+    assert s.kernel_dict().load() is not None
 
 
 def test_onedim_solver_app_app():
@@ -132,11 +200,11 @@ def test_onedim_solver_app_run():
     assert set(results["lo"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
 
     # We expect the whole [0, 360] to be covered
-    assert len(results["lo"].coords["vaa"]) == 360 / 180
+    assert len(results["lo"].coords["vaa"]) == 360. / 180.
     # # We expect [0, 90[ to be covered (90° should be missing)
-    assert len(results["lo"].coords["vza"]) == 90 / 45
+    assert len(results["lo"].coords["vza"]) == 90. / 45.
     # We just check that we record something as expected
-    assert np.all(results["lo"].data > 0)
+    assert np.all(results["lo"].data > 0.)
 
 
 @pytest.mark.slow

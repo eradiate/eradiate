@@ -2,6 +2,8 @@ import sys
 
 import mock
 
+from eradiate.scenes.integrators import IntegratorFactory
+
 MOCK_MODULES = [
     "mitsuba", "mitsuba.core", "mitsuba.core.math", "mitsuba.core.spline",
     "mitsuba.core.warp", "mitsuba.core.xml", "mitsuba.render",
@@ -30,6 +32,7 @@ factory_classes = {
     "AtmosphereFactory": AtmosphereFactory,
     "BiosphereFactory": BiosphereFactory,
     "IlluminationFactory": IlluminationFactory,
+    "IntegratorFactory": IntegratorFactory,
     "MeasureFactory": MeasureFactory,
     "SpectrumFactory": SpectrumFactory,
     "SurfaceFactory": SurfaceFactory,
