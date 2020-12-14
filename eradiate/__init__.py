@@ -72,6 +72,13 @@ class Mode:
         return mode_cls(**kwargs)
 
 
+@register_mode("none")
+@attr.s
+class ModeNone(Mode):
+    # Default mode, defined to improve error messages
+    pass
+
+
 @register_mode("mono", precision="single")
 @attr.s
 class ModeMono(Mode):
@@ -104,7 +111,7 @@ class ModeMonoDouble(Mode):
 
 # -- Public API ----------------------------------------------------------------
 
-mode = None
+mode = ModeNone()
 """Eradiate's operational mode configuration.
 
 .. seealso::
