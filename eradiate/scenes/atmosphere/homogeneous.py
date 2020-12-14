@@ -8,7 +8,7 @@ from ..spectra import Spectrum, SpectrumFactory, UniformSpectrum
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...util.attrs import converter_or_auto, validator_has_quantity, validator_or_auto
 from ...util.collections import onedict_value
-from ...util.units import ureg
+from ...util.units import ureg, kernel_default_units
 
 
 @AtmosphereFactory.register("homogeneous")
@@ -64,9 +64,9 @@ class HomogeneousAtmosphere(Atmosphere):
     def kernel_height(self):
         """Height of the kernel object delimiting the atmosphere."""
         if self.height == "auto":
-            return ureg.Quantity(100, "km")
+            return ureg.Quantity(100, "km") + self.kernel_offset
         else:
-            return self.height
+            return self.height + self.kernel_offset
 
     @property
     def kernel_width(self):
@@ -129,9 +129,10 @@ class HomogeneousAtmosphere(Atmosphere):
         else:
             medium = self.media(ref=False)[f"medium_{self.id}"]
 
-        width = self.kernel_width.magnitude
-        height = self.kernel_height.magnitude
-        offset = self.kernel_offset.magnitude
+        k_length = kernel_default_units.get("length")
+        k_width = self.kernel_width.to(k_length).magnitude
+        k_height = self.kernel_height.to(k_length).magnitude
+        k_offset = self.kernel_offset.to(k_length).magnitude
 
         return {
             f"shape_{self.id}": {
@@ -139,9 +140,9 @@ class HomogeneousAtmosphere(Atmosphere):
                     "cube",
                 "to_world":
                     ScalarTransform4f([
-                        [0.5 * width, 0., 0., 0.],
-                        [0., 0.5 * width, 0., 0.],
-                        [0., 0., 0.5 * (height + offset), 0.5 * (height - offset)],
+                        [0.5 * k_width, 0., 0., 0.],
+                        [0., 0.5 * k_width, 0., 0.],
+                        [0., 0., 0.5 * k_height, 0.5 * k_height - k_offset],
                         [0., 0., 0., 1.],
                     ]),
                 "bsdf": {

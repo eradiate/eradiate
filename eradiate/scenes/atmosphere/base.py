@@ -50,7 +50,10 @@ class Atmosphere(SceneElement, ABC):
     height = attrib_quantity(
         default="auto",
         converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
-        validator=validator_or_auto(validator_units_compatible(ureg.m), validator_is_positive),
+        validator=validator_or_auto(
+            validator_units_compatible(ureg.m),
+            validator_is_positive
+        ),
         units_compatible=cdu.generator("length"),
         units_add_converter=False,
         units_add_validator=False
@@ -59,7 +62,10 @@ class Atmosphere(SceneElement, ABC):
     width = attrib_quantity(
         default="auto",
         converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
-        validator=validator_or_auto(validator_units_compatible(ureg.m), validator_is_positive),
+        validator=validator_or_auto(
+            validator_units_compatible(ureg.m),
+            validator_is_positive
+        ),
         units_compatible=cdu.generator("length"),
         units_add_converter=False,
         units_add_validator=False
@@ -82,7 +88,10 @@ class Atmosphere(SceneElement, ABC):
            This is required to ensure that the surface is the only shape
            which can be intersected at ground level during ray tracing.
         """
-        return self.kernel_height * 1e-3  # TODO: adjust offset based on medium profile
+        if self.height == "auto":
+            return ureg.Quantity(0.1, "km")  # This is a 0.1% offset for a height of 100 km
+        else:
+            return self.height * 1e-3  # TODO: adjust offset based on medium profile
 
     @property
     @abstractmethod
@@ -128,8 +137,7 @@ class Atmosphere(SceneElement, ABC):
 
     def kernel_dict(self, ref=True):
         # TODO: return a KernelDict
-        # TODO: extract integrator setup
-        kernel_dict = {"integrator": {"type": "volpath"}}  # Force volpath integrator
+        kernel_dict = {}
 
         if not ref:
             kernel_dict[self.id] = self.shapes()[f"shape_{self.id}"]

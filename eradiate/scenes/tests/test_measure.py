@@ -5,7 +5,7 @@ from eradiate.scenes.core import KernelDict
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.surface import RPVSurface
 from eradiate.scenes.measure import DistantMeasure, PerspectiveCameraMeasure, \
-    RadianceMeterHsphereMeasure, RadianceMeterPPlaneMeasure
+    RadianceMeterHsphereMeasure, RadianceMeterPlaneMeasure
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 from eradiate.util.units import ureg
 
@@ -55,12 +55,12 @@ def test_hemispherical_hsphere_selection(mode_mono):
 
     assert np.allclose(-directions_front, directions_back)
 
-def test_pplane_class(mode_mono):
-    d = RadianceMeterPPlaneMeasure()
+def test_plane_class(mode_mono):
+    d = RadianceMeterPlaneMeasure()
     assert KernelDict.empty().add(d).load() is not None
 
 
-def test_pplane_postprocess(mode_mono):
+def test_plane_postprocess(mode_mono):
     """To test the postprocess method, we create a data dictionary, mapping
     a three sensor_ids to results. Two IDs will map to the expected results,
      the other will map to results of a different shape, prompting the test to
@@ -71,13 +71,13 @@ def test_pplane_postprocess(mode_mono):
     data = {"test_sensor": np.linspace(0, 3, 2 * 2),
             "test_sensor2": np.linspace(0, 3, 2 * 2),
             "test_sensor_wrong": np.linspace(0, 1, 18 * 72)}
-    d = RadianceMeterPPlaneMeasure(zenith_res=45)
+    d = RadianceMeterPlaneMeasure(zenith_res=45)
     data_repacked = d.postprocess_results(sensor_id, spp, data)
     assert np.allclose(data_repacked, [[0, 1], [2, 3]], atol=0)
 
 
 @pytest.mark.slow
-def test_pplane_orientation(mode_mono):
+def test_plane_orientation(mode_mono):
     """To ensure that the principal plane sensor recovers the correct values, render two scenes:
     Once with a hemispherical view and once with a pplane view. Select the values corresponding to
     the pplane from the hemispherical dataset and compare with the pplane data."""
@@ -94,7 +94,7 @@ def test_pplane_orientation(mode_mono):
     surface = RPVSurface(width=ureg.Quantity(800., ureg.km))
     illumination = DirectionalIllumination(zenith=45., irradiance=SolarIrradianceSpectrum())
     hemisphere = RadianceMeterHsphereMeasure(azimuth_res=1, **measure_config)
-    pplane = RadianceMeterPPlaneMeasure(**measure_config)
+    pplane = RadianceMeterPlaneMeasure(**measure_config)
 
     # prepare the scene with hemispherical sensor and render
     kernel_dict_hemi = KernelDict.empty()

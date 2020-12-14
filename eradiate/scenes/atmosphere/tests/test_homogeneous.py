@@ -18,6 +18,9 @@ def test_homogeneous(mode_mono, ref):
 
     # Check if default constructor works
     r = HomogeneousAtmosphere()
+    assert r.height == "auto"
+    assert r.kernel_offset == ureg.Quantity(0.1, "km")
+    assert r.kernel_height == ureg.Quantity(100.1, "km")
 
     # Check if default constructs can be loaded by the kernel
     dict_phase = onedict_value(r.phase())

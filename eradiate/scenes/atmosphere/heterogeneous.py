@@ -206,7 +206,7 @@ class HeterogeneousAtmosphere(Atmosphere):
     }
 
     def __attrs_post_init__(self):
-        # checks for width and height automatic computation
+        # Check for automatic width and height computation
         if self.profile is not None:
             if self.height != "auto":
                 raise ValueError("height must be set to 'auto' when profile is "
@@ -229,9 +229,10 @@ class HeterogeneousAtmosphere(Atmosphere):
     def kernel_height(self):
         if self.height == "auto":
             ds = self.profile.to_dataset()
-            return ureg.Quantity(ds.z_level.values.max(), ds.z_level.units)
+            return ureg.Quantity(ds.z_level.values.max(), ds.z_level.units) + \
+                   self.kernel_offset
         else:
-            return self.height
+            return self.height + self.kernel_offset
 
     @property
     def kernel_width(self):
@@ -360,9 +361,10 @@ class HeterogeneousAtmosphere(Atmosphere):
         else:
             medium = self.media(ref=False)[f"medium_{self.id}"]
 
-        width = self.kernel_width.to(kdu.get("length")).magnitude
-        height = self.kernel_height.to(kdu.get("length")).magnitude
-        offset = self.kernel_offset.to(kdu.get("length")).magnitude
+        k_length = kdu.get("length")
+        k_width = self.kernel_width.to(k_length).magnitude
+        k_height = self.kernel_height.to(k_length).magnitude
+        k_offset = self.kernel_offset.to(k_length).magnitude
 
         return {
             f"shape_{self.id}": {
@@ -370,9 +372,9 @@ class HeterogeneousAtmosphere(Atmosphere):
                     "cube",
                 "to_world":
                     ScalarTransform4f([
-                        [0.5 * width, 0., 0., 0.],
-                        [0., 0.5 * width, 0., 0.],
-                        [0., 0., 0.5 * (height + offset), 0.5 * (height - offset)],
+                        [0.5 * k_width, 0., 0., 0.],
+                        [0., 0.5 * k_width, 0., 0.],
+                        [0., 0., 0.5 * k_height, 0.5 * k_height - k_offset],
                         [0., 0., 0., 1.],
                     ]),
                 "bsdf": {
