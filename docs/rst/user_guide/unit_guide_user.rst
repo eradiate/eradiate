@@ -128,7 +128,7 @@ appropriate units.
 
    .. code-block:: python
 
-      my_atmosphere.height = ureg.Quantity(100., "s")  # This will raise a UnitsError
+      my_atmosphere.toa_altitude = ureg.Quantity(100., "s")  # This will raise a UnitsError
 
 .. _sec-user_guide-unit_guide_user-field_unit_documentation:
 

@@ -208,11 +208,11 @@ class HeterogeneousAtmosphere(Atmosphere):
     def __attrs_post_init__(self):
         # Check for automatic width and height computation
         if self.profile is not None:
-            if self.height != "auto":
+            if self.toa_altitude != "auto":
                 raise ValueError("height must be set to 'auto' when profile is "
                                  "set")
         else:
-            if self.height == "auto":
+            if self.toa_altitude == "auto":
                 raise ValueError("height cannot be set to 'auto' when profile "
                                  "is None")
             if self.width == "auto":
@@ -226,13 +226,12 @@ class HeterogeneousAtmosphere(Atmosphere):
             self._cache_dir.mkdir(parents=True, exist_ok=True)
 
     @property
-    def kernel_height(self):
-        if self.height == "auto":
+    def height(self):
+        if self.toa_altitude == "auto":
             ds = self.profile.to_dataset()
-            return ureg.Quantity(ds.z_level.values.max(), ds.z_level.units) + \
-                   self.kernel_offset
+            return ureg.Quantity(ds.z_level.values.max(), ds.z_level.units)
         else:
-            return self.height + self.kernel_offset
+            return ureg.Quantity(100., ureg.km)
 
     @property
     def kernel_width(self):
@@ -259,9 +258,8 @@ class HeterogeneousAtmosphere(Atmosphere):
                 if width > ureg.Quantity(1e5, "km"):
                     width = ureg.Quantity(1e5, "km")
             else:
-                raise ValueError("cannot automatically determine the width"
-                                 "when the scattering coefficient reaches"
-                                 "zero.")
+                raise ValueError("cannot automatically compute width when "
+                                 "scattering coefficient reaches zero")
         else:
             width = self.width
 
@@ -318,15 +316,15 @@ class HeterogeneousAtmosphere(Atmosphere):
     def media(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f
 
-        width = self.kernel_width.to(kdu.get("length")).magnitude
-        height = self.kernel_height.to(kdu.get("length")).magnitude
-        offset = self.kernel_offset.to(kdu.get("length")).magnitude
+        k_width = self.kernel_width.to(kdu.get("length")).magnitude
+        k_height = self.kernel_height.to(kdu.get("length")).magnitude
+        k_offset = self.kernel_offset.to(kdu.get("length")).magnitude
 
         # First, transform the [0, 1]^3 cube to the right dimensions
         trafo = ScalarTransform4f([
-            [width, 0., 0., -0.5 * width],
-            [0., width, 0., -0.5 * width],
-            [0., 0., height + offset, -offset],
+            [k_width, 0., 0., -0.5 * k_width],
+            [0., k_width, 0., -0.5 * k_width],
+            [0., 0., k_height + k_offset, -k_offset],
             [0., 0., 0., 1.],
         ])
 

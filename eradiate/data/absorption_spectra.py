@@ -33,7 +33,7 @@ _presolver = PathResolver()
 
 
 class _AbsorptionGetter(DataGetter):
-    _PATHS = {
+    PATHS = {
         "usa_mls-narrowrange": "spectra/absorption/usa_mls/narrowrange/*.nc",
         "usa_mls-fullrange": "spectra/absorption/usa_mls/fullrange/*.nc",
         "us76_u86_4-fullrange": "spectra/absorption/us76_u86_4/fullrange/*.nc",
@@ -42,14 +42,19 @@ class _AbsorptionGetter(DataGetter):
 
     @classmethod
     def open(cls, id):
-        paths = _presolver.glob(cls.path(id))
-        return xr.open_mfdataset(paths)
+        path = cls.path(id)
+        paths = _presolver.glob(path)
+
+        try:
+            return xr.open_mfdataset(paths)
+        except OSError as e:
+            raise OSError(f"while opening file at {path}: {str(e)}")
 
     @classmethod
     def find(cls):
         result = {}
 
-        for id in cls._PATHS.keys():
+        for id in cls.PATHS.keys():
             paths = _presolver.glob(cls.path(id))
             result[id] = bool(len(list(paths)))
 

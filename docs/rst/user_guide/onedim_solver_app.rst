@@ -89,7 +89,7 @@ atmosphere are supported.
 Homogeneous atmosphere
     The atmosphere has spatially invariant radiative properties. Currently,
     this application only supports a homogeneous atmosphere with Rayleigh
-    scattering and no absorption.
+    scattering.
 
 Heterogeneous atmosphere
     The atmosphere has spatially varying radiative properties along the
@@ -119,11 +119,20 @@ Black surface
 Configuring the application
 ---------------------------
 
-The application is implemented by the :class:`.OneDimSolverApp` class. It
-is configured using a Python dictionary, and its functionality is completely
-exposed by its command-line interface (CLI) ``ertonedim``. The CLI creates
-the class's dictionary from a YAML configuration file. The following shows a
-configuration dictionary and its equivalent YAML specification:
+The application is implemented by the :class:`.OneDimSolverApp` class. Its
+constructor can be called in a regular way; in that case, an operational
+mode must be selected prior to instantiating the class using the
+:func:`~eradiate.set_mode` function. Note that every parameter of the
+:class:`.OneDimSolverApp` constructor  is optional and has a default value and
+can be passed as an object or a dictionary.
+
+In addition, the :class:`OneDimSolverApp.from_dict() <.OneDimSolverApp.from_dict>`
+class method allows for instantiating :class:`.OneDimSolverApp` from a
+dictionary. The functionality of the
+:class:`OneDimSolverApp.from_dict() <.OneDimSolverApp.from_dict>` is completely
+exposed by the ``ertonedim`` command-line interface (CLI). The CLI creates
+the configuration dictionary from a YAML configuration file. The following shows
+a configuration dictionary and its equivalent YAML specification:
 
 .. tabbed:: Dictionary
 
@@ -131,33 +140,33 @@ configuration dictionary and its equivalent YAML specification:
 
       {
           "mode": {
-              "type": "mono",
-              "wavelength": 577.
+              "type": "mono",  # Single-precision monochromatic mode
+              "wavelength": 577.  # Evaluate optical properties at 577 nm
           },
           "surface": {
-              "type": "rpv"
+              "type": "rpv"  # Use a RPV surface with default parameters
           },
           "atmosphere": {
-              "type": "rayleigh_homogeneous",
-              "height": 120.,
-              "height_units": "km",
-              "sigma_s": 1.e-4
+              "type": "homogeneous",  # Use a homogeneous atmosphere ...
+              "toa_altitude": 120.,  # ... with TOA at 120 ...
+              "toa_altitude_units": "km",  # ... km ...
+              "sigma_s": 1e-4  # ... and a scattering coefficient of 1e-4 m^-1
           },
           "illumination": {
-              "type": "directional",
-              "zenith": 30.,
-              "azimuth": 0.,
+              "type": "directional",  # Use directional illumination ...
+              "zenith": 30.,  # ... with a solar zenith angle of 30° ...
+              "azimuth": 0.,  # ... and a solar azimuth angle of 0°
               "irradiance": {
-                  "type": "uniform",
-                  "value": 1.8e+6,
-                  "value_units": "W/km**2/nm"
+                  "type": "uniform",  # Illuminate the scene with a uniform irradiance ...
+                  "value": 1.8e6,  # ... of 1.8e6 ...
+                  "value_units": "W/km**2/nm" # ... W/km^2/nm
               },
           },
-          "measure": [{
-              "type": "toa_hsphere",
-              "spp": 32000,
-              "zenith_res": 5.,
-              "azimuth_res": 5.
+          "measures": [{
+              "type": "toa_hsphere",  # ... Record outgoing radiance at TOA ...
+              "spp": 32000,  # ... with 32000 samples per angular point ...
+              "zenith_res": 5., # ... with one angular point per 5° for zeniths ...
+              "azimuth_res": 5.  # ... and one angular point per 5° for azimuths
           }]
       }
 
@@ -166,28 +175,28 @@ configuration dictionary and its equivalent YAML specification:
    .. code-block:: yaml
 
       mode:
-        type: mono
-        wavelength: 577.
+        type: mono # Single-precision monochromatic mode
+        wavelength: 577. # Evaluate optical properties at 577 nm
       surface:
-        type: rpv
+        type: rpv # Use a RPV surface with default parameters
       atmosphere:
-        type: rayleigh_homogeneous
-        height: 120.
-        height_units: km
-        sigma_s: 1.e-4
+        type: homogeneous # Use a homogeneous atmosphere ...
+        toa_altitude: 120. # ... with TOA at 120 ...
+        toa_altitude_units: km # ... km ...
+        sigma_s: 1.e-4 # ... and a scattering coefficient of 1e-4 m^-1
       illumination:
-        type: directional
-        zenith: 30.
-        azimuth: 0.
+        type: directional # Use directional illumination ...
+        zenith: 30. # ... with a solar zenith angle of 30° ...
+        azimuth: 0. # ... and a solar azimuth angle of 0°
         irradiance:
-          type: uniform
-          value: 1.8e+6
-          value_units: W/km**2/nm
-      measure:
-      - type: toa_hsphere
-        spp: 32000
-        zenith_res: 5.
-        azimuth_res: 5.
+          type: uniform # Illuminate the scene with a uniform irradiance ...
+          value: 1.8e+6 # ... of 1.8e6 ...
+          value_units: W/km**2/nm # ... W/km^2/nm
+      measures:
+        - type: toa_hsphere # ... Record outgoing radiance at TOA ...
+          spp: 32000 # ... with 32000 samples per angular point ...
+          zenith_res: 5. # ... with one angular point per 5° for zeniths ...
+          azimuth_res: 5. # ... and one angular point per 5° for azimuths
 
 The configuration is divided into sections presented and detailed below. Unless
 specified, each section is also a dictionary and should take a ``type``
@@ -216,7 +225,8 @@ configures the computational kernel. The ``type`` parameter must be a valid mode
 identifier. This application currently supports the ``mono`` mode, which
 performs monochromatic simulations. In this mode, only one wavelength is
 transported per ray traced by the Monte Carlo engine. The mono ``mode`` is
-wavelength-aware and has a single ``wavelength`` parameter.
+wavelength-aware and has a single ``wavelength`` parameter. A double-precision
+variant ``mono_double`` can also be selected.
 
 .. seealso::
 
@@ -245,8 +255,8 @@ parameters.
 The two supported atmosphere models are referenced with the following ``type``
 values:
 
-* ``rayleigh_homogeneous``: homogeneous atmosphere with no absorption and
-  Rayleigh scattering [:class:`.RayleighHomogeneousAtmosphere`];
+* ``homogeneous``: homogeneous atmosphere with no absorption and
+  Rayleigh scattering [:class:`.HomogeneousAtmosphere`];
 * ``heterogeneous``: heterogeneous atmosphere with selectable atmospheric
   profile (defaults to a profile derived from the US76 standard profile)
   [:class:`.HeterogeneousAtmosphere`].
@@ -257,9 +267,9 @@ kilometers. Its scattering coefficient is forced to
 
 .. note::
 
-   In the example, the ``height_units`` field is used to specify the units of
-   the ``height`` field. If ``height_units`` is unset, ``height`` is interpreted
-   in metres.
+   In the example, the ``toa_altitude_units`` field is used to specify the units
+   of the ``toa_altitude`` field. If ``toa_altitude_units`` is unset,
+   ``toa_altitude`` is interpreted in metres.
 
 .. seealso::
 
@@ -285,7 +295,6 @@ in the illumination classes' documentation.
 When unspecified, the illumination section defaults to a directional
 illumination using a Solar irradiance spectrum.
 
-
 The example uses a directional light source. Section parameters set the
 illumination direction through its zenith and azimuth angles (also known as Sun
 zenith and azimuth angles) and its irradiance is set to
@@ -296,10 +305,10 @@ zenith and azimuth angles) and its irradiance is set to
    * Illumination reference documentation: :mod:`eradiate.scenes.illumination`
    * Spectrum reference documentation: :mod:`eradiate.scenes.spectra`
 
-``measure``
-^^^^^^^^^^^
+``measures``
+^^^^^^^^^^^^
 
-This section defines observational parameters. The ``measure`` section is
+This section defines observational parameters. The ``measures`` section is
 different from the others because it is a list of dictionaries. Each list item
 is a dictionary defined the usual way (``type`` and other parameters).
 
@@ -337,15 +346,15 @@ Result output
 
 Data output depends on the way the application is accessed:
 
-* The CLI outputs results to netCDF files whose naming pattern is controlled by
+* The CLI outputs results to NetCDF files whose naming pattern is controlled by
   a positional argument ``fname_results``, used as a file name prefix for all
   output data sets. One netCDF file is produced for each measure.
 * When using the :class:`.OneDimSolverApp` class directly, the
   :meth:`~.OneDimSolverApp.run()` method stores the computed results in the
   ``results`` attribute as a dictionary mapping measure identifiers to a
-  :class:`xarray.Dataset` object. Each data set has one variable for each computed
-  physical quantity (*e.g.* TOA radiance, BRDF and BRF for the ``toa_hsphere_*`` and ``toa_pplane_*``
-  measures).
+  :class:`xarray.Dataset` object. Each data set has one variable for each
+  computed physical quantity (*e.g.* TOA radiance, BRDF and BRF for the
+  ``toa_hsphere_*`` and ``toa_pplane_*`` measures).
 
 Visualisation
 -------------

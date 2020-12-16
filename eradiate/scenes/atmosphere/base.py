@@ -6,12 +6,8 @@ import attr
 
 from ..core import SceneElement
 from ...util.attrs import (
-    converter_or_auto,
-    validator_or_auto,
-    attrib_quantity,
-    converter_to_units,
-    validator_is_positive,
-    validator_units_compatible
+    attrib_quantity, converter_or_auto, converter_to_units,
+    validator_is_positive, validator_or_auto, validator_units_compatible
 )
 from ...util.factory import BaseFactory
 from ...util.units import config_default_units as cdu
@@ -26,10 +22,10 @@ class Atmosphere(SceneElement, ABC):
 
     .. rubric:: Constructor arguments / instance attributes
 
-    ``height`` (float or "auto"):
-        Atmosphere height. If set to ``"auto"``, the atmosphere height is taken
-        from the radiative properties profile provided it has one. Otherwise,
-        a default value of 100 km is used.
+    ``toa`` (float or "auto"):
+        Altitude of the top-of-atmosphere level. If set to ``"auto"``, the
+        TOA is inferred from the radiative properties profile provided it has
+        one. Otherwise, a default value of 100 km is used.
 
         Unit-enabled field (default unit: cdu[length])
 
@@ -47,7 +43,7 @@ class Atmosphere(SceneElement, ABC):
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
-    height = attrib_quantity(
+    toa_altitude = attrib_quantity(
         default="auto",
         converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
         validator=validator_or_auto(
@@ -72,10 +68,20 @@ class Atmosphere(SceneElement, ABC):
     )
 
     @property
-    @abstractmethod
+    def height(self):
+        """Actual value of the atmosphere's height as a :class:`pint.Quantity`.
+        If ``toa_altitude`` is set to ``"auto"``, a value of 100 km is returned;
+        otherwise, ``toa_altitude`` is returned.
+        """
+        if self.toa_altitude == "auto":
+            return ureg.Quantity(100., ureg.km)
+        else:
+            return self.toa_altitude
+
+    @property
     def kernel_height(self):
         """Height of the kernel object delimiting the atmosphere."""
-        pass
+        return self.height + self.kernel_offset
 
     @property
     def kernel_offset(self):
@@ -88,10 +94,7 @@ class Atmosphere(SceneElement, ABC):
            This is required to ensure that the surface is the only shape
            which can be intersected at ground level during ray tracing.
         """
-        if self.height == "auto":
-            return ureg.Quantity(0.1, "km")  # This is a 0.1% offset for a height of 100 km
-        else:
-            return self.height * 1e-3  # TODO: adjust offset based on medium profile
+        return self.height * 1e-3
 
     @property
     @abstractmethod

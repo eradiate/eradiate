@@ -16,6 +16,9 @@ Data handling [eradiate.data]
 
    open
    registered
+   find
+   getter
+
 
 .. rubric:: Modules
 

@@ -1,12 +1,15 @@
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.illumination import DirectionalIllumination
-from eradiate.scenes.surface import RPVSurface
-from eradiate.scenes.measure import DistantMeasure, PerspectiveCameraMeasure, \
-    RadianceMeterHsphereMeasure, RadianceMeterPlaneMeasure
+from eradiate.scenes.measure import (
+    DistantMeasure, PerspectiveCameraMeasure, RadianceMeterHsphereMeasure,
+    RadianceMeterPlaneMeasure
+)
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
+from eradiate.scenes.surface import RPVSurface
 from eradiate.util.units import ureg
 
 
@@ -22,22 +25,25 @@ def test_perspective(mode_mono):
     assert KernelDict.empty().add(d).load() is not None
 
 
-def test_radiancemeter_hemispherical(mode_mono):
+def test_radiancemeter_hsphere_construct(mode_mono):
     # Test constructor
     d = RadianceMeterHsphereMeasure()
     assert KernelDict.empty().add(d).load() is not None
 
 
-def test_hemispherical_postprocess(mode_mono):
-    """To test the postprocess method, we create a data dictionary, mapping
-    a two sensor_ids to results. One ID will map to the expected results,
-     the other will map to results of a different shape, prompting the test to
-     fail, should these results be read. This way we can assert that the correct
-    data are looked up and then reshaped, as expected."""
+def test_radiancemeter_hsphere_postprocess(mode_mono):
+    """To test the postprocess() method, we create a data dictionary mapping
+    two sensor_ids to results. One ID will map to the expected results,
+    the other will map to results of a different shape, prompting the test to
+    fail, should these results be read. This way we can assert that the correct
+    data are looked up and then reshaped, as expected.
+    """
     sensor_id = ["test_sensor"]
     spp = [1]
-    data = {"test_sensor": np.linspace(0, 1, 9 * 36),
-            "test_wrong_sensor": np.linspace(0, 1, 18 * 72)}
+    data = {
+        "test_sensor": np.linspace(0, 1, 9 * 36),
+        "test_wrong_sensor": np.linspace(0, 1, 18 * 72)
+    }
 
     d = RadianceMeterHsphereMeasure(zenith_res=10, azimuth_res=10)
     data_reshaped = d.postprocess_results(sensor_id, spp, data)
@@ -45,7 +51,7 @@ def test_hemispherical_postprocess(mode_mono):
     assert np.shape(data_reshaped) == (9, 36)
 
 
-def test_hemispherical_hsphere_selection(mode_mono):
+def test_radiancemeter_hsphere_hemisphere(mode_mono):
     # Test hemisphere selection
     d = RadianceMeterHsphereMeasure()
     d_back = RadianceMeterHsphereMeasure(hemisphere="back")
@@ -55,21 +61,39 @@ def test_hemispherical_hsphere_selection(mode_mono):
 
     assert np.allclose(-directions_front, directions_back)
 
-def test_plane_class(mode_mono):
+
+def test_radiancemeter_hsphere_sensor_info():
+    measure = RadianceMeterHsphereMeasure(spp=15)
+    measure._spp_max_single = 10
+
+    eradiate.set_mode("mono")
+    assert measure.sensor_info() == [
+        (f"{measure.id}_0", 10),
+        (f"{measure.id}_1", 5)
+    ]
+
+    eradiate.set_mode("mono_double")
+    assert measure.sensor_info() == [
+        (f"{measure.id}", 15),
+    ]
+
+
+def test_radiancemeter_plane_construct(mode_mono):
     d = RadianceMeterPlaneMeasure()
     assert KernelDict.empty().add(d).load() is not None
 
 
-def test_plane_postprocess(mode_mono):
+def test_radiancemeter_plane_postprocess(mode_mono):
     """To test the postprocess method, we create a data dictionary, mapping
-    a three sensor_ids to results. Two IDs will map to the expected results,
-     the other will map to results of a different shape, prompting the test to
-     fail, should these results be read. This way we can assert that the correct
-    data are looked up and then reshaped, as expected."""
-    sensor_id = ["test_sensor", "test_sensor2"]
-    spp = [1,1]
-    data = {"test_sensor": np.linspace(0, 3, 2 * 2),
-            "test_sensor2": np.linspace(0, 3, 2 * 2),
+    three sensor_ids to results. Two IDs will map to the expected results,
+    the other will map to results of a different shape, prompting the test to
+    fail, should these results be read. This way we can assert that the correct
+    data are looked up and then reshaped, as expected.
+    """
+    sensor_id = ["test_sensor_1", "test_sensor_2"]
+    spp = [1, 1]
+    data = {"test_sensor_1": np.linspace(0, 3, 2 * 2),
+            "test_sensor_2": np.linspace(0, 3, 2 * 2),
             "test_sensor_wrong": np.linspace(0, 1, 18 * 72)}
     d = RadianceMeterPlaneMeasure(zenith_res=45)
     data_repacked = d.postprocess_results(sensor_id, spp, data)
@@ -77,7 +101,7 @@ def test_plane_postprocess(mode_mono):
 
 
 @pytest.mark.slow
-def test_plane_orientation(mode_mono):
+def test_radiancemeter_plane_orientation(mode_mono):
     """To ensure that the principal plane sensor recovers the correct values, render two scenes:
     Once with a hemispherical view and once with a pplane view. Select the values corresponding to
     the pplane from the hemispherical dataset and compare with the pplane data."""
@@ -117,8 +141,29 @@ def test_plane_orientation(mode_mono):
     result_pplane = pplane.postprocess_results(["pplane"], [1], data_pplane)
 
     # select the data to compare
-    reshaped_hemi = np.concatenate([np.squeeze(result_hemi[::-1, 180, ]), np.squeeze(result_hemi[:, 0])])
-    reshaped_pplane = np.concatenate([np.squeeze(result_pplane[::-1, 1]), np.squeeze(result_pplane[:, 0])])
+    reshaped_hemi = np.concatenate([
+        np.squeeze(result_hemi[::-1, 180, ]),
+        np.squeeze(result_hemi[:, 0])
+    ])
+    reshaped_pplane = np.concatenate([
+        np.squeeze(result_pplane[::-1, 1]),
+        np.squeeze(result_pplane[:, 0])
+    ])
 
     assert np.allclose(reshaped_hemi, reshaped_pplane, rtol=1e-9)
 
+
+def test_radiancemeter_plane_sensor_info():
+    measure = RadianceMeterPlaneMeasure(spp=15)
+    measure._spp_max_single = 10
+
+    eradiate.set_mode("mono")
+    assert measure.sensor_info() == [
+        (f"{measure.id}_0", 10),
+        (f"{measure.id}_1", 5)
+    ]
+
+    eradiate.set_mode("mono_double")
+    assert measure.sensor_info() == [
+        (f"{measure.id}", 15),
+    ]

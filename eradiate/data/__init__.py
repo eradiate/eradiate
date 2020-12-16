@@ -41,7 +41,7 @@ import xarray as xr
 
 from .absorption_spectra import _AbsorptionGetter
 from .solar_irradiance_spectra import _SolarIrradianceGetter
-from .spectral_response_function import  _SpectralResponseFunctionGetter
+from .spectral_response_function import _SpectralResponseFunctionGetter
 from ..util.presolver import PathResolver
 
 _presolver = PathResolver()
@@ -75,6 +75,9 @@ def open(category=None, id=None, path=None):
 
     Raises → ValueError:
         The requested resource is not handled.
+
+    Raises → OSError:
+        I/O error while processing a handled resource.
     """
     if path is None:
         if category is None or id is None:
@@ -82,13 +85,10 @@ def open(category=None, id=None, path=None):
                              "be None")
 
         try:
-            getter = _getters[category]
-        except KeyError:
-            raise ValueError(f"invalid data category '{category}'")
-
-        try:
-            return getter.open(id)
+            return getter(category).open(id)
         except ValueError:
+            raise
+        except OSError:
             raise
 
     # path is not None: we open the data
@@ -101,6 +101,25 @@ def open(category=None, id=None, path=None):
     raise ValueError(f"cannot load resource {fname}")
 
 
+def getter(category):
+    """Get the getter class for the requested category.
+
+    Parameter ``category`` (str):
+        Dataset category identifier. See :func:`open` for valid categories.
+
+    Returns → :class:`.DataGetter`:
+        Getter class for the requested category.
+
+    Raises → ValueError:
+        Unknown requested category.
+    """
+    try:
+        return _getters[category]
+    except KeyError:
+        raise ValueError(f"invalid data category '{category}'; must be one of "
+                         f"{list(_getters.keys())}")
+
+
 def registered(category):
     """Get a list of registered dataset IDs for a given data set category.
 
@@ -109,16 +128,8 @@ def registered(category):
 
     Returns → list[str]:
         List of registered data set IDs for the selected category.
-
-    Raises → ValueError:
-        Unknown requested category.
     """
-    try:
-        getter = _getters[category]
-    except KeyError:
-        raise ValueError(f"invalid data category '{category}'")
-
-    return getter.registered()
+    return getter(category).registered()
 
 
 def find(category):
@@ -131,9 +142,4 @@ def find(category):
         Report dictionary containing data set identifiers as keys and Boolean
         values (``True`` if a file exists for this ID, ``False`` otherwise).
     """
-    try:
-        getter = _getters[category]
-    except KeyError:
-        raise ValueError(f"invalid data category '{category}'")
-
-    return getter.find()
+    return getter(category).find()

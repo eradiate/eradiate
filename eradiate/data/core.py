@@ -1,19 +1,19 @@
 class DataGetter:
     """Base class for data getters."""
 
-    _PATHS = None
+    PATHS = None
     """Dictionary mapping registered resource IDs with paths (or globs)."""
 
     @classmethod
     def registered(cls):
         """Return list of registered resources."""
-        return list(cls._PATHS.keys())
+        return list(cls.PATHS.keys())
 
     @classmethod
     def path(cls, id):
-        """Get paths to registered resources from _PATHS."""
+        """Get paths to registered resources from PATHS."""
         try:
-            return cls._PATHS[id]
+            return cls.PATHS[id]
         except KeyError:
             raise ValueError(f"unknown data set '{id}'")
 

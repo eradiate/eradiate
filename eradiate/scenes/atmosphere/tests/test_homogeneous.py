@@ -18,7 +18,7 @@ def test_homogeneous(mode_mono, ref):
 
     # Check if default constructor works
     r = HomogeneousAtmosphere()
-    assert r.height == "auto"
+    assert r.toa_altitude == "auto"
     assert r.kernel_offset == ureg.Quantity(0.1, "km")
     assert r.kernel_height == ureg.Quantity(100.1, "km")
 
@@ -42,8 +42,8 @@ def test_homogeneous(mode_mono, ref):
     assert r.sigma_s.value == ureg.Quantity(1e-5, ureg.m ** -1)
 
     eradiate.set_mode("mono", wavelength=650.)
-    r = HomogeneousAtmosphere(height=ureg.Quantity(10, ureg.km))
-    assert r.height == ureg.Quantity(10, ureg.km)
+    r = HomogeneousAtmosphere(toa_altitude=ureg.Quantity(10, ureg.km))
+    assert r.toa_altitude == ureg.Quantity(10, ureg.km)
 
     # Check if sigma_s was correctly computed using the mode wavelength value
     wavelength = eradiate.mode.wavelength
@@ -62,7 +62,7 @@ def test_homogeneous(mode_mono, ref):
 
     # Check that attributes wrong units or invalid values raise an error
     with pytest.raises(UnitsError):
-        HomogeneousAtmosphere(height=ureg.Quantity(10, "second"))
+        HomogeneousAtmosphere(toa_altitude=ureg.Quantity(10, "second"))
 
     with pytest.raises(UnitsError):
         HomogeneousAtmosphere(width=ureg.Quantity(5, "m^2"))
@@ -71,7 +71,7 @@ def test_homogeneous(mode_mono, ref):
         HomogeneousAtmosphere(sigma_s=ureg.Quantity(1e-7, "m"))
 
     with pytest.raises(ValueError):
-        HomogeneousAtmosphere(height=-100.)
+        HomogeneousAtmosphere(toa_altitude=-100.)
 
     with pytest.raises(ValueError):
         HomogeneousAtmosphere(width=-50.)

@@ -21,7 +21,7 @@ def cli(config, fname_results, fname_plots):
     # Load configuration
     with open(config, "r") as configfile:
         config = yaml.safe_load(configfile)
-    app = OneDimSolverApp(config)
+    app = OneDimSolverApp.from_dict(config)
 
     # Run simulation
     app.run()
