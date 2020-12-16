@@ -13,6 +13,7 @@ Developer guide
    factory_guide
    unit_guide_developer
    adding_tutorials
+   design_atmosphere
 
 Eradiate's high-level components are written in Python 3. They rely on a kernel
 component which is a fork of the Mitsuba 2 rendering system, written in the

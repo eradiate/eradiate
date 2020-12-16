@@ -41,7 +41,7 @@ _presolver = PathResolver()
 
 
 class _SolarIrradianceGetter(DataGetter):
-    _PATHS = {
+    PATHS = {
         "blackbody_sun": "spectra/solar_irradiance/blackbody_sun.nc",
         "meftah_2017": "spectra/solar_irradiance/meftah_2017.nc",
         "thuillier_2003": "spectra/solar_irradiance/thuillier_2003.nc",
@@ -60,7 +60,7 @@ class _SolarIrradianceGetter(DataGetter):
     def find(cls):
         result = {}
 
-        for id in cls._PATHS.keys():
+        for id in cls.PATHS.keys():
             path = _presolver.resolve(cls.path(id))
             result[id] = path.is_file()
 

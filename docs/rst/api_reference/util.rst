@@ -17,7 +17,6 @@ Utility [eradiate.util]
 
    attrs
    collections
-   config_object
    exceptions
    factory
    frame

@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from eradiate.solvers.onedim.app import OneDimSolverApp
 from eradiate.util.plot import remove_xylabels
 
 eradiate_dir = os.environ["ERADIATE_DIR"]
@@ -59,47 +60,56 @@ def test_symmetry_zenith(variant_scalar_mono, surface, atmosphere):
         The results on either side of the zenith must agree within a relative tolerance of 5e-3.
     """
 
-    from eradiate.solvers.onedim.app import OneDimSolverApp
-
-    config = {}
-
-    config["mode"] = {"type": "mono_double",
-                      "wavelength": 550.}
-
-    config["illumination"] = {"type": "directional",
-                              "zenith": 0.,
-                              "azimuth": 0.,
-                              "irradiance": {
-                                  "type": "uniform",
-                                  "value": 1.e6
-                              }}
-    config["measure"] = [{"type": "toa_pplane_lo",
-                          "zenith_res": 10,
-                          "spp": 1000000}]
+    config = {
+        "mode": {
+            "type": "mono_double",
+            "wavelength": 550.
+        },
+        "illumination": {
+            "type": "directional",
+            "zenith": 0.,
+            "azimuth": 0.,
+            "irradiance": {
+                "type": "uniform",
+                "value": 1.e6
+            }
+        },
+        "measures": [{
+            "type": "toa_pplane_lo",
+            "zenith_res": 10,
+            "spp": 1000000
+        }]
+    }
 
     if surface == "lambertian":
-        config["surface"] = {"type": "lambertian",
-                             "reflectance": {
-                                 "type": "uniform",
-                                 "value": 0.5
-                             }}
+        config["surface"] = {
+            "type": "lambertian",
+            "reflectance": {
+                "type": "uniform",
+                "value": 0.5
+            }
+        }
     elif surface == "rpv":
-        config["surface"] = {"type": "rpv",
-                             "rho_0": 0.183,
-                             "k": 0.780,
-                             "ttheta": -0.1}
+        config["surface"] = {
+            "type": "rpv",
+            "rho_0": 0.183,
+            "k": 0.780,
+            "ttheta": -0.1
+        }
 
     if atmosphere is None:
-        config["atmosphere"] = None
+        pass
     elif atmosphere == "homogeneous":
-        config["atmosphere"] = {"type": "homogeneous",
-                                "sigma_s": 1.e-2}
+        config["atmosphere"] = {
+            "type": "homogeneous",
+            "sigma_s": 1.e-2
+        }
 
-    app = OneDimSolverApp(config)
+    app = OneDimSolverApp.from_dict(config)
     app.run()
 
     # Fold negative VZA onto the positive half-space
-    results = app.results["toa_pplane_lo"]["lo"]
+    results = app.results["toa_pplane"]["lo"]
     lo_zero = np.squeeze(results.where(results.vza >= 0., drop=True).values)[1:]
     lo_pi = np.squeeze(results.where(results.vza < 0., drop=True).values)[::-1]
     vza_values = results.where(results.vza > 0., drop=True).vza.values

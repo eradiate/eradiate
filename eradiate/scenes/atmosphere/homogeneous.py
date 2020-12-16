@@ -61,14 +61,6 @@ class HomogeneousAtmosphere(Atmosphere):
     )
 
     @property
-    def kernel_height(self):
-        """Height of the kernel object delimiting the atmosphere."""
-        if self.height == "auto":
-            return ureg.Quantity(100, "km") + self.kernel_offset
-        else:
-            return self.height + self.kernel_offset
-
-    @property
     def kernel_width(self):
         """Width of the kernel object delimiting the atmosphere."""
         if self.width == "auto":

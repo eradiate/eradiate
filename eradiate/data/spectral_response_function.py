@@ -89,7 +89,7 @@ _presolver = PathResolver()
 
 
 class _SpectralResponseFunctionGetter(DataGetter):
-    _PATHS = {
+    PATHS = {
         f"sentinel-3{satellite}-slstr-s{channel}":
         f"spectra/srf/sentinel-3{satellite}-slstr-s{channel}.nc"
         for satellite in ["a", "b"] for channel in range(1, 10)
@@ -104,7 +104,7 @@ class _SpectralResponseFunctionGetter(DataGetter):
     def find(cls):
         result = {}
 
-        for id in cls._PATHS.keys():
+        for id in cls.PATHS.keys():
             path = _presolver.resolve(cls.path(id))
             result[id] = path.is_file()
 

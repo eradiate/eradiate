@@ -419,6 +419,14 @@ class RadianceMeterHsphereMeasure(Measure):
         validator=validator_is_positive
     )
 
+    # Private attributes
+    _spp_max_single = attr.ib(
+        default=1e5,
+        converter=int,
+        validator=validator_is_positive,
+        repr=False
+    )
+
     _zenith_angles = attr.ib(default=None, init=False)  # Set during post-init
     _azimuth_angles = attr.ib(default=None, init=False)  # Set during post-init
 
@@ -493,18 +501,23 @@ class RadianceMeterHsphereMeasure(Measure):
 
     def sensor_info(self):
         """This method generates the sensor_id for the kernel_scene sensor
-        implementation. On top of that, it will perform the SPP-split if conditions
-        are met. In single precision computation the SPP should not become too
-        large, otherwise the results will degrade due to precision limitations.
-        In this case, this method will create multiple sensor_ids.
-        It returns a list of tuples, each holding a sensor_id and the corresponding
-        SPP value. In the case of a SPP-split, none of the SPP values will
-        exceed the threshold."""
-        if eradiate.mode.precision == eradiate.ModePrecision.SINGLE and self.spp > 1e5:
-            sensor_info = [(f"{self.id}_{i}", int(1e5)) for i in range(int(self.spp / 1e5))]
-            if self.spp % 1e5 != 0:
-                sensor_info += [(f"{self.id}_{int(self.spp / 1e5)}", self.spp % 1e5)]
-            return sensor_info
+        implementation. On top of that, it will perform the SPP-split if
+        conditions are met. In single precision computation the SPP should not
+        become too large, otherwise the results will degrade due to precision
+        limitations. In this case, this method will create multiple sensor_ids.
+        It returns a list of tuples, each holding a sensor_id and the
+        corresponding SPP value. In the case of a SPP-split, none of the SPP
+        values will exceed the threshold.
+        """
+        if eradiate.mode.precision == eradiate.ModePrecision.SINGLE \
+                and self.spp > self._spp_max_single:
+            spps = [self._spp_max_single
+                    for i in range(int(self.spp / self._spp_max_single))]
+            if self.spp % self._spp_max_single:
+                spps.append(self.spp % self._spp_max_single)
+
+            return [(f"{self.id}_{i}", spp) for i, spp in enumerate(spps)]
+
         else:
             return [(self.id, self.spp)]
 
@@ -633,6 +646,14 @@ class RadianceMeterPlaneMeasure(Measure):
         validator=validator_is_positive
     )
 
+    # Private attributes
+    _spp_max_single = attr.ib(
+        default=1e5,
+        converter=int,
+        validator=validator_is_positive,
+        repr=False
+    )
+
     _zenith_angles = attr.ib(default=None, init=False)  # Set during post-init
     _azimuth_angles = attr.ib(default=None, init=False)  # Set during post-init
 
@@ -646,7 +667,7 @@ class RadianceMeterPlaneMeasure(Measure):
             ureg.deg
         )
 
-    def postprocess_results(self, sensor_id, sensor_spp, results):
+    def postprocess_results(self, sensor_ids, sensor_spps, runner_results):
         """This method reshapes the 1D results returned by the
         ``radiancemeterarray`` kernel plugin into the shape implied by the
         azimuth and zenith angle resolutions, such that the result complies with
@@ -656,27 +677,28 @@ class RadianceMeterPlaneMeasure(Measure):
         the SPP per sensor, this method will recombine the results from each
         sensor.
 
-        Parameter ``sensor_id`` (list):
-            List of sensor_ids that belong to this measure
+        Parameter ``sensor_ids`` (list):
+            List of sensor IDs that belong to this measure.
 
-        Parameter ``sensor_spp`` (list):
-            List of spp values that belong to this measure's sensors.
+        Parameter ``sensor_spps`` (list):
+            List of SPP values that belong to this measure's sensors.
 
-        Parameter ``results`` (dict):
-            Dictionary, mapping sensor IDs to their respective results.
+        Parameter ``runner_results`` (dict):
+            Dictionary mapping sensor IDs to their respective results.
 
         Returns → dict:
             Recombined and reshaped results.
         """
+        sensor_values = np.array([runner_results[x] for x in sensor_ids])
+        spp_sum = np.sum(sensor_spps)
 
-        sensors = np.array([results[x] for x in sensor_id])
-        spp_sum = np.sum(sensor_spp)
+        # Compute weighted sum of sensor contributions
+        # The transpose() is required to correctly position the dimension on
+        # which dot() operates
+        runner_results = np.dot(sensor_values.transpose(), sensor_spps).transpose()
+        runner_results /= spp_sum
 
-        # multiply each sensor's result by its relative SPP and sum all results
-        results = np.dot(sensors.transpose(), sensor_spp / spp_sum).transpose()
-        print(results)
-
-        return np.reshape(results, (len(self._zenith_angles), 2))
+        return np.reshape(runner_results, (len(self._zenith_angles), 2))
 
     def _orientation_transform(self):
         """Compute matrix that transforms vectors between object and world space."""
@@ -718,11 +740,15 @@ class RadianceMeterPlaneMeasure(Measure):
         corresponding SPP value. In the case of a SPP-split, none of the SPP
         values will exceed the threshold.
         """
-        if eradiate.mode.precision == eradiate.ModePrecision.SINGLE and self.spp > 1e5:
-            sensor_info = [(f"{self.id}_{i}", int(1e5)) for i in range(int(self.spp / 1e5))]
-            if self.spp % 1e5 != 0:
-                sensor_info += [(f"{self.id}_{int(self.spp / 1e5)}", self.spp % 1e5)]
-            return sensor_info
+        if eradiate.mode.precision == eradiate.ModePrecision.SINGLE \
+                and self.spp > self._spp_max_single:
+            spps = [self._spp_max_single
+                    for i in range(int(self.spp / self._spp_max_single))]
+            if self.spp % self._spp_max_single:
+                spps.append(self.spp % self._spp_max_single)
+
+            return [(f"{self.id}_{i}", spp) for i, spp in enumerate(spps)]
+
         else:
             return [(self.id, self.spp)]
 

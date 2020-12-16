@@ -443,21 +443,18 @@ class US76ApproxRadProfile(RadProfile):
         Default: 50
 
     ``height`` (float):
-        Atmosphere's height.
-
-        Default: 100 km
+        Atmosphere's height. Default: 100 km.
 
         Unit-enabled field (default: cdu[length]).
 
-    ``dataset`` (str):
-        Dataset identifier.
-
-        Default: ``"us76_u86_4-fullrange"``
+    ``dataset`` ("us76_u86_4-fullrange" or "test"):
+        Dataset identifier. Default: ``"us76_u86_4-fullrange"``.
 
         .. warning::
 
-            This attribute serves as debugging tool. Do not modify it unless
-            you know what you are doing.
+           This attribute exists for debugging purposes. Unless during testing,
+           it should be used with its default value.
+
     """
     n_layers = attr.ib(
         default=50,
