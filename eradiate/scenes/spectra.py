@@ -303,7 +303,7 @@ class SolarIrradianceSpectrum(Spectrum):
     def kernel_dict(self, ref=True):
         from eradiate import mode
 
-        if mode.id == "mono":
+        if mode.id in {"mono", "mono_double"}:
             wavelength = mode.wavelength.to(ureg.nm).magnitude
 
             irradiance_magnitude = float(
@@ -333,4 +333,4 @@ class SolarIrradianceSpectrum(Spectrum):
             }
 
         else:
-            raise ModeError(f"unsupported mode '{mode.type}'")
+            raise ModeError(f"unsupported mode '{mode.id}'")
