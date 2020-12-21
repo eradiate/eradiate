@@ -303,7 +303,7 @@ class SolarIrradianceSpectrum(Spectrum):
     def kernel_dict(self, ref=True):
         from eradiate import mode
 
-        if mode.id in {"mono", "mono_double"}:
+        if mode.is_monochromatic():
             wavelength = mode.wavelength.to(ureg.nm).magnitude
 
             irradiance_magnitude = float(

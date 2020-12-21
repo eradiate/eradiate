@@ -508,7 +508,7 @@ class US76ApproxRadProfile(RadProfile):
         from eradiate import mode
         from eradiate.util.exceptions import ModeError
 
-        if mode.id not in {"mono", "mono_double"}:
+        if not mode.is_monochromatic():
             raise ModeError(f"unsupported mode {mode.id}")
         else:
             wavelength = mode.wavelength

@@ -12,24 +12,20 @@ from .util.attrs import attrib_quantity, unit_enabled
 from .util.units import config_default_units, ureg
 
 
+class ModeSpectrum(enum.Enum):
+    """An enumeration defining known kernel spectrum representations."""
+
+    MONO = "mono"
+    # POLY = "poly"
+    # SPECTRAL = "spectral"
+    # CKD = "ckd"
+
+
 class ModePrecision(enum.Enum):
     """An enumeration defining known kernel precision."""
 
-    SINGLE = enum.auto()
-    DOUBLE = enum.auto()
-
-    @classmethod
-    def from_str(cls, s):
-        """Get a member from a string.
-
-        Parameter ``s`` (str):
-            String to convert to :class:`.ModePrecision`. ``s`` will first be
-            converted to upper case.
-
-        Returns → :class:`.ModePrecision`:
-            Retrieved enum member.
-        """
-        return cls[s.upper()]
+    SINGLE = "single"
+    DOUBLE = "double"
 
 
 # Map associating a mode ID string to the corresponding class
@@ -37,19 +33,18 @@ class ModePrecision(enum.Enum):
 mode_registry = {}
 
 
-def register_mode(mode_id, precision="single"):
+def register_mode(mode_id, spectrum="mono", precision="single"):
     # This decorator is meant to be added to added to an Mode child class.
     # It adds it to mode_registry.
 
-    if isinstance(precision, str):
-        precision = ModePrecision.from_str(precision)
-    else:
-        raise ValueError(f"Can not set precision from {type(precision)} object.")
+    spectrum = ModeSpectrum(spectrum)
+    precision = ModePrecision(precision)
 
     def decorator(cls):
         mode_registry[mode_id] = cls
         cls.id = mode_id
         cls.precision = precision
+        cls.spectrum = spectrum
         return cls
 
     return decorator
@@ -62,6 +57,14 @@ class Mode:
     # All derived classes will be frozen
     # Side-effect: they will also implement from_dict()
     id = None
+    polarization = None
+    precision = None
+
+    def is_monochromatic(self):
+        return self.spectrum is ModeSpectrum.MONO
+
+    def is_double_precision(self):
+        return self.precision is ModePrecision.DOUBLE
 
     @staticmethod
     def new(mode_id, **kwargs):
@@ -79,7 +82,7 @@ class ModeNone(Mode):
     pass
 
 
-@register_mode("mono", precision="single")
+@register_mode("mono", spectrum="mono", precision="single")
 @attr.s
 class ModeMono(Mode):
     # Monochromatic mode, single precision
@@ -94,7 +97,7 @@ class ModeMono(Mode):
         eradiate.kernel.set_variant("scalar_mono")
 
 
-@register_mode("mono_double", precision="double")
+@register_mode("mono_double", spectrum="mono", precision="double")
 @attr.s
 class ModeMonoDouble(Mode):
     # Monochromatic mode, double precision
