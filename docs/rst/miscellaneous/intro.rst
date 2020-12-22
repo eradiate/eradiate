@@ -2,7 +2,8 @@ Miscellaneous
 =============
 
 .. toctree::
-    :maxdepth: 1
+   :maxdepth: 1
 
-    bibliography
-    Todo list<todolist>
+   changelog
+   bibliography
+   Todo list<todolist>
