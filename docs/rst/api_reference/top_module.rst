@@ -23,6 +23,7 @@ Top-level module [eradiate]
    :toctree: generated/
 
    ModePrecision
+   ModeSpectrum
 
 .. rubric:: Functions
 

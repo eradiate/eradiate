@@ -57,8 +57,8 @@ class Mode:
     # All derived classes will be frozen
     # Side-effect: they will also implement from_dict()
     id = None
-    polarization = None
     precision = None
+    spectrum = None
 
     def is_monochromatic(self):
         return self.spectrum is ModeSpectrum.MONO
