@@ -2,8 +2,6 @@ import sys
 
 import mock
 
-from eradiate.scenes.integrators import IntegratorFactory
-
 MOCK_MODULES = [
     "mitsuba", "mitsuba.core", "mitsuba.core.math", "mitsuba.core.spline",
     "mitsuba.core.warp", "mitsuba.core.xml", "mitsuba.render",
@@ -23,6 +21,7 @@ from tinydb.storages import MemoryStorage
 from eradiate.scenes.atmosphere import AtmosphereFactory
 from eradiate.scenes.biosphere import BiosphereFactory
 from eradiate.scenes.illumination import IlluminationFactory
+from eradiate.scenes.integrators import IntegratorFactory
 from eradiate.scenes.measure import MeasureFactory
 from eradiate.scenes.spectra import SpectrumFactory
 from eradiate.scenes.surface import SurfaceFactory
