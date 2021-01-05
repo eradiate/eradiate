@@ -18,6 +18,26 @@ library, whose data model is based on NetCDF. xarray provides a comprehensive,
 robust and convenient interface to read, write, manipulate and visualise NetCDF
 data.
 
+.. _sec-user_guide-manual_download:
+
+Adding manually downloaded data
+-------------------------------
+
+Due to the impracticality of storing large data sets with the code base
+Eradiate does not ship all data required to run simulations.
+Certain large data sets are hosted on an FTP server and need to be
+downloaded manually.
+
+:ref:`This section <sec-user_guide-molecular_absorption_datasets>` contains a list of
+molecular absorption datasets, including a description of their extent and limitations as well as
+a download link.
+
+The data are served in compressed archives, including their containing
+folders. To install the downloaded data, first decompress the archive into a temporary
+location. The decompressed folder can then be placed directly in the ``resources/data``
+folder and typical file managers will be able to merge the two file trees, placing
+the data files in the correct location in the local file tree.
+
 Accessing shipped data
 ----------------------
 

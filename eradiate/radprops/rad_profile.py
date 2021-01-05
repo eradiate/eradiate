@@ -389,52 +389,6 @@ class US76ApproxRadProfile(RadProfile):
     values from the US76 atmospheric vertical profile, in the corresponding
     atmospheric layers.
 
-    .. warning::
-
-       This ``us76_u86_4`` gas mixture does not completely match the gas
-       mixture defined in the U.S. Standard Atmosphere 1976 model (see
-       :cite:`NASA1976USStandardAtmosphere`). The U.S. Standard Atmosphere 1976
-       model (abbreviated *US76 model* in the following) divides the atmosphere
-       into two altitude regions: below the altitude of 86 kilometers, the
-       model assumes air is a well-mixed dry gas with the following constituent
-       species: N2, O2, Ar, CO2, Ne, He, Kr, Xe, CH4, H2. **Note that H2O is
-       absent from this list of gas species.** Above 86 kilometers
-       of altitude (altitude at which the air number density is smaller than
-       the air number density at the surface by a factor larger than 1e5)
-       the remaining gas species are N2, O2, Ar, He, O and H and are not well-
-       mixed anymore.
-
-       The ``us76_u86_4`` mixture is identical to the gas
-       mixture in the US76 model under 86 kilometers of altitude and as far as
-       N2, O2, CO2 and CH4 are concerned. The reason for which the other gas
-       species from the US76 model under 86 kilometers (Ar, Ne, He, Kr, Xe, H2)
-       are not included in this mixture is because they are absent from the
-       `HITRAN <https://hitran.org/>`_ spectroscopic database, which means
-       that the absorption cross sections cannot be computed for this species.
-       The reason for which, we restrict to the first altitude region of the
-       US76 model in the definition of the ``us76_u86_4`` mixture is that it
-       is simpler to produce an absorption dataset for a well-mixed gas than
-       for a non well-mixed gas.
-
-       The approximation of using a gas mixture defined based on the first
-       altitude region of the US76 model may be justified by the fact that
-       the air number density is at least 1e5 smaller above 86 kilometers
-       than the air number density at the surface. Unless the volume fractions
-       of the important absorbing species are significantly different, this
-       means that the absorption coefficient will also be at least 1e5 smaller
-       above 86 kilometers of altitude.
-       The approximation of restricting to only 4 gas species of the 10 species
-       present in the US76 model for altitudes below 86 km, although forced,
-       has consequences that are unknown to us. In other words, we ignore the
-       conditions of validity of this approximation. Simply put, it was the
-       best approximation we could find up until now.
-
-       All that justifies the naming of the present class. We acknowledge
-       the limitations of this *US76-approximation radiative profile* and
-       are working on a more flexible solution. In the meantime, we wanted
-       to be as transparent (unintentional wordplay) as possible regarding the
-       data and methods that are used here.
-
     .. rubric:: Constructor arguments / instance attributes
 
     ``n_layers`` (int):
