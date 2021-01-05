@@ -14,6 +14,7 @@ User guide
    data_guide
    unit_guide_user
    solar_irradiance_spectra
+   molecular_absorption_datasets
 
 ..
   Archived content

@@ -14,19 +14,58 @@ the minimal Python distribution
 However, nothing currently prevents Eradiate from running in a regular pyenv
 environment.
 
-.. _sec-getting_started-building-python:
-
 Setting up your Python environment
 ----------------------------------
 
+.. _sec-getting_started-building-setup_automation:
+
+Automated environment creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We recommend using Conda for Python environment management and provide
+a script to automatically create the environment. Executing the
+``resources/envs/conda_create_env.sh`` script at the root of the Eradiate source
+tree, will create the environment and include the necessary environment
+variables in the environment's setup and teardown procedures.
+
+.. warning::
+
+   Executing the Conda environment setup script will reset any existing
+   environment with the name "eradiate"!
+
+The script automates the default Conda environment setup and the
+Eradiate package installation. Optional steps can also be automated using a
+series of flags:
+
+-d    Perform :ref:`development dependency installation <sec-getting_started-building-python-conda-optional>`
+-j    Perform :ref:`Jupyter lab installation and extension activation <sec-getting_started-building-python-conda-optional>`
+-a    Add automatic environment variable setup to environment activation script
+      (makes the :ref:`environment variable setup <sec-getting_started-building-environment_variables>`
+      no longer necessary)
+-e    Add a `direnv <https://direnv.net/>`_  ``.envrc`` file to the root of the
+      Eradiate source tree (makes the
+      :ref:`environment variable setup <sec-getting_started-building-environment_variables>`
+      no longer necessary)
+
+.. tabbed:: Typical user setup
+
+   .. code-block:: bash
+
+      bash resources/envs/conda_create_env.sh -j -a
+
+.. tabbed:: Typical developer setup
+
+   .. code-block:: bash
+
+      bash resources/envs/conda_create_env.sh -d -j -a
+
 .. note::
 
-   For automated environment setup, please
-   `see below <sec-getting_started-building-setup_automation>`_.
+   We are not sourcing the script, we are executing it in a subshell.
 
 .. _sec-getting_started-building-python-conda:
 
-Using Conda [Recommended]
+Setting up Conda manually
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Eradiate requires a recent version of Python (at least **3.6**). A Conda
@@ -281,46 +320,13 @@ the embedded Mitsuba version number to the terminal:
 
     python -c "import eradiate.kernel; eradiate.kernel.set_variant('scalar_mono'); print(eradiate.kernel.core.MTS_VERSION)"
 
-.. _sec-getting_started-building-setup_automation:
+.. _sec-getting_started-building-manual_data_sets:
 
-Setup automation
-----------------
+Required data sets
+------------------
 
-Conda environment creation can be automatically handled by executing the
-``resources/envs/conda_create_env.sh`` script at the root of the Eradiate source
-tree.
-
-.. warning::
-
-   Executing the Conda environment setup script will reset the existing
-   environment!
-
-The script automates by default the default Conda environment setup and the
-Eradiate package installation. Optional steps can also be automate using a
-series of flags:
-
--d    Perform :ref:`development dependency installation <sec-getting_started-building-python-conda-optional>`
--j    Perform :ref:`Jupyter lab installation and extension activation <sec-getting_started-building-python-conda-optional>`
--a    Add automatic environment variable setup to environment activation script
-      (makes the :ref:`environment variable setup <sec-getting_started-building-environment_variables>`
-      no longer necessary)
--e    Add a `direnv <https://direnv.net/>`_  ``.envrc`` file to the root of the
-      Eradiate source tree (makes the
-      :ref:`environment variable setup <sec-getting_started-building-environment_variables>`
-      no longer necessary)
-
-.. tabbed:: Typical user setup
-
-   .. code-block:: bash
-
-      bash resources/envs/conda_create_env.sh -j -a
-
-.. tabbed:: Typical developer setup
-
-   .. code-block:: bash
-
-      bash resources/envs/conda_create_env.sh -d -j -a
-
-.. note::
-
-   We are not sourcing the script, we are executing it in a subshell.
+Eradiate does not automatically ship all available data sets due to their size.
+In order to successfully run all tests and tutorials, at least the ``us76_u86_4-4000_25711``
+data set must be downloaded manually and placed in the ``resources/data`` directory.
+:ref:`This section <sec-user_guide-manual_download>` explains where the data set can be aquired
+and where it must be placed exactly.
