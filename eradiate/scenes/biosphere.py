@@ -7,6 +7,8 @@
        :factory: BiosphereFactory
 """
 
+from abc import ABC
+
 import aabbtree
 import attr
 import numpy as np
@@ -40,9 +42,14 @@ class BiosphereFactory(BaseFactory):
     registry = {}
 
 
+@attr.s
+class Canopy(SceneElement, ABC):
+    """An abstract base class defining a base type for all canopies."""
+
+
 @BiosphereFactory.register("homogeneous_discrete_canopy")
 @attr.s
-class HomogeneousDiscreteCanopy(SceneElement):
+class HomogeneousDiscreteCanopy(Canopy):
     """A generator for the `homogenous discrete canopy used in the RAMI benchmark
     <https://rami-benchmark.jrc.ec.europa.eu/_www/phase/phase_exp.php?strTag=level3&strNext=meas&strPhase=RAMI3&strTagValue=HOM_SOL_DIS>`_.
     This is a re-implementation of the generator in raytran.

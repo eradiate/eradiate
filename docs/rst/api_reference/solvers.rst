@@ -16,4 +16,5 @@ High-level solvers [eradiate.solvers]
    :toctree: generated/
 
    onedim
+   rami
    postprocess
