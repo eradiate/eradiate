@@ -3,8 +3,9 @@ import pytest
 
 from eradiate.util.frame import angles_to_direction
 
+
 @pytest.mark.slow
-def test_maximum_scene_size(variant_scalar_mono_double, json_metadata):
+def test_maximum_scene_size(mode_mono_double, json_metadata):
     r"""
     Maximum scene size (``path``)
     =============================
@@ -29,8 +30,9 @@ def test_maximum_scene_size(variant_scalar_mono_double, json_metadata):
     Expected behaviour
     ------------------
 
-    For all scene sizes below the parametrized size :code:`min_expected_size` the computational
-    results must be equal to the theoretical prediction within a relative tolerance of 1e-3.
+    For all scene sizes below the parametrized size :code:`min_expected_size`
+    the computational results must be equal to the theoretical prediction within
+    a relative tolerance of 1e-3.
     """
     from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
     from eradiate.scenes.core import KernelDict
@@ -39,12 +41,18 @@ def test_maximum_scene_size(variant_scalar_mono_double, json_metadata):
     min_expected_size = 1e3
     results = dict()
     spp = 1
+    zeniths = np.arange(0., 90., 10.)
+    azimuths = np.arange(0., 360., 10.)
+
+    expected = np.zeros((len(zeniths), len(azimuths)))
+    for i, zenith in enumerate(zeniths):
+        expected[i, :] = np.cos(np.deg2rad(zenith)) / (2.0 * np.pi)
+
     for scene_size in [10 ** i for i in range(1, 9)]:
-        result = np.empty((10, 37))
+        result = np.zeros(expected.shape)
 
-        for i, zenith in enumerate(np.linspace(0, 89, 10)):
-            for j, azimuth in enumerate(np.linspace(0, 360, 37)):
-
+        for i, zenith in enumerate(zeniths):
+            for j, azimuth in enumerate(azimuths):
                 kernel_dict = KernelDict({
                     "type": "scene",
                     "bsdf_surface": {
@@ -89,9 +97,9 @@ def test_maximum_scene_size(variant_scalar_mono_double, json_metadata):
 
                 solver = OneDimRunner(kernel_dict)
 
-                result[i][j] = solver.run()["measure"]
+                result[i][j] = solver.run()["measure"].squeeze()
 
-        results[scene_size] = np.allclose(result, 1.0 / (2.0 * np.pi), rtol=1e-3)
+        results[scene_size] = np.allclose(result, expected, rtol=1e-3)
 
     assert np.all(
         [
@@ -104,7 +112,7 @@ def test_maximum_scene_size(variant_scalar_mono_double, json_metadata):
 
     # write the maximum scene size that passes the test to the benchmarks rst file
 
-    passed_sizes = [size for size in results if results[size] == True]
+    passed_sizes = [size for size in results if results[size]]
     maxsize = np.max(passed_sizes)
 
     json_metadata["metrics"] = {
