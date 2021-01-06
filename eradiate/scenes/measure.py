@@ -156,7 +156,7 @@ class DistantMeasure(Measure):
                     theta=self.zenith.to(ureg.rad).magnitude,
                     phi=self.azimuth.to(ureg.rad).magnitude
                 )),
-                "target": [0, 0, 0],
+                "ray_target": [0, 0, 0],
                 "sampler": {
                     "type": "independent",
                     "sample_count": self.spp

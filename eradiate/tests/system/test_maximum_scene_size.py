@@ -70,7 +70,7 @@ def test_maximum_scene_size(variant_scalar_mono_double, json_metadata):
                             theta=np.deg2rad(zenith),
                             phi=np.deg2rad(azimuth)
                         )),
-                        "target": [0, 0, 0],
+                        "ray_target": [0, 0, 0],
                         "sampler": {
                             "type": "independent",
                             "sample_count": spp

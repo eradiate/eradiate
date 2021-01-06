@@ -222,7 +222,7 @@ class RPVSurface(Surface):
                     "type": "uniform",
                     "value": self.k
                 },
-                "ttheta": {
+                "g": {
                     "type": "uniform",
                     "value": self.ttheta
                 }
