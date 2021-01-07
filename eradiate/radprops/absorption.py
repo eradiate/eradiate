@@ -51,7 +51,10 @@
     convention (http://cfconventions.org/).
 """
 
+import numpy as np
+
 import eradiate.data as data
+from eradiate.data.absorption_spectra import available_datasets
 from ..util.units import ureg
 
 
@@ -106,11 +109,20 @@ def compute_sigma_a(wavelength=550., profile=None, dataset_id=None):
     # open the absorption cross section dataset and interpolate
     if profile.attrs["title"] == "U.S. Standard Atmosphere 1976":
         if dataset_id is None:
-            dataset_id = "us76_u86_4-fullrange"
+            available = available_datasets(
+                wavenumber=wavenumber.magnitude,
+                absorber="us76_u86_4",
+                engine="spectra",
+            )
+            if available is not None:
+                dataset_id = available[0]  # take first available dataset
+            else:
+                raise ValueError(f"Could not find available datasets "
+                                 f"corresponding to this wavenumber value "
+                                 f"({wavenumber.magnitude})")
+
         ds = data.open(category="absorption_spectrum", id=dataset_id)
         xsw = ds.xs.interp(w=wavenumber.magnitude)
-
-        # interpolate dataset in pressure
         xsp = xsw.interp(
             p=p.magnitude,
             kwargs=dict(fill_value=0.)  # this is required to handle the
