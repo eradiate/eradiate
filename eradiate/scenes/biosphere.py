@@ -44,8 +44,7 @@ class BiosphereFactory(BaseFactory):
 
 @attr.s
 class Canopy(SceneElement, ABC):
-    """An abstract base class defining a base type for all canopies.
-    """
+    """An abstract base class defining a base type for all canopies."""
 
 
 @BiosphereFactory.register("homogeneous_discrete_canopy")
