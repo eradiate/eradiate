@@ -98,7 +98,7 @@ class HomogeneousDiscreteCanopy(SceneElement):
         [x, y, z] will extend over [-x/2, x/2], [-y/2, y/2] and [0, z], centered
         at ``position`` parameter. Default: [0, 0, 0].
 
-        If ``size`` is not set, it will be automaticaly computed from ``hdo``,
+        If ``size`` is not set, it will be automatically computed from ``hdo``,
         ``hvr`` and ``n_leaves``.
 
         Unit-enabled field (default units: cdu[length]).
@@ -118,10 +118,10 @@ class HomogeneousDiscreteCanopy(SceneElement):
 
         .. admonition:: Note
 
-            To emulate the behaviour of the raytran leaf cloud generator
-            simply try instantiating the leaf cloud several times with
-            different ``seed`` values and after a certain amount of
-            failures, run it without overlap avoidance.
+           To emulate the behaviour of the raytran leaf cloud generator
+           simply try instantiating the leaf cloud several times with
+           different ``seed`` values and after a certain amount of
+           failures, run it without overlap avoidance.
 
     ``leaf_reflectance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
         Reflectance spectrum of the leaves in the cloud. Must be a reflectance
