@@ -309,7 +309,8 @@ class DistantMeasure(Measure):
     target = attr.ib(
         default=None,
         converter=attr.converters.optional(Target.convert),
-        validator=attr.validators.optional(attr.validators.instance_of(Target))
+        validator=attr.validators.optional(attr.validators.instance_of(Target)),
+        on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate)
     )
 
     def sensor_info(self):
@@ -318,7 +319,7 @@ class DistantMeasure(Measure):
         SPP levels that lead to numerical precision loss in results."""
         return [(self.id, self.spp)]
 
-    def postprocess_results(self, sensor_id, sensor_spp, results):
+    def postprocess_results(self, sensor_ids, sensor_spp, results):
         """Process sensor data to extract measure results. These post-processing
         operations can include (but are not limited to) array reshaping and
         sensor data aggregation and data transformation operations.
@@ -335,11 +336,15 @@ class DistantMeasure(Measure):
         Returns → dict:
             Recombined an reshaped results.
         """
-        return results["sensor_id"]
+        if isinstance(sensor_ids, list):
+            sensor_ids = sensor_ids[0]
+
+        return results[sensor_ids]
 
     def kernel_dict(self, ref=True):
         result = {
             "type": "distant",
+            "id": self.id,
             "direction": list(-angles_to_direction(
                 theta=self.zenith.to(ureg.rad).magnitude,
                 phi=self.azimuth.to(ureg.rad).magnitude
@@ -442,12 +447,12 @@ class PerspectiveCameraMeasure(Measure):
         validator=validator_is_positive
     )
 
-    def postprocess_results(self, sensor_id, sensor_spp, results):
+    def postprocess_results(self, sensor_ids, sensor_spp, results):
         """Process sensor data to extract measure results. These post-processing
         operations can include (but are not limited to) array reshaping and
         sensor data aggregation and data transformation operations.
 
-        Parameter ``sensor_id`` (list):
+        Parameter ``sensor_ids`` (list):
             List of sensor_ids that belong to this measure
 
         Parameter ``sensor_spp`` (list):
@@ -459,7 +464,10 @@ class PerspectiveCameraMeasure(Measure):
         Returns → dict:
             Recombined an reshaped results.
         """
-        return results["sensor_id"]
+        if isinstance(sensor_ids, list):
+            sensor_ids = sensor_ids[0]
+
+        return results[sensor_ids]
 
     def sensor_info(self):
         """This method returns a tuple of sensor IDs and the corresponding SPP
@@ -632,7 +640,7 @@ class RadianceMeterHsphereMeasure(Measure):
             ureg.deg
         )
 
-    def postprocess_results(self, sensor_id, sensor_spp, results):
+    def postprocess_results(self, sensor_ids, sensor_spp, results):
         """This method reshapes the 1D results returned by the
         ``radiancemeterarray`` kernel plugin into the shape implied by the
         azimuth and zenith angle resolutions, such that the result complies with
@@ -642,7 +650,7 @@ class RadianceMeterHsphereMeasure(Measure):
         the SPP per sensor, this method will recombine the results from each
         sensor.
 
-        Parameter ``sensor_id`` (list):
+        Parameter ``sensor_ids`` (list):
             List of sensor_ids that belong to this measure
 
         Parameter ``sensor_spp`` (list):
@@ -654,7 +662,7 @@ class RadianceMeterHsphereMeasure(Measure):
         Returns → dict:
             Recombined and reshaped results.
         """
-        sensors = np.array([results[x] for x in sensor_id])
+        sensors = np.array([results[x] for x in sensor_ids])
         spp_sum = np.sum(sensor_spp)
 
         # multiply each sensor's result by its relative SPP and sum all results
