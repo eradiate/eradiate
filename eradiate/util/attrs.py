@@ -321,8 +321,8 @@ def validator_is_number(_, attribute, value):
     Raises a ``TypeError`` in case of failure.
     """
     if not isinstance(value, (int, float)):
-        raise TypeError(f"{attribute} must be a real number, "
-                        f"got {value} which is a {type(value)}")
+        raise TypeError(f"{attribute.name} must be a real number, "
+                        f"got {value} which is a {value.__class__}")
 
 
 def validator_is_string(_, attribute, value):
