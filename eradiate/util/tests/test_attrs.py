@@ -156,6 +156,7 @@ def test_unit_support():
             converter=attr.converters.optional(converter_quantity(float)),
             units_compatible=ureg.m
         )
+
     o = MyClass()
     o = MyClass(ureg.Quantity(1., "m"))
     o.field = None
@@ -167,6 +168,22 @@ def test_unit_support():
     with pytest.raises(ValueError):
         o.field = "a"
 
+
+def test_attrib_quantity_repeated_overrides():
+    # We check that repeatedly overriding units works as expected
+
+    @unit_enabled
+    @attr.s
+    class MyClass:
+        field = attrib_quantity(units_compatible=cdu.generator("length"))
+
+    with cdu.override({"length": "km"}):
+        o = MyClass(1.)
+        assert o.field == ureg.Quantity(1., ureg.km)
+
+    with cdu.override({"length": "m"}):
+        o = MyClass(1.)
+        assert o.field == ureg.Quantity(1., ureg.m)
 
 
 def test_unit_enabled():
