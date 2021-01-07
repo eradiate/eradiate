@@ -17,7 +17,8 @@ from functools import lru_cache
 
 import pint
 
-#: Unit registry common to all Eradiate components
+#: Unit registry common to all Eradiate components. All units used in Eradiate
+#: must be created using this registry.
 ureg = pint.UnitRegistry()
 
 
