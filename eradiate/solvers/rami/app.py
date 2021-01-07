@@ -11,74 +11,24 @@ from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
 
 import eradiate.kernel
-from .runner import OneDimRunner
-from ...scenes.atmosphere import AtmosphereFactory, HomogeneousAtmosphere
-from ...scenes.atmosphere.base import Atmosphere
-from ...scenes.biosphere import (
-    Canopy, HomogeneousDiscreteCanopy, BiosphereFactory
-)
+from ..onedim.runner import OneDimRunner
+from ...scenes.biosphere import (BiosphereFactory, Canopy, HomogeneousDiscreteCanopy)
 from ...scenes.core import KernelDict, SceneElement
 from ...scenes.illumination import (
     DirectionalIllumination, Illumination, IlluminationFactory
 )
 from ...scenes.integrators import (
-    Integrator, IntegratorFactory, VolPathIntegrator
+    Integrator, IntegratorFactory, PathIntegrator
 )
-from ...scenes.measure import (
-    MeasureFactory, RadianceMeterHsphereMeasure, RadianceMeterPlaneMeasure,
-    PerspectiveCameraMeasure
-)
+from ...scenes.measure import (DistantMeasure, MeasureFactory, PerspectiveCameraMeasure,
+                               RadianceMeterHsphereMeasure, RadianceMeterPlaneMeasure)
 from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
 from ...util import plot as ertplt
 from ...util import xarray as ertxr
 from ...util.exceptions import ModeError
 from ...util.misc import always_iterable, ensure_array
-from ...util.units import config_default_units as cdu
 from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
-
-
-@MeasureFactory.register(
-    "toa_hsphere", "toa_hsphere_lo", "toa_hsphere_brdf", "toa_hsphere_brf"
-)
-@attr.s
-class TOAHsphereMeasure(RadianceMeterHsphereMeasure):
-    """Top-of-atmosphere radiancemeter (hemisphere coverage). This class is a
-    lightweight specialisation of its :class:`RadianceMeterHsphereMeasure`
-    parent class and should only be used with :class:`OneDimScene`.
-    It is registered to :class:`.MeasureFactory` with the following keys:
-    ``"toa_hsphere"``, ``"toa_hsphere_lo"``, ``"toa_hsphere_brdf"``,
-    ``"toa_hsphere_brf"``.
-    """
-    id = attr.ib(default="toa_hsphere")
-
-    # Only the back hemisphere is supported
-    hemisphere = attr.ib(
-        default="back",
-        validator=attr.validators.in_(("back",)),
-    )
-
-
-@MeasureFactory.register(
-    "toa_pplane", "toa_pplane_lo", "toa_pplane_brdf", "toa_pplane_brf"
-)
-@attr.s
-class TOAPPlaneMeasure(RadianceMeterPlaneMeasure):
-    """Top-of-atmosphere radiancemeter (principal plane coverage).
-    This class is a lightweight specialisation of its
-    :class:`RadianceMeterPlaneMeasure` parent class and should only be used
-    with :class:`OneDimScene`.
-    It is registered to :class:`.MeasureFactory` with the following keys:
-    ``"toa_pplane"``, ``"toa_pplane_lo"``, ``"toa_pplane_brdf"``,
-    ``"toa_pplane_brf"``.
-    """
-    id = attr.ib(default="toa_pplane")
-
-    # Only the back hemisphere is supported
-    hemisphere = attr.ib(
-        default="back",
-        validator=attr.validators.in_(("back",)),
-    )
 
 
 @attr.s
@@ -133,11 +83,6 @@ class RamiScene(SceneElement):
         :meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`.
         Default: :class:`VolPathIntegrator() <.VolPathIntegrator>`.
     """
-    atmosphere = attr.ib(
-        factory=HomogeneousAtmosphere,
-        converter=AtmosphereFactory.convert,
-        validator=attr.validators.instance_of(Atmosphere),
-    )
 
     surface = attr.ib(
         factory=LambertianSurface,
@@ -145,10 +90,10 @@ class RamiScene(SceneElement):
         validator=attr.validators.instance_of(Surface)
     )
 
-    biosphere = attr.ib(
-        factory=HomogeneousDiscreteCanopy,
-        converter=BiosphereFactory.convert,
-        validator=attr.validators.instance_of(Canopy)
+    canopy = attr.ib(
+        default=None,
+        converter=attr.converters.optional(BiosphereFactory.convert),
+        validator=attr.validators.optional(attr.validators.instance_of(Canopy))
     )
 
     illumination = attr.ib(
@@ -158,7 +103,7 @@ class RamiScene(SceneElement):
     )
 
     measures = attr.ib(
-        factory=lambda: [TOAHsphereMeasure()],
+        factory=lambda: [DistantMeasure()],
         converter=lambda value:
         [MeasureFactory.convert(x) for x in always_iterable(value)]
         if not isinstance(value, dict)
@@ -169,25 +114,16 @@ class RamiScene(SceneElement):
     def _measures_validator(self, attribute, value):
         for element in value:
             # Check measure type
-            if not isinstance(element, (TOAPPlaneMeasure, TOAHsphereMeasure, PerspectiveCameraMeasure)):
+            if not isinstance(element,
+                              (DistantMeasure, PerspectiveCameraMeasure)):
                 raise TypeError(
                     f"while validating {attribute.name}: must be a list of "
                     f"objects of one of the following types: "
-                    f"(TOAPPlaneMeasure, TOAHSphereMeasure)"
-                )
-
-            # Principal plane measures only work with directional illumination
-            if isinstance(element, TOAPPlaneMeasure) and \
-                    not isinstance(self.illumination, DirectionalIllumination):
-                raise ValueError(
-                    f"while validating {attribute.name}: found measure of type "
-                    f"{element.__class__.__name__}, incompatible with "
-                    f"illumination of type "
-                    f"{self.illumination.__class__.__name__}"
+                    f"(DistantMeasure)"
                 )
 
     integrator = attr.ib(
-        factory=VolPathIntegrator,
+        factory=PathIntegrator,
         converter=IntegratorFactory.convert,
         validator=attr.validators.instance_of(Integrator)
     )
@@ -201,21 +137,30 @@ class RamiScene(SceneElement):
     def __attrs_post_init__(self):
         # Parts of the init sequence we could take care of using converters
 
-        # Override surface width with atmosphere width
-        self.surface.width = self.atmosphere.kernel_width
+        # Override surface width with canopy width
+        if self.canopy is not None:
+            self.surface.width = max(self.canopy.size[:2])
 
         # Process measures
         for measure in self.measures:
-            if isinstance(measure, (TOAHsphereMeasure, TOAPPlaneMeasure)):
-                # Override ray origin
-                if self.atmosphere is not None:
-                    sensor_altitude = self.atmosphere.kernel_height.to(cdu.get("length")).magnitude
-                    measure.origin = [0., 0., sensor_altitude]
-
-            if isinstance(measure, TOAPPlaneMeasure):
-                # Set principal plane measure orientation if any
-                phi_i = self.illumination.azimuth.to(ureg.rad).magnitude
-                measure.orientation = [np.cos(phi_i), np.sin(phi_i), 0.]
+            # Override ray target location
+            if isinstance(measure, DistantMeasure):
+                if self.canopy is not None:
+                    measure.target = dict(
+                        type="rectangle",
+                        xmin=-0.5 * self.canopy.size[0],
+                        xmax=0.5 * self.canopy.size[0],
+                        ymin=-0.5 * self.canopy.size[1],
+                        ymax=0.5 * self.canopy.size[1],
+                    )
+                else:
+                    measure.target = dict(
+                        type="rectangle",
+                        xmin=-0.5 * self.surface.width,
+                        xmax=0.5 * self.surface.width,
+                        ymin=-0.5 * self.surface.width,
+                        ymax=0.5 * self.surface.width,
+                    )
 
         # Populate measure registry
         for measure in self.measures:
@@ -230,13 +175,17 @@ class RamiScene(SceneElement):
 
     def kernel_dict(self, ref=True):
         result = KernelDict.empty()
+
+        if self.canopy is not None:
+            result.add(self.canopy)
+
         result.add([
-            self.atmosphere,
             self.surface,
             self.illumination,
             *self.measures,
             self.integrator
         ])
+
         return result
 
 
@@ -325,11 +274,11 @@ class RamiSolverApp:
         return cls.new(scene=scene)
 
     def run(self):
-        """Perform radiative transfer simulation and post-process results.
-        """
+        """Perform radiative transfer simulation and post-process results."""
 
         # Run simulation
         runner_results = self._runner.run()
+        print(runner_results)
 
         # Post-processing
         # TODO: put that in a separate method
@@ -344,6 +293,7 @@ class RamiSolverApp:
         wavelength = ensure_array(eradiate.mode.wavelength.magnitude, dtype=float)
         # TODO: This will raise if illumination is not directional; handle that
 
+        # -- TODO: Format results
         sensor_query = Query()
         for measure in scene.measures:
             measure_id = measure.id
@@ -351,83 +301,8 @@ class RamiSolverApp:
             sensor_ids = [db_entry["sensor_id"] for db_entry in entries]
             sensor_spps = [db_entry["sensor_spp"] for db_entry in entries]
             data = measure.postprocess_results(sensor_ids, sensor_spps, runner_results)
-            results = xr.Dataset()
-            for dim in [0, 1, 4]:
-                data = np.expand_dims(data, dim)
 
-            zenith_res = measure.zenith_res
-
-            if isinstance(measure, RadianceMeterHsphereMeasure):
-                azimuth_res = measure.azimuth_res
-                vza = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
-                vaa = np.arange(0., 360., azimuth_res.to(ureg.deg).magnitude)
-                coord_specs_id = "angular_observation"
-
-            elif isinstance(measure, RadianceMeterPlaneMeasure):
-                vza = np.arange(0., 90., zenith_res.to(ureg.deg).magnitude)
-                vaa = np.array([0., 180.])
-                coord_specs_id = "angular_observation_pplane"
-
-            elif isinstance(measure, PerspectiveCameraMeasure):
-                self.results["camera"] = data
-                return
-
-            else:
-                raise ValueError(f"Unsupported measure type {measure.__class__}")
-
-            results["lo"] = xr.DataArray(
-                data,
-                coords=(("sza", sza), ("saa", saa), ("vza", vza),
-                        ("vaa", vaa), ("wavelength", wavelength))
-            )
-            results["irradiance"] = (
-                ("sza", "saa", "wavelength"),
-                np.array(
-                    self._kernel_dict["illumination"]["irradiance"]["value"] *
-                    cos_sza
-                ).reshape((1, 1, 1))
-            )
-
-            results["brdf"] = results["lo"] / results["irradiance"]
-            results["brf"] = results["brdf"] * np.pi
-
-            if coord_specs_id.endswith("_pplane"):
-                results = ertxr.pplane(results)
-
-            # Add missing metadata
-            dataset_spec = ertxr.DatasetSpec(
-                convention="CF-1.8",
-                title="Top-of-atmosphere simulation results",
-                history=f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
-                        f"data creation - {__name__}.OneDimSolverApp.run",
-                source=f"eradiate, version {eradiate.__version__}",
-                references="",
-                var_specs={
-                    "irradiance": ertxr.VarSpec(
-                        standard_name="toa_horizontal_solar_irradiance_per_unit_wavelength",
-                        units=str(kdu.get("irradiance")),
-                        long_name="top-of-atmosphere horizontal spectral irradiance"
-                    ),
-                    "lo": ertxr.VarSpec(
-                        standard_name="toa_outgoing_radiance_per_unit_wavelength",
-                        units=str(kdu.get("radiance")),
-                        long_name="top-of-atmosphere outgoing spectral radiance"
-                    ),
-                    "brf": ertxr.VarSpec(
-                        standard_name="toa_brf",
-                        units="dimensionless",
-                        long_name="top-of-atmosphere bi-directional reflectance factor"
-                    ),
-                    "brdf": ertxr.VarSpec(
-                        standard_name="toa_brdf",
-                        units="1/sr",
-                        long_name="top-of-atmosphere bi-directional reflection distribution function"
-                    )
-                },
-                coord_specs=coord_specs_id
-            )
-            results.ert.normalize_metadata(dataset_spec)
-
+            results = data.squeeze()
             self.results[measure_id] = results
 
     def save_results(self, fname_prefix):
