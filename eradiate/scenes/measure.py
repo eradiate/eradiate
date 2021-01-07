@@ -16,8 +16,15 @@ import numpy as np
 import eradiate.kernel
 from .core import SceneElement
 from ..util.attrs import (
-    attrib_quantity, validator_has_len, validator_is_positive
+    attrib_quantity,
+    converter_quantity,
+    unit_enabled,
+    validator_has_len,
+    validator_is_number,
+    validator_is_positive,
+    validator_quantity
 )
+from ..util.collections import is_vector3
 from ..util.factory import BaseFactory
 from ..util.frame import angles_to_direction, spherical_to_cartesian
 from ..util.misc import always_iterable
@@ -80,6 +87,177 @@ class MeasureFactory(BaseFactory):
     registry = {}
 
 
+@unit_enabled
+@attr.s
+class Target:
+    """Abstract interface for target selection classes used by :class:`DistantMeasure`."""
+
+    def kernel_item(self):
+        """Return kernel item."""
+        raise NotImplementedError
+
+    @staticmethod
+    def new(target_type, *args, **kwargs):
+        """Instantiate one of the supported child classes. This factory requires
+        manual class registration. All position and keyword arguments are
+        forwarded to the constructed type.
+
+        Currently supported classes:
+
+        * ``point``: :class:`TargetPoint`
+        * ``rectangle``: :class:`TargetRectangle`
+
+        Parameter ``target_type`` (str):
+            Identifier of one of the supported child classes.
+        """
+        if target_type == "point":
+            return TargetPoint(*args, **kwargs)
+        elif target_type == "rectangle":
+            return TargetRectangle(*args, **kwargs)
+        else:
+            raise ValueError(f"unknown target type {target_type}")
+
+    @staticmethod
+    def convert(value):
+        """Object converter method.
+
+        If ``value`` is a dictionary, this method uses :meth:`new` to
+        instantiate a :class:`Target` child class based on the ``"type"`` entry
+        it contains.
+
+        If ``value`` is a 3-vector, this method returns a :class:`TargetPoint`
+        instance.
+
+        Otherwise, it returns ``value``.
+        """
+        if isinstance(value, dict):
+            d = deepcopy(value)
+            try:
+                target_type = d.pop("type")
+            except KeyError:
+                raise ValueError("cannot convert dict, missing 'type' entry")
+
+            return Target.new(target_type, **d)
+
+        if is_vector3(value):
+            return Target.new("point", xyz=value)
+
+        return value
+
+
+@attr.s
+class TargetPoint(Target):
+    """Point target specification.
+
+    .. rubric:: Constructor arguments / instance attributes
+
+    ``xyz`` (3-vector):
+        Target point coordinates.
+
+        Unit-enabled field (default: cdu[length]).
+    """
+    # Target point in CDU
+    xyz = attrib_quantity(units_compatible=cdu.generator("length"))
+
+    @xyz.validator
+    def _xyz_validator(self, attribute, value):
+        if not is_vector3(value):
+            raise ValueError(f"while validating {attribute.name}: must be a "
+                             f"3-element vector of numbers")
+
+    def kernel_item(self):
+        """Return kernel item."""
+        return self.xyz.to(kdu.get("length")).magnitude
+
+
+@attr.s
+class TargetRectangle(Target):
+    """Rectangle target specification.
+
+    This target spec defines an rectangular, axis-aligned zone where ray targets
+    will be sampled.
+
+    .. rubric:: Constructor arguments / instance attributes
+
+    ``xmin`` (float):
+        Lower bound on the X axis.
+
+        Unit-enabled field (default: cdu[length]).
+
+    ``xmax`` (float):
+        Upper bound on the X axis.
+
+        Unit-enabled field (default: cdu[length]).
+
+    ``ymin`` (float):
+        Lower bound on the Y axis.
+
+        Unit-enabled field (default: cdu[length]).
+
+    ``ymax`` (float):
+        Lower bound on the Y axis.
+
+        Unit-enabled field (default: cdu[length]).
+    """
+
+    # Corners of an axis-aligned rectangle in CDU
+    xmin = attrib_quantity(
+        converter=converter_quantity(float),
+        validator=validator_quantity(validator_is_number),
+        units_compatible=cdu.generator("length")
+    )
+    xmax = attrib_quantity(
+        converter=converter_quantity(float),
+        validator=validator_quantity(validator_is_number),
+        units_compatible=cdu.generator("length")
+    )
+    ymin = attrib_quantity(
+        converter=converter_quantity(float),
+        validator=validator_quantity(validator_is_number),
+        units_compatible=cdu.generator("length")
+    )
+    ymax = attrib_quantity(
+        converter=converter_quantity(float),
+        validator=validator_quantity(validator_is_number),
+        units_compatible=cdu.generator("length")
+    )
+
+    @xmin.validator
+    @xmax.validator
+    def _x_validator(self, attribute, value):
+        if not self.xmin < self.xmax:
+            raise ValueError(f"while validating {attribute.name}: 'xmin' must "
+                             f"be lower than 'xmax")
+
+    @ymin.validator
+    @ymax.validator
+    def _y_validator(self, attribute, value):
+        if not self.ymin < self.ymax:
+            raise ValueError(f"while validating {attribute.name}: 'ymin' must "
+                             f"be lower than 'ymax")
+
+    def kernel_item(self):
+        """Return kernel item."""
+        from eradiate.kernel.core import ScalarTransform4f
+
+        xmin = self.xmin.to(kdu.get("length")).magnitude
+        xmax = self.xmax.to(kdu.get("length")).magnitude
+        ymin = self.ymin.to(kdu.get("length")).magnitude
+        ymax = self.ymax.to(kdu.get("length")).magnitude
+
+        dx = xmax - xmin
+        dy = ymax - ymin
+
+        to_world = \
+            ScalarTransform4f.translate([0.5 * dx + xmin, 0.5 * dy + ymin, 0]) * \
+            ScalarTransform4f.scale([0.5 * dx, 0.5 * dy, 1])
+
+        return {
+            "type": "rectangle",
+            "to_world": to_world
+        }
+
+
 @MeasureFactory.register("distant")
 @attr.s
 class DistantMeasure(Measure):
@@ -103,8 +281,13 @@ class DistantMeasure(Measure):
 
     ``spp`` (int):
         Number of samples. Default: 10000.
-    """
 
+    ``target`` (:class:`Target` or None):
+        Target specification. If set to ``None``, default target point selection
+        is used. The target can be specified using an array-like with 3
+        elements (which will be converted to a :class:`TargetPoint`) or a
+        dictionary interpreted by :meth:`Target.convert`. Default: None.
+    """
     zenith = attrib_quantity(
         default=ureg.Quantity(0., ureg.deg),
         validator=validator_is_positive,
@@ -121,6 +304,12 @@ class DistantMeasure(Measure):
         default=10000,
         converter=int,
         validator=validator_is_positive
+    )
+
+    target = attr.ib(
+        default=None,
+        converter=attr.converters.optional(Target.convert),
+        validator=attr.validators.optional(attr.validators.instance_of(Target))
     )
 
     def sensor_info(self):
@@ -149,28 +338,31 @@ class DistantMeasure(Measure):
         return results["sensor_id"]
 
     def kernel_dict(self, ref=True):
-        return {
-            self.id: {
-                "type": "distant",
-                "direction": list(-angles_to_direction(
-                    theta=self.zenith.to(ureg.rad).magnitude,
-                    phi=self.azimuth.to(ureg.rad).magnitude
-                )),
-                "ray_target": [0, 0, 0],
-                "sampler": {
-                    "type": "independent",
-                    "sample_count": self.spp
-                },
-                "film": {
-                    "type": "hdrfilm",
-                    "width": 1,
-                    "height": 1,
-                    "pixel_format": "luminance",
-                    "component_format": "float32",
-                    "rfilter": {"type": "box"}
-                }
-            }
+        result = {
+            "type": "distant",
+            "direction": list(-angles_to_direction(
+                theta=self.zenith.to(ureg.rad).magnitude,
+                phi=self.azimuth.to(ureg.rad).magnitude
+            )),
+            "sampler": {
+                "type": "independent",
+                "sample_count": self.spp
+            },
+            "film": {
+                "type": "hdrfilm",
+                "width": 1,
+                "height": 1,
+                "pixel_format": "luminance",
+                "component_format": "float32",
+                "rfilter": {"type": "box"}
+            },
         }
+
+        if self.target is not None:
+            target = self.target
+            result["ray_target"] = target.kernel_item()
+
+        return {self.id: result}
 
 
 @MeasureFactory.register("perspective")

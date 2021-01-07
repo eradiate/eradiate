@@ -1,3 +1,4 @@
+import enoki as ek
 import numpy as np
 import pytest
 
@@ -6,16 +7,103 @@ from eradiate.scenes.core import KernelDict
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.measure import (
     DistantMeasure, PerspectiveCameraMeasure, RadianceMeterHsphereMeasure,
-    RadianceMeterPlaneMeasure
+    RadianceMeterPlaneMeasure, Target, TargetPoint, TargetRectangle
 )
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 from eradiate.scenes.surface import RPVSurface
+from eradiate.util.units import config_default_units as cdu
+from eradiate.util.units import kernel_default_units as kdu
 from eradiate.util.units import ureg
 
 
+def test_target(mode_mono):
+    from mitsuba.core import Point3f
+    # TargetPoint: basic constructor
+    with cdu.override({"length": "km"}):
+        t = TargetPoint([0, 0, 0])
+        assert t.xyz.units == ureg.km
+
+    with pytest.raises(ValueError):
+        TargetPoint(0)
+
+    # TargetPoint: check kernel item
+    with cdu.override({"length": "km"}), kdu.override({"length": "m"}):
+        t = TargetPoint([1, 2, 0])
+        assert ek.allclose(t.kernel_item(), [1000, 2000, 0])
+
+    # TargetRectangle: basic constructor
+    with cdu.override({"length": "km"}):
+        t = TargetRectangle(0, 1, 0, 1)
+        assert t.xmin == 0. * ureg.km
+        assert t.xmax == 1. * ureg.km
+        assert t.ymin == 0. * ureg.km
+        assert t.ymax == 1. * ureg.km
+
+    with cdu.override({"length": "m"}):
+        t = TargetRectangle(0, 1, 0, 1)
+        assert t.xmin == 0. * ureg.m
+        assert t.xmax == 1. * ureg.m
+        assert t.ymin == 0. * ureg.m
+        assert t.ymax == 1. * ureg.m
+
+    with pytest.raises(ValueError):
+        TargetRectangle(0, 1, "a", 1)
+
+    with pytest.raises(ValueError):
+        TargetRectangle(0, 1, 1, -1)
+
+    # TargetRectangle: check kernel item
+    t = TargetRectangle(-1, 1, -1, 1)
+
+    with kdu.override({"length": "mm"}):  # Tricky: we can't compare transforms directly
+        kernel_item = t.kernel_item()["to_world"]
+        assert ek.allclose(
+            kernel_item.transform_point(Point3f(-1, -1, 0)), [-1000, -1000, 0]
+        )
+        assert ek.allclose(
+            kernel_item.transform_point(Point3f(1, 1, 0)), [1000, 1000, 0]
+        )
+        assert ek.allclose(
+            kernel_item.transform_point(Point3f(1, 1, 42)), [1000, 1000, 42]
+        )
+
+    # Factory: basic test
+    with cdu.override({"length": "m"}):
+        t = Target.new("point", xyz=[1, 1, 0])
+        assert isinstance(t, TargetPoint)
+        assert np.allclose(t.xyz, ureg.Quantity([1, 1, 0], ureg.m))
+
+        t = Target.new("rectangle", 0, 1, 0, 1)
+        assert isinstance(t, TargetRectangle)
+
+    # Converter: basic test
+    with cdu.override({"length": "m"}):
+        t = Target.convert({"type": "point", "xyz": [1, 1, 0]})
+        assert isinstance(t, TargetPoint)
+        assert np.allclose(t.xyz, ureg.Quantity([1, 1, 0], ureg.m))
+
+        t = Target.convert([1, 1, 0])
+        assert isinstance(t, TargetPoint)
+        assert np.allclose(t.xyz, ureg.Quantity([1, 1, 0], ureg.m))
+
+        with pytest.raises(ValueError):
+            Target.convert({"xyz": [1, 1, 0]})
+
+
 def test_distant(mode_mono):
-    # Constructor
+    # Test default constructor
     d = DistantMeasure()
+    assert KernelDict.empty().add(d).load() is not None
+
+    # Test target support
+    # -- Target a point
+    d = DistantMeasure(target=[0, 0, 0])
+    assert KernelDict.empty().add(d).load() is not None
+
+    # -- Target an axis-aligned rectangular patch
+    d = DistantMeasure(
+        target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
+    )
     assert KernelDict.empty().add(d).load() is not None
 
 
