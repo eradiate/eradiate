@@ -371,8 +371,7 @@ class US76ApproxRadProfile(RadProfile):
 
        Instantiating this class requires to download the absorption datasets
        for the ``us76_u86_4`` gas mixture and place them in
-       ``$ERADIATE_DIR/resources/data/spectra/absorption/us76_u86_4/fullrange/``
-       (create the directory if necessary).
+       ``$ERADIATE_DIR/resources/data/``.
 
     The radiative properties are computed based upon the so-called US76
     atmospheric vertical profile.
@@ -401,8 +400,8 @@ class US76ApproxRadProfile(RadProfile):
 
         Unit-enabled field (default: cdu[length]).
 
-    ``dataset`` ("us76_u86_4-fullrange" or "test"):
-        Dataset identifier. Default: ``"us76_u86_4-fullrange"``.
+    ``dataset`` (str):
+        Dataset identifier. Default: ``"spectra-us76_u86_4-4000_25711"``.
 
         .. warning::
 
@@ -444,8 +443,8 @@ class US76ApproxRadProfile(RadProfile):
     )
 
     dataset = attr.ib(
-        default="us76_u86_4-fullrange",
-        validator=attr.validators.in_({"us76_u86_4-fullrange", "test"}),
+        default="spectra-us76_u86_4-4000_25711",
+        validator=attr.validators.in_({"spectra-us76_u86_4-4000_25711", "test"}),
     )
 
     def __attrs_post_init__(self):
