@@ -289,11 +289,18 @@ print additional information about various command line arguments.
       which clang
       which clang++
 
-   The resulting paths can be passed to CMake as variables, like this.
+   The python interpreter is passed directly to cmake like this:
 
    .. code-block:: bash
 
-      cmake -GNinja -D PYHTON_EXECUTABLE=<result of query> CMAKE_C_COMPILER=<result of query> CMAKE_CXX_COMPILER=<result of query> ..
+      cmake -GNinja -D PYHTON_EXECUTABLE=<result of query> ..
+
+   The C and C++ compilers must be defined through environment variables like this:
+
+   .. code-block:: bash
+
+      export CC=<result of query>
+      export CXX=<result of query>
 
 .. _sec-getting_started-building-install_package:
 

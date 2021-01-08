@@ -93,6 +93,17 @@ listed below.
 Additionally Eradiate requires a fairly recent version of Python (at least 3.6) and we highly recommend
 using the Conda environment manager to set up your Python environment.
 
+.. _sec-getting_started-quickstart-cloning:
+
+Cloning the repository
+----------------------
+
+To get the code, clone the repository including its submodules with the following command:
+
+.. code-block:: bash
+
+   git clone --recursive https://github.com/eradiate/eradiate
+
 .. _sec-getting_started-quickstart-setup_conda:
 
 Setting up the Conda environment
@@ -110,17 +121,6 @@ Afterwards, activate the environment, running the following command
 .. code-block:: bash
 
    conda activate eradiate
-
-.. _sec-getting_started-quickstart-cloning:
-
-Cloning the repository
-----------------------
-
-To get the code, clone the repository including its submodules with the following command:
-
-.. code-block:: bash
-
-   git clone --recursive https://github.com/eradiate/eradiate
 
 .. _sec-getting_started-quickstart-compiling:
 
