@@ -382,8 +382,8 @@ class US76ApproxRadProfile(RadProfile):
     profile.
     The absorption coefficient is computed in two steps. First, the
     absorption cross section is computed by interpolating the
-    absorption cross section datasets for the ``us76_u86_4`` mixture at the
-    wavelength specified in the eradiate mode and at the pressure values
+    absorption cross section datasets for the :ref:`us76_u86_4 <sec-user_guide-molecular_absorption_datasets-spectra_us76_u86_4>`
+    mixture at the wavelength specified in the eradiate mode and at the pressure values
     corresponding to the US76 atmospheric vertical profile. The second step
     consists in multiplying these cross sections by the total number density
     values from the US76 atmospheric vertical profile, in the corresponding
