@@ -46,7 +46,7 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
 
     expected = np.zeros((len(zeniths), len(azimuths)))
     for i, zenith in enumerate(zeniths):
-        expected[i, :] = np.cos(np.deg2rad(zenith)) / (2.0 * np.pi)
+        expected[i, :] = 1.0 / (2.0 * np.pi)
 
     for scene_size in [10 ** i for i in range(1, 9)]:
         result = np.zeros(expected.shape)
@@ -74,7 +74,7 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
                     "measure": {
                         "type": "distant",
                         "id": "measure",
-                        "direction": list(-angles_to_direction(
+                        "direction": list(angles_to_direction(
                             theta=np.deg2rad(zenith),
                             phi=np.deg2rad(azimuth)
                         )),
