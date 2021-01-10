@@ -3,6 +3,7 @@
 import enum
 from copy import copy
 from functools import lru_cache
+from numbers import Number
 
 import attr
 import numpy as np
@@ -317,10 +318,10 @@ def validator_units_compatible(units):
 
 
 def validator_is_number(_, attribute, value):
-    """Validates if ``value`` is an ``int`` or ``float``.
+    """Validates if ``value`` is a number.
     Raises a ``TypeError`` in case of failure.
     """
-    if not isinstance(value, (int, float)):
+    if not isinstance(value, Number):
         raise TypeError(f"{attribute.name} must be a real number, "
                         f"got {value} which is a {value.__class__}")
 
