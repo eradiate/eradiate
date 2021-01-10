@@ -101,9 +101,9 @@ def test_distant(mode_mono):
     assert KernelDict.empty().add(d).load() is not None
 
     # -- Target an axis-aligned rectangular patch
-    d = DistantMeasure(
-        target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
-    )
+    d = DistantMeasure(target={
+        "type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1
+    })
     assert KernelDict.empty().add(d).load() is not None
 
 

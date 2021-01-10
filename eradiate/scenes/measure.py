@@ -22,6 +22,7 @@ from ..util.attrs import (
     validator_has_len,
     validator_is_number,
     validator_is_positive,
+    validator_is_vector3,
     validator_quantity
 )
 from ..util.collections import is_vector3
@@ -288,22 +289,15 @@ class DistantMeasure(Measure):
         elements (which will be converted to a :class:`TargetPoint`) or a
         dictionary interpreted by :meth:`Target.convert`. Default: None.
     """
-    zenith = attrib_quantity(
-        default=ureg.Quantity(0., ureg.deg),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("angle"),
+    direction = attr.ib(
+        default=[0, 0, 1],
+        converter=np.array,
+        validator=validator_is_vector3,
     )
 
-    azimuth = attrib_quantity(
-        default=ureg.Quantity(0., ureg.deg),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("angle"),
-    )
-
-    spp = attr.ib(
-        default=10000,
-        converter=int,
-        validator=validator_is_positive
+    flip_directions = attr.ib(
+        default=None,
+        converter=attr.converters.optional(bool)
     )
 
     target = attr.ib(
@@ -311,6 +305,26 @@ class DistantMeasure(Measure):
         converter=attr.converters.optional(Target.convert),
         validator=attr.validators.optional(attr.validators.instance_of(Target)),
         on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate)
+    )
+
+    orientation = attrib_quantity(
+        default=ureg.Quantity(0., ureg.deg),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("angle"),
+    )
+
+    spp = attr.ib(
+        default=32,
+        converter=int,
+        validator=validator_is_positive
+    )
+
+    film_resolution = attr.ib(
+        default=(32, 32),
+        validator=attr.validators.deep_iterable(
+            member_validator=attr.validators.instance_of(int),
+            iterable_validator=validator_has_len(2)
+        ),
     )
 
     def sensor_info(self):
@@ -345,18 +359,20 @@ class DistantMeasure(Measure):
         result = {
             "type": "distant",
             "id": self.id,
-            "direction": list(-angles_to_direction(
-                theta=self.zenith.to(ureg.rad).magnitude,
-                phi=self.azimuth.to(ureg.rad).magnitude
-            )),
+            "direction": self.direction,
+            "orientation": [
+                np.cos(self.orientation.to(ureg.rad).m),
+                np.sin(self.orientation.to(ureg.rad).m),
+                0.
+            ],
             "sampler": {
                 "type": "independent",
                 "sample_count": self.spp
             },
             "film": {
                 "type": "hdrfilm",
-                "width": 1,
-                "height": 1,
+                "width": self.film_resolution[0],
+                "height": self.film_resolution[1],
                 "pixel_format": "luminance",
                 "component_format": "float32",
                 "rfilter": {"type": "box"}
@@ -366,6 +382,9 @@ class DistantMeasure(Measure):
         if self.target is not None:
             target = self.target
             result["ray_target"] = target.kernel_item()
+
+        if self.flip_directions is not None:
+            result["flip_directions"] = self.flip_directions
 
         return {self.id: result}
 
