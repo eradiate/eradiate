@@ -1,4 +1,3 @@
-import datetime
 import os
 from copy import deepcopy
 from pathlib import Path
@@ -6,13 +5,12 @@ from pathlib import Path
 import attr
 import matplotlib.pyplot as plt
 import numpy as np
-import xarray as xr
 from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
 
 import eradiate.kernel
 from ..onedim.runner import OneDimRunner
-from ...scenes.biosphere import (BiosphereFactory, Canopy, HomogeneousDiscreteCanopy)
+from ...scenes.biosphere import (BiosphereFactory, Canopy)
 from ...scenes.core import KernelDict, SceneElement
 from ...scenes.illumination import (
     DirectionalIllumination, Illumination, IlluminationFactory
@@ -20,15 +18,35 @@ from ...scenes.illumination import (
 from ...scenes.integrators import (
     Integrator, IntegratorFactory, PathIntegrator
 )
-from ...scenes.measure import (DistantMeasure, MeasureFactory, PerspectiveCameraMeasure,
-                               RadianceMeterHsphereMeasure, RadianceMeterPlaneMeasure)
+from ...scenes.measure import (DistantMeasure, MeasureFactory, PerspectiveCameraMeasure)
 from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
 from ...util import plot as ertplt
 from ...util import xarray as ertxr
 from ...util.exceptions import ModeError
 from ...util.misc import always_iterable, ensure_array
-from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
+
+
+@MeasureFactory.register(
+    "toa_pplane_rami", "toa_pplane_lo_rami", "toa_pplane_brdf_rami", "toa_pplane_brf_rami"
+)
+@attr.s
+class TOAPPlaneMeasure(DistantMeasure):
+    """Top-of-atmosphere radiancemeter (principal plane coverage).
+    This class is a lightweight specialisation of its
+    :class:`radiancemeter` parent class and should only be used
+    with :class:`RamiScene`.
+    It is registered to :class:`.MeasureFactory` with the following keys:
+    ``"toa_pplane"``, ``"toa_pplane_lo"``, ``"toa_pplane_brdf"``,
+    ``"toa_pplane_brf"``.
+    """
+    id = attr.ib(default="toa_pplane")
+
+    # Only the back hemisphere is supported
+    hemisphere = attr.ib(
+        default="back",
+        validator=attr.validators.in_(("back",)),
+    )
 
 
 @attr.s
@@ -165,13 +183,11 @@ class RamiScene(SceneElement):
         # Populate measure registry
         for measure in self.measures:
             for sensor_id, sensor_spp in measure.sensor_info():
-                self.measure_registry.insert(
-                    {
-                        "measure_id": measure.id,
-                        "sensor_id": sensor_id,
-                        "sensor_spp": sensor_spp
-                    }
-                )
+                self.measure_registry.insert({
+                    "measure_id": measure.id,
+                    "sensor_id": sensor_id,
+                    "sensor_spp": sensor_spp
+                })
 
     def kernel_dict(self, ref=True):
         result = KernelDict.empty()
@@ -278,7 +294,7 @@ class RamiSolverApp:
 
         # Run simulation
         runner_results = self._runner.run()
-        print(runner_results)
+        # print(runner_results)
 
         # Post-processing
         # TODO: put that in a separate method
