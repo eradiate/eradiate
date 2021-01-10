@@ -326,6 +326,14 @@ def validator_is_number(_, attribute, value):
                         f"got {value} which is a {value.__class__}")
 
 
+def validator_is_vector3(instance, attribute, value):
+    """Validates if ``value`` is convertible to a 3-vector."""
+    return attr.validators.deep_iterable(
+        member_validator=validator_is_number,
+        iterable_validator=validator_has_len(3)
+    )(instance, attribute, value)
+
+
 def validator_is_string(_, attribute, value):
     """Validates if ``value`` is a ``str``.
     Raises a ``TypeError`` in case of failure.
