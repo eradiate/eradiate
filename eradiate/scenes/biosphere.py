@@ -220,9 +220,9 @@ class HomogeneousDiscreteCanopy(Canopy):
         ]
     )
 
-    _positions = attrib_quantity(default=[] * ureg.m, init=False)
-    _leaf_normals = attr.ib(default=[], init=False)
-    _tries = attr.ib(default=1000000, init=False)
+    _positions = attrib_quantity(default=[] * ureg.m, init=False, repr=False)
+    _leaf_normals = attr.ib(default=[], init=False, repr=False)
+    _tries = attr.ib(default=1000000, init=False, repr=False)
 
     def __attrs_post_init__(self):
         # set the seed for the RNG
