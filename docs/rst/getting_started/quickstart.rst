@@ -195,7 +195,7 @@ Compilation is as simple as running the following from inside Eradiate's root di
 Add large data files
 --------------------
 
-Download the `us76_u86_4-4000_25711 data set <https://eradiate.eu/data/spectra-us76_u86_4-fullrange.zip>`_,
+Download the `us76_u86_4-4000_25711 data set <https://eradiate.eu/data/spectra-us76_u86_4-4000_25711.zip>`_,
 extract the archive into a temporary location and copy contents into ``$ERADIATE_DIR/resources/data``.
 
 Verify installation
