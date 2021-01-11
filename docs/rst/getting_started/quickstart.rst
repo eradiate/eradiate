@@ -205,9 +205,9 @@ In a terminal, try and import Eradiate:
 
 .. code-block:: bash
 
-   python -c "import eradiate, eradiate.kernel; print(eradiate.__version__)"
+   python -c "import eradiate.kernel; eradiate.kernel.set_variant('scalar_mono'); print(eradiate.kernel.core.MTS_VERSION)"
 
-The command should succeed and display the current version number.
+The command should succeed and display the current version number of the Mitsuba kernel.
 You can now run Eradiate. |smile|
 
 .. |smile| unicode:: U+1F642
