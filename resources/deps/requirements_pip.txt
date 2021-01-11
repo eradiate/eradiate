@@ -10,5 +10,6 @@ numpy==1.18
 pint~=0.16
 ruamel.yaml==0.16
 scipy==1.3
+tinydb
 tqdm==4.46
 xarray==0.16.1

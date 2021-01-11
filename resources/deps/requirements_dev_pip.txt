@@ -15,4 +15,3 @@ sphinx-panels~=0.5
 sphinx>=3.1
 sphinxcontrib-bibtex~=1.0
 tabulate==0.8
-tinydb
