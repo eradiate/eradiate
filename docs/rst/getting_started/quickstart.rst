@@ -76,9 +76,9 @@ listed below.
    .. admonition:: Installing packages
 
       On macOS, you will need to install XCode, CMake, and
-      `Ninja <https://ninja-build.org/>`_. XCode can be install from the App
-      Store. CMake and Ninja can be installed with the
-      `Homebrew package manager <https://brew.sh/>`_:
+      `Ninja <https://ninja-build.org/>`_. XCode can be installed from the App
+      Store. Make sure that your copy of the XCode is up-to-date. CMake and
+      Ninja can be installed with the `Homebrew package manager <https://brew.sh/>`_:
 
       .. code-block:: bash
 
@@ -109,11 +109,13 @@ To get the code, clone the repository including its submodules with the followin
 Setting up the Conda environment
 --------------------------------
 
-Eradiate ships a shell script, which will set up a Conda environment with all necessary packages
-and will add the required environment variables. Simply run the script like this:
+Eradiate ships a shell script, which will set up a Conda environment with all
+necessary packages and will add the required environment variables. Navigate to
+the freshly created Git clone and run the script:
 
 .. code-block:: bash
 
+   cd eradiate
    bash resources/envs/conda_create_env.sh -j -a
 
 Afterwards, activate the environment, running the following command
@@ -141,27 +143,71 @@ Compilation is as simple as running the following from inside Eradiate's root di
    If you activated the conda environment, the Eradiate root directory can be reached from everywhere
    through the ``$ERADIATE_DIR`` environment variable.
 
-.. _sec-getting_started-quickstart-install_package:
 
-Installing the Eradiate package
--------------------------------
+.. dropdown:: Tips & Tricks
 
-After successful compilation, you can install the Eradiate package in your conda environment.
+   Mitsuba compilation can fail due to CMake not accessing the correct Python
+   interpreter and/or C/C++ compiler.
+   In this case, the interpreter and compiler can be specified manually through
+   CMake variables. To determine the path to the python interpreter run the
+   following command in your terminal
 
-.. code-block:: bash
+   .. code-block:: bash
 
-   conda activate eradiate
-   cd $ERADIATE_DIR
-   pip install .
+      which python
+
+   The response should be a path, similar to this:
+
+   .. tabbed:: Linux
+
+      .. code-block::
+
+         /home/<username>/miniconda3/envs/eradiate/bin/python
+
+   .. tabbed:: macOS
+
+      .. code-block::
+
+         /Users/<username>/miniconda3/envs/eradiate/bin/python
+
+   For the C and C++ compilers, run the following commands respectively.
+
+   .. code-block:: bash
+
+      which clang
+      which clang++
+
+   The python interpreter is passed directly to cmake like this:
+
+   .. code-block:: bash
+
+      cmake -GNinja -D PYHTON_EXECUTABLE=<result of query> ..
+
+   The C and C++ compilers must be defined through environment variables like this:
+
+   .. code-block:: bash
+
+      export CC=<result of query>
+      export CXX=<result of query>
 
 .. _sec-getting_started-quickstart-data_files:
 
 Add large data files
 --------------------
 
-Download the ``us76_u86_4-4000_25711`` from `Link <https://eradiate.eu/data/spectra-us76_u86_4-4000_25711.zip>`_,
+Download the `us76_u86_4-4000_25711 data set <https://eradiate.eu/data/spectra-us76_u86_4-fullrange.zip>`_,
 extract the archive into a temporary location and copy contents into ``$ERADIATE_DIR/resources/data``.
 
+Verify installation
+-------------------
+
+In a terminal, try and import Eradiate:
+
+.. code-block:: bash
+
+   python -c "import eradiate, eradiate.kernel; print(eradiate.__version__)"
+
+The command should succeed and display the current version number.
 You can now run Eradiate. |smile|
 
 .. |smile| unicode:: U+1F642
