@@ -1,3 +1,4 @@
+import datetime
 import os
 from copy import deepcopy
 from pathlib import Path
@@ -5,6 +6,7 @@ from pathlib import Path
 import attr
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
 
@@ -23,30 +25,10 @@ from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
 from ...util import plot as ertplt
 from ...util import xarray as ertxr
 from ...util.exceptions import ModeError
+from ...util.frame import direction_to_angles, square_to_uniform_hemisphere
 from ...util.misc import always_iterable, ensure_array
+from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
-
-
-@MeasureFactory.register(
-    "toa_pplane_rami", "toa_pplane_lo_rami", "toa_pplane_brdf_rami", "toa_pplane_brf_rami"
-)
-@attr.s
-class TOAPPlaneMeasure(DistantMeasure):
-    """Top-of-atmosphere radiancemeter (principal plane coverage).
-    This class is a lightweight specialisation of its
-    :class:`radiancemeter` parent class and should only be used
-    with :class:`RamiScene`.
-    It is registered to :class:`.MeasureFactory` with the following keys:
-    ``"toa_pplane"``, ``"toa_pplane_lo"``, ``"toa_pplane_brdf"``,
-    ``"toa_pplane_brf"``.
-    """
-    id = attr.ib(default="toa_pplane")
-
-    # Only the back hemisphere is supported
-    hemisphere = attr.ib(
-        default="back",
-        validator=attr.validators.in_(("back",)),
-    )
 
 
 @attr.s
@@ -292,9 +274,14 @@ class RamiSolverApp:
     def run(self):
         """Perform radiative transfer simulation and post-process results."""
 
+        def _add_missing_dims(x, dims):
+            """Local function; add missing dimensions to numpy array."""
+            for dim in dims:
+                x = np.expand_dims(x, dim)
+            return x
+
         # Run simulation
         runner_results = self._runner.run()
-        # print(runner_results)
 
         # Post-processing
         # TODO: put that in a separate method
@@ -312,14 +299,109 @@ class RamiSolverApp:
         # -- TODO: Format results
         sensor_query = Query()
         for measure in scene.measures:
+            # Collect results from sensors associated to processed measure
             measure_id = measure.id
             entries = scene.measure_registry.search(sensor_query.measure_id == measure_id)
             sensor_ids = [db_entry["sensor_id"] for db_entry in entries]
             sensor_spps = [db_entry["sensor_spp"] for db_entry in entries]
             data = measure.postprocess_results(sensor_ids, sensor_spps, runner_results)
+            data = _add_missing_dims(data, [0, 1, 4])
 
-            results = data.squeeze()
-            self.results[measure_id] = results
+            # Create an empty dataset to store results
+            ds = xr.Dataset()
+
+            if isinstance(measure, DistantMeasure):
+                # Assign leaving radiance variable and corresponding coords
+                ds["lo"] = xr.DataArray(
+                    data,
+                    coords=(
+                        ("sza", sza),
+                        ("saa", saa),
+                        ("y", range(data.shape[2])),
+                        ("x", range(data.shape[3])),
+                        ("wavelength", wavelength)
+                    ),
+                )
+
+                # Did the sensor sample ray directions in the hemisphere or on a
+                # plane?
+                plane = (data.shape[2] == 1)
+
+                # Compute viewing angles at pixel centers
+                xs = ds.x
+                ys = ds.y
+                theta = np.full((len(ys), len(xs)), np.nan)
+                phi = np.full_like(theta, np.nan)
+
+                if plane:
+                    for x in xs:
+                        for y in ys:
+                            sample = float(x + 0.5) / len(xs)
+                            theta[y, x] = 90. - 180. * sample
+                            phi[y, x] = measure.orientation.to("deg").m
+                else:
+                    for x in xs:
+                        for y in ys:
+                            xy = [float((x + 0.5) / len(xs)),
+                                  float((y + 0.5) / len(ys))]
+                            d = square_to_uniform_hemisphere(xy)
+                            theta[y, x], phi[y, x] = \
+                                direction_to_angles(d).to("deg").m
+
+                # Assign angles as non-dimension coords
+                ds["vza"] = (("y", "x"), theta, {"units": "deg"})
+                ds["vaa"] = (("y", "x"), phi, {"units": "deg"})
+                ds = ds.set_coords(("vza", "vaa"))
+
+            else:
+                raise ValueError(f"Unsupported measure type {measure.__class__}")
+
+            # Add other variables
+            ds["irradiance"] = (
+                ("sza", "saa", "wavelength"),
+                np.array(
+                    self._kernel_dict["illumination"]["irradiance"]["value"] *
+                    cos_sza
+                ).reshape((1, 1, 1))
+            )
+            ds["brdf"] = ds["lo"] / ds["irradiance"]
+            ds["brf"] = ds["brdf"] * np.pi
+
+            # Add missing metadata
+            dataset_spec = ertxr.DatasetSpec(
+                convention="CF-1.8",
+                title="Top-of-atmosphere simulation results",
+                history=f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+                        f"data creation - {__name__}.{self.__class__}.run",
+                source=f"eradiate, version {eradiate.__version__}",
+                references="",
+                var_specs={
+                    "irradiance": ertxr.VarSpec(
+                        standard_name="toa_horizontal_solar_irradiance_per_unit_wavelength",
+                        units=str(kdu.get("irradiance")),
+                        long_name="top-of-atmosphere horizontal spectral irradiance"
+                    ),
+                    "lo": ertxr.VarSpec(
+                        standard_name="toa_outgoing_radiance_per_unit_wavelength",
+                        units=str(kdu.get("radiance")),
+                        long_name="top-of-atmosphere outgoing spectral radiance"
+                    ),
+                    "brf": ertxr.VarSpec(
+                        standard_name="toa_brf",
+                        units="dimensionless",
+                        long_name="top-of-atmosphere bi-directional reflectance factor"
+                    ),
+                    "brdf": ertxr.VarSpec(
+                        standard_name="toa_brdf",
+                        units="1/sr",
+                        long_name="top-of-atmosphere bi-directional reflection distribution function"
+                    )
+                },
+                coord_specs="angular_observation"
+            )
+            ds.ert.normalize_metadata(dataset_spec)
+
+            self.results[measure_id] = ds
 
     def save_results(self, fname_prefix):
         """Save results to netCDF files.
