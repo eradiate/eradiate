@@ -198,7 +198,6 @@
 """
 
 import numpy as np
-import pathlib
 import xarray as xr
 
 from .core import DataGetter
@@ -248,7 +247,7 @@ class _AbsorptionGetter(DataGetter):
 
 @ureg.wraps(ret=None, args=("cm^-1", None, None), strict=False)
 def available_datasets(wavenumber, absorber="us76_u86_4", engine="spectra"):
-    """Returns the available datasets corresponding to a given wavenumber,
+    """Returns the available dataset(s) corresponding to a given wavenumber,
     absorber and absorption cross section engine.
 
     Parameter ``wavenumber`` (:class:`~pint.Quantity`):
@@ -261,20 +260,21 @@ def available_datasets(wavenumber, absorber="us76_u86_4", engine="spectra"):
         Engine used to compute the absorption cross sections.
 
     Returns → list or ``None``:
-        Available dataset ids.
+        Available dataset id(s).
     """
     if absorber == "us76_u86_4":
         if engine != "spectra":
             raise ValueError(f"engine {engine} is not supported.")
-        absorber_dir = pathlib.Path(f"resources/data/spectra/absorption/{absorber}")
-        subdirs = [f for f in absorber_dir.glob("*") if f.is_dir() and not f.name.startswith(".")]
         available = []
-        for subdir in subdirs:
-            _engine, _absorber, w_range = tuple(subdir.name.split("-"))
-            if _absorber == absorber and _engine == engine:
-                w_min, w_max = w_range.split("_")
-                if float(w_min) <= wavenumber < float(w_max):
-                    available.append(subdir.name)
+        for d in [_AbsorptionGetter.PATHS[k] for k in _AbsorptionGetter.PATHS
+                  if k != "test"]:
+            path = _presolver.resolve(d.strip("/*.nc"))
+            if path.is_absolute():
+                _engine, _absorber, w_range = tuple(path.name.split("-"))
+                if _absorber == absorber and _engine == engine:
+                    w_min, w_max = w_range.split("_")
+                    if float(w_min) <= wavenumber < float(w_max):
+                        available.append(path.name)
         return available if len(available) > 0 else None
     else:
         raise ValueError(f"absorber {absorber} is not supported.")
