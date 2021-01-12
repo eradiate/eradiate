@@ -22,7 +22,7 @@ machine meets the requirements listed below.
 
 .. tabbed:: Linux
 
-   .. dropdown:: Tested configuration
+   .. dropdown:: *Tested configuration*
 
       Operating system: Ubuntu Linux 20.04.1.
 
@@ -57,7 +57,7 @@ machine meets the requirements listed below.
 
 .. tabbed:: macOS
 
-   .. dropdown:: Tested configuration
+   .. dropdown:: *Tested configuration*
 
       Operating system: macOS Catalina 10.15.2.
 
@@ -120,7 +120,7 @@ the freshly created Git clone and run the script:
    cd eradiate
    bash resources/envs/conda_create_env.sh -j -a
 
-.. dropdown:: Development setup
+.. dropdown:: *Development setup*
 
    If you are setting up the code for development or want to run the test suite,
    then the ``-d`` flag will also add dev dependencies to the created Conda
@@ -218,15 +218,15 @@ The compilation process can last up to around half an hour on old machines.
 
 .. _sec-getting_started-quickstart-data_files:
 
-Add large data files
---------------------
+Adding large data files
+-----------------------
 
 Download the `us76_u86_4-4000_25711 data set <https://eradiate.eu/data/spectra-us76_u86_4-4000_25711.zip>`_,
 extract the archive to a temporary location and copy contents into
 ``$ERADIATE_DIR/resources/data``.
 
-Verify installation
--------------------
+Verifying the installation
+--------------------------
 
 In a terminal, try and import Eradiate:
 
