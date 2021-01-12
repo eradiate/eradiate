@@ -37,6 +37,7 @@ import numpy as np
 import xarray as xr
 
 from eradiate import __version__
+from eradiate import data
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
 from ..thermoprops import us76
@@ -401,13 +402,15 @@ class US76ApproxRadProfile(RadProfile):
         Unit-enabled field (default: cdu[length]).
 
     ``dataset`` (str):
-        Dataset identifier. Default: ``"spectra-us76_u86_4-4000_25711"``.
+        Dataset identifier. Default: ``None``.
 
         .. warning::
 
-           This attribute exists for debugging purposes. Unless during testing,
-           it should be used with its default value.
-
+           This attribute exists for testing purposes. Unless during testing,
+           it should be used with its default value. The
+           :func:`eradiate.radprops.absorption.compute_sigma_a`
+           function will figure out automatically what absorption dataset
+           to use, based on the thermophysical profile and the wavelength value.
     """
     n_layers = attr.ib(
         default=50,
@@ -443,8 +446,10 @@ class US76ApproxRadProfile(RadProfile):
     )
 
     dataset = attr.ib(
-        default="spectra-us76_u86_4-4000_25711",
-        validator=attr.validators.in_({"spectra-us76_u86_4-4000_25711", "test"}),
+        default=None,
+        validator=attr.validators.optional(
+            attr.validators.in_(
+                list(data.getter("absorption_spectrum").PATHS.keys())))
     )
 
     def __attrs_post_init__(self):

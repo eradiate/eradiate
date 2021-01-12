@@ -50,9 +50,6 @@
     The meaning of the first 5 attributes is explained in the C.F. 1.8
     convention (http://cfconventions.org/).
 """
-
-import numpy as np
-
 import eradiate.data as data
 from eradiate.data.absorption_spectra import available_datasets
 from ..util.units import ureg
