@@ -49,6 +49,8 @@ def pcolormesh_polar(darray, r=None, theta=None, **kwargs):
     if theta is None:
         theta = darray.dims[1]
 
+    theta_dims = darray[theta].dims
+
     try:
         theta_units = ureg.Unit(darray[theta].attrs["units"])
     except KeyError:
@@ -57,7 +59,7 @@ def pcolormesh_polar(darray, r=None, theta=None, **kwargs):
     if theta_units != ureg.rad:
         theta_rad = f"{theta}_rad"
         theta_rad_values = ureg.Quantity(darray[theta].values, theta_units).to(ureg.rad).magnitude
-        darray_plot = darray.assign_coords(**{theta_rad: (theta, theta_rad_values)})
+        darray_plot = darray.assign_coords(**{theta_rad: (theta_dims, theta_rad_values)})
         darray_plot[theta_rad].attrs = darray[theta].attrs
         darray_plot[theta_rad].attrs["units"] = "rad"
     else:
