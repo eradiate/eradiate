@@ -353,7 +353,9 @@ class DistantMeasure(Measure):
         if isinstance(sensor_ids, list):
             sensor_ids = sensor_ids[0]
 
-        return results[sensor_ids]
+        data = results[sensor_ids]
+
+        return np.reshape(data, (data.shape[0], data.shape[1]))
 
     def kernel_dict(self, ref=True):
         result = {
