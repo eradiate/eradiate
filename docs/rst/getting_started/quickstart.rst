@@ -12,14 +12,13 @@ common questions.
 
    If you experience issues with this quick start guide, please refer to the more detailed setup instructions.
 
-
 .. _sec-getting_started-quickstart-prerequisites:
 
 Prerequisites
 -------------
 
-Before cloning the repo and compiling the code, ensure that your machine meets the requirements
-listed below.
+Before cloning the Git repository and compiling the code, ensure that your
+machine meets the requirements listed below.
 
 .. tabbed:: Linux
 
@@ -41,9 +40,9 @@ listed below.
 
    .. admonition:: Installing packages
 
-      All prerequisites except for conda can be installed through the usual Linux
-      package managers. For example, using the APT package manager, which is used
-      in most Debian based distributions, like Ubuntu:
+      All prerequisites except for conda can be installed through the usual
+      Linux package managers. For example, using the APT package manager, which
+      is used in most Debian-based distributions, like Ubuntu:
 
       .. code-block:: bash
 
@@ -53,8 +52,8 @@ listed below.
          # Install libraries for image I/O
          sudo apt install -y libpng-dev zlib1g-dev libjpeg-dev
 
-      If your Linux distribution does not include APT, please consult your package
-      manager's repositories for the respective packages.
+      If your Linux distribution does not include APT, please consult your
+      package manager's repositories for the respective packages.
 
 .. tabbed:: macOS
 
@@ -84,21 +83,24 @@ listed below.
 
          brew install cmake ninja
 
-      Additionally, running the Xcode command line tools once might be necessary:
+      Additionally, running the Xcode command line tools once might be
+      necessary:
 
       .. code-block:: bash
 
          xcode-select --install
 
-Additionally Eradiate requires a fairly recent version of Python (at least 3.6) and we highly recommend
-using the Conda environment manager to set up your Python environment.
+Additionally Eradiate requires a fairly recent version of Python (at least 3.6)
+and we highly recommend using the Conda environment manager to set up your
+Python environment.
 
 .. _sec-getting_started-quickstart-cloning:
 
 Cloning the repository
 ----------------------
 
-To get the code, clone the repository including its submodules with the following command:
+To get the code, clone the repository including its submodules with the
+following command:
 
 .. code-block:: bash
 
@@ -118,77 +120,93 @@ the freshly created Git clone and run the script:
    cd eradiate
    bash resources/envs/conda_create_env.sh -j -a
 
+.. dropdown:: Development setup
+
+   If you are setting up the code for development or want to run the test suite,
+   then the ``-d`` flag will also add dev dependencies to the created Conda
+   environment:
+
+   .. code-block:: bash
+
+      cd eradiate
+      bash resources/envs/conda_create_env.sh -d -j -a
+
 Afterwards, activate the environment, running the following command
 
 .. code-block:: bash
 
    conda activate eradiate
 
+.. admonition:: Note
+
+   Once the Conda environment is active, the Eradiate root directory can be
+   reached from everywhere through the ``$ERADIATE_DIR`` environment variable.
+
 .. _sec-getting_started-quickstart-compiling:
 
 Compiling the kernel
 --------------------
 
-Compilation is as simple as running the following from inside Eradiate's root directory:
+Create a build directory in Eradiate's root directory:
 
 .. code-block:: bash
 
+
    mkdir build
    cd build
-   cmake -GNinja ..
-   ninja
 
-.. admonition:: Note
+Configure CMake for compilation:
 
-   If you activated the conda environment, the Eradiate root directory can be reached from everywhere
-   through the ``$ERADIATE_DIR`` environment variable.
+.. code-block:: bash
 
+   cmake -GNinja -DPYTHON_EXECUTABLE=$(python3 -c "import sys; print(sys.executable)") ..
 
-.. dropdown:: Tips & Tricks
+Inspect CMake logs to check if clang is used as the C++ compiler. Search for
+lines starting with
 
-   Mitsuba compilation can fail due to CMake not accessing the correct Python
-   interpreter and/or C/C++ compiler.
-   In this case, the interpreter and compiler can be specified manually through
-   CMake variables. To determine the path to the python interpreter run the
-   following command in your terminal
+.. code-block::
+
+   -- Check for working C compiler: ...
+   -- Check for working CXX compiler: ...
+
+.. dropdown:: *If clang is not used by CMake ...*
+
+   If clang is not used by CMake (this is very common on Linux systems), you
+   have to explicitly define clang as the default C++ compiler. This can be
+   achieved with the following shell commands:
 
    .. code-block:: bash
 
-      which python
+      export CC=clang
+      export CXX=clang++
 
-   The response should be a path, similar to this:
+   You might want to add these commands to your environment profile loading
+   script.
 
-   .. tabbed:: Linux
+Inspect CMake logs to check if your Conda environment Python is used by CMake.
+Search for lines starting with:
+
+.. tabbed:: Linux
 
       .. code-block::
 
-         /home/<username>/miniconda3/envs/eradiate/bin/python
+         -- Found PythonInterp: /home/<username>/miniconda3/envs/eradiate/...
+         -- Found PythonLibs: /home/<username>/miniconda3/envs/eradiate/...
 
-   .. tabbed:: macOS
+.. tabbed:: macOS
 
-      .. code-block::
+   .. code-block::
 
-         /Users/<username>/miniconda3/envs/eradiate/bin/python
+      -- Found PythonInterp: /Users/<username>/miniconda3/envs/eradiate/...
+      -- Found PythonLibs: /Users/<username>/miniconda3/envs/eradiate/...
 
-   For the C and C++ compilers, run the following commands respectively.
+.. dropdown:: *If the wrong Python binary is used by CMake ...*
 
-   .. code-block:: bash
-
-      which clang
-      which clang++
-
-   The python interpreter is passed directly to cmake like this:
+   It probably means you have not activated your Conda environment:
 
    .. code-block:: bash
 
-      cmake -GNinja -D PYHTON_EXECUTABLE=<result of query> ..
-
-   The C and C++ compilers must be defined through environment variables like this:
-
-   .. code-block:: bash
-
-      export CC=<result of query>
-      export CXX=<result of query>
+      conda activate eradiate
 
 .. _sec-getting_started-quickstart-data_files:
 
@@ -196,7 +214,8 @@ Add large data files
 --------------------
 
 Download the `us76_u86_4-4000_25711 data set <https://eradiate.eu/data/spectra-us76_u86_4-4000_25711.zip>`_,
-extract the archive into a temporary location and copy contents into ``$ERADIATE_DIR/resources/data``.
+extract the archive to a temporary location and copy contents into
+``$ERADIATE_DIR/resources/data``.
 
 Verify installation
 -------------------
