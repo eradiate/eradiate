@@ -66,6 +66,9 @@ class HomogeneousDiscreteCanopy(Canopy):
       Please refer to this method for details on the file format.
     """
 
+    lai = attr.ib()
+    n_leaves = attr.ib()
+
     id = attr.ib(
         default="homogeneous_discrete_canopy",
         validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -247,7 +250,7 @@ class HomogeneousDiscreteCanopy(Canopy):
         radius = leaf_radius.to(kdu_length).magnitude
 
         # warnings for non physical values
-        if radius > size[2]:
+        if radius > size[2].to(kdu_length).magnitude:
             warnings.warn(f"Leaf radius {radius} is larger than the canopy"
                           f"height {size[2]}. The leaves might not fit inside"
                           f"the specified volume.")
@@ -270,7 +273,8 @@ class HomogeneousDiscreteCanopy(Canopy):
         return HomogeneousDiscreteCanopy(leaf_reflectance=leaf_reflectance,
                                          leaf_transmittance=leaf_transmittance,
                                          center_position=center_position,
-                                         transforms=transforms)
+                                         transforms=transforms,
+                                         lai=lai, n_leaves=n_leaves)
 
     @staticmethod
     def _inversebeta(mu, nu):
@@ -375,6 +379,11 @@ class HomogeneousDiscreteCanopy(Canopy):
             raise FileNotFoundError(f"No file at {file_path} found.")
 
         transforms = []
+        leaf_area = 0
+        max_x = 0
+        min_x = 0
+        max_y = 0
+        min_y = 0
         with open(os.path.abspath(file_path), "r") as definition_file:
             for line in definition_file:
                 values  = line.split(" ")
@@ -383,11 +392,22 @@ class HomogeneousDiscreteCanopy(Canopy):
                 radius = ensure_units(float(values[0]), "meter")
                 radius = radius.to(kdu_length).magnitude
 
+                leaf_area += radius*radius*np.pi
+
                 position = ensure_units([float(values[1]),
                             float(values[2]),
                             float(values[3])], "meter")
 
                 position = position.to(kdu_length).magnitude
+
+                if position[0] > max_x:
+                    max_x = position[0]
+                if position[0] < min_x:
+                    min_x = position[0]
+                if position[1] > max_y:
+                    max_y = position[1]
+                if position[1] < min_y:
+                    min_y = position[1]
 
                 normal = ensure_units([float(values[4]),
                                        float(values[5]),
@@ -406,10 +426,13 @@ class HomogeneousDiscreteCanopy(Canopy):
                 )
                 transforms.append(to_world)
 
+            lai = leaf_area / abs((max_x - min_x) * (max_y - min_y))
+
             return HomogeneousDiscreteCanopy(leaf_reflectance=leaf_reflectance,
                                              leaf_transmittance=leaf_transmittance,
                                              center_position=center_position,
-                                             transforms=transforms)
+                                             transforms=transforms,
+                                             _lai=lai, _n_leaves=len(transforms))
 
     def kernel_dict(self, ref=True):
         from eradiate.kernel.core import ScalarTransform4f
