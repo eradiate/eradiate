@@ -17,16 +17,13 @@ features, configuration format and usage of this application.
 
 .. _Quick overview: ../../notebooks/tutorials/quick_overview/quick_overview.ipynb
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
+.. admonition:: Tutorials
 
-   Tutorial <../../notebooks/tutorials/onedim_solver_app/onedim_solver_app.ipynb>
+   .. toctree::
+      :maxdepth: 1
 
-.. link-button:: tut-onedim_solver_app
-   :type: ref
-   :text: Tutorial
-   :classes: btn-outline-primary btn-block
+      Tutorial － Basic usage <../../notebooks/tutorials/onedim_solver_app/onedim_solver_app.ipynb>
+      Tutorial － Heterogeneous atmosphere <../../notebooks/tutorials/onedim_solver_app/heterogeneous_atmospheres.ipynb>
 
 Available features
 ------------------
