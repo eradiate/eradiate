@@ -9,21 +9,19 @@ def test_homogeneous_discrete_canopy_instantiate(mode_mono):
     """Test instantiation for the homogeneous discrete canopy
     in a cuboid volume."""
 
-    # assert that the values that are possibly computed during init
-    # have the expected value
-    cloud = HomogeneousDiscreteCanopy()
-    assert cloud.n_leaves == 4000
-    assert np.allclose(cloud.size.to(ureg.m).magnitude,
-                       [16, 16, 15], rtol=1.e-6)
-    assert cloud.hdo == 1 * ureg.m
+    cloud = HomogeneousDiscreteCanopy.from_parameters()
 
-    cloud2 = HomogeneousDiscreteCanopy(size=[10, 10, 10])
-    assert cloud2.n_leaves == 1527
-    assert np.allclose(cloud2.size.to(ureg.m).magnitude,
-                       [10, 10, 10], rtol=1.e-6)
-    assert np.allclose(cloud2.hdo.to(ureg.m).magnitude,
-                       0.868232846, rtol=1.e-6)
+    # create a valid kernel dict by default
+    assert cloud.kernel_dict() is not None
 
-#TODO: Add a render test, that renders a scene with a leaf cloud
-# and compares with a reference.
-# Needed for that: The radiancemeter with tunable target area
+    # default parameters are used correctly
+    cloud2 = HomogeneousDiscreteCanopy.from_parameters(size=[0, 0, 0], leaf_radius=0.25)
+    assert cloud2._n_leaves == 4000
+    assert np.allclose(cloud2._size.to(ureg.m).magnitude,
+                       [16.17, 16.15, 15.28], rtol=1.e-2)
+
+    # size takes precedence over number of leaves
+    cloud3 = HomogeneousDiscreteCanopy.from_parameters(size=[10, 10, 10])
+    assert cloud3._n_leaves == 9549
+    assert np.allclose(cloud3._size.to(ureg.m).magnitude,
+                       [10, 10, 10], rtol=1.e-3)
