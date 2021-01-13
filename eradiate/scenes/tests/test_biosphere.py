@@ -11,13 +11,13 @@ def test_homogeneous_discrete_canopy_instantiate(mode_mono):
 
     # assert that the values that are possibly computed during init
     # have the expected value
-    cloud = HomogeneousDiscreteCanopy()
+    cloud = HomogeneousDiscreteCanopy.from_parameters()
     assert cloud.n_leaves == 4000
     assert np.allclose(cloud.size.to(ureg.m).magnitude,
                        [16, 16, 15], rtol=1.e-6)
     assert cloud.hdo == 1 * ureg.m
 
-    cloud2 = HomogeneousDiscreteCanopy(size=[10, 10, 10])
+    cloud2 = HomogeneousDiscreteCanopy.from_parameters(size=[10, 10, 10])
     assert cloud2.n_leaves == 1527
     assert np.allclose(cloud2.size.to(ureg.m).magnitude,
                        [10, 10, 10], rtol=1.e-6)
