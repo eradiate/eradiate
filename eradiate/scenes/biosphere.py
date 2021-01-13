@@ -12,6 +12,9 @@ from abc import ABC
 import aabbtree
 import attr
 import numpy as np
+import os
+import pint
+import warnings
 
 from .core import SceneElement
 from .spectra import Spectrum, SpectrumFactory
@@ -24,7 +27,7 @@ from ..util.attrs import (
 from ..util.factory import BaseFactory
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
-from ..util.units import ureg
+from ..util.units import ureg, ensure_units
 
 
 class BiosphereFactory(BaseFactory):
@@ -52,154 +55,20 @@ class Canopy(SceneElement, ABC):
 class HomogeneousDiscreteCanopy(Canopy):
     """A generator for the `homogenous discrete canopy used in the RAMI benchmark
     <https://rami-benchmark.jrc.ec.europa.eu/_www/phase/phase_exp.php?strTag=level3&strNext=meas&strPhase=RAMI3&strTagValue=HOM_SOL_DIS>`_.
-    This is a re-implementation of the generator in raytran.
-    Leaf orientation distribution is set by approximating the beta distribution
-    as given in :cite:`MyneniRoss1991PhotonVegetationInteraction`.
 
-    The configuration of this scene element allows for different variants:
+    This canopy can be instantiated in two ways:
 
-    - Either the number of leaves `n_leaves` or the horizontal extent of the
-      canopy can be specified. In case both are given, the horizontal extent
-      will take precedence
-    - Either the `hdo`/`hvr` values or the vertical extent of the canopy can be
-      specified. If both are given, the vertical extent will take precedence.
-
-    Horizontal and vertical extent are specified through the `size`
-    parameter.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``id`` (str):
-        Identifier. Default value: "homogeneous_discrete_canopy"
-
-    ``lai`` (float):
-        Leaf area index. Default value: 3.
-
-    ``radius`` (float):
-        Leaf radius. Default 0.25.
-
-        Unit-enabled field (default unit: cdu[length])
-
-    ``mu`` (float):
-        First parameter for the beta distribution. Default: 1.066.
-
-    ``nu`` (float):
-        Second parameter for the beta distribution. Default value: 1.853.
-
-    ``n_leaves`` (int):
-        Total number of leaves to generate. If ``size`` is set, it will override
-        this parameter. Default: 4000
-
-    ``hdo`` (float):
-        Mean horizontal distance between leaves. If ``size`` is set, it will
-        override this parameter. Default: 1.
-
-        Unit-enabled field (default unit: cdu[length])
-
-    ``hvr`` (float):
-        Ratio of mean horizontal leaf distance and vertical canopy extent.
-        If ``size`` is set, it will override this parameter. Default: 1.
-
-    ``size`` (list[float]):
-        Length of the canopy in the three dimensions. A canopy with size
-        [x, y, z] will extend over [-x/2, x/2], [-y/2, y/2] and [0, z], centered
-        at ``position`` parameter. Default: [0, 0, 0].
-
-        If ``size`` is not set, it will be automatically computed from ``hdo``,
-        ``hvr`` and ``n_leaves``.
-
-        Unit-enabled field (default units: cdu[length]).
-
-    ``position`` (list[float]):
-        Three dimensional position of the canopy. Default: [0, 0, 0].
-
-        Unit-enabled field (default units: cdu[length])
-
-    ``seed`` (int):
-        Seed for the random number generator. Default: 1.
-
-    ``avoid_overlap`` (bool):
-        If ``True``, the scene element will attempt to place the leaves such
-        that they do not overlap. If a leaf cannot be placed without overlap
-        after 1e6 tries, it will raise a ``RuntimeError``. Default: True.
-
-        .. admonition:: Note
-
-           To emulate the behaviour of the raytran leaf cloud generator
-           simply try instantiating the leaf cloud several times with
-           different ``seed`` values and after a certain amount of
-           failures, run it without overlap avoidance.
-
-    ``leaf_reflectance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
-        Reflectance spectrum of the leaves in the cloud. Must be a reflectance
-        spectrum (dimensionless). Default: 0.5.
-
-    ``leaf_transmittance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
-        Transmittance spectrum of the leaves in the cloud. Must be a
-        transmittance spectrum (dimensionless). Default: 0.5.
+    - The classmethod :meth:`~eradiate.scenes.biosphere.HomogeneousDiscreteCanopy.from_parameters`
+      takes a set of parameters and will generate the canopy from them. For details,
+      please see the documentation of that method.
+    - The classmethod :meth:`~eradiate.scenes.biosphere.HomogeneousDiscreteCanopy.from_files`
+      will read a set of definition files that specify the leaves of the canopy.
+      Please refer to this method for details on the file format.
     """
 
     id = attr.ib(
         default="homogeneous_discrete_canopy",
         validator=attr.validators.optional(attr.validators.instance_of(str)),
-    )
-
-    n_leaves = attr.ib(
-        default=4000, converter=int, validator=validator_is_positive
-    )
-
-    seed = attr.ib(
-        default=1,
-        converter=int,
-        validator=validator_is_positive,
-    )
-
-    avoid_overlap = attr.ib(default=True, converter=bool)
-
-    leaf_area_index = attr.ib(
-        default=3.,
-        converter=float,
-        validator=validator_is_positive,
-    )
-
-    mu = attr.ib(
-        default=1.066,
-        converter=float,
-        validator=validator_is_positive,
-    )
-
-    nu = attr.ib(
-        default=1.853,
-        converter=float,
-        validator=validator_is_positive,
-    )
-
-    hvr = attr.ib(
-        default=1.,
-        converter=float,
-        validator=validator_is_positive,
-    )
-
-    hdo = attrib_quantity(
-        default=ureg.Quantity(1., ureg.m),
-        units_compatible=cdu.generator("length"),
-    )
-
-    leaf_radius = attrib_quantity(
-        default=ureg.Quantity(0.25, ureg.m),
-        units_compatible=cdu.generator("length"),
-    )
-
-    position = attrib_quantity(
-        default=ureg.Quantity([0, 0, 0], ureg.m),
-        validator=validator_has_len(3),
-        units_compatible=cdu.generator("length"),
-    )
-
-    size = attrib_quantity(
-        default=ureg.Quantity([0, 0, 0], ureg.m),
-        validator=validator_has_len(3),
-        units_compatible=cdu.generator("length"),
     )
 
     leaf_reflectance = attr.ib(
@@ -220,56 +89,208 @@ class HomogeneousDiscreteCanopy(Canopy):
         ]
     )
 
-    _positions = attrib_quantity(default=[] * ureg.m, init=False, repr=False)
-    _leaf_normals = attr.ib(default=[], init=False, repr=False)
-    _tries = attr.ib(default=1000000, init=False, repr=False)
+    center_position = attrib_quantity(
+        default=ureg.Quantity([0, 0, 0], ureg.m),
+        validator=validator_has_len(3),
+        units_compatible=cdu.generator("length"),
+    )
 
-    def __attrs_post_init__(self):
-        # set the seed for the RNG
-        np.random.seed(self.seed)
+    transforms = attr.ib(default=[])
 
+    @staticmethod
+    def get_quantity_param(params_dict, name, unit, default):
+        try:
+            param = params_dict[name]
+        except KeyError:
+            param = default
+
+        try:
+            unit = params_dict[f"{name}_units"]
+        except KeyError:
+            unit = unit
+
+        return ensure_units(param, unit)
+
+    @classmethod
+    def from_parameters(cls, size=[30,30,3], lai=3, mu=1.066, nu=1.853,
+                        leaf_reflectance=0.5, leaf_transmittance=0.5,
+                        leaf_radius=0.1, n_leaves=4000, center_position=[0,0,0],
+                        hdo=1, hvr=1, seed=1,
+                        avoid_overlap=False):
+        """
+        This method allows the creation of a HomogeneousDiscreteCanopy
+        from statistical parameters.
+        This is a re-implementation of the generator in raytran.
+        Leaf orientation distribution is set by approximating the beta distribution
+        as given in :cite:`MyneniRoss1991PhotonVegetationInteraction`.
+
+        The configuration of this scene element allows for different variants:
+
+        - Either the number of leaves `n_leaves` or the horizontal extent of the
+          canopy can be specified. In case both are given, the horizontal extent
+          will take precedence
+        - Either the `hdo`/`hvr` values or the vertical extent of the canopy can be
+          specified. If both are given, the vertical extent will take precedence.
+
+        Horizontal and vertical extent are specified through the `size`
+        parameter.
+
+        .. rubric:: Constructor arguments / instance attributes
+
+        ``size`` (list[float]):
+            Length of the canopy in the three dimensions. A canopy with size
+            [x, y, z] will extend over [-x/2, x/2], [-y/2, y/2] and [0, z], centered
+            at ``position`` parameter. Default: [30, 30, 3].
+
+            If ``size`` is not set, it will be automatically computed from ``hdo``,
+            ``hvr`` and ``n_leaves``.
+
+            Unit-enabled field (default units: cdu[length]).
+
+        ``lai`` (float):
+            Leaf area index. Physical range: [0, 10], Default value: 3.
+
+        ``mu`` (float):
+            First parameter for the beta distribution. Default: 1.066.
+
+        ``nu`` (float):
+            Second parameter for the beta distribution. Default value: 1.853.
+
+        ``leaf_reflectance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
+            Reflectance spectrum of the leaves in the cloud. Must be a reflectance
+            spectrum (dimensionless). Default: 0.5.
+
+        ``leaf_transmittance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
+            Transmittance spectrum of the leaves in the cloud. Must be a
+            transmittance spectrum (dimensionless). Default: 0.5.
+
+        ``radius`` (float):
+            Leaf radius. Physical range: [0, height/2.], Default 0.1.
+
+            Unit-enabled field (default unit: cdu[length])
+
+        ``n_leaves`` (int):
+            Total number of leaves to generate. If ``size`` is set, it will override
+            this parameter. Default: 4000
+
+        ``center_position`` (list[float]):
+            Three dimensional position of the canopy. Default: [0, 0, 0].
+
+            Unit-enabled field (default units: cdu[length])
+
+        ``hdo`` (float):
+            Mean horizontal distance between leaves. If ``size`` is set, it will
+            override this parameter. Default: 1.
+
+            Unit-enabled field (default unit: cdu[length])
+
+        ``hvr`` (float):
+            Ratio of mean horizontal leaf distance and vertical canopy extent.
+            If ``size`` is set, it will override this parameter. Default: 1.
+
+        ``seed`` (int):
+            Seed for the random number generator. Default: 1.
+
+        ``avoid_overlap`` (bool):
+            If ``True``, the scene element will attempt to place the leaves such
+            that they do not overlap. If a leaf cannot be placed without overlap
+            after 1e6 tries, it will raise a ``RuntimeError``. Default: False.
+
+            .. warning::
+
+                Depending on the canopy specification instantiation can take
+                a very long time if overlap avoidance is active!
+
+            .. admonition:: Note
+
+               To emulate the behaviour of the raytran leaf cloud generator
+               simply try instantiating the leaf cloud several times with
+               different ``seed`` values and after a certain amount of
+               failures, run it without overlap avoidance.
+        """
+
+        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+
+        size = ensure_units(size, ureg.m)
+        lai = ensure_units(lai, None)
+        leaf_radius = ensure_units(leaf_radius, ureg.m)
+        center_position = ensure_units(center_position, ureg.m)
+        hdo = ensure_units(hdo, None)
+        hdo = ensure_units(hdo, None)
+
+        np.random.seed(seed)
+        
         # n_leaves or horizontal extent
-        if self.size[0].magnitude == 0 or self.size[1].magnitude == 0:
-            self.size[0] = self.size[1] = \
+        if size[0].magnitude == 0 or size[1].magnitude == 0:
+            size[0] = size[1] = \
                 np.sqrt(
-                    self.n_leaves * np.pi *
-                    self.leaf_radius ** 2 / self.leaf_area_index
+                    n_leaves * np.pi *
+                    leaf_radius ** 2 / lai
                 )
         else:
-            self.n_leaves = int(np.floor(
-                self.size[0] * self.size[1] * self.leaf_area_index /
-                (np.pi * self.leaf_radius ** 2)
+            n_leaves = int(np.floor(
+                size[0] * size[1] * lai /
+                (np.pi * leaf_radius ** 2)
             ))
 
         # hdo/hvr or vertical extent
-        if self.size[2].magnitude == 0:
-            self.size[2] = (
-                    self.leaf_area_index * self.hdo ** 3 /
-                    (np.pi * self.leaf_radius ** 2 * self.hvr)
-            )
-        else:
-            self.hdo = np.power(
-                np.pi * self.leaf_radius ** 2 * self.size[2] * self.hvr /
-                self.leaf_area_index, 1 / 3.
-            )
+        if size[2].magnitude == 0:
+            size[2] = (
+                lai * hdo ** 3 /
+                (
+                    np.pi * leaf_radius ** 2 * hvr)
+                )
 
-    def _inversebeta(self):
+        positions = cls._compute_positions(size, leaf_radius,
+                                           n_leaves, avoid_overlap)
+        kdu_length = kdu.get("length")
+        radius = leaf_radius.to(kdu_length).magnitude
+
+        # warnings for non physical values
+        if radius > size[2]:
+            warnings.warn(f"Leaf radius {radius} is larger than the canopy"
+                          f"height {size[2]}. The leaves might not fit inside"
+                          f"the specified volume.")
+
+        transforms = []
+        for pos in positions:
+            theta = np.rad2deg(cls._inversebeta(mu, nu))
+            phi = np.random.rand() * 360.
+
+            to_world = (
+                    ScalarTransform4f.translate(ScalarVector3f(
+                        pos.to(kdu_length).magnitude)
+                    ) *
+                    ScalarTransform4f.rotate(ScalarVector3f(0, 0, 1), phi) *
+                    ScalarTransform4f.rotate(ScalarVector3f(0, -1, 0), theta) *
+                    ScalarTransform4f.scale(ScalarVector3f(radius, radius, 1))
+            )
+            transforms.append(to_world)
+
+        return HomogeneousDiscreteCanopy(leaf_reflectance=leaf_reflectance,
+                                         leaf_transmittance=leaf_transmittance,
+                                         center_position=center_position,
+                                         transforms=transforms)
+
+    @staticmethod
+    def _inversebeta(mu, nu):
         while True:
             rands = np.random.rand(2)
-            s1 = np.power(rands[0], 1. / self.mu)
-            s2 = np.power(rands[1], 1. / self.nu)
+            s1 = np.power(rands[0], 1. / mu)
+            s2 = np.power(rands[1], 1. / nu)
             s = s1 + s2
             if s <= 1:
                 return s1 / s
 
-    def _compute_positions(self):
-        size_magnitude = self.size.to(ureg.m).magnitude
-        radius_mag = self.leaf_radius.to(ureg.m).magnitude
+    @staticmethod
+    def _compute_positions(size, leaf_radius, n_leaves, tries=10000000, avoid_overlap=False):
+        size_magnitude = size.to(ureg.m).magnitude
+        radius_mag = leaf_radius.to(ureg.m).magnitude
         positions_temp = []
         tree = aabbtree.AABBTree()
 
-        for i in range(self.n_leaves):
-            if not self.avoid_overlap:
+        for i in range(n_leaves):
+            if not avoid_overlap:
                 rand = np.random.rand(3)
                 positions_temp.append([
                     rand[0] * size_magnitude[0] - size_magnitude[0] / 2.,
@@ -277,7 +298,7 @@ class HomogeneousDiscreteCanopy(Canopy):
                     rand[2] * size_magnitude[2]
                 ])
             else:
-                for j in range(self._tries):
+                for j in range(tries):
                     rand = np.random.rand(3)
                     pos_candidate = [
                         rand[0] * size_magnitude[0] - size_magnitude[0] / 2.,
@@ -312,51 +333,119 @@ class HomogeneousDiscreteCanopy(Canopy):
                         "unable to place all leaves: "
                         "the specified canopy might be too dense"
                     )
-        self._positions = positions_temp * ureg.m
+        return positions_temp * ureg.m
+
+    @classmethod
+    def from_file(cls, file_path, leaf_reflectance=0.5, leaf_transmittance=0.5,
+                  center_position=[0,0,0]):
+        """
+        This method allows construcint the Canopy from a text file, specifying
+        the individual leaves. The file must specify one leaf per line with the
+        following seven parameters separated by one space:
+
+        - The leaf radius
+        - The x, y and z component of the leaf center
+        - The x, y and z component of the leaf normal
+
+        All values are given in meters.
+
+        .. rubric:: Constructor arguments
+
+        ``file_path`` (string or Path-like object):
+            Path to the text file specifying the leaves in the canopy.
+            Can be absolute or relative.
+
+        ``leaf_reflectance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
+            Reflectance spectrum of the leaves in the cloud. Must be a reflectance
+            spectrum (dimensionless). Default: 0.5.
+
+        ``leaf_transmittance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
+            Transmittance spectrum of the leaves in the cloud. Must be a
+            transmittance spectrum (dimensionless). Default: 0.5.
+
+        ``center_position`` (list[float]):
+            Three dimensional position of the canopy. Default: [0, 0, 0].
+
+            Unit-enabled field (default units: cdu[length])
+        """
+
+        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"No file at {file_path} found.")
+
+        transforms = []
+        with open(os.path.abspath(file_path), "r") as definition_file:
+            for line in definition_file:
+                values  = line.split(" ")
+                kdu_length = kdu.get("length")
+
+                radius = ensure_units(float(values[0]), "meter")
+                radius = radius.to(kdu_length).magnitude
+
+                position = ensure_units([float(values[1]),
+                            float(values[2]),
+                            float(values[3])], "meter")
+
+                position = position.to(kdu_length).magnitude
+
+                normal = ensure_units([float(values[4]),
+                                       float(values[5]),
+                                       float(values[6])], "meter")
+
+                normal = normal.to(kdu_length).magnitude
+
+                to_world = (
+                    ScalarTransform4f.look_at(
+                        origin=position,
+                        target=position+normal,
+                        up=np.cross(position, normal)
+                    ) *
+                    ScalarTransform4f.scale(
+                        ScalarVector3f(radius, radius, 1))
+                )
+                transforms.append(to_world)
+
+            return HomogeneousDiscreteCanopy(leaf_reflectance=leaf_reflectance,
+                                             leaf_transmittance=leaf_transmittance,
+                                             center_position=center_position,
+                                             transforms=transforms)
 
     def kernel_dict(self, ref=True):
-        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+        from eradiate.kernel.core import ScalarTransform4f
+
         return_dict = {
-            "leaf": {
+            "leaf_bsdf": {
+                "type": "bilambertian",
+                "reflectance":
+                    self.leaf_reflectance.kernel_dict()["spectrum"],
+                "transmittance":
+                    self.leaf_transmittance.kernel_dict()["spectrum"],
+            },
+            "leaves": {
                 "type": "shapegroup",
-                "shape_01": {
-                    "type": "disk",
-                    "bsdf": {
-                        "type": "bilambertian",
-                        "reflectance":
-                            self.leaf_reflectance.kernel_dict()["spectrum"],
-                        "transmittance":
-                            self.leaf_transmittance.kernel_dict()["spectrum"],
-                    }
-                }
             }
         }
 
-        self._compute_positions()
-        kdu_length = kdu.get("length")
-        radius = self.leaf_radius.to(kdu_length).magnitude
-
-        for i in range(len(self._positions)):
-            theta = np.rad2deg(self._inversebeta())
-            phi = np.random.rand() * 360.
-
-            to_world = (
-                    ScalarTransform4f.translate(ScalarVector3f(
-                        self.position.to(kdu_length).magnitude +
-                        self._positions[i].to(kdu_length).magnitude)
-                    ) *
-                    ScalarTransform4f.rotate(ScalarVector3f(0, 0, 1), phi) *
-                    ScalarTransform4f.rotate(ScalarVector3f(0, -1, 0), theta) *
-                    ScalarTransform4f.scale(ScalarVector3f(radius, radius, 1))
-            )
-
-            return_dict[f"shape_{i}"] = {
-                "type": "instance",
-                "group": {
+        for i, transform in enumerate(self.transforms):
+            return_dict["leaves"][f"leaf_{i}"] = {
+                "type": "disk",
+                "bsdf": {
                     "type": "ref",
-                    "id": "leaf"
+                    "id": "leaf_bsdf"
                 },
-                "to_world": to_world
+                "to_world": transform
             }
+
+        return_dict["canopy"] = {
+            "type": "instance",
+            "group": {
+                "type": "ref",
+                "id": "leaves"
+            },
+            "to_world": ScalarTransform4f.translate(
+                self.center_position.to(kdu.get("length")).magnitude
+            )
+        }
 
         return return_dict
