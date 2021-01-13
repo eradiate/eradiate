@@ -22,10 +22,16 @@ features, configuration format and usage of this application.
    :hidden:
 
    Tutorial <../../notebooks/tutorials/onedim_solver_app/onedim_solver_app.ipynb>
+   Heterogeneous atmospheres <../../notebooks/tutorials/onedim_solver_app/heterogeneous_atmospheres.ipynb>
 
 .. link-button:: tut-onedim_solver_app
    :type: ref
    :text: Tutorial
+   :classes: btn-outline-primary btn-block
+
+.. link-button:: tut-heterogeneous_atmospheres
+   :type: ref
+   :text: Tutorial - Simulations with 1D heterogeneous atmospheres
    :classes: btn-outline-primary btn-block
 
 Available features
