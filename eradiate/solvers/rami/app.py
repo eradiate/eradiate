@@ -36,6 +36,7 @@ from ...scenes.surface import (
     SurfaceFactory
 )
 from ...util import xarray as ertxr
+from ...util.attrs import validator_is_positive
 from ...util.exceptions import ModeError
 from ...util.frame import direction_to_angles, square_to_uniform_hemisphere
 from ...util.misc import always_iterable, ensure_array
@@ -67,6 +68,16 @@ class RamiScene(SceneElement):
         interpreted by
         :meth:`BiosphereFactory.convert() <.BiosphereFactory.convert>`
         Default: :class:`HomogeneousDiscreteCanopy() <.HomogeneousDiscreteCanopy>`.
+
+    ``padding`` (int):
+        Padding level.
+        This parameter specifies the number of copies that are placed around the
+        original canopy to mitigate adjacency effects.
+        A value of 0 will yield only the original canopy. A value of 1 will add
+        one copy in every direction, yielding a 3x3 patch. A value of 2 will
+        yield a 5x5 patch and so on. The optimal padding level depends on the
+        specification of the canopy.
+        Default: 0.
 
     ``illumination`` (:class:`.DirectionalIllumination` or dict):
         Illumination specification.
@@ -107,6 +118,12 @@ class RamiScene(SceneElement):
         default=None,
         converter=attr.converters.optional(BiosphereFactory.convert),
         validator=attr.validators.optional(attr.validators.instance_of(Canopy))
+    )
+
+    padding = attr.ib(
+        default=0,
+        converter=int,
+        validator=validator_is_positive
     )
 
     illumination = attr.ib(
@@ -153,6 +170,9 @@ class RamiScene(SceneElement):
         if self.canopy is not None:
             self.surface.width = max(self.canopy.size[:2])
 
+        # scale surface to accomodate padding
+        self.surface.width = self.surface.width * (1 + 2 * self.padding)
+
         # Process measures
         for measure in self.measures:
             # Override ray target location if relevant
@@ -185,10 +205,36 @@ class RamiScene(SceneElement):
                 })
 
     def kernel_dict(self, ref=True):
+        from eradiate.kernel.core import ScalarTransform4f
         result = KernelDict.empty()
 
         if self.canopy is not None:
-            result.add(self.canopy)
+            canopy_dict = self.canopy.kernel_dict(ref=True)
+            result.add(canopy_dict)
+
+            # specify the instances for padding
+            patch_size = max(self.canopy.size[:2])
+            kdu_length = kdu.get("length")
+            for shapegroup_id in canopy_dict.keys():
+                if shapegroup_id.find("bsdf") != -1:
+                    continue
+                for x_offset in np.arange(-self.padding, self.padding+1):
+                    for y_offset in np.arange(-self.padding, self.padding+1):
+                        instance_dict = {
+                            "type": "instance",
+                            "group": {
+                                "type": "ref",
+                                "id": f"{shapegroup_id}"
+                            },
+                            "to_world": ScalarTransform4f.translate([
+                                    patch_size.m_as(kdu_length) * x_offset,
+                                    patch_size.m_as(kdu_length) * y_offset,
+                                    0.0
+                                ]
+                            )
+
+                        }
+                        result[f"instance{x_offset}_{y_offset}"] = instance_dict
 
         result.add([
             self.surface,
