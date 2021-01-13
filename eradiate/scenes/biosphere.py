@@ -7,12 +7,13 @@
        :factory: BiosphereFactory
 """
 
-from abc import ABC
-
 __all__ = ["BiosphereFactory", "HomogeneousDiscreteCanopy"]
+
+from abc import ABC, abstractmethod
 
 import aabbtree
 import attr
+from copy import copy
 import numpy as np
 import os
 
@@ -47,7 +48,42 @@ class BiosphereFactory(BaseFactory):
 
 @attr.s
 class Canopy(SceneElement, ABC):
-    """An abstract base class defining a base type for all canopies."""
+    """
+    An abstract base class defining a base type for all canopies.
+    """
+
+    # fmt: off
+    id = attr.ib(
+        default="canopy",
+        validator=attr.validators.optional(attr.validators.instance_of(str)),
+    )
+
+    size = attrib_quantity(
+        default=None,
+        # TODO: add other validators maybe
+        validator=validator_has_len(3),
+        units_compatible=cdu.generator("length"),
+    )
+    # fmt: on
+
+    @abstractmethod
+    def bsdfs(self):
+        pass
+
+    @abstractmethod
+    def shapes(self, ref=False):
+        pass
+
+    def kernel_dict(self, ref=True):
+        kernel_dict = {}
+
+        if not ref:
+            kernel_dict[self.id] = self.shapes(ref=False)[f"shape_{self.id}"]
+        else:
+            kernel_dict[f"bsdf_{self.id}"] = self.bsdfs()[f"bsdf_{self.id}"]
+            kernel_dict[self.id] = self.shapes(ref=True)[f"shape_{self.id}"]
+
+        return kernel_dict
 
 
 def _inversebeta(mu, nu):
@@ -162,10 +198,9 @@ def _create_leaf_cloud(
     """
 
     positions = np.empty((n_leaves, 3))
-
     if shape_type == "cube":
         if np.allclose(cube_size, [0, 0, 0]):
-            raise ValueError("Parameter cube_size must be set for cuboid leaf" "cloud.")
+            raise ValueError("Parameter cube_size must be set for cuboid leaf cloud.")
         tree = aabbtree.AABBTree()
 
         if not avoid_overlap:
@@ -220,7 +255,7 @@ def _create_leaf_cloud(
     elif shape_type == "sphere":
         if sphere_radius == 0:
             raise ValueError(
-                "Parameter sphere_radius must be set for spherical" "leaf cloud."
+                "Parameter sphere_radius must be set for spherical leaf cloud."
             )
         for i in range(n_leaves):
             rand = np.random.rand(3)
@@ -312,15 +347,17 @@ class HomogeneousDiscreteCanopy(Canopy):
         units_compatible=cdu.generator("length"),
     )
 
-    leaf_orientations = attr.ib(default=[])
+    leaf_orientations = attr.ib(
+        default=[]
+    )
 
     leaf_reflectance = attr.ib(
         default=0.5,
         converter=SpectrumFactory.converter("reflectance"),
         validator=[
             attr.validators.instance_of(Spectrum),
-            validator_has_quantity("reflectance")
-        ]
+            validator_has_quantity("reflectance"),
+        ],
     )
 
     leaf_transmittance = attr.ib(
@@ -328,8 +365,8 @@ class HomogeneousDiscreteCanopy(Canopy):
         converter=SpectrumFactory.converter("transmittance"),
         validator=[
             attr.validators.instance_of(Spectrum),
-            validator_has_quantity("transmittance")
-        ]
+            validator_has_quantity("transmittance"),
+        ],
     )
 
     leaf_radius = attrib_quantity(
@@ -339,6 +376,18 @@ class HomogeneousDiscreteCanopy(Canopy):
     )
     # fmt: on
 
+    @leaf_positions.validator
+    @leaf_orientations.validator
+    def _positions_orientations_validator(self, attribute, value):
+        if not len(self.leaf_positions) == len(self.leaf_orientations):
+            raise ValueError(
+                f"While validating {attribute}:"
+                f"leaf_positions and leaf_orientations must have"
+                f"the same length!"
+                f"Got positions: {len(self.leaf_positions)},"
+                f"orientations: {len(self.leaf_orientations)}."
+            )
+
     # Hidden parameters, initialised during post-init
     # -- Leaf area index of the created canopy. Used only to display information
     #    about the object.
@@ -346,60 +395,73 @@ class HomogeneousDiscreteCanopy(Canopy):
     # -- Number of leaves in the canopy. Used only to display information about
     #    the object.
     _n_leaves = attr.ib(default=None, init=False)
-    _size = attr.ib(default=None, init=False)
-
-    @property
-    def size(self):
-        return self._size
 
     def __str__(self):
-        height = self._size[2]
+        height = self.size[2]
         # fmt: off
-        return f"HomogeneousDiscreteCanopy:\n" \
-               f"    Canopy height:      {height.magnitude} {height.units}\n" \
-               f"    LAI:                {self._lai}\n" \
-               f"    Number of leaves:   {self._n_leaves}\n" \
-               f"    Leaf reflectance:   {self.leaf_reflectance}\n" \
-               f"    Leaf transmittance: {self.leaf_transmittance}"
-        # fmt: on
+        return (
+            f"HomogeneousDiscreteCanopy:\n"
+            f"    Canopy height:      {height.magnitude} {height.units}\n"
+            f"    LAI:                {self._lai}\n"
+            f"    Number of leaves:   {self._n_leaves}\n"
+            f"    Leaf reflectance:   {self.leaf_reflectance}\n"
+            f"    Leaf transmittance: {self.leaf_transmittance}"
+        )
+        # fmt:on
 
     def __attrs_post_init__(self):
 
-        # check for parameter consistency
-        assert len(self.leaf_positions) == len(self.leaf_orientations)
-
-        minx = 0 * ureg.m
-        maxx = 0 * ureg.m
-        miny = 0 * ureg.m
-        maxy = 0 * ureg.m
-        minz = 0 * ureg.m
-        maxz = 0 * ureg.m
-        for pos in self.leaf_positions:
-
-            if pos[0] < minx:
-                minx = pos[0]
-            if pos[0] > maxx:
-                maxx = pos[0]
-            if pos[1] < miny:
-                miny = pos[1]
-            if pos[1] > maxy:
-                maxy = pos[1]
-            if pos[2] < minz:
-                minz = pos[2]
-            if pos[2] > maxz:
-                maxz = pos[2]
-
-        self._size = [
-            abs(maxx - minx).m_as(ureg.m),
-            abs(maxy - miny).m_as(ureg.m),
-            abs(maxz - minz).m_as(ureg.m),
-        ] * ureg.m
         leaf_area = (
             np.pi * self.leaf_radius * self.leaf_radius * len(self.leaf_positions)
         )
-        self._lai = leaf_area / (self._size[0] * self._size[1])
+        self._lai = leaf_area / (self.size[0] * self.size[1])
 
         self._n_leaves = len(self.leaf_positions)
+
+    def bsdfs(self):
+        # fmt: off
+        return {
+            f"bsdf_{self.id}":
+                {
+                    "type":
+                        "bilambertian",
+                    "reflectance":
+                        self.leaf_reflectance.kernel_dict()["spectrum"],
+                    "transmittance":
+                        self.leaf_transmittance.kernel_dict()["spectrum"],
+                },
+        }
+        # fmt: on
+
+    def shapes(self, ref=True):
+        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+
+        kdu_length = kdu.get("length")
+
+        shapes_dict = {f"shape_{self.id}": {"type": "shapegroup",}}
+
+        if ref:
+            bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
+        else:
+            bsdf = self.bsdfs()[f"bsdf_{self.id}"]
+
+        radius = self.leaf_radius.to(kdu_length).magnitude
+        for i in range(len(self.leaf_positions)):
+            position_mag = self.leaf_positions[i].to(kdu_length).magnitude
+            normal = self.leaf_orientations[i]
+            to_world = ScalarTransform4f.look_at(
+                origin=position_mag,
+                target=position_mag + normal,
+                up=np.cross(position_mag, normal),
+            ) * ScalarTransform4f.scale(ScalarVector3f(radius, radius, 1))
+
+            shapes_dict[f"shape_{self.id}"][f"leaf_{i}"] = {
+                "type": "disk",
+                "bsdf": bsdf,
+                "to_world": to_world,
+            }
+
+        return shapes_dict
 
     @classmethod
     @ureg.wraps(
@@ -490,6 +552,11 @@ class HomogeneousDiscreteCanopy(Canopy):
             Total number of leaves to generate. If ``size`` is set, it will override
             this parameter. Default: 4000
 
+        Parameter ``center_position`` (list[float]):
+            Three dimensional position of the canopy. Default: [0, 0, 0]m.
+
+            Unit-enabled field (default units: cdu[length])
+
         Parameter ``hdo`` (float):
             Mean horizontal distance between leaves. If ``size`` is set, it will
             override this parameter. Default: 1.
@@ -553,14 +620,12 @@ class HomogeneousDiscreteCanopy(Canopy):
             leaf_radius=leaf_radius,
             leaf_positions=positions,
             leaf_orientations=orientations,
+            size=size,
         )
 
     @classmethod
-    def from_file(
-        cls,
-        file_path,
-        leaf_reflectance=0.5,
-        leaf_transmittance=0.5,
+    def from_rami(
+        cls, file_path, leaf_reflectance=0.5, leaf_transmittance=0.5, size=[0, 0, 0]
     ):
         """
         This method allows construction of the Canopy from a text file, specifying
@@ -616,7 +681,7 @@ class HomogeneousDiscreteCanopy(Canopy):
                 orientations_.append(normal)
 
         positions = np.array(positions_) * ureg.m
-        orientations = np.array(orientations_) * ureg.dimensionless
+        orientations = np.array(orientations_)
 
         return cls(
             leaf_reflectance=leaf_reflectance,
@@ -624,45 +689,60 @@ class HomogeneousDiscreteCanopy(Canopy):
             leaf_radius=radius,
             leaf_positions=positions,
             leaf_orientations=orientations,
+            size=size,
         )
 
+    @classmethod
+    def from_dict(cls, d):
+        """Create from a dictionary. This class method will additionally
+        pre-process the passed dictionary to merge any field with an
+        associated ``"_units"`` field into a :class:`pint.Quantity` container.
+
+        Since the class can be instantiated by either passing a file that
+        specifies the locations and orientations of leaves or by passing
+        parameters for a procedural generation of these locations and
+        orientations, this method also selects the proper instantiation method.
+        If the ``file_path`` parameter is set, instantiation from this file
+        will be performed. Otherwise procedural generation of the canopy
+        will be chosen.
+
+        Parameter ``d`` (dict):
+            Configuration dictionary used for initialisation.
+
+        Returns → wrapped_cls:
+            Created object.
+        """
+
+        # Pre-process dict: apply units to unit-enabled fields
+        d_copy = copy(d)
+
+        for field in cls._fields_supporting_units():
+            # Fetch user-specified unit if any
+            try:
+                field_units = d_copy.pop(f"{field}_units")
+            except KeyError:
+                # If no unit is specified, don't attempt conversion and let the
+                # constructor take care of it
+                continue
+
+            # If a unit is found, try to apply it
+            # Bonus: if a unit field *and* a quantity were found, we convert the
+            # quantity to the unit
+            field_value = d_copy[field]
+            d_copy[field] = ensure_units(field_value, field_units, convert=True)
+
+        if "file_path" in d_copy:
+            return cls.from_rami(**d_copy)
+        else:
+            return cls.from_parameters(**d_copy)
+
     def kernel_dict(self, ref=True):
-        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+        kernel_dict = {}
 
-        kdu_length = kdu.get("length")
+        if not ref:
+            kernel_dict[self.id] = self.shapes(ref=False)[f"shape_{self.id}"]
+        else:
+            kernel_dict[f"bsdf_{self.id}"] = self.bsdfs()[f"bsdf_{self.id}"]
+            kernel_dict[self.id] = self.shapes(ref=True)[f"shape_{self.id}"]
 
-        # fmt: off
-        return_dict = {
-            "leaf_bsdf":
-                {
-                    "type":
-                        "bilambertian",
-                    "reflectance":
-                        self.leaf_reflectance.kernel_dict()["spectrum"],
-                    "transmittance":
-                        self.leaf_transmittance.kernel_dict()["spectrum"],
-                },
-        }
-
-        radius = self.leaf_radius.to(kdu_length).magnitude
-        for i in range(len(self.leaf_positions)):
-            position_mag = self.leaf_positions[i].to(kdu_length).magnitude
-            normal = self.leaf_orientations[i]
-            to_world = (
-                ScalarTransform4f.look_at(
-                    origin=position_mag,
-                    target=position_mag + normal,
-                    up=np.cross(position_mag, normal)
-                ) * ScalarTransform4f.scale(ScalarVector3f(radius, radius, 1))
-            )
-            return_dict[f"leaf_{i}"] = {
-                "type": "disk",
-                "bsdf": {
-                    "type": "ref",
-                    "id": "leaf_bsdf"
-                },
-                "to_world": to_world
-            }
-
-        return return_dict
-        # fmt: on
+        return kernel_dict
