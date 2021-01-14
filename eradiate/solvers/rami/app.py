@@ -22,7 +22,6 @@ from ...scenes.integrators import (
 )
 from ...scenes.measure import (DistantMeasure, MeasureFactory, PerspectiveCameraMeasure)
 from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
-from ...util import plot as ertplt
 from ...util import xarray as ertxr
 from ...util.exceptions import ModeError
 from ...util.frame import direction_to_angles, square_to_uniform_hemisphere
@@ -294,7 +293,6 @@ class RamiSolverApp:
         cos_sza = np.cos(illumination.zenith.to(ureg.rad).magnitude)
         saa = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
         wavelength = ensure_array(eradiate.mode.wavelength.magnitude, dtype=float)
-        # TODO: This will raise if illumination is not directional; handle that
 
         # -- TODO: Format results
         sensor_query = Query()
@@ -425,29 +423,27 @@ class RamiSolverApp:
             Filename prefix for plot files. A plot file is create for each
             computed quantity of each measure.
         """
-        for measure_id, result in self.results.items():
-            # Is the data hemispherical or plane?
-            dataset_spec = ertxr.DatasetSpec(coord_specs="angular_observation")
-            try:
-                result.ert.validate_metadata(dataset_spec)
-                is_hemispherical = True
-            except ValueError:
-                is_hemispherical = False
+        for measure in self.scene.measures:
+            measure_id = measure.id
+            result = self.results[measure_id]
 
-            for quantity, data in result.items():
-                if quantity == "irradiance":
-                    continue
+            if isinstance(measure, DistantMeasure):
+                for quantity in result.data_vars:
+                    if quantity == "irradiance":
+                        continue
 
-                if is_hemispherical:
-                    data.squeeze().ert.plot_pcolormesh_polar(r="vza", theta="vaa")
-                    ax = plt.gca()
-                    ertplt.remove_xylabels(ax)
+                    data = result[quantity]
 
-                else:
-                    data.squeeze().plot()
+                    if data.shape[2] == 1:  # Only a plane is covered
+                        data.squeeze().plot(x="vza")
+                    else:
+                        data.squeeze().plot.pcolormesh()
 
-                fname_plot = os.path.abspath(f"{fname_prefix}_{measure_id}_{quantity}.png")
-                os.makedirs(os.path.dirname(fname_plot), exist_ok=True)
-                print(f"Saving plot to {fname_plot}")
-                plt.savefig(fname_plot, bbox_inches="tight")
-                plt.close()
+                    fname_plot = os.path.abspath(f"{fname_prefix}_{measure_id}_{quantity}.png")
+                    os.makedirs(os.path.dirname(fname_plot), exist_ok=True)
+                    print(f"Saving plot to {fname_plot}")
+                    plt.savefig(fname_plot, bbox_inches="tight")
+                    plt.close()
+
+            else:
+                raise NotImplementedError
