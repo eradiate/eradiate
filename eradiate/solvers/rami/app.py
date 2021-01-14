@@ -12,16 +12,29 @@ from tinydb.storages import MemoryStorage
 
 import eradiate.kernel
 from ..onedim.runner import OneDimRunner
-from ...scenes.biosphere import (BiosphereFactory, Canopy)
+from ...scenes.biosphere import (
+    BiosphereFactory,
+    Canopy
+)
 from ...scenes.core import KernelDict, SceneElement
 from ...scenes.illumination import (
-    DirectionalIllumination, Illumination, IlluminationFactory
+    DirectionalIllumination,
+    IlluminationFactory
 )
 from ...scenes.integrators import (
-    Integrator, IntegratorFactory, PathIntegrator
+    Integrator,
+    IntegratorFactory,
+    PathIntegrator
 )
-from ...scenes.measure import (DistantMeasure, MeasureFactory, PerspectiveCameraMeasure)
-from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
+from ...scenes.measure import (
+    DistantMeasure,
+    MeasureFactory
+)
+from ...scenes.surface import (
+    LambertianSurface,
+    Surface,
+    SurfaceFactory
+)
 from ...util import xarray as ertxr
 from ...util.exceptions import ModeError
 from ...util.frame import direction_to_angles, square_to_uniform_hemisphere
@@ -37,13 +50,6 @@ class RamiScene(SceneElement):
 
     .. rubric:: Constructor arguments / instance attributes
 
-    ``atmosphere`` (:class:`.Atmosphere` or dict):
-        Atmosphere specification.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`AtmosphereFactory.convert() <.AtmosphereFactory.convert>`.
-        Default: :class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`.
-
     ``surface`` (:class:`.Surface` or dict):
         Surface specification.
         This parameter can be specified as a dictionary which will be
@@ -51,14 +57,18 @@ class RamiScene(SceneElement):
         :meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`.
         Default: :class:`LambertianSurface() <.LambertianSurface>`.
 
-    ``biosphere`` (:class:`.Biosphere` or dict):
-        Biosphere specification.
+        .. note::
+
+           Surface size will be overridden using canopy parameters.
+
+    ``canopy`` (:class:`.Canopy` or dict):
+        Canopy specification.
         This parameter can be specified as a dictionary which will be
         interpreted by
         :meth:`BiosphereFactory.convert() <.BiosphereFactory.convert>`
         Default: :class:`HomogeneousDiscreteCanopy() <.HomogeneousDiscreteCanopy>`.
 
-    ``illumination`` (:class:`.Illumination` or dict):
+    ``illumination`` (:class:`.DirectionalIllumination` or dict):
         Illumination specification.
         This parameter can be specified as a dictionary which will be
         interpreted by
@@ -71,16 +81,20 @@ class RamiScene(SceneElement):
         :meth:`MeasureFactory.convert() <.MeasureFactory.convert>`.
         Optionally, a single :class:`.Measure` or dictionary specification
         may be passed and will automatically be wrapped into a list.
-        Allowed value types: :class:`TOAHsphereMeasure`,
-        :class:`TOAPPlaneMeasure`.
-        Default: :class:`TOAHsphereMeasure() <TOAHsphereMeasure>`.
+        Allowed value types: :class:`DistantMeasure`.
+        Default: :class:`DistantMeasure() <DistantMeasure>`.
+
+        .. note::
+
+           Target zone will be overridden using canopy parameters if unset.
+           If no canopy is specified, surface size parameters will be used.
 
     ``integrator`` (:class:`.Integrator` or dict):
         Monte Carlo integration algorithm specification.
         This parameter can be specified as a dictionary which will be
         interpreted by
         :meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`.
-        Default: :class:`VolPathIntegrator() <.VolPathIntegrator>`.
+        Default: :class:`PathIntegrator() <.PathIntegrator>`.
     """
 
     surface = attr.ib(
@@ -98,7 +112,7 @@ class RamiScene(SceneElement):
     illumination = attr.ib(
         factory=DirectionalIllumination,
         converter=IlluminationFactory.convert,
-        validator=attr.validators.instance_of(Illumination)
+        validator=attr.validators.instance_of(DirectionalIllumination)
     )
 
     measures = attr.ib(
@@ -113,8 +127,7 @@ class RamiScene(SceneElement):
     def _measures_validator(self, attribute, value):
         for element in value:
             # Check measure type
-            if not isinstance(element,
-                              (DistantMeasure, PerspectiveCameraMeasure)):
+            if not isinstance(element, DistantMeasure):
                 raise TypeError(
                     f"while validating {attribute.name}: must be a list of "
                     f"objects of one of the following types: "
@@ -142,24 +155,25 @@ class RamiScene(SceneElement):
 
         # Process measures
         for measure in self.measures:
-            # Override ray target location
+            # Override ray target location if relevant
             if isinstance(measure, DistantMeasure):
-                if self.canopy is not None:
-                    measure.target = dict(
-                        type="rectangle",
-                        xmin=-0.5 * self.canopy.size[0],
-                        xmax=0.5 * self.canopy.size[0],
-                        ymin=-0.5 * self.canopy.size[1],
-                        ymax=0.5 * self.canopy.size[1],
-                    )
-                else:
-                    measure.target = dict(
-                        type="rectangle",
-                        xmin=-0.5 * self.surface.width,
-                        xmax=0.5 * self.surface.width,
-                        ymin=-0.5 * self.surface.width,
-                        ymax=0.5 * self.surface.width,
-                    )
+                if measure.target is None:
+                    if self.canopy is not None:
+                        measure.target = dict(
+                            type="rectangle",
+                            xmin=-0.5 * self.canopy.size[0],
+                            xmax=0.5 * self.canopy.size[0],
+                            ymin=-0.5 * self.canopy.size[1],
+                            ymax=0.5 * self.canopy.size[1],
+                        )
+                    else:
+                        measure.target = dict(
+                            type="rectangle",
+                            xmin=-0.5 * self.surface.width,
+                            xmax=0.5 * self.surface.width,
+                            ymin=-0.5 * self.surface.width,
+                            ymax=0.5 * self.surface.width,
+                        )
 
         # Populate measure registry
         for measure in self.measures:
@@ -205,9 +219,6 @@ class RamiSolverApp:
         key and holds a value consisting of a :class:`~xarray.Dataset` holding
         one variable per physical quantity computed by the measure.
     """
-    # Class attributes
-    SUPPORTED_MODES = frozenset({"mono", "mono_double"})
-
     # Instance attributes
     scene = attr.ib(
         factory=RamiScene,
@@ -221,6 +232,8 @@ class RamiSolverApp:
     _kernel_dict = attr.ib(default=None, init=False, repr=False)  # Cached kernel dictionary
 
     _runner = attr.ib(default=None, init=False, repr=False)  # Runner
+
+    _raw_results = attr.ib(default=None, init=False, repr=False)  # Raw runner output
 
     def __attrs_post_init__(self):
         # Initialise runner
@@ -258,11 +271,9 @@ class RamiSolverApp:
                              "dictionary")
 
         # Select appropriate operational mode
-        if mode_id not in cls.SUPPORTED_MODES:
-            raise ValueError(f"unsupported mode type '{mode_id}' (must be one "
-                             f"of {tuple(cls.SUPPORTED_MODES)})")
-
         eradiate.set_mode(mode_id, **mode_config)
+        if not eradiate.mode.is_monochromatic():
+            raise ModeError("only monochromatic modes are supported")
 
         # Create scene
         scene = RamiScene(**solver_config)
@@ -270,31 +281,44 @@ class RamiSolverApp:
         # Instantiate class
         return cls.new(scene=scene)
 
-    def run(self):
-        """Perform radiative transfer simulation and post-process results."""
+    def process(self):
+        """Run simulation on the configured scene. Raw results yielded by the
+        encapsulated runner are stored in ``self._raw_results``.
 
-        def _add_missing_dims(x, dims):
-            """Local function; add missing dimensions to numpy array."""
-            for dim in dims:
-                x = np.expand_dims(x, dim)
-            return x
+        .. seealso:: :meth:`postprocess`, :meth:`run`
+        """
+        self._raw_results = None  # Unset raw results for error detection
+        self._raw_results = self._runner.run()
 
-        # Run simulation
-        runner_results = self._runner.run()
+    def postprocess(self):
+        """Post-process raw results stored in hidden attribute
+        ``self._raw_results`` after successful execution of :meth:`process`.
+        Post-processed results are stored in ``self.results``.
 
-        # Post-processing
-        # TODO: put that in a separate method
+        Raises → ValueError:
+            If ``self._raw_results`` is ``None``, *i.e.* if :meth:`process`
+            has not been successfully run.
+
+        .. seealso:: :meth:`process`, :meth:`run`
+        """
+        if self._raw_results is None:
+            raise ValueError(
+                f"raw results are unset: simulation must first be completed "
+                f"using {self.__class__.__name__}.process()"
+            )
+
         scene = self.scene
-        # -- Ensure that scalar values used as xarray coordinates are arrays
+
+        # Ensure that scalar values used as xarray coordinates are arrays
         illumination = scene.illumination
 
-        # -- Collect illumination parameters
+        # Collect illumination parameters
         sza = ensure_array(illumination.zenith.to(ureg.deg).magnitude, dtype=float)
         cos_sza = np.cos(illumination.zenith.to(ureg.rad).magnitude)
         saa = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
         wavelength = ensure_array(eradiate.mode.wavelength.magnitude, dtype=float)
 
-        # -- TODO: Format results
+        # Format results
         sensor_query = Query()
         for measure in scene.measures:
             # Collect results from sensors associated to processed measure
@@ -302,8 +326,14 @@ class RamiSolverApp:
             entries = scene.measure_registry.search(sensor_query.measure_id == measure_id)
             sensor_ids = [db_entry["sensor_id"] for db_entry in entries]
             sensor_spps = [db_entry["sensor_spp"] for db_entry in entries]
-            data = measure.postprocess_results(sensor_ids, sensor_spps, runner_results)
-            data = _add_missing_dims(data, [0, 1, 4])
+            data = measure.postprocess_results(sensor_ids, sensor_spps, self._raw_results)
+
+            if len(data.shape) != 2:
+                raise ValueError(f"raw result array has incorrect shape "
+                                 f"{data.shape}")
+
+            # Add missing dimensions to raw result array
+            data = np.expand_dims(data, [0, 1, -1])
 
             # Create an empty dataset to store results
             ds = xr.Dataset()
@@ -400,6 +430,13 @@ class RamiSolverApp:
             ds.ert.normalize_metadata(dataset_spec)
 
             self.results[measure_id] = ds
+
+    def run(self):
+        """Perform radiative transfer simulation and post-process results.
+        Essentially chains :meth:`process` and :meth:`postprocess`.
+        """
+        self.process()
+        self.postprocess()
 
     def save_results(self, fname_prefix):
         """Save results to netCDF files.
