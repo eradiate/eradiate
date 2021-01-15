@@ -161,7 +161,7 @@ Configure CMake for compilation:
 
    cmake -GNinja -DPYTHON_EXECUTABLE=$(python3 -c "import sys; print(sys.executable)") ..
 
-Inspect CMake logs to check if clang is used as the C++ compiler. Search for
+Inspect CMake output to check if clang is used as the C++ compiler. Search for
 lines starting with
 
 .. code-block::
@@ -207,6 +207,14 @@ Search for lines starting with:
    .. code-block:: bash
 
       conda activate eradiate
+
+When CMake is successfully configured, you can compile the code:
+
+.. code-block:: bash
+
+   ninja
+
+The compilation process can last up to around half an hour on old machines.
 
 .. _sec-getting_started-quickstart-data_files:
 

@@ -46,5 +46,5 @@ def test_file_synchronicity(condafile, pipfile):
 
     for key, value in yamldict.items():
         assert key in txtdict, f"{key} is present in conda deps but missing in pip deps."
-        assert yamldict[key] == txtdict[key], f"Versions not matching: conda version is " \
+        assert yamldict[key] == txtdict[key], f"Versions not matching for '{key}': conda version is " \
                                               f"{yamldict[key]}, pip version is {txtdict[key]}"
