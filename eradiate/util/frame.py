@@ -63,8 +63,8 @@ def direction_to_angles(wi):
     return [theta, phi]
 
 
-@ureg.wraps(ret=None, args=(None, "rad", "rad"), strict=False)
-def spherical_to_cartesian(r, theta, phi):
+@ureg.wraps(ret=None, args=(None, "rad", "rad", None), strict=False)
+def spherical_to_cartesian(r, theta, phi, origin=np.zeros((3,))):
     r"""Convert spherical coordinates to cartesian coordinates
 
     Parameter ``r`` (float):
@@ -78,21 +78,24 @@ def spherical_to_cartesian(r, theta, phi):
         Azimuth angle coordinate [radian].
         Convention: :math:`2 \pi` corresponds to the X axis.
 
+    Parameter ``origin`` (array):
+        Shifts the center point of the coordinate system.
+
     Returns → array[float]:
         Cartesian coordinates x, y, z.
     """
 
     if isinstance(r, pint.Quantity):
         return np.array([
-            r.magnitude * np.sin(theta) * np.cos(phi),
-            r.magnitude * np.sin(theta) * np.sin(phi),
-            r.magnitude * np.cos(theta)
+            r.magnitude * np.sin(theta) * np.cos(phi) + origin[0],
+            r.magnitude * np.sin(theta) * np.sin(phi) + origin[1],
+            r.magnitude * np.cos(theta) + origin[2]
         ]) * r.units
     else:
         return np.array([
-            r * np.sin(theta) * np.cos(phi),
-            r * np.sin(theta) * np.sin(phi),
-            r * np.cos(theta)
+            r * np.sin(theta) * np.cos(phi) + origin[0],
+            r * np.sin(theta) * np.sin(phi) + origin[1],
+            r * np.cos(theta) + origin[2]
         ])
 
 

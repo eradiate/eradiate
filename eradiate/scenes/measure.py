@@ -23,11 +23,11 @@ from ..util.attrs import (
     validator_is_number,
     validator_is_positive,
     validator_is_vector3,
-    validator_quantity
+    validator_quantity,
 )
 from ..util.collections import is_vector3
 from ..util.factory import BaseFactory
-from ..util.frame import angles_to_direction, spherical_to_cartesian
+from ..util.frame import angles_to_direction
 from ..util.misc import always_iterable
 from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
@@ -84,6 +84,7 @@ class MeasureFactory(BaseFactory):
        .. factorytable::
           :factory: MeasureFactory
     """
+
     _constructed_type = Measure
     registry = {}
 
@@ -157,14 +158,17 @@ class TargetPoint(Target):
 
         Unit-enabled field (default: cdu[length]).
     """
+
     # Target point in CDU
     xyz = attrib_quantity(units_compatible=cdu.generator("length"))
 
     @xyz.validator
     def _xyz_validator(self, attribute, value):
         if not is_vector3(value):
-            raise ValueError(f"while validating {attribute.name}: must be a "
-                             f"3-element vector of numbers")
+            raise ValueError(
+                f"while validating {attribute.name}: must be a "
+                f"3-element vector of numbers"
+            )
 
     def kernel_item(self):
         """Return kernel item."""
@@ -201,6 +205,7 @@ class TargetRectangle(Target):
         Unit-enabled field (default: cdu[length]).
     """
 
+    # fmt: off
     # Corners of an axis-aligned rectangle in CDU
     xmin = attrib_quantity(
         converter=converter_quantity(float),
@@ -222,20 +227,25 @@ class TargetRectangle(Target):
         validator=validator_quantity(validator_is_number),
         units_compatible=cdu.generator("length")
     )
+    # fmt: on
 
     @xmin.validator
     @xmax.validator
     def _x_validator(self, attribute, value):
         if not self.xmin < self.xmax:
-            raise ValueError(f"while validating {attribute.name}: 'xmin' must "
-                             f"be lower than 'xmax")
+            raise ValueError(
+                f"while validating {attribute.name}: 'xmin' must "
+                f"be lower than 'xmax"
+            )
 
     @ymin.validator
     @ymax.validator
     def _y_validator(self, attribute, value):
         if not self.ymin < self.ymax:
-            raise ValueError(f"while validating {attribute.name}: 'ymin' must "
-                             f"be lower than 'ymax")
+            raise ValueError(
+                f"while validating {attribute.name}: 'ymin' must "
+                f"be lower than 'ymax"
+            )
 
     def kernel_item(self):
         """Return kernel item."""
@@ -249,14 +259,11 @@ class TargetRectangle(Target):
         dx = xmax - xmin
         dy = ymax - ymin
 
-        to_world = \
-            ScalarTransform4f.translate([0.5 * dx + xmin, 0.5 * dy + ymin, 0]) * \
-            ScalarTransform4f.scale([0.5 * dx, 0.5 * dy, 1])
+        to_world = ScalarTransform4f.translate(
+            [0.5 * dx + xmin, 0.5 * dy + ymin, 0]
+        ) * ScalarTransform4f.scale([0.5 * dx, 0.5 * dy, 1])
 
-        return {
-            "type": "rectangle",
-            "to_world": to_world
-        }
+        return {"type": "rectangle", "to_world": to_world}
 
 
 @MeasureFactory.register("distant")
@@ -298,6 +305,13 @@ class DistantMeasure(Measure):
     ``flip_directions`` (bool):
         If ``True``, sampled directions will be flipped. Default: False.
     """
+
+    # fmt: off
+    zenith = attrib_quantity(
+        default=ureg.Quantity(0., ureg.deg),
+        validator=validator_is_positive,
+        units_compatible=cdu.generator("angle"),
+    )
     film_resolution = attr.ib(
         default=(32, 32),
         validator=attr.validators.deep_iterable(
@@ -335,6 +349,7 @@ class DistantMeasure(Measure):
         default=None,
         converter=attr.converters.optional(bool)
     )
+    # fmt: on
 
     def sensor_info(self):
         """This method returns a tuple of sensor IDs and the corresponding SPP
@@ -366,6 +381,7 @@ class DistantMeasure(Measure):
 
         return np.reshape(data, (data.shape[0], data.shape[1]))
 
+    # fmt: off
     def kernel_dict(self, ref=True):
         result = {
             "type": "distant",
@@ -398,6 +414,7 @@ class DistantMeasure(Measure):
             result["flip_directions"] = self.flip_directions
 
         return {self.id: result}
+    # fmt: on
 
 
 @MeasureFactory.register("perspective")
@@ -406,9 +423,8 @@ class PerspectiveCameraMeasure(Measure):
     """Perspective camera scene element [:factorykey:`perspective`].
 
     This scene element is a thin wrapper around the ``perspective`` sensor
-    kernel plugin. It positions a perspective camera based on the a pair of
-    zenith and azimuth angles, following the convention used in Earth
-    observation. The film is a square.
+    kernel plugin. It positions a perspective camera based on a set of vectors,
+    specifying the origin, viewing direction and 'up' direction of the camera.
 
     .. rubric:: Constructor arguments / instance attributes
 
@@ -418,54 +434,53 @@ class PerspectiveCameraMeasure(Measure):
 
         Unit-enabled field (default: cdu[length]).
 
-    ``zenith`` (float):
-        Zenith angle. Default value: 0 deg.
-
-        Unit-enabled field (default: cdu[angle]).
-
-    ``azimuth`` (float):
-        Azimuth angle value. Default value: 0 deg.
-
-        Unit-enabled field (default: cdu[angle]).
-
-    ``distance`` (float):
-        Distance from the ``target`` point to the camera.
-        Default: 1 km.
+    ``origin`` (array[float]):
+        A 3-element vector specifying the position of the camera.
+        Default: [1, 1, 1] m.
 
         Unit-enabled field (default: cdu[length]).
 
-    ``res`` (int):
-        Resolution of the film in pixels. Default: 64.
+    ``up`` (array[float]):
+        A 3-element vector specifying the up direction of the camera.
+        This vector must be different from the camera's viewing direction,
+        which is given by ``target - origin``.
+        Default: [0, 0, 1].
+
+    ``film_width`` (int):
+        Horizontal resolution of the film in pixels. Default: 64.
+
+    ``film_height`` (int):
+        Vertical resolution of the film in pixels. Default: 64.
 
     ``spp`` (int):
         Number of samples per pixel. Default: 32.
     """
 
+    # fmt: off
     target = attrib_quantity(
         default=ureg.Quantity([0, 0, 0], ureg.m),
         validator=validator_has_len(3),
         units_compatible=cdu.generator("length"),
     )
 
-    zenith = attrib_quantity(
-        default=ureg.Quantity(0., ureg.deg),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("angle"),
-    )
-
-    azimuth = attrib_quantity(
-        default=ureg.Quantity(0., ureg.deg),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("angle"),
-    )
-
-    distance = attrib_quantity(
-        default=ureg.Quantity(1., ureg.km),
-        validator=validator_is_positive,
+    origin = attrib_quantity(
+        default=ureg.Quantity([1, 1, 1], ureg.m),
+        validator=validator_has_len(3),
         units_compatible=cdu.generator("length"),
     )
 
-    res = attr.ib(
+    up = attr.ib(
+        default=[0, 0, 1],
+        validator=validator_has_len(3)
+    )
+
+    film_width = attr.ib(
+        default=64,
+        converter=int,
+        validator=validator_is_positive
+    )
+
+    film_height = attr.ib(
         default=64,
         converter=int,
         validator=validator_is_positive
@@ -476,6 +491,27 @@ class PerspectiveCameraMeasure(Measure):
         converter=int,
         validator=validator_is_positive
     )
+    # fmt: on
+
+    @target.validator
+    @origin.validator
+    def _target_origin_validator(self, attribute, value):
+        if np.all(self.target == self.origin):
+            raise ValueError(
+                f"While initializing {attribute}:"
+                f"Origin and target must not be equal,"
+                f"got target = {self.target}, origin = {self.origin}"
+            )
+
+    @up.validator
+    def _up_validator(self, attribute, value):
+        direction = self.target - self.origin
+        if np.allclose(np.cross(direction, value), 0):
+            raise ValueError(
+                f"While initializing {attribute}:"
+                f"Up direction must differ from viewing direction,"
+                f"got up = {self.up}, view direction = {direction}."
+            )
 
     def postprocess_results(self, sensor_ids, sensor_spp, results):
         """Process sensor data to extract measure results. These post-processing
@@ -505,43 +541,33 @@ class PerspectiveCameraMeasure(Measure):
         SPP levels that lead to numerical precision loss in results."""
         return [(self.id, self.spp)]
 
+    # fmt: off
     def kernel_dict(self, ref=True):
         from eradiate.kernel.core import ScalarTransform4f
 
         target = self.target.to(kdu.get("length")).magnitude
-        distance = self.distance.to(kdu.get("length")).magnitude
-        zenith = self.zenith.to("rad").magnitude
-        azimuth = self.azimuth.to("rad").magnitude
-
-        origin = spherical_to_cartesian(distance, zenith, azimuth)
-        direction = origin / np.linalg.norm(origin)
-
-        if np.allclose(origin, target):
-            raise ValueError("target is too close to the camera")
-
-        up = [np.cos(azimuth), np.sin(azimuth), 0] \
-            if np.allclose(direction, [0, 0, 1]) \
-            else [0, 0, 1]
+        origin = self.origin.to(kdu.get("length")).magnitude
 
         return {
             self.id: {
                 "type": "perspective",
                 "far_clip": 1e7,
-                "to_world": ScalarTransform4f.look_at(origin=origin, target=target, up=up),
+                "to_world": ScalarTransform4f.look_at(origin=origin, target=target, up=self.up),
                 "sampler": {
                     "type": "independent",
                     "sample_count": self.spp
                 },
                 "film": {
                     "type": "hdrfilm",
-                    "width": self.res,
-                    "height": self.res,
+                    "width": self.film_width,
+                    "height": self.film_height,
                     "pixel_format": "luminance",
                     "component_format": "float32",
                     "rfilter": {"type": "box"}
                 }
             }
         }
+    # fmt: on
 
 
 @MeasureFactory.register("radiancemeter_hsphere")
@@ -605,6 +631,7 @@ class RadianceMeterHsphereMeasure(Measure):
         Default: ``"radiancemeter_hsphere"``.
     """
 
+    # fmt: off
     zenith_res = attrib_quantity(
         default=ureg.Quantity(10., ureg.deg),
         validator=validator_is_positive,
@@ -659,15 +686,14 @@ class RadianceMeterHsphereMeasure(Measure):
 
     _zenith_angles = attr.ib(default=None, init=False)  # Set during post-init
     _azimuth_angles = attr.ib(default=None, init=False)  # Set during post-init
+    # fmt: on
 
     def __attrs_post_init__(self):
         self._zenith_angles = ureg.Quantity(
-            np.arange(0, 90., self.zenith_res.to(ureg.deg).magnitude),
-            ureg.deg
+            np.arange(0, 90.0, self.zenith_res.to(ureg.deg).magnitude), ureg.deg
         )
         self._azimuth_angles = ureg.Quantity(
-            np.arange(0, 360., self.azimuth_res.to(ureg.deg).magnitude),
-            ureg.deg
+            np.arange(0, 360.0, self.azimuth_res.to(ureg.deg).magnitude), ureg.deg
         )
 
     def postprocess_results(self, sensor_ids, sensor_spp, results):
@@ -698,13 +724,16 @@ class RadianceMeterHsphereMeasure(Measure):
         # multiply each sensor's result by its relative SPP and sum all results
         results = np.dot(sensors.transpose(), sensor_spp / spp_sum).transpose()
 
-        return np.reshape(results, (len(self._zenith_angles), len(self._azimuth_angles)))
+        return np.reshape(
+            results, (len(self._zenith_angles), len(self._azimuth_angles))
+        )
 
     def _orientation_transform(self):
         """Compute matrix that transforms vectors between object and world
         space.
         """
         from eradiate.kernel.core import Transform4f, Vector3f, Point3f
+
         origin = Point3f(self.origin.to(kdu.get("length")).magnitude)
         zenith_direction = Vector3f(self.direction)
         orientation = Vector3f(self.orientation)
@@ -722,12 +751,15 @@ class RadianceMeterHsphereMeasure(Measure):
         directions = []
         for theta in self._zenith_angles.to(ureg.rad).magnitude:
             for phi in self._azimuth_angles.to(ureg.rad).magnitude:
-                directions.append(hemisphere_transform.transform_vector(
-                    angles_to_direction(theta=theta, phi=phi))
+                directions.append(
+                    hemisphere_transform.transform_vector(
+                        angles_to_direction(theta=theta, phi=phi)
+                    )
                 )
 
-        return -np.array(directions) if self.hemisphere == "back" \
-            else np.array(directions)
+        return (
+            -np.array(directions) if self.hemisphere == "back" else np.array(directions)
+        )
 
     def sensor_info(self):
         """This method generates the sensor_id for the kernel_scene sensor
@@ -739,10 +771,14 @@ class RadianceMeterHsphereMeasure(Measure):
         corresponding SPP value. In the case of a SPP-split, none of the SPP
         values will exceed the threshold.
         """
-        if eradiate.mode.precision == eradiate.ModePrecision.SINGLE \
-                and self.spp > self._spp_max_single:
-            spps = [self._spp_max_single
-                    for i in range(int(self.spp / self._spp_max_single))]
+        if (
+            eradiate.mode.precision == eradiate.ModePrecision.SINGLE
+            and self.spp > self._spp_max_single
+        ):
+            spps = [
+                self._spp_max_single
+                for i in range(int(self.spp / self._spp_max_single))
+            ]
             if self.spp % self._spp_max_single:
                 spps.append(self.spp % self._spp_max_single)
 
@@ -751,6 +787,7 @@ class RadianceMeterHsphereMeasure(Measure):
         else:
             return [(self.id, self.spp)]
 
+    # fmt: off
     def kernel_dict(self, **kwargs):
         directions = self._directions()
         origin = always_iterable(self.origin.to(kdu.get("length")).magnitude)
@@ -782,6 +819,7 @@ class RadianceMeterHsphereMeasure(Measure):
             kernel_dict[sensor_id] = sensor_dict
 
         return kernel_dict
+    # fmt: on
 
 
 @attr.s
@@ -838,6 +876,8 @@ class RadianceMeterPlaneMeasure(Measure):
         Number of samples per (zenith, azimuth) pair.
         Default: 32.
     """
+
+    # fmt: off
     zenith_res = attrib_quantity(
         default=ureg.Quantity(10., ureg.deg),
         validator=validator_is_positive,
@@ -886,16 +926,13 @@ class RadianceMeterPlaneMeasure(Measure):
 
     _zenith_angles = attr.ib(default=None, init=False)  # Set during post-init
     _azimuth_angles = attr.ib(default=None, init=False)  # Set during post-init
+    # fmt: on
 
     def __attrs_post_init__(self):
         self._zenith_angles = ureg.Quantity(
-            np.arange(0, 90., self.zenith_res.to(ureg.deg).magnitude),
-            ureg.deg
+            np.arange(0, 90.0, self.zenith_res.to(ureg.deg).magnitude), ureg.deg
         )
-        self._azimuth_angles = ureg.Quantity(
-            np.array([0, 180]),
-            ureg.deg
-        )
+        self._azimuth_angles = ureg.Quantity(np.array([0, 180]), ureg.deg)
 
     def postprocess_results(self, sensor_ids, sensor_spps, runner_results):
         """This method reshapes the 1D results returned by the
@@ -933,6 +970,7 @@ class RadianceMeterPlaneMeasure(Measure):
     def _orientation_transform(self):
         """Compute matrix that transforms vectors between object and world space."""
         from eradiate.kernel.core import Transform4f, Point3f, Vector3f
+
         origin = Point3f(self.origin.to(kdu.get("length")).magnitude)
         zenith_direction = Vector3f(self.direction)
         orientation = Vector3f(self.orientation)
@@ -941,7 +979,9 @@ class RadianceMeterPlaneMeasure(Measure):
         if not np.any(np.cross(zenith_direction, up)):
             raise ValueError("Zenith direction and orientation must not be parallel!")
 
-        return Transform4f.look_at(origin, [sum(x) for x in zip(origin, zenith_direction)], up)
+        return Transform4f.look_at(
+            origin, [sum(x) for x in zip(origin, zenith_direction)], up
+        )
 
     def _directions(self):
         """Generate the array of direction vectors to configure the kernel
@@ -953,12 +993,15 @@ class RadianceMeterPlaneMeasure(Measure):
         directions = []
         for theta in self._zenith_angles.to(ureg.rad).magnitude:
             for phi in self._azimuth_angles.to(ureg.rad).magnitude:
-                directions.append(hemisphere_transform.transform_vector(
-                    angles_to_direction(theta=theta, phi=phi))
+                directions.append(
+                    hemisphere_transform.transform_vector(
+                        angles_to_direction(theta=theta, phi=phi)
+                    )
                 )
 
-        return -np.array(directions) if self.hemisphere == "back" \
-            else np.array(directions)
+        return (
+            -np.array(directions) if self.hemisphere == "back" else np.array(directions)
+        )
 
     def sensor_info(self):
         """This method generates the sensor_id for the kernel_scene sensor
@@ -970,10 +1013,14 @@ class RadianceMeterPlaneMeasure(Measure):
         corresponding SPP value. In the case of a SPP-split, none of the SPP
         values will exceed the threshold.
         """
-        if eradiate.mode.precision == eradiate.ModePrecision.SINGLE \
-                and self.spp > self._spp_max_single:
-            spps = [self._spp_max_single
-                    for i in range(int(self.spp / self._spp_max_single))]
+        if (
+            eradiate.mode.precision == eradiate.ModePrecision.SINGLE
+            and self.spp > self._spp_max_single
+        ):
+            spps = [
+                self._spp_max_single
+                for i in range(int(self.spp / self._spp_max_single))
+            ]
             if self.spp % self._spp_max_single:
                 spps.append(self.spp % self._spp_max_single)
 
@@ -982,6 +1029,7 @@ class RadianceMeterPlaneMeasure(Measure):
         else:
             return [(self.id, self.spp)]
 
+    # fmt: off
     def kernel_dict(self, **kwargs):
         directions = self._directions()
         origin = always_iterable(self.origin.to(kdu.get("length")).magnitude)
@@ -1013,3 +1061,4 @@ class RadianceMeterPlaneMeasure(Measure):
             kernel_dict[sensor_id] = sensor_dict
 
         return kernel_dict
+    # fmt: on

@@ -112,6 +112,17 @@ def test_perspective(mode_mono):
     d = PerspectiveCameraMeasure()
     assert KernelDict.empty().add(d).load() is not None
 
+    # origin and target cannot be the same
+    for point in [[0, 0, 0], [1, 1, 1], [-1, 0.5, 1.3333]]:
+        with pytest.raises(ValueError):
+            d = PerspectiveCameraMeasure(origin=point, target=point)
+
+    # up must differ from the camera's viewing direction
+    with pytest.raises(ValueError):
+        d = PerspectiveCameraMeasure(origin=[0, 1, 0],
+                                     target=[1, 0, 0],
+                                     up=[1, -1, 0])
+
 
 def test_radiancemeter_hsphere_construct(mode_mono):
     # Test constructor
