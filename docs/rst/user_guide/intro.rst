@@ -9,6 +9,7 @@ User guide
    ../../notebooks/tutorials/quick_overview/quick_overview.ipynb
    basic_concepts
    onedim_solver_app
+   ../../notebooks/tutorials/rami_solver_app/rami_solver_app.ipynb
    ../../notebooks/tutorials/xarray/xarray.ipynb
    package_structure
    data_guide
