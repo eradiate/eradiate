@@ -101,9 +101,9 @@ def test_make_dataarray():
     )
 
     assert da.coords["vza"].attrs == {
-        "standard_name": "sensor_zenith_angle",
+        "standard_name": "viewing_zenith_angle",
         "units": "deg",
-        "long_name": "sensor zenith angle"
+        "long_name": "viewing zenith angle"
     }
 
 
@@ -155,9 +155,9 @@ def test_validate_metadata(dataarray_without_metadata):
     coord_spec = CoordSpecRegistry.get("vza")
     attrs = validate_metadata(dataarray.vza, coord_spec, normalize=True)
     assert attrs == {
-        "standard_name": "sensor_zenith_angle",
+        "standard_name": "viewing_zenith_angle",
         "units": "deg",
-        "long_name": "sensor zenith angle"
+        "long_name": "viewing zenith angle"
     }
 
 
