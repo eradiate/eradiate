@@ -24,8 +24,18 @@ runs and collect results.
 What can I do with Eradiate
 ---------------------------
 
+Perform monochromatic simulations.
+    Eradiate simulates radiative transfer for a single wavelength between 280
+    and 2400 nm.
+
 Perform simulations on one-dimensional scenes.
-    Currently, Eradiate supports simulations on one-dimensional scenes
-    consisting of a flat surface and an atmosphere.
+    Eradiate supports simulations on 3D scenes carefully designed to produce
+    results similar to what we would get with 1D geometries. These scenes
+    consist of a flat surface underneath a cloud-free and aerosol-free
+    atmosphere.
+
+Perform simulations on three-dimensional scenes.
+    Eradiate supports simulations on 3D scenes consisting of a vegetated ground
+    patch with no atmosphere above it.
 
 *More features are coming soon!*
