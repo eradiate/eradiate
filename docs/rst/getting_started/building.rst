@@ -65,8 +65,8 @@ series of flags:
 
 .. _sec-getting_started-building-python-conda:
 
-Setting up Conda manually
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting up a Conda environment manually
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Eradiate requires a recent version of Python (at least **3.6**). A Conda
 environment file is provided in the ``resources/deps/`` directory and can be
@@ -81,7 +81,7 @@ Once your environment is ready, you can activate it:
 
 .. code-block:: bash
 
-    conda activate eradiate
+   conda activate eradiate
 
 .. _sec-getting_started-building-python-conda-optional:
 
@@ -127,7 +127,7 @@ Jupyter lab extensions
 Installing without Conda
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-We provide requirements files for use with pip, for the basic and developer
+We provide pip requirement files for the main and developer
 requirements. These files can be found under ``resources/deps/requirements_pip.txt``
 and ``resources/deps/requirements_dev_pip.txt``.
 
@@ -333,7 +333,8 @@ Required data sets
 ------------------
 
 Eradiate does not automatically ship all available data sets due to their size.
-In order to successfully run all tests and tutorials, at least the ``us76_u86_4-4000_25711``
-data set must be downloaded manually and placed in the ``resources/data`` directory.
-:ref:`This section <sec-user_guide-manual_download>` explains where the data set can be aquired
-and where it must be placed exactly.
+In order to successfully run all tests and tutorials, the
+`us76_u86_4-4000_25711 data set <https://eradiate.eu/data/spectra-us76_u86_4-4000_25711.zip>`_
+must be downloaded manually and placed in the ``resources/data`` directory.
+:ref:`This section <sec-user_guide-manual_download>` explains in detail where
+the data set can be found and where it must be placed exactly.
