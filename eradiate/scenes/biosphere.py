@@ -162,7 +162,7 @@ def _create_leaf_cloud(
     """
 
     positions = np.empty((n_leaves, 3))
-    print(f"pos dims: {np.shape(positions)}")
+
     if shape_type == "cube":
         if np.allclose(cube_size, [0, 0, 0]):
             raise ValueError(
@@ -282,24 +282,16 @@ class HomogeneousDiscreteCanopy(Canopy):
 
     .. rubric:: Constructor arguments / instance attributes
 
-    ``_lai`` (float):
-        Leaf area index of the created canopy. Used only to display information
-        about the object.
-
-    ``_n_leaves`` (int):
-        Number of leaves in the canopy. Used only to display information about
-        the object.
-
     ``leaf_positions`` (list[list[float]]):
-        Lists all leaf positions as three vectors in cartesian coordinates.
+        Lists all leaf positions as 3-vectors in cartesian coordinates.
 
         Unit-enabled field (default units: cdu[length])
 
     ``leaf_orientations`` (list[list[float]]):
-        Lists all leaf orientations as three vectors in cartesian coordinates.
+        Lists all leaf orientations as 3-vectors in cartesian coordinates.
 
     ``leaf_radius`` (float):
-        Leaf radius. Default 0.1 m.
+        Leaf radius. Default: 0.1 m.
 
         Unit-enabled field (default unit: cdu[length])
 
@@ -312,21 +304,17 @@ class HomogeneousDiscreteCanopy(Canopy):
         transmittance spectrum (dimensionless). Default: 0.5.
     """
 
-    _lai = attr.ib(init=False)
-    _n_leaves = attr.ib(init=False)
-    _size = attr.ib(init=False)
-
-    leaf_positions = attrib_quantity(
-        units_compatible=cdu.generator("length"),
-    )
-
-    leaf_orientations = attr.ib(
-    )
-
     id = attr.ib(
         default="homogeneous_discrete_canopy",
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
+
+    leaf_positions = attrib_quantity(
+        default=[],
+        units_compatible=cdu.generator("length"),
+    )
+
+    leaf_orientations = attr.ib(default=[])
 
     leaf_reflectance = attr.ib(
         default=0.5,
@@ -352,7 +340,18 @@ class HomogeneousDiscreteCanopy(Canopy):
         units_compatible=cdu.generator("length"),
     )
 
-    transforms = attr.ib(default=[])
+    # Hidden parameters, initialised during post-init
+    # -- Leaf area index of the created canopy. Used only to display information
+    #    about the object.
+    _lai = attr.ib(default=None, init=False)
+    # -- Number of leaves in the canopy. Used only to display information about
+    #    the object.
+    _n_leaves = attr.ib(default=None, init=False)
+    _size = attr.ib(default=None, init=False)
+
+    @property
+    def size(self):
+        return self._size
 
     def __str__(self):
         height = self._size[2]
@@ -579,8 +578,6 @@ class HomogeneousDiscreteCanopy(Canopy):
 
             Unit-enabled field (default units: cdu[length])
         """
-
-        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"No file at {file_path} found.")
