@@ -31,13 +31,17 @@ def test_rami_scene(mode_mono):
 
     # -- Check that surface is appropriately inherited from atmosphere
     s = RamiScene(
-        canopy=HomogeneousDiscreteCanopy(size=ureg.Quantity([100, 50, 10], "m"))
+        canopy=HomogeneousDiscreteCanopy.from_parameters(
+            size=ureg.Quantity([100, 50, 10], "m")
+        )
     )
-    assert s.surface.width == ureg.Quantity(100., "m")
+    assert np.allclose(s.surface.width, ureg.Quantity(100., "m"))
 
     # -- Check that distant sensor target zone is appropriately defined
     s = RamiScene(
-        canopy=HomogeneousDiscreteCanopy(size=ureg.Quantity([100, 50, 10], "m")),
+        canopy=HomogeneousDiscreteCanopy.from_parameters(
+            size=ureg.Quantity([100, 50, 10], "m")
+        ),
         measures=DistantMeasure()
     )
     target = s.measures[0].target
