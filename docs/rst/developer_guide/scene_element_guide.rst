@@ -20,6 +20,15 @@ Writing a new scene element class
    `Pint <https://pint.readthedocs.io>`_, whose documentation is also a very
    helpful read.
 
+.. warning::
+
+   Unless specific action is taken, the default implementation of
+   :meth:`.SceneElement.from_dict` requires that all :class:`.SceneElement`
+   child classes only have keyword-argument attributes. It is therefore highly
+   recommended to define defaults for all attributes, unless your new
+   :class:`.SceneElement` provides an appropriate implementation of its
+   :meth:`~.SceneElement.from_dict` method.
+
 Scene elements, deriving from the :class:`~eradiate.scenes.core.SceneElement`
 class, are the core of Eradiate's scene generation system. They provide an
 interface to quickly and safely generate kernel scene dictionary elements
