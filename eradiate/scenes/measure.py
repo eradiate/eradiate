@@ -270,34 +270,46 @@ class DistantMeasure(Measure):
 
     .. rubric:: Constructor arguments / instance attributes
 
-    ``zenith`` (float):
-        Zenith angle. Default value: 0 deg.
-
-        Unit-enabled field (default: cdu[angle]).
-
-    ``azimuth`` (float):
-        Azimuth angle value. Default value: 0 deg.
-
-        Unit-enabled field (default: cdu[angle]).
+    ``film_resolution`` (array[int]):
+        Film resolution as a (height, width) 2-tuple.
+        If the height is set to 1, direction sampling will be restricted to a
+        plane.
+        Default: (32, 32).
 
     ``spp`` (int):
-        Number of samples. Default: 10000.
+        Number of samples per pixel. Default: 32.
 
     ``target`` (:class:`Target` or None):
         Target specification. If set to ``None``, default target point selection
         is used. The target can be specified using an array-like with 3
         elements (which will be converted to a :class:`TargetPoint`) or a
         dictionary interpreted by :meth:`Target.convert`. Default: None.
+
+    ``orientation`` (float):
+        Azimuth angle defining the orientation of the sensor in the horizontal
+        plane. Default: 0 deg.
+
+        Unit-enabled field (default: cdu[angle]).
+
+    ``direction`` (array[float]):
+        Vector orienting the hemisphere mapped by the measure as a 3-vector.
+        Default: [0, 0, 1].
+
+    ``flip_directions`` (bool):
+        If ``True``, sampled directions will be flipped. Default: False.
     """
-    direction = attr.ib(
-        default=[0, 0, 1],
-        converter=np.array,
-        validator=validator_is_vector3,
+    film_resolution = attr.ib(
+        default=(32, 32),
+        validator=attr.validators.deep_iterable(
+            member_validator=attr.validators.instance_of(int),
+            iterable_validator=validator_has_len(2)
+        ),
     )
 
-    flip_directions = attr.ib(
-        default=None,
-        converter=attr.converters.optional(bool)
+    spp = attr.ib(
+        default=32,
+        converter=int,
+        validator=validator_is_positive
     )
 
     target = attr.ib(
@@ -313,18 +325,15 @@ class DistantMeasure(Measure):
         units_compatible=cdu.generator("angle"),
     )
 
-    spp = attr.ib(
-        default=32,
-        converter=int,
-        validator=validator_is_positive
+    direction = attr.ib(
+        default=[0, 0, 1],
+        converter=np.array,
+        validator=validator_is_vector3,
     )
 
-    film_resolution = attr.ib(
-        default=(32, 32),
-        validator=attr.validators.deep_iterable(
-            member_validator=attr.validators.instance_of(int),
-            iterable_validator=validator_has_len(2)
-        ),
+    flip_directions = attr.ib(
+        default=None,
+        converter=attr.converters.optional(bool)
     )
 
     def sensor_info(self):
