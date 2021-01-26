@@ -15,6 +15,9 @@
    * - ``meftah_2017``
      - :cite:`Meftah2017SOLARISSReference`
      - [165, 3000.1]
+   * - ``solid_2017_mean``
+     - :cite:`Haberreiter2017ObservationalSolarIrradiance`
+     - [0.5, 1991.5]
    * - ``thuillier_2003``
      - :cite:`Thuillier2003SolarSpectralIrradiance`
      - [200, 2397]
@@ -45,6 +48,7 @@ class _SolarIrradianceGetter(DataGetter):
         "blackbody_sun": "spectra/solar_irradiance/blackbody_sun.nc",
         "meftah_2017": "spectra/solar_irradiance/meftah_2017.nc",
         "thuillier_2003": "spectra/solar_irradiance/thuillier_2003.nc",
+        "solid_2017_mean": "spectra/solar_irradiance/solid_2017_mean.nc",
         "whi_2008": "spectra/solar_irradiance/whi_2008_time_period_1.nc",  # alias
         "whi_2008_1": "spectra/solar_irradiance/whi_2008_time_period_1.nc",
         "whi_2008_2": "spectra/solar_irradiance/whi_2008_time_period_2.nc",

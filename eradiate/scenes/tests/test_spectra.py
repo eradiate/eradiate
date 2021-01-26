@@ -13,13 +13,13 @@ from eradiate.util.units import kernel_default_units as kdu
 
 
 def test_converter(mode_mono):
-    # Check if dicts are correctly processed
+    # Dicts are correctly processed
     s = SpectrumFactory.converter("radiance")({"type": "uniform"})
     assert s == UniformSpectrum(quantity="radiance", value=1.0)
     s = SpectrumFactory.converter("irradiance")({"type": "uniform"})
     assert s == UniformSpectrum(quantity="irradiance", value=1.0)
 
-    # Check if floats and quantities are correctly processed
+    # Floats and quantities are correctly processed
     s = SpectrumFactory.converter("radiance")(1.0)
     assert s == UniformSpectrum(quantity="radiance", value=1.0)
     s = SpectrumFactory.converter("radiance")(ureg.Quantity(1e6, "W/km^2/sr/nm"))
@@ -61,10 +61,10 @@ def test_uniform(mode_mono):
         "quantity": "radiance", "value": 1., "value_units": "W/km^2/sr/nm"
     })
 
-    # Check that produced kernel dict is valid
+    # Produced kernel dict is valid
     assert load_dict(onedict_value(s.kernel_dict())) is not None
 
-    # Check if unit scaling is properly applied
+    # Unit scaling is properly applied
     with cdu.override({"radiance": "W/m^2/sr/nm"}):
         s = UniformSpectrum(quantity="radiance", value=1.)
     with kdu.override({"radiance": "kW/m^2/sr/nm"}):
@@ -75,23 +75,28 @@ def test_uniform(mode_mono):
 def test_solar(mode_mono):
     from eradiate.kernel.core.xml import load_dict
 
-    # Check if we can instantiate the element
+    # We can instantiate the element
     s = SolarIrradianceSpectrum()
 
-    # Check that unsupported solar spectrum keywords raise
+    # Unsupported solar spectrum keywords raise
     with pytest.raises(ValueError):
         SolarIrradianceSpectrum(dataset="doesnt_exist")
 
-    # Check that produced kernel dict is valid
+    # Produced kernel dict is valid
     assert load_dict(onedict_value(s.kernel_dict())) is not None
 
-    # Check that a more detailed specification still produces a valid object
+    # A more detailed specification still produces a valid object
     s = SolarIrradianceSpectrum(scale=2.0)
     assert load_dict(onedict_value(s.kernel_dict())) is not None
 
-    # Check that the element doesn't work out of the supported spectral range
+    # Element doesn't work out of the supported spectral range
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
 
     with pytest.raises(ValueError):
         eradiate.set_mode("mono", wavelength=2400.)
         s.kernel_dict()
+
+    # solid_2017_mean dataset can be used
+    eradiate.set_mode("mono", wavelength=550.)
+    s = SolarIrradianceSpectrum(dataset="solid_2017_mean")
+    assert load_dict(onedict_value(s.kernel_dict()))
