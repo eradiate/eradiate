@@ -398,31 +398,31 @@ class RamiSolverApp:
             # Add missing metadata
             dataset_spec = ertxr.DatasetSpec(
                 convention="CF-1.8",
-                title="Top-of-atmosphere simulation results",
+                title="Top-of-canopy simulation results",
                 history=f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
                         f"data creation - {__name__}.{self.__class__}.run",
                 source=f"eradiate, version {eradiate.__version__}",
                 references="",
                 var_specs={
                     "irradiance": ertxr.VarSpec(
-                        standard_name="toa_horizontal_solar_irradiance_per_unit_wavelength",
+                        standard_name="toc_horizontal_solar_irradiance_per_unit_wavelength",
                         units=str(kdu.get("irradiance")),
-                        long_name="top-of-atmosphere horizontal spectral irradiance"
+                        long_name="top-of-canopy horizontal spectral irradiance"
                     ),
                     "lo": ertxr.VarSpec(
-                        standard_name="toa_outgoing_radiance_per_unit_wavelength",
+                        standard_name="toc_outgoing_radiance_per_unit_wavelength",
                         units=str(kdu.get("radiance")),
-                        long_name="top-of-atmosphere outgoing spectral radiance"
+                        long_name="top-of-canopy outgoing spectral radiance"
                     ),
                     "brf": ertxr.VarSpec(
-                        standard_name="toa_brf",
+                        standard_name="toc_brf",
                         units="dimensionless",
-                        long_name="top-of-atmosphere bi-directional reflectance factor"
+                        long_name="top-of-canopy bi-directional reflectance factor"
                     ),
                     "brdf": ertxr.VarSpec(
-                        standard_name="toa_brdf",
+                        standard_name="toc_brdf",
                         units="1/sr",
-                        long_name="top-of-atmosphere bi-directional reflection distribution function"
+                        long_name="top-of-canopy bi-directional reflection distribution function"
                     )
                 },
                 coord_specs="angular_observation"
