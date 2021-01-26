@@ -57,7 +57,8 @@ spectrum datasets:
   (695.7e6 km) and the distance of the blackbody to the Earth (:math:`D`) is set
   to 1 astronomical unit (149.5978707e6 km) which is the Sun-Earth average
   distance. The wavelength range extends from 280 nm to 2400 nm to cover
-  Eradiate's wavelength range.
+  Eradiate's wavelength range. Reference:
+  :cite:`Liou2002IntroductionAtmosphericRadiation`.
 
 - ``meftah_2017``: reference solar irradiance spectrum based on observations
   from the SOLSPEC instrument of the SOLAR payload onboard the internationial
@@ -68,12 +69,14 @@ spectrum datasets:
   of the solar cycle 24. Wavelength range: [165.0, 3000.1] nm. Resolution:
   better than 1 nm below 1000 nm, and 1 nm in the [1000, 3000] nm wavelength
   range. Absolute uncertainty: 1.26 % (1 standard deviation). Total solar
-  irradiance: 1372.3 +/- 16.9 W/m^2 (1 standard deviation).
+  irradiance: 1372.3 +/- 16.9 W/m^2 (1 standard deviation). Reference:
+  :cite:`Meftah2017SOLARISSReference`.
 
 - ``solid_2017```: observational solar irradiance spectrum composite based on
   data from 20 different instruments. The dataset provides daily solar
   irradiance spectra from 1978-11-7 to 2014-12-31. Wavelength range: [0.5,
-  1991.5] nm. Resolution: variable, between 1 and 16 nm.
+  1991.5] nm. Resolution: variable, between 1 and 16 nm. Reference:
+  :cite:`Haberreiter2017ObservationalSolarIrradiance`.
 
 - ``solid_2017_mean``: time-average of the ``solid_2017`` dataset over all days
   from 1978-11-7 to 2014-12-31.
@@ -85,6 +88,7 @@ spectrum datasets:
   spectrum. Wavelength range: [200, 2397] nm. Resolution: 1 nm. The mean
   absolute uncertainty is of 2 to 3 %. The spectrum is representative of
   moderately high solar activity. Total solar irradiance: 1367.7 W/m^2.
+  Reference: :cite:`Thuillier2003SolarSpectralIrradiance`.
 
 - ``whi_2008_*``: combination of simultaneous satellite observations from the
   SEE and SORCE instruments (from 2008-03-25 to 2008-04-16) onboard the TIMED
@@ -104,6 +108,7 @@ spectrum datasets:
       Total solar irradiance: 1360.84 W/m^2.
 
   ``whi_2008`` is an alias to the quiet sun spectrum ``whi_2008_3``.
+  Reference: :cite:`Woods2008SolarIrradianceReference`.
 
 Visualise a solar irradiance spectrum
 -------------------------------------
