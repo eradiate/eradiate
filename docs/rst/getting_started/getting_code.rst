@@ -37,6 +37,13 @@ the following command in the cloned source directory:
 
 The ``--init`` flag will ensure that any new submodule will be initialised.
 
+After updating, it's always better to rebuild the kernel:
+
+.. code-block:: bash
+
+   cd $ERADIATE_DIR/build
+   ninja
+
 .. admonition:: Aliasing the update command for convenience
 
    The following command installs a git alias named ``pullall`` that automates

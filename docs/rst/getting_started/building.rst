@@ -293,7 +293,7 @@ print additional information about various command line arguments.
 
    .. code-block:: bash
 
-      cmake -GNinja -D PYHTON_EXECUTABLE=<result of query> ..
+      cmake -GNinja -DPYHTON_EXECUTABLE=<result of query> ..
 
    The C and C++ compilers must be defined through environment variables like this:
 
