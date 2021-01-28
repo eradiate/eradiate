@@ -34,9 +34,9 @@ machine meets the requirements listed below.
          git,       2.25.1
          cmake,     3.16.3
          ninja,     1.10.0
-         clang,     10.0.0-4ubuntu1
-         libc++,    10
-         libc++abi, 10
+         clang,     9.0.1-12
+         libc++,    9
+         libc++abi, 9
 
    .. admonition:: Installing packages
 
@@ -47,7 +47,7 @@ machine meets the requirements listed below.
       .. code-block:: bash
 
          # Install build tools, compiler and libc++
-         sudo apt install -y git cmake ninja-build clang-10 libc++-dev libc++abi-dev
+         sudo apt install -y git cmake ninja-build clang-9 libc++-9-dev libc++abi-9-dev
 
          # Install libraries for image I/O
          sudo apt install -y libpng-dev zlib1g-dev libjpeg-dev
@@ -177,8 +177,8 @@ lines starting with
 
    .. code-block:: bash
 
-      export CC=clang
-      export CXX=clang++
+      export CC=clang-9
+      export CXX=clang++-9
 
    You might want to add these commands to your environment profile loading
    script.
