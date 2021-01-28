@@ -10,6 +10,7 @@ from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
 from eradiate.contexts import KernelDictContext
 from eradiate.data import _presolver
+from eradiate.radprops.particles import ParticlesLayer
 from eradiate.radprops import AFGL1986RadProfile, US76ApproxRadProfile
 from eradiate.scenes.atmosphere._heterogeneous import (
     HeterogeneousAtmosphere,
@@ -339,3 +340,37 @@ def test_heterogeneous_invalid_toa_altitude_value(mode_mono, tmpdir):
             },
             cache_dir=tmpdir,
         )
+
+
+def test_heterogeneous_with_particles(mode_mono, tmpdir):
+    particles_layer_1 = ParticlesLayer(
+        bottom=ureg.Quantity(0., "km"),
+        top=ureg.Quantity(1., "km")
+    )
+    particles_layer_2 = ParticlesLayer(
+        bottom=ureg.Quantity(1500, "m"),
+        top=ureg.Quantity(2200., "m"),
+        vert_dist=dict(type="gaussian", std=ureg.Quantity(200, "m")),
+        tau_550=.1,
+    )
+    particles_layer_3 = {
+        "bottom": ureg.Quantity(9., "km"),
+        "top": ureg.Quantity(10., "km"),
+        "vert_dist": {
+            "type": "exponential",
+        },
+    }
+    atmosphere = HeterogeneousAtmosphere(
+        profile={
+            "type": "array",
+            "sigma_t_values": np.ones((3, 3, 3)),
+            "albedo_values": np.ones((3, 3, 3)),
+        },
+        cache_dir=tmpdir,
+        particles=[
+            particles_layer_1,
+            particles_layer_2,
+            particles_layer_3,
+        ]
+    )
+

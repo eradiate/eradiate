@@ -6,12 +6,14 @@ Atmospheric radiative properties calculation package.
 
    .. factorytable::
       :factory: RadProfileFactory
+
+.. admonition:: Registered factory members [:class:`.VerticalDistributionFactory`]
+   :class: hint
+
+   .. factorytable::
+      :factory: VerticalDistributionFactory
 """
 
-
-from .rad_profile import (
-    AFGL1986RadProfile,
-    ArrayRadProfile,
-    RadProfileFactory,
-    US76ApproxRadProfile,
-)
+from .rad_profile import RadProfileFactory
+from .rad_profile import ArrayRadProfile, US76ApproxRadProfile, AFGL1986RadProfile
+from .particles import ParticlesLayer, VerticalDistributionFactory, VerticalDistribution

@@ -28,7 +28,7 @@ from eradiate.scenes.integrators import IntegratorFactory
 from eradiate.scenes.measure import MeasureFactory
 from eradiate.scenes.spectra import SpectrumFactory
 from eradiate.scenes.surface import SurfaceFactory
-from eradiate.radprops import RadProfileFactory
+from eradiate.radprops import RadProfileFactory, VerticalDistributionFactory
 
 factory_classes = {
     "AtmosphereFactory": AtmosphereFactory,
@@ -38,7 +38,8 @@ factory_classes = {
     "MeasureFactory": MeasureFactory,
     "SpectrumFactory": SpectrumFactory,
     "SurfaceFactory": SurfaceFactory,
-    "RadProfileFactory": RadProfileFactory
+    "RadProfileFactory": RadProfileFactory,
+    "VerticalDistributionFactory": VerticalDistributionFactory
 }
 
 factory_db = TinyDB(storage=MemoryStorage)

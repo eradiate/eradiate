@@ -9,10 +9,10 @@ import xarray as xr
 from ._base import Atmosphere, AtmosphereFactory
 from ... import validators
 from ..._attrs import documented, parse_docs
-from ...radprops import RadProfileFactory
-from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+from ...radprops import RadProfileFactory, ParticlesLayer
+from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
 
 
 def write_binary_grid3d(filename, values):
@@ -212,6 +212,19 @@ class HeterogeneousAtmosphere(Atmosphere):
         default="None",
     )
 
+    particles = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(list),
+            validator=attr.validators.optional(
+                attr.validators.instance_of(list)
+            ),
+        ),
+        doc="Particles layers",
+        type="list of dict or :class:`ParticlesLayer`",
+        default="``None``",
+    )
+
     _quantities = {"albedo": "albedo", "sigma_t": "collision_coefficient"}
 
     def __attrs_post_init__(self):
@@ -220,6 +233,19 @@ class HeterogeneousAtmosphere(Atmosphere):
             self.cache_dir = Path(tempfile.mkdtemp())
         else:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+        # check that the particles layer is within the boundaries of the
+        # molecular atmosphere
+        self._update_particles()
+        if self.particles is not None:
+            for particles_layer in self.particles:
+                print(particles_layer)
+                if particles_layer.bottom < 0. or particles_layer.top > self.height:
+                    raise ValueError(f"particles layer must be within the "
+                                     f"boundaries of the molecular atmosphere (0 "
+                                     f"{self.height.units}, "
+                                     f"{self.height.magnitude} "
+                                     f"{self.height.units}).")
 
     def height(self):
         if self.toa_altitude == "auto":
@@ -377,3 +403,18 @@ class HeterogeneousAtmosphere(Atmosphere):
                 "interior": medium,
             }
         }
+
+    def _update_particles(self):
+        """Make the particles layers objects and update particles attribute
+        with the list of instanciated particles layers objects"""
+        if self.particles is not None:
+            particles_layers = []
+            for element in self.particles:
+                if isinstance(element, dict):
+                    particles_layers.append(ParticlesLayer.from_dict(element))
+                elif isinstance(element, ParticlesLayer):
+                    particles_layers.append(element)
+                else:
+                    raise ValueError(f"particles items must be either of type dict or ParticlesLayer "
+                                     f"(got {type(element)})")
+            self.particles = particles_layers

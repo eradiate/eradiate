@@ -13,11 +13,23 @@ import xarray as xr
 import eradiate.data as data
 
 from . import profile_dataset_spec
+from ..mesh import to_regular
 from ..units import unit_registry as ureg
 from ..units import to_quantity
 
 ATOMIC_MASS_CONSTANT = ureg.Quantity(
     *scipy.constants.physical_constants["atomic mass constant"][:-1]
+)
+
+profile_dataset_spec = DatasetSpec(
+    var_specs={
+        "p": VarSpec(standard_name="air_pressure", units="Pa", long_name="air pressure"),
+        "t": VarSpec(standard_name="air_temperature", units="K", long_name="air temperature"),
+        "n": VarSpec(standard_name="number_density", units="m^-3", long_name="number density"),
+        "n_tot": VarSpec(standard_name="air_number_density", units="m^-3",
+                         long_name="air number density"),
+    },
+    coord_specs="atmospheric_profile"
 )
 
 
@@ -432,7 +444,7 @@ def make_profile_regular(profile, atol):
     profile.ert.validate_metadata(profile_dataset_spec)
 
     # compute the regular altitude nodes mesh
-    regular_z_level = _to_regular(mesh=profile.z_level.values, atol=atol)
+    regular_z_level = to_regular(mesh=profile.z_level.values, atol=atol)
 
     # compute corresponding altitude centers mesh
     regular_z_layer = (regular_z_level[:-1] + regular_z_level[1:]) / 2.0
