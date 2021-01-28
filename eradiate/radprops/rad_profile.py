@@ -446,7 +446,7 @@ class US76ApproxRadProfile(RadProfile):
     )
 
     dataset = attr.ib(
-        default=None,
+        default="spectra-us76_u86_4-18000_18500",
         validator=attr.validators.optional(
             attr.validators.in_(
                 list(data.getter("absorption_spectrum").PATHS.keys())))
