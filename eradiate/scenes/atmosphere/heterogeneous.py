@@ -256,10 +256,10 @@ class HeterogeneousAtmosphere(Atmosphere):
             min_sigma_s = sigma_s.min()
             if min_sigma_s > 0.:
                 width = 10. / min_sigma_s
-                if width > ureg.Quantity(1e5, "km"):
-                    width = ureg.Quantity(1e5, "km")
+                if width > ureg.Quantity(1e3, "km"):
+                    width = ureg.Quantity(1e3, "km")
             else:
-                raise ValueError("cannot automatically compute width when "
+                raise ValueError("cannot compute width automatically when "
                                  "scattering coefficient reaches zero")
         else:
             width = self.width
