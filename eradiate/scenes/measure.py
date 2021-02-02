@@ -496,7 +496,7 @@ class PerspectiveCameraMeasure(Measure):
     @target.validator
     @origin.validator
     def _target_origin_validator(self, attribute, value):
-        if np.all(self.target == self.origin):
+        if np.allclose(self.target, self.origin):
             raise ValueError(
                 f"While initializing {attribute}:"
                 f"Origin and target must not be equal,"
