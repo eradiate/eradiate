@@ -72,11 +72,20 @@ spectrum datasets:
   irradiance: 1372.3 +/- 16.9 W/m^2 (1 standard deviation). Reference:
   :cite:`Meftah2017SOLARISSReference`.
 
-- ``solid_2017```: observational solar irradiance spectrum composite based on
+- ``solid_2017``: observational solar irradiance spectrum composite based on
   data from 20 different instruments. The dataset provides daily solar
   irradiance spectra from 1978-11-7 to 2014-12-31. Wavelength range: [0.5,
   1991.5] nm. Resolution: variable, between 1 and 16 nm. Reference:
-  :cite:`Haberreiter2017ObservationalSolarIrradiance`.
+  :cite:`Haberreiter2017ObservationalSolarIrradiance`. See also
+  `the Cal/Val Portal of the Committee on Earth Observation Satellites
+  <http://calvalportal.ceos.org/solar-irradiance-spectrum>`_
+
+.. note::
+    Due to its larger size, the ``solid_2017`` dataset is not shipped with the
+    code base. You can download it from the eradiate FTP server
+    (`download link <https://eradiate.eu/data/solid_2017.zip>`_).
+    Extract the archive into a temporary location then copy-merge the folder
+    in ``resources/data``.
 
 - ``solid_2017_mean``: time-average of the ``solid_2017`` dataset over all days
   from 1978-11-7 to 2014-12-31.
