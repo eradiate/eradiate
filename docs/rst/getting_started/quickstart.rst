@@ -214,7 +214,7 @@ When CMake is successfully configured, you can compile the code:
 
    ninja
 
-The compilation process can last up to around half an hour on old machines.
+The compilation process can last for up to around half an hour on old machines.
 
 .. _sec-getting_started-quickstart-data_files:
 
