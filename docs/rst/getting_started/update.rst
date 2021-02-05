@@ -1,0 +1,71 @@
+.. _sec-getting_started-update:
+
+Update guide
+============
+
+Eradiate receives continuous updates. The use of submodules and locked Python
+dependencies requires some care managing updates. This page provides guidelines
+to help with this process.
+
+Updating the source code
+------------------------
+
+In the cloned source directory, pull the latest update from GitHub:
+
+.. code:: bash
+
+   cd $ERADIATE_DIR
+   git pull
+
+Unfortunately, pulling from the main repository won't automatically keep the
+submodules in sync, which can lead to various problems. After pulling the
+repository itself, it is essential to update the submodules. This is done using
+the following command in the cloned source directory:
+
+.. code:: bash
+
+   git submodule update --init --recursive
+
+.. dropdown:: *Aliasing the update command for convenience*
+
+   The following command installs a git alias named ``pullall`` that automates
+   these two steps.
+
+   .. code:: bash
+
+      git config --global alias.pullall '!f(){ git pull "$@" && git submodule update --init --recursive; }; f'
+
+   Afterwards, simply write
+
+   .. code:: bash
+
+      git pullall
+
+   to fetch the latest version of Eradiate and the appropriate versions of its
+   nested submodules.
+
+The ``--init`` flag will ensure that any new submodule will be initialised.
+
+Rebuilding the kernel
+---------------------
+
+After updating, it's always better to rebuild the kernel:
+
+.. code:: bash
+
+   cd $ERADIATE_DIR/build
+   ninja
+
+Updating your Conda environment
+-------------------------------
+
+After updating the source code, an update of your Conda environment might be
+necessary. In that case, the ``conda-init`` target can be used:
+
+.. code:: bash
+
+   cd $ERADIATE_DIR
+   make conda-init
+
+If something goes wrong during that process, an environment reset should solve
+most issues (see :ref:`sec-getting_started-install-setup_conda`).

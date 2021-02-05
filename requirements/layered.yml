@@ -1,0 +1,18 @@
+# This file establishes dependencies between layered requirement specs
+main:
+  constraints:
+    - dev
+docs:
+  constraints:
+    - dev
+  includes:
+    - main
+tests:
+  constraints:
+    - dev
+  includes:
+    - main
+dev:
+  includes:
+    - docs
+    - tests

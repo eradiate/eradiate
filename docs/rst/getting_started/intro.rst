@@ -6,9 +6,8 @@ Getting started
 .. toctree::
    :maxdepth: 1
 
-   quickstart
-   getting_code
-   building
+   install
+   update
 
 What is Eradiate?
 -----------------

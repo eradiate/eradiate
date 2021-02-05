@@ -7,6 +7,7 @@ Developer guide
    :maxdepth: 1
 
    conventions_practices
+   dependencies
    documentation
    testing
    scene_element_guide

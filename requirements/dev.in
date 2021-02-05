@@ -1,0 +1,12 @@
+-r docs.in
+-r tests.in
+black
+bump2version
+conda-lock
+ipython
+isort
+jupyterlab
+pip
+pip-tools
+setuptools
+twine

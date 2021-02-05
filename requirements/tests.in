@@ -1,0 +1,8 @@
+-r main.in
+-c dev.txt
+pytest
+pytest-json-report
+pytest-metadata
+pytest-xdist
+sphinx
+tabulate

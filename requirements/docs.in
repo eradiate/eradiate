@@ -1,0 +1,9 @@
+-r main.in
+-c dev.txt
+mock
+nbsphinx
+pydata-sphinx-theme
+sphinx>=3.1
+sphinxcontrib-bibtex<2.0
+sphinx-copybutton
+sphinx-panels

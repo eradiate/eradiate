@@ -1,0 +1,15 @@
+-c dev.txt
+aabbtree
+attrs
+click
+cerberus
+dask
+matplotlib
+netcdf4
+numpy
+pint
+ruamel.yaml
+scipy
+tinydb
+tqdm
+xarray
