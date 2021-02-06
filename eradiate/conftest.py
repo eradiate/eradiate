@@ -52,9 +52,10 @@ def pytest_runtest_setup(item):
         else:
             dataset_id = mark.kwargs["dataset_id"]
 
+        # Try to get path to dataset file
         dataset_path = data.getter(dataset_category).PATHS[dataset_id]
-        print(data.find(dataset_category)[dataset_id])
 
+        # If the data is missing, we skip the test
         if not data.find(dataset_category)[dataset_id]:
             pytest.skip(f"Could not find dataset '{dataset_category}.{dataset_id}'; "
                         f"please download dataset files and place them in "
