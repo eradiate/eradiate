@@ -1,0 +1,23 @@
+mode:
+  type: mono
+  wavelength: 577.
+surface:
+  type: rpv
+atmosphere:
+  type: homogeneous
+  toa_altitude: 120.
+  toa_altitude_units: km
+  sigma_s: 1.e-4
+illumination:
+  type: directional
+  zenith: 30.
+  azimuth: 0.
+  irradiance:
+    type: uniform
+    value: 1.8e+6
+    value_units: W/km**2/nm
+measures:
+  - type: toa_hsphere
+    spp: 32000
+    zenith_res: 5.
+    azimuth_res: 5.

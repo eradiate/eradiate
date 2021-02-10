@@ -164,7 +164,8 @@ lower dimensionality. This is typically used to extract a principal plane view
 from an observation data set. Eradiate provides a helper function, exposed by its
 data array accessor
 (:meth:`EradiateDataArrayAccessor.extract_pplane() <eradiate.util.xarray.EradiateDataArrayAccessor.extract_pplane>`),
-to do so. See the :ref:`xarray module tutorial <tut-xarray>` for more detail.
+to do so. See :ref:`sphx_glr_examples_generated_tutorials_data_01_xarray.py` for
+more detail.
 
 Visualising angular data
 ^^^^^^^^^^^^^^^^^^^^^^^^

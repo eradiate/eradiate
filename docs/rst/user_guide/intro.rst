@@ -6,11 +6,8 @@ User guide
 .. toctree::
    :maxdepth: 1
 
-   ../../notebooks/tutorials/quick_overview/quick_overview.ipynb
    basic_concepts
    onedim_solver_app
-   ../../notebooks/tutorials/rami_solver_app/rami_solver_app.ipynb
-   ../../notebooks/tutorials/xarray/xarray.ipynb
    package_structure
    data_guide
    unit_guide_user
@@ -27,3 +24,6 @@ User guide
      :maxdepth: 1
 
      archive/post_processing
+     ../../notebooks/tutorials/quick_overview/quick_overview.ipynb
+     ../../notebooks/tutorials/rami_solver_app/rami_solver_app.ipynb
+     ../../notebooks/tutorials/xarray/xarray.ipynb

@@ -12,16 +12,19 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: autobuild help clean clean_generated Makefile
+.PHONY: help clean clean_generated Makefile
 
-autobuild:
-	sphinx-autobuild .  _build/html
+html-plot:
+	$(SPHINXBUILD) -D plot_gallery=1 -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" $(SPHINXOPTS) $(O)
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 clean: clean_generated
 	rm -rf _build/*
 
 clean_generated:
 	rm -rf rst/api_reference/generated/*
+	rm -rf examples/generated/*
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

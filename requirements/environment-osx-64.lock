@@ -1,5 +1,5 @@
 # platform: osx-64
-# env_hash: e66796c6c7ed9b0ccef8bf6c38e524d38d74e10c086e1570282ec0e1a85bc7fc
+# env_hash: b513f3ab58758097f562a3a0fb99e64d9cf126a962826932ca8f6e7440ba8398
 @EXPLICIT
 https://conda.anaconda.org/conda-forge/osx-64/bzip2-1.0.8-hc929b4f_4.tar.bz2#521b82c700a64bac7d8da27539422e91
 https://conda.anaconda.org/conda-forge/osx-64/c-ares-1.17.1-hc929b4f_0.tar.bz2#24fc0b91a6eacc6753fef90514d67ce9
@@ -97,7 +97,7 @@ https://conda.anaconda.org/conda-forge/noarch/sphinxcontrib-serializinghtml-1.1.
 https://conda.anaconda.org/conda-forge/noarch/tabulate-0.8.7-pyh9f0ad1d_0.tar.bz2#229780178ffe9121c873e00ba8de39bf
 https://conda.anaconda.org/conda-forge/noarch/tblib-1.6.0-py_0.tar.bz2#0e1562c39e804e0d7df8650626379caa
 https://conda.anaconda.org/conda-forge/noarch/testpath-0.4.4-py_0.tar.bz2#3b98fff4d5342bebde2ecaa314f796f9
-https://conda.anaconda.org/conda-forge/noarch/tinydb-4.3.0-pyhd3deb0d_0.tar.bz2#a8c014456f603b5cdfa9935022ee3f4f
+https://conda.anaconda.org/conda-forge/noarch/tinydb-4.4.0-pyh44b312d_0.tar.bz2#7eae4c65984fa669f9f2bf36721caf97
 https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2#f832c45a477c78bebd107098db465095
 https://conda.anaconda.org/conda-forge/noarch/toolz-0.11.1-py_0.tar.bz2#d1e66b58cb00b3817ad9f05eec098c00
 https://conda.anaconda.org/conda-forge/noarch/tqdm-4.56.2-pyhd8ed1ab_0.tar.bz2#30688aac09a7c76dd993f483320a972c
@@ -148,7 +148,7 @@ https://conda.anaconda.org/conda-forge/osx-64/anyio-2.1.0-py37hf985489_0.tar.bz2
 https://conda.anaconda.org/conda-forge/osx-64/argon2-cffi-20.1.0-py37hf967b71_2.tar.bz2#4548b36af838ff2f9a0cc021348890f3
 https://conda.anaconda.org/conda-forge/noarch/black-20.8b1-py_1.tar.bz2#e555d6b71ec916c3dc4e6e3793cc9796
 https://conda.anaconda.org/conda-forge/osx-64/brotlipy-0.7.0-py37hf967b71_1001.tar.bz2#2e1016af5a81ba9e50d8bd25bf82b352
-https://conda.anaconda.org/conda-forge/osx-64/cmarkgfm-0.4.2-py37hb30f6a1_3.tar.bz2#86fd887ff631f51a7130a84e3e462abd
+https://conda.anaconda.org/conda-forge/osx-64/cmarkgfm-0.5.2-py37h7585375_0.tar.bz2#c435a9091bc24bc3897f2f4c6d9dd9e2
 https://conda.anaconda.org/conda-forge/osx-64/cryptography-3.4.4-py37ha1e1f9f_0.tar.bz2#8f27a350192cae363a244ba30a549ffc
 https://conda.anaconda.org/conda-forge/noarch/dask-core-2021.2.0-pyhd8ed1ab_0.tar.bz2#55e9ec3fa2b40d163f062977c7fee870
 https://conda.anaconda.org/conda-forge/noarch/importlib_metadata-3.4.0-hd8ed1ab_0.tar.bz2#6d962cade0658bb1040a3e994add14e0
@@ -190,7 +190,7 @@ https://conda.anaconda.org/conda-forge/noarch/wcwidth-0.2.5-pyh9f0ad1d_2.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/xarray-0.16.2-pyhd8ed1ab_0.tar.bz2#45057a982fbac8e5c5ba5167358d4bbb
 https://conda.anaconda.org/conda-forge/noarch/dask-2021.2.0-pyhd8ed1ab_0.tar.bz2#a364d5fd4dc772b336354d78c0de9b20
 https://conda.anaconda.org/conda-forge/noarch/nbclient-0.5.2-pyhd8ed1ab_0.tar.bz2#06970c2047dd29a7d320b0a765f9b1e4
-https://conda.anaconda.org/conda-forge/noarch/prompt-toolkit-3.0.14-pyha770c72_0.tar.bz2#ab67af70c2ff5cc2be310f0d6cb95a8a
+https://conda.anaconda.org/conda-forge/noarch/prompt-toolkit-3.0.16-pyha770c72_0.tar.bz2#1a7cec3da4a94cd23d3de4155bff4941
 https://conda.anaconda.org/conda-forge/noarch/pytest-forked-1.2.0-pyh9f0ad1d_0.tar.bz2#d4bc635ac7fd58559a6f1a1f78354818
 https://conda.anaconda.org/conda-forge/noarch/pytest-metadata-1.11.0-pyhd3deb0d_0.tar.bz2#2e92f7ccb8d9a03966fc36e3861522ec
 https://conda.anaconda.org/conda-forge/noarch/requests-2.25.1-pyhd3deb0d_0.tar.bz2#ae687aba31a1c400192a86a2e993ffdc
@@ -204,9 +204,9 @@ https://conda.anaconda.org/conda-forge/noarch/sphinx-3.4.3-pyhd8ed1ab_0.tar.bz2#
 https://conda.anaconda.org/conda-forge/noarch/conda-lock-0.8.0-pyhd8ed1ab_0.tar.bz2#1258c98fb0bb0b9171b8150e259535b8
 https://conda.anaconda.org/conda-forge/osx-64/ipykernel-5.4.2-py37he01cfaa_0.tar.bz2#e8a11751b77c444f687ddc0fa79d4077
 https://conda.anaconda.org/conda-forge/osx-64/jupyter_server-1.3.0-py37hf985489_0.tar.bz2#db54bd2c94b76e7edf2ed999c2af9d12
-https://conda.anaconda.org/conda-forge/noarch/nbsphinx-0.8.1-pyh44b312d_0.tar.bz2#4cd9c81db93ea4a9f68abb16a53e1e3c
 https://conda.anaconda.org/conda-forge/noarch/pydata-sphinx-theme-0.4.3-pyhd8ed1ab_0.tar.bz2#6b244842d35eb2c8f85a757cbb17947a
 https://conda.anaconda.org/conda-forge/noarch/sphinx-copybutton-0.3.1-pyhd8ed1ab_0.tar.bz2#decad13214a2a545944560eccf4a9815
+https://conda.anaconda.org/conda-forge/noarch/sphinx-gallery-0.8.2-pyhd8ed1ab_0.tar.bz2#26210aef2e849fd276e050fb4e9c44e0
 https://conda.anaconda.org/conda-forge/noarch/sphinx-panels-0.5.2-pyhd3deb0d_0.tar.bz2#1a871a63c4be1bd47a7aa48b7417a426
 https://conda.anaconda.org/conda-forge/noarch/sphinxcontrib-bibtex-1.0.0-py_0.tar.bz2#14eee0167ee00dcea96aead777f229a7
 https://conda.anaconda.org/conda-forge/osx-64/twine-3.3.0-py37hf985489_0.tar.bz2#06566083baec5174117565f26067cfce

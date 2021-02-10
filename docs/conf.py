@@ -19,6 +19,7 @@ import sys
 sys.path.append(os.path.abspath("./_ext"))
 sys.path.append(os.path.abspath(".."))
 
+
 # -- Project information -----------------------------------------------------
 
 def read(*parts):
@@ -91,9 +92,29 @@ extensions.append("sphinx.ext.viewcode")
 extensions.append("sphinxcontrib.bibtex")
 extensions.append("sphinx_copybutton")
 
-# nbsphinx: use jupyter notebooks in docs
-extensions.append("nbsphinx")
-nbsphinx_execute = "never"  # Define nbsphinx execution policy
+# Example gallery support
+from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
+
+extensions.append("sphinx_gallery.gen_gallery")
+sphinx_gallery_conf = {
+    "examples_dirs": [  # paths to example scripts
+        "examples/tutorials",
+    ],
+    "gallery_dirs": [  # path to where to save gallery generated output
+        "examples/generated/tutorials/",
+    ],
+    "subsection_order": ExplicitOrder([
+        "examples/tutorials/solver_onedim",
+        "examples/tutorials/solver_rami",
+        "examples/tutorials/data",
+    ]),
+    "within_subsection_order": FileNameSortKey,
+    "filename_pattern": "/",
+    "reference_url": {
+        "eradiate": None,  # The module you locally document uses None
+    },
+    "plot_gallery": False,  # Disabled until we move away from RTD or package the kernel
+}
 
 # Sphinx-panels extension: don't load Bootstrap CSS again
 extensions.append("sphinx_panels")

@@ -11,11 +11,9 @@ This guide:
 - illustrates how to visualise a solar irradiance spectrum
 - explains how to add your own solar irradiance spectrum dataset
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
+.. admonition:: Tutorials
 
-   Tutorial <../../notebooks/tutorials/solar_irradiance_spectra/add_your_own_solar_irradiance_spectrum_dataset.ipynb>
+   * Adding data ⇒ :ref:`sphx_glr_examples_generated_tutorials_data_02_custom_solar_irradiance.py`
 
 List available solar irradiance spectrum datasets
 -------------------------------------------------
@@ -142,7 +140,7 @@ irradiance) data variable:
 
 The resulting spectrum is displayed below.
 
-.. image:: fig/thuillier_2003.png
+.. image:: ../../fig/thuillier_2003.png
   :width: 800
   :alt: thuillier_2003 spectrum
 
@@ -160,7 +158,7 @@ spectrum:
 
 The resulting spectrum is displayed below.
 
-.. image:: fig/solid_2017.png
+.. image:: ../../fig/solid_2017.png
   :width: 800
   :alt: solid_2017 spectrum
 
@@ -173,5 +171,5 @@ larger than zero, the dataset supports selection by time stamps.
 Add your own solar irradiance spectrum dataset
 ----------------------------------------------
 
-Refer to the
-:ref:`tutorial notebook <tut-add_your_own_solar_irradiance_spectrum_dataset>`.
+See
+:ref:`sphx_glr_examples_generated_tutorials_data_02_custom_solar_irradiance.py`.
