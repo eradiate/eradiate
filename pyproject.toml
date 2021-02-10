@@ -1,0 +1,3 @@
+[tool.isort]
+profile = "pycharm"
+reverse_relative = true
