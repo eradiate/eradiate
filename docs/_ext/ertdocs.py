@@ -1,14 +1,17 @@
 import sys
 
-import mock
+try:
+    import mitsuba
+except ImportError:
+    import mock
 
-MOCK_MODULES = [
-    "mitsuba", "mitsuba.core", "mitsuba.core.math", "mitsuba.core.spline",
-    "mitsuba.core.warp", "mitsuba.core.xml", "mitsuba.render",
-    "mitsuba.render.mueller"
-]
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+    MOCK_MODULES = [
+        "mitsuba", "mitsuba.core", "mitsuba.core.math", "mitsuba.core.spline",
+        "mitsuba.core.warp", "mitsuba.core.xml", "mitsuba.render",
+        "mitsuba.render.mueller"
+    ]
+    for mod_name in MOCK_MODULES:
+        sys.modules[mod_name] = mock.Mock()
 
 from docutils import nodes
 from docutils.parsers.rst import directives

@@ -5,7 +5,7 @@
 Eradiate documentation
 ======================
 
-    *A New-generation Radiative Transfer Model for the Earth Observation Community*
+*A New-generation Radiative Transfer Model for the Earth Observation Community*
 
 Eradiate is a radiative transfer simulation software package written in Python
 and C++17. It relies on a computational kernel based on the
@@ -51,6 +51,7 @@ work.
 
    rst/getting_started/intro
    rst/user_guide/intro
+   examples/generated/tutorials/index
    rst/developer_guide/intro
    rst/api_reference/intro
    rst/miscellaneous/intro

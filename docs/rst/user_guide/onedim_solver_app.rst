@@ -9,21 +9,16 @@ actually one-dimensional (Eradiate's kernel is a 3D Monte Carlo ray tracer),
 scene setup ensures that the computed quantities are equivalent to what would
 be obtained with a proper 1D code.
 
-As mentioned in the `Quick overview`_ tutorial, the
-one-dimensional solver application can be used either through its command-line
-interface ``ertonedim`` or through its Python API (see
+As mentioned in the :ref:`sphx_glr_examples_generated_tutorials_01_quick_overview.py`
+tutorial, the one-dimensional solver application can be used either through its
+command-line interface ``ertonedim`` or through its Python API (see
 :class:`.OneDimSolverApp`). This guide goes in more detail on the
 features, configuration format and usage of this application.
 
-.. _Quick overview: ../../notebooks/tutorials/quick_overview/quick_overview.ipynb
-
 .. admonition:: Tutorials
 
-   .. toctree::
-      :maxdepth: 1
-
-      Tutorial － Basic usage <../../notebooks/tutorials/onedim_solver_app/onedim_solver_app.ipynb>
-      Tutorial － Heterogeneous atmosphere <../../notebooks/tutorials/onedim_solver_app/heterogeneous_atmospheres.ipynb>
+   * Basic usage ⇒ :ref:`sphx_glr_examples_generated_tutorials_solver_onedim_01_solver_onedim.py`
+   * Heterogeneous atmosphere ⇒ :ref:`sphx_glr_examples_generated_tutorials_solver_onedim_02_heterogeneous_atmospheres.py`
 
 Available features
 ------------------

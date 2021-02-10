@@ -1,0 +1,23 @@
+mode:
+  type: mono
+  wavelength: 550.  # nm
+surface:
+  type: lambertian
+  reflectance:
+    type: uniform
+    value: 0.5  # dimensionless
+atmosphere:
+  type: homogeneous
+  toa_altitude: 40.  # km
+illumination:
+  type: directional
+  zenith: 30.  # deg
+  azimuth: 0.  # deg
+  irradiance:
+    type: uniform
+    value: 1.8e+6  # W/km^2/nm
+measures:
+  - type: toa_hsphere
+    spp: 32000  # dimensionless
+    zenith_res: 10.  # deg
+    azimuth_res: 10.  # deg
