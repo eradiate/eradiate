@@ -8,6 +8,7 @@
 """
 
 from abc import ABC
+
 __all__ = ["BiosphereFactory", "HomogeneousDiscreteCanopy"]
 
 import aabbtree
@@ -55,18 +56,17 @@ def _inversebeta(mu, nu):
     """
     while True:
         rands = np.random.rand(2)
-        s1 = np.power(rands[0], 1. / mu)
-        s2 = np.power(rands[1], 1. / nu)
+        s1 = np.power(rands[0], 1.0 / mu)
+        s2 = np.power(rands[1], 1.0 / nu)
         s = s1 + s2
         if s <= 1:
             return s1 / s
 
 
 @ureg.wraps(
-    (ureg.m, None), (
-        None, ureg.m, ureg.m, ureg.m, ureg.m, None, ureg.m, None, None, None,
-        None
-    ), False
+    (ureg.m, None),
+    (None, ureg.m, ureg.m, ureg.m, ureg.m, None, ureg.m, None, None, None, None),
+    False,
 )
 def _create_leaf_cloud(
     shape_type,
@@ -79,7 +79,7 @@ def _create_leaf_cloud(
     mu=1.066,
     nu=1.853,
     tries=1000000,
-    avoid_overlap=False
+    avoid_overlap=False,
 ):
     """
     Creates a set of transform matrices for RAMI canopy scenes.
@@ -165,19 +165,16 @@ def _create_leaf_cloud(
 
     if shape_type == "cube":
         if np.allclose(cube_size, [0, 0, 0]):
-            raise ValueError(
-                "Parameter cube_size must be set for cuboid leaf"
-                "cloud."
-            )
+            raise ValueError("Parameter cube_size must be set for cuboid leaf" "cloud.")
         tree = aabbtree.AABBTree()
 
         if not avoid_overlap:
             for i in range(n_leaves):
                 rand = np.random.rand(3)
                 positions[i] = [
-                    rand[0] * cube_size[0] - cube_size[0] / 2.,
-                    rand[1] * cube_size[1] - cube_size[1] / 2.,
-                    rand[2] * cube_size[2]
+                    rand[0] * cube_size[0] - cube_size[0] / 2.0,
+                    rand[1] * cube_size[1] - cube_size[1] / 2.0,
+                    rand[2] * cube_size[2],
                 ]
         # try placing the leaves such that they do not overlap by creating
         # axes alingned bounding boxes and checking them for intersection
@@ -186,24 +183,24 @@ def _create_leaf_cloud(
                 for j in range(tries):
                     rand = np.random.rand(3)
                     pos_candidate = [
-                        rand[0] * cube_size[0] - cube_size[0] / 2.,
-                        rand[1] * cube_size[1] - cube_size[1] / 2.,
-                        rand[2] * cube_size[2]
+                        rand[0] * cube_size[0] - cube_size[0] / 2.0,
+                        rand[1] * cube_size[1] - cube_size[1] / 2.0,
+                        rand[2] * cube_size[2],
                     ]
                     aabb = aabbtree.AABB(
                         [
                             (
                                 pos_candidate[0] - leaf_radius,
-                                pos_candidate[0] + leaf_radius
+                                pos_candidate[0] + leaf_radius,
                             ),
                             (
                                 pos_candidate[1] - leaf_radius,
-                                pos_candidate[1] + leaf_radius
+                                pos_candidate[1] + leaf_radius,
                             ),
                             (
                                 pos_candidate[2] - leaf_radius,
-                                pos_candidate[2] + leaf_radius
-                            )
+                                pos_candidate[2] + leaf_radius,
+                            ),
                         ]
                     )
                     if i == 0:
@@ -223,8 +220,7 @@ def _create_leaf_cloud(
     elif shape_type == "sphere":
         if sphere_radius == 0:
             raise ValueError(
-                "Parameter sphere_radius must be set for spherical"
-                "leaf cloud."
+                "Parameter sphere_radius must be set for spherical" "leaf cloud."
             )
         for i in range(n_leaves):
             rand = np.random.rand(3)
@@ -233,7 +229,8 @@ def _create_leaf_cloud(
             r = rand[2] * sphere_radius
             positions[i] = [
                 r * np.sin(theta) * np.cos(phi),
-                r * np.sin(theta) * np.sin(phi), r * np.cos(theta)
+                r * np.sin(theta) * np.sin(phi),
+                r * np.cos(theta),
             ]
     elif shape_type == "cylinder":
         if cylinder_radius == 0 or cylinder_height == 0:
@@ -253,12 +250,12 @@ def _create_leaf_cloud(
     orientations = np.empty((n_leaves, 3))
     for i in range(np.shape(orientations)[0]):
         theta = np.rad2deg(_inversebeta(mu, nu))
-        phi = np.random.rand() * 360.
+        phi = np.random.rand() * 360.0
 
         orientation = [
             np.sin(theta) * np.cos(phi),
             np.sin(theta) * np.sin(phi),
-            np.cos(theta)
+            np.cos(theta),
         ]
         orientations[i] = orientation
 
@@ -304,6 +301,7 @@ class HomogeneousDiscreteCanopy(Canopy):
         transmittance spectrum (dimensionless). Default: 0.5.
     """
 
+    # fmt: off
     id = attr.ib(
         default="homogeneous_discrete_canopy",
         validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -339,6 +337,7 @@ class HomogeneousDiscreteCanopy(Canopy):
         validator=validator_is_positive,
         units_compatible=cdu.generator("length"),
     )
+    # fmt: on
 
     # Hidden parameters, initialised during post-init
     # -- Leaf area index of the created canopy. Used only to display information
@@ -355,12 +354,14 @@ class HomogeneousDiscreteCanopy(Canopy):
 
     def __str__(self):
         height = self._size[2]
+        # fmt: off
         return f"HomogeneousDiscreteCanopy:\n" \
                f"    Canopy height:      {height.magnitude} {height.units}\n" \
                f"    LAI:                {self._lai}\n" \
                f"    Number of leaves:   {self._n_leaves}\n" \
                f"    Leaf reflectance:   {self.leaf_reflectance}\n" \
                f"    Leaf transmittance: {self.leaf_transmittance}"
+        # fmt: on
 
     def __attrs_post_init__(self):
 
@@ -391,9 +392,10 @@ class HomogeneousDiscreteCanopy(Canopy):
         self._size = [
             abs(maxx - minx).m_as(ureg.m),
             abs(maxy - miny).m_as(ureg.m),
-            abs(maxz - minz).m_as(ureg.m)] * ureg.m
-        leaf_area = np.pi * self.leaf_radius * self.leaf_radius * len(
-            self.leaf_positions
+            abs(maxz - minz).m_as(ureg.m),
+        ] * ureg.m
+        leaf_area = (
+            np.pi * self.leaf_radius * self.leaf_radius * len(self.leaf_positions)
         )
         self._lai = leaf_area / (self._size[0] * self._size[1])
 
@@ -401,10 +403,23 @@ class HomogeneousDiscreteCanopy(Canopy):
 
     @classmethod
     @ureg.wraps(
-        None, (
-            None, ureg.m, None, None, None, ureg.m, None, None, None,
-            None, None, None, None
-        ), False
+        None,
+        (
+            None,
+            ureg.m,
+            None,
+            None,
+            None,
+            ureg.m,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        ),
+        False,
     )
     def from_parameters(
         cls,
@@ -419,7 +434,7 @@ class HomogeneousDiscreteCanopy(Canopy):
         hdo=1,
         hvr=1,
         seed=1,
-        avoid_overlap=False
+        avoid_overlap=False,
     ):
         """
         This method allows the creation of a HomogeneousDiscreteCanopy
@@ -510,23 +525,17 @@ class HomogeneousDiscreteCanopy(Canopy):
 
         # n_leaves or horizontal extent
         if size[0] == 0 or size[1] == 0:
-            size[0] = size[1] = \
-                np.sqrt(
-                    n_leaves * np.pi *
-                    leaf_radius ** 2 / lai
-                )
+            size[0] = size[1] = np.sqrt(n_leaves * np.pi * leaf_radius ** 2 / lai)
         else:
             n_leaves = int(
-                np.floor((size[0] * size[1] * lai) / (np.pi * leaf_radius**2))
+                np.floor((size[0] * size[1] * lai) / (np.pi * leaf_radius ** 2))
             )
 
         # hdo/hvr or vertical extent
         if size[2] == 0:
-            size[2] = (lai * hdo**3 / (np.pi * leaf_radius**2 * hvr))
+            size[2] = lai * hdo ** 3 / (np.pi * leaf_radius ** 2 * hvr)
         else:
-            hdo = np.power(
-                np.pi * leaf_radius**2 * size[2] * hvr / lai, 1 / 3.
-            )
+            hdo = np.power(np.pi * leaf_radius ** 2 * size[2] * hvr / lai, 1 / 3.0)
 
         positions, orientations = _create_leaf_cloud(
             shape_type="cube",
@@ -535,7 +544,7 @@ class HomogeneousDiscreteCanopy(Canopy):
             leaf_radius=leaf_radius,
             mu=mu,
             nu=nu,
-            avoid_overlap=avoid_overlap
+            avoid_overlap=avoid_overlap,
         )
 
         return cls(
@@ -543,7 +552,7 @@ class HomogeneousDiscreteCanopy(Canopy):
             leaf_transmittance=leaf_transmittance,
             leaf_radius=leaf_radius,
             leaf_positions=positions,
-            leaf_orientations=orientations
+            leaf_orientations=orientations,
         )
 
     @classmethod
@@ -594,14 +603,14 @@ class HomogeneousDiscreteCanopy(Canopy):
                 position = [
                     float(values[1].strip()),
                     float(values[2].strip()),
-                    float(values[3].strip())
+                    float(values[3].strip()),
                 ]
 
                 positions_.append(position)
                 normal = [
                     float(values[4].strip()),
                     float(values[5].strip()),
-                    float(values[6].strip())
+                    float(values[6].strip()),
                 ]
 
                 orientations_.append(normal)
@@ -614,13 +623,15 @@ class HomogeneousDiscreteCanopy(Canopy):
             leaf_transmittance=leaf_transmittance,
             leaf_radius=radius,
             leaf_positions=positions,
-            leaf_orientations=orientations
+            leaf_orientations=orientations,
         )
 
     def kernel_dict(self, ref=True):
         from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+
         kdu_length = kdu.get("length")
 
+        # fmt: off
         return_dict = {
             "leaf_bsdf":
                 {
@@ -654,3 +665,4 @@ class HomogeneousDiscreteCanopy(Canopy):
             }
 
         return return_dict
+        # fmt: on
