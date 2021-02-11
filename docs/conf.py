@@ -10,7 +10,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import codecs
 import os
+import re
 import sys
 
 # sys.path.insert(0, os.path.abspath('.'))
@@ -19,9 +21,35 @@ sys.path.append(os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
+def read(*parts):
+    """
+    Build an absolute path from *parts* and and return the contents of the
+    resulting file.  Assume UTF-8 encoding.
+    """
+    here = os.path.abspath(os.path.dirname(__file__))
+    with codecs.open(os.path.join(here, *parts), "rb", "utf-8") as f:
+        return f.read()
+
+
+def find_version(*file_paths):
+    """
+    Build a path from *file_paths* and search for a ``__version__``
+    string inside.
+    """
+    version_file = read(*file_paths)
+    version_match = re.search(
+        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M
+    )
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+
 project = "Eradiate"
 copyright = "2020, The Eradiate Team"
 author = "The Eradiate Team"
+release = find_version("../eradiate/__init__.py")
+version = release.rsplit(u".", 1)[0]
 
 # -- General configuration ---------------------------------------------------
 
@@ -81,6 +109,7 @@ intersphinx_mapping = {
     "mitsuba": ("https://eradiate-kernel.readthedocs.io/en/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/latest/", None),
     "attr": ("https://www.attrs.org/en/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
 }
 
 # Activate todo notes
