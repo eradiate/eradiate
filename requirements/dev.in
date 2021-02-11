@@ -4,6 +4,7 @@ black
 bump2version
 conda-lock
 ipython
+ipywidgets
 isort
 jupyterlab
 pip

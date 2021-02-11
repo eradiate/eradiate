@@ -172,6 +172,7 @@ iniconfig==1.1.1
 ipykernel==5.4.3
     # via
     #   -c requirements/dev.txt
+    #   ipywidgets
     #   notebook
 ipython-genutils==0.2.0
     # via
@@ -185,7 +186,10 @@ ipython==7.20.0
     #   -c requirements/dev.txt
     #   -r requirements/dev.in
     #   ipykernel
+    #   ipywidgets
     #   jupyterlab
+ipywidgets==7.6.3
+    # via -r requirements/dev.in
 isort==5.7.0
     # via
     #   -c requirements/dev.txt
@@ -244,6 +248,8 @@ jupyterlab-server==2.2.0
     # via
     #   -c requirements/dev.txt
     #   jupyterlab
+jupyterlab-widgets==1.0.0
+    # via ipywidgets
 jupyterlab==3.0.7
     # via
     #   -c requirements/dev.txt
@@ -297,6 +303,7 @@ nbconvert==6.0.7
 nbformat==5.1.2
     # via
     #   -c requirements/dev.txt
+    #   ipywidgets
     #   jupyter-server
     #   nbclient
     #   nbconvert
@@ -318,6 +325,7 @@ notebook==6.2.0
     # via
     #   -c requirements/dev.txt
     #   nbclassic
+    #   widgetsnbextension
 numpy==1.20.1
     # via
     #   -c requirements/dev.txt
@@ -635,6 +643,7 @@ traitlets==5.0.5
     #   -c requirements/dev.txt
     #   ipykernel
     #   ipython
+    #   ipywidgets
     #   jupyter-client
     #   jupyter-core
     #   jupyter-server
@@ -669,6 +678,8 @@ webencodings==0.5.1
     # via
     #   -c requirements/dev.txt
     #   bleach
+widgetsnbextension==3.5.1
+    # via ipywidgets
 xarray==0.16.2
     # via
     #   -c requirements/dev.txt
