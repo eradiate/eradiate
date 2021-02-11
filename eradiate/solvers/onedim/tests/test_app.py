@@ -75,12 +75,7 @@ def test_onedim_solver_app_new():
         OneDimSolverApp.new()
 
 
-_d = {attr.name: attr.default for attr in RadProfileFactory.registry["us76_approx"].__attrs_attrs__}
-_default_absorption_spectrum = _d["dataset"]
-
-
 @pytest.mark.slow
-@pytest.mark.skipif_data_not_found("absorption_spectrum", _default_absorption_spectrum)
 def test_onedim_scene_real_life(mode_mono):
     # Construct with typical parameters
     s = OneDimScene(

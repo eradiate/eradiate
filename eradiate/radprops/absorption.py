@@ -93,7 +93,7 @@ def compute_sigma_a(wavelength=550., profile=None, dataset_id=None):
     Returns → float or array:
         Absorption coefficient [m^-1].
     """
-    wavenumber = (1 / ureg.Quantity(wavelength, "nm")).to("cm^-1")
+    wavenumber = (1.0 / ureg.Quantity(wavelength, "nm")).to("cm^-1")
 
     # make default profile
     if profile is None:

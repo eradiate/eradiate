@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate.radprops import (
     ArrayRadProfile, RadProfileFactory, US76ApproxRadProfile
 )
@@ -32,28 +33,27 @@ def test_array_rad_props_profile(mode_mono):
                             sigma_t_values=np.linspace(0., 1e-5, 10))
 
 
+@pytest.mark.slow
 def test_us76_approx_rad_profile(mode_mono):
-    import eradiate
-
     # We set the wavelength ourselves because the test absorption dataset has
     # a very narrow wavelength range
     eradiate.set_mode("mono", wavelength=ureg.Quantity(630.827266, "nm"))
 
     # Default constructor
-    p = US76ApproxRadProfile(dataset="test")
+    p = US76ApproxRadProfile()
 
     for x in [p.sigma_a, p.sigma_s, p.sigma_t, p.albedo]:
         assert isinstance(x, ureg.Quantity)
         assert x.shape == (1, 1, 50)
 
     # Custom atmosphere height
-    p = US76ApproxRadProfile(height=120., dataset="test")
+    p = US76ApproxRadProfile(height=120.)
     for x in [p.sigma_a, p.sigma_s, p.sigma_t, p.albedo]:
         assert isinstance(x, ureg.Quantity)
         assert x.shape == (1, 1, 50)
 
     # Custom number of layers
-    p = US76ApproxRadProfile(n_layers=36, dataset="test")
+    p = US76ApproxRadProfile(n_layers=36)
     for x in [p.sigma_a, p.sigma_s, p.sigma_t, p.albedo]:
         assert isinstance(x, ureg.Quantity)
         assert x.shape == (1, 1, 36)
