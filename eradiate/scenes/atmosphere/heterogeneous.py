@@ -209,15 +209,26 @@ class HeterogeneousAtmosphere(Atmosphere):
         # Check for automatic width and height computation
         if self.profile is not None:
             if self.toa_altitude != "auto":
-                raise ValueError("height must be set to 'auto' when profile is "
-                                 "set")
+                raise ValueError("toa_altitude must be set to 'auto' when "
+                                 "profile is set")
+            if self.boa_altitude != "auto":
+                raise ValueError("boa_altitude must be set to 'auto' when "
+                                 "profile is set")
         else:
             if self.toa_altitude == "auto":
-                raise ValueError("height cannot be set to 'auto' when profile "
-                                 "is None")
+                raise ValueError("toa_altitude cannot be set to 'auto' when "
+                                 "profile is None")
+            if self.boa_altitude == "auto":
+                raise ValueError("boa_altitude cannot be set to 'auto' when "
+                                 "profile is None")
             if self.width == "auto":
                 raise ValueError("width cannot be set to 'auto' when profile "
                                  "is None")
+
+        # atmosphere top must be above atmosphere bottom
+        if self.bottom > self.top:
+            raise ValueError(f"boa_altitude ({self.bottom}) must be "
+                             f"smaller than toa_altitude ({self.top})")
 
         # Prepare cache directory in case we'd need it
         if self._cache_dir is None:
@@ -226,12 +237,24 @@ class HeterogeneousAtmosphere(Atmosphere):
             self._cache_dir.mkdir(parents=True, exist_ok=True)
 
     @property
-    def height(self):
+    def top(self):
         if self.toa_altitude == "auto":
             ds = self.profile.to_dataset()
-            return ureg.Quantity(ds.z_level.values.max(), ds.z_level.units)
+            return ureg.Quantity(
+                value=ds.z_level.values.max(),
+                units=ds.z_level.units)
         else:
-            return ureg.Quantity(100., ureg.km)
+            return self.toa_altitude
+
+    @property
+    def bottom(self):
+        if self.boa_altitude == "auto":
+            ds = self.profile.to_dataset()
+            return ureg.Quantity(
+                value=ds.z_level.values.min(),
+                units=ds.z_level.units)
+        else:
+            return self.boa_altitude
 
     @property
     def kernel_width(self):

@@ -40,6 +40,20 @@ def test_heterogeneous_nowrite(mode_mono):
         )
     )
 
+    # Atmosphere top must be above atmosphere bottom
+    with pytest.raises(ValueError):
+        r = HeterogeneousAtmosphere(
+            width=ureg.Quantity(100., ureg.km),
+            boa_altitude=ureg.Quantity(2., ureg.km),
+            toa_altitude=ureg.Quantity(1., ureg.km),
+            sigma_t_fname=_presolver.resolve(
+                "tests/textures/heterogeneous_atmosphere_mono/sigma_t.vol"
+            ),
+            albedo_fname=_presolver.resolve(
+                "tests/textures/heterogeneous_atmosphere_mono/albedo.vol"
+            )
+        )
+
     # Check if default output can be loaded
     p = a.phase()
     assert load_dict(onedict_value(p)) is not None

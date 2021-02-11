@@ -8,7 +8,7 @@ from ..spectra import Spectrum, SpectrumFactory, UniformSpectrum
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...util.attrs import converter_or_auto, validator_has_quantity, validator_or_auto
 from ...util.collections import onedict_value
-from ...util.units import kernel_default_units
+from ...util.units import kernel_default_units, ureg
 
 
 @AtmosphereFactory.register("homogeneous")
@@ -59,6 +59,25 @@ class HomogeneousAtmosphere(Atmosphere):
         validator=[attr.validators.instance_of(Spectrum),
                    validator_has_quantity("collision_coefficient")]
     )
+
+    def __attrs_post_init__(self):
+        if self.bottom > self.top:
+            raise ValueError(f"boa_altitude ({self.bottom}) must be "
+                             f"smaller than toa_altitude ({self.top})")
+
+    @property
+    def top(self):
+        if self.toa_altitude == "auto":
+            return ureg.Quantity(100, ureg.km)
+        else:
+            return self.toa_altitude
+
+    @property
+    def bottom(self):
+        if self.boa_altitude == "auto":
+            return ureg.Quantity(0, ureg.km)
+        else:
+            return self.boa_altitude
 
     @property
     def kernel_width(self):

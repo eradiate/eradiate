@@ -22,6 +22,13 @@ def test_homogeneous(mode_mono, ref):
     assert r.kernel_offset == ureg.Quantity(0.1, "km")
     assert r.kernel_height == ureg.Quantity(100.1, "km")
 
+    # Atmosphere top must be above atmosphere bottom
+    with pytest.raises(ValueError):
+        r = HomogeneousAtmosphere(
+            boa_altitude=2.,
+            toa_altitude=1.,
+        )
+
     # Check if default constructs can be loaded by the kernel
     dict_phase = onedict_value(r.phase())
     assert load_dict(dict_phase) is not None

@@ -44,8 +44,15 @@ class Atmosphere(SceneElement, ABC):
     )
 
     boa_altitude = attrib_quantity(
-        default=ureg.Quantity(0., "km"),
+        default="auto",
+        converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
+        validator=validator_or_auto(
+            validator_units_compatible(ureg.m),
+            validator_is_positive
+        ),
         units_compatible=cdu.generator("length"),
+        units_add_converter=False,
+        units_add_validator=False
     )
 
     toa_altitude = attrib_quantity(
@@ -73,19 +80,18 @@ class Atmosphere(SceneElement, ABC):
     )
 
     @property
+    @abstractmethod
     def top(self):
         """Top of the atmosphere altitude.
         """
-        if self.toa_altitude == "auto":
-            return ureg.Quantity(100, ureg.km)
-        else:
-            return self.toa_altitude
+        pass
 
     @property
+    @abstractmethod
     def bottom(self):
         """Bottom of the atmosphere altitude (alias to ``boa_altitude``).
         """
-        return self.boa_altitude
+        pass
 
     @property
     def height(self):
