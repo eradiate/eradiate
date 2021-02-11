@@ -40,6 +40,7 @@ from eradiate import __version__
 from eradiate import data
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
+from ..data.absorption_spectra import available_datasets
 from ..thermoprops import us76
 from ..util.attrs import (
     attrib_quantity, unit_enabled, validator_all_positive, validator_is_positive
@@ -446,7 +447,7 @@ class US76ApproxRadProfile(RadProfile):
     )
 
     dataset = attr.ib(
-        default="spectra-us76_u86_4-18000_18500",
+        default="spectra-us76_u86_4-18000_18500",  # this is a dummy default
         validator=attr.validators.optional(
             attr.validators.in_(
                 list(data.getter("absorption_spectrum").PATHS.keys())))
@@ -484,6 +485,20 @@ class US76ApproxRadProfile(RadProfile):
             wavelength=wavelength,
             number_density=ureg.Quantity(profile.n_tot.values, profile.n_tot.units),
         )
+
+        # find the absorption dataset
+        wavenumber = (1 / wavelength).to("cm^-1")
+        available = available_datasets(
+            wavenumber=wavenumber.magnitude,
+            absorber="us76_u86_4",
+            engine="spectra",
+        )
+        if available is not None:
+            self.dataset = available[0]  # take first available dataset
+        else:
+            raise ValueError(f"Could not find available datasets "
+                             f"corresponding to the current wavelength value "
+                             f"({wavelength})")
 
         # Compute absorption coefficient
         self._sigma_a_values = compute_sigma_a(
