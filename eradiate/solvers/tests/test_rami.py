@@ -6,8 +6,8 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import ModeError
-from eradiate.scenes.biosphere import HomogeneousDiscreteCanopy
-from eradiate.scenes.measure._distant import DistantMeasure
+from eradiate.scenes.biosphere import HomogeneousDiscreteCanopy, LeafCloud
+from eradiate.scenes.measure import DistantMeasure
 from eradiate.solvers.rami import RamiScene, RamiSolverApp
 
 
@@ -31,17 +31,18 @@ def test_rami_scene(mode_mono):
 
     # -- Check that surface is appropriately inherited from atmosphere
     s = RamiScene(
-        canopy=HomogeneousDiscreteCanopy.from_parameters(
-            size=ureg.Quantity([100, 50, 10], "m")
+        canopy=HomogeneousDiscreteCanopy(
+            leaf_cloud_specs=[(LeafCloud.from_parameters(), [0, 0, 0])],
+            size=ureg.Quantity([100, 50, 10], "m"),
         )
     )
     assert np.allclose(s.surface.width, ureg.Quantity(100., "m"))
 
     # -- Check that distant sensor target zone is appropriately defined
     s = RamiScene(
-        canopy=HomogeneousDiscreteCanopy.from_parameters(
-            size=ureg.Quantity([100, 50, 10], "m")
-        ),
+        canopy=HomogeneousDiscreteCanopy(
+        leaf_cloud_specs=[(LeafCloud.from_parameters(), [0, 0, 0])],
+        size= ureg.Quantity([100, 50, 10], "m")),
         measures=DistantMeasure()
     )
     target = s.measures[0].target
@@ -70,7 +71,9 @@ def test_rami_scene_real_life(mode_mono):
     # Construct with typical parameters
     s = RamiScene(
         surface={"type": "lambertian"},
-        canopy={"type": "homogeneous_discrete_canopy"},
+        canopy={"type": "homogeneous_discrete_canopy",
+                "leaf_cloud": {"shape_type": "cube"},
+                "size": ureg.Quantity([100, 50, 10], "m")},
         illumination={"type": "directional", "zenith": 45.},
         measures={"type": "distant"}
     )
@@ -88,7 +91,9 @@ def test_rami_solver_app_run(mode_mono):
     as well as the correct setting of data.
     """
     app = RamiSolverApp(scene=RamiScene(
-        canopy={"type": "homogeneous_discrete_canopy", "avoid_overlap": False},
+        canopy={"type": "homogeneous_discrete_canopy",
+                "leaf_cloud": {"shape_type": "cube"},
+                "size": ureg.Quantity([100, 50, 10], "m")},
         measures={"type": "distant"},
     ))
 

@@ -57,6 +57,8 @@ Biosphere [eradiate.scenes.biosphere]
    :toctree: generated/
 
    HomogeneousDiscreteCanopy
+   FloatingSpheresCanopy
+   RealZoomInCanopy
 
 .. _sec-reference-scenes-surface:
 
