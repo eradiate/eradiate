@@ -43,6 +43,11 @@ class Atmosphere(SceneElement, ABC):
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
+    boa_altitude = attrib_quantity(
+        default=ureg.Quantity(0., "km"),
+        units_compatible=cdu.generator("length"),
+    )
+
     toa_altitude = attrib_quantity(
         default="auto",
         converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
@@ -68,15 +73,25 @@ class Atmosphere(SceneElement, ABC):
     )
 
     @property
-    def height(self):
-        """Actual value of the atmosphere's height as a :class:`pint.Quantity`.
-        If ``toa_altitude`` is set to ``"auto"``, a value of 100 km is returned;
-        otherwise, ``toa_altitude`` is returned.
+    def top(self):
+        """Top of the atmosphere altitude.
         """
         if self.toa_altitude == "auto":
-            return ureg.Quantity(100., ureg.km)
+            return ureg.Quantity(100, ureg.km)
         else:
             return self.toa_altitude
+
+    @property
+    def bottom(self):
+        """Bottom of the atmosphere altitude (alias to ``boa_altitude``).
+        """
+        return self.boa_altitude
+
+    @property
+    def height(self):
+        """Atmosphere's height.
+        """
+        return self.top - self.bottom
 
     @property
     def kernel_height(self):
