@@ -18,12 +18,12 @@ def test_modes():
     # We expect that the kernel variant is appropriately selected
     assert eradiate.kernel.variant() == "scalar_mono"
     # We check for defaults
-    assert eradiate.mode.wavelength == ureg.Quantity(550., ureg.nm)
+    assert eradiate.mode().wavelength == ureg.Quantity(550., ureg.nm)
 
     # Check for unit conversion
     eradiate.set_mode("mono", wavelength=300.)
-    assert eradiate.mode.wavelength == ureg.Quantity(300., ureg.nm)
+    assert eradiate.mode().wavelength == ureg.Quantity(300., ureg.nm)
 
     # Check that mode instances are frozen
     with pytest.raises(FrozenInstanceError):
-        eradiate.mode.wavelength = 100
+        eradiate.mode().wavelength = 100

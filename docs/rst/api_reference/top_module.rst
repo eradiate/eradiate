@@ -13,21 +13,12 @@ Top-level module [eradiate]
    :toctree: generated/
 
    __version__
-   mode
-   modes
-
-
-.. rubric:: Classes
-
-.. autosummary::
-   :toctree: generated/
-
-   ModePrecision
-   ModeSpectrum
 
 .. rubric:: Functions
 
 .. autosummary::
    :toctree: generated/
 
+   mode
+   modes
    set_mode

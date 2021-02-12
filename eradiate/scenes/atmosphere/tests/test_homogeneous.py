@@ -46,7 +46,7 @@ def test_homogeneous(mode_mono, ref):
     assert r.toa_altitude == ureg.Quantity(10, ureg.km)
 
     # Check if sigma_s was correctly computed using the mode wavelength value
-    wavelength = eradiate.mode.wavelength
+    wavelength = eradiate.mode().wavelength
     assert np.isclose(r._sigma_s.value, compute_sigma_s_air(wavelength=wavelength))
 
     # Check if automatic scene width works as intended

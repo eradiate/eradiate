@@ -87,7 +87,7 @@ class HomogeneousAtmosphere(Atmosphere):
         if self.sigma_s == "auto":
             return UniformSpectrum(
                 quantity="collision_coefficient",
-                value=compute_sigma_s_air(wavelength=eradiate.mode.wavelength)
+                value=compute_sigma_s_air(wavelength=eradiate.mode().wavelength)
             )
         else:
             return self.sigma_s

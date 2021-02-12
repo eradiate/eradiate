@@ -12,6 +12,7 @@ from tinydb.storages import MemoryStorage
 
 import eradiate.kernel
 from ..onedim.runner import OneDimRunner
+from ..._mode import ModeNone
 from ...scenes.biosphere import (
     BiosphereFactory,
     Canopy
@@ -299,7 +300,7 @@ class RamiSolverApp:
         All arguments are forwarded to the :class:`.RamiSolverApp`
         constructor.
         """
-        if isinstance(eradiate.mode, eradiate.ModeNone):
+        if isinstance(eradiate.mode(), ModeNone):
             raise ModeError(f"no mode selected, use eradiate.set_mode()")
 
         return cls(*args, **kwargs)
@@ -368,7 +369,7 @@ class RamiSolverApp:
         sza = ensure_array(illumination.zenith.to(ureg.deg).magnitude, dtype=float)
         cos_sza = np.cos(illumination.zenith.to(ureg.rad).magnitude)
         saa = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
-        wavelength = ensure_array(eradiate.mode.wavelength.magnitude, dtype=float)
+        wavelength = ensure_array(eradiate.mode().wavelength.magnitude, dtype=float)
 
         # Format results
         sensor_query = Query()

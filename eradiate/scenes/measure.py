@@ -15,6 +15,7 @@ import numpy as np
 
 import eradiate.kernel
 from .core import SceneElement
+from .._mode import ModePrecision
 from ..util.attrs import (
     attrib_quantity,
     converter_quantity,
@@ -806,9 +807,11 @@ class RadianceMeterHsphereMeasure(Measure):
         corresponding SPP value. In the case of a SPP-split, none of the SPP
         values will exceed the threshold.
         """
+        mode = eradiate.mode()
+
         if (
-                eradiate.mode.precision == eradiate.ModePrecision.SINGLE
-                and self.spp > self._spp_max_single
+            mode.is_single_precision()
+            and self.spp > self._spp_max_single
         ):
             spps = [
                 self._spp_max_single
@@ -1057,9 +1060,11 @@ class RadianceMeterPlaneMeasure(Measure):
         corresponding SPP value. In the case of a SPP-split, none of the SPP
         values will exceed the threshold.
         """
+        mode = eradiate.mode()
+
         if (
-                eradiate.mode.precision == eradiate.ModePrecision.SINGLE
-                and self.spp > self._spp_max_single
+            mode.is_single_precision()
+            and self.spp > self._spp_max_single
         ):
             spps = [
                 self._spp_max_single
