@@ -137,7 +137,7 @@ can be changed to your liking. We will first create an empty environment:
 
 .. code:: bash
 
-   conda create eradiate
+   conda create --name eradiate
 
 .. warning:: If an environment with the same name exists, you will be prompted
    for overwrite.
