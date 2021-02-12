@@ -446,13 +446,6 @@ class US76ApproxRadProfile(RadProfile):
         repr=False,
     )
 
-    dataset = attr.ib(
-        default="spectra-us76_u86_4-18000_18500",  # this is a dummy default
-        validator=attr.validators.optional(
-            attr.validators.in_(
-                list(data.getter("absorption_spectrum").PATHS.keys())))
-    )
-
     def __attrs_post_init__(self):
         self.update()
 
@@ -487,15 +480,13 @@ class US76ApproxRadProfile(RadProfile):
         )
 
         # find the absorption dataset
-        wavenumber = (1 / wavelength).to("cm^-1")
+        wavenumber = (1.0 / wavelength).to("cm^-1")
         available = available_datasets(
             wavenumber=wavenumber.magnitude,
             absorber="us76_u86_4",
             engine="spectra",
         )
-        if available is not None:
-            self.dataset = available[0]  # take first available dataset
-        else:
+        if not available:
             raise ValueError(f"Could not find available datasets "
                              f"corresponding to the current wavelength value "
                              f"({wavelength})")
@@ -504,7 +495,7 @@ class US76ApproxRadProfile(RadProfile):
         self._sigma_a_values = compute_sigma_a(
             wavelength=wavelength,
             profile=profile,
-            dataset_id=self.dataset,
+            dataset_id=available[0],
         )
 
     @property

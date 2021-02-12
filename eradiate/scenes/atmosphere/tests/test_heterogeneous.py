@@ -96,10 +96,7 @@ def test_heterogeneous_us76(mode_mono, tmpdir):
     # Check if volume data file creation works as expected
     a = HeterogeneousAtmosphere(
         width=ureg.Quantity(1000., "km"),
-        profile={
-            "type": "us76_approx",
-            "dataset": "test",
-        },
+        profile={"type": "us76_approx"},
         cache_dir=tmpdir
     )
 
