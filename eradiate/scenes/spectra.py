@@ -13,6 +13,7 @@ import numpy as np
 import pint
 from pint import DimensionalityError
 
+import eradiate
 from .core import SceneElement
 from .. import data
 from ..util.attrs import attrib_quantity, documented, parse_docs, validator_is_positive, \
@@ -298,7 +299,7 @@ class SolarIrradianceSpectrum(Spectrum):
             raise ValueError(f"unknown dataset {self.dataset}")
 
     def kernel_dict(self, ref=True):
-        from eradiate import mode
+        mode = eradiate.mode()
 
         if mode.is_monochromatic():
             wavelength = mode.wavelength.to(ureg.nm).magnitude

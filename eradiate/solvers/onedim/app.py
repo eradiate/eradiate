@@ -13,6 +13,7 @@ from tinydb.storages import MemoryStorage
 
 import eradiate.kernel
 from .runner import OneDimRunner
+from ..._mode import ModeNone
 from ...scenes.atmosphere import AtmosphereFactory, HomogeneousAtmosphere
 from ...scenes.atmosphere.base import Atmosphere
 from ...scenes.core import KernelDict, SceneElement
@@ -283,7 +284,7 @@ class OneDimSolverApp:
         All arguments are forwarded to the :class:`.OneDimSolverApp`
         constructor.
         """
-        if isinstance(eradiate.mode, eradiate.ModeNone):
+        if isinstance(eradiate.mode(), ModeNone):
             raise ModeError(f"no mode selected, use eradiate.set_mode()")
 
         return cls(*args, **kwargs)
@@ -336,7 +337,7 @@ class OneDimSolverApp:
         sza = ensure_array(illumination.zenith.to(ureg.deg).magnitude, dtype=float)
         cos_sza = np.cos(illumination.zenith.to(ureg.rad).magnitude)
         saa = ensure_array(illumination.azimuth.to(ureg.deg).magnitude, dtype=float)
-        wavelength = ensure_array(eradiate.mode.wavelength.magnitude, dtype=float)
+        wavelength = ensure_array(eradiate.mode().wavelength.magnitude, dtype=float)
         # TODO: This will raise if illumination is not directional; handle that
 
         sensor_query = Query()

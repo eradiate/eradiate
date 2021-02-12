@@ -36,7 +36,7 @@ import attr
 import numpy as np
 import xarray as xr
 
-from eradiate import __version__
+import eradiate
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
 from ..data.absorption_spectra import find_dataset
@@ -45,6 +45,7 @@ from ..util.attrs import (
     attrib_quantity, documented, parse_docs, unit_enabled, validator_all_positive,
     validator_is_positive
 )
+from ..util.exceptions import ModeError
 from ..util.factory import BaseFactory
 from ..util.units import config_default_units as cdu
 from ..util.units import ureg
@@ -155,7 +156,7 @@ def make_dataset(z_level, z_layer=None, sigma_a=None, sigma_s=None, sigma_t=None
                 f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
                 f"data set creation - "
                 f"{__name__}.make_dataset",
-            "source": f"eradiate, version {__version__}",
+            "source": f"eradiate, version {eradiate.__version__}",
             "references": "",
         }
     )
@@ -469,8 +470,7 @@ class US76ApproxRadProfile(RadProfile):
         """Update internal variables. An update is required to recompute the
         internal state when the wavelength is changed.
         """
-        from eradiate import mode
-        from eradiate.util.exceptions import ModeError
+        mode = eradiate.mode()
 
         if not mode.is_monochromatic():
             raise ModeError(f"unsupported mode {mode.id}")
