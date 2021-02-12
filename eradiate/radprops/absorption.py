@@ -50,94 +50,124 @@
     The meaning of the first 5 attributes is explained in the C.F. 1.8
     convention (http://cfconventions.org/).
 """
-import eradiate.data as data
-from eradiate.data.absorption_spectra import available_datasets
+import numpy as np
+from scipy.constants import physical_constants
+
 from ..util.units import ureg
 
+_BOLTZMANN = ureg.Quantity(*physical_constants['Boltzmann constant'][:2])
 
-@ureg.wraps(ret="m^-1", args=("nm", None, None), strict=False)
-def compute_sigma_a(wavelength=550., profile=None, dataset_id=None):
-    """Computes the monochromatic absorption coefficient in the thermophysical
-    conditions given by a thermophysical ``profile``.
+
+def _check_within_range(name, value, lower, upper):
+    value = np.array(value)
+    if (value < lower).any() or (value > upper).any():
+        raise ValueError(f"{name} value(s) ({value}) is outside of range "
+                         f"({lower}, {upper})")
+
+
+@ureg.wraps(ret="m^-1", args=(None, "nm", "Pa", "K", "m^-3", None), strict=False)
+def compute_sigma_a(ds, wl=550., p=101325., t=288.15, n=None,
+                    p_fill_value=None):
+    """Computes the monochromatic absorption coefficient at given wavelength,
+    pressure and temperature values, according to the formula:
+
+    .. math::
+        k_{a\\lambda} = n \\, \\sigma_{a\\lambda} (p, T)
+
+    where
+    :math:`k_{a\\lambda}` is the absorption coefficient,
+    :math:`\\lambda` is the wavelength,
+    :math:`n` is the number density,
+    :math:`\\sigma_a` is the absorption cross section,
+    :math:`p` is the pressure and
+    :math:`t` is the temperature.
 
     .. note::
-        This function requires that the absorption cross section datasets
-        corresponding to ``dataset_id`` are downloaded and placed at the
-        appropriate location. See :mod:`~eradiate.data` module for more
-        information about the registered dataset ids and the corresponding
-        paths.
+        if the coordinate ``t`` is not in the dataset ``ds``, the interpolation
+        on temperature is not performed.
+        If ``n`` is ``None``, the value of the parameter ``t`` is then used
+        only to compute the corresponding number density.
+        Else, the value of ``t`` is simply ignored.
 
     .. note::
-        So far, this function only supports the U.S. Standard Atmosphere 1976
-        profile.
+        If at least two of ``p``, ``t`` and ``n`` are arrays, either their
+        length are the same, or one of them has a length of 1.
 
-    Parameter ``wavelength`` (float or array):
+    Parameter ``ds`` (:class:`~xarray.Dataset`):
+        Absorption cross section dataset.
+
+    Parameter ``wl`` (float):
         Wavelength value [nm].
 
-    Parameter ``profile`` (`~xr.Dataset`):
-        Atmosphere's thermophysical profile.
+        Default: 550 nm.
 
-        Default value: U.S. Standard Atmosphere 1976 profile with 50 regular
-        layers between 0 and 100 km.
+    Parameter ``p`` (float or array):
+        Pressure [Pa].
 
-    Parameter ``dataset_id`` (str):
-        Dataset identifier.
+        Default: 101325 Pa.
 
-        .. warning::
+    Parameter ``t`` (float or array):
+        Temperature [K].
 
-            This parameter serves as debugging tool.
-            The dataset identifier is determined automatically, based upon the
-            atmospheric thermophysical profile. Use only if you know
-            what you are doing.
+        Default: 288.15 K.
+
+    Parameter ``n`` (float or array):
+        Number density [m^-3].
+
+        Default: ``None``.
+
+    Parameter ``p_fill_value`` (float):
+        If not ``None``, out of bounds values are assigned ``p_fill_value``
+        during interpolation on pressure.
+
+        Default: ``None``
 
     Returns → float or array:
         Absorption coefficient [m^-1].
     """
-    wavenumber = (1.0 / ureg.Quantity(wavelength, "nm")).to("cm^-1")
+    # check wavelength is within range of dataset
+    wn_max = ureg.Quantity(value=ds.w.values.max(), units=ds.w.units)
+    wn_min = ureg.Quantity(value=ds.w.values.min(), units=ds.w.units)
+    _check_within_range(name="wavelength",
+                        value=wl,
+                        lower=(1 / wn_max).to("nm").magnitude,
+                        upper=(1 / wn_min).to("nm").magnitude)
 
-    # make default profile
-    if profile is None:
-        from ..thermoprops.us76 import make_profile
-        profile = make_profile()
+    # compute wavenumber
+    wn = (1.0 / ureg.Quantity(wl, "nm")).to(ds.w.units).magnitude
 
-    n_tot = ureg.Quantity(profile.n_tot.values, profile.n_tot.units)
-    p = ureg.Quantity(profile.p.values, profile.p.units)
+    # interpolate in wavenumber
+    xsw = ds.xs.interp(w=wn)
 
-    # open the absorption cross section dataset and interpolate
-    if profile.attrs["title"] == "U.S. Standard Atmosphere 1976":
-        if dataset_id is None:
-            available = available_datasets(
-                wavenumber=wavenumber.magnitude,
-                absorber="us76_u86_4",
-                engine="spectra",
-            )
-            if available is not None:
-                dataset_id = available[0]  # take first available dataset
-            else:
-                raise ValueError(f"Could not find available datasets "
-                                 f"corresponding to this wavenumber value "
-                                 f"({wavenumber.magnitude})")
-
-        ds = data.open(category="absorption_spectrum", id=dataset_id)
-        xsw = ds.xs.interp(w=wavenumber.magnitude)
-        xsp = xsw.interp(
-            p=p.magnitude,
-            kwargs=dict(fill_value=0.)  # this is required to handle the
-            # pressure values that are smaller than 0.101325 Pa (the pressure
-            # point with the smallest value in the absorption datasets) in the
-            # US76 profile. These small pressure values occur above the
-            # altitude of 93 km. Considering that the air number density at
-            # these altitudes is small than the air number density at the
-            # surface by a factor larger than 1e5, we assume that the
-            # corresponding absorption coefficient is negligible compared to
-            # 0.01 km^-1.
-        )
-        xs = ureg.Quantity(xsp.values, xsp.units)
+    # interpolate in pressure
+    if p_fill_value is None:
+        _check_within_range(name="pressure",
+                            value=p,
+                            lower=xsw.p.values.min(),
+                            upper=xsw.p.values.max())
+        xsp = xsw.interp(p=p)
     else:
-        raise NotImplementedError(
-            "Only the U.S. Standard Atmosphere 1976 profile is supported so "
-            "far.")
+        xsp = xsw.interp(p=p, kwargs=dict(fill_value=p_fill_value))
 
-    sigma = (n_tot * xs).to("m^-1").magnitude
+    # interpolate in temperature
+    if "t" in ds.coords:
+        _check_within_range(name="temperature",
+                            value=t,
+                            lower=xsw.t.values.min(),
+                            upper=xsw.t.values.max())
+        xst = xsp.interp(t=t)
+    else:
+        xst = xsp
+
+    xs = ureg.Quantity(xst.values, xst.units)
+
+    # compute number density
+    if n is None:
+        k = _BOLTZMANN.magnitude
+        n = p / (k * t)
+    n = ureg.Quantity(value=n, units="m^-3")
+
+    # compute absorption coefficient
+    sigma = (n * xs).to("m^-1").magnitude
 
     return sigma

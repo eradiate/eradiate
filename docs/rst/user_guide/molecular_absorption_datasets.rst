@@ -23,38 +23,64 @@ for each of these data sets.
      - Download link
    * - :ref:`spectra_us76_u86_4 <sec-user_guide-molecular_absorption_datasets-spectra_us76_u86_4>`
      - US76 standard atmosphere absorption cross sections below 86km with four molecules (N2, O2, CO2 and CH4)
-     - `Link <https://eradiate.eu/data/spectra-us76_u86_4-4000_25711.zip>`_
+     - `Link <https://eradiate.eu/data/spectra-us76_u86_4.zip>`_
 
 .. _sec-user_guide-molecular_absorption_datasets-spectra_us76_u86_4:
 
-spectra_us76_u86_4
+spectra-us76_u86_4
 ------------------
 
-Absorption cross section dataset for the ``us76_u86_4`` mixture. The dataset follows the US76 atmospheric profile
-:cite:`NASA1976USStandardAtmosphere` up to an altitude of 86 kilometers and contains four molecular species.
-The absorption cross section values were computed using `SPECTRA <https://spectra.iao.ru/>`_.
+This absorption spectrum is that of the gas mixture ``us76_u86_4`` defined by
+the following volume mixing ratio:
 
-This dataset can be interpolated both in wavenumber and in pressure.
-Since the dataset is specific to the US76 atmosphere thermophysical profile, when interpolating along one of the axes,
-the other axis' value will match the corresponding value pair in said profile.
-In other words, the dataset must be interpolated only once to find the absorption cross section corresponding
-to a set of pressure and temperature values.
+- ``N2``: 0.78084
+- ``O2``: 0.209476
+- ``CO2``: 0.000314
+- ``CH4``: 0.000002
 
-The dataset is limited to altitudes below 86 kilometers, because for these altitudes, the gasses can be
-assumed to be well mixed. Above 86 kilometers the air number density is smaller than a factor of 1e-5 compared
-to sea level and the assumption of well mixing breaks down.
+This gas mixture corresponds to the gas mixture that is present in the lower
+86 km part of the atmosphere in the US76 model
+:cite:`NASA1976USStandardAtmosphere`, when the composition is
+restricted to 4 gas species, namely **N2**, **O2**, **CO2** and **CH4**.
+The dataset is limited to altitudes below 86 kilometers, because for these
+altitudes, the gases are assumed to be well mixed in the US76 atmosphere
+thermophysical model.
 
-The ``us76_u86_4`` mixture is defined as the gas mixture in the US76 atmosphere model for altitudes below
-86 kilometers and restricted to four gas species: N2, O2, CO2, CH4.
-The volume fractions are the following:
+The absorption cross section values were computed using
+`SPECTRA <https://spectra.iao.ru/>`_.
 
-- N2: 0.78084
-- O2: 0.209476
-- CO2: 0.000314
-- CH4: 0.000002
+The ``spectra-us76_u86_4`` dataset has a wavenumber coordinate and a pressure
+coordinate. The table below indicates the characteristics of the spectral and
+pressure meshes.
 
-.. admonition:: Note
+.. list-table::
+   :widths: 1 1 1 1
+   :header-rows: 1
 
-   The dataset is restricted to these four species, because the others (Ar, Ne, He, Kr, Xe) are not
-   available in the `HITRAN <https://hitran.org/>`_ database used by SPECTRA.
-   Notably H2O is absent from this list of gas species as well!
+   * - Coordinate
+     - Minimum value
+     - Maximum value
+     - Step
+   * - Wavenumber (cm^-1)
+     - 4000
+     - 25711
+     - 0.00314
+   * - Wavelength (nm)
+     - ~389
+     - 2500
+     - (variable)
+   * - Pressure (Pa)
+     - 0.101325
+     - 101325
+     - (variable)
+
+The pressure mesh is 64 values geometrically spaced between the minimum and
+maximum values.
+This dataset can be interpolated both in wavenumber and pressure, but has no
+temperature coordinate.
+Since the dataset is specific to the US76 atmosphere thermophysical profile,
+when interpolating along the pressure axis, the temperature axis' value will
+match the corresponding value pair in said profile.
+In other words, the dataset must be interpolated only once to find the
+absorption cross section corresponding to a set of pressure and temperature
+values.

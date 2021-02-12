@@ -40,7 +40,7 @@ from eradiate import __version__
 from eradiate import data
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
-from ..data.absorption_spectra import available_datasets
+from ..data.absorption_spectra import find_dataset
 from ..thermoprops import us76
 from ..util.attrs import (
     attrib_quantity, unit_enabled, validator_all_positive, validator_is_positive
@@ -371,9 +371,8 @@ class US76ApproxRadProfile(RadProfile):
 
     .. note::
 
-       Instantiating this class requires to download the absorption datasets
-       for the ``us76_u86_4`` gas mixture and place them in
-       ``$ERADIATE_DIR/resources/data/``.
+       Instantiating this class requires to download the absorption dataset
+       ``spectra-us76_u86_4`` and place it in ``$ERADIATE_DIR/resources/data/``.
 
     The radiative properties are computed based upon the so-called US76
     atmospheric vertical profile.
@@ -401,17 +400,6 @@ class US76ApproxRadProfile(RadProfile):
         Atmosphere's height. Default: 100 km.
 
         Unit-enabled field (default: cdu[length]).
-
-    ``dataset`` (str):
-        Dataset identifier. Default: ``None``.
-
-        .. warning::
-
-           This attribute exists for testing purposes. Unless during testing,
-           it should be used with its default value. The
-           :func:`eradiate.radprops.absorption.compute_sigma_a`
-           function will figure out automatically what absorption dataset
-           to use, based on the thermophysical profile and the wavelength value.
     """
     n_layers = attr.ib(
         default=50,
@@ -447,21 +435,6 @@ class US76ApproxRadProfile(RadProfile):
     )
 
     def __attrs_post_init__(self):
-        self.update()
-
-    def update(self):
-        """Update internal variables. An update is required to recompute the
-        internal state when any of the ``n_layers`` or ``height`` attributes
-        is modified.
-        """
-        from eradiate import mode
-        from eradiate.util.exceptions import ModeError
-
-        if not mode.is_monochromatic():
-            raise ModeError(f"unsupported mode {mode.id}")
-        else:
-            wavelength = mode.wavelength
-
         # Compute total number density and pressure values
         altitude_mesh = np.linspace(
             start=0.,
@@ -473,7 +446,22 @@ class US76ApproxRadProfile(RadProfile):
         profile = us76.make_profile(altitude_mesh)
         self._thermo_profile = profile
 
+        self.update()
+
+    def update(self):
+        """Update internal variables. An update is required to recompute the
+        internal state when the wavelength is changed.
+        """
+        from eradiate import mode
+        from eradiate.util.exceptions import ModeError
+
+        if not mode.is_monochromatic():
+            raise ModeError(f"unsupported mode {mode.id}")
+        else:
+            wavelength = mode.wavelength
+
         # Compute scattering coefficient
+        profile = self._thermo_profile
         self._sigma_s_values = compute_sigma_s_air(
             wavelength=wavelength,
             number_density=ureg.Quantity(profile.n_tot.values, profile.n_tot.units),
@@ -481,21 +469,24 @@ class US76ApproxRadProfile(RadProfile):
 
         # find the absorption dataset
         wavenumber = (1.0 / wavelength).to("cm^-1")
-        available = available_datasets(
+        dataset_id = find_dataset(
             wavenumber=wavenumber.magnitude,
             absorber="us76_u86_4",
             engine="spectra",
         )
-        if not available:
-            raise ValueError(f"Could not find available datasets "
-                             f"corresponding to the current wavelength value "
-                             f"({wavelength})")
 
+        dataset = data.open(category="absorption_spectrum", id=dataset_id)
         # Compute absorption coefficient
         self._sigma_a_values = compute_sigma_a(
-            wavelength=wavelength,
-            profile=profile,
-            dataset_id=available[0],
+            dataset,
+            wl=wavelength,
+            p=profile.p.values,
+            n=profile.n_tot.values,
+            p_fill_value=0.,  # us76_u86_4 dataset is limited to pressures above
+            # 0.101325 Pa, but us76 thermophysical profile goes below that
+            # value for altitudes larger than 93 km. At these altitudes, the
+            # number density is so small compared to that at the sea level that
+            # we assume it is negligible.
         )
 
     @property
