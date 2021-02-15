@@ -37,13 +37,13 @@ import numpy as np
 import xarray as xr
 
 from eradiate import __version__
-from eradiate import data
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
 from ..data.absorption_spectra import find_dataset
 from ..thermoprops import us76
 from ..util.attrs import (
-    attrib_quantity, unit_enabled, validator_all_positive, validator_is_positive
+    attrib_quantity, documented, parse_docs, unit_enabled, validator_all_positive,
+    validator_is_positive
 )
 from ..util.factory import BaseFactory
 from ..util.units import config_default_units as cdu
@@ -218,11 +218,6 @@ class RadProfile(ABC):
     @property
     @abstractmethod
     def sigma_s(self):
-        """Return scattering coefficient.
-
-        Returns → :class:`pint.Quantity`:
-            Profile scattering coefficient.
-        """
         pass
 
     @abstractmethod
@@ -251,6 +246,7 @@ class RadProfileFactory(BaseFactory):
 
 
 @RadProfileFactory.register("array")
+@parse_docs
 @attr.s
 class ArrayRadProfile(RadProfile):
     """A flexible radiative property profile whose albedo and extinction
@@ -283,46 +279,43 @@ class ArrayRadProfile(RadProfile):
         Note that the shape of the ``sigma_t_values`` and ``albedo_values``
         arrays is :code:`(1, 1, 3)`, where the last dimension corresponds
         to the ``z`` dimension.
-
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``albedo_values`` (array):
-        An array specifying albedo values.
-        **Required, no default**.
-
-        Unit-enabled field (dimensionless).
-
-    ``height`` (float):
-        Height of the atmosphere
-
-        Default: 100 km.
-
-        Unit-enabled field (default: cdu[length]).
-
-    ``sigma_t_values`` (array):
-        An array specifying extinction coefficient values.
-        **Required, no default**.
-
-        Unit-enabled field (default: cdu[length]^-1).
     """
 
-    albedo_values = attrib_quantity(
-        default=None,
-        validator=validator_all_positive,
-        units_compatible=ureg.dimensionless,
+    albedo_values = documented(
+        attrib_quantity(
+            default=None,
+            validator=validator_all_positive,
+            units_compatible=ureg.dimensionless,
+        ),
+        doc="An array specifying albedo values. **Required, no default**.\n"
+            "\n"
+            "Unit-enabled field (dimensionless).",
+        type="array",
     )
 
-    height = attrib_quantity(
-        default=ureg.Quantity(100, "km").to(cdu.get_str("length")),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("length")
+    height = documented(
+        attrib_quantity(
+            default=ureg.Quantity(100, "km").to(cdu.get_str("length")),
+            validator=validator_is_positive,
+            units_compatible=cdu.generator("length")
+        ),
+        doc="Height of the atmosphere. Default: 100 km.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="float",
     )
 
-    sigma_t_values = attrib_quantity(
-        default=None,
-        validator=validator_all_positive,
-        units_compatible=cdu.generator("collision_coefficient"),
+    sigma_t_values = documented(
+        attrib_quantity(
+            default=None,
+            validator=validator_all_positive,
+            units_compatible=cdu.generator("collision_coefficient"),
+        ),
+        doc="An array specifying extinction coefficient values. **Required, no "
+            "default**.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]^-1).",
+        type="array",
     )
 
     @albedo_values.validator
@@ -340,21 +333,47 @@ class ArrayRadProfile(RadProfile):
 
     @property
     def albedo(self):
+        """Return albedo.
+
+        Returns → :class:`pint.Quantity`:
+            Profile albedo.
+        """
         return self.albedo_values
 
     @property
     def sigma_t(self):
+        """Return extinction coefficient.
+
+        Returns → :class:`pint.Quantity`:
+            Profile extinction coefficient.
+        """
         return self.sigma_t_values
 
     @property
     def sigma_a(self):
+        """Return absorption coefficient.
+
+        Returns → :class:`pint.Quantity`:
+            Profile absorption coefficient.
+        """
         return self.sigma_t * (1. - self.albedo)
 
     @property
     def sigma_s(self):
+        """Return scattering coefficient.
+
+        Returns → :class:`pint.Quantity`:
+            Profile scattering coefficient.
+        """
         return self.sigma_t * self.albedo
 
     def to_dataset(self):
+        """Return a dataset that holds the radiative properties of the
+        corresponding atmospheric profile.
+
+        Returns → :class:`xarray.Dataset`:
+            Radiative properties dataset.
+        """
         n_layers = self.sigma_t.size
         return make_dataset(
             z_level=np.linspace(0., self.height.to("m"), n_layers + 1),
@@ -364,7 +383,7 @@ class ArrayRadProfile(RadProfile):
 
 
 @RadProfileFactory.register("us76_approx")
-@unit_enabled
+@parse_docs
 @attr.s
 class US76ApproxRadProfile(RadProfile):
     """A US76-approximation radiative profile.
@@ -388,30 +407,28 @@ class US76ApproxRadProfile(RadProfile):
     consists in multiplying these cross sections by the total number density
     values from the US76 atmospheric vertical profile, in the corresponding
     atmospheric layers.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``n_layers`` (int):
-        Number of atmospheric layers.
-
-        Default: 50
-
-    ``height`` (float):
-        Atmosphere's height. Default: 100 km.
-
-        Unit-enabled field (default: cdu[length]).
     """
-    n_layers = attr.ib(
-        default=50,
-        converter=int,
-        validator=validator_is_positive
+    n_layers = documented(
+        attr.ib(
+            default=50,
+            converter=int,
+            validator=validator_is_positive
+        ),
+        doc="Number of atmospheric layers. Default: 50",
+        type="int",
     )
 
-    height = attrib_quantity(
-        default=ureg.Quantity(100., ureg.km),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("length"),
-        units_add_converter=True,
+    height = documented(
+        attrib_quantity(
+            default=ureg.Quantity(100., ureg.km),
+            validator=validator_is_positive,
+            units_compatible=cdu.generator("length"),
+            units_add_converter=True,
+        ),
+        doc="Atmosphere's height. Default: 100 km.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="float"
     )
 
     _sigma_s_values = attrib_quantity(
@@ -491,21 +508,47 @@ class US76ApproxRadProfile(RadProfile):
 
     @property
     def albedo(self):
+        """Return albedo.
+
+        Returns → :class:`pint.Quantity`:
+            Profile albedo.
+        """
         return (self.sigma_s / self.sigma_t).to(ureg.dimensionless)
 
     @property
     def sigma_a(self):
+        """Return absorption coefficient.
+
+        Returns → :class:`pint.Quantity`:
+            Profile absorption coefficient.
+        """
         return self._sigma_a_values[np.newaxis, np.newaxis, ...]
 
     @property
     def sigma_s(self):
+        """Return scattering coefficient.
+
+        Returns → :class:`pint.Quantity`:
+            Profile scattering coefficient.
+        """
         return self._sigma_s_values[np.newaxis, np.newaxis, ...]
 
     @property
     def sigma_t(self):
+        """Return extinction coefficient.
+
+        Returns → :class:`pint.Quantity`:
+            Profile extinction coefficient.
+        """
         return self.sigma_a + self.sigma_s
 
     def to_dataset(self):
+        """Return a dataset that holds the radiative properties of the
+        corresponding atmospheric profile.
+
+        Returns → :class:`xarray.Dataset`:
+            Radiative properties dataset.
+        """
         return make_dataset(
             z_level=self._thermo_profile.z_level.values,
             z_layer=self._thermo_profile.z_layer.values,

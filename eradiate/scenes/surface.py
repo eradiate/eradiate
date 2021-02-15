@@ -14,7 +14,7 @@ import attr
 from .core import SceneElement
 from .spectra import Spectrum, SpectrumFactory
 from ..util.attrs import (
-    attrib_quantity, validator_has_quantity, validator_is_positive
+    attrib_quantity, documented, get_doc, parse_docs, validator_has_quantity, validator_is_positive
 )
 from ..util.factory import BaseFactory
 from ..util.units import config_default_units as cdu
@@ -22,30 +22,35 @@ from ..util.units import kernel_default_units as kdu
 from ..util.units import ureg
 
 
+@parse_docs
 @attr.s
 class Surface(SceneElement, ABC):
-    """An abstract base class defining common facilities for all surfaces.
+    """
+    An abstract base class defining common facilities for all surfaces.
     All these surfaces consist of a square parametrised by its width.
-
-    See :class:`~eradiate.scenes.core.SceneElement` for undocumented members.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``width`` (float):
-        Surface size. Default: 100 km.
-
-        Unit-enabled field (default: cdu[length]).
     """
 
-    id = attr.ib(
-        default="surface",
-        validator=attr.validators.optional(attr.validators.instance_of(str)),
+    id = documented(
+        attr.ib(
+            default="surface",
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
+        ),
+        doc=get_doc(SceneElement, "id", "doc"),
+        type=get_doc(SceneElement, "id", "type"),
+        default="\"surface\""
     )
 
-    width = attrib_quantity(
-        default=ureg.Quantity(100., ureg.km),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("length")
+    width = documented(
+        attrib_quantity(
+            default=ureg.Quantity(100., ureg.km),
+            validator=validator_is_positive,
+            units_compatible=cdu.generator("length")
+        ),
+        doc="Surface size.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="float",
+        default="100 km",
     )
 
     @abstractmethod
@@ -114,28 +119,25 @@ class SurfaceFactory(BaseFactory):
 
 
 @SurfaceFactory.register("lambertian")
+@parse_docs
 @attr.s
 class LambertianSurface(Surface):
     """Lambertian surface scene element [:factorykey:`lambertian`].
 
     This class creates a square surface to which a Lambertian BRDF is attached.
-
-    See :class:`.Surface` for undocumented members.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``reflectance`` (:class:`.UniformSpectrum`):
-        Reflectance spectrum. Default: 0.5.
-
-        Can be initialised with a dictionary processed by
-        :class:`.SpectrumFactory`.
     """
 
-    reflectance = attr.ib(
-        default=0.5,
-        converter=SpectrumFactory.converter("reflectance"),
-        validator=[attr.validators.instance_of(Spectrum),
-                   validator_has_quantity("reflectance")]
+    reflectance = documented(
+        attr.ib(
+            default=0.5,
+            converter=SpectrumFactory.converter("reflectance"),
+            validator=[attr.validators.instance_of(Spectrum),
+                       validator_has_quantity("reflectance")]
+        ),
+        doc="Reflectance spectrum. Can be initialised with a dictionary "
+            "processed by :class:`.SpectrumFactory`.",
+        type=":class:`.UniformSpectrum`",
+        default="0.5",
     )
 
     def bsdfs(self):
@@ -148,13 +150,12 @@ class LambertianSurface(Surface):
 
 
 @SurfaceFactory.register("black")
+@parse_docs
 @attr.s
 class BlackSurface(Surface):
     """Black surface scene element [:factorykey:`black`].
 
-    This class creates a square surface with a non-reflecting BRDF attached.
-
-    See :class:`.Surface` for undocumented members.
+    This class creates a square surface with a black BRDF attached.
     """
 
     def bsdfs(self):
@@ -167,6 +168,7 @@ class BlackSurface(Surface):
 
 
 @SurfaceFactory.register("rpv")
+@parse_docs
 @attr.s
 class RPVSurface(Surface):
     """RPV surface scene element [:factorykey:`rpv`].
@@ -177,37 +179,39 @@ class RPVSurface(Surface):
 
     The default configuration corresponds to grassland (visible light)
     (:cite:`Rahman1993CoupledSurfaceatmosphereReflectance`, Table 1).
-
-    See :class:`.Surface` for undocumented members.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``rho_0`` (float):
-        Default: 0.183.
-
-    ``k`` (float):
-        Default: 0.780.
-
-    ``ttheta`` (float):
-        Default: -0.1.
     """
 
     # TODO: check if there are bounds to default parameters
     # TODO: add support for spectra
 
-    rho_0 = attr.ib(
-        default=0.183,
-        converter=float
+    rho_0 = documented(
+        attr.ib(
+            default=0.183,
+            converter=float
+        ),
+        doc=":math:`\\rho_0` parameter.",
+        type="float",
+        default="0.183",
     )
 
-    k = attr.ib(
-        default=0.780,
-        converter=float
+    k = documented(
+        attr.ib(
+            default=0.780,
+            converter=float
+        ),
+        doc=":math:`k` parameter.",
+        type="float",
+        default="0.780",
     )
 
-    ttheta = attr.ib(
-        default=-0.1,
-        converter=float
+    ttheta = documented(
+        attr.ib(
+            default=-0.1,
+            converter=float
+        ),
+        doc=":math:`\\Theta` parameter.",
+        type="float",
+        default="-0.1",
     )
 
     def bsdfs(self):

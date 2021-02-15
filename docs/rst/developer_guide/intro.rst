@@ -10,7 +10,6 @@ Developer guide
    dependencies
    testing
    documentation
-   tutorials
    scene_element_guide
    factory_guide
    unit_guide_developer

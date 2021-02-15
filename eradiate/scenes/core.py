@@ -1,14 +1,12 @@
 """Basic abstractions and utilities to assist with scene generation."""
 
-import importlib
 from abc import ABC, abstractmethod
 
 import attr
 
 import eradiate.kernel
-from ..util.attrs import unit_enabled
+from ..util.attrs import documented, parse_docs, unit_enabled
 from ..util.exceptions import KernelVariantError
-from ..util.factory import BaseFactory
 
 
 class KernelDict(dict):
@@ -106,6 +104,7 @@ class KernelDict(dict):
         return load_dict(self)
 
 
+@parse_docs
 @unit_enabled
 @attr.s
 class SceneElement(ABC):
@@ -118,16 +117,16 @@ class SceneElement(ABC):
 
         This class is designed to integrate with factory classes derived from
         :class:`.Factory`.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``id`` (str or None):
-        User-defined object identifier. Default: ``None``.
     """
 
-    id = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(str)),
+    id = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
+        ),
+        doc="User-defined object identifier.",
+        type="str or None",
+        default="None",
     )
 
     @abstractmethod

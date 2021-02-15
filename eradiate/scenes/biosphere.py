@@ -9,26 +9,26 @@
 
 __all__ = ["BiosphereFactory", "HomogeneousDiscreteCanopy"]
 
+import os
 from abc import ABC, abstractmethod
+from copy import copy
 
 import aabbtree
 import attr
-from copy import copy
 import numpy as np
-import os
 
 from .core import SceneElement
 from .spectra import Spectrum, SpectrumFactory
 from ..util.attrs import (
     attrib_quantity,
-    validator_has_len,
+    documented, get_doc, parse_docs, validator_has_len,
     validator_has_quantity,
     validator_is_positive,
 )
 from ..util.factory import BaseFactory
 from ..util.units import config_default_units as cdu
+from ..util.units import ensure_units, ureg
 from ..util.units import kernel_default_units as kdu
-from ..util.units import ureg, ensure_units
 
 
 class BiosphereFactory(BaseFactory):
@@ -53,16 +53,27 @@ class Canopy(SceneElement, ABC):
     """
 
     # fmt: off
-    id = attr.ib(
-        default="canopy",
-        validator=attr.validators.optional(attr.validators.instance_of(str)),
+    id = documented(
+        attr.ib(
+            default="canopy",
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
+        ),
+        doc=get_doc(SceneElement, "id", "doc"),
+        type=get_doc(SceneElement, "id", "type"),
+        default="\"canopy\"",
     )
 
-    size = attrib_quantity(
-        default=None,
-        # TODO: add other validators maybe
-        validator=validator_has_len(3),
-        units_compatible=cdu.generator("length"),
+    size = documented(
+        attrib_quantity(
+            default=None,
+            # TODO: add other validators maybe
+            validator=validator_has_len(3),
+            units_compatible=cdu.generator("length"),
+        ),
+        doc="Canopy size.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="array-like[float, float, float]",
     )
     # fmt: on
 
@@ -298,81 +309,95 @@ def _create_leaf_cloud(
 
 
 @BiosphereFactory.register("homogeneous_discrete_canopy")
+@parse_docs
 @attr.s
 class HomogeneousDiscreteCanopy(Canopy):
-    """A generator for the `homogenous discrete canopy used in the RAMI benchmark
-    <https://rami-benchmark.jrc.ec.europa.eu/_www/phase/phase_exp.php?strTag=level3&strNext=meas&strPhase=RAMI3&strTagValue=HOM_SOL_DIS>`_.
+    """A generator for the
+    `homogenous discrete canopy used in the RAMI benchmark <https://rami-benchmark.jrc.ec.europa.eu/_www/phase/phase_exp.php?strTag=level3&strNext=meas&strPhase=RAMI3&strTagValue=HOM_SOL_DIS>`_.
 
     This canopy can be instantiated in two ways:
 
-    - The classmethod :meth:`~eradiate.scenes.biosphere.HomogeneousDiscreteCanopy.from_parameters`
-      takes a set of parameters and will generate the canopy from them. For details,
-      please see the documentation of that method.
-    - The classmethod :meth:`~eradiate.scenes.biosphere.HomogeneousDiscreteCanopy.from_file`
+    * The classmethod
+      :meth:`~eradiate.scenes.biosphere.HomogeneousDiscreteCanopy.from_parameters`
+      takes a set of parameters and will generate the canopy from them. For
+      details, please see the documentation of that method.
+    * The classmethod
+      :meth:`~eradiate.scenes.biosphere.HomogeneousDiscreteCanopy.from_file`
       will read a set of definition files that specify the leaves of the canopy.
       Please refer to this method for details on the file format.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``leaf_positions`` (list[list[float]]):
-        Lists all leaf positions as 3-vectors in cartesian coordinates.
-
-        Unit-enabled field (default units: cdu[length])
-
-    ``leaf_orientations`` (list[list[float]]):
-        Lists all leaf orientations as 3-vectors in cartesian coordinates.
-
-    ``leaf_radius`` (float):
-        Leaf radius. Default: 0.1 m.
-
-        Unit-enabled field (default unit: cdu[length])
-
-    ``leaf_reflectance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
-        Reflectance spectrum of the leaves in the cloud. Must be a reflectance
-        spectrum (dimensionless). Default: 0.5.
-
-    ``leaf_transmittance`` (float or :class:`~eradiate.scenes.spectra.Spectrum`):
-        Transmittance spectrum of the leaves in the cloud. Must be a
-        transmittance spectrum (dimensionless). Default: 0.5.
     """
 
     # fmt: off
-    id = attr.ib(
+    id = documented(
+        attr.ib(
+            default="homogeneous_discrete_canopy",
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
+        ),
+        doc=get_doc(Canopy, "id", "doc"),
+        type=get_doc(Canopy, "id", "type"),
         default="homogeneous_discrete_canopy",
-        validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
-    leaf_positions = attrib_quantity(
-        default=[],
-        units_compatible=cdu.generator("length"),
+    leaf_positions = documented(
+        attrib_quantity(
+            default=[],
+            units_compatible=cdu.generator("length"),
+        ),
+        doc="Lists all leaf positions as 3-vectors in cartesian coordinates.\n"
+            "\n"
+            "Unit-enabled field (default units: cdu[length]).",
+        type="list[list[float]]",
+        default="list()",
     )
 
-    leaf_orientations = attr.ib(
-        default=[]
+    leaf_orientations = documented(
+        attr.ib(default=[]),
+        doc="Lists all leaf orientations as 3-vectors in cartesian coordinates.",
+        type="list[list[float]]",
+        default="list()",
     )
 
-    leaf_reflectance = attr.ib(
-        default=0.5,
-        converter=SpectrumFactory.converter("reflectance"),
-        validator=[
-            attr.validators.instance_of(Spectrum),
-            validator_has_quantity("reflectance"),
-        ],
+    leaf_reflectance = documented(
+        attr.ib(
+            default=0.5,
+            converter=SpectrumFactory.converter("reflectance"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validator_has_quantity("reflectance"),
+            ],
+        ),
+        doc="Reflectance spectrum of the leaves in the canopy. Must be a "
+            "reflectance spectrum (dimensionless).",
+        type="float or :class:`~eradiate.scenes.spectra.Spectrum`",
+        default="0.5",
     )
 
-    leaf_transmittance = attr.ib(
-        default=0.5,
-        converter=SpectrumFactory.converter("transmittance"),
-        validator=[
-            attr.validators.instance_of(Spectrum),
-            validator_has_quantity("transmittance"),
-        ],
+    leaf_transmittance = documented(
+        attr.ib(
+            default=0.5,
+            converter=SpectrumFactory.converter("transmittance"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validator_has_quantity("transmittance"),
+            ],
+        ),
+        doc="Transmittance spectrum of the leaves in the canopy. Must be a "
+            "transmittance spectrum (dimensionless).",
+        type="float or :class:`~eradiate.scenes.spectra.Spectrum`",
+        default="0.5",
     )
 
-    leaf_radius = attrib_quantity(
-        default=ureg.Quantity(0.1, ureg.m),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("length"),
+    leaf_radius = documented(
+        attrib_quantity(
+            default=ureg.Quantity(0.1, ureg.m),
+            validator=validator_is_positive,
+            units_compatible=cdu.generator("length"),
+        ),
+        doc="Leaf radius.\n"
+            "\n"
+            "Unit-enabled field (default unit: cdu[length]).",
+        type="float",
+        default="0.1 m",
     )
     # fmt: on
 

@@ -7,64 +7,71 @@ import attr
 from ..core import SceneElement
 from ...util.attrs import (
     attrib_quantity, converter_or_auto, converter_to_units,
-    validator_is_positive, validator_or_auto, validator_units_compatible
+    documented, get_doc, parse_docs, validator_is_positive, validator_or_auto,
+    validator_units_compatible
 )
 from ...util.factory import BaseFactory
 from ...util.units import config_default_units as cdu
 from ...util.units import ureg
 
 
+@parse_docs
 @attr.s
 class Atmosphere(SceneElement, ABC):
     """An abstract base class defining common facilities for all atmospheres.
-
-    See :class:`~eradiate.scenes.core.SceneElement` for undocumented members.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``toa`` (float or "auto"):
-        Altitude of the top-of-atmosphere level. If set to ``"auto"``, the
-        TOA is inferred from the radiative properties profile provided it has
-        one. Otherwise, a default value of 100 km is used.
-
-        Unit-enabled field (default unit: cdu[length])
-
-    ``width`` (float or "auto"):
-        Atmosphere width. If set to ``"auto"``, a value will be estimated to
-        ensure that the medium is optically thick. The implementation of
-        this estimate depends on the concrete class inheriting from this
-        one. Default: ``"auto"``.
-
-        Unit-enabled field (default unit: cdu[length])
     """
 
-    id = attr.ib(
-        default="atmosphere",
-        validator=attr.validators.optional(attr.validators.instance_of(str)),
+    id = documented(
+        attr.ib(
+            default="atmosphere",
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
+        ),
+        doc=get_doc(SceneElement, "id", "doc"),
+        type=get_doc(SceneElement, "id", "type"),
+        default="\"atmosphere\""
     )
 
-    toa_altitude = attrib_quantity(
-        default="auto",
-        converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
-        validator=validator_or_auto(
-            validator_units_compatible(ureg.m),
-            validator_is_positive
+    toa_altitude = documented(
+        attrib_quantity(
+            default="auto",
+            converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
+            validator=validator_or_auto(
+                validator_units_compatible(ureg.m),
+                validator_is_positive
+            ),
+            units_compatible=cdu.generator("length"),
+            units_add_converter=False,
+            units_add_validator=False
         ),
-        units_compatible=cdu.generator("length"),
-        units_add_converter=False,
-        units_add_validator=False
+        doc="Altitude of the top-of-atmosphere level. If set to ``\"auto\"``, the "
+            "TOA is inferred from the radiative properties profile provided it has "
+            "one. Otherwise, a default value of 100 km is used.\n"
+            "\n"
+            "Unit-enabled field (default unit: cdu[length]).",
+        type="float or \"auto\"",
+        default="\"auto\"",
     )
 
-    width = attrib_quantity(
-        default="auto",
-        converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
-        validator=validator_or_auto(
-            validator_units_compatible(ureg.m),
-            validator_is_positive
+    width = documented(
+        attrib_quantity(
+            default="auto",
+            converter=converter_or_auto(converter_to_units(cdu.generator("length"))),
+            validator=validator_or_auto(
+                validator_units_compatible(ureg.m),
+                validator_is_positive
+            ),
+            units_compatible=cdu.generator("length"),
+            units_add_converter=False,
+            units_add_validator=False
         ),
-        units_compatible=cdu.generator("length"),
-        units_add_converter=False,
-        units_add_validator=False
+        doc="Atmosphere width. If set to ``\"auto\"``, a value will be estimated to "
+            "ensure that the medium is optically thick. The implementation of "
+            "this estimate depends on the concrete class inheriting from this "
+            "one.\n"
+            "\n"
+            "Unit-enabled field (default unit: cdu[length]).",
+        type="float or \"auto\"",
+        default="\"auto\"",
     )
 
     @property
