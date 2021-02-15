@@ -28,6 +28,7 @@ from ...scenes.measure import (
 from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
 from ...util import plot as ertplt
 from ...util import xarray as ertxr
+from ...util.attrs import documented, parse_docs
 from ...util.exceptions import ModeError
 from ...util.misc import always_iterable, ensure_array
 from ...util.units import config_default_units as cdu
@@ -78,75 +79,72 @@ class TOAPPlaneMeasure(RadianceMeterPlaneMeasure):
     )
 
 
+@parse_docs
 @attr.s
 class OneDimScene(SceneElement):
-    """Scene abstraction suitable for radiative transfer simulation on
-    one-dimensional scenes.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``atmosphere`` (:class:`.Atmosphere` or dict):
-        Atmosphere specification.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`AtmosphereFactory.convert() <.AtmosphereFactory.convert>`.
-        Default: :class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`.
-
-    ``surface`` (:class:`.Surface` or dict):
-        Surface specification.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`.
-        Default: :class:`LambertianSurface() <.LambertianSurface>`.
-
-    ``illumination`` (:class:`.Illumination` or dict):
-        Illumination specification.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`IlluminationFactory.convert() <.IlluminationFactory.convert>`.
-        Default: :class:`DirectionalIllumination() <.DirectionalIllumination>`.
-
-    ``measures`` (list[:class:`.Measure`] or list[dict] or :class:`.Measure` or dict):
-        List of measure specifications. The passed list may contain dictionary,
-        which will be interpreted by
-        :meth:`MeasureFactory.convert() <.MeasureFactory.convert>`.
-        Optionally, a single :class:`.Measure` or dictionary specification
-        may be passed and will automatically be wrapped into a list.
-        Allowed value types: :class:`TOAHsphereMeasure`,
-        :class:`TOAPPlaneMeasure`.
-        Default: :class:`TOAHsphereMeasure() <TOAHsphereMeasure>`.
-
-    ``integrator`` (:class:`.Integrator` or dict):
-        Monte Carlo integration algorithm specification.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`.
-        Default: :class:`VolPathIntegrator() <.VolPathIntegrator>`.
     """
-    atmosphere = attr.ib(
-        factory=HomogeneousAtmosphere,
-        converter=AtmosphereFactory.convert,
-        validator=attr.validators.instance_of(Atmosphere),
+    Scene abstraction suitable for radiative transfer simulation on
+    one-dimensional scenes.
+    """
+    atmosphere = documented(
+        attr.ib(
+            factory=HomogeneousAtmosphere,
+            converter=AtmosphereFactory.convert,
+            validator=attr.validators.instance_of(Atmosphere),
+        ),
+        doc="Atmosphere specification. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by "
+            ":meth:`AtmosphereFactory.convert() <.AtmosphereFactory.convert>`.",
+        type=":class:`.Atmosphere` or dict",
+        default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )
 
-    surface = attr.ib(
-        factory=LambertianSurface,
-        converter=SurfaceFactory.convert,
-        validator=attr.validators.instance_of(Surface)
+    surface = documented(
+        attr.ib(
+            factory=LambertianSurface,
+            converter=SurfaceFactory.convert,
+            validator=attr.validators.instance_of(Surface)
+        ),
+        doc="Surface specification. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by "
+            ":meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`.",
+        type=":class:`.Surface` or dict",
+        default=":class:`LambertianSurface() <.LambertianSurface>`"
     )
 
-    illumination = attr.ib(
-        factory=DirectionalIllumination,
-        converter=IlluminationFactory.convert,
-        validator=attr.validators.instance_of(Illumination)
+    illumination = documented(
+        attr.ib(
+            factory=DirectionalIllumination,
+            converter=IlluminationFactory.convert,
+            validator=attr.validators.instance_of(Illumination)
+        ),
+        doc="Illumination specification. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by "
+            ":meth:`IlluminationFactory.convert() <.IlluminationFactory.convert>`.",
+        type=":class:`.Illumination` or dict",
+        default=":class:`DirectionalIllumination() <.DirectionalIllumination>`"
     )
 
-    measures = attr.ib(
-        factory=lambda: [TOAHsphereMeasure()],
-        converter=lambda value:
-        [MeasureFactory.convert(x) for x in always_iterable(value)]
-        if not isinstance(value, dict)
-        else [MeasureFactory.convert(value)]
+    measures = documented(
+        attr.ib(
+            factory=lambda: [TOAHsphereMeasure()],
+            converter=lambda value:
+            [MeasureFactory.convert(x) for x in always_iterable(value)]
+            if not isinstance(value, dict)
+            else [MeasureFactory.convert(value)]
+        ),
+        doc="List of measure specifications. The passed list may contain dictionary, "
+            "which will be interpreted by "
+            ":meth:`MeasureFactory.convert() <.MeasureFactory.convert>`. "
+            "Optionally, a single :class:`.Measure` or dictionary specification "
+            "may be passed and will automatically be wrapped into a list. "
+            "Allowed value types: :class:`TOAHsphereMeasure`, "
+            ":class:`TOAPPlaneMeasure`.",
+        type="list[:class:`.Measure`] or list[dict] or :class:`.Measure` or dict",
+        default=":class:`TOAHsphereMeasure() <TOAHsphereMeasure>`",
     )
 
     @measures.validator
@@ -170,10 +168,18 @@ class OneDimScene(SceneElement):
                     f"{self.illumination.__class__.__name__}"
                 )
 
-    integrator = attr.ib(
-        factory=VolPathIntegrator,
-        converter=IntegratorFactory.convert,
-        validator=attr.validators.instance_of(Integrator)
+    integrator = documented(
+        attr.ib(
+            factory=VolPathIntegrator,
+            converter=IntegratorFactory.convert,
+            validator=attr.validators.instance_of(Integrator)
+        ),
+        doc="Monte Carlo integration algorithm specification. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by "
+            ":meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`.",
+        type=":class:`.Integrator` or dict",
+        default=":class:`VolPathIntegrator() <.VolPathIntegrator>`"
     )
 
     measure_registry = attr.ib(
@@ -224,37 +230,42 @@ class OneDimScene(SceneElement):
         return result
 
 
+@parse_docs
 @attr.s
 class OneDimSolverApp:
-    """Solver application dedicated to the simulation of radiative transfer on
+    """
+    Solver application dedicated to the simulation of radiative transfer on
     one-dimensional scenes.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``scene`` (:class:`OneDimScene`):
-        One-dimensional scene to simulate radiative transfer on.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`OneDimScene.from_dict() <.OneDimScene.from_dict>`.
-        Default: :class:`OneDimScene() <OneDimScene>`.
-
-    ``results`` (dict) [read-only]:
-        Post-processed simulation results. Each entry uses a measure ID as its
-        key and holds a value consisting of a :class:`~xarray.Dataset` holding
-        one variable per physical quantity computed by the measure.
     """
     # Class attributes
     SUPPORTED_MODES = frozenset({"mono", "mono_double"})
 
     # Instance attributes
-    scene = attr.ib(
-        factory=OneDimScene,
-        converter=lambda x: OneDimScene.from_dict(x)
-        if isinstance(x, dict) else x,
-        validator=attr.validators.instance_of(OneDimScene)
+    scene = documented(
+        attr.ib(
+            factory=OneDimScene,
+            converter=lambda x: OneDimScene.from_dict(x)
+            if isinstance(x, dict) else x,
+            validator=attr.validators.instance_of(OneDimScene)
+        ),
+        doc="One-dimensional scene to simulate radiative transfer on. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by "
+            ":meth:`OneDimScene.from_dict() <.OneDimScene.from_dict>`.",
+        type=":class:`OneDimScene`",
+        default=":class:`OneDimScene() <OneDimScene>`",
     )
 
-    results = attr.ib(factory=dict, init=False)
+    results = documented(
+        attr.ib(factory=dict, init=False),
+        doc="Post-processed simulation results. Each entry uses a measure ID as its "
+            "key and holds a value consisting of a :class:`~xarray.Dataset` holding "
+            "one variable per physical quantity computed by the measure.\n"
+            "\n"
+            ".. note:: This field is read-only and is not accessible as a "
+            "constructor argument.",
+        type="dict",
+    )
 
     _kernel_dict = attr.ib(default=None, init=False, repr=False)  # Cached kernel dictionary
 

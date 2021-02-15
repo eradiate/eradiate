@@ -36,7 +36,7 @@ from ...scenes.surface import (
     SurfaceFactory
 )
 from ...util import xarray as ertxr
-from ...util.attrs import validator_is_positive
+from ...util.attrs import documented, parse_docs, validator_is_positive
 from ...util.exceptions import ModeError
 from ...util.frame import direction_to_angles, square_to_uniform_hemisphere
 from ...util.misc import always_iterable, ensure_array
@@ -44,100 +44,94 @@ from ...util.units import kernel_default_units as kdu
 from ...util.units import ureg
 
 
+@parse_docs
 @attr.s
 class RamiScene(SceneElement):
-    """Scene abstraction suitable for radiative transfer simulation on
-    RAMI benchmark scenes.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``surface`` (:class:`.Surface` or dict):
-        Surface specification.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`.
-        Default: :class:`LambertianSurface() <.LambertianSurface>`.
-
-        .. note::
-
-           Surface size will be overridden using canopy parameters.
-
-    ``canopy`` (:class:`.Canopy` or dict):
-        Canopy specification.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`BiosphereFactory.convert() <.BiosphereFactory.convert>`
-        Default: :class:`HomogeneousDiscreteCanopy() <.HomogeneousDiscreteCanopy>`.
-
-    ``padding`` (int):
-        Padding level.
-        This parameter specifies the number of copies that are placed around the
-        original canopy to mitigate adjacency effects.
-        A value of 0 will yield only the original canopy. A value of 1 will add
-        one copy in every direction, yielding a 3x3 patch. A value of 2 will
-        yield a 5x5 patch and so on. The optimal padding level depends on the
-        specification of the canopy.
-        Default: 0.
-
-    ``illumination`` (:class:`.DirectionalIllumination` or dict):
-        Illumination specification.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`IlluminationFactory.convert() <.IlluminationFactory.convert>`.
-        Default: :class:`DirectionalIllumination() <.DirectionalIllumination>`.
-
-    ``measures`` (list[:class:`.Measure`] or list[dict] or :class:`.Measure` or dict):
-        List of measure specifications. The passed list may contain dictionary,
-        which will be interpreted by
-        :meth:`MeasureFactory.convert() <.MeasureFactory.convert>`.
-        Optionally, a single :class:`.Measure` or dictionary specification
-        may be passed and will automatically be wrapped into a list.
-        Allowed value types: :class:`DistantMeasure`.
-        Default: :class:`DistantMeasure() <DistantMeasure>`.
-
-        .. note::
-
-           Target zone will be overridden using canopy parameters if unset.
-           If no canopy is specified, surface size parameters will be used.
-
-    ``integrator`` (:class:`.Integrator` or dict):
-        Monte Carlo integration algorithm specification.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`.
-        Default: :class:`PathIntegrator() <.PathIntegrator>`.
     """
-
-    surface = attr.ib(
-        factory=LambertianSurface,
-        converter=SurfaceFactory.convert,
-        validator=attr.validators.instance_of(Surface)
+    Scene abstraction suitable for radiative transfer simulation on RAMI
+    benchmark scenes.
+    """
+    surface = documented(
+        attr.ib(
+            factory=LambertianSurface,
+            converter=SurfaceFactory.convert,
+            validator=attr.validators.instance_of(Surface)
+        ),
+        doc="Surface specification. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by "
+            ":meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`. "
+            ".. note:: Surface size will be overridden using canopy parameters.",
+        type=":class:`.Surface` or dict",
+        default=":class:`LambertianSurface() <.LambertianSurface>`"
     )
 
-    canopy = attr.ib(
-        default=None,
-        converter=attr.converters.optional(BiosphereFactory.convert),
-        validator=attr.validators.optional(attr.validators.instance_of(Canopy))
+    canopy = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(BiosphereFactory.convert),
+            validator=attr.validators.optional(attr.validators.instance_of(Canopy))
+        ),
+        doc="Canopy specification. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by "
+            ":meth:`BiosphereFactory.convert() <.BiosphereFactory.convert>`.",
+        type=":class:`.Canopy` or dict",
+        default=":class:`HomogeneousDiscreteCanopy() <.HomogeneousDiscreteCanopy>`",
     )
 
-    padding = attr.ib(
-        default=0,
-        converter=int,
-        validator=validator_is_positive
+    padding = documented(
+        attr.ib(
+            default=0,
+            converter=int,
+            validator=validator_is_positive
+        ),
+        doc="Padding level. The scene will be padded with copies to account for "
+            "adjacency effects. This, in practice, has effects similar to "
+            "making the scene periodic."
+            "A value of 0 will yield only the defined scene. A value of 1 "
+            "will add one copy in every direction, yielding a 3×3 patch. A "
+            "value of 2 will yield a 5×5 patch, etc. The optimal padding level "
+            "depends on the scene.",
+        type="int",
+        default="0"
     )
 
-    illumination = attr.ib(
-        factory=DirectionalIllumination,
-        converter=IlluminationFactory.convert,
-        validator=attr.validators.instance_of(DirectionalIllumination)
+    illumination = documented(
+        attr.ib(
+            factory=DirectionalIllumination,
+            converter=IlluminationFactory.convert,
+            validator=attr.validators.instance_of(DirectionalIllumination)
+        ),
+        doc="Illumination specification. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by "
+            ":meth:`IlluminationFactory.convert() <.IlluminationFactory.convert>`.",
+        type=":class:`.DirectionalIllumination` or dict",
+        default=":class:`DirectionalIllumination() <.DirectionalIllumination>`"
     )
 
-    measures = attr.ib(
-        factory=lambda: [DistantMeasure()],
-        converter=lambda value:
-        [MeasureFactory.convert(x) for x in always_iterable(value)]
-        if not isinstance(value, dict)
-        else [MeasureFactory.convert(value)]
+    measures = documented(
+        attr.ib(
+            factory=lambda: [DistantMeasure()],
+            converter=lambda value:
+            [MeasureFactory.convert(x) for x in always_iterable(value)]
+            if not isinstance(value, dict)
+            else [MeasureFactory.convert(value)]
+        ),
+        doc="List of measure specifications. The passed list may contain "
+            "dictionary, which will be interpreted by "
+            ":meth:`MeasureFactory.convert() <.MeasureFactory.convert>`. "
+            "Optionally, a single :class:`.Measure` or dictionary specification "
+            "may be passed and will automatically be wrapped into a list.\n"
+            "\n"
+            "Allowed value types: :class:`DistantMeasure`.\n"
+            "\n"
+            ".. note:: The target zone will be overridden using canopy "
+            "parameters if unset. If no canopy is specified, surface size "
+            "parameters will be used.",
+        type="list[:class:`.Measure`] or list[dict] or :class:`.Measure` or dict",
+        default=":class:`DistantMeasure() <.DistantMeasure>`",
     )
 
     @measures.validator
@@ -151,10 +145,18 @@ class RamiScene(SceneElement):
                     f"(DistantMeasure)"
                 )
 
-    integrator = attr.ib(
-        factory=PathIntegrator,
-        converter=IntegratorFactory.convert,
-        validator=attr.validators.instance_of(Integrator)
+    integrator = documented(
+        attr.ib(
+            factory=PathIntegrator,
+            converter=IntegratorFactory.convert,
+            validator=attr.validators.instance_of(Integrator)
+        ),
+        doc="Monte Carlo integration algorithm specification. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by "
+            ":meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`.",
+        type=":class:`.Integrator` or dict",
+        default=":class:`PathIntegrator() <.PathIntegrator>`",
     )
 
     measure_registry = attr.ib(
@@ -218,8 +220,8 @@ class RamiScene(SceneElement):
             for shapegroup_id in canopy_dict.keys():
                 if shapegroup_id.find("bsdf") != -1:
                     continue
-                for x_offset in np.arange(-self.padding, self.padding+1):
-                    for y_offset in np.arange(-self.padding, self.padding+1):
+                for x_offset in np.arange(-self.padding, self.padding + 1):
+                    for y_offset in np.arange(-self.padding, self.padding + 1):
                         instance_dict = {
                             "type": "instance",
                             "group": {
@@ -227,10 +229,10 @@ class RamiScene(SceneElement):
                                 "id": f"{shapegroup_id}"
                             },
                             "to_world": ScalarTransform4f.translate([
-                                    patch_size.m_as(kdu_length) * x_offset,
-                                    patch_size.m_as(kdu_length) * y_offset,
-                                    0.0
-                                ]
+                                patch_size.m_as(kdu_length) * x_offset,
+                                patch_size.m_as(kdu_length) * y_offset,
+                                0.0
+                            ]
                             )
 
                         }
@@ -246,34 +248,38 @@ class RamiScene(SceneElement):
         return result
 
 
+@parse_docs
 @attr.s
 class RamiSolverApp:
-    """Solver application dedicated to the simulation of radiative transfer on
+    """
+    Solver application dedicated to the simulation of radiative transfer on
     RAMI benchmark scenes.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``scene`` (:class:`RamiScene`):
-        RAMI benchmark scene to simulate radiative transfer on.
-        This parameter can be specified as a dictionary which will be
-        interpreted by
-        :meth:`RamiScene.from_dict() <.RamiScene.from_dict>`.
-        Default: :class:`RamiScene() <RamiScene>`.
-
-    ``results`` (dict) [read-only]:
-        Post-processed simulation results. Each entry uses a measure ID as its
-        key and holds a value consisting of a :class:`~xarray.Dataset` holding
-        one variable per physical quantity computed by the measure.
     """
     # Instance attributes
-    scene = attr.ib(
-        factory=RamiScene,
-        converter=lambda x: RamiScene.from_dict(x)
-        if isinstance(x, dict) else x,
-        validator=attr.validators.instance_of(RamiScene)
+    scene = documented(
+        attr.ib(
+            factory=RamiScene,
+            converter=lambda x: RamiScene.from_dict(x)
+            if isinstance(x, dict) else x,
+            validator=attr.validators.instance_of(RamiScene)
+        ),
+        doc="RAMI benchmark scene to simulate radiative transfer on. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by :meth:`RamiScene.from_dict() <.RamiScene.from_dict>`.",
+        type=":class:`RamiScene`",
+        default=":class:`RamiScene() <RamiScene>`",
     )
 
-    results = attr.ib(factory=dict, init=False)
+    results = documented(
+        attr.ib(factory=dict, init=False),
+        doc="Post-processed simulation results. Each entry uses a measure ID as its "
+            "key and holds a value consisting of a :class:`~xarray.Dataset` holding "
+            "one variable per physical quantity computed by the measure.\n"
+            "\n"
+            ".. note:: This field is read-only and is not accessible as a "
+            "constructor argument.",
+        type="dict",
+    )
 
     _kernel_dict = attr.ib(default=None, init=False, repr=False)  # Cached kernel dictionary
 

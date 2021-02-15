@@ -5,13 +5,16 @@ import numpy as np
 
 import eradiate.kernel
 from ...scenes.core import KernelDict
+from ...util.attrs import documented, parse_docs
 from ...util.exceptions import KernelVariantError
 
 
+@parse_docs
 @attr.s
 class OneDimRunner:
-    r"""Execute simulations on one-dimensional scenes, *i.e.* with 2
-    translational invariances.
+    r"""
+    Execute simulations on one-dimensional scenes, *i.e.* with 2 translational
+    invariances.
 
     .. important::
 
@@ -26,26 +29,25 @@ class OneDimRunner:
             eradiate.kernel.set_variant("scalar_mono_double")
             solver = OneDimSolver()
             solver.run()
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``kernel_dict`` (:class:`~eradiate.scenes.core.KernelDict`):
-        Dictionary used to generate the scene for which simulations will be
-        run. If no value is passed, a default scene is constructed. It
-        consists of a square covering :math:`[-1, 1]^2` with normal vector
-        :math:`+Z` and a Lambertian BRDF (reflectance :math:`\rho = 0.5`)
-        illuminated by a directional emitter with direction vector
-        :math:`-Z` and constant irradiance equal to 1. By default the
-        sensor will record four points, coressponding to a zenith angle of
-        :math:`45°` and azimuth angles of :math:`[0°, 90°, 180°, 270°]`.
-        If set to `None`, defaults to :data:`DEFAULT_KERNEL_DICT`.
     """
 
     SUPPORTED_VARIANTS = frozenset({"scalar_mono", "scalar_mono_double"})
 
-    kernel_dict = attr.ib(
-        factory=KernelDict.empty,
-        converter=KernelDict,
+    kernel_dict = documented(
+        attr.ib(
+            factory=KernelDict.empty,
+            converter=KernelDict,
+        ),
+        doc="Dictionary used to generate the scene for which simulations will be "
+            "run. If no value is passed, a default scene is constructed. It "
+            "consists of a square covering :math:`[-1, 1]^2` with normal vector "
+            ":math:`+Z` and a Lambertian BRDF (reflectance :math:`\\rho = 0.5`) "
+            "illuminated by a directional emitter with direction vector "
+            ":math:`-Z` and constant irradiance equal to 1. By default the "
+            "sensor will record four points, coressponding to a zenith angle of "
+            ":math:`45°` and azimuth angles of :math:`[0°, 90°, 180°, 270°]`. "
+            "If set to `None`, defaults to :data:`DEFAULT_KERNEL_DICT`.",
+        type=":class:`~eradiate.scenes.core.KernelDict`"
     )
 
     def _check_variant(self):

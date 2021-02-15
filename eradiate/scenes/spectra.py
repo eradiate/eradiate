@@ -15,7 +15,8 @@ from pint import DimensionalityError
 
 from .core import SceneElement
 from .. import data
-from ..util.attrs import attrib_quantity, validator_is_positive, validator_is_string
+from ..util.attrs import attrib_quantity, documented, parse_docs, validator_is_positive, \
+    validator_is_string
 from ..util.exceptions import ModeError, UnitsError
 from ..util.factory import BaseFactory
 from ..util.units import PhysicalQuantity, compatible, ensure_units, ureg
@@ -23,26 +24,24 @@ from ..util.units import config_default_units as cdu
 from ..util.units import kernel_default_units as kdu
 
 
+@parse_docs
 @attr.s
 class Spectrum(SceneElement, ABC):
     """Spectrum abstract base class.
-
-    See :class:`SceneElement` for undocumented members.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    Parameter ``quantity`` (str or :class:`PhysicalQuantity` or None):
-        Physical quantity which the spectrum represents. If not ``None``,
-        the specified quantity must be one which varies with wavelength.
-        See :meth:`PhysicalQuantity.spectrum` for allowed values.
-
-        Child classes should implement value units validation and conversion
-        based on ``quantity``. In particular, no unit validation or conversion
-        should occur if ``quantity`` is ``None``.
     """
-    quantity = attr.ib(
-        default=None,
-        converter=attr.converters.optional(PhysicalQuantity.from_any),
+    quantity = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(PhysicalQuantity.from_any),
+        ),
+        doc="Physical quantity which the spectrum represents. If not ``None``, "
+            "the specified quantity must be one which varies with wavelength. "
+            "See :meth:`.PhysicalQuantity.spectrum` for allowed values.\n"
+            "\n"
+            "Child classes should implement value units validation and conversion "
+            "based on ``quantity``. In particular, no unit validation or conversion "
+            "should occur if ``quantity`` is ``None``.",
+        type="str or :class:`.PhysicalQuantity` or None",
     )
 
     @quantity.validator
@@ -118,22 +117,21 @@ class SpectrumFactory(BaseFactory):
 
 
 @SpectrumFactory.register("uniform")
+@parse_docs
 @attr.s
 class UniformSpectrum(Spectrum):
-    """Uniform spectrum (*i.e.* constant against wavelength). Supports basic
-    arithmetics.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    Parameter ``value`` (float or :class:`~pint.Quantity`):
-        Uniform spectrum value. If a float is passed and ``quantity`` is not
-        ``None``, it is automatically converted to appropriate configuration
-        default units. If a :class:`~pint.Quantity` is passed and ``quantity``
-        is not ``None``, units will be checked for consistency.
-
-    See :class:`Spectrum` for undocumented members.
     """
-    value = attrib_quantity(default=1.0)
+    Uniform spectrum (*i.e.* constant against wavelength). Supports basic
+    arithmetics.
+    """
+    value = documented(
+        attrib_quantity(default=1.0),
+        doc="Uniform spectrum value. If a float is passed and ``quantity`` is not "
+            "``None``, it is automatically converted to appropriate configuration "
+            "default units. If a :class:`~pint.Quantity` is passed and ``quantity`` "
+            "is not ``None``, units will be checked for consistency.",
+        type="float or :class:`~pint.Quantity`",
+    )
 
     @value.validator
     def value_validator(self, attribute, value):
@@ -229,10 +227,10 @@ class UniformSpectrum(Spectrum):
 
 
 @SpectrumFactory.register("solar_irradiance")
+@parse_docs
 @attr.s(frozen=True)
 class SolarIrradianceSpectrum(Spectrum):
-    """Solar irradiance spectrum scene element
-    [:factorykey:`solar_irradiance`].
+    """Solar irradiance spectrum scene element [:factorykey:`solar_irradiance`].
 
     This scene element produces the scene dictionary required to
     instantiate a kernel plugin using the Sun irradiance spectrum. The data set
@@ -249,16 +247,6 @@ class SolarIrradianceSpectrum(Spectrum):
 
     The produced kernel dictionary automatically adjusts its irradiance units
     depending on the selected kernel default units.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``dataset`` (str):
-        Dataset key. Allowed values: see
-        :attr:`solar irradiance dataset documentation <eradiate.data.solar_irradiance_spectra>`.
-        Default: ``"thuillier_2003"``.
-
-    ``scale`` (float):
-        Scaling factor. Default: 1.
     """
 
     #: Physical quantity
@@ -268,16 +256,25 @@ class SolarIrradianceSpectrum(Spectrum):
         repr=False
     )
 
-    #: Dataset identifier
-    dataset = attr.ib(
-        default="thuillier_2003",
-        validator=validator_is_string,
+    dataset = documented(
+        attr.ib(
+            default="thuillier_2003",
+            validator=validator_is_string,
+        ),
+        doc="Dataset identifier. Allowed values: see "
+        ":attr:`solar irradiance dataset documentation <eradiate.data.solar_irradiance_spectra>`. "
+        "Default: ``\"thuillier_2003\"``. ",
+        type="str",
     )
 
-    scale = attr.ib(
-        default=1.,
-        converter=float,
-        validator=validator_is_positive,
+    scale = documented(
+        attr.ib(
+            default=1.,
+            converter=float,
+            validator=validator_is_positive,
+        ),
+        doc="Scaling factor. Default: 1.",
+        type="float",
     )
 
     @dataset.validator

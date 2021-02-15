@@ -10,7 +10,7 @@ import xarray as xr
 from .base import Atmosphere, AtmosphereFactory
 from ...radprops import RadProfileFactory
 from ...radprops.rad_profile import RadProfile
-from ...util.attrs import validator_is_file
+from ...util.attrs import documented, parse_docs, validator_is_file
 from ...util.units import kernel_default_units as kdu, ureg
 
 
@@ -94,13 +94,10 @@ def _dataarray_to_ndarray(value):
 
 
 @AtmosphereFactory.register("heterogeneous")
+@parse_docs
 @attr.s
 class HeterogeneousAtmosphere(Atmosphere):
-    r"""Heterogeneous atmosphere scene element
-    [:factorykey:`heterogeneous`].
-
-    See :class:`~eradiate.scenes.atmosphere.base.Atmosphere` for undocumented
-    members.
+    r"""Heterogeneous atmosphere scene element [:factorykey:`heterogeneous`].
 
     This class builds a one-dimensional heterogeneous atmosphere. It expands as
     a ``heterogeneous`` kernel plugin, which takes as parameters a set of
@@ -131,39 +128,31 @@ class HeterogeneousAtmosphere(Atmosphere):
        While radiative properties specified using the ``profile`` field will be
        scaled according to kernel default unit override, existing volume data
        will not.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``profile`` (:class:`~eradiate.radprops.rad_profile.RadProfile` or None):
-        Radiative property profile used. If set, volume data files will be
-        created from profile data to initialise the corresponding kernel
-        plugin. If ``None``, :class:`.HeterogeneousAtmosphere` will assume
-        that volume data files already exist.
-
-    ``albedo_fname`` (path-like or None):
-        Path to the single scattering albedo volume data file. If ``None``,
-        a value will be created when the file will be requested.
-        Default: ``None``.
-
-    ``sigma_t_fname`` (path-like or None):
-        Path to the extinction coefficient volume data file. If ``None``,
-        a value will be created when the file will be requested.
-        Default: ``None``.
-
-    ``cache_dir`` (path-like or None):
-        Path to a cache directory where volume data files will be created.
-        If ``None``, a temporary cache directory will be used.
     """
 
-    profile = attr.ib(
-        default=None,
-        converter=RadProfileFactory.convert,
-        validator=attr.validators.optional(attr.validators.instance_of(RadProfile))
+    profile = documented(
+        attr.ib(
+            default=None,
+            converter=RadProfileFactory.convert,
+            validator=attr.validators.optional(attr.validators.instance_of(RadProfile))
+        ),
+        doc="Radiative property profile used. If set, volume data files will be "
+            "created from profile data to initialise the corresponding kernel "
+            "plugin. If ``None``, :class:`.HeterogeneousAtmosphere` will assume "
+            "that volume data files already exist.",
+        type=":class:`~eradiate.radprops.rad_profile.RadProfile` or None",
+        default="None",
     )
 
-    albedo_fname = attr.ib(
-        default=None,
-        converter=attr.converters.optional(Path)
+    albedo_fname = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(Path)
+        ),
+        doc="Path to the single scattering albedo volume data file. If ``None``, "
+            "a value will be created when the file will be requested.",
+        type="path-like or None",
+        default="None",
     )
 
     @albedo_fname.validator
@@ -178,9 +167,15 @@ class HeterogeneousAtmosphere(Atmosphere):
             except FileNotFoundError:
                 raise
 
-    sigma_t_fname = attr.ib(
-        default=None,
-        converter=attr.converters.optional(Path),
+    sigma_t_fname = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(Path),
+        ),
+        doc="Path to the extinction coefficient volume data file. If ``None``, "
+            "a value will be created when the file will be requested.",
+        type="path-like or None",
+        default="None",
     )
 
     @sigma_t_fname.validator
@@ -195,9 +190,15 @@ class HeterogeneousAtmosphere(Atmosphere):
             except FileNotFoundError:
                 raise
 
-    _cache_dir = attr.ib(
-        default=None,
-        converter=attr.converters.optional(Path)
+    cache_dir = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(Path)
+        ),
+        doc="Path to a cache directory where volume data files will be created. "
+            "If ``None``, a temporary cache directory will be used.",
+        type="path-like or None",
+        default="None",
     )
 
     _quantities = {
@@ -220,10 +221,10 @@ class HeterogeneousAtmosphere(Atmosphere):
                                  "is None")
 
         # Prepare cache directory in case we'd need it
-        if self._cache_dir is None:
-            self._cache_dir = Path(tempfile.mkdtemp())
+        if self.cache_dir is None:
+            self.cache_dir = Path(tempfile.mkdtemp())
         else:
-            self._cache_dir.mkdir(parents=True, exist_ok=True)
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     @property
     def height(self):
@@ -301,7 +302,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             # If file name is not specified, we create one
             field_fname = getattr(self, f"{field}_fname")
             if field_fname is None:
-                field_fname = self._cache_dir / f"{field}.vol"
+                field_fname = self.cache_dir / f"{field}.vol"
                 setattr(self, f"{field}_fname", field_fname)
 
             # We have the data and the filename: we can create the file

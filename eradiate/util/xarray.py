@@ -5,9 +5,9 @@ import cerberus
 import xarray as xr
 
 from . import plot
-
-
 # -- Metadata processing -------------------------------------------------------
+from .attrs import documented, parse_docs
+
 
 def validate_metadata(data, spec, normalize=False, allow_unknown=False):
     """Validate (and possibly normalise) metadata fields of the ``data``
@@ -55,29 +55,36 @@ class DataSpec:
         raise NotImplementedError
 
 
+@parse_docs
 @attr.s
 class CoordSpec(DataSpec):
     """Specification for a coordinate variable.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``standard_name`` (str):
-        `Standard name as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#standard-name>`_.
-
-    ``units`` (str or None):
-        `Units as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#units>`_.
-        If set to ``None``, the coordinate variable is considered unitless (not
-        to be confused with dimensionless), *i.e.* it should be applied no unit.
-        This is typically useful for coordinates consisting of string labels,
-        which do not have units and are not used for computation.
-
-    ``long_name`` (str):
-        `Long name as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#long-name>`_.
     """
 
-    standard_name = attr.ib()
-    units = attr.ib()
-    long_name = attr.ib()
+    standard_name = documented(
+        attr.ib(),
+        doc="`Standard name as implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#standard-name>`_.",
+        type="str"
+    )
+
+    units = documented(
+        attr.ib(),
+        doc="`Units as implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#units>`_. "
+            "If set to ``None``, the coordinate variable is considered unitless (not "
+            "to be confused with dimensionless), *i.e.* it should be applied no unit. "
+            "This is typically useful for coordinates consisting of string labels, "
+            "which do not have units and are not used for computation. ",
+        type="str or None"
+    )
+
+    long_name = documented(
+        attr.ib(),
+        doc="`Long name as implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#long-name>`_.",
+        type="str"
+    )
 
     @property
     def schema(self):
@@ -204,56 +211,63 @@ def _coord_specs_validator(instance, attribute, value):
                             f"must be a dict[str, CoordSpec]")
 
 
+@parse_docs
 @attr.s
 class VarSpec:
     """Specification for a data variable.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``standard_name`` (str or None):
-        `Standard name as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#standard-name>`_.
-        If ``None``, ``long_name`` must be ``None``. If not ``None``,
-        ``long_name`` must not be ``None``.
-
-    ``units`` (str or None):
-        `Units as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#units>`_.
-        If set to ``None``, the coordinate variable is considered unitless (not
-        to be confused with dimensionless), *i.e.* it should be applied no unit.
-        This is typically useful for coordinates consisting of string labels,
-        which do not have units and are not used for computation.
-
-    ``long_name`` (str or None):
-        `Long name as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#long-name>`_.
-        If ``None``, ``standard_name`` must be ``None``. If not ``None``,
-        ``standard_name`` must not be ``None``.
-
-    .. warning::
-
-       Either both or none of ``standard_name`` and ``long_name`` must be
-       ``None``.
-
-    ``coord_specs`` (str or dict[str, :class:`CoordSpec`]):
-        Specification for variable coordinates. Empty dicts are allowed.
-        If a string is passed, it will be converted to a coordinate
-        specification collection using
-        :meth:`CoordSpecRegistry.str_to_collection`.
     """
-    standard_name = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(str))
+    standard_name = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(attr.validators.instance_of(str))
+        ),
+        doc="`Standard name as implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#standard-name>`_. "
+            "If ``None``, ``long_name`` must be ``None``. If not ``None``, "
+            "``long_name`` must not be ``None``.",
+        type="str or None",
     )
-    units = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(str))
+
+    units = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(attr.validators.instance_of(str))
+        ),
+        doc="`Units as implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#units>`_. "
+            "If set to ``None``, the coordinate variable is considered unitless (not "
+            "to be confused with dimensionless), *i.e.* it should be applied no unit. "
+            "This is typically useful for coordinates consisting of string labels, "
+            "which do not have units and are not used for computation.",
+        type="str or None",
     )
-    long_name = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(str))
+
+    long_name = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(attr.validators.instance_of(str))
+        ),
+        doc="`Long name as implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#long-name>`_. "
+            "If ``None``, ``standard_name`` must be ``None``. If not ``None``, "
+            "``standard_name`` must not be ``None``.\n"
+            "\n"
+            ".. warning:: Either both or none of ``standard_name`` and "
+            "``long_name`` must be ``None``.",
+        type="str or None",
     )
-    coord_specs = attr.ib(
-        converter=CoordSpecRegistry.str_to_collection,
-        factory=dict,
-        validator=[attr.validators.instance_of(dict), _coord_specs_validator]
+
+    coord_specs = documented(
+        attr.ib(
+            converter=CoordSpecRegistry.str_to_collection,
+            factory=dict,
+            validator=[attr.validators.instance_of(dict), _coord_specs_validator]
+        ),
+        doc="Specification for variable coordinates. Empty dicts are allowed. "
+            "If a string is passed, it will be converted to a coordinate "
+            "specification collection using "
+            ":meth:`CoordSpecRegistry.str_to_collection`.",
+        type="str or dict[str, :class:`CoordSpec`]",
     )
 
     def __attrs_post_init__(self):
@@ -304,70 +318,93 @@ def _var_specs_validator(instance, attribute, value):
                             f"must be a dict[str, VarSpec]")
 
 
+@parse_docs
 @attr.s
 class DatasetSpec:
     """Specification for a dataset.
 
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``convention`` (str or None):
-        `Convention used for metadata <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#_overview>`_.
-        Usually set to ``"CF-1.8".``
-
-    ``title`` (str or None):
-        `Dataset title as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.
-
-    ``history`` (str or None):
-        `Dataset history as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.
-
-    ``source`` (str or None):
-        `Dataset production method as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.
-
-    ``references`` (str or None):
-        `References describing the data or its production process as implied by the CF-convention <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.
-
-    .. warning::
-
-       Either all or none of ``convention``, ``title``, ``history``, ``source``
-       and ``references`` must be ``None``.
-
-    ``var_specs`` (dict[str, :class:`CoordSpec`]):
-        Specification for data variables. Empty dicts are allowed.
-
-    ``coord_specs`` (str or dict[str, :class:`CoordSpec`]):
-        Specification for variable coordinates. Empty dicts are allowed.
-        If a string is passed, it will be converted to a coordinate
-        specification collection using
-        :meth:`CoordSpecRegistry.str_to_collection`.
+    .. warning:: Either all or none of ``convention``, ``title``, ``history``,
+       ``source`` and ``references`` must be ``None``.
     """
-    convention = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(str))
+    convention = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(attr.validators.instance_of(str))
+        ),
+        doc="`Convention used for metadata "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#_overview>`_. "
+            "Usually set to ``\"CF-1.8\".``",
+        type="str or None",
+        default="None",
     )
-    title = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(str))
+
+    title = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(attr.validators.instance_of(str))
+        ),
+        doc="`Dataset title as implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.",
+        type="str or None",
+        default="None",
     )
-    history = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(str))
+
+    history = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(attr.validators.instance_of(str))
+        ),
+        doc="`Dataset history as implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.",
+        type="str or None",
+        default="None",
     )
-    source = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(str))
+
+    source = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(attr.validators.instance_of(str))
+        ),
+        doc="`Dataset production method as implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.",
+        type="str or None",
+        default="None",
     )
-    references = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(str))
+
+    references = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(attr.validators.instance_of(str))
+        ),
+        doc="`References describing the data or its production process as "
+            "implied by the CF-convention "
+            "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.",
+        type="str or None",
+        default="None",
     )
-    var_specs = attr.ib(
-        factory=dict,
-        validator=[attr.validators.instance_of(dict), _var_specs_validator]
+
+    var_specs = documented(
+        attr.ib(
+            factory=dict,
+            validator=[attr.validators.instance_of(dict), _var_specs_validator]
+        ),
+        doc="Specification for data variables. Empty dicts are allowed.",
+        type="dict[str, :class:`CoordSpec`]",
+        default="dict()",
     )
-    coord_specs = attr.ib(
-        converter=CoordSpecRegistry.str_to_collection,
-        factory=dict,
-        validator=[attr.validators.instance_of(dict), _coord_specs_validator]
+
+    coord_specs = documented(
+        attr.ib(
+            converter=CoordSpecRegistry.str_to_collection,
+            factory=dict,
+            validator=[attr.validators.instance_of(dict), _coord_specs_validator]
+        ),
+        doc="Specification for variable coordinates. Empty dicts are allowed. "
+            "If a string is passed, it will be converted to a coordinate "
+            "specification collection using "
+            ":meth:`CoordSpecRegistry.str_to_collection`.",
+        type="str or dict[str, :class:`CoordSpec`]",
+        default="dict()",
     )
 
     def __attrs_post_init__(self):
@@ -434,7 +471,6 @@ for collection_id, coord_spec_ids in [
     ("solar_irradiance_spectrum", ("w", "t"))
 ]:
     CoordSpecRegistry.register_collection(collection_id, coord_spec_ids)
-
 
 # Define solar irradiance spectra dataset specifications
 ssi_dataset_spec = DatasetSpec(

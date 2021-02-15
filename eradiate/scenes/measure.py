@@ -18,7 +18,7 @@ from .core import SceneElement
 from ..util.attrs import (
     attrib_quantity,
     converter_quantity,
-    unit_enabled,
+    documented, get_doc, parse_docs, unit_enabled,
     validator_has_len,
     validator_is_number,
     validator_is_positive,
@@ -34,16 +34,20 @@ from ..util.units import kernel_default_units as kdu
 from ..util.units import ureg
 
 
+@parse_docs
 @attr.s
 class Measure(SceneElement, ABC):
     """Abstract class for all measure scene elements.
-
-    See :class:`.SceneElement` for undocumented members.
     """
 
-    id = attr.ib(
-        default="measure",
-        validator=attr.validators.optional((attr.validators.instance_of(str))),
+    id = documented(
+        attr.ib(
+            default="measure",
+            validator=attr.validators.optional((attr.validators.instance_of(str))),
+        ),
+        doc=get_doc(SceneElement, "id", "doc"),
+        type=get_doc(SceneElement, "id", "type"),
+        default="\"measure\"",
     )
 
     @abstractmethod
@@ -147,20 +151,20 @@ class Target:
         return value
 
 
+@parse_docs
 @attr.s
 class TargetPoint(Target):
     """Point target specification.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``xyz`` (3-vector):
-        Target point coordinates.
-
-        Unit-enabled field (default: cdu[length]).
     """
 
     # Target point in CDU
-    xyz = attrib_quantity(units_compatible=cdu.generator("length"))
+    xyz = documented(
+        attrib_quantity(units_compatible=cdu.generator("length")),
+        doc="Target point coordinates.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="array-like[float, float, float]",
+    )
 
     @xyz.validator
     def _xyz_validator(self, attribute, value):
@@ -175,58 +179,65 @@ class TargetPoint(Target):
         return self.xyz.to(kdu.get("length")).magnitude
 
 
+@parse_docs
 @attr.s
 class TargetRectangle(Target):
     """Rectangle target specification.
 
     This target spec defines an rectangular, axis-aligned zone where ray targets
     will be sampled.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``xmin`` (float):
-        Lower bound on the X axis.
-
-        Unit-enabled field (default: cdu[length]).
-
-    ``xmax`` (float):
-        Upper bound on the X axis.
-
-        Unit-enabled field (default: cdu[length]).
-
-    ``ymin`` (float):
-        Lower bound on the Y axis.
-
-        Unit-enabled field (default: cdu[length]).
-
-    ``ymax`` (float):
-        Lower bound on the Y axis.
-
-        Unit-enabled field (default: cdu[length]).
     """
 
     # fmt: off
     # Corners of an axis-aligned rectangle in CDU
-    xmin = attrib_quantity(
-        converter=converter_quantity(float),
-        validator=validator_quantity(validator_is_number),
-        units_compatible=cdu.generator("length")
+    xmin = documented(
+        attrib_quantity(
+            converter=converter_quantity(float),
+            validator=validator_quantity(validator_is_number),
+            units_compatible=cdu.generator("length")
+        ),
+        doc="Lower bound on the X axis.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="float",
     )
-    xmax = attrib_quantity(
-        converter=converter_quantity(float),
-        validator=validator_quantity(validator_is_number),
-        units_compatible=cdu.generator("length")
+
+    xmax = documented(
+        attrib_quantity(
+            converter=converter_quantity(float),
+            validator=validator_quantity(validator_is_number),
+            units_compatible=cdu.generator("length")
+        ),
+        doc="Upper bound on the X axis.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="float",
     )
-    ymin = attrib_quantity(
-        converter=converter_quantity(float),
-        validator=validator_quantity(validator_is_number),
-        units_compatible=cdu.generator("length")
+
+    ymin = documented(
+        attrib_quantity(
+            converter=converter_quantity(float),
+            validator=validator_quantity(validator_is_number),
+            units_compatible=cdu.generator("length")
+        ),
+        doc="Lower bound on the Y axis.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="float",
     )
-    ymax = attrib_quantity(
-        converter=converter_quantity(float),
-        validator=validator_quantity(validator_is_number),
-        units_compatible=cdu.generator("length")
+
+    ymax = documented(
+        attrib_quantity(
+            converter=converter_quantity(float),
+            validator=validator_quantity(validator_is_number),
+            units_compatible=cdu.generator("length"),
+        ),
+        doc="Upper bound on the Y axis.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="float",
     )
+
     # fmt: on
 
     @xmin.validator
@@ -267,6 +278,7 @@ class TargetRectangle(Target):
 
 
 @MeasureFactory.register("distant")
+@parse_docs
 @attr.s
 class DistantMeasure(Measure):
     """Distant measure scene element [:factorykey:`distant`].
@@ -274,81 +286,85 @@ class DistantMeasure(Measure):
     This scene element is a thin wrapper around the ``distant`` sensor kernel
     plugin. It parametrises the sensor is oriented based on the a pair of zenith
     and azimuth angles, following the convention used in Earth observation.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``film_resolution`` (array[int]):
-        Film resolution as a (height, width) 2-tuple.
-        If the height is set to 1, direction sampling will be restricted to a
-        plane.
-        Default: (32, 32).
-
-    ``spp`` (int):
-        Number of samples per pixel. Default: 32.
-
-    ``target`` (:class:`Target` or None):
-        Target specification. If set to ``None``, default target point selection
-        is used. The target can be specified using an array-like with 3
-        elements (which will be converted to a :class:`TargetPoint`) or a
-        dictionary interpreted by :meth:`Target.convert`. Default: None.
-
-    ``orientation`` (float):
-        Azimuth angle defining the orientation of the sensor in the horizontal
-        plane. Default: 0 deg.
-
-        Unit-enabled field (default: cdu[angle]).
-
-    ``direction`` (array[float]):
-        Vector orienting the hemisphere mapped by the measure as a 3-vector.
-        Default: [0, 0, 1].
-
-    ``flip_directions`` (bool):
-        If ``True``, sampled directions will be flipped. Default: False.
     """
 
     # fmt: off
-    zenith = attrib_quantity(
-        default=ureg.Quantity(0., ureg.deg),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("angle"),
-    )
-    film_resolution = attr.ib(
-        default=(32, 32),
-        validator=attr.validators.deep_iterable(
-            member_validator=attr.validators.instance_of(int),
-            iterable_validator=validator_has_len(2)
+    film_resolution = documented(
+        attr.ib(
+            default=(32, 32),
+            validator=attr.validators.deep_iterable(
+                member_validator=attr.validators.instance_of(int),
+                iterable_validator=validator_has_len(2)
+            ),
         ),
+        doc="Film resolution as a (height, width) 2-tuple. "
+            "If the height is set to 1, direction sampling will be restricted to a "
+            "plane.",
+        type="array-like[int, int]",
+        default="(32, 32)"
     )
 
-    spp = attr.ib(
-        default=32,
-        converter=int,
-        validator=validator_is_positive
+    spp = documented(
+        attr.ib(
+            default=32,
+            converter=int,
+            validator=validator_is_positive
+        ),
+        doc="Number of samples per pixel.",
+        type="int",
+        default="32"
     )
 
-    target = attr.ib(
-        default=None,
-        converter=attr.converters.optional(Target.convert),
-        validator=attr.validators.optional(attr.validators.instance_of(Target)),
-        on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate)
+    target = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(Target.convert),
+            validator=attr.validators.optional(attr.validators.instance_of(Target)),
+            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate)
+        ),
+        doc="Target specification. If set to ``None``, default target point selection "
+            "is used. The target can be specified using an array-like with 3 "
+            "elements (which will be converted to a :class:`TargetPoint`) or a "
+            "dictionary interpreted by :meth:`Target.convert`.",
+        type=":class:`Target` or None",
+        default="None",
     )
 
-    orientation = attrib_quantity(
-        default=ureg.Quantity(0., ureg.deg),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("angle"),
+    orientation = documented(
+        attrib_quantity(
+            default=ureg.Quantity(0., ureg.deg),
+            validator=validator_is_positive,
+            units_compatible=cdu.generator("angle"),
+        ),
+        doc="Azimuth angle defining the orientation of the sensor in the "
+            "horizontal plane.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[angle]).",
+        type="float",
+        default="0.0 deg",
     )
 
-    direction = attr.ib(
-        default=[0, 0, 1],
-        converter=np.array,
-        validator=validator_is_vector3,
+    direction = documented(
+        attr.ib(
+            default=[0, 0, 1],
+            converter=np.array,
+            validator=validator_is_vector3,
+        ),
+        doc="Vector orienting the hemisphere mapped by the measure.",
+        type="arraylike[float, float, float]",
+        default="[0, 0, 1]"
     )
 
-    flip_directions = attr.ib(
-        default=None,
-        converter=attr.converters.optional(bool)
+    flip_directions = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(bool)
+        ),
+        doc=" If ``True``, sampled directions will be flipped.",
+        type="bool",
+        default="False",
     )
+
     # fmt: on
 
     def sensor_info(self):
@@ -418,6 +434,7 @@ class DistantMeasure(Measure):
 
 
 @MeasureFactory.register("perspective")
+@parse_docs
 @attr.s
 class PerspectiveCameraMeasure(Measure):
     """Perspective camera scene element [:factorykey:`perspective`].
@@ -425,72 +442,80 @@ class PerspectiveCameraMeasure(Measure):
     This scene element is a thin wrapper around the ``perspective`` sensor
     kernel plugin. It positions a perspective camera based on a set of vectors,
     specifying the origin, viewing direction and 'up' direction of the camera.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``target`` (array[float]):
-        A 3-element vector specifying the location targeted by the camera.
-        Default: [0, 0, 0] m.
-
-        Unit-enabled field (default: cdu[length]).
-
-    ``origin`` (array[float]):
-        A 3-element vector specifying the position of the camera.
-        Default: [1, 1, 1] m.
-
-        Unit-enabled field (default: cdu[length]).
-
-    ``up`` (array[float]):
-        A 3-element vector specifying the up direction of the camera.
-        This vector must be different from the camera's viewing direction,
-        which is given by ``target - origin``.
-        Default: [0, 0, 1].
-
-    ``film_width`` (int):
-        Horizontal resolution of the film in pixels. Default: 64.
-
-    ``film_height`` (int):
-        Vertical resolution of the film in pixels. Default: 64.
-
-    ``spp`` (int):
-        Number of samples per pixel. Default: 32.
     """
 
     # fmt: off
-    target = attrib_quantity(
-        default=ureg.Quantity([0, 0, 0], ureg.m),
-        validator=validator_has_len(3),
-        units_compatible=cdu.generator("length"),
+    target = documented(
+        attrib_quantity(
+            default=ureg.Quantity([0, 0, 0], ureg.m),
+            validator=validator_has_len(3),
+            units_compatible=cdu.generator("length"),
+        ),
+        doc="A 3-element vector specifying the location targeted by the camera.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="array-like[float, float, float]",
+        default="[0, 0, 0] m"
     )
 
-    origin = attrib_quantity(
-        default=ureg.Quantity([1, 1, 1], ureg.m),
-        validator=validator_has_len(3),
-        units_compatible=cdu.generator("length"),
+    origin = documented(
+        attrib_quantity(
+            default=ureg.Quantity([1, 1, 1], ureg.m),
+            validator=validator_has_len(3),
+            units_compatible=cdu.generator("length"),
+        ),
+        doc="A 3-element vector specifying the position of the camera.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="array-like[float, float, float]",
+        default="[1, 1, 1] m"
     )
 
-    up = attr.ib(
-        default=[0, 0, 1],
-        validator=validator_has_len(3)
+    up = documented(
+        attr.ib(
+            default=[0, 0, 1],
+            validator=validator_has_len(3)
+        ),
+        doc="A 3-element vector specifying the up direction of the camera.\n"
+            "This vector must be different from the camera's viewing direction,\n"
+            "which is given by ``target - origin``.",
+        type="array-like[float, float, float]",
+        default="[0, 0, 1]",
     )
 
-    film_width = attr.ib(
-        default=64,
-        converter=int,
-        validator=validator_is_positive
+    film_width = documented(
+        attr.ib(
+            default=64,
+            converter=int,
+            validator=validator_is_positive
+        ),
+        doc="Horizontal resolution of the film in pixels.",
+        type="int",
+        default="64",
     )
 
-    film_height = attr.ib(
-        default=64,
-        converter=int,
-        validator=validator_is_positive
+    film_height = documented(
+        attr.ib(
+            default=64,
+            converter=int,
+            validator=validator_is_positive
+        ),
+        doc="Vertical resolution of the film in pixels.",
+        type="int",
+        default="64",
     )
 
-    spp = attr.ib(
-        default=32,
-        converter=int,
-        validator=validator_is_positive
+    spp = documented(
+        attr.ib(
+            default=32,
+            converter=int,
+            validator=validator_is_positive
+        ),
+        doc="Number of samples per pixel.",
+        type="int",
+        default="32",
     )
+
     # fmt: on
 
     @target.validator
@@ -571,109 +596,118 @@ class PerspectiveCameraMeasure(Measure):
 
 
 @MeasureFactory.register("radiancemeter_hsphere")
+@parse_docs
 @attr.s
 class RadianceMeterHsphereMeasure(Measure):
-    """Hemispherical radiancemeter measure scene element
+    """
+    Hemispherical radiancemeter measure scene element
     [:factorykey:`radiancemeter_hsphere`].
 
     This scene element creates a ``radiancemeterarray`` sensor kernel plugin
     covering the hemisphere defined by an ``origin`` point and a ``direction``
     vector.
-
-    See :class:`Measure` for undocumented members.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``zenith_res`` (float):
-        Zenith angle resolution. Default:  10 deg.
-
-        Unit-enabled field (default unit: cdu[angle]).
-
-    ``azimuth_res`` (float):
-        Azimuth angle resolution. Default: 10 deg.
-
-        Unit-enabled field (default unit: cdu[angle]).
-
-    ``origin`` (list[float]):
-        Position of the sensor. Default: [0, 0, 0] m.
-
-        Unit-enabled field (default unit: cdu[length]).
-
-    ``direction`` (list[float]):
-        Direction of the hemisphere's zenith. Default: [0, 0, 1].
-
-    ``orientation`` (list[float]):
-        Direction with which azimuth origin is aligned.
-        Default: [1, 0, 0].
-
-    ``hemisphere`` ("front" or "back"):
-        If set to ``"front"``, the created radiancemeter array directions will
-        point to the hemisphere defined by ``direction``.
-        If set to ``"back"``, the created radiancemeter array directions will
-        point to the hemisphere defined by ``-direction``.
-        Default: ``"front"``.
-
-        .. only:: latex
-
-           .. figure:: ../../../fig/radiancemeter_hsphere.png
-
-        .. only:: not latex
-
-           .. figure:: ../../../fig/radiancemeter_hsphere.svg
-
-
-    ``spp`` (int):
-        Number of samples per (zenith, azimuth) pair.
-        Default: 32.
-
-    ``id`` (str):
-        Identifier to allow mapping of results to the measure inside an application.
-        Default: ``"radiancemeter_hsphere"``.
     """
 
     # fmt: off
-    zenith_res = attrib_quantity(
-        default=ureg.Quantity(10., ureg.deg),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("angle"),
-    )
-
-    azimuth_res = attrib_quantity(
-        default=ureg.Quantity(10., ureg.deg),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("angle"),
-    )
-
-    origin = attrib_quantity(
-        default=ureg.Quantity([0, 0, 0], ureg.m),
-        validator=validator_has_len(3),
-        units_compatible=cdu.generator("length"),
-    )
-
-    direction = attr.ib(
-        default=[0, 0, 1],
-        validator=validator_has_len(3)
-    )
-
-    orientation = attr.ib(
-        default=[1, 0, 0],
-        validator=validator_has_len(3),
-    )
-
-    hemisphere = attr.ib(
-        default="front",
-        validator=attr.validators.in_(("front", "back")),
-    )
-
-    id = attr.ib(
+    id = documented(
+        attr.ib(
+            default="radiancemeter_hsphere",
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
+        ),
+        doc=get_doc(Measure, "id", "doc"),
+        type=get_doc(Measure, "id", "type"),
         default="radiancemeter_hsphere",
-        validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
-    spp = attr.ib(
-        default=32,
-        converter=int,
-        validator=validator_is_positive
+    zenith_res = documented(
+        attrib_quantity(
+            default=ureg.Quantity(10., ureg.deg),
+            validator=validator_is_positive,
+            units_compatible=cdu.generator("angle"),
+        ),
+        doc="Zenith angle resolution.\n"
+            "\n"
+            "Unit-enabled field (default unit: cdu[angle]).",
+        type="float",
+        default="10.0 deg"
+    )
+
+    azimuth_res = documented(
+        attrib_quantity(
+            default=ureg.Quantity(10., ureg.deg),
+            validator=validator_is_positive,
+            units_compatible=cdu.generator("angle"),
+        ),
+        doc="Azimuth angle resolution.\n"
+            "\n"
+            "Unit-enabled field (default unit: cdu[angle]).",
+        type="float",
+        default="10.0 deg",
+    )
+
+    origin = documented(
+        attrib_quantity(
+            default=ureg.Quantity([0, 0, 0], ureg.m),
+            validator=validator_has_len(3),
+            units_compatible=cdu.generator("length"),
+        ),
+        doc="Position of the sensor.\n"
+            "\n"
+            "Unit-enabled field (default unit: cdu[length]).",
+        type="array-like[float, float, float]",
+        default="[0, 0, 0] m",
+    )
+
+    direction = documented(
+        attr.ib(
+            default=[0, 0, 1],
+            validator=validator_has_len(3)
+        ),
+        doc="Direction of the hemisphere's zenith.",
+        type="array-like[float, float, float]",
+        default="[0, 0, 1]",
+    )
+
+    orientation = documented(
+        attr.ib(
+            default=[1, 0, 0],
+            validator=validator_has_len(3),
+        ),
+        doc="Direction with which azimuth origin is aligned.",
+        type="array-like[float, float, float]",
+        default="[1, 0, 0]"
+    )
+
+    hemisphere = documented(
+        attr.ib(
+            default="front",
+            validator=attr.validators.in_(("front", "back")),
+        ),
+        doc="If set to ``\"front\"``, the created radiancemeter array directions "
+            "will point to the hemisphere defined by ``direction``. If set to "
+            "``\"back\"``, the created radiancemeter array directions will "
+            "point to the hemisphere defined by ``-direction``.\n"
+            "\n"
+            ".. only:: latex\n"
+            "\n"
+            "   .. figure:: ../../../fig/radiancemeter_hsphere.png\n"
+            "\n"
+            ".. only:: not latex\n"
+            "\n"
+            "   .. figure:: ../../../fig/radiancemeter_hsphere.svg",
+        type="\"front\" or \"back\"",
+        default="\"front\"",
+    )
+
+    spp = documented(
+        attr.ib(
+            default=32,
+            converter=int,
+            validator=validator_is_positive
+        ),
+        doc="Number of samples per (zenith, azimuth) pair.",
+        type="int",
+        default="32",
     )
 
     # Private attributes
@@ -686,6 +720,7 @@ class RadianceMeterHsphereMeasure(Measure):
 
     _zenith_angles = attr.ib(default=None, init=False)  # Set during post-init
     _azimuth_angles = attr.ib(default=None, init=False)  # Set during post-init
+
     # fmt: on
 
     def __attrs_post_init__(self):
@@ -772,8 +807,8 @@ class RadianceMeterHsphereMeasure(Measure):
         values will exceed the threshold.
         """
         if (
-            eradiate.mode.precision == eradiate.ModePrecision.SINGLE
-            and self.spp > self._spp_max_single
+                eradiate.mode.precision == eradiate.ModePrecision.SINGLE
+                and self.spp > self._spp_max_single
         ):
             spps = [
                 self._spp_max_single
@@ -822,98 +857,106 @@ class RadianceMeterHsphereMeasure(Measure):
     # fmt: on
 
 
-@attr.s
 @MeasureFactory.register("radiancemeter_plane")
+@parse_docs
+@attr.s
 class RadianceMeterPlaneMeasure(Measure):
-    """Plane radiancemeter measure scene element
+    """
+    Plane radiancemeter measure scene element
     [:factorykey:`radiancemeter_plane`].
 
     This scene element creates a ``radiancemeterarray`` sensor kernel plugin
     covering a plane defined by an ``origin`` point, a ``direction`` vector and
     an ``orientation`` vector.
-
-    See :class:`Measure` for undocumented members.
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``zenith_res`` (float):
-        Zenith angle resolution. Default:  10 deg.
-
-        Unit-enabled field (default unit: cdu[angle]).
-
-    ``origin`` (list[float]):
-        Position of the sensor. Default: [0, 0, 0] m.
-
-        Unit-enabled field (default unit: cdu[length]).
-
-    ``direction`` (list[float]):
-        Direction of the hemisphere's zenith. Default: [0, 0, 1].
-
-    ``orientation`` (list[float]):
-        Direction with which azimuth origin is aligned.
-        Default value: [1, 0, 0].
-
-    ``hemisphere`` ("front" or "back"):
-        If set to ``"front"``, the created radiancemeter array directions will
-        point to the hemisphere defined by ``direction``.
-        If set to ``"back"``, the created radiancemeter array directions will
-        point to the hemisphere defined by ``-direction``.
-        Default value: ``"front"``.
-
-        .. only:: latex
-
-           .. figure:: ../../../fig/radiancemeter_plane.png
-
-        .. only:: not latex
-
-           .. figure:: ../../../fig/radiancemeter_plane.svg
-
-    ``id`` (str):
-        Identifier to allow mapping of results to the measure inside an
-        application. Default: "radiancemeter_plane".
-
-    ``spp`` (int):
-        Number of samples per (zenith, azimuth) pair.
-        Default: 32.
     """
 
     # fmt: off
-    zenith_res = attrib_quantity(
-        default=ureg.Quantity(10., ureg.deg),
-        validator=validator_is_positive,
-        units_compatible=cdu.generator("angle"),
+    id = documented(
+        attr.ib(
+            default="radiancemeter_plane",
+            validator=attr.validators.optional((attr.validators.instance_of(str))),
+        ),
+        doc=get_doc(Measure, "id", "doc"),
+        type=get_doc(Measure, "id", "type"),
+        default="\"radiancemeter_plane\"",
     )
 
-    origin = attrib_quantity(
-        default=ureg.Quantity([0, 0, 0], ureg.m),
-        validator=validator_has_len(3),
-        units_compatible=cdu.generator("length"),
+    zenith_res = documented(
+        attrib_quantity(
+            default=ureg.Quantity(10., ureg.deg),
+            validator=validator_is_positive,
+            units_compatible=cdu.generator("angle"),
+        ),
+        doc="Zenith angle resolution.\n"
+            "\n"
+            "Unit-enabled field (default unit: cdu[angle]).",
+        type=float,
+        default="10.0 deg"
     )
 
-    direction = attr.ib(
-        default=[0, 0, 1],
-        validator=validator_has_len(3)
+    origin = documented(
+        attrib_quantity(
+            default=ureg.Quantity([0, 0, 0], ureg.m),
+            validator=validator_has_len(3),
+            units_compatible=cdu.generator("length"),
+        ),
+        doc="Position of the sensor.\n"
+            "\n"
+            "Unit-enabled field (default unit: cdu[length]).",
+        type="array-like[float, float, float]",
+        default="[0, 0, 0] m.",
     )
 
-    orientation = attr.ib(
-        default=[1, 0, 0],
-        validator=validator_has_len(3),
+    direction = documented(
+        attr.ib(
+            default=[0, 0, 1],
+            validator=validator_has_len(3)
+        ),
+        doc="Direction of the hemisphere's zenith.",
+        type="array-like[float, float, float]",
+        default="[0, 0, 1]",
     )
 
-    hemisphere = attr.ib(
-        default="front",
-        validator=attr.validators.in_(("front", "back")),
+    orientation = documented(
+        attr.ib(
+            default=[1, 0, 0],
+            validator=validator_has_len(3),
+        ),
+        doc="Direction with which azimuth origin is aligned.",
+        type="array-like[float, float, float]",
+        default="[1, 0, 0]",
     )
 
-    id = attr.ib(
-        default="radiancemeter_plane",
-        validator=attr.validators.optional((attr.validators.instance_of(str))),
+    hemisphere = documented(
+        attr.ib(
+            default="front",
+            validator=attr.validators.in_(("front", "back")),
+        ),
+        doc="If set to ``\"front\"``, the created radiancemeter array "
+            "directions will point to the hemisphere defined by ``direction``. "
+            " If set to ``\"back\"``, the created radiancemeter array "
+            "directions will point to the hemisphere defined by ``-direction``.\n"
+            "\n"
+            ".. only:: latex\n"
+            "\n"
+            "   .. figure:: ../../../fig/radiancemeter_plane.png\n"
+            "\n"
+            ".. only:: not latex\n"
+            "\n"
+            "   .. figure:: ../../../fig/radiancemeter_plane.svg",
+        type="\"front\" or \"back\"",
+        default="\"front\""
     )
 
-    spp = attr.ib(
-        default=32,
-        converter=int,
-        validator=validator_is_positive
+    spp = documented(
+        attr.ib(
+            default=32,
+            converter=int,
+            validator=validator_is_positive
+        ),
+        doc="Number of samples per (zenith, azimuth) pair.",
+        type="int",
+        default="32",
     )
 
     # Private attributes
@@ -926,6 +969,7 @@ class RadianceMeterPlaneMeasure(Measure):
 
     _zenith_angles = attr.ib(default=None, init=False)  # Set during post-init
     _azimuth_angles = attr.ib(default=None, init=False)  # Set during post-init
+
     # fmt: on
 
     def __attrs_post_init__(self):
@@ -1014,8 +1058,8 @@ class RadianceMeterPlaneMeasure(Measure):
         values will exceed the threshold.
         """
         if (
-            eradiate.mode.precision == eradiate.ModePrecision.SINGLE
-            and self.spp > self._spp_max_single
+                eradiate.mode.precision == eradiate.ModePrecision.SINGLE
+                and self.spp > self._spp_max_single
         ):
             spps = [
                 self._spp_max_single
