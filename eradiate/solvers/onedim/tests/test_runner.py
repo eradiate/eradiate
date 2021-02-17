@@ -5,7 +5,7 @@ import eradiate.kernel
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure import RadianceMeterHsphereMeasure
 from eradiate.solvers.onedim.runner import OneDimRunner
-from eradiate.util.exceptions import KernelVariantError
+from eradiate.exceptions import KernelVariantError
 
 
 def test_onedim_runner_construct(mode_mono):

@@ -1,6 +1,6 @@
 import attr
 
-from eradiate.util.factory import BaseFactory
+from eradiate.factory import BaseFactory
 
 
 @attr.s

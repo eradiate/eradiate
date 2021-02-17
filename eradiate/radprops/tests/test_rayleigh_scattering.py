@@ -5,7 +5,7 @@ from eradiate.radprops.rayleigh import (
     air_refractive_index,
     compute_sigma_s_air
 )
-from eradiate.util.units import ureg
+from eradiate import unit_registry as ureg
 
 _Q = ureg.Quantity
 

@@ -53,7 +53,7 @@
 import numpy as np
 from scipy.constants import physical_constants
 
-from ..util.units import ureg
+from .._units import unit_registry as ureg
 
 _BOLTZMANN = ureg.Quantity(*physical_constants['Boltzmann constant'][:2])
 

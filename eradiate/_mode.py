@@ -1,9 +1,10 @@
 import enum
 
 import attr
+import pinttr
 
-from .util.attrs import attrib_quantity, unit_enabled
-from .util.units import config_default_units, ureg
+from ._units import unit_context_config as ucc
+from ._units import unit_registry as ureg
 
 
 class ModeSpectrum(enum.Enum):
@@ -44,7 +45,6 @@ def register_mode(mode_id, spectrum="mono", precision="single"):
     return decorator
 
 
-@unit_enabled
 @attr.s(frozen=True)
 class Mode:
     # Parent class for all operational modes
@@ -83,14 +83,15 @@ class ModeNone(Mode):
 @attr.s
 class ModeMono(Mode):
     # Monochromatic mode, single precision
-    wavelength = attrib_quantity(
-        default=ureg.Quantity(550., ureg.nm),
-        units_compatible=config_default_units.generator("wavelength"),
-        on_setattr=None
+    wavelength = pinttr.ib(
+        default=ureg.Quantity(550.0, ureg.nm),
+        units=ucc.deferred("wavelength"),
+        on_setattr=None,
     )
 
     def __attrs_post_init__(self):
         import eradiate.kernel
+
         eradiate.kernel.set_variant("scalar_mono")
 
 
@@ -98,18 +99,21 @@ class ModeMono(Mode):
 @attr.s
 class ModeMonoDouble(Mode):
     # Monochromatic mode, double precision
-    wavelength = attrib_quantity(
-        default=ureg.Quantity(550., ureg.nm),
-        units_compatible=config_default_units.generator("wavelength"),
-        on_setattr=None
+    wavelength = pinttr.ib(
+        default=ureg.Quantity(550.0, ureg.nm),
+        units=ucc.deferred("wavelength"),
+        on_setattr=None,
     )
 
     def __attrs_post_init__(self):
         import eradiate.kernel
+
         eradiate.kernel.set_variant("scalar_mono_double")
+
 
 # Eradiate's operational mode configuration
 _current_mode = ModeNone()
+
 
 # -- Public API ----------------------------------------------------------------
 

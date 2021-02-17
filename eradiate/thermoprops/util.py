@@ -5,7 +5,8 @@ from datetime import datetime
 import numpy as np
 import xarray as xr
 
-from ..util.xarray import DatasetSpec, VarSpec
+import eradiate.xarray.metadata
+from ..xarray.metadata import DatasetSpec, VarSpec
 
 profile_dataset_spec = DatasetSpec(
     var_specs={

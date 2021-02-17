@@ -1,9 +1,9 @@
+import pinttr
 import pytest
 
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination
-from eradiate.util.exceptions import UnitsError
-from eradiate.util.units import ureg
+from eradiate import unit_registry as ureg
 
 
 def test_constant(mode_mono):
@@ -48,5 +48,5 @@ def test_directional(mode_mono):
     # Check if specification from a constant works
     d = DirectionalIllumination(irradiance=ureg.Quantity(1., "W/m^2/nm"))
     assert KernelDict.empty().add(d).load() is not None
-    with pytest.raises(UnitsError):  # Wrong units
+    with pytest.raises(pinttr.exceptions.UnitsError):  # Wrong units
         DirectionalIllumination(irradiance=ureg.Quantity(1., "W/m^2/sr/nm"))

@@ -83,9 +83,7 @@
 import xarray as xr
 
 from .core import DataGetter
-from ..util.presolver import PathResolver
-
-_presolver = PathResolver()
+from .. import path_resolver as _presolver
 
 
 class _SpectralResponseFunctionGetter(DataGetter):

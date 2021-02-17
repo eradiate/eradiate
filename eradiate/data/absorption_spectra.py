@@ -18,10 +18,8 @@ import numpy as np
 import xarray as xr
 
 from .core import DataGetter
-from ..util.presolver import PathResolver
-from ..util.units import ureg
-
-_presolver = PathResolver()
+from .. import path_resolver as _presolver
+from .._units import unit_registry as ureg
 
 _US76_U86_4_PATH = "spectra/absorption/us76_u86_4"
 _US76_U86_4_PREF = "spectra-us76_u86_4"

@@ -7,8 +7,8 @@ import eradiate
 from eradiate.scenes.biosphere import HomogeneousDiscreteCanopy
 from eradiate.scenes.measure import DistantMeasure
 from eradiate.solvers.rami.app import RamiScene, RamiSolverApp
-from eradiate.util.exceptions import ModeError
-from eradiate.util.units import ureg
+from eradiate.exceptions import ModeError
+from eradiate import unit_registry as ureg
 
 
 def test_rami_scene(mode_mono):

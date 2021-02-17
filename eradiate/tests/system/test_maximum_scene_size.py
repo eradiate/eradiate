@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from eradiate.util.frame import angles_to_direction
+from eradiate.frame import angles_to_direction
 
 
 @pytest.mark.slow

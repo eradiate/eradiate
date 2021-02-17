@@ -10,25 +10,35 @@
 __all__ = ["BiosphereFactory", "HomogeneousDiscreteCanopy"]
 
 import os
-from abc import ABC, abstractmethod
-from copy import copy
+from abc import (
+    ABC,
+    abstractmethod
+)
 
 import aabbtree
 import attr
 import numpy as np
+import pinttr
 
 from .core import SceneElement
-from .spectra import Spectrum, SpectrumFactory
-from ..util.attrs import (
-    attrib_quantity,
-    documented, get_doc, parse_docs, validator_has_len,
-    validator_has_quantity,
-    validator_is_positive,
+from .spectra import (
+    Spectrum,
+    SpectrumFactory
 )
-from ..util.factory import BaseFactory
-from ..util.units import config_default_units as cdu
-from ..util.units import ensure_units, ureg
-from ..util.units import kernel_default_units as kdu
+from .._attrs import (
+    documented,
+    get_doc,
+    parse_docs
+)
+from .._factory import BaseFactory
+from .._units import unit_context_config as ucc
+from .._units import unit_context_kernel as uck
+from .._units import unit_registry as ureg
+from ..validators import (
+    has_len,
+    has_quantity,
+    is_positive
+)
 
 
 class BiosphereFactory(BaseFactory):
@@ -64,11 +74,11 @@ class Canopy(SceneElement, ABC):
     )
 
     size = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=None,
             # TODO: add other validators maybe
-            validator=validator_has_len(3),
-            units_compatible=cdu.generator("length"),
+            validator=has_len(3),
+            units=ucc.deferred("length"),
         ),
         doc="Canopy size.\n"
             "\n"
@@ -339,9 +349,9 @@ class HomogeneousDiscreteCanopy(Canopy):
     )
 
     leaf_positions = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=[],
-            units_compatible=cdu.generator("length"),
+            units=ucc.deferred("length"),
         ),
         doc="Lists all leaf positions as 3-vectors in cartesian coordinates.\n"
             "\n"
@@ -363,7 +373,7 @@ class HomogeneousDiscreteCanopy(Canopy):
             converter=SpectrumFactory.converter("reflectance"),
             validator=[
                 attr.validators.instance_of(Spectrum),
-                validator_has_quantity("reflectance"),
+                has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance spectrum of the leaves in the canopy. Must be a "
@@ -378,7 +388,7 @@ class HomogeneousDiscreteCanopy(Canopy):
             converter=SpectrumFactory.converter("transmittance"),
             validator=[
                 attr.validators.instance_of(Spectrum),
-                validator_has_quantity("transmittance"),
+                has_quantity("transmittance"),
             ],
         ),
         doc="Transmittance spectrum of the leaves in the canopy. Must be a "
@@ -388,10 +398,10 @@ class HomogeneousDiscreteCanopy(Canopy):
     )
 
     leaf_radius = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity(0.1, ureg.m),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("length"),
+            validator=is_positive,
+            units=ucc.deferred("length"),
         ),
         doc="Leaf radius.\n"
             "\n"
@@ -459,9 +469,12 @@ class HomogeneousDiscreteCanopy(Canopy):
         # fmt: on
 
     def shapes(self, ref=True):
-        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+        from eradiate.kernel.core import (
+            ScalarTransform4f,
+            ScalarVector3f
+        )
 
-        kdu_length = kdu.get("length")
+        kdu_length = uck.get("length")
 
         shapes_dict = {f"shape_{self.id}": {"type": "shapegroup",}}
 
@@ -688,7 +701,7 @@ class HomogeneousDiscreteCanopy(Canopy):
                 values = line.split()
 
                 if i == 0:
-                    radius = ensure_units(float(values[0].strip()), "meter")
+                    radius = pinttr.converters.ensure_units(float(values[0].strip()), "meter")
 
                 position = [
                     float(values[1].strip()),
@@ -739,22 +752,7 @@ class HomogeneousDiscreteCanopy(Canopy):
         """
 
         # Pre-process dict: apply units to unit-enabled fields
-        d_copy = copy(d)
-
-        for field in cls._fields_supporting_units():
-            # Fetch user-specified unit if any
-            try:
-                field_units = d_copy.pop(f"{field}_units")
-            except KeyError:
-                # If no unit is specified, don't attempt conversion and let the
-                # constructor take care of it
-                continue
-
-            # If a unit is found, try to apply it
-            # Bonus: if a unit field *and* a quantity were found, we convert the
-            # quantity to the unit
-            field_value = d_copy[field]
-            d_copy[field] = ensure_units(field_value, field_units, convert=True)
+        d_copy = pinttr.interpret_units(d, ureg=ureg)
 
         if "file_path" in d_copy:
             return cls.from_rami(**d_copy)

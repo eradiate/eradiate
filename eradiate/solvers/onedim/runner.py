@@ -4,9 +4,13 @@ import attr
 import numpy as np
 
 import eradiate.kernel
+
+from ..._attrs import (
+    documented,
+    parse_docs
+)
 from ...scenes.core import KernelDict
-from ...util.attrs import documented, parse_docs
-from ...util.exceptions import KernelVariantError
+from eradiate.exceptions import KernelVariantError
 
 
 @parse_docs
@@ -68,7 +72,10 @@ class OneDimRunner:
         self._check_variant()
 
         # Basic setup
-        from eradiate.kernel.core import LogLevel, Thread
+        from eradiate.kernel.core import (
+            LogLevel,
+            Thread
+        )
         Thread.thread().logger().set_log_level(LogLevel.Warn)
 
         results = dict()

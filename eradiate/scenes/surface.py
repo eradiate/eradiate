@@ -7,19 +7,32 @@
       :factory: SurfaceFactory
 """
 
-from abc import ABC, abstractmethod
+from abc import (
+    ABC,
+    abstractmethod
+)
 
 import attr
+import pinttr
 
 from .core import SceneElement
-from .spectra import Spectrum, SpectrumFactory
-from ..util.attrs import (
-    attrib_quantity, documented, get_doc, parse_docs, validator_has_quantity, validator_is_positive
+from .spectra import (
+    Spectrum,
+    SpectrumFactory
 )
-from ..util.factory import BaseFactory
-from ..util.units import config_default_units as cdu
-from ..util.units import kernel_default_units as kdu
-from ..util.units import ureg
+from .._attrs import (
+    documented,
+    get_doc,
+    parse_docs
+)
+from .._factory import BaseFactory
+from .._units import unit_context_config as ucc
+from .._units import unit_context_kernel as uck
+from .._units import unit_registry as ureg
+from ..validators import (
+    has_quantity,
+    is_positive
+)
 
 
 @parse_docs
@@ -41,10 +54,10 @@ class Surface(SceneElement, ABC):
     )
 
     width = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity(100., ureg.km),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("length")
+            validator=is_positive,
+            units=ucc.deferred("length")
         ),
         doc="Surface size.\n"
             "\n"
@@ -73,14 +86,17 @@ class Surface(SceneElement, ABC):
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             attached to the surface.
         """
-        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+        from eradiate.kernel.core import (
+            ScalarTransform4f,
+            ScalarVector3f
+        )
 
         if ref:
             bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
         else:
             bsdf = self.bsdfs()[f"bsdf_{self.id}"]
 
-        width = self.width.to(kdu.get("length")).magnitude
+        width = self.width.to(uck.get("length")).magnitude
 
         return {
             f"shape_{self.id}": {
@@ -132,7 +148,7 @@ class LambertianSurface(Surface):
             default=0.5,
             converter=SpectrumFactory.converter("reflectance"),
             validator=[attr.validators.instance_of(Spectrum),
-                       validator_has_quantity("reflectance")]
+                       has_quantity("reflectance")]
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
             "processed by :class:`.SpectrumFactory`.",

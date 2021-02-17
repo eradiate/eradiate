@@ -5,7 +5,7 @@ import eradiate
 from eradiate.radprops import (
     ArrayRadProfile, RadProfileFactory, US76ApproxRadProfile
 )
-from eradiate.util.units import ureg
+from eradiate import unit_registry as ureg
 
 
 def test_rad_props_profile_factory(mode_mono):

@@ -3,7 +3,7 @@ import pytest
 
 import eradiate.data as data
 from eradiate.radprops.absorption import compute_sigma_a
-from eradiate.util.units import ureg
+from eradiate import unit_registry as ureg
 
 
 def test_compute_sigma_a():

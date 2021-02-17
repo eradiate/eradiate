@@ -4,69 +4,79 @@ Package structure overview
 ==========================
 
 This section documents the general principles underlying the organisation of
-Eradiate's Python packages. Eradiate's code is organised into five submodules:
+the Eradiate Python package.
 
-:mod:`eradiate.kernel`
-    This submodule provides an interface to Eradiate's computational kernel.
+.. image:: ../../fig/package.svg
 
-:mod:`eradiate.scenes`
-    This library contains scene generation components.
+Main entry points
+-----------------
 
-:mod:`eradiate.solvers`
-    Components in this submodule glue the previous together, coordinate kernel
-    runs, implement post-processing and visualisation for specific use-cases.
+Core support [:ref:`eradiate <sec-reference-core>`]
+    The top-level module contains basic support functions required to do almost
+    anything with Eradiate.
 
-:mod:`eradiate.util`
-    This submodule contains additional utility components, not specific to any
-    of the others.
+Scene generation [:ref:`eradiate.scenes <sec-reference-scenes>`]
+    This package exposes the scene generation components. It includes convenient
+    interfaces to create objects representing the geometry, optical properties,
+    illumination and measures in the scene on which you'll run your radiative
+    transfer simulation.
 
-:mod:`eradiate.data`
-    Data shipped with Eradiate can be accessed using a generic interface defined
-    in this submodule.
+Solvers [:ref:`eradiate.solvers <sec-reference-solvers>`]
+    In this package, you will find interfaces to trigger simulation runs,
+    including pre- and post-processing operations.
 
-In the following, we will describe the organisation of the :mod:`eradiate.scenes`
-module.
+Low-level computational kernel
+------------------------------
 
-The high-level scene description library [:mod:`eradiate.scenes`]
------------------------------------------------------------------
+Kernel [:ref:`eradiate.kernel <sec-reference-kernel>`]
+    This module provides an interface to Eradiate's computational kernel, based
+    on a modified version of the Mitsuba 2 rendering system. The ``scenes`` and
+    ``solvers`` packages are, under the hood, high-level interfaces to the
+    kernel components.
 
-The scene generation API uses primary abstractions defined in the
-:mod:`eradiate.scenes.core` module. this module defines the
-:class:`~eradiate.scenes.core.SceneElement` base class as well as the
-:class:`eradiate.scenes.core.KernelDict` class, which serves as the main
-interface with the kernel.
+Data handling and visualisation
+-------------------------------
 
-The :mod:`eradiate.scenes` module also has a number of submodules classifying
-components based on the Earth system science nomenclature:
+Data handling [:ref:`eradiate.data <sec-reference-data>`]
+    This package serves data used by Eradiate. This data can be shipped by
+    Eradiate, but also extended by users.
 
-:mod:`eradiate.scenes.atmosphere`
-    This submodule contains scene elements used to add an atmosphere to the
-    scene.
+xarray extensions [:ref:`eradiate.xarray <sec-reference-xarray>`]
+    This package provides interfaces to create an manipulate Eradiate's
+    `xarray <http://xarray.pydata.org>`_-based input and output data.
 
-:mod:`eradiate.scenes.biosphere` (upcoming)
-    This submodule will contain scene elements used to add vegetation
-    to the scene.
+Plotting [:ref:`eradiate.plot <sec-reference-plot>`]
+    This module defines utility functions to create
+    `matplotlib <https://matplotlib.org>`_-based visualisations of Eradiate's
+    input and output data.
 
-:mod:`eradiate.scenes.cryosphere` (upcoming)
-    This submodule will contain scene elements used to add cryosphere elements
-    to the scene.
+Physical properties
+-------------------
 
-:mod:`eradiate.scenes.hydrosphere` (upcoming)
-    This  submodule will contain scene elements used to add water surfaces and
-    bodies to the scene.
+Radiative properties [:ref:`eradiate.radprops <sec-reference-radprops>`]
+    This package provides abstractions used to define radiative properties used
+    to create scenes.
 
-:mod:`eradiate.scenes.lithosphere` (upcoming)
-    This submodule will contain scene elements used to add mineral surfaces
-    to the scene.
+Thermosphysical properties [:ref:`eradiate.thermoprops <sec-reference-thermoprops>`]
+    This package provides abstractions used to define thermophysical properties
+    of scene objects. The output of its components are generally used as input
+    of components responsible for radiative property computation.
 
-In addition, transverse components are defined in the following submodules:
+Other support components
+------------------------
 
-:mod:`eradiate.scenes.surface`
-    This submodule contains scene elements used to add a surface to the scene.
+Class writing facilities [:ref:`eradiate.{converters, validators, _attrs, _factory} <sec-reference-class_writing>`]
+    These components are part of Eradiate's core class writing system. It relies
+    on the `attrs <https://www.attrs.org>`_ library, extended for `Pint <https://pint.readthedocs.io>`_
+    compatibility by the `Pinttrs <https://pinttrs.readthedocs.io>`_ library.
 
-:mod:`eradiate.scenes.illumination`
-    This module defines scene elements used to illuminate the scene, _i.e._
-    light sources.
+Math support [:ref:`eradiate.{frame, warp} <sec-reference-math>`]
+    For the cases where Eradiate's math dependencies and kernel are not
+    enough, additional mathematical tools are provided.
 
-:mod:`eradiate.scenes.measure`
-    This module defines scene elements used to compute radiative quantities.
+Exceptions [:ref:`eradiate.exceptions <sec-reference-exceptions>`]
+    This module contains exception and warning definitions.
+
+Miscellaneous [:ref:`eradiate._util <sec-reference-misc>`]
+    This module contains support components which don't fit in any of the
+    aforementioned classification entries.

@@ -30,26 +30,35 @@
 """
 
 import datetime
-from abc import ABC, abstractmethod
+from abc import (
+    ABC,
+    abstractmethod
+)
 
 import attr
 import numpy as np
+import pinttr
 import xarray as xr
 
 import eradiate
+
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
 from .. import data
-from ..data.absorption_spectra import find_dataset
-from ..thermoprops import us76
-from ..util.attrs import (
-    attrib_quantity, documented, parse_docs, unit_enabled, validator_all_positive,
-    validator_is_positive
+from .._attrs import (
+    documented,
+    parse_docs
 )
-from ..util.exceptions import ModeError
-from ..util.factory import BaseFactory
-from ..util.units import config_default_units as cdu
-from ..util.units import ureg
+from .._factory import BaseFactory
+from .._units import unit_context_config as ucc
+from .._units import unit_registry as ureg
+from ..data.absorption_spectra import find_dataset
+from ..exceptions import ModeError
+from ..thermoprops import us76
+from ..validators import (
+    all_positive,
+    is_positive
+)
 
 
 @ureg.wraps(ret=None, args=("m", "m", "m^-1", "m^-1", "m^-1", None), strict=False)
@@ -163,7 +172,6 @@ def make_dataset(z_level, z_layer=None, sigma_a=None, sigma_s=None, sigma_t=None
     )
 
 
-@unit_enabled
 @attr.s
 class RadProfile(ABC):
     """An abstract base class for radiative property profiles. Classes deriving
@@ -185,7 +193,8 @@ class RadProfile(ABC):
     @classmethod
     def from_dict(cls, d):
         """Initialise a :class:`RadPropsProfile` from a dictionary."""
-        return cls(**d)
+        d_copy = pinttr.interpret_units(d, ureg=ureg)
+        return cls(**d_copy)
 
     @property
     @abstractmethod
@@ -284,10 +293,10 @@ class ArrayRadProfile(RadProfile):
     """
 
     albedo_values = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=None,
-            validator=validator_all_positive,
-            units_compatible=ureg.dimensionless,
+            validator=all_positive,
+            units=ureg.dimensionless,
         ),
         doc="An array specifying albedo values. **Required, no default**.\n"
             "\n"
@@ -296,10 +305,10 @@ class ArrayRadProfile(RadProfile):
     )
 
     height = documented(
-        attrib_quantity(
-            default=ureg.Quantity(100, "km").to(cdu.get_str("length")),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("length")
+        pinttr.ib(
+            default=ureg.Quantity(100, "km"),
+            validator=is_positive,
+            units=ucc.deferred("length")
         ),
         doc="Height of the atmosphere. Default: 100 km.\n"
             "\n"
@@ -308,10 +317,10 @@ class ArrayRadProfile(RadProfile):
     )
 
     sigma_t_values = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=None,
-            validator=validator_all_positive,
-            units_compatible=cdu.generator("collision_coefficient"),
+            validator=all_positive,
+            units=ucc.deferred("collision_coefficient"),
         ),
         doc="An array specifying extinction coefficient values. **Required, no "
             "default**.\n"
@@ -466,18 +475,17 @@ class US76ApproxRadProfile(RadProfile):
         attr.ib(
             default=50,
             converter=int,
-            validator=validator_is_positive
+            validator=is_positive
         ),
         doc="Number of atmospheric layers. Default: 50",
         type="int",
     )
 
     height = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity(100., ureg.km),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("length"),
-            units_add_converter=True,
+            validator=is_positive,
+            units=ucc.deferred("length"),
         ),
         doc="Atmosphere's height. Default: 100 km.\n"
             "\n"
@@ -485,16 +493,16 @@ class US76ApproxRadProfile(RadProfile):
         type="float"
     )
 
-    _sigma_s_values = attrib_quantity(
+    _sigma_s_values = pinttr.ib(
         default=None,
-        units_compatible=cdu.generator("collision_coefficient"),
+        units=ucc.deferred("collision_coefficient"),
         init=False,
         repr=False,
     )
 
-    _sigma_a_values = attrib_quantity(
+    _sigma_a_values = pinttr.ib(
         default=None,
-        units_compatible=cdu.generator("collision_coefficient"),
+        units=ucc.deferred("collision_coefficient"),
         init=False,
         repr=False,
     )

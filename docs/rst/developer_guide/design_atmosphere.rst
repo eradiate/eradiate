@@ -13,7 +13,7 @@ For this reason, Eradiate makes the shape delimiting the atmosphere slightly
 larger than it actually should and offsets it so that the bottom of the
 atmosphere's kernel shape does not exactly coincide with the surface.
 
-In addition, the :class:`~eradiate.scenes.atmosphere.base.Atmosphere` interface
+In addition, the :class:`~eradiate.scenes.atmosphere.Atmosphere` interface
 defines a series of attributes required to position the atmosphere's kernel
 shape vertically:
 
