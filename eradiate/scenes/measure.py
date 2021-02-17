@@ -6,33 +6,34 @@
     .. factorytable::
        :factory: MeasureFactory
 """
-from abc import ABC
-from abc import abstractmethod
+from abc import (
+    ABC,
+    abstractmethod
+)
 from copy import deepcopy
 
 import attr
 import numpy as np
+import pinttr
+from pinttr.util import always_iterable
 
 import eradiate.kernel
 from .core import SceneElement
-from .._mode import ModePrecision
-from ..util.attrs import (
-    attrib_quantity,
-    converter_quantity,
-    documented, get_doc, parse_docs, unit_enabled,
-    validator_has_len,
-    validator_is_number,
-    validator_is_positive,
-    validator_is_vector3,
-    validator_quantity,
+from .. import (
+    converters,
+    validators
 )
-from ..util.collections import is_vector3
-from ..util.factory import BaseFactory
-from ..util.frame import angles_to_direction
-from ..util.misc import always_iterable
-from ..util.units import config_default_units as cdu
-from ..util.units import kernel_default_units as kdu
-from ..util.units import ureg
+from .._attrs import (
+    documented,
+    get_doc,
+    parse_docs
+)
+from .._factory import BaseFactory
+from .._units import unit_context_config as ucc
+from .._units import unit_context_kernel as uck
+from .._units import unit_registry as ureg
+from .._util import is_vector3
+from ..frame import angles_to_direction
 
 
 @parse_docs
@@ -94,7 +95,6 @@ class MeasureFactory(BaseFactory):
     registry = {}
 
 
-@unit_enabled
 @attr.s
 class Target:
     """Abstract interface for target selection classes used by :class:`DistantMeasure`."""
@@ -160,7 +160,7 @@ class TargetPoint(Target):
 
     # Target point in CDU
     xyz = documented(
-        attrib_quantity(units_compatible=cdu.generator("length")),
+        pinttr.ib(units=ucc.deferred("length")),
         doc="Target point coordinates.\n"
             "\n"
             "Unit-enabled field (default: cdu[length]).",
@@ -177,7 +177,13 @@ class TargetPoint(Target):
 
     def kernel_item(self):
         """Return kernel item."""
-        return self.xyz.to(kdu.get("length")).magnitude
+        return self.xyz.to(uck.get("length")).magnitude
+
+
+def _target_rectangle_xy_converter(x):
+    return converters.on_quantity(float)(
+        pinttr.converters.to_units(ucc.deferred("length"))(x)
+    )
 
 
 @parse_docs
@@ -188,14 +194,12 @@ class TargetRectangle(Target):
     This target spec defines an rectangular, axis-aligned zone where ray targets
     will be sampled.
     """
-
     # fmt: off
-    # Corners of an axis-aligned rectangle in CDU
+    # Corners of an axis-aligned rectangle in config units
     xmin = documented(
-        attrib_quantity(
-            converter=converter_quantity(float),
-            validator=validator_quantity(validator_is_number),
-            units_compatible=cdu.generator("length")
+        pinttr.ib(
+            converter=_target_rectangle_xy_converter,
+            units=ucc.deferred("length")
         ),
         doc="Lower bound on the X axis.\n"
             "\n"
@@ -204,10 +208,9 @@ class TargetRectangle(Target):
     )
 
     xmax = documented(
-        attrib_quantity(
-            converter=converter_quantity(float),
-            validator=validator_quantity(validator_is_number),
-            units_compatible=cdu.generator("length")
+        pinttr.ib(
+            converter=_target_rectangle_xy_converter,
+            units=ucc.deferred("length")
         ),
         doc="Upper bound on the X axis.\n"
             "\n"
@@ -216,10 +219,9 @@ class TargetRectangle(Target):
     )
 
     ymin = documented(
-        attrib_quantity(
-            converter=converter_quantity(float),
-            validator=validator_quantity(validator_is_number),
-            units_compatible=cdu.generator("length")
+        pinttr.ib(
+            converter=_target_rectangle_xy_converter,
+            units=ucc.deferred("length")
         ),
         doc="Lower bound on the Y axis.\n"
             "\n"
@@ -228,10 +230,9 @@ class TargetRectangle(Target):
     )
 
     ymax = documented(
-        attrib_quantity(
-            converter=converter_quantity(float),
-            validator=validator_quantity(validator_is_number),
-            units_compatible=cdu.generator("length"),
+        pinttr.ib(
+            converter=_target_rectangle_xy_converter,
+            units=ucc.deferred("length"),
         ),
         doc="Upper bound on the Y axis.\n"
             "\n"
@@ -240,6 +241,12 @@ class TargetRectangle(Target):
     )
 
     # fmt: on
+    @xmin.validator
+    @xmax.validator
+    @ymin.validator
+    @ymax.validator
+    def _xy_validator(self, attribute, value):
+        validators.on_quantity(validators.is_number)(self, attribute, value)
 
     @xmin.validator
     @xmax.validator
@@ -263,10 +270,10 @@ class TargetRectangle(Target):
         """Return kernel item."""
         from eradiate.kernel.core import ScalarTransform4f
 
-        xmin = self.xmin.to(kdu.get("length")).magnitude
-        xmax = self.xmax.to(kdu.get("length")).magnitude
-        ymin = self.ymin.to(kdu.get("length")).magnitude
-        ymax = self.ymax.to(kdu.get("length")).magnitude
+        xmin = self.xmin.to(uck.get("length")).magnitude
+        xmax = self.xmax.to(uck.get("length")).magnitude
+        ymin = self.ymin.to(uck.get("length")).magnitude
+        ymax = self.ymax.to(uck.get("length")).magnitude
 
         dx = xmax - xmin
         dy = ymax - ymin
@@ -295,7 +302,7 @@ class DistantMeasure(Measure):
             default=(32, 32),
             validator=attr.validators.deep_iterable(
                 member_validator=attr.validators.instance_of(int),
-                iterable_validator=validator_has_len(2)
+                iterable_validator=validators.has_len(2)
             ),
         ),
         doc="Film resolution as a (height, width) 2-tuple. "
@@ -309,7 +316,7 @@ class DistantMeasure(Measure):
         attr.ib(
             default=32,
             converter=int,
-            validator=validator_is_positive
+            validator=validators.is_positive
         ),
         doc="Number of samples per pixel.",
         type="int",
@@ -332,10 +339,10 @@ class DistantMeasure(Measure):
     )
 
     orientation = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity(0., ureg.deg),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("angle"),
+            validator=validators.is_positive,
+            units=ucc.deferred("angle"),
         ),
         doc="Azimuth angle defining the orientation of the sensor in the "
             "horizontal plane.\n"
@@ -349,7 +356,7 @@ class DistantMeasure(Measure):
         attr.ib(
             default=[0, 0, 1],
             converter=np.array,
-            validator=validator_is_vector3,
+            validator=validators.is_vector3,
         ),
         doc="Vector orienting the hemisphere mapped by the measure.",
         type="arraylike[float, float, float]",
@@ -447,10 +454,10 @@ class PerspectiveCameraMeasure(Measure):
 
     # fmt: off
     target = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity([0, 0, 0], ureg.m),
-            validator=validator_has_len(3),
-            units_compatible=cdu.generator("length"),
+            validator=validators.has_len(3),
+            units=ucc.deferred("length"),
         ),
         doc="A 3-element vector specifying the location targeted by the camera.\n"
             "\n"
@@ -460,10 +467,10 @@ class PerspectiveCameraMeasure(Measure):
     )
 
     origin = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity([1, 1, 1], ureg.m),
-            validator=validator_has_len(3),
-            units_compatible=cdu.generator("length"),
+            validator=validators.has_len(3),
+            units=ucc.deferred("length"),
         ),
         doc="A 3-element vector specifying the position of the camera.\n"
             "\n"
@@ -475,7 +482,7 @@ class PerspectiveCameraMeasure(Measure):
     up = documented(
         attr.ib(
             default=[0, 0, 1],
-            validator=validator_has_len(3)
+            validator=validators.has_len(3)
         ),
         doc="A 3-element vector specifying the up direction of the camera.\n"
             "This vector must be different from the camera's viewing direction,\n"
@@ -488,7 +495,7 @@ class PerspectiveCameraMeasure(Measure):
         attr.ib(
             default=64,
             converter=int,
-            validator=validator_is_positive
+            validator=validators.is_positive
         ),
         doc="Horizontal resolution of the film in pixels.",
         type="int",
@@ -499,7 +506,7 @@ class PerspectiveCameraMeasure(Measure):
         attr.ib(
             default=64,
             converter=int,
-            validator=validator_is_positive
+            validator=validators.is_positive
         ),
         doc="Vertical resolution of the film in pixels.",
         type="int",
@@ -510,7 +517,7 @@ class PerspectiveCameraMeasure(Measure):
         attr.ib(
             default=32,
             converter=int,
-            validator=validator_is_positive
+            validator=validators.is_positive
         ),
         doc="Number of samples per pixel.",
         type="int",
@@ -571,8 +578,8 @@ class PerspectiveCameraMeasure(Measure):
     def kernel_dict(self, ref=True):
         from eradiate.kernel.core import ScalarTransform4f
 
-        target = self.target.to(kdu.get("length")).magnitude
-        origin = self.origin.to(kdu.get("length")).magnitude
+        target = self.target.to(uck.get("length")).magnitude
+        origin = self.origin.to(uck.get("length")).magnitude
 
         return {
             self.id: {
@@ -621,10 +628,10 @@ class RadianceMeterHsphereMeasure(Measure):
     )
 
     zenith_res = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity(10., ureg.deg),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("angle"),
+            validator=validators.is_positive,
+            units=ucc.deferred("angle"),
         ),
         doc="Zenith angle resolution.\n"
             "\n"
@@ -634,10 +641,10 @@ class RadianceMeterHsphereMeasure(Measure):
     )
 
     azimuth_res = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity(10., ureg.deg),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("angle"),
+            validator=validators.is_positive,
+            units=ucc.deferred("angle"),
         ),
         doc="Azimuth angle resolution.\n"
             "\n"
@@ -647,10 +654,10 @@ class RadianceMeterHsphereMeasure(Measure):
     )
 
     origin = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity([0, 0, 0], ureg.m),
-            validator=validator_has_len(3),
-            units_compatible=cdu.generator("length"),
+            validator=validators.has_len(3),
+            units=ucc.deferred("length"),
         ),
         doc="Position of the sensor.\n"
             "\n"
@@ -662,7 +669,7 @@ class RadianceMeterHsphereMeasure(Measure):
     direction = documented(
         attr.ib(
             default=[0, 0, 1],
-            validator=validator_has_len(3)
+            validator=validators.has_len(3)
         ),
         doc="Direction of the hemisphere's zenith.",
         type="array-like[float, float, float]",
@@ -672,7 +679,7 @@ class RadianceMeterHsphereMeasure(Measure):
     orientation = documented(
         attr.ib(
             default=[1, 0, 0],
-            validator=validator_has_len(3),
+            validator=validators.has_len(3),
         ),
         doc="Direction with which azimuth origin is aligned.",
         type="array-like[float, float, float]",
@@ -704,7 +711,7 @@ class RadianceMeterHsphereMeasure(Measure):
         attr.ib(
             default=32,
             converter=int,
-            validator=validator_is_positive
+            validator=validators.is_positive
         ),
         doc="Number of samples per (zenith, azimuth) pair.",
         type="int",
@@ -715,7 +722,7 @@ class RadianceMeterHsphereMeasure(Measure):
     _spp_max_single = attr.ib(
         default=1e5,
         converter=int,
-        validator=validator_is_positive,
+        validator=validators.is_positive,
         repr=False
     )
 
@@ -768,9 +775,13 @@ class RadianceMeterHsphereMeasure(Measure):
         """Compute matrix that transforms vectors between object and world
         space.
         """
-        from eradiate.kernel.core import Transform4f, Vector3f, Point3f
+        from eradiate.kernel.core import (
+            Point3f,
+            Transform4f,
+            Vector3f
+        )
 
-        origin = Point3f(self.origin.to(kdu.get("length")).magnitude)
+        origin = Point3f(self.origin.to(uck.get("length")).magnitude)
         zenith_direction = Vector3f(self.direction)
         orientation = Vector3f(self.orientation)
         up = Transform4f.rotate(zenith_direction, 90).transform_vector(orientation)
@@ -828,7 +839,7 @@ class RadianceMeterHsphereMeasure(Measure):
     # fmt: off
     def kernel_dict(self, **kwargs):
         directions = self._directions()
-        origin = always_iterable(self.origin.to(kdu.get("length")).magnitude)
+        origin = always_iterable(self.origin.to(uck.get("length")).magnitude)
         kernel_dict = {}
 
         base_dict = {
@@ -885,10 +896,10 @@ class RadianceMeterPlaneMeasure(Measure):
     )
 
     zenith_res = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity(10., ureg.deg),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("angle"),
+            validator=validators.is_positive,
+            units=ucc.deferred("angle"),
         ),
         doc="Zenith angle resolution.\n"
             "\n"
@@ -898,10 +909,10 @@ class RadianceMeterPlaneMeasure(Measure):
     )
 
     origin = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity([0, 0, 0], ureg.m),
-            validator=validator_has_len(3),
-            units_compatible=cdu.generator("length"),
+            validator=validators.has_len(3),
+            units=ucc.deferred("length"),
         ),
         doc="Position of the sensor.\n"
             "\n"
@@ -913,7 +924,7 @@ class RadianceMeterPlaneMeasure(Measure):
     direction = documented(
         attr.ib(
             default=[0, 0, 1],
-            validator=validator_has_len(3)
+            validator=validators.has_len(3)
         ),
         doc="Direction of the hemisphere's zenith.",
         type="array-like[float, float, float]",
@@ -923,7 +934,7 @@ class RadianceMeterPlaneMeasure(Measure):
     orientation = documented(
         attr.ib(
             default=[1, 0, 0],
-            validator=validator_has_len(3),
+            validator=validators.has_len(3),
         ),
         doc="Direction with which azimuth origin is aligned.",
         type="array-like[float, float, float]",
@@ -955,7 +966,7 @@ class RadianceMeterPlaneMeasure(Measure):
         attr.ib(
             default=32,
             converter=int,
-            validator=validator_is_positive
+            validator=validators.is_positive
         ),
         doc="Number of samples per (zenith, azimuth) pair.",
         type="int",
@@ -966,7 +977,7 @@ class RadianceMeterPlaneMeasure(Measure):
     _spp_max_single = attr.ib(
         default=1e5,
         converter=int,
-        validator=validator_is_positive,
+        validator=validators.is_positive,
         repr=False
     )
 
@@ -1016,9 +1027,13 @@ class RadianceMeterPlaneMeasure(Measure):
 
     def _orientation_transform(self):
         """Compute matrix that transforms vectors between object and world space."""
-        from eradiate.kernel.core import Transform4f, Point3f, Vector3f
+        from eradiate.kernel.core import (
+            Point3f,
+            Transform4f,
+            Vector3f
+        )
 
-        origin = Point3f(self.origin.to(kdu.get("length")).magnitude)
+        origin = Point3f(self.origin.to(uck.get("length")).magnitude)
         zenith_direction = Vector3f(self.direction)
         orientation = Vector3f(self.orientation)
 
@@ -1081,7 +1096,7 @@ class RadianceMeterPlaneMeasure(Measure):
     # fmt: off
     def kernel_dict(self, **kwargs):
         directions = self._directions()
-        origin = always_iterable(self.origin.to(kdu.get("length")).magnitude)
+        origin = always_iterable(self.origin.to(uck.get("length")).magnitude)
         kernel_dict = {}
 
         base_dict = {

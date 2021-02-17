@@ -1,7 +1,7 @@
 import numpy as np
 
 from eradiate.scenes.biosphere import HomogeneousDiscreteCanopy
-from eradiate.util.units import ureg
+from eradiate import unit_registry as ureg
 
 
 def test_homogeneous_discrete_canopy_instantiate(mode_mono):

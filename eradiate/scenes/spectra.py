@@ -11,18 +11,23 @@ from abc import ABC
 import attr
 import numpy as np
 import pint
+import pinttr
 from pint import DimensionalityError
 
 import eradiate
 from .core import SceneElement
 from .. import data
-from ..util.attrs import attrib_quantity, documented, parse_docs, validator_is_positive, \
-    validator_is_string
-from ..util.exceptions import ModeError, UnitsError
-from ..util.factory import BaseFactory
-from ..util.units import PhysicalQuantity, compatible, ensure_units, ureg
-from ..util.units import config_default_units as cdu
-from ..util.units import kernel_default_units as kdu
+from .._attrs import (
+    documented,
+    parse_docs
+)
+from .._factory import BaseFactory
+from .._units import PhysicalQuantity
+from .._units import unit_context_config as ucc
+from .._units import unit_context_kernel as uck
+from .._units import unit_registry as ureg
+from ..exceptions import ModeError
+from ..validators import is_positive
 
 
 @parse_docs
@@ -33,7 +38,7 @@ class Spectrum(SceneElement, ABC):
     quantity = documented(
         attr.ib(
             default=None,
-            converter=attr.converters.optional(PhysicalQuantity.from_any),
+            converter=attr.converters.optional(PhysicalQuantity),
         ),
         doc="Physical quantity which the spectrum represents. If not ``None``, "
             "the specified quantity must be one which varies with wavelength. "
@@ -126,7 +131,7 @@ class UniformSpectrum(Spectrum):
     arithmetics.
     """
     value = documented(
-        attrib_quantity(default=1.0),
+        attr.ib(default=1.0),
         doc="Uniform spectrum value. If a float is passed and ``quantity`` is not "
             "``None``, it is automatically converted to appropriate configuration "
             "default units. If a :class:`~pint.Quantity` is passed and ``quantity`` "
@@ -137,20 +142,22 @@ class UniformSpectrum(Spectrum):
     @value.validator
     def value_validator(self, attribute, value):
         if self.quantity is not None and isinstance(value, pint.Quantity):
-            expected_units = cdu.get(self.quantity)
+            expected_units = ucc.get(self.quantity)
 
-            if not compatible(expected_units, value.units):
-                raise UnitsError(
-                    f"while validating {attribute.name}, got units "
+            if not pinttr.util.units_compatible(expected_units, value.units):
+                raise pinttr.exceptions.UnitsError(
+                    value.units,
+                    expected_units,
+                    extra_msg=f"while validating {attribute.name}, got units "
                     f"'{value.units}' incompatible with quantity {self.quantity} "
                     f"(expected '{expected_units}')"
                 )
 
-        validator_is_positive(self, attribute, value)
+        is_positive(self, attribute, value)
 
     def __attrs_post_init__(self):
         if self.quantity is not None and self.value is not None:
-            self.value = ensure_units(self.value, cdu.get(self.quantity))
+            self.value = pinttr.converters.ensure_units(self.value, ucc.get(self.quantity))
 
     @property
     def _values(self):
@@ -166,7 +173,7 @@ class UniformSpectrum(Spectrum):
         try:
             value = self.value + other.value
         except DimensionalityError as e:
-            raise UnitsError(str(e))
+            raise pinttr.exceptions.UnitsError(e.units1, e.units2)
 
         return UniformSpectrum(quantity=quantity, value=value)
 
@@ -181,7 +188,7 @@ class UniformSpectrum(Spectrum):
         try:
             value = self.value - other.value
         except DimensionalityError as e:
-            raise UnitsError(str(e))
+            raise pinttr.exceptions.UnitsError(e.units1, e.units2)
 
         return UniformSpectrum(quantity=quantity, value=value)
 
@@ -197,7 +204,7 @@ class UniformSpectrum(Spectrum):
         try:
             value = self.value * other.value
         except DimensionalityError as e:
-            raise UnitsError(str(e))
+            raise pinttr.exceptions.UnitsError(e.units1, e.units2)
 
         return UniformSpectrum(quantity=quantity, value=value)
 
@@ -212,17 +219,17 @@ class UniformSpectrum(Spectrum):
         try:
             value = self.value / other.value
         except DimensionalityError as e:
-            raise UnitsError(str(e))
+            raise pinttr.exceptions.UnitsError(e.units1, e.units2)
 
         return UniformSpectrum(quantity=quantity, value=value)
 
     def kernel_dict(self, ref=True):
-        kernel_units = kdu.get(self.quantity)
+        kernel_units = uck.get(self.quantity)
 
         return {
             "spectrum": {
                 "type": "uniform",
-                "value": self.value.to(kernel_units).magnitude,
+                "value": self.value.m_as(kernel_units),
             }
         }
 
@@ -260,7 +267,7 @@ class SolarIrradianceSpectrum(Spectrum):
     dataset = documented(
         attr.ib(
             default="thuillier_2003",
-            validator=validator_is_string,
+            validator=attr.validators.instance_of(str),
         ),
         doc="Dataset identifier. Allowed values: see "
         ":attr:`solar irradiance dataset documentation <eradiate.data.solar_irradiance_spectra>`. "
@@ -272,7 +279,7 @@ class SolarIrradianceSpectrum(Spectrum):
         attr.ib(
             default=1.,
             converter=float,
-            validator=validator_is_positive,
+            validator=is_positive,
         ),
         doc="Scaling factor. Default: 1.",
         type="float",
@@ -331,7 +338,7 @@ class SolarIrradianceSpectrum(Spectrum):
             return {
                 "spectrum": {
                     "type": "uniform",
-                    "value": irradiance.to(kdu.get("irradiance")).magnitude *
+                    "value": irradiance.to(uck.get("irradiance")).magnitude *
                              self.scale
                 }
             }

@@ -23,7 +23,7 @@ clean: clean_generated
 	rm -rf _build/*
 
 clean_generated:
-	rm -rf rst/api_reference/generated/*
+	rm -rf rst/reference/generated/*
 	rm -rf examples/generated/*
 
 # Catch-all target: route all unknown targets to Sphinx using the new

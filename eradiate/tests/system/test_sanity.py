@@ -8,7 +8,7 @@ import pytest
 import xarray as xr
 
 from eradiate.solvers.onedim.app import OneDimSolverApp
-from eradiate.util.plot import remove_xylabels
+from eradiate.plot import remove_xylabels
 
 eradiate_dir = os.environ["ERADIATE_DIR"]
 output_dir = os.path.join(eradiate_dir, "test_report", "generated")

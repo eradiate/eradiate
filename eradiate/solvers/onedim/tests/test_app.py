@@ -2,14 +2,19 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.radprops import RadProfileFactory
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
-from eradiate.scenes.illumination import \
-    ConstantIllumination, DirectionalIllumination
-from eradiate.solvers.onedim.app import \
-    OneDimScene, OneDimSolverApp, TOAHsphereMeasure, TOAPPlaneMeasure
-from eradiate.util.exceptions import ModeError
-from eradiate.util.units import ureg
+from eradiate.scenes.illumination import (
+    ConstantIllumination,
+    DirectionalIllumination,
+)
+from eradiate.solvers.onedim.app import (
+    OneDimScene,
+    OneDimSolverApp,
+    TOAHsphereMeasure,
+    TOAPPlaneMeasure,
+)
+from eradiate.exceptions import ModeError
+from eradiate import unit_registry as ureg
 
 
 def test_onedim_scene(mode_mono):

@@ -23,6 +23,7 @@ Custom solar irradiance spectrum
 # First, we read our data into a :class:`pandas.DataFrame`:
 
 import pandas as pd
+
 df = pd.read_csv("02_custom_solar_irradiance_data.csv", header=1, names=["w", "ssi"])
 
 # %%
@@ -75,18 +76,36 @@ ds
 # -------------------------------
 #
 # Before going any further, we must validate the metadata of the dataset we've
-# created.
-#
-# .. note:: The metadata of Eradiate's solar irradiance spectrum datasets must
-#    follow strict specifications defined by the ``ssi_dataset_spec`` variable
-#    in the :mod:`eradiate.util.xarray` module.
+# created. The metadata of Eradiate's solar irradiance spectrum datasets must
+# follow a specification defined by the ``ssi_dataset_spec`` variable:
 
-from eradiate.util.xarray import ssi_dataset_spec
+from eradiate.xarray.metadata import DatasetSpec, VarSpec
+
+# Define solar irradiance spectra dataset specifications
+ssi_dataset_spec = DatasetSpec(
+    title="Untitled solar irradiance spectrum",
+    convention="CF-1.8",
+    source="Unknown",
+    history="Unknown",
+    references="Unknown",
+    var_specs={
+        "ssi": VarSpec(
+            standard_name="solar_irradiance_per_unit_wavelength",
+            units="W/m^2/nm",
+            long_name="solar spectral irradiance"
+        )
+    },
+    coord_specs="solar_irradiance_spectrum"
+)
 
 # %%
 # We can validate our dataset's metadata by running:
 
 ds.ert.validate_metadata(ssi_dataset_spec)
+
+# %%
+# .. note:: Loading any Eradiate submodule will automatically set up Eradiate's
+#    xarray accessors.
 
 # %%
 # Normalisation

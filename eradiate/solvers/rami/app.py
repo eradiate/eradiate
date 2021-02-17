@@ -1,23 +1,39 @@
 import datetime
 import os
-from copy import deepcopy
 from pathlib import Path
 
 import attr
 import matplotlib.pyplot as plt
 import numpy as np
+import pinttr
 import xarray as xr
-from tinydb import Query, TinyDB
+from tinydb import (
+    Query,
+    TinyDB
+)
 from tinydb.storages import MemoryStorage
 
 import eradiate.kernel
+
 from ..onedim.runner import OneDimRunner
+from ..._attrs import (
+    documented,
+    parse_docs
+)
 from ..._mode import ModeNone
+from ..._units import unit_context_kernel as uck
+from ..._units import unit_registry as ureg
+from ..._util import ensure_array
+from ...exceptions import ModeError
+from ...frame import direction_to_angles
 from ...scenes.biosphere import (
     BiosphereFactory,
     Canopy
 )
-from ...scenes.core import KernelDict, SceneElement
+from ...scenes.core import (
+    KernelDict,
+    SceneElement
+)
 from ...scenes.illumination import (
     DirectionalIllumination,
     IlluminationFactory
@@ -36,13 +52,12 @@ from ...scenes.surface import (
     Surface,
     SurfaceFactory
 )
-from ...util import xarray as ertxr
-from ...util.attrs import documented, parse_docs, validator_is_positive
-from ...util.exceptions import ModeError
-from ...util.frame import direction_to_angles, square_to_uniform_hemisphere
-from ...util.misc import always_iterable, ensure_array
-from ...util.units import kernel_default_units as kdu
-from ...util.units import ureg
+from ...validators import is_positive
+from ...warp import square_to_uniform_hemisphere
+from ...xarray.metadata import (
+    DatasetSpec,
+    VarSpec
+)
 
 
 @parse_docs
@@ -85,7 +100,7 @@ class RamiScene(SceneElement):
         attr.ib(
             default=0,
             converter=int,
-            validator=validator_is_positive
+            validator=is_positive
         ),
         doc="Padding level. The scene will be padded with copies to account for "
             "adjacency effects. This, in practice, has effects similar to "
@@ -116,7 +131,7 @@ class RamiScene(SceneElement):
         attr.ib(
             factory=lambda: [DistantMeasure()],
             converter=lambda value:
-            [MeasureFactory.convert(x) for x in always_iterable(value)]
+            [MeasureFactory.convert(x) for x in pinttr.util.always_iterable(value)]
             if not isinstance(value, dict)
             else [MeasureFactory.convert(value)]
         ),
@@ -217,7 +232,7 @@ class RamiScene(SceneElement):
 
             # specify the instances for padding
             patch_size = max(self.canopy.size[:2])
-            kdu_length = kdu.get("length")
+            kdu_length = uck.get("length")
             for shapegroup_id in canopy_dict.keys():
                 if shapegroup_id.find("bsdf") != -1:
                     continue
@@ -309,7 +324,7 @@ class RamiSolverApp:
     def from_dict(cls, d):
         """Instantiate from a dictionary."""
         # Collect mode configuration
-        solver_config = deepcopy(d)
+        solver_config = pinttr.interpret_units(d, ureg=ureg)
 
         try:
             mode_config = solver_config.pop("mode")
@@ -449,7 +464,7 @@ class RamiSolverApp:
             ds["brf"] = ds["brdf"] * np.pi
 
             # Add missing metadata
-            dataset_spec = ertxr.DatasetSpec(
+            dataset_spec = DatasetSpec(
                 convention="CF-1.8",
                 title="Top-of-canopy simulation results",
                 history=f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
@@ -457,22 +472,22 @@ class RamiSolverApp:
                 source=f"eradiate, version {eradiate.__version__}",
                 references="",
                 var_specs={
-                    "irradiance": ertxr.VarSpec(
+                    "irradiance": VarSpec(
                         standard_name="toc_horizontal_solar_irradiance_per_unit_wavelength",
-                        units=str(kdu.get("irradiance")),
+                        units=str(uck.get("irradiance")),
                         long_name="top-of-canopy horizontal spectral irradiance"
                     ),
-                    "lo": ertxr.VarSpec(
+                    "lo": VarSpec(
                         standard_name="toc_outgoing_radiance_per_unit_wavelength",
-                        units=str(kdu.get("radiance")),
+                        units=str(uck.get("radiance")),
                         long_name="top-of-canopy outgoing spectral radiance"
                     ),
-                    "brf": ertxr.VarSpec(
+                    "brf": VarSpec(
                         standard_name="toc_brf",
                         units="dimensionless",
                         long_name="top-of-canopy bi-directional reflectance factor"
                     ),
-                    "brdf": ertxr.VarSpec(
+                    "brdf": VarSpec(
                         standard_name="toc_brdf",
                         units="1/sr",
                         long_name="top-of-canopy bi-directional reflection distribution function"

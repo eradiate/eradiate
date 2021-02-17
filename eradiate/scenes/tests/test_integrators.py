@@ -1,5 +1,9 @@
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.integrators import PathIntegrator, VolPathIntegrator, VolPathMISIntegrator
+from eradiate.scenes.integrators import (
+    PathIntegrator,
+    VolPathIntegrator,
+    VolPathMISIntegrator
+)
 
 
 def test_path(mode_mono):

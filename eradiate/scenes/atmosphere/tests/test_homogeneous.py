@@ -1,13 +1,13 @@
 import numpy as np
+import pinttr
 import pytest
 
 import eradiate
 from eradiate.radprops.rayleigh import compute_sigma_s_air
-from eradiate.scenes.atmosphere.homogeneous import HomogeneousAtmosphere
+from eradiate.scenes.atmosphere._homogeneous import HomogeneousAtmosphere
 from eradiate.scenes.core import KernelDict
-from eradiate.util.collections import onedict_value
-from eradiate.util.exceptions import UnitsError
-from eradiate.util.units import ureg
+from eradiate._util import onedict_value
+from eradiate import unit_registry as ureg
 
 
 @pytest.mark.parametrize("ref", (False, True))
@@ -61,13 +61,13 @@ def test_homogeneous(mode_mono, ref):
     assert np.allclose(r._sigma_s.value, compute_sigma_s_air(wavelength=650.))
 
     # Check that attributes wrong units or invalid values raise an error
-    with pytest.raises(UnitsError):
+    with pytest.raises(pinttr.exceptions.UnitsError):
         HomogeneousAtmosphere(toa_altitude=ureg.Quantity(10, "second"))
 
-    with pytest.raises(UnitsError):
+    with pytest.raises(pinttr.exceptions.UnitsError):
         HomogeneousAtmosphere(width=ureg.Quantity(5, "m^2"))
 
-    with pytest.raises(UnitsError):
+    with pytest.raises(pinttr.exceptions.UnitsError):
         HomogeneousAtmosphere(sigma_s=ureg.Quantity(1e-7, "m"))
 
     with pytest.raises(ValueError):

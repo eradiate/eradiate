@@ -120,7 +120,7 @@ ds.brf.sel(vaa=90.)
 # we can very easily visualise the TOA BRF on a polar plot:
 
 import matplotlib.pyplot as plt
-import eradiate.util.plot as ertplt
+import eradiate.plot as ertplt
 
 brf = ds.brf
 brf.squeeze().ert.plot_pcolormesh_polar()

@@ -12,7 +12,7 @@ from scipy.interpolate import interp1d
 
 from eradiate import __version__
 from .util import profile_dataset_spec
-from ..util.units import ureg
+from .._units import unit_registry as ureg
 
 _Q = ureg.Quantity
 

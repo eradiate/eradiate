@@ -2,8 +2,12 @@ import numpy as np
 
 
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.surface import LambertianSurface, RPVSurface, BlackSurface
-from eradiate.util.units import ureg
+from eradiate.scenes.surface import (
+    LambertianSurface,
+    RPVSurface,
+    BlackSurface,
+)
+from eradiate import unit_registry as ureg
 
 
 def test_lambertian(mode_mono):

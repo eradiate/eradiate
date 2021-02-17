@@ -4,7 +4,7 @@
 import numpy as np
 from scipy.constants import physical_constants
 
-from ..util.units import ureg
+from .._units import unit_registry as ureg
 
 # Physical constants
 #: Loschmidt constant [km^-3].

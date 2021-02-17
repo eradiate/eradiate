@@ -42,9 +42,7 @@ import xarray as xr
 from .absorption_spectra import _AbsorptionGetter
 from .solar_irradiance_spectra import _SolarIrradianceGetter
 from .spectral_response_function import _SpectralResponseFunctionGetter
-from ..util.presolver import PathResolver
-
-_presolver = PathResolver()
+from .. import path_resolver as _presolver
 
 _getters = {
     "absorption_spectrum": _AbsorptionGetter,

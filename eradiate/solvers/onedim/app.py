@@ -1,40 +1,64 @@
 """One dimensional solver application class and related facilities."""
 import datetime
 import os
-from copy import deepcopy
 from pathlib import Path
 
 import attr
 import matplotlib.pyplot as plt
 import numpy as np
+import pinttr
 import xarray as xr
-from tinydb import Query, TinyDB
+from tinydb import (
+    Query,
+    TinyDB
+)
 from tinydb.storages import MemoryStorage
 
 import eradiate.kernel
+import eradiate.xarray.metadata
+import eradiate.xarray.select
+from eradiate.exceptions import ModeError
+
 from .runner import OneDimRunner
+from ... import plot as ertplt
+from ..._attrs import (
+    documented,
+    parse_docs
+)
 from ..._mode import ModeNone
-from ...scenes.atmosphere import AtmosphereFactory, HomogeneousAtmosphere
-from ...scenes.atmosphere.base import Atmosphere
-from ...scenes.core import KernelDict, SceneElement
+from ..._units import unit_context_config as ucd
+from ..._units import unit_context_kernel as uck
+from ..._units import unit_registry as ureg
+from ..._util import ensure_array
+from ...scenes.atmosphere import (
+    Atmosphere,
+    AtmosphereFactory,
+    HomogeneousAtmosphere
+)
+from ...scenes.core import (
+    KernelDict,
+    SceneElement
+)
 from ...scenes.illumination import (
-    DirectionalIllumination, Illumination, IlluminationFactory
+    DirectionalIllumination,
+    Illumination,
+    IlluminationFactory
 )
 from ...scenes.integrators import (
-    Integrator, IntegratorFactory, VolPathIntegrator
+    Integrator,
+    IntegratorFactory,
+    VolPathIntegrator
 )
 from ...scenes.measure import (
-    MeasureFactory, RadianceMeterHsphereMeasure, RadianceMeterPlaneMeasure
+    MeasureFactory,
+    RadianceMeterHsphereMeasure,
+    RadianceMeterPlaneMeasure
 )
-from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
-from ...util import plot as ertplt
-from ...util import xarray as ertxr
-from ...util.attrs import documented, parse_docs
-from ...util.exceptions import ModeError
-from ...util.misc import always_iterable, ensure_array
-from ...util.units import config_default_units as cdu
-from ...util.units import kernel_default_units as kdu
-from ...util.units import ureg
+from ...scenes.surface import (
+    LambertianSurface,
+    Surface,
+    SurfaceFactory
+)
 
 
 @MeasureFactory.register(
@@ -133,7 +157,7 @@ class OneDimScene(SceneElement):
         attr.ib(
             factory=lambda: [TOAHsphereMeasure()],
             converter=lambda value:
-            [MeasureFactory.convert(x) for x in always_iterable(value)]
+            [MeasureFactory.convert(x) for x in pinttr.util.always_iterable(value)]
             if not isinstance(value, dict)
             else [MeasureFactory.convert(value)]
         ),
@@ -200,7 +224,7 @@ class OneDimScene(SceneElement):
             if isinstance(measure, (TOAHsphereMeasure, TOAPPlaneMeasure)):
                 # Override ray origin
                 if self.atmosphere is not None:
-                    sensor_altitude = self.atmosphere.kernel_height.to(cdu.get("length")).magnitude
+                    sensor_altitude = self.atmosphere.kernel_height.to(ucd.get("length")).magnitude
                     measure.origin = [0., 0., sensor_altitude]
 
             if isinstance(measure, TOAPPlaneMeasure):
@@ -293,7 +317,7 @@ class OneDimSolverApp:
     def from_dict(cls, d):
         """Instantiate from a dictionary."""
         # Collect mode configuration
-        solver_config = deepcopy(d)
+        solver_config = pinttr.interpret_units(d, ureg=ureg)
 
         try:
             mode_config = solver_config.pop("mode")
@@ -315,7 +339,7 @@ class OneDimSolverApp:
         eradiate.set_mode(mode_id, **mode_config)
 
         # Create scene
-        scene = OneDimScene(**solver_config)
+        scene = OneDimScene.from_dict(solver_config)
 
         # Instantiate class
         return cls.new(scene=scene)
@@ -384,10 +408,10 @@ class OneDimSolverApp:
             results["brf"] = results["brdf"] * np.pi
 
             if coord_specs_id.endswith("_pplane"):
-                results = ertxr.pplane(results)
+                results = eradiate.xarray.select.pplane(results)
 
             # Add missing metadata
-            dataset_spec = ertxr.DatasetSpec(
+            dataset_spec = eradiate.xarray.metadata.DatasetSpec(
                 convention="CF-1.8",
                 title="Top-of-atmosphere simulation results",
                 history=f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
@@ -395,22 +419,22 @@ class OneDimSolverApp:
                 source=f"eradiate, version {eradiate.__version__}",
                 references="",
                 var_specs={
-                    "irradiance": ertxr.VarSpec(
+                    "irradiance": eradiate.xarray.metadata.VarSpec(
                         standard_name="toa_horizontal_solar_irradiance_per_unit_wavelength",
-                        units=str(kdu.get("irradiance")),
+                        units=str(uck.get("irradiance")),
                         long_name="top-of-atmosphere horizontal spectral irradiance"
                     ),
-                    "lo": ertxr.VarSpec(
+                    "lo": eradiate.xarray.metadata.VarSpec(
                         standard_name="toa_outgoing_radiance_per_unit_wavelength",
-                        units=str(kdu.get("radiance")),
+                        units=str(uck.get("radiance")),
                         long_name="top-of-atmosphere outgoing spectral radiance"
                     ),
-                    "brf": ertxr.VarSpec(
+                    "brf": eradiate.xarray.metadata.VarSpec(
                         standard_name="toa_brf",
                         units="dimensionless",
                         long_name="top-of-atmosphere bi-directional reflectance factor"
                     ),
-                    "brdf": ertxr.VarSpec(
+                    "brdf": eradiate.xarray.metadata.VarSpec(
                         standard_name="toa_brdf",
                         units="1/sr",
                         long_name="top-of-atmosphere bi-directional reflection distribution function"
@@ -446,9 +470,9 @@ class OneDimSolverApp:
         """
         for measure_id, result in self.results.items():
             # Is the data hemispherical or plane?
-            dataset_spec = ertxr.DatasetSpec(coord_specs="angular_observation")
+            dataset_spec = eradiate.xarray.metadata.DatasetSpec(coord_specs="angular_observation")
             try:
-                result.ert.validate_metadata(dataset_spec)
+                eradiate.xarray.metadata.validate_metadata(dataset_spec)
                 is_hemispherical = True
             except ValueError:
                 is_hemispherical = False

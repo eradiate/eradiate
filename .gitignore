@@ -18,7 +18,7 @@ __pycache__
 build/
 docs/_build/
 docs/examples/generated/
-docs/rst/api_reference/generated/
+docs/rst/reference/generated/
 test_report/generated/
 
 # Coverage

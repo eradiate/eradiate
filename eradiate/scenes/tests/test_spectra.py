@@ -1,15 +1,18 @@
 import numpy as np
+import pinttr
 import pytest
 
 import eradiate
 from eradiate.scenes.spectra import (
-    SolarIrradianceSpectrum, SpectrumFactory, UniformSpectrum
+    SolarIrradianceSpectrum,
+    SpectrumFactory,
+    UniformSpectrum,
 )
-from eradiate.util.collections import onedict_value
-from eradiate.util.exceptions import UnitsError
-from eradiate.util.units import PhysicalQuantity, ureg
-from eradiate.util.units import config_default_units as cdu
-from eradiate.util.units import kernel_default_units as kdu
+from eradiate._util import onedict_value
+from eradiate._units import PhysicalQuantity
+from eradiate import unit_registry as ureg
+from eradiate import unit_context_config as ucc
+from eradiate import unit_context_kernel as uck
 
 
 def test_converter(mode_mono):
@@ -24,7 +27,7 @@ def test_converter(mode_mono):
     assert s == UniformSpectrum(quantity="radiance", value=1.0)
     s = SpectrumFactory.converter("radiance")(ureg.Quantity(1e6, "W/km^2/sr/nm"))
     assert s == UniformSpectrum(quantity="radiance", value=1.0)
-    with pytest.raises(UnitsError):
+    with pytest.raises(pinttr.exceptions.UnitsError):
         SpectrumFactory.converter("irradiance")(ureg.Quantity(1, "W/m^2/sr/nm"))
 
 
@@ -36,7 +39,6 @@ def test_uniform(mode_mono):
 
     # Instantiate with only quantity
     UniformSpectrum(quantity=PhysicalQuantity.COLLISION_COEFFICIENT)
-    UniformSpectrum(quantity="COLLISION_COEFFICIENT")
     UniformSpectrum(quantity="collision_coefficient")
 
     # Instantiate with unsupported quantity
@@ -50,7 +52,7 @@ def test_uniform(mode_mono):
         UniformSpectrum(quantity="collision_coefficient", value=-1.)
 
     # Raise if units and quantity are inconsistent
-    with pytest.raises(UnitsError):
+    with pytest.raises(pinttr.exceptions.UnitsError):
         UniformSpectrum(
             quantity="collision_coefficient",
             value=ureg.Quantity(1., "")
@@ -65,9 +67,9 @@ def test_uniform(mode_mono):
     assert load_dict(onedict_value(s.kernel_dict())) is not None
 
     # Unit scaling is properly applied
-    with cdu.override({"radiance": "W/m^2/sr/nm"}):
+    with ucc.override({"radiance": "W/m^2/sr/nm"}):
         s = UniformSpectrum(quantity="radiance", value=1.)
-    with kdu.override({"radiance": "kW/m^2/sr/nm"}):
+    with uck.override({"radiance": "kW/m^2/sr/nm"}):
         d = s.kernel_dict()
         assert np.allclose(d["spectrum"]["value"], 1e-3)
 

@@ -134,6 +134,7 @@ intersphinx_mapping = {
     "pint": ("https://pint.readthedocs.io/en/latest/", None),
     "attr": ("https://www.attrs.org/en/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
+    "pinttrs": ("https://pinttrs.readthedocs.io/en/latest/", None),
 }
 
 # Activate todo notes
@@ -142,12 +143,14 @@ todo_include_todos = True
 
 # Autodoc and autosummary options
 extensions.append("sphinx.ext.autodoc")
-extensions.append("sphinx.ext.autosummary")
-autosummary_generate = True
-autosummary_members = True
 autodoc_default_flags = [
     "members", "undoc-members", "show-inheritance", "inherited-members"
 ]
+
+extensions.append("sphinx.ext.autosummary")
+autosummary_generate = True
+autosummary_members = True
+
 # Mitsuba modules must be mocked in order to allow compiling docs even if they're not here;
 # this mocking is also done in the ertdocs extension
 autodoc_mock_imports = [

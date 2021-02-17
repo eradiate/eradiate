@@ -10,18 +10,26 @@
 from abc import ABC
 
 import attr
+import pinttr
 
 from .core import SceneElement
-from .spectra import SolarIrradianceSpectrum, Spectrum, SpectrumFactory
-from ..util.attrs import (
-    attrib_quantity,
-    documented, parse_docs, validator_has_quantity,
-    validator_is_positive
+from .spectra import (
+    SolarIrradianceSpectrum,
+    Spectrum,
+    SpectrumFactory
 )
-from ..util.factory import BaseFactory
-from ..util.frame import angles_to_direction
-from ..util.units import config_default_units as cdu
-from ..util.units import ureg
+from .._attrs import (
+    documented,
+    parse_docs
+)
+from .._factory import BaseFactory
+from .._units import unit_context_config as ucc
+from .._units import unit_registry as ureg
+from ..frame import angles_to_direction
+from ..validators import (
+    has_quantity,
+    is_positive
+)
 
 
 @attr.s
@@ -63,7 +71,7 @@ class ConstantIllumination(Illumination):
             default=1.,
             converter=SpectrumFactory.converter("radiance"),
             validator=[attr.validators.instance_of(Spectrum),
-                       validator_has_quantity("radiance")]
+                       has_quantity("radiance")]
         ),
         doc="Emitted radiance spectrum. Must be a radiance spectrum "
             "(in W/m^2/sr/nm or compatible units).",
@@ -91,10 +99,10 @@ class DirectionalIllumination(Illumination):
     """
 
     zenith = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity(0., ureg.deg),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("angle"),
+            validator=is_positive,
+            units=ucc.deferred("angle"),
         ),
         doc="Zenith angle. \n"
             "\n"
@@ -104,10 +112,10 @@ class DirectionalIllumination(Illumination):
     )
 
     azimuth = documented(
-        attrib_quantity(
+        pinttr.ib(
             default=ureg.Quantity(0., ureg.deg),
-            validator=validator_is_positive,
-            units_compatible=cdu.generator("angle"),
+            validator=is_positive,
+            units=ucc.deferred("angle"),
         ),
         doc="Azimuth angle value.\n"
             "\n"
@@ -121,7 +129,7 @@ class DirectionalIllumination(Illumination):
             factory=SolarIrradianceSpectrum,
             converter=SpectrumFactory.converter("irradiance"),
             validator=[attr.validators.instance_of(Spectrum),
-                       validator_has_quantity("irradiance")]
+                       has_quantity("irradiance")]
         ),
         doc="Emitted power flux in the plane orthogonal to the illumination direction. "
             "Must be an irradiance spectrum (in W/m^2/nm or compatible unit). "

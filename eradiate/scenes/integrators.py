@@ -10,8 +10,12 @@
 import attr
 
 from .core import SceneElement
-from ..util.attrs import documented, get_doc, parse_docs
-from ..util.factory import BaseFactory
+from .._attrs import (
+    documented,
+    get_doc,
+    parse_docs
+)
+from .._factory import BaseFactory
 
 
 @parse_docs

@@ -9,5 +9,5 @@ Eradiate documentation
    rst/getting_started/intro
    rst/user_guide/intro
    rst/developer_guide/intro
-   rst/api_reference/intro
+   rst/reference/index
    rst/miscellaneous/bibliography

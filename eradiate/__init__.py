@@ -6,7 +6,29 @@ __version__ = "0.0.1"  #: Eradiate version number.
 
 from ._mode import mode, set_mode, modes
 
-# -- xarray accessor imports ---------------------------------------------------
+# -- Unit management facilities ------------------------------------------------
 
-from .util.xarray import EradiateDataArrayAccessor, EradiateDatasetAccessor
-del EradiateDataArrayAccessor, EradiateDatasetAccessor
+from ._units import unit_registry, unit_context_config, unit_context_kernel
+
+# -- Path resolver -------------------------------------------------------------
+
+from ._presolver import PathResolver
+path_resolver = PathResolver()
+del PathResolver
+
+# ------------------------------------------------------------------------------
+
+from . import converters, validators, xarray
+
+__all__ = [
+    "__version__",
+    "mode",
+    "modes",
+    "set_mode",
+    "path_resolver",
+    "unit_registry",
+    "unit_context_config",
+    "unit_context_kernel",
+    "converters",
+    "validators",
+]

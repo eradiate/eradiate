@@ -77,7 +77,7 @@ sample_data
 # top-of-atmosphere BRF over the hemisphere using the data array accessor:
 
 import matplotlib.pyplot as plt
-import eradiate.util.plot as ertplt
+import eradiate.plot as ertplt
 
 brf = sample_data.brf
 
@@ -169,7 +169,8 @@ plt.close()
 # :class:`.CoordSpec` objects. The following piece of code defines the
 # specification for an outgoing zenith angle coordinate variable:
 
-from eradiate.util.xarray import CoordSpec
+from eradiate.xarray.metadata import CoordSpec, CoordSpecRegistry, VarSpec
+
 theta_o_spec = CoordSpec("outgoing_zenith_angle", "deg", "outgoing zenith angle")
 
 # %%
@@ -178,7 +179,6 @@ theta_o_spec = CoordSpec("outgoing_zenith_angle", "deg", "outgoing zenith angle"
 # class member of the :class:`.CoordSpecRegistry` class. We can check the list
 # of registered coordinate specification sets:
 
-from eradiate.util.xarray import CoordSpecRegistry
 list(CoordSpecRegistry.registry_collections.keys())
 
 # %%
@@ -202,8 +202,6 @@ coord_specs_angular_obs
 # about angular data) and the :class:`.VarSpec` constructor allows to pass
 # coordinate specification collection identifiers:
 
-from eradiate.util.xarray import VarSpec
-
 var_spec = VarSpec(
     standard_name="toa_brf",
     long_name="TOA bidirectional reflectance factor",
@@ -218,7 +216,7 @@ var_spec.coord_specs
 # :class:`~xarray.DataArray`. In order to apply our metadata, we will also pass
 # ``var_spec`` to this function:
 
-from eradiate.util.xarray import make_dataarray
+from eradiate.xarray.make import make_dataarray
 
 make_dataarray(
     np.random.random((1, 1, 5, 5, 1)),

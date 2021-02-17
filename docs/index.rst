@@ -26,7 +26,7 @@ Where Should I Go?
     Learn how to use Eradiate's applications and API.
 :ref:`Developer guide<sec-developer_guide-intro>`
     Learn how to work with Eradiate's source code and modify it.
-:ref:`API reference<sec-api_reference-intro>`
+:ref:`Reference<sec-reference>`
     The complete API reference.
 
 
@@ -46,12 +46,13 @@ The Eradiate team acknowledges all Mitsuba 2 contributors for their exceptional
 work.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
    :hidden:
+   :titlesonly:
 
    rst/getting_started/intro
    rst/user_guide/intro
    examples/generated/tutorials/index
    rst/developer_guide/intro
-   rst/api_reference/intro
+   rst/reference/index
    rst/miscellaneous/intro

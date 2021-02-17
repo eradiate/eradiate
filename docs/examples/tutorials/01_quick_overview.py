@@ -70,7 +70,7 @@ shell_command("ertonedim 01_quick_overview_config.yml ertonedim ertonedim")
 # --------------------
 # 
 # Eradiate also provides total access to its features through a complete and 
-# documented API (see :ref:`sec-api_reference-intro`). The ``ertonedim``
+# documented API (see :ref:`sec-reference`). The ``ertonedim``
 # command-line tool is a thin wrapper around the :class:`.OneDimSolverApp`
 # class. We can easily reproduce the previous computation using it.
 # 
@@ -116,7 +116,7 @@ ds.to_netcdf("ertonedim.nc")
 # plotting facilities:
 
 import matplotlib.pyplot as plt
-import eradiate.util.plot as ertplt
+import eradiate.plot as ertplt
 
 fig = plt.gcf()
 ds.brf.squeeze().ert.plot_pcolormesh_polar()
