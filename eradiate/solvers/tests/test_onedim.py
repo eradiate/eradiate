@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 import eradiate
+from eradiate import path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import ModeError
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
@@ -64,9 +65,18 @@ def test_onedim_solver_app_new():
 @pytest.mark.slow
 def test_onedim_scene_real_life(mode_mono):
     # Construct with typical parameters
+    test_absorption_data_set = path_resolver.resolve(
+        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
+    )
     s = OneDimScene(
         surface={"type": "rpv"},
-        atmosphere={"type": "heterogeneous", "profile": {"type": "us76_approx"}},
+        atmosphere={
+            "type": "heterogeneous",
+            "profile": {
+                "type": "us76_approx",
+                "absorption_data_set": test_absorption_data_set,
+            },
+        },
         illumination={"type": "directional", "zenith": 45.0},
         measures={"type": "distant", "id": "toa"},
     )

@@ -23,6 +23,7 @@ Data sets
    :recursive:
    :toctree: generated/
 
-   solar_irradiance_spectra
    absorption_spectra
+   thermoprops_profiles
+   solar_irradiance_spectra
    spectral_response_function

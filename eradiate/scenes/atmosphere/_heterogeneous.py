@@ -7,14 +7,8 @@ import attr
 import numpy as np
 import xarray as xr
 
-from ._base import (
-    Atmosphere,
-    AtmosphereFactory
-)
-from ..._attrs import (
-    documented,
-    parse_docs
-)
+from ._base import Atmosphere, AtmosphereFactory
+from ..._attrs import documented, parse_docs
 from ..._units import unit_context_kernel as uck
 from ..._units import unit_registry as ureg
 from ...radprops import RadProfileFactory
@@ -38,20 +32,23 @@ def write_binary_grid3d(filename, values):
         values = values.values
 
     if not isinstance(values, np.ndarray):
-        raise TypeError(f"unsupported data type {type(values)} "
-                        f"(expected numpy array or xarray DataArray)")
+        raise TypeError(
+            f"unsupported data type {type(values)} "
+            f"(expected numpy array or xarray DataArray)"
+        )
 
     if values.ndim not in {3, 4}:
-        raise ValueError(f"'values' must have 3 or 4 dimensions "
-                         f"(got shape {values.shape})")
+        raise ValueError(
+            f"'values' must have 3 or 4 dimensions " f"(got shape {values.shape})"
+        )
 
     # note: this is an exact copy of the function write_binary_grid3d from
     # https://github.com/mitsuba-renderer/mitsuba-data/blob/master/tests/scenes/participating_media/create_volume_data.py
 
-    with open(filename, 'wb') as f:
-        f.write(b'V')
-        f.write(b'O')
-        f.write(b'L')
+    with open(filename, "wb") as f:
+        f.write(b"V")
+        f.write(b"O")
+        f.write(b"L")
         f.write(np.uint8(3).tobytes())  # Version
         f.write(np.int32(1).tobytes())  # type
         f.write(np.int32(values.shape[0]).tobytes())  # size
@@ -80,7 +77,7 @@ def read_binary_grid3d(filename):
         Values.
     """
 
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         file_content = f.read()
         _shape = struct.unpack("iii", file_content[8:20])  # shape of the values array
         _num = np.prod(np.array(_shape))  # number of values
@@ -105,7 +102,8 @@ def _dataarray_to_ndarray(value):
 @parse_docs
 @attr.s
 class HeterogeneousAtmosphere(Atmosphere):
-    r"""Heterogeneous atmosphere scene element [:factorykey:`heterogeneous`].
+    """
+    Heterogeneous atmosphere scene element [:factorykey:`heterogeneous`].
 
     This class builds a one-dimensional heterogeneous atmosphere. It expands as
     a ``heterogeneous`` kernel plugin, which takes as parameters a set of
@@ -142,24 +140,21 @@ class HeterogeneousAtmosphere(Atmosphere):
         attr.ib(
             default=None,
             converter=RadProfileFactory.convert,
-            validator=attr.validators.optional(attr.validators.instance_of(RadProfile))
+            validator=attr.validators.optional(attr.validators.instance_of(RadProfile)),
         ),
         doc="Radiative property profile used. If set, volume data files will be "
-            "created from profile data to initialise the corresponding kernel "
-            "plugin. If ``None``, :class:`.HeterogeneousAtmosphere` will assume "
-            "that volume data files already exist.",
+        "created from profile data to initialise the corresponding kernel "
+        "plugin. If ``None``, :class:`.HeterogeneousAtmosphere` will assume "
+        "that volume data files already exist.",
         type=":class:`~eradiate.radprops.rad_profile.RadProfile` or None",
         default="None",
     )
 
     albedo_fname = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(Path)
-        ),
+        attr.ib(default=None, converter=attr.converters.optional(Path)),
         doc="Path to the single scattering albedo volume data file. If "
-            "``None``, a value will be created when the file will be "
-            "requested.",
+        "``None``, a value will be created when the file will be "
+        "requested.",
         type="path-like or None",
         default="None",
     )
@@ -169,8 +164,9 @@ class HeterogeneousAtmosphere(Atmosphere):
         # The file should exist if no albedo value is provided to create it
         if self.profile is None:
             if value is None:
-                raise ValueError("if 'profile' is not set, "
-                                 "'albedo_fname' must be set")
+                raise ValueError(
+                    "if 'profile' is not set, 'albedo_fname' must be set"
+                )
             try:
                 return is_file(self, attribute, value)
             except FileNotFoundError:
@@ -182,7 +178,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             converter=attr.converters.optional(Path),
         ),
         doc="Path to the extinction coefficient volume data file. If ``None``, "
-            "a value will be created when the file will be requested.",
+        "a value will be created when the file will be requested.",
         type="path-like or None",
         default="None",
     )
@@ -192,42 +188,36 @@ class HeterogeneousAtmosphere(Atmosphere):
         # The file should exist if no sigma_t value is provided to create it
         if self.profile is None:
             if value is None:
-                raise ValueError("if 'profile' is not set, "
-                                 "'sigma_t_fname' must be set")
+                raise ValueError("if 'profile' is not set, 'sigma_t_fname' must be set")
             try:
                 return is_file(self, attribute, value)
             except FileNotFoundError:
                 raise
 
     cache_dir = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(Path)
-        ),
+        attr.ib(default=None, converter=attr.converters.optional(Path)),
         doc="Path to a cache directory where volume data files will be "
-            "created. If ``None``, a temporary cache directory will be used.",
+        "created. If ``None``, a temporary cache directory will be used.",
         type="path-like or None",
         default="None",
     )
 
-    _quantities = {
-        "albedo": "albedo",
-        "sigma_t": "collision_coefficient"
-    }
+    _quantities = {"albedo": "albedo", "sigma_t": "collision_coefficient"}
 
     def __attrs_post_init__(self):
         # Check for automatic width and height computation
         if self.profile is not None:
             if self.toa_altitude != "auto":
-                raise ValueError("toa_altitude must be set to 'auto' when "
-                                 "profile is set")
+                raise ValueError(
+                    "toa_altitude must be set to 'auto' when profile is set"
+                )
         else:
             if self.toa_altitude == "auto":
-                raise ValueError("toa_altitude cannot be set to 'auto' when "
-                                 "profile is None")
+                raise ValueError(
+                    "toa_altitude cannot be set to 'auto' when profile is None"
+                )
             if self.width == "auto":
-                raise ValueError("width cannot be set to 'auto' when profile "
-                                 "is None")
+                raise ValueError("width cannot be set to 'auto' when profile is None")
 
         # Prepare cache directory in case we'd need it
         if self.cache_dir is None:
@@ -238,10 +228,11 @@ class HeterogeneousAtmosphere(Atmosphere):
     @property
     def height(self):
         if self.toa_altitude == "auto":
-            ds = self.profile.to_dataset()
-            return ureg.Quantity(ds.z_level.values.max(), ds.z_level.units)
+            return (
+                self.profile.levels.max()
+            )  # assumes minimum altitude level is at 0 km
         else:
-            return ureg.Quantity(100., ureg.km)
+            return ureg.Quantity(100.0, ureg.km)  # matches the default value
 
     @property
     def kernel_width(self):
@@ -250,12 +241,11 @@ class HeterogeneousAtmosphere(Atmosphere):
         if self.width == "auto":
             if self.profile is None:
                 albedo = ureg.Quantity(
-                    read_binary_grid3d(self.albedo_fname),
-                    ureg.dimensionless
+                    read_binary_grid3d(self.albedo_fname), ureg.dimensionless
                 )
                 sigma_t = ureg.Quantity(
                     read_binary_grid3d(self.sigma_t_fname),
-                    uck.get("collision_coefficient")
+                    uck.get("collision_coefficient"),
                 )
             else:
                 albedo = self.profile.albedo
@@ -263,13 +253,15 @@ class HeterogeneousAtmosphere(Atmosphere):
 
             sigma_s = sigma_t * albedo
             min_sigma_s = sigma_s.min()
-            if min_sigma_s > 0.:
-                width = 10. / min_sigma_s
+            if min_sigma_s > 0.0:
+                width = 10.0 / min_sigma_s
                 if width > ureg.Quantity(1e3, "km"):
                     width = ureg.Quantity(1e3, "km")
             else:
-                raise ValueError("cannot compute width automatically when "
-                                 "scattering coefficient reaches zero")
+                raise ValueError(
+                    "cannot compute width automatically when "
+                    "scattering coefficient reaches zero"
+                )
         else:
             width = self.width
 
@@ -292,21 +284,18 @@ class HeterogeneousAtmosphere(Atmosphere):
             fields = {fields}
 
         if self.profile is None:
-            raise ValueError("'profile' is not set, cannot write volume data "
-                             "files")
+            raise ValueError("'profile' is not set, cannot write volume data " "files")
 
         for field in fields:
             # Is the requested field supported?
             if field not in supported_fields:
-                raise ValueError(f"field {field} cannot be used to create "
-                                 f"volume data")
+                raise ValueError(f"field {field} cannot be used to create volume data")
 
             # Does the considered field have values?
             field_quantity = getattr(self.profile, field)
 
             if field_quantity is None:
-                raise ValueError(f"field {field} is empty, cannot create "
-                                 f"volume data")
+                raise ValueError(f"field {field} is empty, cannot create volume data")
 
             # If file name is not specified, we create one
             field_fname = getattr(self, f"{field}_fname")
@@ -317,7 +306,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             # We have the data and the filename: we can create the file
             write_binary_grid3d(
                 field_fname,
-                field_quantity.to(uck.get(self._quantities[field])).magnitude
+                field_quantity.m_as(uck.get(self._quantities[field])),
             )
 
     def phase(self):
@@ -331,12 +320,14 @@ class HeterogeneousAtmosphere(Atmosphere):
         k_offset = self.kernel_offset.to(uck.get("length")).magnitude
 
         # First, transform the [0, 1]^3 cube to the right dimensions
-        trafo = ScalarTransform4f([
-            [k_width, 0., 0., -0.5 * k_width],
-            [0., k_width, 0., -0.5 * k_width],
-            [0., 0., k_height + k_offset, -k_offset],
-            [0., 0., 0., 1.],
-        ])
+        trafo = ScalarTransform4f(
+            [
+                [k_width, 0.0, 0.0, -0.5 * k_width],
+                [0.0, k_width, 0.0, -0.5 * k_width],
+                [0.0, 0.0, k_height + k_offset, -k_offset],
+                [0.0, 0.0, 0.0, 1.0],
+            ]
+        )
 
         # Create volume data files if possible
         if self.profile is not None:
@@ -351,12 +342,12 @@ class HeterogeneousAtmosphere(Atmosphere):
                 "sigma_t": {
                     "type": "gridvolume",
                     "filename": str(self.sigma_t_fname),
-                    "to_world": trafo
+                    "to_world": trafo,
                 },
                 "albedo": {
                     "type": "gridvolume",
                     "filename": str(self.albedo_fname),
-                    "to_world": trafo
+                    "to_world": trafo,
                 },
             }
         }
@@ -376,19 +367,16 @@ class HeterogeneousAtmosphere(Atmosphere):
 
         return {
             f"shape_{self.id}": {
-                "type":
-                    "cube",
-                "to_world":
-                    ScalarTransform4f([
-                        [0.5 * k_width, 0., 0., 0.],
-                        [0., 0.5 * k_width, 0., 0.],
-                        [0., 0., 0.5 * k_height, 0.5 * k_height - k_offset],
-                        [0., 0., 0., 1.],
-                    ]),
-                "bsdf": {
-                    "type": "null"
-                },
-                "interior":
-                    medium
+                "type": "cube",
+                "to_world": ScalarTransform4f(
+                    [
+                        [0.5 * k_width, 0.0, 0.0, 0.0],
+                        [0.0, 0.5 * k_width, 0.0, 0.0],
+                        [0.0, 0.0, 0.5 * k_height, 0.5 * k_height - k_offset],
+                        [0.0, 0.0, 0.0, 1.0],
+                    ]
+                ),
+                "bsdf": {"type": "null"},
+                "interior": medium,
             }
         }

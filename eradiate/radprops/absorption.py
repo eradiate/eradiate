@@ -1,173 +1,149 @@
 """Functions to compute monochromatic absorption.
-
-.. admonition:: Absorption cross section data set format:
-
-    The data structure is a :class:`~xarray.Dataset` with specific data
-    variables, dimensions and data coordinates.
-
-    Data variables:
-
-    - ``xs``: absorption cross section [cm^2]
-
-    If the absorber is a mixture, an additional data variable is required:
-
-    - ``mr``: mixing ratio []
-
-    The dimensions of ``xs`` should be one of the following:
-
-    - ``w``
-    - (``w``, ``p``)
-    - (``w``, ``t``)
-    - (``w``, ``p``, ``t``)
-
-    What dimensions are included indicate the relationship between the current dataset to other datasets and allow to combine these datasets together.
-    Datasets with identical dimensions can be combined together along those dimensions, provided the absorber is the same.
-    For example, a dataset with the dimensions (``w``, ``p``) for the ``us76`` absorber can be combined with other ``us76`` datasets with dimensions (``w``, ``p``), along the ``p`` dimension.
-
-    The dimension of ``mr`` is ``m``.
-
-    Data coordinates:
-
-    - ``m``: absorbing molecule(s) []
-    - ``w``: wavenumber [cm^-1]
-    - ``p``: pressure [Pa]
-    - ``t``: temperature [K]
-
-    All these data coordinates are required even, if the corresponding dimensions do not not appear in the ``xs`` and ``mr``.
-    In the latter case however, the data coordinates must be renamed by adding a ``c`` to the data coordinate name.
-    This is to indicate that the data coordinate is a non-dimension data coordinate.
-    See the difference between dimension coordinate and non-dimension coordinate at http://xarray.pydata.org/en/stable/data-structures.html
-
-    Attributes:
-
-    - ``convention``
-    - ``title``
-    - ``history``
-    - ``source``
-    - ``references``
-    - ``absorber``: name of the absorbing molecule/mixture
-
-    The meaning of the first 5 attributes is explained in the C.F. 1.8
-    convention (http://cfconventions.org/).
 """
 import numpy as np
+import xarray as xr
 from scipy.constants import physical_constants
 
 from .._units import unit_registry as ureg
 
-_BOLTZMANN = ureg.Quantity(*physical_constants['Boltzmann constant'][:2])
+_BOLTZMANN = ureg.Quantity(*physical_constants["Boltzmann constant"][:2])
 
 
-def _check_within_range(name, value, lower, upper):
-    value = np.array(value)
-    if (value < lower).any() or (value > upper).any():
-        raise ValueError(f"{name} value(s) ({value}) is outside of range "
-                         f"({lower}, {upper})")
+@ureg.wraps(ret="m^-1", args=(None, "nm", "Pa", "K", "m^-3", None, None), strict=False)
+def compute_sigma_a(
+    ds, wl=550.0, p=101325.0, t=288.15, n=None, fill_values=None, methods=None
+):
+    """
+    Computes the monochromatic absorption coefficient at given wavelength,
+    pressure and temperature values.
 
-
-@ureg.wraps(ret="m^-1", args=(None, "nm", "Pa", "K", "m^-3", None), strict=False)
-def compute_sigma_a(ds, wl=550., p=101325., t=288.15, n=None,
-                    p_fill_value=None):
-    """Computes the monochromatic absorption coefficient at given wavelength,
-    pressure and temperature values, according to the formula:
+    The absorption coefficient is computed according to the formula:
 
     .. math::
         k_{a\\lambda} = n \\, \\sigma_{a\\lambda} (p, T)
 
     where
-    :math:`k_{a\\lambda}` is the absorption coefficient,
-    :math:`\\lambda` is the wavelength,
-    :math:`n` is the number density,
-    :math:`\\sigma_a` is the absorption cross section,
-    :math:`p` is the pressure and
-    :math:`t` is the temperature.
 
-    .. note::
-        if the coordinate ``t`` is not in the dataset ``ds``, the interpolation
-        on temperature is not performed.
-        If ``n`` is ``None``, the value of the parameter ``t`` is then used
-        only to compute the corresponding number density.
-        Else, the value of ``t`` is simply ignored.
+    * :math:`k_{a\\lambda}` is the absorption coefficient [:math:`L^{-1}`],
+    * :math:`\\lambda` is the wavelength [:math:`L`],
+    * :math:`n` is the number density [:math:`L^{-3}`],
+    * :math:`\\sigma_a` is the absorption cross section [:math:`L^2`],
+    * :math:`p` is the pressure [:math:`ML^{-1}T^{-2}`] and
+    * :math:`t` is the temperature [:math:`\\Theta`].
 
-    .. note::
-        If at least two of ``p``, ``t`` and ``n`` are arrays, either their
-        length are the same, or one of them has a length of 1.
+    .. warning::
+       The values of the absorption cross section at the desired wavelength,
+       pressure and temperature values,
+       :math:`\\sigma_{a\\lambda} (p, T)`,
+       are obtained by interpolating the input absorption cross section data
+       set along the corresponding dimensions.
 
     Parameter ``ds`` (:class:`~xarray.Dataset`):
-        Absorption cross section dataset.
+        Absorption cross section data set.
 
     Parameter ``wl`` (float):
         Wavelength value [nm].
 
-        Default: 550 nm.
-
     Parameter ``p`` (float or array):
         Pressure [Pa].
 
-        Default: 101325 Pa.
+        .. note::
+           If ``p``, ``t`` and ``n`` are arrays, their length must be the same.
 
     Parameter ``t`` (float or array):
         Temperature [K].
 
-        Default: 288.15 K.
+        .. note::
+           If the coordinate ``t`` is not in the input dataset ``ds``, the
+           interpolation on temperature is not performed.
 
     Parameter ``n`` (float or array):
         Number density [m^-3].
 
-        Default: ``None``.
+        .. note::
+           If ``n`` is ``None``, the values of ``t`` and ``p`` are then used
+           only to compute the corresponding number density.
 
-    Parameter ``p_fill_value`` (float):
-        If not ``None``, out of bounds values are assigned ``p_fill_value``
-        during interpolation on pressure.
+    Parameter ``fill_values`` (dict):
+        Mapping of coordinates (in ``["w", "pt"]``) and fill values (either
+        ``None`` or float).
+        If not ``None``, out of bounds values are assigned the fill value
+        during interpolation along the wavelength or pressure and temperature
+        coordinates.
+        If ``None``, out of bounds values will trigger the raise of a
+        ``ValueError``.
+        Only one fill value can be provided for both pressure and temperature
+        coordinates.
 
-        Default: ``None``
+    Parameter ``methods`` (dict):
+        Mapping of coordinates (in ``["w", "pt"]``) and interpolation methods.
+        Default interpolation method is linear.
+        Only one interpolation method can be specified for both pressure
+        and temperature coordinates.
 
-    Returns → float or array:
-        Absorption coefficient [m^-1].
+    Returns → :class:`~pint.Quantity`:
+        Absorption coefficient values.
+
+    Raises → ``ValueError``:
+        When wavelength, pressure, or temperature values are out of the range
+        of the data set and the corresponding fill value in ``fill_values`` is
+        ``None``.
     """
-    # check wavelength is within range of dataset
-    wn_max = ureg.Quantity(value=ds.w.values.max(), units=ds.w.units)
-    wn_min = ureg.Quantity(value=ds.w.values.min(), units=ds.w.units)
-    _check_within_range(name="wavelength",
-                        value=wl,
-                        lower=(1 / wn_max).to("nm").magnitude,
-                        upper=(1 / wn_min).to("nm").magnitude)
+    if fill_values is None:
+        fill_values = dict(w=None, pt=None)
 
-    # compute wavenumber
-    wn = (1.0 / ureg.Quantity(wl, "nm")).to(ds.w.units).magnitude
+    if methods is None:
+        methods = dict(w="linear", pt="linear")
 
-    # interpolate in wavenumber
-    xsw = ds.xs.interp(w=wn)
+    for name in ["w", "pt"]:
+        if name not in fill_values:
+            fill_values[name] = None
+        if name not in methods:
+            methods[name] = "linear"
 
-    # interpolate in pressure
-    if p_fill_value is None:
-        _check_within_range(name="pressure",
-                            value=p,
-                            lower=xsw.p.values.min(),
-                            upper=xsw.p.values.max())
-        xsp = xsw.interp(p=p)
-    else:
-        xsp = xsw.interp(p=p, kwargs=dict(fill_value=p_fill_value))
+    # Interpolate along wavenumber dimension
+    xsw = ds.interp(
+        w=1e7 / wl,  # wavenumber in cm^-1
+        method=methods["w"],
+        kwargs=dict(
+            bounds_error=(fill_values["w"] is None),
+            fill_value=fill_values["w"],
+        ),
+    )
 
-    # interpolate in temperature
+    # If the data set includes a temperature coordinate, we interpolate along
+    # both pressure and temperature dimensions.
+    # Else, we interpolate only along the pressure dimension.
+    p_values = np.array([p]) if isinstance(p, float) else p
+    pz = xr.DataArray(p_values, dims="pt")
     if "t" in ds.coords:
-        _check_within_range(name="temperature",
-                            value=t,
-                            lower=xsw.t.values.min(),
-                            upper=xsw.t.values.max())
-        xst = xsp.interp(t=t)
+        t_values = np.array([t] * len(p_values)) if isinstance(t, float) else t
+        tz = xr.DataArray(t_values, dims="pt")
+        interpolated = xsw.interp(
+            p=pz,
+            t=tz,
+            method=methods["pt"],
+            kwargs=dict(
+                bounds_error=(fill_values["pt"] is None),
+                fill_value=fill_values["pt"],
+            ),
+        )
     else:
-        xst = xsp
+        interpolated = xsw.interp(
+            p=pz,
+            method=methods["pt"],
+            kwargs=dict(
+                bounds_error=(fill_values["pt"] is None),
+                fill_value=fill_values["pt"],
+            ),
+        )
 
-    xs = ureg.Quantity(xst.values, xst.units)
+    xs = ureg.Quantity(interpolated.xs.values, interpolated.xs.units)
 
-    # compute number density
+    # If 'n' is None, we compute it using the ideal gas state equation.
     if n is None:
         k = _BOLTZMANN.magnitude
-        n = p / (k * t)
+        n = p / (k * t)  # ideal gas state equation
     n = ureg.Quantity(value=n, units="m^-3")
 
-    # compute absorption coefficient
-    sigma = (n * xs).to("m^-1").magnitude
-
-    return sigma
+    return (n * xs).m_as("m^-1")

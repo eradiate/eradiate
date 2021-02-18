@@ -10,6 +10,8 @@ import pinttr
 #: must be created using this registry.
 unit_registry = pint.UnitRegistry()
 
+unit_registry.define("dobson_unit = 2.687e20 * meter^-2 = du = dobson = dobson_units")
+
 
 class PhysicalQuantity(enum.Enum):
     """An enumeration defining physical quantities known to Eradiate."""

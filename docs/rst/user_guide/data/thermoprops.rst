@@ -1,7 +1,7 @@
 .. _sec-user_guide-data-thermoprops:
 
-Atmosphere thermophysical properties profile data sets
-======================================================
+Atmosphere thermophysical properties data sets
+==============================================
 
 An atmosphere thermophysical properties data set provide the spatial variation
 of air pressure, air temperature, air number density and individual species

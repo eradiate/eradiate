@@ -26,10 +26,12 @@ the second kind of call will try and resolve directly a path using the
    .. list-table::
       :widths: 1 1
 
-      * - :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
-        - Solar irradiance spectrum
       * - :class:`absorption_cross_section_spectrum <eradiate.data.absorption_spectra>`
         - Absorption cross section spectrum
+      * - :class:`thermoprops_profiles <eradiate.data.thermoprops_profiles>`
+        - Atmospheric thermophysical properties profiles
+      * - :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
+        - Solar irradiance spectrum
       * - :class:`spectral_response_function <eradiate.data.spectral_response_function>`
         - Spectral response function
 
@@ -40,12 +42,16 @@ import os
 import xarray as xr
 
 from .absorption_spectra import _AbsorptionGetter
+from .chemistry import _ChemistryGetter
 from .solar_irradiance_spectra import _SolarIrradianceGetter
 from .spectral_response_function import _SpectralResponseFunctionGetter
+from .thermoprops_profiles import _ThermoPropsProfilesGetter
 from .. import path_resolver as _presolver
 
 _getters = {
     "absorption_spectrum": _AbsorptionGetter,
+    "chemistry": _ChemistryGetter,
+    "thermoprops_profiles": _ThermoPropsProfilesGetter,
     "solar_irradiance_spectrum": _SolarIrradianceGetter,
     "spectral_response_function": _SpectralResponseFunctionGetter,
 }
@@ -79,8 +85,9 @@ def open(category=None, id=None, path=None):
     """
     if path is None:
         if category is None or id is None:
-            raise ValueError("if 'path' is None, 'category' and 'id' must not "
-                             "be None")
+            raise ValueError(
+                "if 'path' is None, 'category' and 'id' must not be None"
+            )
 
         try:
             return getter(category).open(id)
@@ -114,8 +121,10 @@ def getter(category):
     try:
         return _getters[category]
     except KeyError:
-        raise ValueError(f"invalid data category '{category}'; must be one of "
-                         f"{list(_getters.keys())}")
+        raise ValueError(
+            f"invalid data category '{category}'; must be one of "
+            f"{list(_getters.keys())}"
+        )
 
 
 def registered(category):

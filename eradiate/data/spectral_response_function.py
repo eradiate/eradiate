@@ -1,6 +1,7 @@
 """Spectral response function data getter.
 """
 import enum
+
 import xarray as xr
 
 from .core import DataGetter
@@ -8,6 +9,10 @@ from .. import path_resolver as _presolver
 
 
 class Platform(enum.Enum):
+    """
+    Platform enumeration.
+    """
+
     Sentinel_2A = "sentinel_2a"
     Sentinel_2B = "sentinel_2b"
     Sentinel_3A = "sentinel_3a"
@@ -16,6 +21,10 @@ class Platform(enum.Enum):
 
 
 class Instrument(enum.Enum):
+    """
+    Instrument enumeration.
+    """
+
     MODIS = "modis"
     MSI = "msi"
     OLCI = "olci"

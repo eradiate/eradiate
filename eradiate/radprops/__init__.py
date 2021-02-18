@@ -8,4 +8,4 @@
 """
 
 from .rad_profile import RadProfileFactory
-from .rad_profile import ArrayRadProfile, US76ApproxRadProfile
+from .rad_profile import ArrayRadProfile, US76ApproxRadProfile, AFGL1986RadProfile
