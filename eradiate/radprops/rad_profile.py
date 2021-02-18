@@ -388,27 +388,79 @@ class ArrayRadProfile(RadProfile):
 @parse_docs
 @attr.s
 class US76ApproxRadProfile(RadProfile):
-    """A US76-approximation radiative profile.
+    """
+    Radiative properties profile approximately corresponding to an
+    atmospheric profile based on the original U.S. Standard Atmosphere 1976
+    atmosphere model.
 
     .. note::
 
        Instantiating this class requires to download the absorption dataset
        ``spectra-us76_u86_4`` and place it in ``$ERADIATE_DIR/resources/data/``.
 
-    The radiative properties are computed based upon the so-called US76
-    atmospheric vertical profile.
-    The scattering coefficient is computed with
-    :func:`sigma_s_air<eradiate.radprops.rayleigh.sigma_s_air>`
-    using the total number density from the US76 atmospheric vertical
-    profile.
-    The absorption coefficient is computed in two steps. First, the
-    absorption cross section is computed by interpolating the
-    absorption cross section datasets for the :ref:`us76_u86_4 <sec-user_guide-molecular_absorption_datasets-spectra_us76_u86_4>`
-    mixture at the wavelength specified in the eradiate mode and at the pressure values
-    corresponding to the US76 atmospheric vertical profile. The second step
-    consists in multiplying these cross sections by the total number density
-    values from the US76 atmospheric vertical profile, in the corresponding
-    atmospheric layers.
+    The :mod:`~eradiate.thermoprops.us76` module implements the original *U.S.
+    Standard Atmosphere 1976* atmosphere model, as defined by the
+    :cite:`NASA1976USStandardAtmosphere` technical report.
+    In the original atmosphere model, the gases are assumed well-mixed below
+    the altitude of 86 kilometers.
+    In the present radiative properties profile, the absorption coefficient is
+    computed using the ``spectra-us76_u86_4`` absorption dataset.
+    This dataset provides the absorption cross section of a specific mixture
+    of N2, O2, CO2 and CH4, the mixing ratio of which are those defined by the
+    *U.S. Standard Atmosphere 1976* model for the region of altitudes under
+    86 kilometers, where these four gas species are well-mixed.
+    As a result, the dataset is representative of the *U.S. Standard Atmosphere
+    1976* model only below 86 kilometers.
+    Since the atmosphere is typically a hundred kilometers high or more in
+    radiative transfer applications, and in order to make the radiative
+    properties profile reach these altitudes, the absorption coefficient
+    is nevertheless computed using the ``spectra-us76_u86_4`` dataset.
+    This approximation assumes that the absorption coefficient does not vary
+    much whether the mixing ratios of the absorbing gas mixture are those
+    below or above 86 km.
+    Furthermore, the *U.S. Standard Atmosphere 1976* model includes other gas
+    species than N2, O2, CO2 and CH4.
+    They are: Ar, He, Ne, Kr, H, O, Xe, He and H2.
+    All these species except H2 are absent from the
+    `HITRAN <https://hitran.org/>`_ spectroscopic database.
+    Since the absorption datasets are computed using HITRAN, the atomic species
+    could not be included in ``spectra-us76_u86_4``.
+    H2 was mistakenly forgotten and should be added to the dataset in a future
+    revision.
+
+
+    .. note::
+       We refer to the *U.S. Standard Atmosphere 1976* atmosphere model as the
+       model defined by the set of assumptions and equations in part 1 of the
+       report, and "numerically" illustrated by the extensive tables in part
+       4 of the report.
+       In particular, the part 3, entitled *Trace constituents*, which
+       provides rough estimates and discussions on the amounts of trace
+       constituents such as ozone, water vapor, nitrous oxide, methane, and so
+       on, is not considered as part of the *U.S. Standard Atmosphere 1976*
+       atmosphere model because it does not clearly defines the concentration
+       values of all trace constituents at all altitudes, neither does it
+       provide a way to compute them.
+
+    .. note::
+       It seems that the identifier "US76" is commonly used to refer to a
+       standard atmospheric profile used in radiative transfer application.
+       However, there appears to be some confusion around the definition of
+       that standard atmospheric profile.
+       In our understanding, what is called the "US76 standard atmospheric
+       profile", or "US76" in short, **is not the U.S. Standard Atmosphere
+       1976 atmosphere model** but instead the so-called "U.S. Standard (1976)
+       atmospheric profile model" in a AFGL technical report entitled *AFGL
+       Atmospheric Constituent Profiles (0-120km)* and published in 1986 by
+       Anderson et al.
+       Although the "U.S. Standard (1976) atmospheric profile model" of the
+       AFGL's report is based on the *U.S. Standard Atmosphere* 1976 atmosphere
+       model (hence the name), it is significantly different when it comes
+       about the gas species concentration profiles.
+       Notably, the "U.S. Standard (1976) atmospheric profile model" of the
+       AFGL's report include radiatively active gases such as H2O, O3, N2O,
+       and CO, that the *U.S. Standard Atmosphere 1976* atmosphere model does
+       not include.
     """
     n_layers = documented(
         attr.ib(
