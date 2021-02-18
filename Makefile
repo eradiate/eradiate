@@ -65,6 +65,7 @@ conda-lock-all:
 
 # Initialise development environment
 conda-init:
+	python requirements/check_conda_env.py
 	conda update --file requirements/environment-$(PLATFORM).lock
 	python requirements/copy_envvars.py
 	python setup.py develop

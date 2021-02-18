@@ -1,16 +1,14 @@
 import os
 from textwrap import dedent
 
+import check_conda_env
+
 
 def main():
+    check_conda_env.main()
+
     root_dir = os.getcwd()
     conda_prefix = os.environ.get("CONDA_PREFIX")
-    conda_default_env = os.environ.get("CONDA_DEFAULT_ENV")
-
-    # Check if conda env is active
-    if not conda_default_env or conda_default_env == "base":
-        print("Activate a Conda environment other than 'base'")
-        exit(1)
 
     # Define paths to (de)activate scripts
     activate_dir = os.path.join(conda_prefix, "etc/conda/activate.d")
