@@ -15,5 +15,6 @@ Thermophysical properties [eradiate.thermoprops]
    :recursive:
    :toctree: generated/
 
+   afgl1986
    us76
    util

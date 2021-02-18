@@ -1,18 +1,6 @@
 """Absorption cross section spectrum data sets shipped with Eradiate.
-
-**Category ID**: ``absorption_spectrum``
-
-.. list-table:: Available data sets and corresponding identifiers
-   :widths: 1 1 1
-   :header-rows: 1
-
-   * - Dataset ID
-     - Reference
-     - Spetral range [nm]
-   * - ``spectra-us76_u86_4``
-     - ``eradiate-datasets_maker/scripts/spectra/acs/spectra/us76_u86_4.py``
-     - [~389, 2500]
 """
+import enum
 
 import numpy as np
 import xarray as xr
@@ -21,21 +9,119 @@ from .core import DataGetter
 from .. import path_resolver as _presolver
 from .._units import unit_registry as ureg
 
-_US76_U86_4_PATH = "spectra/absorption/us76_u86_4"
-_US76_U86_4_PREF = "spectra-us76_u86_4"
+
+class Absorber(enum.Enum):
+    """
+    Absorbing species enumeration.
+    """
+
+    us76_u86_4 = "us76_u86_4"
+    CH4 = "CH4"
+    CO = "CO"
+    CO2 = "CO2"
+    H2O = "H2O"
+    N2O = "N2O"
+    O2 = "O2"
+    O3 = "O3"
+
+
+class Engine(enum.Enum):
+    """
+    Absorption cross section computation engine enumeration.
+    """
+
+    SPECTRA = "spectra"
+
+
+class Group(enum.Enum):
+    """
+    Data sets group enumeration.
+
+    Note: a group refers to a collection of data sets that differ by their
+    wavenumber bins.
+    """
+
+    SPECTRA_US76_U86_4 = (Absorber.us76_u86_4, Engine.SPECTRA)
+    SPECTRA_CH4 = (Absorber.CH4, Engine.SPECTRA)
+    SPECTRA_CO = (Absorber.CO, Engine.SPECTRA)
+    SPECTRA_CO2 = (Absorber.CO2, Engine.SPECTRA)
+    SPECTRA_H2O = (Absorber.H2O, Engine.SPECTRA)
+    SPECTRA_N2O = (Absorber.N2O, Engine.SPECTRA)
+    SPECTRA_O2 = (Absorber.O2, Engine.SPECTRA)
+    SPECTRA_O3 = (Absorber.O3, Engine.SPECTRA)
+
+
+def _resolve_group(absorber, engine):
+    """
+    Return the group corresponding to the (absorber, engine) pair, if it
+    exists.
+    """
+    for group in Group:
+        if group.value == (absorber, engine):
+            return group
+    raise ValueError(f"Cannot resolve group ({absorber}, {engine})")
+
+
+# fmt: off
+_WAVENUMBER_BINS = {
+    Group.SPECTRA_US76_U86_4: [(x, x + 500)
+                              for x in np.arange(4000, 25500, 500)] +
+                              [(25500, 25711)],
+    Group.SPECTRA_CH4: [(x, x + 100) for x in np.arange(4000, 11500, 100)] +
+                       [(11500, 11502)],
+    Group.SPECTRA_CO: [(x, x + 100) for x in np.arange(4000, 14400, 100)] +
+                      [(14400, 14478)],
+    Group.SPECTRA_CO2: [(x, x + 100) for x in np.arange(4000, 14000, 100)] +
+                       [(14000 , 14076)],
+    Group.SPECTRA_H2O: [(x, x + 100) for x in np.arange(4000, 25700, 100)] +
+                       [(25700, 25711)],
+    Group.SPECTRA_N2O: [(x, x + 100) for x in np.arange(4000, 10300, 100)] +
+                       [(10300, 10364)],
+    Group.SPECTRA_O2: [(x, x + 100) for x in np.arange(4000, 17200, 100)] +
+                      [(17200, 17273)],
+    Group.SPECTRA_O3: [(x, x + 100) for x in np.arange(4000, 6900, 100)] +
+                      [(6900, 6997)],
+}
+# fmt: on
+
+
+def _resolve_w_bin(group, wavenumber):
+    """
+    Return the wavenumber bin corresponding to a group and a wavenumber value,
+    if it exists.
+    """
+    for w_bin in _WAVENUMBER_BINS[group]:
+        w_min, w_max = w_bin
+        if w_min <= wavenumber <= w_max:
+            return w_bin
+    raise ValueError(
+        f"Cannot find wavenumber bin corresponding to wavenumber "
+        f"value {wavenumber} in for the group {group}"
+    )
+
+
+def _get_data_set_id(group, w_bin):
+    """
+    Return the data set identifier of the data set specified by a group and
+    a wavenumber bin.
+    """
+    absorber, engine = group.value
+    w_min, w_max = w_bin
+    return f"{absorber.value}-{engine.value}-{w_min}_{w_max}"
+
+
+_ROOT_DIR = "spectra/absorption"
+
+_PATHS = {}
+for group in Group:
+    absorber, engine = group.value
+    for wavenumber_bin in _WAVENUMBER_BINS[group]:
+        data_set_id = _get_data_set_id(group, wavenumber_bin)
+        _PATHS[data_set_id] = f"{_ROOT_DIR}/{absorber.value}/{data_set_id}/*.nc"
 
 
 class _AbsorptionGetter(DataGetter):
-    PATHS = {
-        **{f"{_US76_U86_4_PREF}-{x}_{x + 500}": f"{_US76_U86_4_PATH}/"
-                                                f"{_US76_U86_4_PREF}-{x}_"
-                                                f"{x + 500}/*.nc"
-           for x in np.arange(4000, 25500, 500)},
-        f"{_US76_U86_4_PREF}-25500_25711": f"{_US76_U86_4_PATH}/"
-                                           f"{_US76_U86_4_PREF}-"
-                                           f"25500_25711/*.nc",
-        "test": "tests/absorption/us76_u86_4/*.nc",
-    }
+    PATHS = _PATHS
 
     @classmethod
     def open(cls, id):
@@ -59,37 +145,23 @@ class _AbsorptionGetter(DataGetter):
 
 
 @ureg.wraps(ret=None, args=("cm^-1", None, None), strict=False)
-def find_dataset(wavenumber, absorber="us76_u86_4", engine="spectra"):
-    """Finds the dataset corresponding to a given wavenumber,
+def find_dataset(wavenumber, absorber, engine):
+    """
+    Find the dataset corresponding to a given wavenumber,
     absorber and absorption cross section engine.
 
     Parameter ``wavenumber`` (:class:`~pint.Quantity`):
         Wavenumber value [cm^-1].
 
-    Parameter ``absorber`` (str):
-        Absorber name.
+    Parameter ``absorber`` (:class:`Absorber`):
+        Absorber.
 
-    Parameter ``engine`` (str):
+    Parameter ``engine`` (:class:`Engine`):
         Engine used to compute the absorption cross sections.
 
-    Returns → str:
+    Returns → :class:`str`:
         Available dataset id.
     """
-    if absorber == "us76_u86_4":
-        if engine != "spectra":
-            raise ValueError(f"engine {engine} is not supported.")
-        for d in [_AbsorptionGetter.PATHS[k] for k in _AbsorptionGetter.PATHS
-                  if k != "test"]:
-            path = _presolver.resolve(d.strip("/*.nc"))
-            if path.is_absolute():
-                _engine, _absorber, w_range = tuple(path.name.split("-"))
-                if _absorber == absorber and _engine == engine:
-                    w_min, w_max = w_range.split("_")
-                    if float(w_min) <= wavenumber < float(w_max):
-                        return path.name
-        raise ValueError(f"could not find the dataset corresponding to "
-                         f"wavenumber = {wavenumber}, "
-                         f"absorber = {absorber} and "
-                         f"engine = {engine}")
-    else:
-        raise ValueError(f"absorber {absorber} is not supported.")
+    group = _resolve_group(absorber=absorber, engine=engine)
+    w_bin = _resolve_w_bin(group=group, wavenumber=wavenumber)
+    return _get_data_set_id(group=group, w_bin=w_bin)

@@ -7,7 +7,9 @@ Data guide
    :maxdepth: 2
 
    intro
-   srf
-   thermoprops
+   absorption
+   radprops
    solar_irradiance_spectrum_data_sets
    spectra-us76_u86_4
+   srf
+   thermoprops

@@ -1,4 +1,4 @@
-r"""US Standard Atmosphere 1976 thermophysical model, according to
+"""US Standard Atmosphere 1976 thermophysical model, according to
 :cite:`NASA1976USStandardAtmosphere`.
 """
 
