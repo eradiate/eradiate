@@ -39,6 +39,7 @@ import xarray as xr
 import eradiate
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
+from .. import data
 from ..data.absorption_spectra import find_dataset
 from ..thermoprops import us76
 from ..util.attrs import (
