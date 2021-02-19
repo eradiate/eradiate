@@ -11,7 +11,7 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 from eradiate import __version__
-from .util import profile_dataset_spec
+from ..util.xarray import profile_dataset_spec
 from ..util.units import ureg
 
 _Q = ureg.Quantity

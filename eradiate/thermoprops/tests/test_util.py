@@ -6,9 +6,9 @@ from eradiate.thermoprops.util import (
     make_profile_regular,
     _find_regular_params_gcd,
     _to_regular,
-    profile_dataset_spec
 )
 from eradiate.util.units import ureg
+from eradiate.util.xarray import profile_dataset_spec
 Q_ = ureg.Quantity
 
 

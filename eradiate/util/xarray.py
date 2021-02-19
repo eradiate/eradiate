@@ -5,6 +5,7 @@ import cerberus
 import xarray as xr
 
 from . import plot
+from ..thermoprops.util import column_number_density
 # -- Metadata processing -------------------------------------------------------
 from .attrs import documented, parse_docs
 
@@ -489,6 +490,18 @@ ssi_dataset_spec = DatasetSpec(
     coord_specs="solar_irradiance_spectrum"
 )
 
+# Define atmospheric profiles dataset specifications
+profile_dataset_spec = DatasetSpec(
+    var_specs={
+        "p": VarSpec(standard_name="air_pressure", units="Pa", long_name="air pressure"),
+        "t": VarSpec(standard_name="air_temperature", units="K", long_name="air temperature"),
+        "n": VarSpec(standard_name="number_density", units="m^-3", long_name="number density"),
+        "n_tot": VarSpec(standard_name="air_number_density", units="m^-3",
+                         long_name="air number density"),
+    },
+    coord_specs="atmospheric_profile"
+)
+
 
 def make_dataarray(data, coords=None, dims=None, var_spec=None):
     """Create a :class:`~xarray.DataArray` with default metadata.
@@ -696,6 +709,10 @@ class EradiateDataArrayAccessor:
         self.validate_metadata(var_spec, normalize=True, allow_unknown=False)
 
 
+from eradiate.util.units import ureg
+
+
+
 @xr.register_dataset_accessor("ert")
 class EradiateDatasetAccessor:
     """Convenience wrapper for operations on :class:`~xarray.Dataset` instances.
@@ -763,3 +780,6 @@ class EradiateDatasetAccessor:
         ``True``.
         """
         self.validate_metadata(dataset_spec, normalize=True, allow_unknown=False)
+
+    def column(self, species):
+        return column_number_density(ds=self._obj, species=species)

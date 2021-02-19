@@ -5,18 +5,112 @@ from datetime import datetime
 import numpy as np
 import xarray as xr
 
-from ..util.xarray import DatasetSpec, VarSpec
+from ..util.units import ureg
 
-profile_dataset_spec = DatasetSpec(
-    var_specs={
-        "p": VarSpec(standard_name="air_pressure", units="Pa", long_name="air pressure"),
-        "t": VarSpec(standard_name="air_temperature", units="K", long_name="air temperature"),
-        "n": VarSpec(standard_name="number_density", units="m^-3", long_name="number density"),
-        "n_tot": VarSpec(standard_name="air_number_density", units="m^-3",
-                         long_name="air number density"),
-    },
-    coord_specs="atmospheric_profile"
-)
+
+def column_number_density(ds, species):
+    """Computes the column number density, :math:`N`, for a given species
+    according to the formula:
+
+    .. math::
+      N = \\sum_{i=0}^{L-1} n_i \\, (z_{i+1} - z_i)
+
+    where
+    :math:`z_i` are the level altitudes and
+    :math:`n_i` are the number densities of that given species inside the
+    :math:`L` atmospheric layers.
+    """
+    n = ureg.Quantity(
+        value=ds.n.sel(species=species).values,
+        units=ds.n.units)
+    dz = ureg.Quantity(
+        value=ds.z_level.values[1:] - ds.z_level.values[:-1],
+        units=ds.z_level.units)
+    column = (n * dz).sum().to("m^-2")
+    return column
+
+
+def rescale_number_density(ds, column_amounts, surface_amounts={}):
+    """Rescale the number density values according to column and/or
+    surface amounts.
+
+    Parameter ``ds`` (:class:`xarray`):
+        Initial atmospheric profile
+
+    Parameter ``column_amounts`` (dict):
+        Column number density. Mapping ``str`` -> ``ureg.Quantity()``.
+
+    Parameter ``surface_amounts`` (dict):
+        Surface number density. Mapping ``str`` -> ``ureg.Quantity()``.
+
+    Returns ``xarray.Dataset``:
+        Rescaled atmospheric profile.
+    """
+    # compute scaling factors
+    factor = {}
+    for species in column_amounts:
+        amount = column_amounts[species].to("m^-2").magnitude
+        initial_amount = ds.ert.column(species=species).magnitude
+        factor[species] = amount / initial_amount
+
+    # rescale individual number densities
+    n = ds.n.values
+    for i, species in enumerate(ds.species.values):
+        n[i] *= factor[species]
+
+    # update total number density
+    ntot = n.sum(axis=0)
+
+    print("ntot.shape", (ntot.shape))
+    print("n.shape", n.shape)
+
+    rescaled = ds.assign_coords(n=(
+        ("species", "z_layer"), n, {
+            "standard_name": "number_density",
+            "long_name": "number density",
+            "units": "m^-3"})
+    ).assign_coords(n_tot=(
+        "z_layer", ntot, {
+            "standard_name": "total_number_density",
+            "long_name": "total number density",
+            "units": "m^-3"}))
+
+    return rescaled
+
+
+@ureg.wraps(ret=None, args=(None, "m", None), strict=False)
+def project(ds, z_level, conserve_columns=False):
+    """Projects the atmospheric profile onto a new level altitude mesh.
+
+    Parameter ``ds`` (:class:`xarray.Dataset`):
+        Atmospheric profile
+
+    Parameter ``z_level`` (array):
+        Level altitude mesh [m].
+    After interpolating the current atmospheric profile onto the new level
+    altitude mesh, the column number densities change
+    """
+    initial_columns = {
+        s: ds.ert.column(species=s) for s in ds.species.values
+    }
+
+    z_layer = (z_level[1:] + z_level[:-1]) / 2.
+    interpolated = ds.interp(z_layer=z_layer,
+                             method="linear",
+                             kwargs=dict(
+                                fill_value="extrapolate")
+                            )
+    projection = interpolated.assign_coords(z_level=(
+        "z_level", z_level, {
+            "standard_name": "level_altitude",
+            "long_name": "level altitude",
+            "units": "m"}))
+    print(projection)
+
+    if conserve_columns:
+        projection = rescale_number_density(projection, initial_columns)
+
+    return projection
 
 
 def rescale_co2(profile, surf_ppmv, inplace=False):
