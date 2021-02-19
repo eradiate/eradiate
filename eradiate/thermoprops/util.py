@@ -1,4 +1,5 @@
-"""Utility functions to manipulate atmospheric profiles. """
+"""Utility functions to manipulate atmospheric thermophysical properties
+profiles. """
 
 from datetime import datetime
 
@@ -18,7 +19,7 @@ def column_number_density(ds, species):
       N = \\sum_{i=0}^{L-1} n_i \\, (z_{i+1} - z_i)
 
     where
-    :math: denotes the column number density,
+    :math:`N` denotes the column number density,
     :math:`z_i` are the level altitudes and
     :math:`n_i` are the number densities of that given species inside the
     :math:`L` atmospheric layers.
@@ -50,16 +51,12 @@ def compute_scaling_factors(ds, column_amounts, surface_amounts):
     Parameter ``ds`` (:class:`xarray.Dataset`):
         Initial atmospheric profile.
 
-    Parameter ``column_amounts`` (dict):
-        Column number density values to be matched.
-        Mapping of the species to the column amounts:
-        ``str`` -> ``ureg.Quantity``.
+    Parameter ``column_amounts`` (dict: str -> :class:`ureg.Quantity`):
+        Column number density values to be matched, for each species.
         Column amounts must have the dimensions [length^-2].
 
-    Parameter ``surface_amounts`` (dict):
-        Number density values at the surface to be matched.
-        Mapping of the species to the surface amounts:
-        ``str`` -> ``ureg.Quantity``.
+    Parameter ``surface_amounts`` (dict: str -> :class:`ureg.Quantity`):
+        Number density values at the surface to be matched, for each species.
         Surface amounts must either have the dimensions [length^-3] or be
         dimensionless, in which case they are interpreted as volume fractions.
 
@@ -91,7 +88,8 @@ def compute_scaling_factors(ds, column_amounts, surface_amounts):
 
 
 def rescale_number_density(ds, factors):
-    """Multiply the number density values by a given factor.
+    """Multiply the individual number densities by given factors for each
+    species.
 
     .. note::
         This will also update the total number density data variable in the
@@ -100,10 +98,9 @@ def rescale_number_density(ds, factors):
     Parameter ``ds`` (:class:`xarray.Dataset`):
         Initial atmospheric profile.
 
-    Parameter ``factors`` (dict):
-        Scaling factors.
-        Mapping of the species to its corresponding scaling factor:
-        ``str`` -> ``float``
+    Parameter ``factors`` (dict: str -> float):
+        Scaling factors for each species.
+        Mapping of the species to its corresponding scaling factor.
 
     Returns ``xarray.Dataset``:
         Rescaled atmospheric profile.
@@ -139,12 +136,15 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
 
     Parameter ``method`` (str):
         The method used to interpolate. Choose from ``"linear"``,
-        ``"nearest"``, ``"zero"``, ``"slinear"``, ``"quadratic"``, ``"cubic"``.
+        ``"nearest"``, ``"zero"``, ``"slinear"``, ``"quadratic"``, and
+        ``"cubic"``.
+
+        Default: ``"linear"``.
 
     Parameter ``conserve_columns`` (bool):
-        Rescale the number densities in the atmospheric profile so that the
-        column number densities in the initial and interpolated atmospheric
-        profile are in the same.
+        If ``True``, multiply the number densities in the atmospheric profile
+        so that the column number densities in the initial and interpolated
+        atmospheric profile are in same.
 
         Default: ``False``.
 
