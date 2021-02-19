@@ -6,7 +6,24 @@ from datetime import datetime
 import numpy as np
 import xarray as xr
 
+from ..thermoprops import profile_dataset_spec
 from ..util.units import ureg
+
+
+def volume_fractions_sum_to_one(ds, rtol=1e-12):
+    """Returns ``Trye`` if the volume fractions sum up to one.
+
+    Parameter ``ds`` (:class:`xarray.Dataset`):
+        Atmospheric profile
+
+    Parameter ``rtol`` (float):
+        Relative tolerance parameter.
+
+    Returns → bool:
+        ``True`` if the volume fractions sum up to one, ``False`` otherwise.
+    """
+    fractions = ds.n / ds.n_tot
+    return np.allclose(fractions.sum(dim="species").values, 1., rtol=rtol)
 
 
 def column_number_density(ds, species):
@@ -43,7 +60,7 @@ def column_number_density(ds, species):
     return column
 
 
-def compute_scaling_factors(ds, column_amounts, surface_amounts):
+def compute_scaling_factors(ds, column_amounts=None, surface_amounts=None):
     """Compute the scaling factors to be applied to the number density values
     of each species in an atmospheric profile, so that the integrated number
     density and/or the surface number density, match given values.
@@ -55,39 +72,69 @@ def compute_scaling_factors(ds, column_amounts, surface_amounts):
         Column number density values to be matched, for each species.
         Column amounts must have the dimensions [length^-2].
 
+        Default: ``None``.
+
     Parameter ``surface_amounts`` (dict: str -> :class:`ureg.Quantity`):
         Number density values at the surface to be matched, for each species.
         Surface amounts must either have the dimensions [length^-3] or be
         dimensionless, in which case they are interpreted as volume fractions.
 
+        Default: ``None``.
+
     Returns → dict:
         Scaling factors for each applicable species.
     """
+    if column_amounts is None and surface_amounts is None:
+        raise ValueError("columns_amount and surface_amounts cannot both be "
+                         "None")
+
     factors = {}
 
-    for species in column_amounts:
-        amount = column_amounts[species].to("m^-2").magnitude
-        initial_amount = ds.ert.column(species=species).magnitude
-        factors[species] = amount / initial_amount
+    if column_amounts is not None:
+        for species in column_amounts:
+            amount = column_amounts[species].to("m^-2").magnitude
+            initial_amount = column_number_density(ds=ds,
+                                                   species=species).magnitude
+            factors[species] = amount / initial_amount
 
-    for species in surface_amounts:
-        if species in column_amounts:
-            raise ValueError("a species cannot be both in 'column_amounts' and "
-                             "'surface_amounts'")
+    if surface_amounts is not None:
+        for species in surface_amounts:
+            if species in column_amounts:
+                raise ValueError("a species cannot be both in 'column_amounts' and "
+                                 "'surface_amounts'")
 
-        quantity = surface_amounts[species]
-        if quantity.units == ureg.dimensionless:  # interpret as volume fraction
-            amount = quantity.magnitude * ds.n_tot.values[0]
-        else:
-            amount = quantity.to("m^-3").magnitude
+            quantity = surface_amounts[species]
+            if quantity.units == ureg.dimensionless:  # interpret as volume fraction
+                amount = quantity.magnitude * ds.n_tot.values[0]
+            else:
+                amount = quantity.to("m^-3").magnitude
 
-        initial_amount = ds.n.sel(species=species).values[0]
-        factors[species] = amount / initial_amount
+            initial_amount = ds.n.sel(species=species).values[0]
+            factors[species] = amount / initial_amount
 
     return factors
 
 
-def rescale_number_density(ds, factors):
+def human_readable(items):
+    """Transforms a list into readable human text.
+
+    Example: ``["a", "b", "c"]`` -> ``"a, b and c"``
+
+    Parameter ``elements`` (list):
+        List.
+
+    Returns → str:
+        Human readable text.
+    """
+    x = f"{items[0]}"
+    for s in items[1:-1]:
+        x += f", {s}"
+    if len(items) > 1:
+        x += f" and {items[-1]}"
+    return x
+
+
+def rescale_number_density(ds, factors, inplace=False):
     """Multiply the individual number densities by given factors for each
     species.
 
@@ -102,31 +149,42 @@ def rescale_number_density(ds, factors):
         Scaling factors for each species.
         Mapping of the species to its corresponding scaling factor.
 
+    Parameter ``inplace`` (bool):
+        If ``True``, the atmospheric profile object is modified.
+        Else, a new atmospheric profile object is returned.
+
     Returns ``xarray.Dataset``:
         Rescaled atmospheric profile.
     """
+    if not inplace:
+        ds = ds.copy(deep=True)
+
     # rescale individual number densities
     n = ds.n.values
     for i, species in enumerate(ds.species.values):
-        n[i] *= factors[species]
-    n_var = (("species", "z_layer"), n, dict(
-        standard_name="number_density",
-        long_name="number density",
-        units="m^-3"))
+        if species in factors:
+            n[i] *= factors[species]
 
     # update total number density
-    n_tot = n.sum(axis=0)
-    n_tot_var = ("z_layer", n_tot, dict(
-        standard_name="total_number_density",
-        long_name= "total number density",
-        units="m^-3"))
+    ds.n_tot.values = n.sum(axis=0)
 
-    return ds.assign_coords(n=n_var).assign_coords(n_tot=n_tot_var)
+    # update metadata
+    species = list(factors.keys())
+    ds.attrs["history"] += \
+        f"\n" \
+        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - " \
+        f"Atmospheric profile rescaled for {human_readable(species)} - " \
+        f"eradiate.thermoprops.util.rescale_number_density"
+
+    return ds
 
 
 @ureg.wraps(ret=None, args=(None, "m", None, None), strict=False)
 def interpolate(ds, z_level, method="linear", conserve_columns=False):
     """Interpolates an atmospheric profile onto a new level altitude mesh.
+
+    .. note::
+        Returns a new atmospheric profile object.
 
     Parameter ``ds`` (:class:`xarray.Dataset`):
         Initial atmospheric profile.
@@ -151,23 +209,78 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
     Returns → :class:`xarray.Dataset`:
         Interpolated atmospheric profile
     """
+
+    # interpolate
     z_layer = (z_level[1:] + z_level[:-1]) / 2.
     interpolated = ds.interp(z_layer=z_layer,
                              method=method,
                              kwargs=dict(fill_value="extrapolate"))
-    projection = interpolated.assign_coords(z_level=(
-        "z_level", z_level, {
-            "standard_name": "level_altitude",
-            "long_name": "level altitude",
-            "units": "m"}))
+
+    # update level altitudes
+    z_level_attrs = ds.z_level.attrs
+    interpolated.update(dict(z_level=("z_level", z_level, z_level_attrs)))
 
     if conserve_columns:
-        factors = compute_scaling_factors(ds=projection,
-                                          column_amounts=ds.ert.columns)
-        projection = rescale_number_density(ds=projection,
-                                            factors=factors)
+        initial_amounts = {
+            s: column_number_density(ds, s) for s in ds.species.values}
+        factors = compute_scaling_factors(ds=interpolated,
+                                          column_amounts=initial_amounts)
+        interpolated = rescale_number_density(ds=interpolated,
+                                              factors=factors,
+                                              inplace=True)
 
-    return projection
+    return interpolated
+
+
+def fill_out_with(ds, species):
+    """Fill out an atmospheric profile with a new gas species where the volume
+    fractions do not add up to 1.
+
+    Parameter ``ds`` (:class:`xarray.Dataset`):
+        Initial atmospheric profile
+
+    Parameter ``species`` (str):
+        Species.
+
+    Return → :class:`xarray.Dataset`:
+        Filled out atmospheric profile.
+    """
+    if species in ds.species.values:
+        raise ValueError(f"{species} is already in atmospheric profile")
+
+    n_tot = ureg.Quantity(
+        value=ds.n_tot.values,
+        units=ds.n_tot.units)
+    n_sum = ureg.Quantity(
+        value=ds.n.sum(dim="species").values,
+        units=ds.n.units)
+    n_species = n_tot - n_sum
+
+    if not volume_fractions_sum_to_one(ds, rtol=1e-12):
+        new_species_list = list(ds.species.values)
+        new_species_list.append(species)
+
+        n_layers = ds.dims['z_layer']
+        new_n = np.concatenate(
+            [ds.n.values, n_species.magnitude.reshape(1, n_layers)], axis=0)
+
+        ds.attrs["history"] += \
+            f"\n" \
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - " \
+            f"Atmospheric profile filled out with {species} - " \
+            f"eradiate.thermoprops.util.fill_out_with"
+
+        return ds.update(dict(
+            n=(("species", "z_layer"), new_n, dict(
+                standard_name="number_density",
+                long_name="number density",
+                units="m^-3")),
+            species=("species", new_species_list, dict(
+                standard_name="species",
+                long_name="species"))))
+    else:
+        raise ValueError("there is no room for a new gas species in this "
+                         "atmospheric profile.")
 
 
 def make_profile_regular(profile, atol):
