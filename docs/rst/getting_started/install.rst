@@ -57,7 +57,7 @@ machine meets the requirements listed below.
       package manager's repositories for the respective packages.
 
    .. note:: We currently recommend compiling the C++ code with Clang based on
-      `upstream advice from the Mitsuba development team <https://eradiate-kernel.readthedocs.io/en/latest/src/getting_started/compiling.html#linux>`.
+      `upstream advice from the Mitsuba development team <https://eradiate-kernel.readthedocs.io/en/latest/src/getting_started/compiling.html#linux>`_.
       We also recommend using Clang 9 — not another version — because we also
       encountered issues building with other versions. We hope to improve
       compiler support in the future.
