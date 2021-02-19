@@ -709,10 +709,6 @@ class EradiateDataArrayAccessor:
         self.validate_metadata(var_spec, normalize=True, allow_unknown=False)
 
 
-from eradiate.util.units import ureg
-
-
-
 @xr.register_dataset_accessor("ert")
 class EradiateDatasetAccessor:
     """Convenience wrapper for operations on :class:`~xarray.Dataset` instances.
@@ -783,3 +779,9 @@ class EradiateDatasetAccessor:
 
     def column(self, species):
         return column_number_density(ds=self._obj, species=species)
+
+    def columns(self):
+        return {
+            species: column_number_density(ds=self._obj, species=species)
+            for species in self._obj.species.values
+        }

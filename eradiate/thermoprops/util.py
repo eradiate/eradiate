@@ -9,16 +9,28 @@ from ..util.units import ureg
 
 
 def column_number_density(ds, species):
-    """Computes the column number density, :math:`N`, for a given species
-    according to the formula:
+    """Computes the column number density of a given species in an atmospheric
+    profile.
+
+    The column number density is computed according to the formula:
 
     .. math::
       N = \\sum_{i=0}^{L-1} n_i \\, (z_{i+1} - z_i)
 
     where
+    :math: denotes the column number density,
     :math:`z_i` are the level altitudes and
     :math:`n_i` are the number densities of that given species inside the
     :math:`L` atmospheric layers.
+
+    Parameter ``ds`` (:class:`xarray.Dataset`):
+        Atmospheric profile.
+
+    Parameter ``species`` (str):
+        Species.
+
+    Returns → :class:`ureg.Quantity`:
+        Column number density [m^-2].
     """
     n = ureg.Quantity(
         value=ds.n.sel(species=species).values,
@@ -30,85 +42,130 @@ def column_number_density(ds, species):
     return column
 
 
-def rescale_number_density(ds, column_amounts, surface_amounts={}):
-    """Rescale the number density values according to column and/or
-    surface amounts.
+def compute_scaling_factors(ds, column_amounts, surface_amounts):
+    """Compute the scaling factors to be applied to the number density values
+    of each species in an atmospheric profile, so that the integrated number
+    density and/or the surface number density, match given values.
 
-    Parameter ``ds`` (:class:`xarray`):
-        Initial atmospheric profile
+    Parameter ``ds`` (:class:`xarray.Dataset`):
+        Initial atmospheric profile.
 
     Parameter ``column_amounts`` (dict):
-        Column number density. Mapping ``str`` -> ``ureg.Quantity()``.
+        Column number density values to be matched.
+        Mapping of the species to the column amounts:
+        ``str`` -> ``ureg.Quantity``.
+        Column amounts must have the dimensions [length^-2].
 
     Parameter ``surface_amounts`` (dict):
-        Surface number density. Mapping ``str`` -> ``ureg.Quantity()``.
+        Number density values at the surface to be matched.
+        Mapping of the species to the surface amounts:
+        ``str`` -> ``ureg.Quantity``.
+        Surface amounts must either have the dimensions [length^-3] or be
+        dimensionless, in which case they are interpreted as volume fractions.
+
+    Returns → dict:
+        Scaling factors for each applicable species.
+    """
+    factors = {}
+
+    for species in column_amounts:
+        amount = column_amounts[species].to("m^-2").magnitude
+        initial_amount = ds.ert.column(species=species).magnitude
+        factors[species] = amount / initial_amount
+
+    for species in surface_amounts:
+        if species in column_amounts:
+            raise ValueError("a species cannot be both in 'column_amounts' and "
+                             "'surface_amounts'")
+
+        quantity = surface_amounts[species]
+        if quantity.units == ureg.dimensionless:  # interpret as volume fraction
+            amount = quantity.magnitude * ds.n_tot.values[0]
+        else:
+            amount = quantity.to("m^-3").magnitude
+
+        initial_amount = ds.n.sel(species=species).values[0]
+        factors[species] = amount / initial_amount
+
+    return factors
+
+
+def rescale_number_density(ds, factors):
+    """Multiply the number density values by a given factor.
+
+    .. note::
+        This will also update the total number density data variable in the
+        dataset.
+
+    Parameter ``ds`` (:class:`xarray.Dataset`):
+        Initial atmospheric profile.
+
+    Parameter ``factors`` (dict):
+        Scaling factors.
+        Mapping of the species to its corresponding scaling factor:
+        ``str`` -> ``float``
 
     Returns ``xarray.Dataset``:
         Rescaled atmospheric profile.
     """
-    # compute scaling factors
-    factor = {}
-    for species in column_amounts:
-        amount = column_amounts[species].to("m^-2").magnitude
-        initial_amount = ds.ert.column(species=species).magnitude
-        factor[species] = amount / initial_amount
-
     # rescale individual number densities
     n = ds.n.values
     for i, species in enumerate(ds.species.values):
-        n[i] *= factor[species]
+        n[i] *= factors[species]
+    n_var = (("species", "z_layer"), n, dict(
+        standard_name="number_density",
+        long_name="number density",
+        units="m^-3"))
 
     # update total number density
-    ntot = n.sum(axis=0)
+    n_tot = n.sum(axis=0)
+    n_tot_var = ("z_layer", n_tot, dict(
+        standard_name="total_number_density",
+        long_name= "total number density",
+        units="m^-3"))
 
-    print("ntot.shape", (ntot.shape))
-    print("n.shape", n.shape)
-
-    rescaled = ds.assign_coords(n=(
-        ("species", "z_layer"), n, {
-            "standard_name": "number_density",
-            "long_name": "number density",
-            "units": "m^-3"})
-    ).assign_coords(n_tot=(
-        "z_layer", ntot, {
-            "standard_name": "total_number_density",
-            "long_name": "total number density",
-            "units": "m^-3"}))
-
-    return rescaled
+    return ds.assign_coords(n=n_var).assign_coords(n_tot=n_tot_var)
 
 
-@ureg.wraps(ret=None, args=(None, "m", None), strict=False)
-def project(ds, z_level, conserve_columns=False):
-    """Projects the atmospheric profile onto a new level altitude mesh.
+@ureg.wraps(ret=None, args=(None, "m", None, None), strict=False)
+def interpolate(ds, z_level, method="linear", conserve_columns=False):
+    """Interpolates an atmospheric profile onto a new level altitude mesh.
 
     Parameter ``ds`` (:class:`xarray.Dataset`):
-        Atmospheric profile
+        Initial atmospheric profile.
 
     Parameter ``z_level`` (array):
         Level altitude mesh [m].
-    After interpolating the current atmospheric profile onto the new level
-    altitude mesh, the column number densities change
-    """
-    initial_columns = {
-        s: ds.ert.column(species=s) for s in ds.species.values
-    }
 
+    Parameter ``method`` (str):
+        The method used to interpolate. Choose from ``"linear"``,
+        ``"nearest"``, ``"zero"``, ``"slinear"``, ``"quadratic"``, ``"cubic"``.
+
+    Parameter ``conserve_columns`` (bool):
+        Rescale the number densities in the atmospheric profile so that the
+        column number densities in the initial and interpolated atmospheric
+        profile are in the same.
+
+        Default: ``False``.
+
+    Returns → :class:`xarray.Dataset`:
+        Interpolated atmospheric profile
+    """
     z_layer = (z_level[1:] + z_level[:-1]) / 2.
     interpolated = ds.interp(z_layer=z_layer,
-                             method="linear",
-                             kwargs=dict(
-                                fill_value="extrapolate")
-                            )
+                             method=method,
+                             kwargs=dict(fill_value="extrapolate"))
     projection = interpolated.assign_coords(z_level=(
         "z_level", z_level, {
             "standard_name": "level_altitude",
             "long_name": "level altitude",
             "units": "m"}))
-    print(projection)
 
     if conserve_columns:
-        projection = rescale_number_density(projection, initial_columns)
+        factors = compute_scaling_factors(ds=projection,
+                                          column_amounts=ds.ert.columns)
+        projection = rescale_number_density(ds=projection,
+                                            factors=factors)
 
     return projection
 
