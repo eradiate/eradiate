@@ -1,7 +1,7 @@
 import pytest
 
+from eradiate.thermoprops import profile_dataset_spec
 from eradiate.thermoprops.us76 import *
-from eradiate.util.xarray import profile_dataset_spec
 
 _Q = ureg.Quantity
 
