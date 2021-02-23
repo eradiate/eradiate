@@ -89,8 +89,11 @@ html_static_path = ["_static"]
 # Configure extensions
 extensions.append("sphinx.ext.mathjax")
 extensions.append("sphinx.ext.viewcode")
-extensions.append("sphinxcontrib.bibtex")
 extensions.append("sphinx_copybutton")
+
+# Bibliography
+extensions.append("sphinxcontrib.bibtex")
+bibtex_bibfiles = ["references.bib"]
 
 # Example gallery support
 from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
