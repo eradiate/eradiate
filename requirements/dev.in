@@ -3,6 +3,7 @@
 black
 bump2version
 conda-lock
+coverage
 ipython
 ipywidgets
 isort

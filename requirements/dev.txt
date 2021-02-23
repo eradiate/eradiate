@@ -107,6 +107,8 @@ conda-lock==0.8.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/dev.in
+coverage==5.4
+    # via -r requirements/dev.in
 cycler==0.10.0
     # via
     #   -c requirements/dev.txt
