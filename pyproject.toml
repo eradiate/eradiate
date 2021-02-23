@@ -1,3 +1,11 @@
 [tool.isort]
 profile = "pycharm"
 reverse_relative = true
+
+[tool.coverage.run]
+source = [
+    "eradiate/",
+]
+omit = [
+    "*/tests/*",
+]

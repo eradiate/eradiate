@@ -20,3 +20,7 @@ docs/_build/
 docs/examples/generated/
 docs/rst/api_reference/generated/
 test_report/generated/
+
+# Coverage
+.coverage
+htmlcov/
