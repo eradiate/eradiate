@@ -29,6 +29,9 @@ pip-update-in-files:
 # Dev must be compiled first because it constrains the others
 # No hashes: doesn't play nicely with RTD when running pip-compile on macOS
 pip-compile: pip-update-in-files
+	rm requirements/dev.txt
+	touch requirements/dev.txt
+
 	@for LAYER in dev main docs tests; do \
 		echo "Compiling requirements/$${LAYER}.in to requirements/$${LAYER}.txt"; \
 		pip-compile --upgrade --build-isolation --allow-unsafe \
