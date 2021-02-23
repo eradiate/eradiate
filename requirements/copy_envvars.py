@@ -9,6 +9,7 @@ def main():
 
     root_dir = os.getcwd()
     conda_prefix = os.environ.get("CONDA_PREFIX")
+    conda_default_env = os.environ.get("CONDA_DEFAULT_ENV")
 
     # Define paths to (de)activate scripts
     activate_dir = os.path.join(conda_prefix, "etc/conda/activate.d")
