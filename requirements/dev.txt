@@ -74,7 +74,7 @@ certifi==2020.12.5
     # via
     #   -c requirements/dev.txt
     #   requests
-cffi==1.14.4
+cffi==1.14.5
     # via
     #   -c requirements/dev.txt
     #   argon2-cffi
@@ -108,7 +108,9 @@ conda-lock==0.8.0
     #   -c requirements/dev.txt
     #   -r requirements/dev.in
 coverage==5.4
-    # via -r requirements/dev.in
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/dev.in
 cycler==0.10.0
     # via
     #   -c requirements/dev.txt
@@ -132,6 +134,7 @@ docutils==0.16
     #   readme-renderer
     #   sphinx
     #   sphinx-panels
+    #   sphinxcontrib-bibtex
 ensureconda==1.4.1
     # via
     #   -c requirements/dev.txt
@@ -157,7 +160,7 @@ imagesize==1.2.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==3.4.0
+importlib-metadata==3.5.0
     # via
     #   -c requirements/dev.txt
     #   jsonschema
@@ -170,7 +173,7 @@ iniconfig==1.1.1
     # via
     #   -c requirements/dev.txt
     #   pytest
-ipykernel==5.4.3
+ipykernel==5.5.0
     # via
     #   -c requirements/dev.txt
     #   ipywidgets
@@ -236,7 +239,11 @@ jupyter-core==4.7.1
     #   nbconvert
     #   nbformat
     #   notebook
-jupyter-server==1.3.0
+jupyter-packaging==0.7.12
+    # via
+    #   -c requirements/dev.txt
+    #   jupyterlab
+jupyter-server==1.4.1
     # via
     #   -c requirements/dev.txt
     #   jupyterlab
@@ -246,7 +253,7 @@ jupyterlab-pygments==0.1.2
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-jupyterlab-server==2.2.0
+jupyterlab-server==2.3.0
     # via
     #   -c requirements/dev.txt
     #   jupyterlab
@@ -254,7 +261,7 @@ jupyterlab-widgets==1.0.0
     # via
     #   -c requirements/dev.txt
     #   ipywidgets
-jupyterlab==3.0.7
+jupyterlab==3.0.9
     # via
     #   -c requirements/dev.txt
     #   -r requirements/dev.in
@@ -294,7 +301,7 @@ nbclassic==0.2.6
     # via
     #   -c requirements/dev.txt
     #   jupyterlab
-nbclient==0.5.1
+nbclient==0.5.2
     # via
     #   -c requirements/dev.txt
     #   nbconvert
@@ -315,7 +322,7 @@ nest-asyncio==1.5.1
     # via
     #   -c requirements/dev.txt
     #   nbclient
-netcdf4==1.5.5.1
+netcdf4==1.5.6
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -334,20 +341,17 @@ numpy==1.20.1
     #   pandas
     #   scipy
     #   xarray
-oset==0.1.3
-    # via
-    #   -c requirements/dev.txt
-    #   sphinxcontrib-bibtex
 packaging==20.9
     # via
     #   -c requirements/dev.txt
     #   bleach
+    #   jupyter-packaging
     #   jupyterlab
     #   jupyterlab-server
     #   pint
     #   pytest
     #   sphinx
-pandas==1.2.1
+pandas==1.2.2
     # via
     #   -c requirements/dev.txt
     #   xarray
@@ -396,7 +400,7 @@ prometheus-client==0.9.0
     #   -c requirements/dev.txt
     #   jupyter-server
     #   notebook
-prompt-toolkit==3.0.14
+prompt-toolkit==3.0.16
     # via
     #   -c requirements/dev.txt
     #   ipython
@@ -427,7 +431,7 @@ pydata-sphinx-theme==0.4.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-pygments==2.7.4
+pygments==2.8.0
     # via
     #   -c requirements/dev.txt
     #   ipython
@@ -457,7 +461,7 @@ pytest-metadata==1.11.0
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
     #   pytest-json-report
-pytest-xdist==2.2.0
+pytest-xdist==2.2.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
@@ -486,13 +490,13 @@ pyyaml==5.4.1
     #   conda-lock
     #   dask
     #   pybtex
-pyzmq==22.0.2
+pyzmq==22.0.3
     # via
     #   -c requirements/dev.txt
     #   jupyter-client
     #   jupyter-server
     #   notebook
-readme-renderer==28.0
+readme-renderer==29.0
     # via
     #   -c requirements/dev.txt
     #   twine
@@ -525,7 +529,7 @@ ruamel.yaml==0.16.12
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-scipy==1.6.0
+scipy==1.6.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -565,7 +569,7 @@ sphinx-panels==0.5.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx==3.4.3
+sphinx==3.5.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -579,7 +583,7 @@ sphinxcontrib-applehelp==1.0.2
     # via
     #   -c requirements/dev.txt
     #   sphinx
-sphinxcontrib-bibtex==1.0.0
+sphinxcontrib-bibtex==2.1.4
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -603,7 +607,7 @@ sphinxcontrib-serializinghtml==1.1.4
     # via
     #   -c requirements/dev.txt
     #   sphinx
-tabulate==0.8.7
+tabulate==0.8.9
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
@@ -616,7 +620,7 @@ testpath==0.4.4
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-tinydb==4.3.0
+tinydb==4.4.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -635,7 +639,7 @@ tornado==6.1
     #   jupyterlab
     #   notebook
     #   terminado
-tqdm==4.56.0
+tqdm==4.57.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -705,7 +709,6 @@ setuptools==53.0.0
     #   cerberus
     #   ipython
     #   jsonschema
-    #   oset
     #   sphinx
     #   twine
     #   xarray

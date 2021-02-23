@@ -54,6 +54,7 @@ docutils==0.16
     #   pybtex-docutils
     #   sphinx
     #   sphinx-panels
+    #   sphinxcontrib-bibtex
 idna==2.10
     # via
     #   -c requirements/dev.txt
@@ -62,7 +63,7 @@ imagesize==1.2.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==3.4.0
+importlib-metadata==3.5.0
     # via
     #   -c requirements/dev.txt
     #   pint
@@ -90,7 +91,7 @@ mock==4.0.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-netcdf4==1.5.5.1
+netcdf4==1.5.6
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -104,16 +105,12 @@ numpy==1.20.1
     #   pandas
     #   scipy
     #   xarray
-oset==0.1.3
-    # via
-    #   -c requirements/dev.txt
-    #   sphinxcontrib-bibtex
 packaging==20.9
     # via
     #   -c requirements/dev.txt
     #   pint
     #   sphinx
-pandas==1.2.1
+pandas==1.2.2
     # via
     #   -c requirements/dev.txt
     #   xarray
@@ -138,7 +135,7 @@ pydata-sphinx-theme==0.4.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-pygments==2.7.4
+pygments==2.8.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
@@ -174,7 +171,7 @@ ruamel.yaml==0.16.12
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-scipy==1.6.0
+scipy==1.6.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -201,7 +198,7 @@ sphinx-panels==0.5.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx==3.4.3
+sphinx==3.5.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -214,7 +211,7 @@ sphinxcontrib-applehelp==1.0.2
     # via
     #   -c requirements/dev.txt
     #   sphinx
-sphinxcontrib-bibtex==1.0.0
+sphinxcontrib-bibtex==2.1.4
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -238,11 +235,11 @@ sphinxcontrib-serializinghtml==1.1.4
     # via
     #   -c requirements/dev.txt
     #   sphinx
-tinydb==4.3.0
+tinydb==4.4.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-tqdm==4.56.0
+tqdm==4.57.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -268,6 +265,5 @@ setuptools==53.0.0
     # via
     #   -c requirements/dev.txt
     #   cerberus
-    #   oset
     #   sphinx
     #   xarray
