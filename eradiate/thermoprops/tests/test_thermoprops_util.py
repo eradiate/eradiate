@@ -6,12 +6,45 @@ from eradiate.thermoprops.us76 import make_profile
 from eradiate.thermoprops.util import (
     _find_regular_params_gcd,
     _to_regular,
+    equilibrium_water_vapor_fraction,
     make_profile_regular,
-    profile_dataset_spec
+    profile_dataset_spec,
+    water_vapor_saturation_pressure
 )
 
 
 Q_ = ureg.Quantity
+
+
+def test_water_vapor_saturation_pressure():
+    # values are correct, reference value from:
+    # https://www.engineeringtoolbox.com/water-vapor-saturation-pressure-d_599.html
+    t = ureg.Quantity(18, "celsius")
+    p = water_vapor_saturation_pressure(t=t)
+    assert np.isclose(p, ureg.Quantity(2.065, "kPa"), rtol=0.1)
+
+    # accepts temperature below freezing point
+    t = ureg.Quantity(-10, "celsius")
+    p = water_vapor_saturation_pressure(t=t)
+
+
+def test_equilibrium_water_vapor_fraction():
+    # raises when equilibrium does not exist
+    with pytest.raises(ValueError):
+        equilibrium_water_vapor_fraction(p=ureg.Quantity(3, "kPa"),
+                                         t=ureg.Quantity(50, "celsius"))
+        equilibrium_water_vapor_fraction(p=ureg.Quantity(3, "kPa"),
+                                         t=ureg.Quantity(-10, "celsius"))
+        equilibrium_water_vapor_fraction(p=ureg.Quantity(100, "Pa"),
+                                         t=ureg.Quantity(10, "celsius"))
+        equilibrium_water_vapor_fraction(p=ureg.Quantity(100, "Pa"),
+                                         t=ureg.Quantity(-10, "celsius"))
+        equilibrium_water_vapor_fraction(p=ureg.Quantity(1, "bar"),
+                                         t=ureg.Quantity(120, "celsius"))
+    # values are in [0, 1]
+    value = equilibrium_water_vapor_fraction(p=ureg.Quantity(90, "kPa"),
+                                             t=ureg.Quantity(20, "celsius"))
+    assert 0. <= value <= 1.
 
 
 def test_find_regular_params_gcd():

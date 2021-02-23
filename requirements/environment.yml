@@ -10,6 +10,7 @@ dependencies:
   - click
   - cerberus
   - dask
+  - iapws
   - matplotlib
   - netcdf4
   - numpy

@@ -2,11 +2,16 @@
 
 from datetime import datetime
 
+import iapws
 import numpy as np
 import xarray as xr
 
-import eradiate.xarray.metadata
-from ..xarray.metadata import DatasetSpec, VarSpec
+from .._units import unit_registry as ureg
+from ..xarray.metadata import (
+    DatasetSpec,
+    VarSpec
+)
+
 
 profile_dataset_spec = DatasetSpec(
     var_specs={
@@ -18,6 +23,68 @@ profile_dataset_spec = DatasetSpec(
     },
     coord_specs="atmospheric_profile"
 )
+
+
+@ureg.wraps(ret="Pa", args="K", strict=False)
+def water_vapor_saturation_pressure(t):
+    """Computes the water vapor saturation pressure over liquid water or ice,
+    at the given temperature.
+
+    .. note::
+        Valid for pressures larger than the triple point pressure (~611 Pa).
+
+    Parameter ``t`` (float):
+        Temperature [K].
+
+    Returns → float:
+        Water vapor saturation pressure [Pa].
+    """
+    if t >= 273.15:  # water is liquid
+        p = ureg.Quantity(iapws.iapws97._PSat_T(t), "MPa")
+    else:  # water is solid
+        p = ureg.Quantity(iapws._iapws._Sublimation_Pressure(t), "MPa")
+    return p.to("Pa").magnitude
+
+
+@ureg.wraps(ret=ureg.dimensionless, args=("Pa", "K"), strict=False)
+def equilibrium_water_vapor_fraction(p, t):
+    """Computes the water vapor volume fraction at equilibrium, i.e., when the
+    rate of condensation of water vapor equals the rate of evaporation of
+    liquid water or ice, depending on the temperature.
+
+    The water vapor volume fraction :math:`x_w` is computed with:
+
+    .. math::
+       x_w(p,T) = \\frac{p_w(T)}{p}
+
+    where
+    :math:`p` is the pressure,
+    :math:`T` is the temperature and
+    :math:`p_w` is the water vapor saturation pressure at the given temperature.
+
+    This water vapor volume fraction corresponds to a relative humidity of 100%.
+
+    .. note::
+       For some values of the pressure and temperature, the equilibrium does
+       not exist.
+       An exception is raised in those cases.
+
+    Parameter ``p`` (float):
+        Pressure [Pa].
+
+    Parameter ``t`` (float):
+        Temperature [K].
+
+    Returns → float:
+        Water vapor volume fraction [dimensionless].
+    """
+    p_water_vapor = water_vapor_saturation_pressure(t).magnitude
+    if p_water_vapor <= p:
+        return p_water_vapor / p
+    else:
+        raise ValueError(
+            f"Equilibrium cannot be reached in these conditions (p = "
+            f"{round(p, 2)} Pa, t = {round(t, 2)} K)")
 
 
 def rescale_co2(profile, surf_ppmv, inplace=False):
