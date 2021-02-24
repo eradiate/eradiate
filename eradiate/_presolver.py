@@ -38,10 +38,30 @@ class PathResolver(metaclass=Singleton):
         ``[$PWD, $ERADIATE_DIR/resources/data]``
         """
 
+        eradiate_dir = os.getenv("ERADIATE_DIR")
+        if eradiate_dir is None:
+            raise ValueError(
+                "Environment variable ERADIATE_DIR is not set.\n"
+                "Please set this variable to the absolute path of the Eradiate installation folder.\n"
+                "If you are running Eradiate directly from the sources, " 
+                "then you can alternatively source the provided setpath.sh script."
+            )
+        
+        eradiate_path = Path(eradiate_dir).absolute()
+        eradiate_init = eradiate_path / "eradiate" / "__init__.py"
+        if not eradiate_init.exists():
+            raise ValueError(
+                f"Could not find {eradiate_init} file.\n"
+                "Please make sure the ERADIATE_DIR environment variable is correctly set to the Eradiate "
+                "installation folder.\n"
+                "If you are running Eradiate directly from the sources, " 
+                "then you can alternatively source the provided setpath.sh script."
+            )
+
         self.clear()
         for path in [
             Path.cwd(),  # Current working directory
-            Path(os.getenv("ERADIATE_DIR")).absolute() / "resources/data"  # Eradiate data directory
+            eradiate_path / "resources" / "data"  # Eradiate data directory
         ]:
             self.append(path)
 
