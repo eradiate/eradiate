@@ -16,6 +16,7 @@ attrs==20.3.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+    #   pinttrs
 babel==2.9.0
     # via
     #   -c requirements/dev.txt
@@ -63,7 +64,7 @@ imagesize==1.2.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==3.5.0
+importlib-metadata==3.6.0
     # via
     #   -c requirements/dev.txt
     #   pint
@@ -119,6 +120,11 @@ pillow==8.1.0
     #   -c requirements/dev.txt
     #   matplotlib
 pint==0.16.1
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/main.in
+    #   pinttrs
+pinttrs==1.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in

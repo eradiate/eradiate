@@ -8,6 +8,7 @@ matplotlib
 netcdf4
 numpy
 pint
+pinttrs
 ruamel.yaml
 scipy
 tinydb

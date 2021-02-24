@@ -5,94 +5,59 @@
 #    pip-compile --allow-unsafe --output-file=requirements/dev.txt requirements/dev.in
 #
 aabbtree==2.6.2
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
+    # via -r requirements/main.in
 alabaster==0.7.12
-    # via
-    #   -c requirements/dev.txt
-    #   sphinx
+    # via sphinx
 anyio==2.1.0
-    # via
-    #   -c requirements/dev.txt
-    #   jupyter-server
+    # via jupyter-server
 apipkg==1.5
-    # via
-    #   -c requirements/dev.txt
-    #   execnet
+    # via execnet
 appdirs==1.4.4
     # via
-    #   -c requirements/dev.txt
     #   black
     #   ensureconda
 appnope==0.1.2
     # via
-    #   -c requirements/dev.txt
     #   ipykernel
     #   ipython
 argon2-cffi==20.1.0
-    # via
-    #   -c requirements/dev.txt
-    #   notebook
+    # via notebook
 async-generator==1.10
-    # via
-    #   -c requirements/dev.txt
-    #   nbclient
+    # via nbclient
 attrs==20.3.0
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   jsonschema
+    #   pinttrs
     #   pytest
 babel==2.9.0
     # via
-    #   -c requirements/dev.txt
     #   jupyterlab-server
     #   sphinx
 backcall==0.2.0
-    # via
-    #   -c requirements/dev.txt
-    #   ipython
+    # via ipython
 black==20.8b1
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/dev.in
+    # via -r requirements/dev.in
 bleach==3.3.0
     # via
-    #   -c requirements/dev.txt
     #   nbconvert
     #   readme-renderer
 bump2version==1.0.1
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/dev.in
+    # via -r requirements/dev.in
 cerberus==1.3.2
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
+    # via -r requirements/main.in
 certifi==2020.12.5
-    # via
-    #   -c requirements/dev.txt
-    #   requests
+    # via requests
 cffi==1.14.5
-    # via
-    #   -c requirements/dev.txt
-    #   argon2-cffi
+    # via argon2-cffi
 cftime==1.4.1
-    # via
-    #   -c requirements/dev.txt
-    #   netcdf4
+    # via netcdf4
 chardet==4.0.0
-    # via
-    #   -c requirements/dev.txt
-    #   requests
+    # via requests
 click-default-group==1.2.2
-    # via
-    #   -c requirements/dev.txt
-    #   conda-lock
+    # via conda-lock
 click==7.1.2
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   black
     #   click-default-group
@@ -100,69 +65,42 @@ click==7.1.2
     #   ensureconda
     #   pip-tools
 colorama==0.4.4
-    # via
-    #   -c requirements/dev.txt
-    #   twine
+    # via twine
 conda-lock==0.8.0
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/dev.in
+    # via -r requirements/dev.in
 coverage==5.4
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/dev.in
+    # via -r requirements/dev.in
 cycler==0.10.0
-    # via
-    #   -c requirements/dev.txt
-    #   matplotlib
+    # via matplotlib
 dask==2021.2.0
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
+    # via -r requirements/main.in
 decorator==4.4.2
-    # via
-    #   -c requirements/dev.txt
-    #   ipython
+    # via ipython
 defusedxml==0.6.0
-    # via
-    #   -c requirements/dev.txt
-    #   nbconvert
+    # via nbconvert
 docutils==0.16
     # via
-    #   -c requirements/dev.txt
     #   pybtex-docutils
     #   readme-renderer
     #   sphinx
     #   sphinx-panels
     #   sphinxcontrib-bibtex
 ensureconda==1.4.1
-    # via
-    #   -c requirements/dev.txt
-    #   conda-lock
+    # via conda-lock
 entrypoints==0.3
-    # via
-    #   -c requirements/dev.txt
-    #   nbconvert
+    # via nbconvert
 execnet==1.8.0
-    # via
-    #   -c requirements/dev.txt
-    #   pytest-xdist
+    # via pytest-xdist
 filelock==3.0.12
-    # via
-    #   -c requirements/dev.txt
-    #   ensureconda
+    # via ensureconda
 idna==2.10
     # via
-    #   -c requirements/dev.txt
     #   anyio
     #   requests
 imagesize==1.2.0
+    # via sphinx
+importlib-metadata==3.6.0
     # via
-    #   -c requirements/dev.txt
-    #   sphinx
-importlib-metadata==3.5.0
-    # via
-    #   -c requirements/dev.txt
     #   jsonschema
     #   keyring
     #   pint
@@ -170,43 +108,31 @@ importlib-metadata==3.5.0
     #   pytest
     #   twine
 iniconfig==1.1.1
-    # via
-    #   -c requirements/dev.txt
-    #   pytest
+    # via pytest
 ipykernel==5.5.0
     # via
-    #   -c requirements/dev.txt
     #   ipywidgets
     #   notebook
 ipython-genutils==0.2.0
     # via
-    #   -c requirements/dev.txt
     #   jupyter-server
     #   nbformat
     #   notebook
     #   traitlets
 ipython==7.20.0
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/dev.in
     #   ipykernel
     #   ipywidgets
     #   jupyterlab
 ipywidgets==7.6.3
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/dev.in
+    # via -r requirements/dev.in
 isort==5.7.0
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/dev.in
+    # via -r requirements/dev.in
 jedi==0.18.0
-    # via
-    #   -c requirements/dev.txt
-    #   ipython
+    # via ipython
 jinja2==2.11.3
     # via
-    #   -c requirements/dev.txt
     #   conda-lock
     #   jupyter-server
     #   jupyterlab
@@ -215,24 +141,19 @@ jinja2==2.11.3
     #   notebook
     #   sphinx
 json5==0.9.5
-    # via
-    #   -c requirements/dev.txt
-    #   jupyterlab-server
+    # via jupyterlab-server
 jsonschema==3.2.0
     # via
-    #   -c requirements/dev.txt
     #   jupyterlab-server
     #   nbformat
 jupyter-client==6.1.11
     # via
-    #   -c requirements/dev.txt
     #   ipykernel
     #   jupyter-server
     #   nbclient
     #   notebook
 jupyter-core==4.7.1
     # via
-    #   -c requirements/dev.txt
     #   jupyter-client
     #   jupyter-server
     #   jupyterlab
@@ -240,100 +161,61 @@ jupyter-core==4.7.1
     #   nbformat
     #   notebook
 jupyter-packaging==0.7.12
-    # via
-    #   -c requirements/dev.txt
-    #   jupyterlab
+    # via jupyterlab
 jupyter-server==1.4.1
     # via
-    #   -c requirements/dev.txt
     #   jupyterlab
     #   jupyterlab-server
     #   nbclassic
 jupyterlab-pygments==0.1.2
-    # via
-    #   -c requirements/dev.txt
-    #   nbconvert
+    # via nbconvert
 jupyterlab-server==2.3.0
-    # via
-    #   -c requirements/dev.txt
-    #   jupyterlab
+    # via jupyterlab
 jupyterlab-widgets==1.0.0
-    # via
-    #   -c requirements/dev.txt
-    #   ipywidgets
+    # via ipywidgets
 jupyterlab==3.0.9
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/dev.in
+    # via -r requirements/dev.in
 keyring==22.0.1
-    # via
-    #   -c requirements/dev.txt
-    #   twine
+    # via twine
 kiwisolver==1.3.1
-    # via
-    #   -c requirements/dev.txt
-    #   matplotlib
+    # via matplotlib
 latexcodec==2.0.1
-    # via
-    #   -c requirements/dev.txt
-    #   pybtex
+    # via pybtex
 markupsafe==1.1.1
-    # via
-    #   -c requirements/dev.txt
-    #   jinja2
+    # via jinja2
 matplotlib==3.3.4
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
+    # via -r requirements/main.in
 mistune==0.8.4
-    # via
-    #   -c requirements/dev.txt
-    #   nbconvert
+    # via nbconvert
 mock==4.0.3
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/docs.in
+    # via -r requirements/docs.in
 mypy-extensions==0.4.3
-    # via
-    #   -c requirements/dev.txt
-    #   black
+    # via black
 nbclassic==0.2.6
-    # via
-    #   -c requirements/dev.txt
-    #   jupyterlab
+    # via jupyterlab
 nbclient==0.5.2
-    # via
-    #   -c requirements/dev.txt
-    #   nbconvert
+    # via nbconvert
 nbconvert==6.0.7
     # via
-    #   -c requirements/dev.txt
     #   jupyter-server
     #   notebook
 nbformat==5.1.2
     # via
-    #   -c requirements/dev.txt
     #   ipywidgets
     #   jupyter-server
     #   nbclient
     #   nbconvert
     #   notebook
 nest-asyncio==1.5.1
-    # via
-    #   -c requirements/dev.txt
-    #   nbclient
+    # via nbclient
 netcdf4==1.5.6
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
+    # via -r requirements/main.in
 notebook==6.2.0
     # via
-    #   -c requirements/dev.txt
     #   nbclassic
     #   widgetsnbextension
 numpy==1.20.1
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   cftime
     #   matplotlib
@@ -343,7 +225,6 @@ numpy==1.20.1
     #   xarray
 packaging==20.9
     # via
-    #   -c requirements/dev.txt
     #   bleach
     #   jupyter-packaging
     #   jupyterlab
@@ -352,88 +233,57 @@ packaging==20.9
     #   pytest
     #   sphinx
 pandas==1.2.2
-    # via
-    #   -c requirements/dev.txt
-    #   xarray
+    # via xarray
 pandocfilters==1.4.3
-    # via
-    #   -c requirements/dev.txt
-    #   nbconvert
+    # via nbconvert
 parso==0.8.1
-    # via
-    #   -c requirements/dev.txt
-    #   jedi
+    # via jedi
 pathspec==0.8.1
-    # via
-    #   -c requirements/dev.txt
-    #   black
+    # via black
 pexpect==4.8.0
-    # via
-    #   -c requirements/dev.txt
-    #   ipython
+    # via ipython
 pickleshare==0.7.5
-    # via
-    #   -c requirements/dev.txt
-    #   ipython
+    # via ipython
 pillow==8.1.0
-    # via
-    #   -c requirements/dev.txt
-    #   matplotlib
+    # via matplotlib
 pint==0.16.1
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/main.in
+    #   pinttrs
+pinttrs==1.1.0
+    # via -r requirements/main.in
 pip-tools==5.5.0
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/dev.in
+    # via -r requirements/dev.in
 pkginfo==1.7.0
-    # via
-    #   -c requirements/dev.txt
-    #   twine
+    # via twine
 pluggy==0.13.1
-    # via
-    #   -c requirements/dev.txt
-    #   pytest
+    # via pytest
 prometheus-client==0.9.0
     # via
-    #   -c requirements/dev.txt
     #   jupyter-server
     #   notebook
 prompt-toolkit==3.0.16
-    # via
-    #   -c requirements/dev.txt
-    #   ipython
+    # via ipython
 ptyprocess==0.7.0
     # via
-    #   -c requirements/dev.txt
     #   pexpect
     #   terminado
 py==1.10.0
     # via
-    #   -c requirements/dev.txt
     #   pytest
     #   pytest-forked
 pybtex-docutils==1.0.0
-    # via
-    #   -c requirements/dev.txt
-    #   sphinxcontrib-bibtex
+    # via sphinxcontrib-bibtex
 pybtex==0.24.0
     # via
-    #   -c requirements/dev.txt
     #   pybtex-docutils
     #   sphinxcontrib-bibtex
 pycparser==2.20
-    # via
-    #   -c requirements/dev.txt
-    #   cffi
+    # via cffi
 pydata-sphinx-theme==0.4.3
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/docs.in
+    # via -r requirements/docs.in
 pygments==2.8.0
     # via
-    #   -c requirements/dev.txt
     #   ipython
     #   jupyterlab-pygments
     #   nbconvert
@@ -441,33 +291,22 @@ pygments==2.8.0
     #   sphinx
 pyparsing==2.4.7
     # via
-    #   -c requirements/dev.txt
     #   matplotlib
     #   packaging
 pyrsistent==0.17.3
-    # via
-    #   -c requirements/dev.txt
-    #   jsonschema
+    # via jsonschema
 pytest-forked==1.3.0
-    # via
-    #   -c requirements/dev.txt
-    #   pytest-xdist
+    # via pytest-xdist
 pytest-json-report==1.2.4
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/tests.in
+    # via -r requirements/tests.in
 pytest-metadata==1.11.0
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/tests.in
     #   pytest-json-report
 pytest-xdist==2.2.1
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/tests.in
+    # via -r requirements/tests.in
 pytest==6.2.2
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/tests.in
     #   pytest-forked
     #   pytest-json-report
@@ -475,42 +314,31 @@ pytest==6.2.2
     #   pytest-xdist
 python-dateutil==2.8.1
     # via
-    #   -c requirements/dev.txt
     #   jupyter-client
     #   matplotlib
     #   pandas
 pytz==2021.1
     # via
-    #   -c requirements/dev.txt
     #   babel
     #   pandas
 pyyaml==5.4.1
     # via
-    #   -c requirements/dev.txt
     #   conda-lock
     #   dask
     #   pybtex
 pyzmq==22.0.3
     # via
-    #   -c requirements/dev.txt
     #   jupyter-client
     #   jupyter-server
     #   notebook
 readme-renderer==29.0
-    # via
-    #   -c requirements/dev.txt
-    #   twine
+    # via twine
 regex==2020.11.13
-    # via
-    #   -c requirements/dev.txt
-    #   black
+    # via black
 requests-toolbelt==0.9.1
-    # via
-    #   -c requirements/dev.txt
-    #   twine
+    # via twine
 requests==2.25.1
     # via
-    #   -c requirements/dev.txt
     #   conda-lock
     #   ensureconda
     #   jupyterlab-server
@@ -518,29 +346,19 @@ requests==2.25.1
     #   sphinx
     #   twine
 rfc3986==1.4.0
-    # via
-    #   -c requirements/dev.txt
-    #   twine
+    # via twine
 ruamel.yaml.clib==0.2.2
-    # via
-    #   -c requirements/dev.txt
-    #   ruamel.yaml
+    # via ruamel.yaml
 ruamel.yaml==0.16.12
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
+    # via -r requirements/main.in
 scipy==1.6.1
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
+    # via -r requirements/main.in
 send2trash==1.5.0
     # via
-    #   -c requirements/dev.txt
     #   jupyter-server
     #   notebook
 six==1.15.0
     # via
-    #   -c requirements/dev.txt
     #   argon2-cffi
     #   bleach
     #   cycler
@@ -550,28 +368,17 @@ six==1.15.0
     #   python-dateutil
     #   readme-renderer
 sniffio==1.2.0
-    # via
-    #   -c requirements/dev.txt
-    #   anyio
+    # via anyio
 snowballstemmer==2.1.0
-    # via
-    #   -c requirements/dev.txt
-    #   sphinx
+    # via sphinx
 sphinx-copybutton==0.3.1
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/docs.in
+    # via -r requirements/docs.in
 sphinx-gallery==0.8.2
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/docs.in
+    # via -r requirements/docs.in
 sphinx-panels==0.5.2
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/docs.in
+    # via -r requirements/docs.in
 sphinx==3.5.1
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/docs.in
     #   -r requirements/tests.in
     #   pydata-sphinx-theme
@@ -580,59 +387,36 @@ sphinx==3.5.1
     #   sphinx-panels
     #   sphinxcontrib-bibtex
 sphinxcontrib-applehelp==1.0.2
-    # via
-    #   -c requirements/dev.txt
-    #   sphinx
+    # via sphinx
 sphinxcontrib-bibtex==2.1.4
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/docs.in
+    # via -r requirements/docs.in
 sphinxcontrib-devhelp==1.0.2
-    # via
-    #   -c requirements/dev.txt
-    #   sphinx
+    # via sphinx
 sphinxcontrib-htmlhelp==1.0.3
-    # via
-    #   -c requirements/dev.txt
-    #   sphinx
+    # via sphinx
 sphinxcontrib-jsmath==1.0.1
-    # via
-    #   -c requirements/dev.txt
-    #   sphinx
+    # via sphinx
 sphinxcontrib-qthelp==1.0.3
-    # via
-    #   -c requirements/dev.txt
-    #   sphinx
+    # via sphinx
 sphinxcontrib-serializinghtml==1.1.4
-    # via
-    #   -c requirements/dev.txt
-    #   sphinx
+    # via sphinx
 tabulate==0.8.9
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/tests.in
+    # via -r requirements/tests.in
 terminado==0.9.2
     # via
-    #   -c requirements/dev.txt
     #   jupyter-server
     #   notebook
 testpath==0.4.4
-    # via
-    #   -c requirements/dev.txt
-    #   nbconvert
+    # via nbconvert
 tinydb==4.4.0
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
+    # via -r requirements/main.in
 toml==0.10.2
     # via
-    #   -c requirements/dev.txt
     #   black
     #   conda-lock
     #   pytest
 tornado==6.1
     # via
-    #   -c requirements/dev.txt
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
@@ -641,12 +425,10 @@ tornado==6.1
     #   terminado
 tqdm==4.57.0
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   twine
 traitlets==5.0.5
     # via
-    #   -c requirements/dev.txt
     #   ipykernel
     #   ipython
     #   ipywidgets
@@ -658,53 +440,34 @@ traitlets==5.0.5
     #   nbformat
     #   notebook
 twine==3.3.0
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/dev.in
+    # via -r requirements/dev.in
 typed-ast==1.4.2
-    # via
-    #   -c requirements/dev.txt
-    #   black
+    # via black
 typing-extensions==3.7.4.3
     # via
-    #   -c requirements/dev.txt
     #   anyio
     #   black
     #   importlib-metadata
 urllib3==1.26.3
-    # via
-    #   -c requirements/dev.txt
-    #   requests
+    # via requests
 wcwidth==0.2.5
-    # via
-    #   -c requirements/dev.txt
-    #   prompt-toolkit
+    # via prompt-toolkit
 webencodings==0.5.1
-    # via
-    #   -c requirements/dev.txt
-    #   bleach
+    # via bleach
 widgetsnbextension==3.5.1
-    # via
-    #   -c requirements/dev.txt
-    #   ipywidgets
+    # via ipywidgets
 xarray==0.16.2
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
+    # via -r requirements/main.in
 zipp==3.4.0
-    # via
-    #   -c requirements/dev.txt
-    #   importlib-metadata
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==21.0.1
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/dev.in
     #   pip-tools
 setuptools==53.0.0
     # via
-    #   -c requirements/dev.txt
     #   -r requirements/dev.in
     #   cerberus
     #   ipython
