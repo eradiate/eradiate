@@ -10,7 +10,7 @@ Heterogeneous atmospheres
 # :ref:`sphx_glr_examples_generated_tutorials_solver_onedim_01_solver_onedim.py`
 # if needed.
 
-from eradiate.solvers.onedim.app import OneDimSolverApp
+from eradiate.solvers.onedim import OneDimSolverApp
 
 # %%
 # Get started

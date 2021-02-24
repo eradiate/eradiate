@@ -102,3 +102,8 @@ def test_solar(mode_mono):
     eradiate.set_mode("mono", wavelength=550.)
     s = SolarIrradianceSpectrum(dataset="solid_2017_mean")
     assert load_dict(onedict_value(s.kernel_dict()))
+
+    # values properties interpolates the irradiance as expected
+    eradiate.set_mode("mono", wavelength=550.)
+    s = SolarIrradianceSpectrum(dataset="thuillier_2003")
+    assert np.allclose(s.values, ureg.Quantity(1.87938, "W/m^2/nm"))

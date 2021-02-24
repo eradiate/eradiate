@@ -1,7 +1,7 @@
 import click
 import ruamel.yaml as yaml
 
-from eradiate.solvers.rami.app import RamiSolverApp
+from eradiate.solvers.rami import RamiSolverApp
 
 
 @click.command()

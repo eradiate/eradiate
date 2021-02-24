@@ -1,7 +1,7 @@
 import click
 import ruamel.yaml as yaml
 
-from eradiate.solvers.onedim.app import OneDimSolverApp
+from eradiate.solvers.onedim import OneDimSolverApp
 
 
 @click.command()

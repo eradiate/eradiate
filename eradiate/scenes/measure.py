@@ -317,7 +317,7 @@ class TargetOriginSphere(TargetOrigin):
     )
 
     @center.validator
-    def _xyz_validator(self, attribute, value):
+    def _center_validator(self, attribute, value):
         if not is_vector3(value):
             raise ValueError(
                 f"while validating {attribute.name}: must be a "

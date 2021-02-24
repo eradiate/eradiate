@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 import eradiate.data as data
-from eradiate.solvers.postprocess import apply_srf
+from eradiate.solvers.core._postprocess import apply_srf
 
 
 def test_apply_srf():

@@ -18,6 +18,7 @@ del PathResolver
 
 # ------------------------------------------------------------------------------
 
+from . import scenes, solvers
 from . import converters, validators, xarray
 
 __all__ = [
@@ -29,6 +30,9 @@ __all__ = [
     "unit_registry",
     "unit_context_config",
     "unit_context_kernel",
+    "scenes",
+    "solvers",
     "converters",
     "validators",
+    "xarray",
 ]

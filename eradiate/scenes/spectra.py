@@ -19,7 +19,7 @@ from .core import SceneElement
 from .. import data
 from .._attrs import (
     documented,
-    parse_docs
+    parse_docs,
 )
 from .._factory import BaseFactory
 from .._units import PhysicalQuantity
@@ -33,8 +33,8 @@ from ..validators import is_positive
 @parse_docs
 @attr.s
 class Spectrum(SceneElement, ABC):
-    """Spectrum abstract base class.
-    """
+    """Spectrum abstract base class."""
+
     quantity = documented(
         attr.ib(
             default=None,
@@ -56,11 +56,19 @@ class Spectrum(SceneElement, ABC):
             return
 
         if value not in PhysicalQuantity.spectrum():
-            raise ValueError(f"while validating {attribute.name}: "
-                             f"got value '{value}', expected one of {str()}")
+            raise ValueError(
+                f"while validating {attribute.name}: "
+                f"got value '{value}', expected one of {str()}"
+            )
 
     @property
     def _values(self):
+        """Return spectrum internal values."""
+        raise NotImplementedError
+
+    @property
+    def values(self):
+        """Evaluate (as a Pint quantity) spectrum values based on currently active mode."""
         raise NotImplementedError
 
 
@@ -74,6 +82,7 @@ class SpectrumFactory(BaseFactory):
        .. factorytable::
           :factory: SpectrumFactory
     """
+
     _constructed_type = Spectrum
     registry = {}
 
@@ -161,6 +170,10 @@ class UniformSpectrum(Spectrum):
 
     @property
     def _values(self):
+        return self.value
+
+    @property
+    def values(self):
         return self.value
 
     def __add__(self, other):
@@ -277,7 +290,7 @@ class SolarIrradianceSpectrum(Spectrum):
 
     scale = documented(
         attr.ib(
-            default=1.,
+            default=1.0,
             converter=float,
             validator=is_positive,
         ),
@@ -288,9 +301,11 @@ class SolarIrradianceSpectrum(Spectrum):
     @dataset.validator
     def _dataset_validator(self, attribute, value):
         if value not in data.registered("solar_irradiance_spectrum"):
-            raise ValueError(f"while setting {attribute.name}: '{value}' not in "
-                             f"list of supported solar irradiance spectra "
-                             f"{data.registered('solar_irradiance_spectrum')}")
+            raise ValueError(
+                f"while setting {attribute.name}: '{value}' not in "
+                f"list of supported solar irradiance spectra "
+                f"{data.registered('solar_irradiance_spectrum')}"
+            )
 
     data = attr.ib(
         init=False,
@@ -305,6 +320,18 @@ class SolarIrradianceSpectrum(Spectrum):
         except KeyError:
             raise ValueError(f"unknown dataset {self.dataset}")
 
+    @property
+    def values(self):
+        if eradiate.mode().is_monochromatic():
+            w = eradiate.mode().wavelength
+            w_units = self.data.w.attrs["units"]
+            ssi_units = self.data.ssi.attrs["units"]
+            return ureg.Quantity(
+                self.data.ssi.interp(w=w.m_as(w_units)).data.squeeze(), ssi_units
+            )
+        else:
+            raise ModeError(f"unsupported mode '{eradiate.mode()}'")
+
     def kernel_dict(self, ref=True):
         mode = eradiate.mode()
 
@@ -312,10 +339,12 @@ class SolarIrradianceSpectrum(Spectrum):
             wavelength = mode.wavelength.to(ureg.nm).magnitude
 
             if self.dataset == "solid_2017":
-                raise NotImplementedError(f"Solar irradiance spectrum datasets "
-                                          f"with a non-empty time coordinate "
-                                          f"are not supported yet.")
-            # TODO: add support to solar irradiance spectrum datasets with a non-empty time coordinate
+                raise NotImplementedError(
+                    "Solar irradiance spectrum datasets with a non-empty time "
+                    "coordinate are not supported yet."
+                )
+            # TODO: add support to solar irradiance spectrum datasets with a
+            #  non-empty time coordinate
 
             irradiance_magnitude = float(
                 self.data.ssi.interp(
