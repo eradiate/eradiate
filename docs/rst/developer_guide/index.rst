@@ -1,4 +1,4 @@
-.. _sec-developer_guide-intro:
+.. _sec-developer_guide:
 
 Developer guide
 ===============

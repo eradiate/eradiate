@@ -50,7 +50,7 @@ cycler==0.10.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2021.2.0
+dask==2021.3.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -62,6 +62,10 @@ execnet==1.8.0
     # via
     #   -c requirements/dev.txt
     #   pytest-xdist
+iapws==1.5.2
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/main.in
 idna==2.10
     # via
     #   -c requirements/dev.txt
@@ -70,7 +74,7 @@ imagesize==1.2.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==3.6.0
+importlib-metadata==3.7.2
     # via
     #   -c requirements/dev.txt
     #   pint
@@ -116,11 +120,11 @@ packaging==20.9
     #   pint
     #   pytest
     #   sphinx
-pandas==1.2.2
+pandas==1.2.3
     # via
     #   -c requirements/dev.txt
     #   xarray
-pillow==8.1.0
+pillow==8.1.2
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -129,7 +133,7 @@ pint==0.16.1
     #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   pinttrs
-pinttrs==1.1.0
+pinttrs==21.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -142,7 +146,7 @@ py==1.10.0
     #   -c requirements/dev.txt
     #   pytest
     #   pytest-forked
-pygments==2.8.0
+pygments==2.8.1
     # via
     #   -c requirements/dev.txt
     #   sphinx
@@ -198,7 +202,7 @@ ruamel.yaml.clib==0.2.2
     # via
     #   -c requirements/dev.txt
     #   ruamel.yaml
-ruamel.yaml==0.16.12
+ruamel.yaml==0.16.13
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -206,6 +210,7 @@ scipy==1.6.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+    #   iapws
 six==1.15.0
     # via
     #   -c requirements/dev.txt
@@ -215,7 +220,7 @@ snowballstemmer==2.1.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-sphinx==3.5.1
+sphinx==3.5.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
@@ -255,7 +260,7 @@ toml==0.10.2
     # via
     #   -c requirements/dev.txt
     #   pytest
-tqdm==4.57.0
+tqdm==4.59.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -267,17 +272,17 @@ urllib3==1.26.3
     # via
     #   -c requirements/dev.txt
     #   requests
-xarray==0.16.2
+xarray==0.17.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-zipp==3.4.0
+zipp==3.4.1
     # via
     #   -c requirements/dev.txt
     #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==53.0.0
+setuptools==54.1.1
     # via
     #   -c requirements/dev.txt
     #   cerberus

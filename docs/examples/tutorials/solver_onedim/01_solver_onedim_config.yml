@@ -1,23 +1,26 @@
 mode:
-  type: mono
-  wavelength: 577.
+  type: mono_double # Double-precision monochromatic mode
+  wavelength: 577.0 # Evaluate optical properties at 577 nm
 surface:
-  type: rpv
+  type: rpv # Use a RPV surface with default parameters
 atmosphere:
-  type: homogeneous
-  toa_altitude: 120.
+  type: homogeneous   # Use a homogeneous atmosphere ...
+  toa_altitude: 120.0 # ... with TOA at 120 km ...
   toa_altitude_units: km
-  sigma_s: 1.e-4
+  sigma_s: 1.0e-4     # ... and a scattering coefficient of 1e-4 m^-1
+  sigma_s_units: m ** -1
 illumination:
-  type: directional
-  zenith: 30.
-  azimuth: 0.
+  type: directional  # Use directional illumination ...
+  zenith: 30.0       # ... with a solar zenith angle of 30° ...
+  zenith_units: deg
+  azimuth: 0.0       # ... and a solar azimuth angle of 0°
+  azimuth_units: deg
   irradiance:
-    type: uniform
-    value: 1.8e+6
-    value_units: W/km**2/nm
+    type: solar_irradiance  # Illuminate the scene with Solar radiance (default dataset)
 measures:
-  - type: toa_hsphere
-    spp: 32000
-    zenith_res: 5.
-    azimuth_res: 5.
+  - type: distant    # Record outgoing radiance at TOA
+    id: toa_pplane   # This, in practice, will record radiance in the principal plane ...
+    orientation: 0.0 # ... because we're setting the orientation to the same value as the illumination azimuth ...
+    orientation_units: deg
+    film_resolution: [32, 1]  # ... and because we're setting the film height to 1, thus restricting sampling to a plane
+    spp: 1000000     # We take a lot of samples to reduce the variance in our results as much as possible

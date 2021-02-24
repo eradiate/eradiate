@@ -28,8 +28,7 @@ eradiate.set_mode("mono", wavelength=550.)
 #
 # .. _RAMI 3 homogeneous discrete canopy scene: https://rami-benchmark.jrc.ec.europa.eu/_www/phase/phase_exp.php?strTag=level3&strNext=meas&strPhase=RAMI3&strTagValue=HOM_SOL_DIS
 
-from eradiate.scenes.biosphere import HomogeneousDiscreteCanopy
-canopy = HomogeneousDiscreteCanopy.from_parameters()
+canopy = eradiate.scenes.biosphere.HomogeneousDiscreteCanopy.from_parameters()
 canopy
 
 # %%
@@ -37,16 +36,14 @@ canopy
 # about the size of this surface: the solver will automatically match it with
 # the size of the canopy.
 
-from eradiate.scenes.surface import LambertianSurface
-surface = LambertianSurface(reflectance=0.15)
+surface = eradiate.scenes.surface.LambertianSurface(reflectance=0.15)
 surface
 
 # %%
 # Next up is the illumination. We use the directional illumination with the
 # default solar irradiance spectrum and select arbitrary illumination angles:
 
-from eradiate.scenes.illumination import DirectionalIllumination
-illumination = DirectionalIllumination(zenith=30., azimuth=45.)
+illumination = eradiate.scenes.illumination.DirectionalIllumination(zenith=30., azimuth=45.)
 illumination
 
 
@@ -79,8 +76,7 @@ illumination
 # The :class:`.DistantMeasure` class has other parameters, but we do not need to
 # modify them for now.
 
-from eradiate.scenes.measure import DistantMeasure
-measure = DistantMeasure(
+measure = eradiate.scenes.measure.DistantMeasure(
     id="toa_brf",
     film_resolution=(32, 32),
     spp=1000,
@@ -91,8 +87,7 @@ measure
 # We are now ready to instantiate our scene. We just have to assemble the
 # elements we have created so far:
 
-from eradiate.solvers.rami.app import RamiScene
-scene = RamiScene(
+scene = eradiate.solvers.rami.RamiScene(
     canopy=canopy,
     surface=surface,
     illumination=illumination,
@@ -102,8 +97,7 @@ scene = RamiScene(
 # %%
 # We can now create a solver application object with our scene:
 
-from eradiate.solvers.rami.app import RamiSolverApp
-app = RamiSolverApp(scene)
+app = eradiate.solvers.rami.RamiSolverApp(scene)
 
 # %%
 # Running the simulation
@@ -174,7 +168,7 @@ plt.show()
 # SPP at a reasonable computational cost. Let's increase it up to 100000 to
 # reduce that noise.
 
-measure = DistantMeasure(
+measure = eradiate.scenes.measure.DistantMeasure(
     id="toa_brf",
     film_resolution=(32, 1),
     spp=100000,
@@ -184,13 +178,13 @@ measure = DistantMeasure(
 # %%
 # We can now redefine a scene and run our computation:
 
-scene = RamiScene(
+scene = eradiate.solvers.rami.RamiScene(
     canopy=canopy,
     surface=surface,
     illumination=illumination,
     measures=measure,
 )
-app = RamiSolverApp(scene)
+app = eradiate.solvers.rami.RamiSolverApp(scene)
 app.run()
 
 # %%

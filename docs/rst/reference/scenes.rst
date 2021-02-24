@@ -3,6 +3,8 @@
 Scene generation [eradiate.scenes]
 ==================================
 
+.. _sec-reference-scenes-core:
+
 Core [eradiate.scenes.core]
 ---------------------------
 .. currentmodule:: eradiate.scenes.core
@@ -12,6 +14,8 @@ Core [eradiate.scenes.core]
 
    SceneElement
    KernelDict
+
+.. _sec-reference-scenes-atmosphere:
 
 Atmosphere [eradiate.scenes.atmosphere]
 ---------------------------------------
@@ -33,6 +37,8 @@ Atmosphere [eradiate.scenes.atmosphere]
    HomogeneousAtmosphere
    HeterogeneousAtmosphere
 
+.. _sec-reference-scenes-biosphere:
+
 Biosphere [eradiate.scenes.biosphere]
 -------------------------------------
 .. currentmodule:: eradiate.scenes.biosphere
@@ -51,6 +57,8 @@ Biosphere [eradiate.scenes.biosphere]
    :toctree: generated/
 
    HomogeneousDiscreteCanopy
+
+.. _sec-reference-scenes-surface:
 
 Surfaces [eradiate.scenes.surface]
 ----------------------------------
@@ -73,6 +81,8 @@ Surfaces [eradiate.scenes.surface]
    LambertianSurface
    RPVSurface
 
+.. _sec-reference-scenes-illumination:
+
 Illumination [eradiate.scenes.illumination]
 -------------------------------------------
 .. currentmodule:: eradiate.scenes.illumination
@@ -92,6 +102,8 @@ Illumination [eradiate.scenes.illumination]
 
    DirectionalIllumination
    ConstantIllumination
+
+.. _sec-reference-scenes-measure:
 
 Measures [eradiate.scenes.measure]
 ----------------------------------
@@ -125,6 +137,8 @@ Measures [eradiate.scenes.measure]
    TargetOriginRectangle
    TargetOriginSphere
 
+.. _sec-reference-scenes-integrators:
+
 Integrators [eradiate.scenes.integrators]
 -----------------------------------------
 .. currentmodule:: eradiate.scenes.integrators
@@ -145,6 +159,8 @@ Integrators [eradiate.scenes.integrators]
    PathIntegrator
    VolPathIntegrator
    VolPathMISIntegrator
+
+.. _sec-reference-scenes-spectra:
 
 Spectra [eradiate.scenes.spectra]
 ---------------------------------

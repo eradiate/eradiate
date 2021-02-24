@@ -20,11 +20,11 @@ arbitrary number of light sources, possibly accounting for polarisation.
 Where Should I Go?
 ------------------
 
-:ref:`Getting started<sec-getting_started-intro>`
+:ref:`Getting started<sec-getting_started>`
     Learn about Eradiate, how to get it and how to compile it.
-:ref:`User guide<sec-user_guide-intro>`
+:ref:`User guide<sec-user_guide>`
     Learn how to use Eradiate's applications and API.
-:ref:`Developer guide<sec-developer_guide-intro>`
+:ref:`Developer guide<sec-developer_guide>`
     Learn how to work with Eradiate's source code and modify it.
 :ref:`Reference<sec-reference>`
     The complete API reference.
@@ -50,9 +50,9 @@ work.
    :hidden:
    :titlesonly:
 
-   rst/getting_started/intro
-   rst/user_guide/intro
+   rst/getting_started/index
+   rst/user_guide/index
    examples/generated/tutorials/index
-   rst/developer_guide/intro
+   rst/developer_guide/index
    rst/reference/index
-   rst/miscellaneous/intro
+   rst/miscellaneous/index

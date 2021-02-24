@@ -1,4 +1,4 @@
-.. _sec-user_guide-intro:
+.. _sec-user_guide:
 
 User guide
 ==========
@@ -7,10 +7,10 @@ User guide
    :maxdepth: 1
 
    basic_concepts
-   onedim_solver_app
    package_structure
-   data_guide
+   onedim_solver_app
    unit_guide_user
+   data_guide
    atmosphere/index
    solar_irradiance_spectra
    molecular_absorption_datasets

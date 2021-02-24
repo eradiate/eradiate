@@ -4,11 +4,11 @@ import numpy as np
 import pytest
 
 import eradiate
+from eradiate import unit_registry as ureg
+from eradiate.exceptions import ModeError
 from eradiate.scenes.biosphere import HomogeneousDiscreteCanopy
 from eradiate.scenes.measure import DistantMeasure
-from eradiate.solvers.rami.app import RamiScene, RamiSolverApp
-from eradiate.exceptions import ModeError
-from eradiate import unit_registry as ureg
+from eradiate.solvers.rami import RamiScene, RamiSolverApp
 
 
 def test_rami_scene(mode_mono):
@@ -91,12 +91,10 @@ def test_rami_solver_app_run(mode_mono):
         canopy={"type": "homogeneous_discrete_canopy", "avoid_overlap": False},
         measures={"type": "distant"},
     ))
-    pprint(app.scene.measure_registry.all())
 
     app.run()
 
     results = app.results["measure"]
-    print(results)
 
     # # Assert the correct dimensions of the application's results
     # assert set(results["lo"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}

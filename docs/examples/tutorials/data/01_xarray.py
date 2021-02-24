@@ -37,7 +37,7 @@ xarray module tutorial
 # illumination zenith angle of 30°. We keep the default atmosphere and surface
 # (Lambertian) and increase the number of samples per pixel to a high value:
 
-from eradiate.solvers.onedim.app import OneDimSolverApp
+from eradiate.solvers.onedim import OneDimSolverApp
 
 app = OneDimSolverApp.from_dict({
     "mode": {

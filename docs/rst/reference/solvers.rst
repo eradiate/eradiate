@@ -3,6 +3,23 @@
 High-level solvers [eradiate.solvers]
 =====================================
 
+Core infrastructure [eradiate.solvers.core]
+-------------------------------------------
+.. currentmodule:: eradiate.solvers.core
+
+.. autosummary::
+   :toctree: generated/
+
+   runner
+
+.. dropdown:: **Private: Solver internals**
+
+   .. autosummary::
+      :toctree: generated/
+
+      _scene.Scene
+      _solver_app.SolverApp
+
 One-dimensional problems [eradiate.solvers.onedim]
 --------------------------------------------------
 .. currentmodule:: eradiate.solvers.onedim
@@ -10,8 +27,8 @@ One-dimensional problems [eradiate.solvers.onedim]
 .. autosummary::
    :toctree: generated/
 
-   app.OneDimSolverApp
-   app.OneDimScene
+   OneDimSolverApp
+   OneDimScene
 
 RAMI benchmarking cases [eradiate.solvers.rami]
 -----------------------------------------------
@@ -20,14 +37,5 @@ RAMI benchmarking cases [eradiate.solvers.rami]
 .. autosummary::
    :toctree: generated/
 
-   app.RamiSolverApp
-   app.RamiScene
-
-Low-level runner
-----------------
-.. currentmodule:: eradiate.solvers
-
-.. autosummary::
-   :toctree: generated/
-
-   onedim.runner.OneDimRunner
+   RamiSolverApp
+   RamiScene

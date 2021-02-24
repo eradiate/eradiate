@@ -86,7 +86,8 @@ config
 # translated into a configuration dictionary. This dictionary can be used as 
 # the argument of the :class:`.OneDimSolverApp` constructor:
 
-from eradiate.solvers.onedim.app import OneDimSolverApp
+from eradiate.solvers.onedim import OneDimSolverApp
+
 solver = OneDimSolverApp.from_dict(config)
 
 # %%

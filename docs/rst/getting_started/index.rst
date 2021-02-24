@@ -1,4 +1,4 @@
-.. _sec-getting_started-intro:
+.. _sec-getting_started:
 
 Getting started
 ===============

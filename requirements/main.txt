@@ -29,11 +29,15 @@ cycler==0.10.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2021.2.0
+dask==2021.3.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-importlib-metadata==3.6.0
+iapws==1.5.2
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/main.in
+importlib-metadata==3.7.2
     # via
     #   -c requirements/dev.txt
     #   pint
@@ -63,11 +67,11 @@ packaging==20.9
     # via
     #   -c requirements/dev.txt
     #   pint
-pandas==1.2.2
+pandas==1.2.3
     # via
     #   -c requirements/dev.txt
     #   xarray
-pillow==8.1.0
+pillow==8.1.2
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -76,7 +80,7 @@ pint==0.16.1
     #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   pinttrs
-pinttrs==1.1.0
+pinttrs==21.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -102,7 +106,7 @@ ruamel.yaml.clib==0.2.2
     # via
     #   -c requirements/dev.txt
     #   ruamel.yaml
-ruamel.yaml==0.16.12
+ruamel.yaml==0.16.13
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -110,6 +114,7 @@ scipy==1.6.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+    #   iapws
 six==1.15.0
     # via
     #   -c requirements/dev.txt
@@ -119,7 +124,7 @@ tinydb==4.4.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-tqdm==4.57.0
+tqdm==4.59.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -127,17 +132,17 @@ typing-extensions==3.7.4.3
     # via
     #   -c requirements/dev.txt
     #   importlib-metadata
-xarray==0.16.2
+xarray==0.17.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-zipp==3.4.0
+zipp==3.4.1
     # via
     #   -c requirements/dev.txt
     #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==53.0.0
+setuptools==54.1.1
     # via
     #   -c requirements/dev.txt
     #   cerberus
