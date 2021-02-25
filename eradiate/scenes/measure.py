@@ -8,7 +8,7 @@
 """
 from abc import (
     ABC,
-    abstractmethod
+    abstractmethod,
 )
 from copy import deepcopy
 
@@ -21,12 +21,12 @@ import eradiate.kernel
 from .core import SceneElement
 from .. import (
     converters,
-    validators
+    validators,
 )
 from .._attrs import (
     documented,
     get_doc,
-    parse_docs
+    parse_docs,
 )
 from .._factory import BaseFactory
 from .._units import unit_context_config as ucc
@@ -96,8 +96,10 @@ class MeasureFactory(BaseFactory):
 
 
 @attr.s
-class Target:
-    """Abstract interface for target selection classes used by :class:`DistantMeasure`."""
+class TargetOrigin:
+    """Interface for target and origin selection classes used by
+    :class:`DistantMeasure`.
+    """
 
     def kernel_item(self):
         """Return kernel item."""
@@ -111,16 +113,19 @@ class Target:
 
         Currently supported classes:
 
-        * ``point``: :class:`TargetPoint`
-        * ``rectangle``: :class:`TargetRectangle`
+        * ``point``: :class:`TargetOriginPoint`
+        * ``rectangle``: :class:`TargetOriginRectangle`
+        * ``sphere``: :class:`TargetOriginSphere`
 
         Parameter ``target_type`` (str):
             Identifier of one of the supported child classes.
         """
         if target_type == "point":
-            return TargetPoint(*args, **kwargs)
+            return TargetOriginPoint(*args, **kwargs)
         elif target_type == "rectangle":
-            return TargetRectangle(*args, **kwargs)
+            return TargetOriginRectangle(*args, **kwargs)
+        elif target_type == "sphere":
+            return TargetOriginSphere(*args, **kwargs)
         else:
             raise ValueError(f"unknown target type {target_type}")
 
@@ -144,24 +149,23 @@ class Target:
             except KeyError:
                 raise ValueError("cannot convert dict, missing 'type' entry")
 
-            return Target.new(target_type, **d)
+            return TargetOrigin.new(target_type, **d)
 
         if is_vector3(value):
-            return Target.new("point", xyz=value)
+            return TargetOrigin.new("point", xyz=value)
 
         return value
 
 
 @parse_docs
 @attr.s
-class TargetPoint(Target):
-    """Point target specification.
-    """
+class TargetOriginPoint(TargetOrigin):
+    """Point target or origin specification."""
 
-    # Target point in CDU
+    # Target point in config units
     xyz = documented(
         pinttr.ib(units=ucc.deferred("length")),
-        doc="Target point coordinates.\n"
+        doc="Point coordinates.\n"
             "\n"
             "Unit-enabled field (default: cdu[length]).",
         type="array-like[float, float, float]",
@@ -177,10 +181,10 @@ class TargetPoint(Target):
 
     def kernel_item(self):
         """Return kernel item."""
-        return self.xyz.to(uck.get("length")).magnitude
+        return self.xyz.m_as(uck.get("length"))
 
 
-def _target_rectangle_xy_converter(x):
+def _target_point_rectangle_xyz_converter(x):
     return converters.on_quantity(float)(
         pinttr.converters.to_units(ucc.deferred("length"))(x)
     )
@@ -188,17 +192,16 @@ def _target_rectangle_xy_converter(x):
 
 @parse_docs
 @attr.s
-class TargetRectangle(Target):
-    """Rectangle target specification.
+class TargetOriginRectangle(TargetOrigin):
+    """Rectangle target origin specification.
 
-    This target spec defines an rectangular, axis-aligned zone where ray targets
-    will be sampled.
+    This class defines an axis-aligned rectangular zone where ray targets will
+    be sampled or ray origins will be projected.
     """
     # fmt: off
-    # Corners of an axis-aligned rectangle in config units
     xmin = documented(
         pinttr.ib(
-            converter=_target_rectangle_xy_converter,
+            converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length")
         ),
         doc="Lower bound on the X axis.\n"
@@ -209,7 +212,7 @@ class TargetRectangle(Target):
 
     xmax = documented(
         pinttr.ib(
-            converter=_target_rectangle_xy_converter,
+            converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length")
         ),
         doc="Upper bound on the X axis.\n"
@@ -220,7 +223,7 @@ class TargetRectangle(Target):
 
     ymin = documented(
         pinttr.ib(
-            converter=_target_rectangle_xy_converter,
+            converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length")
         ),
         doc="Lower bound on the Y axis.\n"
@@ -231,7 +234,7 @@ class TargetRectangle(Target):
 
     ymax = documented(
         pinttr.ib(
-            converter=_target_rectangle_xy_converter,
+            converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),
         ),
         doc="Upper bound on the Y axis.\n"
@@ -240,12 +243,26 @@ class TargetRectangle(Target):
         type="float",
     )
 
+    z = documented(
+        pinttr.ib(
+            default=0.0,
+            converter=_target_point_rectangle_xyz_converter,
+            units=ucc.deferred("length"),
+        ),
+        doc="Altitude of the plane enclosing the rectangle.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="float",
+        default="0.0",
+    )
+
     # fmt: on
     @xmin.validator
     @xmax.validator
     @ymin.validator
     @ymax.validator
-    def _xy_validator(self, attribute, value):
+    @z.validator
+    def _xyz_validator(self, attribute, value):
         validators.on_quantity(validators.is_number)(self, attribute, value)
 
     @xmin.validator
@@ -270,19 +287,60 @@ class TargetRectangle(Target):
         """Return kernel item."""
         from eradiate.kernel.core import ScalarTransform4f
 
-        xmin = self.xmin.to(uck.get("length")).magnitude
-        xmax = self.xmax.to(uck.get("length")).magnitude
-        ymin = self.ymin.to(uck.get("length")).magnitude
-        ymax = self.ymax.to(uck.get("length")).magnitude
+        xmin = self.xmin.m_as(uck.get("length"))
+        xmax = self.xmax.m_as(uck.get("length"))
+        ymin = self.ymin.m_as(uck.get("length"))
+        ymax = self.ymax.m_as(uck.get("length"))
+        z = self.z.m_as(uck.get("length"))
 
         dx = xmax - xmin
         dy = ymax - ymin
 
         to_world = ScalarTransform4f.translate(
-            [0.5 * dx + xmin, 0.5 * dy + ymin, 0]
-        ) * ScalarTransform4f.scale([0.5 * dx, 0.5 * dy, 1])
+            [0.5 * dx + xmin, 0.5 * dy + ymin, z]
+        ) * ScalarTransform4f.scale([0.5 * dx, 0.5 * dy, 1.0])
 
         return {"type": "rectangle", "to_world": to_world}
+
+
+@parse_docs
+@attr.s
+class TargetOriginSphere(TargetOrigin):
+    """Sphere target or origin specification."""
+
+    center = documented(
+        pinttr.ib(units=ucc.deferred("length")),
+        doc="Center coordinates.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="array-like[float, float, float]",
+    )
+
+    @center.validator
+    def _xyz_validator(self, attribute, value):
+        if not is_vector3(value):
+            raise ValueError(
+                f"while validating {attribute.name}: must be a "
+                f"3-element vector of numbers"
+            )
+
+    radius = documented(
+        pinttr.ib(
+            units=ucc.deferred("length"),
+            validator=[pinttr.validators.has_compatible_units, validators.is_positive]
+        ),
+        doc="Sphere radius.\n"
+            "\n"
+            "Unit-enabled field (default: cdu[length]).",
+        type="float",
+    )
+
+    def kernel_item(self):
+        """Return kernel item."""
+        center = self.center.m_as(uck.get("length"))
+        radius = self.radius.m_as(uck.get("length"))
+
+        return {"type": "sphere", "center": center, "radius": radius}
 
 
 @MeasureFactory.register("distant")
@@ -326,15 +384,37 @@ class DistantMeasure(Measure):
     target = documented(
         attr.ib(
             default=None,
-            converter=attr.converters.optional(Target.convert),
-            validator=attr.validators.optional(attr.validators.instance_of(Target)),
+            converter=attr.converters.optional(TargetOrigin.convert),
+            validator=attr.validators.optional(attr.validators.instance_of((
+                TargetOriginPoint,
+                TargetOriginRectangle,
+            ))),
             on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate)
         ),
-        doc="Target specification. If set to ``None``, default target point selection "
-            "is used. The target can be specified using an array-like with 3 "
+        doc="Target specification. If set to ``None``, default target point "
+            "selection is used: rays will not target a particular region of the "
+            "scene. The target can be specified using an array-like with 3 "
             "elements (which will be converted to a :class:`TargetPoint`) or a "
             "dictionary interpreted by :meth:`Target.convert`.",
         type=":class:`Target` or None",
+        default="None",
+    )
+
+    origin = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(TargetOrigin.convert),
+            validator=attr.validators.optional(attr.validators.instance_of((
+                TargetOriginSphere,
+            ))),
+            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
+        ),
+        doc="Ray origin specification. If set to ``None``, the default origin "
+            "point selection strategy is used: ray origins will be projected to "
+            "the scene's bounding sphere. Otherwise, ray origins are projected "
+            "to the shape specified as origin. The origin can be specified using "
+            "a dictionary interpreted by :meth:`TargetOrigin.convert`.",
+        type=":class:`TargetOriginSphere` or None",
         default="None",
     )
 
@@ -372,7 +452,6 @@ class DistantMeasure(Measure):
         type="bool",
         default="False",
     )
-
     # fmt: on
 
     def sensor_info(self):
@@ -431,8 +510,10 @@ class DistantMeasure(Measure):
         }
 
         if self.target is not None:
-            target = self.target
-            result["ray_target"] = target.kernel_item()
+            result["ray_target"] = self.target.kernel_item()
+
+        if self.origin is not None:
+            result["ray_origin"] = self.origin.kernel_item()
 
         if self.flip_directions is not None:
             result["flip_directions"] = self.flip_directions
