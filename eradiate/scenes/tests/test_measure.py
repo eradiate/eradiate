@@ -13,52 +13,52 @@ from eradiate.scenes.measure import (
     PerspectiveCameraMeasure,
     RadianceMeterHsphereMeasure,
     RadianceMeterPlaneMeasure,
-    Target,
-    TargetPoint,
-    TargetRectangle
+    TargetOrigin,
+    TargetOriginPoint,
+    TargetOriginRectangle, TargetOriginSphere,
 )
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 from eradiate.scenes.surface import RPVSurface
 
 
-def test_target(mode_mono):
+def test_target_origin(mode_mono):
     from mitsuba.core import Point3f
-    # TargetPoint: basic constructor
+    # TargetOriginPoint: basic constructor
     with ucc.override({"length": "km"}):
-        t = TargetPoint([0, 0, 0])
+        t = TargetOriginPoint([0, 0, 0])
         assert t.xyz.units == ureg.km
 
     with pytest.raises(ValueError):
-        TargetPoint(0)
+        TargetOriginPoint(0)
 
-    # TargetPoint: check kernel item
+    # TargetOriginPoint: check kernel item
     with ucc.override({"length": "km"}), uck.override({"length": "m"}):
-        t = TargetPoint([1, 2, 0])
+        t = TargetOriginPoint([1, 2, 0])
         assert ek.allclose(t.kernel_item(), [1000, 2000, 0])
 
-    # TargetRectangle: basic constructor
+    # TargetOriginRectangle: basic constructor
     with ucc.override({"length": "km"}):
-        t = TargetRectangle(0, 1, 0, 1)
+        t = TargetOriginRectangle(0, 1, 0, 1)
         assert t.xmin == 0. * ureg.km
         assert t.xmax == 1. * ureg.km
         assert t.ymin == 0. * ureg.km
         assert t.ymax == 1. * ureg.km
 
     with ucc.override({"length": "m"}):
-        t = TargetRectangle(0, 1, 0, 1)
+        t = TargetOriginRectangle(0, 1, 0, 1)
         assert t.xmin == 0. * ureg.m
         assert t.xmax == 1. * ureg.m
         assert t.ymin == 0. * ureg.m
         assert t.ymax == 1. * ureg.m
 
     with pytest.raises(ValueError):
-        TargetRectangle(0, 1, "a", 1)
+        TargetOriginRectangle(0, 1, "a", 1)
 
     with pytest.raises(ValueError):
-        TargetRectangle(0, 1, 1, -1)
+        TargetOriginRectangle(0, 1, 1, -1)
 
-    # TargetRectangle: check kernel item
-    t = TargetRectangle(-1, 1, -1, 1)
+    # TargetOriginRectangle: check kernel item
+    t = TargetOriginRectangle(-1, 1, -1, 1)
 
     with uck.override({"length": "mm"}):  # Tricky: we can't compare transforms directly
         kernel_item = t.kernel_item()["to_world"]
@@ -72,27 +72,47 @@ def test_target(mode_mono):
             kernel_item.transform_point(Point3f(1, 1, 42)), [1000, 1000, 42]
         )
 
+    # TargetOriginSphere: basic constructor
+    with ucc.override({"length": "km"}):
+        t = TargetOriginSphere([0, 0, 0], 1)
+        assert t.center.units == ureg.km
+        assert t.radius.units == ureg.km
+
+    with pytest.raises(ValueError):
+        TargetOriginSphere(0, 1)
+    with pytest.raises(ValueError):
+        TargetOriginSphere([0, 0, 0], -1)
+
+    # TargetOriginSphere: check kernel item
+    t = TargetOriginSphere([0, 0, 1], 1)
+    with uck.override({"length": "mm"}):
+        kernel_item = t.kernel_item()
+        assert set(kernel_item.keys()) == {"type", "radius", "center"}
+        assert kernel_item["type"] == "sphere"
+        assert np.allclose(kernel_item["center"], [0, 0, 1000])
+        assert np.allclose(kernel_item["radius"], 1000)
+
     # Factory: basic test
     with ucc.override({"length": "m"}):
-        t = Target.new("point", xyz=[1, 1, 0])
-        assert isinstance(t, TargetPoint)
+        t = TargetOrigin.new("point", xyz=[1, 1, 0])
+        assert isinstance(t, TargetOriginPoint)
         assert np.allclose(t.xyz, ureg.Quantity([1, 1, 0], ureg.m))
 
-        t = Target.new("rectangle", 0, 1, 0, 1)
-        assert isinstance(t, TargetRectangle)
+        t = TargetOrigin.new("rectangle", 0, 1, 0, 1)
+        assert isinstance(t, TargetOriginRectangle)
 
     # Converter: basic test
     with ucc.override({"length": "m"}):
-        t = Target.convert({"type": "point", "xyz": [1, 1, 0]})
-        assert isinstance(t, TargetPoint)
+        t = TargetOrigin.convert({"type": "point", "xyz": [1, 1, 0]})
+        assert isinstance(t, TargetOriginPoint)
         assert np.allclose(t.xyz, ureg.Quantity([1, 1, 0], ureg.m))
 
-        t = Target.convert([1, 1, 0])
-        assert isinstance(t, TargetPoint)
+        t = TargetOrigin.convert([1, 1, 0])
+        assert isinstance(t, TargetOriginPoint)
         assert np.allclose(t.xyz, ureg.Quantity([1, 1, 0], ureg.m))
 
         with pytest.raises(ValueError):
-            Target.convert({"xyz": [1, 1, 0]})
+            TargetOrigin.convert({"xyz": [1, 1, 0]})
 
 
 def test_distant(mode_mono):
@@ -109,6 +129,11 @@ def test_distant(mode_mono):
     d = DistantMeasure(target={
         "type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1
     })
+    assert KernelDict.empty().add(d).load() is not None
+
+    # Test origin support
+    # -- Project origins to a sphere
+    d = DistantMeasure(origin={"type": "sphere", "center": [0, 0, 0], "radius": 1})
     assert KernelDict.empty().add(d).load() is not None
 
 

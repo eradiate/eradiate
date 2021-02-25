@@ -104,7 +104,7 @@ Measures [eradiate.scenes.measure]
 
    MeasureFactory
    Measure
-   Target
+   TargetOrigin
 
 **Scene elements**
 
@@ -116,13 +116,14 @@ Measures [eradiate.scenes.measure]
    RadianceMeterHsphereMeasure
    RadianceMeterPlaneMeasure
 
-**Target selection**
+**Target and origin specification**
 
 .. autosummary::
    :toctree: generated/
 
-   TargetPoint
-   TargetRectangle
+   TargetOriginPoint
+   TargetOriginRectangle
+   TargetOriginSphere
 
 Integrators [eradiate.scenes.integrators]
 -----------------------------------------
