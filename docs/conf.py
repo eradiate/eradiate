@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import codecs
+import datetime
 import os
 import re
 import sys
@@ -47,7 +48,7 @@ def find_version(*file_paths):
 
 
 project = "Eradiate"
-copyright = "2020, The Eradiate Team"
+copyright = f"2020-{datetime.datetime.now().year}, The Eradiate Team"
 author = "The Eradiate Team"
 release = find_version("../eradiate/__init__.py")
 version = release.rsplit(u".", 1)[0]
