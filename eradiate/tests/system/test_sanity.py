@@ -144,4 +144,4 @@ def test_symmetry_zenith(variant_scalar_mono, surface, atmosphere):
 
     assert np.allclose(results_postprocessed["lo_zero"],
                        results_postprocessed["lo_pi"],
-                       rtol=5.e-3)
+                       rtol=1e-2)
