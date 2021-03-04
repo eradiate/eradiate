@@ -1,5 +1,5 @@
 [tool.isort]
-profile = "pycharm"
+profile = "black"
 reverse_relative = true
 
 [tool.coverage.run]
