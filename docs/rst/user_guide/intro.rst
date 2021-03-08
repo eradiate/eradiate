@@ -11,6 +11,7 @@ User guide
    package_structure
    data_guide
    unit_guide_user
+   atmosphere/index
    solar_irradiance_spectra
    molecular_absorption_datasets
 
