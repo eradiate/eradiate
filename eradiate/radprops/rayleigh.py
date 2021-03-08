@@ -36,11 +36,27 @@ def compute_sigma_s_air(wavelength=550.,
                         number_density=_STANDARD_AIR_NUMBER_DENSITY.magnitude,
                         king_factor=1.049,
                         depolarisation_ratio=None):
-    """Compute the Rayleigh scattering coefficient of air.
+    r"""Compute the Rayleigh scattering coefficient of air.
 
     When default values are used, this provides the Rayleigh scattering
     coefficient for air at 550 nm in standard temperature and pressure
     conditions.
+
+    The scattering coefficient is computed by considering the air as a pure
+    gas with associated effective optical properties (refractive index,
+    King factor) and according to the expression provided by
+    :cite:`Eberhard2010CorrectEquationsCommon` (eq. 60):
+
+    .. math::
+
+       k_{\mathrm s \, \lambda} (n) = \frac{8 \pi^3}{3 \lambda^4} \frac{1}{n}
+          \left( \eta_{\lambda}^2(n) - 1 \right)^2 F_{\lambda}
+
+    where
+    :math:`\lambda` is the wavelength (subscript indicates spectral dependence),
+    :math:`n` is the air number density,
+    :math:`\eta` is the air refractive index and
+    :math:`F` is the air King factor.
 
     Parameter ``wavelength`` (float):
         Wavelength [nm].
@@ -83,7 +99,8 @@ def air_refractive_index(wavelength=550.,
 
     The wavelength dependence of the refractive index is computed using equation
     2 from :cite:`Peck1972DispersionAir`. This formula is a fit of
-    measurements of the air refractive index in the range
+    measurements of the air refractive index in the range of wavelength from
+    :math:`\lambda = 240` nm to :math:`1690` nm.
     The number density dependence is computed using a simple proportionality
     rule.
 
