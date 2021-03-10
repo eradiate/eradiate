@@ -14,7 +14,7 @@ from ... import unit_registry as ureg
 from ..._attrs import documented, parse_docs
 from ..._mode import ModeNone
 from ...exceptions import ModeError
-from ...scenes.measure import DistantMeasure
+from ...scenes.measure._distant import DistantMeasure
 
 
 @parse_docs

@@ -5,7 +5,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import ModeError
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
-from eradiate.scenes.measure import DistantMeasure
+from eradiate.scenes.measure._distant import DistantMeasure
 from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
 
 

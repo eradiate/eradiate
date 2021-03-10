@@ -120,10 +120,6 @@ six==1.15.0
     #   -c requirements/dev.txt
     #   cycler
     #   python-dateutil
-tinydb==4.4.0
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
 tqdm==4.59.0
     # via
     #   -c requirements/dev.txt

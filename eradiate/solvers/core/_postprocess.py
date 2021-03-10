@@ -3,7 +3,7 @@ import xarray as xr
 
 from ... import data
 from ...frame import direction_to_angles
-from ...scenes.measure import DistantMeasure
+from ...scenes.measure._distant import DistantMeasure
 from ...warp import square_to_uniform_hemisphere
 
 

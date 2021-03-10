@@ -3,7 +3,7 @@
 import numpy as np
 import pint
 
-from eradiate._units import unit_registry as ureg
+from ._units import unit_registry as ureg
 
 
 @ureg.wraps(ret=None, args=("dimensionless", "rad"), strict=False)
@@ -85,6 +85,7 @@ def spherical_to_cartesian(r, theta, phi, origin=np.zeros((3,))):
         Cartesian coordinates x, y, z.
     """
 
+    # fmt: off
     if isinstance(r, pint.Quantity):
         return np.array([
             r.magnitude * np.sin(theta) * np.cos(phi) + origin[0],
@@ -97,8 +98,4 @@ def spherical_to_cartesian(r, theta, phi, origin=np.zeros((3,))):
             r * np.sin(theta) * np.sin(phi) + origin[1],
             r * np.cos(theta) + origin[2]
         ])
-
-
-# -- Utility warping functions (port to numpy from Mitsuba 2) ------------------
-
-
+    # fmt: on
