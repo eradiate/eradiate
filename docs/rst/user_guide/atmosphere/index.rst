@@ -1,8 +1,11 @@
-.. _sec-atmosphere-intro:
+.. _sec-user_guide-atmosphere:
 
-Atmosphere
-==========
+Atmosphere guide
+================
 
 .. toctree::
+   intro
    absorption
    scattering
+   homogeneous
+   heterogeneous
