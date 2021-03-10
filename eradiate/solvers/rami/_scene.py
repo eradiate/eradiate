@@ -6,7 +6,7 @@ from eradiate._attrs import documented, get_doc, parse_docs
 from eradiate.scenes.biosphere import BiosphereFactory, Canopy
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
-from eradiate.scenes.measure import DistantMeasure
+from eradiate.scenes.measure._distant import DistantMeasure
 from eradiate.scenes.surface import LambertianSurface, Surface, SurfaceFactory
 from eradiate.solvers.core._scene import Scene
 

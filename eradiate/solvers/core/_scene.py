@@ -2,14 +2,13 @@ from abc import ABC
 
 import attr
 import pinttr
-from tinydb import TinyDB
-from tinydb.storages import MemoryStorage
 
 from ..._attrs import documented, parse_docs
 from ...scenes.core import SceneElement
 from ...scenes.illumination import DirectionalIllumination, IlluminationFactory
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
-from ...scenes.measure import DistantMeasure, MeasureFactory
+from ...scenes.measure import MeasureFactory
+from ...scenes.measure._distant import DistantMeasure
 
 
 @parse_docs
@@ -66,14 +65,6 @@ class Scene(SceneElement, ABC):
                     f"(DistantMeasure)"
                 )
 
-    # fmt: off
-    measure_registry = attr.ib(
-        init=False,
-        repr=False,
-        factory=lambda: TinyDB(storage=MemoryStorage),
-    )
-    # fmt: on
-
     integrator = documented(
         attr.ib(
             factory=PathIntegrator,
@@ -88,22 +79,8 @@ class Scene(SceneElement, ABC):
         default=":class:`PathIntegrator() <.PathIntegrator>`",
     )
 
-    def _populate_measure_registry(self):
-        # Populate measure registry
-        self.measure_registry.drop_tables()
-
-        for measure in self.measures:
-            for sensor_id, sensor_spp in measure.sensor_info():
-                self.measure_registry.insert(
-                    {
-                        "measure_id": measure.id,
-                        "sensor_id": sensor_id,
-                        "sensor_spp": sensor_spp,
-                    }
-                )
-
     def update(self):
-        self._populate_measure_registry()
+        pass
 
     def __attrs_post_init__(self):
         self.update()

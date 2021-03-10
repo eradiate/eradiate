@@ -3,7 +3,6 @@ import datetime
 import attr
 import numpy as np
 import xarray as xr
-from tinydb import Query
 
 import eradiate
 
@@ -14,7 +13,7 @@ from ... import unit_context_kernel as uck
 from ... import unit_registry as ureg
 from ..._attrs import documented, parse_docs
 from ..._util import ensure_array
-from ...scenes.measure import DistantMeasure
+from ...scenes.measure._distant import DistantMeasure
 from ...xarray.metadata import DatasetSpec, VarSpec
 
 
@@ -70,18 +69,9 @@ class OneDimSolverApp(SolverApp):
         wavelength = ensure_array(eradiate.mode().wavelength.magnitude, dtype=float)
 
         # Format results
-        sensor_query = Query()
         for measure in scene.measures:
             # Collect results from sensors associated to processed measure
-            measure_id = measure.id
-            entries = scene.measure_registry.search(
-                sensor_query.measure_id == measure_id
-            )
-            sensor_ids = [db_entry["sensor_id"] for db_entry in entries]
-            sensor_spps = [db_entry["sensor_spp"] for db_entry in entries]
-            data = measure.postprocess_results(
-                sensor_ids, sensor_spps, self._raw_results
-            )
+            data = measure.postprocess_results(self._raw_results)
 
             if len(data.shape) != 2:
                 raise ValueError(
@@ -158,4 +148,4 @@ class OneDimSolverApp(SolverApp):
             )
             ds.ert.normalize_metadata(dataset_spec)
 
-            self.results[measure_id] = ds
+            self.results[measure.id] = ds

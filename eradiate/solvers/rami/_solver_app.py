@@ -3,7 +3,6 @@ import datetime
 import attr
 import numpy as np
 import xarray as xr
-from tinydb import Query
 
 import eradiate
 
@@ -14,7 +13,7 @@ from ... import unit_context_kernel as uck
 from ... import unit_registry as ureg
 from ..._attrs import documented, parse_docs
 from ..._util import ensure_array
-from ...scenes.measure import DistantMeasure
+from ...scenes.measure._distant import DistantMeasure
 from ...xarray.metadata import DatasetSpec, VarSpec
 
 
@@ -24,6 +23,7 @@ class RamiSolverApp(SolverApp):
     """Solver application dedicated to the simulation of radiative transfer on
     RAMI benchmark scenes.
     """
+
     _SCENE_TYPE = RamiScene
 
     scene = documented(
@@ -68,18 +68,14 @@ class RamiSolverApp(SolverApp):
         wavelength = ensure_array(eradiate.mode().wavelength.magnitude, dtype=float)
 
         # Format results
-        sensor_query = Query()
         for measure in scene.measures:
             # Collect results from sensors associated to processed measure
-            measure_id = measure.id
-            entries = scene.measure_registry.search(sensor_query.measure_id == measure_id)
-            sensor_ids = [db_entry["sensor_id"] for db_entry in entries]
-            sensor_spps = [db_entry["sensor_spp"] for db_entry in entries]
-            data = measure.postprocess_results(sensor_ids, sensor_spps, self._raw_results)
+            data = measure.postprocess_results(self._raw_results)
 
             if len(data.shape) != 2:
-                raise ValueError(f"raw result array has incorrect shape "
-                                 f"{data.shape}")
+                raise ValueError(
+                    f"raw result array has incorrect shape " f"{data.shape}"
+                )
 
             # Add missing dimensions to raw result array
             data = np.expand_dims(data, [0, 1, -1])
@@ -110,9 +106,9 @@ class RamiSolverApp(SolverApp):
             irradiance = self.scene.illumination.irradiance.values
             ds["irradiance"] = (
                 ("sza", "saa", "wavelength"),
-                np.array(
-                    irradiance.m_as(uck.get("irradiance")) * cos_sza
-                ).reshape((1, 1, 1)),
+                np.array(irradiance.m_as(uck.get("irradiance")) * cos_sza).reshape(
+                    (1, 1, 1)
+                ),
             )
             ds["brdf"] = ds["lo"] / ds["irradiance"]
             ds["brf"] = ds["brdf"] * np.pi
@@ -151,4 +147,4 @@ class RamiSolverApp(SolverApp):
             )
             ds.ert.normalize_metadata(dataset_spec)
 
-            self._results[measure_id] = ds
+            self._results[measure.id] = ds

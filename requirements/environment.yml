@@ -18,7 +18,6 @@ dependencies:
   - pinttrs
   - ruamel.yaml
   - scipy
-  - tinydb
   - tqdm
   - xarray
   # tests
@@ -49,3 +48,4 @@ dependencies:
   - sphinx-copybutton
   - sphinx-gallery
   - sphinx-panels
+  - tinydb

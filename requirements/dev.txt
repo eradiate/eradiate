@@ -36,6 +36,8 @@ babel==2.9.0
     #   sphinx
 backcall==0.2.0
     # via ipython
+beautifulsoup4==4.9.3
+    # via pydata-sphinx-theme
 black==20.8b1
     # via -r requirements/dev.in
 bleach==3.3.0
@@ -175,7 +177,7 @@ jupyterlab-server==2.3.0
     # via jupyterlab
 jupyterlab-widgets==1.0.0
     # via ipywidgets
-jupyterlab==3.0.9
+jupyterlab==3.0.10
     # via -r requirements/dev.in
 keyring==23.0.0
     # via twine
@@ -264,7 +266,7 @@ prometheus-client==0.9.0
     # via
     #   jupyter-server
     #   notebook
-prompt-toolkit==3.0.16
+prompt-toolkit==3.0.17
     # via ipython
 ptyprocess==0.7.0
     # via
@@ -282,7 +284,7 @@ pybtex==0.24.0
     #   sphinxcontrib-bibtex
 pycparser==2.20
     # via cffi
-pydata-sphinx-theme==0.4.3
+pydata-sphinx-theme==0.5.0
     # via -r requirements/docs.in
 pygments==2.8.1
     # via
@@ -375,6 +377,8 @@ sniffio==1.2.0
     # via anyio
 snowballstemmer==2.1.0
     # via sphinx
+soupsieve==2.2
+    # via beautifulsoup4
 sphinx-copybutton==0.3.1
     # via -r requirements/docs.in
 sphinx-gallery==0.8.2
@@ -413,7 +417,7 @@ terminado==0.9.2
 testpath==0.4.4
     # via nbconvert
 tinydb==4.4.0
-    # via -r requirements/main.in
+    # via -r requirements/docs.in
 toml==0.10.2
     # via
     #   black

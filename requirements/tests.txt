@@ -252,10 +252,6 @@ tabulate==0.8.9
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
-tinydb==4.4.0
-    # via
-    #   -c requirements/dev.txt
-    #   -r requirements/main.in
 toml==0.10.2
     # via
     #   -c requirements/dev.txt

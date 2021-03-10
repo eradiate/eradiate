@@ -7,7 +7,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import ModeError
 from eradiate.scenes.biosphere import HomogeneousDiscreteCanopy
-from eradiate.scenes.measure import DistantMeasure
+from eradiate.scenes.measure._distant import DistantMeasure
 from eradiate.solvers.rami import RamiScene, RamiSolverApp
 
 

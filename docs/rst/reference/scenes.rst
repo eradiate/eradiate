@@ -116,7 +116,13 @@ Measures [eradiate.scenes.measure]
 
    MeasureFactory
    Measure
-   TargetOrigin
+
+.. dropdown:: **Private: Sensor information data structure**
+
+   .. autosummary::
+      :toctree: generated/
+
+      _core.SensorInfo
 
 **Scene elements**
 
@@ -125,17 +131,17 @@ Measures [eradiate.scenes.measure]
 
    DistantMeasure
    PerspectiveCameraMeasure
-   RadianceMeterHsphereMeasure
-   RadianceMeterPlaneMeasure
+   RadiancemeterMeasure
 
-**Target and origin specification**
+.. dropdown:: **Private: Target and origin specification for DistantMeasure**
 
-.. autosummary::
-   :toctree: generated/
+   .. autosummary::
+      :toctree: generated/
 
-   TargetOriginPoint
-   TargetOriginRectangle
-   TargetOriginSphere
+      _distant.TargetOrigin
+      _distant.TargetOriginPoint
+      _distant.TargetOriginRectangle
+      _distant.TargetOriginSphere
 
 .. _sec-reference-scenes-integrators:
 

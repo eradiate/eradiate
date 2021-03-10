@@ -12,6 +12,5 @@ pint
 pinttrs
 ruamel.yaml
 scipy
-tinydb
 tqdm
 xarray
