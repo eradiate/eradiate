@@ -4,6 +4,9 @@ Heterogeneous atmospheres
 """
 
 # %%
+# .. warning:: Outdated content, update required
+
+# %%
 # This tutorial illustrates how to perform monochromatic simulations in
 # one-dimensional heterogeneous atmospheres using the one-dimensional solver
 # application :class:`.OneDimSolverApp`. Refer to

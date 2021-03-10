@@ -4,6 +4,9 @@ Quick overview
 """
 
 # %%
+# .. warning:: Outdated content, update required
+
+# %%
 # This tutorial gives a very quick introduction to Eradiate's main features. We
 # assume here that you have successfully installed the package (see
 # :ref:`sec-getting_started-install`). In this guide, we will see:

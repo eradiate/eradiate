@@ -3,6 +3,8 @@
 Factory guide
 =============
 
+.. warning:: Outdated content, update required
+
 Eradiate's object creation process is heavily supported by a series of factory
 classes. They serve two purposes:
 

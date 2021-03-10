@@ -3,6 +3,8 @@
 Unit handling for users
 =======================
 
+.. warning:: Outdated content, update required
+
 Eradiate tries hard to handle physical quantities correctly and uses the
 `Pint unit handling library <https://pint.readthedocs.io>`_ to do so.
 A general reason for that is that poor unit handling can lead to

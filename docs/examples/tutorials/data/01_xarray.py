@@ -4,6 +4,9 @@ xarray module tutorial
 """
 
 # %%
+# .. warning:: Outdated content, update required
+
+# %%
 # In this tutorial, we will learn how to use Eradiate's xarray extensions. 
 # In addition to this introduction, it is recommended to refer to the 
 # :mod:`technical documentation <eradiate.util.xarray>`. We assume here that you

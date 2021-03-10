@@ -3,6 +3,8 @@
 Writing a new scene element class
 =================================
 
+.. warning:: Outdated content, update required
+
 .. warning::
 
    The entire scene generation architecture is built using the
