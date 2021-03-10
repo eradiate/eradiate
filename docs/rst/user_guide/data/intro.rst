@@ -1,7 +1,7 @@
-.. _sec-user_guide-data_guide:
+.. _sec-user_guide-data-intro:
 
-Data guide
-==========
+Introduction
+============
 
 Eradiate ships, processes and produces data. This guide presents:
 

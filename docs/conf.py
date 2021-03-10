@@ -110,6 +110,7 @@ sphinx_gallery_conf = {
     "subsection_order": ExplicitOrder([
         "examples/tutorials/solver_onedim",
         "examples/tutorials/solver_rami",
+        "examples/tutorials/atmosphere",
         "examples/tutorials/biosphere",
         "examples/tutorials/data",
     ]),

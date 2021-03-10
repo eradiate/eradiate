@@ -7,6 +7,8 @@ Scattering of light by molecules is computed using the Rayleigh approximation
 (see :cite:`Liou2002IntroductionAtmosphericRadiation`, section 3.3.1 for
 example).
 
+.. _sec-atmosphere-molecular-scattering-phase:
+
 Phase function
 --------------
 

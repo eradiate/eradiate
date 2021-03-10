@@ -10,7 +10,7 @@ User guide
    package_structure
    onedim_solver_app
    unit_guide_user
-   data_guide
+   data/index
    atmosphere/index
    solar_irradiance_spectra
    molecular_absorption_datasets
