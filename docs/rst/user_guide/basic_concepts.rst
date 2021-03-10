@@ -83,7 +83,7 @@ specification of scene elements in a configuration file.
 
 .. admonition:: Example
 
-   The one-dimensional solver application (:class:`~eradiate.solvers.onedime.OneDimSolverApp`)
+   The one-dimensional solver application (:class:`~eradiate.solvers.onedim.OneDimSolverApp`)
    lets the user choose from two different measures. The application offers a
    top-of-atmosphere leaving radiance measure either recording the entire
    hemisphere or only the principal plane. The user specifies only the kind of

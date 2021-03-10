@@ -218,12 +218,12 @@ class HeterogeneousAtmosphere(Atmosphere):
         # Check for automatic width and height computation
         if self.profile is not None:
             if self.toa_altitude != "auto":
-                raise ValueError("height must be set to 'auto' when profile is "
-                                 "set")
+                raise ValueError("toa_altitude must be set to 'auto' when"
+                                 "profile is set")
         else:
             if self.toa_altitude == "auto":
-                raise ValueError("height cannot be set to 'auto' when profile "
-                                 "is None")
+                raise ValueError("toa_altitude cannot be set to 'auto' when "
+                                 "profile is None")
             if self.width == "auto":
                 raise ValueError("width cannot be set to 'auto' when profile "
                                  "is None")

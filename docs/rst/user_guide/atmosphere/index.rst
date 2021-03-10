@@ -1,8 +1,9 @@
-.. _sec-atmosphere-intro:
+.. _sec-atmosphere-index:
 
 Atmosphere
 ==========
 
 .. toctree::
+   intro
    absorption
    scattering

@@ -1,0 +1,144 @@
+.. _sec-atmosphere-intro:
+
+Introduction
+============
+
+Atmosphere modelling
+--------------------
+
+Eradiate represents the atmosphere as a **shape** that encompasses a
+**participating medium** (the air).
+
+The shape is a cuboid characterised by width and height values that correspond
+to the width and height, respectively, of the atmosphere object.
+
+.. image:: ../../../fig/atmosphere-cuboid_shape.png
+   :align: center
+   :scale: 50
+
+The participating medium is characterised by a phase function type and a 3D
+array of albedo and extinction coefficient values that describe how
+radiative properties vary in space.
+
+.. image:: ../../../fig/atmosphere-participating_medium.png
+   :align: center
+   :scale: 50
+
+Each value in this 3D array corresponds to one cell of a spatial mesh that
+discretises the participating medium into an arrangement of adjacent 3D cells
+wherein the radiative properties are uniform.
+In the example illustrated by the image above, the shape of the array would be
+(4, 2, 2).
+The phase function does not vary from one cell to the other ; it is the same
+for the whole atmosphere.
+
+.. note::
+   So far, only purely molecular atmospheres are supported.
+   Work on adding aerosols to the atmosphere is ongoing.
+
+Atmosphere types
+----------------
+
+Eradiate provides two atmosphere types:
+
+* homogeneous atmosphere
+  (:class:`~eradiate.scenes.atmosphere.HomogeneousAtmosphere`): radiative
+  properties are uniform within the atmosphere.
+* heterogeneous atmosphere
+  (:class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere`): radiative
+  properties are non-uniform with the atmosphere.
+
+.. image:: ../../../fig/atmosphere-classes.png
+   :align: center
+
+Both atmosphere types inherit an abstract atmosphere base type
+(:class:`~eradiate.scenes.atmosphere.Atmosphere`),
+parameterised by a top-of-atmosphere altitude (``toa_altitude``) and a width
+(``width``).
+As a result, these parameters can be set for both atmosphere types.
+Both atmosphere types use the
+:ref:`Rayleigh scattering phase function <sec-atmosphere-molecular-scattering>`
+to describe the angular distribution of scattered light.
+
+Homogeneous atmosphere
+~~~~~~~~~~~~~~~~~~~~~~
+
+The homogeneous atmosphere is characterised by a single value of the scattering
+coefficient (``sigma_s``) and a single value of the absorption coefficient
+(``sigma_a``).
+
+.. admonition:: Example
+
+   Create a 1000 x 1000 x 120 km homogeneous atmosphere with
+   :math:`k_{\mathrm{s}} = 10^{-3} \, \mathrm{km}^{-1}` and
+   :math:`k_{\mathrm{a}} = 10^{-5} \, \mathrm{km}^{-1}`
+   using:
+
+   .. code:: python
+
+      import eradiate
+      from eradiate import unit_registry as ureg
+      eradiate.set_mode("mono")
+
+      atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(
+          toa_altitude = ureg.Quantity(120, "km"),
+          width = ureg.Quantity(1000, "km"),
+          sigma_s = ureg.Quantity(1e-3, "km^-1"),
+          sigma_a = ureg.Quantity(1e-5, "km^-1"),
+      )
+
+Heterogeneous atmosphere
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The heterogeneous atmosphere is characterised by non-uniform radiative
+properties.
+
+.. note::
+
+   At the moment, Eradiate provides 1D-heterogeneous atmosphere only.
+
+1D-heterogeneous atmospheres are characterised by radiative properties
+that vary with altitude.
+Together, the values of the radiative properties at different altitude points
+constitute the **radiative properties profile** of the atmosphere.
+The radiative properties profile is specified by the ``profile`` parameter of
+the :class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere` class.
+You can either specify directly the radiative properties profile, or choose
+a profile from a list of registered profile types.
+
+.. note::
+
+   So far, only the
+   :class:`us76_approx <eradiate.radprops.rad_profile.US76ApproxRadProfile>`
+   radiative properties profile is available.
+   We are working on adding radiative properties profiles corresponding to the
+   AFGL (1986) atmospheric profiles
+   :cite:`Anderson1986AtmosphericConstituentProfiles`.
+   Stay tuned for that!
+
+.. admonition:: Example
+
+   Create a 1000 x 1000 x 120 km heterogeneous atmosphere with a radiative
+   properties profile approximately corresponding to the US76 atmosphere, using:
+
+   .. code:: python
+
+      import eradiate
+      from eradiate import unit_registry as ureg
+      eradiate.set_mode("mono")
+
+      atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
+          toa_altitude="auto",
+          width=ureg.Quantity(1000, "km"),
+          profile=dict(
+              type="us76_approx",
+              height=ureg.Quantity(120, "km"),
+              n_layers=50,
+          )
+      )
+
+   In this example, the atmosphere extends from 0 km to 120 km and is divided
+   into 50 layers.
+   In each of these layers, the albedo and the extinction coefficient are
+   automatically computed in the appropriate pressure and temperature conditions
+   corresponding to the US76 atmosphere, and at the current wavelength.
