@@ -3,12 +3,9 @@
 Homogeneous atmospheres
 =======================
 
-Initialise with the constructor
--------------------------------
-
 To create a homogeneous atmosphere, simply call the constructor of the
 :class:`~eradiate.scenes.atmosphere.HomogeneousAtmosphere` class from the
-:mod:`eradiate.scenes.atmosphere` module:
+:mod:`~eradiate.scenes.atmosphere` package:
 
 .. code:: python
 
@@ -29,7 +26,7 @@ You must set a wavelength value before ``sigma_s`` can be computed:
 The value of ``sigma_s`` is computed by
 :func:`compute_sigma_s_air() <eradiate.radprops.rayleigh.compute_sigma_s_air>`.
 In the above example, the corresponding value is approximately
-:math:`0.0115 \mathrm{km}^{-1}`
+:math:`1.15 \, 10^{-2} \, \mathrm{km}^{-1}`
 By default, the atmosphere width is automatically computed from the value of
 the scattering coefficient, using the formula:
 
@@ -61,19 +58,3 @@ Below, we specify a 1000 x 1000 x 120 km homogeneous atmosphere with
           sigma_s = ureg.Quantity(1e-3, "km^-1"),
           sigma_a = ureg.Quantity(1e-5, "km^-1"),
       )
-
-Initialise with a dictionary
-----------------------------
-
-Alternatively to using the class constructor, you can initialise a homogeneous
-atmosphere using a dictionary:
-
-.. code::
-
-   d = {
-       "toa_altitude": ureg.Quantity(120, "km"),
-       "width": ureg.Quantity(1000, "km"),
-       "sigma_s": ureg.Quantity(1e-3, "km^-1"),
-       "sigma_a": ureg.Quantity(1e-5, "km^-1"),
-   }
-   atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere.from_dict(d)
