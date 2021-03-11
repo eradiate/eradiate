@@ -7,3 +7,5 @@ Atmosphere
    intro
    absorption
    scattering
+   homogeneous
+   heterogeneous

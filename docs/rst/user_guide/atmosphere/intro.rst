@@ -3,6 +3,33 @@
 Introduction
 ============
 
+Assumptions
+-----------
+
+The air is assumed to behave as an
+`ideal gas <https://en.wikipedia.org/wiki/Ideal_gas>`_,
+i.e. a collection of point particles without interactions between one another.
+It is in thermodynamic equilibrium, it is not chemically reacting and it obeys
+the ideal gas state equation:
+
+.. math::
+
+   p = n k T
+
+where:
+
+* :math:`p` stands for the pressure :math:`[ML^{-1}T^{-2}]`,
+* :math:`n` stands for the number density :math:`[L^{-3}]`,
+* :math:`k` is the
+  `Bolzmann constant <https://en.wikipedia.org/wiki/Boltzmann_constant>`_
+  :math:`[ML^{2}T^{-2}\Theta^{-1}]` and
+* :math:`T` stands for the temperature :math:`[\Theta]`.
+
+Air can usually be treated as an ideal gas within reasonable tolerance over a
+wide parameter range around standard temperature and pressure (273 K, 100 kPa)
+and the approximation generally gets better with lower pressure and higher
+temperature.
+
 Atmosphere modelling
 --------------------
 
@@ -16,21 +43,28 @@ to the width and height, respectively, of the atmosphere object.
    :align: center
    :scale: 50
 
-The participating medium is characterised by a phase function type and a 3D
-array of albedo and extinction coefficient values that describe how
+This shape delimits the region of space that is occupied by the participating
+medium.
+
+The participating medium is characterised by a phase function type and two 3D
+arrays of albedo and extinction coefficient values that describe how
 radiative properties vary in space.
 
 .. image:: ../../../fig/atmosphere-participating_medium.png
    :align: center
    :scale: 50
 
-Each value in this 3D array corresponds to one cell of a spatial mesh that
+Each value in these 3D array corresponds to one cell of a spatial mesh that
 discretises the participating medium into an arrangement of adjacent 3D cells
 wherein the radiative properties are uniform.
-In the example illustrated by the image above, the shape of the array would be
-(4, 2, 2).
+In the example illustrated by the image above, the shape of these arrays would
+be (4, 2, 2).
 The phase function does not vary from one cell to the other ; it is the same
 for the whole atmosphere.
+Only the albedo and extinction coefficient are allowed to vary with space.
+The structure of the participating medium is assumed to be isotropic, i.e. the
+properties of the medium embedded in one cell is invariant to rotation of the
+cell.
 
 .. note::
    So far, only purely molecular atmospheres are supported.
@@ -46,7 +80,7 @@ Eradiate provides two atmosphere types:
   properties are uniform within the atmosphere.
 * heterogeneous atmosphere
   (:class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere`): radiative
-  properties are non-uniform with the atmosphere.
+  properties are non-uniform within the atmosphere.
 
 .. image:: ../../../fig/atmosphere-classes.png
    :align: center
@@ -86,6 +120,9 @@ coefficient (``sigma_s``) and a single value of the absorption coefficient
           sigma_s = ureg.Quantity(1e-3, "km^-1"),
           sigma_a = ureg.Quantity(1e-5, "km^-1"),
       )
+
+For more detail, refer to the guide page dedicated to
+:ref:`homogeneous atmospheres <sec-atmosphere-homogeneous>`.
 
 Heterogeneous atmosphere
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,3 +179,6 @@ a profile from a list of registered profile types.
    In each of these layers, the albedo and the extinction coefficient are
    automatically computed in the appropriate pressure and temperature conditions
    corresponding to the US76 atmosphere, and at the current wavelength.
+
+For more detail, refer to the guide page dedicated to
+:ref:`heterogeneous atmospheres <sec-atmosphere-heterogeneous>`.
