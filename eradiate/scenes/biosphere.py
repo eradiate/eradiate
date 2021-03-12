@@ -792,9 +792,9 @@ class HomogeneousDiscreteCanopy(DiscreteCanopy):
         pre-process the passed dictionary to merge any field with an
         associated ``"_units"`` field into a :class:`pint.Quantity` container.
 
-        A dictionary must follow this form:
+        **Dictionary format:**
 
-        .. code-block:: python
+        .. code:: python
 
            {
                "type": "real_zoom_in_canopy",
@@ -857,9 +857,9 @@ class FloatingSpheresCanopy(DiscreteCanopy):
     def from_dict(cls, d):
         """Create from a dictionary.
 
-        Dictionary format:
+        **Dictionary format:**
 
-        .. code-block:: python
+        .. code:: python
 
            {
                "type": "real_zoom_in_canopy",
@@ -958,9 +958,9 @@ class RealZoomInCanopy(DiscreteCanopy):
     def from_dict(cls, d):
         """Create from a dictionary.
 
-        Dictionary format:
+        **Dictionary format:**
 
-                .. code-block:: python
+        .. code:: python
 
            {
                "type": "real_zoom_in_canopy",
