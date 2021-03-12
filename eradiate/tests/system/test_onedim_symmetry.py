@@ -26,7 +26,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     Result symmetry
     ===============
 
-    This test case checks for result symmetry when using the :class:`.OneDimSolverApp` workflow.
+    This test case checks for result symmetry when using the ``OneDimSolverApp`` workflow.
 
     Rationale
     ---------
@@ -74,7 +74,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
         measures={
             "type": "distant",
             "id": "toa_pplane",
-            "film_resolution": (1, n_vza),
+            "film_resolution": (n_vza, 1),
             "spp": spp,
         },
         surface={
