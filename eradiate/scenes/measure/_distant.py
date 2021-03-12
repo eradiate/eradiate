@@ -286,7 +286,7 @@ class DistantMeasure(Measure):
         "scene. The target can be specified using an array-like with 3 "
         "elements (which will be converted to a :class:`TargetPoint`) or a "
         "dictionary interpreted by :meth:`Target.convert`.",
-        type=":class:`Target` or None",
+        type=":class:`TargetOrigin` or None",
         default="None",
     )
 

@@ -7,6 +7,7 @@ def test_radiancemeter(mode_mono):
     s = RadiancemeterMeasure()
 
     # Film is appropropriately set
+    # fmt: off
     assert s._film_dicts() == [{
         "film": {
             "type": "hdrfilm",
@@ -17,6 +18,7 @@ def test_radiancemeter(mode_mono):
             "rfilter": {"type": "box"},
         }
     }]
+    # fmt: on
 
     # The kernel dict can be instantiated
-    assert KernelDict.empty().add(s).load() is not None
+    assert KernelDict.new(s).load() is not None

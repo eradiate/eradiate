@@ -40,7 +40,10 @@ def runner(kernel_dict):
     # Run computation
     from eradiate.kernel.core.xml import load_dict
 
-    kernel_scene = load_dict(kernel_dict)
+    try:
+        kernel_scene = load_dict(kernel_dict.data)
+    except AttributeError:
+        kernel_scene = load_dict(kernel_dict)
 
     for i_sensor, sensor in enumerate(kernel_scene.sensors()):
         kernel_scene.integrator().render(kernel_scene, sensor)

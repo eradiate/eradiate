@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 import attr
 import numpy as np
@@ -97,11 +98,10 @@ class Measure(SceneElement, ABC):
 
         return np.reshape(result, (result.shape[0], result.shape[1]))
 
-    def sensor_infos(self):
+    def sensor_infos(self) -> List[SensorInfo]:
         """Return a tuple of sensor information data structures.
 
-        Returns → list[:class:`.SensorInfo`]:
-            List of sensor
+        :returns: List of sensor information data structures.
         """
         spps = self._split_spp()
 
@@ -113,7 +113,7 @@ class Measure(SceneElement, ABC):
                 SensorInfo(id=f"{self.id}_{i}", spp=spp) for i, spp in enumerate(spps)
             ]
 
-    def _split_spp(self):
+    def _split_spp(self) -> List[float]:
         """Generate sensor specifications, possibly applying sample count
         splitting in single-precision mode.
 
@@ -125,8 +125,7 @@ class Measure(SceneElement, ABC):
         Sensor records will have to be combined using
         :meth:`.postprocess_results`.
 
-        Returns → list[float]:
-            List of split SPPs if relevant.
+        :returns: List of split SPPs if relevant.
         """
         mode = eradiate.mode()
 
