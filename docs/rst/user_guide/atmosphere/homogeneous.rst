@@ -3,6 +3,10 @@
 Homogeneous atmospheres
 =======================
 
+.. image:: ../../../fig/atmosphere-homogeneous.png
+   :align: center
+   :scale: 50
+
 To create a homogeneous atmosphere, simply call the constructor of the
 :class:`~eradiate.scenes.atmosphere.HomogeneousAtmosphere` class from the
 :mod:`~eradiate.scenes.atmosphere` package:

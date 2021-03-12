@@ -114,9 +114,8 @@ to describe the angular distribution of scattered light.
 Homogeneous atmosphere
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The homogeneous atmosphere is characterised by a single value of the extinction
-coefficient (:math:`k_{\mathrm{s}}`) and a single value of the albedo
-(:math:`\varpi`).
+The homogeneous atmosphere is characterised by uniform extinction coefficient
+(:math:`k_{\mathrm{s}}`) and albedo (:math:`\varpi`).
 
 .. image:: ../../../fig/atmosphere-homogeneous.png
    :align: center

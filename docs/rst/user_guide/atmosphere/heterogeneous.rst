@@ -3,6 +3,10 @@
 Heterogeneous atmospheres
 =========================
 
+.. image:: ../../../fig/atmosphere-heterogeneous.png
+   :align: center
+   :scale: 50
+
 The non-uniform radiative properties of the heterogeneous atmosphere are
 described by the radiative properties profile, which consists of the two
 spatial fields
