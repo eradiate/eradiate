@@ -36,14 +36,15 @@ def test_rami_scene(mode_mono):
             size=ureg.Quantity([100, 50, 10], "m"),
         )
     )
-    assert np.allclose(s.surface.width, ureg.Quantity(100., "m"))
+    assert np.allclose(s.surface.width, ureg.Quantity(100.0, "m"))
 
     # -- Check that distant sensor target zone is appropriately defined
     s = RamiScene(
         canopy=HomogeneousDiscreteCanopy(
-        leaf_cloud_specs=[(LeafCloud.from_parameters(), [0, 0, 0])],
-        size= ureg.Quantity([100, 50, 10], "m")),
-        measures=DistantMeasure()
+            leaf_cloud_specs=[(LeafCloud.from_parameters(), [0, 0, 0])],
+            size=ureg.Quantity([100, 50, 10], "m"),
+        ),
+        measures=DistantMeasure(),
     )
     target = s.measures[0].target
     canopy = s.canopy
@@ -71,11 +72,13 @@ def test_rami_scene_real_life(mode_mono):
     # Construct with typical parameters
     s = RamiScene(
         surface={"type": "lambertian"},
-        canopy={"type": "homogeneous_discrete_canopy",
-                "leaf_cloud": {"shape_type": "cube"},
-                "size": ureg.Quantity([100, 50, 10], "m")},
-        illumination={"type": "directional", "zenith": 45.},
-        measures={"type": "distant"}
+        canopy={
+            "type": "homogeneous_discrete_canopy",
+            "leaf_cloud": {"shape_type": "cube"},
+            "size": ureg.Quantity([100, 50, 10], "m"),
+        },
+        illumination={"type": "directional", "zenith": 45.0},
+        measures={"type": "distant"},
     )
     assert s.kernel_dict().load() is not None
 
@@ -90,12 +93,16 @@ def test_rami_solver_app_run(mode_mono):
     We assert the correct setting of the DataArray coordinates and dimensions,
     as well as the correct setting of data.
     """
-    app = RamiSolverApp(scene=RamiScene(
-        canopy={"type": "homogeneous_discrete_canopy",
+    app = RamiSolverApp(
+        scene=RamiScene(
+            canopy={
+                "type": "homogeneous_discrete_canopy",
                 "leaf_cloud": {"shape_type": "cube"},
-                "size": ureg.Quantity([100, 50, 10], "m")},
-        measures={"type": "distant"},
-    ))
+                "size": ureg.Quantity([100, 50, 10], "m"),
+            },
+            measures={"type": "distant"},
+        )
+    )
 
     app.run()
 

@@ -8,14 +8,14 @@
 """
 
 __all__ = [
-    "BiosphereFactory", "HomogeneousDiscreteCanopy", "FloatingSpheresCanopy",
+    "BiosphereFactory",
+    "HomogeneousDiscreteCanopy",
+    "FloatingSpheresCanopy",
     "RealZoomInCanopy",
 ]
 
 import os
-from abc import (
-    ABC, abstractmethod
-)
+from abc import ABC, abstractmethod
 
 import aabbtree
 import attr
@@ -23,24 +23,13 @@ import numpy as np
 import pinttr
 
 from .core import SceneElement
-from .spectra import (
-    Spectrum,
-    SpectrumFactory
-)
-from .._attrs import (
-    documented,
-    get_doc,
-    parse_docs
-)
+from .spectra import Spectrum, SpectrumFactory
+from .._attrs import documented, get_doc, parse_docs
 from .._factory import BaseFactory
 from .._units import unit_context_config as ucc
 from .._units import unit_context_kernel as uck
 from .._units import unit_registry as ureg
-from ..validators import (
-    has_len,
-    has_quantity,
-    is_positive
-)
+from ..validators import has_len, has_quantity, is_positive
 
 
 class BiosphereFactory(BaseFactory):
@@ -56,6 +45,7 @@ class BiosphereFactory(BaseFactory):
 
     _constructed_type = SceneElement
     registry = {}
+
 
 @parse_docs
 @attr.s
@@ -112,10 +102,9 @@ class LeafCloud:
     def _positions_orientations_validator(self, attribute, value):
         if not len(self.leaf_positions) == len(self.leaf_orientations):
             raise ValueError(
-                f"While validating {attribute}:"
-                f"leaf_positions and leaf_orientations must have"
-                f"the same length!"
-                f"Got positions: {len(self.leaf_positions)},"
+                f"While validating {attribute}: "
+                f"leaf_positions and leaf_orientations must have the same length! "
+                f"Got positions: {len(self.leaf_positions)}, "
                 f"orientations: {len(self.leaf_orientations)}."
             )
 
@@ -128,7 +117,7 @@ class LeafCloud:
                 has_quantity("reflectance"),
             ],
         ),
-        doc="Reflectance spectrum of the leaves in the cloud."
+        doc="Reflectance spectrum of the leaves in the cloud. "
             "Must be a reflectance spectrum (dimensionless).",
         type=":class:`.Spectrum`",
         default="0.5"
@@ -143,7 +132,7 @@ class LeafCloud:
                 has_quantity("transmittance"),
             ],
         ),
-        doc="Transmittance spectrum of the leaves in the cloud."
+        doc="Transmittance spectrum of the leaves in the cloud. "
             "Must be a transmittance spectrum (dimensionless).",
         type=":class:`.Spectrum`",
         default="0.5"
@@ -166,11 +155,7 @@ class LeafCloud:
 
     @classmethod
     def from_file(
-            cls,
-            fname_leaves,
-            leaf_transmittance,
-            leaf_reflectance,
-            id="leaf_cloud"
+        cls, fname_leaves, leaf_transmittance, leaf_reflectance, id="leaf_cloud"
     ):
         """
         This method allows construction of the LeafCloud from a text file,
@@ -234,29 +219,29 @@ class LeafCloud:
             leaf_orientations=orientations,
             leaf_reflectance=leaf_reflectance,
             leaf_transmittance=leaf_transmittance,
-            leaf_radius=radius
+            leaf_radius=radius,
         )
 
     @classmethod
     def from_parameters(
-            cls,
-            id="leaf_cloud",
-            leaf_transmittance=0.5,
-            leaf_reflectance=0.5,
-            shape_type="cube",
-            size=[30, 30, 3]*ureg.m,
-            sphere_radius=0*ureg.m,
-            cylinder_radius=0*ureg.m,
-            cylinder_height=0*ureg.m,
-            lai=3,
-            mu=1.066,
-            nu=1.853,
-            leaf_radius=0.1*ureg.m,
-            n_leaves=4000,
-            hdo=1,
-            hvr=1,
-            seed=1,
-            avoid_overlap=False
+        cls,
+        id="leaf_cloud",
+        leaf_transmittance=0.5,
+        leaf_reflectance=0.5,
+        shape_type="cube",
+        size=[30, 30, 3] * ureg.m,
+        sphere_radius=0 * ureg.m,
+        cylinder_radius=0 * ureg.m,
+        cylinder_height=0 * ureg.m,
+        lai=3,
+        mu=1.066,
+        nu=1.853,
+        leaf_radius=0.1 * ureg.m,
+        n_leaves=4000,
+        hdo=1,
+        hvr=1,
+        seed=1,
+        avoid_overlap=False,
     ):
         """
         This method allows the creation of a HomogeneousDiscreteCanopy
@@ -346,18 +331,15 @@ class LeafCloud:
 
         # n_leaves or horizontal extent
         if size[0] == 0 or size[1] == 0:
-            size[0] = size[1] = np.sqrt(
-                n_leaves * np.pi * leaf_radius ** 2 / lai)
+            size[0] = size[1] = np.sqrt(n_leaves * np.pi * leaf_radius ** 2 / lai)
         else:
             n_leaves = int(
-                np.floor(
-                (size[0] * size[1] * lai) / (np.pi * leaf_radius ** 2))
+                np.floor((size[0] * size[1] * lai) / (np.pi * leaf_radius ** 2))
             )
 
         # hdo/hvr or vertical extent
         if size[2] == 0:
-            size[2] = lai * hdo ** 3 / (
-                    np.pi * leaf_radius ** 2 * hvr)
+            size[2] = lai * hdo ** 3 / (np.pi * leaf_radius ** 2 * hvr)
 
         leaf_positions, leaf_orientations = _create_leaf_cloud(
             shape_type=shape_type,
@@ -370,7 +352,7 @@ class LeafCloud:
             mu=mu,
             nu=nu,
             seed=seed,
-            avoid_overlap=avoid_overlap
+            avoid_overlap=avoid_overlap,
         )
 
         return cls(
@@ -379,15 +361,14 @@ class LeafCloud:
             leaf_orientations=leaf_orientations,
             leaf_reflectance=leaf_reflectance,
             leaf_transmittance=leaf_transmittance,
-            leaf_radius=leaf_radius
+            leaf_radius=leaf_radius,
         )
 
     def shapes(self, ref=False):
         from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
         kernel_length = uck.get("length")
-
-        shapes_dict = {self.id: {"type": "shapegroup", }}
+        shapes_dict = {self.id: {"type": "shapegroup"}}
 
         if ref:
             bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
@@ -398,11 +379,14 @@ class LeafCloud:
         for i in range(len(self.leaf_positions)):
             position_mag = self.leaf_positions[i].m_as(kernel_length)
             normal = self.leaf_orientations[i]
-            to_world = ScalarTransform4f.look_at(
-                origin=position_mag,
-                target=position_mag + normal,
-                up=np.cross(position_mag, normal),
-            ) * ScalarTransform4f.scale(radius)
+            to_world = (
+                ScalarTransform4f.look_at(
+                    origin=position_mag,
+                    target=position_mag + normal,
+                    up=np.cross(position_mag, normal),
+                )
+                * ScalarTransform4f.scale(radius)
+            )
 
             shapes_dict[f"{self.id}"][f"leaf_{i}"] = {
                 "type": "disk",
@@ -413,19 +397,13 @@ class LeafCloud:
         return shapes_dict
 
     def bsdfs(self):
-        # fmt: off
         return {
-            f"bsdf_{self.id}":
-                {
-                    "type":
-                        "bilambertian",
-                    "reflectance":
-                        self.leaf_reflectance.kernel_dict()["spectrum"],
-                    "transmittance":
-                        self.leaf_transmittance.kernel_dict()["spectrum"],
-                },
+            f"bsdf_{self.id}": {
+                "type": "bilambertian",
+                "reflectance": self.leaf_reflectance.kernel_dict()["spectrum"],
+                "transmittance": self.leaf_transmittance.kernel_dict()["spectrum"],
+            },
         }
-        # fmt: on
 
     def kernel_dict(self, ref=True):
         kernel_dict = {}
@@ -465,8 +443,8 @@ class Canopy(SceneElement, ABC):
             units=ucc.deferred("length"),
         ),
         doc="Canopy size.\n"
-            "\n"
-            "Unit-enabled field (default: ucc[length]).",
+        "\n"
+        "Unit-enabled field (default: ucc[length]).",
         type="array-like[float, float, float]",
     )
     # fmt: on
@@ -675,7 +653,7 @@ def _create_leaf_cloud(
     elif shape_type == "cylinder":
         if cylinder_radius == 0 or cylinder_height == 0:
             raise ValueError(
-                "Parameters cylinder_height and cylinder_radius"
+                "Parameters cylinder_height and cylinder_radius "
                 "must be set for cylindrical leaf cloud."
             )
 
@@ -715,30 +693,23 @@ class DiscreteCanopy(Canopy):
         attr.ib(
             default=[]
         ),
-        doc="Tuples containing the leaf cloud objects and a list of points,"
-            "specifying the locations of the leaf cloud inside the canopy.",
+        doc="Tuples containing the leaf cloud objects and a list of points, "
+        "specifying the locations of the leaf cloud inside the canopy.",
         type="list(tuple(:class:`.LeafCloud`, list(list())))",
         default="[]",
     )
-
     # fmt: on
 
     def bsdfs(self):
         returndict = {}
         for (leaf_cloud, leaf_cloud_id) in self.leaf_cloud_specs:
-            returndict = {
-                **returndict,
-                **leaf_cloud.bsdfs()
-            }
+            returndict = {**returndict, **leaf_cloud.bsdfs()}
         return returndict
 
     def shapes(self, ref=False):
         returndict = {}
         for (leaf_cloud, leaf_cloud_id) in self.leaf_cloud_specs:
-            returndict = {
-                **returndict,
-                **leaf_cloud.shapes(ref)
-            }
+            returndict = {**returndict, **leaf_cloud.shapes(ref)}
         return returndict
 
     def kernel_dict(self, ref=True):
@@ -747,13 +718,12 @@ class DiscreteCanopy(Canopy):
 
         for leaf_cloud_id in leaf_cloud_ids:
             if not ref:
-                kernel_dict[leaf_cloud_id] = self.shapes(ref=False)[
-                    leaf_cloud_id]
+                kernel_dict[leaf_cloud_id] = self.shapes(ref=False)[leaf_cloud_id]
             else:
-                kernel_dict[f"bsdf_{leaf_cloud_id}"] = \
-                    self.bsdfs()[f"bsdf_{leaf_cloud_id}"]
-                kernel_dict[leaf_cloud_id] = self.shapes(ref=True)[
-                    leaf_cloud_id]
+                kernel_dict[f"bsdf_{leaf_cloud_id}"] = self.bsdfs()[
+                    f"bsdf_{leaf_cloud_id}"
+                ]
+                kernel_dict[leaf_cloud_id] = self.shapes(ref=True)[leaf_cloud_id]
 
         return kernel_dict
 
@@ -807,8 +777,12 @@ class HomogeneousDiscreteCanopy(DiscreteCanopy):
         leaf_cloud = self.leaf_cloud_specs[0][0]
 
         self._n_leaves = leaf_cloud.n_leaves()
-        leaf_area = np.pi * np.square(leaf_cloud.leaf_radius.m_as(kernel_length)) \
-                    * leaf_cloud.n_leaves() * kernel_length
+        leaf_area = (
+            np.pi
+            * np.square(leaf_cloud.leaf_radius.m_as(kernel_length))
+            * leaf_cloud.n_leaves()
+            * kernel_length
+        )
 
         self._lai = leaf_area / (self.size[0] * self.size[1])
 
@@ -852,8 +826,10 @@ class HomogeneousDiscreteCanopy(DiscreteCanopy):
             leaf_cloud = LeafCloud.from_file(**leaf_cloud_spec)
         else:
             if leaf_cloud_spec["shape_type"] != "cube":
-                raise ValueError("The HomogeneousDiscreteCanopy must be used"
-                                 "with a cuboid leaf cloud.")
+                raise ValueError(
+                    "The HomogeneousDiscreteCanopy must be used"
+                    "with a cuboid leaf cloud."
+                )
             leaf_cloud = LeafCloud.from_parameters(**leaf_cloud_spec)
 
         return cls(leaf_cloud_specs=[(leaf_cloud, [[0, 0, 0]])], size=size)
@@ -865,7 +841,7 @@ class HomogeneousDiscreteCanopy(DiscreteCanopy):
 class FloatingSpheresCanopy(DiscreteCanopy):
     """Generates the canopy for the `floating sphere scenario <https://rami-benchmark.jrc.ec.europa.eu/HTML/RAMI3/EXPERIMENTS3/HETEROGENEOUS/FLOATING_SPHERES/SOLAR_DOMAIN/DISCRETE/DISCRETE.php>`_ in the RAMI benchmark
 
-    This canopy is composed of a set of leaf clouds shaped as spheres. """
+    This canopy is composed of a set of leaf clouds shaped as spheres."""
 
     id = documented(
         attr.ib(
@@ -876,7 +852,6 @@ class FloatingSpheresCanopy(DiscreteCanopy):
         type=get_doc(Canopy, "id", "type"),
         default="floating_spheres_canopy",
     )
-
 
     @classmethod
     def from_dict(cls, d):
@@ -939,17 +914,21 @@ class FloatingSpheresCanopy(DiscreteCanopy):
             for line in spf:
                 coords = line.split()
                 if len(coords) != 3:
-                    raise ValueError(f"Leaf positions must have three coordinates."
-                                     f"Found: {len(coords)}!")
+                    raise ValueError(
+                        f"Leaf positions must have three coordinates."
+                        f"Found: {len(coords)}!"
+                    )
                 sphere_positions.append(
                     [float(coord.strip()) for coord in line.split()]
                 )
         if "fname_leaves" in leaf_cloud_spec:
-            leaf_cloud =  LeafCloud.from_file(**leaf_cloud_spec)
+            leaf_cloud = LeafCloud.from_file(**leaf_cloud_spec)
         else:
             if leaf_cloud_spec["shape_type"] != "sphere":
-                raise ValueError("The FloatingSphereCanopy must be used"
-                                 "with a spherical leaf cloud.")
+                raise ValueError(
+                    "The FloatingSphereCanopy must be used"
+                    "with a spherical leaf cloud."
+                )
             leaf_cloud = LeafCloud.from_parameters(**leaf_cloud_spec)
 
         size = d_copy["size"]
@@ -963,7 +942,7 @@ class FloatingSpheresCanopy(DiscreteCanopy):
 class RealZoomInCanopy(DiscreteCanopy):
     """Generates the canopy for the `real zoom in scenario <https://rami-benchmark.jrc.ec.europa.eu/HTML/RAMI3/EXPERIMENTS3/HETEROGENEOUS/REAL_ZOOM-IN/REAL_ZOOM-IN.php>`_ in the RAMI benchmark.
 
-    This canopy is composed of a set of leaf clouds shaped as spheres. """
+    This canopy is composed of a set of leaf clouds shaped as spheres."""
 
     id = documented(
         attr.ib(
@@ -1044,8 +1023,9 @@ class RealZoomInCanopy(DiscreteCanopy):
                 coords = line.split()
                 if len(coords) != 3:
                     raise ValueError(
-                        f"Leaf positions must have three coordinates."
-                        f"Found: {len(coords)}!")
+                        f"Leaf positions must have three coordinates. "
+                        f"Found: {len(coords)}!"
+                    )
                 sphere_positions.append(
                     [float(coord.strip()) for coord in line.split()]
                 )
@@ -1053,8 +1033,10 @@ class RealZoomInCanopy(DiscreteCanopy):
             spherical_leaf_cloud = LeafCloud.from_file(**sphere_spec)
         else:
             if sphere_spec["shape_type"] != "sphere":
-                raise ValueError("The spherical leaf clouds must be used"
-                                 "with a spherical leaf cloud.")
+                raise ValueError(
+                    "The spherical leaf clouds must be used"
+                    "with a spherical leaf cloud."
+                )
             spherical_leaf_cloud = LeafCloud.from_parameters(**sphere_spec)
 
         # parse cylinder specifications
@@ -1067,7 +1049,8 @@ class RealZoomInCanopy(DiscreteCanopy):
                 if len(coords) != 3:
                     raise ValueError(
                         f"Leaf positions must have three coordinates."
-                        f"Found: {len(coords)}!")
+                        f"Found: {len(coords)}!"
+                    )
                 cylinder_positions.append(
                     [float(coord.strip()) for coord in line.split()]
                 )
@@ -1075,8 +1058,10 @@ class RealZoomInCanopy(DiscreteCanopy):
             cylindrical_leaf_cloud = LeafCloud.from_file(**cylinder_spec)
         else:
             if cylinder_spec["shape_type"] != "cylinder":
-                raise ValueError("The cylindrical leaf clouds must be used"
-                                 "with a cylindrical leaf cloud.")
+                raise ValueError(
+                    "The cylindrical leaf clouds must be used"
+                    "with a cylindrical leaf cloud."
+                )
             cylindrical_leaf_cloud = LeafCloud.from_parameters(**cylinder_spec)
 
         size = d_copy["size"]
@@ -1084,6 +1069,7 @@ class RealZoomInCanopy(DiscreteCanopy):
         return cls(
             leaf_cloud_specs=[
                 (spherical_leaf_cloud, sphere_positions),
-                (cylindrical_leaf_cloud, cylinder_positions)],
-            size=size
+                (cylindrical_leaf_cloud, cylinder_positions),
+            ],
+            size=size,
         )
