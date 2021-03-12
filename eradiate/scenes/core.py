@@ -1,21 +1,16 @@
 """Basic abstractions and utilities to assist with scene generation."""
 
-from abc import (
-    ABC,
-    abstractmethod
-)
+from abc import ABC, abstractmethod
+from collections import UserDict
 
 import attr
 import pinttr
 
 import eradiate.kernel
 
-from .._attrs import (
-    documented,
-    parse_docs
-)
+from .._attrs import documented, parse_docs
 from .._units import unit_registry as ureg
-from eradiate.exceptions import KernelVariantError
+from ..exceptions import KernelVariantError
 
 
 class KernelDict(dict):
@@ -41,10 +36,13 @@ class KernelDict(dict):
         variant = eradiate.kernel.variant()
 
         if variant is not None:
-            self.variant = variant  #: Kernel variant with for which the scene is created
+            self.variant = (
+                variant  #: Kernel variant with for which the scene is created
+            )
         else:
-            raise KernelVariantError("a kernel variant must be selected to "
-                                     "create a KernelDict object")
+            raise KernelVariantError(
+                "a kernel variant must be selected to " "create a KernelDict object"
+            )
 
     @classmethod
     def empty(cls):
@@ -66,14 +64,17 @@ class KernelDict(dict):
             not the same as the current one
         """
         if self.get("type", None) != "scene":
-            raise ValueError("kernel scene dictionary is missing {'type': 'scene'} "
-                             "parameters")
+            raise ValueError(
+                "kernel scene dictionary is missing {'type': 'scene'} " "parameters"
+            )
 
         variant = eradiate.kernel.variant()
         if self.variant != variant:
-            raise KernelVariantError(f"scene dictionary created for kernel "
-                                     f"variant '{self.variant}', incompatible "
-                                     f"with current variant '{variant}'")
+            raise KernelVariantError(
+                f"scene dictionary created for kernel "
+                f"variant '{self.variant}', incompatible "
+                f"with current variant '{variant}'"
+            )
 
     def add(self, content):
         """Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
@@ -110,6 +111,7 @@ class KernelDict(dict):
     def load(self):
         self.check()
         from eradiate.kernel.core.xml import load_dict
+
         return load_dict(self)
 
 
