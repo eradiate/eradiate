@@ -1,9 +1,20 @@
 .. _sec-atmosphere-molecular-absorption:
 
 Molecular absorption
---------------------
+====================
 
-The monochromatic absorption coefficient :math:`[L^{-1}]` is computed using the equation:
+There are several ways to compute molecular absorption.
+The most general and accurate way is the *monochromatic model*, also known as
+the *line-by-line model*.
+There are also approximate models, such as the CK model, which are less accurate
+but faster.
+
+Monochromatic model
+-------------------
+
+In monochromatic mode, the monochromatic model is used.
+In the monochromatic model, the monochromatic absorption coefficient
+:math:`[L^{-1}]` is computed using the equation:
 
 .. math::
 
@@ -115,3 +126,10 @@ cross section value is approximated to 0.
       \max_{\nu} k_{a} = 4.0 \, 10^{-4} \, \mathrm{km}^{-1},
 
    this approximation seems reasonable.
+
+
+Approximate models
+------------------
+
+.. note::
+   The support for approximate models is currently ongoing work.

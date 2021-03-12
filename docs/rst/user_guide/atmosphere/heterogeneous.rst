@@ -149,6 +149,8 @@ The corresponding atmosphere is 100 km high and is divided into 4 layers
 The first values in the  ``sigma_t_values`` and ``albedo_values`` arrays
 correspond to the bottom layer of the atmosphere.
 
+.. _sec-atmosphere-heterogeneous-kernel_volume_data_files:
+
 Kernel volume data files
 ------------------------
 
