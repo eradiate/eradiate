@@ -107,9 +107,8 @@ html_theme = "alabaster"
 # html_theme = "pydata_sphinx_theme"
 
 # Register the theme as an extension to generate a sitemap.xml
-extensions = ["alabaster", 'rst2pdf.pdfbuilder']
+extensions = ["alabaster", "rst2pdf.pdfbuilder"]
 extensions.append("sphinx.ext.mathjax")
-extensions.append("sphinxcontrib.bibtex")
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

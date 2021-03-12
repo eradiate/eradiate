@@ -1,6 +1,5 @@
 import argparse
 import os
-from shutil import copyfile
 import subprocess
 
 import generate_summary_files as summaries
@@ -83,7 +82,7 @@ def cli():
 
     eradiate_dir = os.environ["ERADIATE_DIR"]
     build_dir = os.path.join(eradiate_dir, "test_report", "generated")
-    special_dirs = [os.path.join(eradiate_dir, "resources", "deps", "tests")]
+    special_dirs = []  # Now empty, still here in case it's again useful
 
     parser = argparse.ArgumentParser(description=helptext)
     parser.add_argument(
@@ -105,7 +104,7 @@ def cli():
         # run_pytest(target_dir=os.path.join(kernel_dir, "src"),
         #            json_report_file=os.path.join(build_dir, 'report_kernel.json'))
         run_pytest(target_dir=os.path.join(eradiate_dir, "eradiate"),
-                   json_report_file=os.path.join(build_dir, 'report_eradiate.json'))
+                   json_report_file=os.path.join(build_dir, "report_eradiate.json"))
         run_pytest(target_dir=special_dirs,
                    json_report_file=os.path.join(build_dir, "report_special.json"))
 

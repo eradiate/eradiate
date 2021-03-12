@@ -180,7 +180,7 @@ def write_to_file(test_dict, output_dir):
 
 .. role:: green
 
-.. _testspec:
+.. _sec-testspec:
 
 *********************************
 Detailed system-test results

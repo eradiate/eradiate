@@ -47,9 +47,11 @@ def create_summary_table(report):
     time = datetime.fromtimestamp(report['created']).strftime('%H:%M:%S')
     commithash = get_git_revision_short_hash()
 
-    heading = """*******************
-Test result summary
-*******************
+    heading = """.. _sec-summary:
+
+*******
+Summary
+*******
 
 This table contains the results of all tests that were executed in the creation of this test report. Additionally
 it contains the git revision that was used as well as the time of execution.
