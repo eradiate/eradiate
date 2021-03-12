@@ -59,9 +59,26 @@ discretises the participating medium into an arrangement of adjacent 3D cells
 wherein the radiative properties are uniform.
 In the example illustrated by the image above, the shape of these arrays would
 be (4, 2, 2).
+The extinction coefficient (:math:`k_{\mathrm{t}}`) and albedo (:math:`\varpi`)
+are defined by:
+
+.. math::
+
+   k_{\mathrm{t}} = k_{\mathrm{s}} + k_{\mathrm{a}}
+
+.. math::
+
+   \varpi = \frac{k_{\mathrm{s}}}{k_{\mathrm{t}}}
+
+where:
+
+* :math:`k_{\mathrm{a}}` is the absorption coefficient :math:`[L^{-1}]` and
+* :math:`k_{\mathrm{s}}` is the scattering coefficient :math:`[L^{-1}]`.
+
 The phase function does not vary from one cell to the other ; it is the same
 for the whole atmosphere.
 Only the albedo and extinction coefficient are allowed to vary with space.
+
 The structure of the participating medium is assumed to be isotropic, i.e. the
 properties of the medium embedded in one cell is invariant to rotation of the
 cell.
@@ -97,9 +114,13 @@ to describe the angular distribution of scattered light.
 Homogeneous atmosphere
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The homogeneous atmosphere is characterised by a single value of the scattering
-coefficient (``sigma_s``) and a single value of the absorption coefficient
-(``sigma_a``).
+The homogeneous atmosphere is characterised by a single value of the extinction
+coefficient (:math:`k_{\mathrm{s}}`) and a single value of the albedo
+(:math:`\varpi`).
+
+.. image:: ../../../fig/atmosphere-homogeneous.png
+   :align: center
+   :scale: 50
 
 .. admonition:: Example
 
@@ -134,14 +155,20 @@ properties.
 
    At the moment, Eradiate provides 1D-heterogeneous atmosphere only.
 
+.. image:: ../../../fig/atmosphere-heterogeneous.png
+   :align: center
+   :scale: 50
+
 1D-heterogeneous atmospheres are characterised by radiative properties
 that vary with altitude.
 Together, the values of the radiative properties at different altitude points
 constitute the **radiative properties profile** of the atmosphere.
 The radiative properties profile is specified by the ``profile`` parameter of
 the :class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere` class.
-You can either specify directly the radiative properties profile, or choose
-a profile from a list of registered profile types.
+You can either specify the radiative properties profile by choosing
+a profile from a list of registered profile types, or by providing
+:ref:`kernel volume data files <sec-atmosphere-heterogeneous-kernel_volume_data_files>`
+where the values of the extinction coefficient and albedo are written.
 
 .. note::
 
