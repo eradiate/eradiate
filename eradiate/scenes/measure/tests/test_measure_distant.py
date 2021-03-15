@@ -113,20 +113,20 @@ def test_target_origin(mode_mono):
 def test_distant(mode_mono):
     # Test default constructor
     d = DistantMeasure()
-    assert KernelDict.empty().add(d).load() is not None
+    assert KernelDict.new(d).load() is not None
 
     # Test target support
     # -- Target a point
     d = DistantMeasure(target=[0, 0, 0])
-    assert KernelDict.empty().add(d).load() is not None
+    assert KernelDict.new(d).load() is not None
 
     # -- Target an axis-aligned rectangular patch
     d = DistantMeasure(
         target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
     )
-    assert KernelDict.empty().add(d).load() is not None
+    assert KernelDict.new(d).load() is not None
 
     # Test origin support
     # -- Project origins to a sphere
     d = DistantMeasure(origin={"type": "sphere", "center": [0, 0, 0], "radius": 1})
-    assert KernelDict.empty().add(d).load() is not None
+    assert KernelDict.new(d).load() is not None

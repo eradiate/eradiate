@@ -21,12 +21,12 @@ def runner(kernel_dict):
        Prior to usage, a kernel variant must be selected using
        :func:`~mitsuba.set_variant`.
 
-    Parameter ``kernel_dict`` (dict):
-            Dictionary describing the kernel scene.
+    Parameter ``kernel_dict`` (:class:.KernelDict`):
+        Dictionary describing the kernel scene.
 
-        Returns → dict:
-            Dictionary mapping sensor IDs to the corresponding recorded data.
-            Sensors without an ID are assigned a default key.
+    Returns → dict:
+        Dictionary mapping sensor IDs to the corresponding recorded data.
+        Sensors without an ID are assigned a default key.
     """
     _check_variant()
 
@@ -40,7 +40,7 @@ def runner(kernel_dict):
     # Run computation
     from eradiate.kernel.core.xml import load_dict
 
-    kernel_scene = load_dict(kernel_dict)
+    kernel_scene = load_dict(kernel_dict.data)
 
     for i_sensor, sensor in enumerate(kernel_scene.sensors()):
         kernel_scene.integrator().render(kernel_scene, sensor)

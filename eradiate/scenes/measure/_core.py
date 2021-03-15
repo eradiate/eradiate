@@ -101,7 +101,7 @@ class Measure(SceneElement, ABC):
         """Return a tuple of sensor information data structures.
 
         Returns → list[:class:`.SensorInfo`]:
-            List of sensor
+            List of sensor information data structures.
         """
         spps = self._split_spp()
 
@@ -125,7 +125,7 @@ class Measure(SceneElement, ABC):
         Sensor records will have to be combined using
         :meth:`.postprocess_results`.
 
-        Returns → list[float]:
+        Returns → list[int]:
             List of split SPPs if relevant.
         """
         mode = eradiate.mode()

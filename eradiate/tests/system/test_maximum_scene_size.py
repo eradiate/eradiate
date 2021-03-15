@@ -1,6 +1,7 @@
 import numpy as np
 
 from eradiate.frame import angles_to_direction
+from eradiate.scenes.core import KernelDict
 from eradiate.solvers.core import runner
 
 
@@ -29,10 +30,7 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
     the computational results must be equal to the theoretical prediction within
     a relative tolerance of 1e-5.
     """
-    from eradiate.kernel.core import (
-        ScalarTransform4f,
-        ScalarVector3f
-    )
+    from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
     min_expected_size = 1e2
     results = dict()
@@ -46,40 +44,42 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
         + [2.0 * 10 ** i for i in range(1, 8)]
         + [5.0 * 10 ** i for i in range(1, 8)]
     ):
-        kernel_dict = {
-            "type": "scene",
-            "bsdf_surface": {
-                "type": "diffuse",
-                "reflectance": rho,
-            },
-            "surface": {
-                "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(
-                    ScalarVector3f(scene_size, scene_size, 1)
-                ),
-                "bsdf": {"type": "ref", "id": "bsdf_surface"},
-            },
-            "illumination": {
-                "type": "directional",
-                "direction": [0, 0, -1],
-                "irradiance": li,
-            },
-            "measure": {
-                "type": "distant",
-                "id": "measure",
-                "ray_target": [0, 0, 0],
-                "sampler": {"type": "independent", "sample_count": spp},
-                "film": {
-                    "type": "hdrfilm",
-                    "width": 32,
-                    "height": 32,
-                    "pixel_format": "luminance",
-                    "component_format": "float32",
-                    "rfilter": {"type": "box"},
+        kernel_dict = KernelDict.new(
+            {
+                "type": "scene",
+                "bsdf_surface": {
+                    "type": "diffuse",
+                    "reflectance": rho,
                 },
-            },
-            "integrator": {"type": "path"},
-        }
+                "surface": {
+                    "type": "rectangle",
+                    "to_world": ScalarTransform4f.scale(
+                        ScalarVector3f(scene_size, scene_size, 1)
+                    ),
+                    "bsdf": {"type": "ref", "id": "bsdf_surface"},
+                },
+                "illumination": {
+                    "type": "directional",
+                    "direction": [0, 0, -1],
+                    "irradiance": li,
+                },
+                "measure": {
+                    "type": "distant",
+                    "id": "measure",
+                    "ray_target": [0, 0, 0],
+                    "sampler": {"type": "independent", "sample_count": spp},
+                    "film": {
+                        "type": "hdrfilm",
+                        "width": 32,
+                        "height": 32,
+                        "pixel_format": "luminance",
+                        "component_format": "float32",
+                        "rfilter": {"type": "box"},
+                    },
+                },
+                "integrator": {"type": "path"},
+            }
+        )
 
         result = runner(kernel_dict)["measure"].squeeze()
         results[scene_size] = np.allclose(result, expected, rtol=1e-5)

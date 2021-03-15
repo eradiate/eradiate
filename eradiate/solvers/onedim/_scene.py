@@ -6,7 +6,11 @@ from ..._attrs import documented, get_doc, parse_docs
 from ...scenes.atmosphere import Atmosphere, AtmosphereFactory, HomogeneousAtmosphere
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, VolPathIntegrator
-from ...scenes.measure._distant import DistantMeasure, TargetOriginPoint, TargetOriginSphere
+from ...scenes.measure._distant import (
+    DistantMeasure,
+    TargetOriginPoint,
+    TargetOriginSphere,
+)
 from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
 
 
@@ -99,17 +103,17 @@ class OneDimScene(Scene):
                     )
 
     def kernel_dict(self, ref=True):
-        result = KernelDict.empty()
+        result = KernelDict.new()
 
         if self.atmosphere is not None:
-            result.add([self.atmosphere])
+            result.add(self.atmosphere)
 
         # fmt: off
-        result.add([
+        result.add(
             self.surface,
             self.illumination,
             *self.measures,
             self.integrator
-        ])
+        )
         # fmt: on
         return result

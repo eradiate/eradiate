@@ -49,11 +49,7 @@ class RamiScene(Scene):
     )
 
     padding = documented(
-        attr.ib(
-            default=0,
-            converter=int,
-            validator=validators.is_positive
-        ),
+        attr.ib(default=0, converter=int, validator=validators.is_positive),
         doc="Padding level. The scene will be padded with copies to account for "
         "adjacency effects. This, in practice, has effects similar to "
         "making the scene periodic."
@@ -114,7 +110,7 @@ class RamiScene(Scene):
     def kernel_dict(self, ref=True):
         from eradiate.kernel.core import ScalarTransform4f
 
-        result = KernelDict.empty()
+        result = KernelDict.new()
 
         if self.canopy is not None:
             canopy_dict = self.canopy.kernel_dict(ref=True)
@@ -130,24 +126,22 @@ class RamiScene(Scene):
                     for y_offset in np.arange(-self.padding, self.padding + 1):
                         instance_dict = {
                             "type": "instance",
-                            "group": {
-                                "type": "ref",
-                                "id": f"{shapegroup_id}"
-                            },
-                            "to_world": ScalarTransform4f.translate([
-                                patch_size.m_as(kdu_length) * x_offset,
-                                patch_size.m_as(kdu_length) * y_offset,
-                                0.0
-                            ])
-
+                            "group": {"type": "ref", "id": f"{shapegroup_id}"},
+                            "to_world": ScalarTransform4f.translate(
+                                [
+                                    patch_size.m_as(kdu_length) * x_offset,
+                                    patch_size.m_as(kdu_length) * y_offset,
+                                    0.0,
+                                ]
+                            ),
                         }
                         result[f"instance{x_offset}_{y_offset}"] = instance_dict
 
-        result.add([
+        result.add(
             self.surface,
             self.illumination,
             *self.measures,
             self.integrator,
-        ])
+        )
 
         return result
