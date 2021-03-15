@@ -33,8 +33,7 @@ def test_homogeneous(mode_mono, ref):
     assert load_dict(dict_shape) is not None
 
     # Check if produced scene can be instantiated
-    kernel_dict = KernelDict.empty()
-    kernel_dict.add(r)
+    kernel_dict = KernelDict.new(r)
     assert kernel_dict.load() is not None
 
     # Construct with parameters
@@ -53,7 +52,7 @@ def test_homogeneous(mode_mono, ref):
     assert np.isclose(r.kernel_width, 10. / compute_sigma_s_air(wavelength=wavelength))
 
     # Check if produced scene can be instantiated
-    assert KernelDict.empty().add(r).load() is not None
+    assert KernelDict.new(r).load() is not None
 
     # Check that sigma_s wavelength specification is correctly taken from eradiate mode
     eradiate.set_mode("mono", wavelength=650.)

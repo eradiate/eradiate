@@ -61,7 +61,7 @@ def test_heterogeneous_nowrite(mode_mono):
 
     # Load all elements at once (and use references)
     with unit_context_kernel.override({"length": "km"}):
-        kernel_dict = KernelDict.empty()
+        kernel_dict = KernelDict.new()
         kernel_dict.add(a)
         scene = kernel_dict.load()
         assert scene is not None
@@ -87,7 +87,7 @@ def test_heterogeneous_write(mode_mono, tmpdir):
     assert a.albedo_fname.is_file()
     assert a.sigma_t_fname.is_file()
     # Check if written files can be loaded
-    assert KernelDict.empty().add(a).load() is not None
+    assert KernelDict.new(a).load() is not None
 
     # Check that inconsistent init will raise
     with pytest.raises(ValueError):
@@ -114,7 +114,7 @@ def test_heterogeneous_us76(mode_mono, tmpdir):
     assert a.albedo_fname.is_file()
     assert a.sigma_t_fname.is_file()
     # Check if written files can be loaded
-    assert KernelDict.empty().add(a).load() is not None
+    assert KernelDict.new(a).load() is not None
 
 
 def test_heterogeneous_units(mode_mono):

@@ -13,16 +13,21 @@ from .._units import unit_registry as ureg
 from ..exceptions import KernelVariantError
 
 
-class KernelDict(dict):
+class KernelDict(UserDict):
     """A dictionary designed to contain a scene specification appropriate for
     instantiation with :func:`~mitsuba.core.xml.load_dict`.
 
     :class:`KernelDict` keeps track of the variant it has been created with
     and performs minimal checks to help prevent inconsistent scene creation.
-    """
 
-    # TODO: add a content() method which returns a generator with the content of
-    #       the items() method without the 'type' entry
+    .. rubric:: Instance attributes
+
+    ``data`` (dict):
+        Wrapped dictionary.
+
+    ``variant`` (str):
+        Kernel variant for which the dictionary is created.
+    """
 
     def __init__(self, *args, **kwargs):
         """Initialise self and set :attr:`variant` attribute based on currently
@@ -31,88 +36,89 @@ class KernelDict(dict):
         Raises → :class:`~eradiate.util.exceptions.KernelVariantError`
             If no kernel variant is set.
         """
-        super(KernelDict, self).__init__(*args, **kwargs)
-
         variant = eradiate.kernel.variant()
 
         if variant is not None:
-            self.variant = (
-                variant  #: Kernel variant with for which the scene is created
-            )
+            #: Kernel variant for which the scene is created
+            self.variant = variant
         else:
             raise KernelVariantError(
-                "a kernel variant must be selected to " "create a KernelDict object"
+                "a kernel variant must be selected to create a KernelDict object"
             )
 
-    @classmethod
-    def empty(cls):
-        """Create an empty scene."""
-        return cls({"type": "scene"})
+        super().__init__(*args, **kwargs)
 
     def check(self):
         """Perform basic checks on the dictionary:
 
-        - check that the ``{"type": "scene"}`` parameter is included;
-        - check if the variant for which the kernel dictionary was created is
+        * check that the ``{"type": "scene"}`` parameter is included;
+        * check if the variant for which the kernel dictionary was created is
           the same as the current one.
 
         Raises → ValueError
-            If  the ``{"type": "scene"}`` parameter is missing.
+            If the ``{"type": "scene"}`` parameter is missing.
 
         Raises → :class:`.KernelVariantError`
             If the variant for which the kernel dictionary was created is
             not the same as the current one
         """
-        if self.get("type", None) != "scene":
-            raise ValueError(
-                "kernel scene dictionary is missing {'type': 'scene'} " "parameters"
-            )
-
         variant = eradiate.kernel.variant()
         if self.variant != variant:
             raise KernelVariantError(
-                f"scene dictionary created for kernel "
-                f"variant '{self.variant}', incompatible "
-                f"with current variant '{variant}'"
+                f"scene dictionary created for kernel variant '{self.variant}', "
+                f"incompatible with current variant '{variant}'"
             )
 
-    def add(self, content):
+        if self.get("type", None) != "scene":
+            raise ValueError(
+                "kernel scene dictionary is missing {'type': 'scene'} parameters"
+            )
+
+    @classmethod
+    def new(cls, *elements):
+        """Create a kernel dictionary using the passed elements. This variadic
+        function accepts an arbitrary number of positional arguments.
+
+        Parameter ``elements`` (:class:`SceneElement` or dict):
+            Items to add to the newly created kernel dictionary.
+
+        Returns → :class:`KernelDict`
+            Initialise kernel dictionary.
+        """
+        result = cls({"type": "scene"})
+        result.add(*elements)
+        return result
+
+    def add(self, *elements):
         """Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
         another dictionary object with the current :class:`KernelDict`.
 
-        Parameter ``content`` (:class:`~eradiate.scenes.core.SceneElement` or list or dict)
-            Content to merge with the current scene. If ``content`` is a
+        Parameter ``elements`` (:class:`SceneElement` or dict):
+            Items to add to the current kernel dictionary. If the item is a
             :class:`~eradiate.scenes.core.SceneElement` instance, its
             :meth:`~eradiate.scenes.core.SceneElement.kernel_dict` method will
-            be called with ``ref`` set to `True`. If ``content`` is a list,
-            :meth:`add` will be called for each element of it. If ``content`` is
-            a dict, it will be merged without change.
-
-        Returns → ``self``
+            be called with ``ref`` set to ``True``. If it is a dictionary
+            (including a :class:`.KernelDict`), it will be merged without change.
         """
-        # TODO: make variadic
-        # TODO: accept merging KernelDict instances (after variant check)
 
-        if isinstance(content, SceneElement):
-            for key, value in content.kernel_dict(ref=True).items():
-                self[key] = value
-        elif isinstance(content, list):
-            for item in content:
-                self.add(item)
-        else:
-            for key, value in content.items():
-                self[key] = value
-
-        return self
-
-    def normalize(self):
-        self["type"] = "scene"
+        for element in elements:
+            try:
+                self.update(element.kernel_dict(ref=True))
+            except AttributeError:
+                self.update(element)
 
     def load(self):
+        """Load kernel object from self.
+
+        .. note:: Requires a valid selected operational mode.
+
+        Returns → :class:`mitsuba.render.Scene`:
+             Kernel object.
+        """
         self.check()
         from eradiate.kernel.core.xml import load_dict
 
-        return load_dict(self)
+        return load_dict(self.data)
 
 
 @parse_docs

@@ -29,7 +29,6 @@ def is_vector3(value):
     if isinstance(value, pint.Quantity):
         return is_vector3(value.magnitude)
 
-    # @formatter:off
     return (
         (
             isinstance(value, numpy.ndarray)
@@ -38,7 +37,6 @@ def is_vector3(value):
         and len(value) == 3
         and all(map(lambda x: isinstance(x, Number), value))
     )
-    # @formatter:on
 
 
 class Singleton(type):

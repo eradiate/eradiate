@@ -7,7 +7,7 @@ from eradiate.scenes.measure import PerspectiveCameraMeasure
 def test_perspective(mode_mono):
     # Constructor
     d = PerspectiveCameraMeasure()
-    assert KernelDict.empty().add(d).load() is not None
+    assert KernelDict.new(d).load() is not None
 
     # Origin and target cannot be the same
     for point in [[0, 0, 0], [1, 1, 1], [-1, 0.5, 1.3333]]:

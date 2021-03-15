@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+from eradiate.scenes.core import KernelDict
 from eradiate.solvers.core import runner
 
 
@@ -48,31 +49,33 @@ def test_radiometric_accuracy(mode_mono, illumination, spp, li):
     vza = np.linspace(0, 80, 10)
     rho = 0.5
 
-    kernel_dict = {
-        "type": "scene",
-        "surface": {
-            "type": "rectangle",
-            "bsdf": {
-                "type": "diffuse",
-                "reflectance": rho,
+    kernel_dict = KernelDict.new(
+        {
+            "type": "scene",
+            "surface": {
+                "type": "rectangle",
+                "bsdf": {
+                    "type": "diffuse",
+                    "reflectance": rho,
+                },
             },
-        },
-        "measure": {
-            "type": "distant",
-            "id": "measure",
-            "ray_target": [0, 0, 0],
-            "sampler": {"type": "independent", "sample_count": spp},
-            "film": {
-                "type": "hdrfilm",
-                "width": len(vza),
-                "height": 1,
-                "pixel_format": "luminance",
-                "component_format": "float32",
-                "rfilter": {"type": "box"},
+            "measure": {
+                "type": "distant",
+                "id": "measure",
+                "ray_target": [0, 0, 0],
+                "sampler": {"type": "independent", "sample_count": spp},
+                "film": {
+                    "type": "hdrfilm",
+                    "width": len(vza),
+                    "height": 1,
+                    "pixel_format": "luminance",
+                    "component_format": "float32",
+                    "rfilter": {"type": "box"},
+                },
             },
-        },
-        "integrator": {"type": "path"},
-    }
+            "integrator": {"type": "path"},
+        }
+    )
 
     if illumination == "directional":
         kernel_dict["illumination"] = {
