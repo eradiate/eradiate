@@ -6,36 +6,53 @@ Molecular absorption
 There are several ways to compute molecular absorption.
 The most general and accurate way is the *monochromatic model*, also known as
 the *line-by-line model*.
-There are also approximate models, such as the CK model, which are less accurate
-but faster.
+There are also approximate models, such as the *CK model*, which are less
+accurate but faster.
+:cite:`Taine2014TransfertsThermiquesIntroduction`.
 
 Monochromatic model
 -------------------
 
 In monochromatic mode, the monochromatic model is used.
-In the monochromatic model, the monochromatic absorption coefficient
-:math:`[L^{-1}]` is computed using the equation:
+In the monochromatic model, the air monochromatic absorption coefficient,
+:math:`k_{\mathrm a \lambda} \, [L^{-1}]`,
+due to :math:`N` absorbers, is computed using the equation:
 
 .. math::
 
-   k_{\mathrm a \lambda} (p, T) = n \, \sigma_{\mathrm a}(\nu, p, T)
+   k_{\mathrm a \lambda} (p, T, \vec{x}) = \sum_{i=0}^{N-1} \, x_i \, n \,
+   \sigma_{\mathrm{ai}}(\nu, p, T)
 
 where
 
 * :math:`n` is the air number density :math:`[L^{-3}]`,
-* :math:`\sigma_{\mathrm a}` is the monochromatic absorption cross section :math:`[L^2]`,
+* :math:`\sigma_{\mathrm {ai}}` is the monochromatic absorption cross section
+  :math:`[L^2]`, of the :math:`i` -th absorber,
 * :math:`\nu = \lambda^{-1}` is the wavenumber :math:`[L^{-1}]`,
-* :math:`p` is the pressure :math:`[ML^{-1}T^{-2}]` and
-* :math:`T` is the temperature :math:`[\Theta]`.
+* :math:`p` is the pressure :math:`[ML^{-1}T^{-2}]`,
+* :math:`T` is the temperature :math:`[\Theta]` and
+* :math:`x_i` is the volume fraction :math:`[/]` of the :math:`i` -th absorber
+  in air (:math:`\vec{x}` is the vector whose constituents are :math:`x_i`).
 
-The monochromatic absorption cross section is computed by interpolating the
-absorption cross section data set that corresponds to the absorbing gas species
-or mixture on the wavenumber, pressure and temperature axes.
+Note that the sum of the absorbers volume fractions is not necessarily 1,
+because there are some non-absorbing species in the air:
+
+.. math::
+
+   \sum_{i=0}^{N-1} x_i \leq 1
+
+.. note::
+
+   Absorbers can be mixtures of absorbers.
+
+The monochromatic absorption cross section values are computed by interpolating
+the absorption cross section data set that corresponds to the absorber
+on the wavenumber, pressure and temperature axes.
 
 .. note::
 
    At the moment, molecular absorption is only computed for the so-called
-   ``us76_u86_4`` gas mixture and within the
+   ``us76_u86_4`` absorber and within the
    :mod:`us76 <eradiate.thermoprops.us76>` thermophysical properties profile.
 
    We are currently working on the functionality to compute absorption by the
@@ -45,8 +62,8 @@ or mixture on the wavenumber, pressure and temperature axes.
 ``us76_u86_4``
 ~~~~~~~~~~~~~~
 
-The ``us76_u86_4`` gas mixture is defined by the mixing ratios provided in the
-table below.
+The ``us76_u86_4`` absorber is a gas mixture defined by the mixing ratios
+provided in the table below.
 The ``us76_u86_4`` is named in this way because it corresponds to the
 gas mixture defined by the ``us76`` atmosphere model
 :cite:`NASA1976USStandardAtmosphere` in the region of altitudes below 86 km,
@@ -69,6 +86,29 @@ and restricted to the 4 main molecular species, namely N2, O2, CO2 and CH4.
 Monochromatic absorption by the ``us76_u86_4`` gas mixture is computed by
 interpolating the absorption cross section data set ``spectra-us76_u86_4`` in
 wavenumber and pressure.
+
+Wait, what?
+^^^^^^^^^^^
+
+Indeed, the absorption cross section data set is interpolated on the
+wavenumber axis.
+In theory, interpolating the absorption cross section spectrum of a gas
+requires the spectrum to have a very high resolution, because the spectrum
+typically includes numerous fine features called *lines* that are characterised
+by an intensity (area under the line curve) and a half-width at half-maximum
+(:math:`\gamma`).
+In standard conditions (101325 Pa, 300 K), :math:`\gamma` is around
+:math:`10^{-2} \mathrm{cm}^{-1}` for CO2 and H2O
+:cite:`Taine2014TransfertsThermiquesIntroduction`,
+but changes with pressure and temperature (and also with the absorber) and
+generally decreases with increasing altitudes.
+In order to resolve each line, the spectrum must be computed at a resolution
+better than :math:`\gamma`, e.g.
+:math:`3 \, 10^{-3} \mathrm{cm}^{-1}`
+if :math:`\gamma = 10^{-2} \mathrm{cm}^{-1}`.
+
+
+
 The absorption cross sections in this data set were computed using the
 `SPECTRA <https://spectra.iao.ru>`_
 Information System, which uses the HITRAN database (2016-edition)
