@@ -7,32 +7,20 @@
       :factory: SurfaceFactory
 """
 
-from abc import (
-    ABC,
-    abstractmethod
-)
+from abc import ABC, abstractmethod
+from copy import deepcopy
 
 import attr
 import pinttr
 
 from .core import SceneElement
-from .spectra import (
-    Spectrum,
-    SpectrumFactory
-)
-from .._attrs import (
-    documented,
-    get_doc,
-    parse_docs
-)
+from .spectra import Spectrum, SpectrumFactory
+from .._attrs import documented, get_doc, parse_docs
 from .._factory import BaseFactory
 from .._units import unit_context_config as ucc
 from .._units import unit_context_kernel as uck
 from .._units import unit_registry as ureg
-from ..validators import (
-    has_quantity,
-    is_positive
-)
+from ..validators import has_quantity, is_positive
 
 
 @parse_docs
@@ -86,10 +74,7 @@ class Surface(SceneElement, ABC):
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             attached to the surface.
         """
-        from eradiate.kernel.core import (
-            ScalarTransform4f,
-            ScalarVector3f
-        )
+        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
 
         if ref:
             bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
@@ -118,6 +103,12 @@ class Surface(SceneElement, ABC):
             kernel_dict[self.id] = self.shapes(ref=True)[f"shape_{self.id}"]
 
         return kernel_dict
+
+    def scaled(self, factor):
+        """Return a copy of self scaled by a given factor."""
+        result = deepcopy(self)
+        result.width *= factor
+        return result
 
 
 class SurfaceFactory(BaseFactory):

@@ -98,8 +98,7 @@ class OneDimScene(Scene):
                     )
 
                     measure.origin = TargetOriginSphere(
-                        center=measure.target.xyz,
-                        radius=radius,
+                        center=measure.target.xyz, radius=radius
                     )
 
     def kernel_dict(self, ref=True):
@@ -108,12 +107,5 @@ class OneDimScene(Scene):
         if self.atmosphere is not None:
             result.add(self.atmosphere)
 
-        # fmt: off
-        result.add(
-            self.surface,
-            self.illumination,
-            *self.measures,
-            self.integrator
-        )
-        # fmt: on
+        result.add(self.surface, self.illumination, *self.measures, self.integrator)
         return result

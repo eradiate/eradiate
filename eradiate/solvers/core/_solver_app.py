@@ -43,7 +43,8 @@ class SolverApp(ABC):
 
     @classmethod
     def new(cls, *args, **kwargs):
-        """Create an instance after preparatory checks.
+        """
+        Create an instance after preparatory checks.
         All arguments are forwarded to the constructor.
         """
         if isinstance(eradiate.mode(), ModeNone):
@@ -110,14 +111,16 @@ class SolverApp(ABC):
         pass
 
     def run(self):
-        """Perform radiative transfer simulation and post-process results.
+        """
+        Perform radiative transfer simulation and post-process results.
         Essentially chains :meth:`process` and :meth:`postprocess`.
         """
         self.process()
         self.postprocess()
 
     def save_results(self, fname_prefix):
-        """Save results to netCDF files.
+        """
+        Save results to netCDF files.
 
         Parameter ``fname_prefix`` (str):
             Filename prefix for result storage. A netCDF file is created for

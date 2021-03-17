@@ -1,14 +1,13 @@
 import attr
-import numpy as np
 
-from eradiate import unit_context_kernel as uck, validators
-from eradiate._attrs import documented, get_doc, parse_docs
-from eradiate.scenes.biosphere import BiosphereFactory, Canopy
-from eradiate.scenes.core import KernelDict
-from eradiate.scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
-from eradiate.scenes.measure._distant import DistantMeasure
-from eradiate.scenes.surface import LambertianSurface, Surface, SurfaceFactory
-from eradiate.solvers.core._scene import Scene
+from ..core._scene import Scene
+from ... import validators
+from ..._attrs import documented, get_doc, parse_docs
+from ...scenes.biosphere import BiosphereFactory, Canopy
+from ...scenes.core import KernelDict
+from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
+from ...scenes.measure._distant import DistantMeasure
+from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
 
 
 @parse_docs
@@ -82,9 +81,6 @@ class RamiScene(Scene):
         if self.canopy is not None:
             self.surface.width = max(self.canopy.size[:2])
 
-        # Scale surface to accomodate padding
-        self.surface.width = self.surface.width * (1.0 + 2.0 * self.padding)
-
         # Process measures
         for measure in self.measures:
             # Override ray target location if relevant
@@ -108,37 +104,22 @@ class RamiScene(Scene):
                         )
 
     def kernel_dict(self, ref=True):
-        from eradiate.kernel.core import ScalarTransform4f
-
         result = KernelDict.new()
 
         if self.canopy is not None:
-            canopy_dict = self.canopy.kernel_dict(ref=True)
-            result.add(canopy_dict)
+            if self.padding > 0:  # We must add extra instances if padding is requested
+                canopy = self.canopy.padded(self.padding)
+                surface = self.surface.scaled(2 * self.padding + 1)
+            else:
+                canopy = self.canopy
+                surface = self.surface
 
-            # specify the instances for padding
-            patch_size = max(self.canopy.size[:2])
-            kdu_length = uck.get("length")
-            for shapegroup_id in canopy_dict.keys():
-                if shapegroup_id.find("bsdf") != -1:
-                    continue
-                for x_offset in np.arange(-self.padding, self.padding + 1):
-                    for y_offset in np.arange(-self.padding, self.padding + 1):
-                        instance_dict = {
-                            "type": "instance",
-                            "group": {"type": "ref", "id": f"{shapegroup_id}"},
-                            "to_world": ScalarTransform4f.translate(
-                                [
-                                    patch_size.m_as(kdu_length) * x_offset,
-                                    patch_size.m_as(kdu_length) * y_offset,
-                                    0.0,
-                                ]
-                            ),
-                        }
-                        result[f"instance{x_offset}_{y_offset}"] = instance_dict
+            result.add(canopy.kernel_dict(ref=True))
+        else:
+            surface = self.surface
 
         result.add(
-            self.surface,
+            surface,
             self.illumination,
             *self.measures,
             self.integrator,

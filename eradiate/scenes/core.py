@@ -169,11 +169,10 @@ class SceneElement(ABC):
         """Return a dictionary suitable for kernel scene configuration.
 
         Parameter ``ref`` (bool):
-            If `True`, use referencing for all relevant nested kernel plugins.
+            If ``True``, use referencing for all relevant nested kernel plugins.
 
         Returns → dict:
             Dictionary suitable for merge with a kernel scene dictionary
             (using :func:`~mitsuba.core.xml.load_dict`).
         """
-        # TODO: return a KernelDict
         pass
