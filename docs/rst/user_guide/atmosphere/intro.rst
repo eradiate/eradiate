@@ -39,7 +39,7 @@ Eradiate represents the atmosphere as a **shape** that encompasses a
 The shape is a cuboid characterised by width and height values that correspond
 to the width and height, respectively, of the atmosphere object.
 
-.. image:: ../../../fig/atmosphere-cuboid_shape.png
+.. image:: fig/atmosphere-cuboid_shape.png
    :align: center
    :scale: 50
 
@@ -50,7 +50,7 @@ The participating medium is characterised by a phase function type and two 3D
 arrays of albedo and extinction coefficient values that describe how
 radiative properties vary in space.
 
-.. image:: ../../../fig/atmosphere-participating_medium.png
+.. image:: fig/atmosphere-participating_medium.png
    :align: center
    :scale: 50
 
@@ -99,7 +99,7 @@ Eradiate provides two atmosphere types:
   (:class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere`): radiative
   properties are non-uniform within the atmosphere.
 
-.. image:: ../../../fig/atmosphere-classes.png
+.. image:: fig/atmosphere-classes.png
    :align: center
 
 Both atmosphere types inherit an abstract atmosphere base type
@@ -117,7 +117,7 @@ Homogeneous atmosphere
 The homogeneous atmosphere is characterised by uniform extinction coefficient
 (:math:`k_{\mathrm{s}}`) and albedo (:math:`\varpi`).
 
-.. image:: ../../../fig/atmosphere-homogeneous.png
+.. image:: fig/atmosphere-homogeneous.png
    :align: center
    :scale: 50
 
@@ -154,7 +154,7 @@ properties.
 
    At the moment, Eradiate provides 1D-heterogeneous atmosphere only.
 
-.. image:: ../../../fig/atmosphere-heterogeneous.png
+.. image:: fig/atmosphere-heterogeneous.png
    :align: center
    :scale: 50
 

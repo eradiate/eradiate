@@ -1,4 +1,4 @@
-.. _sec-atmosphere-index:
+.. _sec-user_guide-atmosphere:
 
 Atmosphere
 ==========
