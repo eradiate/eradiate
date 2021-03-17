@@ -56,9 +56,18 @@ Biosphere [eradiate.scenes.biosphere]
 .. autosummary::
    :toctree: generated/
 
-   HomogeneousDiscreteCanopy
-   FloatingSpheresCanopy
-   RealZoomInCanopy
+   LeafCloud
+   InstancedLeafCloud
+   DiscreteCanopy
+
+.. dropdown:: **Parameters for LeafCloud generators**
+
+   .. autosummary::
+      :toctree: generated/
+
+      _discrete.CuboidLeafCloudParams
+      _discrete.SphereLeafCloudParams
+      _discrete.CylinderLeafCloudParams
 
 .. _sec-reference-scenes-surface:
 

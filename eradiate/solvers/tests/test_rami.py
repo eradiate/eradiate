@@ -6,7 +6,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import ModeError
-from eradiate.scenes.biosphere import HomogeneousDiscreteCanopy, LeafCloud
+from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import DistantMeasure
 from eradiate.solvers.rami import RamiScene, RamiSolverApp
 
@@ -29,20 +29,24 @@ def test_rami_scene(mode_mono):
     s = RamiScene(measures={"type": "distant"})
     assert s.kernel_dict().load() is not None
 
-    # -- Check that surface is appropriately inherited from atmosphere
+    # -- Surface size is appropriately inherited from canopy
     s = RamiScene(
-        canopy=HomogeneousDiscreteCanopy(
-            leaf_cloud_specs=[(LeafCloud.from_parameters(), [0, 0, 0])],
-            size=ureg.Quantity([100, 50, 10], "m"),
+        canopy=DiscreteCanopy.homogeneous(
+            lai=3.0,
+            leaf_radius=0.1 * ureg.m,
+            l_horizontal=10.0 * ureg.m,
+            l_vertical=2.0 * ureg.m,
         )
     )
-    assert np.allclose(s.surface.width, ureg.Quantity(100.0, "m"))
+    assert np.allclose(s.surface.width, ureg.Quantity(10.0, "m"))
 
-    # -- Check that distant sensor target zone is appropriately defined
+    # -- Distant sensor target zone is appropriately defined
     s = RamiScene(
-        canopy=HomogeneousDiscreteCanopy(
-            leaf_cloud_specs=[(LeafCloud.from_parameters(), [0, 0, 0])],
-            size=ureg.Quantity([100, 50, 10], "m"),
+        canopy=DiscreteCanopy.homogeneous(
+            lai=3.0,
+            leaf_radius=0.1 * ureg.m,
+            l_horizontal=10.0 * ureg.m,
+            l_vertical=2.0 * ureg.m,
         ),
         measures=DistantMeasure(),
     )
@@ -73,9 +77,12 @@ def test_rami_scene_real_life(mode_mono):
     s = RamiScene(
         surface={"type": "lambertian"},
         canopy={
-            "type": "homogeneous_discrete_canopy",
-            "leaf_cloud": {"shape_type": "cube"},
-            "size": ureg.Quantity([100, 50, 10], "m"),
+            "type": "discrete_canopy",
+            "construct": "homogeneous",
+            "lai": 3.0,
+            "leaf_radius": 0.1 * ureg.m,
+            "l_horizontal": 10.0 * ureg.m,
+            "l_vertical": 2.0 * ureg.m,
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures={"type": "distant"},
@@ -96,9 +103,12 @@ def test_rami_solver_app_run(mode_mono):
     app = RamiSolverApp(
         scene=RamiScene(
             canopy={
-                "type": "homogeneous_discrete_canopy",
-                "leaf_cloud": {"shape_type": "cube"},
-                "size": ureg.Quantity([100, 50, 10], "m"),
+                "type": "discrete_canopy",
+                "construct": "homogeneous",
+                "lai": 3.0,
+                "leaf_radius": 0.1 * ureg.m,
+                "l_horizontal": 10.0 * ureg.m,
+                "l_vertical": 2.0 * ureg.m,
             },
             measures={"type": "distant"},
         )

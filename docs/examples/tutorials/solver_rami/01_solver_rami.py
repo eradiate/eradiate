@@ -18,34 +18,48 @@ typically used in the RAMI benchmarking exercise.
 # nm:
 
 import eradiate
-eradiate.set_mode("mono", wavelength=550.)
+
+eradiate.set_mode("mono", wavelength=550.0)
+
+# %%
+# We also assign an alias to the unit registry:
+
+ureg = eradiate.unit_registry
 
 # %%
 # Now, we can define our scene. For this example, we will use the
 # `RAMI 3 homogeneous discrete canopy scene`_,
-# which can be created using the :class:`.HomogeneousDiscreteCanopy` class. We
-# will use default parameters to create it quickly:
+# which can be created using the :class:`.DiscreteCanopy` class. We use typical
+# values (in the red optical domain) to set it up:
 #
 # .. _RAMI 3 homogeneous discrete canopy scene: https://rami-benchmark.jrc.ec.europa.eu/_www/phase/phase_exp.php?strTag=level3&strNext=meas&strPhase=RAMI3&strTagValue=HOM_SOL_DIS
 
-canopy = eradiate.scenes.biosphere.HomogeneousDiscreteCanopy.from_parameters()
+canopy = eradiate.scenes.biosphere.DiscreteCanopy.homogeneous(
+    lai=3.0,
+    leaf_radius=0.1 * ureg.m,
+    l_vertical=2.0 * ureg.m,
+    l_horizontal=30.0 * ureg.m,
+    leaf_reflectance=0.0546,
+    leaf_transmittance=0.0149,
+)
 canopy
 
 # %%
-# We will then create a Lambertian surface with reflectance 0.15. We do not care
-# about the size of this surface: the solver will automatically match it with
-# the size of the canopy.
+# We will then create a Lambertian surface with reflectance 0.127. We do not
+# care about the size of this surface: the solver will automatically match it
+# with the size of the canopy.
 
-surface = eradiate.scenes.surface.LambertianSurface(reflectance=0.15)
+surface = eradiate.scenes.surface.LambertianSurface(reflectance=0.127)
 surface
 
 # %%
 # Next up is the illumination. We use the directional illumination with the
 # default solar irradiance spectrum and select arbitrary illumination angles:
 
-illumination = eradiate.scenes.illumination.DirectionalIllumination(zenith=30., azimuth=45.)
+illumination = eradiate.scenes.illumination.DirectionalIllumination(
+    zenith=30.0, azimuth=45.0
+)
 illumination
-
 
 # %%
 # The last part we need to add to our scene is a measure. This solver currently
@@ -142,6 +156,7 @@ app.results["toa_brf"]
 # capabilities:
 
 import matplotlib.pyplot as plt
+
 ds = app.results["toa_brf"]
 ds.brf.squeeze().plot.imshow()
 plt.show()
@@ -169,10 +184,7 @@ plt.show()
 # reduce that noise.
 
 measure = eradiate.scenes.measure.DistantMeasure(
-    id="toa_brf",
-    film_resolution=(32, 1),
-    spp=100000,
-    orientation=45.
+    id="toa_brf", film_resolution=(32, 1), spp=100000, orientation=45.0
 )
 
 # %%
@@ -209,5 +221,5 @@ da
 # orientation, is located to the right of the plot, where the VZA takes positive
 # values.
 
-da.plot(x="vza")
+da.plot(x="vza", marker=".", linestyle="--")
 plt.show()
