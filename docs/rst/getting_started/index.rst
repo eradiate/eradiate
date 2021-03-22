@@ -8,6 +8,7 @@ Getting started
 
    install
    update
+   docker
 
 What is Eradiate?
 -----------------
@@ -36,5 +37,12 @@ Perform simulations on one-dimensional scenes.
 Perform simulations on three-dimensional scenes.
     Eradiate supports simulations on 3D scenes consisting of a vegetated ground
     patch with no atmosphere above it.
+
+Running with Docker
+-------------------
+
+Docker users may benefit from the images provided by the Eradiate team.
+
+Those images allow a fast setup and can provide a ready to use Jupyter Lab server for experimenting.
 
 *More features are coming soon!*
