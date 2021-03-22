@@ -74,6 +74,19 @@ molecule coordinates.
    profile.
    This is why this data set is tied to the ``us76`` thermophysical profile.
 
+   The graph below illustrates the pressure and temperature points used to
+   compute the absorption cross section.
+   There are 64 points (in red).
+   The pressure values are geometrically spaced between
+   :math:`10^{-6} \mathrm{atm}` (:math:`0.101325 \mathrm{Pa}`) and
+   :math:`1 \mathrm{atm}` (:math:`101325 \mathrm{Pa}`).
+   The temperature values are defined as the ordinate values when the abscissa
+   values are set to these 64 pressure values, and the pressure-temperature
+   relationship is given by the US76 model (blue curve).
+
+   .. image:: fig/pt_points.png
+      :align: center
+
 Wavenumber coordinate
 ~~~~~~~~~~~~~~~~~~~~~
 The wavenumber coordinate is a linearly spaced mesh between
@@ -132,6 +145,7 @@ values.
 We assess the interpolation accuracy by computing the relative errors:
 
 .. math::
+   :label: rerr
 
    \epsilon(p_i, q) =
    \frac{
@@ -187,8 +201,25 @@ values are too small to influence radiative transfer computations significantly.
 Results
 ^^^^^^^
 
+Below are illustrated some histograms of the values of :math:`\epsilon`
+computed with :eq:`rerr`.
+
+Wavenumber interpolation
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Below is given the histogram of the relative errors :math:`\epsilon (\nu_i, p)`
+for :math:`p=101325 \, \mathrm{Pa}` when interpolating the down-sampled
+data set on to the even-index wavenumber values of the original data set.
+
 .. image:: fig/w_interp_rerr_histo_101325.png
    :align: center
+
+Pressure interpolation
+~~~~~~~~~~~~~~~~~~~~~~
+
+Below is illustrated the histogram of the relative errors
+:math:`\epsilon(p_i, \nu)` for :math:`p_i = 65349 \, \mathrm{Pa}` and for all
+wavenumbers values of the original data set.
 
 .. image:: fig/p_interp_rerr_histo_65349.png
    :align: center
@@ -206,24 +237,40 @@ We make the following observations:
 * Up to altitudes ~ 10 km the interpolation accuracy remains fine -- better than
   5 % except for outliers.
 * For pressure corresponding to 10 km altitude and higher, the interpolation
-  accuracy gets poorer, although the errors counts decrease at the same time.
+  accuracy gets poorer -- up to 30 % at 20 km, although the errors counts
+  decrease at the same time.
 * As the pressure decreases (corresponding altitude increases), the interpolation
   accuracy gets poorer and poorer.
-
-.. note::
-
-   The counts number decreases with decreasing pressure because lower pressure
-   means lower number density hence fewer absorption cross section data points
-   satisfy :eq:`negligible_k`.
+  It reaches 80 % at 30 km of altitude and goes above 100 % at 35 km and above.
+* The counts number decreases with decreasing pressure because lower pressure
+  means lower number density hence fewer absorption cross section data points
+  satisfy :eq:`negligible_k`.
 
 Pressure interpolation
-^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~
 
 We make the following observations:
 
-* The interpolation accuracy is relatively bad -- around 100 % -- at ground level
-  altitude.
+* At 4 km altitude (:math:`p = 65349 \, \mathrm{Pa}`), the interpolation
+  accuracy is relatively bad -- up to 40 % -- except for a few outliers.
+* The interpolation accuracy generally improves with increasing altitudes
+  (decreasing pressure).
+* For altitudes ~ 13 km and higher (:math:`p < 17531 \, \mathrm{Pa}`), the
+  interpolation accuracy is better than 5 %, except for some outliers.
+* The counts number decreases with decreasing pressure because lower pressure
+  means lower number density hence fewer absorption cross section data points
+  satisfy :eq:`negligible_k`.
 
-.. note::
-   We plan to generate a new version of the data set with a finer pressure mesh
-   to address this problem.
+Conclusion
+^^^^^^^^^^
+
+It is not easy to draw any conclusion regarding the interpolation accuracy of
+the ``spectra-us76_u86_4`` absorption data set from the above analysis.
+Since the interpolation accuracy of the down-sampled data set is not quite
+satisfactory, there is not guarantee that the interpolation accuracy of the
+actual data set is.
+On the other hand, the interpolation accuracy of the down-sampled data set was
+estimated in the worst case scenarios, so that the average accuracy is in fact
+better than the reported accuracy.
+Nevertheless, we plan to generate a new version of the data set with finer
+wavenumber and pressure mesh to improve the interpolation accuracy.
