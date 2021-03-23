@@ -29,6 +29,8 @@ def distant_measure_compute_viewing_angles(
     plane = measure.film_resolution[1] == 1
 
     # Compute viewing angles at pixel locations
+    # Angle computation must correspond to the direction sampling done by the
+    # kernel plugin
     xs = result.coords["x"].data
     ys = result.coords["y"].data
     theta = np.full((len(ys), len(xs)), np.nan)
@@ -39,7 +41,7 @@ def distant_measure_compute_viewing_angles(
             for x in xs:
                 sample = float(x + 0.5) / len(xs)
                 theta[y, x] = 90.0 - 180.0 * sample
-                phi[y, x] = measure.orientation.to("deg").m
+                phi[y, x] = measure.orientation.m_as("deg")
 
     else:
         for y in ys:
