@@ -55,7 +55,9 @@ surface
 # allows us to focus on our workflow.
 #
 # .. seealso:: For a detailed introduction to atmosphere models, please refer to
-#    :ref:`sphx_glr_examples_generated_tutorials_solver_onedim_02_heterogeneous_atmospheres.py`.
+#    :ref:`sphx_glr_examples_generated_tutorials_atmosphere_01_homogeneous.py`
+#    and
+#    :ref:`sphx_glr_examples_generated_tutorials_atmosphere_02_heterogeneous.py`.
 #
 # We will configure our atmosphere as follows:
 #

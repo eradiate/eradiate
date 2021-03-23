@@ -5,19 +5,23 @@ surface:
   type: lambertian
   reflectance:
     type: uniform
-    value: 0.5  # dimensionless
+    value: 0.5
 atmosphere:
   type: homogeneous
-  toa_altitude: 40.  # km
+  toa_altitude: 40.
+  toa_altitude_units: km
 illumination:
   type: directional
-  zenith: 30.  # deg
-  azimuth: 0.  # deg
+  zenith: 30.0
+  zenith_units: deg
+  azimuth: 0.0
+  azimuth_units: deg
   irradiance:
-    type: uniform
-    value: 1.8e+6  # W/km^2/nm
+    type: solar_irradiance
 measures:
-  - type: toa_hsphere
-    spp: 32000  # dimensionless
-    zenith_res: 10.  # deg
-    azimuth_res: 10.  # deg
+  - type: distant
+    id: toa_hsphere
+    orientation: 0.0
+    orientation_units: deg
+    film_resolution: [32, 32]
+    spp: 100000
