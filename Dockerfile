@@ -52,7 +52,7 @@ RUN mkdir -p /sources \
     && cd /sources/eradiate \
     && wget -q https://eradiate.eu/data/solid_2017.zip # Silent and may take a while \
     && wget -q https://eradiate.eu/data/spectra-us76_u86_4.zip # Silent and may take a while \
-    && cd eradiate/data && (unzip ../../solid_2017.zip || true) \
+    && cd resources/data && (unzip ../../solid_2017.zip || true) \
     && (unzip ../../spectra-us76_u86_4.zip || true) \
     && cd /sources/eradiate && python3 setup.py install --single-version-externally-managed --root=/ \
     && cp -r /sources/eradiate/resources /usr/local/lib/python3.8/dist-packages/eradiate/resources \
