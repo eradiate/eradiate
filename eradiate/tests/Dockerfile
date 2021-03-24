@@ -35,6 +35,7 @@ RUN pip3 install                \
     isort                       \
     jupyterlab                  \
     setuptools                  \
+    toolz                       \
     twine                       \
     mock                        \
     pydata-sphinx-theme         \
