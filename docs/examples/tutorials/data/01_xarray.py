@@ -61,7 +61,7 @@ app = OneDimSolverApp.from_dict({
         "zenith_units": "deg"
     },
     "measures": [{
-        "type": "distant",
+        "type": "toa_hsphere",
         "spp": int(1e4)
     }]
 })
