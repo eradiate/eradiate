@@ -52,6 +52,19 @@ Our API is documenting using docstrings. We currently use a custom docstring
 format which works well with our Sphinx theme, but we generally follow usual
 practices; see documented content for examples.
 
+Conventions
+^^^^^^^^^^^
+
+Docstrings start with a newline:
+
+.. code:: python
+
+   def my_func():
+       """
+       Docstring contents.
+       """
+       ...
+
 Documenting attributes
 ^^^^^^^^^^^^^^^^^^^^^^
 
