@@ -14,7 +14,7 @@ from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 # %%
 # Get started
 # -----------
-# Create a homogeneous atmosphere with default parameters with:
+# Create a homogeneous atmosphere with default parameters:
 
 atmosphere = HomogeneousAtmosphere()
 
@@ -45,6 +45,7 @@ atmosphere = HomogeneousAtmosphere(
     sigma_a = ureg.Quantity(1e-5, "km^-1")
 )
 
-# %% The atmosphere now is characterised by
+# %%
+# The atmosphere now is characterised by
 # :math:`k_{\mathrm{s}} = 10^{-3} \, \mathrm{km}^{-1}` and
 # :math:`k_{\mathrm{a}} = 10^{-5} \, \mathrm{km}^{-1}`:
