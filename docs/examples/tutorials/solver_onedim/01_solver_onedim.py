@@ -55,6 +55,8 @@ surface
 # allows us to focus on our workflow.
 #
 # .. seealso:: For a detailed introduction to atmosphere models, please refer to
+#    the user guide sections :ref:`sec-atmosphere-homogeneous` and
+#    :ref:`sec-atmosphere-heterogeneous` or the tutorials
 #    :ref:`sphx_glr_examples_generated_tutorials_atmosphere_01_homogeneous.py`
 #    and
 #    :ref:`sphx_glr_examples_generated_tutorials_atmosphere_02_heterogeneous.py`.

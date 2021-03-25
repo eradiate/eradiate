@@ -58,6 +58,13 @@ atmosphere = HeterogeneousAtmosphere(
 
 # %%
 # The atmosphere now has the dimensions: 2000 x 2000 x 120 km.
+#
+# Inspect the atmosphere's dimensions
+# -----------------------------------
+# Check the atmosphere's dimensions using:
+
+print("height: ", atmosphere.height.to("km"))
+print("width: ", atmosphere.width.to("km"))
 
 # %%
 # Control the number of atmospheric layers
@@ -76,3 +83,19 @@ atmosphere = HeterogeneousAtmosphere(
 
 # %%
 # The atmosphere is now divided into 120 1-km-thick layers.
+#
+# Inspect the atmosphere's radiative properties
+# ---------------------------------------------
+# You can fetch the atmospheric radiative properties into a data set:
+
+ds = atmosphere.profile.to_dataset()
+
+# %%
+# You can use this data set to inspect the atmospheric radiative properties.
+# For example, observe how the extinction coefficient (``sigma_t``) varies with
+# altitude using:
+
+import matplotlib.pyplot as plt
+
+plt.yscale("log")
+ds.sigma_t.plot()
