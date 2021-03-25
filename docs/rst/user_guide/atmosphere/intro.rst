@@ -191,7 +191,6 @@ where the values of the extinction coefficient and albedo are written.
       eradiate.set_mode("mono")
 
       atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
-          toa_altitude="auto",
           width=ureg.Quantity(1000, "km"),
           profile=dict(
               type="us76_approx",

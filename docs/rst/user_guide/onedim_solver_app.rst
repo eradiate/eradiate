@@ -18,7 +18,7 @@ features, configuration format and usage of this application.
 .. admonition:: Tutorials
 
    * Basic usage ⇒ :ref:`sphx_glr_examples_generated_tutorials_solver_onedim_01_solver_onedim.py`
-   * Heterogeneous atmosphere ⇒ :ref:`sphx_glr_examples_generated_tutorials_solver_onedim_02_heterogeneous_atmospheres.py`
+   * Simulations on heterogeneous atmospheres ⇒ :ref:`sphx_glr_examples_generated_tutorials_solver_onedim_02_onedim_sim_hetero_atm.py`
 
 Available features
 ------------------
