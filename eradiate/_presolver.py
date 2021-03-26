@@ -7,7 +7,8 @@ from ._util import Singleton
 
 
 class PathResolver(metaclass=Singleton):
-    """This class implements a simple cross-platform path resolver.
+    """
+    This class implements a simple cross-platform path resolver.
     It looks for a file or directory given its (possibly relative) name and a
     set of search paths. The implementation walks through the search paths in
     order and stops once the file is found.
@@ -38,8 +39,8 @@ class PathResolver(metaclass=Singleton):
         return f"PathResolver(paths=[\n{s}\n])"
 
     def reset(self):
-        """Reset path list to default value:
-        ``[$PWD, $ERADIATE_DIR/resources/data]``
+        """
+        Reset path list to default value: ``[$PWD, $ERADIATE_DIR/resources/data]``.
         """
 
         eradiate_dir = os.getenv("ERADIATE_DIR")
@@ -122,7 +123,7 @@ class PathResolver(metaclass=Singleton):
     def append(self, path):
         """Append an entry to the end of the list of search paths.
 
-        Parameter ``path`` (path-like)
+        Parameter ``path`` (path-like):
             Path to append to the path list.
         """
         path_absolute = Path(path).absolute()
@@ -131,16 +132,12 @@ class PathResolver(metaclass=Singleton):
 
         self.paths.append(path_absolute)
 
-    def resolve(self, path, strict=False):
+    def resolve(self, path):
         """Walk through the list of search paths and try to resolve the input
         path.
 
-        Parameter ``path`` (path-like)
+        Parameter ``path`` (path-like):
             Path to try and resolve.
-
-        Parameter ``strict`` (bool):
-            If ``True``, raise if requested path cannot be resolved instead of
-            returning a relative path.
 
         Returns → :class:`pathlib.Path`:
             If path is found, absolute path to the found item.
@@ -154,13 +151,11 @@ class PathResolver(metaclass=Singleton):
                 if path_full.exists():
                     return path_full
 
-        if strict and not path.exists():
-            raise FileNotFoundError(f"path {path} could not be resolved")
-
         return path
 
     def glob(self, pattern):
-        """Glob the given relative ``pattern`` in all search paths, yielding all
+        """
+        Glob the given relative ``pattern`` in all search paths, yielding all
         matching files (of any kind). This function internally uses
         :func:`pathlib.Path.glob` and returns a generator.
         """
