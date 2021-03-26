@@ -15,12 +15,12 @@ import pinttr
 
 from .core import SceneElement
 from .spectra import Spectrum, SpectrumFactory
+from .. import validators
 from .._attrs import documented, get_doc, parse_docs
 from .._factory import BaseFactory
 from .._units import unit_context_config as ucc
 from .._units import unit_context_kernel as uck
 from .._units import unit_registry as ureg
-from ..validators import has_quantity, is_positive
 
 
 @parse_docs
@@ -38,18 +38,16 @@ class Surface(SceneElement, ABC):
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),
-        default="\"surface\""
+        default='"surface"',
     )
 
     width = documented(
         pinttr.ib(
-            default=ureg.Quantity(100., ureg.km),
-            validator=is_positive,
-            units=ucc.deferred("length")
+            default=ureg.Quantity(100.0, ureg.km),
+            validator=validators.is_positive,
+            units=ucc.deferred("length"),
         ),
-        doc="Surface size.\n"
-            "\n"
-            "Unit-enabled field (default: cdu[length]).",
+        doc="Surface size.\n\nUnit-enabled field (default: cdu[length]).",
         type="float",
         default="100 km",
     )
@@ -86,10 +84,10 @@ class Surface(SceneElement, ABC):
         return {
             f"shape_{self.id}": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(ScalarVector3f(
-                    width * 0.5, width * 0.5, 1.)
+                "to_world": ScalarTransform4f.scale(
+                    ScalarVector3f(width * 0.5, width * 0.5, 1.0)
                 ),
-                "bsdf": bsdf
+                "bsdf": bsdf,
             }
         }
 
@@ -121,6 +119,7 @@ class SurfaceFactory(BaseFactory):
        .. factorytable::
           :factory: SurfaceFactory
     """
+
     _constructed_type = Surface
     registry = {}
 
@@ -138,11 +137,13 @@ class LambertianSurface(Surface):
         attr.ib(
             default=0.5,
             converter=SpectrumFactory.converter("reflectance"),
-            validator=[attr.validators.instance_of(Spectrum),
-                       has_quantity("reflectance")]
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validators.has_quantity("reflectance"),
+            ],
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
-            "processed by :class:`.SpectrumFactory`.",
+        "processed by :class:`.SpectrumFactory`.",
         type=":class:`.UniformSpectrum`",
         default="0.5",
     )
@@ -151,7 +152,7 @@ class LambertianSurface(Surface):
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",
-                "reflectance": self.reflectance.kernel_dict()["spectrum"]
+                "reflectance": self.reflectance.kernel_dict()["spectrum"],
             }
         }
 
@@ -169,7 +170,7 @@ class BlackSurface(Surface):
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",
-                "reflectance": {"type": "uniform", "value": 0.}
+                "reflectance": {"type": "uniform", "value": 0.0},
             }
         }
 
@@ -192,30 +193,21 @@ class RPVSurface(Surface):
     # TODO: add support for spectra
 
     rho_0 = documented(
-        attr.ib(
-            default=0.183,
-            converter=float
-        ),
+        attr.ib(default=0.183, converter=float),
         doc=":math:`\\rho_0` parameter.",
         type="float",
         default="0.183",
     )
 
     k = documented(
-        attr.ib(
-            default=0.780,
-            converter=float
-        ),
+        attr.ib(default=0.780, converter=float),
         doc=":math:`k` parameter.",
         type="float",
         default="0.780",
     )
 
     ttheta = documented(
-        attr.ib(
-            default=-0.1,
-            converter=float
-        ),
+        attr.ib(default=-0.1, converter=float),
         doc=":math:`\\Theta` parameter.",
         type="float",
         default="-0.1",
@@ -225,17 +217,8 @@ class RPVSurface(Surface):
         return {
             f"bsdf_{self.id}": {
                 "type": "rpv",
-                "rho_0": {
-                    "type": "uniform",
-                    "value": self.rho_0
-                },
-                "k": {
-                    "type": "uniform",
-                    "value": self.k
-                },
-                "g": {
-                    "type": "uniform",
-                    "value": self.ttheta
-                }
+                "rho_0": {"type": "uniform", "value": self.rho_0},
+                "k": {"type": "uniform", "value": self.k},
+                "g": {"type": "uniform", "value": self.ttheta},
             }
         }
