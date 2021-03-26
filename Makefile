@@ -77,3 +77,19 @@ conda-init:
 conda-update: conda-lock-all conda-init
 
 .PHONY: conda-lock conda-lock-all conda-init conda-update
+
+# -- Testing -------------------------------------------------------------------
+
+.PHONY: pytest pytest-slow pytest-notslow pytest-formatters
+
+pytest:
+	pytest eradiate
+
+pytest-slow:
+	pytest -m "slow" eradiate
+
+pytest-notslow:
+	pytest -m "not slow" eradiate
+
+pytest-formatters:
+	pytest --black --isort --ignore-glob="*test_*.py" eradiate
