@@ -14,6 +14,48 @@ eradiate.set_mode("mono")
 ureg = eradiate.unit_registry
 
 # %%
+# We then define a small utility function leveraging the low-level components
+# of Eradiate to visualise conveniently the canopies we will create throughout
+# this tutorial:
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def display_canopy(canopy, distance=85):
+    # Compute camera location
+    origin = np.full((3,), distance / np.sqrt(3))
+
+    # Build kernel scene dictionary suitable for visualisation
+    # (we'll render only direct illumination for optimal speed)
+    kernel_dict = eradiate.scenes.core.KernelDict.new(
+        eradiate.scenes.measure.PerspectiveCameraMeasure(
+            id="camera",
+            film_resolution=(640, 480),
+            spp=32,
+            origin=origin,
+            target=(0, 0, 0),
+            up=(0, 0, 1),
+        ),
+        eradiate.scenes.illumination.DirectionalIllumination(),
+        eradiate.scenes.integrators.PathIntegrator(max_depth=2),
+        canopy,
+    )
+
+    # Render image
+    scene = kernel_dict.load()
+    sensor = scene.sensors()[0]
+    scene.integrator().render(scene, sensor)
+
+    # Display image
+    img = np.array(sensor.film().bitmap())
+    fig, ax = plt.subplots(figsize=(6, 6))
+    im = ax.imshow(img, cmap=plt.get_cmap("Greys_r"))
+    plt.colorbar(im, fraction=0.0354, pad=0.02)
+    return ax
+
+
+# %%
 # Eradiate ships a powerful interface to generate *abstract discrete canopies*
 # consisting in a set of disc-shaped "leaves" with a bilambertian surface
 # scattering model. This tutorial introduces basic and advanced usage of this
@@ -52,9 +94,11 @@ ureg = eradiate.unit_registry
 # call will generate a homogeneous discrete canopy of 10 m x 10 m x 3 m size
 # with leaves of 10 cm radius and leaf area index equal to 3:
 
-eradiate.scenes.biosphere.DiscreteCanopy.homogeneous(
+canopy = eradiate.scenes.biosphere.DiscreteCanopy.homogeneous(
     lai=3, leaf_radius=10.0 * ureg.cm, l_horizontal=10 * ureg.m, l_vertical=3 * ureg.m
 )
+display_canopy(canopy, distance=50)
+plt.show()
 
 # %%
 # These parameters, or a set of dependent parameters from which they can be
@@ -122,7 +166,7 @@ eradiate.scenes.biosphere.BiosphereFactory.create(
 # We use the path resolver to get the absolute path to the data file
 # located in the $ERADIATE_DIR/resources/data/tests/canopies directory
 leaf_cloud_filename = eradiate.path_resolver.resolve(
-    "tests/canopies/HET01_UNI_scene.def", strict=True
+    "tests/canopies/HET01_UNI_scene.def"
 )
 
 leaf_cloud = eradiate.scenes.biosphere.LeafCloud.from_file(
@@ -138,7 +182,7 @@ leaf_cloud
 # We use the path resolver to get the absolute path to the data file
 # located in the $ERADIATE_DIR/resources/data/tests/canopies directory
 instance_filename = eradiate.path_resolver.resolve(
-    "tests/canopies/HET01_UNI_instances.def", strict=True
+    "tests/canopies/HET01_UNI_instances.def"
 )
 
 instanced_leaf_cloud = eradiate.scenes.biosphere.InstancedLeafCloud.from_file(
@@ -155,6 +199,12 @@ canopy = eradiate.scenes.biosphere.DiscreteCanopy(
     instanced_leaf_clouds=instanced_leaf_cloud,
 )
 canopy
+
+# %%
+# Let's render an image of this canopy:
+
+display_canopy(canopy, distance=200)
+plt.show()
 
 # %%
 # This can be repeated to specify as many leaf clouds and associated instances
@@ -191,11 +241,17 @@ canopy = eradiate.scenes.biosphere.DiscreteCanopy.homogeneous(
     lai=3, leaf_radius=10.0 * ureg.cm, l_horizontal=10 * ureg.m, l_vertical=3 * ureg.m
 )
 padded_canopy = canopy.padded(1)
+
 print(f"Canopy:")
 print(f"  size: {canopy.size}")
 print(f"  # instances: {canopy.instanced_leaf_clouds[0].instance_positions.shape[0]}")
+display_canopy(canopy, distance=50)
+plt.show()
+
 print(f"Padded canopy:")
 print(f"  size: {padded_canopy.size}")
 print(
     f"  # instances: {padded_canopy.instanced_leaf_clouds[0].instance_positions.shape[0]}"
 )
+display_canopy(padded_canopy, distance=50)
+plt.show()
