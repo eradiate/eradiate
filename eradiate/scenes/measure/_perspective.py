@@ -71,8 +71,8 @@ class PerspectiveCameraMeasure(Measure):
         direction = self.target - self.origin
         if np.allclose(np.cross(direction, value), 0):
             raise ValueError(
-                f"While initializing {attribute}:"
-                f"Up direction must differ from viewing direction, "
+                f"While initializing '{attribute.name}': "
+                f"up direction must not be colinear with viewing direction, "
                 f"got up = {self.up}, direction = {direction}"
             )
 
