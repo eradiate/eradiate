@@ -119,6 +119,7 @@ sphinx_gallery_conf = {
         "eradiate": None,  # The module you locally document uses None
     },
     "plot_gallery": False,  # Disabled until we move away from RTD or package the kernel
+    "default_thumb_file": "fig/icon_eradiate.png",
 }
 
 # Sphinx-panels extension: don't load Bootstrap CSS again
