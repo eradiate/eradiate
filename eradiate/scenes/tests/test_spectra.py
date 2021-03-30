@@ -32,7 +32,7 @@ def test_converter(mode_mono):
 
 
 def test_uniform(mode_mono):
-    from eradiate.kernel.core.xml import load_dict
+    from mitsuba.core.xml import load_dict
 
     # Instantiate without argument
     UniformSpectrum()
@@ -75,7 +75,7 @@ def test_uniform(mode_mono):
 
 
 def test_solar(mode_mono):
-    from eradiate.kernel.core.xml import load_dict
+    from mitsuba.core.xml import load_dict
 
     # We can instantiate the element
     s = SolarIrradianceSpectrum()

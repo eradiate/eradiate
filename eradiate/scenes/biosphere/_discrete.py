@@ -852,7 +852,7 @@ class LeafCloud(SceneElement):
             A dictionary suitable for merge with a :class:`.KernelDict`
             containing all the shapes in the leaf cloud.
         """
-        from eradiate.kernel.core import ScalarTransform4f, coordinate_system
+        from mitsuba.core import ScalarTransform4f, coordinate_system
 
         kernel_length = uck.get("length")
         shapes_dict = {}
@@ -1086,7 +1086,7 @@ class InstancedLeafCloud(SceneElement):
             A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing instances.
         """
-        from eradiate.kernel.core import ScalarTransform4f
+        from mitsuba.core import ScalarTransform4f
 
         kernel_length = uck.get("length")
 

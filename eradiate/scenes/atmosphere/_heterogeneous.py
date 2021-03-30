@@ -324,7 +324,7 @@ class HeterogeneousAtmosphere(Atmosphere):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
 
     def media(self, ref=False):
-        from eradiate.kernel.core import ScalarTransform4f
+        from mitsuba.core import ScalarTransform4f
 
         k_width = self.kernel_width.to(uck.get("length")).magnitude
         k_height = self.kernel_height.to(uck.get("length")).magnitude
@@ -362,7 +362,7 @@ class HeterogeneousAtmosphere(Atmosphere):
         }
 
     def shapes(self, ref=False):
-        from eradiate.kernel.core import ScalarTransform4f
+        from mitsuba.core import ScalarTransform4f
 
         if ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}

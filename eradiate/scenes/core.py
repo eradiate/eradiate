@@ -6,7 +6,7 @@ from collections import UserDict
 import attr
 import pinttr
 
-import eradiate.kernel
+import mitsuba
 
 from .._attrs import documented, parse_docs
 from .._units import unit_registry as ureg
@@ -36,7 +36,7 @@ class KernelDict(UserDict):
         Raises → :class:`~eradiate.util.exceptions.KernelVariantError`
             If no kernel variant is set.
         """
-        variant = eradiate.kernel.variant()
+        variant = mitsuba.variant()
 
         if variant is not None:
             #: Kernel variant for which the scene is created
@@ -62,7 +62,7 @@ class KernelDict(UserDict):
             If the variant for which the kernel dictionary was created is
             not the same as the current one
         """
-        variant = eradiate.kernel.variant()
+        variant = mitsuba.variant()
         if self.variant != variant:
             raise KernelVariantError(
                 f"scene dictionary created for kernel variant '{self.variant}', "
@@ -116,7 +116,7 @@ class KernelDict(UserDict):
              Kernel object.
         """
         self.check()
-        from eradiate.kernel.core.xml import load_dict
+        from mitsuba.core.xml import load_dict
 
         return load_dict(self.data)
 

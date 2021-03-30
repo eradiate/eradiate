@@ -7,16 +7,17 @@ from eradiate import unit_registry as ureg
 
 def test_modes():
     import eradiate
+    import mitsuba
 
     # Check that switching to double precision mode works
     eradiate.set_mode("mono_double")
     # We expect that the kernel variant is appropriately selected
-    assert eradiate.kernel.variant() == "scalar_mono_double"
+    assert mitsuba.variant() == "scalar_mono_double"
 
     # Check that switching to mono mode works
     eradiate.set_mode("mono")
     # We expect that the kernel variant is appropriately selected
-    assert eradiate.kernel.variant() == "scalar_mono"
+    assert mitsuba.variant() == "scalar_mono"
     # We check for defaults
     assert eradiate.mode().wavelength == ureg.Quantity(550., ureg.nm)
 

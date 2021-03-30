@@ -30,7 +30,7 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
     the computational results must be equal to the theoretical prediction within
     a relative tolerance of 1e-5.
     """
-    from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+    from mitsuba.core import ScalarTransform4f, ScalarVector3f
 
     min_expected_size = 1e2
     results = dict()
