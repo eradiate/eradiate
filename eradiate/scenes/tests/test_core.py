@@ -5,7 +5,7 @@ import numpy as np
 import pinttr
 import pytest
 
-import eradiate.kernel
+import mitsuba
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 from eradiate.scenes.core import KernelDict, SceneElement
@@ -16,11 +16,11 @@ from eradiate.exceptions import KernelVariantError
 def test_kernel_dict():
     # Object creation is possible only if a variant is set
     importlib.reload(
-        eradiate.kernel
+        mitsuba
     )  # Required to ensure that any variant set by another test is unset
     with pytest.raises(KernelVariantError):
         KernelDict()
-    eradiate.kernel.set_variant("scalar_mono")
+    mitsuba.set_variant("scalar_mono")
 
     # Constructor class method initialises an empty kernel scene dict
     kernel_dict = KernelDict.new()
@@ -36,12 +36,12 @@ def test_kernel_dict():
         kernel_dict.check()
 
     # Check method raises if dict and set variants are incompatible
-    eradiate.kernel.set_variant("scalar_mono_double")
+    mitsuba.set_variant("scalar_mono_double")
     with pytest.raises(KernelVariantError):
         kernel_dict.check()
 
     # Load method returns a kernel object
-    eradiate.kernel.set_variant("scalar_mono_double")
+    mitsuba.set_variant("scalar_mono_double")
     kernel_dict = KernelDict({"type": "scene", "shape": {"type": "sphere"}})
     assert kernel_dict.load() is not None
 

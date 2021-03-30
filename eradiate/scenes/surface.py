@@ -72,7 +72,7 @@ class Surface(SceneElement, ABC):
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             attached to the surface.
         """
-        from eradiate.kernel.core import ScalarTransform4f, ScalarVector3f
+        from mitsuba.core import ScalarTransform4f, ScalarVector3f
 
         if ref:
             bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}

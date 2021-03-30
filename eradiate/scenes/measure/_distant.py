@@ -202,7 +202,7 @@ class TargetOriginRectangle(TargetOrigin):
 
     def kernel_item(self):
         """Return kernel item."""
-        from eradiate.kernel.core import ScalarTransform4f
+        from mitsuba.core import ScalarTransform4f
 
         xmin = self.xmin.m_as(uck.get("length"))
         xmax = self.xmax.m_as(uck.get("length"))

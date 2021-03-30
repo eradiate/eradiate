@@ -9,9 +9,10 @@ def generate_fixture(variant):
     @pytest.fixture()
     def fixture():
         try:
-            import eradiate.kernel
+            import mitsuba
 
-            eradiate.kernel.set_variant(variant)
+            mitsuba.set_variant(variant)
+
         except Exception:
             pytest.skip(f"Mitsuba variant '{variant}' is not enabled!")
 

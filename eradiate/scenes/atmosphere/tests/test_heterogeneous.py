@@ -35,7 +35,7 @@ def test_read_binary_grid3d():
 
 
 def test_heterogeneous_nowrite(mode_mono):
-    from eradiate.kernel.core.xml import load_dict
+    from mitsuba.core.xml import load_dict
 
     # Test default constructor
     a = HeterogeneousAtmosphere(

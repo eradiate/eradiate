@@ -14,7 +14,7 @@ from eradiate import unit_registry as ureg
 def test_homogeneous(mode_mono, ref):
     # This test checks the functionality of HomogeneousAtmosphere
 
-    from eradiate.kernel.core.xml import load_dict
+    from mitsuba.core.xml import load_dict
 
     # Check if default constructor works
     r = HomogeneousAtmosphere()

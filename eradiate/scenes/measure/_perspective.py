@@ -77,7 +77,7 @@ class PerspectiveCameraMeasure(Measure):
             )
 
     def _base_dicts(self):
-        from eradiate.kernel.core import ScalarTransform4f
+        from mitsuba.core import ScalarTransform4f
 
         target = self.target.m_as(uck.get("length"))
         origin = self.origin.m_as(uck.get("length"))

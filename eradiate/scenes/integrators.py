@@ -56,7 +56,7 @@ class MonteCarloIntegrator(Integrator):
     """
     Base class for integrator elements wrapping kernel classes
     deriving from
-    :class:`eradiate.kernel.render.MonteCarloIntegrator <mitsuba.render.MonteCarloIntegrator>`.
+    :class:`mitsuba.render.MonteCarloIntegrator`.
 
     .. warning:: This class should not be instantiated.
     """

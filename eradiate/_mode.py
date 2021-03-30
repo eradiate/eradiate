@@ -90,9 +90,9 @@ class ModeMono(Mode):
     )
 
     def __attrs_post_init__(self):
-        import eradiate.kernel
+        import mitsuba
 
-        eradiate.kernel.set_variant("scalar_mono")
+        mitsuba.set_variant("scalar_mono")
 
 
 @register_mode("mono_double", spectrum="mono", precision="double")
@@ -106,9 +106,9 @@ class ModeMonoDouble(Mode):
     )
 
     def __attrs_post_init__(self):
-        import eradiate.kernel
+        import mitsuba
 
-        eradiate.kernel.set_variant("scalar_mono_double")
+        mitsuba.set_variant("scalar_mono_double")
 
 
 # Eradiate's operational mode configuration

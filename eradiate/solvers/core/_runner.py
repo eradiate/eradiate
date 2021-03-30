@@ -1,6 +1,6 @@
 import numpy as np
 
-import eradiate.kernel
+import mitsuba
 
 from ...exceptions import KernelVariantError
 
@@ -8,7 +8,7 @@ _SUPPORTED_VARIANTS = {"scalar_mono", "scalar_mono_double"}
 
 
 def _check_variant():
-    variant = eradiate.kernel.variant()
+    variant = mitsuba.variant()
     if variant not in _SUPPORTED_VARIANTS:
         raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
@@ -32,14 +32,14 @@ def runner(kernel_dict):
     _check_variant()
 
     # Basic setup
-    from eradiate.kernel.core import LogLevel, Thread
+    from mitsuba.core import LogLevel, Thread
 
     Thread.thread().logger().set_log_level(LogLevel.Warn)
 
     results = dict()
 
     # Run computation
-    from eradiate.kernel.core.xml import load_dict
+    from mitsuba.core.xml import load_dict
 
     kernel_scene = load_dict(kernel_dict.data)
 

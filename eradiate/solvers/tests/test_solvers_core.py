@@ -51,8 +51,8 @@ def test_runner_fail():
     }
 
     # Runner raises if unsupported variant is active
-    import eradiate.kernel
+    import mitsuba
 
-    eradiate.kernel.set_variant("scalar_rgb")
+    mitsuba.set_variant("scalar_rgb")
     with pytest.raises(KernelVariantError):
         runner(kernel_dict)

@@ -127,7 +127,7 @@ class HomogeneousAtmosphere(Atmosphere):
         }
 
     def shapes(self, ref=False):
-        from eradiate.kernel.core import ScalarTransform4f
+        from mitsuba.core import ScalarTransform4f
 
         if ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
