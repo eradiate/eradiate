@@ -3,16 +3,16 @@ import pinttr
 import pytest
 
 import eradiate
+from eradiate import unit_context_config as ucc
+from eradiate import unit_context_kernel as uck
+from eradiate import unit_registry as ureg
+from eradiate._units import PhysicalQuantity
+from eradiate._util import onedict_value
 from eradiate.scenes.spectra import (
     SolarIrradianceSpectrum,
     SpectrumFactory,
     UniformSpectrum,
 )
-from eradiate._util import onedict_value
-from eradiate._units import PhysicalQuantity
-from eradiate import unit_registry as ureg
-from eradiate import unit_context_config as ucc
-from eradiate import unit_context_kernel as uck
 
 
 def test_converter(mode_mono):
