@@ -43,24 +43,30 @@ def plane(hsphere_dataarray, phi, theta_dim="theta_o", phi_dim="phi_o", drop=Fal
     """
     # Retrieve values for positive half-plane
     theta_pos = hsphere_dataarray.coords[theta_dim]
-    values_pos = hsphere_dataarray.sel(**{
-        phi_dim: phi,
-        theta_dim: theta_pos,
-        "method": "nearest",
-    })
+    values_pos = hsphere_dataarray.sel(
+        **{
+            phi_dim: phi,
+            theta_dim: theta_pos,
+            "method": "nearest",
+        }
+    )
 
     # Retrieve values for negative half-plane
     theta_neg = hsphere_dataarray.coords[theta_dim][1:]
-    values_neg = hsphere_dataarray.sel(**{
-        phi_dim: (phi + 180.) % 360.,
-        theta_dim: theta_neg,
-        "method": "nearest",
-    })
+    values_neg = hsphere_dataarray.sel(
+        **{
+            phi_dim: (phi + 180.0) % 360.0,
+            theta_dim: theta_neg,
+            "method": "nearest",
+        }
+    )
 
     # Transform zeniths to negative values
     values_neg = values_neg.assign_coords({theta_dim: -theta_neg})
     # Reorder data
-    values_neg = values_neg.loc[{theta_dim: sorted(values_neg.coords[theta_dim].values)}]
+    values_neg = values_neg.loc[
+        {theta_dim: sorted(values_neg.coords[theta_dim].values)}
+    ]
 
     # Combine negative and positive half-planes; drop the azimuth dimension
     # (inserted as a scalar dimension afterwards)

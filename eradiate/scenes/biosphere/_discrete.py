@@ -1309,7 +1309,7 @@ class DiscreteCanopy(Canopy):
 
         Returns → :class:`.DiscreteCanopy`:
             Created canopy object.
-       """
+        """
         for param in ["size", "instance_filename", "leaf_cloud_dicts"]:
             if param is None:
                 raise ValueError(f"parameter '{param}' is required")

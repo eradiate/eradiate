@@ -1,10 +1,7 @@
 import attr
 import cerberus
 
-from eradiate._attrs import (
-    documented,
-    parse_docs
-)
+from eradiate._attrs import documented, parse_docs
 
 
 def validate_metadata(data, spec, normalize=False, allow_unknown=False):

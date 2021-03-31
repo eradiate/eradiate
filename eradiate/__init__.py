@@ -4,22 +4,27 @@ __version__ = "0.0.1"  #: Eradiate version number.
 
 # -- Operational mode definition -----------------------------------------------
 
-from ._mode import mode, set_mode, modes
+from ._mode import mode, set_mode, modes  # isort: skip
 
 # -- Unit management facilities ------------------------------------------------
 
-from ._units import unit_registry, unit_context_config, unit_context_kernel
+from ._units import (
+    unit_registry,
+    unit_context_config,
+    unit_context_kernel,
+)  # isort: skip
 
 # -- Path resolver -------------------------------------------------------------
 
-from ._presolver import PathResolver
+# fmt: off
+from ._presolver import PathResolver  # isort: skip
 path_resolver = PathResolver()
 del PathResolver
+# fmt: on
 
 # ------------------------------------------------------------------------------
 
-from . import scenes, solvers
-from . import converters, validators, xarray
+from . import converters, scenes, solvers, validators, xarray
 
 __all__ = [
     "__version__",

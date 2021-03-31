@@ -10,6 +10,7 @@ def generate_fixture(variant):
     def fixture():
         try:
             import eradiate.kernel
+
             eradiate.kernel.set_variant(variant)
         except Exception:
             pytest.skip(f"Mitsuba variant '{variant}' is not enabled!")
@@ -17,10 +18,15 @@ def generate_fixture(variant):
     globals()["variant_" + variant] = fixture
 
 
-for variant in ["scalar_mono", "scalar_mono_double",
-                "scalar_mono_polarized",
-                "scalar_rgb", "scalar_spectral",
-                "packet_rgb", "packet_spectral"]:
+for variant in [
+    "scalar_mono",
+    "scalar_mono_double",
+    "scalar_mono_polarized",
+    "scalar_rgb",
+    "scalar_spectral",
+    "packet_rgb",
+    "packet_spectral",
+]:
     generate_fixture(variant)
 del generate_fixture
 
@@ -30,9 +36,10 @@ def generate_fixture(mode):
     @pytest.fixture()
     def fixture():
         import eradiate
+
         eradiate.set_mode(mode)
 
-    globals()['mode_' + mode] = fixture
+    globals()["mode_" + mode] = fixture
 
 
 for mode in eradiate.modes():
@@ -57,16 +64,20 @@ def pytest_runtest_setup(item):
 
         # If the data is missing, we skip the test
         if not data.find(dataset_category)[dataset_id]:
-            pytest.skip(f"Could not find dataset '{dataset_category}.{dataset_id}'; "
-                        f"please download dataset files and place them in "
-                        f"'data/{dataset_path}' directory.")
+            pytest.skip(
+                f"Could not find dataset '{dataset_category}.{dataset_id}'; "
+                f"please download dataset files and place them in "
+                f"'data/{dataset_path}' directory."
+            )
 
 
 def pytest_configure(config):
-    markexpr = config.getoption("markexpr", 'False')
+    markexpr = config.getoption("markexpr", "False")
 
-    if not 'not slow' in markexpr:
-        print("""\033[93mRunning the full test suite. To skip slow tests, please run "pytest -m 'not slow'"\033[0m""")
+    if not "not slow" in markexpr:
+        print(
+            """\033[93mRunning the full test suite. To skip slow tests, please run "pytest -m 'not slow'"\033[0m"""
+        )
 
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with -m 'not slow')"

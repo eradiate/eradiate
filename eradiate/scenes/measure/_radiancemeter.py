@@ -1,6 +1,6 @@
 import attr
-import pinttr
 import numpy as np
+import pinttr
 
 from ._core import Measure, MeasureFactory
 from ... import validators

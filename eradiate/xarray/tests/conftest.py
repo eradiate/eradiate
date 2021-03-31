@@ -9,12 +9,12 @@ def dataarray_without_metadata():
         data=np.random.random((1, 1, 1, 1, 1)),
         dims=["vza", "vaa", "sza", "saa", "wavelength"],
         coords={
-            "vza": [0.],
-            "vaa": [0.],
-            "sza": [0.],
-            "saa": [0.],
-            "wavelength": [500.]
-        }
+            "vza": [0.0],
+            "vaa": [0.0],
+            "sza": [0.0],
+            "saa": [0.0],
+            "wavelength": [500.0],
+        },
     )
 
 
@@ -25,8 +25,8 @@ def dataset_without_metadata():
             "p": (("z_layer", "z_level", "species"), np.random.random((1, 1, 1))),
         },
         coords={
-            "z_layer": ("z_layer", [0.]),
-            "z_level": ("z_level", [0.]),
-            "species": ("species", ["foo"])
+            "z_layer": ("z_layer", [0.0]),
+            "z_level": ("z_level", [0.0]),
+            "species": ("species", ["foo"]),
         },
     )

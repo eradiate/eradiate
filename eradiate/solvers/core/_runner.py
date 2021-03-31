@@ -1,6 +1,7 @@
 import numpy as np
 
 import eradiate.kernel
+
 from ...exceptions import KernelVariantError
 
 _SUPPORTED_VARIANTS = {"scalar_mono", "scalar_mono_double"}
