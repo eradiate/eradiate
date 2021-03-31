@@ -6,7 +6,7 @@ from ..._attrs import documented, get_doc, parse_docs
 from ...scenes.biosphere import BiosphereFactory, Canopy
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
-from ...scenes.measure._distant import DistantMeasure
+from ...scenes.measure import DistantMeasure
 from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
 
 

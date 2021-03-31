@@ -147,9 +147,10 @@ class SceneElement(ABC):
 
     @classmethod
     def from_dict(cls, d):
-        """Create from a dictionary. This class method will additionally
-        pre-process the passed dictionary to merge any field with an
-        associated ``"_units"`` field into a :class:`pint.Quantity` container.
+        """
+        Create from a dictionary. This class method will additionally pre-process
+        the passed dictionary to merge any field with an associated ``"_units"``
+        field into a :class:`pint.Quantity` container.
 
         Parameter ``d`` (dict):
             Configuration dictionary used for initialisation.
@@ -166,7 +167,8 @@ class SceneElement(ABC):
 
     @abstractmethod
     def kernel_dict(self, ref=True):
-        """Return a dictionary suitable for kernel scene configuration.
+        """
+        Return a dictionary suitable for kernel scene configuration.
 
         Parameter ``ref`` (bool):
             If ``True``, use referencing for all relevant nested kernel plugins.
