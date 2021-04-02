@@ -78,7 +78,7 @@ illumination
 # of 32 × 32.
 #
 # When the simulation starts, the Monte Carlo algorithms traces a number rays
-# per film pixel controlled by the ` `spp`` (for *samples per pixel*) parameter.
+# per film pixel controlled by the ``spp`` (for *samples per pixel*) parameter.
 # The higher the number of SPP, the lower the variance in results, and the
 # higher the computational time. We will set ``spp`` to a rather low value of
 # 1000 to quickly get a global view of our BRF.
@@ -118,7 +118,7 @@ app = eradiate.solvers.rami.RamiSolverApp(scene)
 # ----------------------
 #
 # Once our application object is initialised, we can start the simulation by
-# calling the :class:`.RamiSolverApp.run` method. Progress is displayed during
+# calling the :meth:`.RamiSolverApp.run` method. Progress is displayed during
 # computation.
 
 app.run()
