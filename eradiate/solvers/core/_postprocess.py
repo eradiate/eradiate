@@ -93,7 +93,7 @@ def apply_srf(da, srf):
 
         .. code:: python
 
-            apply_srf(results, "sentinel-3a-slstr-s01")
+            apply_srf(results, "sentinel_3a-slstr-1")
 
 
     Parameter ``da`` (:class:`~xarray.DataArray`):

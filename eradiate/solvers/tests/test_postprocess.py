@@ -9,11 +9,11 @@ def test_apply_srf():
         np.random.random((4, 5)),
         dims=["w", "another"],
         coords={"w": 515 + 80 * np.random.random(4)})
-    output_da = apply_srf(da, "sentinel-3a-slstr-s1")
+    output_da = apply_srf(da, "sentinel_3a-slstr-1")
 
     dataset = data.open(
         category="spectral_response_function",
-        id="sentinel-3a-slstr-s1")
+        id="sentinel_3a-slstr-1")
     weights = dataset.srf.interp(w=da.w.values)
     weighted = da.weighted(weights)
     weighted_sum = weighted.sum(dim="w")

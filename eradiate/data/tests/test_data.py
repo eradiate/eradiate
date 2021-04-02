@@ -13,6 +13,13 @@ def test_open():
         if dataset_id != "solid_2017":  # this dataset is not available in eradiate-data
             data.open(category=cat, id=dataset_id)
 
+    # All spectral response function data sets can be opened
+    paths = data.spectral_response_function._SpectralResponseFunctionGetter.PATHS
+
+    for data_set_id in paths:
+        data.open(category="spectral_response_function",
+                  id=data_set_id)
+
     # Check that unknown category raises
     with pytest.raises(ValueError):
         ds = data.open("doesnt_exist", "blackbody_sun")
