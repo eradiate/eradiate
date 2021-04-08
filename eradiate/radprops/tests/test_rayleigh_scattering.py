@@ -7,14 +7,12 @@ from eradiate.radprops.rayleigh import (
 )
 from eradiate import unit_registry as ureg
 
-_Q = ureg.Quantity
-
 
 def test_sigma_s_air():
     """Test computation of Rayleigh scattering coefficient for air with
     default values."""
 
-    ref_cross_section = _Q(4.513e-27, "cm**2")
+    ref_cross_section = ureg.Quantity(4.513e-27, "cm**2")
     ref_sigmas = ref_cross_section * _LOSCHMIDT
     expected = ref_sigmas
 
@@ -41,11 +39,11 @@ def test_sigma_s_air_optical_thickness():
     from eradiate.thermoprops.us76 import make_profile
 
     profile = make_profile(levels=np.linspace(0., 100000., 1001))
-    n = profile.n_tot.values
+    n = profile.n.values
     z = profile.z_level.values
     dz = z[1:] - z[:-1]
     sigma_s = compute_sigma_s_air(
-        number_density=_Q(n, "m^-3"),
+        number_density=ureg.Quantity(n, "m^-3"),
         depolarisation_ratio=0.031
     )
     optical_thickness = np.sum(sigma_s.to("m^-1").magnitude * dz)
@@ -58,7 +56,7 @@ def test_air_refractive_index():
     values. We compare the results with the values given in Table III of
     :cite:`Peck1972DispersionAir`."""
 
-    wavelength = _Q(np.array([
+    wavelength = ureg.Quantity(np.array([
         1.6945208,
         1.01425728,
         0.64402492,

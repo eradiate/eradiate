@@ -17,9 +17,8 @@ profile_dataset_spec = DatasetSpec(
     var_specs={
         "p": VarSpec(standard_name="air_pressure", units="Pa", long_name="air pressure"),
         "t": VarSpec(standard_name="air_temperature", units="K", long_name="air temperature"),
-        "n": VarSpec(standard_name="number_density", units="m^-3", long_name="number density"),
-        "n_tot": VarSpec(standard_name="air_number_density", units="m^-3",
-                         long_name="air number density"),
+        "n": VarSpec(standard_name="air_number_density", units="m^-3", long_name="air_number density"),
+        "mr": VarSpec(standard_name="mixing_ratio", units="", long_name="mixing ratio"),
     },
     coord_specs="atmospheric_profile"
 )
@@ -195,9 +194,9 @@ def make_profile_regular(profile, atol):
     n_z = len(regular_z_layer)
     p = np.zeros(n_z)
     t = np.zeros(n_z)
-    n_tot = np.zeros(n_z)
+    n = np.zeros(n_z)
     n_species = profile.species.size
-    n = np.zeros((n_species, n_z))
+    mr = np.zeros((n_species, n_z))
     layer = 0
     for i, z in enumerate(regular_z_layer):
         # when altitude is larger than current layer's upper bound, jump to
@@ -205,10 +204,10 @@ def make_profile_regular(profile, atol):
         if z >= profile.z_level.values[layer + 1]:
             layer += 1
 
-        p[i] = profile["p"].values[layer]
-        t[i] = profile["t"].values[layer]
-        n_tot[i] = profile["n_tot"].values[layer]
-        n[:, i] = profile["n"].values[:, layer]
+        p[i] = profile.p.values[layer]
+        t[i] = profile.t.values[layer]
+        n[i] = profile.n.values[layer]
+        mr[:, i] = profile.mr.values[:, layer]
 
     species = profile["species"].values
 
@@ -222,12 +221,12 @@ def make_profile_regular(profile, atol):
     attrs["history"] += f"\n{new_line}"
 
     dataset = xr.Dataset(
-        data_vars={
-            "p": ("z_layer", p),
-            "t": ("z_layer", t),
-            "n_tot": ("z_layer", n_tot),
-            "n": (("species", "z_layer"), n)
-        },
+        data_vars=dict(
+            p=("z_layer", p),
+            t=("z_layer", t),
+            n=("z_layer", n),
+            mr=(("species", "z_layer"), mr)
+        ),
         coords={
             "z_layer": ("z_layer", regular_z_layer),
             "z_level": ("z_level", regular_z_level),

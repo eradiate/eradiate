@@ -13,9 +13,6 @@ from eradiate.thermoprops.util import (
 )
 
 
-Q_ = ureg.Quantity
-
-
 def test_water_vapor_saturation_pressure():
     # values are correct, reference value from:
     # https://www.engineeringtoolbox.com/water-vapor-saturation-pressure-d_599.html
@@ -72,7 +69,7 @@ def test_to_regular():
 # TODO: test further
 def test_make_profile_regular():
     irregular_profile = make_profile(
-        levels=Q_([0., 2., 8., 10., 16., 23., 32., 47., 50.], "km"))
+        levels=ureg.Quantity([0., 2., 8., 10., 16., 23., 32., 47., 50.], "km"))
 
     regular_profile = make_profile_regular(irregular_profile, atol=1000.)
     regular_profile.ert.validate_metadata(profile_dataset_spec)

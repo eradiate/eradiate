@@ -7,4 +7,5 @@ Data guide
 
    intro
    srf
+   thermoprops
    spectra-us76_u86_4

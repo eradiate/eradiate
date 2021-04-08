@@ -157,8 +157,9 @@ class HeterogeneousAtmosphere(Atmosphere):
             default=None,
             converter=attr.converters.optional(Path)
         ),
-        doc="Path to the single scattering albedo volume data file. If ``None``, "
-            "a value will be created when the file will be requested.",
+        doc="Path to the single scattering albedo volume data file. If "
+            "``None``, a value will be created when the file will be "
+            "requested.",
         type="path-like or None",
         default="None",
     )
@@ -203,8 +204,8 @@ class HeterogeneousAtmosphere(Atmosphere):
             default=None,
             converter=attr.converters.optional(Path)
         ),
-        doc="Path to a cache directory where volume data files will be created. "
-            "If ``None``, a temporary cache directory will be used.",
+        doc="Path to a cache directory where volume data files will be "
+            "created. If ``None``, a temporary cache directory will be used.",
         type="path-like or None",
         default="None",
     )
