@@ -14,8 +14,6 @@ from eradiate import __version__
 from .util import profile_dataset_spec
 from .._units import unit_registry as ureg
 
-_Q = ureg.Quantity
-
 
 # ------------------------------------------------------------------------------
 #
@@ -24,7 +22,7 @@ _Q = ureg.Quantity
 # ------------------------------------------------------------------------------
 
 @ureg.wraps(ret=None, args="m", strict=False)
-def make_profile(levels=_Q(np.linspace(0., 1e5, 51), "m")):
+def make_profile(levels=ureg.Quantity(np.linspace(0., 1e5, 51), "m")):
     r"""Makes an atmosphere vertical profile based on the
     US Standard Atmosphere 1976 thermophysical model.
 
@@ -57,24 +55,49 @@ def make_profile(levels=_Q(np.linspace(0., 1e5, 51), "m")):
 
     # create the US76 data set
     ds = create(
-        _Q(z_layer, "m"),
+        ureg.Quantity(z_layer, "m"),
         variables=["p", "t", "n", "n_tot"],
     )
 
-    # format the data set into an atmospheric vertical profile data set
-    ds = ds.rename_dims({"z": "z_layer"}).reset_coords("z", drop=True)
-    ds.coords["z_layer"] = (
+    # derive atmospheric thermophysical properties profile data set
+    thermoprops_ds = xr.Dataset(
+        data_vars={
+            "p": ds.p,
+            "t": ds.t,
+            "n": ds.n_tot,
+            "mr": ds.n / ds.n_tot,
+        }).rename_dims({"z": "z_layer"}).reset_coords("z", drop=True)
+    thermoprops_ds.coords["z_layer"] = (
         "z_layer",
         z_layer,
+        dict(
+            standard_name="layer_altitude",
+            long_name="layer altitude",
+            units="m",
+        )
     )
-    ds.coords["z_level"] = (
+    thermoprops_ds.coords["z_level"] = (
         "z_level",
         levels,
+        dict(
+            standard_name="level_altitude",
+            long_name="level altitude",
+            units="m",
+        )
+    )
+    thermoprops_ds.attrs = dict(
+        convention="CF-1.8",
+        title="U.S. Standard Atmosphere 1976",
+        history=f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+                f"data creation - eradiate.scenes.atmosphere.us76.make_profile",
+        source= f"eradiate, version {__version__}",
+        references="U.S. Standard Atmosphere, 1976, NASA-TM-X-74335, "
+                   "NOAA-S/T-76-1562",
     )
 
-    ds.ert.normalize_metadata(profile_dataset_spec)
+    thermoprops_ds.ert.normalize_metadata(profile_dataset_spec)
 
-    return ds
+    return thermoprops_ds
 
 
 # ------------------------------------------------------------------------------

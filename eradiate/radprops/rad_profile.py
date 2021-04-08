@@ -83,14 +83,11 @@ def make_dataset(z_level, z_layer=None, sigma_a=None, sigma_s=None, sigma_t=None
     Parameter ``sigma_t`` (:class:numpy.ndarray or :class:`pint.Quantity`):
         Extinction coefficient values [m^-1].
 
-    Parameter ``sigma_s`` (:class:numpy.ndarray or :class:`pint.Quantity`):
+    Parameter ``albedo`` (:class:numpy.ndarray or :class:`pint.Quantity`):
         Albedo values [/].
 
-    Parameter ``profile`` (:class:`~xr.Dataset`):
-        Atmospheric vertical profile.
-
     Returns → :class:`~xarray.Dataset`:
-        Data set.
+        Atmosphere radiative properties data set.
     """
     if z_layer is None:
         z_layer = (z_level[1:] + z_level[:-1]) / 2.
@@ -103,8 +100,8 @@ def make_dataset(z_level, z_layer=None, sigma_a=None, sigma_s=None, sigma_t=None
         sigma_a = sigma_t - sigma_s
     else:
         raise ValueError(
-            "You must provide either one of the two pairs of arguments 'sigma_a' and 'sigma_s' or "
-            "'sigma_t' and 'albedo'.")
+            "You must provide either one of the two pairs of arguments "
+            "'sigma_a' and 'sigma_s' or 'sigma_t' and 'albedo'.")
 
     return xr.Dataset(
         data_vars={
@@ -542,7 +539,7 @@ class US76ApproxRadProfile(RadProfile):
         profile = self._thermo_profile
         self._sigma_s_values = compute_sigma_s_air(
             wavelength=wavelength,
-            number_density=ureg.Quantity(profile.n_tot.values, profile.n_tot.units),
+            number_density=ureg.Quantity(profile.n.values, profile.n.units),
         )
 
         # find the absorption dataset
@@ -559,7 +556,7 @@ class US76ApproxRadProfile(RadProfile):
             dataset,
             wl=wavelength,
             p=profile.p.values,
-            n=profile.n_tot.values,
+            n=profile.n.values,
             p_fill_value=0.,  # us76_u86_4 dataset is limited to pressures above
             # 0.101325 Pa, but us76 thermophysical profile goes below that
             # value for altitudes larger than 93 km. At these altitudes, the
