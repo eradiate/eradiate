@@ -1,18 +1,10 @@
 from ._core import BiosphereFactory, Canopy
-from ._discrete import (
-    DiscreteCanopy,
-    FloatingSpheresCanopy,
-    InstancedLeafCloud,
-    LeafCloud,
-    RealZoomInCanopy,
-)
+from ._discrete import DiscreteCanopy, InstancedLeafCloud, LeafCloud
 
 __all__ = [
     "BiosphereFactory",
     "Canopy",
     "DiscreteCanopy",
-    "FloatingSpheresCanopy",
     "InstancedLeafCloud",
     "LeafCloud",
-    "RealZoomInCanopy",
 ]

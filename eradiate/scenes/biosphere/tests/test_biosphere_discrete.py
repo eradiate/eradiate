@@ -7,10 +7,8 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.scenes.biosphere._discrete import (
     DiscreteCanopy,
-    FloatingSpheresCanopy,
     InstancedLeafCloud,
     LeafCloud,
-    RealZoomInCanopy,
     _inversebeta,
     _leaf_cloud_orientations,
     _leaf_cloud_positions_cuboid,

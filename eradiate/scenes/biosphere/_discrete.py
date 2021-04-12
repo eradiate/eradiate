@@ -457,6 +457,15 @@ class LeafCloud(SceneElement):
     * :meth:`.LeafCloud.from_file` loads leaf positions and orientations from a
       text file;
     * :meth:`.LeafCloud.from_dict` dispatches calls to the other constructors.
+
+    .. admonition:: Class method constructors
+
+       .. autosummary::
+
+          cuboid
+          sphere
+          cylinder
+          from_file
     """
 
     id = documented(
@@ -902,6 +911,12 @@ class InstancedLeafCloud(SceneElement):
     """
     Specification a leaf cloud, alongside the locations of instances (*i.e.*
     clones) of it.
+
+    .. admonition:: Class method constructors
+
+       .. autosummary::
+
+          from_files
     """
 
     leaf_cloud = documented(
@@ -1101,6 +1116,13 @@ class DiscreteCanopy(Canopy):
     .. admonition:: Tutorials
 
        * Practical usage ⇒ :ref:`sphx_glr_examples_generated_tutorials_biosphere_01_discrete_canopy.py`
+
+    .. admonition:: Class method constructors
+
+       .. autosummary::
+
+          from_files
+          homogeneous
     """
 
     instanced_leaf_clouds = documented(
@@ -1383,257 +1405,3 @@ class DiscreteCanopy(Canopy):
             raise ValueError(f"parameter 'construct': unsupported value '{construct}'")
 
         return result.padded(padding)
-
-
-@BiosphereFactory.register("floating_spheres_canopy")
-@parse_docs
-@attr.s
-class FloatingSpheresCanopy(DiscreteCanopy):
-    """Generates the canopy for the `floating sphere scenario <https://rami-benchmark.jrc.ec.europa.eu/HTML/RAMI3/EXPERIMENTS3/HETEROGENEOUS/FLOATING_SPHERES/SOLAR_DOMAIN/DISCRETE/DISCRETE.php>`_ in the RAMI benchmark
-
-    This canopy is composed of a set of leaf clouds shaped as spheres."""
-
-    id = documented(
-        attr.ib(
-            default="floating_spheres_canopy",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
-        ),
-        doc=get_doc(Canopy, "id", "doc"),
-        type=get_doc(Canopy, "id", "type"),
-        default="floating_spheres_canopy",
-    )
-
-    @classmethod
-    def from_dict(cls, d):
-        """Create from a dictionary.
-
-        **Dictionary format:**
-
-        .. code:: python
-
-           {
-               "type": "real_zoom_in_canopy",
-               "leaf_cloud": {
-                   "fname_positions": <path to a file>,
-                   <LeafCloud parameters>
-               },
-               "size": <3-vector specifying the size of the canopy>,
-           }
-
-        .. note::
-           This class method will pre-process the passed dictionary to merge any field with an
-           associated ``"_units"`` field into a :class:`pint.Quantity` container.
-
-        Sphere positions are specified in a separate text file, holding the x,y and z
-        coordinates for each sphere per line, separated by whitespace.
-        The `fname_positions` field holds the path to this file.
-
-        For the parametrization of the leaf clouds, see
-        :func:`~.LeafCloud.from_file` and
-        :func:`~.LeafCloud.from_parameters`.
-
-        If `fname_leaves` is present in the leaf cloud specification, the former method
-        will be used, otherwise the latter.
-
-        Note that parametric instantiation requires the leaf cloud to be specified
-        as a sphere. The `shape_type` parameter must be set to `sphere`.
-
-        Also note that in the case of instantiating the leaf cloud from a text file,
-        using the :func:`~eradiate.scenes.biosphere.LeafCloud.from_file` method,
-        two files must be provided. One file to specify the placement of the leaves
-        inside the leaf cloud and one file to position the leaf cloud instances in the
-        scene.
-
-        Parameter ``d`` (dict):
-            Configuration dictionary used for initialisation.
-
-        Returns → wrapped_cls:
-            Created object.
-
-        Raises → ValueError:
-            If the parametric leaf cloud is not specified as `sphere`.
-        """
-        # Pre-process dict: apply units to unit-enabled fields
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        # parse sphere positions
-        leaf_cloud_spec = d_copy["leaf_cloud"]
-        sphere_positions_file = leaf_cloud_spec.pop("fname_positions")
-        sphere_positions = []
-        with open(sphere_positions_file, "r") as spf:
-            for line in spf:
-                coords = line.split()
-                if len(coords) != 3:
-                    raise ValueError(
-                        f"Leaf positions must have three coordinates."
-                        f"Found: {len(coords)}!"
-                    )
-                sphere_positions.append(
-                    [float(coord.strip()) for coord in line.split()]
-                )
-        if "fname_leaves" in leaf_cloud_spec:
-            leaf_cloud = LeafCloud.from_file(**leaf_cloud_spec)
-        else:
-            if leaf_cloud_spec["shape_type"] != "sphere":
-                raise ValueError(
-                    "The FloatingSphereCanopy must be used"
-                    "with a spherical leaf cloud."
-                )
-            leaf_cloud = LeafCloud.from_parameters(**leaf_cloud_spec)
-
-        size = d_copy["size"]
-
-        return cls(
-            leaf_cloud_instances_list=[
-                InstancedLeafCloud(
-                    leaf_cloud=leaf_cloud, instance_positions=sphere_positions
-                )
-            ],
-            size=size,
-        )
-
-
-@BiosphereFactory.register("real_zoom_in_canopy")
-@parse_docs
-@attr.s
-class RealZoomInCanopy(DiscreteCanopy):
-    """Generates the canopy for the
-    `real zoom in scenario <https://rami-benchmark.jrc.ec.europa.eu/HTML/RAMI3/EXPERIMENTS3/HETEROGENEOUS/REAL_ZOOM-IN/REAL_ZOOM-IN.php>`_ in the RAMI benchmark.
-
-    This canopy is composed of a set of sphere- and cylinder-shaped leaf clouds.
-    """
-
-    id = documented(
-        attr.ib(
-            default="real_zoom_in_canopy",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
-        ),
-        doc=get_doc(Canopy, "id", "doc"),
-        type=get_doc(Canopy, "id", "type"),
-        default="real_zoom_in_canopy",
-    )
-
-    @classmethod
-    def from_dict(cls, d):
-        """Create from a dictionary.
-
-        **Dictionary format:**
-
-        .. code:: python
-
-           {
-               "type": "real_zoom_in_canopy",
-               "spherical_leaf_cloud": {
-                   "fname_positions": <path to a file>,
-                   <LeafCloud parameters>
-               },
-               "cylindrical_leaf_cloud": {
-                   "fname_positions": <path to a file>,
-                   <LeafCloud parameters>
-               },
-               "size": <3-vector specifying the size of the canopy>,
-           }
-
-        .. note:: This class method will pre-process the passed dictionary
-           to merge any field with an associated ``"_units"`` field into a
-           :class:`pint.Quantity` container.
-
-        Sphere and cylinder positions are specified in a text file, holding
-        the x,y and z coordinates for each sphere per line, separated by whitespace.
-        The `fname_sphere_positions` field holds the path to this file.
-
-        For the parametrization of the leaf clouds, see
-        :func:`~.LeafCloud.from_file` and
-        :func:`~.LeafCloud.from_parameters`.
-
-        If `fname_leaves` is present in the leaf cloud specification, the former method
-        will be used, otherwise the latter.
-
-        Note that parametric instantiation requires the ``spherical_leaf_cloud`` to
-        be specified with the ``shape_type`` parameter set to ``sphere`` and the
-        ``cylindrical_leaf_cloud`` with ``cylinder``.
-
-        Also note that in the case of instantiating the leaf cloud from a text file,
-        using the :func:`~.LeafCloud.from_file` method,
-        two files must be provided for each leaf cloud. One file to specify the
-        placement of the leaves inside the leaf cloud and one file to position
-        the leaf cloud instances in the scene.
-
-        Parameter ``d`` (dict):
-            Configuration dictionary used for initialisation.
-
-        Returns → wrapped_cls:
-            Created object.
-
-        Raises → ValueError:
-            If the parametric leaf clouds are not specified as `sphere` and
-            `cylinder` respectively.
-
-        """
-        # Pre-process dict: apply units to unit-enabled fields
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        # parse sphere specifications
-        sphere_spec = d_copy["spherical_leaf_cloud"]
-        sphere_positions_file = sphere_spec.pop("fname_positions")
-        sphere_positions = []
-        with open(sphere_positions_file, "r") as spf:
-            for line in spf:
-                coords = line.split()
-                if len(coords) != 3:
-                    raise ValueError(
-                        f"Leaf positions must have three coordinates. "
-                        f"Found: {len(coords)}!"
-                    )
-                sphere_positions.append(
-                    [float(coord.strip()) for coord in line.split()]
-                )
-        if "fname_leaves" in sphere_spec:
-            spherical_leaf_cloud = LeafCloud.from_file(**sphere_spec)
-        else:
-            if sphere_spec["shape_type"] != "sphere":
-                raise ValueError(
-                    "The spherical leaf clouds must be used"
-                    "with a spherical leaf cloud."
-                )
-            spherical_leaf_cloud = LeafCloud.from_parameters(**sphere_spec)
-
-        # parse cylinder specifications
-        cylinder_spec = d_copy["cylindrical_leaf_cloud"]
-        cylinder_positions_file = cylinder_spec.pop("fname_positions")
-        cylinder_positions = []
-        with open(cylinder_positions_file, "r") as spf:
-            for line in spf:
-                coords = line.split()
-                if len(coords) != 3:
-                    raise ValueError(
-                        f"Leaf positions must have three coordinates."
-                        f"Found: {len(coords)}!"
-                    )
-                cylinder_positions.append(
-                    [float(coord.strip()) for coord in line.split()]
-                )
-        if "fname_leaves" in cylinder_spec:
-            cylindrical_leaf_cloud = LeafCloud.from_file(**cylinder_spec)
-        else:
-            if cylinder_spec["shape_type"] != "cylinder":
-                raise ValueError(
-                    "The cylindrical leaf clouds must be used"
-                    "with a cylindrical leaf cloud."
-                )
-            cylindrical_leaf_cloud = LeafCloud.from_parameters(**cylinder_spec)
-
-        size = d_copy["size"]
-
-        return cls(
-            leaf_cloud_instances_list=[
-                InstancedLeafCloud(
-                    leaf_cloud=spherical_leaf_cloud, instance_positions=sphere_positions
-                ),
-                InstancedLeafCloud(
-                    leaf_cloud=cylindrical_leaf_cloud,
-                    instance_positions=cylinder_positions,
-                ),
-            ],
-            size=size,
-        )
