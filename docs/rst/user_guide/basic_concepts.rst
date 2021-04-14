@@ -20,7 +20,7 @@ Kernel
 Eradiate's low-level abstractions are handled by its computational kernel. This
 component is a modified copy of the Mitsuba 2 rendering system and it implements
 the Monte Carlo integration framework Eradiate uses to compute radiative
-transfer. The kernel takes as its input a `scene`, most often specified as a
+transfer. The kernel takes as its input a *scene*, most often specified as a
 Python dictionary and consisting of geometric shapes, radiative properties,
 but also radiation sensors and emitters and a Monte Carlo integration algorithm.
 When instructed to, the kernel loads the scene, performs the requested

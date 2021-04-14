@@ -24,7 +24,7 @@ del PathResolver
 
 # ------------------------------------------------------------------------------
 
-from . import converters, scenes, solvers, validators, xarray
+from . import converters, kernel, scenes, solvers, validators, xarray
 
 __all__ = [
     "__version__",
