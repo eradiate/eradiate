@@ -3,8 +3,14 @@
 Kernel [eradiate.kernel]
 ========================
 
-Eradiate's computational kernel, based on the Mitsuba 2 rendering system.
-If is accessed from the ``eradiate.kernel`` module.
+Eradiate's computational kernel is based on the Mitsuba 2 rendering system.
+Eradiate imports the :mod:`mitsuba` module and makes a basic check to detect if
+it is not our customised version. The :mod:`eradiate.kernel` subpackage provides
+convenience shortcuts to the Mitsuba API, but everything done here can also be
+done with the regular Mitsuba Python bindings.
+
+Customised Mitsuba 2 [eradiate.kernel.mitsuba]
+----------------------------------------------
 
 .. link-button:: https://eradiate-kernel.readthedocs.io
    :type: url
