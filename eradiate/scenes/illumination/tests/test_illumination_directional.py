@@ -3,7 +3,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination
+from eradiate.scenes.illumination import DirectionalIllumination
 
 
 def test_directional(mode_mono):
