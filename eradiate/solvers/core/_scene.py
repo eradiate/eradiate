@@ -7,8 +7,7 @@ from ..._attrs import documented, parse_docs
 from ...scenes.core import SceneElement
 from ...scenes.illumination import DirectionalIllumination, IlluminationFactory
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
-from ...scenes.measure import MeasureFactory
-from ...scenes.measure._distant import DistantMeasure
+from ...scenes.measure import DistantMeasure, MeasureFactory
 
 
 @parse_docs
