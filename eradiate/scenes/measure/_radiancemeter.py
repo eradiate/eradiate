@@ -20,19 +20,6 @@ class RadiancemeterMeasure(Measure):
     sensor kernel plugin. It records the incident power per unit area per unit
     solid angle along a certain ray."""
 
-    film_resolution = documented(
-        attr.ib(
-            default=(1, 1),
-            validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(int),
-                iterable_validator=validators.has_len(2),
-            ),
-        ),
-        doc="Film resolution, set to (1, 1).",
-        type="array-like[int, int]",
-        default="(1, 1)",
-    )
-
     origin = documented(
         pinttr.ib(
             default=ureg.Quantity([0.0, 0.0, 0.0], ureg.m),
@@ -68,6 +55,10 @@ class RadiancemeterMeasure(Measure):
                 f"Origin and target must not be equal, "
                 f"got target = {self.target}, origin = {self.origin}"
             )
+
+    @property
+    def film_resolution(self):
+        return (1, 1)
 
     def _base_dicts(self):
         target = self.target.m_as(uck.get("length"))

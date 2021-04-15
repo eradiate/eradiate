@@ -916,7 +916,7 @@ class InstancedLeafCloud(SceneElement):
 
        .. autosummary::
 
-          from_files
+          from_file
     """
 
     leaf_cloud = documented(

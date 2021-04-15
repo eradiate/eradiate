@@ -21,16 +21,31 @@ class PerspectiveCameraMeasure(Measure):
     specifying the origin, viewing direction and 'up' direction of the camera.
     """
 
+    _film_resolution = documented(
+        attr.ib(
+            default=(32, 32),
+            validator=attr.validators.deep_iterable(
+                member_validator=attr.validators.instance_of(int),
+                iterable_validator=validators.has_len(2),
+            ),
+        ),
+        doc="Film resolution as a (width, height) 2-tuple. "
+        "If the height is set to 1, direction sampling will be restricted to a "
+        "plane.",
+        type="array-like",
+        default="(32, 32)",
+    )
+
     origin = documented(
         pinttr.ib(
             default=ureg.Quantity([1, 1, 1], ureg.m),
             validator=validators.has_len(3),
             units=ucc.deferred("length"),
         ),
-        doc="A 3-element vector specifying the position of the camera.\n"
+        doc="A 3-vector specifying the position of the camera.\n"
         "\n"
         "Unit-enabled field (default: cdu[length]).",
-        type="array-like[float, float, float]",
+        type="array-like",
         default="[1, 1, 1] m",
     )
 
@@ -40,7 +55,7 @@ class PerspectiveCameraMeasure(Measure):
             validator=validators.has_len(3),
             units=ucc.deferred("length"),
         ),
-        doc="A 3-element vector specifying the location targeted by the camera.\n"
+        doc="Point location targeted by the camera.\n"
         "\n"
         "Unit-enabled field (default: cdu[length]).",
         type="array-like[float, float, float]",
@@ -49,10 +64,10 @@ class PerspectiveCameraMeasure(Measure):
 
     up = documented(
         attr.ib(default=[0, 0, 1], validator=validators.has_len(3)),
-        doc="A 3-element vector specifying the up direction of the camera.\n"
+        doc="A 3-vector specifying the up direction of the camera.\n"
         "This vector must be different from the camera's viewing direction,\n"
         "which is given by ``target - origin``.",
-        type="array-like[float, float, float]",
+        type="array-like",
         default="[0, 0, 1]",
     )
 
@@ -75,6 +90,10 @@ class PerspectiveCameraMeasure(Measure):
                 f"up direction must not be colinear with viewing direction, "
                 f"got up = {self.up}, direction = {direction}"
             )
+
+    @property
+    def film_resolution(self):
+        return self._film_resolution
 
     def _base_dicts(self):
         from mitsuba.core import ScalarTransform4f

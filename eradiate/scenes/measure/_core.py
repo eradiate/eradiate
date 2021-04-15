@@ -50,27 +50,20 @@ class Measure(SceneElement, ABC):
         default="32",
     )
 
-    film_resolution = documented(
-        attr.ib(
-            default=(32, 32),
-            validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(int),
-                iterable_validator=validators.has_len(2),
-            ),
-        ),
-        doc="Film resolution as a (width, height) 2-tuple. "
-        "If the height is set to 1, direction sampling will be restricted to a "
-        "plane.",
-        type="array-like[int, int]",
-        default="(32, 32)",
-    )
-
     # Private attributes
     # Sample count which, if exceeded, should trigger sample count splitting in
     # single-precision modes
     _spp_splitting_threshold = attr.ib(
         default=int(1e5), converter=int, validator=validators.is_positive, repr=False
     )
+
+    @property
+    @abstractmethod
+    def film_resolution(self):
+        """
+        Getter for film resolution.
+        """
+        pass
 
     def postprocess_results(self, runner_results):
         """Process sensor data to extract measure results. These post-processing

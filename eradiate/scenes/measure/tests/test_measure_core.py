@@ -2,9 +2,15 @@ from eradiate.scenes.measure._core import Measure, SensorInfo
 
 
 def test_measure():
-    """Unit tests for :class:`.Measure`."""
+    """
+    Unit tests for :class:`.Measure`.
+    """
     # Concrete class to test
     class MyMeasure(Measure):
+        @property
+        def film_resolution(self):
+            return (640, 480)
+
         def _base_dicts(self):
             return [
                 {
@@ -19,7 +25,6 @@ def test_measure():
     assert m.sensor_infos() == [SensorInfo(id=m.id, spp=m.spp)]
 
     # The kernel dict is well-formed
-    m.film_resolution = (640, 480)
     m.spp = 256
     assert m.kernel_dict() == {
         m.id: {
@@ -42,9 +47,15 @@ def test_measure():
 
 
 def test_measure_spp_splitting():
-    """Unit tests for SPP splitting."""
+    """
+    Unit tests for SPP splitting.
+    """
 
     class MyMeasure(Measure):
+        @property
+        def film_resolution(self):
+            return (32, 32)
+
         def _base_dicts(self):
             pass
 

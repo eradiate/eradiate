@@ -90,7 +90,7 @@ class TargetOriginPoint(TargetOrigin):
     xyz = documented(
         pinttr.ib(units=ucc.deferred("length")),
         doc="Point coordinates.\n" "\n" "Unit-enabled field (default: cdu[length]).",
-        type="array-like[float, float, float]",
+        type="array-like",
     )
 
     @xyz.validator
@@ -228,7 +228,7 @@ class TargetOriginSphere(TargetOrigin):
     center = documented(
         pinttr.ib(units=ucc.deferred("length")),
         doc="Center coordinates.\n" "\n" "Unit-enabled field (default: cdu[length]).",
-        type="array-like[float, float, float]",
+        type="array-like",
     )
 
     @center.validator
@@ -266,6 +266,21 @@ class DistantMeasure(Measure):
     plugin. It parametrises the sensor is oriented based on the a pair of zenith
     and azimuth angles, following the convention used in Earth observation.
     """
+
+    _film_resolution = documented(
+        attr.ib(
+            default=(32, 32),
+            validator=attr.validators.deep_iterable(
+                member_validator=attr.validators.instance_of(int),
+                iterable_validator=validators.has_len(2),
+            ),
+        ),
+        doc="Film resolution as a (width, height) 2-tuple. "
+            "If the height is set to 1, direction sampling will be restricted to a "
+            "plane.",
+        type="array-like",
+        default="(32, 32)",
+    )
 
     target = documented(
         attr.ib(
@@ -328,8 +343,8 @@ class DistantMeasure(Measure):
             converter=np.array,
             validator=validators.is_vector3,
         ),
-        doc="Vector orienting the hemisphere mapped by the measure.",
-        type="arraylike[float, float, float]",
+        doc="A 3-vector orienting the hemisphere mapped by the measure.",
+        type="array-like",
         default="[0, 0, 1]",
     )
 
@@ -339,6 +354,10 @@ class DistantMeasure(Measure):
         type="bool",
         default="False",
     )
+
+    @property
+    def film_resolution(self):
+        return self._film_resolution
 
     def _base_dicts(self):
         result = []
