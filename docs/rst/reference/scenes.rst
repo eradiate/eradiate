@@ -143,6 +143,7 @@ Measures [eradiate.scenes.measure]
    DistantMeasure
    PerspectiveCameraMeasure
    RadiancemeterMeasure
+   RadiancemeterArrayMeasure
 
 .. dropdown:: **Private: Target and origin specification for DistantMeasure**
 
