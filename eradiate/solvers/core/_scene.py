@@ -13,7 +13,9 @@ from ...scenes.measure import DistantMeasure, MeasureFactory
 @parse_docs
 @attr.s
 class Scene(SceneElement, ABC):
-    """Abstract class common to all scenes."""
+    """
+    Abstract class common to all scenes.
+    """
 
     illumination = documented(
         attr.ib(

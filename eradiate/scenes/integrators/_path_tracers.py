@@ -50,7 +50,7 @@ class MonteCarloIntegrator(Integrator):
         default="None",
     )
 
-    def kernel_dict(self, ref=True):
+    def kernel_dict(self, ctx=None):
         result = {self.id: {}}
 
         if self.max_depth is not None:
@@ -67,15 +67,16 @@ class MonteCarloIntegrator(Integrator):
 @parse_docs
 @attr.s
 class PathIntegrator(MonteCarloIntegrator):
-    """A thin interface to the `path tracer kernel plugin <https://eradiate-kernel.readthedocs.io/en/latest/generated/plugins.html#path-tracer-path>`_.
+    """
+    A thin interface to the `path tracer kernel plugin <https://eradiate-kernel.readthedocs.io/en/latest/generated/plugins.html#path-tracer-path>`_.
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering and does not account for volume
     interactions.
     """
 
-    def kernel_dict(self, ref=True):
-        result = super(PathIntegrator, self).kernel_dict(ref)
+    def kernel_dict(self, ctx=None):
+        result = super(PathIntegrator, self).kernel_dict()
         result[self.id]["type"] = "path"
         return result
 
@@ -84,14 +85,15 @@ class PathIntegrator(MonteCarloIntegrator):
 @parse_docs
 @attr.s
 class VolPathIntegrator(MonteCarloIntegrator):
-    """A thin interface to the volumetric path tracer kernel plugin.
+    """
+    A thin interface to the volumetric path tracer kernel plugin.
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering and accounts for volume interactions.
     """
 
-    def kernel_dict(self, ref=True):
-        result = super(VolPathIntegrator, self).kernel_dict(ref)
+    def kernel_dict(self, ctx=None):
+        result = super(VolPathIntegrator, self).kernel_dict()
         result[self.id]["type"] = "volpath"
         return result
 
@@ -111,8 +113,8 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
         converter=attr.converters.optional(bool)
     )
 
-    def kernel_dict(self, ref=True):
-        result = super(VolPathMISIntegrator, self).kernel_dict(ref)
+    def kernel_dict(self, ctx=None):
+        result = super(VolPathMISIntegrator, self).kernel_dict()
 
         result[self.id]["type"] = "volpathmis"
         if self.use_spectral_mis is not None:

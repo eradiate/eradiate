@@ -10,7 +10,9 @@ from ...validators import has_quantity
 @parse_docs
 @attr.s
 class ConstantIllumination(Illumination):
-    """Constant illumination scene element [:factorykey:`constant`]."""
+    """
+    Constant illumination scene element [:factorykey:`constant`].
+    """
 
     radiance = documented(
         attr.ib(
@@ -21,13 +23,13 @@ class ConstantIllumination(Illumination):
         doc="Emitted radiance spectrum. Must be a radiance spectrum "
         "(in W/m^2/sr/nm or compatible units).",
         type="float or :class:`~eradiate.scenes.spectra.Spectrum`",
-        default="1.0 cdu[radiance]",
+        default="1.0 ucc[radiance]",
     )
 
-    def kernel_dict(self, ref=True):
+    def kernel_dict(self, ctx=None):
         return {
             self.id: {
                 "type": "constant",
-                "radiance": self.radiance.kernel_dict()["spectrum"],
+                "radiance": self.radiance.kernel_dict(ctx=ctx)["spectrum"],
             }
         }

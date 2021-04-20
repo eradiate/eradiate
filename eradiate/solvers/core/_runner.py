@@ -13,8 +13,9 @@ def _check_variant():
         raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
 
-def runner(kernel_dict):
-    """Low-level runner function. Takes a kernel dictionary, instantiates the
+def runner(kernel_dict, sensor_ids=None):
+    """
+    Low-level runner function. Takes a kernel dictionary, instantiates the
     corresponding kernel scene and runs the integrator with all sensors.
 
     .. important::
@@ -43,7 +44,19 @@ def runner(kernel_dict):
 
     kernel_scene = load_dict(kernel_dict.data)
 
-    for i_sensor, sensor in enumerate(kernel_scene.sensors()):
+    # Define the list of processed sensors
+    if sensor_ids is None:
+        sensors = kernel_scene.sensors()
+    else:
+        sensors = [
+            sensor
+            for sensor in kernel_scene.sensors()
+            if str(sensor.id()) in sensor_ids
+        ]
+
+    # Run kernel for selected sensors
+    for i_sensor, sensor in enumerate(sensors):
+        # Run Mitsuba
         kernel_scene.integrator().render(kernel_scene, sensor)
 
         # Collect results
@@ -51,7 +64,7 @@ def runner(kernel_dict):
         result = np.array(film.bitmap(), dtype=float)
 
         sensor_id = str(sensor.id())
-        if not sensor_id:
+        if not sensor_id:  # Assign default ID if sensor doesn't have one
             sensor_id = f"__sensor_{i_sensor}"
         results[sensor_id] = result
 

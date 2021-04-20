@@ -43,7 +43,7 @@ class Canopy(SceneElement, ABC):
     )
 
     @abstractmethod
-    def bsdfs(self):
+    def bsdfs(self, ctx=None):
         """
         Return BSDF plugin specifications only.
 
@@ -55,7 +55,7 @@ class Canopy(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def shapes(self, ref=False):
+    def shapes(self, ctx=None):
         """
         Return shape plugin specifications only.
 
@@ -67,11 +67,13 @@ class Canopy(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def kernel_dict(self, ref=True):
-        """Return a dictionary suitable for kernel scene configuration.
+    def kernel_dict(self, ctx=None):
+        """
+        Return a dictionary suitable for kernel scene configuration.
 
-        Parameter ``ref`` (bool):
-            If ``True``, use referencing for all relevant nested kernel plugins.
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             Dictionary suitable for merge with a kernel scene dictionary

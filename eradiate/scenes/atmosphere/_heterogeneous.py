@@ -1,4 +1,3 @@
-""" Heterogeneous atmosphere scene elements """
 import struct
 import tempfile
 from pathlib import Path
@@ -17,8 +16,9 @@ from ...validators import is_file
 
 
 def write_binary_grid3d(filename, values):
-    """Writes volume data to a binary file so that a ``gridvolume`` kernel
-    plugin can be instantiated with that file.
+    """
+    Write volume data to a binary file so that a ``gridvolume`` kernel plugin can be
+    instantiated with that file.
 
     Parameter ``filename`` (path-like):
         File name.
@@ -225,7 +225,6 @@ class HeterogeneousAtmosphere(Atmosphere):
         else:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    @property
     def height(self):
         if self.toa_altitude == "auto":
             return (
@@ -238,7 +237,10 @@ class HeterogeneousAtmosphere(Atmosphere):
     def kernel_width(self):
         """Return scene width based on configuration."""
 
+    def kernel_width(self, ctx=None):
         if self.width == "auto":
+            spectral_ctx = ctx.spectral_ctx if ctx is not None else None
+
             if self.profile is None:
                 albedo = ureg.Quantity(
                     read_binary_grid3d(self.albedo_fname), ureg.dimensionless
@@ -248,8 +250,8 @@ class HeterogeneousAtmosphere(Atmosphere):
                     uck.get("collision_coefficient"),
                 )
             else:
-                albedo = self.profile.albedo
-                sigma_t = self.profile.sigma_t
+                albedo = self.profile.albedo(spectral_ctx)
+                sigma_t = self.profile.sigma_t(spectral_ctx)
 
             sigma_s = sigma_t * albedo
             min_sigma_s = sigma_s.min()
@@ -267,15 +269,23 @@ class HeterogeneousAtmosphere(Atmosphere):
 
         return width
 
-    def make_volume_data(self, fields=None):
-        """Create volume data files for requested fields.
+    def make_volume_data(self, fields=None, spectral_ctx=None):
+        """
+        Create volume data files for requested fields.
 
         Parameter ``fields`` (str or list[str] or None):
             If str, field for which to create volume data file. If list,
             fields for which to create volume data files. If ``None``,
             all supported fields are processed (``{"albedo", "sigma_t"}``).
             Default: ``None``.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
         """
+        if spectral_ctx is None:
+            raise ValueError("keyword argument 'spectral_ctx' must be specified")
+
         supported_fields = set(self._quantities.keys())
 
         if fields is None:
@@ -292,7 +302,7 @@ class HeterogeneousAtmosphere(Atmosphere):
                 raise ValueError(f"field {field} cannot be used to create volume data")
 
             # Does the considered field have values?
-            field_quantity = getattr(self.profile, field)
+            field_quantity = getattr(self.profile, field)(spectral_ctx)
 
             if field_quantity is None:
                 raise ValueError(f"field {field} is empty, cannot create volume data")
@@ -304,20 +314,21 @@ class HeterogeneousAtmosphere(Atmosphere):
                 setattr(self, f"{field}_fname", field_fname)
 
             # We have the data and the filename: we can create the file
+            field_quantity.m_as(uck.get(self._quantities[field]))
             write_binary_grid3d(
                 field_fname,
                 field_quantity.m_as(uck.get(self._quantities[field])),
             )
 
-    def phase(self):
+    def phase(self, ctx=None):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
 
-    def media(self, ref=False):
+    def media(self, ctx=None):
         from mitsuba.core import ScalarTransform4f
 
-        k_width = self.kernel_width.to(uck.get("length")).magnitude
-        k_height = self.kernel_height.to(uck.get("length")).magnitude
-        k_offset = self.kernel_offset.to(uck.get("length")).magnitude
+        k_width = self.kernel_width(ctx).m_as(uck.get("length"))
+        k_height = self.kernel_height(ctx).m_as(uck.get("length"))
+        k_offset = self.kernel_offset(ctx).m_as(uck.get("length"))
 
         # First, transform the [0, 1]^3 cube to the right dimensions
         trafo = ScalarTransform4f(
@@ -331,8 +342,8 @@ class HeterogeneousAtmosphere(Atmosphere):
 
         # Create volume data files if possible
         if self.profile is not None:
-            self.make_volume_data("albedo")
-            self.make_volume_data("sigma_t")
+            self.make_volume_data("albedo", spectral_ctx=ctx.spectral_ctx)
+            self.make_volume_data("sigma_t", spectral_ctx=ctx.spectral_ctx)
 
         # Output kernel dict
         return {
@@ -352,18 +363,18 @@ class HeterogeneousAtmosphere(Atmosphere):
             }
         }
 
-    def shapes(self, ref=False):
+    def shapes(self, ctx=None):
         from mitsuba.core import ScalarTransform4f
 
-        if ref:
+        if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
-            medium = self.media(ref=False)[f"medium_{self.id}"]
+            medium = self.media(ctx=None)[f"medium_{self.id}"]
 
         k_length = uck.get("length")
-        k_width = self.kernel_width.to(k_length).magnitude
-        k_height = self.kernel_height.to(k_length).magnitude
-        k_offset = self.kernel_offset.to(k_length).magnitude
+        k_width = self.kernel_width(ctx).m_as(k_length)
+        k_height = self.kernel_height(ctx).m_as(k_length)
+        k_offset = self.kernel_offset(ctx).m_as(k_length)
 
         return {
             f"shape_{self.id}": {

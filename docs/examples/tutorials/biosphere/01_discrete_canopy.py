@@ -26,6 +26,9 @@ def display_canopy(canopy, distance=85):
     # Compute camera location
     origin = np.full((3,), distance / np.sqrt(3))
 
+    # Prepare kernel evaluation context
+    ctx = eradiate.contexts.KernelDictContext()
+
     # Build kernel scene dictionary suitable for visualisation
     # (we'll render only direct illumination for optimal speed)
     kernel_dict = eradiate.scenes.core.KernelDict.new(
@@ -36,10 +39,12 @@ def display_canopy(canopy, distance=85):
             origin=origin,
             target=(0, 0, 0),
             up=(0, 0, 1),
+            spectral_cfg=ctx.spectral_ctx,
         ),
         eradiate.scenes.illumination.DirectionalIllumination(),
         eradiate.scenes.integrators.PathIntegrator(max_depth=2),
         canopy,
+        ctx=ctx,
     )
 
     # Render image

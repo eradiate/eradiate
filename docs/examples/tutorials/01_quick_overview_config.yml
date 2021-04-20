@@ -1,6 +1,4 @@
-mode:
-  type: mono
-  wavelength: 550.  # nm
+mode: mono
 surface:
   type: lambertian
   reflectance:
@@ -17,7 +15,8 @@ illumination:
     type: uniform
     value: 1.8e+6  # W/km^2/nm
 measures:
-  - type: toa_hsphere
+  - type: distant
+    id: toa_hsphere
+    spectral_cfg:
+      wavelength: 550.  # nm
     spp: 32000  # dimensionless
-    zenith_res: 10.  # deg
-    azimuth_res: 10.  # deg

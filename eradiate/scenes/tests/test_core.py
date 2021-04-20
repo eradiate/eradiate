@@ -73,7 +73,7 @@ def test_scene_element(mode_mono):
             validator=[is_number, is_positive],
         )
 
-        def kernel_dict(self, ref=True):
+        def kernel_dict(self, ctx=None):
             return {
                 self.id: {
                     "type": "directional",

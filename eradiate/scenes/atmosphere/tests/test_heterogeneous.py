@@ -16,6 +16,7 @@ from eradiate.scenes.atmosphere._heterogeneous import (
     write_binary_grid3d,
 )
 from eradiate.scenes.core import KernelDict
+from eradiate.contexts import KernelDictContext
 
 
 def test_read_binary_grid3d():
@@ -45,24 +46,30 @@ def test_heterogeneous_nowrite(mode_mono):
     )
 
     # Check if default output can be loaded
-    p = a.phase()
+    ctx = KernelDictContext(ref=False)
+
+    p = a.phase(ctx)
     assert load_dict(onedict_value(p)) is not None
 
-    m = a.media()
+    m = a.media(ctx)
     assert load_dict(onedict_value(m)) is not None
 
-    s = a.shapes()
+    s = a.shapes(ctx)
     assert load_dict(onedict_value(s)) is not None
 
     # Load all elements at once (and use references)
+    ctx = KernelDictContext(ref=True)
+
     with unit_context_kernel.override({"length": "km"}):
         kernel_dict = KernelDict.new()
-        kernel_dict.add(a)
+        kernel_dict.add(a, ctx=ctx)
         scene = kernel_dict.load()
         assert scene is not None
 
 
 def test_heterogeneous_write(mode_mono, tmpdir):
+    ctx = KernelDictContext()
+
     # Check if volume data file creation works as expected
     with unit_context_config.override({"length": "km"}):
         a = HeterogeneousAtmosphere(
@@ -76,12 +83,12 @@ def test_heterogeneous_write(mode_mono, tmpdir):
             cache_dir=tmpdir,
         )
 
-    a.kernel_dict()
+    a.kernel_dict(ctx)
     # If file creation is successful, volume data files must exist
     assert a.albedo_fname.is_file()
     assert a.sigma_t_fname.is_file()
     # Check if written files can be loaded
-    assert KernelDict.new(a).load() is not None
+    assert KernelDict.new(a, ctx=ctx).load() is not None
 
     # Check that inconsistent init will raise
     with pytest.raises(ValueError):
@@ -96,6 +103,8 @@ def test_heterogeneous_write(mode_mono, tmpdir):
 
 
 def test_heterogeneous_us76(mode_mono, tmpdir):
+    ctx = KernelDictContext()
+
     # Volume data file creation works as expected
     # Underlying radiative properties profile is correct
     # Atmosphere height is correctly derived from the radiative
@@ -112,20 +121,20 @@ def test_heterogeneous_us76(mode_mono, tmpdir):
         },
         cache_dir=tmpdir,
     )
-    assert a.height == ureg.Quantity(86, "km")
+    assert a.height() == ureg.Quantity(86, "km")
     profile = a.profile
     assert isinstance(profile, US76ApproxRadProfile)
-    assert profile.sigma_a.shape == (1, 1, 86)
-    assert profile.sigma_s.shape == (1, 1, 86)
-    assert profile.sigma_t.shape == (1, 1, 86)
-    assert profile.albedo.shape == (1, 1, 86)
+    assert profile.sigma_a(ctx.spectral_ctx).shape == (1, 1, 86)
+    assert profile.sigma_s(ctx.spectral_ctx).shape == (1, 1, 86)
+    assert profile.sigma_t(ctx.spectral_ctx).shape == (1, 1, 86)
+    assert profile.albedo(ctx.spectral_ctx).shape == (1, 1, 86)
 
-    a.kernel_dict()
+    a.kernel_dict(ctx)
     # If file creation is successful, volume data files must exist
     assert a.albedo_fname.is_file()
     assert a.sigma_t_fname.is_file()
     # Check if written files can be loaded
-    assert KernelDict.new(a).load() is not None
+    assert KernelDict.new(a, ctx=ctx).load() is not None
 
 
 def test_heterogeneous_afgl1986(mode_mono, tmpdir):
@@ -166,14 +175,14 @@ def test_heterogeneous_afgl1986(mode_mono, tmpdir):
             "absorption_data_sets": test_absorption_data_sets,
         }
     )
-    assert a.height == ureg.Quantity(100, "km")
+    assert a.height() == ureg.Quantity(100, "km")
     assert isinstance(a.profile, AFGL1986RadProfile)
 
 
 def test_heterogeneous_units(mode_mono):
     # Initialising a heterogeneous atmosphere with the wrong units raises an error
     with pytest.raises(pinttr.exceptions.UnitsError):
-        a = HeterogeneousAtmosphere(
+        HeterogeneousAtmosphere(
             width=ureg.Quantity(100.0, "m^2"),
             toa_altitude=1000.0,
             profile={
@@ -185,7 +194,7 @@ def test_heterogeneous_units(mode_mono):
         )
 
     with pytest.raises(pinttr.exceptions.UnitsError):
-        a = HeterogeneousAtmosphere(
+        HeterogeneousAtmosphere(
             width=100.0,
             toa_altitude=ureg.Quantity(1000.0, "s"),
             profile={
@@ -200,7 +209,7 @@ def test_heterogeneous_units(mode_mono):
 def test_heterogeneous_values(mode_mono, tmpdir):
     # test that initialising a heterogeneous atmosphere with invalid values raises an error
     with pytest.raises(ValueError):
-        a = HeterogeneousAtmosphere(
+        HeterogeneousAtmosphere(
             width=-100.0,
             toa_altitude=1000.0,
             profile={
@@ -213,7 +222,7 @@ def test_heterogeneous_values(mode_mono, tmpdir):
         )
 
     with pytest.raises(ValueError):
-        a = HeterogeneousAtmosphere(
+        HeterogeneousAtmosphere(
             width=100.0,
             toa_altitude=-1000.0,
             profile={

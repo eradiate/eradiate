@@ -1,4 +1,5 @@
-"""Radiative property profile definitions.
+"""
+Radiative property profile definitions.
 """
 import datetime
 from abc import ABC, abstractmethod
@@ -170,9 +171,9 @@ class RadProfile(ABC):
 
     .. warning::
 
-       Arrays returned by the :data:`albedo`, :data:`sigma_a`, :data:`sigma_s`
-       and :data:`sigma_t` properties **must** be 3D. Should the profile
-       be one-dimensional, the invariant dimensions can be set to 1.
+       Arrays returned by the :meth:`albedo`, :meth:`sigma_a`, :meth:`sigma_s`
+       and :meth:`sigma_t` methods **must** be 3D. Should the profile
+       be one-dimensional, invariant dimensions can be set to 1.
 
     .. seealso::
 
@@ -188,49 +189,71 @@ class RadProfile(ABC):
         d_copy = pinttr.interpret_units(d, ureg=ureg)
         return cls(**d_copy)
 
-    @property
     @abstractmethod
-    def albedo(self):
+    def albedo(self, spectral_ctx=None):
         """
         Return albedo.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
 
         Returns → :class:`pint.Quantity`:
             Profile albedo.
         """
         pass
 
-    @property
     @abstractmethod
-    def sigma_t(self):
+    def sigma_t(self, spectral_ctx=None):
         """
         Return extinction coefficient.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
 
         Returns → :class:`pint.Quantity`:
             Profile extinction coefficient.
         """
         pass
 
-    @property
     @abstractmethod
-    def sigma_a(self):
+    def sigma_a(self, spectral_ctx=None):
         """
         Return absorption coefficient.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
 
         Returns → :class:`pint.Quantity`:
             Profile absorption coefficient.
         """
         pass
 
-    @property
     @abstractmethod
-    def sigma_s(self):
+    def sigma_s(self, spectral_ctx=None):
+        """
+        Return scattering coefficient.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Returns → :class:`pint.Quantity`:
+            Profile scattering coefficient.
+        """
         pass
 
     @abstractmethod
-    def to_dataset(self):
+    def to_dataset(self, spectral_ctx=None):
         """
-        Return a dataset that holds the radiative properties of the
-        corresponding atmospheric profile.
+        Return a dataset that holds the radiative properties of the corresponding
+        atmospheric profile.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
 
         Returns → :class:`xarray.Dataset`:
             Radiative properties dataset.
@@ -345,76 +368,29 @@ class ArrayRadProfile(RadProfile):
                 f"the same length"
             )
 
-    _wavelength = pinttr.ib(
-        default=None, units=ucc.deferred("wavelength"), init=False, repr=True
-    )
-
-    def __attrs_post_init__(self):
-        self.update()
-
-    def update(self):
-        mode = eradiate.mode()
-        if not mode.is_monochromatic():
-            raise ModeError(f"unsupported mode {mode.id}")
-        else:
-            wavelength = mode.wavelength
-            self._wavelength = wavelength
-
-    @property
-    def albedo(self):
-        """
-        Return albedo.
-
-        Returns → :class:`pint.Quantity`:
-            Profile albedo.
-        """
+    def albedo(self, spectral_ctx=None):
         return self.albedo_values
 
-    @property
-    def sigma_t(self):
-        """
-        Return extinction coefficient.
-
-        Returns → :class:`pint.Quantity`:
-            Profile extinction coefficient.
-        """
+    def sigma_t(self, spectral_ctx=None):
         return self.sigma_t_values
 
-    @property
-    def sigma_a(self):
-        """
-        Return absorption coefficient.
+    def sigma_a(self, spectral_ctx=None):
+        return self.sigma_t(spectral_ctx) * (1.0 - self.albedo(spectral_ctx))
 
-        Returns → :class:`pint.Quantity`:
-            Profile absorption coefficient.
-        """
-        return self.sigma_t * (1.0 - self.albedo)
+    def sigma_s(self, spectral_ctx=None):
+        return self.sigma_t(spectral_ctx) * self.albedo(spectral_ctx)
 
-    @property
-    def sigma_s(self):
-        """
-        Return scattering coefficient.
+    def to_dataset(self, spectral_ctx=None):
+        if eradiate.mode().is_monochromatic():
+            return make_dataset(
+                wavelength=spectral_ctx.wavelength,
+                z_level=self.levels,
+                sigma_t=self.sigma_t().flatten(),
+                albedo=self.albedo().flatten(),
+            )
 
-        Returns → :class:`pint.Quantity`:
-            Profile scattering coefficient.
-        """
-        return self.sigma_t * self.albedo
-
-    def to_dataset(self):
-        """
-        Return a dataset that holds the radiative properties of the
-        corresponding atmospheric radiative properties profile.
-
-        Returns → :class:`xarray.Dataset`:
-            Radiative properties dataset.
-        """
-        n_layers = self.sigma_t.size
-        return make_dataset(
-            wavelength=self._wavelength,
-            z_level=self.levels,
-            sigma_t=self.sigma_t.flatten(),
-            albedo=self.albedo.flatten(),
-        )
+        else:
+            raise ModeError(f"unsupported mode '{eradiate.mode().id}'")
 
 
 @RadProfileFactory.register("us76_approx")
@@ -499,12 +475,12 @@ class US76ApproxRadProfile(RadProfile):
 
     levels = documented(
         pinttr.ib(
-            default=ureg.Quantity(np.linspace(0, 86, 87), "km"),
+            factory=lambda: ureg.Quantity(np.linspace(0, 86, 87), "km"),
             converter=pinttr.converters.to_units(ucc.deferred("length")),
             validator=pinttr.validators.has_compatible_units,
             units=ucc.deferred("length"),
         ),
-        doc="Level altitudes.\n" "\n" "Unit-enabled field (ucc[length]).",
+        doc="Level altitudes.\n\nUnit-enabled field (ucc[length]).",
         type="array",
     )
 
@@ -521,29 +497,6 @@ class US76ApproxRadProfile(RadProfile):
         type="str",
     )
 
-    _sigma_s_values = pinttr.ib(
-        default=None,
-        units=ucc.deferred("collision_coefficient"),
-        init=False,
-        repr=False,
-    )
-
-    _sigma_a_values = pinttr.ib(
-        default=None,
-        units=ucc.deferred("collision_coefficient"),
-        init=False,
-        repr=False,
-    )
-
-    _wavelength = pinttr.ib(
-        default=None, units=ucc.deferred("wavelength"), init=False, repr=True
-    )
-
-    _thermoprops = attr.ib(default=None, init=False, repr=False)
-
-    def __attrs_post_init__(self):
-        self.update()
-
     @staticmethod
     def default_absorption_data_set(wavelength):
         """
@@ -559,105 +512,66 @@ class US76ApproxRadProfile(RadProfile):
         )
         return data.open(category="absorption_spectrum", id=dataset_id)
 
-    def compute_sigma_a(self):
+    def eval_thermoprops_profile(self):
         """
-        Compute absorption coefficient.
+        Evaluate thermophysical properties.
         """
-        mode = eradiate.mode()
-        if not mode.is_monochromatic():
-            raise ModeError(f"unsupported mode {mode.id}")
-        else:
-            wavelength = mode.wavelength
-            self._wavelength = wavelength
-        if self._thermoprops is None:
-            self._thermoprops = self.compute_thermoprops()
+        return us76.make_profile(self.levels)
+
+    def eval_sigma_a(self, spectral_ctx):
+        """
+        Evaluate absorption coefficient given spectral context.
+        """
+        wavelength = spectral_ctx.wavelength
+        profile = self.eval_thermoprops_profile()
+
         if self.absorption_data_set is None:  # ! this is never tested
             data_set = self.default_absorption_data_set(wavelength=wavelength)
         else:
             data_set = xr.open_dataset(self.absorption_data_set)
+
+        # Compute scattering coefficient
         return compute_sigma_a(
             ds=data_set,
             wl=wavelength,
-            p=self._thermoprops.p.values,
-            n=self._thermoprops.n.values,
+            p=profile.p.values,
+            n=profile.n.values,
             fill_values=dict(pt=0.0),  # us76_u86_4 dataset is limited to pressures above
             # 0.101325 Pa, but us76 thermophysical profile goes below that
             # value for altitudes larger than 93 km. At these altitudes, the
             # number density is so small compared to that at the sea level that
             # we assume it is negligible.
-        ).to("km^-1")
+        )
 
-    def compute_sigma_s(self):
+    def eval_sigma_s(self, spectral_ctx):
         """
-        Compute scattering coefficient.
+        Evaluate scattering coefficient given spectral context.
         """
-        mode = eradiate.mode()
-        if not mode.is_monochromatic():
-            raise ModeError(f"unsupported mode {mode.id}")
-        else:
-            wavelength = mode.wavelength
-            self._wavelength = wavelength
-        profile = self._thermoprops
+        wavelength = spectral_ctx.wavelength
+        profile = self.eval_thermoprops_profile()
+
         return compute_sigma_s_air(
             wavelength=wavelength,
             number_density=ureg.Quantity(profile.n.values, profile.n.units),
-        ).to("km^-1")
+        )
 
-    def compute_thermoprops(self):
-        """
-        Compute the atmosphere thermophysical properties.
-        """
-        return us76.make_profile(self.levels)
+    def albedo(self, spectral_ctx=None):
+        return (self.sigma_s(spectral_ctx) / self.sigma_t(spectral_ctx)).to(
+            ureg.dimensionless
+        )
 
-    def update(self):
-        """
-        Update object's internal state.
-        """
-        self._thermoprops = self.compute_thermoprops()
-        self._sigma_a_values = self.compute_sigma_a()
-        self._sigma_s_values = self.compute_sigma_s()
+    def sigma_a(self, spectral_ctx=None):
+        # Add missing dimensions
+        return self.eval_sigma_a(spectral_ctx)[np.newaxis, np.newaxis, ...]
 
-    @property
-    def albedo(self):
-        """
-        Return albedo.
+    def sigma_s(self, spectral_ctx=None):
+        # Add missing dimensions
+        return self.eval_sigma_s(spectral_ctx)[np.newaxis, np.newaxis, ...]
 
-        Returns → :class:`pint.Quantity`:
-            Profile albedo.
-        """
-        return (self.sigma_s / self.sigma_t).to(ureg.dimensionless)
+    def sigma_t(self, spectral_ctx=None):
+        return self.sigma_a(spectral_ctx) + self.sigma_s(spectral_ctx)
 
-    @property
-    def sigma_a(self):
-        """
-        Return absorption coefficient.
-
-        Returns → :class:`pint.Quantity`:
-            Profile absorption coefficient.
-        """
-        return self._sigma_a_values[np.newaxis, np.newaxis, ...]
-
-    @property
-    def sigma_s(self):
-        """
-        Return scattering coefficient.
-
-        Returns → :class:`pint.Quantity`:
-            Profile scattering coefficient.
-        """
-        return self._sigma_s_values[np.newaxis, np.newaxis, ...]
-
-    @property
-    def sigma_t(self):
-        """
-        Return extinction coefficient.
-
-        Returns → :class:`pint.Quantity`:
-            Profile extinction coefficient.
-        """
-        return self.sigma_a + self.sigma_s
-
-    def to_dataset(self):
+    def to_dataset(self, spectral_ctx=None):
         """
         Return a dataset that holds the atmosphere radiative properties.
 
@@ -666,10 +580,10 @@ class US76ApproxRadProfile(RadProfile):
         """
         return make_dataset(
             wavelength=self._wavelength,
-            z_level=self._thermoprops.z_level.values,
-            z_layer=self._thermoprops.z_layer.values,
-            sigma_a=self.sigma_a.flatten(),
-            sigma_s=self.sigma_s.flatten(),
+            z_level=self.eval_thermoprops_profile().z_level.values,
+            z_layer=self.eval_thermoprops_profile().z_layer.values,
+            sigma_a=self.sigma_a(spectral_ctx).flatten(),
+            sigma_s=self.sigma_s(spectral_ctx).flatten(),
         )
 
 
@@ -811,6 +725,7 @@ class AFGL1986RadProfile(RadProfile):
         "Unit-enabled field (ucc[length]).",
         type="array",
     )
+
     concentrations = documented(
         attr.ib(
             default=None,
@@ -823,6 +738,7 @@ class AFGL1986RadProfile(RadProfile):
         ":func:`~eradiate.thermoprops.util.compute_scaling_factors`.",
         type="dict",
     )
+
     absorption_data_sets = documented(
         attr.ib(
             default=None,
@@ -839,25 +755,24 @@ class AFGL1986RadProfile(RadProfile):
         "compute the absorption coefficient of the corresponding species.",
         type="dict",
     )
-    _sigma_s_values = pinttr.ib(
-        default=None,
-        units=ucc.deferred("collision_coefficient"),
-        init=False,
-        repr=False,
-    )
-    _sigma_a_values = pinttr.ib(
-        default=None,
-        units=ucc.deferred("collision_coefficient"),
-        init=False,
-        repr=False,
-    )
-    _wavelength = pinttr.ib(
-        default=None, units=ucc.deferred("wavelength"), init=False, repr=True
-    )
-    _thermoprops = attr.ib(default=None, init=False, repr=False)
 
-    def __attrs_post_init__(self):
-        self.update()
+    def eval_thermoprops_profile(self):
+        """
+        Compute the atmosphere thermophysical properties.
+        """
+        thermoprops = afgl1986.make_profile(model_id=self.model)
+        if self.levels is not None:
+            thermoprops = interpolate(
+                ds=thermoprops, z_level=self.levels, conserve_columns=True
+            )
+
+        if self.concentrations is not None:
+            factors = compute_scaling_factors(
+                ds=thermoprops, concentration=self.concentrations
+            )
+            thermoprops = rescale_concentration(ds=thermoprops, factors=factors)
+
+        return thermoprops
 
     @staticmethod
     def _auto_compute_sigma_a_absorber(wavelength, absorber, n_absorber, p, t):
@@ -921,25 +836,20 @@ class AFGL1986RadProfile(RadProfile):
             fill_values=dict(w=0.0, pt=0.0),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
         )
 
-    def compute_sigma_a(self):
+    def eval_sigma_a(self, spectral_ctx):
         """
-        Compute the absorption coefficient values.
+        Evaluate absorption coefficient given spectral context.
 
-        .. note::
-            Extrapolate to zero when wavelength, pressure and/or temperature
-            are out of bounds.
+        .. note:: Extrapolate to zero when wavelength, pressure and/or
+           temperature are out of bounds.
         """
-        mode = eradiate.mode()
-        if not mode.is_monochromatic():
-            raise ModeError(f"unsupported mode {mode.id}")
-        else:
-            wavelength = mode.wavelength
-            self._wavelength = wavelength
+        wavelength = spectral_ctx.wavelength
+        profile = self.eval_thermoprops_profile()
 
-        p = self._thermoprops.p
-        t = self._thermoprops.t
-        n = self._thermoprops.n
-        mr = self._thermoprops.mr
+        p = profile.p
+        t = profile.t
+        n = profile.n
+        mr = profile.mr
 
         sigma_a = np.full(mr.shape, np.nan)
         absorbers = [
@@ -980,97 +890,45 @@ class AFGL1986RadProfile(RadProfile):
 
         return ureg.Quantity(sigma_a, "km^-1")
 
-    def compute_sigma_s(self):
+    def eval_sigma_s(self, spectral_ctx):
         """
-        Compute the scattering coefficient values.
+        Evaluate scattering coefficient given spectral context.
         """
-        mode = eradiate.mode()
-        if not mode.is_monochromatic():
-            raise ModeError(f"unsupported mode {mode.id}")
-        else:
-            wavelength = mode.wavelength
-            self._wavelength = wavelength
-        n = self._thermoprops.n
+        wavelength = spectral_ctx.wavelength
+        profile = self.eval_thermoprops_profile()
+
         return compute_sigma_s_air(
             wavelength=wavelength,
-            number_density=ureg.Quantity(n.values, n.units),
-        ).to("km^-1")
+            number_density=ureg.Quantity(profile.n.values, profile.n.units),
+        )
 
-    def compute_thermoprops(self):
-        """
-        Compute the atmosphere thermophysical properties.
-        """
-        thermoprops = afgl1986.make_profile(model_id=self.model)
-        if self.levels is not None:
-            thermoprops = interpolate(
-                ds=thermoprops, z_level=self.levels, conserve_columns=True
-            )
-        if self.concentrations is not None:
-            factors = compute_scaling_factors(
-                ds=thermoprops, concentration=self.concentrations
-            )
-            thermoprops = rescale_concentration(ds=thermoprops, factors=factors)
-        return thermoprops
+    def albedo(self, spectral_ctx=None):
+        return (self.sigma_s(spectral_ctx) / self.sigma_t(spectral_ctx)).to(
+            ureg.dimensionless
+        )
 
-    def update(self):
-        """
-        Update the object's internal state.
-        """
-        self._thermoprops = self.compute_thermoprops()
-        self._sigma_a_values = self.compute_sigma_a()
-        self._sigma_s_values = self.compute_sigma_s()
+    def sigma_a(self, spectral_ctx=None):
+        # Add missing dimensions
+        return self.eval_sigma_a(spectral_ctx)[np.newaxis, np.newaxis, ...]
 
-    @property
-    def albedo(self):
-        """
-        Return albedo.
+    def sigma_s(self, spectral_ctx=None):
+        # Add missing dimensions
+        return self.eval_sigma_s(spectral_ctx)[np.newaxis, np.newaxis, ...]
 
-        Returns → :class:`pint.Quantity`:
-            Profile albedo.
-        """
-        return (self.sigma_s / self.sigma_t).to(ureg.dimensionless)
+    def sigma_t(self, spectral_ctx=None):
+        return self.sigma_a(spectral_ctx) + self.sigma_s(spectral_ctx)
 
-    @property
-    def sigma_a(self):
-        """
-        Return absorption coefficient.
-
-        Returns → :class:`pint.Quantity`:
-            Profile absorption coefficient.
-        """
-        return self._sigma_a_values[np.newaxis, np.newaxis, ...]
-
-    @property
-    def sigma_s(self):
-        """
-        Return scattering coefficient.
-
-        Returns → :class:`pint.Quantity`:
-            Profile scattering coefficient.
-        """
-        return self._sigma_s_values[np.newaxis, np.newaxis, ...]
-
-    @property
-    def sigma_t(self):
-        """
-        Return extinction coefficient.
-
-        Returns → :class:`pint.Quantity`:
-            Profile extinction coefficient.
-        """
-        return self.sigma_a + self.sigma_s
-
-    def to_dataset(self):
+    def to_dataset(self, spectral_ctx=None):
         """
         Return a dataset that holds the atmosphere radiative properties.
 
         Returns → :class:`xarray.Dataset`:
-            Atmosphere radiative properties dataset.
+            Radiative properties dataset.
         """
         return make_dataset(
             wavelength=self._wavelength,
-            z_level=self._thermoprops.z_level.values,
-            z_layer=self._thermoprops.z_layer.values,
-            sigma_a=self.sigma_a.flatten(),
-            sigma_s=self.sigma_s.flatten(),
+            z_level=self.eval_thermoprops_profile().z_level.values,
+            z_layer=self.eval_thermoprops_profile().z_layer.values,
+            sigma_a=self.sigma_a(spectral_ctx).flatten(),
+            sigma_s=self.sigma_s(spectral_ctx).flatten(),
         )

@@ -199,3 +199,4 @@ Spectra [eradiate.scenes.spectra]
 
    UniformSpectrum
    SolarIrradianceSpectrum
+   AirScatteringCoefficientSpectrum

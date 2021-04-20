@@ -43,8 +43,9 @@ class Surface(SceneElement, ABC):
     )
 
     @abstractmethod
-    def bsdfs(self):
-        """Return BSDF plugin specifications only.
+    def bsdfs(self, ctx=None):
+        """
+        Return BSDF plugin specifications only.
 
         Returns → dict:
             Return a dictionary suitable for merge with a
@@ -54,8 +55,9 @@ class Surface(SceneElement, ABC):
         # TODO: return a KernelDict
         pass
 
-    def shapes(self, ref=False):
-        """Return shape plugin specifications only.
+    def shapes(self, ctx=None):
+        """
+        Return shape plugin specifications only.
 
         Returns → dict:
             A dictionary suitable for merge with a
@@ -64,12 +66,12 @@ class Surface(SceneElement, ABC):
         """
         from mitsuba.core import ScalarTransform4f, ScalarVector3f
 
-        if ref:
+        if ctx.ref:
             bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
         else:
             bsdf = self.bsdfs()[f"bsdf_{self.id}"]
 
-        width = self.width.to(uck.get("length")).magnitude
+        width = self.kernel_width(ctx=ctx).m_as(uck.get("length"))
 
         return {
             f"shape_{self.id}": {
@@ -81,14 +83,31 @@ class Surface(SceneElement, ABC):
             }
         }
 
-    def kernel_dict(self, ref=True):
+    def kernel_width(self, ctx=None):
+        """
+        Return width of kernel object, possibly overridden by
+        ``ctx.atmosphere_kernel_width``.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns → :class:`pint.Quantity`:
+            Kernel object width.
+        """
+        if ctx.atmosphere_kernel_width is not None:
+            return ctx.atmosphere_kernel_width
+        else:
+            return self.width
+
+    def kernel_dict(self, ctx=None):
         kernel_dict = {}
 
-        if not ref:
-            kernel_dict[self.id] = self.shapes(ref=False)[f"shape_{self.id}"]
+        if not ctx.ref:
+            kernel_dict[self.id] = self.shapes(ctx)[f"shape_{self.id}"]
         else:
-            kernel_dict[f"bsdf_{self.id}"] = self.bsdfs()[f"bsdf_{self.id}"]
-            kernel_dict[self.id] = self.shapes(ref=True)[f"shape_{self.id}"]
+            kernel_dict[f"bsdf_{self.id}"] = self.bsdfs(ctx)[f"bsdf_{self.id}"]
+            kernel_dict[self.id] = self.shapes(ctx)[f"shape_{self.id}"]
 
         return kernel_dict
 
@@ -100,8 +119,8 @@ class Surface(SceneElement, ABC):
 
 
 class SurfaceFactory(BaseFactory):
-    """This factory constructs objects whose classes are derived from
-    :class:`Surface`.
+    """
+    This factory constructs objects whose classes are derived from :class:`Surface`.
 
     .. admonition:: Registered factory members
        :class: hint

@@ -2,13 +2,11 @@ import attr
 import numpy as np
 
 import eradiate
-
 from ... import data
 from ... import unit_context_kernel as uck
 from ... import unit_registry as ureg
 from ..._attrs import documented, parse_docs
 from ..._units import PhysicalQuantity
-from ...exceptions import ModeError
 from ...scenes.spectra import Spectrum, SpectrumFactory
 from ...validators import is_positive
 
@@ -37,7 +35,6 @@ class SolarIrradianceSpectrum(Spectrum):
     depending on the selected kernel default units.
     """
 
-    #: Physical quantity
     quantity = attr.ib(default=PhysicalQuantity.IRRADIANCE, init=False, repr=False)
 
     dataset = documented(
@@ -80,31 +77,17 @@ class SolarIrradianceSpectrum(Spectrum):
         except KeyError:
             raise ValueError(f"unknown dataset {self.dataset}")
 
-    @property
-    def values(self):
-        if eradiate.mode().is_monochromatic():
-            w = eradiate.mode().wavelength
-            w_units = self.data.w.attrs["units"]
-            ssi_units = self.data.ssi.attrs["units"]
-            return ureg.Quantity(
-                self.data.ssi.interp(w=w.m_as(w_units)).data.squeeze(), ssi_units
+    def eval(self, spectral_ctx=None):
+        if self.dataset == "solid_2017":
+            raise NotImplementedError(
+                "Solar irradiance spectrum datasets with a non-empty time "
+                "coordinate are not supported yet."
             )
-        else:
-            raise ModeError(f"unsupported mode '{eradiate.mode()}'")
+        # TODO: add support to solar irradiance spectrum datasets with a
+        #  non-empty time coordinate
 
-    def _compute_irradiance(self):
-        mode = eradiate.mode()
-
-        if mode.is_monochromatic():
-            wavelength = mode.wavelength.m_as(ureg.nm)
-
-            if self.dataset == "solid_2017":
-                raise NotImplementedError(
-                    "Solar irradiance spectrum datasets with a non-empty time "
-                    "coordinate are not supported yet."
-                )
-            # TODO: add support to solar irradiance spectrum datasets with a
-            #  non-empty time coordinate
+        if eradiate.mode().is_monochromatic():
+            wavelength = spectral_ctx.wavelength.m_as(self.data.w.attrs["units"])
 
             irradiance_magnitude = float(
                 self.data.ssi.interp(
@@ -115,7 +98,7 @@ class SolarIrradianceSpectrum(Spectrum):
 
             # Raise if out of bounds or ill-formed dataset
             if np.isnan(irradiance_magnitude):
-                raise ValueError(f"dataset evaluation returned nan")
+                raise ValueError("dataset evaluation returned nan")
 
             # Apply units
             irradiance = ureg.Quantity(
@@ -123,16 +106,16 @@ class SolarIrradianceSpectrum(Spectrum):
             )
 
         else:
-            raise ModeError(f"unsupported mode '{mode.id}'")
+            raise ValueError(f"unsupported mode {eradiate.mode().id}")
 
         return irradiance
 
-    def kernel_dict(self, ref=True):
+    def kernel_dict(self, ctx=None):
         # Apply scaling, build kernel dict
         return {
             "spectrum": {
                 "type": "uniform",
-                "value": self._compute_irradiance().m_as(uck.get("irradiance"))
+                "value": self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
                 * self.scale,
             }
         }

@@ -7,60 +7,6 @@ from ...scenes.measure._distant import DistantMeasure
 from ...warp import square_to_uniform_hemisphere
 
 
-def distant_measure_compute_viewing_angles(
-    ds: xr.Dataset, measure: DistantMeasure
-) -> xr.Dataset:
-    """Add viewing angles to a dataset of results obtained with a
-    :class:`DistantMeasure` measure. Will not mutate the data.
-
-    Parameter ``ds`` (:class:`~xarray.Dataset`):
-        Dataset to operate on.
-
-    Parameter ``measure`` (:class:`.DistantMeasure`):
-        Measure for which to compute angles.
-
-    Returns → :class:`~xarray.Dataset`:
-        Updated dataset.
-    """
-
-    # Did the sensor sample ray directions in the hemisphere or on a
-    # plane?
-    result = ds
-    plane = measure.film_resolution[1] == 1
-
-    # Compute viewing angles at pixel locations
-    # Angle computation must correspond to the direction sampling done by the
-    # kernel plugin
-    xs = result.coords["x"].data
-    ys = result.coords["y"].data
-    theta = np.full((len(ys), len(xs)), np.nan)
-    phi = np.full_like(theta, np.nan)
-
-    if plane:
-        for y in ys:
-            for x in xs:
-                sample = float(x + 0.5) / len(xs)
-                theta[y, x] = 90.0 - 180.0 * sample
-                phi[y, x] = measure.orientation.m_as("deg")
-
-    else:
-        for y in ys:
-            for x in xs:
-                xy = [
-                    float((x + 0.5) / len(xs)),
-                    float((y + 0.5) / len(ys)),
-                ]
-                d = square_to_uniform_hemisphere(xy)
-                theta[y, x], phi[y, x] = direction_to_angles(d).m_as("deg")
-
-    # Assign angles as non-dimension coords
-    result["vza"] = (("y", "x"), theta, {"units": "deg"})
-    result["vaa"] = (("y", "x"), phi, {"units": "deg"})
-    result = result.set_coords(("vza", "vaa"))
-
-    return result
-
-
 def apply_srf(da, srf):
     r"""Computes the weighted average of some data with a wavelength dimension,
     where the weights are taken from the values of an instrument spectral

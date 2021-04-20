@@ -3,6 +3,7 @@ from copy import deepcopy
 import attr
 import numpy as np
 import pinttr
+import xarray as xr
 
 from ._core import Measure, MeasureFactory
 from ... import converters, validators
@@ -11,12 +12,14 @@ from ..._units import unit_context_config as ucc
 from ..._units import unit_context_kernel as uck
 from ..._units import unit_registry as ureg
 from ..._util import is_vector3
+from ...frame import direction_to_angles
+from ...warp import square_to_uniform_hemisphere
 
 
 @attr.s
 class TargetOrigin:
-    """Interface for target and origin selection classes used by
-    :class:`DistantMeasure`.
+    """
+    Interface for target and origin selection classes used by :class:`DistantMeasure`.
     """
 
     def kernel_item(self):
@@ -25,7 +28,8 @@ class TargetOrigin:
 
     @staticmethod
     def new(target_type, *args, **kwargs):
-        """Instantiate one of the supported child classes. This factory requires
+        """
+        Instantiate one of the supported child classes. This factory requires
         manual class registration. All position and keyword arguments are
         forwarded to the constructed type.
 
@@ -49,7 +53,8 @@ class TargetOrigin:
 
     @staticmethod
     def convert(value):
-        """Object converter method.
+        """
+        Object converter method.
 
         If ``value`` is a dictionary, this method uses :meth:`new` to
         instantiate a :class:`Target` child class based on the ``"type"`` entry
@@ -84,7 +89,9 @@ def _target_point_rectangle_xyz_converter(x):
 @parse_docs
 @attr.s
 class TargetOriginPoint(TargetOrigin):
-    """Point target or origin specification."""
+    """
+    Point target or origin specification.
+    """
 
     # Target point in config units
     xyz = documented(
@@ -109,43 +116,43 @@ class TargetOriginPoint(TargetOrigin):
 @parse_docs
 @attr.s
 class TargetOriginRectangle(TargetOrigin):
-    """Rectangle target origin specification.
+    """
+    Rectangle target origin specification.
 
     This class defines an axis-aligned rectangular zone where ray targets will
     be sampled or ray origins will be projected.
     """
 
-    # fmt: off
     xmin = documented(
         pinttr.ib(
             converter=_target_point_rectangle_xyz_converter,
-            units=ucc.deferred("length")
+            units=ucc.deferred("length"),
         ),
         doc="Lower bound on the X axis.\n"
-            "\n"
-            "Unit-enabled field (default: cdu[length]).",
+        "\n"
+        "Unit-enabled field (default: cdu[length]).",
         type="float",
     )
 
     xmax = documented(
         pinttr.ib(
             converter=_target_point_rectangle_xyz_converter,
-            units=ucc.deferred("length")
+            units=ucc.deferred("length"),
         ),
         doc="Upper bound on the X axis.\n"
-            "\n"
-            "Unit-enabled field (default: cdu[length]).",
+        "\n"
+        "Unit-enabled field (default: cdu[length]).",
         type="float",
     )
 
     ymin = documented(
         pinttr.ib(
             converter=_target_point_rectangle_xyz_converter,
-            units=ucc.deferred("length")
+            units=ucc.deferred("length"),
         ),
         doc="Lower bound on the Y axis.\n"
-            "\n"
-            "Unit-enabled field (default: cdu[length]).",
+        "\n"
+        "Unit-enabled field (default: cdu[length]).",
         type="float",
     )
 
@@ -155,8 +162,8 @@ class TargetOriginRectangle(TargetOrigin):
             units=ucc.deferred("length"),
         ),
         doc="Upper bound on the Y axis.\n"
-            "\n"
-            "Unit-enabled field (default: cdu[length]).",
+        "\n"
+        "Unit-enabled field (default: cdu[length]).",
         type="float",
     )
 
@@ -167,13 +174,12 @@ class TargetOriginRectangle(TargetOrigin):
             units=ucc.deferred("length"),
         ),
         doc="Altitude of the plane enclosing the rectangle.\n"
-            "\n"
-            "Unit-enabled field (default: cdu[length]).",
+        "\n"
+        "Unit-enabled field (default: cdu[length]).",
         type="float",
         default="0.0",
     )
 
-    # fmt: on
     @xmin.validator
     @xmax.validator
     @ymin.validator
@@ -223,7 +229,9 @@ class TargetOriginRectangle(TargetOrigin):
 @parse_docs
 @attr.s
 class TargetOriginSphere(TargetOrigin):
-    """Sphere target or origin specification."""
+    """
+    Sphere target or origin specification.
+    """
 
     center = documented(
         pinttr.ib(units=ucc.deferred("length")),
@@ -244,7 +252,7 @@ class TargetOriginSphere(TargetOrigin):
             units=ucc.deferred("length"),
             validator=[pinttr.validators.has_compatible_units, validators.is_positive],
         ),
-        doc="Sphere radius.\n" "\n" "Unit-enabled field (default: cdu[length]).",
+        doc="Sphere radius.\n\nUnit-enabled field (default: cdu[length]).",
         type="float",
     )
 
@@ -260,7 +268,8 @@ class TargetOriginSphere(TargetOrigin):
 @parse_docs
 @attr.s
 class DistantMeasure(Measure):
-    """Distant measure scene element [:factorykey:`distant`].
+    """
+    Distant measure scene element [:factorykey:`distant`].
 
     This scene element is a thin wrapper around the ``distant`` sensor kernel
     plugin. It parametrises the sensor is oriented based on the a pair of zenith
@@ -276,8 +285,8 @@ class DistantMeasure(Measure):
             ),
         ),
         doc="Film resolution as a (width, height) 2-tuple. "
-            "If the height is set to 1, direction sampling will be restricted to a "
-            "plane.",
+        "If the height is set to 1, direction sampling will be restricted to a "
+        "plane.",
         type="array-like",
         default="(32, 32)",
     )
@@ -368,8 +377,8 @@ class DistantMeasure(Measure):
                 "id": sensor_info.id,
                 "direction": self.direction,
                 "orientation": [
-                    np.cos(self.orientation.to(ureg.rad).m),
-                    np.sin(self.orientation.to(ureg.rad).m),
+                    np.cos(self.orientation.m_as(ureg.rad)),
+                    np.sin(self.orientation.m_as(ureg.rad)),
                     0.0,
                 ],
             }
@@ -384,5 +393,40 @@ class DistantMeasure(Measure):
                 d["flip_directions"] = self.flip_directions
 
             result.append(d)
+
+        return result
+
+    def postprocessed_results(self):
+        result = super(DistantMeasure, self).postprocessed_results()
+
+        # Compute viewing angles at pixel locations
+        # Angle computation must correspond to the direction sampling done by the
+        # kernel plugin
+        xs = result.coords["x"].data
+        ys = result.coords["y"].data
+        theta = np.full((len(ys), len(xs)), np.nan)
+        phi = np.full_like(theta, np.nan)
+
+        if self.film_resolution[1] == 1:  # Plane case
+            for y in ys:
+                for x in xs:
+                    sample = float(x + 0.5) / len(xs)
+                    theta[y, x] = 90.0 - 180.0 * sample
+                    phi[y, x] = self.orientation.m_as("deg")
+
+        else:  # Hemisphere case
+            for y in ys:
+                for x in xs:
+                    xy = [
+                        float((x + 0.5) / len(xs)),
+                        float((y + 0.5) / len(ys)),
+                    ]
+                    d = square_to_uniform_hemisphere(xy)
+                    theta[y, x], phi[y, x] = direction_to_angles(d).m_as("deg")
+
+        # Assign angles as non-dimension coords
+        result["vza"] = (("y", "x"), theta, {"units": "deg"})
+        result["vaa"] = (("y", "x"), phi, {"units": "deg"})
+        result = result.set_coords(("vza", "vaa"))
 
         return result

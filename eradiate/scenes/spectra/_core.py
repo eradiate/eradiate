@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import attr
 import pint
@@ -12,7 +12,9 @@ from ...scenes.core import SceneElement
 @parse_docs
 @attr.s
 class Spectrum(SceneElement, ABC):
-    """Spectrum abstract base class."""
+    """
+    Spectrum abstract base class.
+    """
 
     quantity = documented(
         attr.ib(
@@ -40,19 +42,24 @@ class Spectrum(SceneElement, ABC):
                 f"got value '{value}', expected one of {str()}"
             )
 
-    @property
-    def _values(self):
-        """Return spectrum internal values."""
-        raise NotImplementedError
+    @abstractmethod
+    def eval(self, spectral_ctx=None):
+        """
+        Evaluate spectrum.
 
-    @property
-    def values(self):
-        """Evaluate (as a Pint quantity) spectrum values based on currently active mode."""
-        raise NotImplementedError
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Returns → :class:`pint.Quantity`:
+            Evaluated spectrum.
+        """
+        pass
 
 
 class SpectrumFactory(BaseFactory):
-    """This factory constructs objects whose classes are derived from
+    """
+    This factory constructs objects whose classes are derived from
     :class:`Spectrum`.
 
     .. admonition:: Registered factory members
@@ -67,7 +74,8 @@ class SpectrumFactory(BaseFactory):
 
     @staticmethod
     def converter(quantity):
-        """Generate a converter wrapping :meth:`SpectrumFactory.convert` to
+        """
+        Generate a converter wrapping :meth:`SpectrumFactory.convert` to
         handle defaults for shortened spectrum definitions. The produced
         converter processes a parameter ``value`` as follows:
 
@@ -76,9 +84,10 @@ class SpectrumFactory(BaseFactory):
           ``{"type": "uniform", "quantity": quantity, "value": value}``;
         * if ``value`` is a dictionary, it adds a ``"quantity": quantity`` entry
           for the following values of the ``"type"`` entry:
+
           * ``"uniform"``;
-        * otherwise, it forwards ``value`` to
-          :meth:`.SpectrumFactory.convert`.
+
+        * otherwise, it forwards ``value`` to :meth:`.SpectrumFactory.convert`.
 
         Parameter ``quantity`` (str or :class:`PhysicalQuantity`):
             Quantity specifier (converted by :meth:`SpectrumQuantity.from_any`).

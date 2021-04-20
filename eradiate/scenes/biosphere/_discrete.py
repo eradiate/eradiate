@@ -566,8 +566,9 @@ class LeafCloud(SceneElement):
 
     @classmethod
     def cuboid(cls, seed=12345, avoid_overlap=False, **kwargs):
-        """Generate a leaf cloud with an axis-aligned cuboid shape (and a square
-        footprint on the gound). Parameters are checked by the
+        """
+        Generate a leaf cloud with an axis-aligned cuboid shape (and a square
+        footprint on the ground). Parameters are checked by the
         :class:`.CuboidLeafCloudParams` class, which allows for many parameter
         combinations.
 
@@ -842,11 +843,13 @@ class LeafCloud(SceneElement):
 
         return value
 
-    def shapes(self, ref=False):
-        """Return shape plugin specifications.
+    def shapes(self, ctx=None):
+        """
+        Return shape plugin specifications.
 
-        Parameter ``ref`` (bool):
-            If ``True``, declare leaf BSDFs using references.
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             A dictionary suitable for merge with a :class:`.KernelDict`
@@ -857,10 +860,10 @@ class LeafCloud(SceneElement):
         kernel_length = uck.get("length")
         shapes_dict = {}
 
-        if ref:
+        if ctx.ref:
             bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
         else:
-            bsdf = self.bsdfs()[f"bsdf_{self.id}"]
+            bsdf = self.bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
 
         for i_leaf, (position, normal, radius) in enumerate(
             zip(
@@ -882,9 +885,13 @@ class LeafCloud(SceneElement):
 
         return shapes_dict
 
-    def bsdfs(self):
+    def bsdfs(self, ctx=None):
         """
         Return BSDF plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             Return a dictionary suitable for merge with a :class:`.KernelDict`
@@ -893,16 +900,18 @@ class LeafCloud(SceneElement):
         return {
             f"bsdf_{self.id}": {
                 "type": "bilambertian",
-                "reflectance": self.leaf_reflectance.kernel_dict()["spectrum"],
-                "transmittance": self.leaf_transmittance.kernel_dict()["spectrum"],
+                "reflectance": self.leaf_reflectance.kernel_dict(ctx=ctx)["spectrum"],
+                "transmittance": self.leaf_transmittance.kernel_dict(ctx=ctx)[
+                    "spectrum"
+                ],
             }
         }
 
-    def kernel_dict(self, ref=True):
-        if not ref:
-            return self.shapes(ref=False)
+    def kernel_dict(self, ctx=None):
+        if not ctx.ref:
+            return self.shapes(ctx=ctx)
         else:
-            return {**self.bsdfs(), **self.shapes(ref=True)}
+            return {**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx)}
 
 
 @parse_docs
@@ -1055,19 +1064,27 @@ class InstancedLeafCloud(SceneElement):
 
         return value
 
-    def bsdfs(self):
+    def bsdfs(self, ctx=None):
         """
         Return BSDF plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             Return a dictionary suitable for merge with a :class:`.KernelDict`
             containing all the BSDFs attached to the shapes in the leaf cloud.
         """
-        return self.leaf_cloud.bsdfs()
+        return self.leaf_cloud.bsdfs(ctx=ctx)
 
-    def shapes(self, ref=False):
+    def shapes(self, ctx=None):
         """
         Return shape plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             A dictionary suitable for merge with a
@@ -1075,12 +1092,19 @@ class InstancedLeafCloud(SceneElement):
             in the canopy.
         """
         return {
-            self.leaf_cloud.id: {"type": "shapegroup", **self.leaf_cloud.shapes(ref)}
+            self.leaf_cloud.id: {
+                "type": "shapegroup",
+                **self.leaf_cloud.shapes(ctx=ctx),
+            }
         }
 
-    def instances(self):
+    def instances(self, ctx=None):
         """
         Return instance plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             A dictionary suitable for merge with a
@@ -1099,8 +1123,8 @@ class InstancedLeafCloud(SceneElement):
             for i, position in enumerate(self.instance_positions)
         }
 
-    def kernel_dict(self, ref=True):
-        return {**self.bsdfs(), **self.shapes(ref), **self.instances()}
+    def kernel_dict(self, ctx=None):
+        return {**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx), **self.instances(ctx=ctx)}
 
 
 @BiosphereFactory.register("discrete_canopy")
@@ -1143,8 +1167,13 @@ class DiscreteCanopy(Canopy):
         default="[]",
     )
 
-    def bsdfs(self):
-        """Return BSDF plugin specifications.
+    def bsdfs(self, ctx=None):
+        """
+        Return BSDF plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             Return a dictionary suitable for merge with a
@@ -1153,12 +1182,16 @@ class DiscreteCanopy(Canopy):
         """
         result = {}
         for leaf_cloud_instance in self.leaf_cloud_instances:
-            result = {**result, **leaf_cloud_instance.bsdfs()}
+            result = {**result, **leaf_cloud_instance.bsdfs(ctx=ctx)}
         return result
 
-    def shapes(self, ref=False):
+    def shapes(self, ctx=None):
         """
         Return shape plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             A dictionary suitable for merge with a
@@ -1167,7 +1200,7 @@ class DiscreteCanopy(Canopy):
         """
         result = {}
         for leaf_cloud_instance in self.leaf_cloud_instances:
-            result = {**result, **leaf_cloud_instance.shapes(ref)}
+            result = {**result, **leaf_cloud_instance.shapes(ctx=ctx)}
         return result
 
     def instances(self):
@@ -1183,17 +1216,17 @@ class DiscreteCanopy(Canopy):
             result = {**result, **instanced_leaf_cloud.instances()}
         return result
 
-    def kernel_dict(self, ref=True):
-        if not ref:
-            raise ValueError("'ref' must be set to True")
+    def kernel_dict(self, ctx=None):
+        if not ctx.ref:
+            raise ValueError("'ctx.ref' must be set to True")
 
         result = {}
         for instanced_leaf_cloud in self.instanced_leaf_clouds:
             result = {
                 **result,
-                **instanced_leaf_cloud.bsdfs(),
-                **instanced_leaf_cloud.shapes(),
-                **instanced_leaf_cloud.instances(),
+                **instanced_leaf_cloud.bsdfs(ctx=ctx),
+                **instanced_leaf_cloud.shapes(ctx=ctx),
+                **instanced_leaf_cloud.instances(ctx=ctx),
             }
 
         return result

@@ -28,20 +28,21 @@ del PathResolver
 
 # ------------------------------------------------------------------------------
 
-from . import converters, kernel, scenes, solvers, validators, xarray
+from . import converters, contexts, kernel, scenes, solvers, validators, xarray
 
 __all__ = [
     "__version__",
+    "converters",
+    "contexts",
     "mode",
     "modes",
-    "set_mode",
     "path_resolver",
-    "unit_registry",
+    "scenes",
+    "set_mode",
+    "solvers",
     "unit_context_config",
     "unit_context_kernel",
-    "scenes",
-    "solvers",
-    "converters",
+    "unit_registry",
     "validators",
     "xarray",
 ]

@@ -2,15 +2,18 @@ import numpy as np
 
 from eradiate import unit_registry as ureg
 from eradiate.scenes.core import KernelDict
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.surface import RPVSurface
 
 
 def test_rpv(mode_mono):
+    ctx = KernelDictContext()
+
     # Default constructor
     ls = RPVSurface()
 
     # Check if produced scene can be instantiated
-    kernel_dict = KernelDict.new(ls)
+    kernel_dict = KernelDict.new(ls, ctx=ctx)
     assert kernel_dict.load() is not None
 
     # Constructor with arguments
@@ -18,4 +21,4 @@ def test_rpv(mode_mono):
     assert np.allclose(ls.width, ureg.Quantity(1e6, ureg.m))
 
     # Check if produced scene can be instantiated
-    assert KernelDict.new(ls).load() is not None
+    assert KernelDict.new(ls, ctx=ctx).load() is not None

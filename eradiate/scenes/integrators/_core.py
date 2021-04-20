@@ -24,7 +24,8 @@ class Integrator(SceneElement):
 
 
 class IntegratorFactory(BaseFactory):
-    """This factory constructs objects whose classes are derived from
+    """
+    This factory constructs objects whose classes are derived from
     :class:`Integrator`.
 
     .. admonition:: Registered factory members

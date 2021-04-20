@@ -7,27 +7,30 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import ModeError
 from eradiate.scenes.biosphere import DiscreteCanopy
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.measure import DistantMeasure
 from eradiate.solvers.rami import RamiScene, RamiSolverApp
 
 
 def test_rami_scene(mode_mono):
+    ctx = KernelDictContext()
+
     # Construct with default parameters
     s = RamiScene()
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
 
     # Test non-trivial init sequence steps
 
     # -- Init with a single measure (not wrapped in a sequence)
     s = RamiScene(measures=DistantMeasure())
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
     # -- Init from a dict-based measure spec
     # ---- Correctly wrapped in a sequence
     s = RamiScene(measures=[{"type": "distant"}])
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
     # ---- Not wrapped in a sequence
     s = RamiScene(measures={"type": "distant"})
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
 
     # -- Surface size is appropriately inherited from canopy
     s = RamiScene(
@@ -73,6 +76,8 @@ def test_rami_solver_app_new():
 
 
 def test_rami_scene_real_life(mode_mono):
+    ctx = KernelDictContext()
+
     # Construct with typical parameters
     s = RamiScene(
         surface={"type": "lambertian"},
@@ -87,7 +92,7 @@ def test_rami_scene_real_life(mode_mono):
         illumination={"type": "directional", "zenith": 45.0},
         measures={"type": "distant"},
     )
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
 
 
 @pytest.mark.slow

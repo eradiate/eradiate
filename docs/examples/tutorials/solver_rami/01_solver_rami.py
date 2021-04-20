@@ -19,7 +19,7 @@ typically used in the RAMI benchmarking exercise.
 
 import eradiate
 
-eradiate.set_mode("mono", wavelength=550.0)
+eradiate.set_mode("mono")
 
 # %%
 # We also assign an alias to the unit registry:
@@ -94,6 +94,7 @@ measure = eradiate.scenes.measure.DistantMeasure(
     id="toa_brf",
     film_resolution=(32, 32),
     spp=1000,
+    spectral_cfg={"wavelength": 550.0}
 )
 measure
 

@@ -103,7 +103,7 @@ class RamiScene(Scene):
                             ymax=0.5 * self.surface.width,
                         )
 
-    def kernel_dict(self, ref=True):
+    def kernel_dict(self, ctx=None):
         result = KernelDict.new()
 
         if self.canopy is not None:
@@ -114,7 +114,7 @@ class RamiScene(Scene):
                 canopy = self.canopy
                 surface = self.surface
 
-            result.add(canopy.kernel_dict(ref=True))
+            result.add(canopy.kernel_dict(ctx=ctx))
         else:
             surface = self.surface
 
@@ -123,6 +123,7 @@ class RamiScene(Scene):
             self.illumination,
             *self.measures,
             self.integrator,
+            ctx=ctx,
         )
 
         return result

@@ -72,10 +72,6 @@ class OneDimScene(Scene):
         # Don't forget to call super class post-init
         super(OneDimScene, self).update()
 
-        # Override surface width with atmosphere width
-        if self.atmosphere is not None:
-            self.surface.width = self.atmosphere.kernel_width
-
         # Process measures
         for measure in self.measures:
             # Override ray target and origin if relevant
@@ -83,7 +79,7 @@ class OneDimScene(Scene):
             if isinstance(measure, DistantMeasure):
                 if measure.target is None:
                     if self.atmosphere is not None:
-                        toa = self.atmosphere.height
+                        toa = self.atmosphere.height()
                         target_point = [0.0, 0.0, toa.m] * toa.units
                     else:
                         target_point = [0.0, 0.0, 0.0] * ucc.get("length")
@@ -92,7 +88,7 @@ class OneDimScene(Scene):
 
                 if measure.origin is None:
                     radius = (
-                        self.atmosphere.height / 100.0
+                        self.atmosphere.height() / 100.0
                         if self.atmosphere is not None
                         else 1.0 * ucc.get("length")
                     )
@@ -101,11 +97,17 @@ class OneDimScene(Scene):
                         center=measure.target.xyz, radius=radius
                     )
 
-    def kernel_dict(self, ref=True):
-        result = KernelDict.new()
+    def kernel_dict(self, ctx=None):
+        result = KernelDict.new(ctx=ctx)
 
         if self.atmosphere is not None:
-            result.add(self.atmosphere)
+            result.add(self.atmosphere, ctx=ctx)
+            ctx = attr.evolve(
+                ctx, atmosphere_kernel_width=self.atmosphere.kernel_width(ctx)
+            )
 
-        result.add(self.surface, self.illumination, *self.measures, self.integrator)
+        result.add(
+            self.surface, self.illumination, *self.measures, self.integrator, ctx=ctx
+        )
+
         return result

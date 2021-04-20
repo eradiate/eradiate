@@ -4,6 +4,7 @@ import pytest
 import eradiate
 from eradiate import path_resolver
 from eradiate import unit_registry as ureg
+from eradiate.contexts import SpectralContext
 from eradiate.radprops import (
     AFGL1986RadProfile,
     ArrayRadProfile,
@@ -38,14 +39,15 @@ def test_array_rad_props_profile(mode_mono):
         sigma_t_values=sigma_t_values.reshape(1, 1, len(levels) - 1),
     )
     assert isinstance(p.levels, ureg.Quantity)
-    assert isinstance(p.sigma_a, ureg.Quantity)
-    assert isinstance(p.sigma_s, ureg.Quantity)
+    assert isinstance(p.sigma_a(), ureg.Quantity)
+    assert isinstance(p.sigma_s(), ureg.Quantity)
     assert np.allclose(p.levels, levels)
-    assert np.allclose(p.albedo, albedo_values)
-    assert np.allclose(p.sigma_t, sigma_t_values)
+    assert np.allclose(p.albedo(), albedo_values)
+    assert np.allclose(p.sigma_t(), sigma_t_values)
 
     # to_dataset method does not fail
-    assert p.to_dataset()
+    spectral_ctx = SpectralContext.new()
+    assert p.to_dataset(spectral_ctx)
 
     # mismatching shapes in albedo_values and sigma_t_values arrays raise
     with pytest.raises(ValueError):
@@ -57,15 +59,16 @@ def test_array_rad_props_profile(mode_mono):
 
 
 def test_us76_approx_rad_profile(mode_mono):
+    spectral_ctx = SpectralContext.new()
+
     # Default constructor with test absorption data set
     test_absorption_data_set = path_resolver.resolve(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
-    p = US76ApproxRadProfile(
-        absorption_data_set=test_absorption_data_set
-    )
+    p = US76ApproxRadProfile(absorption_data_set=test_absorption_data_set)
 
-    for x in [p.sigma_a, p.sigma_s, p.sigma_t, p.albedo]:
+    for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
+        x = getattr(p, field)(spectral_ctx)
         assert isinstance(x, ureg.Quantity)
         assert x.shape == (1, 1, 86)
 
@@ -74,8 +77,8 @@ def test_us76_approx_rad_profile(mode_mono):
         levels=ureg.Quantity(np.linspace(0, 120, 121), "km"),
         absorption_data_set=test_absorption_data_set,
     )
-    for x in [p.sigma_a, p.sigma_s, p.sigma_t, p.albedo]:
-        assert isinstance(x, ureg.Quantity)
+    for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
+        x = getattr(p, field)(spectral_ctx)
         assert x.shape == (1, 1, 120)
 
 
@@ -104,18 +107,18 @@ def test_afgl1986_rad_profile(mode_mono):
     }
 
     # Default constructor with test absorption data sets
-    eradiate.set_mode(
-        "mono", wavelength=1500.0
+    spectral_ctx = SpectralContext.new(
+        wavelength=1500.0
     )  # in the infrared, all absorption data sets are opened
-    p = AFGL1986RadProfile(
-        absorption_data_sets=test_absorption_data_sets,
-    )
-    for x in [p.sigma_a, p.sigma_s, p.sigma_t, p.albedo]:
+
+    p = AFGL1986RadProfile(absorption_data_sets=test_absorption_data_sets)
+    for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
+        x = getattr(p, field)(spectral_ctx)
         assert isinstance(x, ureg.Quantity)
         assert x.shape == (1, 1, 120)
 
     # Custom level altitudes (in the visible, only the H2O data set is opened)
-    eradiate.set_mode("mono", wavelength=550.0)
+    spectral_ctx.wavelength = 550.0
     p = AFGL1986RadProfile(
         levels=ureg.Quantity(np.linspace(0, 100, 101), "km"),
         absorption_data_sets=test_absorption_data_sets,
@@ -135,7 +138,7 @@ def test_afgl1986_rad_profile(mode_mono):
         absorption_data_sets=test_absorption_data_sets,
     )
 
-    thermoprops = p._thermoprops
+    thermoprops = p.eval_thermoprops_profile()
     column_amount_H2O = compute_column_number_density(thermoprops, "H2O")
     column_amount_O3 = compute_column_number_density(thermoprops, "O3")
     surface_amount_CH4 = compute_number_density_at_surface(thermoprops, "CH4")
@@ -147,8 +150,9 @@ def test_afgl1986_rad_profile(mode_mono):
     assert np.isclose(surface_amount_CH4, concentrations["CH4"], rtol=1e-9)
 
     # Too large concentrations raise
+    p = AFGL1986RadProfile(
+        concentrations={"CO2": ureg.Quantity(400, "")},
+        absorption_data_sets=test_absorption_data_sets,
+    )
     with pytest.raises(ValueError):
-        AFGL1986RadProfile(
-            concentrations={"CO2": ureg.Quantity(400, "")},
-            absorption_data_sets=test_absorption_data_sets,
-        )
+        p.eval_thermoprops_profile()

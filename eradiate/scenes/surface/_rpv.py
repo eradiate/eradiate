@@ -8,7 +8,8 @@ from ..._attrs import documented, parse_docs
 @parse_docs
 @attr.s
 class RPVSurface(Surface):
-    """RPV surface scene element [:factorykey:`rpv`].
+    """
+    RPV surface scene element [:factorykey:`rpv`].
 
     This class creates a square surface to which a RPV BRDF
     :cite:`Rahman1993CoupledSurfaceatmosphereReflectance`
@@ -42,7 +43,7 @@ class RPVSurface(Surface):
         default="-0.1",
     )
 
-    def bsdfs(self):
+    def bsdfs(self, ctx=None):
         return {
             f"bsdf_{self.id}": {
                 "type": "rpv",

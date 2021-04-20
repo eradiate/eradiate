@@ -8,12 +8,13 @@ from ..._attrs import parse_docs
 @parse_docs
 @attr.s
 class BlackSurface(Surface):
-    """Black surface scene element [:factorykey:`black`].
+    """
+    Black surface scene element [:factorykey:`black`].
 
     This class creates a square surface with a black BRDF attached.
     """
 
-    def bsdfs(self):
+    def bsdfs(self, ctx=None):
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",
