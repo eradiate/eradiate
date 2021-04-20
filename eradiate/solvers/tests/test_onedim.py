@@ -6,31 +6,40 @@ from eradiate import path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import ModeError
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.measure._distant import DistantMeasure
 from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
 
 
 def test_onedim_scene(mode_mono):
+    from mitsuba.core import ScalarTransform4f
+
+    ctx = KernelDictContext()
+
     # Construct with default parameters
     s = OneDimScene()
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
 
     # Test non-trivial init sequence steps
 
     # -- Init with a single measure (not wrapped in a sequence)
     s = OneDimScene(measures=DistantMeasure())
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
     # -- Init from a dict-based measure spec
     # ---- Correctly wrapped in a sequence
     s = OneDimScene(measures=[{"type": "distant"}])
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
     # ---- Not wrapped in a sequence
     s = OneDimScene(measures={"type": "distant"})
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
 
     # -- Surface width is appropriately inherited from atmosphere
     s = OneDimScene(atmosphere=HomogeneousAtmosphere(width=ureg.Quantity(42.0, "km")))
-    assert s.surface.width == ureg.Quantity(42.0, "km")
+    kernel_dict = s.kernel_dict(ctx)
+    assert np.allclose(
+        kernel_dict["surface"]["to_world"].matrix,
+        ScalarTransform4f.scale([21000, 21000, 1]).matrix,
+    )
 
     # -- Setting atmosphere to None
     s = OneDimScene(
@@ -38,14 +47,18 @@ def test_onedim_scene(mode_mono):
         surface={"type": "lambertian", "width": 100.0, "width_units": "m"},
         measures={"type": "distant", "id": "distant_measure"},
     )
-    # -- Surface width is unchanged
-    assert s.surface.width == ureg.Quantity(100.0, ureg.m)
+    # -- Surface width is not overridden
+    kernel_dict = s.kernel_dict(ctx)
+    assert np.allclose(
+        kernel_dict["surface"]["to_world"].matrix,
+        ScalarTransform4f.scale([50, 50, 1]).matrix,
+    )
     # -- Measure target is at ground level
     assert np.allclose(s.measures[0].target.xyz, [0, 0, 0] * ureg.m)
     # -- Measure ray origins are projected to a sphere of radius 1 m
     assert np.allclose(s.measures[0].origin.radius, 1.0 * ureg.m)
     # -- Atmosphere is not in kernel dictionary
-    assert "atmosphere" not in s.kernel_dict()
+    assert "atmosphere" not in kernel_dict
 
 
 def test_onedim_solver_app_new():
@@ -64,6 +77,8 @@ def test_onedim_solver_app_new():
 
 @pytest.mark.slow
 def test_onedim_scene_real_life(mode_mono):
+    ctx = KernelDictContext()
+
     # Construct with typical parameters
     test_absorption_data_set = path_resolver.resolve(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
@@ -80,7 +95,7 @@ def test_onedim_scene_real_life(mode_mono):
         illumination={"type": "directional", "zenith": 45.0},
         measures={"type": "distant", "id": "toa"},
     )
-    assert s.kernel_dict().load() is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None
 
 
 def test_onedim_solver_app_construct(mode_mono):
@@ -91,7 +106,8 @@ def test_onedim_solver_app_construct(mode_mono):
 
 @pytest.mark.slow
 def test_onedim_solver_app_run(mode_mono):
-    """Test the creation of a DataArray from the solver result
+    """
+    Test the creation of a DataArray from the solver result
 
     We create a default scene with a set of zenith and azimuth angles,
     render the scene and create the DataArray.

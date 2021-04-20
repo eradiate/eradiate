@@ -21,11 +21,7 @@ Mode control
 
       _mode.ModeSpectrum
       _mode.ModePrecision
-      _mode.register_mode
       _mode.Mode
-      _mode.ModeNone
-      _mode.ModeMono
-      _mode.ModeMonoDouble
 
 Units and quantities
 --------------------

@@ -9,7 +9,7 @@ Homogeneous atmospheres
 # and set the wavelength to 550 nm:
 
 import eradiate
-eradiate.set_mode("mono", wavelength=550.)
+eradiate.set_mode("mono")
 
 # %%
 # Get started

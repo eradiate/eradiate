@@ -14,11 +14,13 @@ from ..._units import unit_registry as ureg
 @parse_docs
 @attr.s
 class RadiancemeterMeasure(Measure):
-    """Radiance meter measure scene element [:factorykey:`radiancemeter`].
+    """
+    Radiance meter measure scene element [:factorykey:`radiancemeter`].
 
     This measure scene element is a thin wrapper around the ``radiancemeter``
     sensor kernel plugin. It records the incident power per unit area per unit
-    solid angle along a certain ray."""
+    solid angle along a certain ray.
+    """
 
     origin = documented(
         pinttr.ib(

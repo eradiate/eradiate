@@ -4,9 +4,8 @@ from abc import ABC, abstractmethod
 from collections import UserDict
 
 import attr
-import pinttr
-
 import mitsuba
+import pinttr
 
 from .._attrs import documented, parse_docs
 from .._units import unit_registry as ureg
@@ -14,7 +13,8 @@ from ..exceptions import KernelVariantError
 
 
 class KernelDict(UserDict):
-    """A dictionary designed to contain a scene specification appropriate for
+    """
+    A dictionary designed to contain a scene specification appropriate for
     instantiation with :func:`~mitsuba.core.xml.load_dict`.
 
     :class:`KernelDict` keeps track of the variant it has been created with
@@ -49,7 +49,8 @@ class KernelDict(UserDict):
         super().__init__(*args, **kwargs)
 
     def check(self):
-        """Perform basic checks on the dictionary:
+        """
+        Perform basic checks on the dictionary:
 
         * check that the ``{"type": "scene"}`` parameter is included;
         * check if the variant for which the kernel dictionary was created is
@@ -75,22 +76,28 @@ class KernelDict(UserDict):
             )
 
     @classmethod
-    def new(cls, *elements):
-        """Create a kernel dictionary using the passed elements. This variadic
+    def new(cls, *elements, ctx=None):
+        """
+        Create a kernel dictionary using the passed elements. This variadic
         function accepts an arbitrary number of positional arguments.
 
         Parameter ``elements`` (:class:`SceneElement` or dict):
             Items to add to the newly created kernel dictionary.
 
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation. *This argument is keyword-only.*
+
         Returns → :class:`KernelDict`
             Initialise kernel dictionary.
         """
         result = cls({"type": "scene"})
-        result.add(*elements)
+        result.add(*elements, ctx=ctx)
         return result
 
-    def add(self, *elements):
-        """Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
+    def add(self, *elements, ctx=None):
+        """
+        Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
         another dictionary object with the current :class:`KernelDict`.
 
         Parameter ``elements`` (:class:`SceneElement` or dict):
@@ -99,16 +106,21 @@ class KernelDict(UserDict):
             :meth:`~eradiate.scenes.core.SceneElement.kernel_dict` method will
             be called with ``ref`` set to ``True``. If it is a dictionary
             (including a :class:`.KernelDict`), it will be merged without change.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation. *This argument is keyword-only.*
         """
 
         for element in elements:
             try:
-                self.update(element.kernel_dict(ref=True))
+                self.update(element.kernel_dict(ctx))
             except AttributeError:
                 self.update(element)
 
     def load(self):
-        """Load kernel object from self.
+        """
+        Load kernel object from self.
 
         .. note:: Requires a valid selected operational mode.
 
@@ -124,7 +136,8 @@ class KernelDict(UserDict):
 @parse_docs
 @attr.s
 class SceneElement(ABC):
-    """Abstract class for all scene elements.
+    """
+    Abstract class for all scene elements.
 
     This abstract base class provides a basic template for all scene element
     classes. It is implemented using the `attrs <https://www.attrs.org>`_ library.
@@ -166,12 +179,16 @@ class SceneElement(ABC):
         return cls(**d_copy)
 
     @abstractmethod
-    def kernel_dict(self, ref=True):
+    def kernel_dict(self, ctx=None):
         """
         Return a dictionary suitable for kernel scene configuration.
 
         Parameter ``ref`` (bool):
             If ``True``, use referencing for all relevant nested kernel plugins.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             Dictionary suitable for merge with a kernel scene dictionary

@@ -1,10 +1,11 @@
 from eradiate.scenes.measure._core import Measure, SensorInfo
 
 
-def test_measure():
+def test_measure(mode_mono):
     """
     Unit tests for :class:`.Measure`.
     """
+
     # Concrete class to test
     class MyMeasure(Measure):
         @property
@@ -46,7 +47,7 @@ def test_measure():
     }
 
 
-def test_measure_spp_splitting():
+def test_measure_spp_splitting(mode_mono):
     """
     Unit tests for SPP splitting.
     """

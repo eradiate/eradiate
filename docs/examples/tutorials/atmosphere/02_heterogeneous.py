@@ -9,7 +9,7 @@ Heterogeneous atmospheres
 # and set the wavelength to 550 nm:
 
 import eradiate
-eradiate.set_mode("mono", wavelength=550.)
+eradiate.set_mode("mono")
 
 # %%
 # This is required because heterogeneous atmospheres are objects whose internal
@@ -98,7 +98,7 @@ atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
 # -----------------------------------
 # Check the atmosphere's dimensions using:
 
-print(atmosphere.height.to("km"))
+print(atmosphere.height().to("km"))
 
 # %%
 
@@ -128,7 +128,8 @@ atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
 # ---------------------------------------------
 # You can fetch the atmospheric radiative properties into a data set:
 
-ds = atmosphere.profile.to_dataset()
+spectral_ctx = eradiate.contexts.SpectralContext.new()
+ds = atmosphere.profile.to_dataset(spectral_ctx)
 ds
 
 # %%

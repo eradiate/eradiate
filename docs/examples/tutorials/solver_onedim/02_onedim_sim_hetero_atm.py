@@ -35,10 +35,7 @@ import xarray as xr
 from eradiate.solvers.onedim import OneDimSolverApp
 
 config = {
-    "mode": {
-        "type": "mono_double",
-        "wavelength": 579.
-    },
+    "mode": "mono_double",
     "atmosphere": {
         "type": "heterogeneous",
         "profile": {
@@ -49,7 +46,8 @@ config = {
         "type": "distant",
         "id": "toa_plane",
         "film_resolution": [90,1],
-        "spp": 65536
+        "spp": 65536,
+        "spectral_cfg": {"wavelength": 579.0},
     }]
 }
 app = OneDimSolverApp.from_dict(config)
@@ -82,7 +80,8 @@ visualise(results_579)
 # reflectance.
 # Indeed, the atmosphere we have created is almost purely scattering:
 
-print(app.scene.atmosphere.profile.albedo)
+spectral_ctx = app.scene.measures[0].spectral_ctx
+print(app.scene.atmosphere.profile.albedo(spectral_ctx))
 
 # %%
 # At higher zenith angles, we observe that the scene is less reflective, which
@@ -100,10 +99,7 @@ print(app.scene.atmosphere.profile.albedo)
 # wavelength.
 
 config = {
-    "mode": {
-        "type": "mono_double",
-        "wavelength": 1281.
-    },
+    "mode": "mono_double",
     "atmosphere": {
         "type": "heterogeneous",
         "profile": {
@@ -114,7 +110,8 @@ config = {
         "type": "distant",
         "id": "toa_plane",
         "film_resolution": [90, 1],
-        "spp": 65536
+        "spp": 65536,
+        "spectral_cfg": {"wavelength": 1281.0},
     }]
 }
 app = OneDimSolverApp.from_dict(config)
@@ -122,7 +119,8 @@ app = OneDimSolverApp.from_dict(config)
 # %%
 # Let us confirm our intuition:
 
-print(app.scene.atmosphere.profile.albedo)
+spectral_ctx = app.scene.measures[0].spectral_ctx
+print(app.scene.atmosphere.profile.albedo(spectral_ctx))
 
 # %%
 # Let us run the infrared simulation and compare our results with the

@@ -17,10 +17,11 @@ from eradiate.scenes.biosphere._discrete import (
     _leaf_cloud_positions_sphere,
     _leaf_cloud_radii,
 )
-
-# -- Fixtures tests ------------------------------------------------------------
 from eradiate.scenes.core import KernelDict
+from eradiate.contexts import KernelDictContext
 
+
+# -- Fixture definitions -------------------------------------------------------
 
 @pytest.fixture(scope="function")
 def rng():
@@ -193,12 +194,14 @@ def test_leaf_cloud_generate(mode_mono):
 
 def test_leaf_cloud_from_file(mode_mono, tempfile_leaves):
     """Unit testing for :meth:`LeafCloud.from_file`."""
+    ctx = KernelDictContext()
+
     # A LeafCloud instance can be loaded from a file on the hard drive
     cloud = LeafCloud.from_file(tempfile_leaves)
     assert len(cloud.leaf_positions) == 5
     assert np.allclose(cloud.leaf_radii, 0.1 * ureg.m)
     # Produced kernel dict is valid
-    assert KernelDict.new(cloud).load()
+    assert KernelDict.new(cloud, ctx=ctx).load()
 
 
 def test_leaf_cloud_from_dict(mode_mono, tempfile_leaves):
@@ -239,6 +242,8 @@ def test_leaf_cloud_from_dict(mode_mono, tempfile_leaves):
 
 
 def test_leaf_cloud_kernel_dict(mode_mono):
+    ctx = KernelDictContext()
+
     """Partial unit testing for :meth:`LeafCloud.kernel_dict`."""
     cloud_id = "my_cloud"
     cloud = LeafCloud(
@@ -250,7 +255,7 @@ def test_leaf_cloud_kernel_dict(mode_mono):
         leaf_transmittance=0.5,
     )
 
-    kernel_dict = cloud.kernel_dict(ref=True)
+    kernel_dict = cloud.kernel_dict(ctx=ctx)
 
     # The BSDF is bilambertian with the parameters we initially set
     assert kernel_dict[f"bsdf_{cloud_id}"] == {
@@ -281,6 +286,8 @@ def test_instanced_leaf_cloud_create(mode_mono):
 
 def test_instanced_leaf_cloud_kernel_dict(mode_mono):
     """Unit testing for :meth:`InstancedLeafCloud.kernel_dict`."""
+    ctx = KernelDictContext()
+
     cloud = LeafCloud(
         leaf_positions=[[0, 0, 0], [1, 1, 1]],
         leaf_orientations=[[0, 0, 1], [1, 0, 0]],
@@ -290,7 +297,7 @@ def test_instanced_leaf_cloud_kernel_dict(mode_mono):
 
     kernel_dict = InstancedLeafCloud(
         leaf_cloud=cloud, instance_positions=positions
-    ).kernel_dict()
+    ).kernel_dict(ctx=ctx)
 
     # The generated kernel dictionary can be instantiated
     assert KernelDict.new(kernel_dict).load()
@@ -310,6 +317,8 @@ def test_instanced_leaf_cloud_from_file(mode_mono, tempfile_spheres):
 
 def test_instanced_leaf_cloud_from_dict(mode_mono, tempfile_spheres):
     """Unit testing for :meth:`InstancedLeafCloud.from_dict`."""
+    ctx = KernelDictContext()
+
     # We can instantiate from a full-dict spec
     instanced_leaf_cloud = InstancedLeafCloud.from_dict(
         {
@@ -324,7 +333,7 @@ def test_instanced_leaf_cloud_from_dict(mode_mono, tempfile_spheres):
     assert instanced_leaf_cloud
 
     # The generated kernel dictionary can be instantiated
-    assert KernelDict.new(instanced_leaf_cloud.kernel_dict()).load()
+    assert KernelDict.new(instanced_leaf_cloud.kernel_dict(ctx=ctx)).load()
 
     # We can access the from_file constructor from a dict
     assert InstancedLeafCloud.from_dict(
@@ -349,11 +358,13 @@ def test_discrete_canopy_instantiate(mode_mono):
 
 
 def test_discrete_canopy_homogeneous(mode_mono):
+    ctx = KernelDictContext()
+
     # The generate_homogeneous() constructor returns a valid canopy object
     canopy = DiscreteCanopy.homogeneous(
         n_leaves=1, leaf_radius=0.1, l_horizontal=10, l_vertical=3
     )
-    assert KernelDict.new(canopy).load()
+    assert KernelDict.new(canopy, ctx=ctx).load()
 
     # We can reproduce this behaviour using the dict-based API
     canopy = DiscreteCanopy.from_dict(
@@ -365,10 +376,12 @@ def test_discrete_canopy_homogeneous(mode_mono):
             "l_vertical": 3,
         }
     )
-    assert KernelDict.new(canopy).load()
+    assert KernelDict.new(canopy, ctx=ctx).load()
 
 
 def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves):
+    ctx = KernelDictContext()
+
     # The from_files() constructor returns a valid canopy object
     canopy = DiscreteCanopy.from_files(
         size=[1, 1, 1],
@@ -385,7 +398,7 @@ def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves
             },
         ],
     )
-    assert KernelDict.new(canopy).load()
+    assert KernelDict.new(canopy, ctx=ctx).load()
 
     # We can reproduce this behaviour using the dict-based API
     canopy = DiscreteCanopy.from_dict(
@@ -406,7 +419,7 @@ def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves
             ],
         }
     )
-    assert KernelDict.new(canopy).load()
+    assert KernelDict.new(canopy, ctx=ctx).load()
 
 
 def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
@@ -415,6 +428,8 @@ def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
     generated cuboid leaf cloud and a series of instanced pre-computed leaf
     clouds.
     """
+    ctx = KernelDictContext()
+
     # First use the regular Python API
     canopy = DiscreteCanopy(
         size=[1.0, 1.0, 1.0] * ureg.m,
@@ -437,7 +452,7 @@ def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
             ),
         ],
     )
-    assert KernelDict.new(canopy).load()
+    assert KernelDict.new(canopy, ctx=ctx).load()
 
     # Reproduce previous example with dict API
     canopy = DiscreteCanopy.from_dict(
@@ -467,11 +482,13 @@ def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
             ],
         }
     )
-    assert KernelDict.new(canopy).load()
+    assert KernelDict.new(canopy, ctx=ctx).load()
 
 
 def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
     """Unit tests for :meth:`.DiscreteCanopy.padded`"""
+    ctx = KernelDictContext()
+
     canopy = DiscreteCanopy.from_files(
         id="canopy",
         size=[100, 100, 30],
@@ -485,7 +502,7 @@ def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
     # The padded canopy object is valid and instantiable
     padded_canopy = canopy.padded(2)
     assert padded_canopy
-    assert KernelDict.new(padded_canopy).load()
+    assert KernelDict.new(padded_canopy, ctx=ctx).load()
     # Padded canopy has (2*padding + 1) ** 2 times more instances than original
     assert len(padded_canopy.instances()) == len(canopy.instances()) * 25
     # Padded canopy has 2*padding + 1 times larger horizontal size than original

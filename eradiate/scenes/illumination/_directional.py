@@ -27,7 +27,7 @@ class DirectionalIllumination(Illumination):
             validator=is_positive,
             units=ucc.deferred("angle"),
         ),
-        doc="Zenith angle. \n" "\n" "Unit-enabled field (default units: cdu[angle]).",
+        doc="Zenith angle.\n\nUnit-enabled field (default units: ucc[angle]).",
         type="float",
         default="0.0 deg",
     )
@@ -40,7 +40,7 @@ class DirectionalIllumination(Illumination):
         ),
         doc="Azimuth angle value.\n"
         "\n"
-        "Unit-enabled field (default units: cdu[angle]).",
+        "Unit-enabled field (default units: ucc[angle]).",
         type="float",
         default="0.0 deg",
     )
@@ -62,16 +62,16 @@ class DirectionalIllumination(Illumination):
         default=":class:`SolarIrradianceSpectrum() <.SolarIrradianceSpectrum>`",
     )
 
-    def kernel_dict(self, ref=True):
+    def kernel_dict(self, ctx=None):
         return {
             self.id: {
                 "type": "directional",
                 "direction": list(
                     -angles_to_direction(
-                        theta=self.zenith.to(ureg.rad).magnitude,
-                        phi=self.azimuth.to(ureg.rad).magnitude,
+                        theta=self.zenith.m_as(ureg.rad),
+                        phi=self.azimuth.m_as(ureg.rad),
                     )
                 ),
-                "irradiance": self.irradiance.kernel_dict()["spectrum"],
+                "irradiance": self.irradiance.kernel_dict(ctx=ctx)["spectrum"],
             }
         }

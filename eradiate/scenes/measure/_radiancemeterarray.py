@@ -3,7 +3,6 @@ import numpy as np
 import pinttr
 
 from ._core import Measure, MeasureFactory
-from ... import validators
 from ..._attrs import documented, parse_docs
 from ..._units import unit_context_config as ucc
 from ..._units import unit_context_kernel as uck

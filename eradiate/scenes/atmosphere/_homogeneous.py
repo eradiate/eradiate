@@ -1,27 +1,9 @@
-"""Homogeneous atmosphere scene elements."""
-
 import attr
 
-import eradiate
-
-from ._base import (
-    Atmosphere,
-    AtmosphereFactory
-)
-from ..spectra import (
-    Spectrum,
-    SpectrumFactory,
-    UniformSpectrum
-)
-from ..._attrs import (
-    documented,
-    parse_docs
-)
+from ._base import Atmosphere, AtmosphereFactory
+from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, SpectrumFactory
+from ..._attrs import documented, parse_docs
 from ..._units import unit_context_kernel as uck
-from ...converters import auto_or as converter_auto_or
-from ...validators import auto_or as validator_auto_or
-from ...radprops.rayleigh import compute_sigma_s_air
-from ..._util import onedict_value
 from ...validators import has_quantity
 
 
@@ -29,90 +11,117 @@ from ...validators import has_quantity
 @parse_docs
 @attr.s()
 class HomogeneousAtmosphere(Atmosphere):
-    """Homogeneous atmosphere scene element [:factorykey:`homogeneous`].
+    """
+    Homogeneous atmosphere scene element [:factorykey:`homogeneous`].
 
     This class builds an atmosphere consisting of a homogeneous medium.
     Scattering uses the Rayleigh phase function.
-   """
+    """
 
     sigma_s = documented(
         attr.ib(
-            default="auto",
-            converter=converter_auto_or(
-                SpectrumFactory.converter("collision_coefficient")
-            ),
-            validator=validator_auto_or(
+            factory=AirScatteringCoefficientSpectrum,
+            converter=SpectrumFactory.converter("collision_coefficient"),
+            validator=[
                 attr.validators.instance_of(Spectrum),
-                has_quantity("collision_coefficient")
-            ),
+                has_quantity("collision_coefficient"),
+            ],
         ),
-        doc="Atmosphere scattering coefficient value. If set to ``\"auto\"``, "
-            "the scattering coefficient will be computed based on the current "
-            "operational mode configuration using the :func:`sigma_s_air` "
-            "function.\n"
-            "\n"
-            "Can be initialised with a dictionary processed by "
-            ":class:`.SpectrumFactory`.",
-        type=":class:`~eradiate.scenes.spectra.Spectrum` or \"auto\"",
-        default="``\"auto\"``",
+        doc="Atmosphere scattering coefficient value.\n"
+        "\n"
+        "Can be initialised with a dictionary processed by "
+        ":class:`.SpectrumFactory`.",
+        type=":class:`~eradiate.scenes.spectra.Spectrum` or float",
+        default=":class:`AirScatteringCoefficient() <.AirScatteringCoefficient>`",
     )
 
     sigma_a = documented(
         attr.ib(
-        default=0.,
-        converter=SpectrumFactory.converter("collision_coefficient"),
-        validator=[attr.validators.instance_of(Spectrum),
-                   has_quantity("collision_coefficient")]
-    ),
+            default=0.0,
+            converter=SpectrumFactory.converter("collision_coefficient"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                has_quantity("collision_coefficient"),
+            ],
+        ),
         doc="Atmosphere absorption coefficient value. Defaults disable "
-            "absorption.\n"
-            "\n"
-            "Can be initialised with a dictionary processed by "
-            ":class:`.SpectrumFactory`.",
+        "absorption.\n"
+        "\n"
+        "Can be initialised with a dictionary processed by "
+        ":class:`.SpectrumFactory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
-        default="0.0 cdu[collision_coefficient]"
+        default="0.0 cdu[collision_coefficient]",
     )
 
-    @property
-    def kernel_width(self):
-        """Width of the kernel object delimiting the atmosphere."""
+    def kernel_width(self, ctx=None):
+        """
+        Width of the kernel object delimiting the atmosphere.
+        """
         if self.width == "auto":
-            return 10. / self._sigma_s.value
+            spectral_ctx = ctx.spectral_ctx if ctx is not None else None
+            return 10.0 / self.eval_sigma_s(spectral_ctx)
         else:
             return self.width
 
-    @property
-    def _albedo(self):
-        """Return albedo."""
-        return UniformSpectrum(
-            quantity="albedo",
-            value=self._sigma_s.value / (self._sigma_s.value + self.sigma_a.value)
+    def eval_albedo(self, spectral_ctx=None):
+        """
+        Return albedo.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Returns → :class:`pint.Quantity`:
+            Albedo.
+        """
+        return self.eval_sigma_s(spectral_ctx) / (
+            self.eval_sigma_s(spectral_ctx) + self.eval_sigma_a(spectral_ctx)
         )
 
-    @property
-    def _sigma_s(self):
-        """Return scattering coefficient based on configuration."""
-        if self.sigma_s == "auto":
-            return UniformSpectrum(
-                quantity="collision_coefficient",
-                value=compute_sigma_s_air(wavelength=eradiate.mode().wavelength)
-            )
-        else:
-            return self.sigma_s
+    def eval_sigma_a(self, spectral_ctx=None):
+        """
+        Return absorption coefficient.
 
-    @property
-    def _sigma_t(self):
-        """Return extinction coefficient."""
-        return UniformSpectrum(
-            quantity="collision_coefficient",
-            value=self.sigma_a.value + self._sigma_s.value
-        )
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
 
-    def phase(self):
+        Returns → :class:`pint.Quantity`:
+            Absorption coefficient.
+        """
+        return self.sigma_a.eval(spectral_ctx)
+
+    def eval_sigma_s(self, spectral_ctx=None):
+        """
+        Return scattering coefficient.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Returns → :class:`pint.Quantity`:
+            Scattering coefficient.
+        """
+        return self.sigma_s.eval(spectral_ctx)
+
+    def eval_sigma_t(self, spectral_ctx=None):
+        """
+        Return extinction coefficient.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Returns → :class:`pint.Quantity`:
+            Extinction coefficient.
+        """
+        return self.eval_sigma_a(spectral_ctx) + self.eval_sigma_s(spectral_ctx)
+
+    def phase(self, ctx=None):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
 
-    def media(self, ref=False):
-        if ref:
+    def media(self, ctx=None):
+        if ctx.ref:
             phase = {"type": "ref", "id": f"phase_{self.id}"}
         else:
             phase = self.phase()[f"phase_{self.id}"]
@@ -121,39 +130,38 @@ class HomogeneousAtmosphere(Atmosphere):
             f"medium_{self.id}": {
                 "type": "homogeneous",
                 "phase": phase,
-                "sigma_t": onedict_value(self._sigma_t.kernel_dict()),
-                "albedo": onedict_value(self._albedo.kernel_dict()),
+                "sigma_t": self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                    uck.get("collision_coefficient")
+                ),
+                "albedo": self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo")),
             }
         }
 
-    def shapes(self, ref=False):
+    def shapes(self, ctx=None):
         from mitsuba.core import ScalarTransform4f
 
-        if ref:
+        if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
-            medium = self.media(ref=False)[f"medium_{self.id}"]
+            medium = self.media(ctx=ctx)[f"medium_{self.id}"]
 
         k_length = uck.get("length")
-        k_width = self.kernel_width.to(k_length).magnitude
-        k_height = self.kernel_height.to(k_length).magnitude
-        k_offset = self.kernel_offset.to(k_length).magnitude
+        k_width = self.kernel_width(ctx=ctx).m_as(k_length)
+        k_height = self.kernel_height(ctx=ctx).m_as(k_length)
+        k_offset = self.kernel_offset(ctx=ctx).m_as(k_length)
 
         return {
             f"shape_{self.id}": {
-                "type":
-                    "cube",
-                "to_world":
-                    ScalarTransform4f([
-                        [0.5 * k_width, 0., 0., 0.],
-                        [0., 0.5 * k_width, 0., 0.],
-                        [0., 0., 0.5 * k_height, 0.5 * k_height - k_offset],
-                        [0., 0., 0., 1.],
-                    ]),
-                "bsdf": {
-                    "type": "null"
-                },
-                "interior":
-                    medium
+                "type": "cube",
+                "to_world": ScalarTransform4f(
+                    [
+                        [0.5 * k_width, 0.0, 0.0, 0.0],
+                        [0.0, 0.5 * k_width, 0.0, 0.0],
+                        [0.0, 0.0, 0.5 * k_height, 0.5 * k_height - k_offset],
+                        [0.0, 0.0, 0.0, 1.0],
+                    ]
+                ),
+                "bsdf": {"type": "null"},
+                "interior": medium,
             }
         }

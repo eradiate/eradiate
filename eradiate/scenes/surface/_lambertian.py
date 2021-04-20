@@ -10,7 +10,8 @@ from ..._attrs import documented, parse_docs
 @parse_docs
 @attr.s
 class LambertianSurface(Surface):
-    """Lambertian surface scene element [:factorykey:`lambertian`].
+    """
+    Lambertian surface scene element [:factorykey:`lambertian`].
 
     This class creates a square surface to which a Lambertian BRDF is attached.
     """
@@ -30,7 +31,7 @@ class LambertianSurface(Surface):
         default="0.5",
     )
 
-    def bsdfs(self):
+    def bsdfs(self, ctx=None):
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",

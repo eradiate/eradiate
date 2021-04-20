@@ -14,7 +14,8 @@ from ..._units import unit_registry as ureg
 @parse_docs
 @attr.s
 class PerspectiveCameraMeasure(Measure):
-    """Perspective camera scene element [:factorykey:`perspective`].
+    """
+    Perspective camera scene element [:factorykey:`perspective`].
 
     This scene element is a thin wrapper around the ``perspective`` sensor
     kernel plugin. It positions a perspective camera based on a set of vectors,

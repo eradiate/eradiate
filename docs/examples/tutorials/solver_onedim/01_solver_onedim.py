@@ -6,7 +6,7 @@ One-dimensional solver application
 # %%
 #
 # This tutorial introduces a classical workflow with one-dimensional scenes
-# using the :class:`.OneDimSolverApp` class. It simulates radiative transfer in 
+# using the :class:`.OneDimSolverApp` class. It simulates radiative transfer in
 # a one-dimensional scene with an atmosphere and a plane surface.
 #
 # Configuring the application
@@ -16,17 +16,17 @@ One-dimensional solver application
 # operational mode. We will run a monochromatic simulation at 577 nm.
 
 import eradiate
-eradiate.set_mode("mono_double", wavelength=577.0)
+eradiate.set_mode("mono_double")
 
 # %%
-# The first thing we have to do is configure the solver application 
-# which will run our simulations. 
+# The first thing we have to do is configure the solver application
+# which will run our simulations.
 # :class:`.OneDimSolverApp` can be instantiated in a variety of ways. While we
 # will go with the more classical way of working with it, we will see at the
 # end of this tutorial that there are alternatives which you might feel more
 # comfortable with.
 #
-# Let's first start by configuring our scene. :class:`.OneDimSolverApp` 
+# Let's first start by configuring our scene. :class:`.OneDimSolverApp`
 # encapsulates an instance of :class:`.OneDimScene`, which itself holds a
 # number of attributes.
 #
@@ -121,13 +121,14 @@ illumination
 # a quick simulation with more samples and less noise.
 #
 # In order to identify our results more easily afterwards, we will assign a
-# ``toa_hsphere`` identifier (for "top-of-atmosphere, hemisphere") to our 
+# ``toa_hsphere`` identifier (for "top-of-atmosphere, hemisphere") to our
 # measure.
 
 measure = eradiate.scenes.measure.DistantMeasure(
     id="toa_hsphere",
     film_resolution=(32, 32),
     spp=10000,
+    spectral_cfg={"wavelength": 577.0},
 )
 measure
 
@@ -191,7 +192,7 @@ from pprint import pprint
 pprint(app.results)
 
 # %%
-# In that case, we have a single measure ``toa_hsphere`` for which we can easily 
+# In that case, we have a single measure ``toa_hsphere`` for which we can easily
 # display the data set:
 
 ds = app.results["toa_hsphere"]
@@ -217,9 +218,9 @@ brf.squeeze().plot()
 plt.show()
 
 # %%
-# We can see that we have a "hot spot" in the back scattering direction (a 
+# We can see that we have a "hot spot" in the back scattering direction (a
 # distinctive feature of the RPV BRDF). If we reduce the amount of scattering in
-# our atmosphere, the hot spot becomes sharper (see the bounds of the colour 
+# our atmosphere, the hot spot becomes sharper (see the bounds of the colour
 # map):
 
 scene = eradiate.solvers.onedim.OneDimScene(
@@ -246,9 +247,9 @@ plt.show()
 #
 # While the hemispherical views we have created so far are convenient for
 # basic checks, they are fairly noisy and we usually prefer visualising results
-# in the principal plane. For that purpose, we can configure our 
-# :class:`.DistantMeasure` by assigning 1 to the film height. Since we are 
-# significantly reducing the number of pixels, we can increase the number of 
+# in the principal plane. For that purpose, we can configure our
+# :class:`.DistantMeasure` by assigning 1 to the film height. Since we are
+# significantly reducing the number of pixels, we can increase the number of
 # samples we will take while (more or less) preserving our computational time.
 
 scene = eradiate.solvers.onedim.OneDimScene(
@@ -262,6 +263,7 @@ scene = eradiate.solvers.onedim.OneDimScene(
         id="toa_pplane",
         film_resolution=(32, 1),
         spp=1000000,
+        spectral_cfg={"wavelength": 577.0},
     ),
 )
 app = eradiate.solvers.onedim.OneDimSolverApp(scene)
@@ -280,12 +282,12 @@ plt.show()
 # %%
 # Alternative object configuration methods
 # ----------------------------------------
-# 
+#
 # So far, we have been using Eradiate's Python API exclusively. However, all
-# scene elements and solver applications can also be configured using 
+# scene elements and solver applications can also be configured using
 # dictionaries. While it requires a little more knowledge of the API (your IDE
-# will not assist you in writing configuration dictionaries), it also saves some 
-# importing. For instance, the scene used for the previous simulation can also 
+# will not assist you in writing configuration dictionaries), it also saves some
+# importing. For instance, the scene used for the previous simulation can also
 # be configured as follows:
 
 scene = eradiate.solvers.onedim.OneDimScene(
@@ -308,6 +310,7 @@ scene = eradiate.solvers.onedim.OneDimScene(
         "id": "toa_hsphere",
         "film_resolution": (32, 1),
         "spp": 1000000,
+        "spectral_cfg": {"wavelength": 577.0},
     },
 )
 
@@ -335,20 +338,18 @@ scene = eradiate.solvers.onedim.OneDimScene.from_dict({
         "id": "toa_hsphere",
         "film_resolution": (32, 1),
         "spp": 1000000,
+        "spectral_cfg": {"wavelength": 577.0},
     },
 })
 
 # %%
-# Finally, we can configure the entire application with a dictionary. This app 
+# Finally, we can configure the entire application with a dictionary. This app
 # configuration dictionary is basically the previous scene configuration, to
-# which we add a mode configuration section used to force mode setup upon 
+# which we add a mode configuration section used to force mode setup upon
 # instantiation of the application object:
 
 config = {
-    "mode": {
-        "type": "mono_double",
-        "wavelength": 577.0,
-    },
+    "mode": "mono_double",
     "surface": {
         "type": "rpv",
     },
@@ -368,6 +369,7 @@ config = {
         "id": "toa_hsphere",
         "film_resolution": (32, 1),
         "spp": 1000000,
+        "spectral_cfg": {"wavelength": 577.0},
     },
 }
 app = eradiate.solvers.onedim.OneDimSolverApp.from_dict(config)
@@ -379,12 +381,12 @@ config
 # case and will automatically attach to a scalar field the units defined a
 # corresponding field with the ``_units``.
 #
-# .. note:: While we use YAML in this example, nothing prevents the use of 
+# .. note:: While we use YAML in this example, nothing prevents the use of
 #    another language to generate your dictionaries.
 #
 # Let's load the following file
 # [:download:`01_solver_onedim_config.yml </examples/tutorials/solver_onedim/01_solver_onedim_config.yml>`]:
-# 
+#
 # .. include:: /examples/tutorials/solver_onedim/01_solver_onedim_config.yml
 #    :literal:
 

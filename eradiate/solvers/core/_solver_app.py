@@ -1,29 +1,33 @@
 import os
-from abc import ABC, abstractmethod
-from copy import copy
+from abc import ABC
 from pathlib import Path
 
 import attr
+import numpy as np
 import pinttr
 from matplotlib import pyplot as plt
 
 import eradiate
-
 from ._runner import runner
-from ... import unit_registry as ureg
 from ..._attrs import documented, parse_docs
-from ..._mode import ModeNone
+from ..._units import unit_context_kernel as uck, unit_registry as ureg
 from ...exceptions import ModeError
+from ...contexts import KernelDictContext
 from ...scenes.measure._distant import DistantMeasure
 
 
 @parse_docs
 @attr.s
 class SolverApp(ABC):
-    """Abstract base class for solver applications."""
+    """
+    Abstract base class for solver applications.
+    """
 
     _SCENE_TYPE = None  # Scene type; must be defined by child classes
-    _raw_results = attr.ib(default=None, init=False, repr=False)  # Raw runner output
+
+    # Scene to simulate radiative transfer on; this field must be overridden by child classes
+    # Type must match _SCENE_TYPE
+    scene = attr.ib(default=None)
 
     # Post-processed output
     _results = documented(
@@ -47,32 +51,27 @@ class SolverApp(ABC):
         Create an instance after preparatory checks.
         All arguments are forwarded to the constructor.
         """
-        if isinstance(eradiate.mode(), ModeNone):
-            raise ModeError(f"no mode selected, use eradiate.set_mode()")
+        if eradiate.mode() is None:
+            raise ModeError("no mode selected, use eradiate.set_mode()")
 
         return cls(*args, **kwargs)
 
     @classmethod
     def from_dict(cls, d):
-        """Instantiate from a dictionary."""
+        """
+        Instantiate from a dictionary.
+        """
         solver_config = pinttr.interpret_units(d, ureg=ureg)
 
         # Collect mode configuration
         try:
-            # We make a copy because we'll mutate it later
-            mode_config = copy(solver_config.pop("mode"))
+            mode_id = solver_config.pop("mode")
         except KeyError:
-            raise ValueError("section 'mode' missing from configuration dictionary")
-
-        try:
-            mode_id = mode_config.pop("type")
-        except KeyError or AttributeError:
-            raise ValueError(
-                "parameter 'mode.type' missing from configuration dictionary"
-            )
+            raise ValueError("parameter 'mode' missing from configuration dictionary")
 
         # Select appropriate operational mode
-        eradiate.set_mode(mode_id, **mode_config)
+        eradiate.set_mode(mode_id)
+
         if not eradiate.mode().is_monochromatic():
             raise ModeError("only monochromatic modes are supported")
 
@@ -82,48 +81,102 @@ class SolverApp(ABC):
         # Instantiate class
         return cls.new(scene=scene)
 
-    def process(self):
-        """Run simulation on the configured scene. Raw results yielded by the
+    def process(self, measure=None):
+        """
+        Run simulation on the configured scene. Raw results yielded by the
         encapsulated runner are stored in ``self._raw_results``.
 
         .. seealso:: :meth:`postprocess`, :meth:`run`
+
+        Parameter ``measure`` (:class:`.Measure` or None):
+            Measure for which to compute radiative transfer. If set to ``None``,
+            the first element of ``self.measures`` is used.
         """
+        # Select measure
+        if measure is None:
+            measure = self.scene.measures[0]
+
         # Unset results for error detection
-        self._raw_results = None
-        self._results = dict()
+        measure.raw_results = None
+
+        # Initialise context
+        spectral_ctx = measure.spectral_ctx
+        ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
+
+        # Define sensor IDs
+        sensor_ids = [sensor_info.id for sensor_info in measure.sensor_infos()]
 
         # Run simulation
-        kernel_dict = self.scene.kernel_dict()
-        self._raw_results = runner(kernel_dict)
+        kernel_dict = self.scene.kernel_dict(ctx=ctx)
+        measure.raw_results = runner(kernel_dict, sensor_ids)
 
-    @abstractmethod
-    def postprocess(self):
-        """Post-process raw results stored in hidden attribute
-        ``self._raw_results`` after successful execution of :meth:`process`.
-        Post-processed results are stored in ``self.results``.
+    def postprocess(self, measure=None):
+        """
+        Post-process raw results stored in measures' ``raw_results`` field. This
+        requires a successful execution of :meth:`process`. Post-processed results
+        are stored in ``self.results``.
+
+        Parameter ``measure`` (:class:`.Measure` or None):
+            Measure for which to compute radiative transfer. If set to ``None``,
+            the first element of ``self.measures`` is used.
 
         Raises → ValueError:
-            If ``self._raw_results`` is ``None``, *i.e.* if :meth:`process`
+            If ``measure.raw_results`` is ``None``, *i.e.* if :meth:`process`
             has not been successfully run.
 
         .. seealso:: :meth:`process`, :meth:`run`
         """
-        pass
+        if not eradiate.mode().is_monochromatic():
+            raise ModeError(f"unsupported mode '{eradiate.mode().id}'")
 
-    def run(self):
+        # Select measure
+        if measure is None:
+            measure = self.scene.measures[0]
+
+        # Collect measure results
+        ds = measure.postprocessed_results()
+
+        # Collect illumination data
+        illumination = self.scene.illumination
+        irradiance = illumination.irradiance.eval(spectral_ctx=measure.spectral_ctx)
+        saa = illumination.azimuth.m_as(ureg.rad)
+        sza = illumination.zenith.m_as(ureg.rad)
+        cos_sza = np.cos(sza)
+
+        # Add new dimensions
+        ds = ds.expand_dims({"sza": [sza], "saa": [saa]}, axis=(0, 1))
+
+        # Add illumination-dependent variables
+        ds["irradiance"] = (
+            ("sza", "saa", "wavelength"),
+            np.array(irradiance.m_as(uck.get("irradiance")) * cos_sza).reshape(
+                (1, 1, 1)
+            ),
+        )
+
+        ds["brdf"] = ds["lo"] / ds["irradiance"]
+        ds["brf"] = ds["brdf"] * np.pi
+
+        self._results[measure.id] = ds
+
+    def run(self, measure=None):
         """
         Perform radiative transfer simulation and post-process results.
         Essentially chains :meth:`process` and :meth:`postprocess`.
+
+        Parameter ``measure`` (:class:`.Measure` or None):
+            Measure for which to compute radiative transfer. If set to ``None``,
+            the first element of ``self.measures`` is used.
         """
-        self.process()
-        self.postprocess()
+        self.process(measure)
+        self.postprocess(measure)
 
     def save_results(self, fname_prefix):
         """
-        Save results to netCDF files.
+        Save results to NetCDF files.
 
         Parameter ``fname_prefix`` (str):
-            Filename prefix for result storage. A netCDF file is created for
+            Filename prefix for result storage. A NetCDF file is created for
             each measure.
         """
         fname_prefix = Path(fname_prefix)
@@ -134,8 +187,8 @@ class SolverApp(ABC):
             results.to_netcdf(path=fname_results)
 
     def plot_results(self, fname_prefix):
-        """Make default plots for stored results and save them to the hard
-        drive.
+        """
+        Make default plots for stored results and save them to the hard drive.
 
         Parameter ``fname_prefix`` (str):
             Filename prefix for plot files. A plot file is create for each

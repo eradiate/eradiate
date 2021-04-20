@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import attr
 import numpy as np
+import xarray as xr
 
 import eradiate
 
@@ -9,18 +10,24 @@ from ..core import SceneElement
 from ... import validators
 from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
+from ..._units import unit_context_kernel as uck
+from ...exceptions import ModeError
+from ...contexts import SpectralContext
 
 
 @parse_docs
 @attr.s
 class SensorInfo:
-    """Data type to store information about a sensor associated with a measure."""
+    """
+    Data type to store information about a sensor associated with a measure.
+    """
 
     id = documented(
         attr.ib(),
         doc="Sensor unique identifier.",
         type="str",
     )
+
     spp = documented(
         attr.ib(),
         doc="Sensor sample count.",
@@ -31,7 +38,9 @@ class SensorInfo:
 @parse_docs
 @attr.s
 class Measure(SceneElement, ABC):
-    """Abstract base class for all measure scene elements."""
+    """
+    Abstract base class for all measure scene elements.
+    """
 
     id = documented(
         attr.ib(
@@ -43,11 +52,25 @@ class Measure(SceneElement, ABC):
         default='"measure"',
     )
 
+    spectral_cfg = documented(
+        attr.ib(factory=SpectralContext.new, converter=SpectralContext.convert),
+        doc="Spectral configuration of the measure. Must match the current "
+        "operational mode.",
+        type=":meth:`SpectralContext.new() <.SpectralContext.new>`",
+        default="None",
+    )
+
     spp = documented(
         attr.ib(default=32, converter=int, validator=validators.is_positive),
         doc="Number of samples per pixel.",
         type="int",
         default="32",
+    )
+
+    raw_results = documented(
+        attr.ib(default=None),
+        doc="Storage for raw results yielded by the kernel.",
+        default="None",
     )
 
     # Private attributes
@@ -58,6 +81,13 @@ class Measure(SceneElement, ABC):
     )
 
     @property
+    def spectral_ctx(self):
+        """
+        Alias to :data:`self.spectral_cfg`.
+        """
+        return self.spectral_cfg
+
+    @property
     @abstractmethod
     def film_resolution(self):
         """
@@ -65,33 +95,9 @@ class Measure(SceneElement, ABC):
         """
         pass
 
-    def postprocess_results(self, runner_results):
-        """Process sensor data to extract measure results. These post-processing
-        operations can include (but are not limited to) array reshaping and
-        sensor data aggregation and transformation operations.
-
-        Parameter ``runner_results`` (dict):
-            Dictionary mapping sensor IDs to their respective results.
-
-            .. seealso:: :func:`eradiate.solvers.core.runner`
-
-        Returns → array:
-            Processed results.
-        """
-        sensor_values = np.array([runner_results[x.id] for x in self.sensor_infos()])
-        sensor_spps = np.array([x.spp for x in self.sensor_infos()])
-        spp_sum = np.sum(sensor_spps)
-
-        # Compute weighted sum of sensor contributions
-        # transpose() is required to correctly position the dimension on which
-        # dot() operates
-        result = np.dot(sensor_values.transpose(), sensor_spps).transpose()
-        result /= spp_sum
-
-        return np.reshape(result, (result.shape[0], result.shape[1]))
-
     def sensor_infos(self):
-        """Return a tuple of sensor information data structures.
+        """
+        Return a tuple of sensor information data structures.
 
         Returns → list[:class:`.SensorInfo`]:
             List of sensor information data structures.
@@ -107,11 +113,12 @@ class Measure(SceneElement, ABC):
             ]
 
     def _split_spp(self):
-        """Generate sensor specifications, possibly applying sample count
-        splitting in single-precision mode.
+        """
+        Generate sensor specifications, possibly applying sample count splitting
+        in single-precision mode.
 
         Sample count (or SPP) splitting consists in splitting sample
-        count among multiple sensors if a high enough sample count (_i.e._
+        count among multiple sensors if a high enough sample count (*i.e.*
         greater than ``self._spp_splitting_threshold``) is requested when using
         a single-precision mode in order to preserve the accuracy of results.
 
@@ -135,6 +142,60 @@ class Measure(SceneElement, ABC):
 
         else:
             return [self.spp]
+
+    def _aggregate_raw_results(self):
+        """
+        Aggregate raw sensor results if multiple sensors were used.
+
+        Returns → array-like:
+            Processed results.
+        """
+        if self.raw_results is None:
+            raise ValueError("no raw results stored, cannot aggregate")
+
+        sensor_values = np.array([self.raw_results[x.id] for x in self.sensor_infos()])
+        sensor_spps = np.array([x.spp for x in self.sensor_infos()])
+        spp_sum = np.sum(sensor_spps)
+
+        # Compute weighted sum of sensor contributions
+        # transpose() is required to correctly position the dimension on which
+        # dot() operates
+        result = np.dot(sensor_values.transpose(), sensor_spps).transpose()
+        result /= spp_sum
+
+        # Reshape result to film size
+        result = np.reshape(result, (result.shape[0], result.shape[1]))
+        return result
+
+    def postprocessed_results(self):
+        """
+        Post-process raw sensor results and encapsulate them in a
+        :class:`~xarray.Dataset`.
+
+        Returns → :class:`~xarray.Dataset`:
+            Post-processed results.
+        """
+        data = self._aggregate_raw_results()
+
+        # Store radiance to a DataArray
+        result = xr.Dataset()
+        result["lo"] = xr.DataArray(
+            data,
+            coords=(
+                ("y", range(data.shape[0])),
+                ("x", range(data.shape[1])),
+            ),
+        )
+
+        # Add spectral coordinate
+        if eradiate.mode().is_monochromatic():
+            wavelength = self.spectral_ctx.wavelength.m_as(uck.get("wavelength"))
+            result = result.expand_dims({"wavelength": [wavelength]}, axis=-1)
+
+        else:
+            raise ModeError(f"unsupported mode '{eradiate.mode().id}'")
+
+        return result
 
     @abstractmethod
     def _base_dicts(self):
@@ -160,7 +221,7 @@ class Measure(SceneElement, ABC):
             for sensor_info in self.sensor_infos()
         ]
 
-    def kernel_dict(self, ref=True):
+    def kernel_dict(self, ctx=None):
         result = {
             f"{sensor_info.id}": {
                 **base_dict,
@@ -180,8 +241,8 @@ class Measure(SceneElement, ABC):
 
 
 class MeasureFactory(BaseFactory):
-    """This factory constructs objects whose classes are derived from
-    :class:`Measure`.
+    """
+    This factory constructs objects whose classes are derived from :class:`Measure`.
 
     .. admonition:: Registered factory members
        :class: hint

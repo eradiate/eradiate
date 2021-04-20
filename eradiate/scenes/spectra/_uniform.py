@@ -51,20 +51,16 @@ class UniformSpectrum(Spectrum):
                 self.value, ucc.get(self.quantity)
             )
 
-    @property
-    def _values(self):
+    def eval(self, spectral_ctx=None):
         return self.value
 
-    @property
-    def values(self):
-        return self.value
-
-    def kernel_dict(self, ref=True):
+    def kernel_dict(self, ctx=None):
         kernel_units = uck.get(self.quantity)
+        spectral_ctx = ctx.spectral_ctx if ctx is not None else None
 
         return {
             "spectrum": {
                 "type": "uniform",
-                "value": self.value.m_as(kernel_units),
+                "value": self.eval(spectral_ctx).m_as(kernel_units),
             }
         }
