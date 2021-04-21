@@ -2,6 +2,10 @@
 
 __version__ = "0.0.1"  #: Eradiate version number.
 
+# -- Workaround: pre-import modules clashing with Mitsuba's import code --------
+
+__import__("xarray")
+
 # -- Operational mode definition -----------------------------------------------
 
 from ._mode import mode, set_mode, modes  # isort: skip
