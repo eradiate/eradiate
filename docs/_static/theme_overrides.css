@@ -1,3 +1,9 @@
 /* Prevent Bootstrap from hiding xarray's HTML output
    https://github.com/executablebooks/sphinx-book-theme/issues/238 */
 .xr-wrap { display: block !important }
+
+/* Set more reasonable fixed width font sizes */
+pre, code {
+  font-size: 95%;
+  line-height: 150%;
+}
