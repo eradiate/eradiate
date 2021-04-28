@@ -78,6 +78,21 @@ conda-update: conda-lock-all conda-init
 
 .PHONY: conda-lock conda-lock-all conda-init conda-update
 
+# -- Documentation -------------------------------------------------------------
+
+.PHONY: docs docs-html-plot
+
+docs:
+	make -C docs html
+	@echo "Documentation index at docs/_build/html/index.html"
+
+docs-html-plot:
+	make -C docs html-plot
+	@echo "Documentation index at docs/_build/html/index.html"
+
+docs-clean:
+	make -C docs clean
+
 # -- Testing -------------------------------------------------------------------
 
 .PHONY: pytest pytest-slow pytest-notslow pytest-formatters
