@@ -25,12 +25,9 @@ Adding manually downloaded data
 
 Due to the impracticality of storing large data sets with the code base
 Eradiate does not ship all data required to run simulations.
-Certain large data sets are hosted on an FTP server and need to be
-downloaded manually.
-
-:ref:`This section <sec-user_guide-molecular_absorption_datasets>` contains a list of
-molecular absorption datasets, including a description of their extent and limitations as well as
-a download link.
+Certain large data sets are hosted on an 
+`FTP server <https://eradiate.eu/data>`_
+and need to be downloaded manually.
 
 The data are served in compressed archives, including their containing
 folders. To install the downloaded data, first decompress the archive into a temporary

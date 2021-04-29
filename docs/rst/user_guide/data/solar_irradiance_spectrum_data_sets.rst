@@ -1,35 +1,9 @@
-.. _sec-user_guide-solar_irradiance_spectra:
+.. _sec-user_guide-data-solar_irradiance_spectrum_data_sets:
 
-Solar irradiance spectra
-========================
+Solar irradiance spectrum data sets
+===================================
 
 Eradiate ships with several reference solar irradiance spectrum datasets.
-This guide:
-
-- explains how to list the available solar irradiance spectrum datasets
-- provides a quick description of the available datasets
-- illustrates how to visualise a solar irradiance spectrum
-- explains how to add your own solar irradiance spectrum dataset
-
-.. admonition:: Tutorials
-
-   * Adding data ⇒ :ref:`sphx_glr_examples_generated_tutorials_data_02_custom_solar_irradiance.py`
-
-List available solar irradiance spectrum datasets
--------------------------------------------------
-
-Find the list of available datasets in the
-:mod:`solar_irradiance_spectra <eradiate.data.solar_irradiance_spectra>`
-module documentation, or by running:
-
-.. code-block:: python
-
-    import eradiate.data as data
-    display(data.registered(category="solar_irradiance_spectrum"))
-
-Quick description of the available datasets
--------------------------------------------
-
 Here is a quick description of each of the available solar irradiance
 spectrum datasets:
 
@@ -116,60 +90,3 @@ spectrum datasets:
 
   ``whi_2008`` is an alias to the quiet sun spectrum ``whi_2008_3``.
   Reference: :cite:`Woods2008SolarIrradianceReference`.
-
-Visualise a solar irradiance spectrum
--------------------------------------
-
-Let's say you chose to use the ``thuillier_2003`` dataset:
-
-.. code-block:: python
-
-    solar_spectrum = data.open(
-        category="solar_irradiance_spectrum",
-        id="thuillier_2003"
-    )
-
-You can visualise the solar irradiance spectrum corresponding to this dataset
-with a simple call to the ``plot()`` method of the ``ssi`` (solar spectral
-irradiance) data variable:
-
-.. code-block:: python
-
-    solar_spectrum.ssi.plot(linewidth=0.3)
-
-
-The resulting spectrum is displayed below.
-
-.. image:: ../../fig/thuillier_2003.png
-  :width: 800
-  :alt: thuillier_2003 spectrum
-
-If the solar irradiance spectrum dataset includes a non-empty ``t`` (time)
-coordinate, you must **select** the date for which you want to visualise the
-spectrum:
-
-.. code-block:: python
-
-    solar_spectrum = data_open(
-        category="solar_irradiance_spectrum",
-        id="solid_2017",
-    )
-    solar_spectrum.ssi.sel(t="2005-03-14").plot(linewidth=0.3)
-
-The resulting spectrum is displayed below.
-
-.. image:: ../../fig/solid_2017.png
-  :width: 800
-  :alt: solid_2017 spectrum
-
-Find out whether a solar irradiance spectrum includes a non-empty time
-coordinate by printing the content of ``solar_spectrum.dims``; in the dictionary
-that is printed, the value for the ``t`` key indicates the number of time
-stamps. If the number is 0, the time coordinate is empty. If the number is
-larger than zero, the dataset supports selection by time stamps.
-
-Add your own solar irradiance spectrum dataset
-----------------------------------------------
-
-See
-:ref:`sphx_glr_examples_generated_tutorials_data_02_custom_solar_irradiance.py`.

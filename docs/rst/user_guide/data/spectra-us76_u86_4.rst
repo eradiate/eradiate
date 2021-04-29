@@ -7,6 +7,9 @@ The ``spectra-us76_u86_4`` data set is an absorption cross section data set
 for the the ``us76_u86_4`` absorbing gas mixture and computed using the
 `SPECTRA <https://spectra.iao.ru>`_ Information System.
 
+Link to download the data set: 
+`spectra-us76_u86_4.zip <https://eradiate.eu/data/spectra-us76_u86_4.zip>`_.
+
 Description
 -----------
 
