@@ -12,8 +12,6 @@ User guide
    unit_guide_user
    data/index
    atmosphere/index
-   solar_irradiance_spectra
-   molecular_absorption_datasets
 
 ..
   Archived content
