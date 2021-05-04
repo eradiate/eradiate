@@ -286,8 +286,8 @@ def test_heterogeneous_invalid_width_units(mode_mono):
             profile={
                 "type": "array",
                 "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
+                "sigma_t_values": np.ones((1, 1, 3)),
+                "albedo_values": np.ones((1, 1, 3)),
             },
         )
 
@@ -302,8 +302,8 @@ def test_heterogeneous_invalid_toa_altitude_units(mode_mono):
             profile={
                 "type": "array",
                 "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
+                "sigma_t_values": np.ones((1, 1, 3)),
+                "albedo_values": np.ones((1, 1, 3)),
             },
         )
 
@@ -318,8 +318,8 @@ def test_heterogeneous_invalid_width_value(mode_mono, tmpdir):
             profile={
                 "type": "array",
                 "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
+                "sigma_t_values": np.ones((1, 1, 3)),
+                "albedo_values": np.ones((1, 1, 3)),
             },
             cache_dir=tmpdir,
         )
@@ -335,8 +335,8 @@ def test_heterogeneous_invalid_toa_altitude_value(mode_mono, tmpdir):
             profile={
                 "type": "array",
                 "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
+                "sigma_t_values": np.ones((1, 1, 3)),
+                "albedo_values": np.ones((1, 1, 3)),
             },
             cache_dir=tmpdir,
         )
@@ -363,8 +363,9 @@ def test_heterogeneous_with_particles(mode_mono, tmpdir):
     atmosphere = HeterogeneousAtmosphere(
         profile={
             "type": "array",
-            "sigma_t_values": np.ones((3, 3, 3)),
-            "albedo_values": np.ones((3, 3, 3)),
+            "levels": ureg.Quantity(np.linspace(0, 12, 4), "km"),
+            "sigma_t_values": np.ones((1, 1, 3)),
+            "albedo_values": np.ones((1, 1, 3)),
         },
         cache_dir=tmpdir,
         particles=[

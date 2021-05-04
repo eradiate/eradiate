@@ -1,23 +1,22 @@
-"""Mesh utilities
-"""
+"""Mesh utilities."""
 
 import math
 import numpy as np
 
 
 def merge(meshes, atol=1e-6):
-    """Concatenate meshes and remove the potential duplicate values.
+    """Merge meshes and remove the potential duplicate values.
 
-    Parameter ``arrays`` (sequence of array):
-        Sequence of arrays.
+    Parameter ``arrays`` (list):
+        Sequence of :class:`~numpy.ndarray`.
 
     Parameter ``atol`` (float):
         Absolute tolerance parameter. If the difference between two elements in
         the arrays is less than ``atol``, the elements will be considered as
         duplicates.
 
-    Returns → array:
-        The concatenated unique mesh.
+    Returns → :class:`~numpy.ndarray`:
+        The merged mesh.
 
     .. admonition:: Example
 
@@ -44,14 +43,14 @@ def merge(meshes, atol=1e-6):
 def unique(x, atol):
     """Returns the unique elements of an array with tolerance.
 
-    Parameter ``x`` (array):
+    Parameter ``x`` (:class:`~numpy.ndarray`):
         Array with potential duplicate elements.
 
     Parameter ``atol`` (float):
         Absolute tolerance parameter. If the difference between two elements in
         ``x`` is smaller than ``atol``, they are considered duplicate elements.
 
-    Returns → array:
+    Returns → :class:`~numpy.ndarray`:
         Array with unique elements.
 
     .. admonition:: Example
@@ -78,25 +77,26 @@ def unique(x, atol):
 
 
 def to_regular(x, atol):
-    r"""Converts an irregular mesh into an approximately-equivalent regular
+    """
+    Converts an irregular mesh into an approximately-equivalent regular
     mesh.
 
     .. note::
         The bound values in the irregular mesh remain the same in
-        the output regular mesh.
+        the output regular mesh. Only the intermediate node values are modified.
 
     .. warning::
         The algorithm is not optimised to find the approximating regular mesh
         with the smallest number of cells. Depending on the value of ``atol``,
         the resulting mesh size can be very large.
 
-    Parameter ``x`` (array):
+    Parameter ``x`` (:class:`~numpy.ndarray`):
         Irregular mesh.
 
     Parameter ``atol`` (float):
         Absolute tolerance parameter.
 
-    Returns -> array:
+    Returns -> :class:`~numpy.ndarray`:
         Regular mesh.
 
     .. admonition:: Example
@@ -128,13 +128,14 @@ def to_regular(x, atol):
           array([0., 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6.])
     """
     x = np.sort(x)
-    n, _ = find_regular_params_gcd(x, unit_number=atol)
-    return np.linspace(start=x[0], stop=x[-1], num=n)
+    num, _ = find_regular_params_gcd(x=x, unit_number=atol)
+    return np.linspace(start=x[0], stop=x[-1], num=num)
 
 
-def find_regular_params_gcd(x, unit_number=1.):
-    r"""Find the parameters of the regular mesh that approximates the irregular
-    input mesh as best as possible.
+def find_regular_params_gcd(x, unit_number=1.0):
+    """
+    Find the parameters (cells number and cell width) of the regular mesh that
+    approximates the irregular input mesh as best as possible.
 
     The algorithm finds the greatest common divisor (GCD) of all cells widths in
     the integer representation specified by the parameter ``unit_number``.
@@ -145,7 +146,7 @@ def find_regular_params_gcd(x, unit_number=1.):
         There are no safeguards regarding how large the number of cells in the
         regular mesh can be. Use the parameter ``unit_number`` with caution.
 
-    Parameter ``x`` (array):
+    Parameter ``x`` (:class:`~numpy.ndarray`):
         1-D array with floating point values.
         Values must be sorted by increasing order.
 
@@ -155,7 +156,7 @@ def find_regular_params_gcd(x, unit_number=1.):
 
         Default: 1.
 
-    Returns -> int, float:
+    Returns -> Tuple[int, float]:
         Number of points in the regular mesh and the value of the constant cells
         width.
 
@@ -215,7 +216,7 @@ def find_regular_params_gcd(x, unit_number=1.):
 #     r"""Finds the number of cells and constant cell width of the regular 1-D
 #     mesh that approximates a 1-D irregular mesh the best.
 #
-#     Parameter ``mesh`` (array):
+#     Parameter ``mesh`` (:class:`~numpy.ndarray`):
 #         Irregular 1-D mesh. Values must be sorted in increasing order.
 #
 #     Parameter ``rtol`` (float):
@@ -234,7 +235,7 @@ def find_regular_params_gcd(x, unit_number=1.):
 #
 #         Default: 10000
 #
-#     Returns -> int, float:
+#     Returns -> Tuple[int, float]:
 #         Number of cells and constant cells width in the approximating regular
 #         mesh.
 #     """

@@ -5,8 +5,6 @@ import xarray as xr
 from eradiate import unit_registry as ureg
 from eradiate.thermoprops.us76 import make_profile
 from eradiate.thermoprops.util import (
-    _find_regular_params_gcd,
-    _to_regular,
     compute_column_number_density,
     compute_number_density_at_surface,
     compute_scaling_factors,
@@ -254,28 +252,6 @@ def test_equilibrium_water_vapor_fraction():
     value = equilibrium_water_vapor_fraction(p=ureg.Quantity(90, "kPa"),
                                              t=ureg.Quantity(20, "celsius"))
     assert 0. <= value <= 1.
-
-
-def test_find_regular_params_gcd():
-    with pytest.raises(ValueError):
-        _find_regular_params_gcd([1, 2, 3], -1.)
-
-    with pytest.raises(ValueError):
-        _find_regular_params_gcd([1, 2, 3], 0.)
-
-    assert _find_regular_params_gcd(np.arange(10)) == (10, 1)
-
-    mesh = [0., 1200., 2500., 5300., 10000., 25500.]
-    assert _find_regular_params_gcd(mesh) == (256, 100)
-    assert _find_regular_params_gcd(mesh, unit_number=1000.) == (26, 1000)
-
-
-def test_to_regular():
-    # check that the bounds are kept the same
-    mesh = [0., 1200., 2500., 5300., 10000., 25500.]
-    regular = _to_regular(mesh, atol=1000)
-    assert regular[0] == mesh[0]
-    assert regular[-1] == mesh[-1]
 
 
 # TODO: test further
