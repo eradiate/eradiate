@@ -1,12 +1,10 @@
 import attr
 import pint
 import pinttr
-from pint import DimensionalityError
 
 from ... import unit_context_config as ucc
 from ... import unit_context_kernel as uck
 from ..._attrs import documented, parse_docs
-from ..._units import PhysicalQuantity
 from ...scenes.spectra import Spectrum, SpectrumFactory
 from ...validators import is_positive
 
@@ -16,7 +14,7 @@ from ...validators import is_positive
 @attr.s
 class UniformSpectrum(Spectrum):
     """
-    Uniform spectrum (*i.e.* constant against wavelength). Supports basic arithmetics.
+    Uniform spectrum (*i.e.* constant against wavelength).
     """
 
     value = documented(
@@ -45,6 +43,9 @@ class UniformSpectrum(Spectrum):
         is_positive(self, attribute, value)
 
     def __attrs_post_init__(self):
+        self.update()
+
+    def update(self):
         if self.quantity is not None and self.value is not None:
             self.value = pinttr.converters.ensure_units(
                 self.value, ucc.get(self.quantity)
@@ -57,68 +58,6 @@ class UniformSpectrum(Spectrum):
     @property
     def values(self):
         return self.value
-
-    def __add__(self, other):
-        # Preserve quantity field only if it is the same for both operands
-        if self.quantity is other.quantity:
-            quantity = self.quantity
-        else:
-            quantity = None
-
-        try:
-            value = self.value + other.value
-        except DimensionalityError as e:
-            raise pinttr.exceptions.UnitsError(e.units1, e.units2)
-
-        return UniformSpectrum(quantity=quantity, value=value)
-
-    def __sub__(self, other):
-        # Preserve quantity field only if it is the same for both
-        # operands
-        if self.quantity is other.quantity:
-            quantity = self.quantity
-        else:
-            quantity = None
-
-        try:
-            value = self.value - other.value
-        except DimensionalityError as e:
-            raise pinttr.exceptions.UnitsError(e.units1, e.units2)
-
-        return UniformSpectrum(quantity=quantity, value=value)
-
-    def __mul__(self, other):
-        # We can only preserve 'dimensionless', other quantities are much
-        # more challenging to infer
-        if (
-            self.quantity is PhysicalQuantity.DIMENSIONLESS
-            and other.quantity is PhysicalQuantity.DIMENSIONLESS
-        ):
-            quantity = PhysicalQuantity.DIMENSIONLESS
-        else:
-            quantity = None
-
-        try:
-            value = self.value * other.value
-        except DimensionalityError as e:
-            raise pinttr.exceptions.UnitsError(e.units1, e.units2)
-
-        return UniformSpectrum(quantity=quantity, value=value)
-
-    def __truediv__(self, other):
-        # We can only infer 'dimensionless' if both operands have the same
-        # quantity field, other cases are much more challenging
-        if self.quantity is other.quantity and self.quantity is not None:
-            quantity = PhysicalQuantity.DIMENSIONLESS
-        else:
-            quantity = None
-
-        try:
-            value = self.value / other.value
-        except DimensionalityError as e:
-            raise pinttr.exceptions.UnitsError(e.units1, e.units2)
-
-        return UniformSpectrum(quantity=quantity, value=value)
 
     def kernel_dict(self, ref=True):
         kernel_units = uck.get(self.quantity)
