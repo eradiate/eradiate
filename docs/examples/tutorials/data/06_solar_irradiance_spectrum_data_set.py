@@ -50,19 +50,13 @@ plt.show()
 # Visualise a solar irradiance spectrum with a time dimension
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# .. attention::
-#   In order to run this example, you must download the ``solid_2017`` data set
-#   (download link: `solid_2017.zip <https://eradiate.eu/data/solid_2017.zip>`_)
-#   and place it in ``resources/data``.
-#
-# If the solar irradiance spectrum dataset includes a non-empty ``t`` (time) # coordinate, you must **select** the date for which you want to visualise the
+# If the solar irradiance spectrum dataset includes a non-empty ``t`` (time) 
+# coordinate, you must **select** the date for which you want to visualise the
 # spectrum:
 
-ds = eradiate.data.open(
-    category="solar_irradiance_spectrum",
-    id="solid_2017",
-)
-ds.ssi.sel(t="2005-03-14").plot(linewidth=0.3)
+path = eradiate.path_resolver.resolve("tests/spectra/solar_irradiance/solid_2017.nc")
+ds = eradiate.data.open(path=path)
+ds.ssi.sel(t="2014-12-31").plot(linewidth=0.3)
 plt.show()
 
 # %%
