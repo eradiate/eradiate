@@ -1,4 +1,5 @@
-"""Atmospheric radiative properties calculation package.
+"""
+Atmospheric radiative properties calculation package.
 
 .. admonition:: Registered factory members [:class:`.RadProfileFactory`]
    :class: hint
@@ -7,5 +8,10 @@
       :factory: RadProfileFactory
 """
 
-from .rad_profile import RadProfileFactory
-from .rad_profile import ArrayRadProfile, US76ApproxRadProfile, AFGL1986RadProfile
+
+from .rad_profile import (
+    AFGL1986RadProfile,
+    ArrayRadProfile,
+    RadProfileFactory,
+    US76ApproxRadProfile,
+)
