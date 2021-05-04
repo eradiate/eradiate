@@ -19,8 +19,12 @@ def test_find_regular_params_gcd():
 
 
 def test_to_regular():
-    # check that the bounds are kept the same
+    # output is regular mesh
     mesh = [0., 1200., 2500., 5300., 10000., 25500.]
     regular = to_regular(mesh, atol=1000)
+    cell_widths = regular[1:] - regular[:-1]
+    assert all(cell_widths==cell_widths[0])
+
+    # bounds remain the same
     assert regular[0] == mesh[0]
     assert regular[-1] == mesh[-1]
