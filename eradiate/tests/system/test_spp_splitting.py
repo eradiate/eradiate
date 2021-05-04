@@ -85,15 +85,12 @@ def test_spp_splitting():
     )
 
     for spp_splitting_threshold in thresholds:
-        print(f"spp_splitting_threshold = {spp_splitting_threshold}")
         solver.scene.measures[0]._spp_splitting_threshold = spp_splitting_threshold
 
         for mode in modes:
-            print(f"mode = {mode}")
             eradiate.set_mode(mode)
 
             for spp in spps:
-                print(f"spp = {spp}")
                 solver.scene.measures[0].spp = spp
                 solver.run()
                 results[spp_splitting_threshold, mode][spp] = float(
@@ -101,13 +98,13 @@ def test_spp_splitting():
                 )
 
     # Save plot for report
-    fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 4))
+    fig, _ = plt.subplots(1, 2, figsize=(10, 4))
     fig, ax = plt.subplots()
     results.plot(ax=ax, logx=True, marker="o", linestyle="--")
     plt.ylabel("brf")
     plt.tight_layout()
 
-    filename = f"test_spp_splitting.png"
+    filename = "test_spp_splitting.png"
     ensure_output_dir(os.path.join(output_dir, "plots"))
     fname_plot = os.path.join(output_dir, "plots", filename)
 
