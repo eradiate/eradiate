@@ -93,10 +93,10 @@ class Surface(SceneElement, ABC):
         return kernel_dict
 
     def scaled(self, factor):
-        """Return a copy of self scaled by a given factor."""
-        result = deepcopy(self)
-        result.width *= factor
-        return result
+        """
+        Return a copy of self scaled by a given factor.
+        """
+        return attr.evolve(self, width=self.width * factor)
 
 
 class SurfaceFactory(BaseFactory):
