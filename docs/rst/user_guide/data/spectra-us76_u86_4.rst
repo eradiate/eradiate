@@ -121,13 +121,13 @@ cross section value is approximated to 0.
 
    .. math::
 
-      \max_{\nu} \sigma_{a} \approx 9.0 \, 10^{-23} \, \mathrm{cm}^2,
+      \max_{\nu} \sigma_{a} \approx 9 \, 10^{-23} \, \mathrm{cm}^2,
 
    which corresponds to a maximal absorption coefficient value of:
 
    .. math::
 
-      \max_{\nu} k_{a} \approx 4.0 \, 10^{-4} \, \mathrm{km}^{-1},
+      \max_{\nu} k_{a} \approx 4 \, 10^{-4} \, \mathrm{km}^{-1},
 
    this approximation seems reasonable.
 
@@ -236,15 +236,10 @@ Wavenumber interpolation
 We make the following observations:
 
 * At standard pressure (ground level altitude), the interpolation accuracy is
-  relatively good -- better than 2 % except for some outliers.
-* Up to altitudes ~ 10 km the interpolation accuracy remains fine -- better than
-  5 % except for outliers.
-* For pressure corresponding to 10 km altitude and higher, the interpolation
-  accuracy gets poorer -- up to 30 % at 20 km, although the errors counts
-  decrease at the same time.
+  fine -- better than 5 % except for some outliers.
 * As the pressure decreases (corresponding altitude increases), the interpolation
-  accuracy gets poorer and poorer.
-  It reaches 80 % at 30 km of altitude and goes above 100 % at 35 km and above.
+  accuracy gets poorer and poorer, although the errors counts decrease
+  simultaneously.
 * The counts number decreases with decreasing pressure because lower pressure
   means lower number density hence fewer absorption cross section data points
   satisfy :eq:`negligible_k`.
@@ -254,11 +249,11 @@ Pressure interpolation
 
 We make the following observations:
 
-* At 4 km altitude (:math:`p = 65349 \, \mathrm{Pa}`), the interpolation
-  accuracy is relatively bad -- up to 40 % -- except for a few outliers.
+* At ~4 km altitude (:math:`p = 65349 \, \mathrm{Pa}`), the interpolation
+  accuracy is relatively bad -- up to 50 % -- except for a few outliers.
 * The interpolation accuracy generally improves with increasing altitudes
   (decreasing pressure).
-* For altitudes ~ 13 km and higher (:math:`p < 17531 \, \mathrm{Pa}`), the
+* For altitudes ~ 21 km and higher (:math:`p < 4703 \, \mathrm{Pa}`), the
   interpolation accuracy is better than 5 %, except for some outliers.
 * The counts number decreases with decreasing pressure because lower pressure
   means lower number density hence fewer absorption cross section data points
@@ -276,4 +271,4 @@ On the other hand, the interpolation accuracy of the down-sampled data set was
 estimated in the worst case scenarios, so that the average accuracy is in fact
 better than the reported accuracy.
 Nevertheless, we plan to generate a new version of the data set with finer
-wavenumber and pressure mesh to improve the interpolation accuracy.
+wavenumber and pressure meshes to improve the interpolation accuracy.
