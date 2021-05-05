@@ -8,7 +8,7 @@ for the the ``us76_u86_4`` absorbing gas mixture and computed using the
 `SPECTRA <https://spectra.iao.ru>`_ Information System.
 
 Link to download the data set: 
-`spectra-us76_u86_4.zip <https://eradiate.eu/data/spectra-us76_u86_4.zip>`_.
+`spectra-us76_u86_4.zip <https://eradiate.eu/data/us76_u86_4-spectra.zip>`_.
 
 Description
 -----------
@@ -96,10 +96,10 @@ The wavenumber coordinate is a linearly spaced mesh between
 :math:`4000 \, \mathrm{cm}^{-1}` (:math:`2500 \, \mathrm{nm}`) and
 :math:`25711 \, \mathrm{cm}^{-1}` (:math:`390 \, \mathrm{nm}`)
 with a constant wavenumber step of
-:math:`0.00314 \, \mathrm{cm}^{-1}` (corresponding wavelength step varies
+:math:`0.01 \, \mathrm{cm}^{-1}` (corresponding wavelength step varies
 between
-:math:`~ 0.00005 \, \mathrm{nm}` and
-:math:`~ 0.002 \, \mathrm{nm}`).
+:math:`~ 0.00015 \, \mathrm{nm}` and
+:math:`~ 0.006 \, \mathrm{nm}`).
 
 Pressure coordinate
 ~~~~~~~~~~~~~~~~~~~
@@ -121,13 +121,13 @@ cross section value is approximated to 0.
 
    .. math::
 
-      \max_{\nu} \sigma_{a} = 9.62 \, 10^{-23} \, \mathrm{cm}^2,
+      \max_{\nu} \sigma_{a} \approx 9.0 \, 10^{-23} \, \mathrm{cm}^2,
 
    which corresponds to a maximal absorption coefficient value of:
 
    .. math::
 
-      \max_{\nu} k_{a} = 4.0 \, 10^{-4} \, \mathrm{km}^{-1},
+      \max_{\nu} k_{a} \approx 4.0 \, 10^{-4} \, \mathrm{km}^{-1},
 
    this approximation seems reasonable.
 
