@@ -37,8 +37,9 @@ class Group(enum.Enum):
     """
     Data sets group enumeration.
 
-    Note: a group refers to a collection of data sets that differ by their
-    wavenumber bins.
+    .. note::
+        A group refers to a collection of data sets that differ by their
+        wavenumber bins.
     """
 
     SPECTRA_US76_U86_4 = (Absorber.us76_u86_4, Engine.SPECTRA)
@@ -64,9 +65,9 @@ def _resolve_group(absorber, engine):
 
 # fmt: off
 _WAVENUMBER_BINS = {
-    Group.SPECTRA_US76_U86_4: [(x, x + 500)
-                              for x in np.arange(4000, 25500, 500)] +
-                              [(25500, 25711)],
+    Group.SPECTRA_US76_U86_4: [(x, x + 1000)
+                              for x in np.arange(4000, 25000, 1000)] +
+                              [(25000, 25711)],
     Group.SPECTRA_CH4: [(x, x + 100) for x in np.arange(4000, 11500, 100)] +
                        [(11500, 11502)],
     Group.SPECTRA_CO: [(x, x + 100) for x in np.arange(4000, 14400, 100)] +
@@ -117,7 +118,7 @@ for group in Group:
     absorber, engine = group.value
     for wavenumber_bin in _WAVENUMBER_BINS[group]:
         data_set_id = _get_data_set_id(group, wavenumber_bin)
-        _PATHS[data_set_id] = f"{_ROOT_DIR}/{absorber.value}/{data_set_id}/*.nc"
+        _PATHS[data_set_id] = f"{_ROOT_DIR}/{absorber.value}/{data_set_id}.nc"
 
 
 class _AbsorptionGetter(DataGetter):
