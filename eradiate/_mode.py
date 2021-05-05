@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 
 import attr
 import mitsuba
@@ -72,7 +73,7 @@ _current_mode = None
 # -- Public API ----------------------------------------------------------------
 
 
-def mode():
+def mode() -> Optional[Mode]:
     """
     Get current operational mode.
 
