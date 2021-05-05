@@ -127,10 +127,11 @@ class _AbsorptionGetter(DataGetter):
     @classmethod
     def open(cls, id):
         path = cls.path(id)
-        paths = _presolver.glob(path)
+        path = _presolver.resolve(path)
 
         try:
-            return xr.open_mfdataset(paths)
+            print(path)
+            return xr.open_dataset(path)
         except OSError as e:
             raise OSError(f"while opening file at {path}: {str(e)}")
 
