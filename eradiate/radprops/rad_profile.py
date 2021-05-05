@@ -578,10 +578,12 @@ class US76ApproxRadProfile(RadProfile):
         Returns → :class:`xarray.Dataset`:
             Radiative properties dataset.
         """
+        profile = self.eval_thermoprops_profile()
+
         return make_dataset(
             wavelength=self._wavelength,
-            z_level=self.eval_thermoprops_profile().z_level.values,
-            z_layer=self.eval_thermoprops_profile().z_layer.values,
+            z_level=profile.z_level.values,
+            z_layer=profile.z_layer.values,
             sigma_a=self.sigma_a(spectral_ctx).flatten(),
             sigma_s=self.sigma_s(spectral_ctx).flatten(),
         )
@@ -838,7 +840,7 @@ class AFGL1986RadProfile(RadProfile):
 
     def eval_sigma_a(self, spectral_ctx):
         """
-        Evaluate absorption coefficient given spectral context.
+        Evaluate absorption coefficient given a spectral context.
 
         .. note:: Extrapolate to zero when wavelength, pressure and/or
            temperature are out of bounds.
@@ -892,7 +894,7 @@ class AFGL1986RadProfile(RadProfile):
 
     def eval_sigma_s(self, spectral_ctx):
         """
-        Evaluate scattering coefficient given spectral context.
+        Evaluate scattering coefficient given a spectral context.
         """
         wavelength = spectral_ctx.wavelength
         profile = self.eval_thermoprops_profile()
