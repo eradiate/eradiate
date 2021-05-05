@@ -1,14 +1,14 @@
 .. _sec-user_guide-data-spectra_us76_u86_4:
 
-``spectra-us76_u86_4``
+``us76_u86_4-spectra``
 ======================
 
-The ``spectra-us76_u86_4`` data set is an absorption cross section data set
+The ``us76_u86_4-spectra`` data set is an absorption cross section data set
 for the the ``us76_u86_4`` absorbing gas mixture and computed using the
 `SPECTRA <https://spectra.iao.ru>`_ Information System.
 
 Link to download the data set: 
-`spectra-us76_u86_4.zip <https://eradiate.eu/data/us76_u86_4-spectra.zip>`_.
+`us76_u86_4-spectra.zip <https://eradiate.eu/data/us76_u86_4-spectra.zip>`_.
 
 Description
 -----------
@@ -52,7 +52,7 @@ SPECTRA uses the HITRAN database (2016-edition)
 Structure
 ^^^^^^^^^
 
-The ``spectra-us76_u86_4`` data set includes two data variables:
+The ``us76_u86_4-spectra`` data set includes two data variables:
 
 * absorption cross section (``xs``)
 * mixing ratios (``mr``)
@@ -135,7 +135,7 @@ Interpolation accuracy
 ----------------------
 
 We assess the accuracy of the wavenumber and pressure interpolation of
-the ``spectra-us76_u86_4`` absorption data set.
+the ``us76_u86_4-spectra`` absorption data set.
 
 Method
 ^^^^^^
@@ -263,7 +263,7 @@ Conclusion
 ^^^^^^^^^^
 
 It is not easy to draw any conclusion regarding the interpolation accuracy of
-the ``spectra-us76_u86_4`` absorption data set from the above analysis.
+the ``us76_u86_4-spectra`` absorption data set from the above analysis.
 Since the interpolation accuracy of the down-sampled data set is not quite
 satisfactory, there is not guarantee that the interpolation accuracy of the
 actual data set is.
