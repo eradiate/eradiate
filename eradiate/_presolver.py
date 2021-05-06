@@ -123,17 +123,18 @@ class PathResolver(metaclass=Singleton):
 
         self.paths.insert(0, path_absolute)
 
-    def append(self, path):
+    def append(self, *paths):
         """Append an entry to the end of the list of search paths.
 
         Parameter ``path`` (path-like):
             Path to append to the path list.
         """
-        path_absolute = Path(path).absolute()
-        if not path_absolute.is_dir():
-            raise ValueError(f"{path} is not an existing directory")
+        for path in paths:
+            path_absolute = Path(path).absolute()
+            if not path_absolute.is_dir():
+                raise ValueError(f"{path} is not an existing directory")
 
-        self.paths.append(path_absolute)
+            self.paths.append(path_absolute)
 
     def resolve(self, path):
         """Walk through the list of search paths and try to resolve the input
