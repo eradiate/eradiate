@@ -35,8 +35,11 @@ class PathResolver(metaclass=Singleton):
         return f"PathResolver(paths=[{s}])"
 
     def __str__(self):
-        s = ",\n".join(["  " + str(x) for x in self.paths])
-        return f"PathResolver(paths=[\n{s}\n])"
+        if not self.paths:
+            return "PathResolver(paths=[])"
+        else:
+            s = ",\n".join(["  " + str(x) for x in self.paths])
+            return f"PathResolver(paths=[\n{s}\n])"
 
     def reset(self):
         """
