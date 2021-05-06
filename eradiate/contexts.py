@@ -1,7 +1,11 @@
+from typing import Dict, Optional
+
 import attr
+import pint
 import pinttr
 
 import eradiate
+
 from ._attrs import documented, parse_docs
 from ._units import unit_context_config as ucc
 from ._units import unit_registry as ureg
@@ -28,7 +32,7 @@ class SpectralContext:
     """
 
     @staticmethod
-    def new(**kwargs):
+    def new(**kwargs) -> "SpectralContext":
         """
         Create a new instance of one of the :class:`SpectralContext` child
         classes. *The instantiated class is defined based on the currently active
@@ -55,7 +59,7 @@ class SpectralContext:
         raise ModeError(f"unsupported mode '{mode.id}'")
 
     @staticmethod
-    def from_dict(d):
+    def from_dict(d: Dict) -> "SpectralContext":
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -92,7 +96,7 @@ class SpectralContext:
 
 @attr.s
 class MonoSpectralContext(SpectralContext):
-    wavelength = pinttr.ib(
+    wavelength: pint.Quantity = pinttr.ib(
         default=ureg.Quantity(550.0, ureg.nm),
         units=ucc.deferred("wavelength"),
     )
@@ -107,15 +111,20 @@ class KernelDictContext:
     when generating kernel dictionaries associated with a :class:`.SceneElement`
     instance.
     """
-    spectral_ctx = documented(
-        attr.ib(factory=SpectralContext.new, converter=SpectralContext.convert),
+
+    spectral_ctx: SpectralContext = documented(
+        attr.ib(
+            factory=SpectralContext.new,
+            converter=SpectralContext.convert,
+            validator=attr.validators.instance_of(SpectralContext),
+        ),
         doc="Spectral context (used to evaluate quantities with any degree "
         "or kind of dependency vs spectrally varying quantities).",
         type=":class:`.SpectralContext`",
         default=":meth:`SpectralContext.new() <.SpectralContext.new>`",
     )
 
-    ref = documented(
+    ref: bool = documented(
         attr.ib(default=True, converter=bool),
         doc="If ``True``, use references when relevant during kernel dictionary "
         "generation.",
@@ -123,7 +132,7 @@ class KernelDictContext:
         default="True",
     )
 
-    atmosphere_kernel_width = documented(
+    atmosphere_kernel_width: Optional[pint.Quantity] = documented(
         pinttr.ib(default=None, units=ucc.deferred("length")),
         doc="If relevant, stores the width of the kernel object associated with "
         "the atmosphere.",
