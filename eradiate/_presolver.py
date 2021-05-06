@@ -1,8 +1,8 @@
 """A simple file resolver."""
 
-import os
 from pathlib import Path
 
+from ._config import config
 from ._util import Singleton
 
 
@@ -43,46 +43,25 @@ class PathResolver(metaclass=Singleton):
 
     def reset(self):
         """
-        Reset path list to default value: ``[$PWD, $ERADIATE_DIR/resources/data]``.
+        Reset path list to default value:
+        ``[$PWD, $ERADIATE_DATA_PATH, $ERADIATE_DIR/resources/data]``.
         """
 
-        eradiate_dir = os.getenv("ERADIATE_DIR")
-        if eradiate_dir is None:
-            raise ValueError(
-                "Environment variable ERADIATE_DIR is not set.\n"
-                "Please set this variable to the absolute path of the Eradiate "
-                "installation folder.\n"
-                "If you are running Eradiate directly from the sources, "
-                "then you can alternatively source the provided setpath.sh "
-                "script."
-            )
-
-        eradiate_path = Path(eradiate_dir).absolute()
-        eradiate_init = eradiate_path / "eradiate" / "__init__.py"
-        if not eradiate_init.exists():
-            raise ValueError(
-                f"Could not find {eradiate_init} file.\n"
-                "Please make sure the ERADIATE_DIR environment variable is "
-                "correctly set to the Eradiate "
-                "installation folder.\n"
-                "If you are running Eradiate directly from the sources, "
-                "then you can alternatively source the provided setpath.sh "
-                "script."
-            )
-
         self.clear()
-        for path in [
-            Path.cwd(),  # Current working directory
-            eradiate_path / "resources" / "data",  # Eradiate data directory
-        ]:
-            self.append(path)
+        self.append(Path.cwd())  # Current working directory
+
+        if config.data_path:
+            self.append(*config.data_path)  # Path list
+
+        self.append(config.dir / "resources" / "data")  # Eradiate data directory
 
     def clear(self):
         """Clear the list of search paths."""
         self.paths.clear()
 
     def contains(self, path):
-        """Check if a given path is included in the search path list.
+        """
+        Check if a given path is included in the search path list.
 
         Parameter ``path`` (path-like)
             Path to be searched for.
@@ -112,7 +91,8 @@ class PathResolver(metaclass=Singleton):
         self.paths.pop(index)
 
     def prepend(self, path):
-        """Prepend an entry at the beginning of the list of search paths.
+        """
+        Prepend an entry at the beginning of the list of search paths.
 
         Parameter ``path`` (path-like)
             Path to prepend to the path list.
@@ -124,7 +104,8 @@ class PathResolver(metaclass=Singleton):
         self.paths.insert(0, path_absolute)
 
     def append(self, *paths):
-        """Append an entry to the end of the list of search paths.
+        """
+        Append an entry to the end of the list of search paths.
 
         Parameter ``path`` (path-like):
             Path to append to the path list.
@@ -137,8 +118,8 @@ class PathResolver(metaclass=Singleton):
             self.paths.append(path_absolute)
 
     def resolve(self, path):
-        """Walk through the list of search paths and try to resolve the input
-        path.
+        """
+        Walk through the list of search paths and try to resolve the input path.
 
         Parameter ``path`` (path-like):
             Path to try and resolve.
