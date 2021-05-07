@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
 import attr
@@ -13,7 +14,7 @@ from .exceptions import ModeError
 
 
 @attr.s
-class SpectralContext:
+class SpectralContext(ABC):
     """
     Context data structure holding state relevant to the evaluation of spectrally
     dependent objects.
@@ -26,6 +27,11 @@ class SpectralContext:
     to create :class:`.SpectralContext` child class objects through the
     :meth:`.SpectralContext.new` class method constructor.
     """
+
+    @property
+    @abstractmethod
+    def wavelength(self):
+        pass
 
     @staticmethod
     def new(**kwargs) -> "SpectralContext":
@@ -90,12 +96,31 @@ class SpectralContext:
         return value
 
 
+@parse_docs
 @attr.s
 class MonoSpectralContext(SpectralContext):
-    wavelength: pint.Quantity = pinttr.ib(
-        default=ureg.Quantity(550.0, ureg.nm),
-        units=ucc.deferred("wavelength"),
+    """
+    Monochromatic spectral context data structure.
+    """
+
+    _wavelength: pint.Quantity = documented(
+        pinttr.ib(
+            default=ureg.Quantity(550.0, ureg.nm),
+            units=ucc.deferred("wavelength"),
+        ),
+        doc="A single wavelength value.\n\nUnit-enabled field "
+        "(default: ucc[wavelength]).",
+        type="float",
+        default="550.0 nm",
     )
+
+    @property
+    def wavelength(self):
+        return self._wavelength
+
+    @wavelength.setter
+    def wavelength(self, value):
+        self._wavelength = value
 
 
 @parse_docs

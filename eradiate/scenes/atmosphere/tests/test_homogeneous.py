@@ -2,7 +2,6 @@ import numpy as np
 import pinttr
 import pytest
 
-import eradiate
 from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere._homogeneous import HomogeneousAtmosphere
 from eradiate.scenes.core import KernelDict
