@@ -8,13 +8,16 @@ from eradiate.scenes.measure._core import (
 
 
 def test_spectral_config(mode_mono):
+    """
+    Unit tests for :class:`.MeasureSpectralConfig` and child classes.
+    """
     # The new() class method constructor selects an appropriate config class
     # depending on the active mode
-    cfg = MeasureSpectralConfig.new(wavelengths=[500., 600.])
+    cfg = MeasureSpectralConfig.new(wavelengths=[500.0, 600.0])
     assert isinstance(cfg, MonoMeasureSpectralConfig)
 
     # Generated spectral contexts are of the appropriate type and in correct numbers
-    ctxs = list(cfg.spectral_ctxs())
+    ctxs = cfg.spectral_ctxs()
     assert len(ctxs) == 2
     assert all(isinstance(ctx, MonoSpectralContext) for ctx in ctxs)
 

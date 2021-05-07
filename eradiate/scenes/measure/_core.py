@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Iterable
+from typing import Dict, List, Tuple
 
 import attr
 import numpy as np
 import pint
 import pinttr
+import xarray
 import xarray as xr
 
 import eradiate
@@ -14,27 +15,27 @@ from ... import converters, validators
 from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
 from ..._units import unit_context_config as ucc
-from ..._units import unit_context_kernel as uck
 from ..._units import unit_registry as ureg
 from ..._util import ensure_array
 from ...contexts import MonoSpectralContext, SpectralContext
-from ...exceptions import ModeError
+from ...exceptions import ModeError, UnsupportedModeError
 
 
 @parse_docs
-@attr.s
+@attr.s(frozen=True)
 class SensorInfo:
     """
     Data type to store information about a sensor associated with a measure.
+    Instances are immutable.
     """
 
-    id = documented(
+    id: str = documented(
         attr.ib(),
         doc="Sensor unique identifier.",
         type="str",
     )
 
-    spp = documented(
+    spp: int = documented(
         attr.ib(),
         doc="Sensor sample count.",
         type="int",
@@ -52,9 +53,9 @@ class MeasureSpectralConfig(ABC):
     """
 
     @abstractmethod
-    def spectral_ctxs(self) -> Iterable[SpectralContext]:
+    def spectral_ctxs(self) -> List[SpectralContext]:
         """
-        This generator yields :class:`.SpectralContext` objects based on the
+        Return a list of :class:`.SpectralContext` objects based on the
         stored spectral configuration. These data structures can be used to
         drive the evaluation of spectrally dependent components during a
         spectral loop.
@@ -155,9 +156,11 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
     def wavelengths(self, value):
         self._wavelengths = value
 
-    def spectral_ctxs(self) -> Iterable[MonoSpectralContext]:
-        for wavelength in self._wavelengths:
-            yield MonoSpectralContext(wavelength=wavelength)
+    def spectral_ctxs(self) -> List[MonoSpectralContext]:
+        return [
+            MonoSpectralContext(wavelength=wavelength)
+            for wavelength in self._wavelengths
+        ]
 
 
 @parse_docs
@@ -189,35 +192,36 @@ class Measure(SceneElement, ABC):
         default="None",
     )
 
-    spp = documented(
+    spp: int = documented(
         attr.ib(default=32, converter=int, validator=validators.is_positive),
         doc="Number of samples per pixel.",
         type="int",
         default="32",
     )
 
-    raw_results = documented(
+    raw_results: xarray.Dataset = documented(
         attr.ib(default=None),
         doc="Storage for raw results yielded by the kernel.",
         default="None",
+        type=":class:`xarray.Dataset` or None",
     )
 
     # Private attributes
     # Sample count which, if exceeded, should trigger sample count splitting in
     # single-precision modes
-    _spp_splitting_threshold = attr.ib(
+    _spp_splitting_threshold: int = attr.ib(
         default=int(1e5), converter=int, validator=validators.is_positive, repr=False
     )
 
     @property
     @abstractmethod
-    def film_resolution(self):
+    def film_resolution(self) -> Tuple[int, int]:
         """
         Getter for film resolution.
         """
         pass
 
-    def sensor_infos(self):
+    def sensor_infos(self) -> List[SensorInfo]:
         """
         Return a tuple of sensor information data structures.
 
@@ -234,7 +238,7 @@ class Measure(SceneElement, ABC):
                 SensorInfo(id=f"{self.id}_{i}", spp=spp) for i, spp in enumerate(spps)
             ]
 
-    def _split_spp(self):
+    def _split_spp(self) -> List[int]:
         """
         Generate sensor specifications, possibly applying sample count splitting
         in single-precision mode.
@@ -265,59 +269,108 @@ class Measure(SceneElement, ABC):
         else:
             return [self.spp]
 
-    def _aggregate_raw_results(self):
+    def _raw_results_empty(self) -> xarray.Dataset:
+        """
+        Create an empty data set to store raw results.
+
+        Dimensions:
+
+        * film width
+        * film height
+        * sensor (for SPP split)
+        * spectral coordinate
+
+        Returns → :class:`~xarray.Dataset`:
+            Empty dataset (filled with NaN).
+        """
+        sensor_ids = [x.id for x in self.sensor_infos()]
+        sensor_spps = [x.spp for x in self.sensor_infos()]
+
+        if eradiate.mode().is_monochromatic():
+            wavelengths = [
+                x.wavelength.m_as(ucc.get("wavelength"))
+                for x in self.spectral_cfg.spectral_ctxs()
+            ]
+
+            return xr.Dataset(
+                data_vars=(
+                    {
+                        "raw_results": (
+                            ["x", "y", "sensor", "wavelength"],
+                            np.full(
+                                (
+                                    *self.film_resolution,
+                                    len(sensor_ids),
+                                    len(wavelengths),
+                                ),
+                                np.nan,
+                            ),
+                        ),
+                        "spp": (
+                            ["sensor_id"],
+                            sensor_spps,
+                            {"long_name": "sample count"},
+                        ),
+                    }
+                ),
+                coords={
+                    "x": (
+                        "x",
+                        [float(x) for x in range(self.film_resolution[0])],
+                        {"long_name": "film width coordinate"},
+                    ),
+                    "y": (
+                        "y",
+                        [float(x) for x in range(self.film_resolution[1])],
+                        {"long_name": "film height coordinate"},
+                    ),
+                    "wavelength": (
+                        "wavelength",
+                        wavelengths,
+                        {
+                            "long_name": "wavelength",
+                            "units": str(ucc.get("wavelength")),
+                        },
+                    ),
+                    "sensor_id": (
+                        "sensor_id",
+                        sensor_ids,
+                        {"long_name": "sensor ID"},
+                    ),
+                },
+            )
+
+        else:
+            raise UnsupportedModeError(supported="monochromatic")
+
+    def _raw_results_aggregated(self) -> xarray.Dataset:
         """
         Aggregate raw sensor results if multiple sensors were used.
 
-        Returns → array-like:
+        Returns → :class:`xarray.Dataset`:
             Processed results.
         """
         if self.raw_results is None:
             raise ValueError("no raw results stored, cannot aggregate")
 
-        sensor_values = np.array([self.raw_results[x.id] for x in self.sensor_infos()])
-        sensor_spps = np.array([x.spp for x in self.sensor_infos()])
-        spp_sum = np.sum(sensor_spps)
+        ds = self.raw_results
+        weights = xr.DataArray(
+            ds.data_vars["spp"],
+            coords={"sensor_id": ds.coords["sensor_id"]},
+            dims=["sensor_id"],
+        )
+        return ds.weighted(weights).mean(dim="sensor_id")
 
-        # Compute weighted sum of sensor contributions
-        # transpose() is required to correctly position the dimension on which
-        # dot() operates
-        result = np.dot(sensor_values.transpose(), sensor_spps).transpose()
-        result /= spp_sum
-
-        # Reshape result to film size
-        result = np.reshape(result, (result.shape[0], result.shape[1]))
-        return result
-
-    def postprocessed_results(self):
+    def postprocessed_results(self) -> xarray.Dataset:
         """
-        Post-process raw sensor results and encapsulate them in a
-        :class:`~xarray.Dataset`.
+        Return post-processed raw sensor results.
 
         Returns → :class:`~xarray.Dataset`:
             Post-processed results.
         """
-        data = self._aggregate_raw_results()
-
-        # Store radiance to a DataArray
-        result = xr.Dataset()
-        result["lo"] = xr.DataArray(
-            data,
-            coords=(
-                ("y", range(data.shape[0])),
-                ("x", range(data.shape[1])),
-            ),
-        )
-
-        # Add spectral coordinate
-        if eradiate.mode().is_monochromatic():
-            wavelength = self.spectral_ctx.wavelength.m_as(uck.get("wavelength"))
-            result = result.expand_dims({"wavelength": [wavelength]}, axis=-1)
-
-        else:
-            raise ModeError(f"unsupported mode '{eradiate.mode().id}'")
-
-        return result
+        # Default implementation simply aggregates SPP-split raw results;
+        # overloads can perform additional post-processing and add metadata
+        return self._raw_results_aggregated()
 
     @abstractmethod
     def _base_dicts(self):
