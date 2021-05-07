@@ -164,9 +164,7 @@ class HeterogeneousAtmosphere(Atmosphere):
         # The file should exist if no albedo value is provided to create it
         if self.profile is None:
             if value is None:
-                raise ValueError(
-                    "if 'profile' is not set, 'albedo_fname' must be set"
-                )
+                raise ValueError("if 'profile' is not set, 'albedo_fname' must be set")
             try:
                 return is_file(self, attribute, value)
             except FileNotFoundError:
@@ -233,41 +231,33 @@ class HeterogeneousAtmosphere(Atmosphere):
         else:
             return ureg.Quantity(100.0, ureg.km)  # matches the default value
 
-    @property
-    def kernel_width(self):
-        """Return scene width based on configuration."""
-
     def kernel_width(self, ctx=None):
         if self.width == "auto":
             spectral_ctx = ctx.spectral_ctx if ctx is not None else None
 
             if self.profile is None:
                 albedo = ureg.Quantity(
-                    read_binary_grid3d(self.albedo_fname), ureg.dimensionless
+                    read_binary_grid3d(self.albedo_fname),
+                    ureg.dimensionless,
                 )
                 sigma_t = ureg.Quantity(
                     read_binary_grid3d(self.sigma_t_fname),
                     uck.get("collision_coefficient"),
                 )
+                min_sigma_s = (sigma_t * albedo).min()
             else:
-                albedo = self.profile.albedo(spectral_ctx)
-                sigma_t = self.profile.sigma_t(spectral_ctx)
+                min_sigma_s = self.profile.sigma_s(spectral_ctx).min()
 
-            sigma_s = sigma_t * albedo
-            min_sigma_s = sigma_s.min()
-            if min_sigma_s > 0.0:
-                width = 10.0 / min_sigma_s
-                if width > ureg.Quantity(1e3, "km"):
-                    width = ureg.Quantity(1e3, "km")
-            else:
+            if min_sigma_s <= 0.0:
                 raise ValueError(
-                    "cannot compute width automatically when "
-                    "scattering coefficient reaches zero"
+                    "cannot compute width automatically when scattering "
+                    "coefficient reaches zero"
                 )
-        else:
-            width = self.width
 
-        return width
+            return min(10.0 / min_sigma_s, ureg.Quantity(1e3, "km"))
+
+        else:
+            return self.width
 
     def make_volume_data(self, fields=None, spectral_ctx=None):
         """
