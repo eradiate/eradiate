@@ -269,7 +269,7 @@ class Measure(SceneElement, ABC):
         else:
             return [self.spp]
 
-    def _raw_results_empty(self) -> xarray.Dataset:
+    def raw_results_empty(self) -> xarray.Dataset:
         """
         Create an empty data set to store raw results.
 

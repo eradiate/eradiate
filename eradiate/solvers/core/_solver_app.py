@@ -99,16 +99,28 @@ class SolverApp(ABC):
         # Unset results for error detection
         measure.raw_results = None
 
-        # Initialise context
-        spectral_ctx = measure.spectral_ctx
-        ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
+        # Create raw result storage
+        ds = measure.raw_results_empty()
 
-        # Define sensor IDs
-        sensor_ids = [sensor_info.id for sensor_info in measure.sensor_infos()]
+        # Spectral loop
+        for spectral_ctx in measure.spectral_cfg.spectral_ctxs():
+            # Initialise context
+            ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
 
-        # Run simulation
-        kernel_dict = self.scene.kernel_dict(ctx=ctx)
-        measure.raw_results = runner(kernel_dict, sensor_ids)
+            # Define sensor IDs
+            sensor_ids = [sensor_info.id for sensor_info in measure.sensor_infos()]
+
+            # Run simulation
+            kernel_dict = self.scene.kernel_dict(ctx=ctx)
+            run_results = runner(kernel_dict, sensor_ids)
+
+            # Collect results
+            for sensor_id, sensor_results in run_results.items():
+                ds["raw_results"].loc[
+                    dict(wavelength=spectral_ctx.wavelength, sensor_id=sensor_id)
+                ] = sensor_results.squeeze()
+
+        measure.raw_results = ds
 
     def postprocess(self, measure=None):
         """
