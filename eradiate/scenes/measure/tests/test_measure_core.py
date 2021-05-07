@@ -1,4 +1,22 @@
-from eradiate.scenes.measure._core import Measure, SensorInfo
+from eradiate.contexts import MonoSpectralContext
+from eradiate.scenes.measure._core import (
+    Measure,
+    MeasureSpectralConfig,
+    MonoMeasureSpectralConfig,
+    SensorInfo,
+)
+
+
+def test_spectral_config(mode_mono):
+    # The new() class method constructor selects an appropriate config class
+    # depending on the active mode
+    cfg = MeasureSpectralConfig.new(wavelengths=[500., 600.])
+    assert isinstance(cfg, MonoMeasureSpectralConfig)
+
+    # Generated spectral contexts are of the appropriate type and in correct numbers
+    ctxs = list(cfg.spectral_ctxs())
+    assert len(ctxs) == 2
+    assert all(isinstance(ctx, MonoSpectralContext) for ctx in ctxs)
 
 
 def test_measure(mode_mono):

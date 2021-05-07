@@ -22,10 +22,6 @@ class SpectralContext:
     around spectral information to kernel dictionary emission methods which
     require spectral configuration information.
 
-    :class:`Measures <.Measure>` also store a user-configured
-    :class:`.SpectralContext` instance which drives contextual spectral
-    configuration in solver applications.
-
     While this class is abstract, it should however be the main entry point
     to create :class:`.SpectralContext` child class objects through the
     :meth:`.SpectralContext.new` class method constructor.
