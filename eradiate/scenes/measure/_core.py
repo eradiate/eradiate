@@ -296,7 +296,7 @@ class Measure(SceneElement, ABC):
                 data_vars=(
                     {
                         "raw_results": (
-                            ["x", "y", "sensor", "wavelength"],
+                            ["x", "y", "sensor_id", "wavelength"],
                             np.full(
                                 (
                                     *self.film_resolution,
