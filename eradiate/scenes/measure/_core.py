@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import attr
 import numpy as np
@@ -161,6 +161,114 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
             MonoSpectralContext(wavelength=wavelength)
             for wavelength in self._wavelengths
         ]
+
+
+@attr.s
+class MeasureResults:
+    raw: Optional[Dict] = attr.ib(
+        default=None,
+        validator=attr.validators.optional(attr.validators.instance_of(dict)),
+    )
+
+    def to_dataset(self) -> xarray.Dataset:
+        """
+        Repack raw results as a :class:`xarray.Dataset`.
+
+        Dimensions:
+
+        * spectral coordinate
+        * sensor (for SPP split)
+        * film width
+        * film height
+
+        Returns → :class:`~xarray.Dataset`:
+            Raw sensor data repacked as a :class:`~xarray.Dataset`.
+        """
+        if self.raw is None:
+            raise ValueError("no raw results to convert to xarray.Dataset")
+
+        if eradiate.mode().is_monochromatic():
+            spectral_coord_label = "w"
+            spectral_coord_metadata = {
+                "long_name": "wavelength",
+                "units": str(ucc.get("wavelength")),
+            }
+        else:
+            raise UnsupportedModeError(supported="monochromatic")
+
+        # Collect coordinate values
+        spectral_coords = set()
+        sensor_ids = set()
+        film_size = np.zeros((2,), dtype=int)
+
+        for spectral_coord, val in self.raw.items():
+            spectral_coords.add(spectral_coord)
+            for sensor_id, data in val["values"].items():
+                sensor_ids.add(sensor_id)
+                film_size = np.maximum(film_size, data.shape)
+
+        spectral_coords = sorted(spectral_coords)
+        sensor_ids = sorted(sensor_ids)
+
+        # Collect values
+        data = np.full((len(spectral_coords), len(sensor_ids), *film_size), np.nan)
+
+        for i_spectral, spectral_coord in enumerate(spectral_coords):
+            for i_sensor, sensor_id in enumerate(sensor_ids):
+                # Note: This doesn't handle heterogeneous sensor film sizes
+                # (i.e. cases in which sensors have different film sizes).
+                # To add support for it, blitting is probably a good approach
+                # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
+                data[i_spectral, i_sensor] = self.raw[spectral_coord]["values"][
+                    sensor_id
+                ]
+
+        # Collect sample counts
+        spps = np.full((len(spectral_coords), len(sensor_ids)), np.nan, dtype=int)
+
+        for i_spectral, spectral_coord in enumerate(spectral_coords):
+            for i_sensor, sensor_id in enumerate(sensor_ids):
+                spps[i_spectral, i_sensor] = self.raw[spectral_coord]["spp"][sensor_id]
+
+        # Construct dataset
+        return xr.Dataset(
+            data_vars=(
+                {
+                    "raw": (
+                        [spectral_coord_label, "sensor_id", "x", "y"],
+                        data,
+                        {"long name": "raw sensor values"},
+                    ),
+                    "spp": (
+                        [spectral_coord_label, "sensor_id"],
+                        spps,
+                        {"long name": "sample count"},
+                    ),
+                }
+            ),
+            coords={
+                "x": (
+                    "x",
+                    [float(x) for x in range(film_size[0])],
+                    {"long_name": "film width coordinate"},
+                ),
+                "y": (
+                    "y",
+                    [float(x) for x in range(film_size[1])],
+                    {"long_name": "film height coordinate"},
+                ),
+                spectral_coord_label: (
+                    spectral_coord_label,
+                    spectral_coords,
+                    spectral_coord_metadata,
+                ),
+                "sensor_id": (
+                    "sensor_id",
+                    sensor_ids,
+                    {"long_name": "sensor ID"},
+                ),
+            },
+        )
 
 
 @parse_docs
