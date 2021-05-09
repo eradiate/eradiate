@@ -1,6 +1,7 @@
-import numpy as np
+from typing import Dict, List, Mapping, Optional
 
 import mitsuba
+import numpy as np
 
 from ...exceptions import KernelVariantError
 
@@ -13,22 +14,33 @@ def _check_variant():
         raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
 
-def runner(kernel_dict, sensor_ids=None):
+def runner(kernel_dict: Mapping, sensor_ids: Optional[List] = None) -> Dict:
     """
     Low-level runner function. Takes a kernel dictionary, instantiates the
     corresponding kernel scene and runs the integrator with all sensors.
 
-    .. important::
-
-       Prior to usage, a kernel variant must be selected using
+    .. important:: Prior to usage, a kernel variant must be selected using
        :func:`~mitsuba.set_variant`.
 
-    Parameter ``kernel_dict`` (:class:.KernelDict`):
+    Parameter ``kernel_dict`` (:class:`.KernelDict`):
         Dictionary describing the kernel scene.
 
     Returns → dict:
-        Dictionary mapping sensor IDs to the corresponding recorded data.
-        Sensors without an ID are assigned a default key.
+        Nested dictionaries with the following structure:
+
+        .. code:: python
+           {
+               "values": {
+                   "sensor_0": data_0,
+                   "sensor_1": data_1,
+                   ...
+               },
+               "spp": {
+                   "sensor_0": sample_count_0,
+                   "sensor_1": sample_count_1,
+                   ...
+               },
+           }
     """
     _check_variant()
 
@@ -66,6 +78,14 @@ def runner(kernel_dict, sensor_ids=None):
         sensor_id = str(sensor.id())
         if not sensor_id:  # Assign default ID if sensor doesn't have one
             sensor_id = f"__sensor_{i_sensor}"
-        results[sensor_id] = result
+
+        if "values" not in results:
+            results["values"] = {}
+        results["values"][sensor_id] = result
+
+        # Add sensor SPPs
+        if "spp" not in results:
+            results["spp"] = {}
+        results["spps"][sensor_id] = sensor.sampler().sample_count()
 
     return results
