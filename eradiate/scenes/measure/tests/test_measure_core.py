@@ -1,6 +1,9 @@
+import numpy as np
+
 from eradiate.contexts import MonoSpectralContext
 from eradiate.scenes.measure._core import (
     Measure,
+    MeasureResults,
     MeasureSpectralConfig,
     MonoMeasureSpectralConfig,
     SensorInfo,
@@ -20,6 +23,43 @@ def test_spectral_config(mode_mono):
     ctxs = cfg.spectral_ctxs()
     assert len(ctxs) == 2
     assert all(isinstance(ctx, MonoSpectralContext) for ctx in ctxs)
+
+
+def test_measure_results(mode_mono):
+    """
+    Unit tests for :class:`MeasureResults`.
+    """
+    results = MeasureResults(
+        # This is our test input
+        raw={
+            550.0: {
+                "values": {
+                    "sensor_0": np.zeros((3, 3)),
+                    "sensor_1": np.ones((3, 3)),
+                },
+                "spp": {
+                    "sensor_0": 100,
+                    "sensor_1": 50,
+                },
+            },
+            600.0: {
+                "values": {
+                    "sensor_0": np.ones((3, 3)),
+                    "sensor_1": np.zeros((3, 3)),
+                },
+                "spp": {
+                    "sensor_0": 100,
+                    "sensor_1": 50,
+                },
+            },
+        }
+    )
+
+    ds = results.to_dataset()
+    assert set(ds.data_vars) == {"raw", "spp"}
+    assert set(ds.coords) == {"sensor_id", "w", "x", "y"}
+    assert ds.raw.shape == (2, 2, 3, 3)
+    assert ds.spp.shape == (2, 2)
 
 
 def test_measure(mode_mono):
