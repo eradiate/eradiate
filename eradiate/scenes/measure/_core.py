@@ -243,7 +243,7 @@ class MeasureResults:
             spectral_coords.add(spectral_coord)
             for sensor_id, data in val["values"].items():
                 sensor_ids.add(sensor_id)
-                film_size = np.maximum(film_size, data.shape)
+                film_size = np.maximum(film_size, data.shape[:2])
 
         spectral_coords = sorted(spectral_coords)
         sensor_ids = sorted(sensor_ids)
@@ -259,7 +259,9 @@ class MeasureResults:
                 # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
                 data[i_spectral, i_sensor] = self.raw[spectral_coord]["values"][
                     sensor_id
-                ]
+                ][..., 0]
+                # This latter indexing selects only one channel in the raw data
+                # array: this works with mono variants but will fail otherwise
 
         # Collect sample counts
         spps = np.full((len(spectral_coords), len(sensor_ids)), np.nan, dtype=int)

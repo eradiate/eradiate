@@ -33,8 +33,8 @@ def runner(kernel_dict: KernelDict, sensor_ids: Optional[List] = None) -> Dict:
 
            {
                "values": {
-                   "sensor_0": data_0,
-                   "sensor_1": data_1,
+                   "sensor_0": data_0, # Arrays of shape (width, height, n_channels)
+                   "sensor_1": data_1, # (n_channels == 1 for mono variants, possibly more)
                    ...
                },
                "spp": {
