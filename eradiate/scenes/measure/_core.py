@@ -163,18 +163,56 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
         ]
 
 
+@parse_docs
 @attr.s
 class MeasureResults:
-    raw: Optional[Dict] = attr.ib(
-        default=None,
-        validator=attr.validators.optional(attr.validators.instance_of(dict)),
+    """
+    Data structure storing simulation results corresponding to a measure.
+    """
+
+    raw: Optional[Dict] = documented(
+        attr.ib(
+            factory=dict,
+            validator=attr.validators.optional(attr.validators.instance_of(dict)),
+        ),
+        doc="Raw results stored as nested dictionaries with the following structure:\n"
+        "\n"
+        ".. code:: python\n\n"
+        "   {\n"
+        "       spectral_key_0: {\n"
+        '           "values": {\n'
+        '               "sensor_0": data_0,\n'
+        '               "sensor_1": data_1,\n'
+        "               ...\n"
+        "           },\n"
+        '           "spp": {\n'
+        '               "sensor_0": sample_count_0,\n'
+        '               "sensor_1": sample_count_1,\n'
+        "               ...\n"
+        "           },\n"
+        "       },\n"
+        "       spectral_key_1: {\n"
+        '               "values": {\n'
+        '                   "sensor_0": data_0,\n'
+        '                   "sensor_1": data_1,\n'
+        "                   ...\n"
+        "               },\n"
+        '               "spp": {\n'
+        '                   "sensor_0": sample_count_0,\n'
+        '                   "sensor_1": sample_count_1,\n'
+        "                   ...\n"
+        "               },\n"
+        "           }\n"
+        "       }\n"
+        "   }\n",
+        type="dict",
+        default="{}",
     )
 
-    def to_dataset(self) -> xarray.Dataset:
+    def to_dataset(self, aggregate_spps=False) -> xarray.Dataset:
         """
-        Repack raw results as a :class:`xarray.Dataset`.
-
-        Dimensions:
+        Repack raw results as a :class:`xarray.Dataset`. Dimensions are as
+        follows:
 
         * spectral coordinate
         * sensor (for SPP split)
@@ -184,7 +222,7 @@ class MeasureResults:
         Returns → :class:`~xarray.Dataset`:
             Raw sensor data repacked as a :class:`~xarray.Dataset`.
         """
-        if self.raw is None:
+        if not self.raw:
             raise ValueError("no raw results to convert to xarray.Dataset")
 
         if eradiate.mode().is_monochromatic():
@@ -231,7 +269,7 @@ class MeasureResults:
                 spps[i_spectral, i_sensor] = self.raw[spectral_coord]["spp"][sensor_id]
 
         # Construct dataset
-        return xr.Dataset(
+        result = xr.Dataset(
             data_vars=(
                 {
                     "raw": (
@@ -270,6 +308,20 @@ class MeasureResults:
             },
         )
 
+        if not aggregate_spps:
+            return result
+
+        # Aggregate SPPs and drop sensor ID dimension
+        # Note: This will not work if multiple sensors are used for a purpose other
+        # than SPP splitting; should this happen, this part must be updated
+        weights = result.data_vars["spp"]
+        result = result.assign(
+            {"raw": result["raw"].weighted(weights).mean(dim="sensor_id")}
+        )
+        result = result.assign({"spp": result.data_vars["spp"].sum(dim="sensor_id")})
+
+        return result.drop_dims("sensor_id")
+
 
 @parse_docs
 @attr.s
@@ -295,8 +347,8 @@ class Measure(SceneElement, ABC):
         ),
         doc="Spectral configuration of the measure. Must match the current "
         "operational mode. Can be passed as a dictionary, which will be "
-        "interpreted by :meth:`SpectralContext.from_dict`.",
-        type=":meth:`SpectralContext.new() <.SpectralContext.new>`",
+        "interpreted by :meth:`MeasureSpectralConfig.from_dict`.",
+        type=":meth:`MeasureSpectralConfig.new() <.MeasureSpectralConfig.new>`",
         default="None",
     )
 
@@ -307,11 +359,11 @@ class Measure(SceneElement, ABC):
         default="32",
     )
 
-    raw_results: xarray.Dataset = documented(
-        attr.ib(default=None),
+    results: MeasureResults = documented(
+        attr.ib(factory=MeasureResults),
         doc="Storage for raw results yielded by the kernel.",
-        default="None",
-        type=":class:`xarray.Dataset` or None",
+        default=":class:`MeasureResults() <.MeasureResults>",
+        type=":class:`.MeasureResults`",
     )
 
     # Private attributes
@@ -377,80 +429,6 @@ class Measure(SceneElement, ABC):
         else:
             return [self.spp]
 
-    def raw_results_empty(self) -> xarray.Dataset:
-        """
-        Create an empty data set to store raw results.
-
-        Dimensions:
-
-        * film width
-        * film height
-        * sensor (for SPP split)
-        * spectral coordinate
-
-        Returns → :class:`~xarray.Dataset`:
-            Empty dataset (filled with NaN).
-        """
-        sensor_ids = [x.id for x in self.sensor_infos()]
-        sensor_spps = [x.spp for x in self.sensor_infos()]
-
-        if eradiate.mode().is_monochromatic():
-            wavelengths = [
-                x.wavelength.m_as(ucc.get("wavelength"))
-                for x in self.spectral_cfg.spectral_ctxs()
-            ]
-
-            return xr.Dataset(
-                data_vars=(
-                    {
-                        "raw_results": (
-                            ["x", "y", "sensor_id", "wavelength"],
-                            np.full(
-                                (
-                                    *self.film_resolution,
-                                    len(sensor_ids),
-                                    len(wavelengths),
-                                ),
-                                np.nan,
-                            ),
-                        ),
-                        "spp": (
-                            ["sensor_id"],
-                            sensor_spps,
-                            {"long_name": "sample count"},
-                        ),
-                    }
-                ),
-                coords={
-                    "x": (
-                        "x",
-                        [float(x) for x in range(self.film_resolution[0])],
-                        {"long_name": "film width coordinate"},
-                    ),
-                    "y": (
-                        "y",
-                        [float(x) for x in range(self.film_resolution[1])],
-                        {"long_name": "film height coordinate"},
-                    ),
-                    "wavelength": (
-                        "wavelength",
-                        wavelengths,
-                        {
-                            "long_name": "wavelength",
-                            "units": str(ucc.get("wavelength")),
-                        },
-                    ),
-                    "sensor_id": (
-                        "sensor_id",
-                        sensor_ids,
-                        {"long_name": "sensor ID"},
-                    ),
-                },
-            )
-
-        else:
-            raise UnsupportedModeError(supported="monochromatic")
-
     def _raw_results_aggregated(self) -> xarray.Dataset:
         """
         Aggregate raw sensor results if multiple sensors were used.
@@ -458,10 +436,10 @@ class Measure(SceneElement, ABC):
         Returns → :class:`xarray.Dataset`:
             Processed results.
         """
-        if self.raw_results is None:
+        if self.results is None:
             raise ValueError("no raw results stored, cannot aggregate")
 
-        ds = self.raw_results
+        ds = self.results
         weights = xr.DataArray(
             ds.data_vars["spp"],
             coords={"sensor_id": ds.coords["sensor_id"]},
@@ -478,7 +456,7 @@ class Measure(SceneElement, ABC):
         """
         # Default implementation simply aggregates SPP-split raw results;
         # overloads can perform additional post-processing and add metadata
-        return self._raw_results_aggregated()
+        return self.results.to_dataset()
 
     @abstractmethod
     def _base_dicts(self):

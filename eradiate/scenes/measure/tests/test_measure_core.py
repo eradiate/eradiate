@@ -27,7 +27,7 @@ def test_spectral_config(mode_mono):
 
 def test_measure_results(mode_mono):
     """
-    Unit tests for :class:`MeasureResults`.
+    Unit tests for :class:`.MeasureResults`.
     """
     results = MeasureResults(
         # This is our test input
@@ -55,11 +55,20 @@ def test_measure_results(mode_mono):
         }
     )
 
+    # Check most raw form of results
     ds = results.to_dataset()
     assert set(ds.data_vars) == {"raw", "spp"}
     assert set(ds.coords) == {"sensor_id", "w", "x", "y"}
     assert ds.raw.shape == (2, 2, 3, 3)
     assert ds.spp.shape == (2, 2)
+
+    # Check SPP aggregation
+    ds = results.to_dataset(aggregate_spps=True)
+    assert set(ds.data_vars) == {"raw", "spp"}
+    assert set(ds.coords) == {"w", "x", "y"}
+    assert ds.raw.shape == (2, 3, 3)
+    assert ds.spp.shape == (2,)
+    assert np.allclose(ds["spp"], (150, 150))
 
 
 def test_measure(mode_mono):
