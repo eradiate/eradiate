@@ -13,14 +13,14 @@ def test_make_dataarray():
             "vaa": [0.0],
             "sza": [0.0],
             "saa": [0.0],
-            "wavelength": [500.0],
+            "w": [500.0],
         },
-        dims=("vza", "vaa", "sza", "saa", "wavelength"),
+        dims=("vza", "vaa", "sza", "saa", "w"),
         var_spec=VarSpec(coord_specs="angular_observation"),
     )
 
-    assert da.dims == ("vza", "vaa", "sza", "saa", "wavelength")
-    assert set(da.coords.keys()) == {"vza", "vaa", "sza", "saa", "wavelength"}
+    assert da.dims == ("vza", "vaa", "sza", "saa", "w")
+    assert set(da.coords.keys()) == {"vza", "vaa", "sza", "saa", "w"}
 
     # Check that metadata are applied properly if required
     da = make_dataarray(
@@ -30,9 +30,9 @@ def test_make_dataarray():
             "vaa": [0.0],
             "sza": [0.0],
             "saa": [0.0],
-            "wavelength": [500.0],
+            "w": [500.0],
         },
-        dims=("vza", "vaa", "sza", "saa", "wavelength"),
+        dims=("vza", "vaa", "sza", "saa", "w"),
         var_spec=VarSpec(coord_specs="angular_observation"),
     )
 

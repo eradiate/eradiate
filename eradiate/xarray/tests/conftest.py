@@ -1,3 +1,4 @@
+
 import numpy as np
 import pytest
 import xarray as xr
@@ -7,13 +8,13 @@ import xarray as xr
 def dataarray_without_metadata():
     return xr.DataArray(
         data=np.random.random((1, 1, 1, 1, 1)),
-        dims=["vza", "vaa", "sza", "saa", "wavelength"],
+        dims=["vza", "vaa", "sza", "saa", "w"],
         coords={
             "vza": [0.0],
             "vaa": [0.0],
             "sza": [0.0],
             "saa": [0.0],
-            "wavelength": [500.0],
+            "w": [500.0],
         },
     )
 
