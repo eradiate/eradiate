@@ -400,8 +400,8 @@ class DistantMeasure(Measure):
         result = super(DistantMeasure, self).postprocessed_results()
 
         # Compute viewing angles at pixel locations
-        # Angle computation must correspond to the direction sampling done by the
-        # kernel plugin
+        # Angle computation must match the kernel plugin's direction sampling
+        # routine
         xs = result.coords["x"].data
         ys = result.coords["y"].data
         theta = np.full((len(ys), len(xs)), np.nan)
@@ -422,7 +422,7 @@ class DistantMeasure(Measure):
                         float((y + 0.5) / len(ys)),
                     ]
                     d = square_to_uniform_hemisphere(xy)
-                    theta[y, x], phi[y, x] = direction_to_angles(d).m_as("deg")
+                    theta[int(y), int(x)], phi[int(y), int(x)] = direction_to_angles(d).m_as("deg")
 
         # Assign angles as non-dimension coords
         result["vza"] = (("y", "x"), theta, {"units": "deg"})
