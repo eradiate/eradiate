@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere._discrete import (
     DiscreteCanopy,
     InstancedLeafCloud,
@@ -18,10 +19,9 @@ from eradiate.scenes.biosphere._discrete import (
     _leaf_cloud_radii,
 )
 from eradiate.scenes.core import KernelDict
-from eradiate.contexts import KernelDictContext
-
 
 # -- Fixture definitions -------------------------------------------------------
+
 
 @pytest.fixture(scope="function")
 def rng():

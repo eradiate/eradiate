@@ -8,6 +8,7 @@ import pytest
 from eradiate import path_resolver, unit_context_config, unit_context_kernel
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
+from eradiate.contexts import KernelDictContext
 from eradiate.data import _presolver
 from eradiate.radprops import AFGL1986RadProfile, US76ApproxRadProfile
 from eradiate.scenes.atmosphere._heterogeneous import (
@@ -16,7 +17,6 @@ from eradiate.scenes.atmosphere._heterogeneous import (
     write_binary_grid3d,
 )
 from eradiate.scenes.core import KernelDict
-from eradiate.contexts import KernelDictContext
 
 
 def test_read_binary_grid3d():

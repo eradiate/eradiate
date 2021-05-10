@@ -2,12 +2,12 @@ import numpy as np
 import pinttr
 import pytest
 
+from eradiate import unit_registry as ureg
+from eradiate._util import onedict_value
+from eradiate.contexts import KernelDictContext
 from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere._homogeneous import HomogeneousAtmosphere
 from eradiate.scenes.core import KernelDict
-from eradiate.contexts import KernelDictContext
-from eradiate._util import onedict_value
-from eradiate import unit_registry as ureg
 
 
 @pytest.mark.parametrize("ref", (False, True))

@@ -4,9 +4,9 @@ import pytest
 import eradiate
 from eradiate import path_resolver
 from eradiate import unit_registry as ureg
+from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import ModeError
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
-from eradiate.contexts import KernelDictContext
 from eradiate.scenes.measure._distant import DistantMeasure
 from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
 

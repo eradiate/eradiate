@@ -5,9 +5,9 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import ModeError
 from eradiate.scenes.biosphere import DiscreteCanopy
-from eradiate.contexts import KernelDictContext
 from eradiate.scenes.measure import DistantMeasure
 from eradiate.solvers.rami import RamiScene, RamiSolverApp
 
