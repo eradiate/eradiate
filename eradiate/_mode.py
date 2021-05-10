@@ -46,7 +46,9 @@ _mode_registry = {
 @attr.s(frozen=True)
 class Mode:
     id: str = attr.ib()
-    precision: ModePrecision = attr.ib(converter=attr.converters.optional(ModePrecision))
+    precision: ModePrecision = attr.ib(
+        converter=attr.converters.optional(ModePrecision)
+    )
     spectrum: ModeSpectrum = attr.ib(converter=attr.converters.optional(ModeSpectrum))
     kernel_variant: str = attr.ib()
     spectral_coord_label: str = attr.ib()

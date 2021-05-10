@@ -1124,7 +1124,11 @@ class InstancedLeafCloud(SceneElement):
         }
 
     def kernel_dict(self, ctx=None):
-        return {**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx), **self.instances(ctx=ctx)}
+        return {
+            **self.bsdfs(ctx=ctx),
+            **self.shapes(ctx=ctx),
+            **self.instances(ctx=ctx),
+        }
 
 
 @BiosphereFactory.register("discrete_canopy")

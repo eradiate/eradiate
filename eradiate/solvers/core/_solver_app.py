@@ -8,11 +8,13 @@ import pinttr
 from matplotlib import pyplot as plt
 
 import eradiate
+
 from ._runner import runner
 from ..._attrs import documented, parse_docs
-from ..._units import unit_context_kernel as uck, unit_registry as ureg
-from ...exceptions import ModeError, UnsupportedModeError
+from ..._units import unit_context_kernel as uck
+from ..._units import unit_registry as ureg
 from ...contexts import KernelDictContext
+from ...exceptions import ModeError, UnsupportedModeError
 from ...scenes.measure import MeasureResults
 from ...scenes.measure._distant import DistantMeasure
 
@@ -162,18 +164,20 @@ class SolverApp(ABC):
 
         # Collect illumination spectral data
         k_irradiance_units = uck.get("irradiance")
-        irradiances = np.array([
-            illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(k_irradiance_units)
-            for spectral_ctx in measure.spectral_cfg.spectral_ctxs()
-        ])
+        irradiances = np.array(
+            [
+                illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
+                    k_irradiance_units
+                )
+                for spectral_ctx in measure.spectral_cfg.spectral_ctxs()
+            ]
+        )
         spectral_coord_label = eradiate.mode().spectral_coord_label
 
         # Add illumination-dependent variables
         ds["irradiance"] = (
             ("sza", "saa", spectral_coord_label),
-            np.array(irradiances * cos_sza).reshape(
-                (1, 1, len(irradiances))
-            ),
+            np.array(irradiances * cos_sza).reshape((1, 1, len(irradiances))),
         )
 
         ds["brdf"] = ds["lo"] / ds["irradiance"]

@@ -1,5 +1,5 @@
-from eradiate.scenes.core import KernelDict
 from eradiate.contexts import KernelDictContext
+from eradiate.scenes.core import KernelDict
 from eradiate.scenes.surface import BlackSurface, LambertianSurface
 
 

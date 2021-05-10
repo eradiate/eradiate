@@ -3,6 +3,7 @@ import datetime
 import attr
 
 import eradiate
+
 from ._scene import OneDimScene
 from ..core._solver_app import SolverApp
 from ... import unit_context_kernel as uck

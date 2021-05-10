@@ -1,8 +1,8 @@
 import numpy as np
 
 from eradiate import unit_registry as ureg
-from eradiate.scenes.core import KernelDict
 from eradiate.contexts import KernelDictContext
+from eradiate.scenes.core import KernelDict
 from eradiate.scenes.surface import RPVSurface
 
 

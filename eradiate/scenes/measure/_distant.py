@@ -423,7 +423,9 @@ class DistantMeasure(Measure):
                         float((y + 0.5) / len(ys)),
                     ]
                     d = square_to_uniform_hemisphere(xy)
-                    theta[int(y), int(x)], phi[int(y), int(x)] = direction_to_angles(d).m_as("deg")
+                    theta[int(y), int(x)], phi[int(y), int(x)] = direction_to_angles(
+                        d
+                    ).m_as("deg")
 
         # Assign angles as non-dimension coords
         result["vza"] = (("y", "x"), theta, {"units": "deg"})
