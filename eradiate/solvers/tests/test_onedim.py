@@ -133,10 +133,10 @@ def test_onedim_solver_app_run(mode_mono):
     results = app.results["toa_hsphere"]
 
     # Post-processing creates expected variables ...
-    assert set(results.data_vars) == {"irradiance", "brf", "brdf", "lo"}
+    assert set(results.data_vars) == {"irradiance", "brf", "brdf", "lo", "spp"}
     # ... dimensions
-    assert set(results["lo"].dims) == {"sza", "saa", "x", "y", "wavelength"}
-    assert set(results["irradiance"].dims) == {"sza", "saa", "wavelength"}
+    assert set(results["lo"].dims) == {"sza", "saa", "x", "y", "w"}
+    assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
     # ... and other coordinates
     assert set(results["lo"].coords) == {
         "sza",
@@ -145,9 +145,9 @@ def test_onedim_solver_app_run(mode_mono):
         "vaa",
         "x",
         "y",
-        "wavelength",
+        "w",
     }
-    assert set(results["irradiance"].coords) == {"sza", "saa", "wavelength"}
+    assert set(results["irradiance"].coords) == {"sza", "saa", "w"}
 
     # We just check that we record something as expected
     assert np.all(results["lo"].data > 0.0)
