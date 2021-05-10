@@ -231,6 +231,9 @@ class MeasureResults:
                 "long_name": "wavelength",
                 "units": str(ucc.get("wavelength")),
             }
+            # TODO: Add channel dimension to dataset (string-labelled;
+            #  value 'intensity' in mono modes;
+            #  values 'R', 'G', 'B' in render modes)
         else:
             raise UnsupportedModeError(supported="monochromatic")
 
