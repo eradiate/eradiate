@@ -411,8 +411,8 @@ class DistantMeasure(Measure):
             for y in ys:
                 for x in xs:
                     sample = float(x + 0.5) / len(xs)
-                    theta[y, x] = 90.0 - 180.0 * sample
-                    phi[y, x] = self.orientation.m_as("deg")
+                    theta[int(y), int(x)] = 90.0 - 180.0 * sample
+                    phi[int(y), int(x)] = self.orientation.m_as("deg")
 
         else:  # Hemisphere case
             for y in ys:
