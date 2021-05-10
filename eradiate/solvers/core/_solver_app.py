@@ -11,8 +11,9 @@ import eradiate
 from ._runner import runner
 from ..._attrs import documented, parse_docs
 from ..._units import unit_context_kernel as uck, unit_registry as ureg
-from ...exceptions import ModeError
+from ...exceptions import ModeError, UnsupportedModeError
 from ...contexts import KernelDictContext
+from ...scenes.measure import MeasureResults
 from ...scenes.measure._distant import DistantMeasure
 
 
@@ -84,7 +85,7 @@ class SolverApp(ABC):
     def process(self, measure=None):
         """
         Run simulation on the configured scene. Raw results yielded by the
-        encapsulated runner are stored in ``self._raw_results``.
+        runner function are stored in ``measure.raw_results``.
 
         .. seealso:: :meth:`postprocess`, :meth:`run`
 
@@ -96,31 +97,29 @@ class SolverApp(ABC):
         if measure is None:
             measure = self.scene.measures[0]
 
-        # Unset results for error detection
-        measure.raw_results = None
-
-        # Create raw result storage
-        ds = measure.raw_results_empty()
+        # Reset measure results
+        measure.results = MeasureResults()
 
         # Spectral loop
         for spectral_ctx in measure.spectral_cfg.spectral_ctxs():
             # Initialise context
             ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
 
-            # Define sensor IDs
+            # Set spectral coordinate value for result storage
+            if eradiate.mode().is_monochromatic():
+                spectral_coord = spectral_ctx.wavelength.magnitude
+            else:
+                raise UnsupportedModeError(supported="monochromatic")
+
+            # Collect sensor IDs
             sensor_ids = [sensor_info.id for sensor_info in measure.sensor_infos()]
 
             # Run simulation
             kernel_dict = self.scene.kernel_dict(ctx=ctx)
             run_results = runner(kernel_dict, sensor_ids)
 
-            # Collect results
-            for sensor_id, sensor_results in run_results.items():
-                ds["raw_results"].loc[
-                    dict(wavelength=spectral_ctx.wavelength, sensor_id=sensor_id)
-                ] = sensor_results.squeeze()
-
-        measure.raw_results = ds
+            # Store results
+            measure.results.raw[spectral_coord] = run_results
 
     def postprocess(self, measure=None):
         """
