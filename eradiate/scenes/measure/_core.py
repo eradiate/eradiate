@@ -226,7 +226,7 @@ class MeasureResults:
             raise ValueError("no raw results to convert to xarray.Dataset")
 
         if eradiate.mode().is_monochromatic():
-            spectral_coord_label = "w"
+            spectral_coord_label = eradiate.mode().spectral_coord_label
             spectral_coord_metadata = {
                 "long_name": "wavelength",
                 "units": str(ucc.get("wavelength")),
@@ -292,8 +292,8 @@ class MeasureResults:
             coords={
                 "x": (
                     "x",
-                    [float(x) for x in range(film_size[0])],
-                    {"long_name": "film width coordinate"},
+                    [float(x) for x in range(film_size[0])],  # Conversion to float is
+                    {"long_name": "film width coordinate"},   # intentional (interpolation)
                 ),
                 "y": (
                     "y",
