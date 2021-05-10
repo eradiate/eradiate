@@ -81,7 +81,7 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
             }
         )
 
-        result = runner(kernel_dict)["measure"].squeeze()
+        result = runner(kernel_dict)["values"]["measure"].squeeze()
         results[scene_size] = np.allclose(result, expected, rtol=1e-5)
 
     # Report test metrics

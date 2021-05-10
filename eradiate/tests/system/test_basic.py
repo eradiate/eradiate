@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+from eradiate._util import onedict_value
 from eradiate.scenes.core import KernelDict
 from eradiate.solvers.core import runner
 
@@ -95,5 +96,5 @@ def test_radiometric_accuracy(mode_mono, illumination, spp, li):
     else:
         raise ValueError(f"unsupported illumination '{illumination}'")
 
-    result = runner(kernel_dict)["measure"]
+    result = runner(kernel_dict)["values"]["measure"]
     assert np.allclose(result, theoretical_solution, rtol=1e-3)
