@@ -458,7 +458,7 @@ class Measure(SceneElement, ABC):
         """
         # Default implementation simply aggregates SPP-split raw results;
         # overloads can perform additional post-processing and add metadata
-        return self.results.to_dataset()
+        return self.results.to_dataset(aggregate_spps=True)
 
     @abstractmethod
     def _base_dicts(self):
