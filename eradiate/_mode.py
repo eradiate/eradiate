@@ -32,21 +32,24 @@ _mode_registry = {
         "spectrum": "mono",
         "precision": "single",
         "kernel_variant": "scalar_mono",
+        "spectral_coord_label": "w",
     },
     "mono_double": {
         "spectrum": "mono",
         "precision": "double",
         "kernel_variant": "scalar_mono_double",
+        "spectral_coord_label": "w",
     },
 }
 
 
 @attr.s(frozen=True)
 class Mode:
-    id = attr.ib()
-    precision = attr.ib(converter=attr.converters.optional(ModePrecision))
-    spectrum = attr.ib(converter=attr.converters.optional(ModeSpectrum))
-    kernel_variant = attr.ib()
+    id: str = attr.ib()
+    precision: ModePrecision = attr.ib(converter=attr.converters.optional(ModePrecision))
+    spectrum: ModeSpectrum = attr.ib(converter=attr.converters.optional(ModeSpectrum))
+    kernel_variant: str = attr.ib()
+    spectral_coord_label: str = attr.ib()
 
     @staticmethod
     def new(mode_id):
