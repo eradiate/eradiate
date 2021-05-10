@@ -397,7 +397,8 @@ class DistantMeasure(Measure):
         return result
 
     def postprocessed_results(self):
-        result = super(DistantMeasure, self).postprocessed_results()
+        # Fetch results (SPP-split aggregated) as a Dataset
+        result = self.results.to_dataset(aggregate_spps=True)
 
         # Compute viewing angles at pixel locations
         # Angle computation must match the kernel plugin's direction sampling
