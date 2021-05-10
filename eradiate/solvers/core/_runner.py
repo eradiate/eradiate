@@ -1,9 +1,10 @@
-from typing import Dict, List, Mapping, Optional
+from typing import Dict, List, Optional
 
 import mitsuba
 import numpy as np
 
 from ...exceptions import KernelVariantError
+from ...scenes.core import KernelDict
 
 _SUPPORTED_VARIANTS = {"scalar_mono", "scalar_mono_double"}
 
@@ -14,7 +15,7 @@ def _check_variant():
         raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
 
-def runner(kernel_dict: Mapping, sensor_ids: Optional[List] = None) -> Dict:
+def runner(kernel_dict: KernelDict, sensor_ids: Optional[List] = None) -> Dict:
     """
     Low-level runner function. Takes a kernel dictionary, instantiates the
     corresponding kernel scene and runs the integrator with all sensors.
@@ -29,6 +30,7 @@ def runner(kernel_dict: Mapping, sensor_ids: Optional[List] = None) -> Dict:
         Nested dictionaries with the following structure:
 
         .. code:: python
+
            {
                "values": {
                    "sensor_0": data_0,
@@ -86,6 +88,6 @@ def runner(kernel_dict: Mapping, sensor_ids: Optional[List] = None) -> Dict:
         # Add sensor SPPs
         if "spp" not in results:
             results["spp"] = {}
-        results["spps"][sensor_id] = sensor.sampler().sample_count()
+        results["spp"][sensor_id] = sensor.sampler().sample_count()
 
     return results

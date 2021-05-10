@@ -34,10 +34,16 @@ def test_runner(mode_mono):
     )
     results = runner(kernel_dict)
 
+    # We store film values and SPPs
+    assert "values" in results
+    assert "spp" in results
+
     # Sensors without ID have a default key
-    assert "__sensor_0" in results
+    assert "__sensor_0" in results["values"]
+    assert "__sensor_0" in results["spp"]
     # Sensors with ID have their ID as key
-    assert "my_sensor" in results
+    assert "my_sensor" in results["values"]
+    assert "my_sensor" in results["spp"]
 
 
 def test_runner_fail():
