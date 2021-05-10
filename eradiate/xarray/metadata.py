@@ -208,20 +208,19 @@ for coord_spec_id, coord_spec in [
     ("vaa", CoordSpec("viewing_azimuth_angle", "deg", "viewing azimuth angle")),
     ("sza", CoordSpec("solar_zenith_angle", "deg", "solar zenith angle")),
     ("saa", CoordSpec("solar_azimuth_angle", "deg", "solar azimuth angle")),
-    ("wavelength", CoordSpec("wavelength", "nm", "wavelength")),
     ("z_layer", CoordSpec("layer_altitude", "m", "layer altitude")),
     ("z_level", CoordSpec("level_altitude", "m", "level altitude")),
     ("species", CoordSpec("species", None, "species")),
-    ("w", CoordSpec("wavelength", "nm", "wavelength")),
+    ("w", CoordSpec("wavelength", "nanometer", "wavelength")),
     ("t", CoordSpec("time", None, "time")),
 ]:
     CoordSpecRegistry.register(coord_spec_id, coord_spec)
 
 # Register coordinate spec collections
 for collection_id, coord_spec_ids in [
-    ("angular_intrinsic", ("theta_i", "phi_i", "theta_o", "phi_o", "wavelength")),
-    ("angular_observation", ("sza", "saa", "vza", "vaa", "wavelength")),
-    ("angular_observation_pplane", ("sza", "saa", "vza", "wavelength")),
+    ("angular_intrinsic", ("theta_i", "phi_i", "theta_o", "phi_o", "w")),
+    ("angular_observation", ("sza", "saa", "vza", "vaa", "w")),
+    ("angular_observation_pplane", ("sza", "saa", "vza", "w")),
     ("atmospheric_profile", ("z_layer", "z_level", "species")),
     ("solar_irradiance_spectrum", ("w", "t")),
 ]:
