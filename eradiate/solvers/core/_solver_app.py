@@ -147,21 +147,32 @@ class SolverApp(ABC):
         # Collect measure results
         ds = measure.postprocessed_results()
 
-        # Collect illumination data
+        # Rename raw field to leaving radiance
+        # (we don't use ds.rename to avoid copying metadata)
+        ds = ds.assign({"lo": ds.data_vars["raw"]}).drop_vars("raw")
+
+        # Collect illumination angular data
         illumination = self.scene.illumination
-        irradiance = illumination.irradiance.eval(spectral_ctx=measure.spectral_ctx)
         saa = illumination.azimuth.m_as(ureg.rad)
         sza = illumination.zenith.m_as(ureg.rad)
         cos_sza = np.cos(sza)
 
-        # Add new dimensions
+        # Add angular dimensions
         ds = ds.expand_dims({"sza": [sza], "saa": [saa]}, axis=(0, 1))
+
+        # Collect illumination spectral data
+        k_irradiance_units = uck.get("irradiance")
+        irradiances = np.array([
+            illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(k_irradiance_units)
+            for spectral_ctx in measure.spectral_cfg.spectral_ctxs()
+        ])
+        spectral_coord_label = eradiate.mode().spectral_coord_label
 
         # Add illumination-dependent variables
         ds["irradiance"] = (
-            ("sza", "saa", "wavelength"),
-            np.array(irradiance.m_as(uck.get("irradiance")) * cos_sza).reshape(
-                (1, 1, 1)
+            ("sza", "saa", spectral_coord_label),
+            np.array(irradiances * cos_sza).reshape(
+                (1, 1, len(irradiances))
             ),
         )
 
