@@ -145,6 +145,13 @@ Measures [eradiate.scenes.measure]
    RadiancemeterMeasure
    RadiancemeterArrayMeasure
 
+**Result storage and processing**
+
+.. autosummary::
+   :toctree: generated/
+
+   MeasureResults
+
 .. dropdown:: **Private: Target and origin specification for DistantMeasure**
 
    .. autosummary::
