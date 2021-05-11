@@ -396,7 +396,7 @@ class DistantMeasure(Measure):
 
         return result
 
-    def postprocessed_results(self):
+    def postprocessed_results(self) -> xr.Dataset:
         # Fetch results (SPP-split aggregated) as a Dataset
         result = self.results.to_dataset(aggregate_spps=True)
 
