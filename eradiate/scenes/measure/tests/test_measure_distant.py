@@ -1,6 +1,7 @@
 import enoki as ek
 import numpy as np
 import pytest
+from matplotlib import pyplot as plt
 
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
@@ -130,3 +131,38 @@ def test_distant(mode_mono):
     # -- Project origins to a sphere
     d = DistantMeasure(origin={"type": "sphere", "center": [0, 0, 0], "radius": 1})
     assert KernelDict.new(d).load() is not None
+
+
+def test_distant_postprocessing(mode_mono):
+    d = DistantMeasure(film_resolution=(32, 32))
+
+    # Add test data to results
+    d.results.raw = {
+        550.0: {"values": {"sensor": np.ones((32, 32, 1))}, "spp": {"sensor": 128}}
+    }
+
+    # Postprocessing succeeds and viewing angles have correct bounds
+    ds = d.postprocessed_results()
+    assert "vza" in ds.coords
+    assert np.allclose(ds.vza.min(), 2.53234575)  # Value manually calculated
+    assert np.allclose(ds.vza.max(), 86.47273911)  # Value manually calculated
+    assert "vaa" in ds.coords
+    assert np.allclose(ds.vaa.min(), -178.5483871)  # Value manually calculated
+    assert np.allclose(ds.vaa.max(), 178.5483871)  # Value manually calculated
+
+    # We now move on to the plane case
+    d._film_resolution = (32, 1)
+    # Mismatched film size and raw data dimensions raises
+    with pytest.raises(ValueError):
+        d.postprocessed_results()
+
+    # Postprocessing succeeds and viewing angles have correct bounds
+    d.results.raw = {
+        550.0: {"values": {"sensor": np.ones((1, 32, 1))}, "spp": {"sensor": 128}}
+    }
+    ds = d.postprocessed_results()
+    assert "vza" in ds.coords
+    assert np.allclose(ds.vza.min(), -87.1875)  # Value manually calculated
+    assert np.allclose(ds.vza.max(), 87.1875)  # Value manually calculated
+    assert "vaa" in ds.coords
+    assert np.allclose(ds.vaa, 0.0)
