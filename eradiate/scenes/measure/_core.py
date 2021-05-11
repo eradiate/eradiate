@@ -308,9 +308,7 @@ class MeasureResults:
                     # Conversion to float is intentional (make interpolation possible)
                     # As mentioned before, film size is (y, x)
                     [float(x) for x in range(film_size[1])],
-                    {
-                        "long_name": "film width coordinate"
-                    },
+                    {"long_name": "film width coordinate"},
                 ),
                 "y": (
                     "y",
