@@ -4,6 +4,8 @@ from typing import Optional
 import attr
 import mitsuba
 
+from eradiate._attrs import documented, parse_docs
+
 
 class ModeSpectrum(enum.Enum):
     """
@@ -43,18 +45,54 @@ _mode_registry = {
 }
 
 
+@parse_docs
 @attr.s(frozen=True)
 class Mode:
-    id: str = attr.ib()
-    precision: ModePrecision = attr.ib(
-        converter=attr.converters.optional(ModePrecision)
+    """
+    Data structure describing Eradiate's operational mode and associated ancillary
+    data.
+
+    .. important:: Instances are immutable.
+    """
+
+    id: str = documented(
+        attr.ib(converter=attr.converters.optional(str)),
+        doc="Mode identifier.",
+        type="str",
     )
-    spectrum: ModeSpectrum = attr.ib(converter=attr.converters.optional(ModeSpectrum))
-    kernel_variant: str = attr.ib()
-    spectral_coord_label: str = attr.ib()
+
+    precision: ModePrecision = documented(
+        attr.ib(converter=attr.converters.optional(ModePrecision)),
+        doc="Mode precision flag.",
+        type=":class:`.ModePrecision`",
+    )
+
+    spectrum: ModeSpectrum = documented(
+        attr.ib(converter=attr.converters.optional(ModeSpectrum)),
+        doc="Mode spectrum flag.",
+        type=":class:`.ModeSpectrum`",
+    )
+
+    kernel_variant: str = documented(
+        attr.ib(converter=attr.converters.optional(str)),
+        doc="Mode kernel variant.",
+        type="str",
+    )
+
+    spectral_coord_label: str = documented(
+        attr.ib(converter=attr.converters.optional(str)),
+        doc="Mode spectral coordinate label.",
+        type="str",
+    )
 
     @staticmethod
     def new(mode_id):
+        """
+        Create a :class:`Mode` instance given its identifier. Available modes are:
+
+        * ``mono``: Monochromatic, single-precision
+        * ``mono_double``: Monochromatic, double-precision
+        """
         try:
             mode_kwargs = _mode_registry[mode_id]
         except KeyError:
@@ -62,12 +100,21 @@ class Mode:
         return Mode(id=mode_id, **mode_kwargs)
 
     def is_monochromatic(self):
+        """
+        Return ``True`` if active mode is monochromatic.
+        """
         return self.spectrum is ModeSpectrum.MONO
 
     def is_single_precision(self):
+        """
+        Return ``True`` if active mode is single-precision.
+        """
         return self.precision is ModePrecision.SINGLE
 
     def is_double_precision(self):
+        """
+        Return ``True`` if active mode is double-precision.
+        """
         return self.precision is ModePrecision.DOUBLE
 
 

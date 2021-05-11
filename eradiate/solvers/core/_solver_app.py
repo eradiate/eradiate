@@ -1,6 +1,7 @@
 import os
 from abc import ABC
 from pathlib import Path
+from typing import Optional
 
 import attr
 import numpy as np
@@ -15,7 +16,7 @@ from ..._units import unit_context_kernel as uck
 from ..._units import unit_registry as ureg
 from ...contexts import KernelDictContext
 from ...exceptions import ModeError, UnsupportedModeError
-from ...scenes.measure import MeasureResults
+from ...scenes.measure import Measure, MeasureResults
 from ...scenes.measure._distant import DistantMeasure
 
 
@@ -84,10 +85,10 @@ class SolverApp(ABC):
         # Instantiate class
         return cls.new(scene=scene)
 
-    def process(self, measure=None):
+    def process(self, measure: Optional[Measure] = None):
         """
         Run simulation on the configured scene. Raw results yielded by the
-        runner function are stored in ``measure.raw_results``.
+        runner function are stored in ``measure.results``.
 
         .. seealso:: :meth:`postprocess`, :meth:`run`
 
@@ -123,9 +124,9 @@ class SolverApp(ABC):
             # Store results
             measure.results.raw[spectral_coord] = run_results
 
-    def postprocess(self, measure=None):
+    def postprocess(self, measure: Optional[Measure] = None):
         """
-        Post-process raw results stored in measures' ``raw_results`` field. This
+        Post-process raw results stored in a measure's ``results`` field. This
         requires a successful execution of :meth:`process`. Post-processed results
         are stored in ``self.results``.
 
@@ -185,7 +186,7 @@ class SolverApp(ABC):
 
         self._results[measure.id] = ds
 
-    def run(self, measure=None):
+    def run(self, measure: Optional[Measure] = None):
         """
         Perform radiative transfer simulation and post-process results.
         Essentially chains :meth:`process` and :meth:`postprocess`.

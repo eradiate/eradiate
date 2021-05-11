@@ -15,7 +15,7 @@ def _check_variant():
         raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
 
-def runner(kernel_dict: KernelDict, sensor_ids: Optional[List] = None) -> Dict:
+def runner(kernel_dict: KernelDict, sensor_ids: Optional[List[str]] = None) -> Dict:
     """
     Low-level runner function. Takes a kernel dictionary, instantiates the
     corresponding kernel scene and runs the integrator with all sensors.
@@ -25,6 +25,8 @@ def runner(kernel_dict: KernelDict, sensor_ids: Optional[List] = None) -> Dict:
 
     Parameter ``kernel_dict`` (:class:`.KernelDict`):
         Dictionary describing the kernel scene.
+
+    Parameter ``sensor_ids`` (list[str] or None)
 
     Returns → dict:
         Nested dictionaries with the following structure:

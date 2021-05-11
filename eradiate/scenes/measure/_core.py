@@ -100,7 +100,7 @@ class MeasureSpectralConfig(ABC):
         Parameter ``d`` (dict):
             Configuration dictionary used for initialisation.
 
-        Returns → instance of cls:
+        Returns → :class:`.MeasureSpectralConfig`:
             Created object.
         """
 
@@ -192,18 +192,18 @@ class MeasureResults:
         "           },\n"
         "       },\n"
         "       spectral_key_1: {\n"
-        '               "values": {\n'
-        '                   "sensor_0": data_0,\n'
-        '                   "sensor_1": data_1,\n'
-        "                   ...\n"
-        "               },\n"
-        '               "spp": {\n'
-        '                   "sensor_0": sample_count_0,\n'
-        '                   "sensor_1": sample_count_1,\n'
-        "                   ...\n"
-        "               },\n"
-        "           }\n"
-        "       }\n"
+        '           "values": {\n'
+        '               "sensor_0": data_0,\n'
+        '               "sensor_1": data_1,\n'
+        "               ...\n"
+        "           },\n"
+        '           "spp": {\n'
+        '               "sensor_0": sample_count_0,\n'
+        '               "sensor_1": sample_count_1,\n'
+        "               ...\n"
+        "           },\n"
+        "       },\n"
+        "       ...\n"
         "   }\n",
         type="dict",
         default="{}",
@@ -211,13 +211,19 @@ class MeasureResults:
 
     def to_dataset(self, aggregate_spps=False) -> xarray.Dataset:
         """
-        Repack raw results as a :class:`xarray.Dataset`. Dimensions are as
-        follows:
+        Repack raw results as a :class:`xarray.Dataset`. Dimension coordinates are
+        as follows:
 
-        * spectral coordinate
-        * sensor (for SPP split)
-        * film width
-        * film height
+        * spectral coordinate (varies vs active mode)
+        * ``sensor_id``: kernel sensor identified (for SPP split, dropped if
+          ``aggregate_spps`` is ``True``)
+        * ``x``: film width
+        * ``y``: film height
+
+        Parameter ``aggregate_spps`` (bool):
+            If ``True``, perform split SPP aggregation (*i.e.* sum results using
+            SPP values as weights). This will result in the ``sensor_id``
+            dimension being dropped.
 
         Returns → :class:`~xarray.Dataset`:
             Raw sensor data repacked as a :class:`~xarray.Dataset`.
@@ -337,7 +343,7 @@ class Measure(SceneElement, ABC):
     Abstract base class for all measure scene elements.
     """
 
-    id = documented(
+    id: Optional[str] = documented(
         attr.ib(
             default="measure",
             validator=attr.validators.optional((attr.validators.instance_of(str))),
@@ -369,7 +375,7 @@ class Measure(SceneElement, ABC):
     results: MeasureResults = documented(
         attr.ib(factory=MeasureResults),
         doc="Storage for raw results yielded by the kernel.",
-        default=":class:`MeasureResults() <.MeasureResults>",
+        default=":class:`MeasureResults() <.MeasureResults>`",
         type=":class:`.MeasureResults`",
     )
 

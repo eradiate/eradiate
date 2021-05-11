@@ -12,6 +12,8 @@ from ._units import unit_context_config as ucc
 from ._units import unit_registry as ureg
 from .exceptions import ModeError
 
+# -- Spectral contexts ---------------------------------------------------------
+
 
 @attr.s
 class SpectralContext(ABC):
@@ -31,6 +33,8 @@ class SpectralContext(ABC):
     @property
     @abstractmethod
     def wavelength(self):
+        # Wavelength associated with spectral context
+        # (may raise NotImplementedError if irrelevant)
         pass
 
     @staticmethod
@@ -70,7 +74,7 @@ class SpectralContext(ABC):
         Parameter ``d`` (dict):
             Configuration dictionary used for initialisation.
 
-        Returns → instance of cls:
+        Returns → :class:`.SpectralContext`:
             Created object.
         """
 
@@ -121,6 +125,9 @@ class MonoSpectralContext(SpectralContext):
     @wavelength.setter
     def wavelength(self, value):
         self._wavelength = value
+
+
+# -- Kernel dictionary contexts ------------------------------------------------
 
 
 @parse_docs
