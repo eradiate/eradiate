@@ -132,7 +132,7 @@ app.run()
 
 results_1281 = app.results["toa_plane"]
 ds = xr.merge([results_579, results_1281])
-ds.brf.plot(x="vza", hue="wavelengths", marker="o", markersize=2, linewidth=0.5)
+ds.brf.plot(x="vza", hue="w", marker="o", markersize=2, linewidth=0.5)
 plt.show()
 
 # %%
