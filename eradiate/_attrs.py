@@ -57,7 +57,7 @@ def _eradiate_formatter(cls_doc, field_docs):
         default_doc = f" = {field_doc.default}" if field_doc.default is not None else ""
 
         docstrings.append(
-            f"``{field_name}``{type_doc}{default_doc}\n"
+            f"``{field_name.lstrip('_')}``{type_doc}{default_doc}\n"
             f"{indent(field_doc.doc, '    ')}\n"
         )
 
