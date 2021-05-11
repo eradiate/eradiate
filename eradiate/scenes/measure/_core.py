@@ -121,7 +121,7 @@ class MeasureSpectralConfig(ABC):
         Otherwise, it returns ``value``.
         """
         if isinstance(value, dict):
-            return SpectralContext.from_dict(value)
+            return MeasureSpectralConfig.from_dict(value)
 
         return value
 
