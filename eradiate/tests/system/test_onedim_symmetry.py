@@ -48,13 +48,11 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     Results
     -------
 
-    See plots below. Left: top-of-atmosphere leaving radiance vs viewing zenith
-    angle (VZA). Negative VZA values are conventional and arbitrary.
-    The first line is parametrised with increasing VZA values, and the second one
-    is parametrised with decreasing VZA values.
-    Both lines should superimpose perfectly it the data would be perfectly
-    symmetrical.
-    Right: Absolute difference between the two data series vs viewing zenith angle.
+    For each of the four combinations of atmosphere and surface, two plots are
+    shown. On the left of each pair, the recorded leaving radiance is plotted
+    against the viewing zenith angle on top of its mirror image for a visual
+    inspection of the result symmetry. On the right of each pair the absolute
+    difference between these two curves is shown, for a more quantitative visualization.
 
     .. image:: generated/plots/lambertian_none.png
        :width: 45%
