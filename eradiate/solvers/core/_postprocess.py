@@ -1,10 +1,4 @@
-import numpy as np
-import xarray as xr
-
 from ... import data
-from ...frame import direction_to_angles
-from ...scenes.measure._distant import DistantMeasure
-from ...warp import square_to_uniform_hemisphere
 
 
 def apply_srf(da, srf):
