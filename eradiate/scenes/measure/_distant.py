@@ -405,6 +405,11 @@ class DistantMeasure(Measure):
         # routine
         xs = result.coords["x"].data
         ys = result.coords["y"].data
+        if not np.allclose((len(xs), len(ys)), self.film_resolution):
+            raise ValueError(
+                f"raw data width and height ({len(xs)}, {len(ys)}) does not "
+                f"match film size ({self.film_resolution})"
+            )
         theta = np.full((len(ys), len(xs)), np.nan)
         phi = np.full_like(theta, np.nan)
 
