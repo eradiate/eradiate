@@ -128,7 +128,7 @@ measure = eradiate.scenes.measure.DistantMeasure(
     id="toa_hsphere",
     film_resolution=(32, 32),
     spp=10000,
-    spectral_cfg={"wavelength": 577.0},
+    spectral_cfg={"wavelengths": [577.0]},
 )
 measure
 
@@ -263,7 +263,7 @@ scene = eradiate.solvers.onedim.OneDimScene(
         id="toa_pplane",
         film_resolution=(32, 1),
         spp=1000000,
-        spectral_cfg={"wavelength": 577.0},
+        spectral_cfg={"wavelengths": [577.0]},
     ),
 )
 app = eradiate.solvers.onedim.OneDimSolverApp(scene)
@@ -310,7 +310,7 @@ scene = eradiate.solvers.onedim.OneDimScene(
         "id": "toa_hsphere",
         "film_resolution": (32, 1),
         "spp": 1000000,
-        "spectral_cfg": {"wavelength": 577.0},
+        "spectral_cfg": {"wavelengths": [577.0]},
     },
 )
 
@@ -338,7 +338,7 @@ scene = eradiate.solvers.onedim.OneDimScene.from_dict({
         "id": "toa_hsphere",
         "film_resolution": (32, 1),
         "spp": 1000000,
-        "spectral_cfg": {"wavelength": 577.0},
+        "spectral_cfg": {"wavelengths": [577.0]},
     },
 })
 
@@ -369,7 +369,7 @@ config = {
         "id": "toa_hsphere",
         "film_resolution": (32, 1),
         "spp": 1000000,
-        "spectral_cfg": {"wavelength": 577.0},
+        "spectral_cfg": {"wavelengths": [577.0]},
     },
 }
 app = eradiate.solvers.onedim.OneDimSolverApp.from_dict(config)

@@ -47,7 +47,7 @@ config = {
         "id": "toa_plane",
         "film_resolution": [90,1],
         "spp": 65536,
-        "spectral_cfg": {"wavelength": 579.0},
+        "spectral_cfg": {"wavelengths": [579.0]},
     }]
 }
 app = OneDimSolverApp.from_dict(config)
@@ -80,7 +80,7 @@ visualise(results_579)
 # reflectance.
 # Indeed, the atmosphere we have created is almost purely scattering:
 
-spectral_ctx = app.scene.measures[0].spectral_ctx
+spectral_ctx = app.scene.measures[0].spectral_cfg.spectral_ctxs()[0]
 print(app.scene.atmosphere.profile.albedo(spectral_ctx))
 
 # %%
@@ -111,7 +111,7 @@ config = {
         "id": "toa_plane",
         "film_resolution": [90, 1],
         "spp": 65536,
-        "spectral_cfg": {"wavelength": 1281.0},
+        "spectral_cfg": {"wavelengths": [1281.0]},
     }]
 }
 app = OneDimSolverApp.from_dict(config)
@@ -119,7 +119,7 @@ app = OneDimSolverApp.from_dict(config)
 # %%
 # Let us confirm our intuition:
 
-spectral_ctx = app.scene.measures[0].spectral_ctx
+spectral_ctx = app.scene.measures[0].spectral_cfg.spectral_ctxs()[0]
 print(app.scene.atmosphere.profile.albedo(spectral_ctx))
 
 # %%
@@ -132,7 +132,7 @@ app.run()
 
 results_1281 = app.results["toa_plane"]
 ds = xr.merge([results_579, results_1281])
-ds.brf.plot(x="vza", hue="wavelength", marker="o", markersize=2, linewidth=0.5)
+ds.brf.plot(x="vza", hue="wavelengths", marker="o", markersize=2, linewidth=0.5)
 plt.show()
 
 # %%
