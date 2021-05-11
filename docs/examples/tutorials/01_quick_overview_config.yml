@@ -6,11 +6,11 @@ surface:
     value: 0.5  # dimensionless
 atmosphere:
   type: homogeneous
-  toa_altitude: 40.  # km
+  toa_altitude: 40.0  # km
 illumination:
   type: directional
-  zenith: 30.  # deg
-  azimuth: 0.  # deg
+  zenith: 30.0  # deg
+  azimuth: 0.0  # deg
   irradiance:
     type: uniform
     value: 1.8e+6  # W/km^2/nm
@@ -18,5 +18,5 @@ measures:
   - type: distant
     id: toa_hsphere
     spectral_cfg:
-      wavelength: 550.  # nm
+      wavelengths: [550.0]  # nm
     spp: 32000  # dimensionless

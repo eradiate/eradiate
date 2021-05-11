@@ -94,7 +94,7 @@ measure = eradiate.scenes.measure.DistantMeasure(
     id="toa_brf",
     film_resolution=(32, 32),
     spp=1000,
-    spectral_cfg={"wavelength": 550.0}
+    spectral_cfg={"wavelengths": [550.0]}
 )
 measure
 
