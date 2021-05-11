@@ -130,7 +130,6 @@ class _AbsorptionGetter(DataGetter):
         path = _presolver.resolve(path)
 
         try:
-            print(path)
             return xr.open_dataset(path)
         except OSError as e:
             raise OSError(f"while opening file at {path}: {str(e)}")
