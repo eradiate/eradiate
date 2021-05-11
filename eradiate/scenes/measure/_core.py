@@ -217,8 +217,8 @@ class MeasureResults:
         * spectral coordinate (varies vs active mode)
         * ``sensor_id``: kernel sensor identified (for SPP split, dropped if
           ``aggregate_spps`` is ``True``)
-        * ``x``: film width
         * ``y``: film height
+        * ``x``: film width
 
         Parameter ``aggregate_spps`` (bool):
             If ``True``, perform split SPP aggregation (*i.e.* sum results using
@@ -258,7 +258,14 @@ class MeasureResults:
         sensor_ids = sorted(sensor_ids)
 
         # Collect values
-        data = np.full((len(spectral_coords), len(sensor_ids), *film_size), np.nan)
+        data = np.full(
+            (
+                len(spectral_coords),
+                len(sensor_ids),
+                *film_size,  # Note: Row-major order (width x comes last)
+            ),
+            np.nan,
+        )
 
         for i_spectral, spectral_coord in enumerate(spectral_coords):
             for i_sensor, sensor_id in enumerate(sensor_ids):
@@ -284,7 +291,7 @@ class MeasureResults:
             data_vars=(
                 {
                     "raw": (
-                        [spectral_coord_label, "sensor_id", "x", "y"],
+                        [spectral_coord_label, "sensor_id", "y", "x"],
                         data,
                         {"long name": "raw sensor values"},
                     ),
@@ -298,14 +305,17 @@ class MeasureResults:
             coords={
                 "x": (
                     "x",
-                    [float(x) for x in range(film_size[0])],  # Conversion to float is
+                    # Conversion to float is intentional (make interpolation possible)
+                    # As mentioned before, film size is (y, x)
+                    [float(x) for x in range(film_size[1])],
                     {
                         "long_name": "film width coordinate"
-                    },  # intentional (interpolation)
+                    },
                 ),
                 "y": (
                     "y",
-                    [float(x) for x in range(film_size[1])],
+                    # Conversion to float is intentional (make interpolation possible)
+                    [float(x) for x in range(film_size[0])],
                     {"long_name": "film height coordinate"},
                 ),
                 spectral_coord_label: (
