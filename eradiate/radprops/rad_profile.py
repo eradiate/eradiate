@@ -484,6 +484,19 @@ class US76ApproxRadProfile(RadProfile):
         type="array",
     )
 
+    has_absorption = documented(
+        attr.ib(
+            default=True,
+            converter=bool,
+            validator=attr.validators.instance_of(bool),
+        ),
+        doc="Absorption switch. If ``True``, the absorption coefficient is "
+        "computed. Else, the absorption coefficient is not computed and "
+        "instead set to zero.",
+        type="bool",
+        default="True",
+    )
+
     absorption_data_set = documented(
         attr.ib(
             default=None,
@@ -522,26 +535,32 @@ class US76ApproxRadProfile(RadProfile):
         """
         Evaluate absorption coefficient given spectral context.
         """
-        wavelength = spectral_ctx.wavelength
-        profile = self.eval_thermoprops_profile()
+        if self.has_absorption:
+            wavelength = spectral_ctx.wavelength
+            profile = self.eval_thermoprops_profile()
 
-        if self.absorption_data_set is None:  # ! this is never tested
-            data_set = self.default_absorption_data_set(wavelength=wavelength)
+            if self.absorption_data_set is None:  # ! this is never tested
+                data_set = self.default_absorption_data_set(wavelength=wavelength)
+            else:
+                data_set = xr.open_dataset(self.absorption_data_set)
+
+            # Compute scattering coefficient
+            return compute_sigma_a(
+                ds=data_set,
+                wl=wavelength,
+                p=profile.p.values,
+                n=profile.n.values,
+                fill_values=dict(
+                    pt=0.0
+                ),  # us76_u86_4 dataset is limited to pressures above
+                # 0.101325 Pa, but us76 thermophysical profile goes below that
+                # value for altitudes larger than 93 km. At these altitudes, the
+                # number density is so small compared to that at the sea level that
+                # we assume it is negligible.
+            )
         else:
-            data_set = xr.open_dataset(self.absorption_data_set)
-
-        # Compute scattering coefficient
-        return compute_sigma_a(
-            ds=data_set,
-            wl=wavelength,
-            p=profile.p.values,
-            n=profile.n.values,
-            fill_values=dict(pt=0.0),  # us76_u86_4 dataset is limited to pressures above
-            # 0.101325 Pa, but us76 thermophysical profile goes below that
-            # value for altitudes larger than 93 km. At these altitudes, the
-            # number density is so small compared to that at the sea level that
-            # we assume it is negligible.
-        )
+            profile = self.eval_thermoprops_profile()
+            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
     def eval_sigma_s(self, spectral_ctx):
         """
@@ -579,9 +598,8 @@ class US76ApproxRadProfile(RadProfile):
             Radiative properties dataset.
         """
         profile = self.eval_thermoprops_profile()
-
         return make_dataset(
-            wavelength=self._wavelength,
+            wavelength=spectral_ctx.wavelength,
             z_level=profile.z_level.values,
             z_layer=profile.z_layer.values,
             sigma_a=self.sigma_a(spectral_ctx).flatten(),
@@ -741,6 +759,19 @@ class AFGL1986RadProfile(RadProfile):
         type="dict",
     )
 
+    has_absorption = documented(
+        attr.ib(
+            default=True,
+            converter=bool,
+            validator=attr.validators.instance_of(bool),
+        ),
+        doc="Absorption switch. If ``True``, the absorption coefficient is "
+        "computed. Else, the absorption coefficient is not computed and "
+        "instead set to zero.",
+        type="bool",
+        default="True",
+    )
+
     absorption_data_sets = documented(
         attr.ib(
             default=None,
@@ -797,7 +828,9 @@ class AFGL1986RadProfile(RadProfile):
                 p=p.values,
                 t=t.values,
                 n=n_absorber.values,
-                fill_values=dict(w=0.0, pt=0.0),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
+                fill_values=dict(
+                    w=0.0, pt=0.0
+                ),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
             )
         except ValueError:  # no data at current wavelength/wavenumber
             sigma_a_absorber = ureg.Quantity(np.zeros(len(p)), "km^-1")
@@ -835,7 +868,9 @@ class AFGL1986RadProfile(RadProfile):
             p=p.values,
             t=t.values,
             n=n_absorber.values,
-            fill_values=dict(w=0.0, pt=0.0),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
+            fill_values=dict(
+                w=0.0, pt=0.0
+            ),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
         )
 
     def eval_sigma_a(self, spectral_ctx):
@@ -845,52 +880,56 @@ class AFGL1986RadProfile(RadProfile):
         .. note:: Extrapolate to zero when wavelength, pressure and/or
            temperature are out of bounds.
         """
-        wavelength = spectral_ctx.wavelength
-        profile = self.eval_thermoprops_profile()
+        if self.has_absorption:
+            wavelength = spectral_ctx.wavelength
+            profile = self.eval_thermoprops_profile()
 
-        p = profile.p
-        t = profile.t
-        n = profile.n
-        mr = profile.mr
+            p = profile.p
+            t = profile.t
+            n = profile.n
+            mr = profile.mr
 
-        sigma_a = np.full(mr.shape, np.nan)
-        absorbers = [
-            Absorber.CH4,
-            Absorber.CO,
-            Absorber.CO2,
-            Absorber.H2O,
-            Absorber.N2O,
-            Absorber.O2,
-            Absorber.O3,
-        ]
-        if self.absorption_data_sets is None:
-            self.absorption_data_sets = {}
+            sigma_a = np.full(mr.shape, np.nan)
+            absorbers = [
+                Absorber.CH4,
+                Absorber.CO,
+                Absorber.CO2,
+                Absorber.H2O,
+                Absorber.N2O,
+                Absorber.O2,
+                Absorber.O3,
+            ]
+            if self.absorption_data_sets is None:
+                self.absorption_data_sets = {}
 
-        for i, absorber in enumerate(absorbers):
-            n_absorber = n * mr.sel(species=absorber.value)
+            for i, absorber in enumerate(absorbers):
+                n_absorber = n * mr.sel(species=absorber.value)
 
-            if absorber.value in self.absorption_data_sets:
-                sigma_a_absorber = self._compute_sigma_a_absorber_from_data_set(
-                    path=self.absorption_data_sets[absorber.value],
-                    wavelength=wavelength,
-                    n_absorber=n_absorber,
-                    p=p,
-                    t=t,
-                )
-            else:
-                sigma_a_absorber = self._auto_compute_sigma_a_absorber(
-                    wavelength=wavelength,
-                    absorber=absorber,
-                    n_absorber=n_absorber,
-                    p=p,
-                    t=t,
-                )
+                if absorber.value in self.absorption_data_sets:
+                    sigma_a_absorber = self._compute_sigma_a_absorber_from_data_set(
+                        path=self.absorption_data_sets[absorber.value],
+                        wavelength=wavelength,
+                        n_absorber=n_absorber,
+                        p=p,
+                        t=t,
+                    )
+                else:
+                    sigma_a_absorber = self._auto_compute_sigma_a_absorber(
+                        wavelength=wavelength,
+                        absorber=absorber,
+                        n_absorber=n_absorber,
+                        p=p,
+                        t=t,
+                    )
 
-            sigma_a[i, :] = sigma_a_absorber.m_as("km^-1")
+                sigma_a[i, :] = sigma_a_absorber.m_as("km^-1")
 
-        sigma_a = np.sum(sigma_a, axis=0)
+            sigma_a = np.sum(sigma_a, axis=0)
 
-        return ureg.Quantity(sigma_a, "km^-1")
+            return ureg.Quantity(sigma_a, "km^-1")
+        else:
+            profile = self.eval_thermoprops_profile()
+            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
     def eval_sigma_s(self, spectral_ctx):
         """
@@ -928,7 +967,7 @@ class AFGL1986RadProfile(RadProfile):
             Radiative properties dataset.
         """
         return make_dataset(
-            wavelength=self._wavelength,
+            wavelength=spectral_ctx.wavelength,
             z_level=self.eval_thermoprops_profile().z_level.values,
             z_layer=self.eval_thermoprops_profile().z_layer.values,
             sigma_a=self.sigma_a(spectral_ctx).flatten(),
