@@ -144,11 +144,11 @@ def test_distant_postprocessing(mode_mono):
     # Postprocessing succeeds and viewing angles have correct bounds
     ds = d.postprocessed_results()
     assert "vza" in ds.coords
-    assert np.allclose(ds.vza.min(), 2.53234575)  # Value manually calculated
-    assert np.allclose(ds.vza.max(), 86.47273911)  # Value manually calculated
+    assert np.allclose(ds.vza.min(), 2.53234575)  # Value calculated manually
+    assert np.allclose(ds.vza.max(), 86.47273911)  # Value calculated manually
     assert "vaa" in ds.coords
-    assert np.allclose(ds.vaa.min(), -178.5483871)  # Value manually calculated
-    assert np.allclose(ds.vaa.max(), 178.5483871)  # Value manually calculated
+    assert np.allclose(ds.vaa.min(), -178.5483871)  # Value calculated manually
+    assert np.allclose(ds.vaa.max(), 178.5483871)  # Value calculated manually
 
     # We now move on to the plane case
     d._film_resolution = (32, 1)
