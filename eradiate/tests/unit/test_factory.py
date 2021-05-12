@@ -44,6 +44,8 @@ def test_create_convert():
 
     @TestFactory.register("subclass")
     class SubclassObject(TestFactoryObject):
+        # this from_dict method is a mock up that makes it
+        # easy to tell if it has been called by the factory.
         def from_dict(self):
             return "teststring"
 

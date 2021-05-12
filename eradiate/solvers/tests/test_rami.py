@@ -107,28 +107,37 @@ def test_rami_solver_app_run(mode_mono):
     """
     app = RamiSolverApp(
         scene=RamiScene(
-            canopy={
-                "type": "discrete_canopy",
-                "construct": "homogeneous",
-                "lai": 3.0,
-                "leaf_radius": 0.1 * ureg.m,
-                "l_horizontal": 10.0 * ureg.m,
-                "l_vertical": 2.0 * ureg.m,
-            },
-            measures={"type": "distant"},
+            measures=[
+                {
+                    "type": "distant",
+                    "id": "toa_hsphere",
+                    "film_resolution": (32, 32),
+                    "spp": 1000,
+                },
+            ]
         )
     )
 
     app.run()
 
-    results = app.results["measure"]
+    results = app.results["toa_hsphere"]
 
-    # # Assert the correct dimensions of the application's results
-    # assert set(results["lo"].dims) == {"sza", "saa", "vza", "vaa", "wavelength"}
-    #
-    # # We expect the whole [0, 360] to be covered
-    # assert len(results["lo"].coords["vaa"]) == 360. / 180.
-    # # # We expect [0, 90[ to be covered (90° should be missing)
-    # assert len(results["lo"].coords["vza"]) == 90. / 45.
-    # # We just check that we record something as expected
-    # assert np.all(results["lo"].data > 0.)
+    # Post-processing creates expected variables ...
+    assert set(results.data_vars) == {"irradiance", "brf", "brdf", "lo", "spp"}
+    # ... dimensions
+    assert set(results["lo"].dims) == {"sza", "saa", "x", "y", "w"}
+    assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
+    # ... and other coordinates
+    assert set(results["lo"].coords) == {
+        "sza",
+        "saa",
+        "vza",
+        "vaa",
+        "x",
+        "y",
+        "w",
+    }
+    assert set(results["irradiance"].coords) == {"sza", "saa", "w"}
+
+    # We just check that we record something as expected
+    assert np.all(results["lo"].data > 0.0)
