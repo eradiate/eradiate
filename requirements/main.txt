@@ -8,12 +8,12 @@ aabbtree==2.6.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-attrs==20.3.0
+attrs==21.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   pinttrs
-cerberus==1.3.3
+cerberus==1.3.4
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -21,7 +21,7 @@ cftime==1.4.1
     # via
     #   -c requirements/dev.txt
     #   netcdf4
-click==7.1.2
+click==8.0.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -33,11 +33,11 @@ cycler==0.10.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2021.4.0
+dask==2021.4.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-fsspec==0.9.0
+fsspec==2021.4.0
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -45,10 +45,9 @@ iapws==1.5.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-importlib-metadata==3.10.1
+importlib-metadata==4.0.1
     # via
     #   -c requirements/dev.txt
-    #   fsspec
     #   pint
 kiwisolver==1.3.1
     # via
@@ -58,7 +57,7 @@ locket==0.2.1
     # via
     #   -c requirements/dev.txt
     #   partd
-matplotlib==3.4.1
+matplotlib==3.4.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -66,7 +65,7 @@ netcdf4==1.5.6
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-numpy==1.20.2
+numpy==1.20.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -97,7 +96,7 @@ pint==0.17
     #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   pinttrs
-pinttrs==21.1.0
+pinttrs==21.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -127,12 +126,12 @@ ruamel.yaml==0.17.4
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-scipy==1.6.2
+scipy==1.6.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   iapws
-six==1.15.0
+six==1.16.0
     # via
     #   -c requirements/dev.txt
     #   cycler
@@ -146,11 +145,11 @@ tqdm==4.60.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-typing-extensions==3.7.4.3
+typing-extensions==3.10.0.0
     # via
     #   -c requirements/dev.txt
     #   importlib-metadata
-xarray==0.17.0
+xarray==0.18.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -160,7 +159,7 @@ zipp==3.4.1
     #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==56.0.0
+setuptools==56.2.0
     # via
     #   -c requirements/dev.txt
     #   cerberus
