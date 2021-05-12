@@ -414,23 +414,18 @@ class DistantMeasure(Measure):
         phi = np.full_like(theta, np.nan)
 
         if self.film_resolution[1] == 1:  # Plane case
-            for y in ys:
-                for x in xs:
-                    sample = float(x + 0.5) / len(xs)
-                    theta[int(y), int(x)] = 90.0 - 180.0 * sample
-                    phi[int(y), int(x)] = self.orientation.m_as("deg")
+            for i_y, y in enumerate(ys):
+                for i_x, x in enumerate(xs):
+                    sample = x
+                    theta[i_y, i_x] = 90.0 - 180.0 * sample
+                    phi[i_y, i_x] = self.orientation.m_as("deg")
 
         else:  # Hemisphere case
-            for y in ys:
-                for x in xs:
-                    xy = [
-                        float((x + 0.5) / len(xs)),
-                        float((y + 0.5) / len(ys)),
-                    ]
+            for i_y, y in enumerate(ys):
+                for i_x, x in enumerate(xs):
+                    xy = [x, y]
                     d = square_to_uniform_hemisphere(xy)
-                    theta[int(y), int(x)], phi[int(y), int(x)] = direction_to_angles(
-                        d
-                    ).m_as("deg")
+                    theta[i_y, i_x], phi[i_y, i_x] = direction_to_angles(d).m_as("deg")
 
         # Assign angles as non-dimension coords
         result["vza"] = (("y", "x"), theta, {"units": "deg"})

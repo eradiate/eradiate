@@ -286,6 +286,11 @@ class MeasureResults:
             for i_sensor, sensor_id in enumerate(sensor_ids):
                 spps[i_spectral, i_sensor] = self.raw[spectral_coord]["spp"][sensor_id]
 
+        # Compute pixel film coordinates
+        # As mentioned before, raw data shape is (y, x)
+        xs = np.arange(0.5, film_size[1], 1.0) / film_size[1]
+        ys = np.arange(0.5, film_size[0], 1.0) / film_size[0]
+
         # Construct dataset
         result = xr.Dataset(
             data_vars=(
@@ -303,19 +308,8 @@ class MeasureResults:
                 }
             ),
             coords={
-                "x": (
-                    "x",
-                    # Conversion to float is intentional (make interpolation possible)
-                    # As mentioned before, film size is (y, x)
-                    [float(x) for x in range(film_size[1])],
-                    {"long_name": "film width coordinate"},
-                ),
-                "y": (
-                    "y",
-                    # Conversion to float is intentional (make interpolation possible)
-                    [float(x) for x in range(film_size[0])],
-                    {"long_name": "film height coordinate"},
-                ),
+                "x": ("x", xs, {"long_name": "film width coordinate"}),
+                "y": ("y", ys, {"long_name": "film height coordinate"}),
                 spectral_coord_label: (
                     spectral_coord_label,
                     spectral_coords,
