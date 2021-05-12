@@ -205,5 +205,6 @@ Spectra [eradiate.scenes.spectra]
    :toctree: generated/
 
    UniformSpectrum
+   InterpolatedSpectrum
    SolarIrradianceSpectrum
    AirScatteringCoefficientSpectrum
