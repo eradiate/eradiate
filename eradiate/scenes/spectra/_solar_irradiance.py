@@ -1,5 +1,6 @@
 import attr
 import numpy as np
+import pint
 
 import eradiate
 
@@ -8,6 +9,7 @@ from ... import unit_context_kernel as uck
 from ... import unit_registry as ureg
 from ..._attrs import documented, parse_docs
 from ..._units import PhysicalQuantity
+from ...contexts import SpectralContext
 from ...scenes.spectra import Spectrum, SpectrumFactory
 from ...validators import is_positive
 
@@ -78,7 +80,7 @@ class SolarIrradianceSpectrum(Spectrum):
         except KeyError:
             raise ValueError(f"unknown dataset {self.dataset}")
 
-    def eval(self, spectral_ctx=None):
+    def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
         if self.dataset == "solid_2017":
             raise NotImplementedError(
                 "Solar irradiance spectrum datasets with a non-empty time "

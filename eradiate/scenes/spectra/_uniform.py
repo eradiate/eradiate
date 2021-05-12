@@ -4,9 +4,10 @@ import pinttr
 
 from ... import unit_context_config as ucc
 from ... import unit_context_kernel as uck
+from ... import validators
 from ..._attrs import documented, parse_docs
+from ...contexts import SpectralContext
 from ...scenes.spectra import Spectrum, SpectrumFactory
-from ...validators import is_positive
 
 
 @SpectrumFactory.register("uniform")
@@ -14,7 +15,7 @@ from ...validators import is_positive
 @attr.s
 class UniformSpectrum(Spectrum):
     """
-    Uniform spectrum (*i.e.* constant against wavelength).
+    Uniform spectrum (*i.e.* constant vs wavelength).
     """
 
     value = documented(
@@ -24,10 +25,11 @@ class UniformSpectrum(Spectrum):
         "default units. If a :class:`~pint.Quantity` is passed and ``quantity`` "
         "is not ``None``, units will be checked for consistency.",
         type="float or :class:`~pint.Quantity`",
+        default="1.0 <quantity units>",
     )
 
     @value.validator
-    def value_validator(self, attribute, value):
+    def _value_validator(self, attribute, value):
         if self.quantity is not None and isinstance(value, pint.Quantity):
             expected_units = ucc.get(self.quantity)
 
@@ -40,7 +42,7 @@ class UniformSpectrum(Spectrum):
                     f"(expected '{expected_units}')",
                 )
 
-        is_positive(self, attribute, value)
+        validators.is_positive(self, attribute, value)
 
     def __attrs_post_init__(self):
         self.update()
@@ -51,7 +53,7 @@ class UniformSpectrum(Spectrum):
                 self.value, ucc.get(self.quantity)
             )
 
-    def eval(self, spectral_ctx=None):
+    def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
         return self.value
 
     def kernel_dict(self, ctx=None):

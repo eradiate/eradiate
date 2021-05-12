@@ -6,6 +6,7 @@ import pint
 from ..._attrs import documented, parse_docs
 from ..._factory import BaseFactory
 from ..._units import PhysicalQuantity
+from ...contexts import SpectralContext
 from ...scenes.core import SceneElement
 
 
@@ -43,7 +44,7 @@ class Spectrum(SceneElement, ABC):
             )
 
     @abstractmethod
-    def eval(self, spectral_ctx=None):
+    def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
         """
         Evaluate spectrum.
 

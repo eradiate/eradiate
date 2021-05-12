@@ -1,4 +1,5 @@
 import attr
+import pint
 
 import eradiate
 
@@ -6,6 +7,7 @@ from ._core import Spectrum, SpectrumFactory
 from ..._attrs import parse_docs
 from ..._units import PhysicalQuantity
 from ..._units import unit_context_kernel as uck
+from ...contexts import SpectralContext
 from ...exceptions import ModeError
 from ...radprops.rayleigh import compute_sigma_s_air
 
@@ -24,7 +26,7 @@ class AirScatteringCoefficientSpectrum(Spectrum):
         default=PhysicalQuantity.COLLISION_COEFFICIENT, init=False, repr=False
     )
 
-    def eval(self, spectral_ctx=None):
+    def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
         if eradiate.mode().is_monochromatic():
             return compute_sigma_s_air(wavelength=spectral_ctx.wavelength)
         else:
