@@ -2,6 +2,7 @@
 
 import numpy as np
 import pint
+from numpy.typing import ArrayLike
 
 from ._units import unit_registry as ureg
 
@@ -21,6 +22,7 @@ def cos_angle_to_direction(cos_theta, phi):
     Returns → array[float]:
         Direction corresponding to the angular parameters [unitless].
     """
+    # TODO: vectorise
     sin_theta = np.sqrt(1.0 - cos_theta * cos_theta)
     sin_phi, cos_phi = np.sin(phi), np.cos(phi)
     return np.array([sin_theta * cos_phi, sin_theta * sin_phi, cos_theta])
@@ -41,26 +43,34 @@ def angles_to_direction(theta, phi):
     Returns → array:
         Direction corresponding to the angular parameters [unitless].
     """
+    # TODO: Vectorise
     return cos_angle_to_direction(np.cos(theta), phi)
 
 
 @ureg.wraps(ret="rad", args=None, strict=False)
-def direction_to_angles(wi):
-    """Converts a cartesian 3-vector to a pair of theta and phi values
-    in spherical coordinates
-
-    Parameter ``wi`` (array):
-        3-vector designating a direction in cartesian coordinates [unitless].
-
-    Returns → :class:`pint.Quantity`:
-        2-vector containing zenith and azimuth angles, where zenith = 0
-        corresponds to +z direction [rad].
+def direction_to_angles(v: ArrayLike) -> ArrayLike:
     """
-    wi = wi / np.linalg.norm(wi)
-    theta = np.arccos(wi[2])
-    phi = np.arctan2(wi[1], wi[0])
+    Convert a cartesian unit vector to a zenith-azimuth pair.
 
-    return [theta, phi]
+    Parameter ``v`` (array-like):
+        A sequence of 3-vectors (shape (N, 3)) [unitless].
+
+    Returns → array-like:
+        A sequence of 2-vectors containing zenith and azimuth angles, where
+        zenith = 0 corresponds to +z direction (shape (N, 2)) [rad].
+    """
+    if not isinstance(v, np.ndarray):
+        v = np.array(v)
+    if v.ndim < 2:
+        v = v.reshape((v.size // 3, 3))
+    if v.ndim > 2 or v.shape[1] != 3:
+        raise ValueError(f"array must be of shape (N, 3), got {v.shape}")
+
+    v = v / np.linalg.norm(v, axis=-1).reshape(len(v), 1)
+    theta = np.arccos(v[..., 2])
+    phi = np.arctan2(v[..., 1], v[..., 0])
+
+    return np.vstack((theta, phi)).T
 
 
 @ureg.wraps(ret=None, args=(None, "rad", "rad", None), strict=False)
@@ -84,6 +94,7 @@ def spherical_to_cartesian(r, theta, phi, origin=np.zeros((3,))):
     Returns → array[float]:
         Cartesian coordinates x, y, z.
     """
+    # TODO: Vectorise
 
     # fmt: off
     if isinstance(r, pint.Quantity):
