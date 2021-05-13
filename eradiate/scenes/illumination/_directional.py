@@ -68,9 +68,8 @@ class DirectionalIllumination(Illumination):
                 "type": "directional",
                 "direction": list(
                     -angles_to_direction(
-                        theta=self.zenith.m_as(ureg.rad),
-                        phi=self.azimuth.m_as(ureg.rad),
-                    )
+                        [self.zenith.m_as(ureg.rad), self.azimuth.m_as(ureg.rad)]
+                    ).squeeze(),
                 ),
                 "irradiance": self.irradiance.kernel_dict(ctx=ctx)["spectrum"],
             }
