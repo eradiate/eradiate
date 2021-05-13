@@ -23,4 +23,6 @@ Sample warping [eradiate.warp]
    :toctree: generated/
 
    square_to_uniform_disk_concentric
+   uniform_disk_to_square_concentric
    square_to_uniform_hemisphere
+   uniform_hemisphere_to_square
