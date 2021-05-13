@@ -134,21 +134,23 @@ def test_distant(mode_mono):
 
 
 def test_distant_postprocessing(mode_mono):
-    d = DistantMeasure(film_resolution=(32, 32))
+    # We use a peculiar rectangular film size to make sure that we get dimensions
+    # right
+    d = DistantMeasure(film_resolution=(32, 16))
 
     # Add test data to results
     d.results.raw = {
-        550.0: {"values": {"sensor": np.ones((32, 32, 1))}, "spp": {"sensor": 128}}
+        550.0: {"values": {"sensor": np.ones((16, 32, 1))}, "spp": {"sensor": 128}}
     }
 
     # Postprocessing succeeds and viewing angles have correct bounds
     ds = d.postprocessed_results()
     assert "vza" in ds.coords
-    assert np.allclose(ds.vza.min(), 2.53234575)  # Value calculated manually
+    assert np.allclose(ds.vza.min(), 5.06592926)  # Value calculated manually
     assert np.allclose(ds.vza.max(), 86.47273911)  # Value calculated manually
     assert "vaa" in ds.coords
-    assert np.allclose(ds.vaa.min(), -178.5483871)  # Value calculated manually
-    assert np.allclose(ds.vaa.max(), 178.5483871)  # Value calculated manually
+    assert np.allclose(ds.vaa.min(), -177.09677419)  # Value calculated manually
+    assert np.allclose(ds.vaa.max(), 177.09677419)  # Value calculated manually
 
     # We now move on to the plane case
     d._film_resolution = (32, 1)
