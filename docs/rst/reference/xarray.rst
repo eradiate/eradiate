@@ -12,6 +12,16 @@ Creation [eradiate.xarray.make]
 
    make_dataarray
 
+Interpolation [eradiate.xarray.interp]
+--------------------------------------
+
+.. currentmodule:: eradiate.xarray.interp
+
+.. autosummary::
+   :toctree: generated/
+
+   film_to_angular
+
 Metadata specification and validation [eradiate.xarray.metadata]
 ----------------------------------------------------------------
 .. currentmodule:: eradiate.xarray.metadata
