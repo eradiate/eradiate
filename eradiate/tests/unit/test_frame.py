@@ -5,25 +5,65 @@ from eradiate.frame import (
     angles_to_direction,
     cos_angle_to_direction,
     direction_to_angles,
-    direction_to_angles,
     spherical_to_cartesian,
 )
 
 
 def test_cos_angle_to_direction():
+    # Old-style call
     assert np.allclose(cos_angle_to_direction(1.0, 0.0), [0, 0, 1])
     assert np.allclose(cos_angle_to_direction(0.0, 0.0), [1, 0, 0])
+    assert np.allclose(cos_angle_to_direction(0.5, 0.0), [np.sqrt(3) / 2, 0, 0.5])
     assert np.allclose(
         cos_angle_to_direction(-1.0, ureg.Quantity(135.0, "deg")), [0, 0, -1]
     )
 
+    # Vectorised call
+    assert np.allclose(
+        cos_angle_to_direction([1.0, 0.0, 0.5, -1.0], [0, 0, 0.0, 0.75 * np.pi]),
+        ([0, 0, 1], [1, 0, 0], [np.sqrt(3) / 2, 0, 0.5], [0, 0, -1]),
+    )
+
 
 def test_angles_to_direction():
-    assert np.allclose(angles_to_direction(0.0, 0.0), [0, 0, 1])
-    assert np.allclose(angles_to_direction(0.5 * np.pi, 0.0), [1, 0, 0])
+    # Old-style call
+    assert np.allclose(angles_to_direction([0.0, 0.0]), [0, 0, 1])
+    assert np.allclose(angles_to_direction([np.pi, 0.0]), [0, 0, -1])
+    assert np.allclose(angles_to_direction([0.5 * np.pi, 0.0]), [1, 0, 0])
+    assert np.allclose(angles_to_direction([0.5 * np.pi, np.pi]), [-1, 0, 0])
+    assert np.allclose(angles_to_direction([0.5 * np.pi, 0.5 * np.pi]), [0, 1, 0])
+    assert np.allclose(angles_to_direction([0.5 * np.pi, -0.5 * np.pi]), [0, -1, 0])
     assert np.allclose(
-        angles_to_direction(ureg.Quantity(45.0), ureg.Quantity(135.0, "deg")),
-        [-0.60167965, 0.60167965, 0.52532199],
+        angles_to_direction([0.25 * np.pi, 0]), [0.70710678, 0, 0.70710678]
+    )
+    assert np.allclose(
+        angles_to_direction([0.5 * np.pi, 0.25 * np.pi]), [0.70710678, 0.70710678, 0]
+    )
+
+    # Vectorised call
+    assert np.allclose(
+        angles_to_direction(
+            [
+                [0.0, 0.0],
+                [np.pi, 0.0],
+                [0.5 * np.pi, 0.0],
+                [0.5 * np.pi, np.pi],
+                [0.5 * np.pi, 0.5 * np.pi],
+                [0.5 * np.pi, -0.5 * np.pi],
+                [0.25 * np.pi, 0],
+                [0.5 * np.pi, 0.25 * np.pi],
+            ]
+        ),
+        [
+            [0, 0, 1],
+            [0, 0, -1],
+            [1, 0, 0],
+            [-1, 0, 0],
+            [0, 1, 0],
+            [0, -1, 0],
+            [0.70710678, 0, 0.70710678],
+            [0.70710678, 0.70710678, 0],
+        ],
     )
 
 
