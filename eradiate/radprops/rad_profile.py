@@ -497,6 +497,19 @@ class US76ApproxRadProfile(RadProfile):
         default="True",
     )
 
+    has_scattering = documented(
+        attr.ib(
+            default=True,
+            converter=bool,
+            validator=attr.validators.instance_of(bool),
+        ),
+        doc="Scattering switch. If ``True``, the scattering coefficient is "
+        "computed. Else, the scattering coefficient is not computed and "
+        "instead set to zero.",
+        type="bool",
+        default="True",
+    )
+
     absorption_data_set = documented(
         attr.ib(
             default=None,
@@ -535,9 +548,9 @@ class US76ApproxRadProfile(RadProfile):
         """
         Evaluate absorption coefficient given spectral context.
         """
+        profile = self.eval_thermoprops_profile()
         if self.has_absorption:
             wavelength = spectral_ctx.wavelength
-            profile = self.eval_thermoprops_profile()
 
             if self.absorption_data_set is None:  # ! this is never tested
                 data_set = self.default_absorption_data_set(wavelength=wavelength)
@@ -559,20 +572,20 @@ class US76ApproxRadProfile(RadProfile):
                 # we assume it is negligible.
             )
         else:
-            profile = self.eval_thermoprops_profile()
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
     def eval_sigma_s(self, spectral_ctx):
         """
         Evaluate scattering coefficient given spectral context.
         """
-        wavelength = spectral_ctx.wavelength
         profile = self.eval_thermoprops_profile()
-
-        return compute_sigma_s_air(
-            wavelength=wavelength,
-            number_density=ureg.Quantity(profile.n.values, profile.n.units),
-        )
+        if self.has_scattering:
+            return compute_sigma_s_air(
+                wavelength=spectral_ctx.wavelength,
+                number_density=ureg.Quantity(profile.n.values, profile.n.units),
+            )
+        else:
+            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
     def albedo(self, spectral_ctx=None):
         return (self.sigma_s(spectral_ctx) / self.sigma_t(spectral_ctx)).to(
@@ -772,6 +785,19 @@ class AFGL1986RadProfile(RadProfile):
         default="True",
     )
 
+    has_scattering = documented(
+        attr.ib(
+            default=True,
+            converter=bool,
+            validator=attr.validators.instance_of(bool),
+        ),
+        doc="Scattering switch. If ``True``, the scattering coefficient is "
+        "computed. Else, the scattering coefficient is not computed and "
+        "instead set to zero.",
+        type="bool",
+        default="True",
+    )
+
     absorption_data_sets = documented(
         attr.ib(
             default=None,
@@ -880,9 +906,9 @@ class AFGL1986RadProfile(RadProfile):
         .. note:: Extrapolate to zero when wavelength, pressure and/or
            temperature are out of bounds.
         """
+        profile = self.eval_thermoprops_profile()
         if self.has_absorption:
             wavelength = spectral_ctx.wavelength
-            profile = self.eval_thermoprops_profile()
 
             p = profile.p
             t = profile.t
@@ -928,20 +954,20 @@ class AFGL1986RadProfile(RadProfile):
 
             return ureg.Quantity(sigma_a, "km^-1")
         else:
-            profile = self.eval_thermoprops_profile()
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
     def eval_sigma_s(self, spectral_ctx):
         """
         Evaluate scattering coefficient given a spectral context.
         """
-        wavelength = spectral_ctx.wavelength
         profile = self.eval_thermoprops_profile()
-
-        return compute_sigma_s_air(
-            wavelength=wavelength,
-            number_density=ureg.Quantity(profile.n.values, profile.n.units),
-        )
+        if self.has_scattering:
+            return compute_sigma_s_air(
+                wavelength=spectral_ctx.wavelength,
+                number_density=ureg.Quantity(profile.n.values, profile.n.units),
+            )
+        else:
+            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
     def albedo(self, spectral_ctx=None):
         return (self.sigma_s(spectral_ctx) / self.sigma_t(spectral_ctx)).to(
