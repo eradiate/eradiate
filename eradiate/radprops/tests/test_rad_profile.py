@@ -122,6 +122,42 @@ def test_us76_approx_rad_profile_has_absorption_false(mode_mono, us76_approx_tes
     assert (ds.sigma_a.values == 0.0).all()
 
 
+def test_us76_approx_rad_profile_has_scattering_default(mode_mono, us76_approx_test_absorption_data_set):
+    # default value for 'has_scattering' is True, hence the scattering
+    # coefficient is computed and is not zero everywhere at 550 nm
+    p = US76ApproxRadProfile(absorption_data_set=us76_approx_test_absorption_data_set)
+    assert p.has_scattering
+    spectral_ctx = SpectralContext.new(wavelength=550.0)
+    ds = p.to_dataset(spectral_ctx)
+    assert (ds.sigma_s.values != 0.0).any()
+
+
+def test_us76_approx_rad_profile_has_scattering_true(mode_mono, us76_approx_test_absorption_data_set):
+    # when 'has_scattering' is True, the scattering coefficient is computed
+    # and is not zero everywhere at 550 nm
+    p = US76ApproxRadProfile(
+        has_scattering=True,
+        absorption_data_set=us76_approx_test_absorption_data_set
+    )
+    assert p.has_scattering
+    spectral_ctx = SpectralContext.new(wavelength=550.0)
+    ds = p.to_dataset(spectral_ctx)
+    assert (ds.sigma_s.values != 0.0).any()
+
+
+def test_us76_approx_rad_profile_has_scattering_false(mode_mono, us76_approx_test_absorption_data_set):
+    # when 'has_scattering' is False, the scattering coefficient is not 
+    # computed and is zero everywhere
+    p = US76ApproxRadProfile(
+        has_scattering=False,
+        absorption_data_set=us76_approx_test_absorption_data_set
+    )
+    assert not p.has_scattering
+    spectral_ctx = SpectralContext.new(wavelength=550.0)
+    ds = p.to_dataset(spectral_ctx)
+    assert (ds.sigma_s.values == 0.0).all()
+
+
 @pytest.fixture
 def afgl1986_test_absorption_data_sets():
     return {
@@ -211,7 +247,7 @@ def test_afgl1986_rad_profile_concentrations_invalid(mode_mono, afgl1986_test_ab
         p.eval_thermoprops_profile()
 
 
-def test_afgl1986_rad_profile_absorption_switch_default(mode_mono, afgl1986_test_absorption_data_sets):
+def test_afgl1986_rad_profile_has_absorption_default(mode_mono, afgl1986_test_absorption_data_sets):
     # default value for 'has_absorption' is True, hence the absorption
     # coefficient is computed and is not zero everywhere at 1650 nm
     p = AFGL1986RadProfile(absorption_data_sets=afgl1986_test_absorption_data_sets)
@@ -221,7 +257,7 @@ def test_afgl1986_rad_profile_absorption_switch_default(mode_mono, afgl1986_test
     assert (ds.sigma_a.values != 0.0).any()
 
 
-def test_afgl1986_rad_profile_absorption_switch_true(mode_mono, afgl1986_test_absorption_data_sets):
+def test_afgl1986_rad_profile_has_absorption_true(mode_mono, afgl1986_test_absorption_data_sets):
     # when 'has_absorption' is True, the absorption coefficient is computed
     # and is not zero everywhere at 1650 nm
     p = AFGL1986RadProfile(
@@ -234,7 +270,7 @@ def test_afgl1986_rad_profile_absorption_switch_true(mode_mono, afgl1986_test_ab
     assert (ds.sigma_a.values != 0.0).any()
 
 
-def test_afgl1986_rad_profile_absorption_switch_false(mode_mono, afgl1986_test_absorption_data_sets):
+def test_afgl1986_rad_profile_has_absorption_false(mode_mono, afgl1986_test_absorption_data_sets):
     # when 'has_absorption' is False, the absorption coefficient is not 
     # computed and is zero everywhere
     p = AFGL1986RadProfile(
@@ -245,3 +281,39 @@ def test_afgl1986_rad_profile_absorption_switch_false(mode_mono, afgl1986_test_a
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
     ds = p.to_dataset(spectral_ctx)
     assert (ds.sigma_a.values == 0.0).all()
+
+
+def test_afgl1986_rad_profile_has_scattering_default(mode_mono, afgl1986_test_absorption_data_sets):
+    # default value for 'has_scattering' is True, hence the absorption
+    # coefficient is computed and is not zero everywhere at 550 nm
+    p = AFGL1986RadProfile(absorption_data_sets=afgl1986_test_absorption_data_sets)
+    assert p.has_scattering
+    spectral_ctx = SpectralContext.new(wavelength=550.0)
+    ds = p.to_dataset(spectral_ctx)
+    assert (ds.sigma_s.values != 0.0).any()
+
+
+def test_afgl1986_rad_profile_has_scattering_true(mode_mono, afgl1986_test_absorption_data_sets):
+    # when 'has_scattering' is True, the scattering coefficient is computed
+    # and is not zero everywhere at 550 nm
+    p = AFGL1986RadProfile(
+        has_scattering=True,
+        absorption_data_sets=afgl1986_test_absorption_data_sets
+    )
+    assert p.has_scattering
+    spectral_ctx = SpectralContext.new(wavelength=550.0)
+    ds = p.to_dataset(spectral_ctx)
+    assert (ds.sigma_s.values != 0.0).any()
+
+
+def test_afgl1986_rad_profile_has_scattering_false(mode_mono, afgl1986_test_absorption_data_sets):
+    # when 'has_scattering' is False, the scattering coefficient is not 
+    # computed and is zero everywhere
+    p = AFGL1986RadProfile(
+        has_scattering=False,
+        absorption_data_sets=afgl1986_test_absorption_data_sets
+    )
+    assert not p.has_scattering
+    spectral_ctx = SpectralContext.new(wavelength=550.0)
+    ds = p.to_dataset(spectral_ctx)
+    assert (ds.sigma_s.values == 0.0).all()
