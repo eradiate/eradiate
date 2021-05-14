@@ -11,8 +11,8 @@ from ..._attrs import documented, parse_docs
 from ..._units import unit_context_kernel as uck
 from ..._units import unit_registry as ureg
 from ...radprops import RadProfileFactory
-from ...radprops.rad_profile import RadProfile
-from ...validators import is_file
+from ...radprops.rad_profile import AFGL1986RadProfile, RadProfile
+from ... import validators
 
 
 def write_binary_grid3d(filename, values):
@@ -108,14 +108,19 @@ class HeterogeneousAtmosphere(Atmosphere):
     This class builds a one-dimensional heterogeneous atmosphere. It expands as
     a ``heterogeneous`` kernel plugin, which takes as parameters a set of
     paths to volume data files. The radiative properties used to configure
-    :class:`.HeterogeneousAtmosphere` can be specified two ways:
+    :class:`.HeterogeneousAtmosphere` can be specified in two ways:
 
     - if the ``profile`` field is specified, kernel volume data files will be
       created using those data;
-    - if the ``profile`` field is not specified (*i.e.* set to ``None``), kernel
+    - if the ``profile`` field is set to ``None`` and
+      the ``albedo_fname`` and ``sigma_t_fname`` fields are specified, kernel
       volume data files will be read from locations set in the ``albedo_fname``
       and ``sigma_t_fname`` attributes (which then must be set to paths
       pointing to existing files).
+    - if the ``profile`` field is not specified and neither are the
+      ``albedo_fname`` and ``sigma_t_fname`` fields, then ``profile`` is set to
+      the default :class:`~eradiate.radprops.rad_profile.AFGL1986RadProfile`
+      radiative properties profile.
 
     If ``profile`` is specified:
 
@@ -138,20 +143,28 @@ class HeterogeneousAtmosphere(Atmosphere):
 
     profile = documented(
         attr.ib(
-            default=None,
-            converter=RadProfileFactory.convert,
+            default=attr.Factory(AFGL1986RadProfile),
+            converter=attr.converters.optional(RadProfileFactory.convert),
             validator=attr.validators.optional(attr.validators.instance_of(RadProfile)),
         ),
         doc="Radiative property profile used. If set, volume data files will be "
         "created from profile data to initialise the corresponding kernel "
-        "plugin. If ``None``, :class:`.HeterogeneousAtmosphere` will assume "
-        "that volume data files already exist.",
+        "plugin.",
         type=":class:`~eradiate.radprops.rad_profile.RadProfile` or None",
-        default="None",
+        default=":class:`AFGL1986RadProfile() <.AFGL1986RadProfile>`",
     )
 
+    @profile.validator
+    def _profile_validator(instance, attribute, value):
+        if instance.toa_altitude != "auto" and value is not None:
+            raise ValueError("'profile' cannot be set if 'toa_altitude' is not 'auto'.")
+
     albedo_fname = documented(
-        attr.ib(default=None, converter=attr.converters.optional(Path)),
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(Path),
+            validator=attr.validators.optional(validators.is_file),
+        ),
         doc="Path to the single scattering albedo volume data file. If "
         "``None``, a value will be created when the file will be "
         "requested.",
@@ -159,21 +172,11 @@ class HeterogeneousAtmosphere(Atmosphere):
         default="None",
     )
 
-    @albedo_fname.validator
-    def _albedo_fname_validator(self, attribute, value):
-        # The file should exist if no albedo value is provided to create it
-        if self.profile is None:
-            if value is None:
-                raise ValueError("if 'profile' is not set, 'albedo_fname' must be set")
-            try:
-                return is_file(self, attribute, value)
-            except FileNotFoundError:
-                raise
-
     sigma_t_fname = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(Path),
+            validator=attr.validators.optional(validators.is_file),
         ),
         doc="Path to the extinction coefficient volume data file. If ``None``, "
         "a value will be created when the file will be requested.",
@@ -181,16 +184,25 @@ class HeterogeneousAtmosphere(Atmosphere):
         default="None",
     )
 
+    @albedo_fname.validator
     @sigma_t_fname.validator
-    def _sigma_t_fname_validator(self, attribute, value):
-        # The file should exist if no sigma_t value is provided to create it
-        if self.profile is None:
-            if value is None:
-                raise ValueError("if 'profile' is not set, 'sigma_t_fname' must be set")
-            try:
-                return is_file(self, attribute, value)
-            except FileNotFoundError:
-                raise
+    def _albedo_fname_and_sigma_t_fname_validator(instance, attribute, value):
+        if instance.profile is None and value is None:
+            raise ValueError(
+                f"{attribute.name} must be set when profile is set to None."
+            )
+        if (
+            instance.width == "auto"
+            and instance.albedo_fname is not None
+            and instance.sigma_t_fname is not None
+        ):
+            raise ValueError(
+                "'albedo_fname' and 'sigma_t_fname' cannot be set when 'width' is set to 'auto'"
+            )
+        if instance.toa_altitude == "auto" and value is not None:
+            raise ValueError(
+                "'albedo_fname' and 'sigma_t_fname' cannot be set when toa_altitude is set to 'auto'"
+            )
 
     cache_dir = documented(
         attr.ib(default=None, converter=attr.converters.optional(Path)),
@@ -203,20 +215,6 @@ class HeterogeneousAtmosphere(Atmosphere):
     _quantities = {"albedo": "albedo", "sigma_t": "collision_coefficient"}
 
     def __attrs_post_init__(self):
-        # Check for automatic width and height computation
-        if self.profile is not None:
-            if self.toa_altitude != "auto":
-                raise ValueError(
-                    "toa_altitude must be set to 'auto' when profile is set"
-                )
-        else:
-            if self.toa_altitude == "auto":
-                raise ValueError(
-                    "toa_altitude cannot be set to 'auto' when profile is None"
-                )
-            if self.width == "auto":
-                raise ValueError("width cannot be set to 'auto' when profile is None")
-
         # Prepare cache directory in case we'd need it
         if self.cache_dir is None:
             self.cache_dir = Path(tempfile.mkdtemp())
@@ -225,11 +223,9 @@ class HeterogeneousAtmosphere(Atmosphere):
 
     def height(self):
         if self.toa_altitude == "auto":
-            return (
-                self.profile.levels.max()
-            )  # assumes minimum altitude level is at 0 km
+            return self.profile.levels.max()
         else:
-            return ureg.Quantity(100.0, ureg.km)  # matches the default value
+            return self.toa_altitude
 
     def kernel_width(self, ctx=None):
         if self.width == "auto":

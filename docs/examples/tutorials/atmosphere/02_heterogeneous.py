@@ -5,80 +5,110 @@ Heterogeneous atmospheres
 
 # %%
 # This tutorial illustrates how to create a heterogeneous atmosphere.
+#
 # We begin by setting the eradiate operational mode to the monochromatic mode
 # and set the wavelength to 550 nm:
 
 import eradiate
+
 eradiate.set_mode("mono")
+spectral_ctx = eradiate.contexts.SpectralContext.new(wavelength=550.0)
 
 # %%
 # This is required because heterogeneous atmospheres are objects whose internal
 # state depend on the wavelength.
-# We import matplotlib.pyplot because we will produce a plot later:
+# We import ``matplotlib.pyplot`` because we will produce a plot later:
 
 import matplotlib.pyplot as plt
 
 # %%
-# We also import the eradiate's unit registry as it will let us set the physical
+# We also import eradiate's unit registry as it will let us set the physical
 # quantities parameters of the heterogeneous atmosphere in a convenient way:
 
 from eradiate import unit_registry as ureg
 
-# %%
-# The heterogeneous atmospheres objects are defined by their underlying
-# radiative properties profile.
-# In this tutorial, we use
-# :class:`~eradiate.radprops.rad_profile.US76ApproxRadProfile`,
-# an approximated radiative properties profile
-# corresponding to the
-# :mod:`~eradiate.thermoprops.us76`
-# atmosphere thermophysical model.
 
 # %%
 # Get started
 # --------------------
-# Create the heterogeneous atmosphere with default parameters (except
-# ``profile``, that is required):
+# Create a heterogeneous atmosphere with:
+
+atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere()
+
+# %%
+# The default constructor uses a default radiative properties profile
+# that extends from 0 to 100 km with 100 layers -- 1 km thick each.
+# This default radiative properties profile corresponds to a purely scattering
+# atmosphere (i.e., no absorption) with common scattering coefficient values
+# for a *U.S. Standard Atmosphere, 1976* thermophysical properties profile and
+# a 550 nm wavelength value.
+
+# %%
+# Set the radiative properties profile
+# ------------------------------------
+# You can set the atmosphere radiative properties profile.
+# Let us use the
+# :class:`~eradiate.radprops.rad_profile.US76ApproxRadProfile`,
+# an approximated radiative properties profile corresponding to the
+# :mod:`~eradiate.thermoprops.us76` atmosphere thermophysical model.
 
 atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
     profile=eradiate.radprops.US76ApproxRadProfile()
 )
 
 # %%
-# The default
-# :class:`~eradiate.radprops.rad_profile.US76ApproxRadProfile`
+# The default :class:`~eradiate.radprops.rad_profile.US76ApproxRadProfile`
 # consists of a 100-km high profile with 50 equally sized -- *i.e.* 2-km
 # thick -- layers.
 # In each of these layers, the albedo and the extinction coefficient are
 # automatically computed in the appropriate pressure and temperature conditions
 # corresponding to the :mod:`~eradiate.thermoprops.us76` atmosphere
-# thermophysical model, and at the current wavelength.
-# You can customise the radiative properties profile (see below).
+# thermophysical model.
+#
+# Refer to the :mod:`~eradiate.radprops` module documentation for a list of
+# available radiative properties profiles.
 
 # %%
-# Set the atmosphere's dimensions
-# -------------------------------
-# Set the atmosphere's height using the ``height`` attribute of the radiative
-# properties profile object:
+# Set the atmosphere's level altitude mesh
+# ----------------------------------------
+# Set the atmosphere's level altitude mesh using the ``levels`` attribute of
+# the radiative properties profile object:
+
+import numpy as np
 
 atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
     profile=eradiate.radprops.US76ApproxRadProfile(
-        height=ureg.Quantity(120, "km")
+        levels=ureg.Quantity(np.linspace(0, 120, 61), "km")
     )
 )
 
 # %%
-# The atmosphere's height automatically inherits the height of the underlying
-# radiative properties profile object.
-# In the example above, the atmosphere is 120 km high.
+# This level altitude mesh defines 60 layers, each 2 km-thick.
+# The atmosphere's vertical extension automatically inherits that of the
+# underlying radiative properties profile object so that, in the example above,
+# the atmosphere also extends from 0 to 120 km.
+# Use the ``levels`` parameter to control the atmosphere vertical extension as
+# well as the number of atmospheric layers and their thicknesses.
 #
+# For example, you can define a completely arbitrary level altitude mesh with
+# four layers of varying thicknesses:
+
+atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
+    profile=eradiate.radprops.US76ApproxRadProfile(
+        levels=ureg.Quantity(np.array([0.0, 4.0, 12.0, 64.0, 100.0]), "km")
+    )
+)
+
+# %%
+# Set the atmosphere's width
+# --------------------------
 # Set the atmosphere's width using the ``width`` attribute:
 
 atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
     profile=eradiate.radprops.US76ApproxRadProfile(
-        height=ureg.Quantity(120, "km")
+        levels=ureg.Quantity(np.linspace(0, 120, 61), "km")
     ),
-    width=ureg.Quantity(500, "km")
+    width=ureg.Quantity(500, "km"),
 )
 
 # %%
@@ -91,8 +121,7 @@ atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
 #    looking down with a zenith angle varying from 0 to 75°.
 #    Above 75°, the measured values start to be influenced by the fact that the
 #    horizontal size of the atmosphere is finite.
-#    For accurate results above 75°, consider increasing the atmosphere width,
-#    by setting the ``width`` attribute to a larger value.
+#    For accurate results above 75°, consider increasing the atmosphere width.
 #
 # Inspect the atmosphere's dimensions
 # -----------------------------------
@@ -104,29 +133,11 @@ print(atmosphere.height().to("km"))
 
 print(atmosphere.width.to("km"))
 
-# %%
-# Control the number of atmospheric layers
-# ----------------------------------------
-# You can control the division of the atmosphere into homogeneous horizontal
-# layers, by setting the ``n_layers`` attribute of the radiative properties
-# profile:
-
-atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
-    profile=eradiate.radprops.US76ApproxRadProfile(
-        height=ureg.Quantity(120, "km"),
-        n_layers=120,
-    )
-)
 
 # %%
-# The atmosphere is now divided into 120 1-km-thick layers.
-#
-# .. note::
-#    The atmosphere layers are of equal-thickness.
-#
 # Inspect the atmosphere's radiative properties
 # ---------------------------------------------
-# You can fetch the atmospheric radiative properties into a data set:
+# You can fetch the atmospheric radiative properties profile into a data set:
 
 spectral_ctx = eradiate.contexts.SpectralContext.new()
 ds = atmosphere.profile.to_dataset(spectral_ctx)
