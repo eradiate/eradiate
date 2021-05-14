@@ -10,6 +10,7 @@ import pinttr
 import xarray as xr
 
 import eradiate
+from eradiate import path_resolver
 
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
@@ -29,8 +30,17 @@ from ..thermoprops.util import (
 from ..validators import all_positive
 
 
+def _to_quantity(variable):
+    try:
+        units = variable.units
+    except KeyError:
+        raise ValueError(f"{variable} has no units.")
+    finally:
+        return ureg.Quantity(variable.values, units)
+
+
 @ureg.wraps(
-    ret=None, args=("nm", "km", "km", "km^-1", "km^-1", "km^-1", None), strict=False
+    ret=None, args=("nm", "km", "km", "km^-1", "km^-1", "km^-1", ""), strict=False
 )
 def make_dataset(
     wavelength,
@@ -380,6 +390,15 @@ class ArrayRadProfile(RadProfile):
     def sigma_s(self, spectral_ctx=None):
         return self.sigma_t(spectral_ctx) * self.albedo(spectral_ctx)
 
+    @classmethod
+    def from_dataset(cls, path):
+        ds = xr.open_dataset(path_resolver.resolve(path))
+        z_level = _to_quantity(ds.z_level)
+        n_layers = ds.z_level.size - 1
+        albedo = _to_quantity(ds.albedo).reshape(1, 1, n_layers)
+        sigma_t = _to_quantity(ds.sigma_t).reshape(1, 1, n_layers)
+        return cls(albedo_values=albedo, sigma_t_values=sigma_t, levels=z_level)
+
     def to_dataset(self, spectral_ctx=None):
         if eradiate.mode().is_monochromatic():
             return make_dataset(
@@ -613,8 +632,8 @@ class US76ApproxRadProfile(RadProfile):
         profile = self.eval_thermoprops_profile()
         return make_dataset(
             wavelength=spectral_ctx.wavelength,
-            z_level=profile.z_level.values,
-            z_layer=profile.z_layer.values,
+            z_level=_to_quantity(profile.z_level),
+            z_layer=_to_quantity(profile.z_layer),
             sigma_a=self.sigma_a(spectral_ctx).flatten(),
             sigma_s=self.sigma_s(spectral_ctx).flatten(),
         )
@@ -994,8 +1013,8 @@ class AFGL1986RadProfile(RadProfile):
         """
         return make_dataset(
             wavelength=spectral_ctx.wavelength,
-            z_level=self.eval_thermoprops_profile().z_level.values,
-            z_layer=self.eval_thermoprops_profile().z_layer.values,
+            z_level=_to_quantity(self.eval_thermoprops_profile().z_level),
+            z_layer=_to_quantity(self.eval_thermoprops_profile().z_layer),
             sigma_a=self.sigma_a(spectral_ctx).flatten(),
             sigma_s=self.sigma_s(spectral_ctx).flatten(),
         )

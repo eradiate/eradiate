@@ -33,10 +33,11 @@ def test_read_binary_grid3d():
 def test_heterogeneous_nowrite(mode_mono):
     from mitsuba.core.xml import load_dict
 
-    # Test default constructor
+    # Constructor with volume data files
     a = HeterogeneousAtmosphere(
         width=ureg.Quantity(100.0, ureg.km),
         toa_altitude=ureg.Quantity(100.0, ureg.km),
+        profile=None,
         sigma_t_fname=_presolver.resolve(
             "tests/textures/heterogeneous_atmosphere_mono/sigma_t.vol"
         ),
@@ -45,7 +46,7 @@ def test_heterogeneous_nowrite(mode_mono):
         ),
     )
 
-    # Check if default output can be loaded
+    # Default output can be loaded
     ctx = KernelDictContext(ref=False)
 
     p = a.phase(ctx)
@@ -70,7 +71,7 @@ def test_heterogeneous_nowrite(mode_mono):
 def test_heterogeneous_write(mode_mono, tmpdir):
     ctx = KernelDictContext()
 
-    # Check if volume data file creation works as expected
+    # Volume data file creation works as expected
     with unit_context_config.override({"length": "km"}):
         a = HeterogeneousAtmosphere(
             width=100.0,
@@ -87,19 +88,112 @@ def test_heterogeneous_write(mode_mono, tmpdir):
     # If file creation is successful, volume data files must exist
     assert a.albedo_fname.is_file()
     assert a.sigma_t_fname.is_file()
-    # Check if written files can be loaded
+
+    # Written files can be loaded
     assert KernelDict.new(a, ctx=ctx).load() is not None
 
-    # Check that inconsistent init will raise
-    with pytest.raises(ValueError):
-        a = HeterogeneousAtmosphere()
 
+def test_heterogeneous_file_does_not_exist(mode_mono, tmpdir):
+    # Non-existing volume data files raise an exception
     with pytest.raises(FileNotFoundError):
         a = HeterogeneousAtmosphere(
             profile=None,
             albedo_fname=tmpdir / "doesnt_exist.vol",
             sigma_t_fname=tmpdir / "doesnt_exist.vol",
         )
+
+
+def test_heterogeneous_missing_albedo_fname(mode_mono, tmpdir):
+    # Providing only 'sigma_t_fname' and not 'albedo_fname' when 'profile' is
+    # None is not valid
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            profile=None,
+            toa_altitude=ureg.Quantity(100, "km"),
+            width=ureg.Quantity(1000, "km"),
+            sigma_t_fname=_presolver.resolve(
+                "tests/textures/heterogeneous_atmosphere_mono/sigma_t.vol"
+            ),
+        )
+
+
+def test_heterogeneous_missing_sigma_t_fname(mode_mono, tmpdir):
+    # Providing only 'albedo_fname' and not 'sigma_t_fname' when 'profile' is
+    # None is not valid
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            profile=None,
+            toa_altitude=ureg.Quantity(100, "km"),
+            width=ureg.Quantity(1000, "km"),
+            albedo_fname=_presolver.resolve(
+                "tests/textures/heterogeneous_atmosphere_mono/albedo.vol"
+            ),
+        )
+
+
+def test_heterogeneous_missing_toa_altitude(mode_mono, tmpdir):
+    # Providing 'albedo_fname' and 'sigma_t_fname' but not 'toa_altitude'
+    # when 'profile' is None is not valid
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            profile=None,
+            width=ureg.Quantity(1000, "km"),
+            albedo_fname=_presolver.resolve(
+                "tests/textures/heterogeneous_atmosphere_mono/albedo.vol"
+            ),
+            sigma_t_fname=_presolver.resolve(
+                "tests/textures/heterogeneous_atmosphere_mono/sigma_t.vol"
+            ),
+        )
+
+
+def test_heterogeneous_missing_width(mode_mono, tmpdir):
+    # Providing 'albedo_fname' and 'sigma_t_fname' but not 'width' when
+    # 'profile' is None is not valid
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            profile=None,
+            toa_altitude=ureg.Quantity(100, "km"),
+            albedo_fname=_presolver.resolve(
+                "tests/textures/heterogeneous_atmosphere_mono/albedo.vol"
+            ),
+            sigma_t_fname=_presolver.resolve(
+                "tests/textures/heterogeneous_atmosphere_mono/sigma_t.vol"
+            ),
+        )
+
+
+def test_heterogeneous_toa_altitude_default_profile(mode_mono):
+    # Setting 'toa_altitude' when 'profile' is not None is not valid.
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            toa_altitude=ureg.Quantity(100, "km"),
+        )
+
+
+def test_heterogeneous_toa_altitude_afgl1986_profile(mode_mono):
+    # Setting 'toa_altitude' when 'profile' is not None is not valid.
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            profile=AFGL1986RadProfile(),
+            toa_altitude=ureg.Quantity(100, "km"),
+        )
+
+
+def test_heterogeneous_toa_altitude_us76_approx_profile(mode_mono):
+    # Setting 'toa_altitude' when 'profile' is not None is not valid.
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            profile=US76ApproxRadProfile(),
+            toa_altitude=ureg.Quantity(100, "km"),
+        )
+
+
+def test_heterogeneous_default(mode_mono):
+    # Default heterogeneous atmosphere uses the default radiative properties
+    # profile
+    a = HeterogeneousAtmosphere()
+    assert a.profile == AFGL1986RadProfile()
 
 
 def test_heterogeneous_us76(mode_mono, tmpdir):
@@ -133,7 +227,8 @@ def test_heterogeneous_us76(mode_mono, tmpdir):
     # If file creation is successful, volume data files must exist
     assert a.albedo_fname.is_file()
     assert a.sigma_t_fname.is_file()
-    # Check if written files can be loaded
+
+    # Written files can be loaded
     assert KernelDict.new(a, ctx=ctx).load() is not None
 
 
@@ -179,8 +274,9 @@ def test_heterogeneous_afgl1986(mode_mono, tmpdir):
     assert isinstance(a.profile, AFGL1986RadProfile)
 
 
-def test_heterogeneous_units(mode_mono):
-    # Initialising a heterogeneous atmosphere with the wrong units raises an error
+def test_heterogeneous_invalid_width_units(mode_mono):
+    # Initialising a heterogeneous atmosphere with the invalid 'width' units
+    # raises an exception
     with pytest.raises(pinttr.exceptions.UnitsError):
         HeterogeneousAtmosphere(
             width=ureg.Quantity(100.0, "m^2"),
@@ -193,6 +289,10 @@ def test_heterogeneous_units(mode_mono):
             },
         )
 
+
+def test_heterogeneous_invalid_toa_altitude_units(mode_mono):
+    # Initialising a heterogeneous atmosphere with the invalid 'toa_altitude'
+    # units raises an exception
     with pytest.raises(pinttr.exceptions.UnitsError):
         HeterogeneousAtmosphere(
             width=100.0,
@@ -206,8 +306,9 @@ def test_heterogeneous_units(mode_mono):
         )
 
 
-def test_heterogeneous_values(mode_mono, tmpdir):
-    # test that initialising a heterogeneous atmosphere with invalid values raises an error
+def test_heterogeneous_invalid_width_value(mode_mono, tmpdir):
+    # Initialising a heterogeneous atmosphere with invalid width value raises
+    # an exception
     with pytest.raises(ValueError):
         HeterogeneousAtmosphere(
             width=-100.0,
@@ -221,6 +322,10 @@ def test_heterogeneous_values(mode_mono, tmpdir):
             cache_dir=tmpdir,
         )
 
+
+def test_heterogeneous_invalid_toa_altitude_value(mode_mono, tmpdir):
+    # Initialising a heterogeneous atmosphere with invalid 'toa_altitude'
+    # value raises an exception
     with pytest.raises(ValueError):
         HeterogeneousAtmosphere(
             width=100.0,
