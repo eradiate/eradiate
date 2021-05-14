@@ -86,34 +86,37 @@ def test_us76_approx_rad_profile(mode_mono, us76_approx_test_absorption_data_set
         assert x.shape == (1, 1, 120)
 
 
-def test_us76_approx_rad_profile_absorption_switch_default(mode_mono, us76_approx_test_absorption_data_set):
-    # default value for 'absorption_switch' is True, hence the absorption
+def test_us76_approx_rad_profile_has_absorption_default(mode_mono, us76_approx_test_absorption_data_set):
+    # default value for 'has_absorption' is True, hence the absorption
     # coefficient is computed and is not zero everywhere at 1650 nm
     p = US76ApproxRadProfile(absorption_data_set=us76_approx_test_absorption_data_set)
+    assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
     ds = p.to_dataset(spectral_ctx)
     assert (ds.sigma_a.values != 0.0).any()
 
 
-def test_us76_approx_rad_profile_absorption_switch_true(mode_mono, us76_approx_test_absorption_data_set):
-    # when 'absorption_switch' is True, the absorption coefficient is computed
+def test_us76_approx_rad_profile_has_absorption_true(mode_mono, us76_approx_test_absorption_data_set):
+    # when 'has_absorption' is True, the absorption coefficient is computed
     # and is not zero everywhere at 1650 nm
     p = US76ApproxRadProfile(
-        absorption_switch=True,
+        has_absorption=True,
         absorption_data_set=us76_approx_test_absorption_data_set
     )
+    assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
     ds = p.to_dataset(spectral_ctx)
     assert (ds.sigma_a.values != 0.0).any()
 
 
-def test_us76_approx_rad_profile_absorption_switch_false(mode_mono, us76_approx_test_absorption_data_set):
-    # when 'absorption_switch' is False, the absorption coefficient is not 
+def test_us76_approx_rad_profile_has_absorption_false(mode_mono, us76_approx_test_absorption_data_set):
+    # when 'has_absorption' is False, the absorption coefficient is not 
     # computed and is zero everywhere
     p = US76ApproxRadProfile(
-        absorption_switch=False,
+        has_absorption=False,
         absorption_data_set=us76_approx_test_absorption_data_set
     )
+    assert not p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
     ds = p.to_dataset(spectral_ctx)
     assert (ds.sigma_a.values == 0.0).all()
@@ -209,33 +212,36 @@ def test_afgl1986_rad_profile_concentrations_invalid(mode_mono, afgl1986_test_ab
 
 
 def test_afgl1986_rad_profile_absorption_switch_default(mode_mono, afgl1986_test_absorption_data_sets):
-    # default value for 'absorption_switch' is True, hence the absorption
+    # default value for 'has_absorption' is True, hence the absorption
     # coefficient is computed and is not zero everywhere at 1650 nm
     p = AFGL1986RadProfile(absorption_data_sets=afgl1986_test_absorption_data_sets)
+    assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
     ds = p.to_dataset(spectral_ctx)
     assert (ds.sigma_a.values != 0.0).any()
 
 
 def test_afgl1986_rad_profile_absorption_switch_true(mode_mono, afgl1986_test_absorption_data_sets):
-    # when 'absorption_switch' is True, the absorption coefficient is computed
+    # when 'has_absorption' is True, the absorption coefficient is computed
     # and is not zero everywhere at 1650 nm
     p = AFGL1986RadProfile(
-        absorption_switch=True,
+        has_absorption=True,
         absorption_data_sets=afgl1986_test_absorption_data_sets
     )
+    assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
     ds = p.to_dataset(spectral_ctx)
     assert (ds.sigma_a.values != 0.0).any()
 
 
 def test_afgl1986_rad_profile_absorption_switch_false(mode_mono, afgl1986_test_absorption_data_sets):
-    # when 'absorption_switch' is False, the absorption coefficient is not 
+    # when 'has_absorption' is False, the absorption coefficient is not 
     # computed and is zero everywhere
     p = AFGL1986RadProfile(
-        absorption_switch=False,
+        has_absorption=False,
         absorption_data_sets=afgl1986_test_absorption_data_sets
     )
+    assert not p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
     ds = p.to_dataset(spectral_ctx)
     assert (ds.sigma_a.values == 0.0).all()
