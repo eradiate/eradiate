@@ -1,5 +1,5 @@
 import enum
-from typing import Optional
+from typing import Dict, Optional
 
 import attr
 import mitsuba
@@ -13,8 +13,6 @@ class ModeSpectrum(enum.Enum):
     """
 
     MONO = "mono"
-    # POLY = "poly"
-    # SPECTRAL = "spectral"
     # CKD = "ckd"
 
 
@@ -86,7 +84,7 @@ class Mode:
     )
 
     @staticmethod
-    def new(mode_id):
+    def new(mode_id) -> "Mode":
         """
         Create a :class:`Mode` instance given its identifier. Available modes are:
 
@@ -99,19 +97,19 @@ class Mode:
             raise ValueError(f"unknown mode '{mode_id}'")
         return Mode(id=mode_id, **mode_kwargs)
 
-    def is_monochromatic(self):
+    def is_monochromatic(self) -> bool:
         """
         Return ``True`` if active mode is monochromatic.
         """
         return self.spectrum is ModeSpectrum.MONO
 
-    def is_single_precision(self):
+    def is_single_precision(self) -> bool:
         """
         Return ``True`` if active mode is single-precision.
         """
         return self.precision is ModePrecision.SINGLE
 
-    def is_double_precision(self):
+    def is_double_precision(self) -> bool:
         """
         Return ``True`` if active mode is double-precision.
         """
@@ -119,7 +117,7 @@ class Mode:
 
 
 # Eradiate's operational mode configuration
-_current_mode = None
+_current_mode: Optional[Mode] = None
 
 
 # -- Public API ----------------------------------------------------------------
@@ -129,23 +127,23 @@ def mode() -> Optional[Mode]:
     """
     Get current operational mode.
 
-    Returns → :class:`Mode`
+    Returns → :class:`.Mode` or None
         Current operational mode.
     """
     return _current_mode
 
 
-def modes():
+def modes() -> Dict:
     """
     Get list of registered operational modes.
 
-    Returns → dict[str, Mode]
+    Returns → dict
         List of registered operational modes
     """
     return _mode_registry
 
 
-def set_mode(mode_id):
+def set_mode(mode_id: str):
     """
     Set Eradiate's operational mode.
 
@@ -156,6 +154,9 @@ def set_mode(mode_id):
     Parameter ``mode_id`` (str):
         Mode to be selected (see list below).
 
+    Raises → ValueError:
+        ``mode_id`` does not match any of the known mode identifiers.
+
     .. rubric:: Available modes
 
     * ``mono`` (monochromatic mode, single precision)
@@ -163,10 +164,10 @@ def set_mode(mode_id):
     """
     global _current_mode
 
-    if mode_id in _mode_registry.keys():
+    if mode_id in _mode_registry:
         mode = Mode.new(mode_id)
         mitsuba.set_variant(mode.kernel_variant)
     else:
-        mode = None
+        raise ValueError(f"unknown mode '{mode_id}'")
 
     _current_mode = mode
