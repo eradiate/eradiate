@@ -157,16 +157,19 @@ def set_mode(mode_id: str):
     Raises → ValueError:
         ``mode_id`` does not match any of the known mode identifiers.
 
-    .. rubric:: Available modes
+    .. rubric:: Valid mode IDs
 
     * ``mono`` (monochromatic mode, single precision)
     * ``mono_double`` (monochromatic mode, double-precision)
+    * ``none`` (no mode selected)
     """
     global _current_mode
 
     if mode_id in _mode_registry:
         mode = Mode.new(mode_id)
         mitsuba.set_variant(mode.kernel_variant)
+    elif mode_id == "none":
+        mode = None
     else:
         raise ValueError(f"unknown mode '{mode_id}'")
 
