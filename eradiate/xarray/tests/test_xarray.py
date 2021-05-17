@@ -4,7 +4,7 @@ from eradiate.xarray.metadata import (
     CoordSpecRegistry,
     DatasetSpec,
     VarSpec,
-    validate_metadata
+    validate_metadata,
 )
 
 
@@ -29,5 +29,5 @@ def test_validate_metadata(dataarray_without_metadata):
     assert attrs == {
         "standard_name": "viewing_zenith_angle",
         "units": "deg",
-        "long_name": "viewing zenith angle"
+        "long_name": "viewing zenith angle",
     }

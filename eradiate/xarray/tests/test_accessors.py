@@ -1,11 +1,7 @@
 import pytest
 import xarray as xr
 
-from eradiate.xarray.metadata import (
-    CoordSpec,
-    DatasetSpec,
-    VarSpec
-)
+from eradiate.xarray.metadata import CoordSpec, DatasetSpec, VarSpec
 
 
 def test_dataarray_accessor_validate_metadata(dataarray_without_metadata):
