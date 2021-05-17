@@ -1,11 +1,27 @@
+__all__ = [
+    "CoordSpec",
+    "DatasetSpec",
+    "VarSpec",
+    "validate_metadata",
+]
+
+from typing import Dict, List, Optional, Union
+
 import attr
 import cerberus
+import xarray
 
 from eradiate._attrs import documented, parse_docs
 
 
-def validate_metadata(data, spec, normalize=False, allow_unknown=False):
-    """Validate (and possibly normalise) metadata fields of the ``data``
+def validate_metadata(
+    data: Union[xarray.Dataset, xarray.DataArray, xarray.Coordinate],
+    spec: "DataSpec",
+    normalize: bool = False,
+    allow_unknown: bool = False,
+):
+    """
+    Validate (and possibly normalise) metadata fields of the ``data``
     parameter based on a data specification.
 
     Parameter ``data``:
@@ -44,7 +60,7 @@ class DataSpec:
     """Interface for data specification classes."""
 
     @property
-    def schema(self):
+    def schema(self) -> Dict:
         """Cerberus schema for metadata validation and normalisation. This
         default implementation raises a NotImplementedError."""
         raise NotImplementedError
@@ -55,14 +71,14 @@ class DataSpec:
 class CoordSpec(DataSpec):
     """Specification for a coordinate variable."""
 
-    standard_name = documented(
+    standard_name: Optional[str] = documented(
         attr.ib(),
         doc="`Standard name as implied by the CF-convention "
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#standard-name>`_.",
         type="str",
     )
 
-    units = documented(
+    units: Optional[str] = documented(
         attr.ib(),
         doc="`Units as implied by the CF-convention "
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#units>`_. "
@@ -73,7 +89,7 @@ class CoordSpec(DataSpec):
         type="str or None",
     )
 
-    long_name = documented(
+    long_name: Optional[str] = documented(
         attr.ib(),
         doc="`Long name as implied by the CF-convention "
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#long-name>`_.",
@@ -81,9 +97,11 @@ class CoordSpec(DataSpec):
     )
 
     @property
-    def schema(self):
-        """Cerberus schema for metadata validation and normalisation. The
-        generated schema can be found in the source code."""
+    def schema(self) -> Dict:
+        """
+        Cerberus schema for metadata validation and normalisation. The generated
+        schema can be found in the source code.
+        """
         result = {
             "standard_name": {
                 "allowed": [self.standard_name],
@@ -110,25 +128,25 @@ class CoordSpec(DataSpec):
 
 
 class CoordSpecRegistry:
-    """Storage for coordinate specifications (:class:`CoordSpec` instances).
+    """
+    Storage for coordinate specifications (:class:`CoordSpec` instances).
     This class also serves stored objects, either individually or as consistent
     collections.
 
-    .. note::
-
-       This class should not be instantiated.
+    .. note:: This class should not be instantiated.
     """
 
     #: Coordinate specification registry (dict[str, :class:`CoordSpec`]).
-    registry = {}
+    registry: Dict = {}
 
     #: Coordination specification collection registry
     #: (dict[str, dict[str, :class:`CoordSpec`]]).
-    registry_collections = {}
+    registry_collections: Dict = {}
 
     @classmethod
-    def register(cls, spec_id, coord_spec):
-        """Add a :class:`CoordSpec` instance to the registry.
+    def register(cls, spec_id: str, coord_spec: CoordSpec):
+        """
+        Add a :class:`CoordSpec` instance to the registry.
 
         Parameter ``spec_id`` (str):
             Registry keyword.
@@ -139,8 +157,9 @@ class CoordSpecRegistry:
         cls.registry[spec_id] = coord_spec
 
     @classmethod
-    def register_collection(cls, collection_id, coord_spec_ids):
-        """Add a collection of :class:`CoordSpec` instance to the registry.
+    def register_collection(cls, collection_id: str, coord_spec_ids: List[str]):
+        """
+        Add a collection of :class:`CoordSpec` instance to the registry.
         Registered coordinate specifications must be already registered
         to this registry (see :meth:`register`).
 
@@ -156,7 +175,7 @@ class CoordSpecRegistry:
         }
 
     @classmethod
-    def get(cls, coord_spec_id):
+    def get(cls, coord_spec_id: str) -> CoordSpec:
         """Query the registry for a coordinate specification.
 
         Parameter ``coord_spec_id`` (str):
@@ -168,9 +187,9 @@ class CoordSpecRegistry:
         return cls.registry[coord_spec_id]
 
     @classmethod
-    def get_collection(cls, collection_id):
-        """Query the coolection registry for a coordinate specification
-        collection.
+    def get_collection(cls, collection_id: str) -> Dict[str, CoordSpec]:
+        """
+        Query the collection registry for a coordinate specification collection.
 
         Parameter ``collection_id`` (str):
             Coordinate specification collection identifier to lookup in the
@@ -240,7 +259,7 @@ def _coord_specs_validator(instance, attribute, value):
 class VarSpec:
     """Specification for a data variable."""
 
-    standard_name = documented(
+    standard_name: Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -252,7 +271,7 @@ class VarSpec:
         type="str or None",
     )
 
-    units = documented(
+    units: Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -266,7 +285,7 @@ class VarSpec:
         type="str or None",
     )
 
-    long_name = documented(
+    long_name: Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -281,7 +300,7 @@ class VarSpec:
         type="str or None",
     )
 
-    coord_specs = documented(
+    coord_specs: Dict[str, CoordSpec] = documented(
         attr.ib(
             converter=CoordSpecRegistry.str_to_collection,
             factory=dict,
@@ -302,12 +321,12 @@ class VarSpec:
             )
 
     @property
-    def dims(self):
+    def dims(self) -> List[str]:
         """Return list of dimension coordinate names."""
         return list(self.coord_specs.keys())
 
     @property
-    def schema(self):
+    def schema(self) -> Dict:
         """Cerberus schema for metadata validation and normalisation. The
         generated schema can be found in the source code."""
         result = {
@@ -346,13 +365,14 @@ def _var_specs_validator(instance, attribute, value):
 @parse_docs
 @attr.s
 class DatasetSpec:
-    """Specification for a dataset.
+    """
+    Specification for a dataset.
 
     .. warning:: Either all or none of ``convention``, ``title``, ``history``,
        ``source`` and ``references`` must be ``None``.
     """
 
-    convention = documented(
+    convention: Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -364,7 +384,7 @@ class DatasetSpec:
         default="None",
     )
 
-    title = documented(
+    title: Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -375,7 +395,7 @@ class DatasetSpec:
         default="None",
     )
 
-    history = documented(
+    history: Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -386,7 +406,7 @@ class DatasetSpec:
         default="None",
     )
 
-    source = documented(
+    source: Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -397,7 +417,7 @@ class DatasetSpec:
         default="None",
     )
 
-    references = documented(
+    references: Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -409,7 +429,7 @@ class DatasetSpec:
         default="None",
     )
 
-    var_specs = documented(
+    var_specs: Dict[str, CoordSpec] = documented(
         attr.ib(
             factory=dict,
             validator=[attr.validators.instance_of(dict), _var_specs_validator],
@@ -419,7 +439,7 @@ class DatasetSpec:
         default="dict()",
     )
 
-    coord_specs = documented(
+    coord_specs: Dict[str, CoordSpec] = documented(
         attr.ib(
             converter=CoordSpecRegistry.str_to_collection,
             factory=dict,
@@ -452,7 +472,7 @@ class DatasetSpec:
             )
 
     @property
-    def schema(self):
+    def schema(self) -> Dict:
         """Cerberus schema for metadata validation and normalisation. The
         generated schema can be found in the source code."""
 

@@ -1,6 +1,5 @@
 import xarray as xr
 
-from . import select
 from .metadata import validate_metadata
 
 
