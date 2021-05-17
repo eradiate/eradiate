@@ -5,13 +5,6 @@ Plotting [eradiate.plot]
 
 .. currentmodule:: eradiate.plot
 
-Plotting wrappers
------------------
-.. autosummary::
-   :toctree: generated/
-
-   pcolormesh_polar
-
 Utility functions
 -----------------
 .. autosummary::

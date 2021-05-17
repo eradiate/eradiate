@@ -26,16 +26,6 @@ Metadata specification and validation [eradiate.xarray.metadata]
    DatasetSpec
    CoordSpecRegistry
 
-Data selection [eradiate.xarray.select]
----------------------------------------
-.. currentmodule:: eradiate.xarray.select
-
-.. autosummary::
-   :toctree: generated/
-
-   plane
-   pplane
-
 Private: Accessors [eradiate.xarray._accessors]
 -----------------------------------------------
 .. currentmodule:: eradiate.xarray._accessors

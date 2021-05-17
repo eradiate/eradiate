@@ -1,10 +1,7 @@
-"""Utility components used to plot data."""
-
 __all__ = [
     "detect_axes",
     "get_axes_from_facet_grid",
     "make_ticks",
-    "pcolormesh_polar",
     "remove_xyticks",
     "remove_xylabels",
 ]
@@ -15,76 +12,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from xarray.plot import FacetGrid
 
-from . import unit_registry as ureg
-from ._units import to_quantity
-
-# -- Plotting wrappers ---------------------------------------------------------
-
-
-def pcolormesh_polar(darray, r=None, theta=None, **kwargs):
-    """Create a polar pcolormesh plot. Wraps :func:`xarray.plot.pcolormesh`:
-    see its documentation for undocumented keyword arguments.
-
-    .. warning::
-
-       This function might perform write operations on ``darray``: if ``theta``
-       if given in degrees (inferred from metadata ``attrs["units"]``), it will
-       add to ``darray`` an extra dimension ``theta + "_rad"`` converting
-       ``theta`` to radian and use it to generate the plot.
-
-    Parameter ``darray`` (:class:`~xarray.DataArray`):
-        Data array to visualise.
-
-    Parameter ``r`` (str or None):
-        Radial coordinate. If ``None``, defaults to ``darray.dims[0]``.
-
-    Parameter ``theta`` (str):
-        Angular coordinate. If ``None``, defaults to ``darray.dims[1]``.
-
-    Returns → :class:`matplotlib.collections.QuadMesh`:
-        Created artist.
-    """
-
-    if r is None:
-        r = darray.dims[0]
-    if theta is None:
-        theta = darray.dims[1]
-
-    theta_dims = darray[theta].dims
-
-    try:
-        theta_units = ureg.Unit(darray[theta].attrs["units"])
-    except KeyError:
-        theta_units = ureg.rad
-
-    if theta_units != ureg.rad:
-        theta_rad = f"{theta}_rad"
-        theta_rad_values = to_quantity(darray[theta]).m_as("rad")
-        darray_plot = darray.assign_coords(
-            **{theta_rad: (theta_dims, theta_rad_values)}
-        )
-        darray_plot[theta_rad].attrs = darray[theta].attrs
-        darray_plot[theta_rad].attrs["units"] = "rad"
-    else:
-        theta_rad = theta
-        darray_plot = darray
-
-    kwargs["x"] = theta_rad
-    kwargs["y"] = r
-
-    subplot_kws = kwargs.get("subplot_kws", None)
-
-    if kwargs.get("ax", None) is None:
-        if subplot_kws is None:
-            subplot_kws = {}
-        subplot_kws["projection"] = "polar"
-        kwargs["subplot_kws"] = subplot_kws
-    else:
-        if subplot_kws is not None:
-            raise ValueError("cannot use subplot_kws with existing ax")
-
-    return darray_plot.plot.pcolormesh(**kwargs)
-
+from ._units import unit_registry as ureg
 
 # -- Utility functions ---------------------------------------------------------
 

@@ -2,7 +2,6 @@ import xarray as xr
 
 from . import select
 from .metadata import validate_metadata
-from .. import plot
 
 
 @xr.register_dataarray_accessor("ert")
@@ -12,18 +11,6 @@ class EradiateDataArrayAccessor:
 
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
-
-    def plot_pcolormesh_polar(self, **kwargs):
-        """Wraps :func:`.pcolormesh_polar`."""
-        return plot.pcolormesh_polar(self._obj, **kwargs)
-
-    def extract_plane(self, phi, theta_dim="theta_o", phi_dim="phi_o"):
-        """Wraps :func:`plane`."""
-        return select.plane(self._obj, phi, theta_dim=theta_dim, phi_dim=phi_dim)
-
-    def extract_pplane(self, sza=None, saa=None):
-        """Wraps :func:`pplane`."""
-        return select.pplane(self._obj, sza=sza, saa=saa)
 
     def validate_metadata(self, var_spec, normalize=False, allow_unknown=True):
         """Validate the metadata for the wrapped :class:`~xarray.DataArray`.
