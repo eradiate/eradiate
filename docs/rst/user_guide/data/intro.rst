@@ -14,7 +14,7 @@ Formats
 Most data sets used and produced by Eradiate are stored in the
 `NetCDF format <https://www.unidata.ucar.edu/software/netcdf/>`_. Eradiate
 interacts with these data using the `xarray <https://xarray.pydata.org/>`_
-library, whose data model is based on NetCDF. xarray provides a comprehensive,
+library, whose data model is based on NetCDF. Xarray provides a comprehensive,
 robust and convenient interface to read, write, manipulate and visualise NetCDF
 data.
 
@@ -23,7 +23,7 @@ data.
 Adding manually downloaded data
 -------------------------------
 
-Due to the impracticality of storing large data sets with the code base
+Due to the impracticality of storing large data sets with the code base,
 Eradiate does not ship all data required to run simulations.
 Certain large data sets are hosted on an 
 `FTP server <https://eradiate.eu/data>`_
@@ -41,7 +41,7 @@ Accessing shipped data
 Eradiate ships with a series of data sets located in its ``resources/data``
 directory. Some of the larger data sets consist of aggregates of many NetCDF
 files, while others are stand-alone NetCDF files. In order to provide a simple
-and unified interface, Eradiate references data sets in a register which can be
+and unified interface, Eradiate references data sets in a registry which can be
 queried using the :mod:`eradiate.data` module.
 
 Data sets are grouped by category, *e.g.* solar irradiance spectrum, absorption
@@ -55,24 +55,15 @@ used:
 
 .. code-block:: python
 
-   import eradiate.data as data
-   ds = data.open("solar_irradiance_spectrum", "thuillier_2003")
-
-If the data set consists of many files, Eradiate will take care of using the
-appropriate data loading protocol and the interface will remain identical:
-
-.. code-block:: python
-
-   import eradiate.data as data
-   ds = data.open("absorption_spectrum", "test")
+   import eradiate
+   ds = eradiate.data.open("solar_irradiance_spectrum", "thuillier_2003")
 
 The :func:`~eradiate.data.open` function can also be used to load user-defined
 data at a known location:
 
 .. code-block:: python
 
-   import eradiate.data as data
-   ds = data.open("path/to/my/data.nc")
+   ds = eradiate.data.open("path/to/my/data.nc")
 
 .. note::
 
@@ -87,7 +78,7 @@ Working with angular data
 Eradiate notably manipulates and produces what we refer to as *angular data sets*,
 which represent variables dependent on one or more directional parameters.
 Typical examples are BRDFs
-(:math:`f_\mathrm{r} (\theta_\mathrm{i}, \varphi_\mathrm{i}, \theta_\mathrm{o}, \varphi_\mathrm{o})`
+(:math:`f_\mathrm{r} (\theta_\mathrm{i}, \varphi_\mathrm{i}, \theta_\mathrm{o}, \varphi_\mathrm{o})`)
 or top-of-atmosphere BRFs
 (:math:`\mathit{BRF}_\mathrm{TOA} (\theta_\mathrm{sun}, \varphi_\mathrm{sun}, \theta_\mathrm{view}, \varphi_\mathrm{view})`):
 a xarray data set representing them has at least one angular dimension (and
@@ -159,9 +150,9 @@ are called *hemispherical*. If they have two pairs of angular dimensions
 (Bi-)hemispherical data sets can be selected or indexed to extract data sets of
 lower dimensionality. This is typically used to extract a principal plane view
 from an observation data set. Eradiate provides a helper function, exposed by its
-data array accessor
-(:meth:`EradiateDataArrayAccessor.extract_pplane() <eradiate.util.xarray.EradiateDataArrayAccessor.extract_pplane>`),
-to do so. See :ref:`sphx_glr_examples_generated_tutorials_data_01_xarray.py` for
+data array accessor --
+:meth:`~eradiate.xarray._accessors.EradiateDataArrayAccessor.extract_pplane`
+-- to do so. See :ref:`sphx_glr_examples_generated_tutorials_data_01_xarray.py` for
 more detail.
 
 Visualising angular data
@@ -170,7 +161,6 @@ Visualising angular data
 Hemispherical data plotting is common in Earth observation applications and
 the commonly-used plotting packages do not offer an easy way to produce
 representations in polar coordinates. Eradiate offers components to make this
-task easier in the form of a xarray accessor. Refer to the corresponding
-documentation
-(:meth:`EradiateDataArrayAccessor.plot_pcolormesh_polar() <eradiate.util.xarray.EradiateDataArrayAccessor.plot_pcolormesh_polar>`)
-for further detail.
+task easier in the form of a xarray accessor -- see 
+:meth:`~eradiate.xarray._accessors.EradiateDataArrayAccessor.plot_pcolormesh_polar`.
+Refer to the corresponding documentation for further detail.
