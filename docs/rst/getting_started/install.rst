@@ -269,7 +269,7 @@ Downloading required data files
 
 Eradiate does not automatically ship all available data sets due to their size.
 In order to successfully run all tests and tutorials, the
-`spectra-us76_u86_4 data set <https://eradiate.eu/data/spectra-us76_u86_4.zip>`_
+`us76_u86_4 data set <https://eradiate.eu/data/us76_u86_4-spectra.zip>`_
 must be downloaded manually and placed in the ``resources/data`` directory.
 :ref:`This section <sec-user_guide-manual_download>` explains in detail where
 the data set can be found and where it must be placed exactly.
