@@ -2,8 +2,8 @@ import pytest
 
 from eradiate._factory import BaseFactory
 
-def test_register():
 
+def test_register():
     class TestFactoryObject(object):
         pass
 
@@ -21,20 +21,21 @@ def test_register():
 
     # test wrong object type
     with pytest.raises(TypeError):
+
         @TestFactory.register("wrong_type")
         class WrongTypeObject(object):
             def from_dict(self):
                 pass
 
-    # test object without 'from_dict'
+        # test object without 'from_dict'
         with pytest.raises(AttributeError):
+
             @TestFactory.register("notfromdict")
             class NoFromDictObject(TestFactoryObject):
                 pass
 
 
 def test_create_convert():
-
     class TestFactoryObject(object):
         pass
 
