@@ -1,13 +1,13 @@
 .. _sec-user_guide-basic_concepts:
 
-Basic concepts
-==============
+Basic concepts and terminology
+==============================
 
 The basic workflow in Eradiate is split into three phases:
 
 1. A scene suitable for the targeted application is generated.
 2. Radiative transfer is computed on the created scene using a Monte Carlo
-   method.
+   ray tracing method.
 3. Results yielded by the kernel are collected, post-processed and possibly
    plotted for visualisation.
 
@@ -43,22 +43,24 @@ All scene element components derive from the :class:`~eradiate.scenes.core.Scene
 abstract class and implement a :meth:`~eradiate.scenes.core.SceneElement.kernel_dict`
 method which generates input data for the kernel.
 
-Runners
--------
+..
 
-Runner components are responsible for managing kernel runs and make the
-interface between the scene generation API and the kernel. They take as their
-input the output produced by scene element and pass it to the kernel. They then
-run and monitor the radiative transfer computation.
+  Runners [COMMENTED: RETIRED FOR NOW]
+  ------------------------------------
 
-They also keep track of kernel scene features and associate them with Eradiate's
-high-level scene abstractions. For instance, the runner is responsible for
-ensuring that all requested high-level measurements are computed and their
-results organised in such a way that high-level post-processing is possible.
+  Runner components are responsible for managing kernel runs and make the
+  interface between the scene generation API and the kernel. They take as their
+  input the output produced by scene element and pass it to the kernel. They then
+  run and monitor the radiative transfer computation.
 
-Runners also supervise kernel runs to handle the presence of multiple sensors
-(sometimes required to compute complex measurements) or chunk large spectral
-intervals into smaller bits.
+  They also keep track of kernel scene features and associate them with Eradiate's
+  high-level scene abstractions. For instance, the runner is responsible for
+  ensuring that all requested high-level measurements are computed and their
+  results organised in such a way that high-level post-processing is possible.
+
+  Runners also supervise kernel runs to handle the presence of multiple sensors
+  (sometimes required to compute complex measurements) or chunk large spectral
+  intervals into smaller bits.
 
 Applications
 ------------
@@ -84,12 +86,38 @@ specification of scene elements in a configuration file.
 .. admonition:: Example
 
    The one-dimensional solver application (:class:`~eradiate.solvers.onedim.OneDimSolverApp`)
-   lets the user choose from two different measures. The application offers a
-   top-of-atmosphere leaving radiance measure either recording the entire
-   hemisphere or only the principal plane. The user specifies only the kind of
-   measure they want the application to compute and provide some basic
-   parameters, such as angular resolution and number of samples per direction to
-   be computed. The application then selects the scene elements required to
-   compute the requested measure and passes the necessary parameters to them.
-   The scene element itself in turn creates the configuration for a
-   ``radiancemeterarray`` kernel plugin.
+   simulates radiative transfer in pseudo-one-dimensional geometries.
+   Its configuration uses concepts with which Earth observation scientists
+   should be familiar. The underlying machinery then breaks down this
+   description into a set of kernel scene specification, accounting for various
+   constraints to ensure that the produced results are correct. A runner
+   component uses these kernel scene specification to perform Monte Carlo ray
+   tracing simulations, and the application then collects the results and
+   post-processes them.
+
+   A top-of-atmosphere radiance-based measure (*e.g.* BRF) is specified to the
+   :class:`~eradiate.solvers.onedim.OneDimSolverApp` as a
+   :class:`~eradiate.scenes.measure.DistantMeasure`. This measure object is
+   then translated into a ``distant`` sensor kernel plugin specification. The
+   application then runs the Monte Carlo ray tracing simulations and collects
+   leaving radiance values. Radiance estimates are then further post-processed
+   to compute reflectance quantities (BRF and BRDF).
+
+Other terminology
+-----------------
+
+Integrator
+  A kernel component which implements a Monte Carlo ray tracing algorithm.
+  Eradiate provides lightweight interface components to configure them.
+
+Sensor
+  A kernel component which records radiance samples and stores them to a film.
+
+Film
+  A kernel component which defines how samples collected by a sensor are stored.
+
+Measure
+  A high-level interface to one or several sensors. Measures can perform
+  post-processing tasks requiring the assembly of multiple sensor results. They
+  also output their results as high-level data structures (*e.g.* xarray
+  labelled arrays).
