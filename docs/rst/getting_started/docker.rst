@@ -56,12 +56,18 @@ Three different images are provided by Eradiate:
  - fxia/eradiate
  - fxia/eradiate-jupyterlab
 
-.. figure:: ../../fig/docker-images-structure.svg
+.. only:: latex
+
+   .. figure:: ../../fig/docker-images-structure.png
+
+.. only:: not latex
+
+   .. figure:: ../../fig/docker-images-structure.svg
 
 Eradiate Kernel
 ---------------
 
-This image provides an environment with a ready to use mitsuba2 engine compiled for Eradiate
+This image provides an environment with a ready to use Mitsuba 2 engine compiled for Eradiate
 
 .. code:: bash
     

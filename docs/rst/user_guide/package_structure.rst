@@ -6,7 +6,13 @@ Package structure overview
 This section documents the general principles underlying the organisation of
 the Eradiate Python package.
 
-.. image:: ../../fig/package.svg
+.. only:: latex
+
+   .. image:: ../../fig/package.png
+
+.. only:: not latex
+
+   .. image:: ../../fig/package.svg
 
 Main entry points
 -----------------
