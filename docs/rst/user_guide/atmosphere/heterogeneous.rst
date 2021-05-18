@@ -48,8 +48,17 @@ Radiative properties profiles objects
 
 There are several types of radiative properties profile objects.
 
-array
-~~~~~
+``afgl1986``
+~~~~~~~~~~~~
+
+The :class:`~eradiate.radprops.rad_profile.AFGL1986RadProfile` 
+(identifier: ``afgl1986``) class allows to create an atmosphere radiative
+properties profile corresponding to the AFGL (1986)
+:cite:`Anderson1986AtmosphericConstituentProfiles`
+atmosphere thermophysical properties profile models.
+
+``array``
+~~~~~~~~~
 
 The :class:`~eradiate.radprops.rad_profile.ArrayRadProfile`
 (identifier: ``"array"``)
@@ -57,8 +66,8 @@ class is a fully-customisable radiative properties profile, where you specify
 directly the radiative properties as arrays of extinction coefficient and
 albedo values.
 
-us76_approx
-~~~~~~~~~~~
+``us76_approx``
+~~~~~~~~~~~~~~~
 
 The
 :class:`~eradiate.radprops.rad_profile.US76ApproxRadProfile`
@@ -66,20 +75,23 @@ The
 class represents an approximation of the radiative properties profile
 corresponding to the :mod:`~eradiate.thermoprops.us76` atmosphere
 thermophysical model.
-The radiative properties profile is derived from the thermophysical properties
-profile as illustrated by the figure below.
+
+Radiative properties profile derived from a thermophysical properties profile
+-----------------------------------------------------------------------------
+
+The ``afgl1986`` and ``us76_approx`` radiative properties profiles are derived
+from their corresponding thermophysical properties profiles as illustrated by
+the figure below.
 
 .. image:: fig/atmosphere-heterogeneous-thermoprops-to-radprops.png
    :align: center
    :scale: 50
 
-On the left is represented the :mod:`~eradiate.thermoprops.us76` thermophysical
-properties profile (for illustration purposes, only 4 layers are included).
+On the left is represented the thermophysical properties profile.
+For illustration purposes, only 4 layers are included.
 The thermophysical properties serve as inputs to the functions that compute the
 radiative properties profile.
-On the right is represented the corresponding
-:class:`~eradiate.radprops.rad_profile.US76ApproxRadProfile` radiative
-properties profile.
+On the right is represented the corresponding radiative properties profile.
 In each atmospheric layer, the radiative properties are computed using
 the corresponding thermophysical properties.
 For example, in the second atmospheric layer (labeled with the subscript 1) in
@@ -88,15 +100,6 @@ are computed at a pressure value given by :math:`p_1`, a temperature value given
 by :math:`T_1` and mixing ratios specified by :math:`\vec{x}_1`.
 Thus, the radiative properties profile is connected with the thermophysical
 properties profile.
-For more details about the
-:class:`~eradiate.radprops.rad_profile.US76ApproxRadProfile`
-class, head towards the reference documentation.
-
-.. note::
-   We are working on adding radiative properties profiles corresponding to the
-   AFGL (1986) atmospheric profiles
-   :cite:`Anderson1986AtmosphericConstituentProfiles`.
-   Stay tuned for that!
 
 .. _sec-atmosphere-heterogeneous-kernel_volume_data_files:
 
