@@ -1,10 +1,16 @@
 .. _sec-user_guide-data-srf:
 
-Spectral response function data sets
-====================================
+Spectral response function
+==========================
 
 A spectral response function data set provide the spectral response of a
 given instrument on a specific platform and in a specific spectral band.
+
+Data sets access
+----------------
+
+All spectral response function data sets required by Eradiate are available
+within Eradiate using :meth:`eradiate.data.open`.
 
 Structure
 ---------

@@ -8,7 +8,7 @@ Solar irradiance spectrum data sets
 #
 #   In this tutorial, you will learn:
 #
-#   * how to list available :ref:`solar irradiance spectrum data sets<sec-user_guide-data-solar_irradiance_spectra_data_sets>`
+#   * how to list available :ref:`solar irradiance spectrum data sets<sec-user_guide-data-solar_irradiance_spectrum_data_sets>`
 #   * how to visualise the data.
 
 # %%
@@ -50,7 +50,7 @@ plt.show()
 # Visualise a solar irradiance spectrum with a time dimension
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# If the solar irradiance spectrum dataset includes a non-empty ``t`` (time) 
+# If the solar irradiance spectrum dataset includes a non-empty ``t`` (time)
 # coordinate, you must **select** the date for which you want to visualise the
 # spectrum:
 

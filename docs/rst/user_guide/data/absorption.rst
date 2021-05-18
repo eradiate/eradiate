@@ -1,7 +1,7 @@
 .. _sec-user_guide-data-absorption:
 
-Absorption cross section data sets
-==================================
+Absorption cross section
+========================
 
 Absorption cross section data sets provide the monochromatic absorption cross
 section spectrum of a given absorbing species at specific pressure and
@@ -10,7 +10,7 @@ temperature conditions.
 
 Data sets access
 ----------------
-All data sets are hosted on
+All data sets are hosted at
 `https://eradiate.eu/data <https://eradiate.eu/data>`_.
 
 Structure
@@ -44,4 +44,4 @@ Data variable ``xs`` is tabulated with respect to ``w``, ``p`` and ``t``
 
 Data variable ``mr``, when present, is tabulated with respect to ``m``.
 Data variable ``mr`` should be included in data sets where the absorber is a
-mixture of different absorbing molecule.
+mixture of different absorbing molecules.

@@ -1,7 +1,7 @@
 .. _sec-user_guide-data-thermoprops:
 
-Atmosphere thermophysical properties data sets
-==============================================
+Atmosphere thermophysical properties
+====================================
 
 An atmosphere thermophysical properties data set provide the spatial variation
 of air pressure, air temperature, air number density and individual species
@@ -10,10 +10,8 @@ mixing ratios.
 Data sets access
 ----------------
 
-All data sets are hosted on
-`https://eradiate.eu/data <https://eradiate.eu/data>`_.
-Download the AFGL (1986) data sets
-`here <https://eradiate.eu/data/afgl1986.zip>`_.
+All atmosphere thermophysical properties data sets required by Eradiate are 
+available within Eradiate using :meth:`eradiate.data.open`.
 
 Structure
 ---------
