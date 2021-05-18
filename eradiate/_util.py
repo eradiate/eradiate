@@ -1,7 +1,6 @@
 from numbers import Number
 from typing import Sequence
 
-import numpy
 import numpy as np
 import pint
 import pinttr
@@ -17,7 +16,7 @@ def onedict_value(d):
 
 
 def ensure_array(x, dtype=None):
-    """Ensure that passed object is a numpy array."""
+    """Ensure that passed object is a Numpy array."""
     kwargs = dict(dtype=dtype) if dtype is not None else {}
 
     return np.array(list(pinttr.util.always_iterable(x)), **kwargs)
@@ -31,7 +30,7 @@ def is_vector3(value):
 
     return (
         (
-            isinstance(value, numpy.ndarray)
+            isinstance(value, np.ndarray)
             or (isinstance(value, Sequence) and not isinstance(value, str))
         )
         and len(value) == 3
@@ -40,7 +39,8 @@ def is_vector3(value):
 
 
 class Singleton(type):
-    """A simple singleton implementation.
+    """
+    A simple singleton implementation.
     See also
     https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python.
 
