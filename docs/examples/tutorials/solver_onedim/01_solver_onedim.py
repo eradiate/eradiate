@@ -16,6 +16,7 @@ One-dimensional solver application
 # operational mode. We will run a monochromatic simulation at 577 nm.
 
 import eradiate
+
 eradiate.set_mode("mono_double")
 
 # %%
@@ -97,7 +98,7 @@ atmosphere
 illumination = eradiate.scenes.illumination.DirectionalIllumination(
     zenith=30.0 * ureg.deg,
     azimuth=0.0 * ureg.deg,
-    irradiance=eradiate.scenes.spectra.SolarIrradianceSpectrum()
+    irradiance=eradiate.scenes.spectra.SolarIrradianceSpectrum(),
 )
 illumination
 
@@ -189,6 +190,7 @@ app.run()
 # data set:
 
 from pprint import pprint
+
 pprint(app.results)
 
 # %%
@@ -318,29 +320,31 @@ scene = eradiate.solvers.onedim.OneDimScene(
 # We can take this up one level and configure the whole scene with a single
 # dictionary:
 
-scene = eradiate.solvers.onedim.OneDimScene.from_dict({
-    "surface": {
-        "type": "rpv",
-    },
-    "atmosphere": {
-        "type": "homogeneous",
-        "toa_altitude": 120.0 * ureg.km,
-        "sigma_s": 1e-4 * ureg.m ** -1,
-    },
-    "illumination": {
-        "type": "directional",
-        "zenith": 30.0 * ureg.deg,
-        "azimuth": 0.0 * ureg.deg,
-        "irradiance": {"type": "solar_irradiance"},
-    },
-    "measures": {
-        "type": "distant",
-        "id": "toa_hsphere",
-        "film_resolution": (32, 1),
-        "spp": 1000000,
-        "spectral_cfg": {"wavelengths": [577.0]},
-    },
-})
+scene = eradiate.solvers.onedim.OneDimScene.from_dict(
+    {
+        "surface": {
+            "type": "rpv",
+        },
+        "atmosphere": {
+            "type": "homogeneous",
+            "toa_altitude": 120.0 * ureg.km,
+            "sigma_s": 1e-4 * ureg.m ** -1,
+        },
+        "illumination": {
+            "type": "directional",
+            "zenith": 30.0 * ureg.deg,
+            "azimuth": 0.0 * ureg.deg,
+            "irradiance": {"type": "solar_irradiance"},
+        },
+        "measures": {
+            "type": "distant",
+            "id": "toa_hsphere",
+            "film_resolution": (32, 1),
+            "spp": 1000000,
+            "spectral_cfg": {"wavelengths": [577.0]},
+        },
+    }
+)
 
 # %%
 # Finally, we can configure the entire application with a dictionary. This app
@@ -392,7 +396,7 @@ config
 
 import ruamel.yaml as yaml
 
-with open("01_solver_onedim_config.yml", 'r') as f:
+with open("01_solver_onedim_config.yml", "r") as f:
     yaml_config = yaml.safe_load(f)
 yaml_config
 
