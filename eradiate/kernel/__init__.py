@@ -4,7 +4,7 @@ Eradiate's computational kernel, based on the Mitsuba 2 rendering system.
 
 try:
     import mitsuba
-except ImportError as e:
+except (ImportError, ModuleNotFoundError) as e:
     raise ImportError(
         "Could not import module 'mitsuba'; did you build the kernel and add "
         "it to your $PYTHONPATH?"
