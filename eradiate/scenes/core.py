@@ -1,7 +1,6 @@
-"""Basic abstractions and utilities to assist with scene generation."""
-
 from abc import ABC, abstractmethod
 from collections import UserDict
+from typing import Dict, Optional, Union
 
 import attr
 import mitsuba
@@ -9,6 +8,7 @@ import pinttr
 
 from .._attrs import documented, parse_docs
 from .._units import unit_registry as ureg
+from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
 
 
@@ -30,10 +30,11 @@ class KernelDict(UserDict):
     """
 
     def __init__(self, *args, **kwargs):
-        """Initialise self and set :attr:`variant` attribute based on currently
+        """
+        Initialise self and set :attr:`variant` attribute based on currently
         set variant.
 
-        Raises → :class:`~eradiate.util.exceptions.KernelVariantError`
+        Raises → :class:`~eradiate.exceptions.KernelVariantError`
             If no kernel variant is set.
         """
         variant = mitsuba.variant()
@@ -76,7 +77,11 @@ class KernelDict(UserDict):
             )
 
     @classmethod
-    def new(cls, *elements, ctx=None):
+    def new(
+        cls,
+        *elements: Union["SceneElement", Dict],
+        ctx: Optional[KernelDictContext] = None,
+    ):
         """
         Create a kernel dictionary using the passed elements. This variadic
         function accepts an arbitrary number of positional arguments.
@@ -95,7 +100,11 @@ class KernelDict(UserDict):
         result.add(*elements, ctx=ctx)
         return result
 
-    def add(self, *elements, ctx=None):
+    def add(
+        self,
+        *elements: Union["SceneElement", Dict],
+        ctx: Optional[KernelDictContext] = None,
+    ):
         """
         Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
         another dictionary object with the current :class:`KernelDict`.
@@ -118,7 +127,7 @@ class KernelDict(UserDict):
             except AttributeError:
                 self.update(element)
 
-    def load(self):
+    def load(self) -> "mitsuba.render.Scene":
         """
         Load kernel object from self.
 
@@ -148,7 +157,7 @@ class SceneElement(ABC):
         :class:`.Factory`.
     """
 
-    id = documented(
+    id: Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -159,7 +168,7 @@ class SceneElement(ABC):
     )
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d: Dict):
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -179,7 +188,7 @@ class SceneElement(ABC):
         return cls(**d_copy)
 
     @abstractmethod
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None):
         """
         Return a dictionary suitable for kernel scene configuration.
 
