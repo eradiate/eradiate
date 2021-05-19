@@ -494,13 +494,15 @@ class US76ApproxRadProfile(RadProfile):
 
     levels = documented(
         pinttr.ib(
-            factory=lambda: ureg.Quantity(np.linspace(0, 86, 87), "km"),
-            converter=pinttr.converters.to_units(ucc.deferred("length")),
-            validator=pinttr.validators.has_compatible_units,
+            factory=lambda: np.arange(0.0, 86.01, 1.0) * ureg.km,
             units=ucc.deferred("length"),
         ),
-        doc="Level altitudes.\n\nUnit-enabled field (ucc[length]).",
+        doc="Level altitudes. Default is regular mesh from 0 to 86 km with "
+        "1 km layer size.\n"
+        "\n"
+        "Unit-enabled field (ucc[length]).",
         type="array",
+        default="range(0, 87) km",
     )
 
     has_absorption = documented(
@@ -764,18 +766,15 @@ class AFGL1986RadProfile(RadProfile):
 
     levels = documented(
         pinttr.ib(
-            default=None,
-            converter=attr.converters.optional(
-                pinttr.converters.to_units(ucc.deferred("length"))
-            ),
-            validator=attr.validators.optional(pinttr.validators.has_compatible_units),
+            factory=lambda: np.arange(0.0, 120.01, 1.0) * ureg.km,
             units=ucc.deferred("length"),
         ),
-        doc="Level altitudes. The default level altitude mesh is a regular "
-        "mesh from 0 to 120 km with a step-altitude of 1 km. \n"
+        doc="Level altitudes. Default is a regular mesh from 0 to 120 km with "
+        "1 km layer size.\n"
         "\n"
         "Unit-enabled field (ucc[length]).",
         type="array",
+        default="range(0, 121) km",
     )
 
     concentrations = documented(
