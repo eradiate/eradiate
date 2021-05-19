@@ -274,6 +274,14 @@ def test_heterogeneous_afgl1986(mode_mono, tmpdir):
     assert isinstance(a.profile, AFGL1986RadProfile)
 
 
+def test_heterogeneous_afgl1986_height(mode_mono, tmpdir):
+    # assert that atmosphere has a valid height
+    atmosphere = HeterogeneousAtmosphere(
+        profile=AFGL1986RadProfile(has_absorption=False)
+    )
+    assert atmosphere.height() is not None
+
+
 def test_heterogeneous_invalid_width_units(mode_mono):
     # Initialising a heterogeneous atmosphere with the invalid 'width' units
     # raises an exception
