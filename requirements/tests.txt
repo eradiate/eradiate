@@ -54,19 +54,20 @@ cycler==0.10.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2021.4.1
+dask==2021.5.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
 docutils==0.16
     # via
     #   -c requirements/dev.txt
+    #   rst2pdf
     #   sphinx
 execnet==1.8.0
     # via
     #   -c requirements/dev.txt
     #   pytest-xdist
-fsspec==2021.4.0
+fsspec==2021.5.0
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -88,13 +89,15 @@ importlib-metadata==4.0.1
     #   pint
     #   pluggy
     #   pytest
+    #   rst2pdf
 iniconfig==1.1.1
     # via
     #   -c requirements/dev.txt
     #   pytest
-jinja2==3.0.0
+jinja2==3.0.1
     # via
     #   -c requirements/dev.txt
+    #   rst2pdf
     #   sphinx
 kiwisolver==1.3.1
     # via
@@ -104,7 +107,7 @@ locket==0.2.1
     # via
     #   -c requirements/dev.txt
     #   partd
-markupsafe==2.0.0
+markupsafe==2.0.1
     # via
     #   -c requirements/dev.txt
     #   jinja2
@@ -131,6 +134,7 @@ packaging==20.9
     #   -c requirements/dev.txt
     #   pint
     #   pytest
+    #   rst2pdf
     #   sphinx
 pandas==1.2.4
     # via
@@ -144,6 +148,7 @@ pillow==8.2.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
+    #   reportlab
 pint==0.17
     # via
     #   -c requirements/dev.txt
@@ -165,6 +170,7 @@ py==1.10.0
 pygments==2.9.0
     # via
     #   -c requirements/dev.txt
+    #   rst2pdf
     #   sphinx
 pyparsing==2.4.7
     # via
@@ -175,7 +181,7 @@ pytest-forked==1.3.0
     # via
     #   -c requirements/dev.txt
     #   pytest-xdist
-pytest-json-report==1.2.4
+pytest-json-report==1.3.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
@@ -210,10 +216,18 @@ pyyaml==5.4.1
     # via
     #   -c requirements/dev.txt
     #   dask
+reportlab==3.5.67
+    # via
+    #   -c requirements/dev.txt
+    #   rst2pdf
 requests==2.25.1
     # via
     #   -c requirements/dev.txt
     #   sphinx
+rst2pdf==0.98
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/tests.in
 ruamel.yaml.clib==0.2.2
     # via
     #   -c requirements/dev.txt
@@ -232,6 +246,10 @@ six==1.16.0
     #   -c requirements/dev.txt
     #   cycler
     #   python-dateutil
+smartypants==2.0.1
+    # via
+    #   -c requirements/dev.txt
+    #   rst2pdf
 snowballstemmer==2.1.0
     # via
     #   -c requirements/dev.txt
@@ -289,7 +307,7 @@ urllib3==1.26.4
     # via
     #   -c requirements/dev.txt
     #   requests
-xarray==0.18.0
+xarray==0.18.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in

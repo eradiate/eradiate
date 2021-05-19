@@ -25,6 +25,7 @@ dependencies:
   - pytest-json-report
   - pytest-metadata
   - pytest-xdist
+  - rst2pdf
   - sphinx
   - tabulate
   # dev

@@ -53,7 +53,7 @@ cycler==0.10.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2021.4.1
+dask==2021.5.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -65,7 +65,7 @@ docutils==0.16
     #   sphinx
     #   sphinx-panels
     #   sphinxcontrib-bibtex
-fsspec==2021.4.0
+fsspec==2021.5.0
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -85,7 +85,7 @@ importlib-metadata==4.0.1
     # via
     #   -c requirements/dev.txt
     #   pint
-jinja2==3.0.0
+jinja2==3.0.1
     # via
     #   -c requirements/dev.txt
     #   sphinx
@@ -101,7 +101,7 @@ locket==0.2.1
     # via
     #   -c requirements/dev.txt
     #   partd
-markupsafe==2.0.0
+markupsafe==2.0.1
     # via
     #   -c requirements/dev.txt
     #   jinja2
@@ -247,7 +247,7 @@ sphinxcontrib-applehelp==1.0.2
     # via
     #   -c requirements/dev.txt
     #   sphinx
-sphinxcontrib-bibtex==2.2.0
+sphinxcontrib-bibtex==2.2.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -292,7 +292,7 @@ urllib3==1.26.4
     # via
     #   -c requirements/dev.txt
     #   requests
-xarray==0.18.0
+xarray==0.18.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in

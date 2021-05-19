@@ -33,11 +33,11 @@ cycler==0.10.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2021.4.1
+dask==2021.5.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-fsspec==2021.4.0
+fsspec==2021.5.0
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -149,7 +149,7 @@ typing-extensions==3.10.0.0
     # via
     #   -c requirements/dev.txt
     #   importlib-metadata
-xarray==0.18.0
+xarray==0.18.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
