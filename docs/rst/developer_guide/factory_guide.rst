@@ -3,9 +3,7 @@
 Factory guide
 =============
 
-.. warning:: Outdated content, update required
-
-Eradiate's object creation process is heavily supported by a series of factory
+Eradiate's object creation process is heavily supported by a set of factory
 classes. They serve two purposes:
 
 * provide a safe and flexible converter system to support Eradiate's
@@ -19,26 +17,24 @@ document them.
 Overview and usage
 ------------------
 
-Eradiate's factories derive from the :class:`~eradiate.util.factory.BaseFactory`
+Eradiate's factories derive from the :class:`~eradiate._factory.BaseFactory`
 class. This class can be used to create object factories which instantiate
 objects based on dictionaries. Created factories handle only one type of object
 (and child classes), specified in a ``_constructed_type`` class attribute. By
 default, this member is set to :class:`object`: without any particular
-precaution, a factory deriving from :class:`~eradiate.util.factory.BaseFactory`
+precaution, a factory deriving from :class:`~eradiate._factory.BaseFactory`
 accepts registration from any class, provided that it implements the required
 interface.
 
-.. note::
-
-   Factories deriving from :class:`~eradiate.util.factory.BaseFactory` are not
-   meant to be instantiated and only implement class methods.
+.. note:: Factories deriving from :class:`~eradiate._factory.BaseFactory` are
+   not meant to be instantiated and only implement class methods.
 
 Class registration to factory objects is done using the
-:meth:`~eradiate.util.factory.register` class decorator (see
-_`Registering a class to a factory`).
+:meth:`~eradiate._factory.BaseFactory.register` class decorator (see
+`Enabling a class for factory usage`_ below).
 
 Using a factory created from this base class simply requires to import it and
-call its :meth:`~eradiate.util.factory.BaseFactory.create` class method with a
+call its :meth:`~eradiate._factory.BaseFactory.create` class method with a
 dictionary containing:
 
 - a ``type`` key, whose value will be the name under which the class to
@@ -46,15 +42,15 @@ dictionary containing:
 - dictionary contents which will be passed to the target class's
   ``from_dict()`` class method.
 
-In addition, factories implement a :meth:`~eradiate.util.factory.BaseFactory.convert`
+In addition, factories implement a :meth:`~eradiate._factory.BaseFactory.convert`
 class method which can be used as a converter in an ``attrs`` initialisation
-sequence. When passed an object, :meth:`~eradiate.util.factory.BaseFactory.convert`
-forwards it to :meth:`~eradiate.util.factory.BaseFactory.create` if it is a
+sequence. When passed an object, :meth:`~eradiate._factory.BaseFactory.convert`
+forwards it to :meth:`~eradiate._factory.BaseFactory.create` if it is a
 dictionary, and otherwise returns the passed object without doing anything.
 When used as an ``attrs`` converter, this allows the user to initialise an
 attribute by passing a dictionary interpreted by a factory instead of an object
 of the requested. This enables the implementation of runtime instantiation and
-configuration of classes from nested dictionaries, by reading them `e.g.` from
+configuration of classes from nested dictionaries, by reading them *e.g.* from
 YAML or JSON fragments.
 
 .. admonition:: Example
@@ -71,7 +67,7 @@ YAML or JSON fragments.
            "type": "directional",
            "irradiance": {"type": "uniform", "value": 1.0},
            "zenith": 30.0,
-           "azimuth": 180.0
+           "azimuth": 180.0,
        })
 
    In practice, the ``type`` key is used to look up the class to instantiate,
@@ -83,27 +79,27 @@ YAML or JSON fragments.
        DirectionalIllumination(
            irradiance={"type": "uniform", "value": 1.0},
            zenith=30.0,
-           azimuth=180.0
+           azimuth=180.0,
        )
 
    Under the hood, this call creates a both
    :class:`~eradiate.scenes.illumination.DirectionalIllumination` and
    :class:`~eradiate.scenes.spectra.UniformSpectrum`: the former
    is instantiated directly (either implicitly using
-   :meth:`~eradiate.util.factory.BaseFactory.create`, or explicitly using the
+   :meth:`.IlluminationFactory.create`, or explicitly using the
    :class:`~eradiate.scenes.illumination.DirectionalIllumination` constructor);
    the latter is instantiated when the dictionary passed as the ``irradiance``
-   parameter is forwarded to :meth:`~eradiate.util.factory.BaseFactory.convert`.
+   parameter is forwarded to :meth:`.SpectrumFactory.convert`.
 
 Enabling a class for factory usage
 ----------------------------------
 
 As previously mentioned, classes can be registered to a factory using the
-factory's :meth:`~eradiate.util.factory.register` class decorator (which should
+factory's :meth:`~eradiate._factory.register` class decorator (which should
 be applied *after* the :func:`attr.s` decorator). Decorated classes must
 implement a ``from_dict()`` class method which generates instances from a
 dictionary. If a class with an unsupported type is decorated with
-:meth:`~eradiate.util.factory.BaseFactory.register`, a ``TypeError`` will be
+:meth:`~eradiate._factory.BaseFactory.register`, a ``TypeError`` will be
 raised upon import.
 
 At this stage, factory features being implemented as class attributes and
@@ -113,18 +109,17 @@ factory-enabled class must be imported so as to be registered to the factory.
 When a factory and its classes are located in the same module, registration
 is automatic (mind, however, that the declaration order is critical, so the
 factory declaration must be placed before any call to its
-:meth:`~eradiate.util.factory.BaseFactory.register` decorator).
+:meth:`~eradiate._factory.BaseFactory.register` decorator).
 
-.. note::
-
-   If a factory and classes to be registered to it are placed in different
-   modules, importing the factory won't necessary result in its register to be
-   properly populated. For this reason, some factories can benefit from some
-   additional registration code, which will make sure that modules containing
-   classes to register will be discovered automatically when the factory will be
-   imported. However, this can result in unreliable import sequence, since
-   discovery will inevitably introduce an import loop. For this reason,
-   automatic module discovery is not performed by Eradiate's factories.
+.. note:: If a factory and classes to be registered to it are placed in
+   different modules, importing the factory won't necessarily result in its
+   register to be properly populated. For this reason, some factories can
+   benefit from some additional registration code, which will make sure that
+   modules containing classes to register will be discovered automatically when
+   the factory will be imported. However, this can result in an unreliable
+   import sequence, since discovery will inevitably introduce an import loop.
+   For this reason, automatic module discovery is not performed by Eradiate's
+   factories.
 
 Documenting factories
 ---------------------

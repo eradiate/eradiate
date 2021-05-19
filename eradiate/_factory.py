@@ -64,22 +64,11 @@ class BaseFactory:
 
             .. code:: python
 
-                # Note that the register() decorator is applied *after* attr.s()
+                # Note that the register() decorator is applied **after** attr.s
                 @IlluminationFactory.register("constant")
                 @attr.s
                 class ConstantIllumination(SceneElement):
-                    radiance = attr.ib(
-                        validator=attr.validators.instance_of(float),
-                        default=1.
-                    )
-
-                    def kernel_dict(self, ref=True):
-                        return {
-                            self.id: {
-                                "type": "constant",
-                                "radiance": {"type": "uniform", "value": self.radiance}
-                            }
-                        }
+                    ...
         """
 
         def inner_wrapper(wrapped_class):
