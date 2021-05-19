@@ -275,7 +275,7 @@ def test_heterogeneous_afgl1986(mode_mono, tmpdir):
 
 
 def test_heterogeneous_afgl1986_height(mode_mono, tmpdir):
-    # assert that atmosphere has a valid height
+    # assert that atmosphere has height
     atmosphere = HeterogeneousAtmosphere(
         profile=AFGL1986RadProfile(has_absorption=False)
     )
