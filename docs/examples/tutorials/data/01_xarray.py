@@ -4,14 +4,15 @@ xarray module tutorial
 """
 
 # %%
-# .. warning:: Outdated content, update required
+# .. warning:: Outdated content, update required.
+#    This tutorial is officially broken.
 
 # %%
-# In this tutorial, we will learn how to use Eradiate's xarray extensions. 
-# In addition to this introduction, it is recommended to refer to the 
+# In this tutorial, we will learn how to use Eradiate's xarray extensions.
+# In addition to this introduction, it is recommended to refer to the
 # :mod:`technical documentation <eradiate.util.xarray>`. We assume here that you
-# are familiar with xarray's 
-# `basics concepts <http://xarray.pydata.org/en/stable/quick-overview.html>`_ 
+# are familiar with xarray's
+# `basics concepts <http://xarray.pydata.org/en/stable/quick-overview.html>`_
 # and `terminology <http://xarray.pydata.org/en/stable/terminology.html>`_.
 #
 # Our approach to data handling
@@ -22,7 +23,7 @@ xarray module tutorial
 # handling framework with built-in advanced data arithmetics, convenient data
 # browsing and selection facilities, a plotting framework, metadata handling and
 # many I/O formats.
-# 
+#
 # Eradiate extends xarray with the recommended
 # `accessor method <http://xarray.pydata.org/en/stable/internals.html#extending-xarray>`_.
 # Its :class:`data array <.EradiateDataArrayAccessor>` and
@@ -42,29 +43,22 @@ xarray module tutorial
 
 from eradiate.solvers.onedim import OneDimSolverApp
 
-app = OneDimSolverApp.from_dict({
-    "mode": {
-        "type": "mono",
-    },
-    "atmosphere": {
-        "type": "heterogeneous",
-        "profile": {"type": "us76_approx"},
-        "width": 1e5,
-        "width_units": "km"
-    },
-    "surface": {
-        "type": "rpv"
-    },
-    "illumination": {
-        "type": "directional",
-        "zenith": 30.,
-        "zenith_units": "deg"
-    },
-    "measures": [{
-        "type": "toa_hsphere",
-        "spp": int(1e4)
-    }]
-})
+app = OneDimSolverApp.from_dict(
+    {
+        "mode": {
+            "type": "mono",
+        },
+        "atmosphere": {
+            "type": "heterogeneous",
+            "profile": {"type": "us76_approx"},
+            "width": 1e5,
+            "width_units": "km",
+        },
+        "surface": {"type": "rpv"},
+        "illumination": {"type": "directional", "zenith": 30.0, "zenith_units": "deg"},
+        "measures": [{"type": "toa_hsphere", "spp": int(1e4)}],
+    }
+)
 app.run()
 
 # %%
@@ -84,8 +78,8 @@ import eradiate.plot as ertplt
 
 brf = sample_data.brf
 
-brf.squeeze().ert.plot_pcolormesh_polar() # note that we must first eliminate the excess dimensions with squeeze()
-ertplt.remove_xylabels() # remove X and Y axis labels
+brf.squeeze().ert.plot_pcolormesh_polar()  # note that we must first eliminate the excess dimensions with squeeze()
+ertplt.remove_xylabels()  # remove X and Y axis labels
 plt.show()
 
 # %%
@@ -101,7 +95,7 @@ plt.show()
 # But we can also extract a plane view for any azimuth value:
 
 # Here we must specify the azimuth and zenith coordinates used to extract this plane view
-brf.ert.extract_plane(phi=90., theta_dim="vza", phi_dim="vaa").plot()
+brf.ert.extract_plane(phi=90.0, theta_dim="vza", phi_dim="vaa").plot()
 plt.show()
 
 # %%
@@ -209,7 +203,7 @@ var_spec = VarSpec(
     standard_name="toa_brf",
     long_name="TOA bidirectional reflectance factor",
     units="",  # BRF values are dimensionless
-    coord_specs="angular_observation"
+    coord_specs="angular_observation",
 )
 var_spec.coord_specs
 
@@ -224,13 +218,13 @@ from eradiate.xarray.make import make_dataarray
 make_dataarray(
     np.random.random((1, 1, 5, 5, 1)),
     coords=(
-        ("sza", [30.]),
-        ("saa", [0.]),
-        ("vza", [0., 15., 30., 45., 60.]),
-        ("vaa", [0., 45., 90., 135., 180.]),
-        ("wavelength", [550.])
+        ("sza", [30.0]),
+        ("saa", [0.0]),
+        ("vza", [0.0, 15.0, 30.0, 45.0, 60.0]),
+        ("vaa", [0.0, 45.0, 90.0, 135.0, 180.0]),
+        ("wavelength", [550.0]),
     ),
-    var_spec=var_spec
+    var_spec=var_spec,
 )
 
 # %%

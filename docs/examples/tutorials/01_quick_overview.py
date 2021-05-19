@@ -4,7 +4,8 @@ Quick overview
 """
 
 # %%
-# .. warning:: Outdated content, update required
+# .. warning:: Outdated content, update required.
+#    This tutorial is officially broken.
 
 # %%
 # This tutorial gives a very quick introduction to Eradiate's main features. We
@@ -31,8 +32,11 @@ Quick overview
 # display their output.
 
 import subprocess
+
+
 def shell_command(args):
     print(subprocess.run(args.split(), capture_output=True).stdout.decode("utf-8"))
+
 
 # %%
 # For this example, we will use the ``ertonedim```
@@ -80,6 +84,7 @@ shell_command("ertonedim 01_quick_overview_config.yml ertonedim ertonedim")
 # We start by loading our YAML configuration file into a dictionary:
 
 import ruamel.yaml as yaml
+
 with open("01_quick_overview_config.yml") as f:
     config = yaml.safe_load(f)
 config
@@ -90,6 +95,7 @@ config
 # the argument of the :class:`.OneDimSolverApp` constructor:
 
 import eradiate
+
 eradiate.set_mode("mono")
 from eradiate.solvers.onedim import OneDimSolverApp
 
@@ -141,7 +147,6 @@ plt.close()
 # We finish this sequence with a quick cleanup:
 
 import glob, os
-for fname in  glob.glob("ertonedim*.png") + glob.glob("ertonedim*.nc"):
-    os.remove(fname)
 
-# %%
+for fname in glob.glob("ertonedim*.png") + glob.glob("ertonedim*.nc"):
+    os.remove(fname)
