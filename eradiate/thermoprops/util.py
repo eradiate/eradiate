@@ -287,7 +287,7 @@ def rescale_concentration(ds, factors, inplace=False):
     return ds
 
 
-@ureg.wraps(ret=None, args=(None, "m", None, None), strict=False)
+@ureg.wraps(ret=None, args=(None, "km", None, None), strict=False)
 def interpolate(ds, z_level, method="linear", conserve_columns=False):
     """
     Interpolates an atmosphere thermophysical properties data set onto a
@@ -300,7 +300,7 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
         Initial atmosphere thermophysical properties data set.
 
     Parameter ``z_level`` (:class:`numpy.ndarray`):
-        Level altitude mesh [m].
+        Level altitude mesh [km].
 
     Parameter ``method`` (str):
         The method used to interpolate (same for all data variables).
@@ -320,9 +320,11 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
         Interpolated atmosphere thermophysical properties data set
     """
     z_layer_values = (z_level[1:] + z_level[:-1]) / 2.0
-    z_layer = ureg.Quantity(z_layer_values, ds.z_layer.units)
+    z_layer = ureg.Quantity(z_layer_values, "km")
     interpolated = ds.interp(
-        z_layer=z_layer.magnitude, method=method, kwargs=dict(fill_value="extrapolate")
+        z_layer=z_layer.m_as(ds.z_layer.units),
+        method=method,
+        kwargs=dict(fill_value="extrapolate"),
     )
     z_level_attrs = ds.z_level.attrs
     z_level = ureg.Quantity(z_level, ds.z_level.units)
