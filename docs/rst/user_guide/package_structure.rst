@@ -35,10 +35,11 @@ Low-level computational kernel
 ------------------------------
 
 Kernel [:ref:`eradiate.kernel <sec-reference-kernel>`]
-    This module provides an interface to Eradiate's computational kernel, based
-    on a modified version of the Mitsuba 2 rendering system. The ``scenes`` and
-    ``solvers`` packages are, under the hood, high-level interfaces to the
-    kernel components.
+    This module provides low-level interface components to Eradiate's
+    computational kernel (a modified version of the Mitsuba 2 rendering system).
+    Currently, this package simply checks that the kernel is installed and
+    can be imported. The ``solvers`` packages are, under the hood, high-level
+    interfaces to the kernel components.
 
 Data handling and visualisation
 -------------------------------
