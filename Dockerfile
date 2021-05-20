@@ -50,17 +50,17 @@ ENV ERADIATE_DIR=/sources/eradiate
 RUN mkdir -p /sources \
     && git clone --recursive https://github.com/eradiate/eradiate.git /sources/eradiate \
     && cd /sources/eradiate \
-    && wget -q https://eradiate.eu/data/solid_2017.zip # Silent and may take a while \
-    && wget -q https://eradiate.eu/data/us76_u86_4-spectra.zip # Silent and may take a while \
+    && wget https://eradiate.eu/data/solid_2017.zip \
+    && wget https://eradiate.eu/data/us76_u86_4-spectra.zip \
     && cd resources/data && (unzip ../../solid_2017.zip || true) \
-    && (unzip ../../spectra-us76_u86_4.zip || true) \
-    && cd /sources/eradiate && python3 setup.py install --single-version-externally-managed --root=/ \
-    && cp -r /sources/eradiate/resources /usr/local/lib/python3.8/dist-packages/eradiate/resources \
+    && (unzip ../../spectra-us76_u86_4.zip || true)
+RUN cd /sources/eradiate && python3 setup.py install --single-version-externally-managed --root=/ \
+    && cp -r /sources/eradiate/resources /usr/local/lib/python3.8/dist-packages/resources \
     && cd / && rm -rf /sources
 
 WORKDIR /app
 
-ENV ERADIATE_DIR=/usr/local/lib/python3.8/dist-packages/eradiate
+ENV ERADIATE_DIR=/usr/local/lib/python3.8/dist-packages
 
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 RUN ln -sf /usr/bin/pip3 /usr/bin/pip
