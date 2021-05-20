@@ -9,11 +9,8 @@ actually one-dimensional (Eradiate's kernel is a 3D Monte Carlo ray tracer),
 scene setup ensures that the computed quantities are equivalent to what would
 be obtained with a proper 1D code.
 
-As mentioned in the :ref:`sphx_glr_examples_generated_tutorials_01_quick_overview.py`
-tutorial, the one-dimensional solver application can be used either through its
-command-line interface ``ertonedim`` or through its Python API (see
-:class:`.OneDimSolverApp`). This guide goes in more detail on the
-features, configuration format and usage of this application.
+This guide introduces the features, configuration format and usage of Eradiate's
+one-dimensional solver application.
 
 .. admonition:: Tutorials
 
