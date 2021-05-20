@@ -53,7 +53,7 @@ def display_canopy(canopy, distance=85):
     scene.integrator().render(scene, sensor)
 
     # Display image
-    img = np.array(sensor.film().bitmap())
+    img = np.array(sensor.film().bitmap()).squeeze()
     fig, ax = plt.subplots(figsize=(6, 6))
     im = ax.imshow(img, cmap=plt.get_cmap("Greys_r"))
     plt.colorbar(im, fraction=0.0354, pad=0.02)
