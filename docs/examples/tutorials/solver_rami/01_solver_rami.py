@@ -163,6 +163,11 @@ ds.brf.squeeze().plot.imshow()
 plt.show()
 
 # %%
+# .. note:: We plot those data against *film coordinates*. If you are interested
+#    in plotting those data against viewing angle coordinates, please refer to
+#    :ref:`sphx_glr_examples_generated_tutorials_data_01_polar_plot.py`.
+
+# %%
 # Note that we used the :meth:`~xarray.DataArray.squeeze` method to drop all
 # scalar dimensions: the :meth:`~xarray.plot.imshow` method is indeed meant to
 # be used on 2D data arrays. On this image, we can see that we indeed have a
