@@ -26,7 +26,9 @@ def runner(kernel_dict: KernelDict, sensor_ids: Optional[List[str]] = None) -> D
     Parameter ``kernel_dict`` (:class:`.KernelDict`):
         Dictionary describing the kernel scene.
 
-    Parameter ``sensor_ids`` (list[str] or None)
+    Parameter ``sensor_ids`` (list[str] or None):
+        Identifiers of the sensors for which the integrator is run. If set to
+        ``None``, all sensors are selected.
 
     Returns → dict:
         Nested dictionaries with the following structure:
