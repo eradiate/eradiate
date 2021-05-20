@@ -193,8 +193,8 @@ def test_heterogeneous_default(mode_mono):
     # Default heterogeneous atmosphere uses the default radiative properties
     # profile
     a = HeterogeneousAtmosphere()
-    assert isinstance(a.profile, AFGL1986RadProfile)
-    assert np.allclose(a.profile.levels, ureg.Quantity(range(0, 121), "km"))
+    assert isinstance(a.profile, US76ApproxRadProfile)
+    assert np.allclose(a.profile.levels, ureg.Quantity(range(0, 87), "km"))
 
 
 def test_heterogeneous_us76(mode_mono, tmpdir):
