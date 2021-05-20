@@ -17,6 +17,7 @@ from .rayleigh import compute_sigma_s_air
 from .. import data
 from .._attrs import documented, parse_docs
 from .._factory import BaseFactory
+from .._units import to_quantity
 from .._units import unit_context_config as ucc
 from .._units import unit_registry as ureg
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
@@ -28,15 +29,6 @@ from ..thermoprops.util import (
     rescale_concentration,
 )
 from ..validators import all_positive
-
-
-def _to_quantity(variable):
-    try:
-        units = variable.units
-    except KeyError:
-        raise ValueError(f"{variable} has no units.")
-    finally:
-        return ureg.Quantity(variable.values, units)
 
 
 @ureg.wraps(
@@ -393,10 +385,10 @@ class ArrayRadProfile(RadProfile):
     @classmethod
     def from_dataset(cls, path):
         ds = xr.open_dataset(path_resolver.resolve(path))
-        z_level = _to_quantity(ds.z_level)
+        z_level = to_quantity(ds.z_level)
         n_layers = ds.z_level.size - 1
-        albedo = _to_quantity(ds.albedo).reshape(1, 1, n_layers)
-        sigma_t = _to_quantity(ds.sigma_t).reshape(1, 1, n_layers)
+        albedo = to_quantity(ds.albedo).reshape(1, 1, n_layers)
+        sigma_t = to_quantity(ds.sigma_t).reshape(1, 1, n_layers)
         return cls(albedo_values=albedo, sigma_t_values=sigma_t, levels=z_level)
 
     def to_dataset(self, spectral_ctx=None):
@@ -634,8 +626,8 @@ class US76ApproxRadProfile(RadProfile):
         profile = self.eval_thermoprops_profile()
         return make_dataset(
             wavelength=spectral_ctx.wavelength,
-            z_level=_to_quantity(profile.z_level),
-            z_layer=_to_quantity(profile.z_layer),
+            z_level=to_quantity(profile.z_level),
+            z_layer=to_quantity(profile.z_layer),
             sigma_a=self.sigma_a(spectral_ctx).flatten(),
             sigma_s=self.sigma_s(spectral_ctx).flatten(),
         )
@@ -1012,8 +1004,8 @@ class AFGL1986RadProfile(RadProfile):
         """
         return make_dataset(
             wavelength=spectral_ctx.wavelength,
-            z_level=_to_quantity(self.eval_thermoprops_profile().z_level),
-            z_layer=_to_quantity(self.eval_thermoprops_profile().z_layer),
+            z_level=to_quantity(self.eval_thermoprops_profile().z_level),
+            z_layer=to_quantity(self.eval_thermoprops_profile().z_layer),
             sigma_a=self.sigma_a(spectral_ctx).flatten(),
             sigma_s=self.sigma_s(spectral_ctx).flatten(),
         )

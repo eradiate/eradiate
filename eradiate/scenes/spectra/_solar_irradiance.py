@@ -9,6 +9,7 @@ from ... import unit_context_kernel as uck
 from ... import unit_registry as ureg
 from ..._attrs import documented, parse_docs
 from ..._units import PhysicalQuantity
+from ..._units import to_quantity
 from ...contexts import SpectralContext
 from ...scenes.spectra import Spectrum, SpectrumFactory
 from ...validators import is_positive
@@ -92,21 +93,16 @@ class SolarIrradianceSpectrum(Spectrum):
         if eradiate.mode().is_monochromatic():
             wavelength = spectral_ctx.wavelength.m_as(self.data.w.attrs["units"])
 
-            irradiance_magnitude = float(
+            irradiance = to_quantity(
                 self.data.ssi.interp(
                     w=wavelength,
                     method="linear",
-                ).values
+                )
             )
 
             # Raise if out of bounds or ill-formed dataset
-            if np.isnan(irradiance_magnitude):
+            if np.isnan(irradiance.magnitude):
                 raise ValueError("dataset evaluation returned nan")
-
-            # Apply units
-            irradiance = ureg.Quantity(
-                irradiance_magnitude, self.data.ssi.attrs["units"]
-            )
 
         else:
             raise ValueError(f"unsupported mode {eradiate.mode().id}")

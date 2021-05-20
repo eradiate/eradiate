@@ -14,6 +14,7 @@ import eradiate.data as data
 
 from . import profile_dataset_spec
 from .._units import unit_registry as ureg
+from .._units import to_quantity
 
 ATOMIC_MASS_CONSTANT = ureg.Quantity(
     *scipy.constants.physical_constants["atomic mass constant"][:-1]
@@ -46,11 +47,10 @@ def compute_column_number_density(ds, species):
         Column number density.
     """
     mr = ds.mr.sel(species=species).values
-    n = ureg.Quantity(value=ds.n.values, units=ds.n.units)
+    n = to_quantity(ds.n)
     n_species = mr * n
-    dz = ureg.Quantity(
-        value=ds.z_level.values[1:] - ds.z_level.values[:-1], units=ds.z_level.units
-    )
+    z_level = to_quantity(ds.z_level)
+    dz = z_level[1:] - z_level[:-1]
     return (n_species * dz).sum()
 
 
@@ -95,8 +95,8 @@ def compute_number_density_at_surface(ds, species):
     Returns → :class:`~pint.Quantity`:
         Number density at the surface.
     """
-    surface_mr = ds.mr.sel(species=species).values[0]
-    surface_n = ureg.Quantity(ds.n.values[0], ds.n.units)
+    surface_mr = to_quantity(ds.mr.sel(species=species))[0]
+    surface_n = to_quantity(ds.n)[0]
     return surface_mr * surface_n
 
 
@@ -114,7 +114,7 @@ def compute_mass_density_at_surface(ds, species):
         Mass density at the surface.
     """
     molecular_mass = data.open(category="chemistry", id="molecular_masses")
-    m = molecular_mass.m.sel(s=species).values * ATOMIC_MASS_CONSTANT
+    m = to_quantity(molecular_mass.m.sel(s=species)) * ATOMIC_MASS_CONSTANT
     return m * compute_number_density_at_surface(ds=ds, species=species)
 
 
@@ -206,9 +206,7 @@ def compute_scaling_factors(ds, concentration):
             factor = amount.to("km/m^3") / initial_amount.to("kg/m^3")
         elif amount.check(""):  # mixing ratio at the surface
             surface_mr_species = amount
-            initial_surface_mr_species = ureg.Quantity(
-                ds.mr.sel(species=species).values[0], ds.mr.units
-            )
+            initial_surface_mr_species = to_quantity(ds.mr.sel(species=species))[0]
             factor = surface_mr_species / initial_surface_mr_species
         else:
             raise ValueError(
@@ -319,16 +317,17 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
     Returns → :class:`xarray.Dataset`:
         Interpolated atmosphere thermophysical properties data set
     """
-    z_layer_values = (z_level[1:] + z_level[:-1]) / 2.0
-    z_layer = ureg.Quantity(z_layer_values, "km")
+    z_level = ureg.Quantity(z_level, "km")
+    z_layer = (z_level[1:] + z_level[:-1]) / 2.0
     interpolated = ds.interp(
         z_layer=z_layer.m_as(ds.z_layer.units),
         method=method,
         kwargs=dict(fill_value="extrapolate"),
     )
     z_level_attrs = ds.z_level.attrs
-    z_level = ureg.Quantity(z_level, ds.z_level.units)
-    interpolated.update(dict(z_level=("z_level", z_level.magnitude, z_level_attrs)))
+    interpolated.update(
+        dict(z_level=("z_level", z_level.m_as(ds.z_level.units), z_level_attrs))
+    )
 
     if conserve_columns:
         initial_amounts = {
@@ -355,8 +354,8 @@ def water_vapor_saturation_pressure(t):
     Parameter ``t`` (float):
         Temperature [K].
 
-    Returns → float:
-        Water vapor saturation pressure [Pa].
+    Returns → :class:`pint.Quantity`:
+        Water vapor saturation pressure.
     """
     if t >= 273.15:  # water is liquid
         p = ureg.Quantity(iapws.iapws97._PSat_T(t), "MPa")
@@ -396,8 +395,12 @@ def equilibrium_water_vapor_fraction(p, t):
     Parameter ``t`` (float):
         Temperature [K].
 
-    Returns → float:
-        Water vapor volume fraction [dimensionless].
+    Returns → :class:`pint.Quantity`:
+        Water vapor volume fraction.
+
+    Raises → ValueError:
+        If equilibrium cannot be reached in the pressure and temperature
+        conditions.
     """
     p_water_vapor = water_vapor_saturation_pressure(t).magnitude
     if p_water_vapor <= p:
