@@ -11,7 +11,7 @@ from ..._attrs import documented, parse_docs
 from ..._units import unit_context_kernel as uck
 from ..._units import unit_registry as ureg
 from ...radprops import RadProfileFactory
-from ...radprops.rad_profile import AFGL1986RadProfile, RadProfile
+from ...radprops.rad_profile import US76ApproxRadProfile, RadProfile
 from ... import validators
 
 
@@ -119,7 +119,7 @@ class HeterogeneousAtmosphere(Atmosphere):
       pointing to existing files).
     - if the ``profile`` field is not specified and neither are the
       ``albedo_fname`` and ``sigma_t_fname`` fields, then ``profile`` is set to
-      the default :class:`~eradiate.radprops.rad_profile.AFGL1986RadProfile`
+      the default :class:`~eradiate.radprops.rad_profile.US76ApproxRadProfile`
       radiative properties profile.
 
     If ``profile`` is specified:
@@ -143,7 +143,7 @@ class HeterogeneousAtmosphere(Atmosphere):
 
     profile = documented(
         attr.ib(
-            default=attr.Factory(AFGL1986RadProfile),
+            default=attr.Factory(US76ApproxRadProfile),
             converter=attr.converters.optional(RadProfileFactory.convert),
             validator=attr.validators.optional(attr.validators.instance_of(RadProfile)),
         ),
@@ -151,7 +151,7 @@ class HeterogeneousAtmosphere(Atmosphere):
         "created from profile data to initialise the corresponding kernel "
         "plugin.",
         type=":class:`~eradiate.radprops.rad_profile.RadProfile` or None",
-        default=":class:`AFGL1986RadProfile() <.AFGL1986RadProfile>`",
+        default=":class:`US76ApproxRadProfile() <.US76ApproxRadProfile>`",
     )
 
     @profile.validator
