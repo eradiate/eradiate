@@ -45,7 +45,7 @@ Data source
 The absorption cross sections data in this data set were computed using the
 `SPECTRA <https://spectra.iao.ru>`_
 Information System, with inputs available
-`here <https://eradiate.eu/data/spectra-us76_u86_4-inputs.zip>`_.
+`here <https://eradiate.eu/data/us76_u86_4-spectra-inputs.zip>`_.
 SPECTRA uses the HITRAN database (2016-edition)
 :cite:`Gordon2016HITRAN2016MolecularSpectroscopic`.
 
