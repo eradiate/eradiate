@@ -46,7 +46,8 @@ app.run()
 
 import matplotlib.pyplot as plt
 
-app.results["measure"].brf.squeeze().plot()
+brf = app.results["measure"].brf.squeeze()
+brf.plot()
 plt.show()
 
 # %%
@@ -54,7 +55,7 @@ plt.show()
 # angle coordinates. Our film coordinate data set
 # cannot be easily plotted using this framework: we first
 # have to convert our data array to viewing angle
-# coordinates. Eradiate provides a support function to
+# coordinates. Eradiate provides an accessor method to
 # automate this process:
 
 import numpy as np
@@ -64,9 +65,7 @@ thetas = np.deg2rad(np.arange(0.0, 85.01, 5.0))
 phis = np.deg2rad(np.arange(0.0, 360.01, 5.0))
 
 # Interpolate data
-brf_angular = eradiate.xarray.interp.film_to_angular(
-    app.results["measure"].brf, thetas, phis
-)
+brf_angular = brf.ert.to_angular(thetas, phis)
 
 # %%
 # The resulting data array uses a structured angle grid as

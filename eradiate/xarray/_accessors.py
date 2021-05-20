@@ -1,5 +1,7 @@
 import xarray as xr
+from numpy.typing import ArrayLike
 
+from .interp import film_to_angular
 from .metadata import validate_metadata
 
 
@@ -45,17 +47,43 @@ class EradiateDataArrayAccessor:
             )
 
     def normalize_metadata(self, var_spec):
-        """Validate the metadata for the wrapped :class:`~xarray.DataArray`.
+        """
+        Validate the metadata for the wrapped :class:`~xarray.DataArray`.
         Basically a call to :meth:`validate_metadata` with ``normalize`` set to
         ``True``.
         """
         self.validate_metadata(var_spec, normalize=True, allow_unknown=False)
 
+    def to_angular(
+        self,
+        theta: ArrayLike,
+        phi: ArrayLike,
+        x_label: str = "x",
+        y_label: str = "y",
+        theta_label: str = "theta",
+        phi_label: str = "phi",
+    ) -> xr.DataArray:
+        """
+        Attempt interpolation of self to angular coordinates using
+        :func:`~eradiate.xarray.interp.film_to_angular`.
+        """
+        return film_to_angular(
+            self._obj,
+            theta=theta,
+            phi=phi,
+            x_label=x_label,
+            y_label=y_label,
+            theta_label=theta_label,
+            phi_label=phi_label,
+        )
+
 
 @xr.register_dataset_accessor("ert")
 class EradiateDatasetAccessor:
-    """Convenience wrapper for operations on :class:`~xarray.Dataset` instances.
-    Accessed as a ``Dataset.ert`` property."""
+    """
+    Convenience wrapper for operations on :class:`~xarray.Dataset` instances.
+    Accessed as a ``Dataset.ert`` property.
+    """
 
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
@@ -114,7 +142,8 @@ class EradiateDatasetAccessor:
                 raise ValueError(f"coordinate '{dim}': {str(e)}")
 
     def normalize_metadata(self, dataset_spec):
-        """Validate the metadata for the wrapped :class:`~xarray.Dataset`.
+        """
+        Validate the metadata for the wrapped :class:`~xarray.Dataset`.
         Basically a call to :meth:`validate_metadata` with ``normalize`` set to
         ``True``.
         """
