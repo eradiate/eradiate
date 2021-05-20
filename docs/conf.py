@@ -150,6 +150,7 @@ extensions.append("sphinx.ext.autodoc")
 autodoc_default_flags = [
     "members", "undoc-members", "show-inheritance", "inherited-members"
 ]
+autodoc_typehints = "none"
 
 extensions.append("sphinx.ext.autosummary")
 autosummary_generate = True
