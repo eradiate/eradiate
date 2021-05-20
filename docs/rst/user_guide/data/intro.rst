@@ -25,15 +25,15 @@ Adding manually downloaded data
 
 Due to the impracticality of storing large data sets with the code base,
 Eradiate does not ship all data required to run simulations.
-Certain large data sets are hosted on an 
-`FTP server <https://eradiate.eu/data>`_
-and need to be downloaded manually.
+Certain large data sets are hosted on a `FTP server <https://eradiate.eu/data>`_
+and must be downloaded manually.
 
-The data are served in compressed archives, including their containing
-folders. To install the downloaded data, first decompress the archive into a temporary
-location. The decompressed folder can then be placed directly in the ``resources/data``
-folder and typical file managers will be able to merge the two file trees, placing
-the data files in the correct location in the local file tree.
+The data are served as compressed archives, including their containing folders.
+To install the downloaded data, first decompress the archive into a temporary
+location. The decompressed folder can then be placed directly in the
+``resources/data`` folder and typical file managers will be able to merge the
+two file trees, placing the data files in the correct location in the local file
+tree.
 
 Accessing shipped data
 ----------------------
@@ -75,13 +75,13 @@ data at a known location:
 Working with angular data
 -------------------------
 
-Eradiate notably manipulates and produces what we refer to as *angular data sets*,
+Eradiate notably manipulates and produces what we refer to as *angular data*,
 which represent variables dependent on one or more directional parameters.
 Typical examples are BRDFs
 (:math:`f_\mathrm{r} (\theta_\mathrm{i}, \varphi_\mathrm{i}, \theta_\mathrm{o}, \varphi_\mathrm{o})`)
 or top-of-atmosphere BRFs
 (:math:`\mathit{BRF}_\mathrm{TOA} (\theta_\mathrm{sun}, \varphi_\mathrm{sun}, \theta_\mathrm{view}, \varphi_\mathrm{view})`):
-a xarray data set representing them has at least one angular dimension (and
+a xarray data array representing them has at least one angular dimension (and
 corresponding coordinates). Eradiate has specific functionality to deal more
 easily with this sort of data.
 
@@ -99,7 +99,7 @@ types of angular dependencies for its variables:
   and ``phi_o``, ``theta_o`` for their outgoing counterparts.
 
 * Observations are usually parametrised by *illumination* (or *solar*) and
-  *viewing* (or *sensor*) directions. For datasets representing such results,
+  *viewing* (or *sensor*) directions. For data sets representing such results,
   Eradiate uses coordinate variables ``sza``, ``saa`` for
   *solar zenith/azimuth angle* and ``vza``, ``vaa`` for
   *viewing zenith/azimuth angle*. A typical example of such variable is
@@ -134,33 +134,23 @@ the nomenclature for the two types:
      - :math:`\varphi_\mathrm{v}`, :math:`\theta_\mathrm{v}`
 
 Eradiate's xarray containers do not explicitly keep track of the angular data
-set type. Instead, coordinate variable naming is enforced and can be used to
-determine whether an angular data set is of intrinsic or observation type.
-
-When a particular component requires an angular data set to be of a specific
-type, its documentation mentions it.
-
-Indexing and selecting angular data
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+set type. However, when relevant, coordinate naming is used to determine whether
+an angular data set is of intrinsic or observation type.
 
 Angular data sets with a pair of angular dimensions :math:`(\theta, \varphi)`
 are called *hemispherical*. If they have two pairs of angular dimensions
 (incoming and outgoing), they are then called *bi-hemispherical*.
 
-(Bi-)hemispherical data sets can be selected or indexed to extract data sets of
-lower dimensionality. This is typically used to extract a principal plane view
-from an observation data set. Eradiate provides a helper function, exposed by its
-data array accessor --
-:meth:`~eradiate.xarray._accessors.EradiateDataArrayAccessor.extract_pplane`
--- to do so. See :ref:`sphx_glr_examples_generated_tutorials_data_01_xarray.py` for
-more detail.
+Measure data formats
+--------------------
 
-Visualising angular data
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Hemispherical data plotting is common in Earth observation applications and
-the commonly-used plotting packages do not offer an easy way to produce
-representations in polar coordinates. Eradiate offers components to make this
-task easier in the form of a xarray accessor -- see 
-:meth:`~eradiate.xarray._accessors.EradiateDataArrayAccessor.plot_pcolormesh_polar`.
-Refer to the corresponding documentation for further detail.
+Most measures in Earth observation radiative transfer modelling have angular
+dependencies. However, Eradiate uses storage data structures inherited from
+computer graphics technology and measure results are usually mapped against
+*film coordinates* :math:`(x, y) \in [0, 1]^2`. When those data represent
+hemispherical quantities, a mapping transformation associate angles to film
+coordinates. For convenience, Eradiate ships helpers to convert data from film
+coordinates to angular coordinates. See
+:ref:`sphx_glr_examples_generated_tutorials_data_01_polar_plot.py` for a
+concrete introduction to those features, as well as angular data visualisation
+in polar coordinates.
