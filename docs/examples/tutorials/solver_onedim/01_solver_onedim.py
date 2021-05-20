@@ -220,6 +220,11 @@ brf.squeeze().plot()
 plt.show()
 
 # %%
+# .. note:: We plot those data against *film coordinates*. If you are interested
+#    in plotting those data against viewing angle coordinates, please refer to
+#    :ref:`sphx_glr_examples_generated_tutorials_data_01_polar_plot.py`.
+
+# %%
 # We can see that we have a "hot spot" in the back scattering direction (a
 # distinctive feature of the RPV BRDF). If we reduce the amount of scattering in
 # our atmosphere, the hot spot becomes sharper (see the bounds of the colour
