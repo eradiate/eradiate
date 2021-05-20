@@ -30,7 +30,6 @@ Units and quantities
 .. toctree::
    :hidden:
    :maxdepth: 1
-
    imported_vars/unit_registry
    imported_vars/unit_context_config
    imported_vars/unit_context_kernel
@@ -51,6 +50,13 @@ Units and quantities
       :toctree: generated
 
        _units.PhysicalQuantity
+
+.. dropdown:: **Private: Quantity converter**
+
+   .. autosummary::
+      :toctree: generated/
+      
+      _units.to_quantity  
 
 Path resolver
 -------------

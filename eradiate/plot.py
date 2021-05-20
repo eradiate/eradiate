@@ -6,7 +6,7 @@ __all__ = [
     "make_ticks",
     "pcolormesh_polar",
     "remove_xyticks",
-    "remove_xylabels"
+    "remove_xylabels",
 ]
 
 import matplotlib.pyplot as _plt
@@ -16,9 +16,10 @@ from matplotlib.figure import Figure
 from xarray.plot import FacetGrid
 
 from . import unit_registry as ureg
-
+from ._units import to_quantity
 
 # -- Plotting wrappers ---------------------------------------------------------
+
 
 def pcolormesh_polar(darray, r=None, theta=None, **kwargs):
     """Create a polar pcolormesh plot. Wraps :func:`xarray.plot.pcolormesh`:
@@ -58,8 +59,10 @@ def pcolormesh_polar(darray, r=None, theta=None, **kwargs):
 
     if theta_units != ureg.rad:
         theta_rad = f"{theta}_rad"
-        theta_rad_values = ureg.Quantity(darray[theta].values, theta_units).to(ureg.rad).magnitude
-        darray_plot = darray.assign_coords(**{theta_rad: (theta_dims, theta_rad_values)})
+        theta_rad_values = to_quantity(darray[theta]).m_as("rad")
+        darray_plot = darray.assign_coords(
+            **{theta_rad: (theta_dims, theta_rad_values)}
+        )
         darray_plot[theta_rad].attrs = darray[theta].attrs
         darray_plot[theta_rad].attrs["units"] = "rad"
     else:
@@ -84,6 +87,7 @@ def pcolormesh_polar(darray, r=None, theta=None, **kwargs):
 
 
 # -- Utility functions ---------------------------------------------------------
+
 
 def detect_axes(from_=None):
     """Try and extract a :class:`~matplotlib.axes.Axes` list from a data structure.
@@ -144,16 +148,14 @@ def get_axes_from_facet_grid(facet_grid, exclude=None):
 
 
 def remove_xylabels(from_=None):
-    """Remove x and y axis labels from ``from_`` (processed by :func:`detect_axes`).
-    """
+    """Remove x and y axis labels from ``from_`` (processed by :func:`detect_axes`)."""
     for ax in detect_axes(from_):
         ax.set_xlabel("")
         ax.set_ylabel("")
 
 
 def remove_xyticks(from_=None):
-    """Remove x and y axis tick labels from ``from_`` (processed by :func:`detect_axes`).
-    """
+    """Remove x and y axis tick labels from ``from_`` (processed by :func:`detect_axes`)."""
     for ax in detect_axes(from_):
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)

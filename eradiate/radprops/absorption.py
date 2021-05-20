@@ -4,6 +4,7 @@ import numpy as np
 import xarray as xr
 from scipy.constants import physical_constants
 
+from .._units import to_quantity
 from .._units import unit_registry as ureg
 
 _BOLTZMANN = ureg.Quantity(*physical_constants["Boltzmann constant"][:2])
@@ -138,7 +139,7 @@ def compute_sigma_a(
             ),
         )
 
-    xs = ureg.Quantity(interpolated.xs.values, interpolated.xs.units)
+    xs = to_quantity(interpolated.xs)
 
     # If 'n' is None, we compute it using the ideal gas state equation.
     if n is None:

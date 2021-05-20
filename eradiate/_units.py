@@ -103,3 +103,29 @@ unit_context_config = _make_unit_context()
 
 #: Unit context used when building kernel dictionaries
 unit_context_kernel = _make_unit_context()
+
+
+def to_quantity(variable: xarray.Variable) -> pint.Quantity:
+    """
+    Converts a :class:`~xarray.Variable` to a :class:`~pint.Quantity`.
+
+    Parameter ``variable`` (:class:`~xarray.Variable`):
+        Xarray variable. For example, a :class:`~xarray.Dataset`'s data
+        variable or coordinate, or a :class:`~xarray.DataArray` or a
+        :class:`~xarray.DataArray`'s coordinate.
+
+        .. note::
+            The variable's ``attrs`` must include a ``units`` key.
+
+    Returns → :class:`pint.Quantity`:
+        The corresponding quantity.
+
+    Raises → ValueError:
+        If the variable's ``attrs`` does not include a ``units`` key.
+    """
+    try:
+        units = variable.units
+    except KeyError:
+        raise ValueError(f"{variable} has no units.")
+    else:
+        return unit_registry.Quantity(variable.values, units)
