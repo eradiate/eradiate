@@ -1,10 +1,9 @@
-""" Unit system-related components. """
-
 import enum
 from functools import lru_cache
 
 import pint
 import pinttr
+import xarray
 
 #: Unit registry common to all Eradiate components. All units used in Eradiate
 #: must be created using this registry.
@@ -33,7 +32,8 @@ class PhysicalQuantity(enum.Enum):
     @classmethod
     @lru_cache(maxsize=32)
     def spectrum(cls):
-        """Return a tuple containing a subset of :class:`PhysicalQuantity`
+        """
+        Return a tuple containing a subset of :class:`PhysicalQuantity`
         members suitable for :class:`.Spectrum` initialisation. This function
         caches its results for improved efficiency.
         """
@@ -105,27 +105,25 @@ unit_context_config = _make_unit_context()
 unit_context_kernel = _make_unit_context()
 
 
-def to_quantity(variable: xarray.Variable) -> pint.Quantity:
+def to_quantity(da: xarray.DataArray) -> pint.Quantity:
     """
-    Converts a :class:`~xarray.Variable` to a :class:`~pint.Quantity`.
+    Converts a :class:`~xarray.DataArray` to a :class:`~pint.Quantity`.
+    The array's ``attrs`` metadata mapping must contain a ``units`` field.
 
-    Parameter ``variable`` (:class:`~xarray.Variable`):
-        Xarray variable. For example, a :class:`~xarray.Dataset`'s data
-        variable or coordinate, or a :class:`~xarray.DataArray` or a
-        :class:`~xarray.DataArray`'s coordinate.
+    .. note:: This function can also be used on coordinate variables.
 
-        .. note::
-            The variable's ``attrs`` must include a ``units`` key.
+    Parameter ``da`` (:class:`~xarray.DataArray`):
+        :class:`~xarray.DataArray` instance which will be converted.
 
     Returns → :class:`pint.Quantity`:
-        The corresponding quantity.
+        The corresponding Pint quantity.
 
     Raises → ValueError:
-        If the variable's ``attrs`` does not include a ``units`` key.
+        If the array's metadata do not contain a ``units`` field.
     """
     try:
-        units = variable.units
-    except KeyError:
-        raise ValueError(f"{variable} has no units.")
+        units = da.attrs["units"]
+    except KeyError as e:
+        raise ValueError("this DataArray has no 'units' metadata field") from e
     else:
-        return unit_registry.Quantity(variable.values, units)
+        return unit_registry.Quantity(da.values, units)
