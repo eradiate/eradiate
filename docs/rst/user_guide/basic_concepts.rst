@@ -45,22 +45,22 @@ method which generates input data for the kernel.
 
 ..
 
-  Runners [COMMENTED: RETIRED FOR NOW]
-  ------------------------------------
+   Runners [COMMENTED: RETIRED FOR NOW]
+   ------------------------------------
 
-  Runner components are responsible for managing kernel runs and make the
-  interface between the scene generation API and the kernel. They take as their
-  input the output produced by scene element and pass it to the kernel. They then
-  run and monitor the radiative transfer computation.
+   Runner components are responsible for managing kernel runs and make the
+   interface between the scene generation API and the kernel. They take as their
+   input the output produced by scene element and pass it to the kernel. They then
+   run and monitor the radiative transfer computation.
 
-  They also keep track of kernel scene features and associate them with Eradiate's
-  high-level scene abstractions. For instance, the runner is responsible for
-  ensuring that all requested high-level measurements are computed and their
-  results organised in such a way that high-level post-processing is possible.
+   They also keep track of kernel scene features and associate them with Eradiate's
+   high-level scene abstractions. For instance, the runner is responsible for
+   ensuring that all requested high-level measurements are computed and their
+   results organised in such a way that high-level post-processing is possible.
 
-  Runners also supervise kernel runs to handle the presence of multiple sensors
-  (sometimes required to compute complex measurements) or chunk large spectral
-  intervals into smaller bits.
+   Runners also supervise kernel runs to handle the presence of multiple sensors
+   (sometimes required to compute complex measurements) or chunk large spectral
+   intervals into smaller bits.
 
 Applications
 ------------

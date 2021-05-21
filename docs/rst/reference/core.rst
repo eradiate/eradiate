@@ -30,6 +30,7 @@ Units and quantities
 .. toctree::
    :hidden:
    :maxdepth: 1
+
    imported_vars/unit_registry
    imported_vars/unit_context_config
    imported_vars/unit_context_kernel
