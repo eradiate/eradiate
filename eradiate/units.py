@@ -1,5 +1,12 @@
+__all__ = [
+    "symbol",
+    "to_quantity",
+]
+
+
 import enum
 from functools import lru_cache
+from typing import Union
 
 import pint
 import pinttr
@@ -108,6 +115,20 @@ unit_context_kernel = _make_unit_context()
 
 
 # -- Public functions ----------------------------------------------------------
+
+
+def symbol(units: Union[pint.Unit, str]) -> str:
+    """
+    Normalise a string or Pint units to a symbol string.
+
+    Parameter ``units`` (:class:`pint.Unit` or srt):
+        Value to convert to a symbol string.
+
+    Returns → str:
+        Symbol string (*e.g.* 'm' for 'metre', 'W / m ** 2' for 'W/m^2', etc.).
+    """
+    units = unit_registry.Unit(units)
+    return format(units, "~")
 
 
 def to_quantity(da: xarray.DataArray) -> pint.Quantity:

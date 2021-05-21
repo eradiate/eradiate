@@ -12,6 +12,7 @@ import cerberus
 import xarray
 
 from eradiate._attrs import documented, parse_docs
+from eradiate.units import symbol
 
 
 def validate_metadata(
@@ -121,6 +122,7 @@ class CoordSpec(DataSpec):
             result["units"] = {
                 "allowed": [self.units],
                 "default": self.units,
+                "coerce": symbol,
                 "required": True,
             }
 
@@ -219,19 +221,58 @@ class CoordSpecRegistry:
 
 # Register coordinate specs
 for coord_spec_id, coord_spec in [
-    ("theta_o", CoordSpec("outgoing_zenith_angle", "deg", "outgoing zenith angle")),
-    ("phi_o", CoordSpec("outgoing_azimuth_angle", "deg", "outgoing azimuth angle")),
-    ("theta_i", CoordSpec("incoming_zenith_angle", "deg", "incoming zenith angle")),
-    ("phi_i", CoordSpec("incoming_azimuth_angle", "deg", "incoming azimuth angle")),
-    ("vza", CoordSpec("viewing_zenith_angle", "deg", "viewing zenith angle")),
-    ("vaa", CoordSpec("viewing_azimuth_angle", "deg", "viewing azimuth angle")),
-    ("sza", CoordSpec("solar_zenith_angle", "deg", "solar zenith angle")),
-    ("saa", CoordSpec("solar_azimuth_angle", "deg", "solar azimuth angle")),
-    ("z_layer", CoordSpec("layer_altitude", "m", "layer altitude")),
-    ("z_level", CoordSpec("level_altitude", "m", "level altitude")),
-    ("species", CoordSpec("species", None, "species")),
-    ("w", CoordSpec("wavelength", "nanometer", "wavelength")),
-    ("t", CoordSpec("time", None, "time")),
+    (
+        "theta_o",
+        CoordSpec("outgoing_zenith_angle", symbol("deg"), "outgoing zenith angle"),
+    ),
+    (
+        "phi_o",
+        CoordSpec("outgoing_azimuth_angle", symbol("deg"), "outgoing azimuth angle"),
+    ),
+    (
+        "theta_i",
+        CoordSpec("incoming_zenith_angle", symbol("deg"), "incoming zenith angle"),
+    ),
+    (
+        "phi_i",
+        CoordSpec("incoming_azimuth_angle", symbol("deg"), "incoming azimuth angle"),
+    ),
+    (
+        "vza",
+        CoordSpec("viewing_zenith_angle", symbol("deg"), "viewing zenith angle"),
+    ),
+    (
+        "vaa",
+        CoordSpec("viewing_azimuth_angle", symbol("deg"), "viewing azimuth angle"),
+    ),
+    (
+        "sza",
+        CoordSpec("solar_zenith_angle", symbol("deg"), "solar zenith angle"),
+    ),
+    (
+        "saa",
+        CoordSpec("solar_azimuth_angle", symbol("deg"), "solar azimuth angle"),
+    ),
+    (
+        "z_layer",
+        CoordSpec("layer_altitude", symbol("m"), "layer altitude"),
+    ),
+    (
+        "z_level",
+        CoordSpec("level_altitude", symbol("m"), "level altitude"),
+    ),
+    (
+        "species",
+        CoordSpec("species", None, "species"),
+    ),
+    (
+        "w",
+        CoordSpec("wavelength", symbol("nm"), "wavelength"),
+    ),
+    (
+        "t",
+        CoordSpec("time", None, "time"),
+    ),
 ]:
     CoordSpecRegistry.register(coord_spec_id, coord_spec)
 
@@ -256,7 +297,7 @@ def _coord_specs_validator(instance, attribute, value):
 
 @parse_docs
 @attr.s
-class VarSpec:
+class VarSpec(DataSpec):
     """Specification for a data variable."""
 
     standard_name: Optional[str] = documented(
@@ -348,6 +389,7 @@ class VarSpec:
             result["units"] = {
                 "allowed": [self.units],
                 "default": self.units,
+                "coerce": symbol,
                 "required": True,
             }
 
@@ -364,7 +406,7 @@ def _var_specs_validator(instance, attribute, value):
 
 @parse_docs
 @attr.s
-class DatasetSpec:
+class DatasetSpec(DataSpec):
     """
     Specification for a dataset.
 

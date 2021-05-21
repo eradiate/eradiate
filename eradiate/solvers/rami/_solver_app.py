@@ -8,6 +8,7 @@ from ._scene import RamiScene
 from ..core._solver_app import SolverApp
 from ... import unit_context_kernel as uck
 from ..._attrs import documented, parse_docs
+from ...units import symbol
 from ...xarray.metadata import DatasetSpec, VarSpec
 
 
@@ -55,22 +56,22 @@ class RamiSolverApp(SolverApp):
             var_specs={
                 "irradiance": VarSpec(
                     standard_name="toc_horizontal_solar_irradiance_per_unit_wavelength",
-                    units=str(uck.get("irradiance")),
+                    units=symbol(uck.get("irradiance")),
                     long_name="top-of-canopy horizontal spectral irradiance",
                 ),
                 "lo": VarSpec(
                     standard_name="toc_outgoing_radiance_per_unit_wavelength",
-                    units=str(uck.get("radiance")),
+                    units=symbol(uck.get("radiance")),
                     long_name="top-of-canopy outgoing spectral radiance",
                 ),
                 "brf": VarSpec(
                     standard_name="toc_brf",
-                    units="dimensionless",
+                    units=symbol("dimensionless"),
                     long_name="top-of-canopy bi-directional reflectance factor",
                 ),
                 "brdf": VarSpec(
                     standard_name="toc_brdf",
-                    units="1/sr",
+                    units=symbol("1/sr"),
                     long_name="top-of-canopy bi-directional reflection distribution function",
                 ),
             },

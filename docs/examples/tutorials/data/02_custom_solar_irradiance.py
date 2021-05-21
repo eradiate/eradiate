@@ -44,30 +44,36 @@ df = pd.read_csv("02_custom_solar_irradiance_data.csv", header=1, names=["w", "s
 import datetime
 import numpy as np
 import xarray as xr
+from eradiate.units import symbol
 
 ds = xr.Dataset(
     data_vars={
-        "ssi": ("w", df.ssi.values, {
-            "standard_name": "solar_irradiance_per_unit_wavelength",
-            "long_name": "solar spectral irradiance",
-            "units": "W/m^2/nm"})
+        "ssi": (
+            "w",
+            df.ssi.values,
+            {
+                "standard_name": "solar_irradiance_per_unit_wavelength",
+                "long_name": "solar spectral irradiance",
+                "units": symbol("W/m^2/nm"),  # normalise unit symbol string
+            },
+        )
     },
     coords={
-        "w": ("w", df.w.values, {
-            "standard_name": "wavelength",
-            "long_name": "wavelength",
-            "units": "nm"}),
-        "t": ("t", np.empty(0), {
-            "standard_name": "time",
-            "long_name": "time"})
+        "w": (
+            "w",
+            df.w.values,
+            {"standard_name": "wavelength", "long_name": "wavelength", "units": "nm"},
+        ),
+        "t": ("t", np.empty(0), {"standard_name": "time", "long_name": "time"}),
     },
     attrs={
         "title": "My awesome dataset",
         "convention": "CF-1.8",
-        "history": f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - data set creation - path/to/my_script.py",
+        "history": f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+        f"data set creation - path/to/my_script.py",
         "source": "My custom observation data",
-        "references": "My article, doi:10.1000/xyz123"
-    }
+        "references": "My article, doi:10.1000/xyz123",
+    },
 )
 ds
 
@@ -79,6 +85,7 @@ ds
 # created. The metadata of Eradiate's solar irradiance spectrum datasets must
 # follow a specification defined by the ``ssi_dataset_spec`` variable:
 
+from eradiate.units import symbol
 from eradiate.xarray.metadata import DatasetSpec, VarSpec
 
 # Define solar irradiance spectra dataset specifications
@@ -91,11 +98,11 @@ ssi_dataset_spec = DatasetSpec(
     var_specs={
         "ssi": VarSpec(
             standard_name="solar_irradiance_per_unit_wavelength",
-            units="W/m^2/nm",
-            long_name="solar spectral irradiance"
+            units=symbol("W/m^2/nm"),
+            long_name="solar spectral irradiance",
         )
     },
-    coord_specs="solar_irradiance_spectrum"
+    coord_specs="solar_irradiance_spectrum",
 )
 
 # %%
@@ -116,19 +123,15 @@ ds.ert.validate_metadata(ssi_dataset_spec)
 # will add the missing fields:
 
 ds = xr.Dataset(
-    data_vars={
-        "ssi": ("w", df.ssi.values, {"units": "W/m^2/nm"})},
-    coords={
-        "w": ("w", df.w.values, {"units": "nm"}),
-        "t": ("t", np.empty(0))
-    },
+    data_vars={"ssi": ("w", df.ssi.values, {"units": symbol("W/m^2/nm")})},
+    coords={"w": ("w", df.w.values, {"units": symbol("nm")}), "t": ("t", np.empty(0))},
     attrs={
         "title": "My awesome dataset",
         "convention": "CF-1.8",
         "history": f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - data set creation - this_toolchain version 0.1",
         "source": "Observation data from this instrument",
-        "references": "My article, doi:10.1000/xyz123"
-    }
+        "references": "My article, doi:10.1000/xyz123",
+    },
 )
 ds.ert.normalize_metadata(ssi_dataset_spec)
 ds
@@ -166,7 +169,9 @@ ds.attrs["url"] = (
     f"https://this.is.where.the.data.can.be.downloaded "
     f"(last accessed on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')})"
 )
-ds.attrs["comment"] = "the original data was re-binned in larger 2nm-wide wavelength bins."
+ds.attrs[
+    "comment"
+] = "the original data was re-binned in larger 2nm-wide wavelength bins."
 ds.attrs["_my_attribute"] = "Other info"
 ds
 
@@ -181,24 +186,32 @@ ds
 # ``$ERADIATE_DIR/resources/data/spectra/solar_irradiance``:
 
 import os
-ds.to_netcdf(os.path.join(
-    os.environ["ERADIATE_DIR"],
-    "resources/data/spectra/solar_irradiance",
-    "my_awesome_dataset.nc"
-))
+
+ds.to_netcdf(
+    os.path.join(
+        os.environ["ERADIATE_DIR"],
+        "resources/data/spectra/solar_irradiance",
+        "my_awesome_dataset.nc",
+    )
+)
 
 # %%
 # If you list the files in that folder, you should see your newly added NetCDF
 # file next to the Eradiate's predefined solar irradiance spectrum datasets:
 
-os.listdir(os.path.join(os.environ["ERADIATE_DIR"], "resources/data/spectra/solar_irradiance"))
+os.listdir(
+    os.path.join(os.environ["ERADIATE_DIR"], "resources/data/spectra/solar_irradiance")
+)
 
 # %%
 # Use your own solar irradiance spectrum dataset
 # ----------------------------------------------
 
 from eradiate.data.solar_irradiance_spectra import _SolarIrradianceGetter
-_SolarIrradianceGetter.PATHS["my_awesome_dataset"] = "spectra/solar_irradiance/my_awesome_dataset.nc"
+
+_SolarIrradianceGetter.PATHS[
+    "my_awesome_dataset"
+] = "spectra/solar_irradiance/my_awesome_dataset.nc"
 
 # %%
 # Now, you are able to use your own solar irradiance spectrum within Eradiate.
@@ -207,4 +220,7 @@ _SolarIrradianceGetter.PATHS["my_awesome_dataset"] = "spectra/solar_irradiance/m
 
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
-DirectionalIllumination(irradiance=SolarIrradianceSpectrum(dataset="my_awesome_dataset"))
+
+DirectionalIllumination(
+    irradiance=SolarIrradianceSpectrum(dataset="my_awesome_dataset")
+)
