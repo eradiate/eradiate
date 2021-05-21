@@ -17,9 +17,6 @@ from .rayleigh import compute_sigma_s_air
 from .. import data
 from .._attrs import documented, parse_docs
 from .._factory import BaseFactory
-from .._units import to_quantity
-from .._units import unit_context_config as ucc
-from .._units import unit_registry as ureg
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
 from ..exceptions import ModeError
 from ..thermoprops import afgl1986, us76
@@ -28,6 +25,9 @@ from ..thermoprops.util import (
     interpolate,
     rescale_concentration,
 )
+from ..units import to_quantity
+from ..units import unit_context_config as ucc
+from ..units import unit_registry as ureg
 from ..validators import all_positive
 
 

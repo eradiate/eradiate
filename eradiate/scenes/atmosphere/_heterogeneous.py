@@ -7,12 +7,12 @@ import numpy as np
 import xarray as xr
 
 from ._base import Atmosphere, AtmosphereFactory
-from ..._attrs import documented, parse_docs
-from ..._units import unit_context_kernel as uck
-from ..._units import unit_registry as ureg
-from ...radprops import RadProfileFactory
-from ...radprops.rad_profile import US76ApproxRadProfile, RadProfile
 from ... import validators
+from ..._attrs import documented, parse_docs
+from ...radprops import RadProfileFactory
+from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
+from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 
 def write_binary_grid3d(filename, values):

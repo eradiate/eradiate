@@ -12,7 +12,7 @@ from ._mode import mode, set_mode, modes  # isort: skip
 
 # -- Unit management facilities ------------------------------------------------
 
-from ._units import (  # isort: skip
+from .units import (  # isort: skip
     unit_context_config,
     unit_context_kernel,
     unit_registry,
@@ -28,12 +28,12 @@ del PathResolver
 
 # ------------------------------------------------------------------------------
 
-from . import contexts, converters, kernel, scenes, solvers, validators, xarray
+from . import contexts, converters, kernel, scenes, solvers, units, validators, xarray
 
 __all__ = [
     "__version__",
-    "converters",
     "contexts",
+    "converters",
     "mode",
     "modes",
     "path_resolver",
@@ -43,6 +43,7 @@ __all__ = [
     "unit_context_config",
     "unit_context_kernel",
     "unit_registry",
+    "units",
     "validators",
     "xarray",
 ]

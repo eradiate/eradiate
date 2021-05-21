@@ -4,8 +4,8 @@ import numpy as np
 import pint
 from numpy.typing import ArrayLike
 
-from ._units import unit_registry as ureg
 from ._util import ensure_array
+from .units import unit_registry as ureg
 
 
 @ureg.wraps(ret=None, args=("dimensionless", "rad"), strict=False)

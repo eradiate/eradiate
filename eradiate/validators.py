@@ -3,8 +3,8 @@ from numbers import Number
 import attr
 import numpy as np
 
-from ._units import unit_registry as ureg
-from ._units import PhysicalQuantity
+from .units import unit_registry as ureg
+from .units import PhysicalQuantity
 
 
 def is_number(_, attribute, value):

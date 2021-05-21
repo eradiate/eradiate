@@ -4,8 +4,8 @@ import pinttr
 from ._core import Illumination, IlluminationFactory
 from ..spectra import SolarIrradianceSpectrum, Spectrum, SpectrumFactory
 from ..._attrs import documented, parse_docs
-from ..._units import unit_context_config as ucc
-from ..._units import unit_registry as ureg
+from ...units import unit_context_config as ucc
+from ...units import unit_registry as ureg
 from ...frame import angles_to_direction
 from ...validators import has_quantity, is_positive
 

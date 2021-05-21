@@ -5,9 +5,9 @@ import pint
 
 from ..._attrs import documented, parse_docs
 from ..._factory import BaseFactory
-from ..._units import PhysicalQuantity
 from ...contexts import SpectralContext
 from ...scenes.core import SceneElement
+from ...units import PhysicalQuantity
 
 
 @parse_docs

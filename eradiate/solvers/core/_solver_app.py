@@ -12,12 +12,12 @@ import eradiate
 
 from ._runner import runner
 from ..._attrs import documented, parse_docs
-from ..._units import unit_context_kernel as uck
-from ..._units import unit_registry as ureg
 from ...contexts import KernelDictContext
 from ...exceptions import ModeError, UnsupportedModeError
 from ...scenes.measure import Measure, MeasureResults
 from ...scenes.measure._distant import DistantMeasure
+from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 
 @parse_docs

@@ -1,4 +1,5 @@
-"""US Standard Atmosphere 1976 thermophysical model, according to
+"""
+US Standard Atmosphere 1976 thermophysical model, according to
 :cite:`NASA1976USStandardAtmosphere`.
 """
 
@@ -11,9 +12,9 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 from eradiate import __version__
-from .util import profile_dataset_spec
-from .._units import unit_registry as ureg
 
+from .util import profile_dataset_spec
+from ..units import unit_registry as ureg
 
 # ------------------------------------------------------------------------------
 #

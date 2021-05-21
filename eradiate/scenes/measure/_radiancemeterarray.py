@@ -4,9 +4,9 @@ import pinttr
 
 from ._core import Measure, MeasureFactory
 from ..._attrs import documented, parse_docs
-from ..._units import unit_context_config as ucc
-from ..._units import unit_context_kernel as uck
-from ..._units import unit_registry as ureg
+from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 
 @MeasureFactory.register("radiancemeterarray")

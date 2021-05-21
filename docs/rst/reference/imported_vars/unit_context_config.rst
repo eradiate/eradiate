@@ -10,10 +10,6 @@ eradiate.unit_context_default
 
    Unit context used when interpreting configuration dictionaries.
 
+   .. note:: Public interface to :data:`eradiate.units.unit_context_config`
+
    .. seealso:: :class:`pinttr.UnitContext`
-
-   .. note::
-
-      Public interface to:
-
-      .. autodata:: eradiate._units.unit_context_config

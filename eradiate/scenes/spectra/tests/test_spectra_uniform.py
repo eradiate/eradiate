@@ -5,9 +5,9 @@ import pytest
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate._units import PhysicalQuantity
 from eradiate._util import onedict_value
 from eradiate.scenes.spectra import UniformSpectrum
+from eradiate.units import PhysicalQuantity
 
 
 def test_uniform(mode_mono):

@@ -1,5 +1,4 @@
-"""Absorption cross section spectrum data sets shipped with Eradiate.
-"""
+"""Absorption cross section spectrum data sets shipped with Eradiate."""
 import enum
 
 import numpy as np
@@ -7,7 +6,7 @@ import xarray as xr
 
 from .core import DataGetter
 from .. import path_resolver as _presolver
-from .._units import unit_registry as ureg
+from ..units import unit_registry as ureg
 
 
 class Absorber(enum.Enum):

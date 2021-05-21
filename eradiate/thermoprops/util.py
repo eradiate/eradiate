@@ -13,8 +13,8 @@ import xarray as xr
 import eradiate.data as data
 
 from . import profile_dataset_spec
-from .._units import unit_registry as ureg
-from .._units import to_quantity
+from ..units import unit_registry as ureg
+from ..units import to_quantity
 
 ATOMIC_MASS_CONSTANT = ureg.Quantity(
     *scipy.constants.physical_constants["atomic mass constant"][:-1]

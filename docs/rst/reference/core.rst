@@ -45,20 +45,6 @@ Units and quantities
    * - :data:`unit_context_kernel`
      - Unit context used when building kernel dictionaries.
 
-.. dropdown:: **Private: Physical quantity enum**
-
-   .. autosummary::
-      :toctree: generated
-
-       _units.PhysicalQuantity
-
-.. dropdown:: **Private: Quantity converter**
-
-   .. autosummary::
-      :toctree: generated/
-      
-      _units.to_quantity  
-
 Path resolver
 -------------
 .. currentmodule:: eradiate

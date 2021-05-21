@@ -23,6 +23,7 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
    kernel
    data
    xarray
+   units
    plot
    thermoprops
    radprops

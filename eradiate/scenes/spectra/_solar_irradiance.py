@@ -6,12 +6,10 @@ import eradiate
 
 from ... import data
 from ... import unit_context_kernel as uck
-from ... import unit_registry as ureg
 from ..._attrs import documented, parse_docs
-from ..._units import PhysicalQuantity
-from ..._units import to_quantity
 from ...contexts import SpectralContext
 from ...scenes.spectra import Spectrum, SpectrumFactory
+from ...units import PhysicalQuantity, to_quantity
 from ...validators import is_positive
 
 

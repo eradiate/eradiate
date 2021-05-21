@@ -8,9 +8,9 @@ import pinttr
 import eradiate
 
 from ._attrs import documented, parse_docs
-from ._units import unit_context_config as ucc
-from ._units import unit_registry as ureg
 from .exceptions import ModeError
+from .units import unit_context_config as ucc
+from .units import unit_registry as ureg
 
 # -- Spectral contexts ---------------------------------------------------------
 

@@ -1,10 +1,9 @@
-"""Functions to compute Rayleigh scattering in the air.
-"""
+"""Functions to compute Rayleigh scattering in air."""
 
 import numpy as np
 from scipy.constants import physical_constants
 
-from .._units import unit_registry as ureg
+from ..units import unit_registry as ureg
 
 # Physical constants
 #: Loschmidt constant [km^-3].

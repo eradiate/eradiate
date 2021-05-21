@@ -8,9 +8,9 @@ import xarray as xr
 from ._core import Measure, MeasureFactory
 from ... import converters, validators
 from ..._attrs import documented, parse_docs
-from ..._units import unit_context_config as ucc
-from ..._units import unit_context_kernel as uck
-from ..._units import unit_registry as ureg
+from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 from ..._util import is_vector3
 from ...frame import direction_to_angles
 from ...warp import square_to_uniform_hemisphere

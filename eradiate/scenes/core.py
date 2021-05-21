@@ -7,7 +7,7 @@ import mitsuba
 import pinttr
 
 from .._attrs import documented, parse_docs
-from .._units import unit_registry as ureg
+from ..units import unit_registry as ureg
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
 

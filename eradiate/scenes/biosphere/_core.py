@@ -7,7 +7,7 @@ from ..core import SceneElement
 from ... import validators
 from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
-from ..._units import unit_context_config as ucc
+from ...units import unit_context_config as ucc
 
 
 @parse_docs

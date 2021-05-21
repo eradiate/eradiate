@@ -4,8 +4,8 @@ import numpy as np
 import xarray as xr
 from scipy.constants import physical_constants
 
-from .._units import to_quantity
-from .._units import unit_registry as ureg
+from ..units import to_quantity
+from ..units import unit_registry as ureg
 
 _BOLTZMANN = ureg.Quantity(*physical_constants["Boltzmann constant"][:2])
 

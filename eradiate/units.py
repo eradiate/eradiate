@@ -5,6 +5,8 @@ import pint
 import pinttr
 import xarray
 
+# -- Global data members -------------------------------------------------------
+
 #: Unit registry common to all Eradiate components. All units used in Eradiate
 #: must be created using this registry.
 unit_registry = pint.UnitRegistry()
@@ -103,6 +105,9 @@ unit_context_config = _make_unit_context()
 
 #: Unit context used when building kernel dictionaries
 unit_context_kernel = _make_unit_context()
+
+
+# -- Public functions ----------------------------------------------------------
 
 
 def to_quantity(da: xarray.DataArray) -> pint.Quantity:

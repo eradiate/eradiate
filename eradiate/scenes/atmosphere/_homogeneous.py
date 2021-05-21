@@ -3,7 +3,7 @@ import attr
 from ._base import Atmosphere, AtmosphereFactory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, SpectrumFactory
 from ..._attrs import documented, parse_docs
-from ..._units import unit_context_kernel as uck
+from ...units import unit_context_kernel as uck
 from ...validators import has_quantity
 
 

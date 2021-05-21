@@ -9,11 +9,11 @@ import eradiate
 from ._core import Spectrum
 from ... import converters, validators
 from ..._attrs import documented, parse_docs
-from ..._units import unit_context_config as ucc
-from ..._units import unit_context_kernel as uck
 from ..._util import ensure_array
 from ...contexts import SpectralContext
 from ...exceptions import UnsupportedModeError
+from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
 
 
 @parse_docs

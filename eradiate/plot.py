@@ -12,8 +12,6 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from xarray.plot import FacetGrid
 
-from ._units import unit_registry as ureg
-
 # -- Utility functions ---------------------------------------------------------
 
 

@@ -11,4 +11,6 @@ eradiate.unit_registry
    Unit registry common to all Eradiate components. All units used in Eradiate
    must be created using this registry.
 
+   .. note:: Public interface to :data:`eradiate.units.unit_registry`
+
    .. seealso:: :class:`pint.UnitRegistry`

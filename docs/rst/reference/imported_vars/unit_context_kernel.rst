@@ -10,10 +10,6 @@ eradiate.unit_context_kernel
 
    Unit context used when building kernel dictionaries.
 
+   .. note:: Public interface to :data:`eradiate.units.unit_context_kernel`
+
    .. seealso:: :class:`pinttr.UnitContext`
-
-   .. note::
-
-      Public interface to:
-
-      .. autodata:: eradiate._units.unit_context_kernel
