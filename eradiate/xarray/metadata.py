@@ -11,8 +11,8 @@ import attr
 import cerberus
 import xarray
 
-from eradiate._attrs import documented, parse_docs
-from eradiate.units import symbol
+from .._attrs import documented, parse_docs
+from ..units import symbol
 
 
 def validate_metadata(
