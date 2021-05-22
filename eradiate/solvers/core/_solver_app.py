@@ -148,7 +148,7 @@ class SolverApp(ABC):
             measure = self.scene.measures[0]
 
         # Collect measure results
-        ds = measure.postprocessed_results()
+        ds = measure.postprocess()
 
         # Rename raw field to leaving radiance
         # (we don't use ds.rename to avoid copying metadata)

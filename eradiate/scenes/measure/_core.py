@@ -14,11 +14,12 @@ from ..core import SceneElement
 from ... import converters, validators
 from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
-from ...units import unit_context_config as ucc
-from ...units import unit_registry as ureg
 from ..._util import ensure_array
 from ...contexts import KernelDictContext, MonoSpectralContext, SpectralContext
 from ...exceptions import ModeError, UnsupportedModeError
+from ...units import symbol
+from ...units import unit_context_config as ucc
+from ...units import unit_registry as ureg
 
 
 @parse_docs
@@ -240,7 +241,7 @@ class MeasureResults:
             spectral_coord_label = eradiate.mode().spectral_coord_label
             spectral_coord_metadata = {
                 "long_name": "wavelength",
-                "units": str(ucc.get("wavelength")),
+                "units": symbol(ucc.get("wavelength")),
             }
             # TODO: Add channel dimension to dataset (string-labelled;
             #  value 'intensity' in mono modes;
@@ -303,12 +304,12 @@ class MeasureResults:
                     "raw": (
                         [spectral_coord_label, "sensor_id", "y", "x"],
                         data,
-                        {"long name": "raw sensor values"},
+                        {"long_name": "raw sensor values"},
                     ),
                     "spp": (
                         [spectral_coord_label, "sensor_id"],
                         spps,
-                        {"long name": "sample count"},
+                        {"long_name": "sample count"},
                     ),
                 }
             ),
@@ -467,7 +468,7 @@ class Measure(SceneElement, ABC):
         )
         return ds.weighted(weights).mean(dim="sensor_id")
 
-    def postprocessed_results(self) -> xarray.Dataset:
+    def postprocess(self) -> xarray.Dataset:
         """
         Return post-processed raw sensor results.
 

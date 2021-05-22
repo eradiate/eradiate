@@ -144,7 +144,7 @@ def test_distant_postprocessing(mode_mono):
     }
 
     # Postprocessing succeeds and viewing angles have correct bounds
-    ds = d.postprocessed_results()
+    ds = d.postprocess()
     assert "vza" in ds.coords
     assert np.allclose(ds.vza.min(), 5.06592926)  # Value calculated manually
     assert np.allclose(ds.vza.max(), 86.47273911)  # Value calculated manually
@@ -156,13 +156,13 @@ def test_distant_postprocessing(mode_mono):
     d._film_resolution = (32, 1)
     # Mismatched film size and raw data dimensions raises
     with pytest.raises(ValueError):
-        d.postprocessed_results()
+        d.postprocess()
 
     # Postprocessing succeeds and viewing angles have correct bounds
     d.results.raw = {
         550.0: {"values": {"sensor": np.ones((1, 32, 1))}, "spp": {"sensor": 128}}
     }
-    ds = d.postprocessed_results()
+    ds = d.postprocess()
     assert "vza" in ds.coords
     assert np.allclose(ds.vza.min(), -87.1875)  # Value manually calculated
     assert np.allclose(ds.vza.max(), 87.1875)  # Value manually calculated

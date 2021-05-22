@@ -144,6 +144,7 @@ Measures [eradiate.scenes.measure]
    :toctree: generated/
 
    DistantMeasure
+   DistantReflectanceMeasure
    PerspectiveCameraMeasure
    RadiancemeterMeasure
    RadiancemeterArrayMeasure

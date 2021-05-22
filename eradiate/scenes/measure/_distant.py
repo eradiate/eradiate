@@ -5,14 +5,18 @@ import numpy as np
 import pinttr
 import xarray as xr
 
+import eradiate
+
 from ._core import Measure, MeasureFactory
+from ..illumination import DirectionalIllumination
 from ... import converters, validators
 from ..._attrs import documented, parse_docs
+from ..._util import is_vector3
+from ...frame import direction_to_angles
+from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ..._util import is_vector3
-from ...frame import direction_to_angles
 from ...warp import square_to_uniform_hemisphere
 
 
@@ -271,9 +275,17 @@ class DistantMeasure(Measure):
     """
     Distant measure scene element [:factorykey:`distant`].
 
-    This scene element is a thin wrapper around the ``distant`` sensor kernel
-    plugin. It parametrises the sensor is oriented based on the a pair of zenith
-    and azimuth angles, following the convention used in Earth observation.
+    This measure records radiance leaving the scene at infinite distance.
+    Depending on film resolution (*i.e.* storage discretisation), radiance is
+    recorded for a single direction, in a plane or in an entire hemisphere.
+
+    When used with a backward tracing algorithm, rays traced by the sensor
+    target a shape which can be controlled through the ``target`` parameter.
+    This feature is useful if one wants to compute the average radiance leaving
+    a particular subset of the scene.
+
+    .. note:: This scene element is a thin wrapper around the ``distant`` sensor
+       kernel plugin.
     """
 
     _film_resolution = documented(
@@ -396,15 +408,36 @@ class DistantMeasure(Measure):
 
         return result
 
-    def postprocessed_results(self) -> xr.Dataset:
+    def postprocess(self) -> xr.Dataset:
         # Fetch results (SPP-split aggregated) as a Dataset
-        result = self.results.to_dataset(aggregate_spps=True)
+        result = self._postprocess_fetch_results()
 
+        # Attach viewing angle coordinates
+        result = self._postprocess_add_viewing_angles(result)
+
+        return result
+
+    def _postprocess_fetch_results(self) -> xr.Dataset:
+        # Collect results and add appropriate metadata
+
+        ds = self.results.to_dataset(aggregate_spps=True)
+
+        # Rename raw field to outgoing radiance
+        ds = ds.rename(raw="lo")
+        ds["lo"].attrs = {
+            "standard_name": "toa_outgoing_radiance_per_unit_wavelength",
+            "long_name": "top-of-atmosphere outgoing spectral radiance",
+            "units": symbol(uck.get("radiance")),
+        }
+
+        return ds
+
+    def _postprocess_add_viewing_angles(self, ds: xr.Dataset) -> xr.Dataset:
         # Compute viewing angles at pixel locations
         # Angle computation must match the kernel plugin's direction sampling
         # routine
-        xs = result.coords["x"].data
-        ys = result.coords["y"].data
+        xs = ds.coords["x"].data
+        ys = ds.coords["y"].data
         if not np.allclose((len(xs), len(ys)), self.film_resolution):
             raise ValueError(
                 f"raw data width and height ({len(xs)}, {len(ys)}) does not "
@@ -416,14 +449,146 @@ class DistantMeasure(Measure):
             phi = np.full_like(theta, self.orientation.m_as("deg"))
 
         else:  # Hemisphere case
-            xy = np.array([(x, y) for y in ys for x in xs ])
+            xy = np.array([(x, y) for y in ys for x in xs])
             angles = direction_to_angles(square_to_uniform_hemisphere(xy)).m_as("deg")
             theta = angles[:, 0].reshape((len(xs), len(ys))).T
             phi = angles[:, 1].reshape((len(xs), len(ys))).T
 
         # Assign angles as non-dimension coords
-        result["vza"] = (("y", "x"), theta, {"units": "deg"})
-        result["vaa"] = (("y", "x"), phi, {"units": "deg"})
-        result = result.set_coords(("vza", "vaa"))
+        ds = ds.assign_coords(
+            {
+                "vza": (
+                    ("y", "x"),
+                    theta,
+                    {
+                        "standard_name": "viewing_zenith_angle",
+                        "long_name": "viewing zenith angle",
+                        "units": symbol("deg"),
+                    },
+                ),
+                "vaa": (
+                    ("y", "x"),
+                    phi,
+                    {
+                        "standard_name": "viewing_azimuth_angle",
+                        "long_name": "viewing azimuth angle",
+                        "units": symbol("deg"),
+                    },
+                ),
+            }
+        )
+
+        return ds
+
+
+@MeasureFactory.register("distant_reflectance")
+@parse_docs
+@attr.s
+class DistantReflectanceMeasure(DistantMeasure):
+    """
+    Distant reflectance  measure scene element
+    [:factorykey:`distant_reflectance`].
+
+    This measure is a specialised version of the :class:`.DistantMeasure`. It
+    implements similar functionality, with extra post-processing features to
+    derive reflectance values from the recorded radiance.
+    """
+
+    def postprocess(self, illumination=None) -> xr.Dataset:
+        """
+        Return post-processed raw sensor results.
+
+        Parameter ``illumination`` (:class:`DirectionalIllumination`):
+            Incoming radiance value. *This keyword argument is required.*
+
+        Returns → :class:`~xarray.Dataset`:
+            Post-processed results.
+        """
+        if illumination is None:
+            raise TypeError("missing required keyword argument 'illumination'")
+
+        if not isinstance(illumination, DirectionalIllumination):
+            raise ValueError(
+                "keyword argument 'illumination' must be a "
+                "DirectionalIllumination instance, got a "
+                f"{illumination.__class__.__name__}"
+            )
+
+        # Get radiance data
+        result = super(DistantReflectanceMeasure, self).postprocess()
+
+        # Add illumination data
+        result = self._postprocessing_add_illumination(result, illumination)
+
+        # Compute reflectance data
+        result = self._postprocessing_add_reflectance(result)
 
         return result
+
+    def _postprocessing_add_illumination(
+        self, ds: xr.Dataset, illumination: DirectionalIllumination
+    ) -> xr.Dataset:
+        # Collect illumination angular data
+        saa = illumination.azimuth.m_as(ureg.rad)
+        sza = illumination.zenith.m_as(ureg.rad)
+        cos_sza = np.cos(sza)
+
+        # Add angular dimensions
+        ds = ds.expand_dims({"sza": [sza], "saa": [saa]}, axis=(0, 1))
+        ds.coords["sza"].attrs = {
+            "standard_name": "solar_zenith_angle",
+            "long_name": "solar zenith angle",
+            "units": symbol("deg"),
+        }
+        ds.coords["saa"].attrs = {
+            "standard_name": "solar_azimuth_angle",
+            "long_name": "solar azimuth angle",
+            "units": symbol("deg"),
+        }
+
+        # Collect illumination spectral data
+        k_irradiance_units = uck.get("irradiance")
+        irradiances = (
+            np.array(
+                [
+                    illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
+                        k_irradiance_units
+                    )
+                    for spectral_ctx in self.spectral_cfg.spectral_ctxs()
+                ]
+            )
+            * k_irradiance_units
+        )
+        spectral_coord_label = eradiate.mode().spectral_coord_label
+
+        # Add irradiance variable
+        ds["irradiance"] = (
+            ("sza", "saa", spectral_coord_label),
+            np.array(irradiances.magnitude * cos_sza).reshape((1, 1, len(irradiances))),
+        )
+        ds["irradiance"].attrs = {
+            "standard_name": "horizontal_solar_irradiance_per_unit_wavelength",
+            "long_name": "horizontal spectral irradiance",
+            "units": symbol(k_irradiance_units),
+        }
+
+        return ds
+
+    def _postprocessing_add_reflectance(self, ds: xr.Dataset) -> xr.Dataset:
+        # Compute BRDF and BRF
+        # We assume that all quantities are stored in kernel units
+        ds["brdf"] = ds["lo"] / ds["irradiance"]
+        ds["brdf"].attrs = {
+            "standard_name": "brdf",
+            "long_name": "bi-directional reflection distribution function",
+            "units": symbol("1/sr"),
+        }
+
+        ds["brf"] = ds["brdf"] * np.pi
+        ds["brf"].attrs = {
+            "standard_name": "brf",
+            "long_name": "bi-directional reflectance factor",
+            "units": symbol("dimensionless"),
+        }
+
+        return ds
