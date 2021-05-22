@@ -160,10 +160,12 @@ class KernelDictContext:
         default="True",
     )
 
-    atmosphere_kernel_width: Optional[pint.Quantity] = documented(
+    override_surface_width: Optional[pint.Quantity] = documented(
         pinttr.ib(default=None, units=ucc.deferred("length")),
-        doc="If relevant, stores the width of the kernel object associated with "
-        "the atmosphere.",
+        doc="If relevant, value which must be used as the surface width "
+        "(*e.g.* when surface size must match atmosphere or canopy size).\n"
+        "\n"
+        "Unit-enabled field (default: cdu[length]).",
         type="float or None",
         default="None",
     )
