@@ -4,6 +4,7 @@ from ._core import Surface, SurfaceFactory
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
 from ..._attrs import documented, parse_docs
+from ...contexts import KernelDictContext
 
 
 @SurfaceFactory.register("lambertian")
@@ -31,7 +32,7 @@ class LambertianSurface(Surface):
         default="0.5",
     )
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext = None):
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",

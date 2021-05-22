@@ -1,15 +1,17 @@
 from abc import ABC, abstractmethod
+from typing import Dict, Optional, Union
 
 import attr
+import pint
 import pinttr
 
 from ..core import SceneElement
-from ... import validators
+from ... import converters, validators
 from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
+from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
-from ...units import unit_registry as ureg
 
 
 @parse_docs
@@ -20,7 +22,7 @@ class Surface(SceneElement, ABC):
     All these surfaces consist of a square parametrised by its width.
     """
 
-    id = documented(
+    id: Optional[str] = documented(
         attr.ib(
             default="surface",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -42,21 +44,28 @@ class Surface(SceneElement, ABC):
     )
 
     @abstractmethod
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext = None):
         """
         Return BSDF plugin specifications only.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             Return a dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
             attached to the surface.
         """
-        # TODO: return a KernelDict
         pass
 
-    def shapes(self, ctx=None):
+    def shapes(self, ctx: KernelDictContext = None):
         """
         Return shape plugin specifications only.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             A dictionary suitable for merge with a
@@ -82,7 +91,7 @@ class Surface(SceneElement, ABC):
             }
         }
 
-    def kernel_width(self, ctx=None):
+    def kernel_width(self, ctx: KernelDictContext = None):
         """
         Return width of kernel object, possibly overridden by
         ``ctx.override_surface_width``.
@@ -99,7 +108,7 @@ class Surface(SceneElement, ABC):
         else:
             return self.width
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: KernelDictContext = None) -> Dict:
         kernel_dict = {}
 
         if not ctx.ref:
@@ -110,9 +119,15 @@ class Surface(SceneElement, ABC):
 
         return kernel_dict
 
-    def scaled(self, factor):
+    def scaled(self, factor: float) -> "Surface":
         """
         Return a copy of self scaled by a given factor.
+
+        Parameter ``factor`` (float):
+            Scaling factor.
+
+        Returns → :class:`Surface`:
+            Scaled copy of self.
         """
         return attr.evolve(self, width=self.width * factor)
 

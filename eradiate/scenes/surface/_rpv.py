@@ -2,6 +2,7 @@ import attr
 
 from ._core import Surface, SurfaceFactory
 from ..._attrs import documented, parse_docs
+from ...contexts import KernelDictContext
 
 
 @SurfaceFactory.register("rpv")
@@ -20,6 +21,7 @@ class RPVSurface(Surface):
     """
 
     # TODO: check if there are bounds to default parameters
+    # TODO: match defaults with plugin defaults
     # TODO: add support for spectra
 
     rho_0 = documented(
@@ -43,7 +45,7 @@ class RPVSurface(Surface):
         default="-0.1",
     )
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext = None):
         return {
             f"bsdf_{self.id}": {
                 "type": "rpv",

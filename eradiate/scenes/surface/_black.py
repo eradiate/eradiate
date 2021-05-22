@@ -2,6 +2,7 @@ import attr
 
 from ._core import Surface, SurfaceFactory
 from ..._attrs import parse_docs
+from ...contexts import KernelDictContext
 
 
 @SurfaceFactory.register("black")
@@ -14,7 +15,7 @@ class BlackSurface(Surface):
     This class creates a square surface with a black BRDF attached.
     """
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext = None):
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",
