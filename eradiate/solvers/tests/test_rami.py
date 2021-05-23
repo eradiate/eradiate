@@ -32,7 +32,7 @@ def test_rami_scene(mode_mono):
     s = RamiScene(measures={"type": "distant"})
     assert s.kernel_dict(ctx=ctx).load() is not None
 
-    # -- Surface size is appropriately inherited from canopy
+    # -- Surface size is appropriately overridden with canopy size
     s = RamiScene(
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
@@ -41,7 +41,13 @@ def test_rami_scene(mode_mono):
             l_vertical=2.0 * ureg.m,
         )
     )
-    assert np.allclose(s.surface.width, ureg.Quantity(10.0, "m"))
+    ctx = KernelDictContext()
+    kernel_scene = s.kernel_dict(ctx)
+    assert np.allclose(ctx.override_surface_width, 10.0 * ureg.m)
+    assert np.allclose(
+        kernel_scene["surface"]["to_world"].transform_point([1, -1, 0]),
+        [5, -5, 0],
+    )
 
     # -- Distant sensor target zone is appropriately defined
     s = RamiScene(

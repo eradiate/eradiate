@@ -5,7 +5,6 @@ from pinttr.util import always_iterable
 
 import eradiate
 
-
 # -- Exceptions ----------------------------------------------------------------
 
 
@@ -54,5 +53,11 @@ class KernelVariantError(Exception):
 
 class ConfigWarning(UserWarning):
     """Used when encountering nonfatal configuration issues."""
+
+    pass
+
+
+class OverriddenValueWarning(UserWarning):
+    """Used when a user-defined value is overridden during execution."""
 
     pass

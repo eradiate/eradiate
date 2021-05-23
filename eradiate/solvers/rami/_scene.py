@@ -84,10 +84,6 @@ class RamiScene(Scene):
         # Don't forget to call super class post-init
         super(RamiScene, self).update()
 
-        # Override surface width with canopy width
-        if self.canopy is not None:
-            self.surface.width = max(self.canopy.size[:2])
-
         # Process measures
         for measure in self.measures:
             # Override ray target location if relevant
@@ -104,29 +100,29 @@ class RamiScene(Scene):
                     else:
                         measure.target = dict(
                             type="rectangle",
-                            xmin=-0.5 * self.surface.width,
-                            xmax=0.5 * self.surface.width,
-                            ymin=-0.5 * self.surface.width,
-                            ymax=0.5 * self.surface.width,
+                            xmin=-0.5 * self.surface.kernel_width(),
+                            xmax=0.5 * self.surface.kernel_width(),
+                            ymin=-0.5 * self.surface.kernel_width(),
+                            ymax=0.5 * self.surface.kernel_width(),
                         )
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None):
+    def kernel_dict(self, ctx: KernelDictContext = None):
         result = KernelDict.new()
 
         if self.canopy is not None:
             if self.padding > 0:  # We must add extra instances if padding is requested
                 canopy = self.canopy.padded(self.padding)
-                surface = self.surface.scaled(2 * self.padding + 1)
+                ctx.override_surface_width = (
+                    max(self.canopy.size[:2]) * 2.0 * self.padding + 1.0
+                )
             else:
                 canopy = self.canopy
-                surface = self.surface
+                ctx.override_surface_width = max(self.canopy.size[:2])
 
             result.add(canopy.kernel_dict(ctx=ctx))
-        else:
-            surface = self.surface
 
         result.add(
-            surface,
+            self.surface,
             self.illumination,
             *self.measures,
             self.integrator,
