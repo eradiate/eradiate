@@ -1,8 +1,11 @@
+from typing import Optional
+
 import attr
 
 from ..core._scene import Scene
 from ... import unit_context_config as ucc
 from ..._attrs import documented, get_doc, parse_docs
+from ...contexts import KernelDictContext
 from ...scenes.atmosphere import Atmosphere, AtmosphereFactory, HomogeneousAtmosphere
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, VolPathIntegrator
@@ -22,7 +25,7 @@ class OneDimScene(Scene):
     one-dimensional scenes.
     """
 
-    atmosphere = documented(
+    atmosphere: Atmosphere = documented(
         attr.ib(
             factory=HomogeneousAtmosphere,
             converter=attr.converters.optional(AtmosphereFactory.convert),
@@ -37,7 +40,7 @@ class OneDimScene(Scene):
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )
 
-    surface = documented(
+    surface: Surface = documented(
         attr.ib(
             factory=LambertianSurface,
             converter=SurfaceFactory.convert,
@@ -51,7 +54,7 @@ class OneDimScene(Scene):
         default=":class:`LambertianSurface() <.LambertianSurface>`",
     )
 
-    integrator = documented(
+    integrator: Integrator = documented(
         attr.ib(
             factory=VolPathIntegrator,
             converter=IntegratorFactory.convert,
@@ -97,7 +100,7 @@ class OneDimScene(Scene):
                         center=measure.target.xyz, radius=radius
                     )
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None):
         result = KernelDict.new(ctx=ctx)
 
         if self.atmosphere is not None:

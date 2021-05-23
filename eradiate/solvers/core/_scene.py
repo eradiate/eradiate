@@ -1,13 +1,18 @@
 from abc import ABC
+from typing import List
 
 import attr
 import pinttr
 
 from ..._attrs import documented, parse_docs
 from ...scenes.core import SceneElement
-from ...scenes.illumination import DirectionalIllumination, IlluminationFactory
+from ...scenes.illumination import (
+    DirectionalIllumination,
+    Illumination,
+    IlluminationFactory,
+)
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
-from ...scenes.measure import DistantMeasure, MeasureFactory
+from ...scenes.measure import DistantMeasure, Measure, MeasureFactory
 
 
 @parse_docs
@@ -17,7 +22,7 @@ class Scene(SceneElement, ABC):
     Abstract class common to all scenes.
     """
 
-    illumination = documented(
+    illumination: Illumination = documented(
         attr.ib(
             factory=DirectionalIllumination,
             converter=IlluminationFactory.convert,
@@ -31,7 +36,7 @@ class Scene(SceneElement, ABC):
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
 
-    measures = documented(
+    measures: List[Measure] = documented(
         attr.ib(
             factory=lambda: [DistantMeasure()],
             converter=lambda value: [
@@ -66,7 +71,7 @@ class Scene(SceneElement, ABC):
                     f"(DistantMeasure)"
                 )
 
-    integrator = documented(
+    integrator: Integrator = documented(
         attr.ib(
             factory=PathIntegrator,
             converter=IntegratorFactory.convert,

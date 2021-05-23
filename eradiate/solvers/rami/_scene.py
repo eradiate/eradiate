@@ -1,8 +1,11 @@
+from typing import Optional
+
 import attr
 
 from ..core._scene import Scene
 from ... import validators
 from ..._attrs import documented, get_doc, parse_docs
+from ...contexts import KernelDictContext
 from ...scenes.biosphere import BiosphereFactory, Canopy
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
@@ -18,7 +21,7 @@ class RamiScene(Scene):
     benchmark scenes.
     """
 
-    surface = documented(
+    surface: Surface = documented(
         attr.ib(
             factory=LambertianSurface,
             converter=SurfaceFactory.convert,
@@ -33,7 +36,7 @@ class RamiScene(Scene):
         default=":class:`LambertianSurface() <.LambertianSurface>`",
     )
 
-    canopy = documented(
+    canopy: Canopy = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(BiosphereFactory.convert),
@@ -47,7 +50,7 @@ class RamiScene(Scene):
         default=":class:`HomogeneousDiscreteCanopy() <.HomogeneousDiscreteCanopy>`",
     )
 
-    padding = documented(
+    padding: int = documented(
         attr.ib(default=0, converter=int, validator=validators.is_positive),
         doc="Padding level. The scene will be padded with copies to account for "
         "adjacency effects. This, in practice, has effects similar to "
@@ -60,7 +63,7 @@ class RamiScene(Scene):
         default="0",
     )
 
-    integrator = documented(
+    integrator: Integrator = documented(
         attr.ib(
             factory=PathIntegrator,
             converter=IntegratorFactory.convert,
@@ -71,11 +74,15 @@ class RamiScene(Scene):
         default=":class:`PathIntegrator() <.PathIntegrator>`",
     )
 
-    def __attrs_post_init__(self):
+    def update(self):
         # Parts of the init sequence we couldn't take care of using converters
+        # TODO: This is not robust and will surely break if any update of
+        #  modified attributes is attempted after object creation.
+        #  Solution: Add these steps to a preprocess step, leave it out of the
+        #  post-init sequence.
 
         # Don't forget to call super class post-init
-        super(RamiScene, self).__attrs_post_init__()
+        super(RamiScene, self).update()
 
         # Override surface width with canopy width
         if self.canopy is not None:
@@ -103,7 +110,7 @@ class RamiScene(Scene):
                             ymax=0.5 * self.surface.width,
                         )
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None):
         result = KernelDict.new()
 
         if self.canopy is not None:
