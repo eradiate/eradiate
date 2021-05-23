@@ -54,28 +54,5 @@ class OneDimSolverApp(SolverApp):
             f"data creation - {__name__}.{self.__class__.__name__}.postprocess",
             source=f"eradiate, version {eradiate.__version__}",
             references="",
-            var_specs={
-                "irradiance": VarSpec(
-                    standard_name="toa_horizontal_solar_irradiance_per_unit_wavelength",
-                    units=symbol(uck.get("irradiance")),
-                    long_name="top-of-atmosphere horizontal spectral irradiance",
-                ),
-                "lo": VarSpec(
-                    standard_name="toa_outgoing_radiance_per_unit_wavelength",
-                    units=symbol(uck.get("radiance")),
-                    long_name="top-of-atmosphere outgoing spectral radiance",
-                ),
-                "brf": VarSpec(
-                    standard_name="toa_brf",
-                    units=symbol("dimensionless"),
-                    long_name="top-of-atmosphere bi-directional reflectance factor",
-                ),
-                "brdf": VarSpec(
-                    standard_name="toa_brdf",
-                    units=symbol("1/sr"),
-                    long_name="top-of-atmosphere bi-directional reflection distribution function",
-                ),
-            },
-            coord_specs="angular_observation",
         )
         ds.ert.normalize_metadata(dataset_spec)

@@ -55,7 +55,7 @@ def test_spp_splitting(mode_mono):
     surface = eradiate.scenes.surface.LambertianSurface(
         width=1.0 * ureg.m, reflectance=1.0
     )
-    measure = eradiate.scenes.measure.DistantMeasure(
+    measure = eradiate.scenes.measure.DistantReflectanceMeasure(
         target=[0, 0, 0],
         film_resolution=(1, 1),
     )

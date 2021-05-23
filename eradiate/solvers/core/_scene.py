@@ -22,7 +22,7 @@ class Scene(SceneElement, ABC):
     Abstract class common to all scenes.
     """
 
-    illumination: Illumination = documented(
+    illumination: DirectionalIllumination = documented(
         attr.ib(
             factory=DirectionalIllumination,
             converter=IlluminationFactory.convert,
@@ -51,7 +51,8 @@ class Scene(SceneElement, ABC):
         "Optionally, a single :class:`.Measure` or dictionary specification "
         "may be passed and will automatically be wrapped into a list.\n"
         "\n"
-        "Allowed value types: :class:`DistantMeasure`.\n"
+        "Allowed value types: :class:`DistantMeasure`, "
+        ":class:`DistantReflectanceMeasure`.\n"
         "\n"
         ".. note:: The target zone will be overridden using canopy "
         "parameters if unset. If no canopy is specified, surface size "

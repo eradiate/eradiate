@@ -115,7 +115,7 @@ def test_rami_solver_app_run(mode_mono):
         scene=RamiScene(
             measures=[
                 {
-                    "type": "distant",
+                    "type": "distant_reflectance",
                     "id": "toa_hsphere",
                     "film_resolution": (32, 32),
                     "spp": 1000,
