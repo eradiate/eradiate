@@ -85,6 +85,11 @@ class MeasureSpectralConfig(ABC):
         """
         mode = eradiate.mode()
 
+        if mode is None:
+            raise ModeError(
+                "instantiating MeasureSpectralConfig requires a mode to be selected"
+            )
+
         if mode.is_monochromatic():
             return MonoMeasureSpectralConfig(**kwargs)
 

@@ -17,7 +17,7 @@ def ensure_output_dir(path):
         os.makedirs(path)
 
 
-def test_spp_splitting():
+def test_spp_splitting(mode_mono):
     """
     SPP splitting test
     ==================
