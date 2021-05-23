@@ -1,3 +1,4 @@
+import warnings
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, Union
 
@@ -10,8 +11,10 @@ from ... import converters, validators
 from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
 from ...contexts import KernelDictContext
+from ...exceptions import ConfigWarning, OverriddenValueWarning
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 
 @parse_docs
@@ -32,15 +35,24 @@ class Surface(SceneElement, ABC):
         default='"surface"',
     )
 
-    width = documented(
+    width: Union[pint.Quantity, str] = documented(
         pinttr.ib(
-            default=ureg.Quantity(100.0, ureg.km),
-            validator=validators.is_positive,
+            default="auto",
+            converter=converters.auto_or(
+                pinttr.converters.to_units(ucc.deferred("length"))
+            ),
+            validator=[
+                validators.auto_or(validators.is_positive),
+                validators.auto_or(pinttr.validators.has_compatible_units),
+            ],
             units=ucc.deferred("length"),
         ),
-        doc="Surface size.\n\nUnit-enabled field (default: cdu[length]).",
-        type="float",
-        default="100 km",
+        doc="Surface size. Without contextual constraint (*e.g.* if the surface "
+        'has no canopy or atmosphere above it), "auto" defaults to 100 km.\n'
+        "\n"
+        "Unit-enabled field (default: cdu[length]).",
+        type='float or "auto"',
+        default='"auto"',
     )
 
     @abstractmethod
@@ -103,10 +115,15 @@ class Surface(SceneElement, ABC):
         Returns → :class:`pint.Quantity`:
             Kernel object width.
         """
-        if ctx.override_surface_width is not None:
+        if ctx is not None and ctx.override_surface_width is not None:
+            if self.width != "auto":
+                warnings.warn(OverriddenValueWarning("Overriding surface width"))
             return ctx.override_surface_width
         else:
-            return self.width
+            if self.width != "auto":
+                return self.width
+            else:
+                return 100.0 * ureg.km
 
     def kernel_dict(self, ctx: KernelDictContext = None) -> Dict:
         kernel_dict = {}
@@ -129,7 +146,15 @@ class Surface(SceneElement, ABC):
         Returns → :class:`Surface`:
             Scaled copy of self.
         """
-        return attr.evolve(self, width=self.width * factor)
+        if self.width == "auto":
+            warnings.warn(
+                ConfigWarning("Surface width set to 'auto', cannot be scaled")
+            )
+            new_width = self.width
+        else:
+            new_width = self.width * factor
+
+        return attr.evolve(self, width=new_width)
 
 
 class SurfaceFactory(BaseFactory):
