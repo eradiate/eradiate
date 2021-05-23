@@ -15,7 +15,7 @@ from ..._attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ModeError, UnsupportedModeError
 from ...scenes.measure import Measure, MeasureResults
-from ...scenes.measure._distant import DistantMeasure
+from ...scenes.measure._distant import DistantMeasure, DistantReflectanceMeasure
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
@@ -147,44 +147,13 @@ class SolverApp(ABC):
         if measure is None:
             measure = self.scene.measures[0]
 
+        # Prepare measure postprocessing arguments
+        measure_kwargs = {}
+        if isinstance(measure, DistantReflectanceMeasure):
+            measure_kwargs["illumination"] = self.scene.illumination
+
         # Collect measure results
-        ds = measure.postprocess()
-
-        # Rename raw field to leaving radiance
-        # (we don't use ds.rename to avoid copying metadata)
-        ds = ds.assign({"lo": ds.data_vars["raw"]}).drop_vars("raw")
-
-        # Collect illumination angular data
-        illumination = self.scene.illumination
-        saa = illumination.azimuth.m_as(ureg.rad)
-        sza = illumination.zenith.m_as(ureg.rad)
-        cos_sza = np.cos(sza)
-
-        # Add angular dimensions
-        ds = ds.expand_dims({"sza": [sza], "saa": [saa]}, axis=(0, 1))
-
-        # Collect illumination spectral data
-        k_irradiance_units = uck.get("irradiance")
-        irradiances = np.array(
-            [
-                illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
-                    k_irradiance_units
-                )
-                for spectral_ctx in measure.spectral_cfg.spectral_ctxs()
-            ]
-        )
-        spectral_coord_label = eradiate.mode().spectral_coord_label
-
-        # Add illumination-dependent variables
-        ds["irradiance"] = (
-            ("sza", "saa", spectral_coord_label),
-            np.array(irradiances * cos_sza).reshape((1, 1, len(irradiances))),
-        )
-
-        ds["brdf"] = ds["lo"] / ds["irradiance"]
-        ds["brf"] = ds["brdf"] * np.pi
-
-        self._results[measure.id] = ds
+        self._results[measure.id] = measure.postprocess(**measure_kwargs)
 
     def run(self, measure: Optional[Measure] = None):
         """

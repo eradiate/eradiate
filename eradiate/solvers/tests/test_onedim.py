@@ -119,7 +119,7 @@ def test_onedim_solver_app_run(mode_mono):
         scene=OneDimScene(
             measures=[
                 {
-                    "type": "distant",
+                    "type": "distant_reflectance",
                     "id": "toa_hsphere",
                     "film_resolution": (32, 32),
                     "spp": 1000,
@@ -216,7 +216,7 @@ def test_onedim_solver_app_postprocessing(mode_mono):
     scene = OneDimScene.from_dict(
         {
             "measures": {
-                "type": "distant",
+                "type": "distant_reflectance",
                 "id": "toa_hsphere",
                 "film_resolution": (32, 32),
                 "spp": 1000,
