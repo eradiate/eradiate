@@ -727,9 +727,9 @@ class AFGL1986RadProfile(RadProfile):
 
             AFGL1986RadProfile(
                 concentrations={
-                    "H2O": ureg.Quantity(15 , "g/m^2"),
+                    "H2O": ureg.Quantity(15 , "kg/m^2"),
                     "CO2": 420 * ureg.dimensionless,
-                    "O3": 0.5 * ureg.dobson_unit,
+                    "O3": 350 * ureg.dobson_unit,
                 }
             )
     """
