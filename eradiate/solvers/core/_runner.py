@@ -50,11 +50,7 @@ def runner(kernel_dict: KernelDict, sensor_ids: Optional[List[str]] = None) -> D
     """
     _check_variant()
 
-    # Basic setup
-    from mitsuba.core import LogLevel, Thread
-
-    Thread.thread().logger().set_log_level(LogLevel.Warn)
-
+    # Result storage
     results = dict()
 
     # Run computation

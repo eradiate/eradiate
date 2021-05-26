@@ -1,3 +1,4 @@
+import logging
 import os
 from abc import ABC
 from pathlib import Path
@@ -6,6 +7,7 @@ from typing import Optional
 import attr
 import pinttr
 from matplotlib import pyplot as plt
+from tqdm.auto import tqdm
 
 import eradiate
 
@@ -16,6 +18,8 @@ from ...exceptions import ModeError, UnsupportedModeError
 from ...scenes.measure import Measure, MeasureResults
 from ...scenes.measure._distant import DistantMeasure, DistantReflectanceMeasure
 from ...units import unit_registry as ureg
+
+logger = logging.getLogger(__name__)
 
 
 @parse_docs
@@ -98,29 +102,47 @@ class SolverApp(ABC):
         if measure is None:
             measure = self.scene.measures[0]
 
+        logger.info(f"Processing measure '{measure.id}'")
+
         # Reset measure results
         measure.results = MeasureResults()
 
         # Spectral loop
-        for spectral_ctx in measure.spectral_cfg.spectral_ctxs():
-            # Initialise context
-            ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
+        spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
 
-            # Set spectral coordinate value for result storage
-            if eradiate.mode().is_monochromatic():
-                spectral_coord = spectral_ctx.wavelength.magnitude
-            else:
-                raise UnsupportedModeError(supported="monochromatic")
+        with tqdm(
+            initial=0,
+            total=len(spectral_ctxs),
+            unit_scale=1.0,
+            leave=True,
+            bar_format="{l_bar}{bar}| {elapsed}, ETA={remaining}",
+        ) as pbar:
+            for spectral_ctx in spectral_ctxs:
+                pbar.set_description(
+                    f"Spectral loop [{spectral_ctx.wavelength:~H}]", refresh=True
+                )
 
-            # Collect sensor IDs
-            sensor_ids = [sensor_info.id for sensor_info in measure.sensor_infos()]
+                # Initialise context
+                ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
 
-            # Run simulation
-            kernel_dict = self.scene.kernel_dict(ctx=ctx)
-            run_results = runner(kernel_dict, sensor_ids)
+                # Set spectral coordinate value for result storage
+                if eradiate.mode().is_monochromatic():
+                    spectral_coord = spectral_ctx.wavelength.magnitude
+                else:
+                    raise UnsupportedModeError(supported="monochromatic")
 
-            # Store results
-            measure.results.raw[spectral_coord] = run_results
+                # Collect sensor IDs
+                sensor_ids = [sensor_info.id for sensor_info in measure.sensor_infos()]
+
+                # Run simulation
+                kernel_dict = self.scene.kernel_dict(ctx=ctx)
+                run_results = runner(kernel_dict, sensor_ids)
+
+                # Store results
+                measure.results.raw[spectral_coord] = run_results
+
+                # Update progress display
+                pbar.update()
 
     def postprocess(self, measure: Optional[Measure] = None):
         """

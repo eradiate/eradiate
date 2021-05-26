@@ -16,3 +16,6 @@ except AttributeError as e:
     raise RuntimeError(
         "The imported 'mitsuba' module is not the Eradiate kernel version."
     ) from e
+
+
+from . import logging
