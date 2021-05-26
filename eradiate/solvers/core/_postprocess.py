@@ -2,7 +2,7 @@ from ... import data
 
 
 def apply_srf(da, srf):
-    r"""Computes the weighted average of some data with a wavelength dimension,
+    r"""Computes the weighted mean of some data with a wavelength dimension,
     where the weights are taken from the values of an instrument spectral
     response function.
 
@@ -47,9 +47,9 @@ def apply_srf(da, srf):
         module.
 
     Return → :class:`~xarray.DataArray`:
-        Weighted-average of the data along the wavelength dimension.
+        Weighted-mean of the data along the wavelength dimension.
     """
     dataset = data.open(category="spectral_response_function", id=srf)
     weights = dataset.srf.interp(w=da.w.values)
     weighted = da.weighted(weights)
-    return weighted.sum(dim="w")
+    return weighted.mean(dim="w")
