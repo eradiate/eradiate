@@ -1,3 +1,4 @@
+import warnings
 from typing import Optional
 
 import attr
@@ -6,6 +7,7 @@ from ..core._scene import Scene
 from ... import unit_context_config as ucc
 from ..._attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
+from ...exceptions import OverriddenValueWarning
 from ...scenes.atmosphere import Atmosphere, AtmosphereFactory, HomogeneousAtmosphere
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, VolPathIntegrator
@@ -53,6 +55,13 @@ class OneDimScene(Scene):
         type=":class:`.Surface` or dict",
         default=":class:`LambertianSurface() <.LambertianSurface>`",
     )
+
+    @surface.validator
+    def _surface_validator(self, attribute, value):
+        if self.atmosphere and value.width != "auto":
+            warnings.warn(
+                OverriddenValueWarning("surface size will be overridden by atmosphere")
+            )
 
     integrator: Integrator = documented(
         attr.ib(
