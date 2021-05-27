@@ -1,3 +1,4 @@
+import warnings
 from typing import Optional
 
 import attr
@@ -6,6 +7,7 @@ from ..core._scene import Scene
 from ... import validators
 from ..._attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
+from ...exceptions import OverriddenValueWarning
 from ...scenes.biosphere import BiosphereFactory, Canopy
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
@@ -35,6 +37,13 @@ class RamiScene(Scene):
         type=":class:`.Surface` or dict",
         default=":class:`LambertianSurface() <.LambertianSurface>`",
     )
+
+    @surface.validator
+    def _surface_validator(self, attribute, value):
+        if self.canopy and value.width != "auto":
+            warnings.warn(
+                OverriddenValueWarning("surface size will be overridden by canopy")
+            )
 
     canopy: Canopy = documented(
         attr.ib(
