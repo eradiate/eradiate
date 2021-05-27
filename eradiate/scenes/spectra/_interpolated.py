@@ -1,3 +1,5 @@
+from typing import MutableMapping, Optional
+
 import attr
 import numpy as np
 import pint
@@ -10,7 +12,7 @@ from ._core import Spectrum
 from ... import converters, validators
 from ..._attrs import documented, parse_docs
 from ..._util import ensure_array
-from ...contexts import SpectralContext
+from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -96,7 +98,7 @@ class InterpolatedSpectrum(Spectrum):
         else:
             raise UnsupportedModeError(supported="monochromatic")
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         kernel_units = uck.get(self.quantity)
         spectral_ctx = ctx.spectral_ctx if ctx is not None else None
 

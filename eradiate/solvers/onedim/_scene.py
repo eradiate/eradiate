@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional
+from typing import MutableMapping, Optional
 
 import attr
 
@@ -109,7 +109,7 @@ class OneDimScene(Scene):
                         center=measure.target.xyz, radius=radius
                     )
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         result = KernelDict.new(ctx=ctx)
 
         if self.atmosphere is not None:

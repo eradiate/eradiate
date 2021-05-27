@@ -1,6 +1,7 @@
 import itertools
 import os
 from copy import deepcopy
+from typing import MutableMapping, Optional
 
 import aabbtree
 import attr
@@ -12,6 +13,7 @@ from ..core import SceneElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
 from ..._attrs import documented, get_doc, parse_docs
+from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -907,7 +909,7 @@ class LeafCloud(SceneElement):
             }
         }
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         if not ctx.ref:
             return self.shapes(ctx=ctx)
         else:
@@ -1123,7 +1125,7 @@ class InstancedLeafCloud(SceneElement):
             for i, position in enumerate(self.instance_positions)
         }
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         return {
             **self.bsdfs(ctx=ctx),
             **self.shapes(ctx=ctx),
@@ -1220,7 +1222,7 @@ class DiscreteCanopy(Canopy):
             result = {**result, **instanced_leaf_cloud.instances()}
         return result
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         if not ctx.ref:
             raise ValueError("'ctx.ref' must be set to True")
 

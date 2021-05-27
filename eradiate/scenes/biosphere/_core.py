@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import MutableMapping, Optional
 
 import attr
 import pinttr
@@ -7,6 +8,7 @@ from ..core import SceneElement
 from ... import validators
 from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
+from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 
 
@@ -67,7 +69,7 @@ class Canopy(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         """
         Return a dictionary suitable for kernel scene configuration.
 

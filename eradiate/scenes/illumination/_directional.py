@@ -1,12 +1,15 @@
+from typing import MutableMapping, Optional
+
 import attr
 import pinttr
 
 from ._core import Illumination, IlluminationFactory
 from ..spectra import SolarIrradianceSpectrum, Spectrum, SpectrumFactory
 from ..._attrs import documented, parse_docs
+from ...contexts import KernelDictContext
+from ...frame import angles_to_direction
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
-from ...frame import angles_to_direction
 from ...validators import has_quantity, is_positive
 
 
@@ -62,7 +65,7 @@ class DirectionalIllumination(Illumination):
         default=":class:`SolarIrradianceSpectrum() <.SolarIrradianceSpectrum>`",
     )
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         return {
             self.id: {
                 "type": "directional",

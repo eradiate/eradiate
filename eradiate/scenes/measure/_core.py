@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, MutableMapping, Optional, Tuple
 
 import attr
 import numpy as np
@@ -17,7 +17,7 @@ from ..._factory import BaseFactory
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ..._util import ensure_array
-from ...contexts import MonoSpectralContext, SpectralContext
+from ...contexts import KernelDictContext, MonoSpectralContext, SpectralContext
 from ...exceptions import ModeError, UnsupportedModeError
 
 
@@ -502,7 +502,7 @@ class Measure(SceneElement, ABC):
             for sensor_info in self.sensor_infos()
         ]
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         result = {
             f"{sensor_info.id}": {
                 **base_dict,

@@ -1,8 +1,11 @@
+from typing import MutableMapping, Optional
+
 import attr
 
 from ._core import Illumination, IlluminationFactory
 from ..spectra import Spectrum, SpectrumFactory
 from ..._attrs import documented, parse_docs
+from ...contexts import KernelDictContext
 from ...validators import has_quantity
 
 
@@ -26,7 +29,7 @@ class ConstantIllumination(Illumination):
         default="1.0 ucc[radiance]",
     )
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         return {
             self.id: {
                 "type": "constant",

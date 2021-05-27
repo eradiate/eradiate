@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
 from collections import UserDict
-from typing import Dict, Optional, Union
+from typing import Dict, MutableMapping, Optional, Union
 
 import attr
 import mitsuba
 import pinttr
 
 from .._attrs import documented, parse_docs
-from ..units import unit_registry as ureg
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
+from ..units import unit_registry as ureg
 
 
 class KernelDict(UserDict):
@@ -188,7 +188,7 @@ class SceneElement(ABC):
         return cls(**d_copy)
 
     @abstractmethod
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         """
         Return a dictionary suitable for kernel scene configuration.
 

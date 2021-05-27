@@ -1,3 +1,5 @@
+from typing import MutableMapping, Optional
+
 import attr
 import pint
 import pinttr
@@ -6,7 +8,7 @@ from ... import unit_context_config as ucc
 from ... import unit_context_kernel as uck
 from ... import validators
 from ..._attrs import documented, parse_docs
-from ...contexts import SpectralContext
+from ...contexts import KernelDictContext, SpectralContext
 from ...scenes.spectra import Spectrum, SpectrumFactory
 
 
@@ -56,7 +58,7 @@ class UniformSpectrum(Spectrum):
     def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
         return self.value
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         kernel_units = uck.get(self.quantity)
         spectral_ctx = ctx.spectral_ctx if ctx is not None else None
 

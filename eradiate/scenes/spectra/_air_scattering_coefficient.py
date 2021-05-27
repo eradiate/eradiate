@@ -1,3 +1,5 @@
+from typing import MutableMapping, Optional
+
 import attr
 import pint
 
@@ -5,7 +7,7 @@ import eradiate
 
 from ._core import Spectrum, SpectrumFactory
 from ..._attrs import parse_docs
-from ...contexts import SpectralContext
+from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import ModeError
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity
@@ -32,7 +34,7 @@ class AirScatteringCoefficientSpectrum(Spectrum):
         else:
             raise ModeError(f"unsupported mode {eradiate.mode().id}")
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         if eradiate.mode().is_monochromatic():
             return {
                 "spectrum": {

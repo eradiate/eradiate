@@ -1,3 +1,5 @@
+from typing import MutableMapping, Optional
+
 import attr
 import numpy as np
 import pint
@@ -7,7 +9,7 @@ import eradiate
 from ... import data
 from ... import unit_context_kernel as uck
 from ..._attrs import documented, parse_docs
-from ...contexts import SpectralContext
+from ...contexts import KernelDictContext, SpectralContext
 from ...scenes.spectra import Spectrum, SpectrumFactory
 from ...units import PhysicalQuantity, to_quantity
 from ...validators import is_positive
@@ -107,7 +109,7 @@ class SolarIrradianceSpectrum(Spectrum):
 
         return irradiance
 
-    def kernel_dict(self, ctx=None):
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         # Apply scaling, build kernel dict
         return {
             "spectrum": {
