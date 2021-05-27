@@ -16,7 +16,7 @@ def test_apply_srf():
     dataset = data.open(category="spectral_response_function", id="sentinel_3a-slstr-1")
     weights = dataset.srf.interp(w=da.w.values)
     weighted = da.weighted(weights)
-    weighted_sum = weighted.sum(dim="w")
+    weighted_sum = weighted.mean(dim="w")
 
     assert "another" in output_da.dims
     assert "w" not in output_da.dims
