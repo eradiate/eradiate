@@ -475,9 +475,9 @@ class LeafCloud(SceneElement):
             default="leaf_cloud",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
         ),
-        doc="Identifier for the object.",
-        type="str",
-        default="leaf_cloud",
+        doc=get_doc(SceneElement, "id", "doc"),
+        type=get_doc(SceneElement, "id", "type"),
+        default="'leaf_cloud'",
     )
 
     leaf_positions = documented(
