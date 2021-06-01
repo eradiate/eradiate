@@ -75,18 +75,22 @@ def display_canopy(canopy, distance=85):
 # directly added to a scene and instantiated using the
 # :class:`.BiosphereFactory`.
 #
-# A :class:`.DiscreteCanopy` consists of one or several :class:`.LeafCloud` s,
-# *i.e.* sets of floating discs. Each leaf cloud can be made of a large number
-# of discs; if the requested :class:`.DiscreteCanopy` object contains too many
-# of them (say, several millions), the memory footprint of the resulting scene
-# will quickly become large.
+# A :class:`.DiscreteCanopy` consists of one or several
+# :class:`.CanopyElement`s, *i.e.* set of floating discs and possible trunks.
+# :class:`.CanopyElement` implements two sub-classes, :class:`.LeafCloud` and
+# :class:`.AbstractTree`, the latter holds a :class:`.LeafCloud` plus
+# specification for a cylindrical trunk. The leaf clouds can be made of a large
+# number of discs; if the requested :class:`.DiscreteCanopy` object contains
+# too many of them (say, several millions), the memory footprint of the
+# resulting scene will quickly become large.
 #
 # In many situations, however, we can simply define a small number of leaf
 # clouds and clone them at designated locations. Under the hood,
 # :class:`.DiscreteCanopy` does not reference directly a set of
-# :class:`.LeafCloud` objects; instead, they are wrapped into
-# :class:`.InstancedLeafCloud` instances which associate to a leaf cloud the
-# positions at which it should be *instanced* (*i.e.* cloned).
+# :class:`.CanopyElement` objects; instead, they are wrapped into
+# :class:`.InstancedCanopyElement` instances which associate to a leaf cloud
+# or abstract tree the positions at which it should be *instanced*
+# (*i.e.* cloned).
 
 # %%
 # Quickly create a homogeneous discrete canopy
@@ -190,9 +194,10 @@ instance_filename = eradiate.path_resolver.resolve(
     "tests/canopies/HET01_UNI_instances.def"
 )
 
-instanced_leaf_cloud = eradiate.scenes.biosphere.InstancedLeafCloud.from_file(
-    filename=instance_filename, leaf_cloud=leaf_cloud
-)
+instanced_leaf_cloud = \
+    eradiate.scenes.biosphere.InstancedCanopyElement.from_file(
+        filename=instance_filename, canopy_element=leaf_cloud
+    )
 instanced_leaf_cloud
 
 # %%
@@ -201,7 +206,7 @@ instanced_leaf_cloud
 canopy = eradiate.scenes.biosphere.DiscreteCanopy(
     id="floating_spheres",
     size=[100, 100, 30] * ureg.m,
-    instanced_leaf_clouds=instanced_leaf_cloud,
+    instanced_canopy_elements=instanced_leaf_cloud,
 )
 canopy
 
@@ -214,12 +219,12 @@ plt.show()
 # %%
 # This can be repeated to specify as many leaf clouds and associated instances
 # as needed. Since this use case is quite common, the
-# :meth:`.DiscreteCanopy.from_files` class method constructor
+# :meth:`.DiscreteCanopy.leaf_cloud_from_files` class method constructor
 # provides a more convenient interface (it notably takes care by itself of
 # setting scene element IDs consistently):
 
 
-canopy = eradiate.scenes.biosphere.DiscreteCanopy.from_files(
+canopy = eradiate.scenes.biosphere.DiscreteCanopy.leaf_cloud_from_files(
     id="floating_spheres",
     size=[100, 100, 30] * ureg.m,
     leaf_cloud_dicts=[
@@ -249,14 +254,14 @@ padded_canopy = canopy.padded(1)
 
 print(f"Canopy:")
 print(f"  size: {canopy.size}")
-print(f"  # instances: {canopy.instanced_leaf_clouds[0].instance_positions.shape[0]}")
+print(f"  # instances: {canopy.instanced_canopy_elements[0].instance_positions.shape[0]}")
 display_canopy(canopy, distance=50)
 plt.show()
 
 print(f"Padded canopy:")
 print(f"  size: {padded_canopy.size}")
 print(
-    f"  # instances: {padded_canopy.instanced_leaf_clouds[0].instance_positions.shape[0]}"
+    f"  # instances: {padded_canopy.instanced_canopy_elements[0].instance_positions.shape[0]}"
 )
 display_canopy(padded_canopy, distance=50)
 plt.show()

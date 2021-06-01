@@ -14,6 +14,7 @@ from ..core import SceneElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
 from ..._attrs import documented, get_doc, parse_docs
+from ..._factory import BaseFactory
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -55,7 +56,9 @@ def _leaf_cloud_positions_cuboid_avoid_overlap(
 ):
     """Compute leaf positions for a cuboid-shaped leaf cloud (square footprint).
     This function also performs conservative collision checks to avoid leaf
-    overlapping.
+    overlapping. This process might take a very long time, if the parameters
+    specify a very dense leaf cloud. Consider using
+    :func:`_leaf_cloud_positions_cuboid`.
     """
     n_attempts = int(n_attempts)  # For safety, ensure conversion to int
 
@@ -131,6 +134,25 @@ def _leaf_cloud_positions_cylinder(n_leaves, radius, l_vertical, rng):
         r = rand[1] * radius
         z = rand[2] * l_vertical
         positions[i, :] = [r * np.cos(phi), r * np.sin(phi), z]
+
+    return positions
+
+
+@ureg.wraps(ureg.m, (None, ureg.m, ureg.m, None))
+def _leaf_cloud_positions_cone(n_leaves, radius, l_vertical, rng):
+    """Compute leaf positions for a cone-shaped leaf cloud (vertical
+    orientation, tip pointing towards positive z.)"""
+
+    positions = np.empty((n_leaves, 3))
+
+    # uniform cone sampling from here:
+    # https://stackoverflow.com/questions/41749411/uniform-sampling-by-volume-within-a-cone
+    for i in range(n_leaves):
+        rand = rng.random(3)
+        h = l_vertical * (rand[0] ** (1 / 3))
+        r = radius / l_vertical * h * np.sqrt(rand[1])
+        phi = rand[2] * 2 * np.pi
+        positions[i, :] = [r * np.cos(phi), r * np.sin(phi), l_vertical - h]
 
     return positions
 
@@ -443,7 +465,72 @@ class CylinderLeafCloudParams(LeafCloudParams):
 
 @parse_docs
 @attr.s
-class LeafCloud(SceneElement):
+class ConicalLeafCloudParams(LeafCloudParams):
+    """
+    Advanced parameter checking class for the cone :class:`.LeafCloud`
+    generator.
+
+    .. seealso:: :meth:`.LeafCloud.cone`
+    """
+
+    _radius = documented(
+        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
+        type="float",
+        default="1 m",
+    )
+
+    _l_vertical = documented(
+        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        doc="Leaf cloud vertical extent.\n\nUnit-enabled field (default: ucc[length]).",
+        type="float",
+        default="1 m",
+    )
+
+    @property
+    def radius(self):
+        return self._radius
+
+    @property
+    def l_vertical(self):
+        return self._l_vertical
+
+
+@parse_docs
+@attr.s
+class CanopyElement(SceneElement):
+    """
+    Abstract base class for objects that can be instantiated in an
+    :class:`.InstancedCanopyElement`.
+    """
+
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+        if not ctx.ref:
+            return self.shapes(ctx=ctx)
+        else:
+            return {**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx)}
+
+
+class CanopyElementFactory(BaseFactory):
+    """
+    This factory constructs objects whose classes are derived from
+    :class:`.CanopyElement`.
+
+    .. admonition:: Registered factory members
+       :class: hint
+
+       .. factorytable::
+          :factory: CanopyElementFactory
+    """
+
+    _constructed_type = CanopyElement
+    registry = {}
+
+
+@CanopyElementFactory.register("leaf_cloud")
+@parse_docs
+@attr.s
+class LeafCloud(CanopyElement):
     """
     A container class for leaf clouds in abstract discrete canopies.
     Holds parameters completely characterising the leaf cloud's leaves.
@@ -456,6 +543,7 @@ class LeafCloud(SceneElement):
       * :meth:`.LeafCloud.cuboid`;
       * :meth:`.LeafCloud.sphere`;
       * :meth:`.LeafCloud.cylinder`;
+      * :meth:`.LeafCloud.cone`;
 
     * :meth:`.LeafCloud.from_file` loads leaf positions and orientations from a
       text file;
@@ -589,7 +677,7 @@ class LeafCloud(SceneElement):
 
         .. seealso:: :class:`.CuboidLeafCloudParams`
 
-        The produced leaf cloud covers uniformly the
+        The produced leaf cloud uniformly covers the
         :math:`(x, y, z) \\in [-\\dfrac{l_h}{2}, + \\dfrac{l_h}{2}] \\times [-\\dfrac{l_h}{2}, + \\dfrac{l_h}{2}] \\times [0, l_v]`
         region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
         of an approximated inverse beta distribution
@@ -664,18 +752,17 @@ class LeafCloud(SceneElement):
         """
         rng = np.random.default_rng(seed=seed)
         params = SphereLeafCloudParams(**kwargs)
-        leaf_positions = (
-            _leaf_cloud_positions_sphere(params.radius, params.n_leaves) * ureg.m,
-            rng,
+        leaf_positions = _leaf_cloud_positions_sphere(
+            params.radius, params.n_leaves, rng
         )
         leaf_orientations = _leaf_cloud_orientations(
             params.n_leaves, params.mu, params.nu, rng
         )
-        leaf_radii = _leaf_cloud_radii(params.n_leaves, params.leaf_radius) * ureg.m
+        leaf_radii = _leaf_cloud_radii(params.n_leaves, params.leaf_radius)
 
         # Create leaf cloud object
         return cls(
-            id=id,
+            id=params.id,
             leaf_positions=leaf_positions,
             leaf_orientations=leaf_orientations,
             leaf_radii=leaf_radii,
@@ -703,20 +790,56 @@ class LeafCloud(SceneElement):
         """
         rng = np.random.default_rng(seed=seed)
         params = CylinderLeafCloudParams(**kwargs)
-        leaf_positions = (
-            _leaf_cloud_positions_cylinder(
-                params.n_leaves, params.radius, params.l_vertical, rng
-            )
-            * ureg.m
+        leaf_positions = _leaf_cloud_positions_cylinder(
+            params.n_leaves, params.radius, params.l_vertical, rng
         )
         leaf_orientations = _leaf_cloud_orientations(
             params.n_leaves, params.mu, params.nu, rng
         )
-        leaf_radii = _leaf_cloud_radii(params.n_leaves, params.leaf_radius) * ureg.m
+        leaf_radii = _leaf_cloud_radii(params.n_leaves, params.leaf_radius)
 
         # Create leaf cloud object
         return cls(
-            id=id,
+            id=params.id,
+            leaf_positions=leaf_positions,
+            leaf_orientations=leaf_orientations,
+            leaf_radii=leaf_radii,
+            leaf_reflectance=params.leaf_reflectance,
+            leaf_transmittance=params.leaf_transmittance,
+        )
+
+    @classmethod
+    def cone(cls, seed=12345, **kwargs):
+        """
+        Generate a leaf cloud with a right conical shape (vertical orientation).
+        Parameters are checked by the :class:`.ConicalLeafCloudParams` class.
+
+        .. seealso:: :class:`.ConicalLeafCloudParams`
+
+        The produced leaf cloud covers uniformly the :math:`r < \\mathit{radius}\cdot\mathit{1 - \frac{z}{l_v}}, z \\in [0, l_v]`
+        region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
+        of an approximated inverse beta distribution
+        :cite:`Ross1991MonteCarloMethods`.
+
+        An additional parameter controls the random number generator.
+
+        Parameter ``seed`` (int):
+            Seed for the random number generator.
+        """
+        rng = np.random.default_rng(seed=seed)
+        params = ConicalLeafCloudParams(**kwargs)
+        leaf_positions = _leaf_cloud_positions_cone(
+            params.n_leaves, params.radius, params.l_vertical, rng
+        )
+        leaf_orientations = _leaf_cloud_orientations(
+            params.n_leaves, params.mu, params.nu, rng
+        )
+
+        leaf_radii = _leaf_cloud_radii(params.n_leaves, params.leaf_radius)
+
+        # Create leaf cloud object
+        return cls(
+            id=params.id,
             leaf_positions=leaf_positions,
             leaf_orientations=leaf_orientations,
             leaf_radii=leaf_radii,
@@ -738,7 +861,7 @@ class LeafCloud(SceneElement):
 
         .. admonition:: File format
 
-           Each line defines a single leaf with the 7 following numerical
+           Each line defines a single leaf with the following 7 numerical
            parameters separated by one or more spaces:
 
            * leaf radius;
@@ -810,6 +933,7 @@ class LeafCloud(SceneElement):
         * ``cuboid``: :meth:`.cuboid`;
         * ``sphere``: :meth:`.sphere`;
         * ``cylinder``: :meth:`.cylinder`;
+        * ``cone``: :meth:`.cone`;
         * ``from_file``: :meth:`.from_file`.
 
         If ``construct`` is missing, parameters are forwarded to the regular
@@ -833,6 +957,9 @@ class LeafCloud(SceneElement):
 
         elif construct == "cylinder":
             return cls.cylinder(**d_copy)
+
+        elif construct == "cone":
+            return cls.cone(**d_copy)
 
         elif construct == "from_file":
             return cls.from_file(**d_copy)
@@ -947,25 +1074,19 @@ class LeafCloud(SceneElement):
             }
         }
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
-        if not ctx.ref:
-            return self.shapes(ctx=ctx)
-        else:
-            return {**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx)}
 
-
+@CanopyElementFactory.register("abstract_tree")
 @parse_docs
 @attr.s
-class InstancedLeafCloud(SceneElement):
+class AbstractTree(CanopyElement):
     """
-    Specification a leaf cloud, alongside the locations of instances (*i.e.*
-    clones) of it.
+    A container class for abstract trees in discrete canopies.
+    Holds a :class:`.LeafCloud` and the parameters characterizing a cylindrical
+    trunk.
 
-    .. admonition:: Class method constructors
-
-       .. autosummary::
-
-          from_file
+    The :meth:`.AbstractTree.from_dict` constructor will instantiate the trunk
+    parameters based on dictionary specification and will forward the entry
+    specifying the leaf cloud to :meth:`.LeafCloud.convert`.
     """
 
     leaf_cloud = documented(
@@ -977,6 +1098,172 @@ class InstancedLeafCloud(SceneElement):
         doc="Instanced leaf cloud. Can be specified as a dictionary, which will "
         "be interpreted by :meth:`.LeafCloud.from_dict`.",
         type=":class:`LeafCloud`",
+        default="None",
+    )
+
+    trunk_height = documented(
+        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        doc="Trunk height.\n\nUnit-enabled field (default: ucc[length]).",
+        type="float",
+        default="1.0 m",
+    )
+
+    trunk_radius = documented(
+        pinttr.ib(default=0.1 * ureg.m, units=ucc.deferred("length")),
+        doc="Trunk radius.\n\nUnit-enabled field (default: ucc[length]).",
+        type="float",
+        default="0.1 m",
+    )
+
+    trunk_reflectance = documented(
+        attr.ib(
+            default=0.5,
+            converter=SpectrumFactory.converter("reflectance"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validators.has_quantity("reflectance"),
+            ],
+        ),
+        doc="Reflectance spectrum of the trunk. "
+        "Must be a reflectance spectrum (dimensionless).",
+        type=":class:`.Spectrum`",
+        default="0.5",
+    )
+
+    def bsdfs(self, ctx=None):
+        """
+        Return BSDF plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns → dict:
+            Return a dictionary suitable for merge with a :class:`.KernelDict`
+            containing all the BSDFs attached to the shapes
+            in the abstract tree.
+        """
+
+        bsdfs_dict = self.leaf_cloud.bsdfs(ctx=ctx)
+
+        bsdfs_dict[f"bsdf_{self.id}"] = {
+            "type": "diffuse",
+            "reflectance": self.trunk_reflectance.kernel_dict(ctx=ctx)["spectrum"],
+        }
+
+        return bsdfs_dict
+
+    def shapes(self, ctx=None):
+        """
+        Return shape plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns → dict:
+            A dictionary suitable for merge with a
+            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
+            in the abstract tree.
+        """
+        from mitsuba.core import ScalarTransform4f
+
+        kernel_length = uck.get("length")
+
+        kernel_height = self.trunk_height.m_as(kernel_length)
+        kernel_radius = self.trunk_radius.m_as(kernel_length)
+
+        leaf_cloud = self.leaf_cloud.translated(
+            [0.0, 0.0, kernel_height] * kernel_length
+        )
+
+        if ctx.ref:
+            bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
+        else:
+            bsdf = self.bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
+
+        shapes_dict = leaf_cloud.shapes(ctx=ctx)
+
+        shapes_dict[f"trunk_cyl_{self.id}"] = {
+            "type": "cylinder",
+            "bsdf": bsdf,
+            "radius": kernel_radius,
+            "p0": [0, 0, -0.1],
+            "p1": [0, 0, kernel_height],
+        }
+
+        shapes_dict[f"trunk_cap_{self.id}"] = {
+            "type": "disk",
+            "bsdf": bsdf,
+            "to_world": ScalarTransform4f.scale(kernel_radius)
+            * ScalarTransform4f.translate(((0, 0, kernel_height / 2.0))),
+        }
+
+        return shapes_dict
+
+    @staticmethod
+    def convert(value):
+        """
+        Object converter method.
+
+        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
+        create an :class:`.AbstractTree`.
+
+        Otherwise, it returns ``value``.
+        """
+        if isinstance(value, dict):
+            return AbstractTree.from_dict(value)
+
+        return value
+
+    @classmethod
+    def from_dict(cls, d):
+        """
+        Construct from a dictionary.
+
+
+        Parameter ``d`` (dict):
+            Dictionary containing parameters passed to the selected constructor.
+            Unit fields are pre-processed with :func:`pinttr.interpret_units`.
+        """
+
+        # Interpret unit fields if any
+        d_copy = pinttr.interpret_units(d, ureg=ureg)
+
+        # pop the leaf cloud specs to avoid name collision with the
+        # AbstractTree constructor
+        leaf_cloud_dict = d_copy.pop("leaf_cloud")
+        leaf_cloud = LeafCloud.convert(leaf_cloud_dict)
+
+        return cls(leaf_cloud=leaf_cloud, **d_copy)
+
+
+@parse_docs
+@attr.s
+class InstancedCanopyElement(SceneElement):
+    """
+    Specification a canopy element, alongside the locations of instances (*i.e.*
+    clones) of it.
+
+    .. admonition:: Class method constructors
+
+       .. autosummary::
+
+          from_file
+          from_dict
+    """
+
+    canopy_element = documented(
+        attr.ib(
+            default=None,
+            validator=attr.validators.optional(
+                attr.validators.instance_of(CanopyElement)
+            ),
+            converter=CanopyElementFactory.convert,
+        ),
+        doc="Instanced canopy element. Can be specified as a dictionary, which will "
+        "be interpreted by :meth:`.CanopyElement.from_dict`.",
+        type=":class:`.CanopyElement`",
         default="None",
     )
 
@@ -998,9 +1285,9 @@ class InstancedLeafCloud(SceneElement):
             )
 
     @classmethod
-    def from_file(cls, filename=None, leaf_cloud=None):
+    def from_file(cls, filename=None, canopy_element=None):
         """
-        Construct a :class:`.InstancedLeafCloud` from a text file specifying
+        Construct a :class:`.InstancedCanopyElement` from a text file specifying
         instance positions.
 
         .. admonition:: File format
@@ -1017,9 +1304,9 @@ class InstancedLeafCloud(SceneElement):
             Can be absolute or relative. Required (setting to ``None`` will
             raise an exception).
 
-        Parameter ``leaf_cloud`` (:class:`.LeafCloud` or dict):
-            :class:`.LeafCloud` to be instanced. If a dictionary is passed,
-            if is interpreted by :meth:`.LeafCloud.from_dict`. If set to
+        Parameter ``canopy_element`` (:class:`.CanopyElement` or dict):
+            :class:`.CanopyElement` to be instanced. If a dictionary is passed,
+            if is interpreted by :meth:`.CanopyElement.from_dict`. If set to
             ``None``, an empty leaf cloud will be created.
 
         Raises → ValueError:
@@ -1034,8 +1321,10 @@ class InstancedLeafCloud(SceneElement):
         if not os.path.isfile(filename):
             raise FileNotFoundError(f"no file at {filename} found.")
 
-        if leaf_cloud is None:
-            leaf_cloud = LeafCloud()
+        if canopy_element is None:
+            canopy_element = LeafCloud()
+        else:
+            canopy_element = CanopyElementFactory.convert(canopy_element)
 
         instance_positions = []
 
@@ -1045,20 +1334,20 @@ class InstancedLeafCloud(SceneElement):
                     coords = np.array(line.split(), dtype=float)
                 except ValueError as e:
                     raise ValueError(
-                        f"while reading {filename}, on line {i_line+1}: "
+                        f"while reading {filename}, on line {i_line + 1}: "
                         f"cannot convert {line} to a 3-vector!"
                     ) from e
 
                 if len(coords) != 3:
                     raise ValueError(
-                        f"while reading {filename}, on line {i_line+1}: "
+                        f"while reading {filename}, on line {i_line + 1}: "
                         f"cannot convert {line} to a 3-vector!"
                     )
 
                 instance_positions.append(coords)
 
         instance_positions = np.array(instance_positions) * ureg.m
-        return cls(leaf_cloud=leaf_cloud, instance_positions=instance_positions)
+        return cls(canopy_element=canopy_element, instance_positions=instance_positions)
 
     @classmethod
     def from_dict(cls, d):
@@ -1070,7 +1359,7 @@ class InstancedLeafCloud(SceneElement):
         * ``file``: :meth:`.from_file`.
 
         If ``construct`` is missing, parameters are forwarded to the regular
-        :class:`.InstancedLeafCloud` constructor.
+        :class:`.InstancedCanopyElement` constructor.
 
         Parameter ``d`` (dict):
             Dictionary containing parameters passed to the selected constructor.
@@ -1095,12 +1384,12 @@ class InstancedLeafCloud(SceneElement):
         Object converter method.
 
         If ``value`` is a dictionary, this method uses :meth:`from_dict` to
-        create a :class:`.InstancedLeafCloud`.
+        create a :class:`.InstancedCanopyElement`.
 
         Otherwise, it returns ``value``.
         """
         if isinstance(value, dict):
-            return InstancedLeafCloud.from_dict(value)
+            return InstancedCanopyElement.from_dict(value)
 
         return value
 
@@ -1116,7 +1405,7 @@ class InstancedLeafCloud(SceneElement):
             Return a dictionary suitable for merge with a :class:`.KernelDict`
             containing all the BSDFs attached to the shapes in the leaf cloud.
         """
-        return self.leaf_cloud.bsdfs(ctx=ctx)
+        return self.canopy_element.bsdfs(ctx=ctx)
 
     def shapes(self, ctx=None):
         """
@@ -1132,9 +1421,9 @@ class InstancedLeafCloud(SceneElement):
             in the canopy.
         """
         return {
-            self.leaf_cloud.id: {
+            self.canopy_element.id: {
                 "type": "shapegroup",
-                **self.leaf_cloud.shapes(ctx=ctx),
+                **self.canopy_element.shapes(ctx=ctx),
             }
         }
 
@@ -1155,9 +1444,9 @@ class InstancedLeafCloud(SceneElement):
         kernel_length = uck.get("length")
 
         return {
-            f"{self.leaf_cloud.id}_instance_{i}": {
+            f"{self.canopy_element.id}_instance_{i}": {
                 "type": "instance",
-                "group": {"type": "ref", "id": self.leaf_cloud.id},
+                "group": {"type": "ref", "id": self.canopy_element.id},
                 "to_world": ScalarTransform4f.translate(position.m_as(kernel_length)),
             }
             for i, position in enumerate(self.instance_positions)
@@ -1181,6 +1470,9 @@ class DiscreteCanopy(Canopy):
     produced canopy can be padded with more clones of itself using the
     :meth:`~.DiscreteCanopy.padded` method.
 
+    The discrete canopy holds an :class:`InstancedCanopyElement` object, which
+    in turn holds any class derived from :class:`CanopyElement`.
+
     .. admonition:: Tutorials
 
        * Practical usage ⇒ :ref:`sphx_glr_examples_generated_tutorials_biosphere_01_discrete_canopy.py`
@@ -1189,25 +1481,25 @@ class DiscreteCanopy(Canopy):
 
        .. autosummary::
 
-          from_files
+          leaf_cloud_from_files
           homogeneous
     """
 
-    instanced_leaf_clouds = documented(
+    instanced_canopy_elements = documented(
         attr.ib(
             factory=list,
             converter=lambda value: [
-                InstancedLeafCloud.convert(x)
+                InstancedCanopyElement.convert(x)
                 for x in pinttr.util.always_iterable(value)
             ]
             if not isinstance(value, dict)
-            else [InstancedLeafCloud.convert(value)],
+            else [InstancedCanopyElement.convert(value)],
         ),
-        doc="List of :class:`.InstancedLeafCloud` defining the canopy. Can be "
-        "initialised with a :class:`.InstancedLeafCloud`, which will be "
+        doc="List of :class:`.CanopyElement` defining the canopy. Can be "
+        "initialised with a :class:`.InstancedCanopyElement`, which will be "
         "automatically wrapped into a list. Dictionary-based specifications are "
         "allowed as well.",
-        type="list[:class:`.InstancedLeafCloud`]",
+        type="list[:class:`.InstancedCanopyElement`]",
         default="[]",
     )
 
@@ -1225,8 +1517,8 @@ class DiscreteCanopy(Canopy):
             attached to the shapes in the canopy.
         """
         result = {}
-        for leaf_cloud_instance in self.leaf_cloud_instances:
-            result = {**result, **leaf_cloud_instance.bsdfs(ctx=ctx)}
+        for instanced_canopy_element in self.instanced_canopy_elements:
+            result = {**result, **instanced_canopy_element.bsdfs(ctx=ctx)}
         return result
 
     def shapes(self, ctx=None):
@@ -1243,8 +1535,8 @@ class DiscreteCanopy(Canopy):
             in the canopy.
         """
         result = {}
-        for leaf_cloud_instance in self.leaf_cloud_instances:
-            result = {**result, **leaf_cloud_instance.shapes(ctx=ctx)}
+        for instanced_canopy_element in self.instanced_canopy_elements:
+            result = {**result, **instanced_canopy_element.shapes(ctx=ctx)}
         return result
 
     def instances(self):
@@ -1256,8 +1548,8 @@ class DiscreteCanopy(Canopy):
             :class:`~eradiate.scenes.core.KernelDict` containing instances.
         """
         result = {}
-        for instanced_leaf_cloud in self.instanced_leaf_clouds:
-            result = {**result, **instanced_leaf_cloud.instances()}
+        for instanced_canopy_element in self.instanced_canopy_elements:
+            result = {**result, **instanced_canopy_element.instances()}
         return result
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
@@ -1265,12 +1557,12 @@ class DiscreteCanopy(Canopy):
             raise ValueError("'ctx.ref' must be set to True")
 
         result = {}
-        for instanced_leaf_cloud in self.instanced_leaf_clouds:
+        for instanced_canopy_element in self.instanced_canopy_elements:
             result = {
                 **result,
-                **instanced_leaf_cloud.bsdfs(ctx=ctx),
-                **instanced_leaf_cloud.shapes(ctx=ctx),
-                **instanced_leaf_cloud.instances(ctx=ctx),
+                **instanced_canopy_element.bsdfs(ctx=ctx),
+                **instanced_canopy_element.shapes(ctx=ctx),
+                **instanced_canopy_element.instances(ctx=ctx),
             }
 
         return result
@@ -1301,9 +1593,9 @@ class DiscreteCanopy(Canopy):
         x_size, y_size = result.size.m_as(config_length)[:2]
         padding_factors = np.array(list(range(-padding, padding + 1)))
 
-        for instanced_leaf_cloud in result.instanced_leaf_clouds:
+        for instanced_canopy_element in result.instanced_canopy_elements:
             # More convenience aliases
-            old_instance_positions = instanced_leaf_cloud.instance_positions.m_as(
+            old_instance_positions = instanced_canopy_element.instance_positions.m_as(
                 config_length
             )
             n_instances_per_cell = old_instance_positions.shape[0]
@@ -1327,7 +1619,7 @@ class DiscreteCanopy(Canopy):
                     old_instance_positions[:, :] + offset
                 )
 
-            instanced_leaf_cloud.instance_positions = (
+            instanced_canopy_element.instance_positions = (
                 new_instance_positions * config_length
             )
 
@@ -1366,21 +1658,24 @@ class DiscreteCanopy(Canopy):
         return cls(
             id=id,
             size=size,
-            instanced_leaf_clouds=[
-                InstancedLeafCloud(
+            instanced_canopy_elements=[
+                InstancedCanopyElement(
                     instance_positions=[[0, 0, 0]],
-                    leaf_cloud=LeafCloud.cuboid(**leaf_cloud_kwargs, id=leaf_cloud_id),
+                    canopy_element=LeafCloud.cuboid(
+                        **leaf_cloud_kwargs, id=leaf_cloud_id
+                    ),
                 )
             ],
         )
 
     @classmethod
-    def from_files(cls, id="discrete_canopy", size=None, leaf_cloud_dicts=None):
+    def leaf_cloud_from_files(
+        cls, id="discrete_canopy", size=None, leaf_cloud_dicts=None
+    ):
         """
-        Create an abstract discrete canopy from leaf cloud and instance text
-        file specifications.
+        Directly create a leaf cloud canopy from text file specifications.
 
-         .. admonition:: Leaf cloud dictionary format
+         .. admonition:: CanopyElement dictionary format
 
            Each item of the ``leaf_cloud_dicts`` list shall have the following
            structure:
@@ -1403,7 +1698,7 @@ class DiscreteCanopy(Canopy):
             Canopy size as a 3-vector (in metres).
 
         Parameter ``leaf_cloud_dicts`` (list[dict]):
-            List of dictionary specifying leaf clouds and instances (see format
+            List of dictionary specifying canopy elements and instances (see format
             above).
 
         Returns → :class:`.DiscreteCanopy`:
@@ -1416,13 +1711,21 @@ class DiscreteCanopy(Canopy):
         if leaf_cloud_dicts is None:
             raise ValueError(f"parameter 'leaf_cloud_dicts' is required")
 
-        # Create leaf cloud
-        instanced_leaf_clouds = []
+        for param in [size, leaf_cloud_dicts]:
+            if param is None:
+                raise ValueError(f"parameter '{param}' is required")
+
+        instanced_canopy_elements = []
 
         for leaf_cloud_dict in leaf_cloud_dicts:
-            instance_filename = leaf_cloud_dict["instance_filename"]
+            instance_filename = leaf_cloud_dict.get("instance_filename", None)
 
-            leaf_cloud_params = {}
+            leaf_cloud_params = {
+                "filename": leaf_cloud_dict.get("leaf_cloud_filename", None),
+                "leaf_reflectance": leaf_cloud_dict.get("leaf_reflectance", 0.5),
+                "leaf_transmittance": leaf_cloud_dict.get("leaf_transmittance", 0.5),
+            }
+
             sub_id = leaf_cloud_dict.get("sub_id", None)
 
             if sub_id is None:
@@ -1431,24 +1734,17 @@ class DiscreteCanopy(Canopy):
                 leaf_cloud_params["id"] = f"{id}_leaf_cloud"
             else:
                 leaf_cloud_params["id"] = f"{id}_{sub_id}_leaf_cloud"
-            leaf_cloud_params["filename"] = leaf_cloud_dict.get(
-                "leaf_cloud_filename", None
-            )
-            leaf_cloud_params["leaf_reflectance"] = leaf_cloud_dict.get(
-                "leaf_reflectance", 0.5
-            )
-            leaf_cloud_params["leaf_transmittance"] = leaf_cloud_dict.get(
-                "leaf_transmittance", 0.5
-            )
 
-            instanced_leaf_clouds.append(
-                InstancedLeafCloud.from_file(
+            instanced_canopy_elements.append(
+                InstancedCanopyElement.from_file(
                     filename=instance_filename,
-                    leaf_cloud=LeafCloud.from_file(**leaf_cloud_params),
+                    canopy_element=LeafCloud.from_file(**leaf_cloud_params),
                 )
             )
 
-        return cls(id=id, size=size, instanced_leaf_clouds=instanced_leaf_clouds)
+        return cls(
+            id=id, size=size, instanced_canopy_elements=instanced_canopy_elements
+        )
 
     @classmethod
     def from_dict(cls, d):
@@ -1478,8 +1774,8 @@ class DiscreteCanopy(Canopy):
 
         if construct == "homogeneous":
             result = cls.homogeneous(**d_copy)
-        elif construct == "from_files":
-            result = cls.from_files(**d_copy)
+        elif construct == "leaf_cloud_from_files":
+            result = cls.leaf_cloud_from_files(**d_copy)
         elif construct is None:
             result = cls(**d_copy)
         else:

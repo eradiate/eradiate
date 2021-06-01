@@ -8,8 +8,9 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere._discrete import (
     DiscreteCanopy,
-    InstancedLeafCloud,
+    InstancedCanopyElement,
     LeafCloud,
+    AbstractTree,
     _inversebeta,
     _leaf_cloud_orientations,
     _leaf_cloud_positions_cuboid,
@@ -323,31 +324,227 @@ def test_leaf_cloud_kernel_dict(mode_mono):
     assert KernelDict.new(kernel_dict).load()
 
 
-# -- InstancedLeafCloud tests --------------------------------------------------
+# -- AbstractTree tests --------------------------------------------------------
 
 
-def test_instanced_leaf_cloud_create(mode_mono):
-    """Unit testing for the :class:`InstancedLeafCloud` constructor."""
+def test_abstract_tree_instantiate(mode_mono):
+    """Unit tests for :class:`AbstractTree`'s default constructor."""
+
+    # Empty constructor does not raise
+    assert AbstractTree()
+
+    # Now with more sensible values
+    assert AbstractTree(
+        leaf_cloud=LeafCloud(
+            leaf_positions=[[0, 0, 0]], leaf_orientations=[[0, 0, 1]], leaf_radii=[0.1]
+        ),
+        trunk_height=0.5,
+        trunk_radius=0.1,
+        trunk_reflectance=0.5,
+    )
+
+
+def test_abstract_tree_dispatch_leaf_cloud(mode_mono, tempfile_leaves):
+    """Test if contained LeafCloud is instantiated in all variants"""
+    ctx = KernelDictContext()
+
+    # A LeafCloud instance can be loaded from a file on the hard drive
+    tree = AbstractTree(leaf_cloud=LeafCloud.from_file(tempfile_leaves))
+    assert len(tree.leaf_cloud.leaf_positions) == 5
+    assert np.allclose(tree.leaf_cloud.leaf_radii, 0.1 * ureg.m)
+    # Produced kernel dict is valid
+    assert KernelDict.new(tree.leaf_cloud, ctx=ctx).load()
+
+    # Use regular constructor if no "type" parameter is specified
+    assert AbstractTree(
+        leaf_cloud=LeafCloud.from_dict(
+            {
+                "leaf_positions": [[0, 0, 0], [1, 1, 1]],
+                "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
+                "leaf_radii": [0.1, 0.1],
+            }
+        )
+    )
+
+    # Dispatch to from_file if requested
+    tree1 = AbstractTree(leaf_cloud=LeafCloud.from_file(tempfile_leaves))
+    tree2 = AbstractTree(
+        leaf_cloud=LeafCloud.from_dict(
+            {"construct": "from_file", "filename": tempfile_leaves}
+        )
+    )
+    # assert leaf clouds are equal
+    assert np.all(tree1.leaf_cloud.leaf_positions == tree2.leaf_cloud.leaf_positions)
+    assert np.all(
+        tree1.leaf_cloud.leaf_orientations == tree2.leaf_cloud.leaf_orientations
+    )
+    assert np.all(tree1.leaf_cloud.leaf_radii == tree2.leaf_cloud.leaf_radii)
+    assert np.all(
+        tree1.leaf_cloud.leaf_transmittance == tree2.leaf_cloud.leaf_transmittance
+    )
+    assert np.all(
+        tree1.leaf_cloud.leaf_reflectance == tree2.leaf_cloud.leaf_reflectance
+    )
+
+    # Dispatch to generator if requested
+    tree = AbstractTree(
+        leaf_cloud=LeafCloud.from_dict(
+            {
+                "construct": "cuboid",
+                "n_leaves": 100,
+                "l_horizontal": 10.0,
+                "l_vertical": 1.0,
+                "leaf_radius": 10.0,
+                "leaf_radius_units": "cm",
+            }
+        )
+    )
+    assert len(tree.leaf_cloud.leaf_radii) == 100
+    assert len(tree.leaf_cloud.leaf_positions) == 100
+    assert np.allclose(tree.leaf_cloud.leaf_radii, 10.0 * ureg.cm)
+
+
+def test_abstract_tree_from_dict(mode_mono, tempfile_leaves):
+    """Unit testing for :meth:`AbstractTree.from_dict`."""
+
+    assert AbstractTree.from_dict(
+        {
+            "leaf_cloud": {
+                "construct": "cuboid",
+                "n_leaves": 100,
+                "l_horizontal": 10.0,
+                "l_vertical": 1.0,
+                "leaf_radius": 10.0,
+                "leaf_radius_units": "cm",
+            },
+            "trunk_height": 2.0,
+            "trunk_radius": 0.2,
+            "trunk_reflectance": 0.5,
+        }
+    )
+
+    tree1 = AbstractTree.from_dict(
+        {
+            "leaf_cloud": {
+                "construct": "cuboid",
+                "n_leaves": 100,
+                "l_horizontal": 10.0,
+                "l_vertical": 1.0,
+                "leaf_radius": 10.0,
+                "leaf_radius_units": "cm",
+            },
+            "trunk_height": 2.0,
+            "trunk_radius": 0.2,
+            "trunk_reflectance": 0.5,
+        }
+    )
+
+    tree2 = AbstractTree(
+        leaf_cloud=LeafCloud.from_dict(
+            {
+                "construct": "cuboid",
+                "n_leaves": 100,
+                "l_horizontal": 10.0,
+                "l_vertical": 1.0,
+                "leaf_radius": 10.0,
+                "leaf_radius_units": "cm",
+            }
+        ),
+        trunk_height=2.0,
+        trunk_radius=0.2,
+        trunk_reflectance=0.5,
+    )
+
+    assert tree1.trunk_height == tree2.trunk_height
+    assert tree1.trunk_radius == tree2.trunk_radius
+    assert tree1.trunk_reflectance == tree2.trunk_reflectance
+
+    assert np.allclose(tree1.leaf_cloud.leaf_positions, tree2.leaf_cloud.leaf_positions)
+    assert np.allclose(
+        tree1.leaf_cloud.leaf_orientations, tree2.leaf_cloud.leaf_orientations
+    )
+    assert np.all(
+        tree1.leaf_cloud.leaf_transmittance == tree2.leaf_cloud.leaf_transmittance
+    )
+    assert np.all(
+        tree1.leaf_cloud.leaf_reflectance == tree2.leaf_cloud.leaf_reflectance
+    )
+
+
+def test_abstract_tree_kernel_dict(mode_mono):
+    ctx = KernelDictContext()
+
+    """Partial unit testing for :meth:`LeafCloud.kernel_dict`."""
+    tree_id = "my_tree"
+    cloud_id = "my_cloud"
+    tree = AbstractTree(
+        leaf_cloud=LeafCloud(
+            id=cloud_id,
+            leaf_positions=[[0, 0, 0], [1, 1, 1]],
+            leaf_orientations=[[1, 0, 0], [0, 1, 0]],
+            leaf_radii=[0.1, 0.1],
+            leaf_reflectance=0.5,
+            leaf_transmittance=0.5,
+        ),
+        id=tree_id,
+        trunk_height=2.0,
+        trunk_radius=0.2,
+        trunk_reflectance=0.5,
+    )
+
+    kernel_dict = tree.kernel_dict(ctx=ctx)
+
+    # The BSDF is bilambertian with the parameters we initially set
+    assert kernel_dict[f"bsdf_{cloud_id}"] == {
+        "type": "bilambertian",
+        "reflectance": {"type": "uniform", "value": 0.5},
+        "transmittance": {"type": "uniform", "value": 0.5},
+    }
+
+    # Leaves are disks
+    for shape_key in [f"{cloud_id}_leaf_0", f"{cloud_id}_leaf_1"]:
+        assert kernel_dict[shape_key]["type"] == "disk"
+
+    # Kernel dict is valid
+    assert KernelDict.new(kernel_dict).load()
+
+
+# -- InstancedCanopyElement tests ----------------------------------------------
+
+
+def test_instanced_canopy_element_create(mode_mono):
+    """Unit testing for the :class:`InstancedCanopyElement` constructor."""
     cloud = LeafCloud(
         leaf_positions=[[0, 0, 0]], leaf_orientations=[[0, 0, 1]], leaf_radii=[0.1]
     )
+    tree = AbstractTree(
+        leaf_cloud=cloud, trunk_height=1.0, trunk_radius=0.1, trunk_reflectance=0.5
+    )
     positions = np.array([[-5, -5, -5], [5, 5, 5]])
-    assert InstancedLeafCloud(leaf_cloud=cloud, instance_positions=positions)
+    assert InstancedCanopyElement(canopy_element=cloud, instance_positions=positions)
+    assert InstancedCanopyElement(canopy_element=tree, instance_positions=positions)
 
 
-def test_instanced_leaf_cloud_kernel_dict(mode_mono):
+def test_instanced_canopy_element_kernel_dict(mode_mono):
     """Unit testing for :meth:`InstancedLeafCloud.kernel_dict`."""
     ctx = KernelDictContext()
 
     cloud = LeafCloud(
-        leaf_positions=[[0, 0, 0], [1, 1, 1]],
-        leaf_orientations=[[0, 0, 1], [1, 0, 0]],
-        leaf_radii=[0.1, 0.1],
+        leaf_positions=[[0, 0, 0]],
+        leaf_orientations=[[0, 0, 1]],
+        leaf_radii=[0.1],
+        id="leaf_cloud",
+    )
+    tree = AbstractTree(
+        leaf_cloud=cloud,
+        trunk_height=1.0,
+        trunk_radius=0.1,
+        trunk_reflectance=0.5,
+        id="tree",
     )
     positions = np.array([[-5, -5, -5], [5, 5, 5]])
-
-    kernel_dict = InstancedLeafCloud(
-        leaf_cloud=cloud, instance_positions=positions
+    kernel_dict = InstancedCanopyElement(
+        canopy_element=tree, instance_positions=positions, id="element"
     ).kernel_dict(ctx=ctx)
 
     # The generated kernel dictionary can be instantiated
@@ -356,24 +553,27 @@ def test_instanced_leaf_cloud_kernel_dict(mode_mono):
 
 def test_instanced_leaf_cloud_from_file(mode_mono, tempfile_spheres):
     """Unit testing for :meth:`InstancedLeafCloud.from_file`."""
-    assert InstancedLeafCloud.from_file(
+    assert InstancedCanopyElement.from_file(
         filename=tempfile_spheres,
-        leaf_cloud={
-            "leaf_positions": [[0, 0, 0], [1, 1, 1]],
-            "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
-            "leaf_radii": [0.1, 0.1],
-        },
+        canopy_element=LeafCloud.from_dict(
+            {
+                "leaf_positions": [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]],
+                "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
+                "leaf_radii": [0.1, 0.1],
+            }
+        ),
     )
 
 
-def test_instanced_leaf_cloud_from_dict(mode_mono, tempfile_spheres):
+def test_instanced_canopy_element_from_dict(mode_mono, tempfile_spheres):
     """Unit testing for :meth:`InstancedLeafCloud.from_dict`."""
     ctx = KernelDictContext()
 
     # We can instantiate from a full-dict spec
-    instanced_leaf_cloud = InstancedLeafCloud.from_dict(
+    instanced_leaf_cloud = InstancedCanopyElement.from_dict(
         {
-            "leaf_cloud": {
+            "canopy_element": {
+                "type": "leaf_cloud",
                 "leaf_positions": [[0, 0, 0], [1, 1, 1]],
                 "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
                 "leaf_radii": [0.1, 0.1],
@@ -387,11 +587,12 @@ def test_instanced_leaf_cloud_from_dict(mode_mono, tempfile_spheres):
     assert KernelDict.new(instanced_leaf_cloud.kernel_dict(ctx=ctx)).load()
 
     # We can access the from_file constructor from a dict
-    assert InstancedLeafCloud.from_dict(
+    assert InstancedCanopyElement.from_dict(
         {
             "construct": "from_file",
             "filename": tempfile_spheres,
-            "leaf_cloud": {
+            "canopy_element": {
+                "type": "leaf_cloud",
                 "leaf_positions": [[0, 0, 0], [1, 1, 1]],
                 "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
                 "leaf_radii": [0.1, 0.1],
@@ -434,7 +635,7 @@ def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves
     ctx = KernelDictContext()
 
     # The from_files() constructor returns a valid canopy object
-    canopy = DiscreteCanopy.from_files(
+    canopy = DiscreteCanopy.leaf_cloud_from_files(
         size=[1, 1, 1],
         leaf_cloud_dicts=[
             {
@@ -454,7 +655,7 @@ def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves
     # We can reproduce this behaviour using the dict-based API
     canopy = DiscreteCanopy.from_dict(
         {
-            "construct": "from_files",
+            "construct": "leaf_cloud_from_files",
             "size": [1, 1, 1],
             "leaf_cloud_dicts": [
                 {
@@ -484,10 +685,10 @@ def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
     # First use the regular Python API
     canopy = DiscreteCanopy(
         size=[1.0, 1.0, 1.0] * ureg.m,
-        instanced_leaf_clouds=[
-            InstancedLeafCloud(
+        instanced_canopy_elements=[
+            InstancedCanopyElement(
                 instance_positions=[[0, 0, 0]],
-                leaf_cloud=LeafCloud.cuboid(
+                canopy_element=LeafCloud.cuboid(
                     n_leaves=1,
                     leaf_radius=0.1,
                     l_horizontal=10,
@@ -495,9 +696,9 @@ def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
                     id="leaf_cloud_cuboid",
                 ),
             ),
-            InstancedLeafCloud.from_file(
+            InstancedCanopyElement.from_file(
                 filename=tempfile_spheres,
-                leaf_cloud=LeafCloud.from_file(
+                canopy_element=LeafCloud.from_file(
                     filename=tempfile_leaves, id="leaf_cloud_precomputed"
                 ),
             ),
@@ -509,10 +710,11 @@ def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
     canopy = DiscreteCanopy.from_dict(
         {
             "size": [1.0, 1.0, 1.0] * ureg.m,
-            "instanced_leaf_clouds": [
+            "instanced_canopy_elements": [
                 {
                     "instance_positions": [[0, 0, 0]],
-                    "leaf_cloud": {
+                    "canopy_element": {
+                        "type": "leaf_cloud",
                         "construct": "cuboid",
                         "n_leaves": 1,
                         "leaf_radius": 0.1,
@@ -524,7 +726,8 @@ def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
                 {
                     "construct": "from_file",
                     "filename": tempfile_spheres,
-                    "leaf_cloud": {
+                    "canopy_element": {
+                        "type": "leaf_cloud",
                         "construct": "from_file",
                         "filename": tempfile_leaves,
                         "id": "leaf_cloud_precomputed",
@@ -540,13 +743,14 @@ def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
     """Unit tests for :meth:`.DiscreteCanopy.padded`"""
     ctx = KernelDictContext()
 
-    canopy = DiscreteCanopy.from_files(
+    canopy = DiscreteCanopy.leaf_cloud_from_files(
         id="canopy",
         size=[100, 100, 30],
         leaf_cloud_dicts=[
             {
                 "instance_filename": tempfile_spheres,
                 "leaf_cloud_filename": tempfile_leaves,
+                "sub_id": "leaf_cloud",
             }
         ],
     )
