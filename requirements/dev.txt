@@ -4,11 +4,11 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/dev.txt requirements/dev.in
 #
-aabbtree==2.6.2
+aabbtree==2.8.0
     # via -r requirements/main.in
 alabaster==0.7.12
     # via sphinx
-anyio==3.0.1
+anyio==3.1.0
     # via jupyter-server
 apipkg==1.5
     # via execnet
@@ -40,7 +40,7 @@ backcall==0.2.0
     # via ipython
 beautifulsoup4==4.9.3
     # via pydata-sphinx-theme
-black==21.5b1
+black==21.5b2
     # via -r requirements/dev.in
 bleach==3.3.0
     # via
@@ -50,17 +50,17 @@ bump2version==1.0.1
     # via -r requirements/dev.in
 cerberus==1.3.4
     # via -r requirements/main.in
-certifi==2020.12.5
+certifi==2021.5.30
     # via requests
 cffi==1.14.5
     # via argon2-cffi
-cftime==1.4.1
+cftime==1.5.0
     # via netcdf4
 chardet==4.0.0
     # via requests
 click-default-group==1.2.2
     # via conda-lock
-click==8.0.0
+click==8.0.1
     # via
     #   -r requirements/main.in
     #   black
@@ -78,7 +78,7 @@ coverage==5.5
     # via -r requirements/dev.in
 cycler==0.10.0
     # via matplotlib
-dask==2021.5.0
+dask==2021.5.1
     # via -r requirements/main.in
 decorator==5.0.9
     # via ipython
@@ -97,7 +97,7 @@ ensureconda==1.4.1
     # via conda-lock
 entrypoints==0.3
     # via nbconvert
-execnet==1.8.0
+execnet==1.8.1
     # via pytest-xdist
 filelock==3.0.12
     # via ensureconda
@@ -111,8 +111,9 @@ idna==2.10
     #   requests
 imagesize==1.2.0
     # via sphinx
-importlib-metadata==4.0.1
+importlib-metadata==4.4.0
     # via
+    #   click
     #   jsonschema
     #   keyring
     #   pep517
@@ -133,7 +134,7 @@ ipython-genutils==0.2.0
     #   nbformat
     #   notebook
     #   traitlets
-ipython==7.23.1
+ipython==7.24.0
     # via
     #   -r requirements/dev.in
     #   ipykernel
@@ -175,14 +176,14 @@ jupyter-core==4.7.1
     #   nbconvert
     #   nbformat
     #   notebook
-jupyter-server==1.7.0
+jupyter-server==1.8.0
     # via
     #   jupyterlab
     #   jupyterlab-server
     #   nbclassic
 jupyterlab-pygments==0.1.2
     # via nbconvert
-jupyterlab-server==2.5.2
+jupyterlab-server==2.6.0
     # via jupyterlab
 jupyterlab-widgets==1.0.0
     # via ipywidgets
@@ -208,7 +209,7 @@ mock==4.0.3
     # via -r requirements/docs.in
 mypy-extensions==0.4.3
     # via black
-nbclassic==0.2.8
+nbclassic==0.3.1
     # via jupyterlab
 nbclient==0.5.3
     # via nbconvert
@@ -281,7 +282,7 @@ pkginfo==1.7.0
     # via twine
 pluggy==0.13.1
     # via pytest
-prometheus-client==0.10.1
+prometheus-client==0.11.0
     # via
     #   jupyter-server
     #   notebook
@@ -350,7 +351,7 @@ pyyaml==5.4.1
     #   conda-lock
     #   dask
     #   pybtex
-pyzmq==22.0.3
+pyzmq==22.1.0
     # via
     #   jupyter-client
     #   jupyter-server
@@ -377,7 +378,7 @@ rst2pdf==0.98
     # via -r requirements/tests.in
 ruamel.yaml.clib==0.2.2
     # via ruamel.yaml
-ruamel.yaml==0.17.4
+ruamel.yaml==0.17.7
     # via -r requirements/main.in
 scipy==1.6.3
     # via
@@ -422,17 +423,17 @@ sphinx==3.5.4
     #   sphinxcontrib-bibtex
 sphinxcontrib-applehelp==1.0.2
     # via sphinx
-sphinxcontrib-bibtex==2.2.1
+sphinxcontrib-bibtex==2.3.0
     # via -r requirements/docs.in
 sphinxcontrib-devhelp==1.0.2
     # via sphinx
-sphinxcontrib-htmlhelp==1.0.3
+sphinxcontrib-htmlhelp==2.0.0
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
 sphinxcontrib-qthelp==1.0.3
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.4
+sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 tabulate==0.8.9
     # via -r requirements/tests.in
@@ -462,7 +463,7 @@ tornado==6.1
     #   jupyterlab
     #   notebook
     #   terminado
-tqdm==4.60.0
+tqdm==4.61.0
     # via
     #   -r requirements/main.in
     #   twine
@@ -488,17 +489,17 @@ typing-extensions==3.10.0.0
     #   anyio
     #   black
     #   importlib-metadata
-urllib3==1.26.4
+urllib3==1.26.5
     # via requests
 wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-websocket-client==1.0.0
+websocket-client==1.0.1
     # via jupyter-server
 widgetsnbextension==3.5.1
     # via ipywidgets
-xarray==0.18.1
+xarray==0.18.2
     # via -r requirements/main.in
 zipp==3.4.1
     # via
@@ -506,11 +507,11 @@ zipp==3.4.1
     #   pep517
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==21.1.1
+pip==21.1.2
     # via
     #   -r requirements/dev.in
     #   pip-tools
-setuptools==56.2.0
+setuptools==57.0.0
     # via
     #   -r requirements/dev.in
     #   cerberus
