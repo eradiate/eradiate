@@ -971,10 +971,11 @@ class AFGL1986RadProfile(RadProfile):
         Evaluate scattering coefficient given a spectral context.
         """
         profile = self.eval_thermoprops_profile()
+        number_density = to_quantity(profile.n)
         if self.has_scattering:
             return compute_sigma_s_air(
                 wavelength=spectral_ctx.wavelength,
-                number_density=ureg.Quantity(profile.n.values, profile.n.units),
+                number_density=number_density,
             )
         else:
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")

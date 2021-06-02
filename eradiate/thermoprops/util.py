@@ -323,7 +323,7 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
     interpolated = ds.interp(
         z_layer=z_layer.m_as(ds.z_layer.units),
         method=method,
-        kwargs=dict(fill_value="extrapolate"),
+        kwargs=dict(bounds_error=True),
     )
     z_level_attrs = ds.z_level.attrs
     interpolated.update(

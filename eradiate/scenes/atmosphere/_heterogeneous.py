@@ -216,9 +216,7 @@ class HeterogeneousAtmosphere(Atmosphere):
         attr.ib(
             default=None,
             converter=attr.converters.optional(list),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(list)
-            ),
+            validator=attr.validators.optional(attr.validators.instance_of(list)),
         ),
         doc="Particles layers",
         type="list of dict or :class:`ParticlesLayer`",
@@ -239,13 +237,14 @@ class HeterogeneousAtmosphere(Atmosphere):
         self._update_particles()
         if self.particles is not None:
             for particles_layer in self.particles:
-                print(particles_layer)
-                if particles_layer.bottom < 0. or particles_layer.top > self.height:
-                    raise ValueError(f"particles layer must be within the "
-                                     f"boundaries of the molecular atmosphere (0 "
-                                     f"{self.height.units}, "
-                                     f"{self.height.magnitude} "
-                                     f"{self.height.units}).")
+                if particles_layer.bottom < 0.0 or particles_layer.top > self.height():
+                    raise ValueError(
+                        f"particles layer must be within the "
+                        f"boundaries of the molecular atmosphere (0 "
+                        f"{self.height.units}, "
+                        f"{self.height.magnitude} "
+                        f"{self.height.units})."
+                    )
 
     def height(self):
         if self.toa_altitude == "auto":
@@ -415,6 +414,8 @@ class HeterogeneousAtmosphere(Atmosphere):
                 elif isinstance(element, ParticlesLayer):
                     particles_layers.append(element)
                 else:
-                    raise ValueError(f"particles items must be either of type dict or ParticlesLayer "
-                                     f"(got {type(element)})")
+                    raise ValueError(
+                        f"particles items must be either of type dict or ParticlesLayer "
+                        f"(got {type(element)})"
+                    )
             self.particles = particles_layers

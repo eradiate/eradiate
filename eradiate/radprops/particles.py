@@ -1,22 +1,24 @@
 """
-    Particles layers
-    ~~~~~~~~~~~~~~~~
+Particles layers
 """
 from abc import ABC, abstractmethod
+
 import attr
 import numpy as np
 import pinttr
-from pinttr.util import units_compatible
-from scipy.stats import norm, expon
 import xarray as xr
+from pinttr.util import units_compatible
+from scipy.stats import expon, norm
 
 from .. import mode
 from .._attrs import documented, parse_docs
-from ..exceptions import ModeError
-from ..validators import is_positive
 from .._factory import BaseFactory
 from .._presolver import PathResolver
-from .._units import unit_registry as ureg, unit_context_config as ucc
+from ..exceptions import ModeError
+from ..units import to_quantity
+from ..units import unit_context_config as ucc
+from ..units import unit_registry as ureg
+from ..validators import is_positive
 
 _presolver = PathResolver()
 
@@ -88,9 +90,7 @@ class VerticalDistribution(ABC):
             converter=pinttr.converters.to_units(ucc.deferred("length")),
             validator=pinttr.validators.has_compatible_units,
         ),
-        doc="Layer bottom altitude."
-            "\n"
-            "Unit-enabled field (default: ucc[length]).",
+        doc="Layer bottom altitude.\nUnit-enabled field (default: ucc[length]).",
         type="float",
     )
     top = documented(
@@ -99,9 +99,7 @@ class VerticalDistribution(ABC):
             converter=pinttr.converters.to_units(ucc.deferred("length")),
             validator=pinttr.validators.has_compatible_units,
         ),
-        doc="Layer top altitude."
-            "\n"
-            "Unit-enabled field (default: ucc[length]).",
+        doc="Layer top altitude.\nUnit-enabled field (default: ucc[length]).",
         type="float",
     )
 
@@ -132,11 +130,10 @@ class VerticalDistribution(ABC):
             Normalised array.
         """
         _norm = np.sum(x)
-        if _norm > 0.:
+        if _norm > 0.0:
             return x / _norm
         else:
-            raise ValueError(f"Cannot normalise fractions because the norm is "
-                             f"0.")
+            raise ValueError(f"Cannot normalise fractions because the norm is " f"0.")
 
 
 class VerticalDistributionFactory(BaseFactory):
@@ -149,6 +146,7 @@ class VerticalDistributionFactory(BaseFactory):
        .. factorytable::
           :factory: VerticalDistributionFactory
     """
+
     _constructed_type = VerticalDistribution
     registry = {}
 
@@ -183,9 +181,12 @@ class Uniform(VerticalDistribution):
                 x = z.magnitude
                 return self._normalise(np.ones(len(x)))
             else:
-                raise ValueError(f"Altitude values do not lie between layer "
-                                 f"bottom ({self.bottom}) and top ({self.top}) "
-                                 f"altitudes. Got {z}.")
+                raise ValueError(
+                    f"Altitude values do not lie between layer "
+                    f"bottom ({self.bottom}) and top ({self.top}) "
+                    f"altitudes. Got {z}."
+                )
+
         return eval
 
 
@@ -207,21 +208,21 @@ class Exponential(VerticalDistribution):
             units=ucc.deferred("collision_coefficient"),
             default=None,
             converter=attr.converters.optional(
-                pinttr.converters.to_units(ucc.deferred("collision_coefficient"))),
-            validator=attr.validators.optional(
-                pinttr.validators.has_compatible_units),
+                pinttr.converters.to_units(ucc.deferred("collision_coefficient"))
+            ),
+            validator=attr.validators.optional(pinttr.validators.has_compatible_units),
         ),
         doc="Rate parameter of the exponential distribution. If ``None``, "
-            "set to the inverse of the layer thickness."
-            "\n"
-            "Unit-enabled field (default: ucc[length]).",
+        "set to the inverse of the layer thickness."
+        "\n"
+        "Unit-enabled field (default: ucc[length]).",
         type="float",
         default="``None``",
     )
 
     def __attrs_post_init__(self):
         if self.rate is None:
-            self.rate = 1. / (self.top - self.bottom)
+            self.rate = 1.0 / (self.top - self.bottom)
 
     @property
     def fractions(self):
@@ -229,13 +230,16 @@ class Exponential(VerticalDistribution):
             if (self.bottom <= z).all() and (z <= self.top).all():
                 x = z.magnitude
                 loc = self.bottom.to(z.units).magnitude
-                scale = (1. / self.rate).to(z.units).magnitude
+                scale = (1.0 / self.rate).to(z.units).magnitude
                 f = expon.pdf(x=x, loc=loc, scale=scale)
                 return self._normalise(f)
             else:
-                raise ValueError(f"Altitude values do not lie between layer "
-                                 f"bottom ({self.bottom}) and top ({self.top}) "
-                                 f"altitudes. Got {z}.")
+                raise ValueError(
+                    f"Altitude values do not lie between layer "
+                    f"bottom ({self.bottom}) and top ({self.top}) "
+                    f"altitudes. Got {z}."
+                )
+
         return eval
 
 
@@ -262,14 +266,14 @@ class Gaussian(VerticalDistribution):
             units=ucc.deferred("length"),
             default=None,
             converter=attr.converters.optional(
-                pinttr.converters.to_units(ucc.deferred("length"))),
-            validator=attr.validators.optional(
-                pinttr.validators.has_compatible_units),
+                pinttr.converters.to_units(ucc.deferred("length"))
+            ),
+            validator=attr.validators.optional(pinttr.validators.has_compatible_units),
         ),
         doc="Mean (expectation) of the distribution. "
-            "If ``None``, set to the middle of the layer."
-            "\n"
-            "Unit-enabled field (default: ucc[length]).",
+        "If ``None``, set to the middle of the layer."
+        "\n"
+        "Unit-enabled field (default: ucc[length]).",
         type="float",
         default="``None``",
     )
@@ -278,24 +282,24 @@ class Gaussian(VerticalDistribution):
             units=ucc.deferred("length"),
             default=None,
             converter=attr.converters.optional(
-                pinttr.converters.to_units(ucc.deferred("length"))),
-            validator=attr.validators.optional(
-                pinttr.validators.has_compatible_units),
+                pinttr.converters.to_units(ucc.deferred("length"))
+            ),
+            validator=attr.validators.optional(pinttr.validators.has_compatible_units),
         ),
         doc="Standard deviation of the distribution. If ``None``, set to one "
-            "sixth of the layer thickness so that half the layer thickness "
-            "equals three standard deviations."
-            "\n"
-            "Unit-enabled field (default: ucc[length]).",
+        "sixth of the layer thickness so that half the layer thickness "
+        "equals three standard deviations."
+        "\n"
+        "Unit-enabled field (default: ucc[length]).",
         type="float",
         default="``None``",
     )
 
     def __attrs_post_init__(self):
         if self.mean is None:
-            self.mean = (self.bottom + self.top) / 2.
+            self.mean = (self.bottom + self.top) / 2.0
         if self.std is None:
-            self.std = (self.top - self.bottom) / 6.
+            self.std = (self.top - self.bottom) / 6.0
 
     @property
     def fractions(self):
@@ -307,9 +311,12 @@ class Gaussian(VerticalDistribution):
                 f = norm.pdf(x=x, loc=loc, scale=scale)
                 return self._normalise(f)
             else:
-                raise ValueError(f"Altitude values do not lie between layer "
-                                 f"bottom ({self.bottom}) and top ({self.top}) "
-                                 f"altitudes. Got {z}.")
+                raise ValueError(
+                    f"Altitude values do not lie between layer "
+                    f"bottom ({self.bottom}) and top ({self.top}) "
+                    f"altitudes. Got {z}."
+                )
+
         return eval
 
 
@@ -320,15 +327,15 @@ class Array(VerticalDistribution):
     """Flexible vertical distribution specified either by an array of values,
     or by a :class:`DataArray` object.
     """
+
     values = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(np.array),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(np.ndarray))
+            validator=attr.validators.optional(attr.validators.instance_of(np.ndarray)),
         ),
         doc="Particles fractions values on a regular altitude mesh starting "
-            "from the layer bottom and stopping at the layer top altitude.",
+        "from the layer bottom and stopping at the layer top altitude.",
         type="array",
         default="``None``",
     )
@@ -337,10 +344,11 @@ class Array(VerticalDistribution):
             default=None,
             converter=attr.converters.optional(xr.DataArray),
             validator=attr.validators.optional(
-                attr.validators.instance_of(xr.DataArray))
+                attr.validators.instance_of(xr.DataArray)
+            ),
         ),
         doc="Particles vertical distribution data array. Fraction as a function"
-            " of altitude (``z``).",
+        " of altitude (``z``).",
         type=":class:`xarray.DataArray`",
         default="``None``",
     )
@@ -349,27 +357,27 @@ class Array(VerticalDistribution):
     def check(self, attribute, value):
         if value is not None:
             if not "z" in value.coords:
-                raise ValueError("Attribute 'data_array' must have a 'z' "
-                                 "coordinate")
+                raise ValueError("Attribute 'data_array' must have a 'z' " "coordinate")
             else:
                 try:
                     units = ureg.Unit(value.z.units)
                     if not units_compatible(units, ureg.Unit("m")):
-                        raise ValueError(f"Coordinate 'z' of attribute "
-                                         f"'data_array' must have units"
-                                         f"compatible with m^-1 (got {units}).")
+                        raise ValueError(
+                            f"Coordinate 'z' of attribute "
+                            f"'data_array' must have units"
+                            f"compatible with m^-1 (got {units})."
+                        )
                 except AttributeError:
-                    raise ValueError("Coordinate 'z' of attribute 'data_array' "
-                                     "must have units.")
+                    raise ValueError(
+                        "Coordinate 'z' of attribute 'data_array' " "must have units."
+                    )
 
     method = documented(
         attr.ib(
-            default="linear",
-            converter=str,
-            validator=attr.validators.instance_of(str)
+            default="linear", converter=str, validator=attr.validators.instance_of(str)
         ),
         doc="Method to interpolate the data. This parameter is passed to "
-            ":meth:`xarray.DataArray.interp`.",
+        ":meth:`xarray.DataArray.interp`.",
         type="str",
         default='``"linear"``',
     )
@@ -378,50 +386,59 @@ class Array(VerticalDistribution):
         if self.values is None and self.data_array is None:
             raise ValueError("You must specify 'values' or 'data_array'.")
         elif self.values is not None and self.data_array is not None:
-            raise ValueError("You cannot specify both 'values' and "
-                             "'data_array' simultaneously.")
+            raise ValueError(
+                "You cannot specify both 'values' and " "'data_array' simultaneously."
+            )
         elif self.data_array is None:
             self.data_array = xr.DataArray(
                 data=self.values,
                 coords={
-                    "z": ("z",
-                          np.linspace(start=self.bottom.to("m").magnitude,
-                                      stop=self.top.to("m").magnitude,
-                                      num=len(self.values)),
-                          {"units": "m"})
+                    "z": (
+                        "z",
+                        np.linspace(
+                            start=self.bottom.to("m").magnitude,
+                            stop=self.top.to("m").magnitude,
+                            num=len(self.values),
+                        ),
+                        {"units": "m"},
+                    )
                 },
-                dims=["z"]
+                dims=["z"],
             )
         elif self.data_array is not None:
-            min_z = ureg.Quantity(value=self.data_array.z.values.min(),
-                                  units=self.data_array.z.units)
+            min_z = to_quantity(self.data_array.z.min())
             if min_z < self.bottom:
-                raise ValueError(f"Minimum altitude value in data_array "
-                                 f"({min_z}) is smaller than bottom altitude "
-                                 f"({self.bottom}).")
-            max_z = ureg.Quantity(value=self.data_array.z.values.max(),
-                                  units=self.data_array.z.units)
+                raise ValueError(
+                    f"Minimum altitude value in data_array "
+                    f"({min_z}) is smaller than bottom altitude "
+                    f"({self.bottom})."
+                )
+
+            max_z = to_quantity(self.data_array.z.max())
             if max_z > self.top:
-                raise ValueError(f"Minimum altitude value in data_array "
-                                 f"({max_z}) is smaller than top altitude"
-                                 f"({self.top}).")
+                raise ValueError(
+                    f"Minimum altitude value in data_array "
+                    f"({max_z}) is smaller than top altitude"
+                    f"({self.top})."
+                )
 
     @property
     def fractions(self):
         def eval(z):
             x = z.to(self.data_array.z.units).magnitude
-            f = self.data_array.interp(coords={"z": x},
-                                       method=self.method,
-                                       kwargs=dict(fill_value=0.))
+            f = self.data_array.interp(
+                coords={"z": x}, method=self.method, kwargs=dict(fill_value=0.0)
+            )
             return self._normalise(f.values)
+
         return eval
 
 
 @parse_docs
 @attr.s
 class ParticlesLayer:
-    """1D particles layer.
-    """
+    """1D particles layer."""
+
     dataset = documented(
         attr.ib(
             default="aeronet_desert",
@@ -434,7 +451,7 @@ class ParticlesLayer:
 
     bottom = documented(
         pinttr.ib(
-            default=ureg.Quantity(0., ureg.km),
+            default=ureg.Quantity(0.0, ureg.km),
             converter=pinttr.converters.to_units(ucc.deferred("length")),
             validator=[
                 is_positive,
@@ -443,8 +460,8 @@ class ParticlesLayer:
             units=ucc.deferred("length"),
         ),
         doc="Bottom altitude of the particles layer."
-            "\n"
-            "Unit-enabled field (default: ucc[length])",
+        "\n"
+        "Unit-enabled field (default: ucc[length])",
         type="float",
         default="0 km",
     )
@@ -452,7 +469,7 @@ class ParticlesLayer:
     top = documented(
         pinttr.ib(
             units=ucc.deferred("length"),
-            default=ureg.Quantity(1., ureg.km),
+            default=ureg.Quantity(1.0, ureg.km),
             converter=pinttr.converters.to_units(ucc.deferred("length")),
             validator=[
                 is_positive,
@@ -460,10 +477,10 @@ class ParticlesLayer:
             ],
         ),
         doc="Top altitude of the particles layer."
-            "\n"
-            "Unit-enabled field (default: ucc[length]).",
+        "\n"
+        "Unit-enabled field (default: ucc[length]).",
         type="float",
-        default="1 km."
+        default="1 km.",
     )
 
     tau_550 = documented(
@@ -476,8 +493,8 @@ class ParticlesLayer:
             ],
         ),
         doc="Extinction optical thickness at the wavelength of 550 nm."
-            "\n"
-            "Unit-enabled field (default: ucc[dimensionless]).",
+        "\n"
+        "Unit-enabled field (default: ucc[dimensionless]).",
         type="float",
         default="0.2",
     )
@@ -485,72 +502,47 @@ class ParticlesLayer:
     vert_dist = documented(
         attr.ib(
             default={"type": "uniform"},
-            validator=attr.validators.instance_of((dict, VerticalDistribution))
+            validator=attr.validators.instance_of((dict, VerticalDistribution)),
         ),
         doc="Particles vertical distribution.",
         type="dict or :class:`VerticalDistribution`",
-        default=':class:`Uniform`',
+        default=":class:`Uniform`",
     )
 
     n_layers = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(int),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(int)),
+            validator=attr.validators.optional(attr.validators.instance_of(int)),
         ),
         doc="Number of layers inside the particles layer."
-            "If ``None``, set to a different value based on the vertical "
-            "distribution type (see table below).\n"
-            "\n"
-            ".. list-table::\n"
-            "   :widths: 1 1\n"
-            "   :header-rows: 1\n"
-            "\n"
-            "   * - Vertical distribution type\n"
-            "     - Number of layers\n"
-            "   * - :class:`Uniform`\n"
-            "     - 1\n"
-            "   * - :class:`Exponential`\n"
-            "     - 8\n"
-            "   * - :class:`Gaussian`\n"
-            "     - 16\n"
-            "   * - :class:`Array`\n"
-            "     - 32\n"
-            "\n",
+        "If ``None``, set to a different value based on the vertical "
+        "distribution type (see table below).\n"
+        "\n"
+        ".. list-table::\n"
+        "   :widths: 1 1\n"
+        "   :header-rows: 1\n"
+        "\n"
+        "   * - Vertical distribution type\n"
+        "     - Number of layers\n"
+        "   * - :class:`Uniform`\n"
+        "     - 1\n"
+        "   * - :class:`Exponential`\n"
+        "     - 8\n"
+        "   * - :class:`Gaussian`\n"
+        "     - 16\n"
+        "   * - :class:`Array`\n"
+        "     - 32\n"
+        "\n",
         type="int",
         default="``None``",
-    )
-
-    _sigma_t_values = pinttr.ib(
-        units=ucc.deferred("collision_coefficient"),
-        default=None,
-        init=False,
-        repr=False,
-    )
-
-    _albedo_values = pinttr.ib(
-        units=ucc.deferred("dimensionless"),
-        default=None,
-        init=False,
-        repr=False,
-    )
-
-    _wavelength = pinttr.ib(
-        units=ucc.deferred("wavelength"),
-        default=None,
-        init=False,
-        repr=False,
     )
 
     def __attrs_post_init__(self):
         # update the keys 'bottom' and 'top' in vertical distribution config
         if isinstance(self.vert_dist, dict):
             d = self.vert_dist
-            d.update({
-                "bottom": self.bottom,
-                "top": self.top
-            })
+            d.update({"bottom": self.bottom, "top": self.top})
             self.vert_dist = VerticalDistributionFactory.convert(d)
 
         # determine layers number based on vertical distribution type
@@ -564,24 +556,18 @@ class ParticlesLayer:
             elif isinstance(self.vert_dist, Array):
                 self.n_layers = 32
 
-        self.update()
-
     @property
     def z_layer(self):
-        """Returns the layer altitudes.
-        """
+        """Returns the layer altitudes."""
         bottom = self.bottom.to("km").magnitude
         top = self.top.to("km").magnitude
-        z_level = np.linspace(start=bottom,
-                              stop=top,
-                              num=self.n_layers + 1)
-        z_layer = (z_level[:-1] + z_level[1:]) / 2.
+        z_level = np.linspace(start=bottom, stop=top, num=self.n_layers + 1)
+        z_layer = (z_level[:-1] + z_level[1:]) / 2.0
         return ureg.Quantity(z_layer, "km")
 
     @property
     def fractions(self):
-        """Returns the particles fractions in the layer.
-        """
+        """Returns the particles fractions in the layer."""
         return self.vert_dist.fractions(self.z_layer)
 
     @property
@@ -591,43 +577,58 @@ class ParticlesLayer:
         Returns → :class:`.Legendre`:
             Phase functions Legendre polynomials expansion coefficients
         """
-        return LegendreExpansion([1., 0.])
+        return LegendreExpansion([1.0, 0.0])
 
-    @property
-    def albedo(self):
-        """Return albedo.
+    def eval_albedo(self, spectral_ctx):
+        """
+        Evaluate albedo given a spectral context.
 
         Returns → :class:`pint.Quantity`:
             Particles layer albedo.
         """
-        return self._albedo_values
+        wavelength = spectral_ctx.wavelength
+        ds = xr.open_dataset(_presolver.resolve(path=self.dataset + ".nc"))
+        interpolated_albedo = ds.albedo.interp(w=wavelength)
+        albedo = to_quantity(interpolated_albedo)
+        albedo_array = albedo * np.ones(self.n_layers)
+        return albedo_array
 
-    @property
-    def sigma_t(self):
-        """Return extinction coefficient.
+    def eval_sigma_t(self, spectral_ctx):
+        """
+        Evaluate extinction coefficient given a spectral context.
 
         Returns → :class:`pint.Quantity`:
             Particles layer extinction coefficient.
         """
-        return self._sigma_t_values
+        wavelength = spectral_ctx.wavelength
+        ds = xr.open_dataset(_presolver.resolve(path=self.dataset + ".nc"))
+        interpolated_sigma_t = ds.sigma_t.interp(w=wavelength)
+        sigma_t = to_quantity(interpolated_sigma_t)
+        sigma_t_array = sigma_t * self.fractions
+        normalised_sigma_t_array = self._normalise_to_tau(
+            ki=sigma_t_array,
+            dz=(self.top - self.bottom) / self.n_layers,
+            tau=self.tau_550,
+        )
+        return normalised_sigma_t_array
 
-    @property
-    def sigma_a(self):
-        """Return absorption coefficient.
+    def eval_sigma_a(self, spectral_ctx):
+        """
+        Evaluate absorption coefficient given a spectral context.
 
         Returns → :class:`pint.Quantity`:
             Particles layer absorption coefficient.
         """
-        return self.sigma_t - self.sigma_s
+        return self.eval_sigma_t(spectral_ctx) - self.eval_sigma_a(spectral_ctx)
 
-    @property
-    def sigma_s(self):
-        """Return scattering coefficient.
+    def eval_sigma_s(self, spectral_ctx):
+        """
+        Evaluate scattering coefficient given a spectral context.
 
         Returns → :class:`pint.Quantity`:
             Particles layer scattering coefficient.
         """
-        return self._albedo_values * self._sigma_t_values
+        return self.eval_sigma_t(spectral_ctx) * self.eval_albedo(spectral_ctx)
 
     @classmethod
     def from_dict(cls, d):
@@ -646,71 +647,58 @@ class ParticlesLayer:
 
         return value
 
-    def update(self):
-        """Update internal variables. An update is required to recompute the
-        internal state when some attributes, or the wavelength, are modified.
-        """
-        current_mode = mode()
-        if not current_mode.is_monochromatic():
-            raise ModeError(f"unsupported mode {current_mode.id}")
-        else:
-            self._wavelength = current_mode.wavelength
-            w = self._wavelength.to("nm").magnitude
-
-        ds = xr.open_dataset(_presolver.resolve(path=self.dataset + ".nc"))
-        sigma_t = ureg.Quantity(value=ds.sigma_t.interp(w=w).values,
-                                units=ds.sigma_t.units)
-        ki = sigma_t * self.fractions
-        self._sigma_t_values = self._normalise_to_tau(
-            ki=ki,
-            dz=(self.top - self.bottom) / self.n_layers,
-            tau=self.tau_550
-        )
-
-        albedo = ureg.Quantity(value=ds.albedo.interp(w=w).values,
-                               units=ds.albedo.units)
-        self._albedo_values = albedo * np.ones(self.n_layers)
-
-    def to_dataset(self):
+    def to_dataset(self, spectral_ctx):
         """Return a dataset that holds the radiative properties of the
         particles layer.
 
         Returns → :class:`xarray.Dataset`:
             Particles layer radiative properties dataset.
         """
+        sigma_t = self.eval_sigma_t(spectral_ctx)
+        albedo = self.eval_albedo(spectral_ctx)
+        z_layer = self.z_layer
+        wavelength = spectral_ctx.wavelength
         return xr.Dataset(
             data_vars={
                 "sigma_t": (
                     ("w", "z_layer"),
-                    np.atleast_2d(self.sigma_t.magnitude),
+                    np.atleast_2d(sigma_t.magnitude),
                     {
                         "standard_name": "extinction_coefficient",
                         "long_name": "extinction coefficient",
-                        "units": self.sigma_t.units,
-                    }
+                        "units": sigma_t.units,
+                    },
                 ),
                 "albedo": (
                     ("w", "z_layer"),
-                    np.atleast_2d(self.albedo.magnitude),
+                    np.atleast_2d(albedo.magnitude),
                     {
                         "standard_name": "albedo",
                         "long_name": "albedo",
-                        "units": self.albedo.units,
-                    }
+                        "units": albedo.units,
+                    },
                 ),
             },
             coords={
-                "z_layer": ("z_layer", self.z_layer.magnitude, {
-                    "standard_name": "layer_altitude",
-                    "long_name": "layer altitude",
-                    "units": self.z_layer.units,
-                }),
-                "w": ("w", [self._wavelength.magnitude], {
-                    "standard_name": "wavelength",
-                    "long_name": "wavelength",
-                    "units": self._wavelength.units,
-                })
-            }
+                "z_layer": (
+                    "z_layer",
+                    z_layer.magnitude,
+                    {
+                        "standard_name": "layer_altitude",
+                        "long_name": "layer altitude",
+                        "units": z_layer.units,
+                    },
+                ),
+                "w": (
+                    "w",
+                    [wavelength.magnitude],
+                    {
+                        "standard_name": "wavelength",
+                        "long_name": "wavelength",
+                        "units": wavelength.units,
+                    },
+                ),
+            },
         )
 
     @staticmethod
