@@ -1371,14 +1371,18 @@ class DiscreteCanopy(Canopy):
         Returns → :class:`.DiscreteCanopy`:
             Created canopy object.
         """
-        for param in ["size", "instance_filename", "leaf_cloud_dicts"]:
-            if param is None:
-                raise ValueError(f"parameter '{param}' is required")
+        # Check if required kwargs are provided (all args must be kwargs if we
+        # want to use this constructor through from_dict())
+        if size is None:
+            raise ValueError(f"parameter 'size' is required")
+        if leaf_cloud_dicts is None:
+            raise ValueError(f"parameter 'leaf_cloud_dicts' is required")
 
+        # Create leaf cloud
         instanced_leaf_clouds = []
 
         for leaf_cloud_dict in leaf_cloud_dicts:
-            instance_filename = leaf_cloud_dict.get("instance_filename", None)
+            instance_filename = leaf_cloud_dict["instance_filename"]
 
             leaf_cloud_params = {}
             sub_id = leaf_cloud_dict.get("sub_id", None)
