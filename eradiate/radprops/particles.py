@@ -406,7 +406,7 @@ class Array(VerticalDistribution):
                 dims=["z"],
             )
         elif self.data_array is not None:
-            min_z = to_quantity(self.data_array.z.min())
+            min_z = to_quantity(self.data_array.z.min(keep_attrs=True))
             if min_z < self.bottom:
                 raise ValueError(
                     f"Minimum altitude value in data_array "
@@ -414,7 +414,7 @@ class Array(VerticalDistribution):
                     f"({self.bottom})."
                 )
 
-            max_z = to_quantity(self.data_array.z.max())
+            max_z = to_quantity(self.data_array.z.max(keep_attrs=True))
             if max_z > self.top:
                 raise ValueError(
                     f"Minimum altitude value in data_array "
