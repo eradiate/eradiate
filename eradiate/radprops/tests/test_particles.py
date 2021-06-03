@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate import unit_registry as ureg
+from eradiate import path_resolver, unit_registry as ureg
 from eradiate.contexts import SpectralContext
 from eradiate.radprops.particles import (
     Array,
@@ -182,17 +182,19 @@ def test_particles_layer_altitude_units():
     assert layer.top == top
 
 
-def test_particles_layer_to_dataset(mode_mono):
+@pytest.fixture
+def test_dataset():
+    return path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc")
+
+
+def test_particles_layer_to_dataset(mode_mono, test_dataset):
     """Method to_dataset returns data set with expected data variables and
     coordinates."""
-    bottom = ureg.Quantity(1.2, "km")
-    top = ureg.Quantity(1.8, "km")
-    tau_550 = ureg.Quantity(0.3, "dimensionless")
-    config = {"bottom": bottom, "top": top, "tau_550": tau_550}
-    layer = ParticleLayer.from_dict(config)
+    layer = ParticleLayer(dataset=test_dataset)
     spectral_ctx = SpectralContext.new()
     ds = layer.to_dataset(spectral_ctx)
-    assert "sigma_t" in ds.data_vars
-    assert "albedo" in ds.data_vars
-    assert "z_layer" in ds.coords
-    assert "w" in ds.coords
+    expected_data_vars = ["phase", "sigma_t", "albedo"]
+    expected_coords = ["z_layer", "w", "mu"]
+    assert all([coord in ds.coords for coord in expected_coords]) and all(
+        [var in ds.data_vars for var in expected_data_vars]
+    )

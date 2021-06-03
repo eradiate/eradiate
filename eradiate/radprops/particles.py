@@ -14,16 +14,14 @@ import xarray as xr
 from pinttr.util import units_compatible
 from scipy.stats import expon, norm
 
+from .. import path_resolver
 from .._attrs import documented, parse_docs
 from .._factory import BaseFactory
-from .._presolver import PathResolver
 from ..contexts import SpectralContext
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..validators import is_positive
-
-_presolver = PathResolver()
 
 
 @parse_docs
@@ -513,12 +511,12 @@ class ParticleLayer:
 
     dataset = documented(
         attr.ib(
-            default="aeronet_desert",
+            default=path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc"),
+            converter=str,
             validator=attr.validators.instance_of(str),
         ),
-        doc="Particles radiative properties dataset.",
+        doc="Particles radiative properties data set path.",
         type="str",
-        default='``"aeronet_desert"``',
     )
 
     def __attrs_post_init__(self):
@@ -542,7 +540,14 @@ class ParticleLayer:
     @property
     def z_layer(self) -> pint.Quantity:
         """
-        Returns the layer altitudes.
+        Compute the layer altitude mesh within the layer.
+
+        The layer altitude mesh corresponds to a regular level altitude mesh
+        from the layer's bottom altitude to the layer's top altitude with
+        a number of points specified by ``n_layer``.
+
+        Returns → :class:`~pint.Quantity`:
+            Layer altitude mesh.
         """
         bottom = self.bottom.to("km").magnitude
         top = self.top.to("km").magnitude
@@ -553,7 +558,10 @@ class ParticleLayer:
     @property
     def fractions(self) -> np.ndarray:
         """
-        Returns the particles fractions in the layer.
+        Compute the particles fractions in the layer.
+
+        Returns → :class:`~numpy.ndarray`:
+            Particles fractions.
         """
         return self.vert_dist.fractions(self.z_layer)
 
@@ -561,13 +569,18 @@ class ParticleLayer:
         """
         Return phase function.
 
-        The phase function is represented by a `:class:`xarray.DataArray`.
+        The phase function is represented by a :class:`~xarray.DataArray` with
+        a :math:`\\mu` (``mu``) coordinate for the scattering angle cosine
+        (:math:`\\mu \\in [-1, 1]`).
 
         Returns → :class:`xarray.DataArray`:
             Phase function.
         """
-        return self.dataset.phase.interp(
-            w=spectral_ctx.wavelength.magnitude, kwargs=dict(bounds_error=True)
+        ds = xr.open_dataset(self.dataset)
+        return (
+            ds.phase.sel(i=0)
+            .sel(j=0)
+            .interp(w=spectral_ctx.wavelength.magnitude, kwargs=dict(bounds_error=True))
         )
 
     def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
@@ -578,7 +591,7 @@ class ParticleLayer:
             Particle layer albedo.
         """
         wavelength = spectral_ctx.wavelength.magnitude
-        ds = xr.open_dataset(_presolver.resolve(path=self.dataset + ".nc"))
+        ds = xr.open_dataset(self.dataset)
         interpolated_albedo = ds.albedo.interp(w=wavelength)
         albedo = to_quantity(interpolated_albedo)
         albedo_array = albedo * np.ones(self.n_layers)
@@ -592,12 +605,12 @@ class ParticleLayer:
             Particle layer extinction coefficient.
         """
         wavelength = spectral_ctx.wavelength.magnitude
-        ds = xr.open_dataset(_presolver.resolve(path=self.dataset + ".nc"))
+        ds = xr.open_dataset(self.dataset)
         interpolated_sigma_t = ds.sigma_t.interp(w=wavelength)
         sigma_t = to_quantity(interpolated_sigma_t)
         sigma_t_array = sigma_t * self.fractions
         normalised_sigma_t_array = self._normalise_to_tau(
-            ki=sigma_t_array,
+            ki=sigma_t_array.magnitude,
             dz=(self.top - self.bottom) / self.n_layers,
             tau=self.tau_550,
         )
@@ -648,55 +661,74 @@ class ParticleLayer:
         Returns → :class:`xarray.Dataset`:
             Particle layer radiative properties dataset.
         """
+        phase = self.eval_phase(spectral_ctx)
         sigma_t = self.eval_sigma_t(spectral_ctx)
         albedo = self.eval_albedo(spectral_ctx)
         z_layer = self.z_layer
         wavelength = spectral_ctx.wavelength
         return xr.Dataset(
             data_vars={
+                "phase": (
+                    ("w", "mu"),
+                    np.atleast_2d(phase.values),
+                    dict(
+                        standard_name="scattering_phase_function",
+                        long_name="scattering phase function",
+                        units="",
+                    ),
+                ),
                 "sigma_t": (
                     ("w", "z_layer"),
                     np.atleast_2d(sigma_t.magnitude),
-                    {
-                        "standard_name": "extinction_coefficient",
-                        "long_name": "extinction coefficient",
-                        "units": sigma_t.units,
-                    },
+                    dict(
+                        standard_name="extinction_coefficient",
+                        long_name="extinction coefficient",
+                        units=sigma_t.units,
+                    ),
                 ),
                 "albedo": (
                     ("w", "z_layer"),
                     np.atleast_2d(albedo.magnitude),
-                    {
-                        "standard_name": "albedo",
-                        "long_name": "albedo",
-                        "units": albedo.units,
-                    },
+                    dict(
+                        standard_name="albedo",
+                        long_name="albedo",
+                        units=albedo.units,
+                    ),
                 ),
             },
             coords={
                 "z_layer": (
                     "z_layer",
                     z_layer.magnitude,
-                    {
-                        "standard_name": "layer_altitude",
-                        "long_name": "layer altitude",
-                        "units": z_layer.units,
-                    },
+                    dict(
+                        standard_name="layer_altitude",
+                        long_name="layer altitude",
+                        units=z_layer.units,
+                    ),
                 ),
                 "w": (
                     "w",
                     [wavelength.magnitude],
-                    {
-                        "standard_name": "wavelength",
-                        "long_name": "wavelength",
-                        "units": wavelength.units,
-                    },
+                    dict(
+                        standard_name="wavelength",
+                        long_name="wavelength",
+                        units=wavelength.units,
+                    ),
+                ),
+                "mu": (
+                    "mu",
+                    phase.mu.values,
+                    dict(
+                        standard_name="scattering_angle_cosine",
+                        long_name="scattering angle cosine",
+                        units="",
+                    ),
                 ),
             },
         )
 
     @staticmethod
-    @ureg.wraps(ret="km^-1", args=("km^-1", "km", ""), strict=False)
+    @ureg.wraps(ret="km^-1", args=("", "km", ""), strict=False)
     def _normalise_to_tau(ki: np.ndarray, dz: np.ndarray, tau: float) -> np.ndarray:
         r"""
         Normalise extinction coefficient values :math:`k_i` so that:
@@ -708,7 +740,7 @@ class ParticleLayer:
         where :math:`tau` is the particle layer optical thickness.
 
         Parameter ``ki`` (array):
-            Extinction coefficients values [km^-1].
+            Dimensionless extinction coefficients values [].
 
         Parameter ``dz`` (array):
             Layer divisions thickness [km].
