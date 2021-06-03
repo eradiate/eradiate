@@ -1,5 +1,5 @@
 """
-Particles layers
+Particle layers
 """
 from abc import ABC, abstractmethod
 
@@ -28,9 +28,9 @@ class VerticalDistribution(ABC):
     r"""
     An abstract base class for particles vertical distributions.
 
-    Vertical distributions help define particles layers.
+    Vertical distributions help define particle layers.
 
-    The particles layer is split into a number of divisions (sub-layers),
+    The particle layer is split into a number of divisions (sub-layers),
     wherein the particles fraction is evaluated.
 
     The vertical distribution is normalised so that:
@@ -400,7 +400,7 @@ class Array(VerticalDistribution):
 @attr.s
 class ParticleLayer:
     """
-    1D particles layer.
+    1D particle layer.
     """
 
     dataset = documented(
@@ -423,7 +423,7 @@ class ParticleLayer:
             ],
             units=ucc.deferred("length"),
         ),
-        doc="Bottom altitude of the particles layer."
+        doc="Bottom altitude of the particle layer."
         "\n"
         "Unit-enabled field (default: ucc[length])",
         type="float",
@@ -440,7 +440,7 @@ class ParticleLayer:
                 pinttr.validators.has_compatible_units,
             ],
         ),
-        doc="Top altitude of the particles layer."
+        doc="Top altitude of the particle layer."
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="float",
@@ -479,7 +479,7 @@ class ParticleLayer:
             converter=attr.converters.optional(int),
             validator=attr.validators.optional(attr.validators.instance_of(int)),
         ),
-        doc="Number of layers inside the particles layer."
+        doc="Number of layers inside the particle layer."
         "If ``None``, set to a different value based on the vertical "
         "distribution type (see table below).\n"
         "\n"
@@ -557,7 +557,7 @@ class ParticleLayer:
         Evaluate albedo given a spectral context.
 
         Returns → :class:`pint.Quantity`:
-            Particles layer albedo.
+            Particle layer albedo.
         """
         wavelength = spectral_ctx.wavelength.magnitude
         ds = xr.open_dataset(_presolver.resolve(path=self.dataset + ".nc"))
@@ -571,7 +571,7 @@ class ParticleLayer:
         Evaluate extinction coefficient given a spectral context.
 
         Returns → :class:`pint.Quantity`:
-            Particles layer extinction coefficient.
+            Particle layer extinction coefficient.
         """
         wavelength = spectral_ctx.wavelength.magnitude
         ds = xr.open_dataset(_presolver.resolve(path=self.dataset + ".nc"))
@@ -590,7 +590,7 @@ class ParticleLayer:
         Evaluate absorption coefficient given a spectral context.
 
         Returns → :class:`pint.Quantity`:
-            Particles layer absorption coefficient.
+            Particle layer absorption coefficient.
         """
         return self.eval_sigma_t(spectral_ctx) - self.eval_sigma_a(spectral_ctx)
 
@@ -599,7 +599,7 @@ class ParticleLayer:
         Evaluate scattering coefficient given a spectral context.
 
         Returns → :class:`pint.Quantity`:
-            Particles layer scattering coefficient.
+            Particle layer scattering coefficient.
         """
         return self.eval_sigma_t(spectral_ctx) * self.eval_albedo(spectral_ctx)
 
@@ -622,10 +622,10 @@ class ParticleLayer:
 
     def to_dataset(self, spectral_ctx):
         """Return a dataset that holds the radiative properties of the
-        particles layer.
+        particle layer.
 
         Returns → :class:`xarray.Dataset`:
-            Particles layer radiative properties dataset.
+            Particle layer radiative properties dataset.
         """
         sigma_t = self.eval_sigma_t(spectral_ctx)
         albedo = self.eval_albedo(spectral_ctx)
@@ -684,7 +684,7 @@ class ParticleLayer:
 
             \sum_i k_i \Delta z = \tau_{550}
 
-        where :math:`tau` is the particles layer optical thickness.
+        where :math:`tau` is the particle layer optical thickness.
 
         Parameter ``ki`` (array):
             Extinction coefficients values [km^-1].

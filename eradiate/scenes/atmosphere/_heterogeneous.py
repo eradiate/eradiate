@@ -218,7 +218,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             converter=attr.converters.optional(list),
             validator=attr.validators.optional(attr.validators.instance_of(list)),
         ),
-        doc="Particles layers",
+        doc="Particle layers",
         type="list of dict or :class:`ParticlesLayer`",
         default="``None``",
     )
@@ -232,14 +232,14 @@ class HeterogeneousAtmosphere(Atmosphere):
         else:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        # check that the particles layer is within the boundaries of the
+        # check that the particle layer is within the boundaries of the
         # molecular atmosphere
         self._update_particles()
         if self.particles is not None:
             for particles_layer in self.particles:
                 if particles_layer.bottom < 0.0 or particles_layer.top > self.height():
                     raise ValueError(
-                        f"particles layer must be within the "
+                        f"particle layer must be within the "
                         f"boundaries of the molecular atmosphere (0 "
                         f"{self.height.units}, "
                         f"{self.height.magnitude} "
@@ -404,8 +404,8 @@ class HeterogeneousAtmosphere(Atmosphere):
         }
 
     def _update_particles(self):
-        """Make the particles layers objects and update particles attribute
-        with the list of instanciated particles layers objects"""
+        """Make the particle layers objects and update particles attribute
+        with the list of instanciated particle layers objects"""
         if self.particles is not None:
             particles_layers = []
             for element in self.particles:
