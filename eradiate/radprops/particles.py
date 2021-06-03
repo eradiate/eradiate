@@ -1,10 +1,14 @@
 """
 Particle layers
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import Callable, Union
 
 import attr
 import numpy as np
+import pint
 import pinttr
 import xarray as xr
 from pinttr.util import units_compatible
@@ -13,6 +17,7 @@ from scipy.stats import expon, norm
 from .._attrs import documented, parse_docs
 from .._factory import BaseFactory
 from .._presolver import PathResolver
+from ..contexts import SpectralContext
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -63,19 +68,19 @@ class VerticalDistribution(ABC):
             raise ValueError("bottom altitude must be lower than top altitude")
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d: dict) -> VerticalDistribution:
         """Initialise a :class:`VerticalDistribution` from a dictionary."""
         return cls(**d)
 
     @property
     @abstractmethod
-    def fractions(self):
+    def fractions(self) -> Callable:
         """Returns a callable that evaluates the particles fractions in the
         layer, given an array of altitude values."""
         pass
 
     @staticmethod
-    def _normalise(x):
+    def _normalise(x: np.ndarray) -> np.ndarray:
         """
         Scale the values so that their sum is 1.
 
@@ -126,8 +131,8 @@ class Uniform(VerticalDistribution):
     """
 
     @property
-    def fractions(self):
-        def eval(z):
+    def fractions(self) -> Callable:
+        def eval(z: pint.Quantity) -> np.ndarray:
             """
             Parameter ``z`` (:class:`pint.Quantity`):
                 Altitude values.
@@ -172,7 +177,7 @@ class Exponential(VerticalDistribution):
             validator=attr.validators.optional(pinttr.validators.has_compatible_units),
         ),
         doc="Rate parameter of the exponential distribution. If ``None``, "
-        "set to the inverse of the layer thickness."
+        "set to the inverse of the layer thickness.\n"
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="float",
@@ -184,8 +189,8 @@ class Exponential(VerticalDistribution):
             self.rate = 1.0 / (self.top - self.bottom)
 
     @property
-    def fractions(self):
-        def eval(z):
+    def fractions(self) -> Callable:
+        def eval(z: pint.Quantity) -> np.ndarray:
             if (self.bottom <= z).all() and (z <= self.top).all():
                 x = z.magnitude
                 loc = self.bottom.to(z.units).magnitude
@@ -231,7 +236,7 @@ class Gaussian(VerticalDistribution):
             validator=attr.validators.optional(pinttr.validators.has_compatible_units),
         ),
         doc="Mean (expectation) of the distribution. "
-        "If ``None``, set to the middle of the layer."
+        "If ``None``, set to the middle of the layer.\n"
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="float",
@@ -248,7 +253,7 @@ class Gaussian(VerticalDistribution):
         ),
         doc="Standard deviation of the distribution. If ``None``, set to one "
         "sixth of the layer thickness so that half the layer thickness "
-        "equals three standard deviations."
+        "equals three standard deviations.\n"
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="float",
@@ -262,8 +267,8 @@ class Gaussian(VerticalDistribution):
             self.std = (self.top - self.bottom) / 6.0
 
     @property
-    def fractions(self):
-        def eval(z):
+    def fractions(self) -> Callable:
+        def eval(z: pint.Quantity) -> np.ndarray:
             if (self.bottom <= z).all() and (z <= self.top).all():
                 x = z.magnitude
                 loc = self.mean.to(z.units).magnitude
@@ -384,8 +389,8 @@ class Array(VerticalDistribution):
                 )
 
     @property
-    def fractions(self):
-        def eval(z):
+    def fractions(self) -> Callable:
+        def eval(z: pint.Quantity) -> np.ndarray:
             x = z.to(self.data_array.z.units).magnitude
             f = self.data_array.interp(
                 coords={"z": x}, method=self.method, kwargs=dict(fill_value=0.0)
@@ -535,7 +540,7 @@ class ParticleLayer:
                 self.n_layers = 32
 
     @property
-    def z_layer(self):
+    def z_layer(self) -> pint.Quantity:
         """
         Returns the layer altitudes.
         """
@@ -546,14 +551,13 @@ class ParticleLayer:
         return ureg.Quantity(z_layer, "km")
 
     @property
-    def fractions(self):
+    def fractions(self) -> np.ndarray:
         """
         Returns the particles fractions in the layer.
         """
         return self.vert_dist.fractions(self.z_layer)
 
-    @property
-    def phase(self, spectral_ctx):
+    def eval_phase(self, spectral_ctx: SpectralContext) -> xr.DataArray:
         """
         Return phase function.
 
@@ -566,7 +570,7 @@ class ParticleLayer:
             w=spectral_ctx.wavelength.magnitude, kwargs=dict(bounds_error=True)
         )
 
-    def eval_albedo(self, spectral_ctx):
+    def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate albedo given a spectral context.
 
@@ -580,7 +584,7 @@ class ParticleLayer:
         albedo_array = albedo * np.ones(self.n_layers)
         return albedo_array
 
-    def eval_sigma_t(self, spectral_ctx):
+    def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate extinction coefficient given a spectral context.
 
@@ -599,7 +603,7 @@ class ParticleLayer:
         )
         return normalised_sigma_t_array
 
-    def eval_sigma_a(self, spectral_ctx):
+    def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate absorption coefficient given a spectral context.
 
@@ -608,7 +612,7 @@ class ParticleLayer:
         """
         return self.eval_sigma_t(spectral_ctx) - self.eval_sigma_a(spectral_ctx)
 
-    def eval_sigma_s(self, spectral_ctx):
+    def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate scattering coefficient given a spectral context.
 
@@ -618,13 +622,13 @@ class ParticleLayer:
         return self.eval_sigma_t(spectral_ctx) * self.eval_albedo(spectral_ctx)
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d: dict) -> ParticleLayer:
         """
-        Initialise a :class:`ParticlesLayer` from a dictionary."""
+        Initialise a :class:`ParticleLayer` from a dictionary."""
         return cls(**d)
 
     @classmethod
-    def convert(cls, value):
+    def convert(cls, value: Union[ParticleLayer, dict]):
         """
         Object converter method.
 
@@ -636,7 +640,7 @@ class ParticleLayer:
 
         return value
 
-    def to_dataset(self, spectral_ctx):
+    def to_dataset(self, spectral_ctx: SpectralContext) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the
         particle layer.
@@ -693,7 +697,7 @@ class ParticleLayer:
 
     @staticmethod
     @ureg.wraps(ret="km^-1", args=("km^-1", "km", ""), strict=False)
-    def _normalise_to_tau(ki, dz, tau):
+    def _normalise_to_tau(ki: np.ndarray, dz: np.ndarray, tau: float) -> np.ndarray:
         r"""
         Normalise extinction coefficient values :math:`k_i` so that:
 
