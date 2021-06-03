@@ -5,11 +5,11 @@ import xarray as xr
 from eradiate import unit_registry as ureg
 from eradiate.contexts import SpectralContext
 from eradiate.radprops.particles import (
-    Uniform,
-    Gaussian,
-    Exponential,
     Array,
+    Exponential,
+    Gaussian,
     ParticleLayer,
+    Uniform,
 )
 
 
