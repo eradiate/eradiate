@@ -24,7 +24,8 @@ _presolver = PathResolver()
 
 @attr.s
 class LegendreExpansion:
-    r"""Representation of a phase function as an expansion of Legendre
+    r"""
+    Representation of a phase function as an expansion of Legendre
     polynomials, :math:`P_n (\cos \theta)`, where :math:`\theta` is the
     scattering angle.
 
@@ -49,18 +50,23 @@ class LegendreExpansion:
 
     @classmethod
     def from_values(cls, values):
-        """Expand phase function values into Legendre polynomials"""
+        """
+        Expand phase function values into Legendre polynomials.
+        """
         pass
 
     @classmethod
     def from_fourrier_series(cls, coefficients):
-        """Create a Legendre polynomials expansion from a Fourrier series
-        expansion."""
+        """
+        Create a Legendre polynomials expansion from a Fourrier series
+        expansion.
+        """
         pass
 
     @classmethod
     def from_spherical_harmonics(cls, coefficients):
-        """Create a Legendre polynomials expansion from a spherical harmonics
+        """
+        Create a Legendre polynomials expansion from a spherical harmonics
         expansion.
         """
         pass
@@ -69,7 +75,8 @@ class LegendreExpansion:
 @parse_docs
 @attr.s
 class VerticalDistribution(ABC):
-    r"""An abstract base class for particles vertical distributions.
+    r"""
+    An abstract base class for particles vertical distributions.
 
     Vertical distributions help define particles layers.
 
@@ -120,7 +127,8 @@ class VerticalDistribution(ABC):
 
     @staticmethod
     def _normalise(x):
-        """Scale the values so that their sum is 1.
+        """
+        Scale the values so that their sum is 1.
 
         Parameter ``x`` (array):
             Values to normalise.
@@ -136,7 +144,8 @@ class VerticalDistribution(ABC):
 
 
 class VerticalDistributionFactory(BaseFactory):
-    """This factory constructs objects whose classes are derived from
+    """
+    This factory constructs objects whose classes are derived from
     :class:`VerticalDistribution`
 
     .. admonition:: Registered factory members
@@ -154,7 +163,8 @@ class VerticalDistributionFactory(BaseFactory):
 @parse_docs
 @attr.s
 class Uniform(VerticalDistribution):
-    r"""Uniform vertical distribution
+    r"""
+    Uniform vertical distribution.
 
     The uniform probability distribution function is:
 
@@ -193,7 +203,8 @@ class Uniform(VerticalDistribution):
 @parse_docs
 @attr.s
 class Exponential(VerticalDistribution):
-    r"""Exponential vertical distribution.
+    r"""
+    Exponential vertical distribution.
 
     The exponential probability distribution function is:
 
@@ -246,7 +257,8 @@ class Exponential(VerticalDistribution):
 @parse_docs
 @attr.s
 class Gaussian(VerticalDistribution):
-    r"""Gaussian vertical distribution.
+    r"""
+    Gaussian vertical distribution.
 
     The Gaussian probability distribution function is:
 
@@ -323,8 +335,9 @@ class Gaussian(VerticalDistribution):
 @parse_docs
 @attr.s
 class Array(VerticalDistribution):
-    """Flexible vertical distribution specified either by an array of values,
-    or by a :class:`DataArray` object.
+    """
+    Flexible vertical distribution specified either by an array of values,
+    or by a :class:`~xarray.DataArray` object.
     """
 
     values = documented(
@@ -436,7 +449,9 @@ class Array(VerticalDistribution):
 @parse_docs
 @attr.s
 class ParticlesLayer:
-    """1D particles layer."""
+    """
+    1D particles layer.
+    """
 
     dataset = documented(
         attr.ib(
@@ -557,7 +572,9 @@ class ParticlesLayer:
 
     @property
     def z_layer(self):
-        """Returns the layer altitudes."""
+        """
+        Returns the layer altitudes.
+        """
         bottom = self.bottom.to("km").magnitude
         top = self.top.to("km").magnitude
         z_level = np.linspace(start=bottom, stop=top, num=self.n_layers + 1)
@@ -566,12 +583,15 @@ class ParticlesLayer:
 
     @property
     def fractions(self):
-        """Returns the particles fractions in the layer."""
+        """
+        Returns the particles fractions in the layer.
+        """
         return self.vert_dist.fractions(self.z_layer)
 
     @property
     def phase(self):
-        """Return phase function Legendre polynomials expansion
+        """
+        Return phase function Legendre polynomials expansion.
 
         Returns → :class:`.Legendre`:
             Phase functions Legendre polynomials expansion coefficients
@@ -703,7 +723,8 @@ class ParticlesLayer:
     @staticmethod
     @ureg.wraps(ret="km^-1", args=("km^-1", "km", ""), strict=False)
     def _normalise_to_tau(ki, dz, tau):
-        r"""Normalise extinction coefficient values :math:`k_i` so that:
+        r"""
+        Normalise extinction coefficient values :math:`k_i` so that:
 
         .. math::
 
