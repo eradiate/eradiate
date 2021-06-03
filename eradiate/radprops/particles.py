@@ -400,6 +400,21 @@ class Array(VerticalDistribution):
 class ParticleLayer:
     """
     1D particle layer.
+
+    The particle layer has a vertical extension specified by a top altitude
+    (``top``) and a bottom altitude (``bottom``).
+    Inside the layer, the particles are distributed according to a vertical
+    distribution (``vert_dist``).
+    See :class:`.VerticalDistribution` for the available distribution types
+    and corresponding parameters.
+    The particle layer is itself divided into a number of (sub-)layers
+    (``n_layers``) to allow the description of the particles number variations
+    with altitude.
+    The total number of particles in the layer is adjusted so that the
+    particle layer's optical thickness at 550 nm meet a specified value
+    (``tau_550``).
+    The particles radiative properties are specified by a data set
+    (``dataset``).
     """
 
     dataset = documented(
@@ -422,7 +437,7 @@ class ParticleLayer:
             ],
             units=ucc.deferred("length"),
         ),
-        doc="Bottom altitude of the particle layer."
+        doc="Bottom altitude of the particle layer.\n"
         "\n"
         "Unit-enabled field (default: ucc[length])",
         type="float",
@@ -439,7 +454,7 @@ class ParticleLayer:
                 pinttr.validators.has_compatible_units,
             ],
         ),
-        doc="Top altitude of the particle layer."
+        doc="Top altitude of the particle layer.\n"
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="float",
@@ -455,7 +470,7 @@ class ParticleLayer:
                 pinttr.validators.has_compatible_units,
             ],
         ),
-        doc="Extinction optical thickness at the wavelength of 550 nm."
+        doc="Extinction optical thickness at the wavelength of 550 nm.\n"
         "\n"
         "Unit-enabled field (default: ucc[dimensionless]).",
         type="float",
@@ -478,9 +493,9 @@ class ParticleLayer:
             converter=attr.converters.optional(int),
             validator=attr.validators.optional(attr.validators.instance_of(int)),
         ),
-        doc="Number of layers inside the particle layer."
-        "If ``None``, set to a different value based on the vertical "
-        "distribution type (see table below).\n"
+        doc="Number of layers inside the particle layer.\n"
+        "If ``None``, ``n_layers`` is set to a different value based on the "
+        "vertical distribution type (see table below).\n"
         "\n"
         ".. list-table::\n"
         "   :widths: 1 1\n"
