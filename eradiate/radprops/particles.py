@@ -401,8 +401,8 @@ class ParticleLayer:
     """
     1D particle layer.
 
-    The particle layer has a vertical extension specified by a top altitude
-    (``top``) and a bottom altitude (``bottom``).
+    The particle layer has a vertical extension specified by a bottom altitude
+    (``bottom``) and a top altitude (``top``).
     Inside the layer, the particles are distributed according to a vertical
     distribution (``vert_dist``).
     See :class:`.VerticalDistribution` for the available distribution types
@@ -416,16 +416,6 @@ class ParticleLayer:
     The particles radiative properties are specified by a data set
     (``dataset``).
     """
-
-    dataset = documented(
-        attr.ib(
-            default="aeronet_desert",
-            validator=attr.validators.instance_of(str),
-        ),
-        doc="Particles radiative properties dataset.",
-        type="str",
-        default='``"aeronet_desert"``',
-    )
 
     bottom = documented(
         pinttr.ib(
@@ -461,6 +451,16 @@ class ParticleLayer:
         default="1 km.",
     )
 
+    vert_dist = documented(
+        attr.ib(
+            default={"type": "uniform"},
+            validator=attr.validators.instance_of((dict, VerticalDistribution)),
+        ),
+        doc="Particles vertical distribution.",
+        type="dict or :class:`VerticalDistribution`",
+        default=":class:`Uniform`",
+    )
+
     tau_550 = documented(
         pinttr.ib(
             units=ucc.deferred("dimensionless"),
@@ -475,16 +475,6 @@ class ParticleLayer:
         "Unit-enabled field (default: ucc[dimensionless]).",
         type="float",
         default="0.2",
-    )
-
-    vert_dist = documented(
-        attr.ib(
-            default={"type": "uniform"},
-            validator=attr.validators.instance_of((dict, VerticalDistribution)),
-        ),
-        doc="Particles vertical distribution.",
-        type="dict or :class:`VerticalDistribution`",
-        default=":class:`Uniform`",
     )
 
     n_layers = documented(
@@ -514,6 +504,16 @@ class ParticleLayer:
         "\n",
         type="int",
         default="``None``",
+    )
+
+    dataset = documented(
+        attr.ib(
+            default="aeronet_desert",
+            validator=attr.validators.instance_of(str),
+        ),
+        doc="Particles radiative properties dataset.",
+        type="str",
+        default='``"aeronet_desert"``',
     )
 
     def __attrs_post_init__(self):
