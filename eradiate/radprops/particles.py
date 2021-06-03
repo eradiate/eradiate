@@ -26,8 +26,8 @@ _presolver = PathResolver()
 class LegendreExpansion:
     r"""
     Representation of a phase function as an expansion of Legendre
-    polynomials, :math:`P_n (\cos \theta)`, where :math:`\theta` is the
-    scattering angle.
+    polynomials, :math:`P_n (\cos \theta)`, where :math:`\theta \in [0, \pi]`
+    is the scattering angle.
 
     The first Legendre polynomials are given by:
 
