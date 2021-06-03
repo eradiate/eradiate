@@ -11,7 +11,7 @@ from ... import validators
 from ..._attrs import documented, parse_docs
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...radprops import RadProfileFactory, ParticlesLayer
+from ...radprops import RadProfileFactory, ParticleLayer
 from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
 
 
@@ -410,8 +410,8 @@ class HeterogeneousAtmosphere(Atmosphere):
             particles_layers = []
             for element in self.particles:
                 if isinstance(element, dict):
-                    particles_layers.append(ParticlesLayer.from_dict(element))
-                elif isinstance(element, ParticlesLayer):
+                    particles_layers.append(ParticleLayer.from_dict(element))
+                elif isinstance(element, ParticleLayer):
                     particles_layers.append(element)
                 else:
                     raise ValueError(

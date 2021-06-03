@@ -398,7 +398,7 @@ class Array(VerticalDistribution):
 
 @parse_docs
 @attr.s
-class ParticlesLayer:
+class ParticleLayer:
     """
     1D particles layer.
     """

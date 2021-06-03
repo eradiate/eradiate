@@ -9,7 +9,7 @@ from eradiate.radprops.particles import (
     Gaussian,
     Exponential,
     Array,
-    ParticlesLayer,
+    ParticleLayer,
 )
 
 
@@ -114,7 +114,7 @@ def test_particles_layer(mode_mono):
     top = ureg.Quantity(1.8, "km")
     tau_550 = ureg.Quantity(0.3, "dimensionless")
     config = {"bottom": bottom, "top": top, "tau_550": tau_550}
-    layer = ParticlesLayer.from_dict(config)
+    layer = ParticleLayer.from_dict(config)
     assert layer.bottom == bottom
     assert layer.top == top
     assert layer.tau_550 == tau_550
@@ -132,7 +132,7 @@ def test_particles_layer_invalid_bottom_top():
         "top": bottom,
     }
     with pytest.raises(ValueError):
-        ParticlesLayer.from_dict(config)
+        ParticleLayer.from_dict(config)
 
 
 def test_particles_layer_invalid_tau_550():
@@ -145,7 +145,7 @@ def test_particles_layer_invalid_tau_550():
         "tau_550": -0.1,
     }
     with pytest.raises(ValueError):
-        ParticlesLayer.from_dict(config)
+        ParticleLayer.from_dict(config)
 
 
 def test_particles_layer_n_layer_adjust():
@@ -159,16 +159,16 @@ def test_particles_layer_n_layer_adjust():
             "type": "exponential",
         },
     }
-    layer = ParticlesLayer.from_dict(config)
+    layer = ParticleLayer.from_dict(config)
     assert layer.n_layers == 8
     assert len(layer.z_layer) == layer.n_layers
 
     config.update({"vert_dist": {"type": "gaussian"}})
-    layer = ParticlesLayer.from_dict(config)
+    layer = ParticleLayer.from_dict(config)
     assert layer.n_layers == 16
 
     config.update({"vert_dist": {"type": "array", "values": [1.0, 2.0, 3.0]}})
-    layer = ParticlesLayer.from_dict(config)
+    layer = ParticleLayer.from_dict(config)
     assert layer.n_layers == 32
 
 
@@ -177,7 +177,7 @@ def test_particles_layer_altitude_units():
     bottom = ureg.Quantity(1, "km")
     top = ureg.Quantity(2000.0, "m")
     config = dict(bottom=bottom, top=top)
-    layer = ParticlesLayer.from_dict(config)
+    layer = ParticleLayer.from_dict(config)
     assert layer.bottom == bottom
     assert layer.top == top
 
@@ -189,7 +189,7 @@ def test_particles_layer_to_dataset(mode_mono):
     top = ureg.Quantity(1.8, "km")
     tau_550 = ureg.Quantity(0.3, "dimensionless")
     config = {"bottom": bottom, "top": top, "tau_550": tau_550}
-    layer = ParticlesLayer.from_dict(config)
+    layer = ParticleLayer.from_dict(config)
     spectral_ctx = SpectralContext.new()
     ds = layer.to_dataset(spectral_ctx)
     assert "sigma_t" in ds.data_vars
