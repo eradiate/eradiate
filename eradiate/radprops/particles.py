@@ -14,7 +14,6 @@ from .. import mode
 from .._attrs import documented, parse_docs
 from .._factory import BaseFactory
 from .._presolver import PathResolver
-from ..exceptions import ModeError
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
