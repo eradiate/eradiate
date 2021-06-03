@@ -22,56 +22,6 @@ from ..validators import is_positive
 _presolver = PathResolver()
 
 
-@attr.s
-class LegendreExpansion:
-    r"""
-    Representation of a phase function as an expansion of Legendre
-    polynomials, :math:`P_n (\cos \theta)`, where :math:`\theta \in [0, \pi]`
-    is the scattering angle.
-
-    The first Legendre polynomials are given by:
-
-    .. math::
-        P_0 (x) = 1
-
-    .. math::
-        P_1 (x) = \frac{1}{2} (3x^2 - 1)
-
-    .. math::
-        P_2 (x) = \frac{1}{2} (5x^3 - 3x)
-
-
-    .. rubric:: Constructor arguments / instance attributes
-
-    ``coefficients`` (array):
-       Coefficients of the Legendre polynomial expansion.
-    """
-    coefficients = attr.ib(converter=np.array)
-
-    @classmethod
-    def from_values(cls, values):
-        """
-        Expand phase function values into Legendre polynomials.
-        """
-        pass
-
-    @classmethod
-    def from_fourrier_series(cls, coefficients):
-        """
-        Create a Legendre polynomials expansion from a Fourrier series
-        expansion.
-        """
-        pass
-
-    @classmethod
-    def from_spherical_harmonics(cls, coefficients):
-        """
-        Create a Legendre polynomials expansion from a spherical harmonics
-        expansion.
-        """
-        pass
-
-
 @parse_docs
 @attr.s
 class VerticalDistribution(ABC):
@@ -589,14 +539,18 @@ class ParticlesLayer:
         return self.vert_dist.fractions(self.z_layer)
 
     @property
-    def phase(self):
+    def phase(self, spectral_ctx):
         """
-        Return phase function Legendre polynomials expansion.
+        Return phase function.
 
-        Returns → :class:`.Legendre`:
-            Phase functions Legendre polynomials expansion coefficients
+        The phase function is represented by a `:class:`xarray.DataArray`.
+
+        Returns → :class:`xarray.DataArray`:
+            Phase function.
         """
-        return LegendreExpansion([1.0, 0.0])
+        return self.dataset.phase.interp(
+            w=spectral_ctx.wavelength.magnitude, kwargs=dict(bounds_error=True)
+        )
 
     def eval_albedo(self, spectral_ctx):
         """
@@ -605,7 +559,7 @@ class ParticlesLayer:
         Returns → :class:`pint.Quantity`:
             Particles layer albedo.
         """
-        wavelength = spectral_ctx.wavelength
+        wavelength = spectral_ctx.wavelength.magnitude
         ds = xr.open_dataset(_presolver.resolve(path=self.dataset + ".nc"))
         interpolated_albedo = ds.albedo.interp(w=wavelength)
         albedo = to_quantity(interpolated_albedo)
@@ -619,7 +573,7 @@ class ParticlesLayer:
         Returns → :class:`pint.Quantity`:
             Particles layer extinction coefficient.
         """
-        wavelength = spectral_ctx.wavelength
+        wavelength = spectral_ctx.wavelength.magnitude
         ds = xr.open_dataset(_presolver.resolve(path=self.dataset + ".nc"))
         interpolated_sigma_t = ds.sigma_t.interp(w=wavelength)
         sigma_t = to_quantity(interpolated_sigma_t)
