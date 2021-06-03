@@ -605,12 +605,14 @@ class ParticleLayer:
 
     @classmethod
     def from_dict(cls, d):
-        """Initialise a :class:`ParticlesLayer` from a dictionary."""
+        """
+        Initialise a :class:`ParticlesLayer` from a dictionary."""
         return cls(**d)
 
     @classmethod
     def convert(cls, value):
-        """Object converter method.
+        """
+        Object converter method.
 
         If ``value`` is a dictionary, this method forwards it to
         :meth:`from_dict`. Otherwise, it returns ``value``.
@@ -621,7 +623,8 @@ class ParticleLayer:
         return value
 
     def to_dataset(self, spectral_ctx):
-        """Return a dataset that holds the radiative properties of the
+        """
+        Return a dataset that holds the radiative properties of the
         particle layer.
 
         Returns → :class:`xarray.Dataset`:
