@@ -10,7 +10,6 @@ import xarray as xr
 from pinttr.util import units_compatible
 from scipy.stats import expon, norm
 
-from .. import mode
 from .._attrs import documented, parse_docs
 from .._factory import BaseFactory
 from .._presolver import PathResolver
