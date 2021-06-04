@@ -490,7 +490,7 @@ class LeafCloud(SceneElement):
     )
 
     leaf_orientations = documented(
-        attr.ib(factory=list),
+        attr.ib(factory=list, converter=np.array),
         doc="Leaf orientations (normal vectors) in Cartesian coordinates as a "
         "(n, 3)-array.",
         type="array-like",
@@ -513,8 +513,20 @@ class LeafCloud(SceneElement):
 
     @leaf_positions.validator
     @leaf_orientations.validator
-    @leaf_radii.validator
     def _positions_orientations_validator(self, attribute, value):
+        if not len(value):
+            return
+
+        if not value.ndim == 2 or value.shape[1] != 3:
+            raise ValueError(
+                f"While validating {attribute.name}: shape should be (N, 3), "
+                f"got {value.shape}"
+            )
+
+    @leaf_positions.validator
+    @leaf_orientations.validator
+    @leaf_radii.validator
+    def _positions_orientations_radii_validator(self, attribute, value):
         if not (
             len(self.leaf_positions)
             == len(self.leaf_orientations)

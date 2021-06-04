@@ -118,6 +118,13 @@ def test_leaf_cloud_instantiate(mode_mono):
         leaf_positions=[[0, 0, 0]], leaf_orientations=[[0, 0, 1]], leaf_radii=[0.1]
     )
 
+    # Incorrect dimensionality raises
+    with pytest.raises(ValueError):
+        LeafCloud(
+            leaf_positions=[0, 0, 0],
+            leaf_orientations=[0, 0, 1],
+            leaf_radii=[0.1] * 3,
+        )
 
 @pytest.mark.slow
 def test_leaf_cloud_generate(mode_mono):
