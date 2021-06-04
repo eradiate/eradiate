@@ -1,3 +1,4 @@
+from eradiate.radprops.rad_profile import ArrayRadProfile
 import pathlib
 import tempfile
 
@@ -342,7 +343,8 @@ def test_heterogeneous_invalid_toa_altitude_value(mode_mono, tmpdir):
         )
 
 
-def test_heterogeneous_with_particles(mode_mono, tmpdir):
+def test_heterogeneous_particles(mode_mono, tmpdir):
+    """Attribute 'particles' is a list of ParticleLayer objects."""
     particles_layer_1 = ParticleLayer(
         bottom=ureg.Quantity(0.0, "km"), top=ureg.Quantity(1.0, "km")
     )
@@ -360,12 +362,11 @@ def test_heterogeneous_with_particles(mode_mono, tmpdir):
         },
     }
     atmosphere = HeterogeneousAtmosphere(
-        profile={
-            "type": "array",
-            "levels": ureg.Quantity(np.linspace(0, 12, 4), "km"),
-            "sigma_t_values": np.ones((1, 1, 3)),
-            "albedo_values": np.ones((1, 1, 3)),
-        },
+        profile=ArrayRadProfile(
+            levels=ureg.Quantity(np.linspace(0, 12, 4), "km"),
+            sigma_t_values=np.ones((1, 1, 3)),
+            albedo_values=np.ones((1, 1, 3)),
+        ),
         cache_dir=tmpdir,
         particles=[
             particles_layer_1,
@@ -373,3 +374,23 @@ def test_heterogeneous_with_particles(mode_mono, tmpdir):
             particles_layer_3,
         ],
     )
+
+    for particle_layer in atmosphere.particles:
+        assert isinstance(particle_layer, ParticleLayer)
+
+
+def test_heterogeneous_particles_invalid_top(mode_mono, tmpdir):
+    """Raises when particle layer's top altitude is invalid."""
+    particles_layer = ParticleLayer(
+        bottom=ureg.Quantity(10.5, "km"), top=ureg.Quantity(12.2, "km")
+    )
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            profile=ArrayRadProfile(
+                levels=ureg.Quantity(np.linspace(0.0, 12.0, 4), "km"),
+                sigma_t_values=np.ones((1, 1, 3)),
+                albedo_values=np.ones((1, 1, 3)),
+            ),
+            cache_dir=tmpdir,
+            particles=[particles_layer],
+        )
