@@ -217,7 +217,9 @@ class HeterogeneousAtmosphere(Atmosphere):
     particles = documented(
         attr.ib(
             default=None,
-            converter=attr.converters.optional(list),
+            converter=attr.converters.optional(
+                lambda value: [ParticleLayer.convert(element) for element in value]
+            ),
             validator=attr.validators.optional(attr.validators.instance_of(list)),
         ),
         doc="Particle layers",
@@ -404,13 +406,3 @@ class HeterogeneousAtmosphere(Atmosphere):
                 "interior": medium,
             }
         }
-
-    def _update_particles(self):
-        """
-        Make the particle layers objects and update particles attribute
-        with the list of instanciated particle layers objects.
-        """
-        if self.particles is not None:
-            self.particles = [
-                ParticleLayer.convert(element) for element in self.particles
-            ]
