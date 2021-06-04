@@ -33,12 +33,12 @@ class BaseFactory:
            This guide gives an overview of the factory system and presents its
            usage.
     """
+
     #: By default, any object can be constructed by the factory
     _constructed_type = object
 
     #: Internal registry for available types
-    registry = {}
-
+    registry = dict()
 
     @classmethod
     def register(cls, *names):
@@ -73,19 +73,25 @@ class BaseFactory:
 
         def inner_wrapper(wrapped_class):
             if not issubclass(wrapped_class, cls._constructed_type):
-                raise TypeError(f"cannot register class '{wrapped_class.__name__}' "
-                                f"to {cls.__name__} (not a subclass of "
-                                f"'{cls._constructed_type.__name__}')")
+                raise TypeError(
+                    f"cannot register class '{wrapped_class.__name__}' "
+                    f"to {cls.__name__} (not a subclass of "
+                    f"'{cls._constructed_type.__name__}')"
+                )
 
             if not hasattr(wrapped_class, "from_dict"):
-                raise AttributeError(f"class '{wrapped_class.__name__}' is "
-                                     f"missing 'from_dict()' and cannot be "
-                                     f"registered")
+                raise AttributeError(
+                    f"class '{wrapped_class.__name__}' is "
+                    f"missing 'from_dict()' and cannot be "
+                    f"registered"
+                )
 
             for name in names:
                 if name in cls.registry:
-                    warnings.warn(f"class '{wrapped_class.__name__}' already "
-                                  f"registered as '{name}', will be replaced")
+                    warnings.warn(
+                        f"class '{wrapped_class.__name__}' already "
+                        f"registered as '{name}', will be replaced"
+                    )
                 cls.registry[name] = wrapped_class
 
             return wrapped_class
@@ -117,8 +123,10 @@ class BaseFactory:
         try:
             return cls.registry[obj_type].from_dict(config_dict)
         except KeyError:
-            raise ValueError(f"no class registered as '{obj_type}'; "
-                             f"registered: {list(cls.registry.keys())}")
+            raise ValueError(
+                f"no class registered as '{obj_type}'; "
+                f"registered: {list(cls.registry.keys())}"
+            )
 
     @classmethod
     def convert(cls, value):
