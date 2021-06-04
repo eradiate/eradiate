@@ -126,6 +126,50 @@ def test_leaf_cloud_instantiate(mode_mono):
             leaf_radii=[0.1] * 3,
         )
 
+
+@pytest.mark.parametrize(
+    "leaf_positions, xyz, expected_leaf_positions",
+    [
+        (
+            [[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0]],
+            [0, 0, 1],
+            [[0, 0, 1], [0, 0, 2], [0, 1, 1], [1, 0, 1]],
+        ),
+        (
+            [[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0]],
+            [[0, 0, 1]] + [[0, 0, 0]] * 3,
+            [[0, 0, 1], [0, 0, 1], [0, 1, 0], [1, 0, 0]],
+        ),
+    ],
+)
+def test_leaf_cloud_translated(mode_mono, leaf_positions, xyz, expected_leaf_positions):
+    """Unit tests for :meth:`LeafCloud.translated`."""
+
+    leaf_positions_size = np.array(leaf_positions).size
+    leaf_orientations = [[0, 0, 1]] * (leaf_positions_size // 3)
+    leaf_radii = [0.1] * (leaf_positions_size // 3)
+
+    leaf_cloud = LeafCloud(
+        leaf_positions=leaf_positions,
+        leaf_orientations=leaf_orientations,
+        leaf_radii=leaf_radii,
+    )
+
+    # Translated object is a copy
+    translated_leaf_cloud = leaf_cloud.translated(xyz * ureg.m)
+    assert translated_leaf_cloud is not leaf_cloud
+
+    # Translated object has offset leaf positions
+    assert np.allclose(
+        translated_leaf_cloud.leaf_positions,
+        np.array(expected_leaf_positions) * ureg.m,
+    )
+
+    # Shapes do not match: translated() raises
+    with pytest.raises(ValueError):
+        leaf_cloud.translated([[1, 0, 0]] * 2 * ureg.m)
+
+
 @pytest.mark.slow
 def test_leaf_cloud_generate(mode_mono):
     """Test the instantiation of the leaf cloud class from parameters"""

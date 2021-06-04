@@ -6,6 +6,7 @@ from typing import MutableMapping, Optional
 import aabbtree
 import attr
 import numpy as np
+import pint
 import pinttr
 
 from ._core import BiosphereFactory, Canopy
@@ -898,6 +899,31 @@ class LeafCloud(SceneElement):
             }
 
         return shapes_dict
+
+    def translated(self, xyz: pint.Quantity):
+        """
+        Return a copy of self translated by the vector ``xyz``.
+
+        Parameter ``xyz`` (:class:`pint.Quantity`):
+            A 3-vector or a (N, 3)-array by which leaves will be translated. If
+            (N, 3) variant is used, the array shape must match that of
+            ``leaf_positions``.
+
+        Returns → :class:`LeafCloud`:
+            Translated copy of self.
+
+        Raises → ValueError:
+            Sizes of ``xyz`` and ``self.leaf_positions`` are incompatible.
+        """
+        if xyz.ndim <= 1:
+            xyz = xyz.reshape((1, 3))
+        elif xyz.shape != self.leaf_positions.shape:
+            raise ValueError(
+                f"shapes xyz {xyz.shape} and self.leaf_positions "
+                f"{self.leaf_positions.shape} do not match"
+            )
+
+        return attr.evolve(self, leaf_positions=self.leaf_positions + xyz)
 
     def bsdfs(self, ctx=None):
         """
