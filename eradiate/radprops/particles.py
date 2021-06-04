@@ -67,14 +67,18 @@ class VerticalDistribution(ABC):
 
     @classmethod
     def from_dict(cls, d: dict) -> VerticalDistribution:
-        """Initialise a :class:`VerticalDistribution` from a dictionary."""
+        """
+        Initialise a :class:`VerticalDistribution` from a dictionary.
+        """
         return cls(**d)
 
     @property
     @abstractmethod
     def fractions(self) -> Callable:
-        """Returns a callable that evaluates the particles fractions in the
-        layer, given an array of altitude values."""
+        """
+        Returns a callable that evaluates the particles fractions in the
+        layer, given an array of altitude values.
+        """
         pass
 
     @staticmethod
