@@ -542,6 +542,20 @@ class ParticleLayer:
                 self.n_layers = 32
 
     @property
+    def z_level(self) -> pint.Quantity:
+        """
+        Compute the level altitude mesh within the layer.
+
+        The level altitude mesh corresponds to a regular level altitude mesh
+        from the layer's bottom altitude to the layer's top altitude with
+        a number of points specified by ``n_layer + 1``.
+
+        Returns → :class:`~pint.Quantity`:
+            Level altitude mesh.
+        """
+        return np.linspace(start=self.bottom, stop=self.top, num=self.n_layers + 1)
+
+    @property
     def z_layer(self) -> pint.Quantity:
         """
         Compute the layer altitude mesh within the layer.
@@ -553,25 +567,25 @@ class ParticleLayer:
         Returns → :class:`~pint.Quantity`:
             Layer altitude mesh.
         """
-        bottom = self.bottom.to("km").magnitude
-        top = self.top.to("km").magnitude
-        z_level = np.linspace(start=bottom, stop=top, num=self.n_layers + 1)
-        z_layer = (z_level[:-1] + z_level[1:]) / 2.0
-        return ureg.Quantity(z_layer, "km")
+        z_level = self.z_level
+        return (z_level[:-1] + z_level[1:]) / 2.0
 
-    @property
-    def fractions(self) -> np.ndarray:
+    def eval_fractions(self, z_layer: ureg.Quantity = None) -> np.ndarray:
         """
         Compute the particles fractions in the layer.
+
+        Parameter ``z_layer`` (:class:`~pint.Quantity`):
+            Layer altitude mesh onto which the fractions must be computed.
 
         Returns → :class:`~numpy.ndarray`:
             Particles fractions.
         """
-        return self.vert_dist.fractions(self.z_layer)
+        z_layer = self.z_layer if z_layer is None else z_layer
+        return self.vert_dist.fractions(z_layer)
 
     def eval_phase(self, spectral_ctx: SpectralContext) -> xr.DataArray:
         """
-        Return phase function.
+        Evaluate the phase function.
 
         The phase function is represented by a :class:`~xarray.DataArray` with
         a :math:`\\mu` (``mu``) coordinate for the scattering angle cosine
@@ -587,9 +601,14 @@ class ParticleLayer:
             .interp(w=spectral_ctx.wavelength.magnitude, kwargs=dict(bounds_error=True))
         )
 
-    def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_albedo(
+        self, spectral_ctx: SpectralContext, z_level: ureg.Quantity = None
+    ) -> pint.Quantity:
         """
         Evaluate albedo given a spectral context.
+
+        Parameter ``z_level`` (:class:`~pint.Quantity`):
+            Level altitude mesh onto which the fractions must be computed.
 
         Returns → :class:`pint.Quantity`:
             Particle layer albedo.
@@ -598,12 +617,18 @@ class ParticleLayer:
         ds = xr.open_dataset(self.dataset)
         interpolated_albedo = ds.albedo.interp(w=wavelength)
         albedo = to_quantity(interpolated_albedo)
-        albedo_array = albedo * np.ones(self.n_layers)
+        n_layers = self.n_layers if z_level is None else len(z_level) - 1
+        albedo_array = albedo * np.ones(n_layers)
         return albedo_array
 
-    def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_t(
+        self, spectral_ctx: SpectralContext, z_level: ureg.Quantity = None
+    ) -> pint.Quantity:
         """
         Evaluate extinction coefficient given a spectral context.
+
+        Parameter ``z_level`` (:class:`~pint.Quantity`):
+            Level altitude mesh onto which the fractions must be computed.
 
         Returns → :class:`pint.Quantity`:
             Particle layer extinction coefficient.
@@ -612,10 +637,17 @@ class ParticleLayer:
         ds = xr.open_dataset(self.dataset)
         interpolated_sigma_t = ds.sigma_t.interp(w=wavelength)
         sigma_t = to_quantity(interpolated_sigma_t)
-        sigma_t_array = sigma_t * self.fractions
+        z_layer = None if z_level is None else (z_level[1:] + z_level[:-1]) / 2.0
+        fractions = self.eval_fractions(z_layer=z_layer)
+        sigma_t_array = sigma_t * fractions
+        dz = (
+            (self.top - self.bottom) / self.n_layers
+            if z_level is None
+            else z_level[1:] - z_level[:-1]
+        )
         normalised_sigma_t_array = self._normalise_to_tau(
             ki=sigma_t_array.magnitude,
-            dz=(self.top - self.bottom) / self.n_layers,
+            dz=dz,
             tau=self.tau_550,
         )
         return normalised_sigma_t_array
@@ -657,18 +689,36 @@ class ParticleLayer:
 
         return value
 
-    def to_dataset(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def radprops(
+        self, spectral_ctx: SpectralContext, z_level: ureg.Quantity = None
+    ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the
         particle layer.
 
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Parameter ``z_level`` (:class:`~pint.Quantity`):
+            Level altitude mesh.
+
+            This parameter allows to compute the radiative properties of the
+            particle layer on a level altitude mesh that is different from
+            the "native" (specified by ``n_layers``) particle layer mesh.
+
+            If ``None``, the level altitude mesh is the regular mesh defined
+            by ``bottom``, ``top`` and ``n_layers`` for the start value,
+            stop value and number of points, respectively.
+
         Returns → :class:`xarray.Dataset`:
             Particle layer radiative properties dataset.
         """
-        phase = self.eval_phase(spectral_ctx)
-        sigma_t = self.eval_sigma_t(spectral_ctx)
-        albedo = self.eval_albedo(spectral_ctx)
-        z_layer = self.z_layer
+        z_level = self.z_level if z_level is None else z_level
+        z_layer = (z_level[1:] + z_level[:-1]) / 2.0
+        phase = self.eval_phase(spectral_ctx=spectral_ctx)
+        sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx, z_level=z_level)
+        albedo = self.eval_albedo(spectral_ctx=spectral_ctx, z_level=z_level)
         wavelength = spectral_ctx.wavelength
         return xr.Dataset(
             data_vars={
@@ -708,6 +758,15 @@ class ParticleLayer:
                         standard_name="layer_altitude",
                         long_name="layer altitude",
                         units=z_layer.units,
+                    ),
+                ),
+                "z_level": (
+                    "z_level",
+                    z_level.magnitude,
+                    dict(
+                        standard_name="level_altitude",
+                        long_name="level altitude",
+                        units=z_level.units,
                     ),
                 ),
                 "w": (

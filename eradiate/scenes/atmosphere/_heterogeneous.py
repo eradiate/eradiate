@@ -1,20 +1,23 @@
-from eradiate.radprops import particles
-from functools import partial
 import struct
 import tempfile
+from functools import partial
 from pathlib import Path
 
 import attr
 import numpy as np
 import xarray as xr
 
+from eradiate.contexts import SpectralContext
+from eradiate.radprops import particles
+
 from ._base import Atmosphere, AtmosphereFactory
+from ... import mesh as mesh
 from ... import validators
 from ..._attrs import documented, parse_docs
-from ...units import unit_context_kernel as uck
-from ...units import unit_registry as ureg
-from ...radprops import RadProfileFactory, ParticleLayer
+from ...radprops import ParticleLayer, RadProfileFactory
 from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
+from ...units import to_quantity, unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 
 def write_binary_grid3d(filename, values):
@@ -406,3 +409,45 @@ class HeterogeneousAtmosphere(Atmosphere):
                 "interior": medium,
             }
         }
+
+    def merge_radprops(self, spectral_ctx: SpectralContext = None) -> xr.Dataset:
+        """
+        Merge molecules and particles radprops.
+
+        Molecular radiative properties, specified by the 'profile' attribute,
+        and particles layers radiative properties are defined on different
+        altitude meshes.
+        These radiative properties profiles must be merged into one for use
+        by :meth:`~.HeterogeneousAtmosphere.make_volume_data`
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Returns → :class:`~xarray.Dataset`
+            Merged radiative properties data set.
+        """
+        if spectral_ctx is None:
+            raise ValueError("keyword argument 'spectral_ctx' must be specified")
+
+        # Find unique level altitude mesh
+        molecules_radprops = self.profile.to_dataset(spectral_ctx)
+        molecules_z_level_mesh = [to_quantity(molecules_radprops.z_level).m_as("km")]
+        particles_z_level_meshes = [
+            element.z_level.m_as("km") for element in self.particles
+        ]
+        z_level_meshes = molecules_z_level_mesh + particles_z_level_meshes
+        # TODO: set atol to mininimum delta z_level value?
+        z_level = ureg.Quantity(
+            mesh.to_regular(mesh.merge(meshes=z_level_meshes), atol=0.01), "km"
+        )  # atol = 10 m (arbitrary!)
+
+        # Compute particles layer radiative properties on unique level altitude mesh
+        radprops = []
+        for layer in self.particles:
+            layer_mask = (z_level >= layer.bottom) & (z_level <= layer.top)
+            radprops.append(
+                layer.radprops(spectral_ctx=spectral_ctx, z_level=z_level[layer_mask])
+            )
+
+        # Project molecules radiative properties on unique layer altitude mesh

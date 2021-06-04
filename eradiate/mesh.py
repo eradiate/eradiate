@@ -1,14 +1,16 @@
 """Mesh utilities."""
+from typing import List, Tuple
 
 import math
 import numpy as np
 
 
-def merge(meshes, atol=1e-6):
-    """Merge meshes and remove the potential duplicate values.
+def merge(meshes: List[np.ndarray], atol: float = 1e-6) -> np.ndarray:
+    """
+    Merge meshes and remove the potential duplicate values.
 
-    Parameter ``arrays`` (list):
-        Sequence of :class:`~numpy.ndarray`.
+    Parameter ``meshes`` (list of :class:`~numpy.ndarray`):
+        Meshes to merge.
 
     Parameter ``atol`` (float):
         Absolute tolerance parameter. If the difference between two elements in
@@ -40,8 +42,9 @@ def merge(meshes, atol=1e-6):
     return unique(x=x, atol=atol)
 
 
-def unique(x, atol):
-    """Returns the unique elements of an array with tolerance.
+def unique(x: np.ndarray, atol: float) -> np.ndarray:
+    """
+    Returns the unique elements of an array with tolerance.
 
     Parameter ``x`` (:class:`~numpy.ndarray`):
         Array with potential duplicate elements.
@@ -76,7 +79,7 @@ def unique(x, atol):
     return np.array(unique_values)
 
 
-def to_regular(x, atol):
+def to_regular(x: np.ndarray, atol: float) -> np.ndarray:
     """
     Converts an irregular mesh into an approximately-equivalent regular
     mesh.
@@ -96,7 +99,7 @@ def to_regular(x, atol):
     Parameter ``atol`` (float):
         Absolute tolerance parameter.
 
-    Returns -> :class:`~numpy.ndarray`:
+    Returns → :class:`~numpy.ndarray`:
         Regular mesh.
 
     .. admonition:: Example
@@ -132,7 +135,9 @@ def to_regular(x, atol):
     return np.linspace(start=x[0], stop=x[-1], num=num)
 
 
-def find_regular_params_gcd(x, unit_number=1.0):
+def find_regular_params_gcd(
+    x: np.ndarray, unit_number: float = 1.0
+) -> Tuple[int, float]:
     """
     Find the parameters (cells number and cell width) of the regular mesh that
     approximates the irregular input mesh as best as possible.
@@ -195,13 +200,16 @@ def find_regular_params_gcd(x, unit_number=1.0):
     if unit_number >= eps:
         w = np.divide(x, unit_number).astype(int)
     else:
-        raise ValueError(f"Parameter unit_number ({unit_number}) must be "
-                         f"larger than machine epsilon ({eps}).")
+        raise ValueError(
+            f"Parameter unit_number ({unit_number}) must be "
+            f"larger than machine epsilon ({eps})."
+        )
     widths = w[1:] - w[:-1]
 
     # Find the greatest common divisor (GCD) of all integer cell widths
     # The constant cell width in the regular mesh is given by that GCD.
     from math import gcd
+
     w = gcd(widths[0], widths[1])
     for wi in widths[2:]:
         w = gcd(wi, w)
@@ -211,6 +219,7 @@ def find_regular_params_gcd(x, unit_number=1.0):
     n = total_width // w + 1
 
     return int(n), float(w) * unit_number
+
 
 # def find_regular_params_tol(mesh, rtol=1e-3, n_cells_max=10000):
 #     r"""Finds the number of cells and constant cell width of the regular 1-D

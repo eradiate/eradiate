@@ -120,7 +120,7 @@ def test_particles_layer(mode_mono):
     assert layer.tau_550 == tau_550
     assert len(layer.z_layer) == layer.n_layers
     # default vertical distribution is uniform:
-    assert (layer.fractions == 1).all()
+    assert (layer.eval_fractions() == 1).all()
 
 
 def test_particles_layer_invalid_bottom_top():
@@ -187,12 +187,12 @@ def test_dataset():
     return path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc")
 
 
-def test_particles_layer_to_dataset(mode_mono, test_dataset):
-    """Method to_dataset returns data set with expected data variables and
+def test_particles_layer_radprops(mode_mono, test_dataset):
+    """Method 'radprops' returns data set with expected data variables and
     coordinates."""
     layer = ParticleLayer(dataset=test_dataset)
     spectral_ctx = SpectralContext.new()
-    ds = layer.to_dataset(spectral_ctx)
+    ds = layer.radprops(spectral_ctx)
     expected_data_vars = ["phase", "sigma_t", "albedo"]
     expected_coords = ["z_layer", "w", "mu"]
     assert all([coord in ds.coords for coord in expected_coords]) and all(
