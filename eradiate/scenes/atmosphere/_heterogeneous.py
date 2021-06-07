@@ -11,11 +11,16 @@ from eradiate.contexts import SpectralContext
 from eradiate.radprops import particles
 
 from ._base import Atmosphere, AtmosphereFactory
+from ._mesh_util import merge
 from ... import mesh as mesh
 from ... import validators
 from ..._attrs import documented, parse_docs
 from ...radprops import ParticleLayer, RadProfileFactory
-from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
+from ...radprops.rad_profile import (
+    RadProfile,
+    US76ApproxRadProfile,
+    interp_along_altitude,
+)
 from ...units import to_quantity, unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
@@ -432,22 +437,30 @@ class HeterogeneousAtmosphere(Atmosphere):
 
         # Find unique level altitude mesh
         molecules_radprops = self.profile.to_dataset(spectral_ctx)
-        molecules_z_level_mesh = [to_quantity(molecules_radprops.z_level).m_as("km")]
+        molecules_z_level_mesh = to_quantity(molecules_radprops.z_level).m_as("km")
         particles_z_level_meshes = [
             element.z_level.m_as("km") for element in self.particles
         ]
-        z_level_meshes = molecules_z_level_mesh + particles_z_level_meshes
-        # TODO: set atol to mininimum delta z_level value?
-        z_level = ureg.Quantity(
-            mesh.to_regular(mesh.merge(meshes=z_level_meshes), atol=0.01), "km"
-        )  # atol = 10 m (arbitrary!)
+        # TODO: set atol
+        z_level_magnitude, z_level_particle_magnitude = merge(
+            molecules_z_level_mesh, particles_z_level_meshes
+        )
+        z_level = ureg.Quantity(z_level_magnitude, "km")
+        z_level_particle = ureg.Quantity(z_level_particle_magnitude, "km")
+        # z_level_meshes = molecules_z_level_mesh + particles_z_level_meshes
+        # z_level = ureg.Quantity(
+        #     mesh.to_regular(mesh.merge(meshes=z_level_meshes), atol=0.01), "km"
+        # )  # atol = 10 m (arbitrary!)
 
         # Compute particles layer radiative properties on unique level altitude mesh
         radprops = []
-        for layer in self.particles:
-            layer_mask = (z_level >= layer.bottom) & (z_level <= layer.top)
+        for i, layer in enumerate(self.particles):
             radprops.append(
-                layer.radprops(spectral_ctx=spectral_ctx, z_level=z_level[layer_mask])
+                layer.radprops(spectral_ctx=spectral_ctx, z_level=z_level_particle[i])
             )
 
-        # Project molecules radiative properties on unique layer altitude mesh
+        # Interpolate molecules radiative properties on unique level altitude mesh
+        new_molecules_radprops = interp_along_altitude(
+            ds=molecules_radprops, new_z_level=z_level
+        )
+        return new_molecules_radprops, radprops
