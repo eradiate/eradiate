@@ -30,6 +30,16 @@ def test_merge_one_layer() -> None:
     assert np.allclose(z_merged, expected_z_merged)
 
 
+def test_merge_one_layer_2() -> None:
+    """Returns expected mesh."""
+    z_mol = np.linspace(0.0, 86.0, 87)
+    z_par = [np.linspace(0.5, 1.5, 2)]
+    expected_z_merged = np.linspace(0.0, 86.0, 173)
+
+    z_merged, _ = merge(z_mol, z_par)
+    assert np.allclose(z_merged, expected_z_merged)
+
+
 def test_merge_layer_mesh_is_not_degraded() -> None:
     """Particle altitude mesh is not degraded."""
     z_mol = np.linspace(0.0, 4.0, 3)
