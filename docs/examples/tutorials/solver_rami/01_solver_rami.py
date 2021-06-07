@@ -69,13 +69,13 @@ illumination
 #
 # All measures in Eradiate use an underlying kernel component called *sensor*.
 # All sensors record their results to a *film*, which consists of a set of
-# pixels arranged on a Cartesian grid, and the :class:`.DistantMeasure` features
-# a ``film_resolution`` parameter which controls the number of pixels on the
-# film. It should be a 2-element sequence of integers, the first one being the
-# width of the film, and the second being the height. We will configure our
-# measure to produce a global view of the scene's bidirectional reflectance
-# factor over the whole hemisphere and will set the film to a coarse resolution
-# of 32 × 32.
+# pixels arranged on a Cartesian grid, and :class:`.DistantReflectanceMeasure`
+# features a ``film_resolution`` parameter which controls the number of pixels
+# on the film. It should be a 2-element sequence of integers, the first one
+# being the width of the film, and the second being the height. We will
+# configure our measure to produce a global view of the scene's bidirectional
+# reflectance factor over the whole hemisphere and will set the film to a coarse
+# resolution of 32 × 32.
 #
 # When the simulation starts, the Monte Carlo algorithms traces a number rays
 # per film pixel controlled by the ``spp`` (for *samples per pixel*) parameter.
@@ -87,14 +87,14 @@ illumination
 # unique identifier: it will be used to reference the results. We will assign
 # the identifier `toa_brf` to our measure.
 #
-# The :class:`.DistantMeasure` class has other parameters, but we do not need to
-# modify them for now.
+# The :class:`.DistantReflectanceMeasure` class has other parameters, but we do
+# not need to modify them for now.
 
-measure = eradiate.scenes.measure.DistantMeasure(
+measure = eradiate.scenes.measure.DistantReflectanceMeasure(
     id="toa_brf",
     film_resolution=(32, 32),
     spp=1000,
-    spectral_cfg={"wavelengths": [550.0]}
+    spectral_cfg={"wavelengths": [550.0]},
 )
 measure
 
@@ -178,10 +178,10 @@ plt.show()
 # -----------------------------------
 #
 # We are now going to run a new simulation with a different measure
-# configuration. We will still use the :class:`.DistantMeasure` element, but we
-# will set its film height to 1 pixel. This will trigger a special behaviour
-# where the underlying kernel sensor will sample directions only on a plane
-# defined by the measure's ``orientation`` parameter. We will set
+# configuration. We will still use the :class:`.DistantReflectanceMeasure`
+# element, but we will set its film height to 1 pixel. This will trigger a
+# special behaviour where the underlying kernel sensor will sample directions
+# only on a plane defined by the measure's ``orientation`` parameter. We will set
 # ``orientation`` to the same value as the Sun azimuth angle: this will make our
 # sensor record radiance in the principal plane.
 #
@@ -189,7 +189,7 @@ plt.show()
 # SPP at a reasonable computational cost. Let's increase it up to 100000 to
 # reduce that noise.
 
-measure = eradiate.scenes.measure.DistantMeasure(
+measure = eradiate.scenes.measure.DistantReflectanceMeasure(
     id="toa_brf", film_resolution=(32, 1), spp=100000, orientation=45.0
 )
 

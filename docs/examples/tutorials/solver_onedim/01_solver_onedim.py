@@ -89,7 +89,7 @@ atmosphere
 # """"""""""""
 #
 # Next up is the illumination of our scene. We will use a directional
-# illumination model [:class:`.DirectionalIllumination`], which consists of an
+# illumination model [:class:`.DirectionalIllumination`], which simulates an
 # infinitely distant collimated light source. This model is configured by
 # the zenith and azimuth angles; we can also specify the illumination spectrum,
 # which we will set to the default solar irradiance spectrum
@@ -109,23 +109,23 @@ illumination
 # The final piece of our scene is the observation. We are interested quantities
 # derived from the top-of-atmosphere leaving radiance, *e.g.* the
 # top-of-atmosphere bidirectional reflectance factor (BRF). Eradiate simulates
-# this using the distant measure [:class:`.DistantMeasure`] which, in practice,
-# records the radiance leaving the scene. By default, this measure records the
-# radiance in the entire hemisphere, which is mapped to its rectangular *film*.
+# this using the distant reflectance measure [:class:`.DistantReflectanceMeasure`]
+# which, in practice, records the radiance leaving the scene and derives
+# reflectance values from it.
 #
-# By default, :class:`.DistantMeasure` records the leaving radiance in the
-# entire hemisphere. Although this is of limited utility for a detailed
-# analysis, it is interesting to examine roughly results and orient more
-# detailed computations. We will therefore run a quick simulation with a
-# low-resolution (32×32) film and a rather low number of samples per pixels
-# (10000). We expect the result to be noisy, but we will see later how to run
-# a quick simulation with more samples and less noise.
+# By default, :class:`.DistantReflectanceMeasure` covers the entire hemisphere.
+# Although this is of limited utility for a detailed analysis, it is interesting
+# to examine roughly results and orient more detailed computations. We will
+# therefore run a quick simulation with a low-resolution (32×32) film and a
+# rather low number of samples per pixels (10000). We expect the result to be
+# noisy, but we will see later how to run a quick simulation with more samples
+# and less noise.
 #
 # In order to identify our results more easily afterwards, we will assign a
 # ``toa_hsphere`` identifier (for "top-of-atmosphere, hemisphere") to our
 # measure.
 
-measure = eradiate.scenes.measure.DistantMeasure(
+measure = eradiate.scenes.measure.DistantReflectanceMeasure(
     id="toa_hsphere",
     film_resolution=(32, 32),
     spp=10000,
@@ -237,7 +237,7 @@ scene = eradiate.solvers.onedim.OneDimScene(
         sigma_s=1e-6 * ureg.m ** -1,
     ),
     illumination=illumination,
-    measures=eradiate.scenes.measure.DistantMeasure(
+    measures=eradiate.scenes.measure.DistantReflectanceMeasure(
         id="toa_hsphere",
         film_resolution=(32, 32),
         spp=10000,
@@ -255,7 +255,7 @@ plt.show()
 # While the hemispherical views we have created so far are convenient for
 # basic checks, they are fairly noisy and we usually prefer visualising results
 # in the principal plane. For that purpose, we can configure our
-# :class:`.DistantMeasure` by assigning 1 to the film height. Since we are
+# :class:`.DistantReflectanceMeasure` by assigning 1 to the film height. Since we are
 # significantly reducing the number of pixels, we can increase the number of
 # samples we will take while (more or less) preserving our computational time.
 
@@ -266,7 +266,7 @@ scene = eradiate.solvers.onedim.OneDimScene(
         sigma_s=1e-4 * ureg.m ** -1,
     ),
     illumination=illumination,
-    measures=eradiate.scenes.measure.DistantMeasure(
+    measures=eradiate.scenes.measure.DistantReflectanceMeasure(
         id="toa_pplane",
         film_resolution=(32, 1),
         spp=1000000,
@@ -313,7 +313,7 @@ scene = eradiate.solvers.onedim.OneDimScene(
         "irradiance": {"type": "solar_irradiance"},
     },
     measures={
-        "type": "distant",
+        "type": "distant_reflectance",
         "id": "toa_hsphere",
         "film_resolution": (32, 1),
         "spp": 1000000,
@@ -342,7 +342,7 @@ scene = eradiate.solvers.onedim.OneDimScene.from_dict(
             "irradiance": {"type": "solar_irradiance"},
         },
         "measures": {
-            "type": "distant",
+            "type": "distant_reflectance",
             "id": "toa_hsphere",
             "film_resolution": (32, 1),
             "spp": 1000000,
@@ -374,7 +374,7 @@ config = {
         "irradiance": {"type": "solar_irradiance"},
     },
     "measures": {
-        "type": "distant",
+        "type": "distant_reflectance",
         "id": "toa_hsphere",
         "film_resolution": (32, 1),
         "spp": 1000000,
