@@ -56,8 +56,10 @@ Biosphere [eradiate.scenes.biosphere]
 .. autosummary::
    :toctree: generated/
 
+   CanopyElement
    LeafCloud
-   InstancedLeafCloud
+   AbstractTree
+   InstancedCanopyElement
    DiscreteCanopy
 
 .. dropdown:: **Parameters for LeafCloud generators**
@@ -68,6 +70,7 @@ Biosphere [eradiate.scenes.biosphere]
       _discrete.CuboidLeafCloudParams
       _discrete.SphereLeafCloudParams
       _discrete.CylinderLeafCloudParams
+      _dicsrete.ConeLeafCloudParams
 
 .. _sec-reference-scenes-surface:
 
