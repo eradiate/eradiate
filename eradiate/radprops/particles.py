@@ -771,7 +771,9 @@ class ParticleLayer:
                 ),
                 "w": (
                     "w",
-                    [wavelength.magnitude],
+                    [
+                        round(wavelength.magnitude, 12)
+                    ],  # fix floating point arithmetic issue
                     dict(
                         standard_name="wavelength",
                         long_name="wavelength",

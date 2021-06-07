@@ -3,6 +3,7 @@ Radiative property profile definitions.
 """
 import datetime
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 import attr
 import numpy as np
@@ -148,8 +149,8 @@ def make_dataset(
             ),
             "w": (
                 "w",
-                [wavelength],
-                dict(standard_name="wavelength", units="nm", long_name="wavelength"),
+                [round(wavelength, 12)],  # fix floating point arithmetic issue,
+                dict(standard_name="wavelength", long_name="wavelength", units="nm"),
             ),
         },
         attrs={
@@ -616,7 +617,7 @@ class US76ApproxRadProfile(RadProfile):
     def sigma_t(self, spectral_ctx=None):
         return self.sigma_a(spectral_ctx) + self.sigma_s(spectral_ctx)
 
-    def to_dataset(self, spectral_ctx=None):
+    def to_dataset(self, spectral_ctx=None) -> xr.Dataset:
         """
         Return a dataset that holds the atmosphere radiative properties.
 
@@ -1010,3 +1011,88 @@ class AFGL1986RadProfile(RadProfile):
             sigma_a=self.sigma_a(spectral_ctx).flatten(),
             sigma_s=self.sigma_s(spectral_ctx).flatten(),
         )
+
+
+def interp_along_altitude(ds: xr.Dataset, new_z_level: ureg.Quantity) -> xr.Dataset:
+    """
+    Interpolate atmospheric radiative properties along altitude.
+
+    The interpolation method is set to ``"nearest"`` so that, if ``new_z_level``
+    is a subdivision of ``ds``'s level altitude mesh, the new sub-layers share
+    the same radiative properties as the corresponding initial layers that they
+    divide.
+
+    Parameter ``ds`` (:class:``xarray.Dataset``):
+        Atmospheric radiative properties data set to interpolate.
+
+    Parameter ``new_z_level`` (:class:``~pint.Quantity``):
+        New level altitude mesh on which to interpolate the atmopsheric radiative
+        properties data set.
+
+    Returns → :class:``xarray.Dataset``:
+    """
+    z_layer = (new_z_level[1:] + new_z_level[:-1]) / 2.0
+    return ds.interp(
+        z_layer=z_layer.m_as(ds.z_layer.units),
+        method="nearest",
+        kwargs=dict(fill_value="extrapolate"),
+    ).assign_coords(
+        {
+            "z_level": (
+                "z_level",
+                new_z_level.magnitude,
+                dict(
+                    standard_name="level_altitude",
+                    long_name="level altitude",
+                    units=new_z_level.units,
+                ),
+            )
+        }
+    )
+
+
+def blend(radprops: Tuple[xr.Dataset]) -> xr.Dataset:
+    """
+    Blend radiative properties profile data sets.
+
+    Total extinction coefficients are computed according to:
+
+    .. math::
+        k_{\mathrm{t}} = \\sum_{i} k_{\mathrm{t}i}
+
+    Total albedo are computed according to:
+
+    .. math::
+        \\varpi = \\sum_{i} \\frac{
+            k_{\mathrm{t}i}
+        }{
+            k_{\mathrm{t}}
+        }
+        \\varpi_i
+
+    Parameter ``radprops`` (tuple of :class:``xarray.Dataset``):
+        Radiative properties data sets to blend.
+
+    Returns → :class:``xarray.Dataset``:
+        Blended radiative properties profile data set.
+    """
+    # TODO: concat along new dimension then perform sum and weighted mean operations along the new dimension
+
+    # Total extinction coefficients
+    sigma_t_i = (x.sigma_t for x in radprops)
+    sigma_t_i_aligned = xr.align(*sigma_t_i, join="outer", fill_value=0.0)
+    sigma_t = sum(sigma_t_i_aligned)
+
+    # Total albedos
+    albedo_i = (x.albedo for x in radprops)
+    albedo_i_aligned = xr.align(*albedo_i, join="outer", fill_value=0.0)
+    albedo = sum(
+        [
+            (sigma_t_i / sigma_t) * albedo_i
+            for sigma_t_i, albedo_i in zip(sigma_t_i_aligned, albedo_i_aligned)
+        ]
+    )
+    # Name the DataArray that has lost its name during the weighted mean operation
+    albedo.name = "albedo"
+
+    return xr.merge([sigma_t, albedo])
