@@ -36,19 +36,16 @@ from eradiate.solvers.onedim import OneDimSolverApp
 
 config = {
     "mode": "mono_double",
-    "atmosphere": {
-        "type": "heterogeneous",
-        "profile": {
-            "type": "us76_approx"
+    "atmosphere": {"type": "heterogeneous", "profile": {"type": "us76_approx"}},
+    "measures": [
+        {
+            "type": "distant_reflectance",
+            "id": "toa_plane",
+            "film_resolution": [90, 1],
+            "spp": 65536,
+            "spectral_cfg": {"wavelengths": [579.0]},
         }
-    },
-    "measures": [{
-        "type": "distant",
-        "id": "toa_plane",
-        "film_resolution": [90,1],
-        "spp": 65536,
-        "spectral_cfg": {"wavelengths": [579.0]},
-    }]
+    ],
 }
 app = OneDimSolverApp.from_dict(config)
 
@@ -100,19 +97,16 @@ print(app.scene.atmosphere.profile.albedo(spectral_ctx))
 
 config = {
     "mode": "mono_double",
-    "atmosphere": {
-        "type": "heterogeneous",
-        "profile": {
-            "type": "us76_approx"
+    "atmosphere": {"type": "heterogeneous", "profile": {"type": "us76_approx"}},
+    "measures": [
+        {
+            "type": "distant_reflectance",
+            "id": "toa_plane",
+            "film_resolution": [90, 1],
+            "spp": 65536,
+            "spectral_cfg": {"wavelengths": [1281.0]},
         }
-    },
-    "measures": [{
-        "type": "distant",
-        "id": "toa_plane",
-        "film_resolution": [90, 1],
-        "spp": 65536,
-        "spectral_cfg": {"wavelengths": [1281.0]},
-    }]
+    ],
 }
 app = OneDimSolverApp.from_dict(config)
 
