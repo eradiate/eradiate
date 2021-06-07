@@ -7,16 +7,16 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere._discrete import (
+    AbstractTree,
     DiscreteCanopy,
     InstancedCanopyElement,
     LeafCloud,
-    AbstractTree,
     _inversebeta,
     _leaf_cloud_orientations,
     _leaf_cloud_positions_cuboid,
     _leaf_cloud_positions_cuboid_avoid_overlap,
     _leaf_cloud_positions_cylinder,
-    _leaf_cloud_positions_sphere,
+    _leaf_cloud_positions_ellipsoid,
     _leaf_cloud_radii,
 )
 from eradiate.scenes.core import KernelDict
@@ -78,11 +78,11 @@ def test_leaf_cloud_positions_cuboid_avoid_overlap(rng):
     assert positions.shape == (1000, 3)
 
 
-def test_leaf_cloud_positions_sphere(rng):
-    """Unit tests for :func:`_leaf_cloud_positions_sphere`."""
-    positions = _leaf_cloud_positions_sphere(1, 1.0 * ureg.m, rng)
+def test_leaf_cloud_positions_ellipsoid(rng):
+    """Unit tests for :func:`_leaf_cloud_positions_ellipsoid`."""
+    positions = _leaf_cloud_positions_ellipsoid(1, rng, 1.0 * ureg.m)
     assert positions.shape == (1, 3)
-    assert np.allclose(positions, [-0.212706, 0.477006, 0.602504] * ureg.m)
+    assert np.allclose(positions, [0.11039234, 0.76996928, 0.50481848] * ureg.m)
 
 
 def test_leaf_cloud_positions_cylinder(rng):

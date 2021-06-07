@@ -69,6 +69,7 @@ Biosphere [eradiate.scenes.biosphere]
 
       _discrete.CuboidLeafCloudParams
       _discrete.SphereLeafCloudParams
+      _discrete.EllipsoidLeafCloudParams
       _discrete.CylinderLeafCloudParams
       _discrete.ConeLeafCloudParams
 
