@@ -29,7 +29,7 @@ def find_closest(
 
 def merge(
     z_mol: np.ndarray, z_par: List[np.ndarray], atol: float = 0.1
-) -> Tuple(np.ndarray, List[np.ndarray]):
+) -> Tuple[np.ndarray, List[np.ndarray]]:
     """
     Merge molecular atmopshere altitude mesh with particle layers altitude meshes.
 
