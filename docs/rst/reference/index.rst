@@ -17,6 +17,7 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
    :maxdepth: 2
 
    core
+   config
    contexts
    scenes
    solvers
