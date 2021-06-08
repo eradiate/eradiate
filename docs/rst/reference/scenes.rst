@@ -70,7 +70,7 @@ Biosphere [eradiate.scenes.biosphere]
       _discrete.CuboidLeafCloudParams
       _discrete.SphereLeafCloudParams
       _discrete.CylinderLeafCloudParams
-      _dicsrete.ConeLeafCloudParams
+      _discrete.ConeLeafCloudParams
 
 .. _sec-reference-scenes-surface:
 

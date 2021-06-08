@@ -465,7 +465,7 @@ class CylinderLeafCloudParams(LeafCloudParams):
 
 @parse_docs
 @attr.s
-class ConicalLeafCloudParams(LeafCloudParams):
+class ConeLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the cone :class:`.LeafCloud`
     generator.
@@ -678,7 +678,7 @@ class LeafCloud(CanopyElement):
         .. seealso:: :class:`.CuboidLeafCloudParams`
 
         The produced leaf cloud uniformly covers the
-        :math:`(x, y, z) \\in [-\\dfrac{l_h}{2}, + \\dfrac{l_h}{2}] \\times [-\\dfrac{l_h}{2}, + \\dfrac{l_h}{2}] \\times [0, l_v]`
+        :math:`(x, y, z) \\in \\left[ -\\dfrac{l_h}{2}, + \\dfrac{l_h}{2} \\right] \\times \\left[ -\\dfrac{l_h}{2}, + \\dfrac{l_h}{2} \\right] \\times [0, l_v]`
         region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
         of an approximated inverse beta distribution
         :cite:`Ross1991MonteCarloMethods`.
@@ -740,7 +740,7 @@ class LeafCloud(CanopyElement):
 
         .. seealso:: :class:`.SphereLeafCloudParams`
 
-        The produced leaf cloud covers uniformly the :math:`r < \\mathit{radius}`
+        The produced leaf cloud covers uniformly the :math:`r < \\mathtt{radius}`
         region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
         of an approximated inverse beta distribution
         :cite:`Ross1991MonteCarloMethods`.
@@ -778,7 +778,8 @@ class LeafCloud(CanopyElement):
 
         .. seealso:: :class:`.CylinderLeafCloudParams`
 
-        The produced leaf cloud covers uniformly the :math:`r < \\mathit{radius}, z \\in [0, l_v]`
+        The produced leaf cloud covers uniformly the
+        :math:`r < \\mathtt{radius}, z \\in [0, l_v]`
         region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
         of an approximated inverse beta distribution
         :cite:`Ross1991MonteCarloMethods`.
@@ -812,11 +813,12 @@ class LeafCloud(CanopyElement):
     def cone(cls, seed=12345, **kwargs):
         """
         Generate a leaf cloud with a right conical shape (vertical orientation).
-        Parameters are checked by the :class:`.ConicalLeafCloudParams` class.
+        Parameters are checked by the :class:`.ConeLeafCloudParams` class.
 
-        .. seealso:: :class:`.ConicalLeafCloudParams`
+        .. seealso:: :class:`.ConeLeafCloudParams`
 
-        The produced leaf cloud covers uniformly the :math:`r < \\mathit{radius}\cdot\mathit{1 - \frac{z}{l_v}}, z \\in [0, l_v]`
+        The produced leaf cloud covers uniformly the
+        :math:`r < \\mathtt{radius} \\cdot \\left( 1 - \\frac{z}{l_v} \\right), z \\in [0, l_v]`
         region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
         of an approximated inverse beta distribution
         :cite:`Ross1991MonteCarloMethods`.
@@ -827,7 +829,7 @@ class LeafCloud(CanopyElement):
             Seed for the random number generator.
         """
         rng = np.random.default_rng(seed=seed)
-        params = ConicalLeafCloudParams(**kwargs)
+        params = ConeLeafCloudParams(**kwargs)
         leaf_positions = _leaf_cloud_positions_cone(
             params.n_leaves, params.radius, params.l_vertical, rng
         )
