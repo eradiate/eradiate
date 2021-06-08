@@ -6,9 +6,17 @@ __version__ = "0.0.1"  #: Eradiate version number.
 
 __import__("xarray")
 
-# -- Operational mode definition -----------------------------------------------
+# -- Global configuration ------------------------------------------------------
 
-from ._mode import mode, set_mode, modes  # isort: skip
+from ._config import config  # isort: skip
+
+# -- Path resolver -------------------------------------------------------------
+
+# fmt: off
+from ._presolver import PathResolver  # isort: skip
+path_resolver = PathResolver()
+del PathResolver
+# fmt: on
 
 # -- Unit management facilities ------------------------------------------------
 
@@ -18,13 +26,9 @@ from .units import (  # isort: skip
     unit_registry,
 )
 
-# -- Path resolver -------------------------------------------------------------
+# -- Operational mode definition -----------------------------------------------
 
-# fmt: off
-from ._presolver import PathResolver  # isort: skip
-path_resolver = PathResolver()
-del PathResolver
-# fmt: on
+from ._mode import mode, set_mode, modes  # isort: skip
 
 # ------------------------------------------------------------------------------
 
