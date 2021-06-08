@@ -4,6 +4,7 @@ attrs
 click
 cerberus
 dask
+environ-config
 iapws
 matplotlib
 netcdf4

@@ -20,6 +20,7 @@ attrs==21.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+    #   environ-config
     #   pinttrs
     #   pytest
 babel==2.9.1
@@ -54,7 +55,7 @@ cycler==0.10.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2021.5.1
+dask==2021.6.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -63,11 +64,15 @@ docutils==0.16
     #   -c requirements/dev.txt
     #   rst2pdf
     #   sphinx
+environ-config==21.2.0
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/main.in
 execnet==1.8.1
     # via
     #   -c requirements/dev.txt
     #   pytest-xdist
-fsspec==2021.5.0
+fsspec==2021.6.0
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -83,7 +88,7 @@ imagesize==1.2.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==4.4.0
+importlib-metadata==4.5.0
     # via
     #   -c requirements/dev.txt
     #   click
@@ -255,7 +260,7 @@ snowballstemmer==2.1.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-sphinx==3.5.4
+sphinx==4.0.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
