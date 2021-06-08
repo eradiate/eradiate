@@ -10,4 +10,6 @@ Configuration [eradiate._config]
 
    EradiateConfig
 
+.. _sec-config-env_vars:
+
 .. include:: generated/env_vars.rst

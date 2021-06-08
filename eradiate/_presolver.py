@@ -15,8 +15,10 @@ class PathResolver(metaclass=Singleton):
     """
 
     def __init__(self):
-        """Initialize a new file resolver with the current working directory
-        and Eradiate's data directory."""
+        """
+        Initialize a new file resolver with the current working directory
+        and Eradiate's data directory.
+        """
         self.paths = []
         self.reset()
 
@@ -45,6 +47,10 @@ class PathResolver(metaclass=Singleton):
         """
         Reset path list to default value:
         ``[$PWD, $ERADIATE_DATA_PATH, $ERADIATE_DIR/resources/data]``.
+
+        .. seealso::
+
+           :ref:`sec-config-env_vars`
         """
 
         self.clear()
