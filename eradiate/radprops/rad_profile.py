@@ -3,7 +3,7 @@ Radiative property profile definitions.
 """
 import datetime
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import List, Tuple
 
 import attr
 import numpy as np
@@ -30,6 +30,7 @@ from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..validators import all_positive
+from ..xarray.math import weighted_mean
 
 
 @ureg.wraps(
@@ -1055,6 +1056,9 @@ def blend(radprops: Tuple[xr.Dataset]) -> xr.Dataset:
     """
     Blend radiative properties profile data sets.
 
+    Although each data set corresponds to a specific altitude region, their
+    altitude coordinate values must align exactly with the other's.
+
     Total extinction coefficients are computed according to:
 
     .. math::
@@ -1076,23 +1080,18 @@ def blend(radprops: Tuple[xr.Dataset]) -> xr.Dataset:
     Returns → :class:``xarray.Dataset``:
         Blended radiative properties profile data set.
     """
-    # TODO: concat along new dimension then perform sum and weighted mean operations along the new dimension
+    # Find the altitude mesh with the most number of points
+    index = np.argmax([r.z_layer.size for r in radprops])
+    z_layer = radprops[index].z_layer
 
-    # Total extinction coefficients
-    sigma_t_i = (x.sigma_t for x in radprops)
-    sigma_t_i_aligned = xr.align(*sigma_t_i, join="outer", fill_value=0.0)
-    sigma_t = sum(sigma_t_i_aligned)
+    # Reindex data sets on that altitude mesh
+    reindexed = [r.reindex({"z_layer": z_layer}, fill_value=0.0) for r in radprops]
 
-    # Total albedos
-    albedo_i = (x.albedo for x in radprops)
-    albedo_i_aligned = xr.align(*albedo_i, join="outer", fill_value=0.0)
-    albedo = sum(
-        [
-            (sigma_t_i / sigma_t) * albedo_i
-            for sigma_t_i, albedo_i in zip(sigma_t_i_aligned, albedo_i_aligned)
-        ]
-    )
-    # Name the DataArray that has lost its name during the weighted mean operation
+    # Compute total extinction coefficient and total albedo
+    sigma_t_i = [r.sigma_t for r in reindexed]
+    sigma_t = sum(sigma_t_i)
+    sigma_t.name = "sigma_t"
+    albedo = weighted_mean(data_arrays=[r.albedo for r in reindexed], weights=sigma_t_i)
     albedo.name = "albedo"
 
     return xr.merge([sigma_t, albedo])
