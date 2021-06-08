@@ -29,6 +29,7 @@ async-generator==1.10
 attrs==21.2.0
     # via
     #   -r requirements/main.in
+    #   environ-config
     #   jsonschema
     #   pinttrs
     #   pytest
@@ -78,7 +79,7 @@ coverage==5.5
     # via -r requirements/dev.in
 cycler==0.10.0
     # via matplotlib
-dask==2021.5.1
+dask==2021.6.0
     # via -r requirements/main.in
 decorator==5.0.9
     # via ipython
@@ -97,11 +98,13 @@ ensureconda==1.4.1
     # via conda-lock
 entrypoints==0.3
     # via nbconvert
+environ-config==21.2.0
+    # via -r requirements/main.in
 execnet==1.8.1
     # via pytest-xdist
 filelock==3.0.12
     # via ensureconda
-fsspec==2021.5.0
+fsspec==2021.6.0
     # via dask
 iapws==1.5.2
     # via -r requirements/main.in
@@ -111,7 +114,7 @@ idna==2.10
     #   requests
 imagesize==1.2.0
     # via sphinx
-importlib-metadata==4.4.0
+importlib-metadata==4.5.0
     # via
     #   click
     #   jsonschema
@@ -134,7 +137,7 @@ ipython-genutils==0.2.0
     #   nbformat
     #   notebook
     #   traitlets
-ipython==7.24.0
+ipython==7.24.1
     # via
     #   -r requirements/dev.in
     #   ipykernel
@@ -410,9 +413,9 @@ sphinx-copybutton==0.3.1
     # via -r requirements/docs.in
 sphinx-gallery==0.9.0
     # via -r requirements/docs.in
-sphinx-panels==0.5.2
+sphinx-panels==0.6.0
     # via -r requirements/docs.in
-sphinx==3.5.4
+sphinx==4.0.2
     # via
     #   -r requirements/docs.in
     #   -r requirements/tests.in
