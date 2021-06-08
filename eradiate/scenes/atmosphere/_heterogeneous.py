@@ -1,17 +1,20 @@
+from __future__ import annotations
+
 import struct
 import tempfile
-from functools import partial
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 import attr
 import numpy as np
+import pint
 import xarray as xr
 
 from eradiate.contexts import SpectralContext
 from eradiate.radprops import particles
 
 from ._base import Atmosphere, AtmosphereFactory
-from ._mesh_util import merge
+from ._mesh_util import conciliate, extract_layer_mesh
 from ... import validators
 from ..._attrs import documented, parse_docs
 from ...radprops import ParticleLayer, RadProfileFactory
@@ -19,6 +22,7 @@ from ...radprops.rad_profile import (
     RadProfile,
     US76ApproxRadProfile,
     interp_along_altitude,
+    blend,
 )
 from ...units import to_quantity
 from ...units import unit_context_kernel as uck
@@ -415,9 +419,14 @@ class HeterogeneousAtmosphere(Atmosphere):
             }
         }
 
-    def merge_radprops(self, spectral_ctx: SpectralContext = None) -> xr.Dataset:
+    @ureg.wraps(ret=None, args=(None, None, "km"), strict=False)
+    def _blend_radprops(
+        self,
+        spectral_ctx: SpectralContext = None,
+        atol: Optional[pint.Quantity] = None,
+    ) -> xr.Dataset:
         """
-        Merge molecules and particles radprops.
+        Blend molecules and particles radprops.
 
         Molecular radiative properties, specified by the 'profile' attribute,
         and particles layers radiative properties are defined on different
@@ -429,36 +438,128 @@ class HeterogeneousAtmosphere(Atmosphere):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
+        Parameter ``atol`` (:class:`~pint.Quantity`):
+            Absolute tolerance on the particle layer altitude bounds [km].
+
         Returns → :class:`~xarray.Dataset`
             Merged radiative properties data set.
         """
         if spectral_ctx is None:
             raise ValueError("keyword argument 'spectral_ctx' must be specified")
 
-        # Find unique level altitude mesh
-        radprops_mol = self.profile.to_dataset(spectral_ctx)
-        z_level_mol = to_quantity(radprops_mol.z_level).m_as("km")
-        z_level_par_all = [element.z_level.m_as("km") for element in self.particles]
-        dz = [z[1] - z[0] for z in z_level_par_all]
-        z_level_magnitude, z_level_par_all_magnitude = merge(
-            z_mol=z_level_mol, z_par=z_level_par_all, atol=min(dz) / 10.0
+        radprops = self._align_radprops(
+            radprops_mol=self.profile.to_dataset(spectral_ctx),
+            particle_layers=self.particles,
+            spectral_ctx=spectral_ctx,
         )
-        z_level = ureg.Quantity(z_level_magnitude, "km")
-        z_level_par = [
-            ureg.Quantity(z_level_par_magnitude, "km")
-            for z_level_par_magnitude in z_level_par_all_magnitude
-        ]
 
-        # Compute particles layer radiative properties on unique level altitude mesh
-        radprops_par_all = []
-        for i, layer in enumerate(self.particles):
-            radprops_layer = layer.radprops(
-                spectral_ctx=spectral_ctx, z_level=z_level_par[i]
+        return blend(radprops)
+
+    @staticmethod
+    @ureg.wraps(ret=None, args=(None, None, None, "km"), strict=False)
+    def _align_radprops(
+        radprops_mol: xr.Dataset,
+        particle_layers: List[ParticleLayer],
+        spectral_ctx: SpectralContext,
+        atol: Optional[pint.Quantity] = None,
+    ) -> Tuple[xr.Dataset, List[xr.Dataset]]:
+        """
+        Align molecules and particles radiative properties on a single altitude
+        mesh.
+
+        Initially, molecules radiative properties and particles radiative
+        properties are specified on different altitude meshes when
+        :class:`~.HeterogeneousAtmosphere` is instanciated.
+        This method uses a refined altitude mesh that is compatible with
+        both the molecules and particles components of the atmosphere.
+        The molecules radiative properties are interpolated on this refined
+        altitude mesh in a way that conserves the individual molecular
+        species amounts.
+        The particles radiative properties are re-computed on the refined
+        altitude mesh.
+
+        .. warning::
+            The refined altitude mesh may displace the particle layer altitude
+            bounds. Use the ``atol`` parameter to set the maximum displacement
+            value.
+
+        Parameter ``radprops_mol`` (:class:`xr.Dataset`):
+            Molecular atmosphere radiative properties.
+
+        Parameter ``particle_layers`` (list of :class:``.ParticleLayer``)
+            Particle layers within the atmosphere.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Parameter ``atol`` (:class:`~pint.Quantity`):
+            Absolute tolerance on the particle layer altitude bounds [km].
+
+        Returns → list of :class:`~xarray.Dataset`:
+            Aligned radiative properties data sets.
+        """
+        # Molecular atmosphere altitude mesh:
+        z_level_mol = to_quantity(radprops_mol.z_level).m_as("km")
+
+        # Particle layers altitude meshes:
+        z_level_par_all = [element.z_level.m_as("km") for element in particle_layers]
+
+        # Find conciliatory altitude mesh
+        z_level_m = HeterogeneousAtmosphere._find_conciliatory_altitude_mesh(
+            z_level_mol=z_level_mol, z_level_par_all=z_level_par_all, atol=atol
+        )
+        z_level = ureg.Quantity(z_level_m, "km")
+
+        # Extract new particle layers' altitude meshes from conciliatory mesh
+        z_level_par_m = [
+            extract_layer_mesh(
+                z=z_level_m, bottom=z_level_par.min(), top=z_level_par.max()
             )
-            radprops_par_all.append(radprops_layer)
+            for z_level_par in z_level_par_all
+        ]
+        z_level_par = [ureg.Quantity(z, "km") for z in z_level_par_m]
+
+        # Align radiative properties
+        radprops = []
 
         # Interpolate molecules radiative properties on unique level altitude mesh
-        radprops_mol_interpolated = interp_along_altitude(
-            ds=radprops_mol, new_z_level=z_level
-        )
-        return radprops_mol_interpolated, radprops_par_all
+        radprops.append(interp_along_altitude(ds=radprops_mol, new_z_level=z_level))
+
+        # Compute particles layer radiative properties on unique level altitude mesh
+        for i, layer in enumerate(particle_layers):
+            radprops.append(
+                layer.radprops(spectral_ctx=spectral_ctx, z_level=z_level_par[i])
+            )
+
+        return radprops
+
+    @staticmethod
+    def _find_conciliatory_altitude_mesh(
+        z_level_mol: np.ndarray, z_level_par_all: np.ndarray, atol: float = None
+    ) -> np.ndarray:
+        """
+        Find the altitude mesh that conciliates molecules and particles initial
+        altitude meshes.
+
+        Refer to :meth:`._mesh_util.conciliate` for more details.
+
+        Parameter ``z_level_mol`` (:class:`~numpy.ndarray`):
+            Altitude mesh of the molecular atmosphere.
+
+        Parameter ``z_level_par`` (list of :class:`~numpy.ndarray`):
+            Altitude meshes of all the particle layers within the atmosphere.
+
+        Parameter ``atol`` (float):
+            Absolute tolerance on the particle layers altitude bounds uncertainty.
+            By default, the absolute tolerance is set to a tenth of the
+            altitude step in the finest particle layer altitude mesh.
+
+        Returns → :class:`~numpy.ndarray`:
+            Conciliatory level altitude mesh.
+        """
+        if atol is None:
+            dz = [z[1] - z[0] for z in z_level_par_all]
+            atol = min(dz) / 10.0
+
+        return conciliate(z_mol=z_level_mol, z_par=z_level_par_all, atol=atol)

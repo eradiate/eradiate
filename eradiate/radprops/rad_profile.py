@@ -1052,7 +1052,7 @@ def interp_along_altitude(ds: xr.Dataset, new_z_level: ureg.Quantity) -> xr.Data
     )
 
 
-def blend(radprops: Tuple[xr.Dataset]) -> xr.Dataset:
+def blend(radprops: List[xr.Dataset]) -> xr.Dataset:
     """
     Blend radiative properties profile data sets.
 
@@ -1074,7 +1074,7 @@ def blend(radprops: Tuple[xr.Dataset]) -> xr.Dataset:
         }
         \\varpi_i
 
-    Parameter ``radprops`` (tuple of :class:``xarray.Dataset``):
+    Parameter ``radprops`` (list of :class:``xarray.Dataset``):
         Radiative properties data sets to blend.
 
     Returns → :class:``xarray.Dataset``:

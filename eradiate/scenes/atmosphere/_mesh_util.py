@@ -27,14 +27,24 @@ def find_closest(
     return x[idx]
 
 
-def merge(
+def conciliate(
     z_mol: np.ndarray, z_par: List[np.ndarray], atol: float = 0.1
-) -> Tuple[np.ndarray, List[np.ndarray]]:
+) -> np.ndarray:
     """
-    Merge molecular atmopshere altitude mesh with particle layers altitude meshes.
+    Conciliate molecular atmopshere altitude mesh with particle layers altitude
+    meshes.
 
-    Each particle layer is garanteed to have a greater or equal number of
-    sub-layers than in their initial level altitude mesh.
+    The method subdivides the initial molecular atmosphere's altitude mesh
+    until it reaches a resolution sufficient for the accurate representation
+    of the particles layers, and returns that refined altitude mesh.
+    The resolution is sufficient when one can find new particle layer bounds
+    in the refined altitude mesh so that the difference between the initial
+    layer altitude bounds and the new layer altitude bounds is less than
+    the value specified by ``atol``.
+
+    .. note::
+        Each particle layer is garanteed to have a greater or equal number of
+        sub-layers than in their initial level altitude mesh.
 
     .. note::
         In the process of merging the altitude meshes, the particle layers
@@ -52,8 +62,8 @@ def merge(
     Parameter ``atol`` (float):
         Absolute tolerance on particle layers bottom and top altitudes.
 
-    Returns -> Tuple[:class:``numpy.ndarray``, List[:class:``numpy.ndarray``]]:
-        Merged altitude mesh, new particle layers individual altitude meshs.
+    Returns -> :class:``numpy.ndarray``
+        Conciliatory altitude mesh.
     """
     # Initial guess
     dz_mol = z_mol[1] - z_mol[0]  # molecules layers thickness
@@ -90,9 +100,35 @@ def merge(
         new_edges = np.concatenate([new_bottoms, new_tops])
         diff = max(np.abs(new_edges - edges))
 
-    # compute new particle layers altitude meshes
-    new_z_par = []
-    for bottom, top in zip(new_bottoms, new_tops):
-        new_z_par.append(z[(z >= bottom) & (z <= top)])
+    return z
 
-    return z, new_z_par
+
+def extract_layer_mesh(z: np.ndarray, bottom: float, top: float) -> np.ndarray:
+    """
+    Extract a particle layer altitude mesh from the input molecular atmosphere
+    altitude mesh corresponding to the particle layer's altitude region.
+
+    Parameter ``z`` (:class:`~numpy.ndarray`):
+        Molecular atmosphere altitude mesh.
+
+    Parameter ``bottom`` (float):
+        Particle layer bottom altitude.
+
+    Parameter ``top`` (float):
+        Particle layer top altitude.
+
+    Returns → :class:`~numpy.ndarray`:
+        Particle layer altitude mesh.
+    """
+    if not bottom < top:
+        raise ValueError(
+            f"bottom must be less than top (got bottom={bottom} which is not less than top={top})"
+        )
+    if bottom < z.min() or bottom > z.max():
+        raise ValueError(
+            f"bottom must be within z (got {bottom} which is not within {z})"
+        )
+    if top < z.min() or top > z.max():
+        raise ValueError(f"top must be within z (got {top} which is not within {z})")
+
+    return z[(z >= find_closest(z, bottom)) & (z <= find_closest(z, top))]
