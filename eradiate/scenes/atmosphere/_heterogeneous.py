@@ -12,7 +12,6 @@ from eradiate.radprops import particles
 
 from ._base import Atmosphere, AtmosphereFactory
 from ._mesh_util import merge
-from ... import mesh as mesh
 from ... import validators
 from ..._attrs import documented, parse_docs
 from ...radprops import ParticleLayer, RadProfileFactory
@@ -21,7 +20,8 @@ from ...radprops.rad_profile import (
     US76ApproxRadProfile,
     interp_along_altitude,
 )
-from ...units import to_quantity, unit_context_kernel as uck
+from ...units import to_quantity
+from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 

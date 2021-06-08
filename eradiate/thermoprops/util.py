@@ -6,16 +6,12 @@ sets.
 from datetime import datetime
 
 import iapws
-import numpy as np
 import scipy.constants
-import xarray as xr
 
 import eradiate.data as data
-import eradiate.mesh as mesh
 
-from . import profile_dataset_spec
-from ..units import unit_registry as ureg
 from ..units import to_quantity
+from ..units import unit_registry as ureg
 
 ATOMIC_MASS_CONSTANT = ureg.Quantity(
     *scipy.constants.physical_constants["atomic mass constant"][:-1]
@@ -411,79 +407,3 @@ def equilibrium_water_vapor_fraction(p, t):
             f"Equilibrium cannot be reached in these conditions (p = "
             f"{round(p, 2)} Pa, t = {round(t, 2)} K)"
         )
-
-
-def make_profile_regular(profile, atol):
-    """
-    Converts the atmosphere thermophysical properties data set with an
-    irregular altitude mesh to a profile defined over a regular altitude mesh.
-
-    Parameter ``profile`` (:class:`~xarray.Dataset`):
-        Original atmosphere thermophysical properties data set, defined over
-        an irregular altitude mesh.
-
-    Parameter ``atol`` (float):
-        Absolute tolerance used in the conversion of the irregular altitude
-        mesh to a regular altitude mesh.
-
-    Returns → :class:`~xarray.Dataset`:
-        Converted atmosphere thermophysical properties data set, defined over
-        a regular altitude mesh.
-    """
-    profile.ert.validate_metadata(profile_dataset_spec)
-
-    # compute the regular altitude nodes mesh
-    regular_z_level = mesh.to_regular(x=profile.z_level.values, atol=atol)
-
-    # compute corresponding altitude centers mesh
-    regular_z_layer = (regular_z_level[:-1] + regular_z_level[1:]) / 2.0
-
-    # compute the atmospheric variables with the regular altitude mesh
-    n_z = len(regular_z_layer)
-    p = np.zeros(n_z)
-    t = np.zeros(n_z)
-    n = np.zeros(n_z)
-    n_species = profile.species.size
-    mr = np.zeros((n_species, n_z))
-    layer = 0
-    for i, z in enumerate(regular_z_layer):
-        # when altitude is larger than current layer's upper bound, jump to
-        # the next layer
-        if z >= profile.z_level.values[layer + 1]:
-            layer += 1
-
-        p[i] = profile.p.values[layer]
-        t[i] = profile.t.values[layer]
-        n[i] = profile.n.values[layer]
-        mr[:, i] = profile.mr.values[:, layer]
-
-    species = profile["species"].values
-
-    # copy attributes
-    attrs = profile.attrs
-
-    # update history
-    new_line = (
-        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - made "
-        f"profile altitude mesh regular - "
-        f"eradiate.thermoprops.util.make_profile_regular "
-    )
-    attrs["history"] += f"\n{new_line}"
-
-    dataset = xr.Dataset(
-        data_vars=dict(
-            p=("z_layer", p),
-            t=("z_layer", t),
-            n=("z_layer", n),
-            mr=(("species", "z_layer"), mr),
-        ),
-        coords={
-            "z_layer": ("z_layer", regular_z_layer),
-            "z_level": ("z_level", regular_z_level),
-            "species": ("species", species),
-        },
-        attrs=attrs,
-    )
-    dataset.ert.normalize_metadata(profile_dataset_spec)
-
-    return dataset

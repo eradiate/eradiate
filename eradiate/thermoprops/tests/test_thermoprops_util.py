@@ -3,7 +3,6 @@ import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
-from eradiate.thermoprops.us76 import make_profile
 from eradiate.thermoprops.util import (
     compute_column_number_density,
     compute_number_density_at_surface,
@@ -11,8 +10,6 @@ from eradiate.thermoprops.util import (
     equilibrium_water_vapor_fraction,
     human_readable,
     interpolate,
-    make_profile_regular,
-    profile_dataset_spec,
     rescale_concentration,
     water_vapor_saturation_pressure,
 )
@@ -217,13 +214,3 @@ def test_equilibrium_water_vapor_fraction():
         p=ureg.Quantity(90, "kPa"), t=ureg.Quantity(20, "celsius")
     )
     assert 0.0 <= value <= 1.0
-
-
-# TODO: test further
-def test_make_profile_regular():
-    irregular_profile = make_profile(
-        levels=ureg.Quantity([0.0, 2.0, 8.0, 10.0, 16.0, 23.0, 32.0, 47.0, 50.0], "km")
-    )
-
-    regular_profile = make_profile_regular(irregular_profile, atol=1000.0)
-    regular_profile.ert.validate_metadata(profile_dataset_spec)

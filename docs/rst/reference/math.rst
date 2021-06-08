@@ -15,18 +15,6 @@ Frame manipulation [eradiate.frame]
    direction_to_angles
    spherical_to_cartesian
 
-Mesh manipulation [eradiate.mesh]
----------------------------------
-.. currentmodule:: eradiate.mesh
-
-.. autosummary::
-   :toctree: generated/
-
-   find_regular_params_gcd
-   merge
-   to_regular
-   unique
-
 Sample warping [eradiate.warp]
 ------------------------------
 .. currentmodule:: eradiate.warp
