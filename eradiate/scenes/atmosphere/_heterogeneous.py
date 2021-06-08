@@ -436,31 +436,26 @@ class HeterogeneousAtmosphere(Atmosphere):
             raise ValueError("keyword argument 'spectral_ctx' must be specified")
 
         # Find unique level altitude mesh
-        molecules_radprops = self.profile.to_dataset(spectral_ctx)
-        molecules_z_level_mesh = to_quantity(molecules_radprops.z_level).m_as("km")
-        particles_z_level_meshes = [
-            element.z_level.m_as("km") for element in self.particles
-        ]
+        radprops_mol = self.profile.to_dataset(spectral_ctx)
+        z_level_mol = to_quantity(radprops_mol.z_level).m_as("km")
+        z_level_par_all = [element.z_level.m_as("km") for element in self.particles]
         # TODO: set atol
-        z_level_magnitude, z_level_particle_magnitude = merge(
-            molecules_z_level_mesh, particles_z_level_meshes
+        z_level_magnitude, z_level_par_magnitude = merge(
+            z_mol=z_level_mol, z_par=z_level_par_all, atol=0.1
         )
         z_level = ureg.Quantity(z_level_magnitude, "km")
-        z_level_particle = ureg.Quantity(z_level_particle_magnitude, "km")
-        # z_level_meshes = molecules_z_level_mesh + particles_z_level_meshes
-        # z_level = ureg.Quantity(
-        #     mesh.to_regular(mesh.merge(meshes=z_level_meshes), atol=0.01), "km"
-        # )  # atol = 10 m (arbitrary!)
+        z_level_par = ureg.Quantity(z_level_par_magnitude, "km")
 
         # Compute particles layer radiative properties on unique level altitude mesh
-        radprops = []
+        radprops_par_all = []
         for i, layer in enumerate(self.particles):
-            radprops.append(
-                layer.radprops(spectral_ctx=spectral_ctx, z_level=z_level_particle[i])
+            radprops_layer = layer.radprops(
+                spectral_ctx=spectral_ctx, z_level=z_level_par[i]
             )
+            radprops_par_all.append(radprops_layer)
 
         # Interpolate molecules radiative properties on unique level altitude mesh
-        new_molecules_radprops = interp_along_altitude(
-            ds=molecules_radprops, new_z_level=z_level
+        radprops_mol_interpolated = interp_along_altitude(
+            ds=radprops_mol, new_z_level=z_level
         )
-        return new_molecules_radprops, radprops
+        return radprops_mol_interpolated, radprops_par_all
