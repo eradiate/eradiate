@@ -34,7 +34,7 @@ class EradiateConfig:
 
     data_path = environ.var(
         default=None,
-        converter=lambda x: [pathlib.Path(y) for y in x.split(":")]
+        converter=lambda x: [pathlib.Path(y) for y in x.split(":") if y]
         if isinstance(x, str)
         else x,
         help="A colon-separated list of paths where to search for data files.",
