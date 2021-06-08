@@ -439,9 +439,9 @@ class HeterogeneousAtmosphere(Atmosphere):
         radprops_mol = self.profile.to_dataset(spectral_ctx)
         z_level_mol = to_quantity(radprops_mol.z_level).m_as("km")
         z_level_par_all = [element.z_level.m_as("km") for element in self.particles]
-        # TODO: set atol
+        dz = [z[1] - z[0] for z in z_level_par_all]
         z_level_magnitude, z_level_par_magnitude = merge(
-            z_mol=z_level_mol, z_par=z_level_par_all, atol=0.1
+            z_mol=z_level_mol, z_par=z_level_par_all, atol=min(dz) / 10.0
         )
         z_level = ureg.Quantity(z_level_magnitude, "km")
         z_level_par = ureg.Quantity(z_level_par_magnitude, "km")
