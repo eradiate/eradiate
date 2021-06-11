@@ -6,9 +6,14 @@ except ImportError:
     import mock
 
     MOCK_MODULES = [
-        "mitsuba", "mitsuba.core", "mitsuba.core.math", "mitsuba.core.spline",
-        "mitsuba.core.warp", "mitsuba.core.xml", "mitsuba.render",
-        "mitsuba.render.mueller"
+        "mitsuba",
+        "mitsuba.core",
+        "mitsuba.core.math",
+        "mitsuba.core.spline",
+        "mitsuba.core.warp",
+        "mitsuba.core.xml",
+        "mitsuba.render",
+        "mitsuba.render.mueller",
     ]
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = mock.Mock()
@@ -38,21 +43,23 @@ factory_classes = {
     "MeasureFactory": MeasureFactory,
     "SpectrumFactory": SpectrumFactory,
     "SurfaceFactory": SurfaceFactory,
-    "RadProfileFactory": RadProfileFactory
+    "RadProfileFactory": RadProfileFactory,
 }
 
 factory_db = TinyDB(storage=MemoryStorage)
 
 for factory_name, cls in factory_classes.items():
-    factory_db.insert_multiple([
-        {
-            "factory": factory_name,
-            "key": key,
-            "module": str(value.__module__),
-            "cls_name": str(value.__name__)
-        }
-        for key, value in cls.registry.items()
-    ])
+    factory_db.insert_multiple(
+        [
+            {
+                "factory": factory_name,
+                "key": key,
+                "module": str(value.__module__),
+                "cls_name": str(value.__name__),
+            }
+            for key, value in cls.registry.items()
+        ]
+    )
 
 
 class FactoryTable(Table):
@@ -60,7 +67,7 @@ class FactoryTable(Table):
     option_spec = {
         "factory": directives.unchanged,
         "modules": directives.unchanged,
-        "sections": directives.flag
+        "sections": directives.flag,
     }
 
     def __init__(self, *args, **kwargs):
@@ -75,7 +82,7 @@ class FactoryTable(Table):
                 "The factorytable directive does not know what to do with "
                 "provided content",
                 nodes.literal_block(self.block_text, self.block_text),
-                line=self.lineno
+                line=self.lineno,
             )
             return [error]
 
@@ -85,7 +92,7 @@ class FactoryTable(Table):
             error = self.state_machine.reporter.error(
                 f"Unknown factory {factory_name}",
                 nodes.literal_block(self.block_text, self.block_text),
-                line=self.lineno
+                line=self.lineno,
             )
             return [error]
 
@@ -108,7 +115,7 @@ class FactoryTable(Table):
                 f"{factory_name}: "
                 f"{', '.join(set(modules) - set(factory_cls._modules))}",
                 nodes.literal_block(self.block_text, self.block_text),
-                line=self.lineno
+                line=self.lineno,
             )
             return [error]
 
@@ -121,13 +128,13 @@ class FactoryTable(Table):
         if modules is not None:
             for module in modules:
                 if show_sections:
-                    member.append([f":bolditalic:`In submodule` "
-                                   f":mod:`~{module}`",
-                                   "—"])
+                    member.append(
+                        [f":bolditalic:`In submodule` " f":mod:`~{module}`", "—"]
+                    )
 
                 for element_info in factory_db.search(
-                        (Query().module.matches(rf"^{module}.*")) &
-                        (Query().factory == factory_name)
+                    (Query().module.matches(rf"^{module}.*"))
+                    & (Query().factory == factory_name)
                 ):
                     factory_keyword = f"``{element_info['key']}``"
                     class_module = element_info["module"]
@@ -136,9 +143,7 @@ class FactoryTable(Table):
                     member.append([factory_keyword, class_reference])
 
         else:  # Disregard module-based query and sorting
-            for element_info in factory_db.search(
-                    Query().factory == factory_name
-            ):
+            for element_info in factory_db.search(Query().factory == factory_name):
                 factory_keyword = f"``{element_info['key']}``"
                 class_module = element_info["module"]
                 class_name = element_info["cls_name"]
@@ -195,7 +200,7 @@ class FactoryTable(Table):
         table += tgroup
 
         tgroup.extend(
-            nodes.colspec(colwidth=col_width, colname='c' + str(idx))
+            nodes.colspec(colwidth=col_width, colname="c" + str(idx))
             for idx, col_width in enumerate(self.col_widths)
         )
 
@@ -204,8 +209,7 @@ class FactoryTable(Table):
 
         row_node = nodes.row()
         thead += row_node
-        row_node.extend(nodes.entry(h, nodes.paragraph(text=h))
-                        for h in self.headers)
+        row_node.extend(nodes.entry(h, nodes.paragraph(text=h)) for h in self.headers)
 
         tbody = nodes.tbody()
         tgroup += tbody
@@ -243,8 +247,7 @@ def factory_key(name, rawtext, text, lineno, inliner, options={}, content=[]):
 
     else:
         msg = inliner.reporter.error(
-            f"factory key {text} could not be interpreted",
-            line=lineno
+            f"factory key {text} could not be interpreted", line=lineno
         )
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
@@ -253,23 +256,16 @@ def factory_key(name, rawtext, text, lineno, inliner, options={}, content=[]):
         db_entries = factory_db.search(Query().key == key)
     else:
         db_entries = factory_db.search(
-            (Query().factory == factory_name) &
-            (Query().key == key)
+            (Query().factory == factory_name) & (Query().key == key)
         )
 
     if len(db_entries) == 0:
-        msg = inliner.reporter.error(
-            f"could not find factory key {text}",
-            line=lineno
-        )
+        msg = inliner.reporter.error(f"could not find factory key {text}", line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
 
     if len(db_entries) > 1:
-        msg = inliner.reporter.error(
-            f"ambiguous factory key {key}",
-            line=lineno
-        )
+        msg = inliner.reporter.error(f"ambiguous factory key {key}", line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
 
@@ -280,8 +276,7 @@ def factory_key(name, rawtext, text, lineno, inliner, options={}, content=[]):
     # TODO: format as monospaced
     # TODO: not robust, retrieve class URI and use it
     # node = nodes.Text(text)
-    node = nodes.reference(rawsource=rawtext, text=key,
-                           refuri=f"{mod}.{cls_name}.html")
+    node = nodes.reference(rawsource=rawtext, text=key, refuri=f"{mod}.{cls_name}.html")
 
     return [node], []
 

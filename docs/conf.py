@@ -23,6 +23,7 @@ sys.path.append(os.path.abspath(".."))
 
 # -- Project information -----------------------------------------------------
 
+
 def read(*parts):
     """
     Build an absolute path from *parts* and and return the contents of the
@@ -39,9 +40,7 @@ def find_version(*file_paths):
     string inside.
     """
     version_file = read(*file_paths)
-    version_match = re.search(
-        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M
-    )
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
     if version_match:
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
@@ -51,7 +50,7 @@ project = "Eradiate"
 copyright = f"2020-{datetime.datetime.now().year}, The Eradiate Team"
 author = "The Eradiate Team"
 release = find_version("../eradiate/__init__.py")
-version = release.rsplit(u".", 1)[0]
+version = release.rsplit(".", 1)[0]
 
 # -- General configuration ---------------------------------------------------
 
@@ -70,6 +69,7 @@ exclude_patterns = ["_build"]
 
 # Add custom extension
 extensions.append("ertdocs")
+extensions.append("exec")
 
 rst_prolog = r"""
 .. role:: bolditalic
@@ -107,13 +107,15 @@ sphinx_gallery_conf = {
     "gallery_dirs": [  # path to where to save gallery generated output
         "examples/generated/tutorials/",
     ],
-    "subsection_order": ExplicitOrder([
-        "examples/tutorials/solver_onedim",
-        "examples/tutorials/solver_rami",
-        "examples/tutorials/atmosphere",
-        "examples/tutorials/biosphere",
-        "examples/tutorials/data",
-    ]),
+    "subsection_order": ExplicitOrder(
+        [
+            "examples/tutorials/solver_onedim",
+            "examples/tutorials/solver_rami",
+            "examples/tutorials/atmosphere",
+            "examples/tutorials/biosphere",
+            "examples/tutorials/data",
+        ]
+    ),
     "within_subsection_order": FileNameSortKey,
     "filename_pattern": "/",
     "reference_url": {
@@ -148,7 +150,10 @@ todo_include_todos = True
 # Autodoc and autosummary options
 extensions.append("sphinx.ext.autodoc")
 autodoc_default_flags = [
-    "members", "undoc-members", "show-inheritance", "inherited-members"
+    "members",
+    "undoc-members",
+    "show-inheritance",
+    "inherited-members",
 ]
 autodoc_typehints = "none"
 
@@ -159,9 +164,14 @@ autosummary_members = True
 # Mitsuba modules must be mocked in order to allow compiling docs even if they're not here;
 # this mocking is also done in the ertdocs extension
 autodoc_mock_imports = [
-    "mitsuba", "mitsuba.core", "mitsuba.core.math", "mitsuba.core.spline",
-    "mitsuba.core.warp", "mitsuba.core.xml", "mitsuba.render",
-    "mitsuba.render.mueller"
+    "mitsuba",
+    "mitsuba.core",
+    "mitsuba.core.math",
+    "mitsuba.core.spline",
+    "mitsuba.core.warp",
+    "mitsuba.core.xml",
+    "mitsuba.render",
+    "mitsuba.render.mueller",
 ]
 
 # ------------------------- HTML output customisation -------------------------
@@ -169,9 +179,7 @@ autodoc_mock_imports = [
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "github_url": "https://github.com/eradiate/eradiate"
-}
+html_theme_options = {"github_url": "https://github.com/eradiate/eradiate"}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -259,22 +267,17 @@ htmlhelp_basename = "eradiate_doc"
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     "papersize": "a4paper",
-
     "classoptions": ",oneside",
-
     # The font size ("10pt", "11pt" or "12pt").
     "pointsize": "10pt",
-
     # Fonts
     "fontpkg": r"""
         \setmainfont{Charis SIL}[Scale=.98]
         \setsansfont{Source Sans Pro}[Scale=MatchLowercase]
         \setmonofont{Hack}[Scale=MatchLowercase]
     """,
-
     # Additional stuff for the LaTeX preamble.
     "preamble": "",
-
     # Latex figure (float) alignment
     # 'figure_align': 'htbp',
 }
@@ -285,8 +288,13 @@ latex_engine = "xelatex"
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ("index_latex", "eradiate.tex", "Eradiate Documentation",
-     "The Eradiate Team", "manual"),
+    (
+        "index_latex",
+        "eradiate.tex",
+        "Eradiate Documentation",
+        "The Eradiate Team",
+        "manual",
+    ),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

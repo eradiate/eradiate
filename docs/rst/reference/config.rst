@@ -12,4 +12,9 @@ Configuration [eradiate._config]
 
 .. _sec-config-env_vars:
 
-.. include:: generated/env_vars.rst
+Environment variables
+---------------------
+
+.. exec::
+   from eradiate._config import EradiateConfig, format_help_dicts_rst
+   print(EradiateConfig.generate_help(formatter=format_help_dicts_rst))
