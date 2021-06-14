@@ -424,7 +424,7 @@ class HeterogeneousAtmosphere(Atmosphere):
         self,
         spectral_ctx: SpectralContext = None,
         atol: Optional[pint.Quantity] = None,
-    ) -> xr.Dataset:
+    ) -> Tuple[xr.Dataset, xr.Dataset]:
         """
         Blend molecules and particles radprops.
 
@@ -441,8 +441,8 @@ class HeterogeneousAtmosphere(Atmosphere):
         Parameter ``atol`` (:class:`~pint.Quantity`):
             Absolute tolerance on the particle layer altitude bounds [km].
 
-        Returns → :class:`~xarray.Dataset`
-            Merged radiative properties data set.
+        Returns → tuple of :class:`~xarray.Dataset`
+            Blended radiative properties data set, blending ratios.
         """
         if spectral_ctx is None:
             raise ValueError("keyword argument 'spectral_ctx' must be specified")

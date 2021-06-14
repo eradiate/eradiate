@@ -30,7 +30,7 @@ from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..validators import all_positive
-from ..xarray.math import weighted_mean
+from ..xarray.math import weighted_mean, ratios
 
 
 @ureg.wraps(
@@ -1053,7 +1053,7 @@ def interp_along_altitude(ds: xr.Dataset, new_z_level: ureg.Quantity) -> xr.Data
     )
 
 
-def blend(radprops: List[xr.Dataset]) -> xr.Dataset:
+def blend(radprops: List[xr.Dataset]) -> Tuple[xr.Dataset, xr.Dataset]:
     """
     Blend radiative properties profile data sets.
 
@@ -1063,29 +1063,29 @@ def blend(radprops: List[xr.Dataset]) -> xr.Dataset:
     Total extinction coefficients are computed according to:
 
     .. math::
-        k_{\mathrm{t}} = \\sum_{i} k_{\mathrm{t}i}
+        k_{\\mathrm{t}} = \\sum_{i} k_{\\mathrm{t}i}
 
     Total albedo are computed according to:
 
     .. math::
         \\varpi = \\sum_{i} \\frac{
-            k_{\mathrm{t}i}
+            k_{\\mathrm{t}i}
         }{
-            k_{\mathrm{t}}
+            k_{\\mathrm{t}}
         }
         \\varpi_i
 
     Parameter ``radprops`` (list of :class:``xarray.Dataset``):
         Radiative properties data sets to blend.
 
-    Returns → :class:``xarray.Dataset``:
-        Blended radiative properties profile data set.
+    Returns → tuple of :class:``xarray.Dataset``:
+        Blended radiative properties profile, blending ratios.
     """
-    # Find the altitude mesh with the most number of points
+    # Find the altitude mesh with the most number of points (reference mesh)
     index = np.argmax([r.z_layer.size for r in radprops])
     z_layer = radprops[index].z_layer
 
-    # Reindex data sets on that altitude mesh
+    # Reindex data sets on the reference altitude mesh
     reindexed = [r.reindex({"z_layer": z_layer}, fill_value=0.0) for r in radprops]
 
     # Compute total extinction coefficient and total albedo
@@ -1095,4 +1095,4 @@ def blend(radprops: List[xr.Dataset]) -> xr.Dataset:
     albedo = weighted_mean(data_arrays=[r.albedo for r in reindexed], weights=sigma_t_i)
     albedo.name = "albedo"
 
-    return xr.merge([sigma_t, albedo])
+    return xr.merge([sigma_t, albedo]), ratios(sigma_t_i)
