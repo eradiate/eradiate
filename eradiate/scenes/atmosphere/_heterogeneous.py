@@ -348,7 +348,44 @@ class HeterogeneousAtmosphere(Atmosphere):
             )
 
     def phase(self, ctx=None):
-        return {f"phase_{self.id}": {"type": "rayleigh"}}
+        if len(self.particles) == 0:
+            return {f"phase_{self.id}": {"type": "rayleigh"}}
+        elif len(self.particles) == 1:
+            from mitsuba.core import ScalarTransform4f
+
+            k_width = self.kernel_width(ctx).m_as(uck.get("length"))
+            k_height = self.kernel_height(ctx).m_as(uck.get("length"))
+            k_offset = self.kernel_offset(ctx).m_as(uck.get("length"))
+
+            # First, transform the [0, 1]^3 cube to the right dimensions
+            trafo = ScalarTransform4f(
+                [
+                    [k_width, 0.0, 0.0, -0.5 * k_width],
+                    [0.0, k_width, 0.0, -0.5 * k_width],
+                    [0.0, 0.0, k_height + k_offset, -k_offset],
+                    [0.0, 0.0, 0.0, 1.0],
+                ]
+            )
+            phase = self.particles[0].eval_phase(spectral_ctx=ctx.spectral_ctx)
+            return {
+                f"phase_{self.id}": {
+                    "type": "blendphase",
+                    "weight": {
+                        "type": "gridvolume",
+                        "filename": "weight.vol",
+                        "to_world": trafo,
+                    },
+                    "phase1": {"type": "rayleigh"},
+                    "phase2": {
+                        "type": "lut",
+                        "values": ",".join([str(value) for value in phase.data]),
+                    },
+                }
+            }
+        else:
+            raise NotImplementedError(
+                "Support for more than one particles layer is ongoing."
+            )
 
     def media(self, ctx=None):
         from mitsuba.core import ScalarTransform4f
