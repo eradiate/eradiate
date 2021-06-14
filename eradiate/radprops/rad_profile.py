@@ -80,7 +80,8 @@ def make_dataset(
 
     if sigma_a is not None and sigma_s is not None:
         sigma_t = sigma_a + sigma_s
-        albedo = sigma_s / sigma_t
+        with np.errstate(divide="ignore", invalid="ignore"):
+            albedo = np.where(sigma_t != 0.0, sigma_s / sigma_t, 0.0)  # broadcast 0.0
     elif sigma_t is not None and albedo is not None:
         sigma_s = albedo * sigma_t
         sigma_a = sigma_t - sigma_s
