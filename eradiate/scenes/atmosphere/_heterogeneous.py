@@ -451,6 +451,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             radprops_mol=self.profile.to_dataset(spectral_ctx),
             particle_layers=self.particles,
             spectral_ctx=spectral_ctx,
+            atol=atol,
         )
 
         return blend(radprops)
