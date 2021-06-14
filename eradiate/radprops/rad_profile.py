@@ -30,7 +30,7 @@ from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..validators import all_positive
-from ..xarray.math import weighted_mean, ratios
+from ..xarray.math import ratios, weighted_mean
 
 
 @ureg.wraps(

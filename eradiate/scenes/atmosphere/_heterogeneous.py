@@ -21,8 +21,8 @@ from ...radprops import ParticleLayer, RadProfileFactory
 from ...radprops.rad_profile import (
     RadProfile,
     US76ApproxRadProfile,
-    interp_along_altitude,
     blend,
+    interp_along_altitude,
 )
 from ...units import to_quantity
 from ...units import unit_context_kernel as uck

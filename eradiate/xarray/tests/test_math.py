@@ -1,8 +1,8 @@
-from eradiate.xarray.math import ratios
-
 import numpy as np
 import pytest
 import xarray as xr
+
+from eradiate.xarray.math import ratios
 
 
 @pytest.fixture
