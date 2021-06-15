@@ -123,6 +123,7 @@ sphinx_gallery_conf = {
     },
     "plot_gallery": False,  # Disabled until we move away from RTD or package the kernel
     "default_thumb_file": "fig/icon_eradiate.png",
+    "remove_config_comments": True,
 }
 
 # Sphinx-panels extension: don't load Bootstrap CSS again
