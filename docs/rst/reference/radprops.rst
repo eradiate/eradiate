@@ -18,3 +18,4 @@ Radiative properties [eradiate.radprops]
    absorption
    rad_profile
    rayleigh
+   particle_dist

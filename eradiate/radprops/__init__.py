@@ -6,6 +6,12 @@ Atmospheric radiative properties calculation package.
 
    .. factorytable::
       :factory: RadProfileFactory
+
+.. admonition:: Registered factory members [:class:`.ParticleDistributionFactory`]
+   :class: hint
+
+   .. factorytable::
+      :factory: ParticleDistributionFactory
 """
 
 
@@ -15,3 +21,4 @@ from .rad_profile import (
     RadProfileFactory,
     US76ApproxRadProfile,
 )
+from .particle_dist import ParticleDistribution, ParticleDistributionFactory
