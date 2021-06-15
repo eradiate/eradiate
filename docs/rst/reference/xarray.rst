@@ -22,6 +22,16 @@ Interpolation [eradiate.xarray.interp]
 
    film_to_angular
 
+   Math [eradiate.xarray.math]
+---------------------------
+
+.. currentmodule:: eradiate.xarray.math
+
+.. autosummary::
+   :toctree: generated/
+
+   weighted_mean
+
 Metadata specification and validation [eradiate.xarray.metadata]
 ----------------------------------------------------------------
 .. currentmodule:: eradiate.xarray.metadata

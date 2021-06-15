@@ -1,16 +1,28 @@
+from __future__ import annotations
+
 import struct
 import tempfile
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 import attr
 import numpy as np
+import pint
 import xarray as xr
 
+from eradiate.contexts import SpectralContext
 from ._core import Atmosphere, AtmosphereFactory
+from ._mesh_util import conciliate, extract_layer_mesh
 from ... import validators
 from ..._attrs import documented, parse_docs
-from ...radprops import RadProfileFactory
-from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
+from ...radprops import ParticleLayer, RadProfileFactory
+from ...radprops.rad_profile import (
+    RadProfile,
+    US76ApproxRadProfile,
+    blend,
+    interp_along_altitude,
+)
+from ...units import to_quantity
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
@@ -37,9 +49,9 @@ def write_binary_grid3d(filename, values):
             f"(expected numpy array or xarray DataArray)"
         )
 
-    if values.ndim not in {3, 4}:
+    if values.ndim not in {3, 4, 5}:
         raise ValueError(
-            f"'values' must have 3 or 4 dimensions " f"(got shape {values.shape})"
+            f"'values' must have 3, 4 or 5 dimensions " f"(got shape {values.shape})"
         )
 
     # note: this is an exact copy of the function write_binary_grid3d from
@@ -189,7 +201,7 @@ class HeterogeneousAtmosphere(Atmosphere):
     def _albedo_fname_and_sigma_t_fname_validator(instance, attribute, value):
         if instance.profile is None and value is None:
             raise ValueError(
-                f"{attribute.name} must be set when profile is set to None."
+                f"{attribute.name} must be set when 'profile' is set to None."
             )
         if (
             instance.width == "auto"
@@ -201,8 +213,20 @@ class HeterogeneousAtmosphere(Atmosphere):
             )
         if instance.toa_altitude == "auto" and value is not None:
             raise ValueError(
-                "'albedo_fname' and 'sigma_t_fname' cannot be set when toa_altitude is set to 'auto'"
+                "'albedo_fname' and 'sigma_t_fname' cannot be set when 'toa_altitude' is set to 'auto'"
             )
+
+    weight_fname = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(Path),
+            validator=attr.validators.optional(validators.is_file),
+        ),
+        doc="Path to the weight volume data file. If ``None``, "
+        "a value will be created when the file will be requested. The weight "
+        "values indicate the blending ratio of each component of the "
+        "atmosphere when the latter contains one or several particle layer(s).",
+    )
 
     cache_dir = documented(
         attr.ib(default=None, converter=attr.converters.optional(Path)),
@@ -212,7 +236,38 @@ class HeterogeneousAtmosphere(Atmosphere):
         default="None",
     )
 
-    _quantities = {"albedo": "albedo", "sigma_t": "collision_coefficient"}
+    particles = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(
+                lambda value: [ParticleLayer.convert(element) for element in value]
+            ),
+            validator=attr.validators.optional(attr.validators.instance_of(list)),
+        ),
+        doc="Particle layers",
+        type="list of :class:`ParticleLayer` or dict",
+        default="``None``",
+    )
+
+    @particles.validator
+    def _validate_particles(instance, attribtue, value):
+        # each particle layer must be within the atmosphere's boundaries.
+        if value is not None:
+            for layer in value:
+                height = instance.height()
+                if layer.bottom < 0.0 or layer.top > height:
+                    raise ValueError(
+                        f"particle layer must be within the "
+                        f"boundaries of the molecular atmosphere (0 "
+                        f"{height.units}, {height.magnitude} "
+                        f"{height.units})."
+                    )
+
+    _quantities = {
+        "albedo": "albedo",
+        "sigma_t": "collision_coefficient",
+        "weight": "dimensionless",
+    }
 
     def __attrs_post_init__(self):
         # Prepare cache directory in case we'd need it
@@ -262,7 +317,8 @@ class HeterogeneousAtmosphere(Atmosphere):
         Parameter ``fields`` (str or list[str] or None):
             If str, field for which to create volume data file. If list,
             fields for which to create volume data files. If ``None``,
-            all supported fields are processed (``{"albedo", "sigma_t"}``).
+            all supported fields are processed (``{"albedo", "sigma_t",
+            "weight"}``).
             Default: ``None``.
 
         Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
@@ -279,35 +335,117 @@ class HeterogeneousAtmosphere(Atmosphere):
         elif isinstance(fields, str):
             fields = {fields}
 
-        if self.profile is None:
-            raise ValueError("'profile' is not set, cannot write volume data " "files")
+        if "weight" in fields:
+            radprops, blending_ratios = self._blend_radprops(spectral_ctx=spectral_ctx)
+            weight = blending_ratios.data[:, :, np.newaxis, np.newaxis, :]
+            rearranged_weight = np.moveaxis(weight, source=[0, 1], destination=[4, 3])
+            print(rearranged_weight.shape)
 
-        for field in fields:
-            # Is the requested field supported?
-            if field not in supported_fields:
-                raise ValueError(f"field {field} cannot be used to create volume data")
+            for field in fields:
+                # Is the requested field supported?
+                if field not in supported_fields:
+                    raise ValueError(
+                        f"field {field} cannot be used to create volume data"
+                    )
 
-            # Does the considered field have values?
-            field_quantity = getattr(self.profile, field)(spectral_ctx)
+                # Does the considered field have values?
+                if field == "weight":
+                    field_quantity = ureg.Quantity(rearranged_weight, "")
+                else:
+                    field_quantity = to_quantity(getattr(radprops, field))
 
-            if field_quantity is None:
-                raise ValueError(f"field {field} is empty, cannot create volume data")
+                if field_quantity is None:
+                    raise ValueError(
+                        f"field {field} is empty, cannot create volume data"
+                    )
 
-            # If file name is not specified, we create one
-            field_fname = getattr(self, f"{field}_fname")
-            if field_fname is None:
-                field_fname = self.cache_dir / f"{field}.vol"
-                setattr(self, f"{field}_fname", field_fname)
+                field_fname = getattr(self, f"{field}_fname")
+                if field_fname is None:
+                    field_fname = self.cache_dir / f"{field}.vol"
+                    setattr(self, f"{field}_fname", field_fname)
 
-            # We have the data and the filename: we can create the file
-            field_quantity.m_as(uck.get(self._quantities[field]))
-            write_binary_grid3d(
-                field_fname,
-                field_quantity.m_as(uck.get(self._quantities[field])),
-            )
+                # We have the data and the filename: we can create the file
+                field_quantity.m_as(uck.get(self._quantities[field]))
+                print(field_quantity)
+                write_binary_grid3d(
+                    field_fname,
+                    field_quantity.m_as(uck.get(self._quantities[field])),
+                )
+
+        else:
+            if self.profile is None:
+                raise ValueError(
+                    "'profile' is not set, cannot write volume data " "files"
+                )
+
+            for field in fields:
+                # Is the requested field supported?
+                if field not in supported_fields:
+                    raise ValueError(
+                        f"field {field} cannot be used to create volume data"
+                    )
+
+                # Does the considered field have values?
+                field_quantity = getattr(self.profile, field)(spectral_ctx)
+
+                if field_quantity is None:
+                    raise ValueError(
+                        f"field {field} is empty, cannot create volume data"
+                    )
+
+                # If file name is not specified, we create one
+                field_fname = getattr(self, f"{field}_fname")
+                if field_fname is None:
+                    field_fname = self.cache_dir / f"{field}.vol"
+                    setattr(self, f"{field}_fname", field_fname)
+
+                # We have the data and the filename: we can create the file
+                field_quantity.m_as(uck.get(self._quantities[field]))
+                write_binary_grid3d(
+                    field_fname,
+                    field_quantity.m_as(uck.get(self._quantities[field])),
+                )
 
     def kernel_phase(self, ctx=None):
-        return {f"phase_{self.id}": {"type": "rayleigh"}}
+        if self.particles is None:
+            return {f"phase_{self.id}": {"type": "rayleigh"}}
+        elif len(self.particles) == 1:
+            from mitsuba.core import ScalarTransform4f
+
+            k_width = self.kernel_width(ctx).m_as(uck.get("length"))
+            k_height = self.kernel_height(ctx).m_as(uck.get("length"))
+            k_offset = self.kernel_offset(ctx).m_as(uck.get("length"))
+
+            # First, transform the [0, 1]^3 cube to the right dimensions
+            trafo = ScalarTransform4f(
+                [
+                    [k_width, 0.0, 0.0, -0.5 * k_width],
+                    [0.0, k_width, 0.0, -0.5 * k_width],
+                    [0.0, 0.0, k_height + k_offset, -k_offset],
+                    [0.0, 0.0, 0.0, 1.0],
+                ]
+            )
+            phase = self.particles[0].eval_phase(spectral_ctx=ctx.spectral_ctx)
+            self.make_volume_data("weight", spectral_ctx=ctx.spectral_ctx)
+            return {
+                f"phase_{self.id}": {
+                    "type": "blendphase",
+                    "weight": {
+                        "type": "gridvolume",
+                        "filename": str(self.weight_fname),
+                        "to_world": trafo,
+                    },
+                    "phase1": {"type": "rayleigh"},
+                    "phase2": {
+                        "type": "lut",
+                        "values": ",".join([str(value) for value in phase.data]),
+                    },
+                }
+            }
+        else:
+            raise NotImplementedError(
+                "Support for more than one particles layer is ongoing."
+            )
 
     def kernel_media(self, ctx=None):
         from mitsuba.core import ScalarTransform4f
@@ -330,6 +468,9 @@ class HeterogeneousAtmosphere(Atmosphere):
         if self.profile is not None:
             self.make_volume_data("albedo", spectral_ctx=ctx.spectral_ctx)
             self.make_volume_data("sigma_t", spectral_ctx=ctx.spectral_ctx)
+
+        if self.particles is not None:
+            self.make_volume_data("weight", spectral_ctx=ctx.spectral_ctx)
 
         # Output kernel dict
         return {
@@ -377,3 +518,149 @@ class HeterogeneousAtmosphere(Atmosphere):
                 "interior": medium,
             }
         }
+
+    @ureg.wraps(ret=None, args=(None, None, "km"), strict=False)
+    def _blend_radprops(
+        self,
+        spectral_ctx: SpectralContext = None,
+        atol: Optional[pint.Quantity] = None,
+    ) -> Tuple[xr.Dataset, xr.Dataset]:
+        """
+        Blend molecules and particles radprops.
+
+        Molecular radiative properties, specified by the 'profile' attribute,
+        and particles layers radiative properties are defined on different
+        altitude meshes.
+        These radiative properties profiles must be merged into one for use
+        by :meth:`~.HeterogeneousAtmosphere.make_volume_data`
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Parameter ``atol`` (:class:`~pint.Quantity`):
+            Absolute tolerance on the particle layer altitude bounds [km].
+
+        Returns → tuple of :class:`~xarray.Dataset`
+            Blended radiative properties data set, blending ratios.
+        """
+        if spectral_ctx is None:
+            raise ValueError("keyword argument 'spectral_ctx' must be specified")
+
+        radprops = self._align_radprops(
+            radprops_mol=self.profile.to_dataset(spectral_ctx),
+            particle_layers=self.particles,
+            spectral_ctx=spectral_ctx,
+            atol=atol,
+        )
+
+        return blend(radprops)
+
+    @staticmethod
+    @ureg.wraps(ret=None, args=(None, None, None, "km"), strict=False)
+    def _align_radprops(
+        radprops_mol: xr.Dataset,
+        particle_layers: List[ParticleLayer],
+        spectral_ctx: SpectralContext,
+        atol: Optional[pint.Quantity] = None,
+    ) -> Tuple[xr.Dataset, List[xr.Dataset]]:
+        """
+        Align molecules and particles radiative properties on a single altitude
+        mesh.
+
+        Initially, molecules radiative properties and particles radiative
+        properties are specified on different altitude meshes when
+        :class:`~.HeterogeneousAtmosphere` is instanciated.
+        This method uses a refined altitude mesh that is compatible with
+        both the molecules and particles components of the atmosphere.
+        The molecules radiative properties are interpolated on this refined
+        altitude mesh in a way that conserves the individual molecular
+        species amounts.
+        The particles radiative properties are re-computed on the refined
+        altitude mesh.
+
+        .. warning::
+            The refined altitude mesh may displace the particle layer altitude
+            bounds. Use the ``atol`` parameter to set the maximum displacement
+            value.
+
+        Parameter ``radprops_mol`` (:class:`xr.Dataset`):
+            Molecular atmosphere radiative properties.
+
+        Parameter ``particle_layers`` (list of :class:``.ParticleLayer``)
+            Particle layers within the atmosphere.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Parameter ``atol`` (:class:`~pint.Quantity`):
+            Absolute tolerance on the particle layer altitude bounds [km].
+
+        Returns → list of :class:`~xarray.Dataset`:
+            Aligned radiative properties data sets.
+        """
+        # Molecular atmosphere altitude mesh:
+        z_level_mol = to_quantity(radprops_mol.z_level).m_as("km")
+
+        # Particle layers altitude meshes:
+        z_level_par_all = [element.z_level.m_as("km") for element in particle_layers]
+
+        # Find conciliatory altitude mesh
+        z_level_m = HeterogeneousAtmosphere._find_conciliatory_altitude_mesh(
+            z_level_mol=z_level_mol, z_level_par_all=z_level_par_all, atol=atol
+        )
+        z_level = ureg.Quantity(z_level_m, "km")
+
+        # Extract new particle layers' altitude meshes from conciliatory mesh
+        z_level_par_m = [
+            extract_layer_mesh(
+                z=z_level_m, bottom=z_level_par.min(), top=z_level_par.max()
+            )
+            for z_level_par in z_level_par_all
+        ]
+        z_level_par = [ureg.Quantity(z, "km") for z in z_level_par_m]
+
+        # Align radiative properties
+        radprops = []
+
+        # Interpolate molecules radiative properties on unique level altitude mesh
+        radprops.append(interp_along_altitude(ds=radprops_mol, new_z_level=z_level))
+
+        # Compute particles layer radiative properties on unique level altitude mesh
+        for i, layer in enumerate(particle_layers):
+            radprops.append(
+                layer.radprops(spectral_ctx=spectral_ctx, z_level=z_level_par[i])
+            )
+
+        return radprops
+
+    @staticmethod
+    def _find_conciliatory_altitude_mesh(
+        z_level_mol: np.ndarray, z_level_par_all: np.ndarray, atol: float = None
+    ) -> np.ndarray:
+        """
+        Find the altitude mesh that conciliates molecules and particles initial
+        altitude meshes.
+
+        Refer to :meth:`._mesh_util.conciliate` for more details.
+
+        Parameter ``z_level_mol`` (:class:`~numpy.ndarray`):
+            Altitude mesh of the molecular atmosphere.
+
+        Parameter ``z_level_par`` (list of :class:`~numpy.ndarray`):
+            Altitude meshes of all the particle layers within the atmosphere.
+
+        Parameter ``atol`` (float):
+            Absolute tolerance on the particle layers altitude bounds uncertainty.
+            By default, the absolute tolerance is set to a tenth of the
+            altitude step in the finest particle layer altitude mesh.
+
+        Returns → :class:`~numpy.ndarray`:
+            Conciliatory level altitude mesh.
+        """
+        if atol is None:
+            dz = [z[1] - z[0] for z in z_level_par_all]
+            atol = min(dz) / 10.0
+
+        return conciliate(z_mol=z_level_mol, z_par=z_level_par_all, atol=atol)

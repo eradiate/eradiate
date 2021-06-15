@@ -3,6 +3,7 @@ Radiative property profile definitions.
 """
 import datetime
 from abc import ABC, abstractmethod
+from typing import List, Tuple
 
 import attr
 import numpy as np
@@ -29,6 +30,7 @@ from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..validators import all_positive
+from ..xarray.math import ratios, weighted_mean
 
 
 @ureg.wraps(
@@ -78,7 +80,8 @@ def make_dataset(
 
     if sigma_a is not None and sigma_s is not None:
         sigma_t = sigma_a + sigma_s
-        albedo = sigma_s / sigma_t
+        with np.errstate(divide="ignore", invalid="ignore"):
+            albedo = np.where(sigma_t != 0.0, sigma_s / sigma_t, 0.0)  # broadcast 0.0
     elif sigma_t is not None and albedo is not None:
         sigma_s = albedo * sigma_t
         sigma_a = sigma_t - sigma_s
@@ -148,8 +151,8 @@ def make_dataset(
             ),
             "w": (
                 "w",
-                [wavelength],
-                dict(standard_name="wavelength", units="nm", long_name="wavelength"),
+                [round(wavelength, 12)],  # fix floating point arithmetic issue,
+                dict(standard_name="wavelength", long_name="wavelength", units="nm"),
             ),
         },
         attrs={
@@ -616,7 +619,7 @@ class US76ApproxRadProfile(RadProfile):
     def sigma_t(self, spectral_ctx=None):
         return self.sigma_a(spectral_ctx) + self.sigma_s(spectral_ctx)
 
-    def to_dataset(self, spectral_ctx=None):
+    def to_dataset(self, spectral_ctx=None) -> xr.Dataset:
         """
         Return a dataset that holds the atmosphere radiative properties.
 
@@ -971,10 +974,11 @@ class AFGL1986RadProfile(RadProfile):
         Evaluate scattering coefficient given a spectral context.
         """
         profile = self.eval_thermoprops_profile()
+        number_density = to_quantity(profile.n)
         if self.has_scattering:
             return compute_sigma_s_air(
                 wavelength=spectral_ctx.wavelength,
-                number_density=ureg.Quantity(profile.n.values, profile.n.units),
+                number_density=number_density,
             )
         else:
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
@@ -1009,3 +1013,80 @@ class AFGL1986RadProfile(RadProfile):
             sigma_a=self.sigma_a(spectral_ctx).flatten(),
             sigma_s=self.sigma_s(spectral_ctx).flatten(),
         )
+
+
+def interp_along_altitude(ds: xr.Dataset, new_z_level: ureg.Quantity) -> xr.Dataset:
+    """
+    Interpolate atmospheric radiative properties along altitude.
+    The interpolation method is set to ``"nearest"`` so that, if ``new_z_level``
+    is a subdivision of ``ds``'s level altitude mesh, the new sub-layers share
+    the same radiative properties as the corresponding initial layers that they
+    divide.
+    Parameter ``ds`` (:class:``xarray.Dataset``):
+        Atmospheric radiative properties data set to interpolate.
+    Parameter ``new_z_level`` (:class:``~pint.Quantity``):
+        New level altitude mesh on which to interpolate the atmopsheric radiative
+        properties data set.
+    Returns → :class:``xarray.Dataset``:
+    """
+    z_layer = (new_z_level[1:] + new_z_level[:-1]) / 2.0
+    return ds.interp(
+        z_layer=z_layer.m_as(ds.z_layer.units),
+        method="nearest",
+        kwargs=dict(fill_value="extrapolate"),
+    ).assign_coords(
+        {
+            "z_level": (
+                "z_level",
+                new_z_level.magnitude,
+                dict(
+                    standard_name="level_altitude",
+                    long_name="level altitude",
+                    units=new_z_level.units,
+                ),
+            )
+        }
+    )
+
+
+def blend(radprops: List[xr.Dataset]) -> Tuple[xr.Dataset, xr.Dataset]:
+    """
+    Blend radiative properties profile data sets.
+    Although each data set corresponds to a specific altitude region, their
+    altitude coordinate values must align exactly with the other's.
+    Total extinction coefficients are computed according to:
+    .. math::
+        k_{\\mathrm{t}} = \\sum_{i} k_{\\mathrm{t}i}
+    Total albedo are computed according to:
+    .. math::
+        \\varpi = \\sum_{i} \\frac{
+            k_{\\mathrm{t}i}
+        }{
+            k_{\\mathrm{t}}
+        }
+        \\varpi_i
+    Parameter ``radprops`` (list of :class:``xarray.Dataset``):
+        Radiative properties data sets to blend.
+    Returns → tuple of :class:``~xarray.Dataset`` and :class:``~xarray.DataArray``:
+        Blended radiative properties profile, blending ratios.
+    """
+    # Find the altitude mesh with the most number of points (reference mesh)
+    index = np.argmax([r.z_layer.size for r in radprops])
+    z_layer = radprops[index].z_layer
+
+    # Reindex data sets on the reference altitude mesh
+    reindexed = [r.reindex({"z_layer": z_layer}, fill_value=0.0) for r in radprops]
+
+    # Compute total extinction coefficient and total albedo
+    sigma_t_i = [r.sigma_t for r in reindexed]
+    sigma_t = sum(sigma_t_i)
+    sigma_t.name = "sigma_t"
+    albedo = weighted_mean(data_arrays=[r.albedo for r in reindexed], weights=sigma_t_i)
+    albedo.name = "albedo"
+
+    blended_radprops = xr.merge([sigma_t, albedo])
+
+    blending_ratios = ratios(sigma_t_i)
+    blending_ratios.attrs["units"] = ""
+
+    return blended_radprops, blending_ratios

@@ -1,3 +1,4 @@
+from eradiate.radprops.rad_profile import ArrayRadProfile
 import pathlib
 import tempfile
 
@@ -10,6 +11,7 @@ from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
 from eradiate.contexts import KernelDictContext
 from eradiate.data import _presolver
+from eradiate.radprops.particles import ParticleLayer
 from eradiate.radprops import AFGL1986RadProfile, US76ApproxRadProfile
 from eradiate.scenes.atmosphere._heterogeneous import (
     HeterogeneousAtmosphere,
@@ -285,8 +287,8 @@ def test_heterogeneous_invalid_width_units(mode_mono):
             profile={
                 "type": "array",
                 "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
+                "sigma_t_values": np.ones((1, 1, 3)),
+                "albedo_values": np.ones((1, 1, 3)),
             },
         )
 
@@ -301,8 +303,8 @@ def test_heterogeneous_invalid_toa_altitude_units(mode_mono):
             profile={
                 "type": "array",
                 "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
+                "sigma_t_values": np.ones((1, 1, 3)),
+                "albedo_values": np.ones((1, 1, 3)),
             },
         )
 
@@ -317,8 +319,8 @@ def test_heterogeneous_invalid_width_value(mode_mono, tmpdir):
             profile={
                 "type": "array",
                 "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
+                "sigma_t_values": np.ones((1, 1, 3)),
+                "albedo_values": np.ones((1, 1, 3)),
             },
             cache_dir=tmpdir,
         )
@@ -334,8 +336,78 @@ def test_heterogeneous_invalid_toa_altitude_value(mode_mono, tmpdir):
             profile={
                 "type": "array",
                 "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
+                "sigma_t_values": np.ones((1, 1, 3)),
+                "albedo_values": np.ones((1, 1, 3)),
             },
             cache_dir=tmpdir,
+        )
+
+
+def test_heterogeneous_particles(mode_mono, tmpdir):
+    from mitsuba.core.xml import load_dict
+
+    a = HeterogeneousAtmosphere(
+        profile=ArrayRadProfile(
+            levels=ureg.Quantity(np.linspace(0, 12, 4), "km"),
+            sigma_t_values=np.ones((1, 1, 3)),
+            albedo_values=np.ones((1, 1, 3)),
+        ),
+        cache_dir=tmpdir,
+        particles=[
+            ParticleLayer(bottom=ureg.Quantity(0.0, "km"), top=ureg.Quantity(1.0, "km"))
+        ],
+    )
+
+    # Default output can be loaded
+    ctx = KernelDictContext(ref=False)
+
+    p = a.phase(ctx)
+    assert load_dict(onedict_value(p)) is not None
+
+    m = a.media(ctx)
+    assert load_dict(onedict_value(m)) is not None
+
+    s = a.shapes(ctx)
+    assert load_dict(onedict_value(s)) is not None
+
+    # Load all elements at once (and use references)
+    ctx = KernelDictContext(ref=True)
+
+    with unit_context_kernel.override({"length": "km"}):
+        kernel_dict = KernelDict.new()
+        kernel_dict.add(a, ctx=ctx)
+        scene = kernel_dict.load()
+        assert scene is not None
+
+
+def test_heterogeneous_particles_convert(mode_mono, tmpdir):
+    """Attribute 'particles' is a list of ParticleLayer objects."""
+    atmosphere = HeterogeneousAtmosphere(
+        profile=ArrayRadProfile(
+            levels=ureg.Quantity(np.linspace(0, 12, 4), "km"),
+            sigma_t_values=np.ones((1, 1, 3)),
+            albedo_values=np.ones((1, 1, 3)),
+        ),
+        cache_dir=tmpdir,
+        particles=[ParticleLayer(), {}],
+    )
+
+    for particle_layer in atmosphere.particles:
+        assert isinstance(particle_layer, ParticleLayer)
+
+
+def test_heterogeneous_particles_invalid_top(mode_mono, tmpdir):
+    """Raises when particle layer's top altitude is invalid."""
+    particles_layer = ParticleLayer(
+        bottom=ureg.Quantity(10.5, "km"), top=ureg.Quantity(12.2, "km")
+    )
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            profile=ArrayRadProfile(
+                levels=ureg.Quantity(np.linspace(0.0, 12.0, 4), "km"),
+                sigma_t_values=np.ones((1, 1, 3)),
+                albedo_values=np.ones((1, 1, 3)),
+            ),
+            cache_dir=tmpdir,
+            particles=[particles_layer],
         )

@@ -15,6 +15,7 @@ Atmospheric radiative properties calculation package.
 """
 
 
+from .particles import ParticleLayer
 from .rad_profile import (
     AFGL1986RadProfile,
     ArrayRadProfile,

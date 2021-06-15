@@ -6,15 +6,12 @@ sets.
 from datetime import datetime
 
 import iapws
-import numpy as np
 import scipy.constants
-import xarray as xr
 
 import eradiate.data as data
 
-from . import profile_dataset_spec
-from ..units import unit_registry as ureg
 from ..units import to_quantity
+from ..units import unit_registry as ureg
 
 ATOMIC_MASS_CONSTANT = ureg.Quantity(
     *scipy.constants.physical_constants["atomic mass constant"][:-1]
@@ -322,7 +319,7 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
     interpolated = ds.interp(
         z_layer=z_layer.m_as(ds.z_layer.units),
         method=method,
-        kwargs=dict(fill_value="extrapolate"),
+        kwargs=dict(bounds_error=True),
     )
     z_level_attrs = ds.z_level.attrs
     interpolated.update(
@@ -410,194 +407,3 @@ def equilibrium_water_vapor_fraction(p, t):
             f"Equilibrium cannot be reached in these conditions (p = "
             f"{round(p, 2)} Pa, t = {round(t, 2)} K)"
         )
-
-
-def make_profile_regular(profile, atol):
-    """
-    Converts the atmosphere thermophysical properties data set with an
-    irregular altitude mesh to a profile defined over a regular altitude mesh.
-
-    Parameter ``profile`` (:class:`~xarray.Dataset`):
-        Original atmosphere thermophysical properties data set, defined over
-        an irregular altitude mesh.
-
-    Parameter ``atol`` (float):
-        Absolute tolerance used in the conversion of the irregular altitude
-        mesh to a regular altitude mesh.
-
-    Returns → :class:`~xarray.Dataset`:
-        Converted atmosphere thermophysical properties data set, defined over
-        a regular altitude mesh.
-    """
-    profile.ert.validate_metadata(profile_dataset_spec)
-
-    # compute the regular altitude nodes mesh
-    regular_z_level = _to_regular(mesh=profile.z_level.values, atol=atol)
-
-    # compute corresponding altitude centers mesh
-    regular_z_layer = (regular_z_level[:-1] + regular_z_level[1:]) / 2.0
-
-    # compute the atmospheric variables with the regular altitude mesh
-    n_z = len(regular_z_layer)
-    p = np.zeros(n_z)
-    t = np.zeros(n_z)
-    n = np.zeros(n_z)
-    n_species = profile.species.size
-    mr = np.zeros((n_species, n_z))
-    layer = 0
-    for i, z in enumerate(regular_z_layer):
-        # when altitude is larger than current layer's upper bound, jump to
-        # the next layer
-        if z >= profile.z_level.values[layer + 1]:
-            layer += 1
-
-        p[i] = profile.p.values[layer]
-        t[i] = profile.t.values[layer]
-        n[i] = profile.n.values[layer]
-        mr[:, i] = profile.mr.values[:, layer]
-
-    species = profile["species"].values
-
-    # copy attributes
-    attrs = profile.attrs
-
-    # update history
-    new_line = (
-        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - made "
-        f"profile altitude mesh regular - "
-        f"eradiate.thermoprops.util.make_profile_regular "
-    )
-    attrs["history"] += f"\n{new_line}"
-
-    dataset = xr.Dataset(
-        data_vars=dict(
-            p=("z_layer", p),
-            t=("z_layer", t),
-            n=("z_layer", n),
-            mr=(("species", "z_layer"), mr),
-        ),
-        coords={
-            "z_layer": ("z_layer", regular_z_layer),
-            "z_level": ("z_level", regular_z_level),
-            "species": ("species", species),
-        },
-        attrs=attrs,
-    )
-    dataset.ert.normalize_metadata(profile_dataset_spec)
-
-    return dataset
-
-
-def _to_regular(mesh, atol):
-    """
-    Converts an irregular altitude mesh into a regular altitude mesh.
-
-    .. note::
-        The bound altitudes in the irregular altitude mesh remain the same in
-        the output regular altitude mesh. Only the intermediate node altitudes
-        are modified.
-
-    .. warning::
-        The algorithm is not optimised to find the approximating regular mesh
-        with the smallest number of layers. Depending on the value of ``atol``,
-        the resulting mesh size can be large.
-
-    Parameter ``mesh`` (:class:`numpy.ndarray`):
-        Irregular altitude mesh with values sorted in increasing order.
-
-    Parameter ``atol`` (float):
-        Absolute tolerance used in the conversion.
-
-    Returns -> :class:`numpy.ndarray`:
-        Regular altitude mesh.
-    """
-
-    n, _ = _find_regular_params_gcd(mesh, atol)
-    return np.linspace(start=mesh[0], stop=mesh[-1], num=n)
-
-
-def _find_regular_params_gcd(mesh, unit_number=1.0):
-    """
-    Finds the parameters (number of cells, constant cell width) of the
-    regular mesh that approximates the irregular input mesh.
-
-    The algorithm finds the greatest common divisor (GCD) of all cells widths
-    in the integer representation specified by the parameter ``unit_number``.
-    This GCD is used to define the constant cells width of the approximating
-    regular mesh.
-
-    .. warning::
-        There are no safeguards regarding how large the number of cells in the
-        regular mesh can be. Use the parameter ``unit_number`` with caution.
-
-    Parameter ``mesh`` (:class:`~numpy.ndarray`):
-        1-D array with floating point values.
-        Values must be sorted by increasing order.
-
-    Parameter ``unit_number`` (float):
-        Defines the unit used to convert the floating point numbers to integer.
-        numbers.
-
-        Default: 1.
-
-    Returns -> Tuple[int, float]:
-        Number of points (int) in the regular mesh and the value of the
-        constant cells width (float).
-    """
-
-    # Convert float cell widths to integer cell widths
-    eps = np.finfo(float).eps
-    if unit_number >= eps:
-        mesh = np.divide(mesh, unit_number).astype(int)
-    else:
-        raise ValueError(
-            f"Parameter unit_number ({unit_number}) must be "
-            f"larger than machine epsilon ({eps})."
-        )
-    widths = mesh[1:] - mesh[:-1]
-
-    # Find the greatest common divisor (GCD) of all integer cell widths
-    # The constant cell width in the regular mesh is given by that GCD.
-    from math import gcd
-
-    w = gcd(widths[0], widths[1])
-    for x in widths[2:]:
-        w = gcd(x, w)
-
-    # Compute the number of points in the regular mesh
-    total_width = mesh[-1] - mesh[0]
-    n = total_width // w + 1
-
-    return n, float(w) * unit_number
-
-
-# def find_regular_params_tol(mesh, rtol=1e-3, n_cells_max=10000):
-#     r"""Finds the number of cells and constant cell width of the regular 1-D
-#     mesh that approximates a 1-D irregular mesh the best.
-#
-#     Parameter ``mesh`` (:class:`~numpy.ndarray`):
-#         Irregular 1-D mesh. Values must be sorted in increasing order.
-#
-#     Parameter ``rtol`` (float):
-#         Relative tolerance on the cells widths. This parameter controls the
-#         accuracy of the approximation.
-#         The parameters of the approximating regular mesh are computed so that
-#         for each layer of the irregular mesh, the corresponding layer or layers
-#         in the regular mesh has a width or have a total width that is not larger
-#         than ``rtol`` times the width of the cell in the irregular mesh.
-#
-#         Default: 1e-3
-#
-#     Parameter ``n_cells_max`` (float):
-#         Maximum number of cells in the regular mesh. This parameter controls the
-#         size of the resulting regular mesh.
-#
-#         Default: 10000
-#
-#     Returns -> Tuple[int, float]:
-#         Number of cells (int) and constant cells width (float) in the
-#         approximating regular mesh.
-#     """
-#
-#     raise NotImplemented
-# TODO: implement this function
