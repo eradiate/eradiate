@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Optional
 
 import attr
-import numpy as np
 import pinttr
 from matplotlib import pyplot as plt
 
@@ -16,7 +15,6 @@ from ...contexts import KernelDictContext
 from ...exceptions import ModeError, UnsupportedModeError
 from ...scenes.measure import Measure, MeasureResults
 from ...scenes.measure._distant import DistantMeasure, DistantReflectanceMeasure
-from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
