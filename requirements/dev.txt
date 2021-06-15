@@ -10,8 +10,6 @@ alabaster==0.7.12
     # via sphinx
 anyio==3.1.0
     # via jupyter-server
-apipkg==1.5
-    # via execnet
 appdirs==1.4.4
     # via
     #   black
@@ -41,7 +39,7 @@ backcall==0.2.0
     # via ipython
 beautifulsoup4==4.9.3
     # via pydata-sphinx-theme
-black==21.5b2
+black==21.6b0
     # via -r requirements/dev.in
 bleach==3.3.0
     # via
@@ -72,8 +70,12 @@ click==8.0.1
 cloudpickle==1.6.0
     # via dask
 colorama==0.4.4
-    # via twine
-conda-lock==0.9.1
+    # via
+    #   rich
+    #   twine
+commonmark==0.9.1
+    # via rich
+conda-lock==0.10.0
     # via -r requirements/dev.in
 coverage==5.5
     # via -r requirements/dev.in
@@ -100,7 +102,7 @@ entrypoints==0.3
     # via nbconvert
 environ-config==21.2.0
     # via -r requirements/main.in
-execnet==1.8.1
+execnet==1.9.0
     # via pytest-xdist
 filelock==3.0.12
     # via ensureconda
@@ -315,6 +317,7 @@ pygments==2.9.0
     #   jupyterlab-pygments
     #   nbconvert
     #   readme-renderer
+    #   rich
     #   rst2pdf
     #   sphinx
 pyparsing==2.4.7
@@ -377,11 +380,13 @@ requests==2.25.1
     #   twine
 rfc3986==1.5.0
     # via twine
+rich==10.3.0
+    # via -r requirements/main.in
 rst2pdf==0.98
     # via -r requirements/tests.in
 ruamel.yaml.clib==0.2.2
     # via ruamel.yaml
-ruamel.yaml==0.17.7
+ruamel.yaml==0.17.9
     # via -r requirements/main.in
 scipy==1.6.3
     # via
@@ -409,7 +414,7 @@ snowballstemmer==2.1.0
     # via sphinx
 soupsieve==2.2.1
     # via beautifulsoup4
-sphinx-copybutton==0.3.1
+sphinx-copybutton==0.3.3
     # via -r requirements/docs.in
 sphinx-gallery==0.9.0
     # via -r requirements/docs.in
@@ -440,7 +445,7 @@ sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 tabulate==0.8.9
     # via -r requirements/tests.in
-terminado==0.10.0
+terminado==0.10.1
     # via
     #   jupyter-server
     #   notebook
@@ -466,7 +471,7 @@ tornado==6.1
     #   jupyterlab
     #   notebook
     #   terminado
-tqdm==4.61.0
+tqdm==4.61.1
     # via
     #   -r requirements/main.in
     #   twine
@@ -492,13 +497,14 @@ typing-extensions==3.10.0.0
     #   anyio
     #   black
     #   importlib-metadata
+    #   rich
 urllib3==1.26.5
     # via requests
 wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-websocket-client==1.0.1
+websocket-client==1.1.0
     # via jupyter-server
 widgetsnbextension==3.5.1
     # via ipywidgets

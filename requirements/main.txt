@@ -30,6 +30,14 @@ cloudpickle==1.6.0
     # via
     #   -c requirements/dev.txt
     #   dask
+colorama==0.4.4
+    # via
+    #   -c requirements/dev.txt
+    #   rich
+commonmark==0.9.1
+    # via
+    #   -c requirements/dev.txt
+    #   rich
 cycler==0.10.0
     # via
     #   -c requirements/dev.txt
@@ -106,6 +114,10 @@ pinttrs==21.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+pygments==2.9.0
+    # via
+    #   -c requirements/dev.txt
+    #   rich
 pyparsing==2.4.7
     # via
     #   -c requirements/dev.txt
@@ -124,11 +136,15 @@ pyyaml==5.4.1
     # via
     #   -c requirements/dev.txt
     #   dask
+rich==10.3.0
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/main.in
 ruamel.yaml.clib==0.2.2
     # via
     #   -c requirements/dev.txt
     #   ruamel.yaml
-ruamel.yaml==0.17.7
+ruamel.yaml==0.17.9
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -147,7 +163,7 @@ toolz==0.11.1
     #   -c requirements/dev.txt
     #   dask
     #   partd
-tqdm==4.61.0
+tqdm==4.61.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -155,6 +171,7 @@ typing-extensions==3.10.0.0
     # via
     #   -c requirements/dev.txt
     #   importlib-metadata
+    #   rich
 xarray==0.18.2
     # via
     #   -c requirements/dev.txt

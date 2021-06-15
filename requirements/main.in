@@ -11,6 +11,7 @@ netcdf4
 numpy
 pint
 pinttrs
+rich
 ruamel.yaml
 scipy
 tqdm
