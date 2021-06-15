@@ -30,7 +30,7 @@ app = eradiate.solvers.onedim.OneDimSolverApp(
         "surface": {"type": "rpv"},
         "measures": [
             {
-                "type": "distant",
+                "type": "distant_reflectance",
                 "film_resolution": (64, 64),
                 "spp": 1000,
             }
