@@ -344,24 +344,9 @@ def test_heterogeneous_invalid_toa_altitude_value(mode_mono, tmpdir):
 
 
 def test_heterogeneous_particles(mode_mono, tmpdir):
-    """Attribute 'particles' is a list of ParticleLayer objects."""
-    particles_layer_1 = ParticleLayer(
-        bottom=ureg.Quantity(0.0, "km"), top=ureg.Quantity(1.0, "km")
-    )
-    particles_layer_2 = ParticleLayer(
-        bottom=ureg.Quantity(1500, "m"),
-        top=ureg.Quantity(2200.0, "m"),
-        vert_dist=dict(type="gaussian", std=ureg.Quantity(200, "m")),
-        tau_550=0.1,
-    )
-    particles_layer_3 = {
-        "bottom": ureg.Quantity(9.0, "km"),
-        "top": ureg.Quantity(10.0, "km"),
-        "vert_dist": {
-            "type": "exponential",
-        },
-    }
-    atmosphere = HeterogeneousAtmosphere(
+    from mitsuba.core.xml import load_dict
+
+    a = HeterogeneousAtmosphere(
         profile=ArrayRadProfile(
             levels=ureg.Quantity(np.linspace(0, 12, 4), "km"),
             sigma_t_values=np.ones((1, 1, 3)),
@@ -369,10 +354,42 @@ def test_heterogeneous_particles(mode_mono, tmpdir):
         ),
         cache_dir=tmpdir,
         particles=[
-            particles_layer_1,
-            particles_layer_2,
-            particles_layer_3,
+            ParticleLayer(bottom=ureg.Quantity(0.0, "km"), top=ureg.Quantity(1.0, "km"))
         ],
+    )
+
+    # Default output can be loaded
+    ctx = KernelDictContext(ref=False)
+
+    p = a.phase(ctx)
+    assert load_dict(onedict_value(p)) is not None
+
+    m = a.media(ctx)
+    assert load_dict(onedict_value(m)) is not None
+
+    s = a.shapes(ctx)
+    assert load_dict(onedict_value(s)) is not None
+
+    # Load all elements at once (and use references)
+    ctx = KernelDictContext(ref=True)
+
+    with unit_context_kernel.override({"length": "km"}):
+        kernel_dict = KernelDict.new()
+        kernel_dict.add(a, ctx=ctx)
+        scene = kernel_dict.load()
+        assert scene is not None
+
+
+def test_heterogeneous_particles_convert(mode_mono, tmpdir):
+    """Attribute 'particles' is a list of ParticleLayer objects."""
+    atmosphere = HeterogeneousAtmosphere(
+        profile=ArrayRadProfile(
+            levels=ureg.Quantity(np.linspace(0, 12, 4), "km"),
+            sigma_t_values=np.ones((1, 1, 3)),
+            albedo_values=np.ones((1, 1, 3)),
+        ),
+        cache_dir=tmpdir,
+        particles=[ParticleLayer(), {}],
     )
 
     for particle_layer in atmosphere.particles:

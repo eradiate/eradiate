@@ -1078,7 +1078,7 @@ def blend(radprops: List[xr.Dataset]) -> Tuple[xr.Dataset, xr.Dataset]:
     Parameter ``radprops`` (list of :class:``xarray.Dataset``):
         Radiative properties data sets to blend.
 
-    Returns → tuple of :class:``xarray.Dataset``:
+    Returns → tuple of :class:``~xarray.Dataset`` and :class:``~xarray.DataArray``:
         Blended radiative properties profile, blending ratios.
     """
     # Find the altitude mesh with the most number of points (reference mesh)
@@ -1095,4 +1095,9 @@ def blend(radprops: List[xr.Dataset]) -> Tuple[xr.Dataset, xr.Dataset]:
     albedo = weighted_mean(data_arrays=[r.albedo for r in reindexed], weights=sigma_t_i)
     albedo.name = "albedo"
 
-    return xr.merge([sigma_t, albedo]), ratios(sigma_t_i)
+    blended_radprops = xr.merge([sigma_t, albedo])
+
+    blending_ratios = ratios(sigma_t_i)
+    blending_ratios.attrs["units"] = ""
+
+    return blended_radprops, blending_ratios

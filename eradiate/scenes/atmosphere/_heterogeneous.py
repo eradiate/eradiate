@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 
 import attr
 import numpy as np
+from pandas.core.base import NoNewAttributesMixin
 import pint
 import xarray as xr
 
@@ -51,9 +52,9 @@ def write_binary_grid3d(filename, values):
             f"(expected numpy array or xarray DataArray)"
         )
 
-    if values.ndim not in {3, 4}:
+    if values.ndim not in {3, 4, 5}:
         raise ValueError(
-            f"'values' must have 3 or 4 dimensions " f"(got shape {values.shape})"
+            f"'values' must have 3, 4 or 5 dimensions " f"(got shape {values.shape})"
         )
 
     # note: this is an exact copy of the function write_binary_grid3d from
@@ -203,7 +204,7 @@ class HeterogeneousAtmosphere(Atmosphere):
     def _albedo_fname_and_sigma_t_fname_validator(instance, attribute, value):
         if instance.profile is None and value is None:
             raise ValueError(
-                f"{attribute.name} must be set when profile is set to None."
+                f"{attribute.name} must be set when 'profile' is set to None."
             )
         if (
             instance.width == "auto"
@@ -215,8 +216,20 @@ class HeterogeneousAtmosphere(Atmosphere):
             )
         if instance.toa_altitude == "auto" and value is not None:
             raise ValueError(
-                "'albedo_fname' and 'sigma_t_fname' cannot be set when toa_altitude is set to 'auto'"
+                "'albedo_fname' and 'sigma_t_fname' cannot be set when 'toa_altitude' is set to 'auto'"
             )
+
+    weight_fname = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(Path),
+            validator=attr.validators.optional(validators.is_file),
+        ),
+        doc="Path to the weight volume data file. If ``None``, "
+        "a value will be created when the file will be requested. The weight "
+        "values indicate the blending ratio of each component of the "
+        "atmosphere when the latter contains one or several particle layer(s).",
+    )
 
     cache_dir = documented(
         attr.ib(default=None, converter=attr.converters.optional(Path)),
@@ -253,7 +266,11 @@ class HeterogeneousAtmosphere(Atmosphere):
                         f"{height.units})."
                     )
 
-    _quantities = {"albedo": "albedo", "sigma_t": "collision_coefficient"}
+    _quantities = {
+        "albedo": "albedo",
+        "sigma_t": "collision_coefficient",
+        "weight": "dimensionless",
+    }
 
     def __attrs_post_init__(self):
         # Prepare cache directory in case we'd need it
@@ -303,7 +320,8 @@ class HeterogeneousAtmosphere(Atmosphere):
         Parameter ``fields`` (str or list[str] or None):
             If str, field for which to create volume data file. If list,
             fields for which to create volume data files. If ``None``,
-            all supported fields are processed (``{"albedo", "sigma_t"}``).
+            all supported fields are processed (``{"albedo", "sigma_t",
+            "weight"}``).
             Default: ``None``.
 
         Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
@@ -320,35 +338,79 @@ class HeterogeneousAtmosphere(Atmosphere):
         elif isinstance(fields, str):
             fields = {fields}
 
-        if self.profile is None:
-            raise ValueError("'profile' is not set, cannot write volume data " "files")
+        if "weight" in fields:
+            radprops, blending_ratios = self._blend_radprops(spectral_ctx=spectral_ctx)
+            weight = blending_ratios.data[:, :, np.newaxis, np.newaxis, :]
+            rearranged_weight = np.moveaxis(weight, source=[0, 1], destination=[4, 3])
+            print(rearranged_weight.shape)
 
-        for field in fields:
-            # Is the requested field supported?
-            if field not in supported_fields:
-                raise ValueError(f"field {field} cannot be used to create volume data")
+            for field in fields:
+                # Is the requested field supported?
+                if field not in supported_fields:
+                    raise ValueError(
+                        f"field {field} cannot be used to create volume data"
+                    )
 
-            # Does the considered field have values?
-            field_quantity = getattr(self.profile, field)(spectral_ctx)
+                # Does the considered field have values?
+                if field == "weight":
+                    field_quantity = ureg.Quantity(rearranged_weight, "")
+                else:
+                    field_quantity = to_quantity(getattr(radprops, field))
 
-            if field_quantity is None:
-                raise ValueError(f"field {field} is empty, cannot create volume data")
+                if field_quantity is None:
+                    raise ValueError(
+                        f"field {field} is empty, cannot create volume data"
+                    )
 
-            # If file name is not specified, we create one
-            field_fname = getattr(self, f"{field}_fname")
-            if field_fname is None:
-                field_fname = self.cache_dir / f"{field}.vol"
-                setattr(self, f"{field}_fname", field_fname)
+                field_fname = getattr(self, f"{field}_fname")
+                if field_fname is None:
+                    field_fname = self.cache_dir / f"{field}.vol"
+                    setattr(self, f"{field}_fname", field_fname)
 
-            # We have the data and the filename: we can create the file
-            field_quantity.m_as(uck.get(self._quantities[field]))
-            write_binary_grid3d(
-                field_fname,
-                field_quantity.m_as(uck.get(self._quantities[field])),
-            )
+                # We have the data and the filename: we can create the file
+                field_quantity.m_as(uck.get(self._quantities[field]))
+                print(field_quantity)
+                write_binary_grid3d(
+                    field_fname,
+                    field_quantity.m_as(uck.get(self._quantities[field])),
+                )
+
+        else:
+            if self.profile is None:
+                raise ValueError(
+                    "'profile' is not set, cannot write volume data " "files"
+                )
+
+            for field in fields:
+                # Is the requested field supported?
+                if field not in supported_fields:
+                    raise ValueError(
+                        f"field {field} cannot be used to create volume data"
+                    )
+
+                # Does the considered field have values?
+                field_quantity = getattr(self.profile, field)(spectral_ctx)
+
+                if field_quantity is None:
+                    raise ValueError(
+                        f"field {field} is empty, cannot create volume data"
+                    )
+
+                # If file name is not specified, we create one
+                field_fname = getattr(self, f"{field}_fname")
+                if field_fname is None:
+                    field_fname = self.cache_dir / f"{field}.vol"
+                    setattr(self, f"{field}_fname", field_fname)
+
+                # We have the data and the filename: we can create the file
+                field_quantity.m_as(uck.get(self._quantities[field]))
+                write_binary_grid3d(
+                    field_fname,
+                    field_quantity.m_as(uck.get(self._quantities[field])),
+                )
 
     def phase(self, ctx=None):
-        if len(self.particles) == 0:
+        if self.particles is None:
             return {f"phase_{self.id}": {"type": "rayleigh"}}
         elif len(self.particles) == 1:
             from mitsuba.core import ScalarTransform4f
@@ -367,12 +429,13 @@ class HeterogeneousAtmosphere(Atmosphere):
                 ]
             )
             phase = self.particles[0].eval_phase(spectral_ctx=ctx.spectral_ctx)
+            self.make_volume_data("weight", spectral_ctx=ctx.spectral_ctx)
             return {
                 f"phase_{self.id}": {
                     "type": "blendphase",
                     "weight": {
                         "type": "gridvolume",
-                        "filename": "weight.vol",
+                        "filename": str(self.weight_fname),
                         "to_world": trafo,
                     },
                     "phase1": {"type": "rayleigh"},
@@ -408,6 +471,9 @@ class HeterogeneousAtmosphere(Atmosphere):
         if self.profile is not None:
             self.make_volume_data("albedo", spectral_ctx=ctx.spectral_ctx)
             self.make_volume_data("sigma_t", spectral_ctx=ctx.spectral_ctx)
+
+        if self.particles is not None:
+            self.make_volume_data("weight", spectral_ctx=ctx.spectral_ctx)
 
         # Output kernel dict
         return {
