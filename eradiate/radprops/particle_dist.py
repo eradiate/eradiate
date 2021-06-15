@@ -15,7 +15,7 @@ from scipy.stats import expon, norm
 
 from .._attrs import documented, parse_docs
 from .._factory import BaseFactory
-from ..units import to_quantity
+from ..validators import all_positive
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
@@ -41,30 +41,6 @@ class ParticleDistribution(ABC):
     where :math:`f_i` is the particle number fraction in the layer division
     :math:`i`.
     """
-    bottom = documented(
-        pinttr.ib(
-            units=ucc.deferred("length"),
-            converter=pinttr.converters.to_units(ucc.deferred("length")),
-            validator=pinttr.validators.has_compatible_units,
-        ),
-        doc="Layer bottom altitude.\n\nUnit-enabled field (default: ucc[length]).",
-        type="float",
-    )
-    top = documented(
-        pinttr.ib(
-            units=ucc.deferred("length"),
-            converter=pinttr.converters.to_units(ucc.deferred("length")),
-            validator=pinttr.validators.has_compatible_units,
-        ),
-        doc="Layer top altitude.\n\nUnit-enabled field (default: ucc[length]).",
-        type="float",
-    )
-
-    @bottom.validator
-    @top.validator
-    def _bottom_and_top_validator(instance, attribute, value):
-        if instance.bottom >= instance.top:
-            raise ValueError("bottom altitude must be lower than top altitude")
 
     @classmethod
     def from_dict(cls, d: dict) -> ParticleDistribution:
@@ -106,7 +82,7 @@ class ParticleDistributionFactory(BaseFactory):
 @ParticleDistributionFactory.register("uniform")
 @parse_docs
 @attr.s
-class Uniform(ParticleDistribution):
+class UniformParticleDistribution(ParticleDistribution):
     r"""
     Uniform particle distribution.
 
@@ -122,22 +98,14 @@ class Uniform(ParticleDistribution):
     """
 
     def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        if np.any(z < self.bottom) or np.any(z > self.top):
-            raise ValueError(
-                f"Altitude values do not lie between layer "
-                f"bottom ({self.bottom}) and top ({self.top}) "
-                f"altitudes. Got {z}."
-            )
-        else:
-            x = z.magnitude
-            f = np.ones(len(x))
-            return f / f.sum()  # Normalise fractions
+        f = np.ones(len(z))
+        return f / f.sum()
 
 
 @ParticleDistributionFactory.register("exponential")
 @parse_docs
 @attr.s
-class Exponential(ParticleDistribution):
+class ExponentialParticleDistribution(ParticleDistribution):
     r"""
     Exponential particle distribution.
 
@@ -152,43 +120,27 @@ class Exponential(ParticleDistribution):
     rate = documented(
         pinttr.ib(
             units=ucc.deferred("collision_coefficient"),
-            default=None,
-            converter=attr.converters.optional(
-                pinttr.converters.to_units(ucc.deferred("collision_coefficient"))
-            ),
-            validator=attr.validators.optional(pinttr.validators.has_compatible_units),
+            converter=pinttr.converters.to_units(ucc.deferred("collision_coefficient")),
+            validator=pinttr.validators.has_compatible_units,
         ),
-        doc="Rate parameter of the exponential distribution. If ``None``, "
-        "set to the inverse of the layer thickness.\n"
+        doc="Rate parameter of the exponential distribution.\n"
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="float",
-        default="``None``",
     )
 
-    def __attrs_post_init__(self):
-        if self.rate is None:
-            self.rate = 1.0 / (self.top - self.bottom)
-
     def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        if np.any(self.bottom > z) or np.any(z > self.top):
-            raise ValueError(
-                f"Altitude values do not lie between layer "
-                f"bottom ({self.bottom}) and top ({self.top}) "
-                f"altitudes. Got {z}."
-            )
-        else:
-            x = z.magnitude
-            loc = self.bottom.to(z.units).magnitude
-            scale = (1.0 / self.rate).to(z.units).magnitude
-            f = expon.pdf(x=x, loc=loc, scale=scale)
-            return f / f.sum()  # Normalise fractions
+        x = z.magnitude
+        loc = z.magnitude.min()
+        scale = (1.0 / self.rate).to(z.units).magnitude
+        f = expon.pdf(x=x, loc=loc, scale=scale)
+        return f / f.sum()
 
 
 @ParticleDistributionFactory.register("gaussian")
 @parse_docs
 @attr.s
-class Gaussian(ParticleDistribution):
+class GaussianParticleDistribution(ParticleDistribution):
     r"""
     Gaussian particle distribution.
 
@@ -208,27 +160,20 @@ class Gaussian(ParticleDistribution):
     mean = documented(
         pinttr.ib(
             units=ucc.deferred("length"),
-            default=None,
-            converter=attr.converters.optional(
-                pinttr.converters.to_units(ucc.deferred("length"))
-            ),
-            validator=attr.validators.optional(pinttr.validators.has_compatible_units),
+            converter=pinttr.converters.to_units(ucc.deferred("length")),
+            validator=pinttr.validators.has_compatible_units,
         ),
         doc="Mean (expectation) of the distribution. "
         "If ``None``, set to the middle of the layer.\n"
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="float",
-        default="``None``",
     )
     std = documented(
         pinttr.ib(
             units=ucc.deferred("length"),
-            default=None,
-            converter=attr.converters.optional(
-                pinttr.converters.to_units(ucc.deferred("length"))
-            ),
-            validator=attr.validators.optional(pinttr.validators.has_compatible_units),
+            converter=pinttr.converters.to_units(ucc.deferred("length")),
+            validator=pinttr.validators.has_compatible_units,
         ),
         doc="Standard deviation of the distribution. If ``None``, set to one "
         "sixth of the layer thickness so that half the layer thickness "
@@ -236,34 +181,20 @@ class Gaussian(ParticleDistribution):
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="float",
-        default="``None``",
     )
 
-    def __attrs_post_init__(self):
-        if self.mean is None:
-            self.mean = (self.bottom + self.top) / 2.0
-        if self.std is None:
-            self.std = (self.top - self.bottom) / 6.0
-
     def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        if np.any(self.bottom > z) or np.any(z > self.top):
-            raise ValueError(
-                f"Altitude values do not lie between layer "
-                f"bottom ({self.bottom}) and top ({self.top}) "
-                f"altitudes. Got {z}."
-            )
-        else:
-            x = z.magnitude
-            loc = self.mean.to(z.units).magnitude
-            scale = self.std.to(z.units).magnitude
-            f = norm.pdf(x=x, loc=loc, scale=scale)
-            return f / f.sum()  # Normalise fractions
+        x = z.magnitude
+        loc = self.mean.to(z.units).magnitude
+        scale = self.std.to(z.units).magnitude
+        f = norm.pdf(x=x, loc=loc, scale=scale)
+        return f / f.sum()
 
 
 @ParticleDistributionFactory.register("array")
 @parse_docs
 @attr.s
-class Array(ParticleDistribution):
+class ArrayParticleDistribution(ParticleDistribution):
     """
     Flexible particle distribution specified either by a particle number
     fraction array or :class:`~xarray.DataArray`.
@@ -273,10 +204,11 @@ class Array(ParticleDistribution):
         attr.ib(
             default=None,
             converter=attr.converters.optional(np.array),
-            validator=attr.validators.optional(attr.validators.instance_of(np.ndarray)),
+            validator=attr.validators.optional(
+                [attr.validators.instance_of(np.ndarray), all_positive]
+            ),
         ),
-        doc="Particle number fraction values on a regular altitude mesh starting "
-        "from the layer bottom and stopping at the layer top altitude.",
+        doc="Particle number fraction values on a regular altitude mesh.",
         type="array",
         default="``None``",
     )
@@ -288,11 +220,17 @@ class Array(ParticleDistribution):
                 attr.validators.instance_of(xr.DataArray)
             ),
         ),
-        doc="Particle vertical distribution data array. Number fraction as a "
-        "function of altitude (``z``).",
-        type=":class:`xarray.DataArray`",
+        doc="Particle distribution data array. Number fraction as a "
+        "function of altitude (``z``).\n"
+        "Note that number fraction do not need to be normalised.",
+        type=":class:`~xarray.DataArray`",
         default="``None``",
     )
+
+    @data_array.validator
+    def _validate_data_array(instance, attribute, value):
+        if value is not None and not np.all(value.data >= 0.0):
+            raise ValueError("'data_array' data must be all positive.")
 
     @values.validator
     @data_array.validator
@@ -301,14 +239,14 @@ class Array(ParticleDistribution):
             raise ValueError("You must specify 'values' or 'data_array'.")
         elif instance.values is not None and instance.data_array is not None:
             raise ValueError(
-                "You cannot specify both 'values' and " "'data_array' simultaneously."
+                "You cannot specify both 'values' and 'data_array' simultaneously."
             )
 
     @data_array.validator
-    def _validate_data_array(instance, attribute, value):
+    def _validate_data_array_and_values(instance, attribute, value):
         if value is not None:
             if not "z" in value.coords:
-                raise ValueError("Attribute 'data_array' must have a 'z' " "coordinate")
+                raise ValueError("Attribute 'data_array' must have a 'z' coordinate")
             else:
                 try:
                     units = ureg.Unit(value.z.units)
@@ -320,23 +258,8 @@ class Array(ParticleDistribution):
                         )
                 except AttributeError:
                     raise ValueError(
-                        "Coordinate 'z' of attribute 'data_array' " "must have units."
+                        "Coordinate 'z' of attribute 'data_array' must have units."
                     )
-            min_z = to_quantity(instance.data_array.z.min(keep_attrs=True))
-            if min_z < instance.bottom:
-                raise ValueError(
-                    f"Minimum altitude value in data_array "
-                    f"({min_z}) is smaller than bottom altitude "
-                    f"({instance.bottom})."
-                )
-
-            max_z = to_quantity(instance.data_array.z.max(keep_attrs=True))
-            if max_z > instance.top:
-                raise ValueError(
-                    f"Minimum altitude value in data_array "
-                    f"({max_z}) is smaller than top altitude"
-                    f"({instance.top})."
-                )
 
     method = documented(
         attr.ib(
@@ -348,19 +271,16 @@ class Array(ParticleDistribution):
         default='``"linear"``',
     )
 
-    def __attrs_post_init__(self):
-        self.update()
-
-    def update(self):
-        if self.values is not None and self.data_array is None:
-            self.data_array = xr.DataArray(
+    def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
+        if self.values is not None:
+            data_array = xr.DataArray(
                 data=self.values,
                 coords={
                     "z": (
                         "z",
                         np.linspace(
-                            start=self.bottom.to("m").magnitude,
-                            stop=self.top.to("m").magnitude,
+                            start=z.to("m").magnitude.min(),
+                            stop=z.to("m").magnitude.max(),
                             num=len(self.values),
                         ),
                         {"units": "m"},
@@ -368,10 +288,11 @@ class Array(ParticleDistribution):
                 },
                 dims=["z"],
             )
+        else:
+            data_array = self.data_array
 
-    def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        x = z.to(self.data_array.z.units).magnitude
-        f = self.data_array.interp(
+        x = z.to(data_array.z.units).magnitude
+        f = data_array.interp(
             coords={"z": x}, method=self.method, kwargs=dict(fill_value=0.0)
         )
         return f.values / f.values.sum()  # Normalise fractions
