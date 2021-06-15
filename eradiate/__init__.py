@@ -32,7 +32,17 @@ from ._mode import mode, set_mode, modes  # isort: skip
 
 # ------------------------------------------------------------------------------
 
-from . import contexts, converters, kernel, scenes, solvers, units, validators, xarray
+from . import (
+    contexts,
+    converters,
+    kernel,
+    notebook,
+    scenes,
+    solvers,
+    units,
+    validators,
+    xarray,
+)
 
 __all__ = [
     "__version__",
@@ -40,6 +50,7 @@ __all__ = [
     "converters",
     "mode",
     "modes",
+    "notebook",
     "path_resolver",
     "scenes",
     "set_mode",

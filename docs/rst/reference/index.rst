@@ -26,6 +26,7 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
    xarray
    units
    plot
+   notebook
    thermoprops
    radprops
    class_writing
