@@ -1,12 +1,12 @@
-ARG REGISTRY=fxia
-ARG VERSION=v1.0.0
+ARG BASE_IMAGE
+ARG BASE_IMAGE_VERSION
 
-FROM ${REGISTRY}/eradiate:${VERSION}
+FROM ${BASE_IMAGE}:${BASE_IMAGE_VERSION}
 
 RUN pip3 install jupyterlab
 
 ENV PORT=8888
+ENV ERADIATE_DIR=/sources/eradiate
 
 CMD jupyter lab --no-browser --allow-root --port=$PORT --ip='0.0.0.0' --allow_origin='*'
-
 EXPOSE 8888
