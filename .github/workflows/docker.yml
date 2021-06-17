@@ -31,6 +31,9 @@ jobs:
           VERSION=$(basename $GITHUB_REF) docker-compose -f docker-build.yml build
 
       - name: Push the images
+        env:
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
         run: |
+          docker login -u rayference -p $DOCKER_HUB_TOKEN
           docker-compose -f docker-build.yml push
           VERSION=$(basename $GITHUB_REF) docker-compose -f docker-build.yml push
