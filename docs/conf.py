@@ -73,7 +73,13 @@ extensions.append("exec")
 
 rst_prolog = r"""
 .. role:: bolditalic
-  :class: bolditalic
+   :class: font-weight-bold font-italic
+  
+.. role:: monospace
+   :class: text-monospace
+   
+.. role:: monobold
+   :class: text-monospace font-weight-bold
 """
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
