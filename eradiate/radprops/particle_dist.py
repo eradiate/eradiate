@@ -131,7 +131,7 @@ class Uniform(ParticleDistribution):
         else:
             x = z.magnitude
             f = np.ones(len(x))
-            return f / f.sum()
+            return f / f.sum()  # Normalise fractions
 
 
 @ParticleDistributionFactory.register("exponential")
@@ -171,18 +171,18 @@ class Exponential(ParticleDistribution):
             self.rate = 1.0 / (self.top - self.bottom)
 
     def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        if (self.bottom <= z).all() and (z <= self.top).all():
-            x = z.magnitude
-            loc = self.bottom.to(z.units).magnitude
-            scale = (1.0 / self.rate).to(z.units).magnitude
-            f = expon.pdf(x=x, loc=loc, scale=scale)
-            return f / f.sum()
-        else:
+        if np.any(self.bottom > z) or np.any(z > self.top):
             raise ValueError(
                 f"Altitude values do not lie between layer "
                 f"bottom ({self.bottom}) and top ({self.top}) "
                 f"altitudes. Got {z}."
             )
+        else:
+            x = z.magnitude
+            loc = self.bottom.to(z.units).magnitude
+            scale = (1.0 / self.rate).to(z.units).magnitude
+            f = expon.pdf(x=x, loc=loc, scale=scale)
+            return f / f.sum()  # Normalise fractions
 
 
 @ParticleDistributionFactory.register("gaussian")
@@ -246,18 +246,18 @@ class Gaussian(ParticleDistribution):
             self.std = (self.top - self.bottom) / 6.0
 
     def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        if (self.bottom <= z).all() and (z <= self.top).all():
-            x = z.magnitude
-            loc = self.mean.to(z.units).magnitude
-            scale = self.std.to(z.units).magnitude
-            f = norm.pdf(x=x, loc=loc, scale=scale)
-            return f / f.sum()
-        else:
+        if np.any(self.bottom > z) or np.any(z > self.top):
             raise ValueError(
                 f"Altitude values do not lie between layer "
                 f"bottom ({self.bottom}) and top ({self.top}) "
                 f"altitudes. Got {z}."
             )
+        else:
+            x = z.magnitude
+            loc = self.mean.to(z.units).magnitude
+            scale = self.std.to(z.units).magnitude
+            f = norm.pdf(x=x, loc=loc, scale=scale)
+            return f / f.sum()  # Normalise fractions
 
 
 @ParticleDistributionFactory.register("array")
@@ -374,4 +374,4 @@ class Array(ParticleDistribution):
         f = self.data_array.interp(
             coords={"z": x}, method=self.method, kwargs=dict(fill_value=0.0)
         )
-        return f.values / f.values.sum()
+        return f.values / f.values.sum()  # Normalise fractions
