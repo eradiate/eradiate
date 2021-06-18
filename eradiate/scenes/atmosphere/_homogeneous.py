@@ -1,8 +1,10 @@
 import attr
 
 from ._core import Atmosphere, AtmosphereFactory
+from ..phase import PhaseFunction, PhaseFunctionFactory, RayleighPhaseFunction
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, SpectrumFactory
 from ..._attrs import documented, parse_docs
+from ..._util import onedict_value
 from ...units import unit_context_kernel as uck
 from ...validators import has_quantity
 
@@ -52,6 +54,20 @@ class HomogeneousAtmosphere(Atmosphere):
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
         default="0.0 cdu[collision_coefficient]",
     )
+
+    phase = documented(
+        attr.ib(
+            factory=lambda: RayleighPhaseFunction(),
+            converter=PhaseFunctionFactory.convert,
+            validator=attr.validators.instance_of(PhaseFunction),
+        )
+    )
+
+    def __attrs_post_init__(self):
+        self.update()
+
+    def update(self):
+        self.phase.id = f"phase_{self.id}"
 
     def kernel_width(self, ctx=None):
         """
@@ -118,13 +134,13 @@ class HomogeneousAtmosphere(Atmosphere):
         return self.eval_sigma_a(spectral_ctx) + self.eval_sigma_s(spectral_ctx)
 
     def kernel_phase(self, ctx=None):
-        return {f"phase_{self.id}": {"type": "rayleigh"}}
+        return self.phase.kernel_dict(ctx=ctx)
 
     def kernel_media(self, ctx=None):
         if ctx.ref:
-            phase = {"type": "ref", "id": f"phase_{self.id}"}
+            phase = {"type": "ref", "id": self.phase.id}
         else:
-            phase = self.phase()[f"phase_{self.id}"]
+            phase = onedict_value(self.kernel_phase(ctx=ctx))
 
         return {
             f"medium_{self.id}": {
