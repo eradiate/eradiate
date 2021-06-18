@@ -40,7 +40,7 @@ class Spectrum(SceneElement, ABC):
         if value not in PhysicalQuantity.spectrum():
             raise ValueError(
                 f"while validating {attribute.name}: "
-                f"got value '{value}', expected one of {str()}"
+                f"got value '{value}', expected one of {str(PhysicalQuantity.spectrum())}"
             )
 
     @abstractmethod
@@ -90,9 +90,9 @@ class SpectrumFactory(BaseFactory):
 
         * otherwise, it forwards ``value`` to :meth:`.SpectrumFactory.convert`.
 
-        Parameter ``quantity`` (str or :class:`PhysicalQuantity`):
-            Quantity specifier (converted by :meth:`SpectrumQuantity.from_any`).
-            See :meth:`PhysicalQuantity.spectrum` for suitable values.
+        Parameter ``quantity`` (str or :class:`.PhysicalQuantity`):
+            Quantity specifier (converted by :class:`.PhysicalQuantity`).
+            See :meth:`.PhysicalQuantity.spectrum` for suitable values.
 
         Returns → callable:
             Generated converter.
