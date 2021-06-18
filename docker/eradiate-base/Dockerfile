@@ -43,6 +43,7 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}
     /opt/conda/bin/conda clean -afy
 
 RUN conda create --name docker
+ENV PATH /opt/conda/envs/docker/bin:$PATH
 
 SHELL ["conda", "run", "-n", "docker", "/bin/bash", "-c"]
 
