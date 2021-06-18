@@ -14,8 +14,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y   \
     libc++abi-9-dev                                 \
     libpng-dev                                      \
     zlib1g-dev                                      \
-    python3.9-distutils                             \
-    python3-pip                                     \
     libjpeg-dev
 
 ENV CC=clang-9
@@ -23,6 +21,7 @@ ENV CXX=clang++-9
 
 COPY . /sources/eradiate
 WORKDIR /sources/eradiate
+RUN make conda-init
 RUN git submodule update --init --recursive
 
 RUN mkdir -p /build/eradiate-kernel                                                                                       \
