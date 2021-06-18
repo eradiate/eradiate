@@ -6,7 +6,7 @@ import attr
 import numpy as np
 import xarray as xr
 
-from ._base import Atmosphere, AtmosphereFactory
+from ._core import Atmosphere, AtmosphereFactory
 from ... import validators
 from ..._attrs import documented, parse_docs
 from ...radprops import RadProfileFactory

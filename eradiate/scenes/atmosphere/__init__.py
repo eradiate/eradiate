@@ -1,4 +1,4 @@
-from ._base import Atmosphere, AtmosphereFactory
+from ._core import Atmosphere, AtmosphereFactory
 from ._heterogeneous import HeterogeneousAtmosphere
 from ._homogeneous import HomogeneousAtmosphere
 
