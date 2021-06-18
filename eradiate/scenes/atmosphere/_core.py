@@ -130,7 +130,7 @@ class Atmosphere(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def phase(self, ctx=None):
+    def kernel_phase(self, ctx=None):
         """
         Return phase function plugin specifications only.
 
@@ -146,7 +146,7 @@ class Atmosphere(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def media(self, ctx=None):
+    def kernel_media(self, ctx=None):
         """
         Return medium plugin specifications only.
 
@@ -162,7 +162,7 @@ class Atmosphere(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def shapes(self, ctx=None):
+    def kernel_shapes(self, ctx=None):
         """
         Return shape plugin specifications only.
 
@@ -181,11 +181,15 @@ class Atmosphere(SceneElement, ABC):
         kernel_dict = {}
 
         if not ctx.ref:
-            kernel_dict[self.id] = self.shapes(ctx=ctx)[f"shape_{self.id}"]
+            kernel_dict[self.id] = self.kernel_shapes(ctx=ctx)[f"shape_{self.id}"]
         else:
-            kernel_dict[f"phase_{self.id}"] = self.phase(ctx=ctx)[f"phase_{self.id}"]
-            kernel_dict[f"medium_{self.id}"] = self.media(ctx=ctx)[f"medium_{self.id}"]
-            kernel_dict[f"{self.id}"] = self.shapes(ctx=ctx)[f"shape_{self.id}"]
+            kernel_dict[f"phase_{self.id}"] = self.kernel_phase(ctx=ctx)[
+                f"phase_{self.id}"
+            ]
+            kernel_dict[f"medium_{self.id}"] = self.kernel_media(ctx=ctx)[
+                f"medium_{self.id}"
+            ]
+            kernel_dict[f"{self.id}"] = self.kernel_shapes(ctx=ctx)[f"shape_{self.id}"]
 
         return kernel_dict
 

@@ -306,10 +306,10 @@ class HeterogeneousAtmosphere(Atmosphere):
                 field_quantity.m_as(uck.get(self._quantities[field])),
             )
 
-    def phase(self, ctx=None):
+    def kernel_phase(self, ctx=None):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
 
-    def media(self, ctx=None):
+    def kernel_media(self, ctx=None):
         from mitsuba.core import ScalarTransform4f
 
         k_width = self.kernel_width(ctx).m_as(uck.get("length"))
@@ -349,13 +349,13 @@ class HeterogeneousAtmosphere(Atmosphere):
             }
         }
 
-    def shapes(self, ctx=None):
+    def kernel_shapes(self, ctx=None):
         from mitsuba.core import ScalarTransform4f
 
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
-            medium = self.media(ctx=None)[f"medium_{self.id}"]
+            medium = self.kernel_media(ctx=None)[f"medium_{self.id}"]
 
         k_length = uck.get("length")
         k_width = self.kernel_width(ctx).m_as(k_length)

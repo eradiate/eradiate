@@ -25,13 +25,13 @@ def test_homogeneous(mode_mono, ref):
     # Check if default constructs can be loaded by the kernel
     ctx = KernelDictContext(ref=False)
 
-    dict_phase = onedict_value(r.phase(ctx))
+    dict_phase = onedict_value(r.kernel_phase(ctx))
     assert load_dict(dict_phase) is not None
 
-    dict_medium = onedict_value(r.media(ctx))
+    dict_medium = onedict_value(r.kernel_media(ctx))
     assert load_dict(dict_medium) is not None
 
-    dict_shape = onedict_value(r.shapes(ctx))
+    dict_shape = onedict_value(r.kernel_shapes(ctx))
     assert load_dict(dict_shape) is not None
 
     # Check if produced scene can be instantiated
