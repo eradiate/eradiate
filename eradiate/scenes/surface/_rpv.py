@@ -1,7 +1,10 @@
 import attr
 
 from ._core import Surface, SurfaceFactory
+from ..spectra import Spectrum, SpectrumFactory
+from ... import validators
 from ..._attrs import documented, parse_docs
+from ..._util import onedict_value
 from ...contexts import KernelDictContext
 
 
@@ -13,35 +16,73 @@ class RPVSurface(Surface):
     RPV surface scene element [:factorykey:`rpv`].
 
     This class creates a square surface to which a RPV BRDF
-    :cite:`Rahman1993CoupledSurfaceatmosphereReflectance`
+    :cite:`Rahman1993CoupledSurfaceatmosphereReflectance,Pinty2000SurfaceAlbedoRetrieval`
     is attached.
 
     The default configuration corresponds to grassland (visible light)
     (:cite:`Rahman1993CoupledSurfaceatmosphereReflectance`, Table 1).
+
+    .. note:: Parameter names are defined as per the symbols used in the
+       Eradiate Scientific Handbook :cite:`EradiateScientificHandbook2020`.
     """
 
-    # TODO: check if there are bounds to default parameters
-    # TODO: match defaults with plugin defaults
-    # TODO: add support for spectra
-
     rho_0 = documented(
-        attr.ib(default=0.183, converter=float),
-        doc=":math:`\\rho_0` parameter.",
-        type="float",
+        attr.ib(
+            default=0.183,
+            converter=SpectrumFactory.converter("dimensionless"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validators.has_quantity("dimensionless"),
+            ],
+        ),
+        doc="Amplitude parameter. Must be dimensionless. "
+        "Should be in :math:`[0, 1]`.",
+        type=":class:`.Spectrum`",
+        default="0.183",
+    )
+
+    rho_c = documented(
+        attr.ib(
+            default=0.183,
+            converter=SpectrumFactory.converter("dimensionless"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validators.has_quantity("dimensionless"),
+            ],
+        ),
+        doc="Hot spot parameter. Must be dimensionless. "
+        "Should be in :math:`[0, 1]`.",
+        type=":class:`.Spectrum`",
         default="0.183",
     )
 
     k = documented(
-        attr.ib(default=0.780, converter=float),
-        doc=":math:`k` parameter.",
-        type="float",
+        attr.ib(
+            default=0.780,
+            converter=SpectrumFactory.converter("dimensionless"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validators.has_quantity("dimensionless"),
+            ],
+        ),
+        doc="Bowl-shape parameter. Must be dimensionless. "
+        "Should be in :math:`[0, 2]`.",
+        type=":class:`.Spectrum`",
         default="0.780",
     )
 
-    ttheta = documented(
-        attr.ib(default=-0.1, converter=float),
-        doc=":math:`\\Theta` parameter.",
-        type="float",
+    g = documented(
+        attr.ib(
+            default=-0.1,
+            converter=SpectrumFactory.converter("dimensionless"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validators.has_quantity("dimensionless"),
+            ],
+        ),
+        doc="Asymmetry parameter. Must be dimensionless. "
+        "Should be in :math:`[-1, 1]`.",
+        type=":class:`.Spectrum`",
         default="-0.1",
     )
 
@@ -49,8 +90,9 @@ class RPVSurface(Surface):
         return {
             f"bsdf_{self.id}": {
                 "type": "rpv",
-                "rho_0": {"type": "uniform", "value": self.rho_0},
-                "k": {"type": "uniform", "value": self.k},
-                "g": {"type": "uniform", "value": self.ttheta},
+                "rho_0": onedict_value(self.rho_0.kernel_dict(ctx=ctx)),
+                "rho_c": onedict_value(self.rho_c.kernel_dict(ctx=ctx)),
+                "k": onedict_value(self.k.kernel_dict(ctx=ctx)),
+                "g": onedict_value(self.g.kernel_dict(ctx=ctx)),
             }
         }

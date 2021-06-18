@@ -77,7 +77,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
         },
         surface={
             "lambertian": {"type": "lambertian", "reflectance": 0.5},
-            "rpv": {"type": "rpv", "rho_0": 0.183, "k": 0.780, "ttheta": -0.1},
+            "rpv": {"type": "rpv", "rho_0": 0.183, "k": 0.780, "g": -0.1},
         }[surface],
         atmosphere={
             "none": None,
