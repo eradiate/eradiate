@@ -1,5 +1,6 @@
 import itertools
 import os
+import warnings
 from copy import deepcopy
 from typing import MutableMapping, Optional
 
@@ -99,24 +100,24 @@ def _leaf_cloud_positions_cuboid_avoid_overlap(
     return positions
 
 
-@ureg.wraps(ureg.m, (None, ureg.m, None))
-def _leaf_cloud_positions_sphere(n_leaves, radius, rng):
-    """Compute leaf positions for a sphere-shaped leaf cloud."""
+@ureg.wraps(ureg.m, (None, None, ureg.m, ureg.m, ureg.m))
+def _leaf_cloud_positions_ellipsoid(n_leaves: int, rng, a: float, b: float, c: float):
+    """
+    Compute leaf positions for an ellipsoid leaf cloud.
+    The ellipsoid follows the equation:
+    :math:`\frac{x^2}{a^2} + \frac{y^2}{b^2} + \frac{z^2}{c^2}= 1`
+    """
 
-    radius = float(radius)
+    positions = []
 
-    positions = np.empty((n_leaves, 3))
-
-    for i in range(n_leaves):
+    while len(positions) < n_leaves:
         rand = rng.random(3)
-        theta = rand[0] * np.pi
-        phi = rand[1] * 2 * np.pi
-        r = rand[2] * radius
-        positions[i, :] = [
-            r * np.sin(theta) * np.cos(phi),
-            r * np.sin(theta) * np.sin(phi),
-            r * np.cos(theta),
-        ]
+        x = (rand[0] - 0.5) * 2 * a
+        y = (rand[1] - 0.5) * 2 * b
+        z = (rand[2] - 0.5) * 2 * c
+
+        if (x ** 2 / a ** 2) + (y ** 2 / b ** 2) + (z ** 2 / c ** 2) <= 1.0:
+            positions.append([x, y, z])
 
     return positions
 
@@ -428,6 +429,69 @@ class SphereLeafCloudParams(LeafCloudParams):
     @property
     def radius(self):
         return self._radius
+
+
+@parse_docs
+@attr.s
+class EllipsoidLeafCloudParams(LeafCloudParams):
+    """
+    Advanced parameter checking class for the ellipsoid :class:`.LeafCloud`
+    generator. Parameters ``a``, ``b`` and ``c`` denote the ellipsoid's half
+    axes along the x, y, and z directions respectively. If either ``b`` or ``c``
+    are not set by the user, they default to being equal to ``a``.
+    Accordingly a sphere of radius ``r`` can be parametrized by setting ``a=r``.
+
+    .. seealso:: :meth:`.LeafCloud.ellipsoid`
+    """
+
+    _a = documented(
+        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
+        type="float",
+        default="1 m",
+    )
+
+    _b = documented(
+        pinttr.ib(default=None, units=ucc.deferred("length")),
+        doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
+        type="float",
+        default="1 m",
+    )
+
+    _c = documented(
+        pinttr.ib(default=None, units=ucc.deferred("length")),
+        doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
+        type="float",
+        default="1 m",
+    )
+
+    @property
+    def a(self):
+        if self._a <= 0:
+            raise ValueError(
+                "Ellipsoid half axis parameters must be strictly larger than zero!"
+            )
+        return self._a
+
+    @property
+    def b(self):
+        if self._b is None:
+            self._b = self.a
+        elif self._b <= 0:
+            raise ValueError(
+                "Ellipsoid half axis parameters must be strictly larger than zero!"
+            )
+        return self._b
+
+    @property
+    def c(self):
+        if self._c is None:
+            self._c = self.a
+        elif self._c <= 0:
+            raise ValueError(
+                "Ellipsoid half axis parameters must be strictly larger than zero!"
+            )
+        return self._c
 
 
 @parse_docs
@@ -752,8 +816,50 @@ class LeafCloud(CanopyElement):
         """
         rng = np.random.default_rng(seed=seed)
         params = SphereLeafCloudParams(**kwargs)
-        leaf_positions = _leaf_cloud_positions_sphere(
-            params.radius, params.n_leaves, rng
+        leaf_positions = _leaf_cloud_positions_ellipsoid(
+            params.n_leaves,
+            rng,
+            params.radius,
+        )
+        leaf_orientations = _leaf_cloud_orientations(
+            params.n_leaves, params.mu, params.nu, rng
+        )
+        leaf_radii = _leaf_cloud_radii(params.n_leaves, params.leaf_radius)
+
+        # Create leaf cloud object
+        return cls(
+            id=params.id,
+            leaf_positions=leaf_positions,
+            leaf_orientations=leaf_orientations,
+            leaf_radii=leaf_radii,
+            leaf_reflectance=params.leaf_reflectance,
+            leaf_transmittance=params.leaf_transmittance,
+        )
+
+    @classmethod
+    def ellipsoid(cls, seed=12345, **kwargs):
+        """
+        Generate a leaf cloud with ellipsoid shape. Parameters are checked by
+        the :class:`.EllipsoidLeafCloudParams` class.
+
+        .. seealso:: :class:`.EllipsoidLeafCloudParams`
+
+        The produced leaf cloud covers uniformly the volume enclosed by
+        :math:`\\frac{x^2}{a^2} + \\frac{y^2}{b^2} + \\frac{z^2}{c^2}= 1` .
+
+        Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
+        of an approximated inverse beta distribution
+        :cite:`Ross1991MonteCarloMethods`.
+
+        An additional parameter controls the random number generator.
+
+        Parameter ``seed`` (int):
+            Seed for the random number generator.
+        """
+        rng = np.random.default_rng(seed=seed)
+        params = EllipsoidLeafCloudParams(**kwargs)
+        leaf_positions = _leaf_cloud_positions_ellipsoid(
+            params.n_leaves, rng, params.a, params.b, params.c
         )
         leaf_orientations = _leaf_cloud_orientations(
             params.n_leaves, params.mu, params.nu, rng
@@ -957,6 +1063,9 @@ class LeafCloud(CanopyElement):
         elif construct == "sphere":
             return cls.sphere(**d_copy)
 
+        elif construct == "ellipsoid":
+            return cls.ellipsoid(**d_copy)
+
         elif construct == "cylinder":
             return cls.cylinder(**d_copy)
 
@@ -1084,7 +1193,18 @@ class AbstractTree(CanopyElement):
     """
     A container class for abstract trees in discrete canopies.
     Holds a :class:`.LeafCloud` and the parameters characterizing a cylindrical
-    trunk.
+    trunk. The entire tree is described in local coordinates and can be placed
+    in the scene using :class:`.InstancedCanopyElement`.
+
+    The trunk starts at [0, 0, -0.1] and extends
+    to [0, 0, trunk_height]. The trunk extends below ``z=0`` to avoid intersection
+    issues at the intersection of the trunk and the ground the tree is usually placed on.
+
+    The leaf cloud will by default be offset such that its local coordinate
+    origin coincides with the upper end of the trunk. If this is not desired,
+    e.g. the leaf cloud is centered around its coordinate origin and the trunk
+    should not extend into it, the parameter ``leaf_cloud_extra_offset`` can be
+    used to shift the leaf cloud **in addition** to the trunk's extent.
 
     The :meth:`.AbstractTree.from_dict` constructor will instantiate the trunk
     parameters based on dictionary specification and will forward the entry
@@ -1132,6 +1252,15 @@ class AbstractTree(CanopyElement):
         default="0.5",
     )
 
+    leaf_cloud_extra_offset = documented(
+        pinttr.ib(factory=list, units=ucc.deferred("length")),
+        doc="Additional offset for the leaf cloud. 3-vector.\n"
+        "\n"
+        "Unit-enabled field (default: ucc[length])",
+        type="array-like",
+        default="[0, 0, 0]",
+    )
+
     def bsdfs(self, ctx=None):
         """
         Return BSDF plugin specifications.
@@ -1177,6 +1306,7 @@ class AbstractTree(CanopyElement):
 
         leaf_cloud = self.leaf_cloud.translated(
             [0.0, 0.0, kernel_height] * kernel_length
+            + self.leaf_cloud_extra_offset.to(kernel_length)
         )
 
         if ctx.ref:
@@ -1198,7 +1328,7 @@ class AbstractTree(CanopyElement):
             "type": "disk",
             "bsdf": bsdf,
             "to_world": ScalarTransform4f.scale(kernel_radius)
-            * ScalarTransform4f.translate(((0, 0, kernel_height / 2.0))),
+            * ScalarTransform4f.translate(((0, 0, kernel_height))),
         }
 
         return shapes_dict
