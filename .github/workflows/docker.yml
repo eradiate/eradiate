@@ -27,13 +27,18 @@ jobs:
 
       - name: Launch the build
         run: |
-          docker-compose -f docker-build.yml build
           VERSION=$(basename $GITHUB_REF) docker-compose -f docker-build.yml build
 
       - name: Push the images
         env:
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
         run: |
+          docker tag rayference/eradiate-base:$(basename $GITHUB_REF) rayference/eradiate-base:latest
+          docker tag rayference/eradiate-kernel-builder:$(basename $GITHUB_REF) rayference/eradiate-kernel-builder:latest
+          docker tag rayference/eradiate-kernel:$(basename $GITHUB_REF) rayference/eradiate-kernel:latest
+          docker tag rayference/eradiate:$(basename $GITHUB_REF) rayference/eradiate:latest
+          docker tag rayference/eradiate-jupyterlab:$(basename $GITHUB_REF) rayference/eradiate-jupyterlab:latest
           docker login -u rayference -p $DOCKER_HUB_TOKEN
-          docker-compose -f docker-build.yml push
           VERSION=$(basename $GITHUB_REF) docker-compose -f docker-build.yml push
+          VERSION=latest docker-compose -f docker-build.yml push
+          
