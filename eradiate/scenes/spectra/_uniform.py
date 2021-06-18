@@ -44,8 +44,6 @@ class UniformSpectrum(Spectrum):
                     f"(expected '{expected_units}')",
                 )
 
-        validators.is_positive(self, attribute, value)
-
     def __attrs_post_init__(self):
         self.update()
 

@@ -27,8 +27,6 @@ def test_uniform(mode_mono):
     # Instantiate with all arguments
     s = UniformSpectrum(quantity="collision_coefficient", value=1.0)
     assert s.value == ureg.Quantity(1.0, "m^-1")
-    with pytest.raises(ValueError):
-        UniformSpectrum(quantity="collision_coefficient", value=-1.0)
 
     # Raise if units and quantity are inconsistent
     with pytest.raises(pinttr.exceptions.UnitsError):
