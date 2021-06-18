@@ -117,10 +117,10 @@ class HomogeneousAtmosphere(Atmosphere):
         """
         return self.eval_sigma_a(spectral_ctx) + self.eval_sigma_s(spectral_ctx)
 
-    def phase(self, ctx=None):
+    def kernel_phase(self, ctx=None):
         return {f"phase_{self.id}": {"type": "rayleigh"}}
 
-    def media(self, ctx=None):
+    def kernel_media(self, ctx=None):
         if ctx.ref:
             phase = {"type": "ref", "id": f"phase_{self.id}"}
         else:
@@ -137,13 +137,13 @@ class HomogeneousAtmosphere(Atmosphere):
             }
         }
 
-    def shapes(self, ctx=None):
+    def kernel_shapes(self, ctx=None):
         from mitsuba.core import ScalarTransform4f
 
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
-            medium = self.media(ctx=ctx)[f"medium_{self.id}"]
+            medium = self.kernel_media(ctx=ctx)[f"medium_{self.id}"]
 
         k_length = uck.get("length")
         k_width = self.kernel_width(ctx=ctx).m_as(k_length)

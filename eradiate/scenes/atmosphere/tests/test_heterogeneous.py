@@ -49,13 +49,13 @@ def test_heterogeneous_nowrite(mode_mono):
     # Default output can be loaded
     ctx = KernelDictContext(ref=False)
 
-    p = a.phase(ctx)
+    p = a.kernel_phase(ctx)
     assert load_dict(onedict_value(p)) is not None
 
-    m = a.media(ctx)
+    m = a.kernel_media(ctx)
     assert load_dict(onedict_value(m)) is not None
 
-    s = a.shapes(ctx)
+    s = a.kernel_shapes(ctx)
     assert load_dict(onedict_value(s)) is not None
 
     # Load all elements at once (and use references)
