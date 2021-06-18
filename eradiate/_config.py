@@ -13,15 +13,16 @@ def format_help_dicts_rst(help_dicts, display_defaults=False):
     """
     help_strs = []
     for help_dict in help_dicts:
-        help_str = f"{help_dict['var_name']} ({'Required' if help_dict['required'] else 'Optional'}"
+        help_str = f".. envvar:: {help_dict['var_name']}\n\n"
+        help_str += f"   *{'Required' if help_dict['required'] else 'Optional'}"
 
         if help_dict.get("default") and display_defaults:
-            help_str += f", Default={help_dict['default']})"
+            help_str += f", Default={help_dict['default']}* "
         else:
-            help_str += ")"
+            help_str += "*. "
 
         if help_dict.get("help_str"):
-            help_str += f"\n    {help_dict['help_str']}"
+            help_str += f"{help_dict['help_str']}"
         help_strs.append(help_str)
 
     return "\n\n".join(help_strs)
