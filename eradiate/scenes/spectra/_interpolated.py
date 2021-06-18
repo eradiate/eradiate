@@ -4,11 +4,10 @@ import attr
 import numpy as np
 import pint
 import pinttr
-from numpy.typing import ArrayLike
 
 import eradiate
 
-from ._core import Spectrum
+from ._core import Spectrum, SpectrumFactory
 from ... import converters, validators
 from ..._attrs import documented, parse_docs
 from ..._util import ensure_array
@@ -18,6 +17,7 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
 
+@SpectrumFactory.register("interpolated")
 @parse_docs
 @attr.s
 class InterpolatedSpectrum(Spectrum):

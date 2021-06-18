@@ -87,6 +87,7 @@ class SpectrumFactory(BaseFactory):
           for the following values of the ``"type"`` entry:
 
           * ``"uniform"``;
+          * ``"interpolated"``;
 
         * otherwise, it forwards ``value`` to :meth:`.SpectrumFactory.convert`.
 
@@ -104,7 +105,10 @@ class SpectrumFactory(BaseFactory):
 
             if isinstance(value, dict):
                 try:
-                    if value["type"] == "uniform" and "quantity" not in value:
+                    if (
+                        value["type"] in {"uniform", "interpolated"}
+                        and "quantity" not in value
+                    ):
                         return SpectrumFactory.convert({**value, "quantity": quantity})
                 except KeyError:
                     pass
