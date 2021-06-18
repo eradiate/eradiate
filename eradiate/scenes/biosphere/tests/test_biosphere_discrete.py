@@ -6,12 +6,12 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
+from eradiate.scenes.biosphere import AbstractTree, MeshTree, MeshTreeElement
 from eradiate.scenes.biosphere._discrete import (
     DiscreteCanopy,
     InstancedCanopyElement,
     LeafCloud,
 )
-from eradiate.scenes.biosphere._tree import AbstractTree
 from eradiate.scenes.core import KernelDict
 
 # -- Fixture definitions -------------------------------------------------------
@@ -40,6 +40,58 @@ def tempfile_spheres():
             tf.write("0.100 -2.274 -9.204\n")
             tf.write("0.100 -9.957 -4.971\n")
             tf.write("0.100 5.339 9.153\n")
+        yield filename
+
+
+@pytest.fixture(scope="module")
+def tempfile_obj():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filename = os.path.join(tmpdir, "tempfile_mesh.obj")
+        with open(filename, "w") as tf:
+            tf.write(
+                """o Cube
+v 1.000000 -1.000000 -1.000000
+v 1.000000 -1.000000 1.000000
+v -1.000000 -1.000000 1.000000
+v -1.000000 -1.000000 -1.000000
+v 1.000000 1.000000 -0.999999
+v 0.999999 1.000000 1.000001
+v -1.000000 1.000000 1.000000
+v -1.000000 1.000000 -1.000000
+vt 1.000000 0.333333
+vt 1.000000 0.666667
+vt 0.666667 0.666667
+vt 0.666667 0.333333
+vt 0.666667 0.000000
+vt 0.000000 0.333333
+vt 0.000000 0.000000
+vt 0.333333 0.000000
+vt 0.333333 1.000000
+vt 0.000000 1.000000
+vt 0.000000 0.666667
+vt 0.333333 0.333333
+vt 0.333333 0.666667
+vt 1.000000 0.000000
+vn 0.000000 -1.000000 0.000000
+vn 0.000000 1.000000 0.000000
+vn 1.000000 0.000000 0.000000
+vn -0.000000 0.000000 1.000000
+vn -1.000000 -0.000000 -0.000000
+vn 0.000000 0.000000 -1.000000
+s off
+f 2/1/1 3/2/1 4/3/1
+f 8/1/2 7/4/2 6/5/2
+f 5/6/3 6/7/3 2/8/3
+f 6/8/4 7/5/4 3/4/4
+f 3/9/5 7/10/5 8/11/5
+f 1/12/6 4/13/6 8/11/6
+f 1/4/1 2/1/1 4/3/1
+f 5/14/2 8/1/2 6/5/2
+f 1/12/3 5/6/3 2/8/3
+f 2/12/4 6/8/4 3/4/4
+f 4/13/5 3/9/5 8/11/5
+f 5/6/6 1/12/6 8/11/6"""
+            )
         yield filename
 
 
@@ -208,12 +260,19 @@ def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves
     assert KernelDict.new(canopy, ctx=ctx).load()
 
 
-def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
+def test_discrete_canopy_advanced(
+    mode_mono, tempfile_spheres, tempfile_leaves, tempfile_obj
+):
     """
-    A more advanced test where we load a pre-computed canopy consisting of a
-    generated cuboid leaf cloud and a series of instanced pre-computed leaf
-    clouds.
+    A more advanced test where we load a series of different canopy elements:
+
+    - A pre-computed canopy consisting of a generated cuboid leaf cloud
+    - A sereies of instanced leaf clouds from files
+    - An abstract tree with a leaf cloud
+    - A mesh based canopy element
+
     """
+
     ctx = KernelDictContext()
 
     # First use the regular Python API
@@ -234,6 +293,36 @@ def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
                 filename=tempfile_spheres,
                 canopy_element=LeafCloud.from_file(
                     filename=tempfile_leaves, id="leaf_cloud_precomputed"
+                ),
+            ),
+            InstancedCanopyElement(
+                instance_positions=[[0, 0, 0]],
+                canopy_element=AbstractTree(
+                    leaf_cloud=LeafCloud.cuboid(
+                        n_leaves=100,
+                        l_horizontal=10.0,
+                        l_vertical=1.0,
+                        leaf_radius=10.0 * ureg.cm,
+                    ),
+                    trunk_height=2.0,
+                    trunk_radius=0.2,
+                    trunk_reflectance=0.5,
+                    id="abstract_tree",
+                ),
+            ),
+            InstancedCanopyElement(
+                instance_positions=[[0, 0, 0]],
+                canopy_element=MeshTree(
+                    id="mesh tree",
+                    mesh_tree_elements=[
+                        MeshTreeElement(
+                            mesh_filename=tempfile_obj,
+                            mesh_units=ureg.m,
+                            mesh_reflectance=0.5,
+                            mesh_transmittance=0.5,
+                            id="mesh_element",
+                        )
+                    ],
                 ),
             ),
         ],
@@ -265,6 +354,39 @@ def test_discrete_canopy_advanced(mode_mono, tempfile_spheres, tempfile_leaves):
                         "construct": "from_file",
                         "filename": tempfile_leaves,
                         "id": "leaf_cloud_precomputed",
+                    },
+                },
+                {
+                    "instance_positions": [[0, 0, 0]],
+                    "canopy_element": {
+                        "type": "abstract_tree",
+                        "leaf_cloud": {
+                            "construct": "cuboid",
+                            "n_leaves": 100,
+                            "l_horizontal": 10.0,
+                            "l_vertical": 1.0,
+                            "leaf_radius": 10.0,
+                            "leaf_radius_units": "cm",
+                        },
+                        "trunk_height": 2.0,
+                        "trunk_radius": 0.2,
+                        "trunk_reflectance": 0.5,
+                        "id": "abstract_tree",
+                    },
+                },
+                {
+                    "instance_positions": [[0, 0, 0]],
+                    "canopy_element": {
+                        "type": "mesh_tree",
+                        "id": "mesh_tree",
+                        "mesh_tree_elements": [
+                            {
+                                "mesh_filename": tempfile_obj,
+                                "mesh_reflectance": 0.5,
+                                "mesh_transmittance": 0.5,
+                                "mesh_units": ureg.m,
+                            }
+                        ],
                     },
                 },
             ],

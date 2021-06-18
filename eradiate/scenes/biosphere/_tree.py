@@ -1,11 +1,16 @@
+from typing import MutableMapping, Optional
+
 import attr
 import pinttr
 
 from ._canopy_element import CanopyElement, CanopyElementFactory
 from ._leaf_cloud import LeafCloud
+from ._mesh_tree_element import MeshTreeElement
+from ..core import SceneElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
-from ..._attrs import documented, parse_docs
+from ..._attrs import documented, get_doc, parse_docs
+from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -43,6 +48,16 @@ class AbstractTree(Tree):
     parameters based on dictionary specification and will forward the entry
     specifying the leaf cloud to :meth:`.LeafCloud.convert`.
     """
+
+    id = documented(
+        attr.ib(
+            default="abstract_tree",
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
+        ),
+        doc=get_doc(SceneElement, "id", "doc"),
+        type=get_doc(SceneElement, "id", "type"),
+        default='"abstract_tree"',
+    )
 
     leaf_cloud = documented(
         attr.ib(
@@ -201,3 +216,96 @@ class AbstractTree(Tree):
         leaf_cloud = LeafCloud.convert(leaf_cloud_dict)
 
         return cls(leaf_cloud=leaf_cloud, **d_copy)
+
+
+@CanopyElementFactory.register("mesh_tree")
+@parse_docs
+@attr.s
+class MeshTree(Tree):
+    """
+    A container class for mesh based tree-like objects in canopies.
+
+    It holds one or more triangulated meshes and corresponding BSDFs, representing
+    the tree.
+
+    The mesh will be interpreted in local coordinates and should be used in an
+    :class:`InstancedCanopyElement` to place at arbitrary positions in a scene.
+    """
+
+    id = documented(
+        attr.ib(
+            default="mesh_tree",
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
+        ),
+        doc=get_doc(SceneElement, "id", "doc"),
+        type=get_doc(SceneElement, "id", "type"),
+        default='"mesh_tree"',
+    )
+
+    mesh_tree_elements = documented(
+        attr.ib(
+            factory=list,
+            converter=lambda value: [
+                MeshTreeElement.convert(x) for x in pinttr.util.always_iterable(value)
+            ]
+            if not isinstance(value, dict)
+            else [MeshTreeElement.convert(value)],
+        ),
+        doc="List of :class:`.CanopyElement` defining the canopy. Can be "
+        "initialised with a :class:`.InstancedCanopyElement`, which will be "
+        "automatically wrapped into a list. Dictionary-based specifications are "
+        "allowed as well.",
+        type="list[:class:`.InstancedCanopyElement`]",
+        default="[]",
+    )
+
+    def bsdfs(self, ctx=None):
+        result = {}
+        for mesh_tree_element in self.mesh_tree_elements:
+            result = {**result, **mesh_tree_element.bsdfs(ctx=ctx)}
+        return result
+
+    def shapes(self, ctx=None):
+        result = {}
+        for mesh_tree_element in self.mesh_tree_elements:
+            result = {**result, **mesh_tree_element.shapes(ctx=ctx)}
+        return result
+
+    @classmethod
+    def from_dict(cls, d):
+
+        # Interpret unit fields if any
+        d_copy = pinttr.interpret_units(d, ureg=ureg)
+
+        mesh_tree_elements = []
+        for mesh_tree_element in d_copy.pop("mesh_tree_elements"):
+            mesh_tree_elements.append(MeshTreeElement.convert(mesh_tree_element))
+
+        return cls(mesh_tree_elements=mesh_tree_elements, **d_copy)
+
+    @staticmethod
+    def convert(value):
+        """
+        Object converter method.
+
+        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
+        create an :class:`.AbstractTree`.
+
+        Otherwise, it returns ``value``.
+        """
+        if isinstance(value, dict):
+            return MeshTree.from_dict(value)
+
+        return value
+
+    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+
+        result = {}
+        for mesh_tree_element in self.mesh_tree_elements:
+            result = {
+                **result,
+                **mesh_tree_element.bsdfs(ctx=ctx),
+                **mesh_tree_element.shapes(ctx=ctx),
+            }
+
+        return result
