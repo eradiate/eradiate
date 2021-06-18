@@ -529,9 +529,9 @@ class DistantReflectanceMeasure(DistantMeasure):
         self, ds: xr.Dataset, illumination: DirectionalIllumination
     ) -> xr.Dataset:
         # Collect illumination angular data
-        saa = illumination.azimuth.m_as(ureg.rad)
-        sza = illumination.zenith.m_as(ureg.rad)
-        cos_sza = np.cos(sza)
+        saa = illumination.azimuth.m_as(ureg.deg)
+        sza = illumination.zenith.m_as(ureg.deg)
+        cos_sza = np.cos(np.deg2rad(sza))
 
         # Add angular dimensions
         ds = ds.expand_dims({"sza": [sza], "saa": [saa]}, axis=(0, 1))
