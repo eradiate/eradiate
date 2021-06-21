@@ -51,10 +51,12 @@ Please refer to the official `Docker Documentation <https://docs.docker.com/>`_ 
 Eradiate Docker Images Structure
 --------------------------------
 
-Three different images are provided by Eradiate:
- - fxia/eradiate-kernel
- - fxia/eradiate
- - fxia/eradiate-jupyterlab
+Five different images are provided by Eradiate:
+ - rayference/eradiate-base
+ - rayference/eradiate-kernel-builder
+ - rayference/eradiate-kernel
+ - rayference/eradiate
+ - rayference/eradiate-jupyterlab
 
 .. only:: latex
 
@@ -64,6 +66,19 @@ Three different images are provided by Eradiate:
 
    .. figure:: ../../fig/docker-images-structure.svg
 
+
+Eradiate base
+-------------
+
+Based on Ubuntu 20.04, this image provides a miniconda env for Eradiate
+
+Eradiate Kernel Builder
+-----------------------
+
+This image is used as a toolchain for the underlying Mitsuba 2 engine compiled for Eradiate
+
+You may use this image in order to check or use the correct compiler version
+
 Eradiate Kernel
 ---------------
 
@@ -72,25 +87,25 @@ This image provides an environment with a ready to use Mitsuba 2 engine compiled
 .. code:: bash
     
     # Launch bash on the eradiate-kernel container
-    docker run -it fxia/eradiate-kernel bash
+    docker run -it rayference/eradiate-kernel bash
 
     # Run mitsuba inside the container
     mitsuba --help
     
-This mitsuba2 engine has been compiled with the correct parameters for Eradiate.
+This mitsuba 2 engine has been compiled with the correct parameters for Eradiate.
 It is used as a base for the other images, and is provided for testing.
 
 Eradiate
 --------
 
-This image provides an installed version of Eradiate, with a modern python3 distribution
+This image provides an installed version of Eradiate, with a modern python 3 distribution from miniconda.
 
 It can be used to run some tests or develop your application and creating your own Docker image.
 
 .. code:: bash
 
     # Launch python on the eradiate container
-    docker run -it fxia/eradiate python
+    docker run -it rayference/eradiate python
 
 .. code:: python
 
@@ -109,7 +124,7 @@ The `myProjectScript.py` may import eradiate.
 
 .. code::
 
-    FROM fxia/eradiate
+    FROM rayference/eradiate
 
     RUN pip install myProjectDep1 myProjectDep2
 
@@ -143,7 +158,7 @@ This server bundles everything needed to run Eradiate.
 .. code:: bash
 
     # Launch an Eradiate ready Jupyterlab in a container
-    docker run -p "8888:8888" --rm -it fxia/eradiate-jupyterlab
+    docker run -p "8888:8888" --rm -it rayference/eradiate-jupyterlab
 
 After downloading and launching the server, this command will various URLs for your web browser.
 Here is an example output of the above command:
@@ -181,4 +196,16 @@ Other listed addresses are not exposed by the container and may fail to load pro
     .. code:: bash
 
         # Specify a port for the Eradiate Jupyterlab
-        docker run -p "8887:8887" -e PORT=8887 --rm -it fxia/eradiate-jupyterlab
+        docker run -p "8887:8887" -e PORT=8887 --rm -it rayference/eradiate-jupyterlab
+
+Building all the images locally
+-------------------------------
+
+Users may want to rebuild the images locally for testing or development on Eradiate.
+
+A ``docker-compose`` config file named ``docker-build.yml`` is provided at the root of the Eradiate project to ease this process.
+
+.. code:: bash
+
+    # Build all docker images specifying a custom version
+    VERSION=myLocalVersion docker-compose -f docker-build.yml build
