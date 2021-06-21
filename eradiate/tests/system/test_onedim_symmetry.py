@@ -37,8 +37,10 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     * Geometry: Either a Lambertian or RPV surface.
     * Illumination: Directional illumination from the zenith (default irradiance).
     * Atmosphere: Either no atmosphere or a purely Rayleigh scattering homogeneous atmosphere.
-    * Sensor: Distant measure covering a plane (16 angular points, :math:`10^6` SPP) and
+    * Sensor: Distant measure covering a plane (17 angular points, :math:`10^6` SPP) and
       targeting (0, 0, 0).
+      We take an odd number of angular points to ensure that the special value
+      :math:`\theta = 0°` is included.
 
     Expected behaviour
     ------------------
@@ -65,7 +67,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
        :width: 45%
     """
     spp = int(1e6)
-    n_vza = 16
+    n_vza = 17
 
     scene = eradiate.solvers.onedim.OneDimScene(
         illumination={"type": "directional", "zenith": 0.0, "azimuth": 0.0},
