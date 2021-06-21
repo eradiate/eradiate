@@ -3,8 +3,6 @@ ARG BASE_IMAGE_VERSION
 
 FROM ${BASE_IMAGE}:${BASE_IMAGE_VERSION}
 
-RUN pip3 install jupyterlab
-
 ENV PORT=8888
 ENV ERADIATE_DIR=/sources/eradiate
 
