@@ -8,7 +8,7 @@ from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure._distant import (
-    DistantMeasure,
+    DistantRadianceMeasure,
     TargetOrigin,
     TargetOriginPoint,
     TargetOriginRectangle,
@@ -111,32 +111,34 @@ def test_target_origin(mode_mono):
             TargetOrigin.convert({"xyz": [1, 1, 0]})
 
 
-def test_distant(mode_mono):
+def test_distant_radiance(mode_mono):
     # Test default constructor
-    d = DistantMeasure()
+    d = DistantRadianceMeasure()
     assert KernelDict.new(d).load() is not None
 
     # Test target support
     # -- Target a point
-    d = DistantMeasure(target=[0, 0, 0])
+    d = DistantRadianceMeasure(target=[0, 0, 0])
     assert KernelDict.new(d).load() is not None
 
     # -- Target an axis-aligned rectangular patch
-    d = DistantMeasure(
+    d = DistantRadianceMeasure(
         target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
     )
     assert KernelDict.new(d).load() is not None
 
     # Test origin support
     # -- Project origins to a sphere
-    d = DistantMeasure(origin={"type": "sphere", "center": [0, 0, 0], "radius": 1})
+    d = DistantRadianceMeasure(
+        origin={"type": "sphere", "center": [0, 0, 0], "radius": 1}
+    )
     assert KernelDict.new(d).load() is not None
 
 
-def test_distant_postprocessing(mode_mono):
+def test_distant_radiance_postprocessing(mode_mono):
     # We use a peculiar rectangular film size to make sure that we get dimensions
     # right
-    d = DistantMeasure(film_resolution=(32, 16))
+    d = DistantRadianceMeasure(film_resolution=(32, 16))
 
     # Add test data to results
     d.results.raw = {

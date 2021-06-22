@@ -7,7 +7,7 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import ModeError
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
-from eradiate.scenes.measure._distant import DistantMeasure
+from eradiate.scenes.measure._distant import DistantRadianceMeasure
 from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
 
 
@@ -23,7 +23,7 @@ def test_onedim_scene(mode_mono):
     # Test non-trivial init sequence steps
 
     # -- Init with a single measure (not wrapped in a sequence)
-    s = OneDimScene(measures=DistantMeasure())
+    s = OneDimScene(measures=DistantRadianceMeasure())
     assert s.kernel_dict(ctx=ctx).load() is not None
     # -- Init from a dict-based measure spec
     # ---- Correctly wrapped in a sequence

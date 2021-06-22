@@ -12,7 +12,7 @@ from ...scenes.atmosphere import Atmosphere, AtmosphereFactory, HomogeneousAtmos
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, VolPathIntegrator
 from ...scenes.measure._distant import (
-    DistantMeasure,
+    DistantRadianceMeasure,
     TargetOriginPoint,
     TargetOriginSphere,
 )
@@ -88,7 +88,7 @@ class OneDimScene(Scene):
         for measure in self.measures:
             # Override ray target and origin if relevant
             # Likely deserves more polishing
-            if isinstance(measure, DistantMeasure):
+            if isinstance(measure, DistantRadianceMeasure):
                 if measure.target is None:
                     if self.atmosphere is not None:
                         toa = self.atmosphere.height()

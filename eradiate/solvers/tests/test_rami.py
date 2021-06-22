@@ -8,7 +8,7 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import ModeError
 from eradiate.scenes.biosphere import DiscreteCanopy
-from eradiate.scenes.measure import DistantMeasure
+from eradiate.scenes.measure import DistantRadianceMeasure
 from eradiate.solvers.rami import RamiScene, RamiSolverApp
 
 
@@ -22,7 +22,7 @@ def test_rami_scene(mode_mono):
     # Test non-trivial init sequence steps
 
     # -- Init with a single measure (not wrapped in a sequence)
-    s = RamiScene(measures=DistantMeasure())
+    s = RamiScene(measures=DistantRadianceMeasure())
     assert s.kernel_dict(ctx=ctx).load() is not None
     # -- Init from a dict-based measure spec
     # ---- Correctly wrapped in a sequence
@@ -57,7 +57,7 @@ def test_rami_scene(mode_mono):
             l_horizontal=10.0 * ureg.m,
             l_vertical=2.0 * ureg.m,
         ),
-        measures=DistantMeasure(),
+        measures=DistantRadianceMeasure(),
     )
     target = s.measures[0].target
     canopy = s.canopy

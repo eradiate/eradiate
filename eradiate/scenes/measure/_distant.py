@@ -272,7 +272,7 @@ class TargetOriginSphere(TargetOrigin):
 @MeasureFactory.register("distant")
 @parse_docs
 @attr.s
-class DistantMeasure(Measure):
+class DistantRadianceMeasure(DistantMeasure):
     """
     Distant measure scene element [:factorykey:`distant`].
 
@@ -485,7 +485,7 @@ class DistantMeasure(Measure):
 @MeasureFactory.register("distant_reflectance")
 @parse_docs
 @attr.s
-class DistantReflectanceMeasure(DistantMeasure):
+class DistantReflectanceMeasure(DistantRadianceMeasure):
     """
     Distant reflectance  measure scene element
     [:factorykey:`distant_reflectance`].

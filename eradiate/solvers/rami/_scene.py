@@ -11,7 +11,7 @@ from ...exceptions import OverriddenValueWarning
 from ...scenes.biosphere import BiosphereFactory, Canopy
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
-from ...scenes.measure import DistantMeasure
+from ...scenes.measure import DistantRadianceMeasure
 from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
 
 
@@ -96,7 +96,7 @@ class RamiScene(Scene):
         # Process measures
         for measure in self.measures:
             # Override ray target location if relevant
-            if isinstance(measure, DistantMeasure):
+            if isinstance(measure, DistantRadianceMeasure):
                 if measure.target is None:
                     if self.canopy is not None:
                         measure.target = dict(
