@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Dict, List, Tuple
 
 import attr
 import numpy as np
@@ -100,7 +101,7 @@ class TargetOriginPoint(TargetOrigin):
     # Target point in config units
     xyz = documented(
         pinttr.ib(units=ucc.deferred("length")),
-        doc="Point coordinates.\n" "\n" "Unit-enabled field (default: cdu[length]).",
+        doc="Point coordinates.\n\nUnit-enabled field (default: cdu[length]).",
         type="array-like",
     )
 
@@ -380,7 +381,7 @@ class DistantMeasure(Measure):
     def film_resolution(self):
         return self._film_resolution
 
-    def _base_dicts(self):
+    def _base_dicts(self) -> List[Dict]:
         result = []
 
         for sensor_info in self.sensor_infos():

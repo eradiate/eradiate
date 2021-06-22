@@ -5,7 +5,6 @@ import attr
 import numpy as np
 import pint
 import pinttr
-import xarray
 import xarray as xr
 
 import eradiate
@@ -215,7 +214,7 @@ class MeasureResults:
         default="{}",
     )
 
-    def to_dataset(self, aggregate_spps=False) -> xarray.Dataset:
+    def to_dataset(self, aggregate_spps=False) -> xr.Dataset:
         """
         Repack raw results as a :class:`xarray.Dataset`. Dimension coordinates are
         as follows:
@@ -450,7 +449,7 @@ class Measure(SceneElement, ABC):
         else:
             return [self.spp]
 
-    def _raw_results_aggregated(self) -> xarray.Dataset:
+    def _raw_results_aggregated(self) -> xr.Dataset:
         """
         Aggregate raw sensor results if multiple sensors were used.
 
@@ -468,7 +467,7 @@ class Measure(SceneElement, ABC):
         )
         return ds.weighted(weights).mean(dim="sensor_id")
 
-    def postprocess(self) -> xarray.Dataset:
+    def postprocess(self) -> xr.Dataset:
         """
         Return post-processed raw sensor results.
 
@@ -480,10 +479,18 @@ class Measure(SceneElement, ABC):
         return self.results.to_dataset(aggregate_spps=True)
 
     @abstractmethod
-    def _base_dicts(self):
+    def _base_dicts(self) -> List[Dict]:
+        """
+        Return a list (one item per sensor) of dictionaries defining parameters
+        not related with the film or the sampler.
+        """
         pass
 
-    def _film_dicts(self):
+    def _film_dicts(self) -> List[Dict]:
+        """
+        Return a list (one item per sensor) of dictionaries defining parameters
+        related with the film.
+        """
         return [
             {
                 "film": {
@@ -497,7 +504,11 @@ class Measure(SceneElement, ABC):
             }
         ] * len(self.sensor_infos())
 
-    def _sampler_dicts(self):
+    def _sampler_dicts(self) -> List[Dict]:
+        """
+        Return a list (one item per sensor) of dictionaries defining parameters
+        related with the sampler.
+        """
         return [
             {"sampler": {"type": "independent", "sample_count": sensor_info.spp}}
             for sensor_info in self.sensor_infos()

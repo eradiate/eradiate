@@ -121,8 +121,8 @@ class RamiScene(Scene):
         if self.canopy is not None:
             if self.padding > 0:  # We must add extra instances if padding is requested
                 canopy = self.canopy.padded(self.padding)
-                ctx.override_surface_width = (
-                    max(self.canopy.size[:2]) * (2.0 * self.padding + 1.0)
+                ctx.override_surface_width = max(self.canopy.size[:2]) * (
+                    2.0 * self.padding + 1.0
                 )
             else:
                 canopy = self.canopy
