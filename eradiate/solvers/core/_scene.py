@@ -12,7 +12,7 @@ from ...scenes.illumination import (
     IlluminationFactory,
 )
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
-from ...scenes.measure import DistantMeasure, Measure, MeasureFactory
+from ...scenes.measure import DistantRadianceMeasure, Measure, MeasureFactory
 
 
 @parse_docs
@@ -38,7 +38,7 @@ class Scene(SceneElement, ABC):
 
     measures: List[Measure] = documented(
         attr.ib(
-            factory=lambda: [DistantMeasure()],
+            factory=lambda: [DistantRadianceMeasure()],
             converter=lambda value: [
                 MeasureFactory.convert(x) for x in pinttr.util.always_iterable(value)
             ]
@@ -65,7 +65,7 @@ class Scene(SceneElement, ABC):
     def _measures_validator(self, attribute, value):
         for element in value:
             # Check measure type
-            if not isinstance(element, DistantMeasure):
+            if not isinstance(element, DistantRadianceMeasure):
                 raise TypeError(
                     f"while validating {attribute.name}: must be a list of "
                     f"objects of one of the following types: "

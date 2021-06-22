@@ -16,7 +16,7 @@ from ..._attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ModeError, UnsupportedModeError
 from ...scenes.measure import Measure, MeasureResults
-from ...scenes.measure._distant import DistantMeasure, DistantReflectanceMeasure
+from ...scenes.measure._distant import DistantRadianceMeasure, DistantReflectanceMeasure
 from ...units import unit_registry as ureg
 
 logger = logging.getLogger(__name__)
@@ -214,7 +214,7 @@ class SolverApp(ABC):
             measure_id = measure.id
             result = self._results[measure_id]
 
-            if isinstance(measure, DistantMeasure):
+            if isinstance(measure, DistantRadianceMeasure):
                 for quantity in result.data_vars:
                     if quantity == "irradiance":
                         continue
