@@ -269,6 +269,37 @@ class TargetOriginSphere(TargetOrigin):
         return {"type": "sphere", "center": center, "radius": radius}
 
 
+@attr.s
+class DistantMeasure(Measure):
+    """
+    Base class for all measures recording radiometric quantities at an infinite
+    distance.
+    """
+
+    target = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(TargetOrigin.convert),
+            validator=attr.validators.optional(
+                attr.validators.instance_of(
+                    (
+                        TargetOriginPoint,
+                        TargetOriginRectangle,
+                    )
+                )
+            ),
+            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
+        ),
+        doc="Target specification. If set to ``None``, default target point "
+        "selection is used: rays will not target a particular region of the "
+        "scene. The target can be specified using an array-like with 3 "
+        "elements (which will be converted to a :class:`TargetPoint`) or a "
+        "dictionary interpreted by :meth:`Target.convert`.",
+        type=":class:`TargetOrigin` or None",
+        default="None",
+    )
+
+
 @MeasureFactory.register("distant")
 @parse_docs
 @attr.s
@@ -302,29 +333,6 @@ class DistantRadianceMeasure(DistantMeasure):
         "plane.",
         type="array-like",
         default="(32, 32)",
-    )
-
-    target = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(TargetOrigin.convert),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(
-                    (
-                        TargetOriginPoint,
-                        TargetOriginRectangle,
-                    )
-                )
-            ),
-            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
-        ),
-        doc="Target specification. If set to ``None``, default target point "
-        "selection is used: rays will not target a particular region of the "
-        "scene. The target can be specified using an array-like with 3 "
-        "elements (which will be converted to a :class:`TargetPoint`) or a "
-        "dictionary interpreted by :meth:`Target.convert`.",
-        type=":class:`TargetOrigin` or None",
-        default="None",
     )
 
     origin = documented(
@@ -590,6 +598,84 @@ class DistantReflectanceMeasure(DistantRadianceMeasure):
             "standard_name": "brf",
             "long_name": "bi-directional reflectance factor",
             "units": symbol("dimensionless"),
+        }
+
+        return ds
+
+
+@MeasureFactory.register("distant_flux")
+@parse_docs
+@attr.s
+class DistantFluxMeasure(DistantMeasure):
+    direction = documented(
+        attr.ib(
+            default=[0, 0, 1],
+            converter=np.array,
+            validator=validators.is_vector3,
+        ),
+        doc="A 3-vector defining the normal to the reference surface for which "
+        "the exitant flux density is computed.",
+        type="array-like",
+        default="[0, 0, 1]",
+    )
+
+    _film_resolution = documented(
+        attr.ib(
+            default=(32, 32),
+            validator=attr.validators.deep_iterable(
+                member_validator=attr.validators.instance_of(int),
+                iterable_validator=validators.has_len(2),
+            ),
+        ),
+        doc="Film resolution as a (width, height) 2-tuple.",
+        type="array-like",
+        default="(32, 32)",
+    )
+
+    @property
+    def film_resolution(self) -> Tuple[int, int]:
+        return self._film_resolution
+
+    def _base_dicts(self) -> List[Dict]:
+        from mitsuba.core import ScalarTransform4f, ScalarVector3f, coordinate_system
+
+        result = []
+        _, up = coordinate_system(self.direction)
+
+        for sensor_info in self.sensor_infos():
+            d = {
+                "type": "distantflux",
+                "id": sensor_info.id,
+                "to_world": ScalarTransform4f.look_at(
+                    origin=[0, 0, 0],
+                    target=ScalarVector3f(self.direction),
+                    up=up,
+                ),
+            }
+
+            if self.target is not None:
+                d["target"] = self.target.kernel_item()
+
+            result.append(d)
+
+        return result
+
+    def postprocess(self) -> xr.Dataset:
+        # Fetch results (SPP-split aggregated) as a Dataset
+        result = self._postprocess_fetch_results()
+
+        return result
+
+    def _postprocess_fetch_results(self) -> xr.Dataset:
+        # Collect results and add appropriate metadata
+        ds = self.results.to_dataset(aggregate_spps=True)
+
+        # Add aggregate flux density field
+        ds["flux"] = ds["raw"].mean(dim=("x", "y"))
+        ds["flux"].attrs = {
+            "standard_name": "toa_outgoing_flux_density_per_unit_wavelength",
+            "long_name": "top-of-atmosphere outgoing spectral flux density",
+            "units": symbol(uck.get("irradiance")),
         }
 
         return ds

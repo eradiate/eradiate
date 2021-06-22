@@ -1,13 +1,14 @@
 import enoki as ek
 import numpy as np
 import pytest
-from matplotlib import pyplot as plt
 
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
+from eradiate._util import onedict_value
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure._distant import (
+    DistantFluxMeasure,
     DistantRadianceMeasure,
     TargetOrigin,
     TargetOriginPoint,
@@ -170,3 +171,62 @@ def test_distant_radiance_postprocessing(mode_mono):
     assert np.allclose(ds.vza.max(), 87.1875)  # Value manually calculated
     assert "vaa" in ds.coords
     assert np.allclose(ds.vaa, 0.0)
+
+
+def test_distant_flux(mode_mono):
+    # Test default constructor
+    d = DistantFluxMeasure()
+    assert KernelDict.new(d).load() is not None
+
+    # Test target support
+    # -- Target a point
+    d = DistantFluxMeasure(target=[0, 0, 0])
+    assert KernelDict.new(d).load() is not None
+
+    # -- Target an axis-aligned rectangular patch
+    d = DistantFluxMeasure(
+        target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
+    )
+    assert KernelDict.new(d).load() is not None
+    print(d.kernel_dict())
+
+
+@pytest.mark.parametrize(
+    ["direction", "frame"],
+    [
+        (
+            [1, 0, 0],
+            [[0, 0, -1], [0, 1, 0], [1, 0, 0]],
+        ),
+        (
+            [0, 0, 1],
+            [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        ),
+    ],
+)
+def test_distant_flux_direction(mode_mono, direction, frame):
+    d = DistantFluxMeasure(direction=direction)
+    to_world = onedict_value(d.kernel_dict())["to_world"]
+    # The reference frame is rotated as expected
+    assert ek.allclose(to_world.transform_vector([1, 0, 0]), frame[0])
+    assert ek.allclose(to_world.transform_vector([0, 1, 0]), frame[1])
+    assert ek.allclose(to_world.transform_vector([0, 0, 1]), frame[2])
+
+
+def test_distant_flux_postprocessing(mode_mono):
+    # We use a peculiar rectangular film size to make sure that we get dimensions
+    # right
+    d = DistantFluxMeasure(film_resolution=(32, 16))
+
+    # Add test data to results
+    d.results.raw = {
+        550.0: {"values": {"sensor": np.ones((16, 32, 1))}, "spp": {"sensor": 128}},
+        560.0: {"values": {"sensor": np.ones((16, 32, 1))}, "spp": {"sensor": 128}},
+    }
+
+    # Postprocessing succeeds and flux field has the same size as the number of
+    # spectral loop iterations
+    ds = d.postprocess()
+    assert "flux" in ds.data_vars
+    assert ds["flux"].shape == (2,)
+    assert np.allclose(ds.flux, 1.0)
