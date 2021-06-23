@@ -36,6 +36,6 @@ class LambertianSurface(Surface):
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",
-                "reflectance": self.reflectance.kernel_dict()["spectrum"],
+                "reflectance": self.reflectance.kernel_dict(ctx=ctx)["spectrum"],
             }
         }
