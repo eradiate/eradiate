@@ -335,12 +335,18 @@ class MeasureResults:
         # Note: This will not work if multiple sensors are used for a purpose other
         # than SPP splitting; should this happen, this part must be updated
         weights = result.data_vars["spp"]
-        result = result.assign(
-            {"raw": result["raw"].weighted(weights).mean(dim="sensor_id")}
+        result_aggregated = result.assign(
+            {"raw": result["raw"].weighted(weights).mean(dim="sensor_id")},
         )
-        result = result.assign({"spp": result.data_vars["spp"].sum(dim="sensor_id")})
+        result_aggregated = result_aggregated.assign(
+            {"spp": result_aggregated.data_vars["spp"].sum(dim="sensor_id")}
+        )
 
-        return result.drop_dims("sensor_id")
+        # We now copy metadata
+        for var in list(result_aggregated.data_vars) + list(result_aggregated.coords):
+            result_aggregated[var].attrs = result[var].attrs.copy()
+
+        return result_aggregated.drop_dims("sensor_id")
 
 
 @parse_docs
