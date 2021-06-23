@@ -299,6 +299,70 @@ class DistantMeasure(Measure):
         default="None",
     )
 
+    def _postprocess_add_illumination(
+        self, ds: xr.Dataset, illumination: DirectionalIllumination
+    ) -> xr.Dataset:
+        """
+        Processes a measure result dataset and add illumination data and m
+        etadata to it. This function is to be used as part of the
+        post-processing pipeline and is optional.
+
+        Parameter ``ds`` (:class:`xarray.Dataset`):
+            Result dataset.
+
+        Parameter ``illumination`` (:class:`.DirectionalIllumination`):
+            Illumination whose data is to be added to the result data set.
+
+        Returns → :class:`xarray.Dataset`:
+            Updated result dataset.
+        """
+
+        # Collect illumination angular data
+        saa = illumination.azimuth.m_as(ureg.deg)
+        sza = illumination.zenith.m_as(ureg.deg)
+        cos_sza = np.cos(np.deg2rad(sza))
+
+        # Add angular dimensions
+        ds = ds.expand_dims({"sza": [sza], "saa": [saa]}, axis=(0, 1))
+        ds.coords["sza"].attrs = {
+            "standard_name": "solar_zenith_angle",
+            "long_name": "solar zenith angle",
+            "units": symbol("deg"),
+        }
+        ds.coords["saa"].attrs = {
+            "standard_name": "solar_azimuth_angle",
+            "long_name": "solar azimuth angle",
+            "units": symbol("deg"),
+        }
+
+        # Collect illumination spectral data
+        k_irradiance_units = uck.get("irradiance")
+        irradiances = (
+            np.array(
+                [
+                    illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
+                        k_irradiance_units
+                    )
+                    for spectral_ctx in self.spectral_cfg.spectral_ctxs()
+                ]
+            )
+            * k_irradiance_units
+        )
+        spectral_coord_label = eradiate.mode().spectral_coord_label
+
+        # Add irradiance variable
+        ds["irradiance"] = (
+            ("sza", "saa", spectral_coord_label),
+            np.array(irradiances.magnitude * cos_sza).reshape((1, 1, len(irradiances))),
+        )
+        ds["irradiance"].attrs = {
+            "standard_name": "horizontal_solar_irradiance_per_unit_wavelength",
+            "long_name": "horizontal spectral irradiance",
+            "units": symbol(k_irradiance_units),
+        }
+
+        return ds
+
 
 @MeasureFactory.register("distant")
 @parse_docs
@@ -527,61 +591,12 @@ class DistantReflectanceMeasure(DistantRadianceMeasure):
         result = super(DistantReflectanceMeasure, self).postprocess()
 
         # Add illumination data
-        result = self._postprocessing_add_illumination(result, illumination)
+        result = self._postprocess_add_illumination(result, illumination)
 
         # Compute reflectance data
         result = self._postprocessing_add_reflectance(result)
 
         return result
-
-    def _postprocessing_add_illumination(
-        self, ds: xr.Dataset, illumination: DirectionalIllumination
-    ) -> xr.Dataset:
-        # Collect illumination angular data
-        saa = illumination.azimuth.m_as(ureg.deg)
-        sza = illumination.zenith.m_as(ureg.deg)
-        cos_sza = np.cos(np.deg2rad(sza))
-
-        # Add angular dimensions
-        ds = ds.expand_dims({"sza": [sza], "saa": [saa]}, axis=(0, 1))
-        ds.coords["sza"].attrs = {
-            "standard_name": "solar_zenith_angle",
-            "long_name": "solar zenith angle",
-            "units": symbol("deg"),
-        }
-        ds.coords["saa"].attrs = {
-            "standard_name": "solar_azimuth_angle",
-            "long_name": "solar azimuth angle",
-            "units": symbol("deg"),
-        }
-
-        # Collect illumination spectral data
-        k_irradiance_units = uck.get("irradiance")
-        irradiances = (
-            np.array(
-                [
-                    illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
-                        k_irradiance_units
-                    )
-                    for spectral_ctx in self.spectral_cfg.spectral_ctxs()
-                ]
-            )
-            * k_irradiance_units
-        )
-        spectral_coord_label = eradiate.mode().spectral_coord_label
-
-        # Add irradiance variable
-        ds["irradiance"] = (
-            ("sza", "saa", spectral_coord_label),
-            np.array(irradiances.magnitude * cos_sza).reshape((1, 1, len(irradiances))),
-        )
-        ds["irradiance"].attrs = {
-            "standard_name": "horizontal_solar_irradiance_per_unit_wavelength",
-            "long_name": "horizontal spectral irradiance",
-            "units": symbol(k_irradiance_units),
-        }
-
-        return ds
 
     def _postprocessing_add_reflectance(self, ds: xr.Dataset) -> xr.Dataset:
         # Compute BRDF and BRF
@@ -676,6 +691,54 @@ class DistantFluxMeasure(DistantMeasure):
             "standard_name": "toa_outgoing_flux_density_per_unit_wavelength",
             "long_name": "top-of-atmosphere outgoing spectral flux density",
             "units": symbol(uck.get("irradiance")),
+        }
+
+        return ds
+
+
+@MeasureFactory.register("distant_albedo")
+@parse_docs
+@attr.s
+class DistantAlbedoMeasure(DistantFluxMeasure):
+    def postprocess(self, illumination=None) -> xr.Dataset:
+        """
+        Return post-processed raw sensor results.
+
+        Parameter ``illumination`` (:class:`DirectionalIllumination`):
+            Incoming radiance value. *This keyword argument is required.*
+
+        Returns → :class:`~xarray.Dataset`:
+            Post-processed results.
+        """
+        if illumination is None:
+            raise TypeError("missing required keyword argument 'illumination'")
+
+        if not isinstance(illumination, DirectionalIllumination):
+            raise ValueError(
+                "keyword argument 'illumination' must be a "
+                "DirectionalIllumination instance, got a "
+                f"{illumination.__class__.__name__}"
+            )
+
+        # Get radiance data
+        result = super(DistantAlbedoMeasure, self).postprocess()
+
+        # Add illumination data
+        result = self._postprocess_add_illumination(result, illumination)
+
+        # Compute albedo data
+        result = self._postprocess_add_albedo(result)
+
+        return result
+
+    def _postprocess_add_albedo(self, ds):
+        # Compute albedo
+        # We assume that all quantities are stored in kernel units
+        ds["albedo"] = ds["flux"] / ds["irradiance"]
+        ds["brdf"].attrs = {
+            "standard_name": "albedo",
+            "long_name": "surface albedo",
+            "units": "",
         }
 
         return ds
