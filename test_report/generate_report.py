@@ -13,7 +13,7 @@ def execute(cmd, **kwargs):
 
 def run_pytest(target_dir=None, json_report_file=None, cwd=None):
     """Run pytest in target_dir (if specified) and generate a JSON test report
-    (if json_report_file is passed). The optional cwd argument can be use to 
+    (if json_report_file is passed). The optional cwd argument can be use to
     set subprocess.Popen()'s cmd keyword argument.
     """
     cmd = ["python", "-m", "pytest"]
@@ -71,8 +71,7 @@ def create_pdf(eradiate_dir):
 
 
 def cli():
-    helptext = \
-        """
+    helptext = """
         Generate the Eradiate test report by first running all tests available
         in python and collecting their results.
 
@@ -91,9 +90,7 @@ def cli():
         action="store_true",
     )
     parser.add_argument(
-        "--pdf",
-        help="Create a pdf report instead of html",
-        action="store_true"
+        "--pdf", help="Create a pdf report instead of html", action="store_true"
     )
     args = parser.parse_args()
 
@@ -103,10 +100,16 @@ def cli():
         # Currently the Mitsuba2 tests are not part of the test report
         # run_pytest(target_dir=os.path.join(kernel_dir, "src"),
         #            json_report_file=os.path.join(build_dir, 'report_kernel.json'))
-        run_pytest(target_dir=os.path.join(eradiate_dir, "eradiate"),
-                   json_report_file=os.path.join(build_dir, "report_eradiate.json"))
-        run_pytest(target_dir=special_dirs,
-                   json_report_file=os.path.join(build_dir, "report_special.json"))
+        run_pytest(
+            target_dir=os.path.join(eradiate_dir, "eradiate"),
+            json_report_file=os.path.join(build_dir, "report_eradiate.json"),
+        )
+
+        if special_dirs:
+            run_pytest(
+                target_dir=special_dirs,
+                json_report_file=os.path.join(build_dir, "report_special.json"),
+            )
 
     summaries.generate()
     ts.generate()

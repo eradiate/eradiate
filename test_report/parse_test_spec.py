@@ -41,7 +41,7 @@ def remove_indentation(doc):
     """
     Removes the indentation from a docstring.
     The number of spaces in the *second* line of a docstring is considered
-    the indentation level and that amount of spaces well be removed from 
+    the indentation level and that amount of spaces well be removed from
     the beginning of each line
     """
     lines = doc.split("\n")
@@ -79,7 +79,7 @@ def get_testcase_outcome(report, name):
         return returndict
 
 
-def get_testcase_loation(report, name):
+def get_testcase_location(report, name):
     """
     Return the file location for a testcase
     """
@@ -95,28 +95,31 @@ def get_testcase_metric(report, name):
     """
     Get the testcase metric if it exists and concatenate
     """
-    eradiate_dir = pathlib.Path(os.environ["ERADIATE_DIR"])
+    metrics = None
 
     try:
         for test in report["tests"]:
             testname = test["nodeid"].split("::")[-1]
             if testname.find(name) != -1:
-                metric = test["metadata"]["metrics"]
+                metrics = test["metadata"]["metrics"]
     except KeyError:
         return ""
-        
+
+    if metrics is None:
+        return ""
+
     returnstring = "\nMetrics\n-------\n\n"
-    for id in metric:
+    for id, values in metrics.items():
         returnstring += (
-            metric[id]["name"]
+            values["name"]
             + "\n"
-            + '"' * len(metric[id]["name"])
+            + '"' * len(values["name"])
             + "\n\n"
-            + metric[id]["description"]
+            + values["description"]
             + " "
-            + metric[id]["value"]
+            + values["value"]
             + " "
-            + metric[id]["units"]
+            + values["units"]
             + "\n\n"
         )
 
@@ -130,7 +133,7 @@ def update_docstring(doc, name, report):
     """
 
     outcomes = get_testcase_outcome(report, name)
-    location = get_testcase_loation(report, name)
+    location = get_testcase_location(report, name)
     metric = get_testcase_metric(report, name)
 
     doc = remove_indentation(doc)
