@@ -3,7 +3,6 @@
 import numpy as np
 import pytest
 
-from eradiate._util import onedict_value
 from eradiate.scenes.core import KernelDict
 from eradiate.solvers.core import runner
 
