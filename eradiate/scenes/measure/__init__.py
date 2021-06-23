@@ -1,6 +1,8 @@
 from ._core import Measure, MeasureFactory, MeasureResults, MeasureSpectralConfig
 from ._distant import (
+    DistantAlbedoMeasure,
     DistantFluxMeasure,
+    DistantMeasure,
     DistantRadianceMeasure,
     DistantReflectanceMeasure,
 )
@@ -13,6 +15,8 @@ __all__ = [
     "MeasureSpectralConfig",
     "MeasureFactory",
     "MeasureResults",
+    "DistantMeasure",
+    "DistantAlbedoMeasure",
     "DistantFluxMeasure",
     "DistantRadianceMeasure",
     "DistantReflectanceMeasure",
