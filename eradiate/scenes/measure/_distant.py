@@ -735,7 +735,7 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
         # Compute albedo
         # We assume that all quantities are stored in kernel units
         ds["albedo"] = ds["flux"] / ds["irradiance"]
-        ds["brdf"].attrs = {
+        ds["albedo"].attrs = {
             "standard_name": "albedo",
             "long_name": "surface albedo",
             "units": "",

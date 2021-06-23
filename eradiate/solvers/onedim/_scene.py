@@ -12,7 +12,7 @@ from ...scenes.atmosphere import Atmosphere, AtmosphereFactory, HomogeneousAtmos
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, VolPathIntegrator
 from ...scenes.measure._distant import (
-    DistantRadianceMeasure,
+    DistantMeasure,
     TargetOriginPoint,
     TargetOriginSphere,
 )
@@ -88,7 +88,7 @@ class OneDimScene(Scene):
         for measure in self.measures:
             # Override ray target and origin if relevant
             # Likely deserves more polishing
-            if isinstance(measure, DistantRadianceMeasure):
+            if isinstance(measure, DistantMeasure):
                 if measure.target is None:
                     if self.atmosphere is not None:
                         toa = self.atmosphere.height()
@@ -98,16 +98,19 @@ class OneDimScene(Scene):
 
                     measure.target = TargetOriginPoint(target_point)
 
-                if measure.origin is None:
-                    radius = (
-                        self.atmosphere.height() / 100.0
-                        if self.atmosphere is not None
-                        else 1.0 * ucc.get("length")
-                    )
+                try:  # TODO: Revisit when new kernel interface will be available
+                    if measure.origin is None:
+                        radius = (
+                            self.atmosphere.height() / 100.0
+                            if self.atmosphere is not None
+                            else 1.0 * ucc.get("length")
+                        )
 
-                    measure.origin = TargetOriginSphere(
-                        center=measure.target.xyz, radius=radius
-                    )
+                        measure.origin = TargetOriginSphere(
+                            center=measure.target.xyz, radius=radius
+                        )
+                except AttributeError:
+                    pass
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         result = KernelDict.new(ctx=ctx)
