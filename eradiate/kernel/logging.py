@@ -100,7 +100,7 @@ def install_logging(force=False):
         LogLevel.Trace: "trace",
         LogLevel.Debug: "debug",
         LogLevel.Info: "info",
-        LogLevel.Warn: "warn",
+        LogLevel.Warn: "warning",
         LogLevel.Error: "error",
     }
 
