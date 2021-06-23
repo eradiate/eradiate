@@ -93,6 +93,9 @@ class InterpolatedSpectrum(Spectrum):
             )
 
     def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
+        if spectral_ctx is None:
+            raise ValueError("spectral_ctx must not be None")
+
         if eradiate.mode().is_monochromatic():
             return np.interp(spectral_ctx.wavelength, self.wavelengths, self.values)
         else:
