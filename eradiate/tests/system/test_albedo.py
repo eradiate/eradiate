@@ -30,7 +30,7 @@ def test_albedo(mode_mono):
     non-uniform BRDF.
 
     * Geometry: A Lambertian surface with linearly varying reflectance for
-      0 to 1 between 500 and 700 nm. Surface width is set to 1 m.
+      0 to 1 between 500 and 700 nm.
     * Illumination: Directional illumination from the zenith (default irradiance).
     * Atmosphere: No atmosphere.
     * Measure: Distant albedo measure with a film of size 64 x 64. This
@@ -70,7 +70,6 @@ def test_albedo(mode_mono):
                     "wavelengths": [500.0, 700.0],
                     "values": [0.0, 1.0],
                 },
-                "width": 1.0 * ureg.m,
             },
             "illumination": {"type": "directional", "zenith": 0.0},
         }
