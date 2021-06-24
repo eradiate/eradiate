@@ -1,37 +1,39 @@
 import json
-from datetime import datetime
-import subprocess
-from tabulate import tabulate
 import os
 import pathlib
+import subprocess
+import textwrap
+from datetime import datetime
+
+from tabulate import tabulate
 
 
 def get_filename_testcasename(test):
-    return test['nodeid'].split("::")
+    return test["nodeid"].split("::")
 
 
 def get_git_revision_short_hash():
-    rev = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
-    return rev.decode(encoding='UTF-8', errors='strict').strip("\n")
+    rev = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+    return rev.decode(encoding="UTF-8", errors="strict").strip("\n")
 
 
 def group_results_unittests(report):
     passed = {}
     failed = {}
     skipped = {}
-    for test in report['tests']:
+    for test in report["tests"]:
         [filename, testcasename] = get_filename_testcasename(test)
-        if test['outcome'] == 'passed':
+        if test["outcome"] == "passed":
             if filename in passed:
                 passed[filename].append(testcasename)
             else:
                 passed[filename] = [testcasename]
-        elif test['outcome'] == 'skipped':
+        elif test["outcome"] == "skipped":
             if filename in skipped:
                 skipped[filename].append(testcasename)
             else:
                 skipped[filename] = [testcasename]
-        elif test['outcome'] == 'failed':
+        elif test["outcome"] == "failed":
             if filename in failed:
                 failed[filename].append(testcasename)
             else:
@@ -43,8 +45,8 @@ def create_summary_table(report):
     """Creates the summary section of the test report.
     This includes the test execution timestamp, the tested git revision and the number of passed, failed and skipped tests."""
 
-    date = datetime.fromtimestamp(report['created']).strftime('%Y-%m-%d')
-    time = datetime.fromtimestamp(report['created']).strftime('%H:%M:%S')
+    date = datetime.fromtimestamp(report["created"]).strftime("%Y-%m-%d")
+    time = datetime.fromtimestamp(report["created"]).strftime("%H:%M:%S")
     commithash = get_git_revision_short_hash()
 
     heading = """.. _sec-summary:
@@ -55,97 +57,84 @@ Summary
 
 This table contains the results of all tests that were executed in the creation of this test report. Additionally
 it contains the git revision that was used as well as the time of execution.
-
 """
 
     try:
-        passed = report['summary']['passed']
+        passed = report["summary"]["passed"]
     except KeyError:
         passed = 0
     try:
-        failed = report['summary']['failed']
+        failed = report["summary"]["failed"]
     except KeyError:
         failed = 0
     try:
-        skipped = report['summary']['skipped']
+        skipped = report["summary"]["skipped"]
     except KeyError:
         skipped = 0
-    table = [["Execution date", " ".join([date, time])],
-             ["Git revision", commithash],
-             [":ref:`Tests passed <Tests passed>`", passed],
-             [":ref:`Tests failed <Tests failed>`", failed],
-             [":ref:`Tests skipped <Tests skipped>`", skipped],
-             ["Tests total", report['summary']['total']]]
-    tabulated = tabulate(table, tablefmt='rst')
+    table = [
+        ["Execution date", " ".join([date, time])],
+        ["Git revision", commithash],
+        [":ref:`Passed tests <Passed tests>`", passed],
+        [":ref:`Failed tests <Failed tests>`", failed],
+        [":ref:`Skipped tests <Skipped tests>`", skipped],
+        ["Total", report["summary"]["total"]],
+    ]
+    tabulated = tabulate(table, tablefmt="rst")
 
-    footer = """
-Click the passed, failed and skipped sections in the table, to skip directly to the corresponding section in the list below.
-"""
-
-    return "\n".join([heading, tabulated, footer])
+    return "\n\n".join([heading, tabulated])
 
 
-def create_passed_table(passed):
-    """Create the table of passed tests, grouped by filename."""
+def create_report_list(test_data_dict, heading):
+    """Create a list report for a set of tests, grouped by filename."""
 
-    heading = """
-.. _Tests passed:
-
-* Passed tests"""
+    header = f"""
+* {heading}"""
 
     body = ""
-    for key, value in passed.items():
+    for key, value in test_data_dict.items():
         value_joined = "\n    * ".join(value)
         body += f"""
   * {key}
 
     * {value_joined}
 """
-    return "\n".join([heading, body])
+    return "\n".join([header, body])
 
 
-def create_failed_table(failed):
-    """Create the table of failed tests, grouped by filename."""
+def create_report_dropdown(test_data_dict, heading, title_style="", body_style=""):
+    """Create a dropdown report for a set of tests, grouped by filename."""
 
-    heading = """
-.. _Tests failed:
-    
-* Failed tests"""
+    n_tests = 0
+    for k, v in test_data_dict.items():
+        n_tests += len(v)
 
-    body = ""
-    for key, value in failed.items():
-        value_joined = "\n    * ".join(value)
-        body += f"""
-      * {key}
+    header = [f".. dropdown:: {heading} [{n_tests}]"]
 
-        * {value_joined}
-    """
-    return "\n".join([heading, body])
+    if title_style:
+        header.append(f"   :title: {title_style}")
+    if body_style:
+        header.append(f"   :body: {body_style}")
 
+    header.append("\n")
 
-def create_skipped_table(skipped):
-    """Create the table of skipped tests, grouped by filename."""
+    body = []
+    for filename, test_names in test_data_dict.items():
+        body_header = [f"   .. dropdown:: {filename} [{len(test_names)}]"]
+        if title_style:
+            body_header.append(f"      :title: {title_style}")
+        if body_style:
+            body_header.append(f"      :body: {body_style}")
 
-    heading = """
-.. _Tests skipped:
+        body.append("\n".join(body_header))
+        body.append("\n".join(f"      * {test_name}" for test_name in test_names))
 
-* Skipped tests"""
-
-    body = ""
-    for key, value in skipped.items():
-        value_joined = "\n    * ".join(value)
-        body += f"""
-      * {key}
-
-        * {value_joined}
-    """
-    return "\n".join([heading, body])
+    return "\n".join(header) + "\n\n".join(body)
 
 
 def generate():
     print("Parsing test results and generating overview files")
-    eradiate_dir = pathlib.Path(os.environ['ERADIATE_DIR'])
-    html_report_dir = eradiate_dir / 'test_report'
+    eradiate_dir = pathlib.Path(os.environ["ERADIATE_DIR"])
+    html_report_dir = eradiate_dir / "test_report"
     build_dir = html_report_dir / "generated"
     if not pathlib.Path.exists(build_dir):
         os.mkdir(build_dir)
@@ -154,7 +143,9 @@ def generate():
     failed = dict()
     skipped = dict()
 
-    for file in [f for f in os.listdir(build_dir) if os.path.isfile(os.path.join(build_dir, f))]:
+    for file in [
+        f for f in os.listdir(build_dir) if os.path.isfile(os.path.join(build_dir, f))
+    ]:
         if os.path.splitext(file)[-1] == ".json":
             with open(os.path.join(build_dir, file), "r") as json_file:
                 report = json.load(json_file)
@@ -166,14 +157,63 @@ def generate():
     with open(build_dir / "summary.rst", "w") as summary_file:
         summary_file.write(create_summary_table(report))
 
-    with open(build_dir / "passed.rst", "w") as passed_file:
-        passed_file.write(create_passed_table(passed))
+    for (
+        test_data_dict,
+        filename,
+        section_heading,
+        dropdown_title_style,
+        dropdown_body_style,
+    ) in [
+        (
+            passed,
+            "passed.rst",
+            "Passed tests",
+            "bg-success text-light",
+            "bg-success text-light",
+        ),
+        (
+            failed,
+            "failed.rst",
+            "Failed tests",
+            "bg-danger text-light",
+            "bg-danger text-light",
+        ),
+        (
+            skipped,
+            "skipped.rst",
+            "Skipped tests",
+            "bg-warning text-dark",
+            "bg-warning text-dark",
+        ),
+    ]:
+        with open(build_dir / filename, "w") as f:
+            f.write(f".. _{section_heading}:\n\n")
 
-    with open(build_dir / "failed.rst", "w") as failed_file:
-        failed_file.write(create_failed_table(failed))
+            # Report rendered as HTML dropdown
+            f.write(".. only:: html\n\n")
+            f.write(
+                textwrap.indent(
+                    create_report_dropdown(
+                        test_data_dict,
+                        section_heading,
+                        title_style=dropdown_title_style,
+                        body_style=dropdown_body_style,
+                    ),
+                    "   ",
+                )
+            )
 
-    with open(build_dir / "skipped.rst", "w") as skipped_file:
-        skipped_file.write(create_skipped_table(skipped))
+            # Report rendered as list (for PDF version)
+            f.write("\n\n")
+            f.write(".. only:: not html\n\n")
+            f.write(
+                textwrap.indent(
+                    create_report_list(test_data_dict, section_heading),
+                    "   ",
+                )
+            )
+
+            f.write("\n")
 
 
 if __name__ == "__main__":
