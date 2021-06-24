@@ -167,6 +167,27 @@ Measures [eradiate.scenes.measure]
       _distant.TargetOriginRectangle
       _distant.TargetOriginSphere
 
+.. _sec-reference-scenes-phase_functions:
+
+Phase functions [eradiate.scenes.phase]
+---------------------------------------
+.. currentmodule:: eradiate.scenes.phase
+
+**Interfaces and factories**
+
+.. autosummary::
+   :toctree: generated/
+
+   PhaseFunctionFactory
+   PhaseFunction
+
+**Scene elements**
+
+.. autosummary::
+   :toctree: generated/
+
+   RayleighPhaseFunction
+
 .. _sec-reference-scenes-integrators:
 
 Integrators [eradiate.scenes.integrators]
