@@ -1,3 +1,4 @@
+import warnings
 from abc import ABC, abstractmethod
 from typing import Dict, List, MutableMapping, Optional, Tuple
 
@@ -552,3 +553,18 @@ class MeasureFactory(BaseFactory):
 
     _constructed_type = Measure
     registry = {}
+
+    @classmethod
+    def create(cls, config_dict):
+        try:
+            if config_dict["type"] == "distant":
+                warnings.warn(
+                    "Using the 'distant' factory ID to create a "
+                    "DistantRadianceMeasure is deprecated. Use "
+                    "'distant_radiance'.",
+                    DeprecationWarning,
+                )
+        except KeyError:
+            pass
+
+        return super(MeasureFactory, cls).create(config_dict)
