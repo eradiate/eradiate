@@ -12,7 +12,9 @@ Core infrastructure [eradiate.solvers.core]
 
    runner
 
-.. dropdown:: **Private: Solver internals**
+**Solver internals**
+
+.. dropdown:: Private
 
    .. autosummary::
       :toctree: generated/

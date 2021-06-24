@@ -62,7 +62,9 @@ Biosphere [eradiate.scenes.biosphere]
    InstancedCanopyElement
    DiscreteCanopy
 
-.. dropdown:: **Parameters for LeafCloud generators**
+**Parameters for LeafCloud generators**
+
+.. dropdown:: Private
 
    .. autosummary::
       :toctree: generated/
@@ -133,12 +135,28 @@ Measures [eradiate.scenes.measure]
    Measure
    DistantMeasure
 
-.. dropdown:: **Private: Sensor information data structure**
+**Sensor information data structure**
+
+.. dropdown:: Private
 
    .. autosummary::
       :toctree: generated/
 
       _core.SensorInfo
+
+**Measure spectral configuration**
+
+   .. autosummary::
+      :toctree: generated/
+
+      MeasureSpectralConfig
+
+**Result storage and processing**
+
+.. autosummary::
+   :toctree: generated/
+
+   MeasureResults
 
 **Scene elements**
 
@@ -153,14 +171,9 @@ Measures [eradiate.scenes.measure]
    RadiancemeterMeasure
    RadiancemeterArrayMeasure
 
-**Result storage and processing**
+**Target and origin specification for DistantMeasure**
 
-.. autosummary::
-   :toctree: generated/
-
-   MeasureResults
-
-.. dropdown:: **Private: Target and origin specification for DistantMeasure**
+.. dropdown:: Private
 
    .. autosummary::
       :toctree: generated/
