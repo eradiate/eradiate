@@ -187,6 +187,7 @@ Phase functions [eradiate.scenes.phase]
    :toctree: generated/
 
    RayleighPhaseFunction
+   HenyeyGreensteinPhaseFunction
 
 .. _sec-reference-scenes-integrators:
 
