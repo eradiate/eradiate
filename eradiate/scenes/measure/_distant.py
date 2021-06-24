@@ -293,9 +293,10 @@ class DistantMeasure(Measure):
         doc="Target specification. If set to ``None``, default target point "
         "selection is used: rays will not target a particular region of the "
         "scene. The target can be specified using an array-like with 3 "
-        "elements (which will be converted to a :class:`TargetPoint`) or a "
-        "dictionary interpreted by :meth:`Target.convert`.",
-        type=":class:`TargetOrigin` or None",
+        "elements (which will be converted to a :class:`.TargetOriginPoint`) "
+        "or a dictionary interpreted by "
+        ":meth:`TargetOrigin.convert() <.TargetOrigin.convert>`.",
+        type=":class:`.TargetOrigin` or None",
         default="None",
     )
 
@@ -312,8 +313,9 @@ class DistantMeasure(Measure):
         "point selection strategy is used: ray origins will be projected to "
         "the scene's bounding sphere. Otherwise, ray origins are projected "
         "to the shape specified as origin. The origin can be specified using "
-        "a dictionary interpreted by :meth:`TargetOrigin.convert`.",
-        type=":class:`TargetOriginSphere` or None",
+        "a dictionary interpreted by "
+        ":meth:`TargetOrigin.convert() <.TargetOrigin.convert>`.",
+        type=":class:`.TargetOriginSphere` or None",
         default="None",
     )
 
@@ -387,9 +389,7 @@ class DistantMeasure(Measure):
 @attr.s
 class DistantRadianceMeasure(DistantMeasure):
     """
-    Distant measure scene element [:factorykey:`distant`].
-
-    This measure records radiance leaving the scene at infinite distance.
+    Record the radiance (in W/m²/sr(/nm)) leaving the scene at infinite distance.
     Depending on film resolution (*i.e.* storage discretisation), radiance is
     recorded for a single direction, in a plane or in an entire hemisphere.
 

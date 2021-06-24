@@ -45,8 +45,7 @@ class SensorInfo:
 
 class MeasureSpectralConfig(ABC):
     """
-    Data structure specifying the spectral configuration of a :class:`.Measure`
-    in monochromatic modes.
+    Data structure specifying the spectral configuration of a :class:`.Measure`.
 
     While this class is abstract, it should however be the main entry point
     to create :class:`.MeasureSpectralConfig` child class objects through the
@@ -66,12 +65,12 @@ class MeasureSpectralConfig(ABC):
     @staticmethod
     def new(**kwargs) -> "MeasureSpectralConfig":
         """
-        Create a new instance of one of the :class:`SpectralContext` child
+        Create a new instance of one of the :class:`.SpectralContext` child
         classes. *The instantiated class is defined based on the currently active
         mode.* Keyword arguments are passed to the instantiated class's
         constructor:
 
-        .. rubric:: Monochromatic modes [:class:`MonoMeasureSpectralConfig`]
+        .. rubric:: Monochromatic modes [:class:`.MonoMeasureSpectralConfig`]
 
         Parameter ``wavelengths`` (:class:`pint.Quantity`):
             List of wavelengths (automatically converted to a Numpy array).
