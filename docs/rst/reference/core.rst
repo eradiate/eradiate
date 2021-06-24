@@ -14,7 +14,9 @@ Mode control
    modes
    set_mode
 
-.. dropdown:: **Private: Mode implementation details**
+**Mode implementation details**
+
+.. dropdown:: Private
 
    .. autosummary::
       :toctree: generated/
@@ -61,7 +63,9 @@ Path resolver
    * - :data:`path_resolver`
      - Unique path resolver instance.
 
-.. dropdown:: **Private: Path resolver implementation**
+**Path resolver implementation**
+
+.. dropdown:: Private
 
    .. autosummary::
       :toctree: generated
