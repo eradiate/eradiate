@@ -382,7 +382,7 @@ class DistantMeasure(Measure):
         return ds
 
 
-@MeasureFactory.register("distant")
+@MeasureFactory.register("distant", "distant_radiance")
 @parse_docs
 @attr.s
 class DistantRadianceMeasure(DistantMeasure):
