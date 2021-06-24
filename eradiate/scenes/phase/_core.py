@@ -35,7 +35,7 @@ class PhaseFunctionFactory(BaseFactory):
        :class: hint
 
        .. factorytable::
-          :factory: PhaseFunction
+          :factory: PhaseFunctionFactory
     """
 
     _constructed_type = PhaseFunction
