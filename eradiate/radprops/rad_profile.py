@@ -916,7 +916,8 @@ class AFGL1986RadProfile(RadProfile):
         """
         Evaluate absorption coefficient given a spectral context.
 
-        .. note:: Extrapolate to zero when wavelength, pressure and/or
+        .. note::
+           Extrapolate to zero when wavelength, pressure and/or
            temperature are out of bounds.
         """
         profile = self.eval_thermoprops_profile()
@@ -1022,12 +1023,16 @@ def interp_along_altitude(ds: xr.Dataset, new_z_level: ureg.Quantity) -> xr.Data
     is a subdivision of ``ds``'s level altitude mesh, the new sub-layers share
     the same radiative properties as the corresponding initial layers that they
     divide.
-    Parameter ``ds`` (:class:``xarray.Dataset``):
+
+    Parameter ``ds`` (:class:`~xarray.Dataset`):
         Atmospheric radiative properties data set to interpolate.
-    Parameter ``new_z_level`` (:class:``~pint.Quantity``):
+
+    Parameter ``new_z_level`` (:class:`~pint.Quantity`):
         New level altitude mesh on which to interpolate the atmopsheric radiative
         properties data set.
-    Returns → :class:``xarray.Dataset``:
+
+    Returns → :class:`~xarray.Dataset`:
+        Interpolated atmospheric radiative properties.
     """
     z_layer = (new_z_level[1:] + new_z_level[:-1]) / 2.0
     return ds.interp(
@@ -1054,20 +1059,26 @@ def blend(radprops: List[xr.Dataset]) -> Tuple[xr.Dataset, xr.Dataset]:
     Blend radiative properties profile data sets.
     Although each data set corresponds to a specific altitude region, their
     altitude coordinate values must align exactly with the other's.
+
     Total extinction coefficients are computed according to:
+
     .. math::
-        k_{\\mathrm{t}} = \\sum_{i} k_{\\mathrm{t}i}
+       k_{\\mathrm{t}} = \\sum_{i} k_{\\mathrm{t}i}
+
     Total albedo are computed according to:
+
     .. math::
-        \\varpi = \\sum_{i} \\frac{
-            k_{\\mathrm{t}i}
-        }{
-            k_{\\mathrm{t}}
-        }
-        \\varpi_i
-    Parameter ``radprops`` (list of :class:``xarray.Dataset``):
+       \\varpi = \\sum_{i} \\frac{
+          k_{\\mathrm{t}i}
+       }{
+          k_{\\mathrm{t}}
+       }
+       \\varpi_i
+
+    Parameter ``radprops`` (list of :class:`xarray.Dataset`):
         Radiative properties data sets to blend.
-    Returns → tuple of :class:``~xarray.Dataset`` and :class:``~xarray.DataArray``:
+
+    Returns → tuple of :class:`~xarray.Dataset` and :class:`~xarray.DataArray`:
         Blended radiative properties profile, blending ratios.
     """
     # Find the altitude mesh with the most number of points (reference mesh)
