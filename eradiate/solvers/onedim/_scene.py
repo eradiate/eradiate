@@ -98,19 +98,16 @@ class OneDimScene(Scene):
 
                     measure.target = TargetOriginPoint(target_point)
 
-                try:  # TODO: Revisit when new kernel interface will be available
-                    if measure.origin is None:
-                        radius = (
-                            self.atmosphere.height() / 100.0
-                            if self.atmosphere is not None
-                            else 1.0 * ucc.get("length")
-                        )
+                if measure.origin is None:
+                    radius = (
+                        self.atmosphere.height() / 100.0
+                        if self.atmosphere is not None
+                        else 1.0 * ucc.get("length")
+                    )
 
-                        measure.origin = TargetOriginSphere(
-                            center=measure.target.xyz, radius=radius
-                        )
-                except AttributeError:
-                    pass
+                    measure.origin = TargetOriginSphere(
+                        center=measure.target.xyz, radius=radius
+                    )
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         result = KernelDict.new(ctx=ctx)

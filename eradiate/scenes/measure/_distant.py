@@ -299,6 +299,24 @@ class DistantMeasure(Measure):
         default="None",
     )
 
+    origin = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(TargetOrigin.convert),
+            validator=attr.validators.optional(
+                attr.validators.instance_of((TargetOriginSphere,))
+            ),
+            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
+        ),
+        doc="Ray origin specification. If set to ``None``, the default origin "
+        "point selection strategy is used: ray origins will be projected to "
+        "the scene's bounding sphere. Otherwise, ray origins are projected "
+        "to the shape specified as origin. The origin can be specified using "
+        "a dictionary interpreted by :meth:`TargetOrigin.convert`.",
+        type=":class:`TargetOriginSphere` or None",
+        default="None",
+    )
+
     def _postprocess_add_illumination(
         self, ds: xr.Dataset, illumination: DirectionalIllumination
     ) -> xr.Dataset:
@@ -397,24 +415,6 @@ class DistantRadianceMeasure(DistantMeasure):
         "plane.",
         type="array-like",
         default="(32, 32)",
-    )
-
-    origin = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(TargetOrigin.convert),
-            validator=attr.validators.optional(
-                attr.validators.instance_of((TargetOriginSphere,))
-            ),
-            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
-        ),
-        doc="Ray origin specification. If set to ``None``, the default origin "
-        "point selection strategy is used: ray origins will be projected to "
-        "the scene's bounding sphere. Otherwise, ray origins are projected "
-        "to the shape specified as origin. The origin can be specified using "
-        "a dictionary interpreted by :meth:`TargetOrigin.convert`.",
-        type=":class:`TargetOriginSphere` or None",
-        default="None",
     )
 
     orientation = documented(
@@ -670,6 +670,9 @@ class DistantFluxMeasure(DistantMeasure):
 
             if self.target is not None:
                 d["target"] = self.target.kernel_item()
+
+            if self.origin is not None:
+                d["origin"] = self.origin.kernel_item()
 
             result.append(d)
 

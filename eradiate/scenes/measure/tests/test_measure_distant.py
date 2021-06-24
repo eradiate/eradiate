@@ -190,6 +190,11 @@ def test_distant_flux(mode_mono):
     assert KernelDict.new(d).load() is not None
     print(d.kernel_dict())
 
+    # Test origin support
+    # -- Project origins to a sphere
+    d = DistantFluxMeasure(origin={"type": "sphere", "center": [0, 0, 0], "radius": 1})
+    assert KernelDict.new(d).load() is not None
+
 
 @pytest.mark.parametrize(
     ["direction", "frame"],
