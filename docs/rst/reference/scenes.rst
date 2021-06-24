@@ -131,6 +131,7 @@ Measures [eradiate.scenes.measure]
 
    MeasureFactory
    Measure
+   DistantMeasure
 
 .. dropdown:: **Private: Sensor information data structure**
 
@@ -144,8 +145,10 @@ Measures [eradiate.scenes.measure]
 .. autosummary::
    :toctree: generated/
 
-   DistantMeasure
+   DistantRadianceMeasure
    DistantReflectanceMeasure
+   DistantFluxMeasure
+   DistantAlbedoMeasure
    PerspectiveCameraMeasure
    RadiancemeterMeasure
    RadiancemeterArrayMeasure
