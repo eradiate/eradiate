@@ -123,7 +123,7 @@ class Surface(SceneElement, ABC):
     def kernel_width(self, ctx: KernelDictContext = None):
         """
         Return width of kernel object, possibly overridden by
-        ``ctx.override_surface_width``.
+        ``ctx.override_scene_width``.
 
         Parameter ``ctx`` (:class:`.KernelDictContext` or None):
             A context data structure containing parameters relevant for kernel
@@ -132,10 +132,10 @@ class Surface(SceneElement, ABC):
         Returns → :class:`pint.Quantity`:
             Kernel object width.
         """
-        if ctx is not None and ctx.override_surface_width is not None:
+        if ctx is not None and ctx.override_scene_width is not None:
             if self.width is not AUTO:
                 warnings.warn(OverriddenValueWarning("Overriding surface width"))
-            return ctx.override_surface_width
+            return ctx.override_scene_width
         else:
             if self.width is not AUTO:
                 return self.width

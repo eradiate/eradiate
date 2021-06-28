@@ -268,7 +268,8 @@ def rescale_concentration(ds, factors, inplace=False):
         if species in factors:
             mr[i] *= factors[species]
 
-    if any(mr.sum(axis=0) > 1.0):
+    machine_epsilon = np.finfo(float).eps
+    if any(mr.sum(axis=0) > 1.0 + machine_epsilon):
         raise ValueError(
             f"Cannot rescale concentration with these factors "
             f"({factors}) because the sum of mixing ratios would "

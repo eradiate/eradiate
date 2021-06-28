@@ -9,14 +9,14 @@ from eradiate.scenes.atmosphere._particles import ParticleLayer
 from eradiate.scenes.core import KernelDict
 
 
-def test_particle_load(mode_mono) -> None:
+def test_particle_load(mode_mono):
     """Produces a kernel dictionary that can be loaded by the kernel."""
     ctx = KernelDictContext()
     particle_layer = ParticleLayer(n_layers=9)
     assert KernelDict.new(particle_layer, ctx=ctx).load() is not None
 
 
-def test_particle_layer() -> None:
+def test_particle_layer():
     """Assigns parameters to expected values."""
     bottom = ureg.Quantity(1.2, "km")
     top = ureg.Quantity(1.8, "km")
@@ -37,18 +37,18 @@ def test_particle_layer() -> None:
     assert layer.dataset == "tests/radprops/rtmom_aeronet_desert.nc"
 
 
-def test_particle_layer_altitude_units() -> None:
+def test_particle_layer_altitude_units():
     """Accept different units for bottom and top altitudes."""
     assert ParticleLayer(bottom=ureg.Quantity(1, "km"), top=ureg.Quantity(2000.0, "m"))
 
 
-def test_particle_layer_invalid_bottom_top() -> None:
+def test_particle_layer_invalid_bottom_top():
     """Raises when 'bottom' is larger that 'top'."""
     with pytest.raises(ValueError):
         ParticleLayer(top=ureg.Quantity(1.2, "km"), bottom=ureg.Quantity(1.8, "km"))
 
 
-def test_particle_layer_invalid_tau_550() -> None:
+def test_particle_layer_invalid_tau_550():
     """Raises when 'tau_550' is invalid."""
     with pytest.raises(ValueError):
         ParticleLayer(
@@ -61,7 +61,7 @@ def test_dataset():
     return path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc")
 
 
-def test_particle_layer_radprops(mode_mono, test_dataset) -> None:
+def test_particle_layer_radprops(mode_mono, test_dataset):
     """Method 'radprops' returns data set with expected data_vars and coords."""
     layer = ParticleLayer(dataset=test_dataset)
     spectral_ctx = SpectralContext.new()
@@ -73,7 +73,7 @@ def test_particle_layer_radprops(mode_mono, test_dataset) -> None:
     )
 
 
-def test_particle_layer_eval_phase(test_dataset) -> None:
+def test_particle_layer_eval_phase(test_dataset):
     """Method 'eval_phase' returns a 'DataArray'."""
     layer = ParticleLayer(dataset=test_dataset)
     spectral_ctx = SpectralContext.new()

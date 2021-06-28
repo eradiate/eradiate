@@ -44,6 +44,8 @@ class ParticleLayer(Atmosphere):
     (set by ``bottom``) and a top altitude (set by ``top``).
     Inside the layer, the particles number is distributed according to a
     distribution (set by ``distribution``).
+    See :mod:`~eradiate.scenes.atmosphere.particle_dist` for the available distribution
+    types and corresponding parameters.
     The particle layer is itself divided into a number of (sub-)layers
     (``n_layers``) to allow to describe the variations of the particles number
     with altitude.
@@ -186,7 +188,7 @@ class ParticleLayer(Atmosphere):
         default="Temporary directory",
     )
 
-    def __attrs_post_init__(self: ParticleLayer):
+    def __attrs_post_init__(self):
         # Prepare cache directory in case we'd need it
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -195,15 +197,15 @@ class ParticleLayer(Atmosphere):
     # --------------------------------------------------------------------------
 
     @property
-    def albedo_file(self: ParticleLayer) -> pathlib.Path:
+    def albedo_file(self) -> pathlib.Path:
         return self.cache_dir / self.albedo_filename
 
     @property
-    def sigma_t_file(self: ParticleLayer) -> pathlib.Path:
+    def sigma_t_file(self) -> pathlib.Path:
         return self.cache_dir / self.sigma_t_filename
 
     @property
-    def weight_file(self: ParticleLayer) -> pathlib.Path:
+    def weight_file(self) -> pathlib.Path:
         return self.cache_dir / self.weight_filename
 
     # --------------------------------------------------------------------------
@@ -211,11 +213,11 @@ class ParticleLayer(Atmosphere):
     # --------------------------------------------------------------------------
 
     @property
-    def top(self: ParticleLayer) -> pint.Quantity:
+    def top(self) -> pint.Quantity:
         return self._top
 
     @property
-    def bottom(self: ParticleLayer) -> pint.Quantity:
+    def bottom(self) -> pint.Quantity:
         return self._bottom
 
     def eval_width(self, ctx: Optional[KernelDictContext]) -> pint.Quantity:
@@ -226,9 +228,10 @@ class ParticleLayer(Atmosphere):
             return self.width
 
     @property
-    def z_level(self: ParticleLayer) -> pint.Quantity:
+    def z_level(self) -> pint.Quantity:
         """
         Compute the level altitude mesh within the particle layer.
+
         The level altitude mesh corresponds to a regular level altitude mesh
         from the layer's bottom altitude to the layer's top altitude with
         a number of points specified by ``n_layer + 1``.
@@ -239,9 +242,10 @@ class ParticleLayer(Atmosphere):
         return np.linspace(start=self.bottom, stop=self.top, num=self.n_layers + 1)
 
     @property
-    def z_layer(self: ParticleLayer) -> pint.Quantity:
+    def z_layer(self) -> pint.Quantity:
         """
         Compute the layer altitude mesh within the particle layer.
+
         The layer altitude mesh corresponds to a regular level altitude mesh
         from the layer's bottom altitude to the layer's top altitude with
         a number of points specified by ``n_layer``.
@@ -252,9 +256,7 @@ class ParticleLayer(Atmosphere):
         z_level = self.z_level
         return (z_level[:-1] + z_level[1:]) / 2.0
 
-    def eval_fractions(
-        self: ParticleLayer, z_layer: ureg.Quantity = None
-    ) -> np.ndarray:
+    def eval_fractions(self, z_layer: ureg.Quantity = None) -> np.ndarray:
         """
         Compute the particle number fraction in the particle layer.
 
@@ -271,7 +273,7 @@ class ParticleLayer(Atmosphere):
     #                       Radiative properties
     # --------------------------------------------------------------------------
 
-    def eval_phase(self: ParticleLayer, spectral_ctx: SpectralContext) -> xr.DataArray:
+    def eval_phase(self, spectral_ctx: SpectralContext) -> xr.DataArray:
         """
         Evaluate the phase function.
 
@@ -290,7 +292,7 @@ class ParticleLayer(Atmosphere):
         )
 
     def eval_albedo(
-        self: ParticleLayer,
+        self,
         spectral_ctx: SpectralContext,
         z_level: ureg.Quantity = None,
     ) -> pint.Quantity:
@@ -312,7 +314,7 @@ class ParticleLayer(Atmosphere):
         return albedo_array
 
     def eval_sigma_t(
-        self: ParticleLayer,
+        self,
         spectral_ctx: SpectralContext,
         z_level: ureg.Quantity = None,
     ) -> pint.Quantity:
@@ -344,9 +346,7 @@ class ParticleLayer(Atmosphere):
         )
         return normalised_sigma_t_array
 
-    def eval_sigma_a(
-        self: ParticleLayer, spectral_ctx: SpectralContext
-    ) -> pint.Quantity:
+    def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate absorption coefficient given a spectral context.
 
@@ -355,9 +355,7 @@ class ParticleLayer(Atmosphere):
         """
         return self.eval_sigma_t(spectral_ctx) - self.eval_sigma_a(spectral_ctx)
 
-    def eval_sigma_s(
-        self: ParticleLayer, spectral_ctx: SpectralContext
-    ) -> pint.Quantity:
+    def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate scattering coefficient given a spectral context.
 
@@ -367,7 +365,7 @@ class ParticleLayer(Atmosphere):
         return self.eval_sigma_t(spectral_ctx) * self.eval_albedo(spectral_ctx)
 
     def eval_radprops(
-        self: ParticleLayer,
+        self,
         spectral_ctx: SpectralContext,
         z_level: ureg.Quantity = None,
     ) -> xr.Dataset:
@@ -480,7 +478,7 @@ class ParticleLayer(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _gridvolume_to_world_trafo(self: ParticleLayer, ctx: KernelDictContext) -> Any:
+    def _gridvolume_to_world_trafo(self, ctx: KernelDictContext) -> Any:
         """
         Returns the 'to_world' transformation for gridvolume plugins.
         """
@@ -497,7 +495,7 @@ class ParticleLayer(Atmosphere):
             zmax=top,
         )
 
-    def kernel_phase(self: ParticleLayer, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
         particles_phase = self.eval_phase(spectral_ctx=ctx.spectral_ctx)
         return {
             f"phase_{self.id}": {
@@ -506,7 +504,7 @@ class ParticleLayer(Atmosphere):
             }
         }
 
-    def kernel_media(self: ParticleLayer, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_media(self, ctx: KernelDictContext) -> MutableMapping:
         radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
         albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
@@ -538,9 +536,7 @@ class ParticleLayer(Atmosphere):
             }
         }
 
-    def kernel_shapes(
-        self: ParticleLayer, ctx: Optional[KernelDictContext]
-    ) -> MutableMapping:
+    def kernel_shapes(self, ctx: Optional[KernelDictContext]) -> MutableMapping:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:

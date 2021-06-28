@@ -32,7 +32,7 @@ def test_kernel_width(mode_mono):
 
     # Override constrains auto size
     obj.width = AUTO
-    ctx = KernelDictContext(override_surface_width=100.0 * ureg.m)
+    ctx = KernelDictContext(override_scene_width=100.0 * ureg.m)
     assert obj.kernel_width(ctx) == 100.0 * ureg.m
 
     # Override with set value raises a warning

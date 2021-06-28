@@ -14,7 +14,6 @@ from ... import converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
-from ...units import to_quantity
 from ...units import unit_context_config as ucc
 
 atmosphere_factory = Factory()

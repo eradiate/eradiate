@@ -253,9 +253,9 @@ class KernelDictContext:
         default="True",
     )
 
-    override_surface_width: Optional[pint.Quantity] = documented(
+    override_scene_width: Optional[pint.Quantity] = documented(
         pinttr.ib(default=None, units=ucc.deferred("length")),
-        doc="If relevant, value which must be used as the surface width "
+        doc="If relevant, value which must be used as the scene width "
         "(*e.g.* when surface size must match atmosphere or canopy size).\n"
         "\n"
         "Unit-enabled field (default: cdu[length]).",
