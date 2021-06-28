@@ -708,7 +708,7 @@ class DistantFluxMeasure(DistantMeasure):
         ds = self.results.to_dataset(aggregate_spps=True)
 
         # Add aggregate flux density field
-        ds["flux"] = ds["raw"].mean(dim=("x", "y"))
+        ds["flux"] = ds["raw"].sum(dim=("x", "y"))
         ds["flux"].attrs = {
             "standard_name": "toa_outgoing_flux_density_per_unit_wavelength",
             "long_name": "top-of-atmosphere outgoing spectral flux density",
