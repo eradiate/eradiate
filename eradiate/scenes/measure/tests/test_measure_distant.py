@@ -234,4 +234,4 @@ def test_distant_flux_postprocessing(mode_mono):
     ds = d.postprocess()
     assert "flux" in ds.data_vars
     assert ds["flux"].shape == (2,)
-    assert np.allclose(ds.flux, 1.0)
+    assert np.allclose(ds.flux, 1.0 * 16 * 32)
