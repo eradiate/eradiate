@@ -3,6 +3,8 @@ ARG BASE_IMAGE_VERSION
 
 FROM ${BASE_IMAGE}:${BASE_IMAGE_VERSION}
 
+ARG PYTHON_VERSION=3.9.5
+
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 # hadolint ignore=DL3008
@@ -42,7 +44,7 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}
     find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
     /opt/conda/bin/conda clean -afy
 
-RUN conda create --name docker
+RUN conda create --name docker python=${PYTHON_VERSION}
 ENV PATH /opt/conda/envs/docker/bin:$PATH
 
 SHELL ["conda", "run", "-n", "docker", "/bin/bash", "-c"]
