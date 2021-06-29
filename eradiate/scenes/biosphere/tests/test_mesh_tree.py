@@ -6,8 +6,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.biosphere._mesh_tree_element import MeshTreeElement
-from eradiate.scenes.biosphere._tree import MeshTree
+from eradiate.scenes.biosphere.mesh_tree_element import MeshTreeElement
 from eradiate.scenes.core import KernelDict
 
 # -- Fixture definitions -------------------------------------------------------
@@ -114,9 +113,7 @@ def tempfile_stl():
         yield filename
 
 
-def test_mesh_tree_element_instantiate(
-    mode_mono, tempfile_obj, tempfile_ply, tempfile_stl
-):
+def test_mesh_tree_instantiate(mode_mono, tempfile_obj, tempfile_ply, tempfile_stl):
 
     # empty constructor raises due to missing mesh description file
     with pytest.raises(FileNotFoundError):
@@ -151,7 +148,7 @@ def test_mesh_tree_element_instantiate(
         )
 
 
-def test_mesh_tree_element_load(mode_mono, tempfile_obj, tempfile_ply):
+def test_mesh_tree_load(mode_mono, tempfile_obj, tempfile_ply):
     """
     Instantiate MeshTreeElement objects from obj and ply files and load the
     corresponding Mitsuba objects.
@@ -179,100 +176,3 @@ def test_mesh_tree_element_load(mode_mono, tempfile_obj, tempfile_ply):
     )
 
     assert KernelDict.new(ply_tree, ctx=ctx).load()
-
-
-def test_mesh_tree_instantiate(mode_mono, tempfile_obj):
-    """
-    Instantiate a MeshTree object holding two MeshTreeElements and load the
-    corresponding Mitsuba objects.
-    """
-    ctx = KernelDictContext()
-
-    # Constructor based instantiation
-    assert MeshTree(
-        mesh_tree_elements=[
-            MeshTreeElement(
-                id="mesh_tree_obj",
-                mesh_filename=tempfile_obj,
-                mesh_unit=ureg.m,
-                mesh_reflectance=0.5,
-                mesh_transmittance=0.5,
-            ),
-            MeshTreeElement(
-                id="mesh_tree_obj_2",
-                mesh_filename=tempfile_obj,
-                mesh_unit=ureg.m,
-                mesh_reflectance=0.1,
-                mesh_transmittance=0.9,
-            ),
-        ]
-    )
-
-    tree = MeshTree(
-        mesh_tree_elements=[
-            MeshTreeElement(
-                id="mesh_tree_obj",
-                mesh_filename=tempfile_obj,
-                mesh_unit=ureg.m,
-                mesh_reflectance=0.5,
-                mesh_transmittance=0.5,
-            ),
-            MeshTreeElement(
-                id="mesh_tree_obj_2",
-                mesh_filename=tempfile_obj,
-                mesh_unit=ureg.m,
-                mesh_reflectance=0.1,
-                mesh_transmittance=0.9,
-            ),
-        ]
-    )
-
-    assert KernelDict.new(tree, ctx=ctx).load()
-
-    # dict API based instantiation
-
-    assert MeshTree.from_dict(
-        {
-            "id": "mesh_tree",
-            "mesh_tree_elements": [
-                {
-                    "id": "mesh_tree_obj",
-                    "mesh_filename": tempfile_obj,
-                    "mesh_reflectance": 0.5,
-                    "mesh_transmittance": 0.5,
-                    "mesh_unit": ureg.m,
-                },
-                {
-                    "id": "mesh_tree_obj_2",
-                    "mesh_filename": tempfile_obj,
-                    "mesh_reflectance": 0.1,
-                    "mesh_transmittance": 0.9,
-                    "mesh_unit": ureg.m,
-                },
-            ],
-        }
-    )
-
-    tree = MeshTree.from_dict(
-        {
-            "id": "mesh_tree",
-            "mesh_tree_elements": [
-                {
-                    "id": "mesh_tree_obj",
-                    "mesh_filename": tempfile_obj,
-                    "mesh_reflectance": 0.5,
-                    "mesh_transmittance": 0.5,
-                    "mesh_unit": ureg.m,
-                },
-                {
-                    "id": "mesh_tree_obj_2",
-                    "mesh_filename": tempfile_obj,
-                    "mesh_reflectance": 0.1,
-                    "mesh_transmittance": 0.9,
-                    "mesh_unit": ureg.m,
-                },
-            ],
-        }
-    )
-
-    assert KernelDict.new(tree, ctx=ctx).load()
