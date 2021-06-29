@@ -1,5 +1,4 @@
 import os
-from typing import MutableMapping, Optional
 
 import attr
 import pint
@@ -8,7 +7,6 @@ from ..core import SceneElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
 from ..._attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext
 from ...units import unit_context_kernel as uck
 
 
@@ -44,7 +42,7 @@ class MeshTreeElement(SceneElement):
     mesh_filename = documented(
         attr.ib(
             default=None,
-            validator=validators.is_path,
+            validator=validators.is_file,
         ),
         doc="Path to the triangulated mesh data file.",
         type="path-like",
@@ -136,21 +134,17 @@ class MeshTreeElement(SceneElement):
         file_extension = os.path.splitext(self.mesh_filename)[1]
         if file_extension == ".obj":
             shapes_dict = {
-                self.id: {
-                    "type": "obj",
-                    "filename": self.mesh_filename,
-                    "bsdf": bsdf,
-                    "to_world": ScalarTransform4f.scale(scaling_factor),
-                }
+                "type": "obj",
+                "filename": self.mesh_filename,
+                "bsdf": bsdf,
+                "to_world": ScalarTransform4f.scale(scaling_factor),
             }
         elif file_extension == ".ply":
             shapes_dict = {
-                self.id: {
-                    "type": "ply",
-                    "filename": self.mesh_filename,
-                    "bsdf": bsdf,
-                    "to_world": ScalarTransform4f.scale(scaling_factor),
-                }
+                "type": "ply",
+                "filename": self.mesh_filename,
+                "bsdf": bsdf,
+                "to_world": ScalarTransform4f.scale(scaling_factor),
             }
 
         return shapes_dict
@@ -170,15 +164,9 @@ class MeshTreeElement(SceneElement):
         return {
             f"bsdf_{self.id}": {
                 "type": "bilambertian",
-                "reflectance": self.mesh_reflectance.kernel_dict(ctx=ctx)["spectrum"],
-                "transmittance": self.mesh_transmittance.kernel_dict(ctx=ctx)[
+                "reflectance": self.leaf_reflectance.kernel_dict(ctx=ctx)["spectrum"],
+                "transmittance": self.leaf_transmittance.kernel_dict(ctx=ctx)[
                     "spectrum"
                 ],
             }
         }
-
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
-        if not ctx.ref:
-            return self.shapes(ctx=ctx)
-        else:
-            return {**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx)}
