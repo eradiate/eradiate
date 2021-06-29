@@ -1,10 +1,11 @@
+import os
 from numbers import Number
 
 import attr
 import numpy as np
 
-from .units import unit_registry as ureg
 from .units import PhysicalQuantity
+from .units import unit_registry as ureg
 
 
 def is_number(_, attribute, value):
@@ -12,15 +13,16 @@ def is_number(_, attribute, value):
     Raises a ``TypeError`` in case of failure.
     """
     if not isinstance(value, Number):
-        raise TypeError(f"{attribute.name} must be a real number, "
-                        f"got {value} which is a {value.__class__}")
+        raise TypeError(
+            f"{attribute.name} must be a real number, "
+            f"got {value} which is a {value.__class__}"
+        )
 
 
 def is_vector3(instance, attribute, value):
     """Validates if ``value`` is convertible to a 3-vector."""
     return attr.validators.deep_iterable(
-        member_validator=is_number,
-        iterable_validator=has_len(3)
+        member_validator=is_number, iterable_validator=has_len(3)
     )(instance, attribute, value)
 
 
@@ -28,7 +30,7 @@ def is_positive(_, attribute, value):
     """Validates if ``value`` is a positive number.
     Raises a ``ValueError`` in case of failure.
     """
-    if value < 0.:
+    if value < 0.0:
         raise ValueError(f"{attribute} must be positive or zero, got {value}")
 
 
@@ -47,8 +49,9 @@ def path_exists(_, attribute, value):
     an existing target. Raises a ``FileNotFoundError`` otherwise.
     """
     if not value.exists():
-        raise FileNotFoundError(f"{attribute} points to '{str(value)}' "
-                                f"(path does not exist)")
+        raise FileNotFoundError(
+            f"{attribute} points to '{str(value)}' " f"(path does not exist)"
+        )
 
 
 def is_file(_, attribute, value):
@@ -56,8 +59,19 @@ def is_file(_, attribute, value):
     an existing file. Raises a ``FileNotFoundError`` otherwise.
     """
     if not value.is_file():
-        raise FileNotFoundError(f"{attribute} points to '{str(value)}' "
-                                f"(not a file)")
+        raise FileNotFoundError(
+            f"{attribute} points to '{str(value)}' " f"(not a file)"
+        )
+
+
+def is_path(_, attribute, value):
+    """Validates if ``value`` is a :class:`pathlib.Path` and points to
+    an existing file. Raises a ``FileNotFoundError`` otherwise.
+    """
+    if value is None or not os.path.exists(value):
+        raise FileNotFoundError(
+            f"{attribute} points to '{str(value)}' " f"(not a file)"
+        )
 
 
 def is_dir(_, attribute, value):
@@ -65,8 +79,9 @@ def is_dir(_, attribute, value):
     an existing file. Raises a ``FileNotFoundError`` otherwise.
     """
     if not value.is_dir():
-        raise FileNotFoundError(f"{attribute} points to '{str(value)}'"
-                                f"(not a directory)")
+        raise FileNotFoundError(
+            f"{attribute} points to '{str(value)}'" f"(not a directory)"
+        )
 
 
 def has_len(size):
@@ -83,8 +98,10 @@ def has_len(size):
 
     def f(_, attribute, value):
         if len(value) != size:
-            raise ValueError(f"{attribute} must be have length {size}, "
-                             f"got {value} of length {len(value)}")
+            raise ValueError(
+                f"{attribute} must be have length {size}, "
+                f"got {value} of length {len(value)}"
+            )
 
     return f
 
@@ -97,9 +114,11 @@ def has_quantity(quantity):
 
     def f(_, attribute, value):
         if value.quantity != quantity:
-            raise ValueError(f"incompatible quantity '{value.quantity}' "
-                             f"used to set field '{attribute.name}' "
-                             f"(allowed: '{quantity}')")
+            raise ValueError(
+                f"incompatible quantity '{value.quantity}' "
+                f"used to set field '{attribute.name}' "
+                f"(allowed: '{quantity}')"
+            )
 
     return f
 
