@@ -4,8 +4,8 @@ import attr
 import pinttr
 
 from ._leaf_cloud import LeafCloud
-from ._mesh_tree_element import MeshTreeElement
 from .canopy_element import CanopyElement, CanopyElementFactory
+from .mesh_tree_element import MeshTreeElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
 from ..._attrs import documented, parse_docs
@@ -273,41 +273,6 @@ class MeshTree(Tree):
         for mesh_tree_element in self.mesh_tree_elements:
             result = {**result, **mesh_tree_element.shapes(ctx=ctx)}
         return result
-
-    @classmethod
-    def from_dict(cls, d):
-        """
-        Construct from a dictionary.
-
-
-        Parameter ``d`` (dict):
-            Dictionary containing parameters passed to the selected constructor.
-            Unit fields are pre-processed with :func:`pinttr.interpret_units`.
-        """
-
-        # Interpret unit fields if any
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        mesh_tree_elements = []
-        for mesh_tree_element in d_copy.pop("mesh_tree_elements"):
-            mesh_tree_elements.append(MeshTreeElement.convert(mesh_tree_element))
-
-        return cls(mesh_tree_elements=mesh_tree_elements, **d_copy)
-
-    @staticmethod
-    def convert(value):
-        """
-        Object converter method.
-
-        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
-        create an :class:`.AbstractTree`.
-
-        Otherwise, it returns ``value``.
-        """
-        if isinstance(value, dict):
-            return MeshTree.from_dict(value)
-
-        return value
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
 

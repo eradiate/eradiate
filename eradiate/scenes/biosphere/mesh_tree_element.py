@@ -177,21 +177,6 @@ class MeshTreeElement(SceneElement):
             }
         }
 
-    @staticmethod
-    def convert(value):
-        """
-        Object converter method.
-
-        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
-        create an :class:`.AbstractTree`.
-
-        Otherwise, it returns ``value``.
-        """
-        if isinstance(value, dict):
-            return MeshTreeElement.from_dict(value)
-
-        return value
-
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         if not ctx.ref:
             return self.shapes(ctx=ctx)
