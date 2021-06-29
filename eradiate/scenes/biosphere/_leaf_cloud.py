@@ -6,7 +6,7 @@ import numpy as np
 import pint
 import pinttr
 
-from .canopy_element import CanopyElement, CanopyElementFactory
+from ._canopy_element import CanopyElement, CanopyElementFactory
 from ..core import SceneElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators

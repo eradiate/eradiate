@@ -1,15 +1,11 @@
-from typing import MutableMapping, Optional
-
 import attr
 import pinttr
 
+from ._canopy_element import CanopyElement, CanopyElementFactory
 from ._leaf_cloud import LeafCloud
-from .canopy_element import CanopyElement, CanopyElementFactory
-from .mesh_tree_element import MeshTreeElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
 from ..._attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -205,84 +201,3 @@ class AbstractTree(Tree):
         leaf_cloud = LeafCloud.convert(leaf_cloud_dict)
 
         return cls(leaf_cloud=leaf_cloud, **d_copy)
-
-
-@CanopyElementFactory.register("mesh_tree")
-@parse_docs
-@attr.s
-class MeshTree(Tree):
-    """
-    A container class for mesh based tree-like objects in canopies.
-
-    It holds one or more triangulated meshes and corresponding BSDFs, representing
-    the tree.
-
-    The mesh will be interpreted in local coordinates and can be used in an
-    :class:`InstancedCanopyElement` to place at arbitrary positions in a scene.
-    """
-
-    mesh_tree_elements = documented(
-        attr.ib(
-            factory=list,
-            converter=lambda value: [
-                MeshTreeElement.convert(x) for x in pinttr.util.always_iterable(value)
-            ]
-            if not isinstance(value, dict)
-            else [MeshTreeElement.convert(value)],
-        ),
-        doc="List of :class:`.CanopyElement` defining the canopy. Can be "
-        "initialised with a :class:`.InstancedCanopyElement`, which will be "
-        "automatically wrapped into a list. Dictionary-based specifications are "
-        "allowed as well.",
-        type="list[:class:`.InstancedCanopyElement`]",
-        default="[]",
-    )
-
-    def bsdfs(self, ctx=None):
-        """
-        Return BSDF plugin specifications.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns → dict:
-            Return a dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
-            attached to the shapes in the mesh tree element.
-        """
-        result = {}
-        for mesh_tree_element in self.mesh_tree_elements:
-            result = {**result, **mesh_tree_element.bsdfs(ctx=ctx)}
-        return result
-
-    def shapes(self, ctx=None):
-        """
-        Return shape plugin specifications.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns → dict:
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
-            in the mesh tree element.
-        """
-        result = {}
-        for mesh_tree_element in self.mesh_tree_elements:
-            result = {**result, **mesh_tree_element.shapes(ctx=ctx)}
-        return result
-
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
-
-        result = {}
-        for instanced_canopy_element in self.instanced_canopy_elements:
-            result = {
-                **result,
-                **instanced_canopy_element.bsdfs(ctx=ctx),
-                **instanced_canopy_element.shapes(ctx=ctx),
-                **instanced_canopy_element.instances(ctx=ctx),
-            }
-
-        return result

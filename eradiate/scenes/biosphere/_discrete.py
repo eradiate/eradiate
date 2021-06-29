@@ -7,9 +7,9 @@ import attr
 import numpy as np
 import pinttr
 
+from ._canopy_element import CanopyElement, CanopyElementFactory
 from ._core import BiosphereFactory, Canopy
 from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
-from .canopy_element import CanopyElement, CanopyElementFactory
 from ..core import SceneElement
 from ..._attrs import documented, parse_docs
 from ...contexts import KernelDictContext
