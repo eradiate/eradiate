@@ -14,7 +14,7 @@ from ...units import unit_context_kernel as uck
 @attr.s
 class MeshTreeElement(SceneElement):
     """
-    Container class for mesh based constituents of tree-like objects in a canopy.
+    Container class for mesh based constitutens of tree-like objects in a canopy.
     Holds the filepath for the triangulated mesh and all parameters specifying
     the associated BSDF.
 

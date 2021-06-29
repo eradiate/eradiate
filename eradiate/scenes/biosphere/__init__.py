@@ -1,6 +1,11 @@
 from ._core import BiosphereFactory, Canopy
-from ._discrete import CanopyElement, DiscreteCanopy, InstancedCanopyElement, LeafCloud
-from ._tree import AbstractTree, MeshTree
+from ._discrete import (
+    AbstractTree,
+    CanopyElement,
+    DiscreteCanopy,
+    InstancedCanopyElement,
+    LeafCloud,
+)
 
 __all__ = [
     "BiosphereFactory",
