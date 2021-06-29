@@ -80,11 +80,9 @@ def test_leaf_cloud_positions_cuboid_avoid_overlap(rng):
 
 def test_leaf_cloud_positions_ellipsoid(rng):
     """Unit tests for :func:`_leaf_cloud_positions_ellipsoid`."""
-    positions = _leaf_cloud_positions_ellipsoid(
-        1, rng, 1.0 * ureg.m, 1.0 * ureg.m, 1.0 * ureg.m
-    )
+    positions = _leaf_cloud_positions_ellipsoid(1, rng, 1.0 * ureg.m)
     assert positions.shape == (1, 3)
-    assert np.allclose(positions, [-0.54532796, -0.36648332, 0.59473091] * ureg.m)
+    assert np.allclose(positions, [0.11039234, 0.76996928, 0.50481848] * ureg.m)
 
 
 def test_leaf_cloud_positions_cylinder(rng):
