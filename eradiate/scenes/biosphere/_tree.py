@@ -312,12 +312,11 @@ class MeshTree(Tree):
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
 
         result = {}
-        for instanced_canopy_element in self.instanced_canopy_elements:
+        for mesh_tree_element in self.mesh_tree_elements:
             result = {
                 **result,
-                **instanced_canopy_element.bsdfs(ctx=ctx),
-                **instanced_canopy_element.shapes(ctx=ctx),
-                **instanced_canopy_element.instances(ctx=ctx),
+                **mesh_tree_element.bsdfs(ctx=ctx),
+                **mesh_tree_element.shapes(ctx=ctx),
             }
 
         return result
