@@ -103,14 +103,16 @@ class Surface(SceneElement, ABC):
         else:
             bsdf = self.bsdfs()[f"bsdf_{self.id}"]
 
-        width = self.kernel_width(ctx=ctx).m_as(uck.get("length"))
+        w = self.kernel_width(ctx=ctx).m_as(uck.get("length"))
+        z = self.altitude.m_as(uck.get("length"))
+        translate_trafo = ScalarTransform4f.translate(ScalarVector3f(0.0, 0.0, z))
+        scale_trafo = ScalarTransform4f.scale(ScalarVector3f(w / 2.0, w / 2.0, 1.0))
+        trafo = translate_trafo * scale_trafo
 
         return {
             f"shape_{self.id}": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(
-                    ScalarVector3f(width * 0.5, width * 0.5, 1.0)
-                ),
+                "to_world": trafo,
                 "bsdf": bsdf,
             }
         }
