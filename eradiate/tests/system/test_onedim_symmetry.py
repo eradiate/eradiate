@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 import eradiate
+from eradiate import unit_registry as ureg
 from eradiate.plot import remove_xylabels
 
 eradiate_dir = os.environ["ERADIATE_DIR"]
@@ -83,7 +84,11 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
         }[surface],
         atmosphere={
             "none": None,
-            "homogeneous": {"type": "homogeneous", "sigma_s": 1.0e-2},
+            "homogeneous": {
+                "type": "homogeneous",
+                "sigma_s": 1.0e-2 * ureg.km ** -1,
+                "top": 1.0e2 * ureg.km,
+            },
         }[atmosphere],
     )
 

@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import MutableMapping, Optional
+from typing import MutableMapping, Optional, Union
 
 import attr
+import pint
 import pinttr
 
 from ..core import SceneElement
@@ -10,7 +11,6 @@ from ..._factory import BaseFactory
 from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
-from ...units import unit_registry as ureg
 
 
 @parse_docs
@@ -18,9 +18,15 @@ from ...units import unit_registry as ureg
 class Atmosphere(SceneElement, ABC):
     """
     An abstract base class defining common facilities for all atmospheres.
+
+    An atmosphere consists of a kernel medium (with a phase function) attached
+    to a kernel shape.
+
+    .. note::
+       The shape type is restricted to cuboid shapes at the moment.
     """
 
-    id = documented(
+    id: Optional[str] = documented(
         attr.ib(
             default="atmosphere",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -30,27 +36,7 @@ class Atmosphere(SceneElement, ABC):
         default='"atmosphere"',
     )
 
-    toa_altitude = documented(
-        pinttr.ib(
-            default=AUTO,
-            converter=converters.auto_or(
-                pinttr.converters.to_units(ucc.deferred("length"))
-            ),
-            validator=validators.auto_or(
-                pinttr.validators.has_compatible_units, validators.is_positive
-            ),
-            units=ucc.deferred("length"),
-        ),
-        doc="Altitude of the top-of-atmosphere level. If set to ``AUTO``, the "
-        "TOA is inferred from the radiative properties profile provided it has "
-        "one. Otherwise, a default value of 100 km is used.\n"
-        "\n"
-        "Unit-enabled field (default unit: cdu[length]).",
-        type="float or AUTO",
-        default="AUTO",
-    )
-
-    width = documented(
+    width: Union[pint.Quantity, str] = documented(
         pinttr.ib(
             default=AUTO,
             converter=converters.auto_or(
@@ -71,66 +57,66 @@ class Atmosphere(SceneElement, ABC):
         default="AUTO",
     )
 
-    def height(self):
-        """
-        Actual value of the atmosphere's height as a :class:`pint.Quantity`.
-        If ``toa_altitude`` is set to ``AUTO``, a value of 100 km is returned;
-        otherwise, ``toa_altitude`` is returned.
-        """
-        if self.toa_altitude is AUTO:
-            return ureg.Quantity(100.0, ureg.km)
-        else:
-            return self.toa_altitude
+    # --------------------------------------------------------------------------
+    #                               Properties
+    # --------------------------------------------------------------------------
 
-    def kernel_height(self, ctx=None):
-        """
-        Return the height of the kernel object delimiting the atmosphere.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns → :class:`pint.Quantity`:
-            Height of the kernel object delimiting the atmosphere
-        """
-        return self.height() + self.kernel_offset(ctx)
-
-    def kernel_offset(self, ctx=None):
-        """
-        Return vertical offset used to position the kernel object delimiting the
-        atmosphere. The created cuboid shape will be shifted towards negative
-        Z values by this amount.
-
-        .. note::
-
-           This is required to ensure that the surface is the only shape
-           which can be intersected at ground level during ray tracing.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns → :class:`pint.Quantity`:
-            Vertical offset of cuboid shape.
-        """
-        return self.height() * 1e-3
-
+    @property
     @abstractmethod
-    def kernel_width(self, ctx=None):
+    def bottom(self) -> pint.Quantity:
         """
-        Return width of the kernel object delimiting the atmosphere.
+        Return the atmosphere's bottom altitude.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns → :class:`pint.Quantity`:
-            Width of the kernel object delimiting the atmosphere.
+        Returns → :class:`~pint.Quantity`:
+            Atmosphere's bottom altitude.
         """
         pass
 
+    @property
     @abstractmethod
-    def kernel_phase(self, ctx=None):
+    def top(self) -> pint.Quantity:
+        """
+        Return the atmosphere's top altitude.
+
+        Returns → :class:`~pint.Quantity`:
+            Atmosphere's top altitude.
+        """
+        pass
+
+    @property
+    def height(self) -> pint.Quantity:
+        """
+        Return the atmosphere's height.
+
+        Returns → :class:`~pint.Quantity`:
+            Atmosphere's height.
+        """
+        return self.top - self.bottom
+
+    # --------------------------------------------------------------------------
+    #                           Evaluation methods
+    # --------------------------------------------------------------------------
+
+    @abstractmethod
+    def eval_width(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+        """
+        Return the Atmosphere's width.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns → :class:`~pint.Quantity`:
+            Atmosphere's width.
+        """
+        pass
+
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
+
+    @abstractmethod
+    def kernel_phase(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         """
         Return phase function plugin specifications only.
 
@@ -146,7 +132,7 @@ class Atmosphere(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def kernel_media(self, ctx=None):
+    def kernel_media(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         """
         Return medium plugin specifications only.
 
@@ -162,7 +148,7 @@ class Atmosphere(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def kernel_shapes(self, ctx=None):
+    def kernel_shapes(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         """
         Return shape plugin specifications only.
 
@@ -177,6 +163,52 @@ class Atmosphere(SceneElement, ABC):
         """
         pass
 
+    def kernel_height(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+        """
+        Return the height of the kernel object delimiting the atmosphere.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns → :class:`~pint.Quantity`:
+            Height of the kernel object delimiting the atmosphere
+        """
+        return self.height + self.kernel_offset(ctx=ctx)
+
+    def kernel_offset(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+        """
+        Return vertical offset used to position the kernel object delimiting the
+        atmosphere. The created cuboid shape will be shifted towards negative
+        Z values by this amount.
+
+        .. note::
+
+           This is required to ensure that the surface is the only shape
+           which can be intersected at ground level during ray tracing.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns → :class:`~pint.Quantity`:
+            Vertical offset of cuboid shape.
+        """
+        return self.height * 1e-3
+
+    def kernel_width(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+        """
+        Return width of the kernel object delimiting the atmosphere.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns → :class:`~pint.Quantity`:
+            Width of the kernel object delimiting the atmosphere.
+        """
+        return self.eval_width(ctx=ctx)
+
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         kernel_dict = {}
 
@@ -189,7 +221,7 @@ class Atmosphere(SceneElement, ABC):
             kernel_dict[f"medium_{self.id}"] = self.kernel_media(ctx=ctx)[
                 f"medium_{self.id}"
             ]
-            kernel_dict[f"{self.id}"] = self.kernel_shapes(ctx=ctx)[f"shape_{self.id}"]
+            kernel_dict[self.id] = self.kernel_shapes(ctx=ctx)[f"shape_{self.id}"]
 
         return kernel_dict
 

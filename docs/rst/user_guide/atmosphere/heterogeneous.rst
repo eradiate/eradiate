@@ -111,13 +111,13 @@ Kernel volume data files
 
 When the heterogeneous atmosphere object is created, the radiative properties
 are written to files, which can be accessed afterwards.
-The locations of these data files is stored in the ``albedo_fname`` and
-``sigma_t_fname`` attributes.
+The locations of these data files is stored in the ``albedo_filename`` and
+``sigma_t_filename`` attributes.
 By default, these files are placed in a temporary directory with a random name.
-To control where these files are saved, set the ``albedo_fname`` and
-``sigma_t_fname`` attributes by providing the paths to these files.
+To control where these files are saved, set the ``albedo_filename`` and
+``sigma_t_filename`` attributes by providing the paths to these files.
 Later, you can re-use these files to create the same heterogeneous atmosphere
-by setting the ``albedo_fname`` and ``sigma_t_fname`` attributes to the paths
+by setting the ``albedo_filename`` and ``sigma_t_filename`` attributes to the paths
 pointing to the files to use.
 
 .. warning::

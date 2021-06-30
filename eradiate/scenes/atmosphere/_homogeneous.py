@@ -1,11 +1,19 @@
+from typing import MutableMapping, Optional
+
 import attr
+import pint
+import pinttr
 
 from ._core import Atmosphere, AtmosphereFactory
 from ..phase import PhaseFunction, PhaseFunctionFactory, RayleighPhaseFunction
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, SpectrumFactory
 from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
+from ...contexts import KernelDictContext, SpectralContext
+from ...kernel.transform import map_cube
+from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 from ...validators import has_quantity
 
 
@@ -16,11 +24,38 @@ class HomogeneousAtmosphere(Atmosphere):
     """
     Homogeneous atmosphere scene element [:factorykey:`homogeneous`].
 
-    This class builds an atmosphere consisting of a homogeneous medium.
-    Scattering uses the Rayleigh phase function.
+    This class builds an atmosphere consisting of a homogeneous medium with
+    customisable collision coefficients and phase function, attached to a
+    cuboid shape.
     """
 
-    sigma_s = documented(
+    _bottom: pint.Quantity = documented(
+        pinttr.ib(
+            default=ureg.Quantity(0.0, ureg.km),
+            units=ucc.deferred("length"),
+        ),
+        doc="Atmosphere's bottom altitude.\n\nUnit-enabled field (default: ucc[length])",
+        type="float",
+        default="0 km",
+    )
+
+    _top: pint.Quantity = documented(
+        pinttr.ib(
+            default=ureg.Quantity(10.0, ureg.km),
+            units=ucc.deferred("length"),
+        ),
+        doc="Atmosphere's top altitude.\n\nUnit-enabled field (default: ucc[length]).",
+        type="float",
+        default="10 km.",
+    )
+
+    @_bottom.validator
+    @_top.validator
+    def _validate_bottom_and_top(instance, attribute, value):
+        if instance.bottom >= instance.top:
+            raise ValueError("bottom altitude must be lower than top altitude")
+
+    sigma_s: Spectrum = documented(
         attr.ib(
             factory=AirScatteringCoefficientSpectrum,
             converter=SpectrumFactory.converter("collision_coefficient"),
@@ -37,7 +72,7 @@ class HomogeneousAtmosphere(Atmosphere):
         default=":class:`AirScatteringCoefficient() <.AirScatteringCoefficient>`",
     )
 
-    sigma_a = documented(
+    sigma_a: Spectrum = documented(
         attr.ib(
             default=0.0,
             converter=SpectrumFactory.converter("collision_coefficient"),
@@ -52,10 +87,10 @@ class HomogeneousAtmosphere(Atmosphere):
         "Can be initialised with a dictionary processed by "
         ":class:`.SpectrumFactory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
-        default="0.0 cdu[collision_coefficient]",
+        default='0.0 cdu["collision_coefficient"]',
     )
 
-    phase = documented(
+    phase: PhaseFunction = documented(
         attr.ib(
             factory=lambda: RayleighPhaseFunction(),
             converter=PhaseFunctionFactory.convert,
@@ -63,23 +98,38 @@ class HomogeneousAtmosphere(Atmosphere):
         )
     )
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         self.update()
 
-    def update(self):
+    def update(self) -> None:
         self.phase.id = f"phase_{self.id}"
 
-    def kernel_width(self, ctx=None):
-        """
-        Width of the kernel object delimiting the atmosphere.
-        """
+    # --------------------------------------------------------------------------
+    #                               Properties
+    # --------------------------------------------------------------------------
+
+    @property
+    def bottom(self) -> pint.Quantity:
+        return self._bottom
+
+    @property
+    def top(self) -> pint.Quantity:
+        return self._top
+
+    # --------------------------------------------------------------------------
+    #                           Evaluation methods
+    # --------------------------------------------------------------------------
+
+    def eval_width(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
         if self.width is AUTO:
             spectral_ctx = ctx.spectral_ctx if ctx is not None else None
             return 10.0 / self.eval_sigma_s(spectral_ctx)
         else:
             return self.width
 
-    def eval_albedo(self, spectral_ctx=None):
+    def eval_albedo(
+        self, spectral_ctx: Optional[SpectralContext] = None
+    ) -> pint.Quantity:
         """
         Return albedo.
 
@@ -87,14 +137,16 @@ class HomogeneousAtmosphere(Atmosphere):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns → :class:`~pint.Quantity`:
             Albedo.
         """
         return self.eval_sigma_s(spectral_ctx) / (
             self.eval_sigma_s(spectral_ctx) + self.eval_sigma_a(spectral_ctx)
         )
 
-    def eval_sigma_a(self, spectral_ctx=None):
+    def eval_sigma_a(
+        self, spectral_ctx: Optional[SpectralContext] = None
+    ) -> pint.Quantity:
         """
         Return absorption coefficient.
 
@@ -102,12 +154,14 @@ class HomogeneousAtmosphere(Atmosphere):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns → :class:`~pint.Quantity`:
             Absorption coefficient.
         """
         return self.sigma_a.eval(spectral_ctx)
 
-    def eval_sigma_s(self, spectral_ctx=None):
+    def eval_sigma_s(
+        self, spectral_ctx: Optional[SpectralContext] = None
+    ) -> pint.Quantity:
         """
         Return scattering coefficient.
 
@@ -115,12 +169,14 @@ class HomogeneousAtmosphere(Atmosphere):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns → :class:`~pint.Quantity`:
             Scattering coefficient.
         """
         return self.sigma_s.eval(spectral_ctx)
 
-    def eval_sigma_t(self, spectral_ctx=None):
+    def eval_sigma_t(
+        self, spectral_ctx: Optional[SpectralContext] = None
+    ) -> pint.Quantity:
         """
         Return extinction coefficient.
 
@@ -128,15 +184,19 @@ class HomogeneousAtmosphere(Atmosphere):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns → :class:`~pint.Quantity`:
             Extinction coefficient.
         """
         return self.eval_sigma_a(spectral_ctx) + self.eval_sigma_s(spectral_ctx)
 
-    def kernel_phase(self, ctx=None):
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
+
+    def kernel_phase(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         return self.phase.kernel_dict(ctx=ctx)
 
-    def kernel_media(self, ctx=None):
+    def kernel_media(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         if ctx.ref:
             phase = {"type": "ref", "id": self.phase.id}
         else:
@@ -153,30 +213,30 @@ class HomogeneousAtmosphere(Atmosphere):
             }
         }
 
-    def kernel_shapes(self, ctx=None):
-        from mitsuba.core import ScalarTransform4f
-
+    def kernel_shapes(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
             medium = self.kernel_media(ctx=ctx)[f"medium_{self.id}"]
 
-        k_length = uck.get("length")
-        k_width = self.kernel_width(ctx=ctx).m_as(k_length)
-        k_height = self.kernel_height(ctx=ctx).m_as(k_length)
-        k_offset = self.kernel_offset(ctx=ctx).m_as(k_length)
+        length_units = uck.get("length")
+        width = self.kernel_width(ctx=ctx).m_as(length_units)
+        top = self.top.m_as(length_units)
+        bottom = self.bottom.m_as(length_units)
+        offset = self.kernel_offset(ctx=ctx).m_as(length_units)
+        trafo = map_cube(
+            xmin=-width / 2.0,
+            xmax=width / 2.0,
+            ymin=-width / 2.0,
+            ymax=width / 2.0,
+            zmin=bottom - offset,
+            zmax=top,
+        )
 
         return {
             f"shape_{self.id}": {
                 "type": "cube",
-                "to_world": ScalarTransform4f(
-                    [
-                        [0.5 * k_width, 0.0, 0.0, 0.0],
-                        [0.0, 0.5 * k_width, 0.0, 0.0],
-                        [0.0, 0.0, 0.5 * k_height, 0.5 * k_height - k_offset],
-                        [0.0, 0.0, 0.0, 1.0],
-                    ]
-                ),
+                "to_world": trafo,
                 "bsdf": {"type": "null"},
                 "interior": medium,
             }

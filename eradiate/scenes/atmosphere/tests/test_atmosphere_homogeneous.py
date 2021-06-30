@@ -1,45 +1,79 @@
 import numpy as np
+import pint
 import pinttr
 import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
-from eradiate.attrs import AUTO
 from eradiate.contexts import KernelDictContext
 from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.phase import PhaseFunctionFactory
+from eradiate.scenes.phase import PhaseFunctionFactory, RayleighPhaseFunction
 
 
-def test_atmosphere_homogeneous_construct(mode_mono):
-    # Constructing with defaults succeeds
+def test_atmosphere_homogeneous_default(mode_mono):
+    """
+    Applies default attributes values.
+    """
     r = HomogeneousAtmosphere()
-    assert r.toa_altitude is AUTO
-    assert r.kernel_offset() == 0.1 * ureg.km
-    assert r.kernel_height() == 100.1 * ureg.km
+    assert r.bottom == 0.0 * ureg.km
+    assert r.top == 10.0 * ureg.km
+    assert isinstance(r.phase, RayleighPhaseFunction)
 
-    # Constructing with custom extinction coefficient value succeeds
+
+def test_atmosphere_homogeneous_sigma_s(mode_mono):
+    """
+    Assigns custom 'sigma_s' value.
+    """
     r = HomogeneousAtmosphere(sigma_s=1e-5)
     assert r.eval_sigma_s() == ureg.Quantity(1e-5, ureg.m ** -1)
 
-    # Constructing with custom TOA altitude value succeeds
-    r = HomogeneousAtmosphere(toa_altitude=10.0 * ureg.km)
-    assert r.toa_altitude == 10.0 * ureg.km
 
-    #  Wrong attribute units or invalid values raise an error
-    with pytest.raises(pinttr.exceptions.UnitsError):
-        HomogeneousAtmosphere(toa_altitude=10 * ureg.s)
+def test_atmosphere_homogeneous_top(mode_mono):
+    """
+    Assigns custom 'top' value.
+    """
+    r = HomogeneousAtmosphere(top=8.0 * ureg.km)
+    assert r.top == 8.0 * ureg.km
 
+
+def test_atmosphere_homogeneous_top_invalid_units(mode_mono):
+    """
+    Raises when invalid units are passed to 'top'.
+    """
+    with pytest.raises(pint.errors.DimensionalityError):
+        HomogeneousAtmosphere(top=10 * ureg.s)
+
+
+def test_atmosphere_homogeneous_width_invalid_units(mode_mono):
+    """
+    Raises when invalid units are passed to 'width'.
+    """
     with pytest.raises(pinttr.exceptions.UnitsError):
         HomogeneousAtmosphere(width=5 * ureg.m ** 2)
 
+
+def test_atmosphere_homogeneous_sigma_s_invalid_units(mode_mono):
+    """
+    Raises when invalid units are passed to 'sigma_s'.
+    """
     with pytest.raises(pinttr.exceptions.UnitsError):
         HomogeneousAtmosphere(sigma_s=1e-7 * ureg.m)
 
-    with pytest.raises(ValueError):
-        HomogeneousAtmosphere(toa_altitude=-100.0)
 
+def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
+    """
+    Raises when invalid value is passed to 'top'.
+    """
+    with pytest.raises(ValueError):
+        HomogeneousAtmosphere(top=-100.0)
+
+
+def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
+    """
+    Raises when invalid value is passed to 'width'.
+    """
     with pytest.raises(ValueError):
         HomogeneousAtmosphere(width=-50.0)
 
@@ -47,7 +81,7 @@ def test_atmosphere_homogeneous_construct(mode_mono):
 @pytest.mark.parametrize("phase_id", PhaseFunctionFactory.registry.keys())
 @pytest.mark.parametrize("ref", (False, True))
 def test_atmosphere_homogeneous_phase_function(mode_mono, phase_id, ref):
-    # All available phase functions can be used to create an instance
+    """Supports all available phase function types."""
     r = HomogeneousAtmosphere(phase={"type": phase_id})
 
     # The resulting object produces a valid kernel dictionary
@@ -57,8 +91,10 @@ def test_atmosphere_homogeneous_phase_function(mode_mono, phase_id, ref):
 
 
 def test_atmosphere_homogeneous_width(mode_mono):
-    # Automatic width computation works as intended
-    r = HomogeneousAtmosphere(toa_altitude=10.0 * ureg.km)
+    """
+    Automatically sets width to ten times the scattering mean free path.
+    """
+    r = HomogeneousAtmosphere()
     ctx = KernelDictContext()
     wavelength = ctx.spectral_ctx.wavelength
     assert np.isclose(
@@ -68,11 +104,13 @@ def test_atmosphere_homogeneous_width(mode_mono):
 
 @pytest.mark.parametrize("ref", (False, True))
 def test_atmosphere_homogeneous_kernel_dict(mode_mono, ref):
+    """
+    Produces kernel dictionaries that can be loaded by the kernel.
+    """
     from mitsuba.core.xml import load_dict
 
     r = HomogeneousAtmosphere()
 
-    # Default kernel dict constructs can be loaded by the kernel
     ctx = KernelDictContext(ref=False)
 
     dict_phase = onedict_value(r.kernel_phase(ctx))
@@ -84,7 +122,6 @@ def test_atmosphere_homogeneous_kernel_dict(mode_mono, ref):
     dict_shape = onedict_value(r.kernel_shapes(ctx))
     assert load_dict(dict_shape) is not None
 
-    # Produced scene can be instantiated
     ctx = KernelDictContext(ref=ref)
     kernel_dict = KernelDict.new(r, ctx=ctx)
     assert kernel_dict.load() is not None
