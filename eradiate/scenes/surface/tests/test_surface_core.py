@@ -55,3 +55,10 @@ def test_scale(mode_mono):
         obj_scaled = obj.scaled(2.0)
     assert obj_scaled is not obj
     assert obj_scaled.width == "auto"
+
+
+def test_negative_altitude():
+    obj = MyBlackSurface()
+
+    with pytest.raises(ValueError):
+        obj.altitude = -1 * ureg.km
