@@ -1,4 +1,3 @@
-import os
 from numbers import Number
 
 import attr
@@ -9,7 +8,8 @@ from .units import unit_registry as ureg
 
 
 def is_number(_, attribute, value):
-    """Validates if ``value`` is a number.
+    """
+    Validates if ``value`` is a number.
     Raises a ``TypeError`` in case of failure.
     """
     if not isinstance(value, Number):
@@ -27,7 +27,8 @@ def is_vector3(instance, attribute, value):
 
 
 def is_positive(_, attribute, value):
-    """Validates if ``value`` is a positive number.
+    """
+    Validates if ``value`` is a positive number.
     Raises a ``ValueError`` in case of failure.
     """
     if value < 0.0:
@@ -35,7 +36,8 @@ def is_positive(_, attribute, value):
 
 
 def all_positive(_, attribute, value):
-    """Validates if all elements in ``value`` are positive number.
+    """
+    Validates if all elements in ``value`` are positive number.
     Raises a ``ValueError`` in case of failure.
     """
     if isinstance(value, ureg.Quantity):
@@ -45,7 +47,8 @@ def all_positive(_, attribute, value):
 
 
 def path_exists(_, attribute, value):
-    """Validates if ``value`` is a :class:`pathlib.Path` and points to
+    """
+    Validates if ``value`` is a :class:`pathlib.Path` and points to
     an existing target. Raises a ``FileNotFoundError`` otherwise.
     """
     if not value.exists():
@@ -55,7 +58,8 @@ def path_exists(_, attribute, value):
 
 
 def is_file(_, attribute, value):
-    """Validates if ``value`` is a :class:`pathlib.Path` and points to
+    """
+    Validates if ``value`` is a :class:`pathlib.Path` and points to
     an existing file. Raises a ``FileNotFoundError`` otherwise.
     """
     if not value.is_file():
@@ -63,7 +67,8 @@ def is_file(_, attribute, value):
 
 
 def is_dir(_, attribute, value):
-    """Validates if ``value`` is a :class:`pathlib.Path` and points to
+    """
+    Validates if ``value`` is a :class:`pathlib.Path` and points to
     an existing file. Raises a ``FileNotFoundError`` otherwise.
     """
     if not value.is_dir():
@@ -73,9 +78,9 @@ def is_dir(_, attribute, value):
 
 
 def has_len(size):
-    """Generates a validator which validates if ``value`` is of length ``size``.
-    The generated validator will raise a ``ValueError`` in
-    case of failure.
+    """
+    Generates a validator which validates if ``value`` is of length ``size``.
+    The generated validator will raise a ``ValueError`` in case of failure.
 
     Parameter ``size`` (int):
         Size required to pass validation.
@@ -95,7 +100,8 @@ def has_len(size):
 
 
 def has_quantity(quantity):
-    """Validates if the validated value has a quantity field matching the
+    """
+    Validates if the validated value has a quantity field matching the
     ``quantity`` parameter."""
 
     quantity = PhysicalQuantity(quantity)
@@ -112,7 +118,8 @@ def has_quantity(quantity):
 
 
 def on_quantity(wrapped_validator):
-    """Applies a validator to either a value or its magnitude if it is a
+    """
+    Applies a validator to either a value or its magnitude if it is a
     :class:`pint.Quantity` object.
 
     Parameter ``wrapped_validator`` (callable(instance, attribute, value)):
@@ -132,12 +139,12 @@ def on_quantity(wrapped_validator):
 
 
 def auto_or(*wrapped_validators):
-    """Validates if the validated value is ``"auto"`` or if all wrapped
+    """
+    Validates if the validated value is ``"auto"`` or if all wrapped
     validators validate.
 
-    .. note::
-       ``wrapped_validators`` is variadic and can therefore be an arbitrary
-       number of validators.
+    .. note:: ``wrapped_validators`` is variadic and can therefore be an
+       arbitrary number of validators.
     """
 
     def f(instance, attribute, value):
