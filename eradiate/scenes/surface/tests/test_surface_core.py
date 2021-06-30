@@ -57,7 +57,18 @@ def test_scale(mode_mono):
     assert obj_scaled.width == "auto"
 
 
+def test_default_altitude():
+    """
+    Sets the altitude to 0.0 km by default.
+    """
+    obj = MyBlackSurface()
+    assert obj.altitude == 0.0 * ureg.km
+
+
 def test_negative_altitude():
+    """
+    Raises when altitude is set to negative value.
+    """
     obj = MyBlackSurface()
 
     with pytest.raises(ValueError):
