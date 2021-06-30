@@ -91,7 +91,7 @@ class OneDimScene(Scene):
             if isinstance(measure, DistantMeasure):
                 if measure.target is None:
                     if self.atmosphere is not None:
-                        toa = self.atmosphere.height()
+                        toa = self.atmosphere.top
                         target_point = [0.0, 0.0, toa.m] * toa.units
                     else:
                         target_point = [0.0, 0.0, 0.0] * ucc.get("length")
@@ -100,7 +100,7 @@ class OneDimScene(Scene):
 
                 if measure.origin is None:
                     radius = (
-                        self.atmosphere.height() / 100.0
+                        self.atmosphere.top / 100.0
                         if self.atmosphere is not None
                         else 1.0 * ucc.get("length")
                     )
