@@ -40,7 +40,7 @@ class Surface(SceneElement, ABC):
             default=ureg.Quantity(0.0, "km"),
             units=ucc.deferred("length"),
             converter=pinttr.converters.to_units(ucc.deferred("length")),
-            validator=pinttr.validators.has_compatible_units,
+            validator=[validators.is_positive, pinttr.validators.has_compatible_units],
         ),
         doc="Surface altitude with respect to mean sea level.",
         type="float",
