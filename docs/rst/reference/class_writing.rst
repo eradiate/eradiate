@@ -10,6 +10,7 @@ Attribute documentation [eradiate.attrs]
 .. autosummary::
    :toctree: generated/
 
+   AUTO
    parse_docs
    documented
    get_doc

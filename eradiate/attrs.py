@@ -6,6 +6,37 @@ from textwrap import dedent, indent
 import attr
 
 
+class _Auto:
+    """
+    Sentinel class to indicate when a dynamic field value is expected to be
+    set automatically. ``_Auto`` is a singleton. There is only ever one of it.
+
+    .. note:: ``bool(_Auto)`` evaluates to ``False``.
+    """
+
+    _singleton = None
+
+    def __new__(cls):
+        if _Auto._singleton is None:
+            _Auto._singleton = super(_Auto, cls).__new__(cls)
+        return _Auto._singleton
+
+    def __repr__(self):
+        return "AUTO"
+
+    def __bool__(self):
+        return False
+
+    def __len__(self):
+        return 0
+
+
+AUTO = _Auto()
+"""
+Sentinel to indicate when a dynamic field value is expected to be set automatically.
+"""
+
+
 class MetadataKey(enum.Enum):
     """Attribute metadata keys.
 
