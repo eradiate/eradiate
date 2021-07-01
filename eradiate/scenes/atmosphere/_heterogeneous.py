@@ -8,7 +8,7 @@ import xarray as xr
 
 from ._core import Atmosphere, AtmosphereFactory
 from ... import validators
-from ...attrs import documented, parse_docs
+from ...attrs import AUTO, documented, parse_docs
 from ...radprops import RadProfileFactory
 from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
 from ...units import unit_context_kernel as uck
@@ -156,8 +156,8 @@ class HeterogeneousAtmosphere(Atmosphere):
 
     @profile.validator
     def _profile_validator(instance, attribute, value):
-        if instance.toa_altitude != "auto" and value is not None:
-            raise ValueError("'profile' cannot be set if 'toa_altitude' is not 'auto'.")
+        if instance.toa_altitude is not AUTO and value is not None:
+            raise ValueError("'profile' cannot be set if 'toa_altitude' is not AUTO.")
 
     albedo_fname = documented(
         attr.ib(
@@ -192,14 +192,14 @@ class HeterogeneousAtmosphere(Atmosphere):
                 f"{attribute.name} must be set when profile is set to None."
             )
         if (
-            instance.width == "auto"
+            instance.width is AUTO
             and instance.albedo_fname is not None
             and instance.sigma_t_fname is not None
         ):
             raise ValueError(
                 "'albedo_fname' and 'sigma_t_fname' cannot be set when 'width' is set to 'auto'"
             )
-        if instance.toa_altitude == "auto" and value is not None:
+        if instance.toa_altitude is AUTO and value is not None:
             raise ValueError(
                 "'albedo_fname' and 'sigma_t_fname' cannot be set when toa_altitude is set to 'auto'"
             )
@@ -222,13 +222,13 @@ class HeterogeneousAtmosphere(Atmosphere):
             self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def height(self):
-        if self.toa_altitude == "auto":
+        if self.toa_altitude is AUTO:
             return self.profile.levels.max()
         else:
             return self.toa_altitude
 
     def kernel_width(self, ctx=None):
-        if self.width == "auto":
+        if self.width is AUTO:
             spectral_ctx = ctx.spectral_ctx if ctx is not None else None
 
             if self.profile is None:

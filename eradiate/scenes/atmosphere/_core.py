@@ -7,7 +7,7 @@ import pinttr
 from ..core import SceneElement
 from ... import converters, validators
 from ..._factory import BaseFactory
-from ...attrs import documented, get_doc, parse_docs
+from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -32,7 +32,7 @@ class Atmosphere(SceneElement, ABC):
 
     toa_altitude = documented(
         pinttr.ib(
-            default="auto",
+            default=AUTO,
             converter=converters.auto_or(
                 pinttr.converters.to_units(ucc.deferred("length"))
             ),
@@ -41,18 +41,18 @@ class Atmosphere(SceneElement, ABC):
             ),
             units=ucc.deferred("length"),
         ),
-        doc='Altitude of the top-of-atmosphere level. If set to ``"auto"``, the '
+        doc="Altitude of the top-of-atmosphere level. If set to ``AUTO``, the "
         "TOA is inferred from the radiative properties profile provided it has "
         "one. Otherwise, a default value of 100 km is used.\n"
         "\n"
         "Unit-enabled field (default unit: cdu[length]).",
-        type='float or "auto"',
-        default='"auto"',
+        type="float or AUTO",
+        default="AUTO",
     )
 
     width = documented(
         pinttr.ib(
-            default="auto",
+            default=AUTO,
             converter=converters.auto_or(
                 pinttr.converters.to_units(ucc.deferred("length"))
             ),
@@ -61,23 +61,23 @@ class Atmosphere(SceneElement, ABC):
             ),
             units=ucc.deferred("length"),
         ),
-        doc='Atmosphere width. If set to ``"auto"``, a value will be estimated to '
+        doc="Atmosphere width. If set to ``AUTO``, a value will be estimated to "
         "ensure that the medium is optically thick. The implementation of "
         "this estimate depends on the concrete class inheriting from this "
         "one.\n"
         "\n"
         "Unit-enabled field (default unit: cdu[length]).",
-        type='float or "auto"',
-        default='"auto"',
+        type="float or AUTO",
+        default="AUTO",
     )
 
     def height(self):
         """
         Actual value of the atmosphere's height as a :class:`pint.Quantity`.
-        If ``toa_altitude`` is set to ``"auto"``, a value of 100 km is returned;
+        If ``toa_altitude`` is set to ``AUTO``, a value of 100 km is returned;
         otherwise, ``toa_altitude`` is returned.
         """
-        if self.toa_altitude == "auto":
+        if self.toa_altitude is AUTO:
             return ureg.Quantity(100.0, ureg.km)
         else:
             return self.toa_altitude

@@ -1,6 +1,7 @@
 import pytest
 
 from eradiate import unit_registry as ureg
+from eradiate.attrs import AUTO
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import ConfigWarning, OverriddenValueWarning
 from eradiate.scenes.surface import Surface
@@ -26,11 +27,11 @@ def test_kernel_width(mode_mono):
     assert obj.kernel_width() == 1.0 * ureg.m
 
     # Auto size yields 100 km kernel width
-    obj.width = "auto"
+    obj.width = AUTO
     assert obj.kernel_width() == 100.0 * ureg.km
 
     # Override constrains auto size
-    obj.width = "auto"
+    obj.width = AUTO
     ctx = KernelDictContext(override_surface_width=100.0 * ureg.m)
     assert obj.kernel_width(ctx) == 100.0 * ureg.m
 
@@ -50,11 +51,11 @@ def test_scale(mode_mono):
     assert obj_scaled.width == 2.0 * obj.width
 
     # Scaling a surface with auto width returns an unmodified copy
-    obj.width = "auto"
+    obj.width = AUTO
     with pytest.warns(ConfigWarning):
         obj_scaled = obj.scaled(2.0)
     assert obj_scaled is not obj
-    assert obj_scaled.width == "auto"
+    assert obj_scaled.width is AUTO
 
 
 def test_default_altitude():

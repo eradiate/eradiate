@@ -9,7 +9,7 @@ import pinttr
 from ..core import SceneElement
 from ... import converters, validators
 from ..._factory import BaseFactory
-from ...attrs import documented, get_doc, parse_docs
+from ...attrs import AUTO, _Auto, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ConfigWarning, OverriddenValueWarning
 from ...units import unit_context_config as ucc
@@ -47,9 +47,9 @@ class Surface(SceneElement, ABC):
         default="0.0 km",
     )
 
-    width: Union[pint.Quantity, str] = documented(
+    width: Union[pint.Quantity, _Auto] = documented(
         pinttr.ib(
-            default="auto",
+            default=AUTO,
             converter=converters.auto_or(
                 pinttr.converters.to_units(ucc.deferred("length"))
             ),
@@ -60,11 +60,11 @@ class Surface(SceneElement, ABC):
             units=ucc.deferred("length"),
         ),
         doc="Surface size. Without contextual constraint (*e.g.* if the surface "
-        'has no canopy or atmosphere above it), "auto" defaults to 100 km.\n'
+        "has no canopy or atmosphere above it), ``AUTO`` defaults to 100 km.\n"
         "\n"
         "Unit-enabled field (default: cdu[length]).",
-        type='float or "auto"',
-        default='"auto"',
+        type="float or AUTO",
+        default="AUTO",
     )
 
     @abstractmethod
@@ -130,11 +130,11 @@ class Surface(SceneElement, ABC):
             Kernel object width.
         """
         if ctx is not None and ctx.override_surface_width is not None:
-            if self.width != "auto":
+            if self.width is not AUTO:
                 warnings.warn(OverriddenValueWarning("Overriding surface width"))
             return ctx.override_surface_width
         else:
-            if self.width != "auto":
+            if self.width is not AUTO:
                 return self.width
             else:
                 return 100.0 * ureg.km
@@ -160,7 +160,7 @@ class Surface(SceneElement, ABC):
         Returns → :class:`Surface`:
             Scaled copy of self.
         """
-        if self.width == "auto":
+        if self.width is AUTO:
             warnings.warn(
                 ConfigWarning("Surface width set to 'auto', cannot be scaled")
             )

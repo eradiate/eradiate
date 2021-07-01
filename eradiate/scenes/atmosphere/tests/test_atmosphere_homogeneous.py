@@ -4,6 +4,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
+from eradiate.attrs import AUTO
 from eradiate.contexts import KernelDictContext
 from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
@@ -14,7 +15,7 @@ from eradiate.scenes.phase import PhaseFunctionFactory
 def test_atmosphere_homogeneous_construct(mode_mono):
     # Constructing with defaults succeeds
     r = HomogeneousAtmosphere()
-    assert r.toa_altitude == "auto"
+    assert r.toa_altitude is AUTO
     assert r.kernel_offset() == 0.1 * ureg.km
     assert r.kernel_height() == 100.1 * ureg.km
 

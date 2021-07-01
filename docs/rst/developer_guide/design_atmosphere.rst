@@ -18,10 +18,9 @@ defines a series of attributes required to position the atmosphere's kernel
 shape vertically:
 
 * ``toa_altitude`` sets the altitude corresponding to the so-called "top of atmosphere"
-  level. It can be set to ``"auto"`` to compute a value automatically (see
-  ``height``);
-* ``height`` is the actual value of ``toa_altitude``: if ``toa_altitude`` it set
-  to ``auto``, ``height`` is set to a value computed automatically; otherwise,
+  level. If unset, a value is automatically computed (see ``height``);
+* ``height`` is the actual value of ``toa_altitude``: if ``toa_altitude`` it
+  left unset, ``height`` is set to a value computed automatically; otherwise,
   it is equal to ``toa_altitude``;
 * ``kernel_offset`` is the distance by which the atmosphere's kernel shape
   should be offset (towards lower altitudes) to prevent ray intersection issues

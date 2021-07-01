@@ -4,7 +4,7 @@ import attr
 
 from ..core._scene import Scene
 from ... import validators
-from ...attrs import documented, get_doc, parse_docs
+from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
 from ...scenes.biosphere import BiosphereFactory, Canopy
@@ -39,7 +39,7 @@ class RamiScene(Scene):
 
     @surface.validator
     def _surface_validator(self, attribute, value):
-        if self.canopy and value.width != "auto":
+        if self.canopy and value.width is not AUTO:
             warnings.warn(
                 OverriddenValueWarning("surface size will be overridden by canopy")
             )

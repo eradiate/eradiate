@@ -4,7 +4,7 @@ from ._core import Atmosphere, AtmosphereFactory
 from ..phase import PhaseFunction, PhaseFunctionFactory, RayleighPhaseFunction
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, SpectrumFactory
 from ..._util import onedict_value
-from ...attrs import documented, parse_docs
+from ...attrs import AUTO, documented, parse_docs
 from ...units import unit_context_kernel as uck
 from ...validators import has_quantity
 
@@ -73,7 +73,7 @@ class HomogeneousAtmosphere(Atmosphere):
         """
         Width of the kernel object delimiting the atmosphere.
         """
-        if self.width == "auto":
+        if self.width is AUTO:
             spectral_ctx = ctx.spectral_ctx if ctx is not None else None
             return 10.0 / self.eval_sigma_s(spectral_ctx)
         else:

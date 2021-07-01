@@ -3,6 +3,7 @@ from numbers import Number
 import attr
 import numpy as np
 
+from .attrs import AUTO
 from .units import PhysicalQuantity
 from .units import unit_registry as ureg
 
@@ -140,15 +141,15 @@ def on_quantity(wrapped_validator):
 
 def auto_or(*wrapped_validators):
     """
-    Validates if the validated value is ``"auto"`` or if all wrapped
-    validators validate.
+    Validates if the validated value is ``AUTO`` or if all wrapped validators
+    validate.
 
     .. note:: ``wrapped_validators`` is variadic and can therefore be an
        arbitrary number of validators.
     """
 
     def f(instance, attribute, value):
-        if value == "auto":
+        if value is AUTO:
             return
 
         for validator in wrapped_validators:

@@ -1,5 +1,7 @@
 import pint
 
+from .attrs import AUTO
+
 
 def on_quantity(wrapped_converter):
     """Applies a converter to the magnitude of a :class:`pint.Quantity`."""
@@ -16,11 +18,11 @@ def on_quantity(wrapped_converter):
 def auto_or(wrapped_converter):
     """
     Returns a converter which executes the wrapped converter if the converted
-    value is not equal to ``"auto"``; otherwise returns ``"auto"``.
+    value is not equal to ``AUTO``; otherwise returns ``AUTO``.
     """
 
     def f(value):
-        if value == "auto":
+        if value is AUTO:
             return value
 
         return wrapped_converter(value)
