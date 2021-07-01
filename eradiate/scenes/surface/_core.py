@@ -59,8 +59,9 @@ class Surface(SceneElement, ABC):
             ],
             units=ucc.deferred("length"),
         ),
-        doc="Surface size. Without contextual constraint (*e.g.* if the surface "
-        "has no canopy or atmosphere above it), ``AUTO`` defaults to 100 km.\n"
+        doc="Surface size. During kernel dictionary construction, ``AUTO`` "
+        "defaults to 100 km, unless a contextual constraint (*e.g.* to match "
+        "the size of an atmosphere or canopy) is applied.\n"
         "\n"
         "Unit-enabled field (default: cdu[length]).",
         type="float or AUTO",
