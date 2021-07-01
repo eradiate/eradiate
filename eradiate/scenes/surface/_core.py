@@ -42,7 +42,7 @@ class Surface(SceneElement, ABC):
             converter=pinttr.converters.to_units(ucc.deferred("length")),
             validator=[validators.is_positive, pinttr.validators.has_compatible_units],
         ),
-        doc="Surface altitude with respect to mean sea level.",
+        doc="Surface geopotential altitude (referenced to Earth's mean sea level).",
         type="float",
         default="0.0 km",
     )
