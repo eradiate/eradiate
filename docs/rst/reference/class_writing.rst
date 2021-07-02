@@ -3,9 +3,9 @@
 Class writing support components
 ================================
 
-Attribute documentation [eradiate._attrs]
+Attribute documentation [eradiate.attrs]
 -----------------------------------------
-.. currentmodule:: eradiate._attrs
+.. currentmodule:: eradiate.attrs
 
 .. autosummary::
    :toctree: generated/

@@ -5,7 +5,7 @@ import attr
 
 from ..core._scene import Scene
 from ... import unit_context_config as ucc
-from ..._attrs import documented, get_doc, parse_docs
+from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
 from ...scenes.atmosphere import Atmosphere, AtmosphereFactory, HomogeneousAtmosphere

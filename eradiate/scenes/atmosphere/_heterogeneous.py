@@ -8,7 +8,7 @@ import xarray as xr
 
 from ._core import Atmosphere, AtmosphereFactory
 from ... import validators
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...radprops import RadProfileFactory
 from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
 from ...units import unit_context_kernel as uck

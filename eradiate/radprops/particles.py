@@ -17,7 +17,7 @@ from .particle_dist import (
     UniformParticleDistribution,
 )
 from .. import path_resolver
-from .._attrs import documented, parse_docs
+from ..attrs import documented, parse_docs
 from ..contexts import SpectralContext
 from ..units import to_quantity
 from ..units import unit_context_config as ucc

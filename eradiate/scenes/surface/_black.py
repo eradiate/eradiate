@@ -1,7 +1,7 @@
 import attr
 
 from ._core import Surface, SurfaceFactory
-from ..._attrs import parse_docs
+from ...attrs import parse_docs
 from ...contexts import KernelDictContext
 
 

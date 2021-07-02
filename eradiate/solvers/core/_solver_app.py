@@ -12,7 +12,7 @@ from tqdm.auto import tqdm
 import eradiate
 
 from ._runner import runner
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ModeError, UnsupportedModeError
 from ...scenes.measure import Measure, MeasureResults

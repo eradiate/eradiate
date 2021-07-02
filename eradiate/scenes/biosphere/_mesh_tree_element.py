@@ -8,7 +8,7 @@ import pint
 from ..core import SceneElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
-from ..._attrs import documented, get_doc, parse_docs
+from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg

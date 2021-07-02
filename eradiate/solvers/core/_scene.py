@@ -4,7 +4,7 @@ from typing import List
 import attr
 import pinttr
 
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...scenes.core import SceneElement
 from ...scenes.illumination import DirectionalIllumination, IlluminationFactory
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator

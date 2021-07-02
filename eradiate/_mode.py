@@ -4,7 +4,7 @@ from typing import Dict, Optional
 import attr
 import mitsuba
 
-from eradiate._attrs import documented, parse_docs
+from eradiate.attrs import documented, parse_docs
 
 
 class ModeSpectrum(enum.Enum):

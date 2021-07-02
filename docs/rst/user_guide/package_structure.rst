@@ -72,7 +72,7 @@ Thermosphysical properties [:ref:`eradiate.thermoprops <sec-reference-thermoprop
 Other support components
 ------------------------
 
-Class writing facilities [:ref:`eradiate.{converters, validators, _attrs, _factory} <sec-reference-class_writing>`]
+Class writing facilities [:ref:`eradiate.{attrs, converters, validators, _factory} <sec-reference-class_writing>`]
     These components are part of Eradiate's core class writing system. It relies
     on the `attrs <https://www.attrs.org>`_ library, extended for `Pint <https://pint.readthedocs.io>`_
     compatibility by the `Pinttrs <https://pinttrs.readthedocs.io>`_ library.

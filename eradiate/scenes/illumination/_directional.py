@@ -5,7 +5,7 @@ import pinttr
 
 from ._core import Illumination, IlluminationFactory
 from ..spectra import SolarIrradianceSpectrum, Spectrum, SpectrumFactory
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...frame import angles_to_direction
 from ...units import unit_context_config as ucc

@@ -3,7 +3,7 @@ import attr
 from ._core import Surface, SurfaceFactory
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
 

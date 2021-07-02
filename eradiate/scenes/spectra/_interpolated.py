@@ -9,8 +9,8 @@ import eradiate
 
 from ._core import Spectrum, SpectrumFactory
 from ... import converters, validators
-from ..._attrs import documented, parse_docs
 from ..._util import ensure_array
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
 from ...units import unit_context_config as ucc

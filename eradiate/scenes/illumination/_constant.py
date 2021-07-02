@@ -4,7 +4,7 @@ import attr
 
 from ._core import Illumination, IlluminationFactory
 from ..spectra import Spectrum, SpectrumFactory
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...validators import has_quantity
 

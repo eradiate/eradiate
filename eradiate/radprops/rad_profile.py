@@ -15,8 +15,8 @@ from eradiate import path_resolver
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
 from .. import data
-from .._attrs import documented, parse_docs
 from .._factory import BaseFactory
+from ..attrs import documented, parse_docs
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
 from ..exceptions import ModeError
 from ..thermoprops import afgl1986, us76

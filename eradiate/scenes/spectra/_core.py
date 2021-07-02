@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 import attr
 import pint
 
-from ..._attrs import documented, parse_docs
 from ..._factory import BaseFactory
+from ...attrs import documented, parse_docs
 from ...contexts import SpectralContext
 from ...scenes.core import SceneElement
 from ...units import PhysicalQuantity

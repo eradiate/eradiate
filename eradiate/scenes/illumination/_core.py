@@ -3,8 +3,8 @@ from abc import ABC
 import attr
 
 from ..core import SceneElement
-from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
+from ...attrs import documented, get_doc, parse_docs
 
 
 @parse_docs

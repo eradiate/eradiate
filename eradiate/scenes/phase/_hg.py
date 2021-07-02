@@ -7,8 +7,8 @@ import eradiate
 from ._core import PhaseFunction, PhaseFunctionFactory
 from ..spectra import Spectrum, SpectrumFactory, UniformSpectrum
 from ... import validators
-from ..._attrs import documented, parse_docs
 from ..._util import onedict_value
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
 

@@ -3,7 +3,7 @@ from typing import MutableMapping, Optional
 import attr
 
 from ._core import Integrator, IntegratorFactory
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
 

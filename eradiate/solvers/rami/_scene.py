@@ -4,7 +4,7 @@ import attr
 
 from ..core._scene import Scene
 from ... import validators
-from ..._attrs import documented, get_doc, parse_docs
+from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
 from ...scenes.biosphere import BiosphereFactory, Canopy

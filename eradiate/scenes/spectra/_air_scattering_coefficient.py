@@ -6,7 +6,7 @@ import pint
 import eradiate
 
 from ._core import Spectrum, SpectrumFactory
-from ..._attrs import parse_docs
+from ...attrs import parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import ModeError
 from ...radprops.rayleigh import compute_sigma_s_air

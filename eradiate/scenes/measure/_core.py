@@ -12,9 +12,9 @@ import eradiate
 
 from ..core import SceneElement
 from ... import converters, validators
-from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
 from ..._util import ensure_array
+from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, MonoSpectralContext, SpectralContext
 from ...exceptions import ModeError, UnsupportedModeError
 from ...units import symbol

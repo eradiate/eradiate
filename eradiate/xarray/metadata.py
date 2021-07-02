@@ -11,7 +11,7 @@ import attr
 import cerberus
 import xarray
 
-from .._attrs import documented, parse_docs
+from ..attrs import documented, parse_docs
 from ..units import symbol
 
 

@@ -11,8 +11,8 @@ import eradiate
 from ._core import Measure, MeasureFactory
 from ..illumination import DirectionalIllumination
 from ... import converters, validators
-from ..._attrs import documented, parse_docs
 from ..._util import is_vector3
+from ...attrs import documented, parse_docs
 from ...frame import direction_to_angles
 from ...units import symbol
 from ...units import unit_context_config as ucc

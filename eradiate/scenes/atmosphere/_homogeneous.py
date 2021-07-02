@@ -3,8 +3,8 @@ import attr
 from ._core import Atmosphere, AtmosphereFactory
 from ..phase import PhaseFunction, PhaseFunctionFactory, RayleighPhaseFunction
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, SpectrumFactory
-from ..._attrs import documented, parse_docs
 from ..._util import onedict_value
+from ...attrs import documented, parse_docs
 from ...units import unit_context_kernel as uck
 from ...validators import has_quantity
 

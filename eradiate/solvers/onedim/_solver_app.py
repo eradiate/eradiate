@@ -7,7 +7,7 @@ import eradiate
 from ._scene import OneDimScene
 from ..core._solver_app import SolverApp
 from ... import unit_context_kernel as uck
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...units import symbol
 from ...xarray.metadata import DatasetSpec, VarSpec
 

@@ -4,7 +4,7 @@ import pinttr
 
 from ._core import Measure, MeasureFactory
 from ... import validators
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg

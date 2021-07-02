@@ -7,7 +7,7 @@ import pinttr
 
 import eradiate
 
-from ._attrs import documented, parse_docs
+from .attrs import documented, parse_docs
 from .exceptions import ModeError
 from .units import unit_context_config as ucc
 from .units import unit_registry as ureg

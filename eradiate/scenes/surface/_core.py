@@ -8,8 +8,8 @@ import pinttr
 
 from ..core import SceneElement
 from ... import converters, validators
-from ..._attrs import documented, get_doc, parse_docs
 from ..._factory import BaseFactory
+from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ConfigWarning, OverriddenValueWarning
 from ...units import unit_context_config as ucc

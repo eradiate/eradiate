@@ -3,7 +3,7 @@ from typing import MutableMapping, Optional
 import attr
 
 from ._core import PhaseFunction, PhaseFunctionFactory
-from ..._attrs import parse_docs
+from ...attrs import parse_docs
 from ...contexts import KernelDictContext
 
 

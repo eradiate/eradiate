@@ -11,7 +11,7 @@ from ._canopy_element import CanopyElement, CanopyElementFactory
 from ._core import BiosphereFactory, Canopy
 from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
 from ..core import SceneElement
-from ..._attrs import documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck

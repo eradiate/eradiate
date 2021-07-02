@@ -3,8 +3,8 @@ from typing import MutableMapping, Optional
 import attr
 
 from ..core import SceneElement
-from ..._attrs import parse_docs
 from ..._factory import BaseFactory
+from ...attrs import parse_docs
 from ...contexts import KernelDictContext
 
 
