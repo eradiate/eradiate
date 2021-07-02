@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.typing import ArrayLike
 
-from eradiate._util import ensure_array
+from ._util import ensure_array
 
 
 def square_to_uniform_disk_concentric(sample: ArrayLike) -> ArrayLike:
