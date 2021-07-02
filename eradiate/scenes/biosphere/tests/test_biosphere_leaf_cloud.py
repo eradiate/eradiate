@@ -278,9 +278,9 @@ def test_leaf_cloud_from_dict(mode_mono, tempfile_leaves):
 
 
 def test_leaf_cloud_kernel_dict(mode_mono):
+    """Partial unit testing for :meth:`LeafCloud.kernel_dict`."""
     ctx = KernelDictContext()
 
-    """Partial unit testing for :meth:`LeafCloud.kernel_dict`."""
     cloud_id = "my_cloud"
     cloud = LeafCloud(
         id=cloud_id,
@@ -306,3 +306,14 @@ def test_leaf_cloud_kernel_dict(mode_mono):
 
     # Kernel dict is valid
     assert KernelDict.new(kernel_dict).load()
+
+
+def test_surface_area(mode_mono):
+    """Unit testing for :meth:`LeafCloud.surface_area`."""
+    cloud = LeafCloud(
+        leaf_positions=[[0, 0, 0], [1, 1, 1]],
+        leaf_orientations=[[1, 0, 0], [0, 1, 0]],
+        leaf_radii=[0.1, 0.1],
+    )
+
+    assert cloud.surface_area() == (2.0 * np.pi * 0.1 ** 2) * (ureg.m ** 2)
