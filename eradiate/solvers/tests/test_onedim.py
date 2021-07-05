@@ -27,10 +27,10 @@ def test_onedim_scene(mode_mono):
     assert s.kernel_dict(ctx=ctx).load() is not None
     # -- Init from a dict-based measure spec
     # ---- Correctly wrapped in a sequence
-    s = OneDimScene(measures=[{"type": "distant"}])
+    s = OneDimScene(measures=[{"type": "distant_radiance"}])
     assert s.kernel_dict(ctx=ctx).load() is not None
     # ---- Not wrapped in a sequence
-    s = OneDimScene(measures={"type": "distant"})
+    s = OneDimScene(measures={"type": "distant_radiance"})
     assert s.kernel_dict(ctx=ctx).load() is not None
 
     # -- Surface width is appropriately inherited from atmosphere
@@ -45,7 +45,7 @@ def test_onedim_scene(mode_mono):
     s = OneDimScene(
         atmosphere=None,
         surface={"type": "lambertian", "width": 100.0, "width_units": "m"},
-        measures={"type": "distant", "id": "distant_measure"},
+        measures={"type": "distant_radiance", "id": "distant_measure"},
     )
     # -- Surface width is not overridden
     kernel_dict = s.kernel_dict(ctx)
@@ -93,7 +93,7 @@ def test_onedim_scene_real_life(mode_mono):
             },
         },
         illumination={"type": "directional", "zenith": 45.0},
-        measures={"type": "distant", "id": "toa"},
+        measures={"type": "distant_reflectance", "id": "toa"},
     )
     assert s.kernel_dict(ctx=ctx).load() is not None
 
