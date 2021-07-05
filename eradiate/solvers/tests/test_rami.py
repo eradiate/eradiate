@@ -24,10 +24,10 @@ def test_rami_scene(mode_mono):
     assert s.kernel_dict(ctx=ctx).load() is not None
     # -- Init from a dict-based measure spec
     # ---- Correctly wrapped in a sequence
-    s = RamiScene(measures=[{"type": "distant"}])
+    s = RamiScene(measures=[{"type": "distant_radiance"}])
     assert s.kernel_dict(ctx=ctx).load() is not None
     # ---- Not wrapped in a sequence
-    s = RamiScene(measures={"type": "distant"})
+    s = RamiScene(measures={"type": "distant_radiance"})
     assert s.kernel_dict(ctx=ctx).load() is not None
 
     # -- Surface size is appropriately overridden with canopy size
