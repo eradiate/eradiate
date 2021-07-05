@@ -1,5 +1,3 @@
-from pprint import pprint
-
 import numpy as np
 import pytest
 
@@ -96,7 +94,7 @@ def test_rami_scene_real_life(mode_mono):
             "l_vertical": 2.0 * ureg.m,
         },
         illumination={"type": "directional", "zenith": 45.0},
-        measures={"type": "distant"},
+        measures={"type": "distant_reflectance"},
     )
     assert s.kernel_dict(ctx=ctx).load() is not None
 
