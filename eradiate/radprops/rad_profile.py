@@ -18,7 +18,7 @@ from .. import data
 from .._factory import BaseFactory
 from ..attrs import documented, parse_docs
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
-from ..exceptions import ModeError
+from ..exceptions import UnsupportedModeError
 from ..thermoprops import afgl1986, us76
 from ..thermoprops.util import (
     compute_scaling_factors,
@@ -401,7 +401,7 @@ class ArrayRadProfile(RadProfile):
             )
 
         else:
-            raise ModeError(f"unsupported mode '{eradiate.mode().id}'")
+            raise UnsupportedModeError(supported="monochromatic")
 
 
 @RadProfileFactory.register("us76_approx")

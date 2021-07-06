@@ -10,6 +10,7 @@ from ... import data
 from ... import unit_context_kernel as uck
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
+from ...exceptions import UnsupportedModeError
 from ...scenes.spectra import Spectrum, SpectrumFactory
 from ...units import PhysicalQuantity, to_quantity
 from ...validators import is_positive
@@ -105,7 +106,7 @@ class SolarIrradianceSpectrum(Spectrum):
                 raise ValueError("dataset evaluation returned nan")
 
         else:
-            raise ValueError(f"unsupported mode {eradiate.mode().id}")
+            raise UnsupportedModeError(supported="monochromatic")
 
         return irradiance
 

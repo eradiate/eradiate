@@ -8,7 +8,7 @@ import pinttr
 import eradiate
 
 from .attrs import documented, parse_docs
-from .exceptions import ModeError
+from .exceptions import UnsupportedModeError
 from .units import unit_context_config as ucc
 from .units import unit_registry as ureg
 
@@ -61,8 +61,8 @@ class SpectralContext(ABC):
 
         if mode.is_monochromatic():
             return MonoSpectralContext(**kwargs)
-
-        raise ModeError(f"unsupported mode '{mode.id}'")
+        else:
+            raise UnsupportedModeError(supported="monochromatic")
 
     @staticmethod
     def from_dict(d: Dict) -> "SpectralContext":

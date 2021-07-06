@@ -8,7 +8,7 @@ import eradiate
 from ._core import Spectrum, SpectrumFactory
 from ...attrs import parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...exceptions import ModeError
+from ...exceptions import UnsupportedModeError
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity
 from ...units import unit_context_kernel as uck
@@ -32,7 +32,7 @@ class AirScatteringCoefficientSpectrum(Spectrum):
         if eradiate.mode().is_monochromatic():
             return compute_sigma_s_air(wavelength=spectral_ctx.wavelength)
         else:
-            raise ModeError(f"unsupported mode {eradiate.mode().id}")
+            raise UnsupportedModeError(supported="monochromatic")
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         if eradiate.mode().is_monochromatic():
@@ -44,5 +44,5 @@ class AirScatteringCoefficientSpectrum(Spectrum):
                     ),
                 }
             }
-
-        raise ModeError(f"unsupported mode '{eradiate.mode().id}'")
+        else:
+            raise UnsupportedModeError(supported="monochromatic")

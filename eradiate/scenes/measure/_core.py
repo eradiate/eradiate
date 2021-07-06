@@ -92,8 +92,8 @@ class MeasureSpectralConfig(ABC):
 
         if mode.is_monochromatic():
             return MonoMeasureSpectralConfig(**kwargs)
-
-        raise ModeError(f"unsupported mode '{mode.id}'")
+        else:
+            raise UnsupportedModeError(supported="monochromatic")
 
     @staticmethod
     def from_dict(d: Dict) -> "MeasureSpectralConfig":

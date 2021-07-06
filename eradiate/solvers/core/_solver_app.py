@@ -165,7 +165,7 @@ class SolverApp(ABC):
         .. seealso:: :meth:`process`, :meth:`run`
         """
         if not eradiate.mode().is_monochromatic():
-            raise ModeError(f"unsupported mode '{eradiate.mode().id}'")
+            raise UnsupportedModeError(supported="monochromatic")
 
         # Select measure
         if measure is None:
