@@ -69,11 +69,11 @@ Biosphere [eradiate.scenes.biosphere]
    .. autosummary::
       :toctree: generated/
 
-      _discrete.CuboidLeafCloudParams
-      _discrete.SphereLeafCloudParams
-      _discrete.EllipsoidLeafCloudParams
-      _discrete.CylinderLeafCloudParams
-      _discrete.ConeLeafCloudParams
+      _leaf_cloud.CuboidLeafCloudParams
+      _leaf_cloud.SphereLeafCloudParams
+      _leaf_cloud.EllipsoidLeafCloudParams
+      _leaf_cloud.CylinderLeafCloudParams
+      _leaf_cloud.ConeLeafCloudParams
 
 .. _sec-reference-scenes-surface:
 
