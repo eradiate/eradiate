@@ -72,7 +72,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     scene = eradiate.solvers.onedim.OneDimScene(
         illumination={"type": "directional", "zenith": 0.0, "azimuth": 0.0},
         measures={
-            "type": "distant",
+            "type": "distant_reflectance",
             "id": "toa_pplane",
             "film_resolution": (n_vza, 1),
             "spp": spp,
