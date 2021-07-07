@@ -597,26 +597,34 @@ class DistantRadianceMeasure(DistantMeasure):
 @attr.s
 class DistantReflectanceMeasure(DistantRadianceMeasure):
     """
-    A specialised version of :class:`.DistantReflectanceMeasure` with extra
+    A specialised version of :class:`.DistantRadianceMeasure` with extra
     post-processing features to derive reflectance values from the recorded
     radiance.
+
+    This measure produces meaningful results only with the
+    :class:`.DirectionalIllumination` illumination model (the :meth:`postprocess`
+    method will raise a ``TypeError`` if called with an incompatible illumination
+    type).
     """
 
     def postprocess(self, illumination=None) -> xr.Dataset:
         """
         Return post-processed raw sensor results.
 
-        Parameter ``illumination`` (:class:`DirectionalIllumination`):
+        Parameter ``illumination`` (:class:`.DirectionalIllumination`):
             Incoming radiance value. *This keyword argument is required.*
 
         Returns → :class:`~xarray.Dataset`:
             Post-processed results.
+
+        Raises → TypeError:
+            If ``illumination`` is missing or if it has an unsupported type.
         """
         if illumination is None:
             raise TypeError("missing required keyword argument 'illumination'")
 
         if not isinstance(illumination, DirectionalIllumination):
-            raise ValueError(
+            TypeError(
                 "keyword argument 'illumination' must be a "
                 "DirectionalIllumination instance, got a "
                 f"{illumination.__class__.__name__}"
@@ -764,13 +772,17 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
     A specialised version of the :class:`.DistantFluxMeasure` with extra
     post-processing features to derive albedo values from the recorded flux
     density.
+
+    This measure produces meaningful results with both the
+    :class:`.DirectionalIllumination` and :class:`.ConstantIllumination`
+    illumination models.
     """
 
     def postprocess(self, illumination=None) -> xr.Dataset:
         """
         Return post-processed raw sensor results.
 
-        Parameter ``illumination`` (:class:`DirectionalIllumination` or :class:`ConstantIllumination`):
+        Parameter ``illumination`` (:class:`.DirectionalIllumination` or :class:`.ConstantIllumination`):
             Incoming radiance value. *This keyword argument is required.*
 
         Returns → :class:`~xarray.Dataset`:
