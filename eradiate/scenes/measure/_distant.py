@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple, Union
 
 import attr
 import numpy as np
+import pint
 import pinttr
 import xarray as xr
 
@@ -10,11 +11,14 @@ import eradiate
 
 from ._core import Measure, measure_factory
 from ..illumination import ConstantIllumination, DirectionalIllumination
+from ..spectra import Spectrum
 from ... import converters, validators
+from ..._mode import ModeFlags
 from ..._util import is_vector3
 from ...attrs import documented, parse_docs
+from ...exceptions import UnsupportedModeError
 from ...frame import direction_to_angles
-from ...units import symbol
+from ...units import symbol, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -342,13 +346,39 @@ class DistantMeasure(Measure):
             If ``illumination`` has an unsupported type.
         """
         k_irradiance_units = uck.get("irradiance")
-        spectral_coords = np.array(
-            [
-                spectral_ctx.wavelength.magnitude
-                for spectral_ctx in self.spectral_cfg.spectral_ctxs()
-            ]
-        )
-        spectral_coord_label = eradiate.mode().spectral_coord_label
+
+        # Collect spectral coordinate values for verification purposes
+        wavelengths_dataset = to_quantity(ds.w)
+
+        def eval_illumination_spectrum(
+            field_name: str, k_units: pint.Unit
+        ) -> pint.Quantity:
+            # Local helper function to help with illumination spectrum evaluation
+
+            spectrum: Spectrum = getattr(illumination, field_name)
+
+            if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+                # Very important: sort spectral coordinate
+                wavelengths = np.sort(self.spectral_cfg.wavelengths)
+                assert np.allclose(wavelengths, wavelengths_dataset)
+                return spectrum.eval_mono(wavelengths).m_as(k_units)
+
+            elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+                # Collect bins and wavelengths, evaluate spectrum
+                bins = self.spectral_cfg.bins
+                wavelengths = [bin.wcenter.m_as(ureg.nm) for bin in bins] * ureg.nm
+                result = spectrum.eval_ckd(*bins).m_as(k_units)
+
+                # Reorder data by ascending wavelengths
+                indices = wavelengths.argsort()
+                wavelengths = wavelengths[indices]
+                assert np.allclose(wavelengths, wavelengths_dataset)
+                result = result[indices]
+
+                return result
+
+            else:
+                raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
         if isinstance(illumination, DirectionalIllumination):
             # Collect illumination angular data
@@ -370,45 +400,23 @@ class DistantMeasure(Measure):
             }
 
             # Collect illumination spectral data
-            irradiances = xr.DataArray(
-                [
-                    illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
-                        k_irradiance_units
-                    )
-                    for spectral_ctx in self.spectral_cfg.spectral_ctxs()
-                ],
-                dims=(spectral_coord_label,),
-                coords={spectral_coord_label: spectral_coords},
-            ).sortby(
-                spectral_coord_label
-            )  # Very important: sort by spectral coordinate
+            irradiances = eval_illumination_spectrum("irradiance", k_irradiance_units)
 
             # Add irradiance variable
             ds["irradiance"] = (
-                ("sza", "saa", spectral_coord_label),
-                (irradiances.values * cos_sza).reshape((1, 1, len(irradiances))),
+                ("sza", "saa", "w"),
+                (irradiances * cos_sza).reshape((1, 1, len(irradiances))),
             )
 
         elif isinstance(illumination, ConstantIllumination):
             # Collect illumination spectral data
             k_radiance_units = uck.get("radiance")
-            radiances = xr.DataArray(
-                [
-                    illumination.radiance.eval(spectral_ctx=spectral_ctx).m_as(
-                        k_radiance_units
-                    )
-                    for spectral_ctx in self.spectral_cfg.spectral_ctxs()
-                ],
-                dims=(spectral_coord_label,),
-                coords={spectral_coord_label: spectral_coords},
-            ).sortby(
-                spectral_coord_label
-            )  # Very important: sort by spectral coordinate
+            radiances = eval_illumination_spectrum("radiance", k_radiance_units)
 
             # Add irradiance variable
             ds["irradiance"] = (
-                (spectral_coord_label,),
-                np.pi * radiances.values.reshape((len(radiances),)),
+                ("w",),
+                np.pi * radiances.reshape((len(radiances),)),
             )
 
         else:
@@ -526,7 +534,7 @@ class DistantRadianceMeasure(DistantMeasure):
         return result
 
     def postprocess(self) -> xr.Dataset:
-        # Fetch results (SPP-split aggregated) as a Dataset
+        # Fetch results (SPP-split aggregated, CKD quadrature computed) as a Dataset
         result = self._postprocess_fetch_results()
 
         # Attach viewing angle coordinates
@@ -535,9 +543,11 @@ class DistantRadianceMeasure(DistantMeasure):
         return result
 
     def _postprocess_fetch_results(self) -> xr.Dataset:
-        # Collect results and add appropriate metadata
+        # Collect raw results, compute CKD quadrature, add appropriate metadata
+        ds = self.results.to_dataset(aggregate_spps=True)
 
-        ds = super(DistantRadianceMeasure, self).postprocess()
+        if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            ds = self._postprocess_ckd_eval_quad(ds)
 
         # Rename raw field to outgoing radiance
         ds = ds.rename(raw="lo")
