@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import attr
 import numpy as np
@@ -9,7 +9,7 @@ import xarray as xr
 import eradiate
 
 from ._core import Measure, MeasureFactory
-from ..illumination import DirectionalIllumination
+from ..illumination import ConstantIllumination, DirectionalIllumination
 from ... import converters, validators
 from ..._util import is_vector3
 from ...attrs import documented, parse_docs
@@ -320,7 +320,9 @@ class DistantMeasure(Measure):
     )
 
     def _postprocess_add_illumination(
-        self, ds: xr.Dataset, illumination: DirectionalIllumination
+        self,
+        ds: xr.Dataset,
+        illumination: Union[DirectionalIllumination, ConstantIllumination],
     ) -> xr.Dataset:
         """
         Processes a measure result dataset and add illumination data and m
@@ -330,51 +332,87 @@ class DistantMeasure(Measure):
         Parameter ``ds`` (:class:`xarray.Dataset`):
             Result dataset.
 
-        Parameter ``illumination`` (:class:`.DirectionalIllumination`):
+        Parameter ``illumination`` (:class:`.DirectionalIllumination` or :class:`ConstantIllumination`):
             Illumination whose data is to be added to the result data set.
 
         Returns → :class:`xarray.Dataset`:
             Updated result dataset.
+
+        Raises → TypeError:
+            If ``illumination`` has an unsupported type.
         """
-
-        # Collect illumination angular data
-        saa = illumination.azimuth.m_as(ureg.deg)
-        sza = illumination.zenith.m_as(ureg.deg)
-        cos_sza = np.cos(np.deg2rad(sza))
-
-        # Add angular dimensions
-        ds = ds.expand_dims({"sza": [sza], "saa": [saa]}, axis=(0, 1))
-        ds.coords["sza"].attrs = {
-            "standard_name": "solar_zenith_angle",
-            "long_name": "solar zenith angle",
-            "units": symbol("deg"),
-        }
-        ds.coords["saa"].attrs = {
-            "standard_name": "solar_azimuth_angle",
-            "long_name": "solar azimuth angle",
-            "units": symbol("deg"),
-        }
-
-        # Collect illumination spectral data
         k_irradiance_units = uck.get("irradiance")
-        irradiances = (
-            np.array(
-                [
-                    illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
-                        k_irradiance_units
-                    )
-                    for spectral_ctx in self.spectral_cfg.spectral_ctxs()
-                ]
-            )
-            * k_irradiance_units
-        )
-        spectral_coord_label = eradiate.mode().spectral_coord_label
 
-        # Add irradiance variable
-        ds["irradiance"] = (
-            ("sza", "saa", spectral_coord_label),
-            np.array(irradiances.magnitude * cos_sza).reshape((1, 1, len(irradiances))),
-        )
+        if isinstance(illumination, DirectionalIllumination):
+            # Collect illumination angular data
+            saa = illumination.azimuth.m_as(ureg.deg)
+            sza = illumination.zenith.m_as(ureg.deg)
+            cos_sza = np.cos(np.deg2rad(sza))
+
+            # Add angular dimensions
+            ds = ds.expand_dims({"sza": [sza], "saa": [saa]}, axis=(0, 1))
+            ds.coords["sza"].attrs = {
+                "standard_name": "solar_zenith_angle",
+                "long_name": "solar zenith angle",
+                "units": symbol("deg"),
+            }
+            ds.coords["saa"].attrs = {
+                "standard_name": "solar_azimuth_angle",
+                "long_name": "solar azimuth angle",
+                "units": symbol("deg"),
+            }
+
+            # Collect illumination spectral data
+            irradiances = (
+                np.array(
+                    [
+                        illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
+                            k_irradiance_units
+                        )
+                        for spectral_ctx in self.spectral_cfg.spectral_ctxs()
+                    ]
+                )
+                * k_irradiance_units
+            )
+            spectral_coord_label = eradiate.mode().spectral_coord_label
+
+            # Add irradiance variable
+            ds["irradiance"] = (
+                ("sza", "saa", spectral_coord_label),
+                np.array(irradiances.magnitude * cos_sza).reshape(
+                    (1, 1, len(irradiances))
+                ),
+            )
+
+        elif isinstance(illumination, ConstantIllumination):
+            # Collect illumination spectral data
+            k_radiance_units = uck.get("radiance")
+            radiances = (
+                np.array(
+                    [
+                        illumination.radiance.eval(spectral_ctx=spectral_ctx).m_as(
+                            k_radiance_units
+                        )
+                        for spectral_ctx in self.spectral_cfg.spectral_ctxs()
+                    ]
+                )
+                * k_radiance_units
+            )
+            spectral_coord_label = eradiate.mode().spectral_coord_label
+
+            # Add irradiance variable
+            ds["irradiance"] = (
+                (spectral_coord_label,),
+                np.pi * np.array(radiances.magnitude).reshape((len(radiances),)),
+            )
+
+        else:
+            raise TypeError(
+                "keyword argument 'illumination' must be one of "
+                "(DirectionalIllumination, ConstantIllumination), got a "
+                f"{illumination.__class__.__name__}"
+            )
+
         ds["irradiance"].attrs = {
             "standard_name": "horizontal_solar_irradiance_per_unit_wavelength",
             "long_name": "horizontal spectral irradiance",
@@ -732,19 +770,24 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
         """
         Return post-processed raw sensor results.
 
-        Parameter ``illumination`` (:class:`DirectionalIllumination`):
+        Parameter ``illumination`` (:class:`DirectionalIllumination` or :class:`ConstantIllumination`):
             Incoming radiance value. *This keyword argument is required.*
 
         Returns → :class:`~xarray.Dataset`:
             Post-processed results.
+
+        Raises → TypeError:
+            If ``illumination`` is missing or if it has an unsupported type.
         """
         if illumination is None:
             raise TypeError("missing required keyword argument 'illumination'")
 
-        if not isinstance(illumination, DirectionalIllumination):
-            raise ValueError(
-                "keyword argument 'illumination' must be a "
-                "DirectionalIllumination instance, got a "
+        if not isinstance(
+            illumination, (DirectionalIllumination, ConstantIllumination)
+        ):
+            raise TypeError(
+                "keyword argument 'illumination' must be one of "
+                "(DirectionalIllumination, ConstantIllumination), got a "
                 f"{illumination.__class__.__name__}"
             )
 

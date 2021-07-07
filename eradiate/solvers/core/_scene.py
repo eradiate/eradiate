@@ -6,7 +6,11 @@ import pinttr
 
 from ...attrs import documented, parse_docs
 from ...scenes.core import SceneElement
-from ...scenes.illumination import DirectionalIllumination, IlluminationFactory
+from ...scenes.illumination import (
+    ConstantIllumination,
+    DirectionalIllumination,
+    IlluminationFactory,
+)
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
 from ...scenes.measure import (
     DistantMeasure,
@@ -27,7 +31,9 @@ class Scene(SceneElement, ABC):
         attr.ib(
             factory=DirectionalIllumination,
             converter=IlluminationFactory.convert,
-            validator=attr.validators.instance_of(DirectionalIllumination),
+            validator=attr.validators.instance_of(
+                (DirectionalIllumination, ConstantIllumination)
+            ),
         ),
         doc="Illumination specification. "
         "This parameter can be specified as a dictionary which will be "
