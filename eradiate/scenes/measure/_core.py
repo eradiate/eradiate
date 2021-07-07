@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import itertools
 from abc import ABC, abstractmethod
-from collections import abc
+from collections import OrderedDict, abc
 from typing import Dict, List, MutableMapping, Optional, Tuple, Union
 
 import attr
 import numpy as np
+import pandas as pd
 import pint
 import pinttr
 import xarray as xr
@@ -16,7 +18,7 @@ from ..core import SceneElement
 from ... import ckd, converters, validators
 from ..._factory import Factory
 from ..._mode import ModeFlags
-from ..._util import ensure_array
+from ..._util import ensure_array, natsort_alphanum_key
 from ...attrs import AUTO, _Auto, documented, get_doc, parse_docs
 from ...ckd import Bin
 from ...contexts import (
@@ -334,7 +336,12 @@ def _str_summary_raw(x):
 @attr.s
 class MeasureResults:
     """
-    Data structure storing simulation results corresponding to a measure.
+    Data structure storing simulation results corresponding to a measure before
+    post-processing. A ``raw`` field stores raw sensor results as nested
+    dictionaries (see corresponding field documentation for further detail).
+    The :meth:`~.MeasureResults.to_dataset` repacks the data as a
+    :class:`~xarray.Dataset`, which is the data structure operated on by the
+    :class:`.Measure.postprocess` pipeline.
     """
 
     raw: Optional[Dict] = documented(
@@ -377,7 +384,7 @@ class MeasureResults:
         default="{}",
     )
 
-    def to_dataset(self, aggregate_spps=False) -> xr.Dataset:
+    def to_dataset(self, aggregate_spps: bool = False) -> xr.Dataset:
         """
         Repack raw results as a :class:`xarray.Dataset`. Dimension coordinates are
         as follows:
@@ -398,68 +405,31 @@ class MeasureResults:
         Returns → :class:`~xarray.Dataset`:
             Raw sensor data repacked as a :class:`~xarray.Dataset`.
         """
+
         if not self.raw:
             raise ValueError("no raw results to convert to xarray.Dataset")
 
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            spectral_coord_label = eradiate.mode().spectral_coord_label
-            spectral_coord_metadata = {
-                "long_name": "wavelength",
-                "units": symbol(ucc.get("wavelength")),
-            }
-            # TODO: Add channel dimension to dataset (string-labelled;
-            #  value 'intensity' in mono modes;
-            #  values 'R', 'G', 'B' in render modes)
-        else:
-            raise UnsupportedModeError(supported="monochromatic")
+        # Collect spectral coordinate label
+        spectral_coord_label = eradiate.mode().spectral_coord_label
 
-        # Collect coordinate values
-        spectral_coords = set()
-        sensor_ids = set()
-        film_size = np.zeros((2,), dtype=int)
-
-        for spectral_coord, val in self.raw.items():
-            spectral_coords.add(spectral_coord)
-            for sensor_id, data in val["values"].items():
-                sensor_ids.add(sensor_id)
-                film_size = np.maximum(film_size, data.shape[:2])
-
-        spectral_coords = sorted(spectral_coords)
-        sensor_ids = sorted(sensor_ids)
-
-        # Collect values
-        data = np.full(
-            (
-                len(spectral_coords),
-                len(sensor_ids),
-                *film_size,  # Note: Row-major order (width x comes last)
-            ),
-            np.nan,
+        # Collect spectral and sensor coordinate values
+        spectral_coords, sensor_ids, film_size = self._to_dataset_helper_coord_values(
+            self.raw
         )
 
-        for i_spectral, spectral_coord in enumerate(spectral_coords):
-            for i_sensor, sensor_id in enumerate(sensor_ids):
-                # Note: This doesn't handle heterogeneous sensor film sizes
-                # (i.e. cases in which sensors have different film sizes).
-                # To add support for it, blitting is probably a good approach
-                # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
-                data[i_spectral, i_sensor] = self.raw[spectral_coord]["values"][
-                    sensor_id
-                ][..., 0]
-                # This latter indexing selects only one channel in the raw data
-                # array: this works with mono variants but will fail otherwise
+        # Collect radiance values
+        data = self._to_dataset_helper_data_values(
+            self.raw, spectral_coords, sensor_ids, film_size
+        )
 
         # Collect sample counts
-        spps = np.full((len(spectral_coords), len(sensor_ids)), np.nan, dtype=int)
-
-        for i_spectral, spectral_coord in enumerate(spectral_coords):
-            for i_sensor, sensor_id in enumerate(sensor_ids):
-                spps[i_spectral, i_sensor] = self.raw[spectral_coord]["spp"][sensor_id]
+        spps = self._to_dataset_helper_spp_values(self.raw, spectral_coords, sensor_ids)
 
         # Compute pixel film coordinates
-        # As mentioned before, raw data shape is (y, x)
-        xs = np.arange(0.5, film_size[1], 1.0) / film_size[1]
-        ys = np.arange(0.5, film_size[0], 1.0) / film_size[0]
+        xs, ys = self._to_dataset_helper_pixel_coord_values(film_size)
+
+        # Construct index if relevant
+        spectral_index = self._to_dataset_helper_spectral_index(spectral_coords)
 
         # Construct dataset
         result = xr.Dataset(
@@ -482,8 +452,8 @@ class MeasureResults:
                 "y": ("y", ys, {"long_name": "film height coordinate"}),
                 spectral_coord_label: (
                     spectral_coord_label,
-                    spectral_coords,
-                    spectral_coord_metadata,
+                    spectral_index,
+                    self._to_dataset_spectral_coord_metadata(),
                 ),
                 "sensor_id": (
                     "sensor_id",
@@ -497,21 +467,218 @@ class MeasureResults:
             return result
 
         # Aggregate SPPs and drop sensor ID dimension
-        # Note: This will not work if multiple sensors are used for a purpose other
-        # than SPP splitting; should this happen, this part must be updated
+        # Note: This will not work if multiple sensors are used for a purpose
+        # other than SPP splitting; should this happen, this part must be
+        # updated
         weights = result.data_vars["spp"]
         result_aggregated = result.assign(
             {"raw": result["raw"].weighted(weights).mean(dim="sensor_id")},
         )
         result_aggregated = result_aggregated.assign(
-            {"spp": result_aggregated.data_vars["spp"].sum(dim="sensor_id")}
+            {"spp": result_aggregated.data_vars["spp"].sum(dim="sensor_id")},
         )
+        result_aggregated = result_aggregated.drop_dims("sensor_id")
 
-        # We now copy metadata
+        # Copy metadata (lost during aggregation)
         for var in list(result_aggregated.data_vars) + list(result_aggregated.coords):
             result_aggregated[var].attrs = result[var].attrs.copy()
 
-        return result_aggregated.drop_dims("sensor_id")
+        return result_aggregated
+
+    @staticmethod
+    def _to_dataset_spectral_coord_metadata() -> Dict:
+        """
+        Return metadata for the spectral coordinate based on active mode.
+
+        Returns → dict:
+            Metadata dictionary, ready to attach to the appropriate xarray
+            coordinate object.
+        """
+        wavelength_units = ucc.get("wavelength")
+
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            return {
+                "standard_name": "wavelength",
+                "long_name": "wavelength",
+                "units": symbol(wavelength_units),
+            }
+
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            return {"long_name": "bindex"}
+
+        else:
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+    @staticmethod
+    def _to_dataset_helper_coord_values(
+        raw: Dict,
+    ) -> Tuple[List, List, Tuple[int, int]]:
+        """
+        Collect spectral and sensor coordinate values from raw result dictionary.
+
+        Parameter ``raw`` (dict):
+            Raw result dictionary.
+
+        Returns → tuple(list, list, tuple[int, int]):
+            A tuple with:
+
+            * ``spectral_coords``: spectral coordinate values, sorted in
+              ascending order (in CKD modes, numeric string bin IDs are sorted
+              in natural order, meaning that "1000" will indeed be after "900");
+            * ``sensor_ids``: sensor coordinate values, sorted in ascending
+              order;
+            * ``film_size``: sensor film size as a (int, int) pair.
+        """
+        spectral_coords = set()
+        sensor_ids = set()
+        film_size = np.zeros((2,), dtype=int)
+
+        for spectral_coord, val in raw.items():
+            spectral_coords.add(spectral_coord)
+            for sensor_id, data in val["values"].items():
+                sensor_ids.add(sensor_id)
+                film_size = np.maximum(film_size, data.shape[:2])
+
+        if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            spectral_coords_sort_key = lambda x: (
+                *natsort_alphanum_key(x[0]),
+                int(x[1]),
+            )
+        else:
+            spectral_coords_sort_key = lambda x: x
+
+        return (
+            sorted(spectral_coords, key=spectral_coords_sort_key),
+            sorted(sensor_ids),
+            tuple(film_size),
+        )
+
+    @staticmethod
+    def _to_dataset_helper_data_values(
+        raw: Dict, spectral_coords: List, sensor_ids: List, film_size: Tuple[int, int]
+    ) -> np.ndarray:
+        """
+        Collect spectral and sensor coordinate values from raw result dictionary.
+
+        Parameter ``raw`` (dict):
+            Raw result dictionary.
+
+        Parameter ``spectral_coords`` (list):
+            Spectral coordinate values.
+
+        Parameter ``sensor_ids`` (list):
+            Sensor coordinate values.
+
+        Parameter ``film_size`` (tuple[int, int]):
+            Sensor film size.
+
+        Returns → array:
+            Sensor data values as a Numpy array. Dimensions are ordered as follows:
+
+            * spectral;
+            * sensor;
+            * pixel index.
+        """
+        if not eradiate.mode().has_flags(ModeFlags.MTS_MONO | ModeFlags.ANY_CKD):
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+        data = np.full(
+            (
+                len(spectral_coords),
+                len(sensor_ids),
+                *film_size,  # Note: Row-major order (width x comes last)
+            ),
+            np.nan,
+        )
+
+        for i_spectral, spectral_coord in enumerate(spectral_coords):
+            for i_sensor, sensor_id in enumerate(sensor_ids):
+                # Note: This doesn't handle heterogeneous sensor film sizes
+                # (i.e. cases in which sensors have different film sizes).
+                # To add support for it, blitting is probably a good approach
+                # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
+                data[i_spectral, i_sensor] = raw[spectral_coord]["values"][sensor_id][
+                    ..., 0
+                ]
+                # This latter indexing selects only one channel in the raw data
+                # array: this works with mono variants but will fail otherwise
+
+        return data
+
+    @staticmethod
+    def _to_dataset_helper_spp_values(
+        raw: Dict, spectral_coords: List, sensor_ids: List
+    ) -> np.ndarray:
+        """
+        Collect sample count values for each (spectral_index, sensor_index) pair.
+
+         Parameter ``raw`` (dict):
+            Raw result dictionary.
+
+        Parameter ``spectral_coords`` (list):
+            Spectral coordinate values.
+
+        Parameter ``sensor_ids`` (list):
+            Sensor coordinate values.
+
+        Returns → array:
+            Sample count for each spectral channel and each sensor.
+            Dimensions are ordered as follows:
+
+            * spectral;
+            * sensor.
+        """
+        spps = np.full((len(spectral_coords), len(sensor_ids)), np.nan, dtype=int)
+
+        for i_spectral, spectral_coord in enumerate(spectral_coords):
+            for i_sensor, sensor_id in enumerate(sensor_ids):
+                spps[i_spectral, i_sensor] = raw[spectral_coord]["spp"][sensor_id]
+
+        return spps
+
+    @staticmethod
+    def _to_dataset_helper_pixel_coord_values(
+        film_size: Tuple[int, int]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Compute pixel coordinates from a film size.
+
+        Parameter ``film_size`` (tuple[int, int]):
+            Film size.
+
+        Returns → tuple[array, array]:
+            (x, y) arrays with pixel coordinates in the [0, 1] × [0, 1] space.
+        """
+
+        # Compute pixel film coordinates
+        # As mentioned before, raw data shape is (y, x)
+        xs = np.arange(0.5, film_size[1], 1.0) / film_size[1]
+        ys = np.arange(0.5, film_size[0], 1.0) / film_size[0]
+
+        return xs, ys
+
+    @staticmethod
+    def _to_dataset_helper_spectral_index(spectral_coords):
+        """
+        Create spectral index based on current mode.
+
+        Parameter ``spectral_coords`` (array-like):
+            List of spectral coordinate values.
+
+        Returns → :class:`pandas.Index`:
+            Generated index (possibly a multi-index).
+        """
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            return pd.Index(spectral_coords)
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            return pd.MultiIndex.from_tuples(spectral_coords, names=("bin", "index"))
+        else:
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+
+# ------------------------------------------------------------------------------
+#                             Measure base class
+# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -627,34 +794,83 @@ class Measure(SceneElement, ABC):
         else:
             return [self.spp]
 
-    def _raw_results_aggregated(self) -> xr.Dataset:
-        """
-        Aggregate raw sensor results if multiple sensors were used.
-
-        Returns → :class:`xarray.Dataset`:
-            Processed results.
-        """
-        if self.results is None:
-            raise ValueError("no raw results stored, cannot aggregate")
-
-        ds = self.results
-        weights = xr.DataArray(
-            ds.data_vars["spp"],
-            coords={"sensor_id": ds.coords["sensor_id"]},
-            dims=["sensor_id"],
-        )
-        return ds.weighted(weights).mean(dim="sensor_id")
-
     def postprocess(self) -> xr.Dataset:
         """
-        Return post-processed raw sensor results.
+        Measure post-processing pipeline. The default implementation simply
+        aggregates SPP-split raw results and computes CKD quadrature if relevant.
+        Overloads can perform additional post-processing tasks and add metadata.
 
         Returns → :class:`~xarray.Dataset`:
             Post-processed results.
         """
-        # Default implementation simply aggregates SPP-split raw results;
-        # overloads can perform additional post-processing and add metadata
-        return self.results.to_dataset(aggregate_spps=True)
+        result = self.results.to_dataset(aggregate_spps=True)
+
+        if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            result = self._postprocess_ckd_eval_quad(result)
+
+        return result
+
+    def _postprocess_ckd_eval_quad(self, ds: xr.Dataset) -> xr.Dataset:
+        """
+        Evaluate quadrature in CKD mode and reindex data.
+
+        Parameter ``ds`` (:class:`xarray.Dataset`):
+            Raw result dataset as generated by the
+            :meth:`.MeasureResults.to_dataset` method, *i.e.* with a ``raw``
+            data variable and  a multi-level index attached to a ``bd``
+            dimension.
+
+        Returns → :class:`~xarray.Dataset`:
+            Post-processed results with the quadrature computed for each film
+            pixel, and the ``bd`` dimension replaced by a wavelength dimension
+            coordinate.
+        """
+        bins = list(OrderedDict.fromkeys(ds.bin.to_index()))  # (deduplicate list)
+        ys = ds.y.values
+        xs = ds.x.values
+        quad = self.spectral_cfg.bin_set.quad
+
+        n_bin = len(bins)
+        n_y = len(ys)
+        n_x = len(xs)
+
+        # Collect wavelengths associated with each bin
+        wavelength_units = ucc.get("wavelength")
+        wavelengths = [
+            bin.wcenter.m_as(wavelength_units)
+            for bin in self.spectral_cfg.bin_set.select_bins(("ids", {"ids": bins}))
+        ]
+
+        # Init storage
+        result = xr.Dataset(
+            {"raw": (("w", "y", "x"), np.zeros((n_bin, n_y, n_x)))},
+            coords={"w": wavelengths, "y": ys, "x": xs},
+        )
+
+        # For each bin and each pixel, compute quadrature and store the result
+        for i_bin, bin in enumerate(bins):
+            values_at_nodes = ds.raw.sel(bin=bin).values
+
+            # Rationale: Avoid using xarray's indexing in this loop for
+            # performance reasons (wrong data indexing method will result in
+            # 10x+ speed reduction)
+            for (i_y, i_x) in itertools.product(range(n_y), range(n_x)):
+                result.raw.values[i_bin, i_y, i_x] = quad.integrate(
+                    values_at_nodes[:, i_y, i_x], interval=np.array([0.0, 1.0])
+                )
+
+        # Copy lost metadata
+        for var in list(result.data_vars) + list(result.coords):
+            if var == "w":
+                result[var].attrs = {
+                    "standard_name": "wavelength",
+                    "long_description": "wavelength",
+                    "units": symbol(wavelength_units),
+                }
+            else:
+                result[var].attrs = ds[var].attrs.copy()
+
+        return result
 
     @abstractmethod
     def _base_dicts(self) -> List[Dict]:
