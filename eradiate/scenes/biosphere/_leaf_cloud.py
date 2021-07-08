@@ -8,7 +8,7 @@ import pinttr
 
 from ._core import CanopyElement, CanopyElementFactory
 from ..core import SceneElement
-from ..spectra import Spectrum, SpectrumFactory
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
 from ...units import unit_context_config as ucc
@@ -666,7 +666,7 @@ class LeafCloud(CanopyElement):
     leaf_reflectance = documented(
         attr.ib(
             default=0.5,
-            converter=SpectrumFactory.converter("reflectance"),
+            converter=spectrum_factory.converter("reflectance"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
@@ -681,7 +681,7 @@ class LeafCloud(CanopyElement):
     leaf_transmittance = documented(
         attr.ib(
             default=0.5,
-            converter=SpectrumFactory.converter("transmittance"),
+            converter=spectrum_factory.converter("transmittance"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("transmittance"),

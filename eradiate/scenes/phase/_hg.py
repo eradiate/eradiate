@@ -5,7 +5,7 @@ import attr
 import eradiate
 
 from ._core import PhaseFunction, PhaseFunctionFactory
-from ..spectra import Spectrum, SpectrumFactory, UniformSpectrum
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ..._util import onedict_value
 from ...attrs import documented, parse_docs
@@ -29,7 +29,7 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
     g = documented(
         attr.ib(
             default=0.0,
-            converter=SpectrumFactory.converter("dimensionless"),
+            converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),

@@ -6,17 +6,17 @@ import pint
 
 import eradiate
 
+from ._core import Spectrum, spectrum_factory
 from ... import data
 from ... import unit_context_kernel as uck
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
-from ...scenes.spectra import Spectrum, SpectrumFactory
 from ...units import PhysicalQuantity, to_quantity
 from ...validators import is_positive
 
 
-@SpectrumFactory.register("solar_irradiance")
+@spectrum_factory.register(type_id="solar_irradiance")
 @parse_docs
 @attr.s(frozen=True)
 class SolarIrradianceSpectrum(Spectrum):

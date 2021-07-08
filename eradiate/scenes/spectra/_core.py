@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import attr
 import pint
+from dessinemoi import Factory
 
 from ..._factory import BaseFactory
 from ...attrs import documented, parse_docs
@@ -58,21 +59,7 @@ class Spectrum(SceneElement, ABC):
         pass
 
 
-class SpectrumFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from
-    :class:`Spectrum`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: SpectrumFactory
-    """
-
-    _constructed_type = Spectrum
-    registry = {}
-
+class SpectrumFactory(Factory):
     @staticmethod
     def converter(quantity):
         """
@@ -116,3 +103,6 @@ class SpectrumFactory(BaseFactory):
             return SpectrumFactory.convert(value)
 
         return f
+
+
+spectrum_factory = SpectrumFactory()

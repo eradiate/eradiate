@@ -9,7 +9,7 @@ from . import CanopyElement
 from ._core import CanopyElementFactory
 from ._leaf_cloud import LeafCloud
 from ..core import SceneElement
-from ..spectra import Spectrum, SpectrumFactory
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
@@ -90,7 +90,7 @@ class AbstractTree(Tree):
     trunk_reflectance = documented(
         attr.ib(
             default=0.5,
-            converter=SpectrumFactory.converter("reflectance"),
+            converter=spectrum_factory.converter("reflectance"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),

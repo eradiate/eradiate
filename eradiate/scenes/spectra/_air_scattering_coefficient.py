@@ -5,7 +5,7 @@ import pint
 
 import eradiate
 
-from ._core import Spectrum, SpectrumFactory
+from ._core import Spectrum, spectrum_factory
 from ...attrs import parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
@@ -14,7 +14,7 @@ from ...units import PhysicalQuantity
 from ...units import unit_context_kernel as uck
 
 
-@SpectrumFactory.register("air_scattering_coefficient")
+@spectrum_factory.register(type_id="air_scattering_coefficient")
 @parse_docs
 @attr.s(frozen=True)
 class AirScatteringCoefficientSpectrum(Spectrum):

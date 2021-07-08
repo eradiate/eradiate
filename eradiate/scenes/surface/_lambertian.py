@@ -1,7 +1,7 @@
 import attr
 
 from ._core import Surface, SurfaceFactory
-from ..spectra import Spectrum, SpectrumFactory
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
@@ -20,7 +20,7 @@ class LambertianSurface(Surface):
     reflectance = documented(
         attr.ib(
             default=0.5,
-            converter=SpectrumFactory.converter("reflectance"),
+            converter=spectrum_factory.converter("reflectance"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),

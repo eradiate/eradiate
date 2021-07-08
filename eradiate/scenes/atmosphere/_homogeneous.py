@@ -6,7 +6,7 @@ import pinttr
 
 from ._core import Atmosphere, AtmosphereFactory
 from ..phase import PhaseFunction, PhaseFunctionFactory, RayleighPhaseFunction
-from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, SpectrumFactory
+from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
@@ -58,7 +58,7 @@ class HomogeneousAtmosphere(Atmosphere):
     sigma_s: Spectrum = documented(
         attr.ib(
             factory=AirScatteringCoefficientSpectrum,
-            converter=SpectrumFactory.converter("collision_coefficient"),
+            converter=spectrum_factory.converter("collision_coefficient"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 has_quantity("collision_coefficient"),
@@ -75,7 +75,7 @@ class HomogeneousAtmosphere(Atmosphere):
     sigma_a: Spectrum = documented(
         attr.ib(
             default=0.0,
-            converter=SpectrumFactory.converter("collision_coefficient"),
+            converter=spectrum_factory.converter("collision_coefficient"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 has_quantity("collision_coefficient"),
