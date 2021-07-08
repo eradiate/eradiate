@@ -60,8 +60,7 @@ class Spectrum(SceneElement, ABC):
 
 
 class SpectrumFactory(Factory):
-    @staticmethod
-    def converter(quantity):
+    def converter(self, quantity):
         """
         Generate a converter wrapping :meth:`SpectrumFactory.convert` to
         handle defaults for shortened spectrum definitions. The produced
@@ -96,11 +95,11 @@ class SpectrumFactory(Factory):
                         value["type"] in {"uniform", "interpolated"}
                         and "quantity" not in value
                     ):
-                        return SpectrumFactory.convert({**value, "quantity": quantity})
+                        return self.convert({**value, "quantity": quantity})
                 except KeyError:
                     pass
 
-            return SpectrumFactory.convert(value)
+            return self.convert(value)
 
         return f
 
