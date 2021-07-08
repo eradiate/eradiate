@@ -5,10 +5,10 @@ from typing import Dict, Optional, Union
 import attr
 import pint
 import pinttr
+from dessinemoi import Factory
 
 from ..core import SceneElement
 from ... import converters, validators
-from ..._factory import BaseFactory
 from ...attrs import AUTO, _Auto, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ConfigWarning, OverriddenValueWarning
@@ -172,16 +172,4 @@ class Surface(SceneElement, ABC):
         return attr.evolve(self, width=new_width)
 
 
-class SurfaceFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from :class:`Surface`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: SurfaceFactory
-    """
-
-    _constructed_type = Surface
-    registry = {}
+surface_factory = Factory()

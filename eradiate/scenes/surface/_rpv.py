@@ -1,6 +1,6 @@
 import attr
 
-from ._core import Surface, SurfaceFactory
+from ._core import Surface, surface_factory
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ..._util import onedict_value
@@ -8,7 +8,7 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
 
-@SurfaceFactory.register("rpv")
+@surface_factory.register(type_id="rpv")
 @parse_docs
 @attr.s
 class RPVSurface(Surface):

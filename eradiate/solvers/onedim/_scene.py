@@ -16,7 +16,7 @@ from ...scenes.measure._distant import (
     TargetOriginPoint,
     TargetOriginSphere,
 )
-from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
+from ...scenes.surface import LambertianSurface, Surface, surface_factory
 
 
 @parse_docs
@@ -45,7 +45,7 @@ class OneDimScene(Scene):
     surface: Surface = documented(
         attr.ib(
             factory=LambertianSurface,
-            converter=SurfaceFactory.convert,
+            converter=surface_factory.convert,
             validator=attr.validators.instance_of(Surface),
         ),
         doc="Surface specification. "

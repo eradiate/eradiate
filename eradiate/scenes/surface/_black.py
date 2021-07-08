@@ -1,11 +1,11 @@
 import attr
 
-from ._core import Surface, SurfaceFactory
+from ._core import Surface, surface_factory
 from ...attrs import parse_docs
 from ...contexts import KernelDictContext
 
 
-@SurfaceFactory.register("black")
+@surface_factory.register(type_id="black")
 @parse_docs
 @attr.s
 class BlackSurface(Surface):
