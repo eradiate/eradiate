@@ -2,7 +2,7 @@ import attr
 import numpy as np
 import pinttr
 
-from ._core import Measure, MeasureFactory
+from ._core import Measure, measure_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...units import unit_context_config as ucc
@@ -10,7 +10,7 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
-@MeasureFactory.register("radiancemeter")
+@measure_factory.register(type_id="radiancemeter")
 @parse_docs
 @attr.s
 class RadiancemeterMeasure(Measure):
