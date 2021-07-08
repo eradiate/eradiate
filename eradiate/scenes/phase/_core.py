@@ -2,9 +2,9 @@ from abc import ABC
 from typing import Optional
 
 import attr
+from dessinemoi import Factory
 
 from ..core import SceneElement
-from ..._factory import BaseFactory
 from ...attrs import documented, get_doc, parse_docs
 
 
@@ -26,17 +26,4 @@ class PhaseFunction(SceneElement, ABC):
     )
 
 
-class PhaseFunctionFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from
-    :class:`PhaseFunction`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: PhaseFunctionFactory
-    """
-
-    _constructed_type = PhaseFunction
-    registry = {}
+phase_function_factory = Factory()

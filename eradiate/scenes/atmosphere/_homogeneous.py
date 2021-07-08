@@ -5,7 +5,7 @@ import pint
 import pinttr
 
 from ._core import Atmosphere, AtmosphereFactory
-from ..phase import PhaseFunction, PhaseFunctionFactory, RayleighPhaseFunction
+from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
@@ -93,7 +93,7 @@ class HomogeneousAtmosphere(Atmosphere):
     phase: PhaseFunction = documented(
         attr.ib(
             factory=lambda: RayleighPhaseFunction(),
-            converter=PhaseFunctionFactory.convert,
+            converter=phase_function_factory.convert,
             validator=attr.validators.instance_of(PhaseFunction),
         )
     )
