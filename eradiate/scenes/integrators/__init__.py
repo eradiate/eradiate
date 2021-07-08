@@ -1,9 +1,9 @@
-from ._core import Integrator, IntegratorFactory
+from ._core import Integrator, integrator_factory
 from ._path_tracers import PathIntegrator, VolPathIntegrator, VolPathMISIntegrator
 
 __all__ = [
     "Integrator",
-    "IntegratorFactory",
+    "integrator_factory",
     "PathIntegrator",
     "VolPathIntegrator",
     "VolPathMISIntegrator",

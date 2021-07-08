@@ -10,7 +10,7 @@ from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
 from ...scenes.biosphere import BiosphereFactory, Canopy
 from ...scenes.core import KernelDict
-from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
+from ...scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ...scenes.measure import DistantMeasure
 from ...scenes.surface import LambertianSurface, Surface, surface_factory
 
@@ -75,7 +75,7 @@ class RamiScene(Scene):
     integrator: Integrator = documented(
         attr.ib(
             factory=PathIntegrator,
-            converter=IntegratorFactory.convert,
+            converter=integrator_factory.convert,
             validator=attr.validators.instance_of(Integrator),
         ),
         doc=get_doc(Scene, attrib="integrator", field="doc"),

@@ -11,7 +11,7 @@ from ...scenes.illumination import (
     DirectionalIllumination,
     IlluminationFactory,
 )
-from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
+from ...scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ...scenes.measure import (
     DistantMeasure,
     DistantRadianceMeasure,
@@ -82,7 +82,7 @@ class Scene(SceneElement, ABC):
     integrator: Integrator = documented(
         attr.ib(
             factory=PathIntegrator,
-            converter=IntegratorFactory.convert,
+            converter=integrator_factory.convert,
             validator=attr.validators.instance_of(Integrator),
         ),
         doc="Monte Carlo integration algorithm specification. "

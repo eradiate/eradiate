@@ -1,7 +1,7 @@
 import attr
+from dessinemoi import Factory
 
 from ..core import SceneElement
-from ..._factory import BaseFactory
 from ...attrs import documented, get_doc, parse_docs
 
 
@@ -23,17 +23,4 @@ class Integrator(SceneElement):
     )
 
 
-class IntegratorFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from
-    :class:`Integrator`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: IntegratorFactory
-    """
-
-    _constructed_type = Integrator
-    registry = {}
+integrator_factory = Factory()

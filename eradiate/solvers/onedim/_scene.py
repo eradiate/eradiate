@@ -10,7 +10,7 @@ from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
 from ...scenes.atmosphere import Atmosphere, AtmosphereFactory, HomogeneousAtmosphere
 from ...scenes.core import KernelDict
-from ...scenes.integrators import Integrator, IntegratorFactory, VolPathIntegrator
+from ...scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ...scenes.measure._distant import (
     DistantMeasure,
     TargetOriginPoint,
@@ -66,7 +66,7 @@ class OneDimScene(Scene):
     integrator: Integrator = documented(
         attr.ib(
             factory=VolPathIntegrator,
-            converter=IntegratorFactory.convert,
+            converter=integrator_factory.convert,
             validator=attr.validators.instance_of(Integrator),
         ),
         doc=get_doc(Scene, attrib="integrator", field="doc"),
