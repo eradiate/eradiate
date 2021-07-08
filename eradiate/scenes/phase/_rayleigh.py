@@ -2,12 +2,12 @@ from typing import MutableMapping, Optional
 
 import attr
 
-from ._core import PhaseFunction, PhaseFunctionFactory
+from ._core import PhaseFunction, phase_function_factory
 from ...attrs import parse_docs
 from ...contexts import KernelDictContext
 
 
-@PhaseFunctionFactory.register("rayleigh")
+@phase_function_factory.register(type_id="rayleigh")
 @parse_docs
 @attr.s
 class RayleighPhaseFunction(PhaseFunction):
