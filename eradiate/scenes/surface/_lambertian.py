@@ -1,13 +1,13 @@
 import attr
 
-from ._core import Surface, SurfaceFactory
+from ._core import Surface, surface_factory
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
 
-@SurfaceFactory.register("lambertian")
+@surface_factory.register(type_id="lambertian")
 @parse_docs
 @attr.s
 class LambertianSurface(Surface):

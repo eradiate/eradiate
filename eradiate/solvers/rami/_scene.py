@@ -12,7 +12,7 @@ from ...scenes.biosphere import BiosphereFactory, Canopy
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, IntegratorFactory, PathIntegrator
 from ...scenes.measure import DistantMeasure
-from ...scenes.surface import LambertianSurface, Surface, SurfaceFactory
+from ...scenes.surface import LambertianSurface, Surface, surface_factory
 
 
 @parse_docs
@@ -26,7 +26,7 @@ class RamiScene(Scene):
     surface: Surface = documented(
         attr.ib(
             factory=LambertianSurface,
-            converter=SurfaceFactory.convert,
+            converter=surface_factory.convert,
             validator=attr.validators.instance_of(Surface),
         ),
         doc="Surface specification. "
