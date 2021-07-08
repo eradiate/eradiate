@@ -2,14 +2,14 @@ from typing import MutableMapping, Optional
 
 import attr
 
-from ._core import Illumination, IlluminationFactory
+from ._core import Illumination, illumination_factory
 from ..spectra import Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...validators import has_quantity
 
 
-@IlluminationFactory.register("constant")
+@illumination_factory.register(type_id="constant")
 @parse_docs
 @attr.s
 class ConstantIllumination(Illumination):

@@ -1,9 +1,9 @@
 from abc import ABC
 
 import attr
+from dessinemoi import Factory
 
 from ..core import SceneElement
-from ..._factory import BaseFactory
 from ...attrs import documented, get_doc, parse_docs
 
 
@@ -25,17 +25,4 @@ class Illumination(SceneElement, ABC):
     )
 
 
-class IlluminationFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from
-    :class:`Illumination`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: IlluminationFactory
-    """
-
-    _constructed_type = Illumination
-    registry = {}
+illumination_factory = Factory()

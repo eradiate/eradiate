@@ -3,7 +3,7 @@ from typing import MutableMapping, Optional
 import attr
 import pinttr
 
-from ._core import Illumination, IlluminationFactory
+from ._core import Illumination, illumination_factory
 from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
@@ -13,7 +13,7 @@ from ...units import unit_registry as ureg
 from ...validators import has_quantity, is_positive
 
 
-@IlluminationFactory.register("directional")
+@illumination_factory.register(type_id="directional")
 @parse_docs
 @attr.s
 class DirectionalIllumination(Illumination):
