@@ -4,7 +4,7 @@ import attr
 import pinttr
 
 from ._core import Illumination, IlluminationFactory
-from ..spectra import SolarIrradianceSpectrum, Spectrum, SpectrumFactory
+from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...frame import angles_to_direction
@@ -51,7 +51,7 @@ class DirectionalIllumination(Illumination):
     irradiance = documented(
         attr.ib(
             factory=SolarIrradianceSpectrum,
-            converter=SpectrumFactory.converter("irradiance"),
+            converter=spectrum_factory.converter("irradiance"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 has_quantity("irradiance"),

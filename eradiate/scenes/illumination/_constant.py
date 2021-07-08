@@ -3,7 +3,7 @@ from typing import MutableMapping, Optional
 import attr
 
 from ._core import Illumination, IlluminationFactory
-from ..spectra import Spectrum, SpectrumFactory
+from ..spectra import Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...validators import has_quantity
@@ -20,7 +20,7 @@ class ConstantIllumination(Illumination):
     radiance = documented(
         attr.ib(
             default=1.0,
-            converter=SpectrumFactory.converter("radiance"),
+            converter=spectrum_factory.converter("radiance"),
             validator=[attr.validators.instance_of(Spectrum), has_quantity("radiance")],
         ),
         doc="Emitted radiance spectrum. Must be a radiance spectrum "

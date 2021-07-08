@@ -4,15 +4,14 @@ import attr
 import pint
 import pinttr
 
+from ._core import Spectrum, spectrum_factory
 from ... import unit_context_config as ucc
 from ... import unit_context_kernel as uck
-from ... import validators
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...scenes.spectra import Spectrum, SpectrumFactory
 
 
-@SpectrumFactory.register("uniform")
+@spectrum_factory.register(type_id="uniform")
 @parse_docs
 @attr.s
 class UniformSpectrum(Spectrum):

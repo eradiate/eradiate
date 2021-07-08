@@ -1,7 +1,7 @@
 import attr
 
 from ._core import Surface, SurfaceFactory
-from ..spectra import Spectrum, SpectrumFactory
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ..._util import onedict_value
 from ...attrs import documented, parse_docs
@@ -29,7 +29,7 @@ class RPVSurface(Surface):
     rho_0 = documented(
         attr.ib(
             default=0.183,
-            converter=SpectrumFactory.converter("dimensionless"),
+            converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
@@ -44,7 +44,7 @@ class RPVSurface(Surface):
     rho_c = documented(
         attr.ib(
             default=0.183,
-            converter=SpectrumFactory.converter("dimensionless"),
+            converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
@@ -59,7 +59,7 @@ class RPVSurface(Surface):
     k = documented(
         attr.ib(
             default=0.780,
-            converter=SpectrumFactory.converter("dimensionless"),
+            converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
@@ -74,7 +74,7 @@ class RPVSurface(Surface):
     g = documented(
         attr.ib(
             default=-0.1,
-            converter=SpectrumFactory.converter("dimensionless"),
+            converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),

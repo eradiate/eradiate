@@ -7,7 +7,7 @@ import pinttr
 
 import eradiate
 
-from ._core import Spectrum, SpectrumFactory
+from ._core import Spectrum, spectrum_factory
 from ... import converters, validators
 from ..._util import ensure_array
 from ...attrs import documented, parse_docs
@@ -17,7 +17,7 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
 
-@SpectrumFactory.register("interpolated")
+@spectrum_factory.register(type_id="interpolated")
 @parse_docs
 @attr.s
 class InterpolatedSpectrum(Spectrum):
