@@ -2,7 +2,7 @@ from typing import MutableMapping, Optional
 
 import attr
 
-from ._core import Integrator, IntegratorFactory
+from ._core import Integrator, integrator_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
@@ -58,7 +58,7 @@ class MonteCarloIntegrator(Integrator):
         return result
 
 
-@IntegratorFactory.register("path")
+@integrator_factory.register(type_id="path")
 @parse_docs
 @attr.s
 class PathIntegrator(MonteCarloIntegrator):
@@ -76,7 +76,7 @@ class PathIntegrator(MonteCarloIntegrator):
         return result
 
 
-@IntegratorFactory.register("volpath")
+@integrator_factory.register(type_id="volpath")
 @parse_docs
 @attr.s
 class VolPathIntegrator(MonteCarloIntegrator):
@@ -93,7 +93,7 @@ class VolPathIntegrator(MonteCarloIntegrator):
         return result
 
 
-@IntegratorFactory.register("volpathmis")
+@integrator_factory.register(type_id="volpathmis")
 @parse_docs
 @attr.s
 class VolPathMISIntegrator(MonteCarloIntegrator):
