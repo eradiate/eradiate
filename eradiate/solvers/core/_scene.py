@@ -9,7 +9,7 @@ from ...scenes.core import SceneElement
 from ...scenes.illumination import (
     ConstantIllumination,
     DirectionalIllumination,
-    IlluminationFactory,
+    illumination_factory,
 )
 from ...scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ...scenes.measure import (
@@ -30,7 +30,7 @@ class Scene(SceneElement, ABC):
     illumination: DirectionalIllumination = documented(
         attr.ib(
             factory=DirectionalIllumination,
-            converter=IlluminationFactory.convert,
+            converter=illumination_factory.convert,
             validator=attr.validators.instance_of(
                 (DirectionalIllumination, ConstantIllumination)
             ),
