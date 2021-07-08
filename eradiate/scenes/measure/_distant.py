@@ -8,7 +8,7 @@ import xarray as xr
 
 import eradiate
 
-from ._core import Measure, MeasureFactory
+from ._core import Measure, measure_factory
 from ..illumination import ConstantIllumination, DirectionalIllumination
 from ... import converters, validators
 from ..._util import is_vector3
@@ -422,7 +422,8 @@ class DistantMeasure(Measure):
         return ds
 
 
-@MeasureFactory.register("distant", "distant_radiance")
+@measure_factory.register(type_id="distant", allow_aliases=True)
+@measure_factory.register(type_id="distant_radiance", allow_aliases=True)
 @parse_docs
 @attr.s
 class DistantRadianceMeasure(DistantMeasure):
@@ -592,7 +593,7 @@ class DistantRadianceMeasure(DistantMeasure):
         return ds
 
 
-@MeasureFactory.register("distant_reflectance")
+@measure_factory.register(type_id="distant_reflectance")
 @parse_docs
 @attr.s
 class DistantReflectanceMeasure(DistantRadianceMeasure):
@@ -661,7 +662,7 @@ class DistantReflectanceMeasure(DistantRadianceMeasure):
         return ds
 
 
-@MeasureFactory.register("distant_flux")
+@measure_factory.register(type_id="distant_flux")
 @parse_docs
 @attr.s
 class DistantFluxMeasure(DistantMeasure):
@@ -764,7 +765,7 @@ class DistantFluxMeasure(DistantMeasure):
         return ds
 
 
-@MeasureFactory.register("distant_albedo")
+@measure_factory.register(type_id="distant_albedo")
 @parse_docs
 @attr.s
 class DistantAlbedoMeasure(DistantFluxMeasure):

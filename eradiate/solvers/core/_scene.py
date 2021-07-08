@@ -16,7 +16,7 @@ from ...scenes.measure import (
     DistantMeasure,
     DistantRadianceMeasure,
     Measure,
-    MeasureFactory,
+    measure_factory,
 )
 
 
@@ -47,10 +47,10 @@ class Scene(SceneElement, ABC):
         attr.ib(
             factory=lambda: [DistantRadianceMeasure()],
             converter=lambda value: [
-                MeasureFactory.convert(x) for x in pinttr.util.always_iterable(value)
+                measure_factory.convert(x) for x in pinttr.util.always_iterable(value)
             ]
             if not isinstance(value, dict)
-            else [MeasureFactory.convert(value)],
+            else [measure_factory.convert(value)],
         ),
         doc="List of measure specifications. The passed list may contain "
         "dictionaries, which will be interpreted by "

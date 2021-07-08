@@ -1,4 +1,4 @@
-from ._core import Measure, MeasureFactory, MeasureResults, MeasureSpectralConfig
+from ._core import Measure, MeasureResults, MeasureSpectralConfig, measure_factory
 from ._distant import (
     DistantAlbedoMeasure,
     DistantFluxMeasure,
@@ -13,7 +13,7 @@ from ._radiancemeterarray import RadiancemeterArrayMeasure
 __all__ = [
     "Measure",
     "MeasureSpectralConfig",
-    "MeasureFactory",
+    "measure_factory",
     "MeasureResults",
     "DistantMeasure",
     "DistantAlbedoMeasure",

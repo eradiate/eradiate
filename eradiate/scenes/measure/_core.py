@@ -7,12 +7,12 @@ import numpy as np
 import pint
 import pinttr
 import xarray as xr
+from dessinemoi import Factory
 
 import eradiate
 
 from ..core import SceneElement
 from ... import converters, validators
-from ..._factory import BaseFactory
 from ..._util import ensure_array
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, MonoSpectralContext, SpectralContext
@@ -539,24 +539,10 @@ class Measure(SceneElement, ABC):
         return result
 
 
-class MeasureFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from :class:`Measure`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: MeasureFactory
-    """
-
-    _constructed_type = Measure
-    registry = {}
-
-    @classmethod
-    def create(cls, config_dict):
+class MeasureFactory(Factory):
+    def create(self, type_id, **kwargs):
         try:
-            if config_dict["type"] == "distant":
+            if type_id == "distant":
                 warnings.warn(
                     "Using the 'distant' factory ID to create a "
                     "DistantRadianceMeasure is deprecated. Use "
@@ -566,4 +552,7 @@ class MeasureFactory(BaseFactory):
         except KeyError:
             pass
 
-        return super(MeasureFactory, cls).create(config_dict)
+        return super().create(type_id, **kwargs)
+
+
+measure_factory = MeasureFactory()
