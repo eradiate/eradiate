@@ -58,7 +58,8 @@ _getters = {
 
 
 def open(category=None, id=None, path=None):
-    """Opens a data set.
+    """
+    Open a data set.
 
     Parameter ``category`` (str or None):
         If ``None``, ``path`` must not be ``None`` .
@@ -85,9 +86,7 @@ def open(category=None, id=None, path=None):
     """
     if path is None:
         if category is None or id is None:
-            raise ValueError(
-                "if 'path' is None, 'category' and 'id' must not be None"
-            )
+            raise ValueError("if 'path' is None, 'category' and 'id' must not be None")
 
         try:
             return getter(category).open(id)
@@ -107,7 +106,8 @@ def open(category=None, id=None, path=None):
 
 
 def getter(category):
-    """Get the getter class for the requested category.
+    """
+    Get the getter class for the requested category.
 
     Parameter ``category`` (str):
         Dataset category identifier. See :func:`open` for valid categories.
@@ -128,7 +128,8 @@ def getter(category):
 
 
 def registered(category):
-    """Get a list of registered dataset IDs for a given data set category.
+    """
+    Get a list of registered dataset IDs for a given data set category.
 
     Parameter ``category`` (str):
         Dataset category identifier. See :func:`open` for valid categories.
@@ -140,7 +141,8 @@ def registered(category):
 
 
 def find(category):
-    """Check if the data referenced for a given category exists.
+    """
+    Check if the data referenced for a given category exists.
 
     Parameter ``category`` (str):
         Dataset category identifier. See :func:`open` for valid categories.
