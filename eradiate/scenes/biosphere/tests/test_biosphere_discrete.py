@@ -6,12 +6,13 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.biosphere import AbstractTree, MeshTree, MeshTreeElement
-from eradiate.scenes.biosphere._discrete import (
-    DiscreteCanopy,
+from eradiate.scenes.biosphere import (
+    AbstractTree,
     InstancedCanopyElement,
-    LeafCloud,
+    MeshTree,
+    MeshTreeElement,
 )
+from eradiate.scenes.biosphere._discrete import DiscreteCanopy, LeafCloud
 from eradiate.scenes.core import KernelDict
 
 # -- Fixture definitions -------------------------------------------------------
@@ -313,13 +314,13 @@ def test_discrete_canopy_advanced(
             InstancedCanopyElement(
                 instance_positions=[[0, 0, 0]],
                 canopy_element=MeshTree(
-                    id="mesh tree",
+                    id="mesh_tree",
                     mesh_tree_elements=[
                         MeshTreeElement(
                             mesh_filename=tempfile_obj,
                             mesh_units=ureg.m,
-                            mesh_reflectance=0.5,
-                            mesh_transmittance=0.5,
+                            reflectance=0.5,
+                            transmittance=0.5,
                             id="mesh_element",
                         )
                     ],
@@ -382,8 +383,8 @@ def test_discrete_canopy_advanced(
                         "mesh_tree_elements": [
                             {
                                 "mesh_filename": tempfile_obj,
-                                "mesh_reflectance": 0.5,
-                                "mesh_transmittance": 0.5,
+                                "reflectance": 0.5,
+                                "transmittance": 0.5,
                                 "mesh_units": ureg.m,
                             }
                         ],

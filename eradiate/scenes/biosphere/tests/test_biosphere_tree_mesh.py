@@ -8,13 +8,15 @@ from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere import MeshTree, MeshTreeElement
 from eradiate.scenes.core import KernelDict
 
-# -- Fixture definitions -------------------------------------------------------
+# ------------------------------------------------------------------------------
+#                            Fixture definitions
+# ------------------------------------------------------------------------------
 
 
 @pytest.fixture(scope="module")
-def tempfile_obj():
+def tmpfile_obj():
     with tempfile.TemporaryDirectory() as tmpdir:
-        filename = os.path.join(tmpdir, "tempfile_mesh.obj")
+        filename = os.path.join(tmpdir, "tmpfile_mesh.obj")
         with open(filename, "w") as tf:
             tf.write(
                 """o Cube
@@ -64,9 +66,9 @@ f 5/6/6 1/12/6 8/11/6"""
 
 
 @pytest.fixture(scope="module")
-def tempfile_ply():
+def tmpfile_ply():
     with tempfile.TemporaryDirectory() as tmpdir:
-        filename = os.path.join(tmpdir, "tempfile_mesh.ply")
+        filename = os.path.join(tmpdir, "tmpfile_mesh.ply")
         with open(filename, "w") as tf:
             tf.write(
                 """ply 
@@ -104,82 +106,73 @@ end_header
 
 
 @pytest.fixture(scope="module")
-def tempfile_stl():
+def tmpfile_stl():
     with tempfile.TemporaryDirectory() as tmpdir:
-        filename = os.path.join(tmpdir, "tempfile_mesh.stl")
+        filename = os.path.join(tmpdir, "tmpfile_mesh.stl")
         with open(filename, "w") as tf:
             tf.write("fake content\n")
         yield filename
 
 
-def test_mesh_tree_element_instantiate(
-    mode_mono, tempfile_obj, tempfile_ply, tempfile_stl
-):
+# ------------------------------------------------------------------------------
+#                                   Test
+# ------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "tmp_file",
+    ["tmpfile_obj", "tmpfile_ply", "tmpfile_stl"],
+    ids=["obj", "ply", "stl"],
+)
+def test_mesh_tree_element_instantiate(mode_mono, tmp_file, request):
+    tmp_file = request.getfixturevalue(tmp_file)
 
     # empty constructor raises due to missing mesh description file
     with pytest.raises(ValueError):
         MeshTreeElement()
 
-    # obj file instantiation
-    assert MeshTreeElement(
-        id="mesh_tree_obj",
-        mesh_filename=tempfile_obj,
-        mesh_units=ureg.m,
-        mesh_reflectance=0.5,
-        mesh_transmittance=0.5,
-    )
-
-    # ply file instantiation
-    assert MeshTreeElement(
-        id="mesh_tree_ply",
-        mesh_filename=tempfile_ply,
-        mesh_units=ureg.m,
-        mesh_reflectance=0.5,
-        mesh_transmittance=0.5,
-    )
-
-    # unsupported file format raise
-    with pytest.raises(ValueError):
-        MeshTreeElement(
-            id="mesh_tree_stl",
-            mesh_filename=tempfile_stl,
+    # instantiation with supported format succeeds, except for stl
+    if "tmpfile_stl" not in request.fixturenames:
+        assert MeshTreeElement(
+            id="mesh_tree",
+            mesh_filename=tmp_file,
             mesh_units=ureg.m,
-            mesh_reflectance=0.5,
-            mesh_transmittance=0.5,
+            reflectance=0.5,
+            transmittance=0.5,
         )
+    else:
+        with pytest.raises(ValueError):
+            MeshTreeElement(
+                id="mesh_tree_stl",
+                mesh_filename=tmp_file,
+                mesh_units=ureg.m,
+                reflectance=0.5,
+                transmittance=0.5,
+            )
 
 
-def test_mesh_tree_element_load(mode_mono, tempfile_obj, tempfile_ply):
+@pytest.mark.parametrize("tmp_file", ["tmpfile_obj", "tmpfile_ply"], ids=["obj", "ply"])
+def test_mesh_tree_element_load(mode_mono, tmp_file, request):
     """
     Instantiate MeshTreeElement objects from obj and ply files and load the
     corresponding Mitsuba objects.
     """
-    ctx = KernelDictContext()
+    tmp_file = request.getfixturevalue(tmp_file)
+    ctx = KernelDictContext(ref=True)
 
-    # obj file instantiation
-    obj_tree = MeshTreeElement(
+    tree_element = MeshTreeElement(
         id="mesh_tree_obj",
-        mesh_filename=tempfile_obj,
+        mesh_filename=tmp_file,
         mesh_units=ureg.m,
-        mesh_reflectance=0.5,
-        mesh_transmittance=0.5,
+        reflectance=0.5,
+        transmittance=0.5,
     )
+    d = {**tree_element.bsdfs(ctx), **tree_element.shapes(ctx)}
 
-    assert KernelDict.new(obj_tree, ctx=ctx).load()
-
-    # ply file instantiation
-    ply_tree = MeshTreeElement(
-        id="mesh_tree_ply",
-        mesh_filename=tempfile_ply,
-        mesh_units=ureg.m,
-        mesh_reflectance=0.5,
-        mesh_transmittance=0.5,
-    )
-
-    assert KernelDict.new(ply_tree, ctx=ctx).load()
+    assert KernelDict.new(d, ctx=ctx).load()
 
 
-def test_mesh_tree_instantiate(mode_mono, tempfile_obj):
+def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
     """
     Instantiate a MeshTree object holding two MeshTreeElements and load the
     corresponding Mitsuba objects.
@@ -191,17 +184,17 @@ def test_mesh_tree_instantiate(mode_mono, tempfile_obj):
         mesh_tree_elements=[
             MeshTreeElement(
                 id="mesh_tree_obj",
-                mesh_filename=tempfile_obj,
+                mesh_filename=tmpfile_obj,
                 mesh_units=ureg.m,
-                mesh_reflectance=0.5,
-                mesh_transmittance=0.5,
+                reflectance=0.5,
+                transmittance=0.5,
             ),
             MeshTreeElement(
                 id="mesh_tree_obj_2",
-                mesh_filename=tempfile_obj,
+                mesh_filename=tmpfile_obj,
                 mesh_units=ureg.m,
-                mesh_reflectance=0.1,
-                mesh_transmittance=0.9,
+                reflectance=0.1,
+                transmittance=0.9,
             ),
         ]
     )
@@ -210,17 +203,17 @@ def test_mesh_tree_instantiate(mode_mono, tempfile_obj):
         mesh_tree_elements=[
             MeshTreeElement(
                 id="mesh_tree_obj",
-                mesh_filename=tempfile_obj,
+                mesh_filename=tmpfile_obj,
                 mesh_units=ureg.m,
-                mesh_reflectance=0.5,
-                mesh_transmittance=0.5,
+                reflectance=0.5,
+                transmittance=0.5,
             ),
             MeshTreeElement(
                 id="mesh_tree_obj_2",
-                mesh_filename=tempfile_obj,
+                mesh_filename=tmpfile_obj,
                 mesh_units=ureg.m,
-                mesh_reflectance=0.1,
-                mesh_transmittance=0.9,
+                reflectance=0.1,
+                transmittance=0.9,
             ),
         ]
     )
@@ -235,16 +228,16 @@ def test_mesh_tree_instantiate(mode_mono, tempfile_obj):
             "mesh_tree_elements": [
                 {
                     "id": "mesh_tree_obj",
-                    "mesh_filename": tempfile_obj,
-                    "mesh_reflectance": 0.5,
-                    "mesh_transmittance": 0.5,
+                    "mesh_filename": tmpfile_obj,
+                    "reflectance": 0.5,
+                    "transmittance": 0.5,
                     "mesh_units": ureg.m,
                 },
                 {
                     "id": "mesh_tree_obj_2",
-                    "mesh_filename": tempfile_obj,
-                    "mesh_reflectance": 0.1,
-                    "mesh_transmittance": 0.9,
+                    "mesh_filename": tmpfile_obj,
+                    "reflectance": 0.1,
+                    "transmittance": 0.9,
                     "mesh_units": ureg.m,
                 },
             ],
@@ -257,16 +250,16 @@ def test_mesh_tree_instantiate(mode_mono, tempfile_obj):
             "mesh_tree_elements": [
                 {
                     "id": "mesh_tree_obj",
-                    "mesh_filename": tempfile_obj,
-                    "mesh_reflectance": 0.5,
-                    "mesh_transmittance": 0.5,
+                    "mesh_filename": tmpfile_obj,
+                    "reflectance": 0.5,
+                    "transmittance": 0.5,
                     "mesh_units": ureg.m,
                 },
                 {
                     "id": "mesh_tree_obj_2",
-                    "mesh_filename": tempfile_obj,
-                    "mesh_reflectance": 0.1,
-                    "mesh_transmittance": 0.9,
+                    "mesh_filename": tmpfile_obj,
+                    "reflectance": 0.1,
+                    "transmittance": 0.9,
                     "mesh_units": ureg.m,
                 },
             ],
