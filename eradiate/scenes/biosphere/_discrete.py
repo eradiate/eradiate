@@ -5,9 +5,10 @@ from typing import MutableMapping, Optional
 import attr
 import numpy as np
 import pinttr
+from rich.pretty import pprint
 
 from . import InstancedCanopyElement
-from ._core import BiosphereFactory, Canopy
+from ._core import biosphere_factory, Canopy
 from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
@@ -15,7 +16,7 @@ from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
 
-@BiosphereFactory.register("discrete_canopy")
+@biosphere_factory.register(type_id="discrete_canopy")
 @parse_docs
 @attr.s
 class DiscreteCanopy(Canopy):
@@ -326,6 +327,7 @@ class DiscreteCanopy(Canopy):
 
         # Dispatch call based on 'construct' parameter
         construct = d_copy.pop("construct", None)
+        pprint(d_copy)
 
         if construct == "homogeneous":
             result = cls.homogeneous(**d_copy)

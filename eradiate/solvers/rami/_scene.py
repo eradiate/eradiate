@@ -8,7 +8,7 @@ from ... import validators
 from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
-from ...scenes.biosphere import BiosphereFactory, Canopy
+from ...scenes.biosphere import Canopy, biosphere_factory
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ...scenes.measure import DistantMeasure
@@ -48,7 +48,7 @@ class RamiScene(Scene):
     canopy: Optional[Canopy] = documented(
         attr.ib(
             default=None,
-            converter=attr.converters.optional(BiosphereFactory.convert),
+            converter=attr.converters.optional(biosphere_factory.convert),
             validator=attr.validators.optional(attr.validators.instance_of(Canopy)),
         ),
         doc="Canopy specification. "
