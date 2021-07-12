@@ -6,7 +6,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._canopy_element import CanopyElement, CanopyElementFactory
+from ._core import CanopyElement, CanopyElementFactory
 from ..core import SceneElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
@@ -588,7 +588,9 @@ class LeafCloud(CanopyElement):
           from_file
     """
 
-    # -- Fields ----------------------------------------------------------------
+    # --------------------------------------------------------------------------
+    #                                 Fields
+    # --------------------------------------------------------------------------
 
     id = documented(
         attr.ib(
@@ -691,7 +693,9 @@ class LeafCloud(CanopyElement):
         default="0.5",
     )
 
-    # -- Properties and accessors ----------------------------------------------
+    # --------------------------------------------------------------------------
+    #                          Properties and accessors
+    # --------------------------------------------------------------------------
 
     def n_leaves(self) -> int:
         """Return the number of leaves in the leaf cloud.
@@ -709,73 +713,9 @@ class LeafCloud(CanopyElement):
         """
         return np.sum(np.pi * self.leaf_radii * self.leaf_radii).squeeze()
 
-    # -- Kernel dictionary generation routines ---------------------------------
-
-    def shapes(self, ctx=None):
-        """
-        Return shape plugin specifications.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns → dict:
-            A dictionary suitable for merge with a :class:`.KernelDict`
-            containing all the shapes in the leaf cloud.
-        """
-        from mitsuba.core import ScalarTransform4f, coordinate_system
-
-        kernel_length = uck.get("length")
-        shapes_dict = {}
-
-        if ctx.ref:
-            bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
-        else:
-            bsdf = self.bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
-
-        for i_leaf, (position, normal, radius) in enumerate(
-            zip(
-                self.leaf_positions.m_as(kernel_length),
-                self.leaf_orientations,
-                self.leaf_radii.m_as(kernel_length),
-            )
-        ):
-            _, up = coordinate_system(normal)
-            to_world = ScalarTransform4f.look_at(
-                origin=position, target=position + normal, up=up
-            ) * ScalarTransform4f.scale(radius)
-
-            shapes_dict[f"{self.id}_leaf_{i_leaf}"] = {
-                "type": "disk",
-                "bsdf": bsdf,
-                "to_world": to_world,
-            }
-
-        return shapes_dict
-
-    def bsdfs(self, ctx=None):
-        """
-        Return BSDF plugin specifications.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns → dict:
-            Return a dictionary suitable for merge with a :class:`.KernelDict`
-            containing all the BSDFs attached to the shapes in the leaf cloud.
-        """
-        return {
-            f"bsdf_{self.id}": {
-                "type": "bilambertian",
-                "reflectance": self.leaf_reflectance.kernel_dict(ctx=ctx)["spectrum"],
-                "transmittance": self.leaf_transmittance.kernel_dict(ctx=ctx)[
-                    "spectrum"
-                ],
-            }
-        }
-
-    # -- Constructors ----------------------------------------------------------
+    # --------------------------------------------------------------------------
+    #                              Constructors
+    # --------------------------------------------------------------------------
 
     @classmethod
     def cuboid(cls, seed=12345, avoid_overlap=False, **kwargs):
@@ -1142,9 +1082,79 @@ class LeafCloud(CanopyElement):
 
         return value
 
-    # -- Other methods ---------------------------------------------------------
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
 
-    def translated(self, xyz: pint.Quantity):
+    def bsdfs(self, ctx=None):
+        """
+        Return BSDF plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns → dict:
+            Return a dictionary suitable for merge with a :class:`.KernelDict`
+            containing all the BSDFs attached to the shapes in the leaf cloud.
+        """
+        return {
+            f"bsdf_{self.id}": {
+                "type": "bilambertian",
+                "reflectance": self.leaf_reflectance.kernel_dict(ctx=ctx)["spectrum"],
+                "transmittance": self.leaf_transmittance.kernel_dict(ctx=ctx)[
+                    "spectrum"
+                ],
+            }
+        }
+
+    def shapes(self, ctx=None):
+        """
+        Return shape plugin specifications.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns → dict:
+            A dictionary suitable for merge with a :class:`.KernelDict`
+            containing all the shapes in the leaf cloud.
+        """
+        from mitsuba.core import ScalarTransform4f, coordinate_system
+
+        kernel_length = uck.get("length")
+        shapes_dict = {}
+
+        if ctx.ref:
+            bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
+        else:
+            bsdf = self.bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
+
+        for i_leaf, (position, normal, radius) in enumerate(
+            zip(
+                self.leaf_positions.m_as(kernel_length),
+                self.leaf_orientations,
+                self.leaf_radii.m_as(kernel_length),
+            )
+        ):
+            _, up = coordinate_system(normal)
+            to_world = ScalarTransform4f.look_at(
+                origin=position, target=position + normal, up=up
+            ) * ScalarTransform4f.scale(radius)
+
+            shapes_dict[f"{self.id}_leaf_{i_leaf}"] = {
+                "type": "disk",
+                "bsdf": bsdf,
+                "to_world": to_world,
+            }
+
+        return shapes_dict
+
+    # --------------------------------------------------------------------------
+    #                               Other methods
+    # --------------------------------------------------------------------------
+
+    def translated(self, xyz: pint.Quantity) -> "LeafCloud":
         """
         Return a copy of self translated by the vector ``xyz``.
 

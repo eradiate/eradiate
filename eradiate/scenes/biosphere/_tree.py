@@ -1,11 +1,13 @@
-from typing import MutableMapping, Optional
+from pathlib import Path
+from typing import Dict, MutableMapping, Optional
 
 import attr
+import pint
 import pinttr
 
-from ._canopy_element import CanopyElement, CanopyElementFactory
+from . import CanopyElement
+from ._core import CanopyElementFactory
 from ._leaf_cloud import LeafCloud
-from ._mesh_tree_element import MeshTreeElement
 from ..core import SceneElement
 from ..spectra import Spectrum, SpectrumFactory
 from ... import validators
@@ -109,6 +111,49 @@ class AbstractTree(Tree):
         default="[0, 0, 0]",
     )
 
+    # --------------------------------------------------------------------------
+    #                              Constructors
+    # --------------------------------------------------------------------------
+
+    @classmethod
+    def from_dict(cls, d):
+        """
+        Construct from a dictionary.
+
+        Parameter ``d`` (dict):
+            Dictionary containing parameters passed to the selected constructor.
+            Unit fields are pre-processed with :func:`pinttr.interpret_units`.
+        """
+
+        # Interpret unit fields if any
+        d_copy = pinttr.interpret_units(d, ureg=ureg)
+
+        # pop the leaf cloud specs to avoid name collision with the
+        # AbstractTree constructor
+        leaf_cloud_dict = d_copy.pop("leaf_cloud")
+        leaf_cloud = LeafCloud.convert(leaf_cloud_dict)
+
+        return cls(leaf_cloud=leaf_cloud, **d_copy)
+
+    @staticmethod
+    def convert(value):
+        """
+        Object converter method.
+
+        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
+        create an :class:`.AbstractTree`.
+
+        Otherwise, it returns ``value``.
+        """
+        if isinstance(value, dict):
+            return AbstractTree.from_dict(value)
+
+        return value
+
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
+
     def bsdfs(self, ctx=None):
         """
         Return BSDF plugin specifications.
@@ -181,42 +226,6 @@ class AbstractTree(Tree):
 
         return shapes_dict
 
-    @staticmethod
-    def convert(value):
-        """
-        Object converter method.
-
-        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
-        create an :class:`.AbstractTree`.
-
-        Otherwise, it returns ``value``.
-        """
-        if isinstance(value, dict):
-            return AbstractTree.from_dict(value)
-
-        return value
-
-    @classmethod
-    def from_dict(cls, d):
-        """
-        Construct from a dictionary.
-
-
-        Parameter ``d`` (dict):
-            Dictionary containing parameters passed to the selected constructor.
-            Unit fields are pre-processed with :func:`pinttr.interpret_units`.
-        """
-
-        # Interpret unit fields if any
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        # pop the leaf cloud specs to avoid name collision with the
-        # AbstractTree constructor
-        leaf_cloud_dict = d_copy.pop("leaf_cloud")
-        leaf_cloud = LeafCloud.convert(leaf_cloud_dict)
-
-        return cls(leaf_cloud=leaf_cloud, **d_copy)
-
 
 @CanopyElementFactory.register("mesh_tree")
 @parse_docs
@@ -259,17 +268,9 @@ class MeshTree(Tree):
         default="[]",
     )
 
-    def bsdfs(self, ctx=None):
-        result = {}
-        for mesh_tree_element in self.mesh_tree_elements:
-            result = {**result, **mesh_tree_element.bsdfs(ctx=ctx)}
-        return result
-
-    def shapes(self, ctx=None):
-        result = {}
-        for mesh_tree_element in self.mesh_tree_elements:
-            result = {**result, **mesh_tree_element.shapes(ctx=ctx)}
-        return result
+    # --------------------------------------------------------------------------
+    #                              Constructors
+    # --------------------------------------------------------------------------
 
     @classmethod
     def from_dict(cls, d):
@@ -298,14 +299,200 @@ class MeshTree(Tree):
 
         return value
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
 
+    def bsdfs(self, ctx=None):
         result = {}
         for mesh_tree_element in self.mesh_tree_elements:
-            result = {
-                **result,
-                **mesh_tree_element.bsdfs(ctx=ctx),
-                **mesh_tree_element.shapes(ctx=ctx),
-            }
-
+            result = {**result, **mesh_tree_element.bsdfs(ctx=ctx)}
         return result
+
+    def shapes(self, ctx=None):
+        result = {}
+        for mesh_tree_element in self.mesh_tree_elements:
+            result = {**result, **mesh_tree_element.shapes(ctx=ctx)}
+        return result
+
+
+@parse_docs
+@attr.s
+class MeshTreeElement:
+    """
+    Container class for mesh based constituents of tree-like objects in a canopy.
+    Holds the filepath for the triangulated mesh and all parameters specifying
+    the associated BSDF.
+
+    .. important:: The triangulated mesh must be provided in .ply or .obj format.
+
+    Since mesh definition files cannot carry Pint units, the attribute ``mesh_units``
+    lets users provide the unit which their mesh is defined in. Upon kernel dict
+    creation the mesh is scaled to match the length unit used in the kernel.
+    If ``mesh_units` is not provided, no scaling of the mesh is performed.
+
+    The :meth:`MeshTreeElement.from_dict` constructor instantiates the class from
+    a configuration dictionary.
+    """
+
+    id: Optional[str] = documented(
+        attr.ib(
+            default="mesh_tree_element",
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
+        ),
+        doc="User-defined object identifier.",
+        type="str or None",
+        default="None",
+    )
+
+    mesh_filename = documented(
+        attr.ib(
+            converter=attr.converters.optional(Path),
+            default=None,
+        ),
+        doc="Path to the triangulated mesh data file. This parameter is required.",
+        type="path-like",
+    )
+
+    @mesh_filename.validator
+    def _mesh_filename_validator(self, attribute, value):
+        if value is None:
+            raise ValueError("'mesh_filename' is required")
+
+        validators.path_exists(self, attribute, value)
+
+        if not value.suffix in [".obj", ".ply"]:
+            raise ValueError(
+                f"While validating {attribute.name}: File extension must be '.obj'"
+                f"or '.ply', got {value.suffix}"
+            )
+
+    mesh_units = documented(
+        attr.ib(default=None, converter=attr.converters.optional(ureg.Unit)),
+        doc="Units the mesh was defined in. Used to convert to kernel units. "
+        "If this value is ``None``, the mesh is interpreted as being defined in"
+        "kernel units.",
+        type="str or :class:`pint.Unit` or None",
+        default="None",
+    )
+
+    @mesh_units.validator
+    def _mesh_units_validator(self, attribute, value):
+        if not isinstance(value, pint.unit.Unit):
+            raise ValueError(
+                f"While validating {attribute.name}: Mesh unit parameter must be "
+                f"a pint Unit object, got {type(value)}"
+            )
+
+    reflectance = documented(
+        attr.ib(
+            default=0.5,
+            converter=SpectrumFactory.converter("reflectance"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validators.has_quantity("reflectance"),
+            ],
+        ),
+        doc="Reflectance of the object. "
+        "Must be a reflectance spectrum (dimensionless).",
+        type=":class:`.Spectrum`",
+        default="0.5",
+    )
+
+    transmittance = documented(
+        attr.ib(
+            default=0.0,
+            converter=SpectrumFactory.converter("transmittance"),
+            validator=[
+                attr.validators.instance_of(Spectrum),
+                validators.has_quantity("transmittance"),
+            ],
+        ),
+        doc="Transmittance of the object. "
+        "Must be a transmittance spectrum (dimensionless).",
+        type=":class:`.Spectrum`",
+        default="0.0",
+    )
+
+    # --------------------------------------------------------------------------
+    #                              Constructors
+    # --------------------------------------------------------------------------
+
+    @classmethod
+    def from_dict(cls, d: Dict):
+        """
+        Create from a dictionary. This class method will additionally pre-process
+        the passed dictionary to merge any field with an associated ``"_units"``
+        field into a :class:`pint.Quantity` container.
+
+        Parameter ``d`` (dict):
+            Configuration dictionary used for initialisation.
+
+        Returns → wrapped_cls:
+            Created object.
+        """
+
+        # Pre-process dict: apply units to unit-enabled fields
+        d_copy = pinttr.interpret_units(d, ureg=ureg)
+
+        # Perform object creation
+        return cls(**d_copy)
+
+    @staticmethod
+    def convert(value):
+        """
+        Object converter method.
+
+        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
+        create an :class:`.MeshTreeElement`.
+
+        Otherwise, it returns ``value``.
+        """
+        if isinstance(value, dict):
+            return MeshTreeElement.from_dict(value)
+
+        return value
+
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
+
+    def bsdfs(self, ctx=None):
+        return {
+            f"bsdf_{self.id}": {
+                "type": "bilambertian",
+                "reflectance": self.reflectance.kernel_dict(ctx=ctx)["spectrum"],
+                "transmittance": self.transmittance.kernel_dict(ctx=ctx)["spectrum"],
+            }
+        }
+
+    def shapes(self, ctx=None):
+        from mitsuba.core import ScalarTransform4f
+
+        if ctx.ref:
+            bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
+        else:
+            bsdf = self.bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
+
+        if self.mesh_units is None:
+            scaling_factor = 1.0
+        else:
+            kernel_length = uck.get("length")
+            scaling_factor = (1.0 * self.mesh_units).m_as(kernel_length)
+
+        base_dict = {
+            "filename": str(self.mesh_filename),
+            "bsdf": bsdf,
+            "to_world": ScalarTransform4f.scale(scaling_factor),
+        }
+
+        if self.mesh_filename.suffix == ".obj":
+            base_dict["type"] = "obj"
+        elif self.mesh_filename.suffix == ".ply":
+            base_dict["type"] = "ply"
+        else:
+            raise ValueError(
+                f"unsupported file extension '{self.mesh_filename.suffix}'"
+            )
+
+        return {self.id: base_dict}
