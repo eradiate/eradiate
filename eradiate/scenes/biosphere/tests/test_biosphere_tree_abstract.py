@@ -10,7 +10,9 @@ from eradiate.scenes.biosphere._discrete import LeafCloud
 from eradiate.scenes.biosphere._tree import AbstractTree
 from eradiate.scenes.core import KernelDict
 
-# -- Fixture definitions -------------------------------------------------------
+# ------------------------------------------------------------------------------
+#                            Fixture definitions
+# ------------------------------------------------------------------------------
 
 
 @pytest.fixture(scope="module")
@@ -26,7 +28,9 @@ def tempfile_leaves():
         yield filename
 
 
-# -- AbstractTree tests --------------------------------------------------------
+# ------------------------------------------------------------------------------
+#                              AbstractTree Tests
+# ------------------------------------------------------------------------------
 
 
 def test_abstract_tree_instantiate(mode_mono):

@@ -5,8 +5,7 @@ import attr
 import pint
 import pinttr
 
-from . import CanopyElement
-from ._core import CanopyElementFactory
+from ._core import CanopyElement, biosphere_factory
 from ._leaf_cloud import LeafCloud
 from ..core import SceneElement
 from ..spectra import Spectrum, spectrum_factory
@@ -26,7 +25,7 @@ class Tree(CanopyElement):
     """
 
 
-@CanopyElementFactory.register("abstract_tree")
+@biosphere_factory.register(type_id="abstract_tree")
 @parse_docs
 @attr.s
 class AbstractTree(Tree):
@@ -227,7 +226,7 @@ class AbstractTree(Tree):
         return shapes_dict
 
 
-@CanopyElementFactory.register("mesh_tree")
+@biosphere_factory.register(type_id="mesh_tree")
 @parse_docs
 @attr.s
 class MeshTree(Tree):
@@ -387,7 +386,7 @@ class MeshTreeElement:
     reflectance = documented(
         attr.ib(
             default=0.5,
-            converter=SpectrumFactory.converter("reflectance"),
+            converter=spectrum_factory.converter("reflectance"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
@@ -402,7 +401,7 @@ class MeshTreeElement:
     transmittance = documented(
         attr.ib(
             default=0.0,
-            converter=SpectrumFactory.converter("transmittance"),
+            converter=spectrum_factory.converter("transmittance"),
             validator=[
                 attr.validators.instance_of(Spectrum),
                 validators.has_quantity("transmittance"),

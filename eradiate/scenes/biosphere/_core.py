@@ -10,10 +10,12 @@ from ..core import SceneElement
 from ... import unit_context_kernel as uck
 from ... import unit_registry as ureg
 from ... import validators
-from ..._factory import BaseFactory
+from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
+
+biosphere_factory = Factory()
 
 
 @parse_docs
@@ -96,22 +98,6 @@ class Canopy(SceneElement, ABC):
         pass
 
 
-class BiosphereFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from
-    :class:`.Canopy`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: BiosphereFactory
-    """
-
-    _constructed_type = Canopy
-    registry = {}
-
-
 @parse_docs
 @attr.s
 class CanopyElement(SceneElement, ABC):
@@ -159,22 +145,6 @@ class CanopyElement(SceneElement, ABC):
             return {**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx)}
 
 
-class CanopyElementFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from
-    :class:`.CanopyElement`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: CanopyElementFactory
-    """
-
-    _constructed_type = CanopyElement
-    registry = {}
-
-
 @parse_docs
 @attr.s
 class InstancedCanopyElement(SceneElement):
@@ -186,8 +156,9 @@ class InstancedCanopyElement(SceneElement):
 
        .. autosummary::
 
-          from_file
+          convert
           from_dict
+          from_file
     """
 
     canopy_element = documented(
@@ -196,7 +167,7 @@ class InstancedCanopyElement(SceneElement):
             validator=attr.validators.optional(
                 attr.validators.instance_of(CanopyElement)
             ),
-            converter=CanopyElementFactory.convert,
+            converter=biosphere_factory.convert,
         ),
         doc="Instanced canopy element. Can be specified as a dictionary, which will "
         "be interpreted by :meth:`.CanopyElement.from_dict`.",
@@ -268,7 +239,7 @@ class InstancedCanopyElement(SceneElement):
         if canopy_element is None:
             canopy_element = {"type": "leaf_cloud"}
 
-        canopy_element = CanopyElementFactory.convert(canopy_element)
+        canopy_element = biosphere_factory.convert(canopy_element)
 
         instance_positions = []
 

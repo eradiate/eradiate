@@ -1,5 +1,9 @@
 import warnings
 from copy import deepcopy
+from typing import Any, MutableMapping, Optional, Tuple, Type, Union
+
+import attr
+import dessinemoi
 
 
 class BaseFactory:
@@ -139,3 +143,36 @@ class BaseFactory:
             return cls.create(value)
 
         return value
+
+
+@attr.s
+class Factory(dessinemoi.Factory):
+    def _convert_impl(
+        self,
+        value,
+        allowed_cls: Optional[Union[Type, Tuple[Type]]] = None,
+    ) -> Any:
+        if isinstance(value, MutableMapping):
+            # Fetch class from registry
+            type_id = value.pop("type")
+            cls = self.registry[type_id]
+
+            # Check if class is allowed
+            if allowed_cls is not None and not issubclass(cls, allowed_cls):
+                raise TypeError(
+                    f"conversion to object type '{type_id}' ({cls}) is not allowed"
+                )
+
+            # Get constructor from dict, if any
+            construct = value.pop("construct", None)
+
+            # Construct object
+            return self.create(type_id, construct=construct, kwargs=value)
+
+        else:
+            # Check if object has allowed type
+            if allowed_cls is not None:
+                if not isinstance(value, allowed_cls):
+                    raise TypeError("value type is not allowed")
+
+            return value
