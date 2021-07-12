@@ -79,7 +79,7 @@ class InstancedCanopyElement(SceneElement):
 
            Location coordinates are assumed to be given in meters.
 
-        Parameter ``filename`` (str or PathLike):
+        Parameter ``filename`` (path-like):
             Path to the text file specifying the leaves in the canopy.
             Can be absolute or relative. Required (setting to ``None`` will
             raise an exception).
@@ -88,6 +88,9 @@ class InstancedCanopyElement(SceneElement):
             :class:`.CanopyElement` to be instanced. If a dictionary is passed,
             if is interpreted by :meth:`.CanopyElement.from_dict`. If set to
             ``None``, an empty leaf cloud will be created.
+
+        Returns → :class:`.InstancedCanopyElement`:
+            Created :class:`.InstancedCanopyElement`.
 
         Raises → ValueError:
             If ``filename`` is set to ``None``.

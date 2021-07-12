@@ -49,6 +49,10 @@ class Canopy(SceneElement, ABC):
         """
         Return BSDF plugin specifications only.
 
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
         Returns → dict:
             Return a dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
@@ -60,6 +64,10 @@ class Canopy(SceneElement, ABC):
     def shapes(self, ctx=None):
         """
         Return shape plugin specifications only.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
 
         Returns → dict:
             A dictionary suitable for merge with a
