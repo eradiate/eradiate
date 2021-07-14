@@ -1,10 +1,12 @@
 from abc import ABC
 
 import attr
-from dessinemoi import Factory
 
 from ..core import SceneElement
+from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
+
+illumination_factory = Factory()
 
 
 @parse_docs
@@ -23,6 +25,3 @@ class Illumination(SceneElement, ABC):
         type=get_doc(SceneElement, "id", "type"),
         default='"illumination"',
     )
-
-
-illumination_factory = Factory()

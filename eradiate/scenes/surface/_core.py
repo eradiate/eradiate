@@ -5,16 +5,18 @@ from typing import Dict, Optional, Union
 import attr
 import pint
 import pinttr
-from dessinemoi import Factory
 
 from ..core import SceneElement
 from ... import converters, validators
+from ..._factory import Factory
 from ...attrs import AUTO, _Auto, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ConfigWarning, OverriddenValueWarning
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+
+surface_factory = Factory()
 
 
 @parse_docs
@@ -170,6 +172,3 @@ class Surface(SceneElement, ABC):
             new_width = self.width * factor
 
         return attr.evolve(self, width=new_width)
-
-
-surface_factory = Factory()

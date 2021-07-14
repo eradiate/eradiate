@@ -1,4 +1,3 @@
-import warnings
 from abc import ABC, abstractmethod
 from typing import Dict, List, MutableMapping, Optional, Tuple
 
@@ -7,12 +6,12 @@ import numpy as np
 import pint
 import pinttr
 import xarray as xr
-from dessinemoi import Factory
 
 import eradiate
 
 from ..core import SceneElement
 from ... import converters, validators
+from ..._factory import Factory
 from ..._util import ensure_array
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, MonoSpectralContext, SpectralContext
@@ -20,6 +19,8 @@ from ...exceptions import ModeError, UnsupportedModeError
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
+
+measure_factory = Factory()
 
 
 @parse_docs
@@ -537,22 +538,3 @@ class Measure(SceneElement, ABC):
             )
         }
         return result
-
-
-class MeasureFactory(Factory):
-    def create(self, type_id, **kwargs):
-        try:
-            if type_id == "distant":
-                warnings.warn(
-                    "Using the 'distant' factory ID to create a "
-                    "DistantRadianceMeasure is deprecated. Use "
-                    "'distant_radiance'.",
-                    DeprecationWarning,
-                )
-        except KeyError:
-            pass
-
-        return super().create(type_id, **kwargs)
-
-
-measure_factory = MeasureFactory()
