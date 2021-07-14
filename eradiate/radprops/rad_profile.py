@@ -15,7 +15,7 @@ from eradiate import path_resolver
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
 from .. import data
-from .._factory import BaseFactory
+from .._factory import Factory
 from ..attrs import documented, parse_docs
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
 from ..exceptions import UnsupportedModeError
@@ -29,6 +29,8 @@ from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..validators import all_positive
+
+rad_profile_factory = Factory()
 
 
 @ureg.wraps(
@@ -263,23 +265,7 @@ class RadProfile(ABC):
         pass
 
 
-class RadProfileFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from
-    :class:`RadProfile`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: RadProfileFactory
-    """
-
-    _constructed_type = RadProfile
-    registry = {}
-
-
-@RadProfileFactory.register("array")
+@rad_profile_factory.register(type_id="array")
 @parse_docs
 @attr.s
 class ArrayRadProfile(RadProfile):
@@ -404,7 +390,7 @@ class ArrayRadProfile(RadProfile):
             raise UnsupportedModeError(supported="monochromatic")
 
 
-@RadProfileFactory.register("us76_approx")
+@rad_profile_factory.register(type_id="us76_approx")
 @parse_docs
 @attr.s
 class US76ApproxRadProfile(RadProfile):
@@ -643,7 +629,7 @@ _AFGL1986_MODELS = [
 ]
 
 
-@RadProfileFactory.register("afgl1986")
+@rad_profile_factory.register(type_id="afgl1986")
 @parse_docs
 @attr.s
 class AFGL1986RadProfile(RadProfile):

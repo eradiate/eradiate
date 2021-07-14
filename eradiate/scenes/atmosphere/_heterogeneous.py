@@ -13,7 +13,7 @@ from eradiate.contexts import KernelDictContext, SpectralContext
 from ._core import Atmosphere, atmosphere_factory
 from ...attrs import AUTO, documented, parse_docs
 from ...kernel.transform import map_cube, map_unit_cube
-from ...radprops import RadProfileFactory
+from ...radprops import rad_profile_factory
 from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -117,7 +117,7 @@ class HeterogeneousAtmosphere(Atmosphere):
     profile: RadProfile = documented(
         attr.ib(
             default=attr.Factory(US76ApproxRadProfile),
-            converter=RadProfileFactory.convert,
+            converter=rad_profile_factory.convert,
             validator=attr.validators.instance_of(RadProfile),
         ),
         doc="Radiative property profile used. If set, volume data files will be "
