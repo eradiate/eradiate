@@ -10,7 +10,7 @@ import xarray as xr
 
 from eradiate.contexts import KernelDictContext, SpectralContext
 
-from ._core import Atmosphere, AtmosphereFactory
+from ._core import Atmosphere, atmosphere_factory
 from ...attrs import AUTO, documented, parse_docs
 from ...kernel.transform import map_cube, map_unit_cube
 from ...radprops import RadProfileFactory
@@ -95,7 +95,7 @@ def read_binary_grid3d(filename):
     return values
 
 
-@AtmosphereFactory.register("heterogeneous")
+@atmosphere_factory.register(type_id="heterogeneous")
 @parse_docs
 @attr.s
 class HeterogeneousAtmosphere(Atmosphere):

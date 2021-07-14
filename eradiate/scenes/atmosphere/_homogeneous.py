@@ -4,7 +4,7 @@ import attr
 import pint
 import pinttr
 
-from ._core import Atmosphere, AtmosphereFactory
+from ._core import Atmosphere, atmosphere_factory
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ..._util import onedict_value
@@ -17,7 +17,7 @@ from ...units import unit_registry as ureg
 from ...validators import has_quantity
 
 
-@AtmosphereFactory.register("homogeneous")
+@atmosphere_factory.register(type_id="homogeneous")
 @parse_docs
 @attr.s()
 class HomogeneousAtmosphere(Atmosphere):

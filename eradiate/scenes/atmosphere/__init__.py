@@ -1,10 +1,10 @@
-from ._core import Atmosphere, AtmosphereFactory
+from ._core import Atmosphere, atmosphere_factory
 from ._heterogeneous import HeterogeneousAtmosphere
 from ._homogeneous import HomogeneousAtmosphere
 
 __all__ = [
     "Atmosphere",
-    "AtmosphereFactory",
     "HeterogeneousAtmosphere",
     "HomogeneousAtmosphere",
+    "atmosphere_factory",
 ]
