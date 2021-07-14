@@ -1,8 +1,10 @@
 import attr
-from dessinemoi import Factory
 
 from ..core import SceneElement
+from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
+
+integrator_factory = Factory()
 
 
 @parse_docs
@@ -21,6 +23,3 @@ class Integrator(SceneElement):
         type=get_doc(SceneElement, "id", "type"),
         default='"integrator"',
     )
-
-
-integrator_factory = Factory()

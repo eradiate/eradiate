@@ -571,6 +571,7 @@ class LeafCloud(CanopyElement):
 
       * :meth:`.LeafCloud.cuboid`;
       * :meth:`.LeafCloud.sphere`;
+      * :meth:`.LeafCloud.ellipsoid`;
       * :meth:`.LeafCloud.cylinder`;
       * :meth:`.LeafCloud.cone`;
 
@@ -582,10 +583,13 @@ class LeafCloud(CanopyElement):
 
        .. autosummary::
 
+          convert
           cuboid
-          sphere
           cylinder
+          ellipsoid
+          from_dict
           from_file
+          sphere
     """
 
     # --------------------------------------------------------------------------
@@ -1026,6 +1030,7 @@ class LeafCloud(CanopyElement):
 
         * ``cuboid``: :meth:`.cuboid`;
         * ``sphere``: :meth:`.sphere`;
+        * ``ellipsoid``: :meth:`.ellipsoid`;
         * ``cylinder``: :meth:`.cylinder`;
         * ``cone``: :meth:`.cone`;
         * ``from_file``: :meth:`.from_file`.
