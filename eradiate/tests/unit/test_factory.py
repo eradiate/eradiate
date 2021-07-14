@@ -1,64 +1,42 @@
-import pytest
+import attr
 
-from eradiate._factory import BaseFactory
-
-
-def test_register():
-    class TestFactoryObject(object):
-        pass
-
-    class TestFactory(BaseFactory):
-        _constructed_type = TestFactoryObject
-        registry = {}
-
-    # test successful registration
-    @TestFactory.register("successful")
-    class SuccessfulObject(TestFactoryObject):
-        def from_dict(self):
-            pass
-
-    assert "successful" in TestFactory.registry.keys()
-
-    # test wrong object type
-    with pytest.raises(TypeError):
-
-        @TestFactory.register("wrong_type")
-        class WrongTypeObject(object):
-            def from_dict(self):
-                pass
-
-        # test object without 'from_dict'
-        with pytest.raises(AttributeError):
-
-            @TestFactory.register("notfromdict")
-            class NoFromDictObject(TestFactoryObject):
-                pass
+from eradiate._factory import Factory
+from eradiate.units import unit_registry as ureg
 
 
-def test_create_convert():
-    class TestFactoryObject(object):
-        pass
+def test_factory_convert():
+    factory = Factory()
 
-    class TestFactory(BaseFactory):
-        _constructed_type = TestFactoryObject
-        registry = {}
+    # We register a type with a nondefault constructor used for dict-based
+    # creation
+    @factory.register(type_id="mycls", dict_constructor="foo")
+    @attr.s
+    class MyClass:
+        field = attr.ib(default=None)
 
-    @TestFactory.register("subclass")
-    class SubclassObject(TestFactoryObject):
-        # this from_dict method is a mock up that makes it
-        # easy to tell if it has been called by the factory.
-        def from_dict(self):
-            return "teststring"
+        @classmethod
+        def foo(cls):
+            return cls(field="foo")
 
-    # assert Factory.create calls the underlying from_dict method
-    assert TestFactory.create({"type": "subclass"}) == "teststring"
+        @classmethod
+        def bar(cls):
+            return cls(field="bar")
 
-    # unregistered classes can't be instantiated
-    with pytest.raises(ValueError):
-        TestFactory.create({"type": "another_class"})
+    # MyClass instances are not modified
+    o = MyClass()
+    assert factory.convert(o) is o
 
-    # convert should return the object if it is not a dict
-    assert TestFactory.convert("string") == "string"
+    # Dict conversion uses the specified constructor
+    assert factory.convert({"type": "mycls"}) == MyClass(field="foo")
 
-    # convert should call Factory.create if a dict is passed
-    assert TestFactory.convert({"type": "subclass"}) == "teststring"
+    # We can override the dict constructor, either to use the default one...
+    assert factory.convert({"type": "mycls", "construct": None}) == MyClass()
+    # ... or a custom one
+    assert factory.convert({"type": "mycls", "construct": "bar"}) == MyClass(
+        field="bar"
+    )
+
+    # Units are attached to fields prior to conversion
+    assert factory.convert(
+        {"type": "mycls", "construct": None, "field": 1.0, "field_units": "m"}
+    ) == MyClass(field=1.0 * ureg.m)
