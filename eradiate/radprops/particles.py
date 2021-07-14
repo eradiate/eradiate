@@ -13,8 +13,8 @@ import xarray as xr
 
 from .particle_dist import (
     ParticleDistribution,
-    ParticleDistributionFactory,
     UniformParticleDistribution,
+    particle_distribution_factory,
 )
 from .. import path_resolver
 from ..attrs import documented, parse_docs
@@ -90,7 +90,7 @@ class ParticleLayer:
     distribution = documented(
         attr.ib(
             factory=UniformParticleDistribution,
-            converter=ParticleDistributionFactory.convert,
+            converter=particle_distribution_factory.convert,
             validator=attr.validators.instance_of(ParticleDistribution),
         ),
         doc="Particle distribution.",

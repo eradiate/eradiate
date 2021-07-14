@@ -13,11 +13,13 @@ import xarray as xr
 from pinttr.util import units_compatible
 from scipy.stats import expon, norm
 
-from .._factory import BaseFactory
+from .._factory import Factory
 from ..attrs import documented, parse_docs
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..validators import all_positive
+
+particle_distribution_factory = Factory()
 
 
 @parse_docs
@@ -63,23 +65,7 @@ class ParticleDistribution(ABC):
         pass
 
 
-class ParticleDistributionFactory(BaseFactory):
-    """
-    This factory constructs objects whose classes are derived from
-    :class:`ParticleDistribution`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: ParticleDistributionFactory
-    """
-
-    _constructed_type = ParticleDistribution
-    registry = {}
-
-
-@ParticleDistributionFactory.register("uniform")
+@particle_distribution_factory.register(type_id="uniform")
 @parse_docs
 @attr.s
 class UniformParticleDistribution(ParticleDistribution):
@@ -102,7 +88,7 @@ class UniformParticleDistribution(ParticleDistribution):
         return f / f.sum()
 
 
-@ParticleDistributionFactory.register("exponential")
+@particle_distribution_factory.register(type_id="exponential")
 @parse_docs
 @attr.s
 class ExponentialParticleDistribution(ParticleDistribution):
@@ -137,7 +123,7 @@ class ExponentialParticleDistribution(ParticleDistribution):
         return f / f.sum()
 
 
-@ParticleDistributionFactory.register("gaussian")
+@particle_distribution_factory.register(type_id="gaussian")
 @parse_docs
 @attr.s
 class GaussianParticleDistribution(ParticleDistribution):
@@ -191,7 +177,7 @@ class GaussianParticleDistribution(ParticleDistribution):
         return f / f.sum()
 
 
-@ParticleDistributionFactory.register("array")
+@particle_distribution_factory.register(type_id="array")
 @parse_docs
 @attr.s
 class ArrayParticleDistribution(ParticleDistribution):
