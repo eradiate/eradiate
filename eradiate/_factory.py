@@ -4,6 +4,9 @@ from typing import Any, MutableMapping, Optional, Tuple, Type, Union
 
 import attr
 import dessinemoi
+import pinttr
+
+from .units import unit_registry as ureg
 
 
 class BaseFactory:
@@ -147,14 +150,25 @@ class BaseFactory:
 
 @attr.s
 class Factory(dessinemoi.Factory):
+    """
+    This factory subclass extends the original :class:`dessinemoi.Factory` type
+    by adding the following functionality to its :meth:`.convert` method:
+
+    * unit interpretation using :func:`pinttr.interpret_units`;
+    * class method constructor selection using the ``construct`` key.
+    """
+
     def _convert_impl(
         self,
         value,
         allowed_cls: Optional[Union[Type, Tuple[Type]]] = None,
     ) -> Any:
         if isinstance(value, MutableMapping):
+            # Interpret units
+            dict_copy = pinttr.interpret_units(value, ureg=ureg)
+
             # Fetch class from registry
-            type_id = value.pop("type")
+            type_id = dict_copy.pop("type")
             cls = self.registry[type_id]
 
             # Check if class is allowed
@@ -164,10 +178,10 @@ class Factory(dessinemoi.Factory):
                 )
 
             # Get constructor from dict, if any
-            construct = value.pop("construct", None)
+            construct = dict_copy.pop("construct", None)
 
             # Construct object
-            return self.create(type_id, construct=construct, kwargs=value)
+            return self.create(type_id, construct=construct, kwargs=dict_copy)
 
         else:
             # Check if object has allowed type
