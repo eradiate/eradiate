@@ -8,7 +8,7 @@ from ... import unit_context_config as ucc
 from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
-from ...scenes.atmosphere import Atmosphere, AtmosphereFactory, HomogeneousAtmosphere
+from ...scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ...scenes.measure._distant import (
@@ -30,7 +30,7 @@ class OneDimScene(Scene):
     atmosphere: Optional[Atmosphere] = documented(
         attr.ib(
             factory=HomogeneousAtmosphere,
-            converter=attr.converters.optional(AtmosphereFactory.convert),
+            converter=attr.converters.optional(atmosphere_factory.convert),
             validator=attr.validators.optional(attr.validators.instance_of(Atmosphere)),
         ),
         doc="Atmosphere specification. If set to ``None``, no atmosphere will "

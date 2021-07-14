@@ -7,10 +7,12 @@ import pinttr
 
 from ..core import SceneElement
 from ... import converters, validators
-from ..._factory import BaseFactory
+from ..._factory import Factory
 from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
+
+atmosphere_factory = Factory()
 
 
 @parse_docs
@@ -224,18 +226,3 @@ class Atmosphere(SceneElement, ABC):
             kernel_dict[self.id] = self.kernel_shapes(ctx=ctx)[f"shape_{self.id}"]
 
         return kernel_dict
-
-
-class AtmosphereFactory(BaseFactory):
-    """This factory constructs objects whose classes are derived from
-    :class:`.Atmosphere`.
-
-    .. admonition:: Registered factory members
-       :class: hint
-
-       .. factorytable::
-          :factory: AtmosphereFactory
-    """
-
-    _constructed_type = Atmosphere
-    registry = {}

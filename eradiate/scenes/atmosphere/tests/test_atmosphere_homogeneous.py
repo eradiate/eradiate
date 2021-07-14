@@ -9,7 +9,7 @@ from eradiate.contexts import KernelDictContext
 from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.phase import PhaseFunctionFactory, RayleighPhaseFunction
+from eradiate.scenes.phase import RayleighPhaseFunction, phase_function_factory
 
 
 def test_atmosphere_homogeneous_default(mode_mono):
@@ -78,7 +78,7 @@ def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
         HomogeneousAtmosphere(width=-50.0)
 
 
-@pytest.mark.parametrize("phase_id", PhaseFunctionFactory.registry.keys())
+@pytest.mark.parametrize("phase_id", phase_function_factory.registry.keys())
 @pytest.mark.parametrize("ref", (False, True))
 def test_atmosphere_homogeneous_phase_function(mode_mono, phase_id, ref):
     """Supports all available phase function types."""
