@@ -220,50 +220,24 @@ def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
 
     assert KernelDict.new(tree, ctx=ctx).load()
 
-    # dict API based instantiation
-
-    assert MeshTree.from_dict(
-        {
-            "id": "mesh_tree",
-            "mesh_tree_elements": [
-                {
-                    "id": "mesh_tree_obj",
-                    "mesh_filename": tmpfile_obj,
-                    "reflectance": 0.5,
-                    "transmittance": 0.5,
-                    "mesh_units": ureg.m,
-                },
-                {
-                    "id": "mesh_tree_obj_2",
-                    "mesh_filename": tmpfile_obj,
-                    "reflectance": 0.1,
-                    "transmittance": 0.9,
-                    "mesh_units": ureg.m,
-                },
-            ],
-        }
+    # check that special converter for the mesh_tree_elements field works as
+    # expected
+    assert MeshTree(
+        id="mesh_tree",
+        mesh_tree_elements=[
+            {
+                "id": "mesh_tree_obj",
+                "mesh_filename": tmpfile_obj,
+                "mesh_units": "m",
+                "reflectance": 0.5,
+                "transmittance": 0.5,
+            },
+            {
+                "id": "mesh_tree_obj_2",
+                "mesh_filename": tmpfile_obj,
+                "mesh_units": "m",
+                "reflectance": 0.1,
+                "transmittance": 0.9,
+            },
+        ],
     )
-
-    tree = MeshTree.from_dict(
-        {
-            "id": "mesh_tree",
-            "mesh_tree_elements": [
-                {
-                    "id": "mesh_tree_obj",
-                    "mesh_filename": tmpfile_obj,
-                    "reflectance": 0.5,
-                    "transmittance": 0.5,
-                    "mesh_units": ureg.m,
-                },
-                {
-                    "id": "mesh_tree_obj_2",
-                    "mesh_filename": tmpfile_obj,
-                    "reflectance": 0.1,
-                    "transmittance": 0.9,
-                    "mesh_units": ureg.m,
-                },
-            ],
-        }
-    )
-
-    assert KernelDict.new(tree, ctx=ctx).load()

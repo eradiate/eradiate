@@ -240,43 +240,6 @@ def test_leaf_cloud_from_file(mode_mono, tempfile_leaves):
     assert KernelDict.new(cloud, ctx=ctx).load()
 
 
-def test_leaf_cloud_from_dict(mode_mono, tempfile_leaves):
-    """Unit testing for :meth:`LeafCloud.from_dict`."""
-
-    # Use regular constructor if no "type" parameter is specified
-    assert LeafCloud.from_dict(
-        {
-            "leaf_positions": [[0, 0, 0], [1, 1, 1]],
-            "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
-            "leaf_radii": [0.1, 0.1],
-        }
-    )
-
-    # Dispatch to from_file if requested
-    cloud1 = LeafCloud.from_file(tempfile_leaves)
-    cloud2 = LeafCloud.from_dict(
-        {"construct": "from_file", "filename": tempfile_leaves}
-    )
-    assert np.all(cloud1.leaf_positions == cloud2.leaf_positions)
-    assert np.all(cloud1.leaf_orientations == cloud2.leaf_orientations)
-    assert np.all(cloud1.leaf_radii == cloud2.leaf_radii)
-    assert np.all(cloud1.leaf_transmittance == cloud2.leaf_transmittance)
-    assert np.all(cloud1.leaf_reflectance == cloud2.leaf_reflectance)
-
-    # Dispatch to generator if requested
-    cloud = LeafCloud.from_dict(
-        {
-            "construct": "cuboid",
-            "n_leaves": 100,
-            "l_horizontal": 10.0,
-            "l_vertical": 1.0,
-            "leaf_radius": 10.0,
-            "leaf_radius_units": "cm",
-        }
-    )
-    assert np.allclose(cloud.leaf_radii, 10.0 * ureg.cm)
-
-
 def test_leaf_cloud_kernel_dict(mode_mono):
     """Partial unit testing for :meth:`LeafCloud.kernel_dict`."""
     ctx = KernelDictContext()

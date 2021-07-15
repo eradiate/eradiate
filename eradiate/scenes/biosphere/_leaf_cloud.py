@@ -569,25 +569,22 @@ class LeafCloud(CanopyElement):
 
     * generators create leaf clouds from a set of parameters:
 
-      * :meth:`.LeafCloud.cuboid`;
-      * :meth:`.LeafCloud.sphere`;
-      * :meth:`.LeafCloud.ellipsoid`;
-      * :meth:`.LeafCloud.cylinder`;
       * :meth:`.LeafCloud.cone`;
+      * :meth:`.LeafCloud.cuboid`;
+      * :meth:`.LeafCloud.cylinder`;
+      * :meth:`.LeafCloud.ellipsoid`;
+      * :meth:`.LeafCloud.sphere`;
 
     * :meth:`.LeafCloud.from_file` loads leaf positions and orientations from a
-      text file;
-    * :meth:`.LeafCloud.from_dict` dispatches calls to the other constructors.
+      text file.
 
     .. admonition:: Class method constructors
 
        .. autosummary::
 
-          convert
           cuboid
           cylinder
           ellipsoid
-          from_dict
           from_file
           sphere
     """
@@ -1020,72 +1017,6 @@ class LeafCloud(CanopyElement):
             leaf_reflectance=leaf_reflectance,
             leaf_transmittance=leaf_transmittance,
         )
-
-    @classmethod
-    def from_dict(cls, d):
-        """
-        Construct from a dictionary. This function first queries for a
-        ``construct`` parameter. If it is found, dictionary parameters are used
-        to call another class method constructor:
-
-        * ``cuboid``: :meth:`.cuboid`;
-        * ``sphere``: :meth:`.sphere`;
-        * ``ellipsoid``: :meth:`.ellipsoid`;
-        * ``cylinder``: :meth:`.cylinder`;
-        * ``cone``: :meth:`.cone`;
-        * ``from_file``: :meth:`.from_file`.
-
-        If ``construct`` is missing, parameters are forwarded to the regular
-        :class:`.LeafCloud` constructor.
-
-        Parameter ``d`` (dict):
-            Dictionary containing parameters passed to the selected constructor.
-            Unit fields are pre-processed with :func:`pinttr.interpret_units`.
-        """
-        # Interpret unit fields if any
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        # Dispatch call based on 'construct' parameter
-        construct = d_copy.pop("construct", None)
-
-        if construct == "cuboid":
-            return cls.cuboid(**d_copy)
-
-        elif construct == "sphere":
-            return cls.sphere(**d_copy)
-
-        elif construct == "ellipsoid":
-            return cls.ellipsoid(**d_copy)
-
-        elif construct == "cylinder":
-            return cls.cylinder(**d_copy)
-
-        elif construct == "cone":
-            return cls.cone(**d_copy)
-
-        elif construct == "from_file":
-            return cls.from_file(**d_copy)
-
-        elif construct is None:
-            return cls(**d_copy)
-
-        else:
-            raise ValueError(f"parameter 'construct': unsupported value '{construct}'")
-
-    @staticmethod
-    def convert(value):
-        """
-        Object converter method.
-
-        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
-        create a :class:`.LeafCloud`.
-
-        Otherwise, it returns ``value``.
-        """
-        if isinstance(value, dict):
-            return LeafCloud.from_dict(value)
-
-        return value
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation

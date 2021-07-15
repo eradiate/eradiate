@@ -145,6 +145,7 @@ class CanopyElement(SceneElement, ABC):
             return {**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx)}
 
 
+@biosphere_factory.register(type_id="instanced")
 @parse_docs
 @attr.s
 class InstancedCanopyElement(SceneElement):
@@ -263,50 +264,6 @@ class InstancedCanopyElement(SceneElement):
 
         instance_positions = np.array(instance_positions) * ureg.m
         return cls(canopy_element=canopy_element, instance_positions=instance_positions)
-
-    @classmethod
-    def from_dict(cls, d):
-        """
-        Construct from a dictionary. This function first queries for a
-        ``type`` parameter. If it is found, dictionary parameters are used to
-        call another class method constructor:
-
-        * ``file``: :meth:`.from_file`.
-
-        If ``construct`` is missing, parameters are forwarded to the regular
-        :class:`.InstancedCanopyElement` constructor.
-
-        Parameter ``d`` (dict):
-            Dictionary containing parameters passed to the selected constructor.
-            Unit fields are pre-processed with :func:`pinttr.interpret_units`.
-        """
-        # Interpret unit fields if any
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        # Dispatch call based on 'construct' parameter
-        construct = d_copy.pop("construct", None)
-
-        if construct == "from_file":
-            return cls.from_file(**d_copy)
-        elif construct is None:
-            return cls(**d_copy)
-        else:
-            raise ValueError(f"parameter 'construct': unsupported value '{construct}'")
-
-    @staticmethod
-    def convert(value):
-        """
-        Object converter method.
-
-        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
-        create a :class:`.InstancedCanopyElement`.
-
-        Otherwise, it returns ``value``.
-        """
-        if isinstance(value, dict):
-            return InstancedCanopyElement.from_dict(value)
-
-        return value
 
     # --------------------------------------------------------------------------
     #                        Kernel dictionary generation

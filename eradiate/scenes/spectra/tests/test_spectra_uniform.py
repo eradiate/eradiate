@@ -6,7 +6,7 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
-from eradiate.scenes.spectra import UniformSpectrum
+from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
 from eradiate.units import PhysicalQuantity
 
 
@@ -32,9 +32,14 @@ def test_uniform(mode_mono):
     with pytest.raises(pinttr.exceptions.UnitsError):
         UniformSpectrum(quantity="collision_coefficient", value=ureg.Quantity(1.0, ""))
 
-    # Instantiate from dictionary
-    s = UniformSpectrum.from_dict(
-        {"quantity": "radiance", "value": 1.0, "value_units": "W/km^2/sr/nm"}
+    # Instantiate from factory using dict
+    s = spectrum_factory.convert(
+        {
+            "type": "uniform",
+            "quantity": "radiance",
+            "value": 1.0,
+            "value_units": "W/km^2/sr/nm",
+        }
     )
 
     # Produced kernel dict is valid

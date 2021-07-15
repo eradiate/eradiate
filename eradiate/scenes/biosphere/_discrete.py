@@ -15,6 +15,15 @@ from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
 
+def _instanced_canopy_elements_converter(value):
+    """
+    Special converter for the DiscreteCanopy.instanced_canopy_elements field.
+    """
+    if isinstance(value, MutableMapping):
+        value["type"] = "instanced"
+    return biosphere_factory.convert(value)
+
+
 @biosphere_factory.register(type_id="discrete_canopy")
 @parse_docs
 @attr.s
@@ -44,11 +53,14 @@ class DiscreteCanopy(Canopy):
         attr.ib(
             factory=list,
             converter=lambda value: [
-                InstancedCanopyElement.convert(x)
+                _instanced_canopy_elements_converter(x)
                 for x in pinttr.util.always_iterable(value)
             ]
-            if not isinstance(value, dict)
-            else [InstancedCanopyElement.convert(value)],
+            if not isinstance(value, MutableMapping)
+            else [_instanced_canopy_elements_converter(value)],
+            validator=attr.validators.deep_iterable(
+                member_validator=attr.validators.instance_of(InstancedCanopyElement)
+            ),
         ),
         doc="List of :class:`.CanopyElement` defining the canopy. Can be "
         "initialised with a :class:`.InstancedCanopyElement`, which will be "

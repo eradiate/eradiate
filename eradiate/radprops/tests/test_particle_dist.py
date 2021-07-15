@@ -28,12 +28,6 @@ def test_uniform():
     assert isinstance(dist, UniformParticleDistribution)
 
 
-def test_uniform_from_dict():
-    "Class method 'from_dict' returns a 'Uniform' object."
-    dist = UniformParticleDistribution.from_dict({})
-    assert isinstance(dist, UniformParticleDistribution)
-
-
 def test_uniform_fractions_all_equal(test_altitudes):
     """Particle fraction values are all equal."""
     dist = UniformParticleDistribution()

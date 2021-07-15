@@ -1,4 +1,5 @@
 import datetime
+from collections import MutableMapping
 
 import attr
 
@@ -6,10 +7,8 @@ import eradiate
 
 from ._scene import RamiScene
 from ..core._solver_app import SolverApp
-from ... import unit_context_kernel as uck
 from ...attrs import documented, parse_docs
-from ...units import symbol
-from ...xarray.metadata import DatasetSpec, VarSpec
+from ...xarray.metadata import DatasetSpec
 
 
 @parse_docs
@@ -25,7 +24,7 @@ class RamiSolverApp(SolverApp):
     scene = documented(
         attr.ib(
             factory=RamiScene,
-            converter=lambda x: RamiScene.from_dict(x) if isinstance(x, dict) else x,
+            converter=lambda x: RamiScene(**x) if isinstance(x, MutableMapping) else x,
             validator=attr.validators.instance_of(RamiScene),
         ),
         doc="RAMI benchmark scene to simulate radiative transfer on. "

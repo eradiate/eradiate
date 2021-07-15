@@ -1,5 +1,7 @@
+from abc import ABC
+from collections import MutableMapping
 from pathlib import Path
-from typing import Dict, MutableMapping, Optional
+from typing import Dict, Optional
 
 import attr
 import pint
@@ -11,7 +13,6 @@ from ..core import SceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -19,10 +20,21 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attr.s
-class Tree(CanopyElement):
+class Tree(CanopyElement, ABC):
     """
-    Abstract base class for tree like canopy elements.
+    Abstract base class for tree-like canopy elements.
     """
+
+    pass
+
+
+def _leaf_cloud_converter(value):
+    """
+    Special converter for the AbstractTree.leaf_cloud field.
+    """
+    if isinstance(value, MutableMapping):
+        value["type"] = "leaf_cloud"
+    return biosphere_factory.convert(value)
 
 
 @biosphere_factory.register(type_id="abstract_tree")
@@ -63,7 +75,7 @@ class AbstractTree(Tree):
     leaf_cloud = documented(
         attr.ib(
             default=None,
-            converter=attr.converters.optional(LeafCloud.convert),
+            converter=attr.converters.optional(_leaf_cloud_converter),
             validator=attr.validators.optional(attr.validators.instance_of(LeafCloud)),
         ),
         doc="Instanced leaf cloud. Can be specified as a dictionary, which will "
@@ -109,45 +121,6 @@ class AbstractTree(Tree):
         type="array-like",
         default="[0, 0, 0]",
     )
-
-    # --------------------------------------------------------------------------
-    #                              Constructors
-    # --------------------------------------------------------------------------
-
-    @classmethod
-    def from_dict(cls, d):
-        """
-        Construct from a dictionary.
-
-        Parameter ``d`` (dict):
-            Dictionary containing parameters passed to the selected constructor.
-            Unit fields are pre-processed with :func:`pinttr.interpret_units`.
-        """
-
-        # Interpret unit fields if any
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        # pop the leaf cloud specs to avoid name collision with the
-        # AbstractTree constructor
-        leaf_cloud_dict = d_copy.pop("leaf_cloud")
-        leaf_cloud = LeafCloud.convert(leaf_cloud_dict)
-
-        return cls(leaf_cloud=leaf_cloud, **d_copy)
-
-    @staticmethod
-    def convert(value):
-        """
-        Object converter method.
-
-        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
-        create an :class:`.AbstractTree`.
-
-        Otherwise, it returns ``value``.
-        """
-        if isinstance(value, dict):
-            return AbstractTree.from_dict(value)
-
-        return value
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
@@ -268,37 +241,6 @@ class MeshTree(Tree):
     )
 
     # --------------------------------------------------------------------------
-    #                              Constructors
-    # --------------------------------------------------------------------------
-
-    @classmethod
-    def from_dict(cls, d):
-
-        # Interpret unit fields if any
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        mesh_tree_elements = []
-        for mesh_tree_element in d_copy.pop("mesh_tree_elements"):
-            mesh_tree_elements.append(MeshTreeElement.convert(mesh_tree_element))
-
-        return cls(mesh_tree_elements=mesh_tree_elements, **d_copy)
-
-    @staticmethod
-    def convert(value):
-        """
-        Object converter method.
-
-        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
-        create an :class:`.AbstractTree`.
-
-        Otherwise, it returns ``value``.
-        """
-        if isinstance(value, dict):
-            return MeshTree.from_dict(value)
-
-        return value
-
-    # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
@@ -417,8 +359,8 @@ class MeshTreeElement:
     #                              Constructors
     # --------------------------------------------------------------------------
 
-    @classmethod
-    def from_dict(cls, d: Dict):
+    @staticmethod
+    def from_dict(d: Dict):
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -435,7 +377,7 @@ class MeshTreeElement:
         d_copy = pinttr.interpret_units(d, ureg=ureg)
 
         # Perform object creation
-        return cls(**d_copy)
+        return MeshTreeElement(**d_copy)
 
     @staticmethod
     def convert(value):

@@ -5,7 +5,12 @@ import numpy as np
 import pytest
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.biosphere import AbstractTree, InstancedCanopyElement, LeafCloud
+from eradiate.scenes.biosphere import (
+    AbstractTree,
+    InstancedCanopyElement,
+    LeafCloud,
+    biosphere_factory,
+)
 from eradiate.scenes.core import KernelDict
 
 # ------------------------------------------------------------------------------
@@ -74,47 +79,10 @@ def test_instanced_leaf_cloud_from_file(mode_mono, tempfile_spheres):
     """Unit testing for :meth:`InstancedLeafCloud.from_file`."""
     assert InstancedCanopyElement.from_file(
         filename=tempfile_spheres,
-        canopy_element=LeafCloud.from_dict(
-            {
-                "leaf_positions": [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]],
-                "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
-                "leaf_radii": [0.1, 0.1],
-            }
-        ),
-    )
-
-
-def test_instanced_canopy_element_from_dict(mode_mono, tempfile_spheres):
-    """Unit testing for :meth:`InstancedLeafCloud.from_dict`."""
-    ctx = KernelDictContext()
-
-    # We can instantiate from a full-dict spec
-    instanced_leaf_cloud = InstancedCanopyElement.from_dict(
-        {
-            "canopy_element": {
-                "type": "leaf_cloud",
-                "leaf_positions": [[0, 0, 0], [1, 1, 1]],
-                "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
-                "leaf_radii": [0.1, 0.1],
-            },
-            "instance_positions": np.array([[-5, -5, -5], [5, 5, 5]]),
-        }
-    )
-    assert instanced_leaf_cloud
-
-    # The generated kernel dictionary can be instantiated
-    assert KernelDict.new(instanced_leaf_cloud.kernel_dict(ctx=ctx)).load()
-
-    # We can access the from_file constructor from a dict
-    assert InstancedCanopyElement.from_dict(
-        {
-            "construct": "from_file",
-            "filename": tempfile_spheres,
-            "canopy_element": {
-                "type": "leaf_cloud",
-                "leaf_positions": [[0, 0, 0], [1, 1, 1]],
-                "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
-                "leaf_radii": [0.1, 0.1],
-            },
-        }
+        canopy_element={
+            "type": "leaf_cloud",
+            "leaf_positions": [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]],
+            "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
+            "leaf_radii": [0.1, 0.1],
+        },
     )

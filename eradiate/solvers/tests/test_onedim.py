@@ -213,22 +213,21 @@ def test_onedim_solver_app_postprocessing(mode_mono):
     """Test the postprocessing method by computing the processed quantities and
     comparing them to a reference computation.
     """
-    scene = OneDimScene.from_dict(
-        {
-            "measures": {
-                "type": "distant_reflectance",
-                "id": "toa_hsphere",
-                "film_resolution": (32, 32),
-                "spp": 1000,
-            },
-            "illumination": {
-                "type": "directional",
-                "zenith": 0.0,
-                "azimuth": 0.0,
-                "irradiance": {"type": "uniform", "value": 5.0},
-            },
-        }
+    scene = OneDimScene(
+        measures={
+            "type": "distant_reflectance",
+            "id": "toa_hsphere",
+            "film_resolution": (32, 32),
+            "spp": 1000,
+        },
+        illumination={
+            "type": "directional",
+            "zenith": 0.0,
+            "azimuth": 0.0,
+            "irradiance": {"type": "uniform", "value": 5.0},
+        },
     )
+
     app = OneDimSolverApp(scene=scene)
     app.run()
 
