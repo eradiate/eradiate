@@ -221,10 +221,10 @@ def test_leaf_cloud_generate(mode_mono):
     assert cloud
     assert cloud.n_leaves() == 1000
     assert np.allclose(
-        np.min(cloud.leaf_positions, axis=0).m_as("m"), [-15, -15, 0], atol=0.05
+        np.min(cloud.leaf_positions.m_as("m"), axis=0), [-15, -15, 0], atol=0.05
     )
     assert np.allclose(
-        np.max(cloud.leaf_positions, axis=0).m_as("m"), [15, 15, 3], atol=0.05
+        np.max(cloud.leaf_positions.m_as("m"), axis=0), [15, 15, 3], atol=0.05
     )
 
 
