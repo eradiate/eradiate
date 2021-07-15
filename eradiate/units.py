@@ -1,6 +1,9 @@
 __all__ = [
     "symbol",
     "to_quantity",
+    "unit_context_config",
+    "unit_context_kernel",
+    "unit_registry",
 ]
 
 
@@ -91,7 +94,7 @@ def _make_unit_context():
         pinttr.UnitGenerator(
             lambda: unit_registry.watt
             / uctx.get(PhysicalQuantity.LENGTH) ** 2
-            / uctx.get(PhysicalQuantity.WAVELENGTH),
+            / uctx.get(PhysicalQuantity.WAVELENGTH)
         ),
     )
     uctx.register(
@@ -100,7 +103,7 @@ def _make_unit_context():
             lambda: unit_registry.watt
             / uctx.get(PhysicalQuantity.LENGTH) ** 2
             / unit_registry.steradian
-            / uctx.get(PhysicalQuantity.WAVELENGTH),
+            / uctx.get(PhysicalQuantity.WAVELENGTH)
         ),
     )
 
