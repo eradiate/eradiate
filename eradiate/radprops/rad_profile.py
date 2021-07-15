@@ -788,7 +788,7 @@ class AFGL1986RadProfile(RadProfile):
 
     absorption_data_sets = documented(
         attr.ib(
-            default=None,
+            factory=dict,
             converter=attr.converters.optional(dict),
             validator=attr.validators.optional(attr.validators.instance_of(dict)),
         ),
@@ -801,6 +801,7 @@ class AFGL1986RadProfile(RadProfile):
         "thermophysical profile, the default data sets will be used to "
         "compute the absorption coefficient of the corresponding species.",
         type="dict",
+        default="{}",
     )
 
     def eval_thermoprops_profile(self):
@@ -913,8 +914,6 @@ class AFGL1986RadProfile(RadProfile):
                 Absorber.O2,
                 Absorber.O3,
             ]
-            if self.absorption_data_sets is None:
-                self.absorption_data_sets = {}
 
             for i, absorber in enumerate(absorbers):
                 n_absorber = n * mr.sel(species=absorber.value)
