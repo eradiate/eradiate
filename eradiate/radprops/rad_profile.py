@@ -539,44 +539,52 @@ class US76ApproxRadProfile(RadProfile):
         """
         Evaluate absorption coefficient given spectral context.
         """
-        profile = self.eval_thermoprops_profile()
-        if self.has_absorption:
-            wavelength = spectral_ctx.wavelength
+        if eradiate.mode().is_monochromatic():
+            profile = self.eval_thermoprops_profile()
+            if self.has_absorption:
+                wavelength = spectral_ctx.wavelength
 
-            if self.absorption_data_set is None:  # ! this is never tested
-                data_set = self.default_absorption_data_set(wavelength=wavelength)
+                if self.absorption_data_set is None:  # ! this is never tested
+                    data_set = self.default_absorption_data_set(wavelength=wavelength)
+                else:
+                    data_set = xr.open_dataset(self.absorption_data_set)
+
+                # Compute scattering coefficient
+                return compute_sigma_a(
+                    ds=data_set,
+                    wl=wavelength,
+                    p=profile.p.values,
+                    n=profile.n.values,
+                    fill_values=dict(
+                        pt=0.0
+                    ),  # us76_u86_4 dataset is limited to pressures above
+                    # 0.101325 Pa, but us76 thermophysical profile goes below that
+                    # value for altitudes larger than 93 km. At these altitudes, the
+                    # number density is so small compared to that at the sea level that
+                    # we assume it is negligible.
+                )
             else:
-                data_set = xr.open_dataset(self.absorption_data_set)
+                return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
-            # Compute scattering coefficient
-            return compute_sigma_a(
-                ds=data_set,
-                wl=wavelength,
-                p=profile.p.values,
-                n=profile.n.values,
-                fill_values=dict(
-                    pt=0.0
-                ),  # us76_u86_4 dataset is limited to pressures above
-                # 0.101325 Pa, but us76 thermophysical profile goes below that
-                # value for altitudes larger than 93 km. At these altitudes, the
-                # number density is so small compared to that at the sea level that
-                # we assume it is negligible.
-            )
         else:
-            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
+            raise UnsupportedModeError(supported="monochromatic")
 
     def eval_sigma_s(self, spectral_ctx):
         """
         Evaluate scattering coefficient given spectral context.
         """
-        profile = self.eval_thermoprops_profile()
-        if self.has_scattering:
-            return compute_sigma_s_air(
-                wavelength=spectral_ctx.wavelength,
-                number_density=ureg.Quantity(profile.n.values, profile.n.units),
-            )
+        if eradiate.mode().is_monochromatic():
+            profile = self.eval_thermoprops_profile()
+            if self.has_scattering:
+                return compute_sigma_s_air(
+                    wavelength=spectral_ctx.wavelength,
+                    number_density=ureg.Quantity(profile.n.values, profile.n.units),
+                )
+            else:
+                return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
+
         else:
-            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
+            raise UnsupportedModeError(supported="monochromatic")
 
     def albedo(self, spectral_ctx=None):
         return (self.sigma_s(spectral_ctx) / self.sigma_t(spectral_ctx)).to(
