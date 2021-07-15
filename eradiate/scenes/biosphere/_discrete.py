@@ -12,7 +12,6 @@ from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
-from ...units import unit_registry as ureg
 
 
 def _instanced_canopy_elements_converter(value):
@@ -24,7 +23,7 @@ def _instanced_canopy_elements_converter(value):
     return biosphere_factory.convert(value)
 
 
-@biosphere_factory.register(type_id="discrete_canopy")
+@biosphere_factory.register(type_id="discrete_canopy", dict_constructor="padded")
 @parse_docs
 @attr.s
 class DiscreteCanopy(Canopy):
@@ -32,10 +31,10 @@ class DiscreteCanopy(Canopy):
     An abstract discrete canopy, consisting of one or several clouds of
     disk-shaped leaves. Each leaf cloud can be instanced arbitrarily. The
     produced canopy can be padded with more clones of itself using the
-    :meth:`~.DiscreteCanopy.padded` method.
+    :meth:`~.DiscreteCanopy.padded_copy` method.
 
-    The discrete canopy holds an :class:`InstancedCanopyElement` object, which
-    in turn holds any class derived from :class:`CanopyElement`.
+    The discrete canopy holds an :class:`.InstancedCanopyElement` object, which
+    in turn holds any class derived from :class:`.CanopyElement`.
 
     .. admonition:: Tutorials
 
@@ -45,9 +44,14 @@ class DiscreteCanopy(Canopy):
 
        .. autosummary::
 
-          leaf_cloud_from_files
           homogeneous
+          leaf_cloud_from_files
+          padded
     """
+
+    # --------------------------------------------------------------------------
+    #                                   Fields
+    # --------------------------------------------------------------------------
 
     instanced_canopy_elements = documented(
         attr.ib(
@@ -69,6 +73,10 @@ class DiscreteCanopy(Canopy):
         type="list[:class:`.InstancedCanopyElement`]",
         default="[]",
     )
+
+    # --------------------------------------------------------------------------
+    #                          Kernel dictionary generation
+    # --------------------------------------------------------------------------
 
     def bsdfs(self, ctx=None):
         """
@@ -134,7 +142,11 @@ class DiscreteCanopy(Canopy):
 
         return result
 
-    def padded(self, padding):
+    # --------------------------------------------------------------------------
+    #                                  Padding
+    # --------------------------------------------------------------------------
+
+    def padded_copy(self, padding):
         """
         Return a copy of the current canopy padded with additional copies.
 
@@ -195,10 +207,38 @@ class DiscreteCanopy(Canopy):
 
         return result
 
+    # --------------------------------------------------------------------------
+    #                               Constructors
+    # --------------------------------------------------------------------------
+
     @classmethod
-    def homogeneous(cls, id="homogeneous_discrete_canopy", **leaf_cloud_kwargs):
+    def padded(cls, padding=0, **kwargs):
         """
-        Generate a homogeneous discrete canopy.
+        Create a discrete canopy and pad it with copies of itself. Keyword
+        arguments are forwarded to the default constructor.
+
+        Parameter ``padding`` (int):
+            Amount of padding around the canopy. Must be positive or zero.
+            The resulting padded canopy is a grid of
+            :math:`2 \\times \\mathit{padding} + 1` copies.
+
+        Returns → :class:`.DiscreteCanopy`:
+            Padded discrete canopy.
+        """
+        return cls(**kwargs).padded_copy(padding)
+
+    @classmethod
+    def homogeneous(
+        cls, padding=0, id="homogeneous_discrete_canopy", **leaf_cloud_kwargs
+    ):
+        """
+        Generate a homogeneous discrete canopy, possibly padded with copies of
+        itself.
+
+        Parameter ``padding`` (int):
+            Amount of padding around the canopy. Must be positive or zero.
+            The resulting padded canopy is a grid of
+            :math:`2 \\times \\mathit{padding} + 1` copies.
 
         Parameter ``id`` (str):
             Canopy object ID.
@@ -233,16 +273,17 @@ class DiscreteCanopy(Canopy):
                     ),
                 )
             ],
-        )
+        ).padded_copy(padding)
 
     @classmethod
     def leaf_cloud_from_files(
-        cls, id="discrete_canopy", size=None, leaf_cloud_dicts=None
+        cls, padding=0, id="discrete_canopy", size=None, leaf_cloud_dicts=None
     ):
         """
-        Directly create a leaf cloud canopy from text file specifications.
+        Directly create a leaf cloud canopy from text file specifications,
+        possibly padded with copies of itself.
 
-         .. admonition:: CanopyElement dictionary format
+        .. admonition:: CanopyElement dictionary format
 
            Each item of the ``leaf_cloud_dicts`` list shall have the following
            structure:
@@ -257,6 +298,10 @@ class DiscreteCanopy(Canopy):
                   "leaf_transmittance": 0.5,  # optional, leaf transmittance (default: 0.5)
               }
 
+        Parameter ``padding`` (int):
+            Amount of padding around the canopy. Must be positive or zero.
+            The resulting padded canopy is a grid of
+            :math:`2 \\times \\mathit{padding} + 1` copies.
 
         Parameter ``id`` (str):
             Canopy ID.
@@ -310,42 +355,7 @@ class DiscreteCanopy(Canopy):
             )
 
         return cls(
-            id=id, size=size, instanced_canopy_elements=instanced_canopy_elements
-        )
-
-    @classmethod
-    def from_dict(cls, d):
-        """
-        Construct from a dictionary. This function first queries for a
-        ``construct`` parameter. If it is found, dictionary parameters are used
-        to call another class method constructor:
-
-        * ``homogeneous``: :meth:`.DiscreteCanopy.homogeneous`;
-        * ``from_files``: :meth:`.DiscreteCanopy.from_files`.
-
-        If ``construct`` is missing, parameters are forwarded to the regular
-        :class:`.InstancedLeafCloud` constructor.
-
-        Parameter ``d`` (dict):
-            Dictionary containing parameters passed to the selected constructor.
-            Unit fields are pre-processed with :func:`pinttr.interpret_units`.
-        """
-        # Interpret unit fields if any
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        # Store padding value
-        padding = d_copy.pop("padding", 0)
-
-        # Dispatch call based on 'construct' parameter
-        construct = d_copy.pop("construct", None)
-
-        if construct == "homogeneous":
-            result = cls.homogeneous(**d_copy)
-        elif construct == "leaf_cloud_from_files":
-            result = cls.leaf_cloud_from_files(**d_copy)
-        elif construct is None:
-            result = cls(**d_copy)
-        else:
-            raise ValueError(f"parameter 'construct': unsupported value '{construct}'")
-
-        return result.padded(padding)
+            id=id,
+            size=size,
+            instanced_canopy_elements=instanced_canopy_elements,
+        ).padded_copy(padding)

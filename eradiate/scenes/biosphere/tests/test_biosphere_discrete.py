@@ -11,6 +11,7 @@ from eradiate.scenes.biosphere import (
     InstancedCanopyElement,
     MeshTree,
     MeshTreeElement,
+    biosphere_factory,
 )
 from eradiate.scenes.biosphere._discrete import DiscreteCanopy, LeafCloud
 from eradiate.scenes.core import KernelDict
@@ -117,18 +118,6 @@ def test_discrete_canopy_homogeneous(mode_mono):
     )
     assert KernelDict.new(canopy, ctx=ctx).load()
 
-    # We can reproduce this behaviour using the dict-based API
-    canopy = DiscreteCanopy.from_dict(
-        {
-            "construct": "homogeneous",
-            "n_leaves": 1,
-            "leaf_radius": 0.1,
-            "l_horizontal": 10,
-            "l_vertical": 3,
-        }
-    )
-    assert KernelDict.new(canopy, ctx=ctx).load()
-
 
 def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves):
     ctx = KernelDictContext()
@@ -148,27 +137,6 @@ def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves
                 "leaf_cloud_filename": tempfile_leaves,
             },
         ],
-    )
-    assert KernelDict.new(canopy, ctx=ctx).load()
-
-    # We can reproduce this behaviour using the dict-based API
-    canopy = DiscreteCanopy.from_dict(
-        {
-            "construct": "leaf_cloud_from_files",
-            "size": [1, 1, 1],
-            "leaf_cloud_dicts": [
-                {
-                    "sub_id": "spheres_1",
-                    "instance_filename": tempfile_spheres,
-                    "leaf_cloud_filename": tempfile_leaves,
-                },
-                {
-                    "sub_id": "spheres_2",
-                    "instance_filename": tempfile_spheres,
-                    "leaf_cloud_filename": tempfile_leaves,
-                },
-            ],
-        }
     )
     assert KernelDict.new(canopy, ctx=ctx).load()
 
@@ -242,71 +210,6 @@ def test_discrete_canopy_advanced(
     )
     assert KernelDict.new(canopy, ctx=ctx).load()
 
-    # Reproduce previous example with dict API
-    canopy = DiscreteCanopy.from_dict(
-        {
-            "size": [1.0, 1.0, 1.0] * ureg.m,
-            "instanced_canopy_elements": [
-                {
-                    "instance_positions": [[0, 0, 0]],
-                    "canopy_element": {
-                        "type": "leaf_cloud",
-                        "construct": "cuboid",
-                        "n_leaves": 1,
-                        "leaf_radius": 0.1,
-                        "l_horizontal": 10,
-                        "l_vertical": 3,
-                        "id": "leaf_cloud_cuboid",
-                    },
-                },
-                {
-                    "construct": "from_file",
-                    "filename": tempfile_spheres,
-                    "canopy_element": {
-                        "type": "leaf_cloud",
-                        "construct": "from_file",
-                        "filename": tempfile_leaves,
-                        "id": "leaf_cloud_precomputed",
-                    },
-                },
-                {
-                    "instance_positions": [[0, 0, 0]],
-                    "canopy_element": {
-                        "type": "abstract_tree",
-                        "leaf_cloud": {
-                            "construct": "cuboid",
-                            "n_leaves": 100,
-                            "l_horizontal": 10.0,
-                            "l_vertical": 1.0,
-                            "leaf_radius": 10.0,
-                            "leaf_radius_units": "cm",
-                        },
-                        "trunk_height": 2.0,
-                        "trunk_radius": 0.2,
-                        "trunk_reflectance": 0.5,
-                        "id": "abstract_tree",
-                    },
-                },
-                {
-                    "instance_positions": [[0, 0, 0]],
-                    "canopy_element": {
-                        "type": "mesh_tree",
-                        "id": "mesh_tree",
-                        "mesh_tree_elements": [
-                            {
-                                "mesh_filename": tempfile_obj,
-                                "reflectance": 0.5,
-                                "transmittance": 0.5,
-                                "mesh_units": ureg.m,
-                            }
-                        ],
-                    },
-                },
-            ],
-        }
-    )
-    assert KernelDict.new(canopy, ctx=ctx).load()
-
 
 def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
     """Unit tests for :meth:`.DiscreteCanopy.padded`"""
@@ -324,7 +227,7 @@ def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
         ],
     )
     # The padded canopy object is valid and instantiable
-    padded_canopy = canopy.padded(2)
+    padded_canopy = canopy.padded_copy(2)
     assert padded_canopy
     assert KernelDict.new(padded_canopy, ctx=ctx).load()
     # Padded canopy has (2*padding + 1) ** 2 times more instances than original
