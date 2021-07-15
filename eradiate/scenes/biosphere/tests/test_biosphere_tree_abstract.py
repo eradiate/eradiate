@@ -61,23 +61,19 @@ def test_abstract_tree_dispatch_leaf_cloud(mode_mono, tempfile_leaves):
     # Produced kernel dict is valid
     assert KernelDict.new(tree.leaf_cloud, ctx=ctx).load()
 
-    # Use regular constructor if no "type" parameter is specified
+    # When passing a dict for the leaf_cloud field, the 'type' param can be omitted
     assert AbstractTree(
-        leaf_cloud=LeafCloud.from_dict(
-            {
-                "leaf_positions": [[0, 0, 0], [1, 1, 1]],
-                "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
-                "leaf_radii": [0.1, 0.1],
-            }
-        )
+        leaf_cloud={
+            "leaf_positions": [[0, 0, 0], [1, 1, 1]],
+            "leaf_orientations": [[0, 0, 1], [1, 0, 0]],
+            "leaf_radii": [0.1, 0.1],
+        }
     )
 
     # Dispatch to from_file if requested
     tree1 = AbstractTree(leaf_cloud=LeafCloud.from_file(tempfile_leaves))
     tree2 = AbstractTree(
-        leaf_cloud=LeafCloud.from_dict(
-            {"construct": "from_file", "filename": tempfile_leaves}
-        )
+        leaf_cloud={"construct": "from_file", "filename": tempfile_leaves}
     )
     # assert leaf clouds are equal
     assert np.all(tree1.leaf_cloud.leaf_positions == tree2.leaf_cloud.leaf_positions)
@@ -94,87 +90,18 @@ def test_abstract_tree_dispatch_leaf_cloud(mode_mono, tempfile_leaves):
 
     # Dispatch to generator if requested
     tree = AbstractTree(
-        leaf_cloud=LeafCloud.from_dict(
-            {
-                "construct": "cuboid",
-                "n_leaves": 100,
-                "l_horizontal": 10.0,
-                "l_vertical": 1.0,
-                "leaf_radius": 10.0,
-                "leaf_radius_units": "cm",
-            }
-        )
+        leaf_cloud={
+            "construct": "cuboid",
+            "n_leaves": 100,
+            "l_horizontal": 10.0,
+            "l_vertical": 1.0,
+            "leaf_radius": 10.0,
+            "leaf_radius_units": "cm",
+        }
     )
     assert len(tree.leaf_cloud.leaf_radii) == 100
     assert len(tree.leaf_cloud.leaf_positions) == 100
     assert np.allclose(tree.leaf_cloud.leaf_radii, 10.0 * ureg.cm)
-
-
-def test_abstract_tree_from_dict(mode_mono, tempfile_leaves):
-    """Unit testing for :meth:`AbstractTree.from_dict`."""
-
-    assert AbstractTree.from_dict(
-        {
-            "leaf_cloud": {
-                "construct": "cuboid",
-                "n_leaves": 100,
-                "l_horizontal": 10.0,
-                "l_vertical": 1.0,
-                "leaf_radius": 10.0,
-                "leaf_radius_units": "cm",
-            },
-            "trunk_height": 2.0,
-            "trunk_radius": 0.2,
-            "trunk_reflectance": 0.5,
-        }
-    )
-
-    tree1 = AbstractTree.from_dict(
-        {
-            "leaf_cloud": {
-                "construct": "cuboid",
-                "n_leaves": 100,
-                "l_horizontal": 10.0,
-                "l_vertical": 1.0,
-                "leaf_radius": 10.0,
-                "leaf_radius_units": "cm",
-            },
-            "trunk_height": 2.0,
-            "trunk_radius": 0.2,
-            "trunk_reflectance": 0.5,
-        }
-    )
-
-    tree2 = AbstractTree(
-        leaf_cloud=LeafCloud.from_dict(
-            {
-                "construct": "cuboid",
-                "n_leaves": 100,
-                "l_horizontal": 10.0,
-                "l_vertical": 1.0,
-                "leaf_radius": 10.0,
-                "leaf_radius_units": "cm",
-            }
-        ),
-        trunk_height=2.0,
-        trunk_radius=0.2,
-        trunk_reflectance=0.5,
-    )
-
-    assert tree1.trunk_height == tree2.trunk_height
-    assert tree1.trunk_radius == tree2.trunk_radius
-    assert tree1.trunk_reflectance == tree2.trunk_reflectance
-
-    assert np.allclose(tree1.leaf_cloud.leaf_positions, tree2.leaf_cloud.leaf_positions)
-    assert np.allclose(
-        tree1.leaf_cloud.leaf_orientations, tree2.leaf_cloud.leaf_orientations
-    )
-    assert np.all(
-        tree1.leaf_cloud.leaf_transmittance == tree2.leaf_cloud.leaf_transmittance
-    )
-    assert np.all(
-        tree1.leaf_cloud.leaf_reflectance == tree2.leaf_cloud.leaf_reflectance
-    )
 
 
 def test_abstract_tree_kernel_dict(mode_mono):

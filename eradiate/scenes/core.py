@@ -167,26 +167,6 @@ class SceneElement(ABC):
         default="None",
     )
 
-    @classmethod
-    def from_dict(cls, d: Dict):
-        """
-        Create from a dictionary. This class method will additionally pre-process
-        the passed dictionary to merge any field with an associated ``"_units"``
-        field into a :class:`pint.Quantity` container.
-
-        Parameter ``d`` (dict):
-            Configuration dictionary used for initialisation.
-
-        Returns → wrapped_cls:
-            Created object.
-        """
-
-        # Pre-process dict: apply units to unit-enabled fields
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-
-        # Perform object creation
-        return cls(**d_copy)
-
     @abstractmethod
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         """

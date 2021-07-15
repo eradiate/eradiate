@@ -44,13 +44,6 @@ class ParticleDistribution(ABC):
     :math:`i`.
     """
 
-    @classmethod
-    def from_dict(cls, d: dict) -> ParticleDistribution:
-        """
-        Initialise a :class:`ParticleDistribution` from a dictionary.
-        """
-        return cls(**d)
-
     @abstractmethod
     def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
         """

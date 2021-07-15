@@ -1,4 +1,5 @@
 import datetime
+from collections import MutableMapping
 
 import attr
 
@@ -6,10 +7,8 @@ import eradiate
 
 from ._scene import OneDimScene
 from ..core._solver_app import SolverApp
-from ... import unit_context_kernel as uck
 from ...attrs import documented, parse_docs
-from ...units import symbol
-from ...xarray.metadata import DatasetSpec, VarSpec
+from ...xarray.metadata import DatasetSpec
 
 
 @parse_docs
@@ -25,7 +24,9 @@ class OneDimSolverApp(SolverApp):
     scene = documented(
         attr.ib(
             factory=OneDimScene,
-            converter=lambda x: OneDimScene.from_dict(x) if isinstance(x, dict) else x,
+            converter=lambda x: OneDimScene(**x)
+            if isinstance(x, MutableMapping)
+            else x,
             validator=attr.validators.instance_of(OneDimScene),
         ),
         doc="One-dimensional scene to simulate radiative transfer on. "

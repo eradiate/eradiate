@@ -6,6 +6,7 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.scenes.spectra import spectrum_factory
 from eradiate.scenes.spectra._interpolated import InterpolatedSpectrum
 
 
@@ -45,18 +46,16 @@ def test_spectra_interpolated_construct(mode_mono):
             values=[0.0, 1.0],
         )
 
-    # Instantiate from dictionary
-    assert (
-        InterpolatedSpectrum.from_dict(
-            {
-                "quantity": "irradiance",
-                "wavelengths": [0.5, 0.6],
-                "wavelengths_units": "micron",
-                "values": [0.5, 1.0],
-                "values_units": "kW/m^2/nm",
-            }
-        )
-        is not None
+    # Instantiate from factory
+    assert spectrum_factory.convert(
+        {
+            "type": "interpolated",
+            "quantity": "irradiance",
+            "wavelengths": [0.5, 0.6],
+            "wavelengths_units": "micron",
+            "values": [0.5, 1.0],
+            "values_units": "kW/m^2/nm",
+        }
     )
 
 

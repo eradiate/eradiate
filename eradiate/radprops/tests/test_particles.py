@@ -4,8 +4,8 @@ import xarray as xr
 from eradiate import path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.contexts import SpectralContext
-from eradiate.radprops.particles import ParticleLayer
 from eradiate.radprops.particle_dist import UniformParticleDistribution
+from eradiate.radprops.particles import ParticleLayer
 
 
 def test_particle_layer() -> None:
@@ -29,53 +29,21 @@ def test_particle_layer() -> None:
     assert layer.dataset == "tests/radprops/rtmom_aeronet_desert.nc"
 
 
-def test_particle_layer_from_dict() -> None:
-    """Assigns parameters to expected values."""
-    config = dict(
-        bottom=ureg.Quantity(1.2, "km"),
-        top=ureg.Quantity(1.8, "km"),
-        distribution=UniformParticleDistribution(),
-        tau_550=0.3,
-        n_layers=1,
-        dataset="tests/radprops/rtmom_aeronet_desert.nc",
-    )
-    layer = ParticleLayer.from_dict(config)
-    assert isinstance(layer, ParticleLayer)
-
-
 def test_particle_layer_altitude_units() -> None:
     """Accept different units for bottom and top altitudes."""
-    bottom = ureg.Quantity(1, "km")
-    top = ureg.Quantity(2000.0, "m")
-    config = dict(bottom=bottom, top=top)
-    layer = ParticleLayer.from_dict(config)
-    assert layer.bottom == bottom
-    assert layer.top == top
+    assert ParticleLayer(bottom=ureg.Quantity(1, "km"), top=ureg.Quantity(2000.0, "m"))
 
 
 def test_particle_layer_invalid_bottom_top() -> None:
-    """Raises when 'bottom' and 'top' are invalid."""
-    bottom = ureg.Quantity(1.2, "km")
-    top = ureg.Quantity(1.8, "km")
-    config = {
-        "bottom": top,
-        "top": bottom,
-    }
+    """Raises when 'bottom' is larger that 'top'."""
     with pytest.raises(ValueError):
-        ParticleLayer.from_dict(config)
+        ParticleLayer(top=ureg.Quantity(1.2, "km"), bottom=ureg.Quantity(1.8, "km"))
 
 
 def test_particle_layer_invalid_tau_550() -> None:
     """Raises when 'tau_550' is invalid."""
-    bottom = ureg.Quantity(1.2, "km")
-    top = ureg.Quantity(1.8, "km")
-    config = {
-        "bottom": bottom,
-        "top": top,
-        "tau_550": -0.1,
-    }
     with pytest.raises(ValueError):
-        ParticleLayer.from_dict(config)
+        ParticleLayer(ureg.Quantity(1.2, "km"), ureg.Quantity(1.8, "km"), tau_550=-0.1)
 
 
 @pytest.fixture

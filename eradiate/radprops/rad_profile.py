@@ -185,14 +185,6 @@ class RadProfile(ABC):
 
     """
 
-    @classmethod
-    def from_dict(cls, d):
-        """
-        Initialise a :class:`RadPropsProfile` from a dictionary.
-        """
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
-        return cls(**d_copy)
-
     @abstractmethod
     def albedo(self, spectral_ctx=None):
         """

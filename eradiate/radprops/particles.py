@@ -265,12 +265,6 @@ class ParticleLayer:
         return self.eval_sigma_t(spectral_ctx) * self.eval_albedo(spectral_ctx)
 
     @classmethod
-    def from_dict(cls, d: dict) -> ParticleLayer:
-        """
-        Initialise a :class:`ParticleLayer` from a dictionary."""
-        return cls(**d)
-
-    @classmethod
     def convert(cls, value: Union[ParticleLayer, dict]):
         """
         Object converter method.
