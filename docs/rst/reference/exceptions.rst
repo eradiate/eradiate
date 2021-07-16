@@ -8,7 +8,7 @@ Exceptions
 .. currentmodule:: eradiate.exceptions
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    KernelVariantError
    ModeError
@@ -18,6 +18,6 @@ Warnings
 .. currentmodule:: eradiate.exceptions
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    ConfigWarning

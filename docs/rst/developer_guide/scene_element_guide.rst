@@ -34,18 +34,6 @@ new scene element subclass.
   implemented by its derived classes: it returns a dictionary which can be then
   used as an input to the kernel.
 
-* :class:`~eradiate.scenes.core.SceneElement` has a class method constructor
-  :meth:`~eradiate.scenes.core.SceneElement.from_dict` which implements a
-  default dictionary interpretation protocol. This method can be overridden by
-  derived classes.
-
-* Unless specific action is taken, the default implementation of
-  :meth:`.SceneElement.from_dict` requires that all :class:`.SceneElement`
-  child classes only have keyword-argument attributes. It is therefore highly
-  recommended to define defaults for all attributes, unless your new
-  :class:`.SceneElement` provides an appropriate implementation of its
-  :meth:`~.SceneElement.from_dict` method.
-
 * :class:`~eradiate.scenes.core.SceneElement` is the base class of a set of
   abstract interfaces (*e.g.* :class:`~eradiate.scenes.illumination.Illumination`,
   :class:`~eradiate.scenes.spectra.Spectrum`, etc.) which are the ones from
@@ -63,17 +51,17 @@ initialisation system works properly.
 .. code-block:: python
 
    import attr
-   from eradiate.scenes.spectra import Spectrum, SpectrumFactory
+   from eradiate.scenes.spectra import Spectrum, spectrum_factory
    from eradiate import ureg
 
-   @SpectrumFactory.register("my_spectrum")
+   @spectrum_factory.register(type_id="my_spectrum")
    @attr.s
    class MySpectrum(Spectrum):
        field = pinttr.ib(default=1.0, units=ureg.m)
        def eval(ctx=None): ...  # Definition skipped
        def kernel_dict(ctx=None): ...  # Definition skipped
 
-   obj = SpectrumFactory.create({"type": "my_spectrum", "field": 1.0})
+   obj = spectrum_factory.convert({"type": "my_spectrum", "field": 1.0})
 
 As mentioned in the :ref:`sec-developer_guide-factory_guide`, factory
 registration occurs only upon class definition: a module defining a scene
@@ -83,7 +71,7 @@ Using factory converters
 ------------------------
 
 As mentioned in the :ref:`sec-developer_guide-factory_guide`, Eradiate's
-factories implement a :func:`~eradiate._factory.BaseFactory.convert` class
+factories implement a :meth:`~.Factory.convert` class
 method which can turn a dictionary into a registered object—and if the method
 receives something else than a dictionary, it simply does nothing.
 
@@ -97,22 +85,22 @@ the use of nested dictionaries to instantiate multiple objects.
    import pinttr
 
    from eradiate import unit_registry as ureg
-   from eradiate.scenes.illumination import Illumination, IlluminationFactory
-   from eradiate.scenes.spectrum import Spectrum, SpectrumFactory
+   from eradiate.scenes.illumination import Illumination, illumination_factory
+   from eradiate.scenes.spectrum import Spectrum, spectrum_factory
 
-   @SpectrumFactory.register("my_spectrum")
+   @spectrum_factory.register(type_id="my_spectrum")
    @attr.s
    class MySpectrum(Spectrum):
        field = pinttr.ib(default=1.0, units=ureg.m)
        def eval(ctx=None): ...  # Definition skipped
        def kernel_dict(ctx=None): ...  # Definition skipped
 
-   @IlluminationFactory.register("my_illumination")
+   @illumination_factory.register("my_illumination")
    @attr.s
    class MyIllumination(Illumination):
        radiance = attr.ib(
            factory=MySpectrum,
-           converter=SpectrumFactory.convert
+           converter=spectrum_factory.convert
        )
        def kernel_dict(): ...  # Definition skipped
 
@@ -121,7 +109,7 @@ the use of nested dictionaries to instantiate multiple objects.
    # Use the factory to convert a dictionary to ElementA
    obj = MyIllumination(element_a={"type": "my_spectrum", "field": 3.0})
    # Instantiate MyIllumination using nested dicts
-   obj = IlluminationFactory.create({
+   obj = illumination_factory.create({
        "type": "my_illumination",
        "radiance": {"type": "my_spectrum", "field": 4.0},
    })
@@ -139,7 +127,7 @@ information.
    a few precautions to keep in mind:
 
    * kernel imports must be local to the method;
-   * if a  kernel importis required to build the dictionary, a kernel variant
+   * if a  kernel import is required to build the dictionary, a kernel variant
      must be selected when it is called (in practice, this means that Eradiate's
      operational mode must have been selected);
    * :meth:`~.SceneElement.kernel_dict`'s signature should allow for the
@@ -171,6 +159,5 @@ following steps:
 The following steps are optional:
 
 * implement a post-init hook steps using the ``__attrs_post_init__()`` method;
-* enable factory-based instantiation using the
-  :meth:`~eradiate._factory.BaseFactory.register()` decorator defined by the
-  appropriate factory.
+* enable factory-based instantiation using the :meth:`~.Factory.register()`
+  decorator defined by the appropriate factory.

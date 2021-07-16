@@ -289,11 +289,11 @@ class CuboidLeafCloudParams(LeafCloudParams):
 
     .. only:: latex
 
-       .. figure:: ../../../fig/cuboid_leaf_cloud_params.png
+       .. figure:: ../../../../fig/cuboid_leaf_cloud_params.png
 
     .. only:: not latex
 
-       .. figure:: ../../../fig/cuboid_leaf_cloud_params.svg
+       .. figure:: ../../../../fig/cuboid_leaf_cloud_params.svg
 
     .. seealso:: :meth:`.LeafCloud.cuboid`
     """

@@ -5,7 +5,7 @@ Private: Miscellaneous support components [eradiate._util]
 .. currentmodule:: eradiate._util
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    Singleton
    ensure_array

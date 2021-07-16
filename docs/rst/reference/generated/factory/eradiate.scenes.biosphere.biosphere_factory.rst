@@ -1,0 +1,24 @@
+eradiate.scenes.biosphere.biosphere_factory
+===========================================
+
+.. data:: eradiate.scenes.biosphere.biosphere_factory
+   :annotation: = eradiate._factory.Factory()
+
+   Instance of :class:`eradiate._factory.Factory`
+
+   .. rubric:: Registered types
+
+   .. list-table::
+      :widths: 25 75
+
+      * - ``abstract_tree``
+        - :class:`AbstractTree`
+      * - ``discrete_canopy``
+        - :class:`DiscreteCanopy`
+      * - ``instanced``
+        - :class:`InstancedCanopyElement`
+      * - ``leaf_cloud``
+        - :class:`LeafCloud`
+      * - ``mesh_tree``
+        - :class:`MeshTree`
+

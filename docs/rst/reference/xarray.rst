@@ -8,7 +8,7 @@ Creation [eradiate.xarray.make]
 .. currentmodule:: eradiate.xarray.make
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    make_dataarray
 
@@ -18,7 +18,7 @@ Interpolation [eradiate.xarray.interp]
 .. currentmodule:: eradiate.xarray.interp
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    film_to_angular
 
@@ -27,7 +27,7 @@ Metadata specification and validation [eradiate.xarray.metadata]
 .. currentmodule:: eradiate.xarray.metadata
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    validate_metadata
    DataSpec
@@ -41,7 +41,7 @@ Private: Accessors [eradiate.xarray._accessors]
 .. currentmodule:: eradiate.xarray._accessors
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    EradiateDataArrayAccessor
    EradiateDatasetAccessor

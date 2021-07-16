@@ -36,8 +36,7 @@ class OneDimScene(Scene):
         doc="Atmosphere specification. If set to ``None``, no atmosphere will "
         "be added. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by "
-        ":meth:`AtmosphereFactory.convert() <.AtmosphereFactory.convert>`.",
+        "interpreted by :data:`.atmosphere_factory`.",
         type=":class:`.Atmosphere` or dict or None",
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )

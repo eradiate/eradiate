@@ -150,8 +150,10 @@ class CanopyElement(SceneElement, ABC):
 @attr.s
 class InstancedCanopyElement(SceneElement):
     """
-    Specification a canopy element, alongside the locations of instances (*i.e.*
-    clones) of it.
+    Instanced canopy element [``instanced``].
+
+    This class wraps a canopy element and defines locations where to position
+    instances (*i.e.* clones) of it.
 
     .. admonition:: Class method constructors
 
@@ -170,8 +172,8 @@ class InstancedCanopyElement(SceneElement):
             ),
             converter=biosphere_factory.convert,
         ),
-        doc="Instanced canopy element. Can be specified as a dictionary, which will "
-        "be interpreted by :meth:`.CanopyElement.from_dict`.",
+        doc="Instanced canopy element. Can be specified as a dictionary, which "
+        "will be converted by :data:`.biosphere_factory`.",
         type=":class:`.CanopyElement`",
         default="None",
     )
@@ -219,7 +221,7 @@ class InstancedCanopyElement(SceneElement):
 
         Parameter ``canopy_element`` (:class:`.CanopyElement` or dict):
             :class:`.CanopyElement` to be instanced. If a dictionary is passed,
-            if is interpreted by :meth:`.CanopyElement.from_dict`. If set to
+            if is interpreted by :data:`.biosphere_factory`. If set to
             ``None``, an empty leaf cloud will be created.
 
         Returns → :class:`.InstancedCanopyElement`:

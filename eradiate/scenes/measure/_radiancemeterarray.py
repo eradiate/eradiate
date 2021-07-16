@@ -14,7 +14,7 @@ from ...units import unit_registry as ureg
 @attr.s
 class RadiancemeterArrayMeasure(Measure):
     """
-    Radiance meter array measure scene element [:factorykey:`radiancemeterarray`].
+    Radiance meter array measure scene element [``radiancemeterarray``].
 
     This measure scene element is a thin wrapper around the ``radiancemeterarray``
     sensor kernel plugin. It records the incident power per unit area per unit

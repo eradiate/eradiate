@@ -13,7 +13,7 @@ Thermophysical properties [eradiate.thermoprops]
 
 .. autosummary::
    :recursive:
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    afgl1986
    us76

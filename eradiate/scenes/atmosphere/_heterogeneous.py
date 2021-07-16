@@ -100,7 +100,7 @@ def read_binary_grid3d(filename):
 @attr.s
 class HeterogeneousAtmosphere(Atmosphere):
     """
-    Heterogeneous atmosphere scene element [:factorykey:`heterogeneous`].
+    Heterogeneous atmosphere scene element [``heterogeneous``].
 
     This class builds a one-dimensional heterogeneous atmosphere.
     It expands as a ``heterogeneous`` kernel plugin, which takes as parameters

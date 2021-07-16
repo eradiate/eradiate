@@ -12,18 +12,21 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help clean clean_generated Makefile
+.PHONY: help rst-api clean clean_generated Makefile
 
 html-plot:
 	$(SPHINXBUILD) -D plot_gallery=1 -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" $(SPHINXOPTS) $(O)
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
+rst-api:
+	python generate_rst_api.py
+
 clean: clean_generated
 	rm -rf _build/*
 
 clean_generated:
-	rm -rf rst/reference/generated/*
+	rm -rf rst/reference/generated/autosummary
 	rm -rf examples/generated/*
 
 # Catch-all target: route all unknown targets to Sphinx using the new

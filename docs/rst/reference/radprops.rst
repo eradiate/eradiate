@@ -13,7 +13,7 @@ Radiative properties [eradiate.radprops]
 
 .. autosummary::
    :recursive:
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    absorption
    particles

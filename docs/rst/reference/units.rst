@@ -8,7 +8,7 @@ Unit registry (aliased in the :mod:`eradiate` module)
 -----------------------------------------------------
 
 .. autosummary::
-  :toctree: generated
+  :toctree: generated/autosummary/
 
    unit_registry
 
@@ -16,7 +16,7 @@ Unit contexts (aliased in the :mod:`eradiate` module)
 -----------------------------------------------------
 
 .. autosummary::
-  :toctree: generated
+  :toctree: generated/autosummary/
 
    unit_context_config
    unit_context_kernel
@@ -25,7 +25,7 @@ Physical quantity unit definitions
 ----------------------------------
 
 .. autosummary::
-  :toctree: generated
+  :toctree: generated/autosummary/
 
    PhysicalQuantity
 
@@ -33,7 +33,7 @@ Utility functions
 -----------------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    symbol
    to_quantity
