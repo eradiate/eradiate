@@ -3,12 +3,12 @@
 Class writing support components
 ================================
 
-Attribute documentation [eradiate.attrs]
------------------------------------------
+Attribute declaration [eradiate.attrs]
+--------------------------------------
 .. currentmodule:: eradiate.attrs
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    AUTO
    parse_docs
@@ -20,7 +20,7 @@ Attribute converters [eradiate.converters]
 .. currentmodule:: eradiate.converters
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    on_quantity
    auto_or
@@ -30,7 +30,7 @@ Attribute validators [eradiate.validators]
 .. currentmodule:: eradiate.validators
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    all_positive
    auto_or
@@ -43,12 +43,3 @@ Attribute validators [eradiate.validators]
    is_vector3
    on_quantity
    path_exists
-
-Private: Base factory [eradiate._factory]
------------------------------------------
-.. currentmodule:: eradiate._factory
-
-.. autosummary::
-   :toctree: generated/
-
-   BaseFactory

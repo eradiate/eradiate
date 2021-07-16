@@ -12,7 +12,7 @@ from ...contexts import KernelDictContext
 @attr.s
 class LambertianSurface(Surface):
     """
-    Lambertian surface scene element [:factorykey:`lambertian`].
+    Lambertian surface scene element [``lambertian``].
 
     This class creates a square surface to which a Lambertian BRDF is attached.
     """

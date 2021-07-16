@@ -1,0 +1,20 @@
+eradiate.scenes.surface.surface_factory
+=======================================
+
+.. data:: eradiate.scenes.surface.surface_factory
+   :annotation: = eradiate._factory.Factory()
+
+   Instance of :class:`eradiate._factory.Factory`
+
+   .. rubric:: Registered types
+
+   .. list-table::
+      :widths: 25 75
+
+      * - ``black``
+        - :class:`BlackSurface`
+      * - ``lambertian``
+        - :class:`LambertianSurface`
+      * - ``rpv``
+        - :class:`RPVSurface`
+

@@ -10,12 +10,15 @@ from .units import unit_registry as ureg
 @attr.s
 class Factory(dessinemoi.Factory):
     """
+    Object factory.
+
     This factory subclass extends the original :class:`dessinemoi.Factory` type
-    by adding the following functionality to its :meth:`.convert` method:
+    by adding the following functionality to its :meth:`convert` method:
 
     * unit interpretation using :func:`pinttr.interpret_units`;
-    * class method constructor selection using the ``construct`` key (overrides
-      the default dict constructor if any).
+    * class method constructor selection using the ``"construct"`` key
+      (overrides the default dict constructor if any; reserves the
+      ``"construct"`` parameter).
     """
 
     def _convert_impl(

@@ -21,19 +21,21 @@ and `for isort <https://github.com/pycqa/isort/wiki/isort-Plugins>`_.
 Code writing
 ------------
 
-.. warning:: Eradiate is built using the `attrs <https://www.attrs.org>`_
-   library. It is strongly recommended to read the ``attrs`` documentation prior
-   to writing additional classes. In particular, it is important to understand
-   the ``attrs`` initialisation sequence, as well as how callables can be used
-   to set defaults and to create converters and validators.
+.. warning::
 
-   Eradiate's unit handling is based on `Pint <https://pint.readthedocs.io>`_,
-   whose documentation is also a very helpful read.
-
-   Finally, Eradiate uses custom Pint-based extensions to ``attrs`` now
-   developed as the standalone project
-   `Pinttrs <https://pinttrs.readthedocs.io>`_. Reading the Pinttrs docs is
-   highly recommended.
+   * Eradiate is built using the `attrs <https://www.attrs.org>`_
+     library. It is strongly recommended to read the ``attrs`` documentation
+     prior to writing additional classes. In particular, it is important to
+     understand the ``attrs`` initialisation sequence, as well as how callables
+     can be used to set defaults and to create converters and validators.
+   * Eradiate's unit handling is based on `Pint <https://pint.readthedocs.io>`_,
+     whose documentation is also a very helpful read.
+   * Eradiate uses custom Pint-based extensions to ``attrs`` now developed as the
+     standalone project `Pinttrs <https://pinttrs.readthedocs.io>`_. Reading the
+     Pinttrs docs is highly recommended.
+   * Eradiate uses factories based on the
+     `Dessine-moi <https://dessinemoi.readthedocs.io>`_ library. Reading the
+     Dessine-moi docs is recommended.
 
 When writing code for Eradiate, the following conventions and practices should
 be followed.
@@ -47,43 +49,22 @@ Minimise class initialisation code
     complex logic implemented by constructors. Although ``attrs`` provides the
     ``__attrs_post_init__()`` method to do so, we try to avoid it as much as
     possible. If a constructor must perform special tasks, then this logic
-    is usually better implemented as a class method constructor (typically
+    is usually better implemented as a *class method constructor* (*e.g.*
     ``from_something()``).
 
 Initialisation from dictionaries
-    Most of Eradiate's classes implement a special ``from_dict()`` class method
-    constructor which initialises them from a dictionary. This method should
-    interpret unit fields (see :func:`pinttr.interpret_units`).
+    A lot of Eradiate's classes can be instantiated using dictionaries. Most of
+    them leverage factories for that purpose (see
+    :ref:`sec-developer_guide-factory_guide` and
+    :ref:`sec-developer_guide-scene_element_guide`). This, in practice, reserves
+    the ``"type"`` and ``"construct"`` parameters, meaning that
+    factory-registered classes cannot have ``type`` or ``construct`` fields.
 
-    .. note:: The ``from_dict()`` class method is called by factories (see
-       :ref:`sec-developer_guide-factory_guide`) based on the value of the
-       dictionary's ``type`` field: it is therefore not advised to define a
-       ``type`` field in new classes. Additional parameters are forwarded to the
-       selected class's constructor as keyword arguments.
+    For classes unregistered to any factory, our convention is to implement
+    dictionary-based initialisation as a ``from_dict()`` class method
+    constructor. It should implement behaviour similar to what
+    :meth:`.Factory.convert` does, *i.e.*:
 
-    By convention, we reserve the ``construct`` key for ``from_dict()`` to
-    select a special constructor. Dictionary contents are then forwarded as
-    keyword arguments to the designed class method.
-
-    .. note:: Classes should therefore not have a ``construct`` field.
-
-    .. admonition:: Example
-
-       .. code:: python
-
-          BiosphereFactory.create({
-              # The following two parameters will select the
-              # DiscreteCanopy.from_files() class method
-              "type": "discrete_canopy",
-              "construct": "from_files",
-              # The following parameters will be passed as keyword arguments to
-              # DiscreteCanopy.from_files()
-              "id": "floating_spheres",
-              "size": [100, 100, 30] * ureg.m,
-              "leaf_cloud_dicts": [{
-                  "instance_filename": instance_filename,
-                  "leaf_cloud_filename": leaf_cloud_filename,
-                  "leaf_reflectance": 0.4,
-                  "leaf_transmittance": 0.1,
-              }],
-          })
+    * interpret units using :func:`pinttr.interpret_units`;
+    * [optional] if relevant, allow for class method constructor selection using
+      the ``"construct"`` parameter.

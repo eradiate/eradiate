@@ -18,7 +18,7 @@ from ...validators import has_quantity, is_positive
 @attr.s
 class DirectionalIllumination(Illumination):
     """
-    Directional illumination scene element [:factorykey:`directional`].
+    Directional illumination scene element [``directional``].
 
     The illumination is oriented based on the classical angular convention used
     in Earth observation.

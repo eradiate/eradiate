@@ -6,7 +6,7 @@ Context data structures [eradiate.contexts]
 .. currentmodule:: eradiate.contexts
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    KernelDictContext
    SpectralContext

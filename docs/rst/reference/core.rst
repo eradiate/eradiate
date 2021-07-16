@@ -8,7 +8,7 @@ Mode control
 .. currentmodule:: eradiate
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    mode
    modes
@@ -19,7 +19,7 @@ Mode control
 .. dropdown:: Private
 
    .. autosummary::
-      :toctree: generated/
+      :toctree: generated/autosummary/
 
       _mode.ModeSpectrum
       _mode.ModePrecision
@@ -68,15 +68,15 @@ Path resolver
 .. dropdown:: Private
 
    .. autosummary::
-      :toctree: generated
+      :toctree: generated/autosummary/
 
-       _presolver.PathResolver
+      _presolver.PathResolver
 
 Miscellaneous
 -------------
 .. currentmodule:: eradiate
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    __version__

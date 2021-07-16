@@ -10,7 +10,7 @@ from ...contexts import KernelDictContext
 @attr.s
 class BlackSurface(Surface):
     """
-    Black surface scene element [:factorykey:`black`].
+    Black surface scene element [``black``].
 
     This class creates a square surface with a black BRDF attached.
     """

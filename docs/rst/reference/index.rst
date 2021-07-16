@@ -16,20 +16,21 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
 .. toctree::
    :maxdepth: 2
 
-   core
+   class_writing
    config
    contexts
+   core
+   data
+   exceptions
+   factory
+   kernel
+   math
+   misc
+   notebook
+   plot
+   radprops
    scenes
    solvers
-   kernel
-   data
-   xarray
-   units
-   plot
-   notebook
    thermoprops
-   radprops
-   class_writing
-   math
-   exceptions
-   misc
+   units
+   xarray

@@ -9,7 +9,7 @@ Access
 ------
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    open
    registered
@@ -21,7 +21,7 @@ Data sets
 
 .. autosummary::
    :recursive:
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    absorption_spectra
    thermoprops_profiles

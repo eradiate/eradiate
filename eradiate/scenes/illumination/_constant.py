@@ -14,7 +14,7 @@ from ...validators import has_quantity
 @attr.s
 class ConstantIllumination(Illumination):
     """
-    Constant illumination scene element [:factorykey:`constant`].
+    Constant illumination scene element [``constant``].
     """
 
     radiance = documented(

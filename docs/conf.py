@@ -67,17 +67,16 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build"]
 
-# Add custom extension
-extensions.append("ertdocs")
+# Add custom extensions
 extensions.append("exec")
 
 rst_prolog = r"""
 .. role:: bolditalic
    :class: font-weight-bold font-italic
-  
+
 .. role:: monospace
    :class: text-monospace
-   
+
 .. role:: monobold
    :class: text-monospace font-weight-bold
 """
@@ -139,16 +138,17 @@ panels_add_bootstrap_css = False
 # Intersphinx configuration for cross-project referencing
 extensions.append("sphinx.ext.intersphinx")
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3/", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "matplotlib": ("https://matplotlib.org/", None),
-    "xarray": ("http://xarray.pydata.org/en/stable/", None),
-    "mitsuba": ("https://eradiate-kernel.readthedocs.io/en/latest/", None),
-    "pint": ("https://pint.readthedocs.io/en/latest/", None),
     "attr": ("https://www.attrs.org/en/stable/", None),
+    "dessinemoi": ("https://dessinemoi.readthedocs.io/en/latest/", None),
+    "matplotlib": ("https://matplotlib.org/", None),
+    "mitsuba": ("https://eradiate-kernel.readthedocs.io/en/latest/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
+    "pint": ("https://pint.readthedocs.io/en/latest/", None),
     "pinttrs": ("https://pinttrs.readthedocs.io/en/latest/", None),
+    "python": ("https://docs.python.org/3/", None),
     "rich": ("https://rich.readthedocs.io/en/latest/", None),
+    "xarray": ("http://xarray.pydata.org/en/stable/", None),
 }
 
 # Activate todo notes

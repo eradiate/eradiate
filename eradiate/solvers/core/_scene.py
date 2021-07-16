@@ -54,7 +54,7 @@ class Scene(SceneElement, ABC):
         ),
         doc="List of measure specifications. The passed list may contain "
         "dictionaries, which will be interpreted by "
-        ":meth:`MeasureFactory.convert() <.MeasureFactory.convert>`. "
+        ":data:`.measure_factory`. "
         "Optionally, a single :class:`.Measure` or dictionary specification "
         "may be passed and will automatically be wrapped into a list.\n"
         "\n"

@@ -13,7 +13,7 @@ from ...contexts import KernelDictContext
 @attr.s
 class RPVSurface(Surface):
     """
-    RPV surface scene element [:factorykey:`rpv`].
+    RPV surface scene element [``rpv``].
 
     This class creates a square surface to which a RPV BRDF
     :cite:`Rahman1993CoupledSurfaceatmosphereReflectance,Pinty2000SurfaceAlbedoRetrieval`

@@ -28,13 +28,13 @@ def _instanced_canopy_elements_converter(value):
 @attr.s
 class DiscreteCanopy(Canopy):
     """
-    An abstract discrete canopy, consisting of one or several clouds of
-    disk-shaped leaves. Each leaf cloud can be instanced arbitrarily. The
-    produced canopy can be padded with more clones of itself using the
-    :meth:`~.DiscreteCanopy.padded_copy` method.
+    Discrete canopy scene element [``discrete_canopy``].
 
-    The discrete canopy holds an :class:`.InstancedCanopyElement` object, which
-    in turn holds any class derived from :class:`.CanopyElement`.
+    An discrete canopy defined by one or several :class:`.CanopyElement`
+    instances. The underlying implementation holds a list of
+    :class:`.InstancedCanopyElement`, allowing for arbitrary cloning of each
+    :class:`.CanopyElement`. The produced canopy can be padded with clones of
+    itself using the :meth:`~.DiscreteCanopy.padded_copy` method.
 
     .. admonition:: Tutorials
 

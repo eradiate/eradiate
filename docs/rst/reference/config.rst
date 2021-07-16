@@ -6,7 +6,7 @@ Configuration [eradiate._config]
 .. currentmodule:: eradiate._config
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    EradiateConfig
 

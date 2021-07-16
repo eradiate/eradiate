@@ -56,10 +56,6 @@ class AbstractTree(Tree):
     e.g. the leaf cloud is centered around its coordinate origin and the trunk
     should not extend into it, the parameter ``leaf_cloud_extra_offset`` can be
     used to shift the leaf cloud **in addition** to the trunk's extent.
-
-    The :meth:`.AbstractTree.from_dict` constructor will instantiate the trunk
-    parameters based on dictionary specification and will forward the entry
-    specifying the leaf cloud to :meth:`.LeafCloud.convert`.
     """
 
     id = documented(
@@ -79,7 +75,9 @@ class AbstractTree(Tree):
             validator=attr.validators.optional(attr.validators.instance_of(LeafCloud)),
         ),
         doc="Instanced leaf cloud. Can be specified as a dictionary, which will "
-        "be interpreted by :meth:`.LeafCloud.from_dict`.",
+        "be interpreted by :data:`.biosphere_factory`. If the latter case, the "
+        '``"type"`` parameter, if omitted, will implicitly be set to '
+        '``"leaf_cloud"``.',
         type=":class:`LeafCloud`",
         default="None",
     )
@@ -270,7 +268,7 @@ class MeshTreeElement:
     Since mesh definition files cannot carry Pint units, the attribute ``mesh_units``
     lets users provide the unit which their mesh is defined in. Upon kernel dict
     creation the mesh is scaled to match the length unit used in the kernel.
-    If ``mesh_units` is not provided, no scaling of the mesh is performed.
+    If ``mesh_units`` is not provided, no scaling of the mesh is performed.
 
     The :meth:`MeshTreeElement.from_dict` constructor instantiates the class from
     a configuration dictionary.

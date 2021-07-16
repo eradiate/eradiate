@@ -22,7 +22,7 @@ from ...validators import has_quantity
 @attr.s()
 class HomogeneousAtmosphere(Atmosphere):
     """
-    Homogeneous atmosphere scene element [:factorykey:`homogeneous`].
+    Homogeneous atmosphere scene element [``homogeneous``].
 
     This class builds an atmosphere consisting of a homogeneous medium with
     customisable collision coefficients and phase function, attached to a

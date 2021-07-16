@@ -1,0 +1,20 @@
+eradiate.radprops.rad_profile.rad_profile_factory
+=================================================
+
+.. data:: eradiate.radprops.rad_profile.rad_profile_factory
+   :annotation: = eradiate._factory.Factory()
+
+   Instance of :class:`eradiate._factory.Factory`
+
+   .. rubric:: Registered types
+
+   .. list-table::
+      :widths: 25 75
+
+      * - ``afgl1986``
+        - :class:`AFGL1986RadProfile`
+      * - ``array``
+        - :class:`ArrayRadProfile`
+      * - ``us76_approx``
+        - :class:`US76ApproxRadProfile`
+

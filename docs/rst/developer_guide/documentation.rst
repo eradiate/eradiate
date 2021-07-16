@@ -19,15 +19,21 @@ commands:
 
 .. code-block:: bash
 
-    cd $ERADIATE_DIR/docs
-    make html
+    cd $ERADIATE_DIR
+    make docs
 
 After the build is completed, the html document is located in
 :code:`$ERADIATE_DIR/docs/_build/html`.
 
-.. note:: By default, docs are built without running examples.
-   See :ref:`sec-developer_guide-documentation-tutorials-running_examples` for
-   more information.
+.. admonition:: Notes
+   :class: note
+
+   * Some parts of the API documentation use static intermediate files generated
+     by a dedicated script. See :ref:`sec-developer_guide-documentation-api-build`
+     for more information.
+   * By default, docs are built without running examples.
+     See :ref:`sec-developer_guide-documentation-tutorials-running_examples` for
+     more information.
 
 Building the kernel documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -111,6 +117,21 @@ be reused. For such cases, we provide the :func:`.get_doc` function:
            type=get_doc(MyClass, "field", "type"),
            default="1.0",
        )
+
+.. _sec-developer_guide-documentation-api-build:
+
+Building API RST files
+^^^^^^^^^^^^^^^^^^^^^^
+
+Parts of the API documentation are generated using a dedicated Python script.
+While regenerating those pages is not always required, keeping them up-to-date
+is recommended. They can be generated using the ``rst-api`` make target:
+
+.. code-block:: bash
+
+    cd $ERADIATE_DIR
+    make docs-rst-api
+    make docs
 
 Editing tutorials
 -----------------

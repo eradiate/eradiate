@@ -8,7 +8,7 @@ Plotting [eradiate.plot]
 Utility functions
 -----------------
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    detect_axes
    get_axes_from_facet_grid

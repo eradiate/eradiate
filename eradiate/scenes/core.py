@@ -4,12 +4,10 @@ from typing import Dict, MutableMapping, Optional, Union
 
 import attr
 import mitsuba
-import pinttr
 
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
-from ..units import unit_registry as ureg
 
 
 class KernelDict(UserDict):
@@ -149,12 +147,7 @@ class SceneElement(ABC):
     Abstract class for all scene elements.
 
     This abstract base class provides a basic template for all scene element
-    classes. It is implemented using the `attrs <https://www.attrs.org>`_ library.
-
-    .. note::
-
-        This class is designed to integrate with factory classes derived from
-        :class:`.Factory`.
+    classes. It is written using the `attrs <https://www.attrs.org>`_ library.
     """
 
     id: Optional[str] = documented(

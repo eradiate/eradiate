@@ -8,7 +8,7 @@ Frame manipulation [eradiate.frame]
 .. currentmodule:: eradiate.frame
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    angles_to_direction
    cos_angle_to_direction
@@ -20,7 +20,7 @@ Sample warping [eradiate.warp]
 .. currentmodule:: eradiate.warp
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    square_to_uniform_disk_concentric
    uniform_disk_to_square_concentric

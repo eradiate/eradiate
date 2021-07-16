@@ -10,7 +10,7 @@ Core [eradiate.scenes.core]
 .. currentmodule:: eradiate.scenes.core
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    SceneElement
    KernelDict
@@ -21,18 +21,21 @@ Atmosphere [eradiate.scenes.atmosphere]
 ---------------------------------------
 .. currentmodule:: eradiate.scenes.atmosphere
 
-**Interfaces and factories**
+**Interfaces**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
-   AtmosphereFactory
    Atmosphere
+
+**Factories**
+
+* :data:`atmosphere_factory`
 
 **Scene elements**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    HomogeneousAtmosphere
    HeterogeneousAtmosphere
@@ -43,37 +46,48 @@ Biosphere [eradiate.scenes.biosphere]
 -------------------------------------
 .. currentmodule:: eradiate.scenes.biosphere
 
-**Interfaces and factories**
+**Interfaces**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
-   BiosphereFactory
    Canopy
+   CanopyElement
+
+**Factories**
+
+* :data:`biosphere_factory`
 
 **Scene elements**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
-   CanopyElement
-   LeafCloud
    AbstractTree
-   InstancedCanopyElement
    DiscreteCanopy
+   InstancedCanopyElement
+   LeafCloud
+   MeshTree
+
+**Mesh-base tree components**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   MeshTreeElement
 
 **Parameters for LeafCloud generators**
 
 .. dropdown:: Private
 
    .. autosummary::
-      :toctree: generated/
+      :toctree: generated/autosummary/
 
-      _leaf_cloud.CuboidLeafCloudParams
-      _leaf_cloud.SphereLeafCloudParams
-      _leaf_cloud.EllipsoidLeafCloudParams
-      _leaf_cloud.CylinderLeafCloudParams
       _leaf_cloud.ConeLeafCloudParams
+      _leaf_cloud.CuboidLeafCloudParams
+      _leaf_cloud.CylinderLeafCloudParams
+      _leaf_cloud.EllipsoidLeafCloudParams
+      _leaf_cloud.SphereLeafCloudParams
 
 .. _sec-reference-scenes-surface:
 
@@ -81,18 +95,21 @@ Surfaces [eradiate.scenes.surface]
 ----------------------------------
 .. currentmodule:: eradiate.scenes.surface
 
-**Interfaces and factories**
+**Interfaces**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
-   SurfaceFactory
    Surface
+
+**Factories**
+
+* :data:`surface_factory`
 
 **Scene elements**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    BlackSurface
    LambertianSurface
@@ -104,18 +121,21 @@ Illumination [eradiate.scenes.illumination]
 -------------------------------------------
 .. currentmodule:: eradiate.scenes.illumination
 
-**Interfaces and factories**
+**Interfaces**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
-   IlluminationFactory
    Illumination
+
+**Factories**
+
+* :data:`illumination_factory`
 
 **Scene elements**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    DirectionalIllumination
    ConstantIllumination
@@ -126,42 +146,45 @@ Measures [eradiate.scenes.measure]
 ----------------------------------
 .. currentmodule:: eradiate.scenes.measure
 
-**Interfaces and factories**
+**Interfaces**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
-   MeasureFactory
    Measure
    DistantMeasure
+
+**Factories**
+
+* :data:`measure_factory`
 
 **Sensor information data structure**
 
 .. dropdown:: Private
 
    .. autosummary::
-      :toctree: generated/
+      :toctree: generated/autosummary/
 
       _core.SensorInfo
 
 **Measure spectral configuration**
 
    .. autosummary::
-      :toctree: generated/
+      :toctree: generated/autosummary/
 
       MeasureSpectralConfig
 
 **Result storage and processing**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    MeasureResults
 
 **Scene elements**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    DistantRadianceMeasure
    DistantReflectanceMeasure
@@ -176,7 +199,7 @@ Measures [eradiate.scenes.measure]
 .. dropdown:: Private
 
    .. autosummary::
-      :toctree: generated/
+      :toctree: generated/autosummary/
 
       _distant.TargetOrigin
       _distant.TargetOriginPoint
@@ -189,18 +212,21 @@ Phase functions [eradiate.scenes.phase]
 ---------------------------------------
 .. currentmodule:: eradiate.scenes.phase
 
-**Interfaces and factories**
+**Interfaces**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
-   PhaseFunctionFactory
    PhaseFunction
+
+**Factories**
+
+* :data:`phase_function_factory`
 
 **Scene elements**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    RayleighPhaseFunction
    HenyeyGreensteinPhaseFunction
@@ -211,18 +237,21 @@ Integrators [eradiate.scenes.integrators]
 -----------------------------------------
 .. currentmodule:: eradiate.scenes.integrators
 
-**Interfaces and factories**
+**Interfaces**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
-   IntegratorFactory
    Integrator
+
+**Factories**
+
+* :data:`integrator_factory`
 
 **Scene elements**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    PathIntegrator
    VolPathIntegrator
@@ -234,18 +263,21 @@ Spectra [eradiate.scenes.spectra]
 ---------------------------------
 .. currentmodule:: eradiate.scenes.spectra
 
-**Interfaces and factories**
+**Interfaces**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
-   SpectrumFactory
    Spectrum
+
+**Factories**
+
+* :data:`spectrum_factory`
 
 **Scene elements**
 
 .. autosummary::
-   :toctree: generated/
+   :toctree: generated/autosummary/
 
    UniformSpectrum
    InterpolatedSpectrum

@@ -1,4 +1,4 @@
-# OS specific 
+# OS specific
 .DS_Store
 
 # direnv config file
@@ -18,7 +18,7 @@ __pycache__
 build/
 docs/_build/
 docs/examples/generated/
-docs/rst/reference/generated/
+docs/rst/reference/generated/autosummary/
 test_report/generated/
 
 # Coverage
