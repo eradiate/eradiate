@@ -1,4 +1,5 @@
 import warnings
+from typing import Optional
 
 import attr
 
@@ -44,7 +45,7 @@ class RamiScene(Scene):
                 OverriddenValueWarning("surface size will be overridden by canopy")
             )
 
-    canopy: Canopy = documented(
+    canopy: Optional[Canopy] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(BiosphereFactory.convert),

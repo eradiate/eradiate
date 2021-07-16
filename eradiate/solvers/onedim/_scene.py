@@ -27,7 +27,7 @@ class OneDimScene(Scene):
     one-dimensional scenes.
     """
 
-    atmosphere: Atmosphere = documented(
+    atmosphere: Optional[Atmosphere] = documented(
         attr.ib(
             factory=HomogeneousAtmosphere,
             converter=attr.converters.optional(AtmosphereFactory.convert),
