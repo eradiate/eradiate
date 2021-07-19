@@ -3,6 +3,8 @@ import re
 
 from tqdm.auto import tqdm
 
+from .._config import config
+
 
 def _add_logging_level(level_name, level_num, method_name=None):
     """
@@ -131,6 +133,7 @@ def install_logging(force=False):
                     unit_scale=1.0,
                     leave=True,
                     bar_format="{l_bar}{bar}| {elapsed}, ETA={remaining}",
+                    disable=config.progress < 2,
                 )
                 self.progress = 0.0
 

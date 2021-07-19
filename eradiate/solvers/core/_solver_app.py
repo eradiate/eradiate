@@ -12,6 +12,7 @@ from tqdm.auto import tqdm
 import eradiate
 
 from ._runner import runner
+from ..._config import config
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ModeError, UnsupportedModeError
@@ -120,6 +121,7 @@ class SolverApp(ABC):
             unit_scale=1.0,
             leave=True,
             bar_format="{l_bar}{bar}| {elapsed}, ETA={remaining}",
+            disable=config.progress < 1,
         ) as pbar:
             for spectral_ctx in spectral_ctxs:
                 pbar.set_description(
