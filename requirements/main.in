@@ -4,6 +4,7 @@ attrs
 click
 cerberus
 dask
+dessinemoi
 environ-config
 iapws
 matplotlib
