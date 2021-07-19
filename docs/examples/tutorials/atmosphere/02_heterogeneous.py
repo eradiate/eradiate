@@ -127,7 +127,7 @@ atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
 # -----------------------------------
 # Check the atmosphere's dimensions using:
 
-print(atmosphere.height().to("km"))
+print(atmosphere.height.to("km"))
 
 # %%
 

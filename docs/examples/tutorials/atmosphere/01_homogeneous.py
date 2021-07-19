@@ -9,6 +9,7 @@ Homogeneous atmospheres
 # and set the wavelength to 550 nm:
 
 import eradiate
+
 eradiate.set_mode("mono")
 
 # %%
@@ -35,14 +36,13 @@ atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere()
 # %%
 # Set the atmosphere's dimensions
 # -------------------------------
-# Set the atmosphere's height and width using the ``toa_altitude`` and
-# ``width`` attributes, respectively:
+# Set the atmosphere's height and width using the ``top`` and ``width``
+# attributes, respectively:
 
 from eradiate import unit_registry as ureg
 
 atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(
-    toa_altitude = ureg.Quantity(120, "km"),
-    width = ureg.Quantity(500, "km")
+    top=ureg.Quantity(120, "km"), width=ureg.Quantity(500, "km")
 )
 
 # %%
@@ -55,8 +55,7 @@ atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(
 # ``sigma_s`` and ``sigma_a`` attributes, respectively:
 
 atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(
-    sigma_s = ureg.Quantity(1e-3, "km^-1"),
-    sigma_a = ureg.Quantity(1e-5, "km^-1")
+    sigma_s=ureg.Quantity(1e-3, "km^-1"), sigma_a=ureg.Quantity(1e-5, "km^-1")
 )
 
 # %%
