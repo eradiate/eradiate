@@ -18,8 +18,8 @@ ureg = eradiate.unit_registry
 # of Eradiate to visualise conveniently the canopies we will create throughout
 # this tutorial:
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def display_canopy(canopy, distance=85):
@@ -124,29 +124,13 @@ eradiate.scenes.biosphere.DiscreteCanopy.homogeneous(
 )
 
 # %%
-# We can use the dictionary API to make an equivalent call. For that purpose, we
+# We can use a factory to make an equivalent call. For that purpose, we
 # will pack the keyword arguments into a dictionary. In addition, we need to
-# instruct the :meth:`.DiscreteCanopy.from_dict` method to dispatch our
+# instruct the :meth:`.factory.convert` method to dispatch our
 # dictionary parameters to :meth:`.DiscreteCanopy.homogeneous` using
-# the ``construct`` parameter (see dispatch rules in the documentation of the
-# :meth:`.DiscreteCanopy.from_dict` method):
+# the ``construct`` parameter:
 
-eradiate.scenes.biosphere.DiscreteCanopy.from_dict(
-    {
-        "construct": "homogeneous",
-        "n_leaves": 1,
-        "leaf_radius": 0.1,
-        "l_horizontal": 10,
-        "l_vertical": 3,
-    }
-)
-
-# %%
-# Finally, a :class:`.DiscreteCanopy` can be created using the
-# :class:`.BiosphereFactory`. In that case, the aforementioned dictionary can
-# be used extended with the appropriate ``type`` field to pass parameters:
-
-eradiate.scenes.biosphere.BiosphereFactory.create(
+eradiate.scenes.biosphere.biosphere_factory.convert(
     {
         "type": "discrete_canopy",
         "construct": "homogeneous",
@@ -194,10 +178,9 @@ instance_filename = eradiate.path_resolver.resolve(
     "tests/canopies/HET01_UNI_instances.def"
 )
 
-instanced_leaf_cloud = \
-    eradiate.scenes.biosphere.InstancedCanopyElement.from_file(
-        filename=instance_filename, canopy_element=leaf_cloud
-    )
+instanced_leaf_cloud = eradiate.scenes.biosphere.InstancedCanopyElement.from_file(
+    filename=instance_filename, canopy_element=leaf_cloud
+)
 instanced_leaf_cloud
 
 # %%
@@ -250,11 +233,13 @@ canopy
 canopy = eradiate.scenes.biosphere.DiscreteCanopy.homogeneous(
     lai=3, leaf_radius=10.0 * ureg.cm, l_horizontal=10 * ureg.m, l_vertical=3 * ureg.m
 )
-padded_canopy = canopy.padded(1)
+padded_canopy = canopy.padded_copy(1)
 
 print(f"Canopy:")
 print(f"  size: {canopy.size}")
-print(f"  # instances: {canopy.instanced_canopy_elements[0].instance_positions.shape[0]}")
+print(
+    f"  # instances: {canopy.instanced_canopy_elements[0].instance_positions.shape[0]}"
+)
 display_canopy(canopy, distance=50)
 plt.show()
 

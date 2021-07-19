@@ -3,8 +3,8 @@ surface:
   type: rpv # Use a RPV surface with default parameters
 atmosphere:
   type: homogeneous   # Use a homogeneous atmosphere ...
-  toa_altitude: 120.0 # ... with TOA at 120 km ...
-  toa_altitude_units: km
+  top: 120.0 # ... with TOA at 120 km ...
+  top_units: km
   sigma_s: 1.0e-4     # ... and a scattering coefficient of 1e-4 m^-1
   sigma_s_units: m ** -1
 illumination:

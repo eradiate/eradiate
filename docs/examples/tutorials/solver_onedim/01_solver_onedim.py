@@ -79,7 +79,7 @@ surface
 from eradiate import unit_registry as ureg
 
 atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(
-    toa_altitude=120.0 * ureg.km,
+    top=120.0 * ureg.km,
     sigma_s=1e-4 * ureg.m ** -1,
 )
 atmosphere
@@ -233,7 +233,7 @@ plt.show()
 scene = eradiate.solvers.onedim.OneDimScene(
     surface=surface,
     atmosphere=eradiate.scenes.atmosphere.HomogeneousAtmosphere(
-        toa_altitude=120.0 * ureg.km,
+        top=120.0 * ureg.km,
         sigma_s=1e-6 * ureg.m ** -1,
     ),
     illumination=illumination,
@@ -262,7 +262,7 @@ plt.show()
 scene = eradiate.solvers.onedim.OneDimScene(
     surface=surface,
     atmosphere=eradiate.scenes.atmosphere.HomogeneousAtmosphere(
-        toa_altitude=120.0 * ureg.km,
+        top=120.0 * ureg.km,
         sigma_s=1e-4 * ureg.m ** -1,
     ),
     illumination=illumination,
@@ -303,7 +303,7 @@ scene = eradiate.solvers.onedim.OneDimScene(
     },
     atmosphere={
         "type": "homogeneous",
-        "toa_altitude": 120.0 * ureg.km,
+        "top": 120.0 * ureg.km,
         "sigma_s": 1e-4 * ureg.m ** -1,
     },
     illumination={
@@ -323,32 +323,30 @@ scene = eradiate.solvers.onedim.OneDimScene(
 
 # %%
 # We can take this up one level and configure the whole scene with a single
-# dictionary:
+# dictionary (this is however not encouraged):
 
-scene = eradiate.solvers.onedim.OneDimScene.from_dict(
-    {
-        "surface": {
-            "type": "rpv",
-        },
-        "atmosphere": {
-            "type": "homogeneous",
-            "toa_altitude": 120.0 * ureg.km,
-            "sigma_s": 1e-4 * ureg.m ** -1,
-        },
-        "illumination": {
-            "type": "directional",
-            "zenith": 30.0 * ureg.deg,
-            "azimuth": 0.0 * ureg.deg,
-            "irradiance": {"type": "solar_irradiance"},
-        },
-        "measures": {
-            "type": "distant_reflectance",
-            "id": "toa_hsphere",
-            "film_resolution": (32, 1),
-            "spp": 1000000,
-            "spectral_cfg": {"wavelengths": [577.0]},
-        },
-    }
+scene = eradiate.solvers.onedim.OneDimScene(
+    surface={
+        "type": "rpv",
+    },
+    atmosphere={
+        "type": "homogeneous",
+        "top": 120.0 * ureg.km,
+        "sigma_s": 1e-4 * ureg.m ** -1,
+    },
+    illumination={
+        "type": "directional",
+        "zenith": 30.0 * ureg.deg,
+        "azimuth": 0.0 * ureg.deg,
+        "irradiance": {"type": "solar_irradiance"},
+    },
+    measures={
+        "type": "distant_reflectance",
+        "id": "toa_hsphere",
+        "film_resolution": (32, 1),
+        "spp": 1000000,
+        "spectral_cfg": {"wavelengths": [577.0]},
+    },
 )
 
 # %%
@@ -364,7 +362,7 @@ config = {
     },
     "atmosphere": {
         "type": "homogeneous",
-        "toa_altitude": 120.0 * ureg.km,
+        "top": 120.0 * ureg.km,
         "sigma_s": 1e-4 * ureg.m ** -1,
     },
     "illumination": {
