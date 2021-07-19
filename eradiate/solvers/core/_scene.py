@@ -18,6 +18,7 @@ from ...scenes.measure import (
     Measure,
     measure_factory,
 )
+from ...units import unit_registry as ureg
 
 
 @parse_docs
@@ -98,3 +99,18 @@ class Scene(SceneElement, ABC):
 
     def __attrs_post_init__(self):
         self.update()
+
+    @classmethod
+    def from_dict(cls, d) -> "Scene":
+        """
+        Create from dictionary. This constructor implements a unit processing
+        step based on :func:`pinttr.interpret_units`.
+
+        Parameter ``d`` (dict):
+            Dictionary.
+
+        Returns → :class:`Scene`:
+
+        """
+        d_copy = pinttr.interpret_units(d, ureg=ureg)
+        return cls(**d_copy)
