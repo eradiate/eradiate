@@ -1,5 +1,5 @@
 from abc import ABC
-from collections import MutableMapping
+from collections.abc import MutableMapping
 from pathlib import Path
 from typing import Dict, Optional
 
