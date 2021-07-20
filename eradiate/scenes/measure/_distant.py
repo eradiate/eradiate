@@ -342,6 +342,13 @@ class DistantMeasure(Measure):
             If ``illumination`` has an unsupported type.
         """
         k_irradiance_units = uck.get("irradiance")
+        spectral_coords = np.array(
+            [
+                spectral_ctx.wavelength.magnitude
+                for spectral_ctx in self.spectral_cfg.spectral_ctxs()
+            ]
+        )
+        spectral_coord_label = eradiate.mode().spectral_coord_label
 
         if isinstance(illumination, DirectionalIllumination):
             # Collect illumination angular data
@@ -363,47 +370,45 @@ class DistantMeasure(Measure):
             }
 
             # Collect illumination spectral data
-            irradiances = (
-                np.array(
-                    [
-                        illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
-                            k_irradiance_units
-                        )
-                        for spectral_ctx in self.spectral_cfg.spectral_ctxs()
-                    ]
-                )
-                * k_irradiance_units
-            )
-            spectral_coord_label = eradiate.mode().spectral_coord_label
+            irradiances = xr.DataArray(
+                [
+                    illumination.irradiance.eval(spectral_ctx=spectral_ctx).m_as(
+                        k_irradiance_units
+                    )
+                    for spectral_ctx in self.spectral_cfg.spectral_ctxs()
+                ],
+                dims=(spectral_coord_label,),
+                coords={spectral_coord_label: spectral_coords},
+            ).sortby(
+                spectral_coord_label
+            )  # Very important: sort by spectral coordinate
 
             # Add irradiance variable
             ds["irradiance"] = (
                 ("sza", "saa", spectral_coord_label),
-                np.array(irradiances.magnitude * cos_sza).reshape(
-                    (1, 1, len(irradiances))
-                ),
+                (irradiances.values * cos_sza).reshape((1, 1, len(irradiances))),
             )
 
         elif isinstance(illumination, ConstantIllumination):
             # Collect illumination spectral data
             k_radiance_units = uck.get("radiance")
-            radiances = (
-                np.array(
-                    [
-                        illumination.radiance.eval(spectral_ctx=spectral_ctx).m_as(
-                            k_radiance_units
-                        )
-                        for spectral_ctx in self.spectral_cfg.spectral_ctxs()
-                    ]
-                )
-                * k_radiance_units
-            )
-            spectral_coord_label = eradiate.mode().spectral_coord_label
+            radiances = xr.DataArray(
+                [
+                    illumination.radiance.eval(spectral_ctx=spectral_ctx).m_as(
+                        k_radiance_units
+                    )
+                    for spectral_ctx in self.spectral_cfg.spectral_ctxs()
+                ],
+                dims=(spectral_coord_label,),
+                coords={spectral_coord_label: spectral_coords},
+            ).sortby(
+                spectral_coord_label
+            )  # Very important: sort by spectral coordinate
 
             # Add irradiance variable
             ds["irradiance"] = (
                 (spectral_coord_label,),
-                np.pi * np.array(radiances.magnitude).reshape((len(radiances),)),
+                np.pi * radiances.values.reshape((len(radiances),)),
             )
 
         else:

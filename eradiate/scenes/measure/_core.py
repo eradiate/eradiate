@@ -226,6 +226,8 @@ class MeasureResults:
         * ``y``: film height
         * ``x``: film width
 
+        .. important:: The spectral coordinate is sorted.
+
         Parameter ``aggregate_spps`` (bool):
             If ``True``, perform split SPP aggregation (*i.e.* sum results using
             SPP values as weights). This will result in the ``sensor_id``
