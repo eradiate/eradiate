@@ -159,8 +159,6 @@ class InstancedCanopyElement(SceneElement):
 
        .. autosummary::
 
-          convert
-          from_dict
           from_file
     """
 
