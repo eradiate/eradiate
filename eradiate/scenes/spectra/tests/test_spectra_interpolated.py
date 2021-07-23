@@ -10,7 +10,7 @@ from eradiate.scenes.spectra import spectrum_factory
 from eradiate.scenes.spectra._interpolated import InterpolatedSpectrum
 
 
-def test_spectra_interpolated_construct(mode_mono):
+def test_spectra_interpolated_construct(modes_all):
     # Instantiating without argument fails
     with pytest.raises(TypeError):
         InterpolatedSpectrum()

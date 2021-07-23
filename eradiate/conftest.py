@@ -3,8 +3,11 @@ import pytest
 import eradiate
 from eradiate import data
 
+# ------------------------------------------------------------------------------
+#                           Kernel variant fixtures
+# ------------------------------------------------------------------------------
 
-# Create kernel variant fixtures
+
 def generate_fixture(variant):
     @pytest.fixture()
     def fixture():
@@ -32,7 +35,11 @@ for variant in [
 del generate_fixture
 
 
-# Create mode fixtures
+# ------------------------------------------------------------------------------
+#                                 Mode fixtures
+# ------------------------------------------------------------------------------
+
+
 def generate_fixture(mode):
     @pytest.fixture()
     def fixture():
@@ -46,6 +53,32 @@ def generate_fixture(mode):
 for mode in eradiate.modes():
     generate_fixture(mode)
 del generate_fixture
+
+
+def generate_fixture_group(name, modes):
+    @pytest.fixture(params=modes)
+    def fixture(request):
+        mode = request.param
+        import eradiate
+
+        eradiate.set_mode(mode)
+
+    globals()["modes_" + name] = fixture
+
+
+variant_groups = {
+    "all_mono": [x for x in eradiate.modes() if x.startswith("mono")],
+    "all": list(eradiate.modes()),
+}
+
+for name, variants in variant_groups.items():
+    generate_fixture_group(name, variants)
+del generate_fixture_group
+
+
+# ------------------------------------------------------------------------------
+#                              Other configuration
+# ------------------------------------------------------------------------------
 
 
 def pytest_runtest_setup(item):
