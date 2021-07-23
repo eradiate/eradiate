@@ -152,3 +152,7 @@ class PathResolver(metaclass=Singleton):
         """
         for path_base in self.paths:
             yield from path_base.glob(pattern)
+
+
+#: Unique :class:`.PathResolver` instance.
+path_resolver = PathResolver()
