@@ -4,13 +4,11 @@
 import xarray as xr
 
 from .core import DataGetter
-from .. import path_resolver as _presolver
+from .._presolver import path_resolver as _presolver
 
 
 class _ChemistryGetter(DataGetter):
-    PATHS = {
-        "molecular_masses": "chemistry/molecular_masses.nc"
-    }
+    PATHS = {"molecular_masses": "chemistry/molecular_masses.nc"}
 
     @classmethod
     def open(cls, id):

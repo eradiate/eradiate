@@ -2,9 +2,8 @@
 """
 import xarray as xr
 
-from eradiate import path_resolver as _presolver
-
 from .core import DataGetter
+from .._presolver import path_resolver as _presolver
 
 
 class _ThermoPropsProfilesGetter(DataGetter):

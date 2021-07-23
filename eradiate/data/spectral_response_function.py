@@ -5,7 +5,7 @@ import enum
 import xarray as xr
 
 from .core import DataGetter
-from .. import path_resolver as _presolver
+from .._presolver import path_resolver as _presolver
 
 
 class Platform(enum.Enum):

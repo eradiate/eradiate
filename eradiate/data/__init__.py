@@ -1,4 +1,5 @@
-"""Data handling facilities.
+"""
+Data handling facilities.
 
 A typical data handling pattern uses the :func:`open` function.
 This function can be called either through its first two parameters
@@ -19,7 +20,6 @@ the second kind of call will try and resolve directly a path using the
       ds = data.open("solar_irradiance_spectrum", "thuillier_2003")
       # second-kind call to ``open()``
       ds = data.open(path="spectra/thuillier_2003.nc")
-
 
 .. admonition:: Valid data set categories
 

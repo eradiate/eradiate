@@ -5,7 +5,7 @@ import numpy as np
 import xarray as xr
 
 from .core import DataGetter
-from .. import path_resolver as _presolver
+from .._presolver import path_resolver as _presolver
 from ..units import unit_registry as ureg
 
 
