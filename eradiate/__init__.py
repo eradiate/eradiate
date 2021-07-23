@@ -35,6 +35,7 @@ from ._mode import mode, set_mode, modes  # isort: skip
 from . import (
     contexts,
     converters,
+    data,
     kernel,
     notebook,
     scenes,
@@ -48,6 +49,7 @@ __all__ = [
     "__version__",
     "contexts",
     "converters",
+    "data",
     "mode",
     "modes",
     "notebook",
