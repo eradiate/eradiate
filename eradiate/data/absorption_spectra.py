@@ -1,4 +1,7 @@
-"""Absorption cross section spectrum data sets shipped with Eradiate."""
+"""
+Absorption cross section spectrum data sets shipped with Eradiate.
+"""
+
 import enum
 
 import numpy as np

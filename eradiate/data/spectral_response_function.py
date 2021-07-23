@@ -1,4 +1,5 @@
-"""Spectral response function data getter.
+"""
+Spectral response function data getter.
 """
 import enum
 

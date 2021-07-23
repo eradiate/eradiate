@@ -1,4 +1,5 @@
-"""Atmospheric thermophysical properties profiles data sets shipped with Eradiate.
+"""
+Atmospheric thermophysical properties profiles data sets shipped with Eradiate.
 """
 import xarray as xr
 

@@ -1,4 +1,5 @@
-"""Solar irradiance spectrum data sets shipped with Eradiate.
+"""
+Solar irradiance spectrum data sets shipped with Eradiate.
 """
 
 import xarray as xr
