@@ -35,16 +35,18 @@ class ModeFlags(enum.Flag):
 
     # -- Mode definition flags -------------------------------------------------
 
-    MONO = ERT_MONO | MTS_SCALAR | MTS_MONO
-    MONO_DOUBLE = ERT_MONO | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
-    # CKD = ERT_CKD | MTS_SCALAR | MTS_MONO
-    # CKD_DOUBLE = ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
+    MONO = ERT_MONO | MTS_SCALAR | MTS_MONO  #: Monochromatic mode, single precision
+    MONO_DOUBLE = (
+        ERT_MONO | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
+    )  #: Monochromatic mode, double precision
+    # CKD = ERT_CKD | MTS_SCALAR | MTS_MONO  #: CKD mode, single precision
+    # CKD_DOUBLE = ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_DOUBLE  #: CKD mode, double precision
 
     # -- Other convenience aliases ---------------------------------------------
 
-    ANY_MONO = ERT_MONO
-    ANY_SCALAR = MTS_SCALAR
-    ANY_DOUBLE = MTS_DOUBLE
+    ANY_MONO = ERT_MONO  #: Any monochromatic mode
+    ANY_SCALAR = MTS_SCALAR  #: Any scalar mode
+    ANY_DOUBLE = MTS_DOUBLE  #: Any double-precision mode
 
 
 # ------------------------------------------------------------------------------
@@ -116,9 +118,16 @@ class Mode:
 
         return "_".join(components)
 
-    def has_flags(self, flags: Union[ModeFlags, str]):
+    def has_flags(self, flags: Union[ModeFlags, str]) -> bool:
         """
         Check if the currently active mode has the passed flags.
+
+        Parameter ``flags`` (:class:`.ModeFlags` or str):
+            Flags to check for. If a string is passed, conversion to a
+            :class:`.ModeFlags` instance will be attempted.
+
+        Returns → bool:
+            ``True`` if current mode has the passed flags, ``False`` otherwise.
         """
         if isinstance(flags, str):
             flags = ModeFlags[flags.upper()]

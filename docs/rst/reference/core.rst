@@ -21,8 +21,7 @@ Mode control
    .. autosummary::
       :toctree: generated/autosummary/
 
-      _mode.ModeSpectrum
-      _mode.ModePrecision
+      _mode.ModeFlags
       _mode.Mode
 
 Units and quantities
