@@ -1,16 +1,10 @@
 import importlib
 
-import attr
 import mitsuba
-import numpy as np
-import pinttr
 import pytest
 
-from eradiate import unit_context_config as ucc
-from eradiate import unit_registry as ureg
 from eradiate.exceptions import KernelVariantError
-from eradiate.scenes.core import KernelDict, SceneElement
-from eradiate.validators import has_len, is_number, is_positive
+from eradiate.scenes.core import KernelDict
 
 
 def test_kernel_dict():

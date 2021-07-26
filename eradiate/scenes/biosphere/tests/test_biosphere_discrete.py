@@ -11,7 +11,6 @@ from eradiate.scenes.biosphere import (
     InstancedCanopyElement,
     MeshTree,
     MeshTreeElement,
-    biosphere_factory,
 )
 from eradiate.scenes.biosphere._discrete import DiscreteCanopy, LeafCloud
 from eradiate.scenes.core import KernelDict

@@ -3,8 +3,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
-from eradiate.contexts import KernelDictContext, SpectralContext
-from eradiate.scenes.core import KernelDict
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.illumination import DirectionalIllumination
 
 
