@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
@@ -38,7 +40,7 @@ class SpectralContext(ABC):
         pass
 
     @staticmethod
-    def new(**kwargs) -> "SpectralContext":
+    def new(**kwargs) -> SpectralContext:
         """
         Create a new instance of one of the :class:`SpectralContext` child
         classes. *The instantiated class is defined based on the currently active
@@ -57,15 +59,15 @@ class SpectralContext(ABC):
            * :func:`eradiate.mode`
            * :func:`eradiate.set_mode`
         """
-        mode = eradiate.mode()
 
-        if mode.is_monochromatic():
+        if eradiate.mode().has_flags("ANY_MONO"):
             return MonoSpectralContext(**kwargs)
+
         else:
             raise UnsupportedModeError(supported="monochromatic")
 
     @staticmethod
-    def from_dict(d: Dict) -> "SpectralContext":
+    def from_dict(d: Dict) -> SpectralContext:
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``

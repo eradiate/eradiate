@@ -83,8 +83,8 @@ class SolverApp(ABC):
         # Select appropriate operational mode
         eradiate.set_mode(mode_id)
 
-        if not eradiate.mode().is_monochromatic():
-            raise ModeError("only monochromatic modes are supported")
+        if not eradiate.mode().has_flags("ANY_MONO"):
+            raise UnsupportedModeError(supported="monochromatic")
 
         # Create scene
         scene = cls._SCENE_TYPE.from_dict(solver_config)
@@ -132,7 +132,7 @@ class SolverApp(ABC):
                 ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
 
                 # Set spectral coordinate value for result storage
-                if eradiate.mode().is_monochromatic():
+                if eradiate.mode().has_flags("ANY_MONO"):
                     spectral_coord = spectral_ctx.wavelength.magnitude
                 else:
                     raise UnsupportedModeError(supported="monochromatic")
@@ -166,7 +166,7 @@ class SolverApp(ABC):
 
         .. seealso:: :meth:`process`, :meth:`run`
         """
-        if not eradiate.mode().is_monochromatic():
+        if not eradiate.mode().has_flags("ANY_MONO"):
             raise UnsupportedModeError(supported="monochromatic")
 
         # Select measure

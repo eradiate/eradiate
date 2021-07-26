@@ -42,7 +42,7 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
     )
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
-        if eradiate.mode().is_monochromatic():
+        if eradiate.mode().has_flags("ANY_MONO"):
             # TODO: This is a workaround until the hg plugin accepts spectra for
             #  its g parameter
             g = float(onedict_value(self.g.kernel_dict(ctx=ctx))["value"])

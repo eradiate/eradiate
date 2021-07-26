@@ -91,7 +91,7 @@ class SolarIrradianceSpectrum(Spectrum):
         # TODO: add support to solar irradiance spectrum datasets with a
         #  non-empty time coordinate
 
-        if eradiate.mode().is_monochromatic():
+        if eradiate.mode().has_flags("ANY_MONO"):
             wavelength = spectral_ctx.wavelength.m_as(self.data.w.attrs["units"])
 
             irradiance = to_quantity(

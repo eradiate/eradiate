@@ -29,13 +29,13 @@ class AirScatteringCoefficientSpectrum(Spectrum):
     )
 
     def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
-        if eradiate.mode().is_monochromatic():
+        if eradiate.mode().has_flags("ANY_MONO"):
             return compute_sigma_s_air(wavelength=spectral_ctx.wavelength)
         else:
             raise UnsupportedModeError(supported="monochromatic")
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
-        if eradiate.mode().is_monochromatic():
+        if eradiate.mode().has_flags("ANY_MONO"):
             return {
                 "spectrum": {
                     "type": "uniform",

@@ -91,8 +91,9 @@ class MeasureSpectralConfig(ABC):
                 "instantiating MeasureSpectralConfig requires a mode to be selected"
             )
 
-        if mode.is_monochromatic():
+        if mode.has_flags("ANY_MONO"):
             return MonoMeasureSpectralConfig(**kwargs)
+
         else:
             raise UnsupportedModeError(supported="monochromatic")
 
@@ -239,7 +240,7 @@ class MeasureResults:
         if not self.raw:
             raise ValueError("no raw results to convert to xarray.Dataset")
 
-        if eradiate.mode().is_monochromatic():
+        if eradiate.mode().has_flags("ANY_MONO"):
             spectral_coord_label = eradiate.mode().spectral_coord_label
             spectral_coord_metadata = {
                 "long_name": "wavelength",
@@ -443,9 +444,11 @@ class Measure(SceneElement, ABC):
         Returns → list[int]:
             List of split SPPs if relevant.
         """
-        mode = eradiate.mode()
 
-        if mode.is_single_precision() and self.spp > self._spp_splitting_threshold:
+        if (
+            not eradiate.mode().has_flags("ANY_DOUBLE")
+            and self.spp > self._spp_splitting_threshold
+        ):
             spps = [
                 self._spp_splitting_threshold
                 for i in range(int(self.spp / self._spp_splitting_threshold))

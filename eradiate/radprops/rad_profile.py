@@ -370,7 +370,7 @@ class ArrayRadProfile(RadProfile):
         return cls(albedo_values=albedo, sigma_t_values=sigma_t, levels=z_level)
 
     def to_dataset(self, spectral_ctx=None):
-        if eradiate.mode().is_monochromatic():
+        if eradiate.mode().has_flags("ANY_MONO"):
             return make_dataset(
                 wavelength=spectral_ctx.wavelength,
                 z_level=self.levels,
