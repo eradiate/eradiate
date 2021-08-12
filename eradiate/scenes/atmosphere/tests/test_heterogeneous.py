@@ -39,21 +39,13 @@ def test_heterogeneous_write_volume_data_files(mode_mono, tmpdir):
             width=100.0,
             profile={
                 "type": "array",
-                "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
+                "levels": np.linspace(0, 3, 10),
+                "sigma_t_values": np.ones((1, 1, 9)),
+                "albedo_values": np.ones((1, 1, 9)),
             },
             cache_dir=tmpdir,
         )
 
-    # If file creation is successful, volume data files must exist
-    atmosphere.make_volume_data(
-        fields=["albedo", "sigma_t"], spectral_ctx=ctx.spectral_ctx
-    )
-    assert atmosphere.albedo_file.is_file()
-    assert atmosphere.sigma_t_file.is_file()
-
-    # Written files can be loaded
     assert KernelDict.new(atmosphere, ctx=ctx).load() is not None
 
 

@@ -10,13 +10,13 @@ import pinttr
 import xarray as xr
 
 import eradiate
-from eradiate import path_resolver
 
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
 from .. import data
 from .._factory import Factory
 from .._mode import ModeFlags
+from .._presolver import path_resolver
 from ..attrs import documented, parse_docs
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
 from ..exceptions import UnsupportedModeError
@@ -377,8 +377,7 @@ class ArrayRadProfile(RadProfile):
                 z_level=self.levels,
                 sigma_t=self.sigma_t().flatten(),
                 albedo=self.albedo().flatten(),
-            )
-
+            ).squeeze()
         else:
             raise UnsupportedModeError(supported="monochromatic")
 
@@ -610,14 +609,17 @@ class US76ApproxRadProfile(RadProfile):
         Returns → :class:`xarray.Dataset`:
             Radiative properties dataset.
         """
-        profile = self.eval_thermoprops_profile()
-        return make_dataset(
-            wavelength=spectral_ctx.wavelength,
-            z_level=to_quantity(profile.z_level),
-            z_layer=to_quantity(profile.z_layer),
-            sigma_a=self.sigma_a(spectral_ctx).flatten(),
-            sigma_s=self.sigma_s(spectral_ctx).flatten(),
-        )
+        if eradiate.mode().has_flags("ANY_MONO"):
+            profile = self.eval_thermoprops_profile()
+            return make_dataset(
+                wavelength=spectral_ctx.wavelength,
+                z_level=to_quantity(profile.z_level),
+                z_layer=to_quantity(profile.z_layer),
+                sigma_a=self.sigma_a(spectral_ctx).flatten(),
+                sigma_s=self.sigma_s(spectral_ctx).flatten(),
+            ).squeeze()
+        else:
+            raise UnsupportedModeError(supported="monochromatic")
 
 
 _AFGL1986_MODELS = [
@@ -988,10 +990,13 @@ class AFGL1986RadProfile(RadProfile):
         Returns → :class:`xarray.Dataset`:
             Radiative properties dataset.
         """
-        return make_dataset(
-            wavelength=spectral_ctx.wavelength,
-            z_level=to_quantity(self.eval_thermoprops_profile().z_level),
-            z_layer=to_quantity(self.eval_thermoprops_profile().z_layer),
-            sigma_a=self.sigma_a(spectral_ctx).flatten(),
-            sigma_s=self.sigma_s(spectral_ctx).flatten(),
-        )
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            return make_dataset(
+                wavelength=spectral_ctx.wavelength,
+                z_level=to_quantity(self.eval_thermoprops_profile().z_level),
+                z_layer=to_quantity(self.eval_thermoprops_profile().z_layer),
+                sigma_a=self.sigma_a(spectral_ctx).flatten(),
+                sigma_s=self.sigma_s(spectral_ctx).flatten(),
+            ).squeeze()
+        else:
+            raise UnsupportedModeError(supported="monochromatic")

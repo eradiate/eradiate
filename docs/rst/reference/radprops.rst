@@ -16,7 +16,5 @@ Radiative properties [eradiate.radprops]
    :toctree: generated/autosummary/
 
    absorption
-   particles
    rad_profile
    rayleigh
-   particle_dist

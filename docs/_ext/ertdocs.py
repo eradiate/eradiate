@@ -26,8 +26,8 @@ from sphinx.util import nested_parse_with_titles
 from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
 
-from eradiate.radprops import ParticleDistributionFactory, RadProfileFactory
-from eradiate.scenes.atmosphere import AtmosphereFactory
+from eradiate.radprops import RadProfileFactory
+from eradiate.scenes.atmosphere import AtmosphereFactory, ParticleDistributionFactory
 from eradiate.scenes.biosphere import BiosphereFactory
 from eradiate.scenes.illumination import IlluminationFactory
 from eradiate.scenes.integrators import IntegratorFactory
