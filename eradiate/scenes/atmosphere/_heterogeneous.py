@@ -1,98 +1,25 @@
-import struct
 import tempfile
 from pathlib import Path
-from typing import List, MutableMapping, Optional, Union
+from typing import MutableMapping, Optional
 
 import attr
 import numpy as np
 import pint
-import xarray as xr
 
-from eradiate.contexts import KernelDictContext, SpectralContext
-
-from ._core import Atmosphere, atmosphere_factory
+from ._core import (
+    Atmosphere,
+    atmosphere_factory,
+    read_binary_grid3d,
+    write_binary_grid3d,
+)
 from ...attrs import AUTO, documented, parse_docs
+from ...contexts import KernelDictContext
 from ...kernel.transform import map_cube, map_unit_cube
 from ...radprops import rad_profile_factory
 from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
+from ...units import to_quantity
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-
-
-def write_binary_grid3d(filename, values):
-    """
-    Write volume data to a binary file so that a ``gridvolume`` kernel plugin can be
-    instantiated with that file.
-
-    Parameter ``filename`` (path-like):
-        File name.
-
-    Parameter ``values`` (:class:`~numpy.ndarray` or :class:`~xarray.DataArray`):
-        Data array to output to the volume data file. This array must 3 or 4
-        dimensions (x, y, z, spectrum). If the array is 3-dimensional, it will
-        automatically be assumed to have only one spectral channel.
-    """
-    if isinstance(values, xr.DataArray):
-        values = values.values
-
-    if not isinstance(values, np.ndarray):
-        raise TypeError(
-            f"unsupported data type {type(values)} "
-            f"(expected numpy array or xarray DataArray)"
-        )
-
-    if values.ndim not in {3, 4}:
-        raise ValueError(
-            f"'values' must have 3 or 4 dimensions " f"(got shape {values.shape})"
-        )
-
-    # note: this is an exact copy of the function write_binary_grid3d from
-    # https://github.com/mitsuba-renderer/mitsuba-data/blob/master/tests/scenes/participating_media/create_volume_data.py
-
-    with open(filename, "wb") as f:
-        f.write(b"V")
-        f.write(b"O")
-        f.write(b"L")
-        f.write(np.uint8(3).tobytes())  # Version
-        f.write(np.int32(1).tobytes())  # type
-        f.write(np.int32(values.shape[0]).tobytes())  # size
-        f.write(np.int32(values.shape[1]).tobytes())
-        f.write(np.int32(values.shape[2]).tobytes())
-        if values.ndim == 3:
-            f.write(np.int32(1).tobytes())  # channels
-        else:
-            f.write(np.int32(values.shape[3]).tobytes())  # channels
-        f.write(np.float32(0.0).tobytes())  # bbox
-        f.write(np.float32(0.0).tobytes())
-        f.write(np.float32(0.0).tobytes())
-        f.write(np.float32(1.0).tobytes())
-        f.write(np.float32(1.0).tobytes())
-        f.write(np.float32(1.0).tobytes())
-        f.write(values.ravel().astype(np.float32).tobytes())
-
-
-def read_binary_grid3d(filename):
-    """Reads a volume data binary file.
-
-    Parameter ``filename`` (str):
-        File name.
-
-    Returns → :class:`~numpy.ndarray`:
-        Values.
-    """
-
-    with open(filename, "rb") as f:
-        file_content = f.read()
-        _shape = struct.unpack("iii", file_content[8:20])  # shape of the values array
-        _num = np.prod(np.array(_shape))  # number of values
-        values = np.array(struct.unpack("f" * _num, file_content[48:]))
-        # file_type = struct.unpack("ccc", file_content[:3]),
-        # version = struct.unpack("B", file_content[3:4]),
-        # type = struct.unpack("i", file_content[4:8]),
-        # channels = struct.unpack("i", file_content[20:24]),
-        # bbox = struct.unpack("ffffff", file_content[24:48]),
-
-    return values
 
 
 @atmosphere_factory.register(type_id="heterogeneous")
@@ -222,58 +149,6 @@ class HeterogeneousAtmosphere(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def make_volume_data(
-        self,
-        fields: Optional[Union[str, List[str]]] = None,
-        spectral_ctx: Optional[SpectralContext] = None,
-    ) -> None:
-        """
-        Create volume data files for requested fields.
-
-        Parameter ``fields`` (str or list[str] or None):
-            If str, field for which to create volume data file. If list,
-            fields for which to create volume data files. If ``None``,
-            all supported fields are processed (``["albedo", "sigma_t"]``).
-            Default: ``None``.
-
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
-        """
-        if spectral_ctx is None:
-            raise ValueError("keyword argument 'spectral_ctx' must be specified")
-
-        supported_fields = set(self._quantities.keys())
-
-        if fields is None:
-            fields = supported_fields
-        elif isinstance(fields, str):
-            fields = {fields}
-
-        if self.profile is None:
-            raise ValueError("'profile' is not set, cannot write volume data " "files")
-
-        for field in fields:
-            # Is the requested field supported?
-            if field not in supported_fields:
-                raise ValueError(f"field {field} cannot be used to create volume data")
-
-            # Does the considered field have values?
-            field_quantity = getattr(self.profile, field)(spectral_ctx)
-
-            if field_quantity is None:
-                raise ValueError(f"field {field} is empty, cannot create volume data")
-
-            # If file name is not specified, we create one
-            field_fname = getattr(self, f"{field}_file")
-
-            # We have the data and the filename: we can create the file
-            field_quantity.m_as(uck.get(self._quantities[field]))
-            write_binary_grid3d(
-                field_fname,
-                field_quantity.m_as(uck.get(self._quantities[field])),
-            )
-
     def kernel_phase(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         return {f"phase_{self.id}": {"type": "rayleigh"}}
 
@@ -292,8 +167,15 @@ class HeterogeneousAtmosphere(Atmosphere):
             zmax=top,
         )
 
-        self.make_volume_data("albedo", spectral_ctx=ctx.spectral_ctx)
-        self.make_volume_data("sigma_t", spectral_ctx=ctx.spectral_ctx)
+        radprops = self.profile.to_dataset(spectral_ctx=ctx.spectral_ctx)
+        albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
+        sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
+        write_binary_grid3d(
+            filename=str(self.albedo_file), values=albedo[np.newaxis, np.newaxis, ...]
+        )
+        write_binary_grid3d(
+            filename=str(self.sigma_t_file), values=sigma_t[np.newaxis, np.newaxis, ...]
+        )
 
         return {
             f"medium_{self.id}": {

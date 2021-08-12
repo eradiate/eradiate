@@ -3,7 +3,7 @@ import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
-from eradiate.radprops.particle_dist import (
+from eradiate.scenes.atmosphere._particle_dist import (
     ArrayParticleDistribution,
     ExponentialParticleDistribution,
     GaussianParticleDistribution,

@@ -31,6 +31,7 @@ Atmosphere [eradiate.scenes.atmosphere]
 **Factories**
 
 * :data:`atmosphere_factory`
+* :data:`particle_distribution_factory`
 
 **Scene elements**
 
@@ -39,6 +40,14 @@ Atmosphere [eradiate.scenes.atmosphere]
 
    HomogeneousAtmosphere
    HeterogeneousAtmosphere
+   ParticleLayer
+
+**Particle distribution**
+
+.. autosummary::
+   :toctree: generated/autosummary
+
+   ParticleDistribution
 
 .. _sec-reference-scenes-biosphere:
 

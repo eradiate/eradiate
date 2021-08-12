@@ -3,9 +3,17 @@ import xarray as xr
 
 from eradiate import path_resolver
 from eradiate import unit_registry as ureg
-from eradiate.contexts import SpectralContext
-from eradiate.radprops.particle_dist import UniformParticleDistribution
-from eradiate.radprops.particles import ParticleLayer
+from eradiate.contexts import SpectralContext, KernelDictContext
+from eradiate.scenes.atmosphere._particle_dist import UniformParticleDistribution
+from eradiate.scenes.atmosphere._particles import ParticleLayer
+from eradiate.scenes.core import KernelDict
+
+
+def test_particle_load(mode_mono) -> None:
+    """Produces a kernel dictionary that can be loaded by the kernel."""
+    ctx = KernelDictContext()
+    particle_layer = ParticleLayer(n_layers=9)
+    assert KernelDict.new(particle_layer, ctx=ctx).load() is not None
 
 
 def test_particle_layer() -> None:
@@ -43,7 +51,9 @@ def test_particle_layer_invalid_bottom_top() -> None:
 def test_particle_layer_invalid_tau_550() -> None:
     """Raises when 'tau_550' is invalid."""
     with pytest.raises(ValueError):
-        ParticleLayer(ureg.Quantity(1.2, "km"), ureg.Quantity(1.8, "km"), tau_550=-0.1)
+        ParticleLayer(
+            bottom=ureg.Quantity(1.2, "km"), top=ureg.Quantity(1.8, "km"), tau_550=-0.1
+        )
 
 
 @pytest.fixture
@@ -55,9 +65,9 @@ def test_particle_layer_radprops(mode_mono, test_dataset) -> None:
     """Method 'radprops' returns data set with expected data_vars and coords."""
     layer = ParticleLayer(dataset=test_dataset)
     spectral_ctx = SpectralContext.new()
-    ds = layer.radprops(spectral_ctx)
+    ds = layer.eval_radprops(spectral_ctx)
     expected_data_vars = ["sigma_t", "albedo"]
-    expected_coords = ["z_layer", "w"]
+    expected_coords = ["z_layer"]
     assert all([coord in ds.coords for coord in expected_coords]) and all(
         [var in ds.data_vars for var in expected_data_vars]
     )

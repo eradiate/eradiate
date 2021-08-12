@@ -1,5 +1,5 @@
 """
-Particle number fraction vertical distributions.
+Particle distributions.
 """
 from __future__ import annotations
 
@@ -13,11 +13,11 @@ import xarray as xr
 from pinttr.util import units_compatible
 from scipy.stats import expon, norm
 
-from .._factory import Factory
-from ..attrs import documented, parse_docs
-from ..units import unit_context_config as ucc
-from ..units import unit_registry as ureg
-from ..validators import all_positive
+from ..._factory import Factory
+from ...attrs import documented, parse_docs
+from ...units import unit_context_config as ucc
+from ...units import unit_registry as ureg
+from ...validators import all_positive
 
 particle_distribution_factory = Factory()
 
