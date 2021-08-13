@@ -9,6 +9,7 @@ from eradiate import path_resolver, unit_context_config
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.radprops import US76ApproxRadProfile
+from eradiate.radprops.rad_profile import AFGL1986RadProfile, ArrayRadProfile
 from eradiate.scenes.atmosphere._heterogeneous import (
     HeterogeneousAtmosphere,
     read_binary_grid3d,
@@ -19,7 +20,7 @@ from eradiate.scenes.core import KernelDict
 
 def test_read_binary_grid3d():
     # write a volume data binary file and test that we read what we wrote
-    write_values = np.random.random(10).reshape(1, 1, 10)
+    write_values = np.random.random((1, 1, 10))
     tmp_dir = pathlib.Path(tempfile.mkdtemp())
     tmp_dir.mkdir(parents=True, exist_ok=True)
     tmp_filename = pathlib.Path(tmp_dir, "test.vol")
@@ -39,9 +40,9 @@ def test_heterogeneous_write_volume_data_files(mode_mono, tmpdir):
             width=100.0,
             profile={
                 "type": "array",
-                "levels": np.linspace(0, 3, 10),
-                "sigma_t_values": np.ones((1, 1, 9)),
-                "albedo_values": np.ones((1, 1, 9)),
+                "levels": np.linspace(0, 9, 10),
+                "sigma_t_values": np.random.random(9),
+                "albedo_values": np.ones(9),
             },
             cache_dir=tmpdir,
         )
@@ -77,12 +78,11 @@ def test_heterogeneous_get_top_us76(mode_mono, tmpdir, test_absorption_data_set)
     Sets the atmosphere top to the maximum altitude level value in the
     underlying US76ApproxRadProfile.
     """
-    profile = US76ApproxRadProfile(
-        levels=ureg.Quantity(np.linspace(0, 86, 87), "km"),
-        absorption_data_set=test_absorption_data_set,
-    )
     atmosphere = HeterogeneousAtmosphere(
-        profile=profile,
+        profile=US76ApproxRadProfile(
+            absorption_data_set=test_absorption_data_set,
+            thermoprops=dict(levels=ureg.Quantity(np.linspace(0, 86, 87), "km")),
+        ),
         cache_dir=tmpdir,
     )
     assert atmosphere.top == ureg.Quantity(86, "km")
@@ -119,12 +119,13 @@ def test_heterogeneous_get_top_afgl1986(mode_mono, tmpdir, test_absorption_data_
     underlying AFGL1986RadProfile.
     """
     a = HeterogeneousAtmosphere(
-        profile={
-            "type": "afgl1986",
-            "model": "us_standard",
-            "levels": ureg.Quantity(np.linspace(0, 100, 101), "km"),
-            "absorption_data_sets": test_absorption_data_sets,
-        }
+        profile=AFGL1986RadProfile(
+            absorption_data_sets=test_absorption_data_sets,
+            thermoprops=dict(
+                model_id="us_standard",
+                levels=ureg.Quantity(np.linspace(0, 100, 101), "km"),
+            ),
+        )
     )
     assert a.top == ureg.Quantity(100.0, "km")
 
@@ -136,12 +137,11 @@ def test_heterogeneous_invalid_width_units(mode_mono):
     with pytest.raises(pinttr.exceptions.UnitsError):
         HeterogeneousAtmosphere(
             width=ureg.Quantity(100.0, "m^2"),
-            profile={
-                "type": "array",
-                "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
-            },
+            profile=ArrayRadProfile(
+                levels=np.linspace(0, 9, 10),
+                sigma_t_values=np.random.random(9),
+                albedo_values=np.random.random(9),
+            ),
         )
 
 
@@ -152,11 +152,10 @@ def test_heterogeneous_invalid_width_value(mode_mono, tmpdir):
     with pytest.raises(ValueError):
         HeterogeneousAtmosphere(
             width=-100.0,
-            profile={
-                "type": "array",
-                "levels": np.linspace(0, 3, 4),
-                "sigma_t_values": np.ones((3, 3, 3)),
-                "albedo_values": np.ones((3, 3, 3)),
-            },
+            profile=ArrayRadProfile(
+                levels=np.linspace(0, 9, 10),
+                sigma_t_values=np.random.random(9),
+                albedo_values=np.random.random(9),
+            ),
             cache_dir=tmpdir,
         )

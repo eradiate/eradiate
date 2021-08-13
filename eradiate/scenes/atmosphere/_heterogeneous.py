@@ -132,7 +132,7 @@ class HeterogeneousAtmosphere(Atmosphere):
                 )
                 min_sigma_s = (sigma_t * albedo).min()
             else:
-                min_sigma_s = self.profile.sigma_s(spectral_ctx).min()
+                min_sigma_s = self.profile.eval_sigma_s(spectral_ctx).min()
 
             if min_sigma_s <= 0.0:
                 raise ValueError(

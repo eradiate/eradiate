@@ -1,79 +1,115 @@
+import pathlib
+from typing import MutableMapping
+
 import numpy as np
 import pytest
+import xarray as xr
 
 from eradiate import path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.contexts import SpectralContext
 from eradiate.radprops import AFGL1986RadProfile, ArrayRadProfile, US76ApproxRadProfile
-from eradiate.thermoprops.util import (
-    compute_column_number_density,
-    compute_number_density_at_surface,
-)
+from eradiate.thermoprops.afgl1986 import make_profile as make_profile_afgl1986
+from eradiate.thermoprops.util import compute_column_number_density
 
 
-def test_array_rad_props_profile(mode_mono):
-    # ArrayRadProfile works
+def test_array_rad_props_profile(mode_mono) -> None:
+    """
+    Assigns attributes.
+    """
     levels = ureg.Quantity(np.linspace(0, 100, 12), "km")
     albedo_values = ureg.Quantity(np.linspace(0.0, 1.0, 11), ureg.dimensionless)
     sigma_t_values = ureg.Quantity(np.linspace(0.0, 1e-5, 11), "m^-1")
     p = ArrayRadProfile(
         levels=levels,
-        albedo_values=albedo_values.reshape(1, 1, len(levels) - 1),
-        sigma_t_values=sigma_t_values.reshape(1, 1, len(levels) - 1),
+        albedo_values=albedo_values,
+        sigma_t_values=sigma_t_values,
     )
-    assert isinstance(p.levels, ureg.Quantity)
-    assert isinstance(p.sigma_a(), ureg.Quantity)
-    assert isinstance(p.sigma_s(), ureg.Quantity)
-    assert np.allclose(p.levels, levels)
-    assert np.allclose(p.albedo(), albedo_values)
-    assert np.allclose(p.sigma_t(), sigma_t_values)
 
-    # to_dataset method does not fail
     spectral_ctx = SpectralContext.new()
-    assert p.to_dataset(spectral_ctx)
+    assert isinstance(p.levels, ureg.Quantity)
+    assert isinstance(p.eval_albedo(spectral_ctx=spectral_ctx), ureg.Quantity)
+    assert isinstance(p.eval_sigma_t(spectral_ctx=spectral_ctx), ureg.Quantity)
+    assert isinstance(p.eval_sigma_a(spectral_ctx=spectral_ctx), ureg.Quantity)
+    assert isinstance(p.eval_sigma_s(spectral_ctx=spectral_ctx), ureg.Quantity)
+    assert np.allclose(p.levels, levels)
+    assert np.allclose(p.eval_albedo(spectral_ctx=spectral_ctx), albedo_values)
+    assert np.allclose(p.eval_sigma_t(spectral_ctx=spectral_ctx), sigma_t_values)
 
-    # mismatching shapes in albedo_values and sigma_t_values arrays raise
+
+def test_array_rad_props_profile_to_dataset(mode_mono) -> None:
+    """
+    Returns a data set.
+    """
+    p = ArrayRadProfile(
+        levels=ureg.Quantity(np.linspace(0, 100, 12), "km"),
+        albedo_values=ureg.Quantity(np.linspace(0.0, 1.0, 11), ureg.dimensionless),
+        sigma_t_values=ureg.Quantity(np.linspace(0.0, 1e-5, 11), "m^-1"),
+    )
+    spectral_ctx = SpectralContext.new()
+    assert isinstance(p.to_dataset(spectral_ctx), xr.Dataset)
+
+
+def test_array_rad_props_profile_invalid_values() -> None:
+    """
+    Mismatching shapes in albedo_values and sigma_t_values arrays raise.
+    """
     with pytest.raises(ValueError):
         ArrayRadProfile(
-            levels=levels,
-            albedo_values=np.linspace(0.0, 1.0, 11).reshape(1, 1, 11),
-            sigma_t_values=np.linspace(0.0, 1e-5, 10).reshape(1, 1, 10),
+            levels=ureg.Quantity(np.linspace(0, 100, 12), "km"),
+            albedo_values=np.linspace(0.0, 1.0, 11),
+            sigma_t_values=np.linspace(0.0, 1e-5, 10),
         )
 
 
 @pytest.fixture
-def us76_approx_test_absorption_data_set():
+def us76_approx_test_absorption_data_set() -> pathlib.Path:
+    """
+    Fixture to return the path to a test absorption data set for 'us76_approx'.
+    """
     return path_resolver.resolve(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
 
 
-def test_us76_approx_rad_profile(mode_mono, us76_approx_test_absorption_data_set):
-    spectral_ctx = SpectralContext.new()
-
-    # Default constructor with test absorption data set
+def test_us76_approx_rad_profile(
+    mode_mono, us76_approx_test_absorption_data_set: pathlib.Path
+) -> None:
+    """
+    Collision coefficient evaluation methods return pint.Quantity objects.
+    """
     p = US76ApproxRadProfile(absorption_data_set=us76_approx_test_absorption_data_set)
 
+    spectral_ctx = SpectralContext.new()
     for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
-        x = getattr(p, field)(spectral_ctx)
+        x = getattr(p, f"eval_{field}")(spectral_ctx)
         assert isinstance(x, ureg.Quantity)
-        assert x.shape == (1, 1, 86)
 
-    # Custom altitude levels
+
+def test_us76_approx_rad_profile_levels(
+    mode_mono, us76_approx_test_absorption_data_set: pathlib.Path
+) -> None:
+    """
+    Collision coefficients' shape match altitude levels shape.
+    """
     p = US76ApproxRadProfile(
-        levels=ureg.Quantity(np.linspace(0, 120, 121), "km"),
+        thermoprops=dict(levels=ureg.Quantity(np.linspace(0, 120, 121), "km")),
         absorption_data_set=us76_approx_test_absorption_data_set,
     )
+
+    spectral_ctx = SpectralContext.new()
     for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
-        x = getattr(p, field)(spectral_ctx)
-        assert x.shape == (1, 1, 120)
+        x = getattr(p, f"eval_{field}")(spectral_ctx)
+        assert x.shape == (120,)
 
 
 def test_us76_approx_rad_profile_has_absorption_default(
-    mode_mono, us76_approx_test_absorption_data_set
-):
-    # default value for 'has_absorption' is True, hence the absorption
-    # coefficient is computed and is not zero everywhere at 1650 nm
+    mode_mono, us76_approx_test_absorption_data_set: pathlib.Path
+) -> None:
+    """
+    Default value for 'has_absorption' is True, hence the absorption
+    coefficient is computed and is not zero everywhere at 1650 nm.
+    """
     p = US76ApproxRadProfile(absorption_data_set=us76_approx_test_absorption_data_set)
     assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
@@ -82,10 +118,12 @@ def test_us76_approx_rad_profile_has_absorption_default(
 
 
 def test_us76_approx_rad_profile_has_absorption_true(
-    mode_mono, us76_approx_test_absorption_data_set
-):
-    # when 'has_absorption' is True, the absorption coefficient is computed
-    # and is not zero everywhere at 1650 nm
+    mode_mono, us76_approx_test_absorption_data_set: pathlib.Path
+) -> None:
+    """
+    When 'has_absorption' is True, the absorption coefficient is computed
+    and is not zero everywhere at 1650 nm.
+    """
     p = US76ApproxRadProfile(
         has_absorption=True, absorption_data_set=us76_approx_test_absorption_data_set
     )
@@ -96,10 +134,12 @@ def test_us76_approx_rad_profile_has_absorption_true(
 
 
 def test_us76_approx_rad_profile_has_absorption_false(
-    mode_mono, us76_approx_test_absorption_data_set
-):
-    # when 'has_absorption' is False, the absorption coefficient is not
-    # computed and is zero everywhere
+    mode_mono, us76_approx_test_absorption_data_set: pathlib.Path
+) -> None:
+    """
+    When 'has_absorption' is False, the absorption coefficient is not
+    computed and is zero everywhere.
+    """
     p = US76ApproxRadProfile(
         has_absorption=False, absorption_data_set=us76_approx_test_absorption_data_set
     )
@@ -110,10 +150,12 @@ def test_us76_approx_rad_profile_has_absorption_false(
 
 
 def test_us76_approx_rad_profile_has_scattering_default(
-    mode_mono, us76_approx_test_absorption_data_set
-):
-    # default value for 'has_scattering' is True, hence the scattering
-    # coefficient is computed and is not zero everywhere at 550 nm
+    mode_mono, us76_approx_test_absorption_data_set: pathlib.Path
+) -> None:
+    """
+    Default value for 'has_scattering' is True, hence the scattering
+    coefficient is computed and is not zero everywhere at 550 nm.
+    """
     p = US76ApproxRadProfile(absorption_data_set=us76_approx_test_absorption_data_set)
     assert p.has_scattering
     spectral_ctx = SpectralContext.new(wavelength=550.0)
@@ -122,10 +164,12 @@ def test_us76_approx_rad_profile_has_scattering_default(
 
 
 def test_us76_approx_rad_profile_has_scattering_true(
-    mode_mono, us76_approx_test_absorption_data_set
-):
-    # when 'has_scattering' is True, the scattering coefficient is computed
-    # and is not zero everywhere at 550 nm
+    mode_mono, us76_approx_test_absorption_data_set: pathlib.Path
+) -> None:
+    """
+    When 'has_scattering' is True, the scattering coefficient is computed
+    and is not zero everywhere at 550 nm.
+    """
     p = US76ApproxRadProfile(
         has_scattering=True, absorption_data_set=us76_approx_test_absorption_data_set
     )
@@ -136,10 +180,12 @@ def test_us76_approx_rad_profile_has_scattering_true(
 
 
 def test_us76_approx_rad_profile_has_scattering_false(
-    mode_mono, us76_approx_test_absorption_data_set
-):
-    # when 'has_scattering' is False, the scattering coefficient is not
-    # computed and is zero everywhere
+    mode_mono, us76_approx_test_absorption_data_set: pathlib.Path
+) -> None:
+    """
+    When 'has_scattering' is False, the scattering coefficient is not
+    computed and is zero everywhere.
+    """
     p = US76ApproxRadProfile(
         has_scattering=False, absorption_data_set=us76_approx_test_absorption_data_set
     )
@@ -150,7 +196,10 @@ def test_us76_approx_rad_profile_has_scattering_false(
 
 
 @pytest.fixture
-def afgl1986_test_absorption_data_sets():
+def afgl1986_test_absorption_data_sets() -> MutableMapping[str, pathlib.Path]:
+    """
+    Fixture to return paths to test absorption data sets for 'afgl_1986'.
+    """
     return {
         "CH4": path_resolver.resolve(
             "tests/spectra/absorption/CH4-spectra-4000_11502.nc"
@@ -174,75 +223,76 @@ def afgl1986_test_absorption_data_sets():
     }
 
 
-def test_afgl1986_rad_profile_default(mode_mono, afgl1986_test_absorption_data_sets):
-    # Default constructor with test absorption data sets
-    spectral_ctx = SpectralContext.new(
-        wavelength=1500.0
-    )  # in the infrared, all absorption data sets are opened
-
+def test_afgl1986_rad_profile_default(
+    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
+) -> None:
+    """
+    Collision coefficient evaluation methods return pint.Quantity objects.
+    """
     p = AFGL1986RadProfile(absorption_data_sets=afgl1986_test_absorption_data_sets)
+
+    spectral_ctx = SpectralContext.new(wavelength=1500.0)
     for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
-        x = getattr(p, field)(spectral_ctx)
+        x = getattr(p, f"eval_{field}")(spectral_ctx)
         assert isinstance(x, ureg.Quantity)
-        assert x.shape == (1, 1, 120)
 
 
-def test_afgl1986_rad_profile_levels(mode_mono, afgl1986_test_absorption_data_sets):
-    # Custom level altitudes (in the visible, only the H2O data set is opened)
-    spectral_ctx = SpectralContext.new(wavelength=550.0)
-
+def test_afgl1986_rad_profile_levels(
+    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
+) -> None:
+    """
+    Collision coefficients' shape match altitude levels shape.
+    """
+    n_layers = 101
     p = AFGL1986RadProfile(
-        levels=ureg.Quantity(np.linspace(0, 100, 101), "km"),
+        thermoprops=dict(
+            levels=ureg.Quantity(np.linspace(0.0, 100.0, n_layers + 1), "km")
+        ),
         absorption_data_sets=afgl1986_test_absorption_data_sets,
     )
+
+    spectral_ctx = SpectralContext.new(wavelength=550.0)
+    for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
+        x = getattr(p, f"eval_{field}")(spectral_ctx)
+        assert x.shape == (n_layers,)
 
 
 def test_afgl1986_rad_profile_concentrations(
-    mode_mono, afgl1986_test_absorption_data_sets
-):
-    # Custom concentrations
-    concentrations = {
-        "H2O": ureg.Quantity(5e23, "m^-2"),  # column number density in S.I. units
-        "O3": ureg.Quantity(
-            0.5, "dobson_unit"
-        ),  # column number density in exotic units
-        "CH4": ureg.Quantity(4e19, "m^-3"),  # number density at the surface
-        "CO2": ureg.Quantity(400e-6, ""),  # mixing ratio at the surface
-    }
-    p = AFGL1986RadProfile(
-        concentrations=concentrations,
-        absorption_data_sets=afgl1986_test_absorption_data_sets,
+    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
+) -> None:
+    """
+    Absorption coefficient is twice larger when H2O concentration is doubled.
+    """
+
+    thermoprops = make_profile_afgl1986()
+    column_amount_H2O = compute_column_number_density(ds=thermoprops, species="H2O")
+    p1 = AFGL1986RadProfile(
+        thermoprops=thermoprops, absorption_data_sets=afgl1986_test_absorption_data_sets
     )
 
-    thermoprops = p.eval_thermoprops_profile()
-    column_amount_H2O = compute_column_number_density(thermoprops, "H2O")
-    column_amount_O3 = compute_column_number_density(thermoprops, "O3")
-    surface_amount_CH4 = compute_number_density_at_surface(thermoprops, "CH4")
-    surface_amount_CO2 = thermoprops.mr.sel(species="CO2").values[0]
-
-    assert np.isclose(column_amount_H2O, concentrations["H2O"], rtol=1e-9)
-    assert np.isclose(column_amount_O3, concentrations["O3"], rtol=1e-9)
-    assert np.isclose(surface_amount_CO2, concentrations["CO2"], rtol=1e-9)
-    assert np.isclose(surface_amount_CH4, concentrations["CH4"], rtol=1e-9)
-
-
-def test_afgl1986_rad_profile_concentrations_invalid(
-    mode_mono, afgl1986_test_absorption_data_sets
-):
-    # Too large concentrations raise
-    p = AFGL1986RadProfile(
-        concentrations={"CO2": ureg.Quantity(400, "")},
+    p2 = AFGL1986RadProfile(
+        thermoprops=dict(
+            concentrations={
+                "H2O": 2 * column_amount_H2O,
+            }
+        ),
         absorption_data_sets=afgl1986_test_absorption_data_sets,
     )
-    with pytest.raises(ValueError):
-        p.eval_thermoprops_profile()
+    spectral_ctx = SpectralContext.new(wavelength=1500.0 * ureg.nm)
+
+    sigma_a_initial = p1.eval_sigma_a(spectral_ctx)
+    sigma_a_doubled = p2.eval_sigma_a(spectral_ctx)
+
+    assert np.allclose(sigma_a_doubled, 2 * sigma_a_initial, rtol=1e-2)
 
 
 def test_afgl1986_rad_profile_has_absorption_default(
-    mode_mono, afgl1986_test_absorption_data_sets
-):
-    # default value for 'has_absorption' is True, hence the absorption
-    # coefficient is computed and is not zero everywhere at 1650 nm
+    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
+) -> None:
+    """
+    Default value for 'has_absorption' is True, hence the absorption
+    coefficient is computed and is not zero everywhere at 1650 nm.
+    """
     p = AFGL1986RadProfile(absorption_data_sets=afgl1986_test_absorption_data_sets)
     assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
@@ -251,10 +301,12 @@ def test_afgl1986_rad_profile_has_absorption_default(
 
 
 def test_afgl1986_rad_profile_has_absorption_true(
-    mode_mono, afgl1986_test_absorption_data_sets
-):
-    # when 'has_absorption' is True, the absorption coefficient is computed
-    # and is not zero everywhere at 1650 nm
+    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
+) -> None:
+    """
+    When 'has_absorption' is True, the absorption coefficient is computed
+    and is not zero everywhere at 1650 nm.
+    """
     p = AFGL1986RadProfile(
         has_absorption=True, absorption_data_sets=afgl1986_test_absorption_data_sets
     )
@@ -265,10 +317,12 @@ def test_afgl1986_rad_profile_has_absorption_true(
 
 
 def test_afgl1986_rad_profile_has_absorption_false(
-    mode_mono, afgl1986_test_absorption_data_sets
-):
-    # when 'has_absorption' is False, the absorption coefficient is not
-    # computed and is zero everywhere
+    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
+) -> None:
+    """
+    When 'has_absorption' is False, the absorption coefficient is not
+    computed and is zero everywhere.
+    """
     p = AFGL1986RadProfile(
         has_absorption=False, absorption_data_sets=afgl1986_test_absorption_data_sets
     )
@@ -279,10 +333,12 @@ def test_afgl1986_rad_profile_has_absorption_false(
 
 
 def test_afgl1986_rad_profile_has_scattering_default(
-    mode_mono, afgl1986_test_absorption_data_sets
-):
-    # default value for 'has_scattering' is True, hence the absorption
-    # coefficient is computed and is not zero everywhere at 550 nm
+    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
+) -> None:
+    """
+    Default value for 'has_scattering' is True, hence the absorption
+    coefficient is computed and is not zero everywhere at 550 nm.
+    """
     p = AFGL1986RadProfile(absorption_data_sets=afgl1986_test_absorption_data_sets)
     assert p.has_scattering
     spectral_ctx = SpectralContext.new(wavelength=550.0)
@@ -292,9 +348,11 @@ def test_afgl1986_rad_profile_has_scattering_default(
 
 def test_afgl1986_rad_profile_has_scattering_true(
     mode_mono, afgl1986_test_absorption_data_sets
-):
-    # when 'has_scattering' is True, the scattering coefficient is computed
-    # and is not zero everywhere at 550 nm
+) -> None:
+    """
+    When 'has_scattering' is True, the scattering coefficient is computed
+    and is not zero everywhere at 550 nm.
+    """
     p = AFGL1986RadProfile(
         has_scattering=True, absorption_data_sets=afgl1986_test_absorption_data_sets
     )
@@ -305,10 +363,12 @@ def test_afgl1986_rad_profile_has_scattering_true(
 
 
 def test_afgl1986_rad_profile_has_scattering_false(
-    mode_mono, afgl1986_test_absorption_data_sets
-):
-    # when 'has_scattering' is False, the scattering coefficient is not
-    # computed and is zero everywhere
+    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
+) -> None:
+    """
+    When 'has_scattering' is False, the scattering coefficient is not
+    computed and is zero everywhere.
+    """
     p = AFGL1986RadProfile(
         has_scattering=False, absorption_data_sets=afgl1986_test_absorption_data_sets
     )
