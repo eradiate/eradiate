@@ -16,6 +16,7 @@ from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
 from .. import data
 from .._factory import Factory
+from .._mode import ModeFlags
 from ..attrs import documented, parse_docs
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
 from ..exceptions import UnsupportedModeError
@@ -539,7 +540,7 @@ class US76ApproxRadProfile(RadProfile):
         """
         Evaluate absorption coefficient given spectral context.
         """
-        if eradiate.mode().is_monochromatic():
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             profile = self.eval_thermoprops_profile()
             if self.has_absorption:
                 wavelength = spectral_ctx.wavelength
@@ -573,7 +574,7 @@ class US76ApproxRadProfile(RadProfile):
         """
         Evaluate scattering coefficient given spectral context.
         """
-        if eradiate.mode().is_monochromatic():
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             profile = self.eval_thermoprops_profile()
             if self.has_scattering:
                 return compute_sigma_s_air(
