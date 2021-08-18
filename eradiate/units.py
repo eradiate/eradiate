@@ -9,16 +9,19 @@ __all__ = [
 
 import enum
 from functools import lru_cache
-from typing import Union
+from typing import Any, Dict, Union
 
 import pint
 import pinttr
 import xarray
+from pinttr.exceptions import UnitsError
+from pinttr.util import units_compatible
 
 # -- Global data members -------------------------------------------------------
 
 #: Unit registry common to all Eradiate components. All units used in Eradiate
 #: must be created using this registry.
+
 unit_registry = pint.UnitRegistry()
 
 unit_registry.define("dobson_unit = 2.687e20 * meter^-2 = du = dobson = dobson_units")
@@ -156,3 +159,58 @@ def to_quantity(da: xarray.DataArray) -> pint.Quantity:
         raise ValueError("this DataArray has no 'units' metadata field") from e
     else:
         return unit_registry.Quantity(da.values, units)
+
+
+def interpret_quantities(
+    d: Dict[str, Any],
+    quantity_map: Dict[str, str],
+    uctx: pinttr.UnitContext,
+    force=False,
+):
+    """
+    Advanced unit interpretation and wrapping for dictionaries. This function
+    first calls :func:`pinttr.interpret_units` to interpret units attached to
+    a given field. Then, it converts quantities and possibly applies default
+    units to fields specified in ``quantity_map`` based on ``uctx``.
+
+    Parameter ``d`` (dict):
+        Dictionary to apply unit conversion, checking and defaults.
+
+    Parameter ``quantity_map`` (dict[str, str]):
+        Dictionary mapping fields to quantity identifiers (see
+        :class:`eradiate.units.PhysicalQuantity` for valid quantity IDs).
+
+    Parameter ``uctx`` (:class:`pinttr.UnitContext`):
+        Unit context containing quantity and default units definitions.
+
+    Returns → dict:
+        Dictionary with units interpreted and checked, and default units
+        applied to relevant fields.
+
+    Raises → :class:`pinttr.UnitsError`:
+        If a field and its mapped quantity have incompatible units.
+    """
+    ureg = uctx.ureg
+
+    # Interpret unit fields
+    result = pinttr.interpret_units(d, ureg)
+
+    # Convert to or apply default units based on the unit map
+    if quantity_map is None:
+        quantity_map = {}
+
+    for key, quantity in quantity_map.items():
+        value = result[key]
+        if isinstance(value, pint.Quantity):
+            units = uctx.get(quantity)
+            if not units_compatible(value.units, units):
+                raise UnitsError(value.units, units)
+
+            if force:
+                result[key] = value.to(units)
+            else:
+                result[key] = value
+        else:
+            result[key] = ureg.Quantity(result[key], uctx.get(quantity))
+
+    return result

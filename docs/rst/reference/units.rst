@@ -35,5 +35,6 @@ Utility functions
 .. autosummary::
    :toctree: generated/autosummary/
 
+   interpret_quantities
    symbol
    to_quantity
