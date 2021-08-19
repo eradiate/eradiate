@@ -153,64 +153,9 @@ def test_onedim_solver_app_run(mode_mono):
     assert np.all(results["lo"].data > 0.0)
 
 
-# TODO: Move this test to integration level?
-# TODO: Add SPP splitting support to DistantMeasure
-# @pytest.mark.slow
-# def test_onedim_solver_app_spp_splitting():
-#     """Test the SPP splitting mechanism by running the same scene, once with
-#     single and double precision each.
-#     """
-#     zenith_res = 90.
-#     spp = 1000000
-#     n_split = 5
-#
-#     # Double-precision run
-#     eradiate.set_mode("mono_double")
-#     app = OneDimSolverApp(scene=OneDimScene(measures=DistantMeasure(
-#         id="toa_pplane",
-#         film_resolution=(1, 90),
-#         spp=spp,
-#         spp_max_single=spp,
-#     )))
-#     app.run()
-#     results_double = app.results["toa_pplane"]["lo"].values
-#
-#     # Single-precision run
-#     eradiate.set_mode("mono")
-#     app = OneDimSolverApp(scene=OneDimScene(measures=DistantMeasure(
-#         id="toa_pplane",
-#         film_resolution=(1, 90),
-#         spp=spp,
-#         spp_max_single=spp,
-#     )))
-#     app.run()
-#     results_single = app.results["toa_pplane"]["lo"].values
-#
-#     # Single-precision with splitting
-#     app = OneDimSolverApp(scene=OneDimScene(measures=TOAPPlaneMeasure(
-#         zenith_res=zenith_res,
-#         spp=spp,
-#         spp_max_single=min(spp / n_split, int(1e5)),
-#     )))
-#     app.run()
-#     results_single_split = app.results["toa_pplane"]["lo"].values
-#
-#     deviation_single = (
-#             np.abs(results_double - results_single) / results_double
-#     ).flatten()
-#     deviation_single_split = (
-#             np.abs(results_double - results_single_split) / results_double
-#     ).flatten()
-#
-#     # Is our reference single-precision run good?
-#     assert np.all(deviation_single < 1e-3)
-#
-#     # Is our split computation close enough to the single-precision reference?
-#     assert np.allclose(deviation_single, deviation_single_split, atol=5e-3)
-
-
 def test_onedim_solver_app_postprocessing(mode_mono):
-    """Test the postprocessing method by computing the processed quantities and
+    """
+    Test the postprocessing method by computing the processed quantities and
     comparing them to a reference computation.
     """
     scene = OneDimScene(
