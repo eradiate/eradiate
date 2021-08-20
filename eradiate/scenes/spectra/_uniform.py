@@ -20,7 +20,7 @@ class UniformSpectrum(Spectrum):
     """
 
     value = documented(
-        attr.ib(default=1.0),
+        attr.ib(default=1.0, repr=lambda x: f"{x:~P}"),
         doc="Uniform spectrum value. If a float is passed and ``quantity`` is not "
         "``None``, it is automatically converted to appropriate configuration "
         "default units. If a :class:`~pint.Quantity` is passed and ``quantity`` "
