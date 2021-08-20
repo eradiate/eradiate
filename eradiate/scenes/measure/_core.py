@@ -170,6 +170,14 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
         ]
 
 
+def _str_summary_raw(x):
+    if not x:
+        return "{}"
+
+    keys = list(x.keys())
+    return f"dict<{len(keys)} items>({{{keys[0]}: {{...}} , ... }})"
+
+
 @parse_docs
 @attr.s
 class MeasureResults:
@@ -181,6 +189,7 @@ class MeasureResults:
         attr.ib(
             factory=dict,
             validator=attr.validators.optional(attr.validators.instance_of(dict)),
+            repr=_str_summary_raw,
         ),
         doc="Raw results stored as nested dictionaries with the following structure:\n"
         "\n"
