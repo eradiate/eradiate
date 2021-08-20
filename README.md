@@ -24,6 +24,6 @@ For build and usage instructions, refer to the [documentation](https://eradiate.
 
 Eradiate's development is funded by a European Space Agency project supported by the European Commission's Copernicus programme. The design phase was funded by the MetEOC-3 project.
 
-Eradiate's core development team consists of Yves Govaerts, Vincent Leroy, Yvan Nollet and Sebastian Schunke.
+Eradiate's core development team consists of Yves Govaerts, Vincent Leroy, Yvan Nollet, Sebastian Schunke and Nicolas Misk.
 
 Eradiate uses the [Mitsuba 2](https://github.com/mitsuba-renderer/mitsuba2) renderer as its computational kernel. The Eradiate team acknowledges Mitsuba 2 creators and contributors for their exceptional work.
