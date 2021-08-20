@@ -45,7 +45,7 @@ pip-lock: pip-update-tools pip-compile
 # Initialise development environment
 pip-init:
 	pip install --upgrade -r requirements/dev.txt
-	python setup.py develop
+	python setup.py develop --no-deps
 
 pip-update: pip-lock pip-init
 
@@ -72,7 +72,7 @@ conda-init:
 	conda config --env --add channels conda-forge --add channels eradiate
 	conda update --file requirements/environment-$(PLATFORM).lock
 	python requirements/copy_envvars.py
-	python setup.py develop
+	python setup.py develop --no-deps
 
 conda-update: conda-lock-all conda-init
 
