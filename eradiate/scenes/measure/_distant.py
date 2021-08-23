@@ -537,7 +537,7 @@ class DistantRadianceMeasure(DistantMeasure):
     def _postprocess_fetch_results(self) -> xr.Dataset:
         # Collect results and add appropriate metadata
 
-        ds = self.results.to_dataset(aggregate_spps=True)
+        ds = super(DistantRadianceMeasure, self).postprocess()
 
         # Rename raw field to outgoing radiance
         ds = ds.rename(raw="lo")
@@ -757,7 +757,7 @@ class DistantFluxMeasure(DistantMeasure):
 
     def _postprocess_fetch_results(self) -> xr.Dataset:
         # Collect results and add appropriate metadata
-        ds = self.results.to_dataset(aggregate_spps=True)
+        ds = super(DistantFluxMeasure, self).postprocess()
 
         # Add aggregate flux density field
         ds["flux"] = ds["raw"].sum(dim=("x", "y"))
