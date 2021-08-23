@@ -27,12 +27,11 @@ registered types. Each registry entry consists of the type registered under the
 associated identifier, as well as an optional field specifying which class
 method constructor should be used when converting dictionaries.
 
-Registered types can be created using the :meth:`.Factory.create`. This method,
-however, is mostly used as the engine powering the :meth:`.Factory.convert`
-method, which is the main entry point to factories in Eradiate. If this method
-is passed a dictionary, it pre-processes it and tries to instantiate one of the
-registered types based of the information it contains; otherwise, is does
-nothing and just returns the object it is passed.
+The :meth:`.Factory.convert` method is the main entry point to factories in
+Eradiate. If this method is passed a dictionary, it pre-processes it, then tries
+to instantiate one of the registered types based of the information contained in
+the dictionary; otherwise, it does nothing and just returns the object it is
+passed.
 
 .. admonition:: Example
 
@@ -63,17 +62,21 @@ nothing and just returns the object it is passed.
           azimuth=180.0,
       )
 
+.. note::
+   :meth:`.Factory.create` is powered by the low-level :meth:`.Factory.create`
+   method.
+
 Enabling a class for factory usage
 ----------------------------------
 
 As previously mentioned, classes can be registered to a factory using the
-factory's :meth:`~eradiate._factory.register` class decorator (which should
+factory's :meth:`.Factory.register` class decorator (which should
 be applied *after* the :func:`attr.s` decorator). Our convention is to use the
 ``type_id`` keyword argument to declare the factory identifier—not a
 ``_TYPE_ID`` class attribute.
 
-.. note:: All the arguments of the :meth:`~eradiate._factory.register` decorator
-   are keyword-only arguments.
+.. note::
+   All the arguments of the :meth:`.Factory.register` decorator are keyword-only.
 
 Documenting factories
 ---------------------
