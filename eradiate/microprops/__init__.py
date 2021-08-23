@@ -1,0 +1,3 @@
+    """
+    Particles microphysical properties.
+    """
