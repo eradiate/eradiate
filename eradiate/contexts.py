@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import attr
 import pint
@@ -11,11 +11,14 @@ import eradiate
 
 from ._mode import ModeFlags
 from .attrs import documented, parse_docs
+from .ckd import Bin, Bindex, BinSet
 from .exceptions import UnsupportedModeError
 from .units import unit_context_config as ucc
 from .units import unit_registry as ureg
 
-# -- Spectral contexts ---------------------------------------------------------
+# ------------------------------------------------------------------------------
+#                               Spectral contexts
+# ------------------------------------------------------------------------------
 
 
 @attr.s
@@ -36,8 +39,20 @@ class SpectralContext(ABC):
     @property
     @abstractmethod
     def wavelength(self):
-        # Wavelength associated with spectral context
-        # (may raise NotImplementedError if irrelevant)
+        """Wavelength associated with spectral context."""
+        # May raise NotImplementedError if irrelevant
+        pass
+
+    @property
+    @abstractmethod
+    def spectral_index(self):
+        """Spectral index associated with spectral context."""
+        pass
+
+    @property
+    @abstractmethod
+    def spectral_index_formatted(self) -> str:
+        """Formatted spectral index (human-readable string)."""
         pass
 
     @staticmethod
@@ -48,12 +63,18 @@ class SpectralContext(ABC):
         mode.* Keyword arguments are passed to the instantiated class's
         constructor:
 
-        .. rubric:: Monochromatic modes [:class:`MonoSpectralContext`]
+        .. rubric:: Monochromatic modes [:class:`.MonoSpectralContext`]
 
         Parameter ``wavelength`` (float):
             Wavelength. Default: 550 nm.
 
             Unit-enabled field (default: ucc[wavelength]).
+
+        .. rubric:: CKD modes [:class:`.CKDSpectralContext`]
+
+        Parameter ``bindex`` (:class:`.Bindex`):
+            CKD bindex. Default: a test value, defined as the first quadrature
+            point for the ``555`` bin of the ``10nm_test`` bin set.
 
         .. seealso::
 
@@ -64,8 +85,11 @@ class SpectralContext(ABC):
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return MonoSpectralContext(**kwargs)
 
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            return CKDSpectralContext(**kwargs)
+
         else:
-            raise UnsupportedModeError(supported="monochromatic")
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     @staticmethod
     def from_dict(d: Dict) -> SpectralContext:
@@ -123,14 +147,80 @@ class MonoSpectralContext(SpectralContext):
 
     @property
     def wavelength(self):
+        """Wavelength associated with spectral context."""
         return self._wavelength
 
     @wavelength.setter
     def wavelength(self, value):
         self._wavelength = value
 
+    @property
+    def spectral_index(self) -> float:
+        """
+        Spectral index associated with spectral context, equal to active
+        wavelength magnitude in config units.
+        """
+        return self._wavelength.m_as(ucc.get("wavelength"))
 
-# -- Kernel dictionary contexts ------------------------------------------------
+    @property
+    def spectral_index_formatted(self) -> str:
+        """Formatted spectral index (human-readable string)."""
+        return f"{self._wavelength:g~P}"
+
+
+@parse_docs
+@attr.s
+class CKDSpectralContext(SpectralContext):
+    """
+    CKD spectral context data structure.
+    """
+
+    _bindex: Bindex = documented(
+        attr.ib(
+            factory=lambda: Bindex(
+                BinSet.from_db("10nm_test").select_bins("555")[0],
+                0,
+            ),
+            converter=Bindex.convert,
+            validator=attr.validators.instance_of(Bindex),
+        ),
+        doc="The bindex value corresponding to this spectral context. "
+        "The default value is a simple placeholder used for testing purposes.",
+        type=":class:`.Bindex`",
+    )
+
+    @property
+    def wavelength(self) -> pint.Quantity:
+        """
+        Wavelength associated with spectral context. Alias for
+        ``self._bindex.bin.wcenter``.
+        """
+        return self._bindex.bin.wcenter
+
+    @property
+    def bin(self) -> Bin:
+        """
+        Bin associated with spectral context. Alias for ``self._bindex.bin``.
+        """
+        return self._bindex.bin
+
+    @property
+    def spectral_index(self) -> Tuple[str, int]:
+        """
+        Spectral index associated with spectral context, equal to active bindex
+        (bin ID, quadrature point index pair).
+        """
+        return self.bin.id, self._bindex.index
+
+    @property
+    def spectral_index_formatted(self) -> str:
+        """Formatted spectral index (human-readable string)."""
+        return f"{self.bin.id}:{self._bindex.index}"
+
+
+# ------------------------------------------------------------------------------
+#                         Kernel dictionary contexts
+# ------------------------------------------------------------------------------
 
 
 @parse_docs

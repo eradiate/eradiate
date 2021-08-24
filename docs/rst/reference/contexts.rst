@@ -11,3 +11,4 @@ Context data structures [eradiate.contexts]
    KernelDictContext
    SpectralContext
    MonoSpectralContext
+   CKDSpectralContext
