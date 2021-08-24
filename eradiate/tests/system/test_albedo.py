@@ -175,7 +175,12 @@ def test_albedo(mode_mono):
         ax1.set_title("Albedo")
         ax1.set_xlabel("Wavelength [nm]")
 
-        rdiffs = (albedos - expected) / expected
+        rdiffs = np.divide(
+            (albedos - expected),
+            expected,
+            where=expected != 0.0,
+            out=np.zeros_like(expected),
+        )
         ax2.plot(wavelengths, rdiffs, linestyle="--", marker="o")
         ax2.set_title("Relative difference")
         ax2.set_xlabel("Wavelength [nm]")
