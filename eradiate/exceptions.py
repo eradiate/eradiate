@@ -27,19 +27,16 @@ class UnsupportedModeError(ModeError):
 
     def __str__(self):
         msg = f"'{eradiate.mode().id}'"
+        extra_msg = []
 
         if self.supported:
-            supported_extra_msg = f"supported: {', '.join(self.supported)}"
-        else:
-            supported_extra_msg = ""
+            extra_msg.append(f"supported: {', '.join(self.supported)}")
 
         if self.unsupported:
-            unsupported_extra_msg = f"unsupported: {', '.join(self.unsupported)}"
-        else:
-            unsupported_extra_msg = ""
+            extra_msg.append(f"unsupported: {', '.join(self.unsupported)}")
 
-        if supported_extra_msg or unsupported_extra_msg:
-            msg += f" ({'; '.join((supported_extra_msg, unsupported_extra_msg))})"
+        if extra_msg:
+            msg += f" ({'; '.join(extra_msg)})"
 
         return msg
 
