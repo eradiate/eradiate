@@ -8,13 +8,24 @@ import numpy as np
 from ..units import unit_registry as ureg
 
 
-def lognorm(ri: float, si: float, ni: float = 1.0) -> Callable:
+@ureg.wraps(ret=None, args=("micrometer", "dimensionless"), strict=False)
+def lognorm(r0: float, std: float = 0.4) -> Callable:
     """
     Return a log-normal distribution as in equation (1) of
     :cite:`Shettle1979ModelsAerosolsLower`.
+
+    Parameter ``r0`` (float):
+        Mode radius [micrometer].
+
+    Parameter ``s`` (float):
+        Standard deviation of the distribution.
+
+    Returns → Callable:
+        A function (:class:`numpy.ndarray` → :class:`numpy.ndarray`)
+        that evaluates the log-normal distribution.
     """
-    return lambda r: (ni / (np.log(10) * r * si * np.sqrt(2 * np.pi))) * np.exp(
-        -np.square(np.log10(r) - np.log10(ri)) / (2 * np.square(si))
+    return lambda r: (1.0 / (np.log(10) * r * std * np.sqrt(2 * np.pi))) * np.exp(
+        -np.square(np.log10(r) - np.log10(r0)) / (2 * np.square(std))
     )
 
 
@@ -38,4 +49,4 @@ def size_distribution(
     Compute the aerosol size distribution according to equation (1) of
     :cite:`Shettle1979ModelsAerosolsLower`.
     """
-    return lognorm(ri=r1, si=s1, ni=n1)(r) + lognorm(ri=r2, si=s2, ni=n2)(r)
+    return lognorm(r0=r1, std=s1, n=n1)(r) + lognorm(r0=r2, std=s2, n=n2)(r)
