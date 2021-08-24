@@ -43,6 +43,8 @@ import xarray as xr
 
 from .absorption_spectra import _AbsorptionGetter
 from .chemistry import _ChemistryGetter
+from .ckd_absorption import _CKDAbsorptionGetter
+from .ckd_bin_sets import _CKDBinSetGetter
 from .solar_irradiance_spectra import _SolarIrradianceGetter
 from .spectral_response_function import _SpectralResponseFunctionGetter
 from .thermoprops_profiles import _ThermoPropsProfilesGetter
@@ -51,6 +53,8 @@ from .. import path_resolver as _presolver
 _getters = {
     "absorption_spectrum": _AbsorptionGetter,
     "chemistry": _ChemistryGetter,
+    "ckd_absorption": _CKDAbsorptionGetter,
+    "ckd_bin_set": _CKDBinSetGetter,
     "thermoprops_profiles": _ThermoPropsProfilesGetter,
     "solar_irradiance_spectrum": _SolarIrradianceGetter,
     "spectral_response_function": _SpectralResponseFunctionGetter,
