@@ -1,3 +1,4 @@
+import re
 from numbers import Number
 from typing import Sequence
 
@@ -36,6 +37,22 @@ def is_vector3(value):
         and len(value) == 3
         and all(map(lambda x: isinstance(x, Number), value))
     )
+
+
+def natsort_alphanum_key(x):
+    """
+    Simple sort key natural order for string sorting.
+    Taken from https://stackoverflow.com/a/11150413/3645374
+    """
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    return tuple(convert(c) for c in re.split("([0-9]+)", x))
+
+
+def natsorted(l):
+    """
+    Sort a list of strings with natural ordering.
+    """
+    return sorted(l, key=natsort_alphanum_key)
 
 
 class Singleton(type):

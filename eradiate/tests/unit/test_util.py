@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate._util import Singleton, is_vector3
+from eradiate._util import Singleton, is_vector3, natsorted
 
 
 def test_singleton():
@@ -32,3 +32,8 @@ vector3_test_data = [
 def test_is_vector3(value, expected):
     result = is_vector3(value)
     assert result == expected
+
+
+def test_natsort():
+    assert natsorted(["10", "1.2", "9"]) == ["1.2", "9", "10"]
+    assert natsorted(["1.2", "a1", "9"]) == ["1.2", "9", "a1"]

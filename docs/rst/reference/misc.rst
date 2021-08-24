@@ -10,4 +10,6 @@ Private: Miscellaneous support components [eradiate._util]
    Singleton
    ensure_array
    is_vector3
+   natsort_alphanum_key
+   natsorted
    onedict_value
