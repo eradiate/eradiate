@@ -39,6 +39,7 @@ from ._mode import (  # isort: skip
 # ------------------------------------------------------------------------------
 
 from . import (
+    ckd,
     contexts,
     converters,
     data,
@@ -53,6 +54,7 @@ from . import (
 
 __all__ = [
     "__version__",
+    "ckd",
     "contexts",
     "converters",
     "data",
