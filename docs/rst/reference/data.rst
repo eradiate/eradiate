@@ -27,3 +27,5 @@ Data sets
    thermoprops_profiles
    solar_irradiance_spectra
    spectral_response_function
+   ckd_bin_sets
+   ckd_absorption
