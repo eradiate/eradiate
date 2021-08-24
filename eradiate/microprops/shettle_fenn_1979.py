@@ -1,18 +1,19 @@
 """
 Aerosols models according to :cite:`Shettle1979ModelsAerosolsLower`.
 """
+from typing import Callable
+
 import numpy as np
-from scipy.stats import lognorm
 
 from ..units import unit_registry as ureg
 
 
-def lognorm(r: np.ndarray, ri: float, si: float, ni: float = 1.0):
+def lognorm(ri: float, si: float, ni: float = 1.0) -> Callable:
     """
-    Compute the log-normal distribution as in equation (1) of
+    Return a log-normal distribution as in equation (1) of
     :cite:`Shettle1979ModelsAerosolsLower`.
     """
-    return (ni / (np.log(10) * r * si * np.sqrt(2 * np.pi))) * np.exp(
+    return lambda r: (ni / (np.log(10) * r * si * np.sqrt(2 * np.pi))) * np.exp(
         -np.square(np.log10(r) - np.log10(ri)) / (2 * np.square(si))
     )
 
@@ -37,4 +38,4 @@ def size_distribution(
     Compute the aerosol size distribution according to equation (1) of
     :cite:`Shettle1979ModelsAerosolsLower`.
     """
-    return lognorm(r=r, ri=r1, si=s1, ni=n1) + lognorm(r=r, ri=r2, si=s2, ni=n2)
+    return lognorm(ri=r1, si=s1, ni=n1)(r) + lognorm(ri=r2, si=s2, ni=n2)(r)
