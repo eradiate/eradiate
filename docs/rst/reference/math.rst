@@ -15,6 +15,17 @@ Frame manipulation [eradiate.frame]
    direction_to_angles
    spherical_to_cartesian
 
+Quadrature rules [eradiate.quad]
+--------------------------------
+
+.. currentmodule:: eradiate.quad
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   Quad
+   QuadType
+
 Sample warping [eradiate.warp]
 ------------------------------
 .. currentmodule:: eradiate.warp
