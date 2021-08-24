@@ -79,3 +79,19 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
+
+def str_summary_numpy(x):
+    with np.printoptions(
+        threshold=4, edgeitems=2, formatter={"float_kind": lambda x: f"{x:g}"}
+    ):
+        shape_str = ",".join(map(str, x.shape))
+        prefix = f"array<{shape_str}>("
+        array_str = f"{x}"
+
+        # Indent repr if it is multiline
+        split = array_str.split("\n")
+        if len(split) > 1:
+            array_str = ("\n" + " " * len(prefix)).join(split)
+
+        return f"{prefix}{array_str})"
