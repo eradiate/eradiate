@@ -23,7 +23,7 @@ class ModeFlags(enum.Flag):
 
     # Eradiate
     ERT_MONO = enum.auto()  #: Mode performs monochromatic simulations
-    # ERT_CKD = enum.auto()  #: Mode performs correlated-k spectral simulation
+    ERT_CKD = enum.auto()  #: Mode performs correlated-k spectral simulation
     # ERT_RGB = enum.auto()  #: Mode performs renders RGB images
 
     # Mitsuba
@@ -46,12 +46,15 @@ class ModeFlags(enum.Flag):
     MONO_DOUBLE = (
         ERT_MONO | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
     )  #: Monochromatic mode, double precision
-    # CKD = ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_SINGLE #: CKD mode, single precision
-    # CKD_DOUBLE = ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_DOUBLE  #: CKD mode, double precision
+    CKD = ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_SINGLE  #: CKD mode, single precision
+    CKD_DOUBLE = (
+        ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
+    )  #: CKD mode, double precision
 
     # -- Other convenience aliases ---------------------------------------------
 
     ANY_MONO = ERT_MONO  #: Any monochromatic mode
+    ANY_CKD = ERT_CKD  #: Any CKD mode
     ANY_SCALAR = MTS_SCALAR  #: Any scalar mode
     ANY_SINGLE = MTS_SINGLE  #: Any single-precision mode
     ANY_DOUBLE = MTS_DOUBLE  #: Any double-precision mode
@@ -71,6 +74,14 @@ _mode_registry = {
     "mono_double": {
         "flags": ModeFlags.MONO_DOUBLE,
         "spectral_coord_label": "w",
+    },
+    "ckd": {
+        "flags": ModeFlags.CKD,
+        "spectral_coord_label": "bd",
+    },
+    "ckd_double": {
+        "flags": ModeFlags.CKD_DOUBLE,
+        "spectral_coord_label": "bd",
     },
 }
 
@@ -148,6 +159,8 @@ class Mode:
 
         * ``mono``: Monochromatic, single-precision
         * ``mono_double``: Monochromatic, double-precision
+        * ``ckd``: CKD, single-precision
+        * ``ckd_double``: CKD, double-precision
         """
         try:
             mode_kwargs = _mode_registry[mode_id]
@@ -203,6 +216,8 @@ def set_mode(mode_id: str):
 
     * ``mono`` (monochromatic mode, single precision)
     * ``mono_double`` (monochromatic mode, double-precision)
+    * ``ckd`` (CKD mode, single precision)
+    * ``ckd_double`` (CKD mode, double-precision)
     * ``none`` (no mode selected)
     """
     global _current_mode

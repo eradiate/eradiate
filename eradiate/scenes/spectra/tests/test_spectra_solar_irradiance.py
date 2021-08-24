@@ -7,7 +7,7 @@ from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 
 
-def test_solar_irradiance(modes_all):
+def test_solar_irradiance(mode_mono):
     from mitsuba.core.xml import load_dict
 
     # Default context

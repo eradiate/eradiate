@@ -1,7 +1,9 @@
 """Root module testing."""
+import pytest
 
 import eradiate
-from eradiate._mode import ModeFlags
+from eradiate._mode import ModeFlags, supported_mode, unsupported_mode
+from eradiate.exceptions import UnsupportedModeError
 
 
 def test_mode_mono(mode_mono):
@@ -42,3 +44,71 @@ def test_mode_flags():
     # Check if conversion of string to flags works as intended
     eradiate.set_mode("mono_double")
     assert eradiate.mode().has_flags("any_double")
+
+
+def test_supported_mode():
+    for mode in ["mono", "mono_double"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            supported_mode("ANY_CKD")
+
+        supported_mode("ANY_MONO")
+
+    for mode in ["ckd", "ckd_double"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            supported_mode("ANY_MONO")
+
+        supported_mode("ANY_CKD")
+
+    for mode in ["mono", "ckd"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            supported_mode("ANY_DOUBLE")
+
+        supported_mode("ANY_SINGLE")
+
+    for mode in ["mono_double", "ckd_double"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            supported_mode("ANY_SINGLE")
+
+        supported_mode("ANY_DOUBLE")
+
+
+def test_unsupported_mode():
+    for mode in ["mono", "mono_double"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            unsupported_mode("ANY_MONO")
+
+        unsupported_mode("ANY_CKD")
+
+    for mode in ["ckd", "ckd_double"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            unsupported_mode("ANY_CKD")
+
+        unsupported_mode("ANY_MONO")
+
+    for mode in ["mono", "ckd"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            unsupported_mode("ANY_SINGLE")
+
+        unsupported_mode("ANY_DOUBLE")
+
+    for mode in ["mono_double", "ckd_double"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            unsupported_mode("ANY_DOUBLE")
+
+        unsupported_mode("ANY_SINGLE")
