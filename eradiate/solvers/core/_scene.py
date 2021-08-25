@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC
 from typing import List
 
@@ -101,7 +103,7 @@ class Scene(SceneElement, ABC):
         self.update()
 
     @classmethod
-    def from_dict(cls, d) -> "Scene":
+    def from_dict(cls, d) -> Scene:
         """
         Create from dictionary. This constructor implements a unit processing
         step based on :func:`pinttr.interpret_units`.
