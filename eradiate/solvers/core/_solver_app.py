@@ -2,7 +2,7 @@ import logging
 import os
 from abc import ABC
 from pathlib import Path
-from typing import Optional
+from typing import Union
 
 import attr
 import pinttr
@@ -93,73 +93,79 @@ class SolverApp(ABC):
         # Instantiate class
         return cls.new(scene=scene)
 
-    def process(self, measure: Optional[Measure] = None):
+    def process(self, *measures: Union[Measure, int]):
         """
         Run simulation on the configured scene. Raw results yielded by the
         runner function are stored in ``measure.results``.
 
         .. seealso:: :meth:`postprocess`, :meth:`run`
 
-        Parameter ``measure`` (:class:`.Measure` or None):
-            Measure for which to compute radiative transfer. If set to ``None``,
-            the first element of ``self.measures`` is used.
+        Parameter ``*measures`` (:class:`.Measure` or int):
+            One or several measures for which to compute radiative transfer.
+            Alternatively, indexes in the measure array can be passed.
+            If no value is passed, all measures are processed.
         """
-        # Select measure
-        if measure is None:
-            measure = self.scene.measures[0]
+        # Mode safeguard
+        if not eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-        logger.info(f"Processing measure '{measure.id}'")
+        if not measures:
+            measures = self.scene.measures
 
-        # Reset measure results
-        measure.results = MeasureResults()
+        for measure in measures:
+            if isinstance(measure, int):
+                measure = self.scene.measures[measure]
 
-        # Spectral loop
-        spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
+            logger.info(f"Processing measure '{measure.id}'")
 
-        with tqdm(
-            initial=0,
-            total=len(spectral_ctxs),
-            unit_scale=1.0,
-            leave=True,
-            bar_format="{l_bar}{bar}| {elapsed}, ETA={remaining}",
-            disable=config.progress < 1,
-        ) as pbar:
-            for spectral_ctx in spectral_ctxs:
-                pbar.set_description(
-                    f"Spectral loop [{spectral_ctx.wavelength:~H}]", refresh=True
-                )
+            # Reset measure results
+            measure.results = MeasureResults()
 
-                # Initialise context
-                ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
+            # Spectral loop
+            spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
 
-                # Set spectral coordinate value for result storage
-                if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-                    spectral_coord = spectral_ctx.wavelength.magnitude
-                else:
-                    raise UnsupportedModeError(supported="monochromatic")
+            with tqdm(
+                initial=0,
+                total=len(spectral_ctxs),
+                unit_scale=1.0,
+                leave=True,
+                bar_format="{desc}{n_fmt}/{total_fmt}|{bar}| {elapsed}, ETA={remaining}",
+                disable=config.progress < 1,
+            ) as pbar:
+                for spectral_ctx in spectral_ctxs:
+                    pbar.set_description(
+                        f"Spectral loop [{spectral_ctx.spectral_index_formatted}]",
+                        refresh=True,
+                    )
 
-                # Collect sensor IDs
-                sensor_ids = [sensor_info.id for sensor_info in measure.sensor_infos()]
+                    # Initialise context
+                    ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
 
-                # Run simulation
-                kernel_dict = self.scene.kernel_dict(ctx=ctx)
-                run_results = runner(kernel_dict, sensor_ids)
+                    # Collect sensor IDs
+                    sensor_ids = [
+                        sensor_info.id for sensor_info in measure.sensor_infos()
+                    ]
 
-                # Store results
-                measure.results.raw[spectral_coord] = run_results
+                    # Run simulation
+                    kernel_dict = self.scene.kernel_dict(ctx=ctx)
+                    run_results = runner(kernel_dict, sensor_ids)
 
-                # Update progress display
-                pbar.update()
+                    # Store results
+                    measure.results.raw[spectral_ctx.spectral_index] = run_results
 
-    def postprocess(self, measure: Optional[Measure] = None):
+                    # Update progress display
+                    pbar.update()
+
+    def postprocess(self, *measures: Union[Measure, int]):
         """
         Post-process raw results stored in a measure's ``results`` field. This
         requires a successful execution of :meth:`process`. Post-processed results
         are stored in ``self.results``.
 
-        Parameter ``measure`` (:class:`.Measure` or None):
-            Measure for which to compute radiative transfer. If set to ``None``,
-            the first element of ``self.measures`` is used.
+        Parameter ``*measure`` (:class:`.Measure` or int):
+            One or several measures for which to perform post-processing.
+            Alternatively, indexes in the measure array can be passed.
+            If no value is passed, all measures are processed.
 
         Raises → ValueError:
             If ``measure.raw_results`` is ``None``, *i.e.* if :meth:`process`
@@ -167,32 +173,36 @@ class SolverApp(ABC):
 
         .. seealso:: :meth:`process`, :meth:`run`
         """
-        if not eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            raise UnsupportedModeError(supported="monochromatic")
+        if not eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-        # Select measure
-        if measure is None:
-            measure = self.scene.measures[0]
+        if not measures:
+            measures = self.scene.measures
 
-        # Prepare measure postprocessing arguments
-        measure_kwargs = {}
-        if isinstance(measure, (DistantReflectanceMeasure, DistantAlbedoMeasure)):
-            measure_kwargs["illumination"] = self.scene.illumination
+        for measure in measures:
+            if isinstance(measure, int):
+                measure = self.scene.measures[measure]
 
-        # Collect measure results
-        self._results[measure.id] = measure.postprocess(**measure_kwargs)
+            # Prepare measure postprocessing arguments
+            measure_kwargs = {}
+            if isinstance(measure, (DistantReflectanceMeasure, DistantAlbedoMeasure)):
+                measure_kwargs["illumination"] = self.scene.illumination
 
-    def run(self, measure: Optional[Measure] = None):
+            # Collect measure results
+            self._results[measure.id] = measure.postprocess(**measure_kwargs)
+
+    def run(self, *measures: Union[Measure, int]):
         """
         Perform radiative transfer simulation and post-process results.
         Essentially chains :meth:`process` and :meth:`postprocess`.
 
-        Parameter ``measure`` (:class:`.Measure` or None):
-            Measure for which to compute radiative transfer. If set to ``None``,
-            the first element of ``self.measures`` is used.
+        Parameter ``*measures`` (:class:`.Measure` or int):
+            One or several measures for which to compute radiative transfer.
+            Alternatively, indexes in the measure array can be passed.
+            If no value is passed, all measures are processed.
         """
-        self.process(measure)
-        self.postprocess(measure)
+        self.process(*measures)
+        self.postprocess(*measures)
 
     def save_results(self, fname_prefix):
         """
