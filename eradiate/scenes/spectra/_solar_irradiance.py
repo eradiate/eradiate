@@ -3,18 +3,37 @@ from typing import MutableMapping, Optional
 import attr
 import numpy as np
 import pint
+import xarray as xr
 
 import eradiate
 
 from ._core import Spectrum, spectrum_factory
 from ... import data
-from ... import unit_context_kernel as uck
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
 from ...units import PhysicalQuantity, to_quantity
+from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 from ...validators import is_positive
+
+
+def _eval_impl(ssi: xr.DataArray, w: pint.Quantity) -> pint.Quantity:
+    w_units = ureg[ssi.w.attrs["units"]]
+    irradiance = to_quantity(ssi.interp(w=w.m_as(w_units), method="linear"))
+
+    # Raise if out of bounds or ill-formed dataset
+    if np.any(np.isnan(irradiance.magnitude)):
+        raise ValueError("dataset interpolation returned nan")
+
+    return irradiance
+
+
+def _eval_impl_ckd(ssi: xr.DataArray, w: pint.Quantity) -> pint.Quantity:
+    interp = _eval_impl(ssi, w)
+    return np.trapz(interp, w) / (w.max() - w.min())
 
 
 @spectrum_factory.register(type_id="solar_irradiance")
@@ -39,6 +58,14 @@ class SolarIrradianceSpectrum(Spectrum):
 
     The produced kernel dictionary automatically adjusts its irradiance units
     depending on the selected kernel default units.
+
+    Evaluation is as follows:
+
+    * in ``mono_*`` modes, the spectrum is evaluated at the spectral context
+      wavelength;
+    * in ``ckd_*`` modes, the spectrum is evaluated as the average value over
+      the spectral context bin (the integral is computed using a trapezoid
+      rule).
     """
 
     quantity = attr.ib(default=PhysicalQuantity.IRRADIANCE, init=False, repr=False)
@@ -93,23 +120,32 @@ class SolarIrradianceSpectrum(Spectrum):
         #  non-empty time coordinate
 
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            wavelength = spectral_ctx.wavelength.m_as(self.data.w.attrs["units"])
+            return _eval_impl(self.data.ssi, spectral_ctx.wavelength)
 
-            irradiance = to_quantity(
-                self.data.ssi.interp(
-                    w=wavelength,
-                    method="linear",
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            # Average irradiance over spectral bin
+            wavelength_units = ucc.get("wavelength")
+            wmin_m = spectral_ctx.bin.wmin.m_as(wavelength_units)
+            wmax_m = spectral_ctx.bin.wmax.m_as(wavelength_units)
+
+            # -- Collect relevant spectral coordinate values
+            w_m = to_quantity(self.data.ssi.w).m_as(wavelength_units)
+            w = (
+                np.hstack(
+                    (
+                        [wmin_m],
+                        w_m[np.where(np.logical_and(wmin_m < w_m, w_m < wmax_m))[0]],
+                        [wmax_m],
+                    )
                 )
+                * wavelength_units
             )
 
-            # Raise if out of bounds or ill-formed dataset
-            if np.isnan(irradiance.magnitude):
-                raise ValueError("dataset evaluation returned nan")
+            # Interpolate at collected wavelengths and compute average on bin extent
+            return _eval_impl_ckd(self.data.ssi, w)
 
         else:
-            raise UnsupportedModeError(supported="monochromatic")
-
-        return irradiance
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         # Apply scaling, build kernel dict

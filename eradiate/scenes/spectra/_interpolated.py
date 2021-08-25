@@ -18,12 +18,29 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
 
+def _eval_impl(x, xp, fp):
+    return np.interp(x, xp, fp, left=0.0, right=0.0)
+
+
+def _eval_impl_ckd(x, xp, fp):
+    interp = _eval_impl(x, xp, fp)
+    return np.trapz(interp, x) / (x.max() - x.min())
+
+
 @spectrum_factory.register(type_id="interpolated")
 @parse_docs
 @attr.s
 class InterpolatedSpectrum(Spectrum):
     """
     Linearly interpolated spectrum. Interpolation uses :func:`numpy.interp`.
+
+    Evaluation is as follows:
+
+    * in ``mono_*`` modes, the spectrum is evaluated at the spectral context
+      wavelength;
+    * in ``ckd_*`` modes, the spectrum is evaluated as the average value over
+      the spectral context bin (the integral is computed using a trapezoid
+      rule).
     """
 
     wavelengths: pint.Quantity = documented(
@@ -98,21 +115,43 @@ class InterpolatedSpectrum(Spectrum):
             raise ValueError("spectral_ctx must not be None")
 
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            return np.interp(spectral_ctx.wavelength, self.wavelengths, self.values)
+            # Note: In CKD modes, we evaluate the spectrum at the central
+            # wavelength of the bin attached to the context
+            return _eval_impl(spectral_ctx.wavelength, self.wavelengths, self.values)
+
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            # Average spectrum over spectral bin
+            wavelength_units = ucc.get("wavelength")
+            wmin_m = spectral_ctx.bin.wmin.m_as(wavelength_units)
+            wmax_m = spectral_ctx.bin.wmax.m_as(wavelength_units)
+
+            # -- Collect relevant spectral coordinate values
+            w_m = self.wavelengths.m_as(wavelength_units)
+            w = (
+                np.hstack(
+                    (
+                        [wmin_m],
+                        w_m[np.where(np.logical_and(wmin_m < w_m, w_m < wmax_m))[0]],
+                        [wmax_m],
+                    )
+                )
+                * wavelength_units
+            )
+
+            # Interpolate at collected wavelengths and compute average on bin extent
+            return _eval_impl_ckd(w, self.wavelengths, self.values)
+
         else:
-            raise UnsupportedModeError(supported="monochromatic")
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
-        kernel_units = uck.get(self.quantity)
-        spectral_ctx = ctx.spectral_ctx if ctx is not None else None
-
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
             return {
                 "spectrum": {
                     "type": "uniform",
-                    "value": self.eval(spectral_ctx).m_as(kernel_units),
+                    "value": self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity)),
                 }
             }
 
         else:
-            raise UnsupportedModeError(supported="monochromatic")
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))

@@ -1,8 +1,11 @@
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate import unit_registry as ureg
+from eradiate._mode import ModeFlags
 from eradiate._util import onedict_value
+from eradiate.ckd import BinSet
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 
@@ -40,8 +43,22 @@ def test_solar_irradiance(mode_mono):
     assert load_dict(onedict_value(s.kernel_dict(ctx)))
 
 
-def test_solar_irradiance_eval(mode_mono):
+def test_solar_irradiance_eval(modes_all):
     # Irradiance is correctly interpolated in mono mode
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
-    spectral_ctx = SpectralContext.new(wavelength=550.0)
-    assert np.allclose(s.eval(spectral_ctx), ureg.Quantity(1.87938, "W/m^2/nm"))
+
+    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        spectral_ctx = SpectralContext.new(wavelength=550.0)
+        # Reference value computed manually
+        assert np.allclose(s.eval(spectral_ctx), ureg.Quantity(1.87938, "W/m^2/nm"))
+
+    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        bin_set = BinSet.from_db("10nm_test")
+        bin = bin_set.select_bins("555")[0]
+        bindex = bin.bindexes[0]
+        spectral_ctx = SpectralContext.new(bindex=bindex)
+        # Reference value computed manually
+        assert np.allclose(s.eval(spectral_ctx), ureg.Quantity(1.838977, "W/m^2/nm"))
+
+    else:
+        assert False

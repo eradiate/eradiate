@@ -2,10 +2,13 @@ import numpy as np
 import pinttr
 import pytest
 
+import eradiate
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate._mode import ModeFlags
+from eradiate.ckd import BinSet
+from eradiate.contexts import KernelDictContext, MonoSpectralContext, SpectralContext
 from eradiate.scenes.spectra import spectrum_factory
 from eradiate.scenes.spectra._interpolated import InterpolatedSpectrum
 
@@ -59,15 +62,25 @@ def test_spectra_interpolated_construct(modes_all):
     )
 
 
-def test_interpolated_eval(mode_mono):
-    spectral_ctx = SpectralContext.new(wavelength=550.0)
+def test_interpolated_eval(modes_all):
+    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        spectral_ctx = SpectralContext.new(wavelength=550.0)
+        expected = 0.5
+
+    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        bin = BinSet.from_db("10nm_test").select_bins("555")[0]
+        spectral_ctx = SpectralContext.new(bindex=bin.bindexes[0])
+        expected = 0.55
+
+    else:
+        assert False
 
     # Spectrum without quantity performs linear interpolation and yields units
     # consistent with values
     spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
-    assert spectrum.eval(spectral_ctx) == 0.5
+    assert spectrum.eval(spectral_ctx) == expected
     spectrum.values *= ureg["W/m^2/nm"]
-    assert spectrum.eval(spectral_ctx) == 0.5 * ureg["W/m^2/nm"]
+    assert spectrum.eval(spectral_ctx) == expected * ureg["W/m^2/nm"]
 
     # Spectrum with quantity performs linear interpolation and yields units
     # consistent with quantity
@@ -75,10 +88,10 @@ def test_interpolated_eval(mode_mono):
         quantity="irradiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
     )
     # Interpolation returns quantity
-    assert spectrum.eval(spectral_ctx) == 0.5 * ucc.get("irradiance")
+    assert spectrum.eval(spectral_ctx) == expected * ucc.get("irradiance")
 
 
-def test_spectra_interpolated_kernel_dict(mode_mono):
+def test_spectra_interpolated_kernel_dict(modes_all_mono):
     from mitsuba.core.xml import load_dict
 
     ctx = KernelDictContext(spectral_ctx=SpectralContext.new(wavelength=550.0))
