@@ -10,7 +10,7 @@ from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
 from eradiate.units import PhysicalQuantity
 
 
-def test_uniform(mode_mono):
+def test_uniform(modes_all):
     from mitsuba.core.xml import load_dict
 
     # Instantiate without argument
