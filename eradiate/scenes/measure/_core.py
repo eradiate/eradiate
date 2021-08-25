@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Dict, List, MutableMapping, Optional, Tuple
+from collections import abc
+from typing import Dict, List, MutableMapping, Optional, Tuple, Union
 
 import attr
 import numpy as np
@@ -10,14 +13,20 @@ import xarray as xr
 import eradiate
 
 from ..core import SceneElement
-from ... import converters, validators
+from ... import ckd, converters, validators
 from ..._factory import Factory
 from ..._mode import ModeFlags
 from ..._util import ensure_array
-from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext, MonoSpectralContext, SpectralContext
+from ...attrs import AUTO, _Auto, documented, get_doc, parse_docs
+from ...ckd import Bin
+from ...contexts import (
+    CKDSpectralContext,
+    KernelDictContext,
+    MonoSpectralContext,
+    SpectralContext,
+)
 from ...exceptions import ModeError, UnsupportedModeError
-from ...units import symbol
+from ...units import interpret_quantities, symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
@@ -45,6 +54,11 @@ class SensorInfo:
     )
 
 
+# ------------------------------------------------------------------------------
+#                   Spectral configuration data structures
+# ------------------------------------------------------------------------------
+
+
 class MeasureSpectralConfig(ABC):
     """
     Data structure specifying the spectral configuration of a :class:`.Measure`.
@@ -65,7 +79,7 @@ class MeasureSpectralConfig(ABC):
         pass
 
     @staticmethod
-    def new(**kwargs) -> "MeasureSpectralConfig":
+    def new(**kwargs) -> MeasureSpectralConfig:
         """
         Create a new instance of one of the :class:`.SpectralContext` child
         classes. *The instantiated class is defined based on the currently active
@@ -95,11 +109,14 @@ class MeasureSpectralConfig(ABC):
         if mode.has_flags(ModeFlags.ANY_MONO):
             return MonoMeasureSpectralConfig(**kwargs)
 
+        elif mode.has_flags(ModeFlags.ANY_CKD):
+            return CKDMeasureSpectralConfig(**kwargs)
+
         else:
-            raise UnsupportedModeError(supported="monochromatic")
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     @staticmethod
-    def from_dict(d: Dict) -> "MeasureSpectralConfig":
+    def from_dict(d: Dict) -> MeasureSpectralConfig:
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -151,8 +168,8 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
             ),
         ),
         doc="List of wavelengths on which to perform the monochromatic spectral "
-        "loop.\n\nUnit-enabled field (default: ucc[wavelength]).",
-        type=":class:`pint.Quantity`",
+        'loop.\n\nUnit-enabled field (default: ucc["wavelength"]).',
+        type="array",
         default="[550.0] nm",
     )
 
@@ -169,6 +186,140 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
             MonoSpectralContext(wavelength=wavelength)
             for wavelength in self._wavelengths
         ]
+
+
+def _ckd_measure_spectral_config_bins_converter(value):
+    # Converter for CKDMeasureSpectralConfig.bins
+    #
+
+    if isinstance(value, str):
+        value = [value]
+
+    bin_set_specs = []
+    for bin_set_spec in value:
+        # Strings and callables are passed without change
+        if isinstance(bin_set_spec, str) or callable(bin_set_spec):
+            bin_set_specs.append(bin_set_spec)
+            continue
+
+        # In sequences and dicts, we interpret units
+        if isinstance(bin_set_spec, abc.Sequence):
+            if bin_set_spec[0] == "interval":
+                bin_set_specs.append(
+                    (
+                        "interval",
+                        interpret_quantities(
+                            bin_set_spec[1],
+                            {"wmin": "wavelength", "wmax": "wavelength"},
+                            ucc,
+                        ),
+                    )
+                )
+            else:
+                bin_set_specs.append(bin_set_spec)
+
+            continue
+
+        if isinstance(bin_set_spec, abc.Mapping):
+            if bin_set_spec["type"] == "interval":
+                bin_set_specs.append(
+                    {
+                        "type": "interval",
+                        "filter_kwargs": interpret_quantities(
+                            bin_set_spec["filter_kwargs"],
+                            {"wmin": "wavelength", "wmax": "wavelength"},
+                            ucc,
+                        ),
+                    }
+                )
+
+            else:
+                bin_set_specs.append(bin_set_spec)
+
+            continue
+
+        raise ValueError(f"unhandled CKD bin specification {bin_set_spec}")
+
+    return bin_set_specs
+
+
+@parse_docs
+@attr.s(frozen=True)
+class CKDMeasureSpectralConfig(MeasureSpectralConfig):
+    """
+    A data structure specifying the spectral configuration of a
+    :class:`.Measure` in CKD mode.
+    """
+
+    # TODO: replace manual bin selection with automation based on sensor spectral
+    #  response (with a system to easily design arbitrary SSRs for cases where an
+    #  instrument is not simulated)
+
+    bin_set: ckd.BinSet = documented(
+        attr.ib(
+            default="10nm",
+            converter=ckd.BinSet.convert,
+            validator=attr.validators.instance_of(ckd.BinSet),
+        ),
+        doc="CKD bin set definition. If a string is passed, the data "
+        "repository is queried for the corresponding identifier using "
+        ":meth:`.BinSet.from_db`.",
+        type=":class:`~.ckd.BinSet` or str",
+        default='"10nm"',
+    )
+
+    _bins: Union[List[str], _Auto] = documented(
+        attr.ib(
+            default=AUTO,
+            converter=converters.auto_or(_ckd_measure_spectral_config_bins_converter),
+        ),
+        doc="List of CKD bins on which to perform the spectral loop. If set to "
+        "``AUTO``, all the bins relevant to the selected spectral response will be "
+        "covered.",
+        type="list[str or tuple or dict or callable] or AUTO",
+        default="AUTO",
+    )
+
+    @_bins.validator
+    def _bins_validator(self, attribute, value):
+        if value is AUTO:
+            return
+
+        for bin_spec in value:
+            if not (
+                isinstance(bin_spec, (str, list, tuple, dict)) or callable(bin_spec)
+            ):
+                raise ValueError(
+                    f"while validating {attribute.name}: unsupported CKD bin "
+                    f"specification {bin_spec}; expected str, sequence, mapping "
+                    f"or callable"
+                )
+
+    @property
+    def bins(self) -> Tuple[Bin]:
+        """
+        List of selected bins.
+        """
+        if self._bins is not AUTO:
+            bin_selectors = self._bins
+        else:
+            bin_selectors = [lambda x: True]
+
+        return self.bin_set.select_bins(*bin_selectors)
+
+    def spectral_ctxs(self) -> List[CKDSpectralContext]:
+        ctxs = []
+
+        for bin in self.bins:
+            for bindex in bin.bindexes:
+                ctxs.append(CKDSpectralContext(bindex))
+
+        return ctxs
+
+
+# ------------------------------------------------------------------------------
+#                     Raw result storage and basic processing
+# ------------------------------------------------------------------------------
 
 
 def _str_summary_raw(x):
@@ -361,6 +512,11 @@ class MeasureResults:
             result_aggregated[var].attrs = result[var].attrs.copy()
 
         return result_aggregated.drop_dims("sensor_id")
+
+
+# ------------------------------------------------------------------------------
+#                             Measure base class
+# ------------------------------------------------------------------------------
 
 
 @parse_docs
