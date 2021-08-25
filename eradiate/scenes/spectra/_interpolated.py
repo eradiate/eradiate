@@ -9,6 +9,7 @@ import eradiate
 
 from ._core import Spectrum, spectrum_factory
 from ... import converters, validators
+from ..._mode import ModeFlags
 from ..._util import ensure_array
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
@@ -96,7 +97,7 @@ class InterpolatedSpectrum(Spectrum):
         if spectral_ctx is None:
             raise ValueError("spectral_ctx must not be None")
 
-        if eradiate.mode().has_flags("ANY_MONO"):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return np.interp(spectral_ctx.wavelength, self.wavelengths, self.values)
         else:
             raise UnsupportedModeError(supported="monochromatic")
@@ -105,7 +106,7 @@ class InterpolatedSpectrum(Spectrum):
         kernel_units = uck.get(self.quantity)
         spectral_ctx = ctx.spectral_ctx if ctx is not None else None
 
-        if eradiate.mode().has_flags("ANY_MONO"):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return {
                 "spectrum": {
                     "type": "uniform",

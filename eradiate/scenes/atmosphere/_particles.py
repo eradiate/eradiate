@@ -22,6 +22,7 @@ from ._particle_dist import (
     particle_distribution_factory,
 )
 from ... import path_resolver
+from ..._mode import ModeFlags
 from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
@@ -390,7 +391,7 @@ class ParticleLayer(Atmosphere):
         Returns → :class:`~xarray.Dataset`:
             Particle layer radiative properties profile dataset.
         """
-        if eradiate.mode().has_flags("ANY_MONO"):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             z_level = self.z_level if z_level is None else z_level
             z_layer = (z_level[1:] + z_level[:-1]) / 2.0
             sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx, z_level=z_level)

@@ -9,6 +9,7 @@ import eradiate
 from ._core import Spectrum, spectrum_factory
 from ... import data
 from ... import unit_context_kernel as uck
+from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
@@ -91,7 +92,7 @@ class SolarIrradianceSpectrum(Spectrum):
         # TODO: add support to solar irradiance spectrum datasets with a
         #  non-empty time coordinate
 
-        if eradiate.mode().has_flags("ANY_MONO"):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             wavelength = spectral_ctx.wavelength.m_as(self.data.w.attrs["units"])
 
             irradiance = to_quantity(

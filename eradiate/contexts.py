@@ -9,6 +9,7 @@ import pinttr
 
 import eradiate
 
+from ._mode import ModeFlags
 from .attrs import documented, parse_docs
 from .exceptions import UnsupportedModeError
 from .units import unit_context_config as ucc
@@ -60,7 +61,7 @@ class SpectralContext(ABC):
            * :func:`eradiate.set_mode`
         """
 
-        if eradiate.mode().has_flags("ANY_MONO"):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return MonoSpectralContext(**kwargs)
 
         else:

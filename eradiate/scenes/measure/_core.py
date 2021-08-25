@@ -12,6 +12,7 @@ import eradiate
 from ..core import SceneElement
 from ... import converters, validators
 from ..._factory import Factory
+from ..._mode import ModeFlags
 from ..._util import ensure_array
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, MonoSpectralContext, SpectralContext
@@ -91,7 +92,7 @@ class MeasureSpectralConfig(ABC):
                 "instantiating MeasureSpectralConfig requires a mode to be selected"
             )
 
-        if mode.has_flags("ANY_MONO"):
+        if mode.has_flags(ModeFlags.ANY_MONO):
             return MonoMeasureSpectralConfig(**kwargs)
 
         else:
@@ -249,7 +250,7 @@ class MeasureResults:
         if not self.raw:
             raise ValueError("no raw results to convert to xarray.Dataset")
 
-        if eradiate.mode().has_flags("ANY_MONO"):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             spectral_coord_label = eradiate.mode().spectral_coord_label
             spectral_coord_metadata = {
                 "long_name": "wavelength",
@@ -455,7 +456,7 @@ class Measure(SceneElement, ABC):
         """
 
         if (
-            not eradiate.mode().has_flags("ANY_DOUBLE")
+            not eradiate.mode().has_flags(ModeFlags.ANY_DOUBLE)
             and self.spp > self._spp_splitting_threshold
         ):
             spps = [
