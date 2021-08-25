@@ -1,7 +1,8 @@
 import numpy as np
 
-from eradiate.contexts import MonoSpectralContext
+from eradiate.contexts import CKDSpectralContext, MonoSpectralContext
 from eradiate.scenes.measure._core import (
+    CKDMeasureSpectralConfig,
     Measure,
     MeasureResults,
     MeasureSpectralConfig,
@@ -10,9 +11,9 @@ from eradiate.scenes.measure._core import (
 )
 
 
-def test_spectral_config(mode_mono):
+def test_mono_spectral_config(modes_all_mono):
     """
-    Unit tests for :class:`.MeasureSpectralConfig` and child classes.
+    Unit tests for :class:`.MonoMeasureSpectralConfig`.
     """
     # The new() class method constructor selects an appropriate config class
     # depending on the active mode
@@ -23,6 +24,35 @@ def test_spectral_config(mode_mono):
     ctxs = cfg.spectral_ctxs()
     assert len(ctxs) == 2
     assert all(isinstance(ctx, MonoSpectralContext) for ctx in ctxs)
+
+
+def test_ckd_spectral_config(modes_all_ckd):
+    """
+    Unit tests for :class:`.MeasureSpectralConfig` and child classes.
+    """
+    # The new() class method constructor selects an appropriate config class
+    # depending on the active mode
+    cfg = MeasureSpectralConfig.new(bin_set="10nm_test", bins=["545", "555"])
+    assert isinstance(cfg, CKDMeasureSpectralConfig)
+
+    # Generated spectral contexts are of the appropriate type and in correct numbers
+    ctxs = cfg.spectral_ctxs()
+    assert len(ctxs) == 32
+    assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
+
+    # In CKD mode, we can also select bins with an interval specification
+    cfg = MeasureSpectralConfig.new(
+        bin_set="10nm_test",
+        bins=[
+            ("interval", {"wmin": 500.0, "wmax": 520.0}),
+            {"type": "interval", "filter_kwargs": {"wmin": 530.0, "wmax": 550.0}},
+            "575",
+        ],
+    )
+    assert isinstance(cfg, CKDMeasureSpectralConfig)
+    ctxs = cfg.spectral_ctxs()
+    assert len(ctxs) == 80
+    assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
 
 
 def test_measure_results(mode_mono):
