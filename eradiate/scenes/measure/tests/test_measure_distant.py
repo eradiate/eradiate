@@ -17,7 +17,7 @@ from eradiate.scenes.measure._distant import (
 )
 
 
-def test_target_origin(mode_mono):
+def test_target_origin(modes_all):
     from mitsuba.core import Point3f
 
     # TargetOriginPoint: basic constructor
@@ -112,7 +112,7 @@ def test_target_origin(mode_mono):
             TargetOrigin.convert({"xyz": [1, 1, 0]})
 
 
-def test_distant_radiance(mode_mono):
+def test_distant_radiance(modes_all):
     # Test default constructor
     d = DistantRadianceMeasure()
     assert KernelDict.new(d).load() is not None
@@ -136,7 +136,7 @@ def test_distant_radiance(mode_mono):
     assert KernelDict.new(d).load() is not None
 
 
-def test_distant_radiance_postprocessing(mode_mono):
+def test_distant_radiance_postprocessing(modes_all_mono):
     # We use a peculiar rectangular film size to make sure that we get dimensions
     # right
     d = DistantRadianceMeasure(film_resolution=(32, 16))
@@ -173,7 +173,7 @@ def test_distant_radiance_postprocessing(mode_mono):
     assert np.allclose(ds.vaa, 0.0)
 
 
-def test_distant_flux(mode_mono):
+def test_distant_flux(modes_all):
     # Test default constructor
     d = DistantFluxMeasure()
     assert KernelDict.new(d).load() is not None
@@ -209,7 +209,7 @@ def test_distant_flux(mode_mono):
         ),
     ],
 )
-def test_distant_flux_direction(mode_mono, direction, frame):
+def test_distant_flux_direction(modes_all, direction, frame):
     d = DistantFluxMeasure(direction=direction)
     to_world = onedict_value(d.kernel_dict())["to_world"]
     # The reference frame is rotated as expected
@@ -218,7 +218,7 @@ def test_distant_flux_direction(mode_mono, direction, frame):
     assert ek.allclose(to_world.transform_vector([0, 0, 1]), frame[2])
 
 
-def test_distant_flux_postprocessing(mode_mono):
+def test_distant_flux_postprocessing(modes_all_mono):
     # We use a peculiar rectangular film size to make sure that we get dimensions
     # right
     d = DistantFluxMeasure(film_resolution=(32, 16))
