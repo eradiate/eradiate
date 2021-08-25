@@ -11,7 +11,7 @@ from eradiate.scenes.measure._distant import DistantRadianceMeasure
 from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
 
 
-def test_onedim_scene(mode_mono):
+def test_onedim_scene(modes_all):
     from mitsuba.core import ScalarTransform4f
 
     ctx = KernelDictContext()
@@ -70,7 +70,7 @@ def test_onedim_solver_app_new():
         OneDimSolverApp.new()
 
     # Should successfully construct a OneDimSolver otherwise
-    for mode in ("mono", "mono_double"):
+    for mode in ("mono", "mono_double", "ckd", "ckd_double"):
         eradiate.set_mode(mode)
         OneDimSolverApp.new()
 
@@ -98,7 +98,7 @@ def test_onedim_scene_real_life(mode_mono):
     assert s.kernel_dict(ctx=ctx).load() is not None
 
 
-def test_onedim_solver_app_construct(mode_mono):
+def test_onedim_solver_app_construct(modes_all):
     # Test default configuration handling
     app = OneDimSolverApp()
     assert app.scene is not None
