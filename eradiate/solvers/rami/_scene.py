@@ -5,6 +5,7 @@ import attr
 
 from ..core._scene import Scene
 from ... import validators
+from ..._mode import ModeFlags, supported_mode
 from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
@@ -82,6 +83,10 @@ class RamiScene(Scene):
         type=get_doc(Scene, attrib="integrator", field="type"),
         default=":class:`PathIntegrator() <.PathIntegrator>`",
     )
+
+    def __attrs_pre_init__(self):
+        # Only tested with monochromatic modes
+        supported_mode(ModeFlags.ANY_MONO)
 
     def update(self):
         # Parts of the init sequence we couldn't take care of using converters

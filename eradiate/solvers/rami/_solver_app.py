@@ -7,6 +7,8 @@ import eradiate
 
 from ._scene import RamiScene
 from ..core._solver_app import SolverApp
+from ... import supported_mode
+from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...xarray.metadata import DatasetSpec
 
@@ -33,6 +35,10 @@ class RamiSolverApp(SolverApp):
         type=":class:`RamiScene`",
         default=":class:`RamiScene() <RamiScene>`",
     )
+
+    def __attrs_pre_init__(self):
+        # Only tested with monochromatic modes
+        supported_mode(ModeFlags.ANY_MONO)
 
     def postprocess(self, measure=None):
         # Select measure
