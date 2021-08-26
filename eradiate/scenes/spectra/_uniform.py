@@ -1,14 +1,17 @@
 from typing import MutableMapping, Optional
 
 import attr
+import numpy as np
 import pint
 import pinttr
 
 from ._core import Spectrum, spectrum_factory
-from ... import unit_context_config as ucc
-from ... import unit_context_kernel as uck
 from ...attrs import documented, parse_docs
+from ...ckd import Bin
 from ...contexts import KernelDictContext, SpectralContext
+from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 
 @spectrum_factory.register(type_id="uniform")
@@ -52,16 +55,25 @@ class UniformSpectrum(Spectrum):
                 self.value, ucc.get(self.quantity)
             )
 
-    def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
-        return self.value
+    def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
+        if isinstance(self.value, pint.Quantity):
+            return np.full_like(w, self.value.m) * self.value.units
+        else:
+            return np.full_like(w, self.value) * ureg.dimensionless
+
+    def eval_ckd(self, *bins: Bin) -> pint.Quantity:
+        if isinstance(self.value, pint.Quantity):
+            return np.full((len(bins),), self.value.m) * self.value.units
+        else:
+            return np.full((len(bins),), self.value) * ureg.dimensionless
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         kernel_units = uck.get(self.quantity)
-        spectral_ctx = ctx.spectral_ctx if ctx is not None else None
+        spectral_ctx = ctx.spectral_ctx if ctx is not None else SpectralContext.new()
 
         return {
             "spectrum": {
                 "type": "uniform",
-                "value": self.eval(spectral_ctx).m_as(kernel_units),
+                "value": float(self.eval(spectral_ctx).m_as(kernel_units)),
             }
         }

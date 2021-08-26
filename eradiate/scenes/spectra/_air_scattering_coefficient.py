@@ -9,10 +9,12 @@ import eradiate
 from ._core import Spectrum, spectrum_factory
 from ..._mode import ModeFlags
 from ...attrs import parse_docs
+from ...ckd import Bin
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity
+from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
@@ -50,7 +52,41 @@ class AirScatteringCoefficientSpectrum(Spectrum):
         repr=False,
     )
 
-    def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
+    def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
+        return compute_sigma_s_air(wavelength=w)
+
+    def eval_ckd(self, *bins: Bin) -> pint.Quantity:
+        # Spectrum is averaged over spectral bin
+
+        result = np.zeros((len(bins),))
+        quantity_units = ucc.get(self.quantity)
+
+        for i_bin, bin in enumerate(bins):
+            # -- Build a spectral mesh with spacing finer than 1 nm (reasonably accurate)
+            wmin_m = bin.wmin.m_as(ureg.nm)
+            wmax_m = bin.wmax.m_as(ureg.nm)
+            w = np.linspace(wmin_m, wmax_m, 2)
+            n = 10
+
+            while True:
+                if w[1] - w[0] <= 1.0:  # nm
+                    break
+                w = np.linspace(wmin_m, wmax_m, n + 1)
+                n *= 2
+
+            w = w * ureg.nm
+
+            # -- Evaluate spectrum at wavelengths
+            interp = self.eval_mono(w)
+
+            # -- Average spectrum on bin extent
+            integral = np.trapz(interp, w)
+            print(integral)
+            result[i_bin] = (integral / bin.width).m_as(quantity_units)
+
+        return result * quantity_units
+
+    def eval_old(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return _eval_impl(spectral_ctx.wavelength)
 
@@ -77,8 +113,10 @@ class AirScatteringCoefficientSpectrum(Spectrum):
             return {
                 "spectrum": {
                     "type": "uniform",
-                    "value": self.eval(ctx.spectral_ctx).m_as(
-                        uck.get("collision_coefficient")
+                    "value": float(
+                        self.eval(ctx.spectral_ctx).m_as(
+                            uck.get("collision_coefficient")
+                        )
                     ),
                 }
             }
