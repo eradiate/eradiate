@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from collections import UserDict
 from typing import Dict, MutableMapping, Optional, Union
@@ -77,7 +79,7 @@ class KernelDict(UserDict):
     @classmethod
     def new(
         cls,
-        *elements: Union["SceneElement", Dict],
+        *elements: Union[SceneElement, Dict],
         ctx: Optional[KernelDictContext] = None,
     ):
         """
@@ -100,7 +102,7 @@ class KernelDict(UserDict):
 
     def add(
         self,
-        *elements: Union["SceneElement", Dict],
+        *elements: Union[SceneElement, Dict],
         ctx: Optional[KernelDictContext] = None,
     ):
         """
@@ -125,7 +127,7 @@ class KernelDict(UserDict):
             except AttributeError:
                 self.update(element)
 
-    def load(self) -> "mitsuba.render.Scene":
+    def load(self) -> mitsuba.render.Scene:
         """
         Load kernel object from self.
 
