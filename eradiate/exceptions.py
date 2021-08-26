@@ -21,12 +21,12 @@ class UnsupportedModeError(ModeError):
 
     def __init__(self, supported=None, unsupported=None, msg=None):
         super(UnsupportedModeError, self).__init__(msg)
-        self.mode = eradiate.mode().id
+        self.mode = eradiate.mode().id if eradiate.mode() is not None else None
         self.supported = list(always_iterable(supported))
         self.unsupported = list(always_iterable(unsupported))
 
     def __str__(self):
-        msg = f"'{eradiate.mode().id}'"
+        msg = f"'{self.mode}'" if self.mode is not None else "None"
         extra_msg = []
 
         if self.supported:
