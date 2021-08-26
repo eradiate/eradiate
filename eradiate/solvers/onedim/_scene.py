@@ -4,7 +4,7 @@ from typing import MutableMapping, Optional
 import attr
 
 from ..core._scene import Scene
-from ... import unit_context_config as ucc
+from ..._mode import ModeFlags, supported_mode
 from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
@@ -17,6 +17,7 @@ from ...scenes.measure._distant import (
     TargetOriginSphere,
 )
 from ...scenes.surface import LambertianSurface, Surface, surface_factory
+from ...units import unit_context_config as ucc
 
 
 @parse_docs
@@ -72,6 +73,10 @@ class OneDimScene(Scene):
         type=get_doc(Scene, attrib="integrator", field="type"),
         default=":class:`VolPathIntegrator() <.VolPathIntegrator>`",
     )
+
+    def __attrs_pre_init__(self):
+        # Only tested with monochromatic and CKD modes
+        supported_mode(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD)
 
     def update(self):
         # Parts of the init sequence we could take care of using converters

@@ -7,6 +7,7 @@ import eradiate
 
 from ._scene import OneDimScene
 from ..core._solver_app import SolverApp
+from ..._mode import ModeFlags, supported_mode
 from ...attrs import documented, parse_docs
 from ...xarray.metadata import DatasetSpec
 
@@ -36,6 +37,10 @@ class OneDimSolverApp(SolverApp):
         type=":class:`OneDimScene`",
         default=":class:`OneDimScene() <.OneDimScene>`",
     )
+
+    def __attrs_pre_init__(self):
+        # Only tested with monochromatic and CKD modes
+        supported_mode(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD)
 
     def postprocess(self, measure=None):
         # Select measure
