@@ -5,7 +5,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.core import KernelDict
@@ -26,8 +26,9 @@ def test_atmosphere_homogeneous_sigma_s(mode_mono):
     """
     Assigns custom 'sigma_s' value.
     """
+    spectral_ctx = SpectralContext.new()
     r = HomogeneousAtmosphere(sigma_s=1e-5)
-    assert r.eval_sigma_s() == ureg.Quantity(1e-5, ureg.m ** -1)
+    assert r.eval_sigma_s(spectral_ctx) == ureg.Quantity(1e-5, ureg.m ** -1)
 
 
 def test_atmosphere_homogeneous_top(mode_mono):
