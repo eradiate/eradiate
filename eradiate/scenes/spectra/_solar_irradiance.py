@@ -3,37 +3,17 @@ from typing import MutableMapping, Optional
 import attr
 import numpy as np
 import pint
-import xarray as xr
-
-import eradiate
 
 from ._core import Spectrum, spectrum_factory
 from ... import data
-from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
+from ...ckd import Bin
 from ...contexts import KernelDictContext, SpectralContext
-from ...exceptions import UnsupportedModeError
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...validators import is_positive
-
-
-def _eval_impl(ssi: xr.DataArray, w: pint.Quantity) -> pint.Quantity:
-    w_units = ureg[ssi.w.attrs["units"]]
-    irradiance = to_quantity(ssi.interp(w=w.m_as(w_units), method="linear"))
-
-    # Raise if out of bounds or ill-formed dataset
-    if np.any(np.isnan(irradiance.magnitude)):
-        raise ValueError("dataset interpolation returned nan")
-
-    return irradiance
-
-
-def _eval_impl_ckd(ssi: xr.DataArray, w: pint.Quantity) -> pint.Quantity:
-    interp = _eval_impl(ssi, w)
-    return np.trapz(interp, w) / (w.max() - w.min())
 
 
 @spectrum_factory.register(type_id="solar_irradiance")
@@ -110,7 +90,7 @@ class SolarIrradianceSpectrum(Spectrum):
         except KeyError:
             raise ValueError(f"unknown dataset {self.dataset}")
 
-    def eval(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
+    def eval(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         if self.dataset == "solid_2017":
             raise NotImplementedError(
                 "Solar irradiance spectrum datasets with a non-empty time "
@@ -119,14 +99,30 @@ class SolarIrradianceSpectrum(Spectrum):
         # TODO: add support to solar irradiance spectrum datasets with a
         #  non-empty time coordinate
 
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            return _eval_impl(self.data.ssi, spectral_ctx.wavelength)
+        return super(SolarIrradianceSpectrum, self).eval(spectral_ctx)
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            # Average irradiance over spectral bin
-            wavelength_units = ucc.get("wavelength")
-            wmin_m = spectral_ctx.bin.wmin.m_as(wavelength_units)
-            wmax_m = spectral_ctx.bin.wmax.m_as(wavelength_units)
+    def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
+        w_units = ureg[self.data.ssi.w.attrs["units"]]
+        irradiance = to_quantity(
+            self.data.ssi.interp(w=w.m_as(w_units), method="linear")
+        )
+
+        # Raise if out of bounds or ill-formed dataset
+        if np.any(np.isnan(irradiance.magnitude)):
+            raise ValueError("dataset interpolation returned nan")
+
+        return irradiance
+
+    def eval_ckd(self, *bins: Bin) -> pint.Quantity:
+        # Spectrum is averaged over spectral bin
+
+        result = np.zeros((len(bins),))
+        wavelength_units = ucc.get("wavelength")
+        quantity_units = ucc.get(self.quantity)
+
+        for i_bin, bin in enumerate(bins):
+            wmin_m = bin.wmin.m_as(wavelength_units)
+            wmax_m = bin.wmax.m_as(wavelength_units)
 
             # -- Collect relevant spectral coordinate values
             w_m = to_quantity(self.data.ssi.w).m_as(wavelength_units)
@@ -141,11 +137,14 @@ class SolarIrradianceSpectrum(Spectrum):
                 * wavelength_units
             )
 
-            # Interpolate at collected wavelengths and compute average on bin extent
-            return _eval_impl_ckd(self.data.ssi, w)
+            # -- Evaluate spectrum at wavelengths
+            interp = self.eval_mono(w)
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+            # -- Average spectrum on bin extent
+            integral = np.trapz(interp, w)
+            result[i_bin] = (integral / bin.width).m_as(quantity_units)
+
+        return result * quantity_units
 
     def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
         # Apply scaling, build kernel dict
