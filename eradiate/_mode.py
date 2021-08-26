@@ -11,6 +11,7 @@ from .attrs import documented, parse_docs
 # ------------------------------------------------------------------------------
 #                                 Mode flags
 # ------------------------------------------------------------------------------
+from .exceptions import UnsupportedModeError
 
 
 class ModeFlags(enum.Flag):
@@ -28,24 +29,31 @@ class ModeFlags(enum.Flag):
     # Mitsuba
     MTS_SCALAR = enum.auto()  #: Mode maps to a scalar Mitsuba variant
     # MTS_LLVM = enum.auto()  #: Mode maps to a LLVM Mitsuba variant
+    # MTS_AD = enum.auto()  #: Mode maps to an autodiff Mitsuba variant
     MTS_MONO = enum.auto()  #: Mode maps to a monochromatic Mitsuba variant
     # MTS_RGB = enum.auto()  #: Mode maps to an RGB Mitsuba variant
-    # MTS_POLARIZED = enum.auto() #: Mode maps to a polarised RGB Mitsuba variant
+    # MTS_SPECTRAL = enum.auto()  #: Mode maps to a spectral Mitsuba variant
+    # MTS_UNPOLARIZED = enum.auto() #: Mode maps to an unpolarised Mitsuba variant
+    # MTS_POLARIZED = enum.auto() #: Mode maps to a polarised Mitsuba variant
+    MTS_SINGLE = enum.auto()  #: Mode maps to a single-precision Mitsuba variant
     MTS_DOUBLE = enum.auto()  #: Mode maps to a double-precision Mitsuba variant
 
     # -- Mode definition flags -------------------------------------------------
 
-    MONO = ERT_MONO | MTS_SCALAR | MTS_MONO  #: Monochromatic mode, single precision
+    MONO = (
+        ERT_MONO | MTS_SCALAR | MTS_MONO | MTS_SINGLE
+    )  #: Monochromatic mode, single precision
     MONO_DOUBLE = (
         ERT_MONO | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
     )  #: Monochromatic mode, double precision
-    # CKD = ERT_CKD | MTS_SCALAR | MTS_MONO  #: CKD mode, single precision
+    # CKD = ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_SINGLE #: CKD mode, single precision
     # CKD_DOUBLE = ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_DOUBLE  #: CKD mode, double precision
 
     # -- Other convenience aliases ---------------------------------------------
 
     ANY_MONO = ERT_MONO  #: Any monochromatic mode
     ANY_SCALAR = MTS_SCALAR  #: Any scalar mode
+    ANY_SINGLE = MTS_SINGLE  #: Any single-precision mode
     ANY_DOUBLE = MTS_DOUBLE  #: Any double-precision mode
 
 
@@ -208,3 +216,31 @@ def set_mode(mode_id: str):
         raise ValueError(f"unknown mode '{mode_id}'")
 
     _current_mode = mode
+
+
+def supported_mode(flags):
+    """
+    Check whether the current mode has specific flags. If not, raise.
+
+    Parameter ``flags`` (:class:`.ModeFlags`):
+        Flags the current mode is expected to have.
+
+    Raises → :class:`UnsupportedModeError`:
+        Current mode does not have the requested flags.
+    """
+    if mode() is None or not mode().has_flags(flags):
+        raise UnsupportedModeError
+
+
+def unsupported_mode(flags):
+    """
+    Check whether the current mode has specific flags. If so, raise.
+
+    Parameter ``flags`` (:class:`.ModeFlags`):
+        Flags the current mode is expected not to have.
+
+    Raises → :class:`UnsupportedModeError`:
+        Current mode has the requested flags.
+    """
+    if mode() is None or mode().has_flags(flags):
+        raise UnsupportedModeError

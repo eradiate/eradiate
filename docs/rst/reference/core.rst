@@ -13,6 +13,8 @@ Mode control
    mode
    modes
    set_mode
+   supported_mode
+   unsupported_mode
 
 **Mode implementation details**
 

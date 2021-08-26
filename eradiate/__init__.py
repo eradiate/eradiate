@@ -28,7 +28,13 @@ from .units import (  # isort: skip
 
 # -- Operational mode definition -----------------------------------------------
 
-from ._mode import mode, set_mode, modes  # isort: skip
+from ._mode import (  # isort: skip
+    mode,
+    set_mode,
+    modes,
+    supported_mode,
+    unsupported_mode,
+)
 
 # ------------------------------------------------------------------------------
 
