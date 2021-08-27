@@ -19,7 +19,7 @@ def test_air_scattering_coefficient(modes_all_mono_ckd):
         expected = ureg.Quantity(0.0114934, "km^-1")
 
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-        expected = ureg.Quantity(0.0110803, "km^-1")
+        expected = ureg.Quantity(0.0114968, "km^-1")
 
     else:
         assert False
