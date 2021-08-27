@@ -13,3 +13,4 @@ Data guide
    spectra-us76_u86_4
    srf
    thermoprops
+   ckd
