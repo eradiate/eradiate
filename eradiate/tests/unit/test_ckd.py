@@ -97,29 +97,29 @@ def test_ckd_bin_set_filter(mode_ckd):
     """
     Unit tests for :meth:`eradiate.ckd.BinSet.filter_bins`.
     """
-    bin_set = BinSet.from_db("10nm")
+    bin_set = BinSet.from_db("10nm_test")
 
     # We get a single bin using wmin == wmax
-    filter = bin_filter_interval(wmin=505 * ureg.nm, wmax=505 * ureg.nm, endpoints=True)
+    filter = bin_filter_interval(wmin=550 * ureg.nm, wmax=550 * ureg.nm, endpoints=True)
     assert len(bin_set.filter_bins(filter)) == 1
 
     # We extend the range to get 2 items
-    filter = bin_filter_interval(wmin=500 * ureg.nm, wmax=520 * ureg.nm, endpoints=True)
+    filter = bin_filter_interval(wmin=545 * ureg.nm, wmax=565 * ureg.nm, endpoints=True)
     assert len(bin_set.filter_bins(filter)) == 2
 
     # The previous also works with endpoints set to False
     filter = bin_filter_interval(
-        wmin=500 * ureg.nm, wmax=520 * ureg.nm, endpoints=False
+        wmin=545 * ureg.nm, wmax=565 * ureg.nm, endpoints=False
     )
     assert len(bin_set.filter_bins(filter)) == 2
 
     # Now we further extend the range to get 3 bins
-    filter = bin_filter_interval(wmin=500 * ureg.nm, wmax=525 * ureg.nm, endpoints=True)
+    filter = bin_filter_interval(wmin=545 * ureg.nm, wmax=570 * ureg.nm, endpoints=True)
     assert len(bin_set.filter_bins(filter)) == 3
 
     # Setting endpoints to False excludes partly covered bins
     filter = bin_filter_interval(
-        wmin=500 * ureg.nm, wmax=525 * ureg.nm, endpoints=False
+        wmin=545 * ureg.nm, wmax=570 * ureg.nm, endpoints=False
     )
     assert len(bin_set.filter_bins(filter)) == 2
 
@@ -127,8 +127,8 @@ def test_ckd_bin_set_filter(mode_ckd):
     assert (
         len(
             bin_set.filter_bins(
-                bin_filter_interval(wmin=505 * ureg.nm, wmax=505 * ureg.nm),
-                bin_filter_ids(["515"]),
+                bin_filter_interval(wmin=545 * ureg.nm, wmax=555 * ureg.nm),
+                bin_filter_ids(["510"]),
             )
         )
         == 2
@@ -138,8 +138,8 @@ def test_ckd_bin_set_filter(mode_ckd):
     assert (
         len(
             bin_set.filter_bins(
-                bin_filter_interval(wmin=505 * ureg.nm, wmax=505 * ureg.nm),
-                bin_filter_ids(["505"]),
+                bin_filter_interval(wmin=545 * ureg.nm, wmax=555 * ureg.nm),
+                bin_filter_ids(["550"]),
             )
         )
         == 1
@@ -147,8 +147,8 @@ def test_ckd_bin_set_filter(mode_ckd):
     assert (
         len(
             bin_set.filter_bins(
-                bin_filter_interval(wmin=500 * ureg.nm, wmax=520 * ureg.nm),
-                bin_filter_ids(["505", "515"]),
+                bin_filter_interval(wmin=545 * ureg.nm, wmax=565 * ureg.nm),
+                bin_filter_ids(["550", "560"]),
             )
         )
         == 2
@@ -160,20 +160,20 @@ def test_ckd_bin_set_select(mode_ckd):
     Unit tests for :meth:`eradiate.ckd.BinSet.select_bins`.
     """
 
-    bin_set = BinSet.from_db("10nm")
+    bin_set = BinSet.from_db("10nm_test")
 
     # Select with an explicit filter
-    filter = bin_filter_interval(wmin=500 * ureg.nm, wmax=520 * ureg.nm)
+    filter = bin_filter_interval(wmin=550 * ureg.nm, wmax=560 * ureg.nm)
     assert len(bin_set.select_bins(filter)) == 2
 
     # Select with a string
-    assert len(bin_set.select_bins("505", "515")) == 2
+    assert len(bin_set.select_bins("550", "560")) == 2
 
     # Select with a tuple
     assert (
         len(
             bin_set.select_bins(
-                ("interval", {"wmin": 500 * ureg.nm, "wmax": 520 * ureg.nm})
+                ("interval", {"wmin": 550 * ureg.nm, "wmax": 560 * ureg.nm})
             )
         )
         == 2
@@ -185,7 +185,7 @@ def test_ckd_bin_set_select(mode_ckd):
             bin_set.select_bins(
                 {
                     "type": "interval",
-                    "filter_kwargs": {"wmin": 500 * ureg.nm, "wmax": 520 * ureg.nm},
+                    "filter_kwargs": {"wmin": 550 * ureg.nm, "wmax": 560 * ureg.nm},
                 }
             )
         )

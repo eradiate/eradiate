@@ -32,7 +32,7 @@ def test_ckd_spectral_config(modes_all_ckd):
     """
     # The new() class method constructor selects an appropriate config class
     # depending on the active mode
-    cfg = MeasureSpectralConfig.new(bin_set="10nm_test", bins=["545", "555"])
+    cfg = MeasureSpectralConfig.new(bin_set="10nm_test", bins=["540", "550"])
     assert isinstance(cfg, CKDMeasureSpectralConfig)
 
     # Generated spectral contexts are of the appropriate type and in correct numbers
@@ -51,7 +51,7 @@ def test_ckd_spectral_config(modes_all_ckd):
     )
     assert isinstance(cfg, CKDMeasureSpectralConfig)
     ctxs = cfg.spectral_ctxs()
-    assert len(ctxs) == 80
+    assert len(ctxs) == 96
     assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
 
 

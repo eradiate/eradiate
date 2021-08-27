@@ -178,14 +178,14 @@ def test_distant_radiance_postprocessing_ckd(modes_all_ckd):
     # right
     d = DistantRadianceMeasure(
         film_resolution=(32, 16),
-        spectral_cfg={"bin_set": "10nm_test", "bins": ["555"]},
+        spectral_cfg={"bin_set": "10nm_test", "bins": ["550"]},
     )
     quad = d.spectral_cfg.bin_set.quad
 
     # Add test data to results
     d.results.raw = {
         **{
-            ("555", i): {
+            ("550", i): {
                 "values": {"sensor": np.ones((16, 32, 1))},
                 "spp": {"sensor": 128},
             }
@@ -214,7 +214,7 @@ def test_distant_radiance_postprocessing_ckd(modes_all_ckd):
     # Postprocessing succeeds and viewing angles have correct bounds
     d.results.raw = {
         **{
-            ("555", i): {
+            ("550", i): {
                 "values": {"sensor": np.ones((1, 32, 1))},
                 "spp": {"sensor": 128},
             }
@@ -297,21 +297,21 @@ def test_distant_flux_postprocessing_ckd(modes_all_ckd):
     # right
     d = DistantFluxMeasure(
         film_resolution=(32, 16),
-        spectral_cfg={"bin_set": "10nm_test", "bins": ["555", "565"]},
+        spectral_cfg={"bin_set": "10nm_test", "bins": ["550", "560"]},
     )
     quad = d.spectral_cfg.bin_set.quad
 
     # Add test data to results
     d.results.raw = {
         **{
-            ("555", i): {
+            ("550", i): {
                 "values": {"sensor": np.ones((16, 32, 1))},
                 "spp": {"sensor": 128},
             }
             for i, _ in enumerate(quad.nodes)
         },
         **{
-            ("565", i): {
+            ("560", i): {
                 "values": {"sensor": np.ones((16, 32, 1))},
                 "spp": {"sensor": 128},
             }

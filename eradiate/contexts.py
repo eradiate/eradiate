@@ -178,7 +178,7 @@ class CKDSpectralContext(SpectralContext):
     _bindex: Bindex = documented(
         attr.ib(
             factory=lambda: Bindex(
-                BinSet.from_db("10nm_test").select_bins("555")[0],
+                BinSet.from_db("10nm_test").select_bins("550")[0],
                 0,
             ),
             converter=Bindex.convert,

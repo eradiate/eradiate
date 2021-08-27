@@ -44,14 +44,14 @@ def test_ckd_spectral_context(mode_ckd):
     Unit tests for :class:`CKDSpectralContext`.
     """
     quad = Quad.gauss_legendre(16)
-    bin = Bin.convert({"id": "505", "wmin": 500.0, "wmax": 510.0, "quad": quad})
+    bin = Bin.convert({"id": "510", "wmin": 505.0, "wmax": 515.0, "quad": quad})
     ctx = SpectralContext.new(bindex=bin.bindexes[8])
 
     # Wavelength is equal to bin central wavelength
-    assert ctx.wavelength == 505.0 * ureg.nm
+    assert ctx.wavelength == 510.0 * ureg.nm
 
     # Index is a (str, int) pair
-    assert ctx.spectral_index == ("505", 8)
+    assert ctx.spectral_index == ("510", 8)
 
     # Index string repr is a compact "{bin_id}:{quad_point_index}" string
-    assert ctx.spectral_index_formatted == "505:8"
+    assert ctx.spectral_index_formatted == "510:8"

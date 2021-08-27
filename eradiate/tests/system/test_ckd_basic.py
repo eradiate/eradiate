@@ -26,10 +26,10 @@ def test_ckd_basic(modes_all_ckd):
                 spectral_cfg={
                     "bin_set": "10nm_test",
                     "bins": [
-                        "555",
-                        "565",
-                        "575",
-                        "515",
+                        "550",
+                        "560",
+                        "570",
+                        "510",
                     ],  # We specify bins in arbitrary order on purpose
                 }
             )
