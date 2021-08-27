@@ -13,8 +13,8 @@ import xarray as xr
 import eradiate.data as data
 
 from . import profile_dataset_spec
-from ..units import unit_registry as ureg
 from ..units import to_quantity
+from ..units import unit_registry as ureg
 
 ATOMIC_MASS_CONSTANT = ureg.Quantity(
     *scipy.constants.physical_constants["atomic mass constant"][:-1]
@@ -119,7 +119,8 @@ def compute_mass_density_at_surface(ds, species):
 
 
 def compute_scaling_factors(ds, concentration):
-    """Compute the scaling factors to be applied to the mixing ratio values
+    r"""
+    Compute the scaling factors to be applied to the mixing ratio values
     of each species in an atmosphere thermophysical properties data set, so
     that the integrated number/mass density and/or the number/mass density at
     the surface, match given values.
