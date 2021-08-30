@@ -535,12 +535,18 @@ class US76ApproxRadProfile(RadProfile):
         # ! This method is never tested because it requires large absorption
         # data sets to be downloaded
         wavenumber = 1.0 / wavelength
-        dataset_id = find_dataset(
+        dataset_ids = find_dataset(
             wavenumber=wavenumber,
             absorber=Absorber.us76_u86_4,
             engine=Engine.SPECTRA,
         )
-        return data.open(category="absorption_spectrum", id=dataset_id)
+        if len(dataset_ids) == 1:
+            return data.open(category="absorption_spectrum", id=dataset_ids[0])
+        elif len(dataset_ids) == 2:
+            ds1 = data.open(category="absorption_spectrum", id=dataset_ids[0])
+            ds2 = data.open(category="absorption_spectrum", id=dataset_ids[1])
+            return xr.concat([ds1.isel(w=slice(0,-1)), ds2], dim="w")
+
 
     def eval_sigma_a(
         self: US76ApproxRadProfile, spectral_ctx: SpectralContext
@@ -734,12 +740,18 @@ class AFGL1986RadProfile(RadProfile):
         # data sets to be downloaded
         wavenumber = 1.0 / wavelength
         try:
-            dataset_id = find_dataset(
+            dataset_ids = find_dataset(
                 wavenumber=wavenumber,
                 absorber=absorber,
                 engine=Engine.SPECTRA,
             )
-            dataset = data.open(category="absorption_spectrum", id=dataset_id)
+            if len(dataset_ids) == 1:
+                dataset = data.open(category="absorption_spectrum", id=dataset_ids[0])
+            elif len(dataset_ids) == 2:
+                ds1 = data.open(category="absorption_spectrum", id=dataset_ids[0])
+                ds2 = data.open(category="absorption_spectrum", id=dataset_ids[1])
+                dataset = xr.concat([ds1.isel(w=slice(0,-1)), ds2], dim="w")
+            
             sigma_a_absorber = compute_sigma_a(
                 ds=dataset,
                 wl=wavelength,

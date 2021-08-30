@@ -3,6 +3,7 @@ Absorption cross section spectrum data sets shipped with Eradiate.
 """
 
 import enum
+from typing import List, Tuple, Union
 
 import numpy as np
 import xarray as xr
@@ -54,7 +55,7 @@ class Group(enum.Enum):
     SPECTRA_O3 = (Absorber.O3, Engine.SPECTRA)
 
 
-def _resolve_group(absorber, engine):
+def _resolve_group(absorber: Absorber, engine: Engine) -> Group:
     """
     Return the group corresponding to the (absorber, engine) pair, if it
     exists.
@@ -88,7 +89,7 @@ _WAVENUMBER_BINS = {
 # fmt: on
 
 
-def _resolve_w_bin(group, wavenumber):
+def _resolve_w_bin(group: Group, wavenumber: float) -> Tuple[float]:
     """
     Return the wavenumber bin corresponding to a group and a wavenumber value,
     if it exists.
@@ -103,7 +104,7 @@ def _resolve_w_bin(group, wavenumber):
     )
 
 
-def _get_data_set_id(group, w_bin):
+def _get_data_set_id(group: Group, w_bin: Tuple[float]) -> str:
     """
     Return the data set identifier of the data set specified by a group and
     a wavenumber bin.
@@ -127,7 +128,7 @@ class _AbsorptionGetter(DataGetter):
     PATHS = _PATHS
 
     @classmethod
-    def open(cls, id):
+    def open(cls, id: str):
         path = cls.path(id)
         path = _presolver.resolve(path)
 
@@ -148,12 +149,15 @@ class _AbsorptionGetter(DataGetter):
 
 
 @ureg.wraps(ret=None, args=("cm^-1", None, None), strict=False)
-def find_dataset(wavenumber, absorber, engine):
+def find_dataset(wavenumber: Union[ureg.Quantity, float], absorber: Absorber, engine: Engine) -> List[str]:
     """
-    Find the dataset corresponding to a given wavenumber,
+    Find the dataset(s) corresponding to a given wavenumber,
     absorber and absorption cross section engine.
 
-    Parameter ``wavenumber`` (:class:`~pint.Quantity`):
+    If the wavenumber value falls very close to the bounds of the wavenumber
+    bin, the dataset id corresponding to the neighbour bin is also returned.
+
+    Parameter ``wavenumber`` (:class:`~pint.Quantity` or float):
         Wavenumber value [cm^-1].
 
     Parameter ``absorber`` (:class:`Absorber`):
@@ -162,9 +166,23 @@ def find_dataset(wavenumber, absorber, engine):
     Parameter ``engine`` (:class:`Engine`):
         Engine used to compute the absorption cross sections.
 
-    Returns → :class:`str`:
-        Available dataset id.
+    Returns → List[str]:
+        Dataset id(s).
+        The returned list include either one or two elements (in the case where 
+        the wavenumber falls too close to bin bounds).
     """
     group = _resolve_group(absorber=absorber, engine=engine)
     w_bin = _resolve_w_bin(group=group, wavenumber=wavenumber)
-    return _get_data_set_id(group=group, w_bin=w_bin)
+    id = _get_data_set_id(group=group, w_bin=w_bin)
+
+    # prevent out-of-bound errors due to floating point arithmetic issues
+    if abs(wavenumber - w_bin[0]) < 1e-6:
+        w_bin_neighbour = _resolve_w_bin(group=group, wavenumber=wavenumber - 1e-5)
+        id_neighbour = _get_data_set_id(group=group, w_bin=w_bin_neighbour)
+        return [id_neighbour, id]
+    elif abs(wavenumber - w_bin[1]) < 1e-6:
+        w_bin_neighbour = _resolve_w_bin(group=group, wavenumber=wavenumber + 1e-5)
+        id_neighbour = _get_data_set_id(group=group, w_bin=w_bin_neighbour)
+        return [id, id_neighbour]
+    else:
+        return [id]
