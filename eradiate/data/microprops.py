@@ -18,4 +18,4 @@ class _Microprops(DataGetter):
     @classmethod
     def open(cls, id):
         path = path_resolver.resolve(cls.path(id))
-        return pd.read_csv(path)
+        return pd.read_csv(path, index_col=0).to_xarray()
