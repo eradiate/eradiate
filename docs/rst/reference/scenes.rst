@@ -40,6 +40,8 @@ Atmosphere [eradiate.scenes.atmosphere]
 
    HomogeneousAtmosphere
    HeterogeneousAtmosphere
+   HeterogeneousNewAtmosphere
+   MolecularAtmosphere
    ParticleLayer
 
 **Particle distribution**

@@ -41,7 +41,7 @@ def test_rami_scene(mode_mono):
     )
     ctx = KernelDictContext()
     kernel_scene = s.kernel_dict(ctx)
-    assert np.allclose(ctx.override_surface_width, 10.0 * ureg.m)
+    assert np.allclose(ctx.override_scene_width, 10.0 * ureg.m)
     assert np.allclose(
         kernel_scene["surface"]["to_world"].transform_point([1, -1, 0]),
         [5, -5, 0],
