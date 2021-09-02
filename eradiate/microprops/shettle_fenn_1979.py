@@ -8,6 +8,8 @@ import numpy as np
 import pint
 import xarray as xr
 
+from .. import data
+from ..units import to_quantity
 from ..units import unit_registry as ureg
 
 
@@ -22,45 +24,7 @@ class AerosolModel(enum.Enum):
     TROPOSPHERIC = "tropospheric"
 
 
-class AerosolComponent(enum.Enum):
-    """
-    Aerosol component enumeration.
-    """
-
-    WATER_SOLUBLE = "water_soluble"
-    DUST_LIKE = "dust_like"
-    SOOT_LIKE = "soot_like"
-    SEA_SALT = "sea_salt"
-    WATER = "water"
-
-
-# aerosol models' compositions (for refractive index computation)
-COMPOSITION = {
-    AerosolModel.RURAL: {
-        AerosolComponent.WATER_SOLUBLE: 0.7,
-        AerosolComponent.DUST_LIKE: 0.3,
-    },
-    AerosolModel.URBAN: {
-        AerosolComponent.WATER_SOLUBLE: 0.7 * 0.8,
-        AerosolComponent.DUST_LIKE: 0.3 * 0.8,
-        AerosolComponent.SOOT_LIKE: 1 * 0.2,
-    },
-    AerosolModel.MARITIME: {
-        AerosolComponent.WATER_SOLUBLE: "variable",  # particles of continental origin
-        AerosolComponent.DUST_LIKE: "variable",  # particles of continental origin
-        AerosolComponent.SEA_SALT: "variable",  # particles of oceanic origin
-    },
-}
-
-SIZE_DISTRIBUTION_PARAMS = {
-    AerosolModel.RURAL: (
-        [0.999875, 0.000125],  # n
-        [0.35 * ureg.dimensionless, 0.4 * ureg.dimensionless],  # std
-    )
-}
-
-
-@ureg.wraps(ret=None, args=("micrometer", "dimensionless"), strict=False)
+@ureg.wraps(ret=None, args=("micrometer", ""), strict=False)
 def lognorm(r0: float, std: float = 0.4) -> Callable:
     """
     Return a log-normal distribution as in equation (1) of
@@ -70,7 +34,7 @@ def lognorm(r0: float, std: float = 0.4) -> Callable:
         Mode radius [micrometer].
 
     Parameter ``s`` (float):
-        Standard deviation of the distribution.
+        Standard deviation of the distribution [].
 
     Returns → Callable:
         A function (:class:`numpy.ndarray` → :class:`numpy.ndarray`)
@@ -81,57 +45,204 @@ def lognorm(r0: float, std: float = 0.4) -> Callable:
     )
 
 
-@ureg.wraps(
-    ret=None,
-    args=(
-        "micrometer",
-        "micrometer",
-        "micrometer",
-        "cm^-3",
-        "cm^-3",
-        "dimensionless",
-        "dimensionless",
-    ),
-    strict=False,
-)
-def size_distribution(
-    r1: float, r2: float, n1: float, n2: float, s1: float, s2: float
+# ------------------------------------------------------------------------------
+#                           Rural aerosol model
+# ------------------------------------------------------------------------------
+
+
+@ureg.wraps(ret=None, args=(""), strict=False)
+def rural_aerosol_large_particles_radius_distribution(
+    rh: Union[pint.Quantity, float] = 0.75
 ) -> Callable:
     """
-    Compute the aerosol size distribution according to equation (1) of
-    :cite:`Shettle1979ModelsAerosolsLower`.
+    Return the radius distribution of the large particles in the rural aerosol
+    model.
     """
-    return lambda r: n1 * lognorm(r0=r1, std=s1)(r) + n2 * lognorm(r0=r2, std=s2)(r)
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_2")
+    r2 = to_quantity(ds.r.sel(model="rural", mode=2).interp(rh=rh))
+    n2 = ureg.Quantity(0.000125, "cm^-3")
+    s2 = ureg.Quantity(0.4 * ureg.dimensionless)
+    return n2 * lognorm(r0=r2, std=s2)
 
 
-@ureg.wraps(ret=None, args=("nm", "micrometer", "micrometer", None, None), strict=False)
-def wet_aeorosl_refractive_index(
-    w: Union[pint.Quantity, np.ndarray, float],
-    r0: Union[pint.Quantity, float],
-    rw: Union[pint.Quantity, float],
-    n0: xr.DataArray,
-    nw: xr.DataArray,
-) -> xr.DataArray:
+@ureg.wraps(ret=None, args=(""), strict=False)
+def rural_aerosol_small_particles_radius_distribution(
+    rh: Union[pint.Quantity, float] = 0.75
+) -> Callable:
     """
-    Compute the wet aerosol particle refractive index according to equation (6)
-    of :cite:`Shettle1979ModelsAerosolsLower`.
-
-    Parameter ``w`` (:class:`~pint.Quantity` or :class:`~numpy.ndarray` or float)
-        Wavelength [nm].
-
-    Parameter ``r0`` (:class:`~pint.Quantity` or float):
-        Dry particle size [micrometer].
-
-    Parameter ``rw`` (:class:`~pint.Quantity` or float):
-        Wet particle size [micrometer].
-
-    Parameter ``n0`` (:class:`~xarray.DataArray`):
-        Dry particle refractive index data.
-
-    Parameter ``nw`` (:class:`~xarray.DataArray`):
-        Water refractive index data.
-
-    Returns → class:`~xarray.DataArray`:
-        Wet aerosol particle refractive index.
+    Return the radius distribution of the small particles in the rural aerosol
+    model.
     """
-    return nw.interp(w=w) + (n0.interp(w=w) - nw.interp(w=w)) * np.power(r0 / rw, 3)
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_2")
+    r1 = to_quantity(ds.r.sel(model="rural", mode=1).interp(rh=rh))
+    n1 = ureg.Quantity(0.999875, "cm^-3")
+    s1 = ureg.Quantity(0.35 * ureg.dimensionless)
+    return n1 * lognorm(r0=r1, std=s1)
+
+
+@ureg.wraps(ret=None, args=("nm", ""), strict=False)
+def rural_aerosol_small_particles_refractive_index(
+    w: Union[pint.Quantity, float], rh: Union[pint.Quantity, float] = 0.75
+) -> pint.Quantity:
+    """
+    Return the refractive index of the small particles in the rural aerosol
+    model.
+    """
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_4a")
+    refractive_index = ds.eta_r + 1j * ds.eta_i
+    return to_quantity(refractive_index.interp(w=w.to(ds.w.units), rh=rh))
+
+
+@ureg.wraps(ret=None, args=("nm", ""), strict=False)
+def rural_aerosol_large_particles_refractive_index(
+    w: Union[pint.Quantity, float], rh: Union[pint.Quantity, float] = 0.75
+) -> pint.Quantity:
+    """
+    Return the refractive index of the large particles in the rural aerosol
+    model.
+    """
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_4b")
+    refractive_index = ds.eta_r + 1j * ds.eta_i
+    return to_quantity(refractive_index.interp(w=w.to(ds.w.units), rh=rh))
+
+
+# ------------------------------------------------------------------------------
+#                           Urban aerosol model
+# ------------------------------------------------------------------------------
+
+
+@ureg.wraps(ret=None, args=(""), strict=False)
+def urban_aerosol_large_particles_radius_distribution(
+    rh: Union[pint.Quantity, float] = 0.75
+) -> Callable:
+    """
+    Return the radius distribution of the large particles in the urban aerosol
+    model.
+    """
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_2")
+    r2 = to_quantity(ds.r.sel(model="urban", mode=2).interp(rh=rh))
+    n2 = ureg.Quantity(0.000125, "cm^-3")
+    s2 = ureg.Quantity(0.4 * ureg.dimensionless)
+    return n2 * lognorm(r0=r2, std=s2)
+
+
+@ureg.wraps(ret=None, args=(""), strict=False)
+def urban_aerosol_small_particles_radius_distribution(
+    rh: Union[pint.Quantity, float] = 0.75
+) -> Callable:
+    """
+    Return the radius distribution of the small particles in the urban aerosol
+    model.
+    """
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_2")
+    r1 = to_quantity(ds.r.sel(model="urban", mode=1).interp(rh=rh))
+    n1 = ureg.Quantity(0.999875, "cm^-3")
+    s1 = ureg.Quantity(0.35 * ureg.dimensionless)
+    return n1 * lognorm(r0=r1, std=s1)
+
+
+@ureg.wraps(ret=None, args=("nm", ""), strict=False)
+def urban_aerosol_small_particles_refractive_index(
+    w: Union[pint.Quantity, float], rh: Union[pint.Quantity, float] = 0.75
+) -> pint.Quantity:
+    """
+    Return the refractive index of the small particles in the urban aerosol
+    model.
+    """
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_5a")
+    refractive_index = ds.eta_r + 1j * ds.eta_i
+    return to_quantity(refractive_index.interp(w=w.to(ds.w.units), rh=rh))
+
+
+@ureg.wraps(ret=None, args=("nm", ""), strict=False)
+def urban_aerosol_large_particles_refractive_index(
+    w: Union[pint.Quantity, float], rh: Union[pint.Quantity, float] = 0.75
+) -> pint.Quantity:
+    """
+    Return the refractive index of the large particles in the urban aerosol
+    model.
+    """
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_5b")
+    refractive_index = ds.eta_r + 1j * ds.eta_i
+    return to_quantity(refractive_index.interp(w=w.to(ds.w.units), rh=rh))
+
+
+# ------------------------------------------------------------------------------
+#                           Maritime aerosol model
+# ------------------------------------------------------------------------------
+
+
+@ureg.wraps(ret=None, args=(""), strict=False)
+def maritime_aerosol_oceanic_component_radius_distribution(
+    rh: Union[pint.Quantity, float] = 0.75
+) -> Callable:
+    """
+    Return the radius distribution of the oceanic component in the maritime
+    aerosol model.
+    """
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_2")
+    r2 = to_quantity(ds.r.sel(model="maritime", mode=2).interp(rh=rh))
+    s2 = ureg.Quantity(0.4 * ureg.dimensionless)
+    return lognorm(r0=r2, std=s2)
+
+
+@ureg.wraps(ret=None, args=(""), strict=False)
+def maritime_aerosol_continental_component_radius_distribution(
+    rh: Union[pint.Quantity, float] = 0.75
+) -> Callable:
+    """
+    Return the radius distribution of the continental component in the maritime
+    aerosol model.
+    """
+    return rural_aerosol_small_particles_radius_distribution(rh=rh)
+
+
+@ureg.wraps(ret=None, args=("nm", ""), strict=False)
+def maritime_aerosol_oceanic_component_refractive_index(
+    w: Union[pint.Quantity, float], rh: Union[pint.Quantity, float] = 0.75
+) -> pint.Quantity:
+    """
+    Return the refractive index of the oceanic component in the maritime aerosol
+    model.
+    """
+    ds = data.open(category="microprops", id="shettle_fenn_1979_table_6")
+    refractive_index = ds.eta_r + 1j * ds.eta_i
+    return to_quantity(refractive_index.interp(w=w.to(ds.w.units), rh=rh))
+
+
+@ureg.wraps(ret=None, args=("nm", ""), strict=False)
+def maritime_aerosol_continental_refractive_index(
+    w: Union[pint.Quantity, float], rh: Union[pint.Quantity, float] = 0.75
+) -> pint.Quantity:
+    """
+    Return the refractive index of the continental component in the maritime
+    aerosol model.
+    """
+    return rural_aerosol_small_particles_refractive_index(w=w, rh=rh)
+
+
+# ------------------------------------------------------------------------------
+#                           Tropospheric aerosol model
+# ------------------------------------------------------------------------------
+
+
+@ureg.wraps(ret=None, args=(""), strict=False)
+def tropospheric_aerosol_radius_distribution(
+    rh: Union[pint.Quantity, float] = 0.75
+) -> Callable:
+    """
+    Return the radius distribution of the particles in the tropospheric aerosol
+    model.
+    """
+    return rural_aerosol_small_particles_radius_distribution(rh=rh)
+
+
+@ureg.wraps(ret=None, args=("nm", ""), strict=False)
+def tropospheric_aerosol_refractive_index(
+    w: Union[pint.Quantity, float], rh: Union[pint.Quantity, float] = 0.75
+) -> pint.Quantity:
+    """
+    Return the refractive index of the particles in the tropospheric aerosol
+    model.
+    """
+    return rural_aerosol_small_particles_refractive_index(w=w, rh=rh)

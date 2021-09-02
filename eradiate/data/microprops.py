@@ -11,11 +11,13 @@ from .._presolver import path_resolver
 
 class _Microprops(DataGetter):
     PATHS = {
-        "shettle_fenn_1979_table_2": "microprops/shettle_fenn_1979_table_2.csv",
-        "shettle_fenn_1979_table_3": "microprops/shettle_fenn_1979_table3.csv",
+        "shettle_fenn_1979_table_2": "microprops/shettle_fenn_1979_table_2.nc",
+        "shettle_fenn_1979_table_3": "microprops/shettle_fenn_1979_table_3.nc",
+        "shettle_fenn_1979_table_4a": "microprops/shettle_fenn_1979_table_4a.nc",
+        "shettle_fenn_1979_table_4b": "microprops/shettle_fenn_1979_table_4b.nc",
     }
 
     @classmethod
     def open(cls, id):
         path = path_resolver.resolve(cls.path(id))
-        return pd.read_csv(path, index_col=0).to_xarray()
+        return xr.open_dataset(path)
