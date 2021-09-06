@@ -2,6 +2,7 @@
 Heterogeneous atmospheres.
 """
 import typing as t
+from collections import abc as cabc
 
 import attr
 import numpy as np
@@ -18,6 +19,32 @@ from ...units import to_quantity
 from ...units import unit_registry as ureg
 
 
+def _heterogeneous_atmosphere_molecular_converter(value):
+    if isinstance(value, cabc.MutableMapping) and ("type" not in value):
+        value["type"] = "molecular_atmosphere"
+    return atmosphere_factory.convert(value, allowed_cls=MolecularAtmosphere)
+
+
+def _heterogeneous_atmosphere_particle_converter(value):
+    if not value:
+        return []
+
+    if not isinstance(value, (list, tuple)):
+        return _heterogeneous_atmosphere_particle_converter([value])
+
+    else:
+        result = []
+
+        for element in value:
+            if isinstance(element, cabc.MutableMapping) and ("type" not in element):
+                element["type"] = "particle_layer"
+            result.append(
+                atmosphere_factory.convert(element, allowed_cls=ParticleLayer)
+            )
+
+        return result
+
+
 @atmosphere_factory.register(type_id="heterogeneous_new")
 @parse_docs
 @attr.s
@@ -29,7 +56,9 @@ class HeterogeneousNewAtmosphere(Atmosphere):
     molecular_atmosphere: t.Optional[MolecularAtmosphere] = documented(
         attr.ib(
             default=None,
-            converter=attr.converters.optional(atmosphere_factory.convert),
+            converter=attr.converters.optional(
+                _heterogeneous_atmosphere_molecular_converter
+            ),
             validator=attr.validators.optional(
                 attr.validators.instance_of(MolecularAtmosphere)
             ),
@@ -42,10 +71,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
     particle_layers: t.List[ParticleLayer] = documented(
         attr.ib(
             factory=list,
-            converter=lambda value: [
-                atmosphere_factory.convert(element, allowed_cls=ParticleLayer)
-                for element in value
-            ],
+            converter=_heterogeneous_atmosphere_particle_converter,
             validator=attr.validators.deep_iterable(
                 attr.validators.instance_of(ParticleLayer)
             ),
@@ -285,7 +311,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
         shapes = KernelDict()
 
         # override component widths
-        ctx.override_scene_width = self.eval_width(ctx=ctx)
+        ctx = ctx.evolve(override_scene_width=self.eval_width(ctx=ctx))
 
         if self.molecular_atmosphere is not None:
             shapes.merge(self.molecular_atmosphere.kernel_shapes(ctx=ctx))

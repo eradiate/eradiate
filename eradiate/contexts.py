@@ -183,7 +183,7 @@ class CKDSpectralContext(SpectralContext):
     CKD spectral context data structure.
     """
 
-    _bindex: Bindex = documented(
+    bindex: Bindex = documented(
         attr.ib(
             factory=lambda: Bindex(
                 BinSet.from_db("10nm_test").select_bins("550")[0],
@@ -203,14 +203,14 @@ class CKDSpectralContext(SpectralContext):
         Wavelength associated with spectral context. Alias for
         ``self._bindex.bin.wcenter``.
         """
-        return self._bindex.bin.wcenter
+        return self.bindex.bin.wcenter
 
     @property
     def bin(self) -> Bin:
         """
         Bin associated with spectral context. Alias for ``self._bindex.bin``.
         """
-        return self._bindex.bin
+        return self.bindex.bin
 
     @property
     def spectral_index(self) -> t.Tuple[str, int]:
@@ -218,12 +218,12 @@ class CKDSpectralContext(SpectralContext):
         Spectral index associated with spectral context, equal to active bindex
         (bin ID, quadrature point index pair).
         """
-        return self.bin.id, self._bindex.index
+        return self.bin.id, self.bindex.index
 
     @property
     def spectral_index_formatted(self) -> str:
         """Formatted spectral index (human-readable string)."""
-        return f"{self.bin.id}:{self._bindex.index}"
+        return f"{self.bin.id}:{self.bindex.index}"
 
 
 # ------------------------------------------------------------------------------

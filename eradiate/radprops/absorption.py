@@ -1,6 +1,9 @@
-"""Functions to compute monochromatic absorption.
+"""
+Functions to compute monochromatic absorption.
 """
 import numpy as np
+import pint
+import typing as t
 import xarray as xr
 from scipy.constants import physical_constants
 
@@ -10,10 +13,15 @@ from ..units import unit_registry as ureg
 _BOLTZMANN = ureg.Quantity(*physical_constants["Boltzmann constant"][:2])
 
 
-@ureg.wraps(ret="m^-1", args=(None, "nm", "Pa", "K", "m^-3", None, None), strict=False)
 def compute_sigma_a(
-    ds, wl=550.0, p=101325.0, t=288.15, n=None, fill_values=None, methods=None
-):
+    ds: xr.Dataset,
+    wl: pint.Quantity = ureg.Quantity(550.0, "nm"),
+    p: pint.Quantity = ureg.Quantity(101325.0, "Pa"),
+    t: pint.Quantity = ureg.Quantity(288.15, "K"),
+    n: t.Optional[pint.Quantity] = None,
+    fill_values: t.Optional[float] = None,
+    methods: t.Optional[t.Dict[str, str]] = None,
+) -> pint.Quantity:
     """
     Computes the monochromatic absorption coefficient at given wavelength,
     pressure and temperature values.
@@ -42,30 +50,30 @@ def compute_sigma_a(
     Parameter ``ds`` (:class:`~xarray.Dataset`):
         Absorption cross section data set.
 
-    Parameter ``wl`` (float):
-        Wavelength value [nm].
+    Parameter ``wl`` (:class:`~pint.Quantity`):
+        Wavelength.
 
-    Parameter ``p`` (float or array):
-        Pressure [Pa].
+    Parameter ``p`` (:class:`~pint.Quantity`):
+        Pressure.
 
         .. note::
            If ``p``, ``t`` and ``n`` are arrays, their length must be the same.
 
-    Parameter ``t`` (float or array):
-        Temperature [K].
+    Parameter ``t`` (:class:`~pint.Quantity`):
+        Temperature.
 
         .. note::
            If the coordinate ``t`` is not in the input dataset ``ds``, the
            interpolation on temperature is not performed.
 
-    Parameter ``n`` (float or array):
+    Parameter ``n`` (:class:`~pint.Quantity`, optional):
         Number density [m^-3].
 
         .. note::
            If ``n`` is ``None``, the values of ``t`` and ``p`` are then used
            only to compute the corresponding number density.
 
-    Parameter ``fill_values`` (dict):
+    Parameter ``fill_values`` (dict, optional):
         Mapping of coordinates (in ``["w", "pt"]``) and fill values (either
         ``None`` or float).
         If not ``None``, out of bounds values are assigned the fill value
@@ -76,7 +84,7 @@ def compute_sigma_a(
         Only one fill value can be provided for both pressure and temperature
         coordinates.
 
-    Parameter ``methods`` (dict):
+    Parameter ``methods`` (dict, optional):
         Mapping of coordinates (in ``["w", "pt"]``) and interpolation methods.
         Default interpolation method is linear.
         Only one interpolation method can be specified for both pressure
@@ -104,7 +112,7 @@ def compute_sigma_a(
 
     # Interpolate along wavenumber dimension
     xsw = ds.interp(
-        w=1e7 / wl,  # wavenumber in cm^-1
+        w=(1.0 / wl).m_as(ds.w.units),  # wavenumber in cm^-1
         method=methods["w"],
         kwargs=dict(
             bounds_error=(fill_values["w"] is None),
@@ -115,10 +123,12 @@ def compute_sigma_a(
     # If the data set includes a temperature coordinate, we interpolate along
     # both pressure and temperature dimensions.
     # Else, we interpolate only along the pressure dimension.
-    p_values = np.array([p]) if isinstance(p, float) else p
+    p_m = p.m_as(ds.p.units)
+    p_values = np.array([p_m]) if isinstance(p_m, float) else p_m
     pz = xr.DataArray(p_values, dims="pt")
     if "t" in ds.coords:
-        t_values = np.array([t] * len(p_values)) if isinstance(t, float) else t
+        t_m = t.m_as(ds.t.units)
+        t_values = np.array([t_m] * len(p_values)) if isinstance(t_m, float) else t_m
         tz = xr.DataArray(t_values, dims="pt")
         interpolated = xsw.interp(
             p=pz,
@@ -141,10 +151,6 @@ def compute_sigma_a(
 
     xs = to_quantity(interpolated.xs)
 
-    # If 'n' is None, we compute it using the ideal gas state equation.
-    if n is None:
-        k = _BOLTZMANN.magnitude
-        n = p / (k * t)  # ideal gas state equation
-    n = ureg.Quantity(value=n, units="m^-3")
+    n = p / (_BOLTZMANN * t) if n is None else n
 
-    return (n * xs).m_as("m^-1")
+    return (n * xs).to("km^-1")

@@ -9,7 +9,7 @@ from ._core import Spectrum, spectrum_factory
 from ..core import KernelDict
 from ... import data, validators
 from ...attrs import documented, parse_docs
-from ...ckd import Bin
+from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
@@ -116,14 +116,16 @@ class SolarIrradianceSpectrum(Spectrum):
 
         return irradiance
 
-    def eval_ckd(self, *bins: Bin) -> pint.Quantity:
+    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         # Spectrum is averaged over spectral bin
 
-        result = np.zeros((len(bins),))
+        result = np.zeros((len(bindexes),))
         wavelength_units = ucc.get("wavelength")
         quantity_units = ucc.get(self.quantity)
 
-        for i_bin, bin in enumerate(bins):
+        for i_bindex, bindex in enumerate(bindexes):
+            bin = bindex.bin
+
             wmin_m = bin.wmin.m_as(wavelength_units)
             wmax_m = bin.wmax.m_as(wavelength_units)
 
@@ -145,7 +147,7 @@ class SolarIrradianceSpectrum(Spectrum):
 
             # -- Average spectrum on bin extent
             integral = np.trapz(interp, w)
-            result[i_bin] = (integral / bin.width).m_as(quantity_units)
+            result[i_bindex] = (integral / bin.width).m_as(quantity_units)
 
         return result * quantity_units
 

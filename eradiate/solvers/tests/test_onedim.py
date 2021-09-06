@@ -6,7 +6,8 @@ from eradiate import path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import ModeError
-from eradiate.scenes.atmosphere import HomogeneousAtmosphere
+from eradiate.radprops.rad_profile import AFGL1986RadProfile
+from eradiate.scenes.atmosphere import HomogeneousAtmosphere, HeterogeneousAtmosphere
 from eradiate.scenes.measure._distant import DistantRadianceMeasure
 from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
 
@@ -59,6 +60,19 @@ def test_onedim_scene(modes_all):
     assert np.allclose(s.measures[0].origin.radius, 1.0 * ureg.m)
     # -- Atmosphere is not in kernel dictionary
     assert "atmosphere" not in kernel_dict
+
+
+def test_onedim_scene_ckd(mode_ckd):
+    """
+    OneDimScene with heterogeneous atmosphere in CKD mode can be created.
+    """
+    ctx = KernelDictContext()
+    s = OneDimScene(
+        atmosphere=HeterogeneousAtmosphere(profile=AFGL1986RadProfile()),
+        surface={"type": "lambertian", "width": 100.0, "width_units": "m"},
+        measures={"type": "distant_radiance", "id": "distant_measure"},
+    )
+    assert s.kernel_dict(ctx=ctx).load() is not None
 
 
 def test_onedim_solver_app_new():

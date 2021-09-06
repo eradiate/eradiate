@@ -13,7 +13,7 @@ from ... import converters, validators
 from ..._mode import ModeFlags
 from ..._util import ensure_array
 from ...attrs import documented, parse_docs
-from ...ckd import Bin
+from ...ckd import Bin, Bindex
 from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
 from ...units import unit_context_config as ucc
@@ -107,16 +107,18 @@ class InterpolatedSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.interp(w, self.wavelengths, self.values, left=0.0, right=0.0)
 
-    def eval_ckd(self, *bins: Bin) -> pint.Quantity:
+    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         # Spectrum is averaged over spectral bin
 
-        result = np.zeros((len(bins),))
+        result = np.zeros((len(bindexes),))
         wavelength_units = ucc.get("wavelength")
         quantity_units = (
             self.values.units if hasattr(self.values, "units") else ureg.dimensionless
         )
 
-        for i_bin, bin in enumerate(bins):
+        for i_bindex, bindex in enumerate(bindexes):
+            bin = bindex.bin
+
             wmin_m = bin.wmin.m_as(wavelength_units)
             wmax_m = bin.wmax.m_as(wavelength_units)
 
@@ -138,7 +140,7 @@ class InterpolatedSpectrum(Spectrum):
 
             # -- Average spectrum on bin extent
             integral = np.trapz(interp, w)
-            result[i_bin] = (integral / bin.width).m_as(quantity_units)
+            result[i_bindex] = (integral / bin.width).m_as(quantity_units)
 
         return result * quantity_units
 

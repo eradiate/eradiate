@@ -6,7 +6,7 @@ from __future__ import annotations
 import datetime
 import pathlib
 import typing as t
-from abc import ABC, abstractmethod
+from abc import ABC
 
 import attr
 import numpy as np
@@ -18,11 +18,12 @@ import eradiate
 
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
-from .. import data
+from .. import data, validators
 from .._factory import Factory
 from .._mode import ModeFlags
 from .._presolver import path_resolver
 from ..attrs import documented, parse_docs
+from ..ckd import Bindex
 from ..contexts import SpectralContext
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
 from ..exceptions import UnsupportedModeError
@@ -30,7 +31,6 @@ from ..thermoprops import afgl1986, us76
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-from ..validators import all_positive
 
 rad_profile_factory = Factory()
 
@@ -175,7 +175,7 @@ class RadProfile(ABC):
     """
     An abstract base class for radiative property profiles. Classes deriving
     from this one must implement methods which return the albedo and collision
-    coefficients as Pint-wrapped 3D Numpy arrays.
+    coefficients as Pint-wrapped Numpy arrays.
 
     .. warning::
 
@@ -189,86 +189,255 @@ class RadProfile(ABC):
 
     """
 
-    @abstractmethod
-    def eval_albedo(
-        self: RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
-        Return albedo.
+        Evaluate albedo spectrum based on a spectral context. This method
+        dispatches evaluation to specialised methods depending on the active
+        mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
             A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Returns → :class:`pint.Quantity`:
+            Evaluated spectrum as an array with length equal to the number of
+            layers.
+        """
+
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            return self.eval_albedo_mono(spectral_ctx.wavelength).squeeze()
+
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            return self.eval_albedo_ckd(spectral_ctx.bindex).squeeze()
+
+        else:
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+    def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
+        """
+        Evaluate albedo spectrum in monochromatic modes.
+
+        Parameter ``w`` (:class:`pint.Quantity`):
+            Wavelength values at which the spectrum is to be evaluated.
 
         Returns → :class:`~pint.Quantity`:
-            Profile albedo.
+            Evaluated profile albedo as an array with shape (n_layers, len(w)).
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
-    def eval_sigma_t(
-        self: RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         """
-        Return extinction coefficient.
+        Evaluate albedo spectrum in CKD modes.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+        Parameter ``*bindexes`` (:class:`.Bindex`):
+            One or several CKD bindexes for which to evaluate the spectrum.
 
         Returns → :class:`~pint.Quantity`:
-            Profile extinction coefficient.
+            Evaluated profile albedo as an array with shape (n_layers, len(bindexes)).
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
-    def eval_sigma_a(
-        self, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
-        Return absorption coefficient.
+        Evaluate extinction coefficient spectrum based on a spectral context.
+        This method dispatches evaluation to specialised methods depending on
+        the active mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
             A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Returns → :class:`pint.Quantity`:
+            Evaluated spectrum as an array with length equal to the number of
+            layers.
+        """
+
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            return self.eval_sigma_t_mono(spectral_ctx.wavelength).squeeze()
+
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            return self.eval_sigma_t_ckd(spectral_ctx.bindex).squeeze()
+
+        else:
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+    def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
+        """
+        Evaluate extinction coefficient spectrum in monochromatic modes.
+
+        Parameter ``w`` (:class:`pint.Quantity`):
+            Wavelength values at which the spectrum is to be evaluated.
 
         Returns → :class:`~pint.Quantity`:
-            Profile absorption coefficient.
+            Evaluated profile extinction coefficient as an array with shape
+            (n_layers, len(w)).
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
-    def eval_sigma_s(
-        self, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         """
-        Return scattering coefficient.
+        Evaluate extinction coefficient spectrum in CKD modes.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+        Parameter ``*bindexes`` (:class:`.Bindex`):
+            One or several CKD bindexes for which to evaluate the spectrum.
 
         Returns → :class:`~pint.Quantity`:
-            Profile scattering coefficient.
+            Evaluated profile extinction coefficient as an array with shape
+            (n_layers, len(bindexes)).
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
-    def to_dataset(
-        self, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> xr.Dataset:
+    def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+        """
+        Evaluate absorption coefficient spectrum based on a spectral context.
+        This method dispatches evaluation to specialised methods depending on
+        the active mode.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Returns → :class:`pint.Quantity`:
+            Evaluated spectrum as an array with length equal to the number of
+            layers.
+        """
+
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
+
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            return self.eval_sigma_a_ckd(spectral_ctx.bindex).squeeze()
+
+        else:
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+    def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
+        """
+        Evaluate absorption coefficient spectrum in monochromatic modes.
+
+        Parameter ``w`` (:class:`pint.Quantity`):
+            Wavelength values at which the spectrum is to be evaluated.
+
+        Returns → :class:`~pint.Quantity`:
+            Evaluated profile absorption coefficient as an array with shape
+            (n_layers, len(w)).
+        """
+        raise NotImplementedError
+
+    def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        """
+        Evaluate absorption coefficient spectrum in CKD modes.
+
+        Parameter ``*bindexes`` (:class:`.Bindex`):
+            One or several CKD bindexes for which to evaluate the spectrum.
+
+        Returns → :class:`~pint.Quantity`:
+            Evaluated profile absorption coefficient as an array with shape
+            (n_layers, len(bindexes)).
+        """
+        raise NotImplementedError
+
+    def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+        """
+        Evaluate scattering coefficient spectrum based on a spectral context.
+        This method dispatches evaluation to specialised methods depending on
+        the active mode.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Returns → :class:`pint.Quantity`:
+            Evaluated spectrum as an array with length equal to the number of
+            layers.
+        """
+
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            return self.eval_sigma_s_mono(spectral_ctx.wavelength).squeeze()
+
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            return self.eval_sigma_s_ckd(spectral_ctx.bindex).squeeze()
+
+        else:
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+    def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
+        """
+        Evaluate scattering coefficient spectrum in monochromatic modes.
+
+        Parameter ``w`` (:class:`pint.Quantity`):
+            Wavelength values at which the spectrum is to be evaluated.
+
+        Returns → :class:`~pint.Quantity`:
+            Evaluated profile scattering coefficient as an array with shape
+            (n_layers, len(w)).
+        """
+        raise NotImplementedError
+
+    def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        """
+        Evaluate scattering coefficient spectrum in CKD modes.
+
+        Parameter ``*bindexes`` (:class:`.Bindex`):
+            One or several CKD bindexes for which to evaluate the spectrum.
+
+        Returns → :class:`~pint.Quantity`:
+            Evaluated profile scattering coefficient as an array with shape
+            (n_layers, len(bindexes)).
+        """
+        raise NotImplementedError
+
+    def eval_dataset(self, spectral_ctx: SpectralContext) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the corresponding
-        atmospheric profile.
+        atmospheric profile. This method dispatches evaluation to specialised
+        methods depending on the active mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
         Returns → :class:`~xarray.Dataset`:
             Radiative properties dataset.
         """
-        pass
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            return self.eval_dataset_mono(spectral_ctx.wavelength).squeeze()
+
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            return self.eval_dataset_ckd(spectral_ctx.bindex).squeeze()
+
+        else:
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+    def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
+        """
+        Return a dataset that holds the radiative properties of the corresponding
+        atmospheric profile in monochromatic modes.
+
+        Parameter ``w`` (:class:`pint.Quantity`):
+            Wavelength values at which spectra are to be evaluated.
+
+        Returns → :class:`~xarray.Dataset`:
+            Radiative properties dataset.
+        """
+        raise NotImplementedError
+
+    def eval_dataset_ckd(self, *bindexes: Bindex) -> xr.Dataset:
+        """
+        Return a dataset that holds the radiative properties of the corresponding
+        atmospheric profile in CKD modes
+
+        Parameter ``*bindexes`` (:class:`.Bindex`):
+            One or several CKD bindexes for which to evaluate spectra.
+
+        Returns → :class:`~xarray.Dataset`:
+            Radiative properties dataset.
+        """
+        raise NotImplementedError
 
 
 @rad_profile_factory.register(type_id="array")
@@ -288,13 +457,13 @@ class ArrayRadProfile(RadProfile):
         ),
         doc="Level altitudes. **Required, no default**.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="array",
     )
 
     albedo_values: pint.Quantity = documented(
         pinttr.ib(
-            validator=all_positive,
+            validator=validators.all_positive,
             units=ureg.dimensionless,
         ),
         doc="An array specifying albedo values. **Required, no default**.\n"
@@ -305,13 +474,13 @@ class ArrayRadProfile(RadProfile):
 
     sigma_t_values: pint.Quantity = documented(
         pinttr.ib(
-            validator=all_positive,
+            validator=validators.all_positive,
             units=ucc.deferred("collision_coefficient"),
         ),
         doc="An array specifying extinction coefficient values. **Required, no "
         "default**.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]^-1).",
+        "Unit-enabled field (default: ucc['collision_coefficient']).",
         type="array",
     )
 
@@ -332,48 +501,37 @@ class ArrayRadProfile(RadProfile):
                 f"the same length"
             )
 
-    def eval_albedo(
-        self, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def __attrs_pre_init__(self):
+        if not eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            raise UnsupportedModeError(supported="monochromatic")
+
+    def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
         return self.albedo_values
 
-    def eval_sigma_t(
-        self, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
         return self.sigma_t_values
 
-    def eval_sigma_a(
-        self, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
-        return self.eval_sigma_t(spectral_ctx) * (1.0 - self.eval_albedo(spectral_ctx))
+    def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
+        return self.eval_sigma_t_mono(w) * (1.0 - self.eval_albedo_mono(w))
 
-    def eval_sigma_s(
-        self, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
-        return self.eval_sigma_t(spectral_ctx) * self.eval_albedo(spectral_ctx)
+    def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
+        return self.eval_sigma_t_mono(w) * self.eval_albedo_mono(w)
+
+    def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
+        return make_dataset(
+            wavelength=w,
+            z_level=self.levels,
+            sigma_t=self.eval_sigma_t_mono(w),
+            albedo=self.eval_albedo_mono(w),
+        ).squeeze()
 
     @classmethod
-    def from_dataset(
-        cls: ArrayRadProfile, path: t.Union[str, pathlib.Path]
-    ) -> ArrayRadProfile:
+    def from_dataset(cls, path: t.Union[str, pathlib.Path]) -> ArrayRadProfile:
         ds = xr.open_dataset(path_resolver.resolve(path))
         z_level = to_quantity(ds.z_level)
         albedo = to_quantity(ds.albedo)
         sigma_t = to_quantity(ds.sigma_t)
         return cls(albedo_values=albedo, sigma_t_values=sigma_t, levels=z_level)
-
-    def to_dataset(
-        self: ArrayRadProfile, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> xr.Dataset:
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            return make_dataset(
-                wavelength=spectral_ctx.wavelength,
-                z_level=self.levels,
-                sigma_t=self.eval_sigma_t(spectral_ctx=spectral_ctx),
-                albedo=self.eval_albedo(spectral_ctx=spectral_ctx),
-            ).squeeze()
-        else:
-            raise UnsupportedModeError(supported="monochromatic")
 
 
 def _convert_thermoprops_us76_approx(
@@ -516,14 +674,14 @@ class US76ApproxRadProfile(RadProfile):
     )
 
     @property
-    def thermoprops(self: US76ApproxRadProfile) -> xr.Dataset:
+    def thermoprops(self) -> xr.Dataset:
         """
         Return thermophysical properties.
         """
         return self._thermoprops
 
     @property
-    def levels(self: US76ApproxRadProfile) -> pint.Quantity:
+    def levels(self) -> pint.Quantity:
         """
         Return level altitudes.
         """
@@ -544,99 +702,93 @@ class US76ApproxRadProfile(RadProfile):
         )
         return data.open(category="absorption_spectrum", id=dataset_id)
 
-    def eval_sigma_a(
-        self: US76ApproxRadProfile, spectral_ctx: SpectralContext
-    ) -> pint.Quantity:
-        """
-        Evaluate absorption coefficient given spectral context.
-        """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            profile = self.thermoprops
-            if self.has_absorption:
-                wavelength = spectral_ctx.wavelength
-
-                if self.absorption_data_set is None:  # ! this is never tested
-                    data_set = self.default_absorption_data_set(wavelength=wavelength)
-                else:
-                    data_set = xr.open_dataset(self.absorption_data_set)
-
-                # Compute scattering coefficient
-                return compute_sigma_a(
-                    ds=data_set,
-                    wl=wavelength,
-                    p=profile.p.values,
-                    n=profile.n.values,
-                    fill_values=dict(
-                        pt=0.0
-                    ),  # us76_u86_4 dataset is limited to pressures above
-                    # 0.101325 Pa, but us76 thermophysical profile goes below that
-                    # value for altitudes larger than 93 km. At these altitudes, the
-                    # number density is so small compared to that at the sea level that
-                    # we assume it is negligible.
-                )
+    def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
+        profile = self.thermoprops
+        if self.has_absorption:
+            if self.absorption_data_set is None:  # ! this is never tested
+                data_set = self.default_absorption_data_set(wavelength=w)
             else:
-                return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
+                data_set = xr.open_dataset(self.absorption_data_set)
 
+            # Compute scattering coefficient
+            return compute_sigma_a(
+                ds=data_set,
+                wl=w,
+                p=to_quantity(profile.p),
+                n=to_quantity(profile.n),
+                fill_values=dict(
+                    pt=0.0
+                ),  # us76_u86_4 dataset is limited to pressures above
+                # 0.101325 Pa, but us76 thermophysical profile goes below that
+                # value for altitudes larger than 93 km. At these altitudes, the
+                # number density is so small compared to that at the sea level that
+                # we assume it is negligible.
+            )
         else:
-            raise UnsupportedModeError(supported="monochromatic")
+            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
-    def eval_sigma_s(
-        self: US76ApproxRadProfile, spectral_ctx: SpectralContext
-    ) -> pint.Quantity:
-        """
-        Evaluate scattering coefficient given spectral context.
-        """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            profile = self.thermoprops
-            if self.has_scattering:
-                return compute_sigma_s_air(
-                    wavelength=spectral_ctx.wavelength,
-                    number_density=to_quantity(profile.n),
-                )
-            else:
-                return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
-
-        else:
-            raise UnsupportedModeError(supported="monochromatic")
-
-    def eval_albedo(
-        self: US76ApproxRadProfile, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
-        """
-        Evaluate albedo given spectral context.
-        """
-        return (self.eval_sigma_s(spectral_ctx) / self.eval_sigma_t(spectral_ctx)).to(
-            ureg.dimensionless
+    def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        raise NotImplementedError(
+            "CKD data sets are not yet available for the U.S. Standard Atmosphere 1976 atmopshere model."
         )
 
-    def eval_sigma_t(
-        self: US76ApproxRadProfile, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
-        """
-        Evaluate extinction coefficient given spectral context.
-        """
-        return self.eval_sigma_a(spectral_ctx) + self.eval_sigma_s(spectral_ctx)
-
-    def to_dataset(
-        self: US76ApproxRadProfile, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> xr.Dataset:
-        """
-        Return a dataset that holds the atmosphere radiative properties.
-
-        Returns → :class:`xarray.Dataset`:
-            Radiative properties dataset.
-        """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            profile = self.thermoprops
-            return make_dataset(
-                wavelength=spectral_ctx.wavelength,
-                z_level=to_quantity(profile.z_level),
-                z_layer=to_quantity(profile.z_layer),
-                sigma_a=self.eval_sigma_a(spectral_ctx),
-                sigma_s=self.eval_sigma_s(spectral_ctx),
-            ).squeeze()
+    def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
+        profile = self.thermoprops
+        if self.has_scattering:
+            return compute_sigma_s_air(
+                wavelength=w,
+                number_density=to_quantity(profile.n),
+            )
         else:
-            raise UnsupportedModeError(supported="monochromatic")
+            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
+
+    def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        wavelengths = ureg.Quantity(
+            np.array([bindex.bin.wcenter.m_as("nm") for bindex in bindexes]), "nm"
+        )
+        return self.eval_sigma_s_mono(w=wavelengths)
+
+    def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
+        sigma_s = self.eval_sigma_s_mono(w)
+        sigma_t = self.eval_sigma_t_mono(w)
+        return np.divide(
+            sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
+        ).to("dimensionless")
+
+    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        sigma_s = self.eval_sigma_s_ckd(bindexes=bindexes)
+        sigma_t = self.eval_sigma_t_ckd(bindexes=bindexes)
+        return np.divide(
+            sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
+        ).to("dimensionless")
+
+    def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
+        return self.eval_sigma_a_mono(w) + self.eval_sigma_s_mono(w)
+
+    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(bindexes) + self.eval_sigma_s_ckd(bindexes)
+
+    def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
+        profile = self.thermoprops
+        return make_dataset(
+            wavelength=w,
+            z_level=to_quantity(profile.z_level),
+            z_layer=to_quantity(profile.z_layer),
+            sigma_a=self.eval_sigma_a_mono(w),
+            sigma_s=self.eval_sigma_s_mono(w),
+        ).squeeze()
+
+    def eval_dataset_ckd(self, *bindexes: Bindex) -> xr.Dataset:
+        if len(bindexes) > 1:
+            raise NotImplementedError
+        else:
+            return make_dataset(
+                wavelength=bindexes[0].bin.wcenter,
+                z_level=to_quantity(self.thermoprops.z_level),
+                z_layer=to_quantity(self.thermoprops.z_layer),
+                sigma_a=self.eval_sigma_a_ckd(*bindexes),
+                sigma_s=self.eval_sigma_s_ckd(*bindexes),
+            ).squeeze()
 
 
 def _convert_thermoprops_afgl1986(
@@ -714,11 +866,11 @@ class AFGL1986RadProfile(RadProfile):
     )
 
     @property
-    def thermoprops(self: AFGL1986RadProfile) -> xr.Dataset:
+    def thermoprops(self) -> xr.Dataset:
         return self._thermoprops
 
     @property
-    def levels(self: AFGL1986RadProfile) -> pint.Quantity:
+    def levels(self) -> pint.Quantity:
         return to_quantity(self.thermoprops.z_level)
 
     @staticmethod
@@ -745,9 +897,9 @@ class AFGL1986RadProfile(RadProfile):
             sigma_a_absorber = compute_sigma_a(
                 ds=dataset,
                 wl=wavelength,
-                p=p.values,
-                t=t.values,
-                n=n_absorber.values,
+                p=p,
+                t=t,
+                n=n_absorber,
                 fill_values=dict(
                     w=0.0, pt=0.0
                 ),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
@@ -791,17 +943,15 @@ class AFGL1986RadProfile(RadProfile):
         return compute_sigma_a(
             ds=dataset,
             wl=wavelength,
-            p=p.values,
-            t=t.values,
-            n=n_absorber.values,
+            p=p,
+            t=t,
+            n=n_absorber,
             fill_values=dict(
                 w=0.0, pt=0.0
             ),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
         )
 
-    def eval_sigma_a(
-        self: AFGL1986RadProfile, spectral_ctx: SpectralContext
-    ) -> pint.Quantity:
+    def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
         """
         Evaluate absorption coefficient given a spectral context.
 
@@ -810,11 +960,11 @@ class AFGL1986RadProfile(RadProfile):
         """
         profile = self.thermoprops
         if self.has_absorption:
-            wavelength = spectral_ctx.wavelength
+            wavelength = w
 
-            p = profile.p
-            t = profile.t
-            n = profile.n
+            p = to_quantity(profile.p)
+            t = to_quantity(profile.t)
+            n = to_quantity(profile.n)
             mr = profile.mr
 
             sigma_a = np.full(mr.shape, np.nan)
@@ -829,7 +979,7 @@ class AFGL1986RadProfile(RadProfile):
             ]
 
             for i, absorber in enumerate(absorbers):
-                n_absorber = n * mr.sel(species=absorber.value)
+                n_absorber = n * to_quantity(mr.sel(species=absorber.value))
 
                 if absorber.value in self.absorption_data_sets:
                     sigma_a_absorber = self._compute_sigma_a_absorber_from_data_set(
@@ -856,51 +1006,75 @@ class AFGL1986RadProfile(RadProfile):
         else:
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
-    def eval_sigma_s(
-        self: AFGL1986RadProfile, spectral_ctx: SpectralContext
-    ) -> pint.Quantity:
-        """
-        Evaluate scattering coefficient given a spectral context.
-        """
+    def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        # TODO: avoid using test data set here
+        # TODO: check that model is us_standard and that bin is available in
+        # data set
+        ds = eradiate.data.open(
+            category="ckd_absorption", id="afgl1986-us_standard-10nm_test"
+        )
+        z = to_quantity(self.thermoprops.z_layer).m_as(ds.z.units)
+        return ureg.Quantity(
+            [
+                ds.k.sel(bd=(bindex.bin.id, bindex.index))
+                .interp(z=z, kwargs=dict(fill_value=0.0))
+                .values
+                for bindex in bindexes
+            ],
+            ds.k.units,
+        )
+
+    def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
         thermoprops = self.thermoprops
         if self.has_scattering:
             return compute_sigma_s_air(
-                wavelength=spectral_ctx.wavelength,
-                number_density=ureg.Quantity(to_quantity(thermoprops.n)),
+                wavelength=w,
+                number_density=to_quantity(thermoprops.n),
             )
         else:
             return ureg.Quantity(np.zeros(thermoprops.z_layer.size), "km^-1")
 
-    def eval_albedo(
-        self: AFGL1986RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
-        return (self.eval_sigma_s(spectral_ctx) / self.eval_sigma_t(spectral_ctx)).to(
+    def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        wavelengths = ureg.Quantity(
+            np.array([bindex.bin.wcenter.m_as("nm") for bindex in bindexes]), "nm"
+        )
+        return self.eval_sigma_s_mono(w=wavelengths)
+
+    def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
+        return (self.eval_sigma_s_mono(w) / self.eval_sigma_t_mono(w)).to(
             ureg.dimensionless
         )
 
-    def eval_sigma_t(
-        self: AFGL1986RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
-        return self.eval_sigma_s(spectral_ctx=spectral_ctx) + self.eval_sigma_a(
-            spectral_ctx=spectral_ctx
-        )
+    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        sigma_s = self.eval_sigma_s_ckd(*bindexes)
+        sigma_t = self.eval_sigma_t_ckd(*bindexes)
+        return np.divide(
+            sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
+        ).to("dimensionless")
 
-    def to_dataset(
-        self: AFGL1986RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
-    ) -> pint.Quantity:
-        """
-        Return a dataset that holds the atmosphere radiative properties.
+    def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
+        return self.eval_sigma_s_mono(w) + self.eval_sigma_a_mono(w)
 
-        Returns → :class:`xarray.Dataset`:
-            Radiative properties dataset.
-        """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(*bindexes) + self.eval_sigma_s_ckd(*bindexes)
+
+    def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
+        return make_dataset(
+            wavelength=w,
+            z_level=to_quantity(self.thermoprops.z_level),
+            z_layer=to_quantity(self.thermoprops.z_layer),
+            sigma_a=self.eval_sigma_a_mono(w),
+            sigma_s=self.eval_sigma_s_mono(w),
+        ).squeeze()
+
+    def eval_dataset_ckd(self, *bindexes: Bindex) -> xr.Dataset:
+        if len(bindexes) > 1:
+            raise NotImplementedError
+        else:
             return make_dataset(
-                wavelength=spectral_ctx.wavelength,
+                wavelength=bindexes[0].bin.wcenter,
                 z_level=to_quantity(self.thermoprops.z_level),
                 z_layer=to_quantity(self.thermoprops.z_layer),
-                sigma_a=self.eval_sigma_a(spectral_ctx),
-                sigma_s=self.eval_sigma_s(spectral_ctx),
+                sigma_a=self.eval_sigma_a_ckd(*bindexes),
+                sigma_s=self.eval_sigma_s_ckd(*bindexes),
             ).squeeze()
-        else:
-            raise UnsupportedModeError(supported="monochromatic")
