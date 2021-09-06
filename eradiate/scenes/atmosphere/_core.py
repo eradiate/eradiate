@@ -14,7 +14,7 @@ import xarray as xr
 from ..core import SceneElement
 from ... import converters, validators
 from ..._factory import Factory
-from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
+from ...attrs import AUTO, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 
@@ -44,7 +44,7 @@ class Atmosphere(SceneElement, ABC):
         default='"atmosphere"',
     )
 
-    width: Union[pint.Quantity, AutoType] = documented(
+    width: Union[pint.Quantity] = documented(
         pinttr.ib(
             default=AUTO,
             converter=converters.auto_or(
