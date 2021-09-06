@@ -1,5 +1,6 @@
 import pytest
 
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure import PerspectiveCameraMeasure
 
@@ -7,7 +8,8 @@ from eradiate.scenes.measure import PerspectiveCameraMeasure
 def test_perspective(mode_mono):
     # Constructor
     d = PerspectiveCameraMeasure()
-    assert KernelDict.new(d).load() is not None
+    ctx = KernelDictContext()
+    assert KernelDict.new(d, ctx=ctx).load() is not None
 
     # Origin and target cannot be the same
     for point in [[0, 0, 0], [1, 1, 1], [-1, 0.5, 1.3333]]:

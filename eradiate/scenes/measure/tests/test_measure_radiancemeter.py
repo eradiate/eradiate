@@ -1,3 +1,4 @@
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure._radiancemeter import RadiancemeterMeasure
 
@@ -21,4 +22,5 @@ def test_radiancemeter(mode_mono):
     ]
 
     # The kernel dict can be instantiated
-    assert KernelDict.new(s).load() is not None
+    ctx = KernelDictContext()
+    assert KernelDict.new(s, ctx=ctx).load() is not None
