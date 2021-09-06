@@ -44,7 +44,7 @@ class Atmosphere(SceneElement, ABC):
         default='"atmosphere"',
     )
 
-    width: Union[pint.Quantity] = documented(
+    width: pint.Quantity = documented(
         pinttr.ib(
             default=AUTO,
             converter=converters.auto_or(
