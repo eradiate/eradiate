@@ -83,32 +83,9 @@ class AirScatteringCoefficientSpectrum(Spectrum):
 
             # -- Average spectrum on bin extent
             integral = np.trapz(interp, w)
-            print(integral)
             result[i_bin] = (integral / bin.width).m_as(quantity_units)
 
         return result * quantity_units
-
-    def eval_old(self, spectral_ctx: SpectralContext = None) -> pint.Quantity:
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            return _eval_impl(spectral_ctx.wavelength)
-
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            # Build a spectral mesh with spacing finer than 1 nm (reasonably accurate)
-            wmin_m = spectral_ctx.bin.wmin.m_as(ureg.nm)
-            wmax_m = spectral_ctx.bin.wmax.m_as(ureg.nm)
-            w = np.linspace(wmin_m, wmax_m, 2)
-            n = 10
-
-            while True:
-                if w[1] - w[0] <= 1.0:  # nm
-                    break
-                w = np.linspace(wmin_m, wmax_m, n + 1)
-                n *= 2
-
-            return _eval_impl_ckd(w * ureg.nm)
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
