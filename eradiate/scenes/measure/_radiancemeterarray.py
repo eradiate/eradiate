@@ -1,5 +1,10 @@
+from __future__ import annotations
+
+from typing import Dict, List, Tuple
+
 import attr
 import numpy as np
+import pint
 import pinttr
 
 from ._core import Measure, measure_factory
@@ -22,19 +27,19 @@ class RadiancemeterArrayMeasure(Measure):
     ``directions`` parameters.
     """
 
-    origins = documented(
+    origins: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity([[0.0, 0.0, 0.0]], ureg.m),
             units=ucc.deferred("length"),
         ),
         doc="A sequence of 3D points specifying radiance meter array positions.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="array-like",
         default="[[0, 0, 0]] m",
     )
 
-    directions = documented(
+    directions: np.ndarray = documented(
         attr.ib(
             default=np.array([[0.0, 0.0, 1.0]]),
             converter=np.array,
@@ -62,10 +67,10 @@ class RadiancemeterArrayMeasure(Measure):
             )
 
     @property
-    def film_resolution(self):
+    def film_resolution(self) -> Tuple[int, int]:
         return (self.origins.shape[0], 1)
 
-    def _base_dicts(self):
+    def _base_dicts(self) -> List[Dict]:
         origins = self.origins.m_as(uck.get("length"))
         directions = self.directions
         result = []

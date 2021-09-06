@@ -1,3 +1,5 @@
+from typing import Dict
+
 import attr
 
 from ._core import Surface, surface_factory
@@ -26,7 +28,7 @@ class RPVSurface(Surface):
        Eradiate Scientific Handbook :cite:`EradiateScientificHandbook2020`.
     """
 
-    rho_0 = documented(
+    rho_0: Spectrum = documented(
         attr.ib(
             default=0.183,
             converter=spectrum_factory.converter("dimensionless"),
@@ -41,7 +43,7 @@ class RPVSurface(Surface):
         default="0.183",
     )
 
-    rho_c = documented(
+    rho_c: Spectrum = documented(
         attr.ib(
             default=0.183,
             converter=spectrum_factory.converter("dimensionless"),
@@ -56,7 +58,7 @@ class RPVSurface(Surface):
         default="0.183",
     )
 
-    k = documented(
+    k: Spectrum = documented(
         attr.ib(
             default=0.780,
             converter=spectrum_factory.converter("dimensionless"),
@@ -71,7 +73,7 @@ class RPVSurface(Surface):
         default="0.780",
     )
 
-    g = documented(
+    g: Spectrum = documented(
         attr.ib(
             default=-0.1,
             converter=spectrum_factory.converter("dimensionless"),
@@ -86,13 +88,13 @@ class RPVSurface(Surface):
         default="-0.1",
     )
 
-    def bsdfs(self, ctx: KernelDictContext = None):
+    def bsdfs(self, ctx: KernelDictContext) -> Dict:
         return {
             f"bsdf_{self.id}": {
                 "type": "rpv",
-                "rho_0": onedict_value(self.rho_0.kernel_dict(ctx=ctx)),
-                "rho_c": onedict_value(self.rho_c.kernel_dict(ctx=ctx)),
-                "k": onedict_value(self.k.kernel_dict(ctx=ctx)),
-                "g": onedict_value(self.g.kernel_dict(ctx=ctx)),
+                "rho_0": onedict_value(self.rho_0.kernel_dict(ctx)),
+                "rho_c": onedict_value(self.rho_c.kernel_dict(ctx)),
+                "k": onedict_value(self.k.kernel_dict(ctx)),
+                "g": onedict_value(self.g.kernel_dict(ctx)),
             }
         }

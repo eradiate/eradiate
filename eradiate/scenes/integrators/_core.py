@@ -14,7 +14,7 @@ class Integrator(SceneElement):
     Abstract base class for all integrator elements.
     """
 
-    id = documented(
+    id: str = documented(
         attr.ib(
             default="integrator",
             validator=attr.validators.optional(attr.validators.instance_of(str)),

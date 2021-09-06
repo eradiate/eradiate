@@ -1,6 +1,7 @@
-from typing import MutableMapping, Optional
+from typing import Dict
 
 import attr
+import pint
 import pinttr
 
 from ._core import Illumination, illumination_factory
@@ -24,7 +25,7 @@ class DirectionalIllumination(Illumination):
     in Earth observation.
     """
 
-    zenith = documented(
+    zenith: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity(0.0, ureg.deg),
             validator=is_positive,
@@ -35,7 +36,7 @@ class DirectionalIllumination(Illumination):
         default="0.0 deg",
     )
 
-    azimuth = documented(
+    azimuth: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity(0.0, ureg.deg),
             validator=is_positive,
@@ -48,7 +49,7 @@ class DirectionalIllumination(Illumination):
         default="0.0 deg",
     )
 
-    irradiance = documented(
+    irradiance: Spectrum = documented(
         attr.ib(
             factory=SolarIrradianceSpectrum,
             converter=spectrum_factory.converter("irradiance"),
@@ -65,7 +66,7 @@ class DirectionalIllumination(Illumination):
         default=":class:`SolarIrradianceSpectrum() <.SolarIrradianceSpectrum>`",
     )
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         return {
             self.id: {
                 "type": "directional",

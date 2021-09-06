@@ -1,4 +1,4 @@
-from typing import MutableMapping, Optional
+from typing import Dict
 
 import attr
 
@@ -17,7 +17,7 @@ class ConstantIllumination(Illumination):
     Constant illumination scene element [``constant``].
     """
 
-    radiance = documented(
+    radiance: Spectrum = documented(
         attr.ib(
             default=1.0,
             converter=spectrum_factory.converter("radiance"),
@@ -29,7 +29,7 @@ class ConstantIllumination(Illumination):
         default='1.0 ucc["radiance"]',
     )
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         return {
             self.id: {
                 "type": "constant",

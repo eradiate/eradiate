@@ -1,3 +1,4 @@
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.integrators import (
     PathIntegrator,
@@ -9,12 +10,13 @@ from eradiate.scenes.integrators import (
 def test_path(mode_mono):
     # Basic specification
     integrator = PathIntegrator()
-    assert integrator.kernel_dict()["integrator"] == {"type": "path"}
+    ctx = KernelDictContext()
+    assert integrator.kernel_dict(ctx)["integrator"] == {"type": "path"}
     assert KernelDict.new(integrator).load() is not None
 
     # More detailed specification
     integrator = PathIntegrator(max_depth=5, rr_depth=3, hide_emitters=False)
-    assert integrator.kernel_dict()["integrator"] == {
+    assert integrator.kernel_dict(ctx)["integrator"] == {
         "type": "path",
         "max_depth": 5,
         "rr_depth": 3,
@@ -26,12 +28,13 @@ def test_path(mode_mono):
 def test_volpath(mode_mono):
     # Basic specification
     integrator = VolPathIntegrator()
-    assert integrator.kernel_dict()["integrator"] == {"type": "volpath"}
+    ctx = KernelDictContext()
+    assert integrator.kernel_dict(ctx)["integrator"] == {"type": "volpath"}
     assert KernelDict.new(integrator).load() is not None
 
     # More detailed specification
     integrator = VolPathIntegrator(max_depth=5, rr_depth=3, hide_emitters=False)
-    assert integrator.kernel_dict()["integrator"] == {
+    assert integrator.kernel_dict(ctx)["integrator"] == {
         "type": "volpath",
         "max_depth": 5,
         "rr_depth": 3,
@@ -43,14 +46,15 @@ def test_volpath(mode_mono):
 def test_volpathmis(mode_mono):
     # Basic specification
     integrator = VolPathMISIntegrator()
-    assert integrator.kernel_dict()["integrator"] == {"type": "volpathmis"}
+    ctx = KernelDictContext()
+    assert integrator.kernel_dict(ctx)["integrator"] == {"type": "volpathmis"}
     assert KernelDict.new(integrator).load() is not None
 
     # More detailed specification
     integrator = VolPathMISIntegrator(
         max_depth=5, rr_depth=3, hide_emitters=False, use_spectral_mis=True
     )
-    assert integrator.kernel_dict()["integrator"] == {
+    assert integrator.kernel_dict(ctx)["integrator"] == {
         "type": "volpathmis",
         "max_depth": 5,
         "rr_depth": 3,

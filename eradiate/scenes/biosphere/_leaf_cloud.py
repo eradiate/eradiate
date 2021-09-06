@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import os
+from typing import Dict
 
 import aabbtree
 import attr
@@ -11,6 +14,7 @@ from ..core import SceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
+from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -218,7 +222,7 @@ class LeafCloudParams:
 
     _leaf_radius = documented(
         pinttr.ib(default=None, units=ucc.deferred("length")),
-        doc="Leaf radius.\n\nUnit-enabled field (default: ucc[length]).",
+        doc="Leaf radius.\n\nUnit-enabled field (default: ucc['length']).",
         type="float",
     )
 
@@ -593,7 +597,7 @@ class LeafCloud(CanopyElement):
     #                                 Fields
     # --------------------------------------------------------------------------
 
-    id = documented(
+    id: str = documented(
         attr.ib(
             default="leaf_cloud",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -603,24 +607,24 @@ class LeafCloud(CanopyElement):
         default="'leaf_cloud'",
     )
 
-    leaf_positions = documented(
+    leaf_positions: pint.Quantity = documented(
         pinttr.ib(factory=list, units=ucc.deferred("length")),
         doc="Leaf positions in cartesian coordinates as a (n, 3)-array.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="array-like",
         default="[]",
     )
 
-    leaf_orientations = documented(
+    leaf_orientations: np.ndarray = documented(
         attr.ib(factory=list, converter=np.array),
         doc="Leaf orientations (normal vectors) in Cartesian coordinates as a "
         "(n, 3)-array.",
-        type="array-like",
+        type="array",
         default="[]",
     )
 
-    leaf_radii = documented(
+    leaf_radii: pint.Quantity = documented(
         pinttr.ib(
             factory=list,
             validator=[
@@ -664,7 +668,7 @@ class LeafCloud(CanopyElement):
                 f"len(leaf_radii) = {len(self.leaf_radii)}."
             )
 
-    leaf_reflectance = documented(
+    leaf_reflectance: Spectrum = documented(
         attr.ib(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
@@ -679,7 +683,7 @@ class LeafCloud(CanopyElement):
         default="0.5",
     )
 
-    leaf_transmittance = documented(
+    leaf_transmittance: Spectrum = documented(
         attr.ib(
             default=0.5,
             converter=spectrum_factory.converter("transmittance"),
@@ -705,12 +709,12 @@ class LeafCloud(CanopyElement):
             Number of leaves in the leaf cloud."""
         return len(self.leaf_positions)
 
-    def surface_area(self) -> float:
+    def surface_area(self) -> pint.Quantity:
         """
         Compute total surface area of the leaf cloud.
 
-        Returns → float:
-            Total surface area.
+        Returns → pint.Quantity:
+            Total surface area as a :class:`~pint.Quantity`.
         """
         return np.sum(np.pi * self.leaf_radii * self.leaf_radii).squeeze()
 
@@ -719,7 +723,9 @@ class LeafCloud(CanopyElement):
     # --------------------------------------------------------------------------
 
     @classmethod
-    def cuboid(cls, seed=12345, avoid_overlap=False, **kwargs):
+    def cuboid(
+        cls, seed: int = 12345, avoid_overlap: bool = False, **kwargs
+    ) -> LeafCloud:
         """
         Generate a leaf cloud with an axis-aligned cuboid shape (and a square
         footprint on the ground). Parameters are checked by the
@@ -747,6 +753,9 @@ class LeafCloud(CanopyElement):
         Parameter ``n_attempts`` (int):
             If ``avoid_overlap`` is ``True``, number of attempts made at placing
             a leaf without collision before giving up. Default: 1e5.
+
+        Returns → :class:`.LeafCloud`:
+            Generated leaf cloud.
         """
         rng = np.random.default_rng(seed=seed)
         n_attempts = kwargs.pop("n_attempts", int(1e5))
@@ -784,7 +793,7 @@ class LeafCloud(CanopyElement):
         )
 
     @classmethod
-    def sphere(cls, seed=12345, **kwargs):
+    def sphere(cls, seed: int = 12345, **kwargs) -> LeafCloud:
         """
         Generate a leaf cloud with spherical shape. Parameters are checked by
         the :class:`.SphereLeafCloudParams` class.
@@ -800,6 +809,9 @@ class LeafCloud(CanopyElement):
 
         Parameter ``seed`` (int):
             Seed for the random number generator.
+
+        Returns → :class:`.LeafCloud`:
+            Generated leaf cloud.
         """
         rng = np.random.default_rng(seed=seed)
         params = SphereLeafCloudParams(**kwargs)
@@ -824,7 +836,7 @@ class LeafCloud(CanopyElement):
         )
 
     @classmethod
-    def ellipsoid(cls, seed=12345, **kwargs):
+    def ellipsoid(cls, seed: int = 12345, **kwargs) -> LeafCloud:
         """
         Generate a leaf cloud with ellipsoid shape. Parameters are checked by
         the :class:`.EllipsoidLeafCloudParams` class.
@@ -842,6 +854,9 @@ class LeafCloud(CanopyElement):
 
         Parameter ``seed`` (int):
             Seed for the random number generator.
+
+        Returns → :class:`.LeafCloud`:
+            Generated leaf cloud.
         """
         rng = np.random.default_rng(seed=seed)
         params = EllipsoidLeafCloudParams(**kwargs)
@@ -864,7 +879,7 @@ class LeafCloud(CanopyElement):
         )
 
     @classmethod
-    def cylinder(cls, seed=12345, **kwargs):
+    def cylinder(cls, seed: int = 12345, **kwargs) -> LeafCloud:
         """
         Generate a leaf cloud with a cylindrical shape (vertical orientation).
         Parameters are checked by the :class:`.CylinderLeafCloudParams` class.
@@ -881,6 +896,9 @@ class LeafCloud(CanopyElement):
 
         Parameter ``seed`` (int):
             Seed for the random number generator.
+
+        Returns → :class:`.LeafCloud`:
+            Generated leaf cloud.
         """
         rng = np.random.default_rng(seed=seed)
         params = CylinderLeafCloudParams(**kwargs)
@@ -903,7 +921,7 @@ class LeafCloud(CanopyElement):
         )
 
     @classmethod
-    def cone(cls, seed=12345, **kwargs):
+    def cone(cls, seed: int = 12345, **kwargs) -> LeafCloud:
         """
         Generate a leaf cloud with a right conical shape (vertical orientation).
         Parameters are checked by the :class:`.ConeLeafCloudParams` class.
@@ -920,6 +938,9 @@ class LeafCloud(CanopyElement):
 
         Parameter ``seed`` (int):
             Seed for the random number generator.
+
+        Returns → :class:`.LeafCloud`:
+            Generated leaf cloud.
         """
         rng = np.random.default_rng(seed=seed)
         params = ConeLeafCloudParams(**kwargs)
@@ -949,7 +970,7 @@ class LeafCloud(CanopyElement):
         leaf_transmittance=0.5,
         leaf_reflectance=0.5,
         id="leaf_cloud",
-    ):
+    ) -> LeafCloud:
         """
         Construct a :class:`.LeafCloud` from a text file specifying the leaf
         positions and orientations.
@@ -982,6 +1003,9 @@ class LeafCloud(CanopyElement):
 
         Parameter ``id`` (str):
             ID of the created :class:`LeafCloud` instance.
+
+        Returns → :class:`.LeafCloud`:
+            Generated leaf cloud.
 
         Raises → ValueError:
             If ``filename`` is set to ``None``.
@@ -1022,11 +1046,11 @@ class LeafCloud(CanopyElement):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext) -> Dict:
         """
         Return BSDF plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -1044,11 +1068,11 @@ class LeafCloud(CanopyElement):
             }
         }
 
-    def shapes(self, ctx=None):
+    def shapes(self, ctx: KernelDictContext) -> Dict:
         """
         Return shape plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -1090,7 +1114,7 @@ class LeafCloud(CanopyElement):
     #                               Other methods
     # --------------------------------------------------------------------------
 
-    def translated(self, xyz: pint.Quantity) -> "LeafCloud":
+    def translated(self, xyz: pint.Quantity) -> LeafCloud:
         """
         Return a copy of self translated by the vector ``xyz``.
 

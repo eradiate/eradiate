@@ -1,4 +1,6 @@
-from typing import MutableMapping, Optional
+from __future__ import annotations
+
+from typing import Dict
 
 import attr
 import numpy as np
@@ -46,7 +48,7 @@ class AirScatteringCoefficientSpectrum(Spectrum):
       rule).
     """
 
-    quantity = attr.ib(
+    quantity: PhysicalQuantity = attr.ib(
         default=PhysicalQuantity.COLLISION_COEFFICIENT,
         init=False,
         repr=False,
@@ -108,7 +110,7 @@ class AirScatteringCoefficientSpectrum(Spectrum):
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
             return {
                 "spectrum": {

@@ -1,4 +1,4 @@
-from typing import MutableMapping, Optional
+from typing import Dict, MutableMapping
 
 import attr
 import pint
@@ -120,20 +120,18 @@ class HomogeneousAtmosphere(Atmosphere):
     #                           Evaluation methods
     # --------------------------------------------------------------------------
 
-    def eval_width(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+    def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         if self.width is AUTO:
             spectral_ctx = ctx.spectral_ctx if ctx is not None else None
             return 10.0 / self.eval_sigma_s(spectral_ctx)
         else:
             return self.width
 
-    def eval_albedo(
-        self, spectral_ctx: Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Return albedo.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -144,13 +142,11 @@ class HomogeneousAtmosphere(Atmosphere):
             self.eval_sigma_s(spectral_ctx) + self.eval_sigma_a(spectral_ctx)
         )
 
-    def eval_sigma_a(
-        self, spectral_ctx: Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Return absorption coefficient.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -159,13 +155,11 @@ class HomogeneousAtmosphere(Atmosphere):
         """
         return self.sigma_a.eval(spectral_ctx)
 
-    def eval_sigma_s(
-        self, spectral_ctx: Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Return scattering coefficient.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -174,13 +168,11 @@ class HomogeneousAtmosphere(Atmosphere):
         """
         return self.sigma_s.eval(spectral_ctx)
 
-    def eval_sigma_t(
-        self, spectral_ctx: Optional[SpectralContext] = None
-    ) -> pint.Quantity:
+    def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Return extinction coefficient.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext` or None):
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -193,10 +185,10 @@ class HomogeneousAtmosphere(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_phase(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
         return self.phase.kernel_dict(ctx=ctx)
 
-    def kernel_media(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_media(self, ctx: KernelDictContext) -> Dict:
         if ctx.ref:
             phase = {"type": "ref", "id": self.phase.id}
         else:
@@ -213,7 +205,7 @@ class HomogeneousAtmosphere(Atmosphere):
             }
         }
 
-    def kernel_shapes(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_shapes(self, ctx: KernelDictContext) -> Dict:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:

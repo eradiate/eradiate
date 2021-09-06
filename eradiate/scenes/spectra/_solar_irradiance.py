@@ -1,11 +1,14 @@
-from typing import MutableMapping, Optional
+from __future__ import annotations
+
+from typing import Dict
 
 import attr
 import numpy as np
 import pint
+import xarray as xr
 
 from ._core import Spectrum, spectrum_factory
-from ... import data
+from ... import data, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bin
 from ...contexts import KernelDictContext, SpectralContext
@@ -13,7 +16,6 @@ from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...validators import is_positive
 
 
 @spectrum_factory.register(type_id="solar_irradiance")
@@ -48,9 +50,11 @@ class SolarIrradianceSpectrum(Spectrum):
       rule).
     """
 
-    quantity = attr.ib(default=PhysicalQuantity.IRRADIANCE, init=False, repr=False)
+    quantity: PhysicalQuantity = attr.ib(
+        default=PhysicalQuantity.IRRADIANCE, init=False, repr=False
+    )
 
-    dataset = documented(
+    dataset: str = documented(
         attr.ib(
             default="thuillier_2003",
             validator=attr.validators.instance_of(str),
@@ -61,11 +65,11 @@ class SolarIrradianceSpectrum(Spectrum):
         type="str",
     )
 
-    scale = documented(
+    scale: float = documented(
         attr.ib(
             default=1.0,
             converter=float,
-            validator=is_positive,
+            validator=validators.is_positive,
         ),
         doc="Scaling factor. Default: 1.",
         type="float",
@@ -80,15 +84,15 @@ class SolarIrradianceSpectrum(Spectrum):
                 f"{data.registered('solar_irradiance_spectrum')}"
             )
 
-    data = attr.ib(init=False, repr=False)
+    data: xr.Dataset = attr.ib(init=False, repr=False)
 
     @data.default
     def _data_factory(self):
         # Load dataset
         try:
             return data.open("solar_irradiance_spectrum", self.dataset)
-        except KeyError:
-            raise ValueError(f"unknown dataset {self.dataset}")
+        except KeyError as e:
+            raise ValueError(f"unknown dataset {self.dataset}") from e
 
     def eval(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         if self.dataset == "solid_2017":
@@ -146,7 +150,7 @@ class SolarIrradianceSpectrum(Spectrum):
 
         return result * quantity_units
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         # Apply scaling, build kernel dict
         return {
             "spectrum": {

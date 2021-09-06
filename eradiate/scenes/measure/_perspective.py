@@ -1,5 +1,10 @@
+from __future__ import annotations
+
+from typing import Dict, List, Tuple
+
 import attr
 import numpy as np
+import pint
 import pinttr
 
 from ._core import Measure, measure_factory
@@ -22,7 +27,7 @@ class PerspectiveCameraMeasure(Measure):
     specifying the origin, viewing direction and 'up' direction of the camera.
     """
 
-    _film_resolution = documented(
+    _film_resolution: Tuple[int, int] = documented(
         attr.ib(
             default=(32, 32),
             validator=attr.validators.deep_iterable(
@@ -37,7 +42,7 @@ class PerspectiveCameraMeasure(Measure):
         default="(32, 32)",
     )
 
-    origin = documented(
+    origin: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity([1, 1, 1], ureg.m),
             validator=validators.has_len(3),
@@ -45,12 +50,12 @@ class PerspectiveCameraMeasure(Measure):
         ),
         doc="A 3-vector specifying the position of the camera.\n"
         "\n"
-        "Unit-enabled field (default: cdu[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="array-like",
         default="[1, 1, 1] m",
     )
 
-    target = documented(
+    target: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity([0, 0, 0], ureg.m),
             validator=validators.has_len(3),
@@ -58,17 +63,21 @@ class PerspectiveCameraMeasure(Measure):
         ),
         doc="Point location targeted by the camera.\n"
         "\n"
-        "Unit-enabled field (default: cdu[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="array-like[float, float, float]",
         default="[0, 0, 0] m",
     )
 
-    up = documented(
-        attr.ib(default=[0, 0, 1], validator=validators.has_len(3)),
+    up: np.ndarray = documented(
+        attr.ib(
+            default=[0, 0, 1],
+            converter=np.array,
+            validator=validators.has_len(3),
+        ),
         doc="A 3-vector specifying the up direction of the camera.\n"
         "This vector must be different from the camera's viewing direction,\n"
         "which is given by ``target - origin``.",
-        type="array-like",
+        type="array",
         default="[0, 0, 1]",
     )
 
@@ -93,10 +102,10 @@ class PerspectiveCameraMeasure(Measure):
             )
 
     @property
-    def film_resolution(self):
+    def film_resolution(self) -> Tuple[int, int]:
         return self._film_resolution
 
-    def _base_dicts(self):
+    def _base_dicts(self) -> List[Dict]:
         from mitsuba.core import ScalarTransform4f
 
         target = self.target.m_as(uck.get("length"))

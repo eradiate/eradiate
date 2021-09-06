@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import UserDict
-from typing import Dict, MutableMapping, Optional, Union
+from typing import Dict, Mapping, MutableMapping, Optional, Union
 
 import attr
 import mitsuba
@@ -79,7 +79,7 @@ class KernelDict(UserDict):
     @classmethod
     def new(
         cls,
-        *elements: Union[SceneElement, Dict],
+        *elements: Union[SceneElement, Mapping],
         ctx: Optional[KernelDictContext] = None,
     ):
         """
@@ -91,7 +91,8 @@ class KernelDict(UserDict):
 
         Parameter ``ctx`` (:class:`.KernelDictContext` or None):
             A context data structure containing parameters relevant for kernel
-            dictionary generation. *This argument is keyword-only.*
+            dictionary generation. *This argument is keyword-only and required
+            only if :class:`.SceneElement` instances are passed.*
 
         Returns → :class:`KernelDict`
             Initialise kernel dictionary.
@@ -102,7 +103,7 @@ class KernelDict(UserDict):
 
     def add(
         self,
-        *elements: Union[SceneElement, Dict],
+        *elements: Union[SceneElement, Mapping],
         ctx: Optional[KernelDictContext] = None,
     ):
         """
@@ -116,22 +117,29 @@ class KernelDict(UserDict):
             be called with ``ref`` set to ``True``. If it is a dictionary
             (including a :class:`.KernelDict`), it will be merged without change.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
-            dictionary generation. *This argument is keyword-only.*
+            dictionary generation. *This argument is keyword-only and required
+            only if :class:`.SceneElement` instances are passed.*
         """
 
         for element in elements:
-            try:
+            if hasattr(element, "kernel_dict"):
+                if not isinstance(ctx, KernelDictContext):
+                    raise ValueError(
+                        "parameter 'ctx' must be set when adding SceneElement "
+                        "instances to the kernel dictionary"
+                    )
                 self.update(element.kernel_dict(ctx))
-            except AttributeError:
+            else:
                 self.update(element)
 
     def load(self) -> mitsuba.render.Scene:
         """
         Load kernel object from self.
 
-        .. note:: Requires a valid selected operational mode.
+        .. note::
+           Requires a valid selected operational mode.
 
         Returns → :class:`mitsuba.render.Scene`:
              Kernel object.
@@ -163,14 +171,14 @@ class SceneElement(ABC):
     )
 
     @abstractmethod
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return a dictionary suitable for kernel scene configuration.
 
         Parameter ``ref`` (bool):
             If ``True``, use referencing for all relevant nested kernel plugins.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 

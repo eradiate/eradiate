@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import itertools
 from copy import deepcopy
-from typing import MutableMapping, Optional
+from typing import Dict, List, MutableMapping, Optional
 
 import attr
 import numpy as np
+import pint
 import pinttr
 
 from . import InstancedCanopyElement
@@ -53,7 +56,7 @@ class DiscreteCanopy(Canopy):
     #                                   Fields
     # --------------------------------------------------------------------------
 
-    instanced_canopy_elements = documented(
+    instanced_canopy_elements: List[InstancedCanopyElement] = documented(
         attr.ib(
             factory=list,
             converter=lambda value: [
@@ -78,11 +81,11 @@ class DiscreteCanopy(Canopy):
     #                          Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext) -> Dict:
         """
         Return BSDF plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -96,11 +99,11 @@ class DiscreteCanopy(Canopy):
             result = {**result, **instanced_canopy_element.bsdfs(ctx=ctx)}
         return result
 
-    def shapes(self, ctx=None):
+    def shapes(self, ctx: KernelDictContext) -> Dict:
         """
         Return shape plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -114,7 +117,7 @@ class DiscreteCanopy(Canopy):
             result = {**result, **instanced_canopy_element.shapes(ctx=ctx)}
         return result
 
-    def instances(self):
+    def instances(self, ctx: KernelDictContext) -> Dict:
         """
         Return instance plugin specifications.
 
@@ -124,10 +127,10 @@ class DiscreteCanopy(Canopy):
         """
         result = {}
         for instanced_canopy_element in self.instanced_canopy_elements:
-            result = {**result, **instanced_canopy_element.instances()}
+            result = {**result, **instanced_canopy_element.instances(ctx)}
         return result
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         if not ctx.ref:
             raise ValueError("'ctx.ref' must be set to True")
 
@@ -146,7 +149,7 @@ class DiscreteCanopy(Canopy):
     #                                  Padding
     # --------------------------------------------------------------------------
 
-    def padded_copy(self, padding):
+    def padded_copy(self, padding: int) -> DiscreteCanopy:
         """
         Return a copy of the current canopy padded with additional copies.
 
@@ -212,7 +215,7 @@ class DiscreteCanopy(Canopy):
     # --------------------------------------------------------------------------
 
     @classmethod
-    def padded(cls, padding=0, **kwargs):
+    def padded(cls, padding: int = 0, **kwargs) -> DiscreteCanopy:
         """
         Create a discrete canopy and pad it with copies of itself. Keyword
         arguments are forwarded to the default constructor.
@@ -222,6 +225,10 @@ class DiscreteCanopy(Canopy):
             The resulting padded canopy is a grid of
             :math:`2 \\times \\mathit{padding} + 1` copies.
 
+        Parameter ``**kwargs``:
+            Keyword arguments forwarded to the :class:`.DiscreteCanopy`
+            constructor.
+
         Returns → :class:`.DiscreteCanopy`:
             Padded discrete canopy.
         """
@@ -229,8 +236,11 @@ class DiscreteCanopy(Canopy):
 
     @classmethod
     def homogeneous(
-        cls, padding=0, id="homogeneous_discrete_canopy", **leaf_cloud_kwargs
-    ):
+        cls,
+        padding: int = 0,
+        id: str = "homogeneous_discrete_canopy",
+        **leaf_cloud_kwargs,
+    ) -> DiscreteCanopy:
         """
         Generate a homogeneous discrete canopy, possibly padded with copies of
         itself.
@@ -243,10 +253,11 @@ class DiscreteCanopy(Canopy):
         Parameter ``id`` (str):
             Canopy object ID.
 
-        Parameter ``leaf_cloud_kwargs``:
+        Parameter ``**leaf_cloud_kwargs``:
             Keyword arguments forwarded to :meth:`.LeafCloud.cuboid`.
 
-            .. note:: The leaf cloud's ID will be set to ``f"{id}_leaf_cloud"``.
+            .. note::
+               The leaf cloud's ID will be set to ``f"{id}_leaf_cloud"``.
 
         Returns → :class:`.DiscreteCanopy`:
             Created canopy object.
@@ -277,7 +288,11 @@ class DiscreteCanopy(Canopy):
 
     @classmethod
     def leaf_cloud_from_files(
-        cls, padding=0, id="discrete_canopy", size=None, leaf_cloud_dicts=None
+        cls,
+        padding: int = 0,
+        id: str = "discrete_canopy",
+        size: Optional[pint.Quantity] = None,
+        leaf_cloud_dicts: List[MutableMapping] = None,
     ):
         """
         Directly create a leaf cloud canopy from text file specifications,
@@ -307,11 +322,12 @@ class DiscreteCanopy(Canopy):
             Canopy ID.
 
         Parameter ``size`` (array-like):
-            Canopy size as a 3-vector (in metres).
+            Canopy size as a 3-vector (in metres). Required (setting to ``None``
+            will raise).
 
         Parameter ``leaf_cloud_dicts`` (list[dict]):
             List of dictionary specifying canopy elements and instances (see format
-            above).
+            above). Required (setting to ``None`` will raise).
 
         Returns → :class:`.DiscreteCanopy`:
             Created canopy object.
@@ -320,12 +336,9 @@ class DiscreteCanopy(Canopy):
         # want to use this constructor through from_dict())
         if size is None:
             raise ValueError(f"parameter 'size' is required")
+
         if leaf_cloud_dicts is None:
             raise ValueError(f"parameter 'leaf_cloud_dicts' is required")
-
-        for param in [size, leaf_cloud_dicts]:
-            if param is None:
-                raise ValueError(f"parameter '{param}' is required")
 
         instanced_canopy_elements = []
 

@@ -1,3 +1,5 @@
+from typing import MutableMapping
+
 import pytest
 
 from eradiate import unit_registry as ureg
@@ -10,7 +12,7 @@ from eradiate.scenes.surface import Surface
 class MyBlackSurface(Surface):
     """A basic implementation for the sake of testing."""
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",
@@ -23,12 +25,13 @@ def test_kernel_width(mode_mono):
     obj = MyBlackSurface()
 
     # Size value is appropriately used as kernel object size
+    ctx = KernelDictContext()
     obj.width = 1.0 * ureg.m
-    assert obj.kernel_width() == 1.0 * ureg.m
+    assert obj.kernel_width(ctx) == 1.0 * ureg.m
 
     # Auto size yields 100 km kernel width
     obj.width = AUTO
-    assert obj.kernel_width() == 100.0 * ureg.km
+    assert obj.kernel_width(ctx) == 100.0 * ureg.km
 
     # Override constrains auto size
     obj.width = AUTO

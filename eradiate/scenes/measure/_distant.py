@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from copy import deepcopy
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import attr
 import numpy as np
@@ -31,12 +33,12 @@ class TargetOrigin:
     Interface for target and origin selection classes used by :class:`DistantMeasure`.
     """
 
-    def kernel_item(self):
+    def kernel_item(self) -> Dict:
         """Return kernel item."""
         raise NotImplementedError
 
     @staticmethod
-    def new(target_type, *args, **kwargs):
+    def new(target_type, *args, **kwargs) -> TargetOrigin:
         """
         Instantiate one of the supported child classes. This factory requires
         manual class registration. All position and keyword arguments are
@@ -61,7 +63,7 @@ class TargetOrigin:
             raise ValueError(f"unknown target type {target_type}")
 
     @staticmethod
-    def convert(value):
+    def convert(value) -> Any:
         """
         Object converter method.
 
@@ -69,7 +71,7 @@ class TargetOrigin:
         instantiate a :class:`Target` child class based on the ``"type"`` entry
         it contains.
 
-        If ``value`` is a 3-vector, this method returns a :class:`TargetPoint`
+        If ``value`` is a 3-vector, this method returns a :class:`.TargetPoint`
         instance.
 
         Otherwise, it returns ``value``.
@@ -103,9 +105,9 @@ class TargetOriginPoint(TargetOrigin):
     """
 
     # Target point in config units
-    xyz = documented(
+    xyz: pint.Quantity = documented(
         pinttr.ib(units=ucc.deferred("length")),
-        doc="Point coordinates.\n\nUnit-enabled field (default: cdu[length]).",
+        doc="Point coordinates.\n\nUnit-enabled field (default: ucc['length']).",
         type="array-like",
     )
 
@@ -117,7 +119,7 @@ class TargetOriginPoint(TargetOrigin):
                 f"3-element vector of numbers"
             )
 
-    def kernel_item(self):
+    def kernel_item(self) -> Dict:
         """Return kernel item."""
         return self.xyz.m_as(uck.get("length"))
 
@@ -132,51 +134,51 @@ class TargetOriginRectangle(TargetOrigin):
     be sampled or ray origins will be projected.
     """
 
-    xmin = documented(
+    xmin: pint.Quantity = documented(
         pinttr.ib(
             converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),
         ),
         doc="Lower bound on the X axis.\n"
         "\n"
-        "Unit-enabled field (default: cdu[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
     )
 
-    xmax = documented(
+    xmax: pint.Quantity = documented(
         pinttr.ib(
             converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),
         ),
         doc="Upper bound on the X axis.\n"
         "\n"
-        "Unit-enabled field (default: cdu[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
     )
 
-    ymin = documented(
+    ymin: pint.Quantity = documented(
         pinttr.ib(
             converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),
         ),
         doc="Lower bound on the Y axis.\n"
         "\n"
-        "Unit-enabled field (default: cdu[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
     )
 
-    ymax = documented(
+    ymax: pint.Quantity = documented(
         pinttr.ib(
             converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),
         ),
         doc="Upper bound on the Y axis.\n"
         "\n"
-        "Unit-enabled field (default: cdu[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
     )
 
-    z = documented(
+    z: pint.Quantity = documented(
         pinttr.ib(
             default=0.0,
             converter=_target_point_rectangle_xyz_converter,
@@ -184,7 +186,7 @@ class TargetOriginRectangle(TargetOrigin):
         ),
         doc="Altitude of the plane enclosing the rectangle.\n"
         "\n"
-        "Unit-enabled field (default: cdu[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
         default="0.0",
     )
@@ -242,9 +244,9 @@ class TargetOriginSphere(TargetOrigin):
     Sphere target or origin specification.
     """
 
-    center = documented(
+    center: pint.Quantity = documented(
         pinttr.ib(units=ucc.deferred("length")),
-        doc="Center coordinates.\n" "\n" "Unit-enabled field (default: cdu[length]).",
+        doc="Center coordinates.\n" "\n" "Unit-enabled field (default: ucc['length']).",
         type="array-like",
     )
 
@@ -256,16 +258,16 @@ class TargetOriginSphere(TargetOrigin):
                 f"3-element vector of numbers"
             )
 
-    radius = documented(
+    radius: pint.Quantity = documented(
         pinttr.ib(
             units=ucc.deferred("length"),
             validator=[pinttr.validators.has_compatible_units, validators.is_positive],
         ),
-        doc="Sphere radius.\n\nUnit-enabled field (default: cdu[length]).",
+        doc="Sphere radius.\n\nUnit-enabled field (default: ucc['length']).",
         type="float",
     )
 
-    def kernel_item(self):
+    def kernel_item(self) -> Dict:
         """Return kernel item."""
         center = self.center.m_as(uck.get("length"))
         radius = self.radius.m_as(uck.get("length"))
@@ -280,7 +282,7 @@ class DistantMeasure(Measure):
     distance.
     """
 
-    target = documented(
+    target: Optional[TargetOrigin] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(TargetOrigin.convert),
@@ -304,7 +306,7 @@ class DistantMeasure(Measure):
         default="None",
     )
 
-    origin = documented(
+    origin: Optional[TargetOrigin] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(TargetOrigin.convert),
@@ -454,7 +456,7 @@ class DistantRadianceMeasure(DistantMeasure):
        kernel plugin.
     """
 
-    _film_resolution = documented(
+    _film_resolution: Tuple[int, int] = documented(
         attr.ib(
             default=(32, 32),
             validator=attr.validators.deep_iterable(
@@ -469,7 +471,7 @@ class DistantRadianceMeasure(DistantMeasure):
         default="(32, 32)",
     )
 
-    orientation = documented(
+    orientation: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity(0.0, ureg.deg),
             validator=validators.is_positive,
@@ -478,7 +480,7 @@ class DistantRadianceMeasure(DistantMeasure):
         doc="Azimuth angle defining the orientation of the sensor in the "
         "horizontal plane.\n"
         "\n"
-        "Unit-enabled field (default: cdu[angle]).",
+        "Unit-enabled field (default: ucc['angle']).",
         type="float",
         default="0.0 deg",
     )
@@ -703,7 +705,7 @@ class DistantFluxMeasure(DistantMeasure):
          sensor kernel plugin.
     """
 
-    direction = documented(
+    direction: np.ndarray = documented(
         attr.ib(
             default=[0, 0, 1],
             converter=np.array,
@@ -715,7 +717,7 @@ class DistantFluxMeasure(DistantMeasure):
         default="[0, 0, 1]",
     )
 
-    _film_resolution = documented(
+    _film_resolution: Tuple[int, int] = documented(
         attr.ib(
             default=(32, 32),
             validator=attr.validators.deep_iterable(
@@ -794,7 +796,12 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
     illumination models.
     """
 
-    def postprocess(self, illumination=None) -> xr.Dataset:
+    def postprocess(
+        self,
+        illumination: Optional[
+            Union[DirectionalIllumination, ConstantIllumination]
+        ] = None,
+    ) -> xr.Dataset:
         """
         Return post-processed raw sensor results.
 
@@ -830,7 +837,7 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
 
         return result
 
-    def _postprocess_add_albedo(self, ds):
+    def _postprocess_add_albedo(self, ds: xr.Dataset) -> xr.Dataset:
         # Compute albedo
         # We assume that all quantities are stored in kernel units
         ds["albedo"] = ds["flux"] / ds["irradiance"]

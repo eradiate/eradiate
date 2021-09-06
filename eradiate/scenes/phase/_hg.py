@@ -1,4 +1,6 @@
-from typing import MutableMapping, Optional
+from __future__ import annotations
+
+from typing import Dict
 
 import attr
 
@@ -27,7 +29,7 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
     scattering.
     """
 
-    g = documented(
+    g: Spectrum = documented(
         attr.ib(
             default=0.0,
             converter=spectrum_factory.converter("dimensionless"),
@@ -42,7 +44,7 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
         default="0.0",
     )
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             # TODO: This is a workaround until the hg plugin accepts spectra for
             #  its g parameter

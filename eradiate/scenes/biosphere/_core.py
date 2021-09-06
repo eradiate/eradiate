@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import os
 from abc import ABC, abstractmethod
-from typing import MutableMapping, Optional
+from typing import Dict, MutableMapping, Optional
 
 import attr
 import numpy as np
+import pint
 import pinttr
 
 from ..core import SceneElement
@@ -25,7 +28,7 @@ class Canopy(SceneElement, ABC):
     An abstract base class defining a base type for all canopies.
     """
 
-    id = documented(
+    id: str = documented(
         attr.ib(
             default="canopy",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -35,7 +38,7 @@ class Canopy(SceneElement, ABC):
         default='"canopy"',
     )
 
-    size = documented(
+    size: pint.Quantity = documented(
         pinttr.ib(
             default=None,
             validator=attr.validators.optional(
@@ -46,16 +49,16 @@ class Canopy(SceneElement, ABC):
             ),
             units=ucc.deferred("length"),
         ),
-        doc="Canopy size as a 3-vector.\n\nUnit-enabled field (default: ucc[length]).",
+        doc="Canopy size as a 3-vector.\n\nUnit-enabled field (default: ucc['length']).",
         type="array-like",
     )
 
     @abstractmethod
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return BSDF plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -67,11 +70,11 @@ class Canopy(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def shapes(self, ctx=None):
+    def shapes(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return shape plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -83,11 +86,11 @@ class Canopy(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return a dictionary suitable for kernel scene configuration.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -107,11 +110,11 @@ class CanopyElement(SceneElement, ABC):
     """
 
     @abstractmethod
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return BSDF plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -123,11 +126,11 @@ class CanopyElement(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def shapes(self, ctx=None):
+    def shapes(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return shape plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -138,7 +141,7 @@ class CanopyElement(SceneElement, ABC):
         """
         pass
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
         if not ctx.ref:
             return self.shapes(ctx=ctx)
         else:
@@ -162,7 +165,7 @@ class InstancedCanopyElement(SceneElement):
           from_file
     """
 
-    canopy_element = documented(
+    canopy_element: CanopyElement = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(
@@ -176,11 +179,14 @@ class InstancedCanopyElement(SceneElement):
         default="None",
     )
 
-    instance_positions = documented(
-        pinttr.ib(factory=list, units=ucc.deferred("length")),
+    instance_positions: pint.Quantity = documented(
+        pinttr.ib(
+            factory=list,
+            units=ucc.deferred("length"),
+        ),
         doc="Instance positions as an (n, 3)-array.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length])",
+        "Unit-enabled field (default: ucc['length'])",
         type="array-like",
         default="[]",
     )
@@ -198,7 +204,11 @@ class InstancedCanopyElement(SceneElement):
     # --------------------------------------------------------------------------
 
     @classmethod
-    def from_file(cls, filename=None, canopy_element=None):
+    def from_file(
+        cls,
+        filename: Optional[os.PathLike] = None,
+        canopy_element: Optional[CanopyElement] = None,
+    ):
         """
         Construct a :class:`.InstancedCanopyElement` from a text file specifying
         instance positions.
@@ -217,7 +227,7 @@ class InstancedCanopyElement(SceneElement):
             Can be absolute or relative. Required (setting to ``None`` will
             raise an exception).
 
-        Parameter ``canopy_element`` (:class:`.CanopyElement` or dict):
+        Parameter ``canopy_element`` (:class:`.CanopyElement` or dict or None):
             :class:`.CanopyElement` to be instanced. If a dictionary is passed,
             if is interpreted by :data:`.biosphere_factory`. If set to
             ``None``, an empty leaf cloud will be created.
@@ -269,11 +279,11 @@ class InstancedCanopyElement(SceneElement):
     #                        Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return BSDF plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -283,11 +293,11 @@ class InstancedCanopyElement(SceneElement):
         """
         return self.canopy_element.bsdfs(ctx=ctx)
 
-    def shapes(self, ctx=None):
+    def shapes(self, ctx: KernelDictContext) -> Dict:
         """
         Return shape plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -303,11 +313,11 @@ class InstancedCanopyElement(SceneElement):
             }
         }
 
-    def instances(self, ctx=None):
+    def instances(self, ctx: KernelDictContext) -> Dict:
         """
         Return instance plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -328,7 +338,7 @@ class InstancedCanopyElement(SceneElement):
             for i, position in enumerate(self.instance_positions)
         }
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         return {
             **self.bsdfs(ctx=ctx),
             **self.shapes(ctx=ctx),

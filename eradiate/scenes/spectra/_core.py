@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import Any, Callable
 
 import attr
 import pint
@@ -9,14 +12,14 @@ from ..._factory import Factory
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bin
-from ...contexts import SpectralContext
+from ...contexts import CKDSpectralContext, MonoSpectralContext, SpectralContext
 from ...exceptions import UnsupportedModeError
 from ...scenes.core import SceneElement
 from ...units import PhysicalQuantity
 
 
 class SpectrumFactory(Factory):
-    def converter(self, quantity):
+    def converter(self, quantity: Any) -> Callable[[Any], Any]:
         """
         Generate a converter wrapping :meth:`SpectrumFactory.convert` to
         handle defaults for shortened spectrum definitions. The produced
@@ -70,7 +73,7 @@ class Spectrum(SceneElement, ABC):
     Spectrum abstract base class.
     """
 
-    quantity = documented(
+    quantity: PhysicalQuantity = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(PhysicalQuantity),

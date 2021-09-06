@@ -6,6 +6,7 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure._distant import (
     DistantFluxMeasure,
@@ -266,7 +267,8 @@ def test_distant_flux(modes_all):
 )
 def test_distant_flux_direction(modes_all, direction, frame):
     d = DistantFluxMeasure(direction=direction)
-    to_world = onedict_value(d.kernel_dict())["to_world"]
+    ctx = KernelDictContext()
+    to_world = onedict_value(d.kernel_dict(ctx))["to_world"]
     # The reference frame is rotated as expected
     assert ek.allclose(to_world.transform_vector([1, 0, 0]), frame[0])
     assert ek.allclose(to_world.transform_vector([0, 1, 0]), frame[1])

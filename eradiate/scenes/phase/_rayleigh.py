@@ -1,4 +1,6 @@
-from typing import MutableMapping, Optional
+from __future__ import annotations
+
+from typing import Dict
 
 import attr
 
@@ -18,5 +20,5 @@ class RayleighPhaseFunction(PhaseFunction):
     atmosphere.
     """
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         return {self.id: {"type": "rayleigh"}}

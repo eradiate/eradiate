@@ -1,7 +1,7 @@
 """
 Heterogeneous atmospheres.
 """
-from typing import List, MutableMapping, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import attr
 import numpy as np
@@ -55,7 +55,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
 
     @molecular_atmosphere.validator
     @particle_layers.validator
-    def _validate_ids(instance, attribute, value) -> None:
+    def _validate_ids(instance, attribute, value):
         ids = set()
 
         for component in instance.components:
@@ -69,15 +69,15 @@ class HeterogeneousNewAtmosphere(Atmosphere):
 
     @molecular_atmosphere.validator
     @particle_layers.validator
-    def _validate_widths(instance, attribute, value) -> None:
+    def _validate_widths(instance, attribute, value):
         if not all([component.width is AUTO for component in instance.components]):
             raise ValueError(
                 "all components must have their 'width' attribute set to 'AUTO'"
             )
 
     @property
-    def components(self):
-        result = [self.molecular_atmosphere] if self.molecular_atmosphere else []
+    def components(self) -> List[Union[MolecularAtmosphere, ParticleLayer]]:
+        result: list = [self.molecular_atmosphere] if self.molecular_atmosphere else []
         result.extend(self.particle_layers)
         return result
 
@@ -101,7 +101,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
         else:
             return 10.0 * ureg.km
 
-    def eval_width(self, ctx: Optional[KernelDictContext]) -> pint.Quantity:
+    def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         widths = [component.eval_width(ctx=ctx) for component in self.components]
 
         if widths:
@@ -113,7 +113,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_phase(self, ctx: Optional[KernelDictContext]) -> MutableMapping:
+    def kernel_phase(self, ctx: KernelDictContext) -> Dict:
         """
         .. note::
            One phase plugin specification per component (molecular atmosphere and
@@ -167,7 +167,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
 
         return phases
 
-    def kernel_media(self, ctx: Optional[KernelDictContext]) -> MutableMapping:
+    def kernel_media(self, ctx: KernelDictContext) -> Dict:
         """
         .. note::
            One media plugin specification per component (molecular atmosphere and
@@ -239,7 +239,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
 
         return media
 
-    def kernel_shapes(self, ctx: Optional[KernelDictContext]) -> MutableMapping:
+    def kernel_shapes(self, ctx: KernelDictContext) -> Dict:
         """
         .. note::
            One shape plugin specification per component (molecular atmosphere and

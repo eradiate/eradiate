@@ -1,6 +1,6 @@
 import numpy as np
 
-from eradiate.contexts import CKDSpectralContext, MonoSpectralContext
+from eradiate.contexts import CKDSpectralContext, KernelDictContext, MonoSpectralContext
 from eradiate.scenes.measure._core import (
     CKDMeasureSpectralConfig,
     Measure,
@@ -126,8 +126,9 @@ def test_measure(mode_mono):
     assert m.sensor_infos() == [SensorInfo(id=m.id, spp=m.spp)]
 
     # The kernel dict is well-formed
+    ctx = KernelDictContext()
     m.spp = 256
-    assert m.kernel_dict() == {
+    assert m.kernel_dict(ctx) == {
         m.id: {
             "type": "some_sensor",
             "id": m.id,

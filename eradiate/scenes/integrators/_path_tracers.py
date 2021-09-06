@@ -1,4 +1,4 @@
-from typing import MutableMapping, Optional
+from typing import Dict, MutableMapping, Optional
 
 import attr
 
@@ -18,7 +18,7 @@ class MonteCarloIntegrator(Integrator):
     .. warning:: This class should not be instantiated.
     """
 
-    max_depth = documented(
+    max_depth: Optional[int] = documented(
         attr.ib(default=None, converter=attr.converters.optional(int)),
         doc="Longest path depth in the generated measure data (where -1 corresponds "
         "to ∞). A value of 1 will display only visible emitters. 2 will lead to "
@@ -28,7 +28,7 @@ class MonteCarloIntegrator(Integrator):
         default="None",
     )
 
-    rr_depth = documented(
+    rr_depth: Optional[int] = documented(
         attr.ib(default=None, converter=attr.converters.optional(int)),
         doc="Minimum path depth after which the implementation will start to use the "
         "Russian roulette path termination criterion. If set to ``None``, "
@@ -37,7 +37,7 @@ class MonteCarloIntegrator(Integrator):
         default="None",
     )
 
-    hide_emitters = documented(
+    hide_emitters: Optional[bool] = documented(
         attr.ib(default=None, converter=attr.converters.optional(bool)),
         doc="Hide directly visible emitters. If set to ``None``, "
         "the kernel default value (``false``) will be used.",
@@ -45,7 +45,7 @@ class MonteCarloIntegrator(Integrator):
         default="None",
     )
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         result = {self.id: {}}
 
         if self.max_depth is not None:
@@ -70,8 +70,8 @@ class PathIntegrator(MonteCarloIntegrator):
     interactions.
     """
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
-        result = super(PathIntegrator, self).kernel_dict()
+    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
+        result = super(PathIntegrator, self).kernel_dict(ctx)
         result[self.id]["type"] = "path"
         return result
 
@@ -87,8 +87,8 @@ class VolPathIntegrator(MonteCarloIntegrator):
     It supports multiple scattering and accounts for volume interactions.
     """
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
-        result = super(VolPathIntegrator, self).kernel_dict()
+    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
+        result = super(VolPathIntegrator, self).kernel_dict(ctx)
         result[self.id]["type"] = "volpath"
         return result
 
@@ -105,8 +105,8 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
 
     use_spectral_mis = attr.ib(default=None, converter=attr.converters.optional(bool))
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
-        result = super(VolPathMISIntegrator, self).kernel_dict()
+    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
+        result = super(VolPathMISIntegrator, self).kernel_dict(ctx)
 
         result[self.id]["type"] = "volpathmis"
         if self.use_spectral_mis is not None:

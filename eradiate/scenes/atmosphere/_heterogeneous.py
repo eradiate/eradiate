@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import MutableMapping, Optional
+from typing import MutableMapping
 
 import attr
 import numpy as np
@@ -151,10 +151,10 @@ class HeterogeneousAtmosphere(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_phase(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
         return {f"phase_{self.id}": {"type": "rayleigh"}}
 
-    def kernel_media(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_media(self, ctx: KernelDictContext) -> MutableMapping:
 
         length_units = uck.get("length")
         width = self.kernel_width(ctx).m_as(length_units)
@@ -196,11 +196,11 @@ class HeterogeneousAtmosphere(Atmosphere):
             }
         }
 
-    def kernel_shapes(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_shapes(self, ctx: KernelDictContext) -> MutableMapping:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
-            medium = self.kernel_media(ctx=None)[f"medium_{self.id}"]
+            medium = self.kernel_media(ctx)[f"medium_{self.id}"]
 
         length_units = uck.get("length")
         width = self.kernel_width(ctx).m_as(length_units)

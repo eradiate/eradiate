@@ -1,4 +1,6 @@
-from typing import MutableMapping, Optional
+from __future__ import annotations
+
+from typing import Dict
 
 import attr
 import numpy as np
@@ -8,7 +10,7 @@ import pinttr
 from ._core import Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...ckd import Bin
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -22,7 +24,7 @@ class UniformSpectrum(Spectrum):
     Uniform spectrum (*i.e.* constant vs wavelength).
     """
 
-    value = documented(
+    value: pint.Quantity = documented(
         attr.ib(default=1.0, repr=lambda x: f"{x:~P}"),
         doc="Uniform spectrum value. If a float is passed and ``quantity`` is not "
         "``None``, it is automatically converted to appropriate configuration "
@@ -67,9 +69,9 @@ class UniformSpectrum(Spectrum):
         else:
             return np.full((len(bins),), self.value) * ureg.dimensionless
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         kernel_units = uck.get(self.quantity)
-        spectral_ctx = ctx.spectral_ctx if ctx is not None else SpectralContext.new()
+        spectral_ctx = ctx.spectral_ctx
 
         return {
             "spectrum": {

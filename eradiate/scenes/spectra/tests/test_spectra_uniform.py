@@ -6,6 +6,7 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
 from eradiate.units import PhysicalQuantity
 
@@ -43,11 +44,13 @@ def test_uniform(modes_all):
     )
 
     # Produced kernel dict is valid
-    assert load_dict(onedict_value(s.kernel_dict())) is not None
+    ctx = KernelDictContext()
+    assert load_dict(onedict_value(s.kernel_dict(ctx))) is not None
 
     # Unit scaling is properly applied
     with ucc.override({"radiance": "W/m^2/sr/nm"}):
         s = UniformSpectrum(quantity="radiance", value=1.0)
     with uck.override({"radiance": "kW/m^2/sr/nm"}):
-        d = s.kernel_dict()
+        ctx = KernelDictContext()
+        d = s.kernel_dict(ctx)
         assert np.allclose(d["spectrum"]["value"], 1e-3)

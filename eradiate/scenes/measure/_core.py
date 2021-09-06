@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 from abc import ABC, abstractmethod
 from collections import OrderedDict, abc
-from typing import Dict, List, MutableMapping, Optional, Tuple, Union
+from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union
 
 import attr
 import numpy as np
@@ -138,7 +138,7 @@ class MeasureSpectralConfig(ABC):
         return MeasureSpectralConfig.new(**d_copy)
 
     @staticmethod
-    def convert(value):
+    def convert(value) -> Any:
         """
         Object converter method.
 
@@ -170,7 +170,7 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
             ),
         ),
         doc="List of wavelengths on which to perform the monochromatic spectral "
-        'loop.\n\nUnit-enabled field (default: ucc["wavelength"]).',
+        "loop.\n\nUnit-enabled field (default: ucc['wavelength']).",
         type="array",
         default="[550.0] nm",
     )
@@ -908,7 +908,7 @@ class Measure(SceneElement, ABC):
             for sensor_info in self.sensor_infos()
         ]
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
         result = {
             f"{sensor_info.id}": {
                 **base_dict,

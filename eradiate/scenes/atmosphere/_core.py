@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import pathlib
 import struct
 from abc import ABC, abstractmethod
-from typing import MutableMapping, Optional, Union
+from typing import Dict, MutableMapping, Optional, Union
 
 import attr
 import numpy as np
@@ -12,7 +14,7 @@ import xarray as xr
 from ..core import SceneElement
 from ... import converters, validators
 from ..._factory import Factory
-from ...attrs import AUTO, documented, get_doc, parse_docs
+from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 
@@ -42,7 +44,7 @@ class Atmosphere(SceneElement, ABC):
         default='"atmosphere"',
     )
 
-    width: Union[pint.Quantity, str] = documented(
+    width: Union[pint.Quantity, AutoType] = documented(
         pinttr.ib(
             default=AUTO,
             converter=converters.auto_or(
@@ -104,11 +106,11 @@ class Atmosphere(SceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @abstractmethod
-    def eval_width(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+    def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         """
         Return the Atmosphere's width.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -122,11 +124,11 @@ class Atmosphere(SceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @abstractmethod
-    def kernel_phase(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return phase function plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -138,11 +140,11 @@ class Atmosphere(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def kernel_media(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_media(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return medium plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -154,11 +156,11 @@ class Atmosphere(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def kernel_shapes(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_shapes(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return shape plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -169,11 +171,11 @@ class Atmosphere(SceneElement, ABC):
         """
         pass
 
-    def kernel_height(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+    def kernel_height(self, ctx: KernelDictContext) -> pint.Quantity:
         """
         Return the height of the kernel object delimiting the atmosphere.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -182,7 +184,7 @@ class Atmosphere(SceneElement, ABC):
         """
         return self.height + self.kernel_offset(ctx=ctx)
 
-    def kernel_offset(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+    def kernel_offset(self, ctx: KernelDictContext) -> pint.Quantity:
         """
         Return vertical offset used to position the kernel object delimiting the
         atmosphere. The created cuboid shape will be shifted towards negative
@@ -193,7 +195,7 @@ class Atmosphere(SceneElement, ABC):
            This is required to ensure that the surface is the only shape
            which can be intersected at ground level during ray tracing.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -202,11 +204,11 @@ class Atmosphere(SceneElement, ABC):
         """
         return self.height * 1e-3
 
-    def kernel_width(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+    def kernel_width(self, ctx: KernelDictContext) -> pint.Quantity:
         """
         Return width of the kernel object delimiting the atmosphere.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -215,7 +217,7 @@ class Atmosphere(SceneElement, ABC):
         """
         return self.eval_width(ctx=ctx)
 
-    def kernel_dict(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         kernel_dict = {}
 
         if not ctx.ref:

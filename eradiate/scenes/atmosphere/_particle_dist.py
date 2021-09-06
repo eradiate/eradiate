@@ -4,6 +4,7 @@ Particle distributions.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import attr
 import numpy as np
@@ -92,11 +93,11 @@ class ExponentialParticleDistribution(ParticleDistribution):
     probability distribution function:
 
     .. math::
-        f(z) = \lambda  \exp \left( -\lambda z \right)
+       f(z) = \lambda  \exp \left( -\lambda z \right)
 
     where :math:`\lambda` is the rate parameter and :math:`z` is the altitude.
     """
-    rate = documented(
+    rate: pint.Quantity = documented(
         pinttr.ib(
             units=ucc.deferred("collision_coefficient"),
             converter=pinttr.converters.to_units(ucc.deferred("collision_coefficient")),
@@ -104,14 +105,14 @@ class ExponentialParticleDistribution(ParticleDistribution):
         ),
         doc="Rate parameter of the exponential distribution.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['collision_coefficient']).",
         type="float",
     )
 
     def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
         x = z.magnitude
         loc = z.magnitude.min()
-        scale = (1.0 / self.rate).to(z.units).magnitude
+        scale = (1.0 / self.rate).m_as(z.units)
         f = expon.pdf(x=x, loc=loc, scale=scale)
         return f / f.sum()
 
@@ -136,7 +137,7 @@ class GaussianParticleDistribution(ParticleDistribution):
     where :math:`\mu` is the mean of the distribution and :math:`\sigma` is
     the standard deviation of the distribution.
     """
-    mean = documented(
+    mean: pint.Quantity = documented(
         pinttr.ib(
             units=ucc.deferred("length"),
             converter=pinttr.converters.to_units(ucc.deferred("length")),
@@ -145,10 +146,10 @@ class GaussianParticleDistribution(ParticleDistribution):
         doc="Mean (expectation) of the distribution. "
         "If ``None``, set to the middle of the layer.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
     )
-    std = documented(
+    std: pint.Quantity = documented(
         pinttr.ib(
             units=ucc.deferred("length"),
             converter=pinttr.converters.to_units(ucc.deferred("length")),
@@ -158,7 +159,7 @@ class GaussianParticleDistribution(ParticleDistribution):
         "sixth of the layer thickness so that half the layer thickness "
         "equals three standard deviations.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
     )
 
@@ -179,7 +180,7 @@ class ArrayParticleDistribution(ParticleDistribution):
     fraction array or :class:`~xarray.DataArray`.
     """
 
-    values = documented(
+    values: Optional[np.typing.ArrayLike] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(np.array),
@@ -188,10 +189,11 @@ class ArrayParticleDistribution(ParticleDistribution):
             ),
         ),
         doc="Particle number fraction values on a regular altitude mesh.",
-        type="array",
+        type="array or None",
         default="``None``",
     )
-    data_array = documented(
+
+    data_array: Optional[xr.DataArray] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(xr.DataArray),
@@ -202,7 +204,7 @@ class ArrayParticleDistribution(ParticleDistribution):
         doc="Particle distribution data array. Number fraction as a "
         "function of altitude (``z``).\n"
         "Note that number fraction do not need to be normalised.",
-        type=":class:`~xarray.DataArray`",
+        type=":class:`~xarray.DataArray` or None",
         default="``None``",
     )
 
@@ -240,7 +242,7 @@ class ArrayParticleDistribution(ParticleDistribution):
                         "Coordinate 'z' of attribute 'data_array' must have units."
                     )
 
-    method = documented(
+    method: str = documented(
         attr.ib(
             default="linear", converter=str, validator=attr.validators.instance_of(str)
         ),

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from abc import ABC
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import attr
 import pint
@@ -13,6 +15,7 @@ from ..core import SceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
+from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -58,7 +61,7 @@ class AbstractTree(Tree):
     used to shift the leaf cloud **in addition** to the trunk's extent.
     """
 
-    id = documented(
+    id: str = documented(
         attr.ib(
             default="abstract_tree",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -68,7 +71,7 @@ class AbstractTree(Tree):
         default='"abstract_tree"',
     )
 
-    leaf_cloud = documented(
+    leaf_cloud: Optional[LeafCloud] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(_leaf_cloud_converter),
@@ -78,25 +81,25 @@ class AbstractTree(Tree):
         "be interpreted by :data:`.biosphere_factory`. If the latter case, the "
         '``"type"`` parameter, if omitted, will implicitly be set to '
         '``"leaf_cloud"``.',
-        type=":class:`LeafCloud`",
+        type=":class:`.LeafCloud`",
         default="None",
     )
 
-    trunk_height = documented(
+    trunk_height: pint.Quantity = documented(
         pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
-        doc="Trunk height.\n\nUnit-enabled field (default: ucc[length]).",
+        doc="Trunk height.\n\nUnit-enabled field (default: ucc['length']).",
         type="float",
         default="1.0 m",
     )
 
-    trunk_radius = documented(
+    trunk_radius: pint.Quantity = documented(
         pinttr.ib(default=0.1 * ureg.m, units=ucc.deferred("length")),
-        doc="Trunk radius.\n\nUnit-enabled field (default: ucc[length]).",
+        doc="Trunk radius.\n\nUnit-enabled field (default: ucc['length']).",
         type="float",
         default="0.1 m",
     )
 
-    trunk_reflectance = documented(
+    trunk_reflectance: Spectrum = documented(
         attr.ib(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
@@ -111,11 +114,11 @@ class AbstractTree(Tree):
         default="0.5",
     )
 
-    leaf_cloud_extra_offset = documented(
+    leaf_cloud_extra_offset: pint.Quantity = documented(
         pinttr.ib(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Additional offset for the leaf cloud. 3-vector.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length])",
+        "Unit-enabled field (default: ucc['length'])",
         type="array-like",
         default="[0, 0, 0]",
     )
@@ -124,11 +127,11 @@ class AbstractTree(Tree):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext) -> Dict:
         """
         Return BSDF plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -147,11 +150,11 @@ class AbstractTree(Tree):
 
         return bsdfs_dict
 
-    def shapes(self, ctx=None):
+    def shapes(self, ctx: KernelDictContext) -> Dict:
         """
         Return shape plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -211,7 +214,7 @@ class MeshTree(Tree):
     :class:`InstancedCanopyElement` to place at arbitrary positions in a scene.
     """
 
-    id = documented(
+    id: str = documented(
         attr.ib(
             default="mesh_tree",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -221,7 +224,7 @@ class MeshTree(Tree):
         default='"mesh_tree"',
     )
 
-    mesh_tree_elements = documented(
+    mesh_tree_elements: List[MeshTree] = documented(
         attr.ib(
             factory=list,
             converter=lambda value: [
@@ -242,13 +245,13 @@ class MeshTree(Tree):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext) -> Dict:
         result = {}
         for mesh_tree_element in self.mesh_tree_elements:
             result = {**result, **mesh_tree_element.bsdfs(ctx=ctx)}
         return result
 
-    def shapes(self, ctx=None):
+    def shapes(self, ctx: KernelDictContext) -> Dict:
         result = {}
         for mesh_tree_element in self.mesh_tree_elements:
             result = {**result, **mesh_tree_element.shapes(ctx=ctx)}
@@ -284,7 +287,7 @@ class MeshTreeElement:
         default="None",
     )
 
-    mesh_filename = documented(
+    mesh_filename: Optional[Path] = documented(
         attr.ib(
             converter=attr.converters.optional(Path),
             default=None,
@@ -306,8 +309,11 @@ class MeshTreeElement:
                 f"or '.ply', got {value.suffix}"
             )
 
-    mesh_units = documented(
-        attr.ib(default=None, converter=attr.converters.optional(ureg.Unit)),
+    mesh_units: Optional[pint.Unit] = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(ureg.Unit),
+        ),
         doc="Units the mesh was defined in. Used to convert to kernel units. "
         "If this value is ``None``, the mesh is interpreted as being defined in"
         "kernel units.",
@@ -323,7 +329,7 @@ class MeshTreeElement:
                 f"a pint Unit object, got {type(value)}"
             )
 
-    reflectance = documented(
+    reflectance: Spectrum = documented(
         attr.ib(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
@@ -338,7 +344,7 @@ class MeshTreeElement:
         default="0.5",
     )
 
-    transmittance = documented(
+    transmittance: Spectrum = documented(
         attr.ib(
             default=0.0,
             converter=spectrum_factory.converter("transmittance"),
@@ -358,7 +364,7 @@ class MeshTreeElement:
     # --------------------------------------------------------------------------
 
     @staticmethod
-    def from_dict(d: Dict):
+    def from_dict(d: Dict) -> MeshTreeElement:
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -367,7 +373,7 @@ class MeshTreeElement:
         Parameter ``d`` (dict):
             Configuration dictionary used for initialisation.
 
-        Returns → wrapped_cls:
+        Returns → :class:`.MeshTreeElement`:
             Created object.
         """
 
@@ -378,11 +384,11 @@ class MeshTreeElement:
         return MeshTreeElement(**d_copy)
 
     @staticmethod
-    def convert(value):
+    def convert(value) -> MeshTreeElement:
         """
         Object converter method.
 
-        If ``value`` is a dictionary, this method uses :meth:`from_dict` to
+        If ``value`` is a dictionary, this method uses :meth:`.from_dict` to
         create an :class:`.MeshTreeElement`.
 
         Otherwise, it returns ``value``.
@@ -396,7 +402,7 @@ class MeshTreeElement:
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx=None):
+    def bsdfs(self, ctx: KernelDictContext) -> Dict:
         return {
             f"bsdf_{self.id}": {
                 "type": "bilambertian",
@@ -405,7 +411,7 @@ class MeshTreeElement:
             }
         }
 
-    def shapes(self, ctx=None):
+    def shapes(self, ctx: KernelDictContext) -> Dict:
         from mitsuba.core import ScalarTransform4f
 
         if ctx.ref:

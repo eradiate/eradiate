@@ -1,3 +1,5 @@
+from typing import Dict
+
 import attr
 
 from ._core import Surface, surface_factory
@@ -17,7 +19,7 @@ class LambertianSurface(Surface):
     This class creates a square surface to which a Lambertian BRDF is attached.
     """
 
-    reflectance = documented(
+    reflectance: Spectrum = documented(
         attr.ib(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
@@ -32,7 +34,7 @@ class LambertianSurface(Surface):
         default="0.5",
     )
 
-    def bsdfs(self, ctx: KernelDictContext = None):
+    def bsdfs(self, ctx: KernelDictContext) -> Dict:
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",

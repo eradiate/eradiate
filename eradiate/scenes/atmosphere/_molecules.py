@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pathlib
 import tempfile
-from typing import MutableMapping, Optional
+from typing import Dict, MutableMapping, Optional
 
 import attr
 import numpy as np
@@ -166,7 +166,7 @@ class MolecularAtmosphere(Atmosphere):
     def thermoprops(self) -> xr.Dataset:
         return self._thermoprops
 
-    def eval_width(self, ctx: Optional[KernelDictContext] = None) -> pint.Quantity:
+    def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         if self.width is AUTO:
             spectral_ctx = ctx.spectral_ctx if ctx is not None else None
             min_sigma_s = self.radprops_profile.eval_sigma_s(spectral_ctx).min()
@@ -232,10 +232,10 @@ class MolecularAtmosphere(Atmosphere):
     def sigma_t_file(self) -> pathlib.Path:
         return self.cache_dir / self.sigma_t_filename
 
-    def kernel_phase(self, ctx: Optional[KernelDictContext] = None) -> MutableMapping:
+    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
         return self.phase.kernel_dict(ctx=ctx)
 
-    def kernel_media(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_media(self, ctx: KernelDictContext) -> Dict:
         length_units = uck.get("length")
         width = self.kernel_width(ctx).m_as(length_units)
         top = self.top.m_as(length_units)
@@ -279,11 +279,11 @@ class MolecularAtmosphere(Atmosphere):
             }
         }
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_shapes(self, ctx: KernelDictContext) -> Dict:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
-            medium = self.kernel_media(ctx=None)[f"medium_{self.id}"]
+            medium = self.kernel_media(ctx)[f"medium_{self.id}"]
 
         length_units = uck.get("length")
         width = self.kernel_width(ctx).m_as(length_units)
@@ -384,10 +384,10 @@ class MolecularAtmosphere(Atmosphere):
         Parameter ``levels`` (:class:`pint.Quantity`):
             Altitude levels.
 
-        Parameter ``concentrations`` (Dict[str, :class:`pint.Quantity`]):
+        Parameter ``concentrations`` (dict[str, :class:`pint.Quantity`]):
             Molecules concentrations.
 
-        Parameter ``kwargs`` (Dict[str]):
+        Parameter ``**kwargs`` (dict[str]):
             Keyword arguments passed to :class:`MolecularAtmosphere`'s
             constructor.
 
@@ -419,10 +419,10 @@ class MolecularAtmosphere(Atmosphere):
         Parameter ``levels`` (:class:`pint.Quantity`):
             Altitude levels.
 
-        Parameter ``concentrations`` (Dict[str, :class:`pint.Quantity`])
+        Parameter ``concentrations`` (dict[str, :class:`pint.Quantity`])
             Molecules concentrations.
 
-        Parameter ``kwargs`` (Dict[str]):
+        Parameter ``**kwargs`` (dict[str]):
             Keyword arguments passed to :class:`MolecularAtmosphere`'s
             constructor.
 

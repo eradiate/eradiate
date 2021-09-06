@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import warnings
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Union
+from typing import Dict, MutableMapping, Optional, Union
 
 import attr
 import pint
@@ -71,11 +73,11 @@ class Surface(SceneElement, ABC):
     )
 
     @abstractmethod
-    def bsdfs(self, ctx: KernelDictContext = None):
+    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
         """
         Return BSDF plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -86,11 +88,11 @@ class Surface(SceneElement, ABC):
         """
         pass
 
-    def shapes(self, ctx: KernelDictContext = None):
+    def shapes(self, ctx: KernelDictContext) -> Dict:
         """
         Return shape plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -104,9 +106,9 @@ class Surface(SceneElement, ABC):
         if ctx.ref:
             bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
         else:
-            bsdf = self.bsdfs()[f"bsdf_{self.id}"]
+            bsdf = self.bsdfs(ctx)[f"bsdf_{self.id}"]
 
-        w = self.kernel_width(ctx=ctx).m_as(uck.get("length"))
+        w = self.kernel_width(ctx).m_as(uck.get("length"))
         z = self.altitude.m_as(uck.get("length"))
         translate_trafo = ScalarTransform4f.translate(ScalarVector3f(0.0, 0.0, z))
         scale_trafo = ScalarTransform4f.scale(ScalarVector3f(w / 2.0, w / 2.0, 1.0))
@@ -120,12 +122,12 @@ class Surface(SceneElement, ABC):
             }
         }
 
-    def kernel_width(self, ctx: KernelDictContext = None):
+    def kernel_width(self, ctx: KernelDictContext) -> pint.Quantity:
         """
         Return width of kernel object, possibly overridden by
         ``ctx.override_scene_width``.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
@@ -142,7 +144,7 @@ class Surface(SceneElement, ABC):
             else:
                 return 100.0 * ureg.km
 
-    def kernel_dict(self, ctx: KernelDictContext = None) -> Dict:
+    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         kernel_dict = {}
 
         if not ctx.ref:
@@ -153,14 +155,14 @@ class Surface(SceneElement, ABC):
 
         return kernel_dict
 
-    def scaled(self, factor: float) -> "Surface":
+    def scaled(self, factor: float) -> Surface:
         """
         Return a copy of self scaled by a given factor.
 
         Parameter ``factor`` (float):
             Scaling factor.
 
-        Returns → :class:`Surface`:
+        Returns → :class:`.Surface`:
             Scaled copy of self.
         """
         if self.width is AUTO:

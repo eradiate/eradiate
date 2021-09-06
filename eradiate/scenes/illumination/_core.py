@@ -16,7 +16,7 @@ class Illumination(SceneElement, ABC):
     Abstract base class for all illumination scene elements.
     """
 
-    id = documented(
+    id: str = documented(
         attr.ib(
             default="illumination",
             validator=attr.validators.optional(attr.validators.instance_of(str)),

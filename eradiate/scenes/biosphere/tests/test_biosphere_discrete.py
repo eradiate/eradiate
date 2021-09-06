@@ -230,7 +230,7 @@ def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
     assert padded_canopy
     assert KernelDict.new(padded_canopy, ctx=ctx).load()
     # Padded canopy has (2*padding + 1) ** 2 times more instances than original
-    assert len(padded_canopy.instances()) == len(canopy.instances()) * 25
+    assert len(padded_canopy.instances(ctx)) == len(canopy.instances(ctx)) * 25
     # Padded canopy has 2*padding + 1 times larger horizontal size than original
     assert np.allclose(padded_canopy.size[:2], 5 * canopy.size[:2])
     # Padded canopy has same vertical size as original

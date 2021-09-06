@@ -112,15 +112,16 @@ class RamiScene(Scene):
                             ymax=0.5 * self.canopy.size[1],
                         )
                     else:
+                        ctx = KernelDictContext()
                         measure.target = dict(
                             type="rectangle",
-                            xmin=-0.5 * self.surface.kernel_width(),
-                            xmax=0.5 * self.surface.kernel_width(),
-                            ymin=-0.5 * self.surface.kernel_width(),
-                            ymax=0.5 * self.surface.kernel_width(),
+                            xmin=-0.5 * self.surface.kernel_width(ctx),
+                            xmax=0.5 * self.surface.kernel_width(ctx),
+                            ymin=-0.5 * self.surface.kernel_width(ctx),
+                            ymax=0.5 * self.surface.kernel_width(ctx),
                         )
 
-    def kernel_dict(self, ctx: KernelDictContext = None):
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = KernelDict.new()
 
         if self.canopy is not None:

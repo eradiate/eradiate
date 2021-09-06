@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pathlib
 import tempfile
-from typing import Any, MutableMapping, Optional, Union
+from typing import Any, Dict, MutableMapping, Optional, Union
 
 import attr
 import numpy as np
@@ -256,11 +256,11 @@ class ParticleLayer(Atmosphere):
         z_level = self.z_level
         return (z_level[:-1] + z_level[1:]) / 2.0
 
-    def eval_fractions(self, z_layer: ureg.Quantity = None) -> np.ndarray:
+    def eval_fractions(self, z_layer: Optional[ureg.Quantity] = None) -> np.ndarray:
         """
         Compute the particle number fraction in the particle layer.
 
-        Parameter ``z_layer`` (:class:`~pint.Quantity`):
+        Parameter ``z_layer`` (:class:`~pint.Quantity` or None):
             Layer altitude mesh onto which the fractions must be computed.
 
         Returns → :class:`~numpy.ndarray`:
@@ -294,12 +294,17 @@ class ParticleLayer(Atmosphere):
     def eval_albedo(
         self,
         spectral_ctx: SpectralContext,
-        z_level: ureg.Quantity = None,
+        z_level: Optional[ureg.Quantity] = None,
     ) -> pint.Quantity:
         """
         Evaluate albedo given a spectral context.
 
-        Parameter ``z_level`` (:class:`~pint.Quantity`):
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Parameter ``z_level`` (:class:`~pint.Quantity` or None):
             Level altitude mesh onto which the fractions must be computed.
 
         Returns → :class:`~pint.Quantity`:
@@ -316,12 +321,17 @@ class ParticleLayer(Atmosphere):
     def eval_sigma_t(
         self,
         spectral_ctx: SpectralContext,
-        z_level: ureg.Quantity = None,
+        z_level: Optional[ureg.Quantity] = None,
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient given a spectral context.
 
-        Parameter ``z_level`` (:class:`~pint.Quantity`):
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Parameter ``z_level`` (:class:`~pint.Quantity` or None):
             Level altitude mesh onto which the fractions must be computed.
 
         Returns → :class:`~pint.Quantity`:
@@ -339,16 +349,21 @@ class ParticleLayer(Atmosphere):
             if z_level is None
             else z_level[1:] - z_level[:-1]
         )
-        normalised_sigma_t_array = self._normalise_to_tau(
+        normalized_sigma_t_array = self._normalize_to_tau(
             ki=sigma_t_array.magnitude,
             dz=dz,
             tau=self.tau_550,
         )
-        return normalised_sigma_t_array
+        return normalized_sigma_t_array
 
     def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate absorption coefficient given a spectral context.
+
+        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
 
         Returns → :class:`~pint.Quantity`:
             Particle layer absorption coefficient.
@@ -367,7 +382,7 @@ class ParticleLayer(Atmosphere):
     def eval_radprops(
         self,
         spectral_ctx: SpectralContext,
-        z_level: ureg.Quantity = None,
+        z_level: Optional[ureg.Quantity] = None,
     ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties profile of the
@@ -375,7 +390,8 @@ class ParticleLayer(Atmosphere):
 
         Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
             A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
 
         Parameter ``z_level`` (:class:`~pint.Quantity`):
             Level altitude mesh.
@@ -446,12 +462,13 @@ class ParticleLayer(Atmosphere):
                     ),
                 },
             ).isel(w=0)
+
         else:
             raise UnsupportedModeError(supported="monochromatic")
 
     @staticmethod
     @ureg.wraps(ret="km^-1", args=("", "km", ""), strict=False)
-    def _normalise_to_tau(ki: np.ndarray, dz: np.ndarray, tau: float) -> np.ndarray:
+    def _normalize_to_tau(ki: np.ndarray, dz: np.ndarray, tau: float) -> np.ndarray:
         r"""
         Normalise extinction coefficient values :math:`k_i` so that:
 
@@ -504,7 +521,7 @@ class ParticleLayer(Atmosphere):
             }
         }
 
-    def kernel_media(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_media(self, ctx: KernelDictContext) -> Dict:
         radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
         albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
@@ -515,10 +532,12 @@ class ParticleLayer(Atmosphere):
             filename=str(self.sigma_t_file), values=sigma_t[np.newaxis, np.newaxis, ...]
         )
         trafo = self._gridvolume_to_world_trafo(ctx=ctx)
+
         if ctx.ref:
             phase = {"type": "ref", "id": f"phase_{self.id}"}
         else:
             phase = onedict_value(self.kernel_phase(ctx=ctx))
+
         return {
             f"medium_{self.id}": {
                 "type": "heterogeneous",
@@ -536,11 +555,11 @@ class ParticleLayer(Atmosphere):
             }
         }
 
-    def kernel_shapes(self, ctx: Optional[KernelDictContext]) -> MutableMapping:
+    def kernel_shapes(self, ctx: Optional[KernelDictContext]) -> Dict:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
-            medium = self.kernel_media(ctx=None)[f"medium_{self.id}"]
+            medium = self.kernel_media(ctx)[f"medium_{self.id}"]
 
         length_units = uck.get("length")
         width = self.kernel_width(ctx).m_as(length_units)
@@ -566,7 +585,7 @@ class ParticleLayer(Atmosphere):
         }
 
     # --------------------------------------------------------------------------
-    #                       Miscelleanous
+    #                               Miscellaneous
     # --------------------------------------------------------------------------
 
     @classmethod
@@ -575,7 +594,7 @@ class ParticleLayer(Atmosphere):
         Object converter method.
 
         If ``value`` is a dictionary, this method forwards it to
-        :meth:`from_dict`. Otherwise, it returns ``value``.
+        :meth:`.from_dict`. Otherwise, it returns ``value``.
         """
         if isinstance(value, dict):
             return cls.from_dict(value)
