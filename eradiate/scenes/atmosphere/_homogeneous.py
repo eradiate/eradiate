@@ -87,7 +87,7 @@ class HomogeneousAtmosphere(Atmosphere):
         "Can be initialised with a dictionary processed by "
         ":class:`.SpectrumFactory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
-        default='0.0 cdu["collision_coefficient"]',
+        default="0.0 ucc['collision_coefficient']",
     )
 
     phase: PhaseFunction = documented(

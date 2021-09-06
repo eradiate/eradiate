@@ -258,7 +258,7 @@ class KernelDictContext:
         doc="If relevant, value which must be used as the scene width "
         "(*e.g.* when surface size must match atmosphere or canopy size).\n"
         "\n"
-        "Unit-enabled field (default: cdu[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float or None",
         default="None",
     )

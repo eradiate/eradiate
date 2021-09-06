@@ -60,7 +60,7 @@ class Atmosphere(SceneElement, ABC):
         "this estimate depends on the concrete class inheriting from this "
         "one.\n"
         "\n"
-        "Unit-enabled field (default unit: cdu[length]).",
+        "Unit-enabled field (default unit: ucc['length']).",
         type="float or AUTO",
         default="AUTO",
     )
