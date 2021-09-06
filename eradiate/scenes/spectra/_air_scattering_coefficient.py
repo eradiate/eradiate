@@ -10,7 +10,7 @@ from ._core import Spectrum, spectrum_factory
 from ..core import KernelDict
 from ..._mode import ModeFlags
 from ...attrs import parse_docs
-from ...ckd import Bin
+from ...ckd import Bin, Bindex
 from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
 from ...radprops.rayleigh import compute_sigma_s_air
@@ -56,14 +56,17 @@ class AirScatteringCoefficientSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return compute_sigma_s_air(wavelength=w)
 
-    def eval_ckd(self, *bins: Bin) -> pint.Quantity:
+    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         # Spectrum is averaged over spectral bin
 
-        result = np.zeros((len(bins),))
+        result = np.zeros((len(bindexes),))
         quantity_units = ucc.get(self.quantity)
 
-        for i_bin, bin in enumerate(bins):
-            # -- Build a spectral mesh with spacing finer than 1 nm (reasonably accurate)
+        for i_bindex, bindex in enumerate(bindexes):
+            bin = bindex.bin
+
+            # -- Build a spectral mesh with spacing finer than 1 nm
+            #    (reasonably accurate)
             wmin_m = bin.wmin.m_as(ureg.nm)
             wmax_m = bin.wmax.m_as(ureg.nm)
             w = np.linspace(wmin_m, wmax_m, 2)
@@ -82,11 +85,11 @@ class AirScatteringCoefficientSpectrum(Spectrum):
 
             # -- Average spectrum on bin extent
             integral = np.trapz(interp, w)
-            result[i_bin] = (integral / bin.width).m_as(quantity_units)
+            result[i_bindex] = (integral / bin.width).m_as(quantity_units)
 
         return result * quantity_units
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
             return KernelDict(
                 {

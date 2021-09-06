@@ -8,7 +8,7 @@ import pinttr
 from ._core import Spectrum, spectrum_factory
 from ..core import KernelDict
 from ...attrs import documented, parse_docs
-from ...ckd import Bin
+from ...ckd import Bindex
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -62,11 +62,11 @@ class UniformSpectrum(Spectrum):
         else:
             return np.full_like(w, self.value) * ureg.dimensionless
 
-    def eval_ckd(self, *bins: Bin) -> pint.Quantity:
+    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         if isinstance(self.value, pint.Quantity):
-            return np.full((len(bins),), self.value.m) * self.value.units
+            return np.full((len(bindexes),), self.value.m) * self.value.units
         else:
-            return np.full((len(bins),), self.value) * ureg.dimensionless
+            return np.full((len(bindexes),), self.value) * ureg.dimensionless
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         kernel_units = uck.get(self.quantity)

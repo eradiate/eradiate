@@ -168,7 +168,7 @@ class HeterogeneousAtmosphere(Atmosphere):
             zmax=top,
         )
 
-        radprops = self.profile.to_dataset(spectral_ctx=ctx.spectral_ctx)
+        radprops = self.profile.eval_dataset(spectral_ctx=ctx.spectral_ctx)
         albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
         write_binary_grid3d(

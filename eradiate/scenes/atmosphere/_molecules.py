@@ -169,8 +169,7 @@ class MolecularAtmosphere(Atmosphere):
 
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         if self.width is AUTO:
-            spectral_ctx = ctx.spectral_ctx if ctx is not None else None
-            min_sigma_s = self.radprops_profile.eval_sigma_s(spectral_ctx).min()
+            min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
 
             if min_sigma_s <= 0.0:
                 raise ValueError(
@@ -219,7 +218,7 @@ class MolecularAtmosphere(Atmosphere):
         Returns → :class:`~xarray.Dataset`:
             Radiative properties dataset.
         """
-        return self.radprops_profile.to_dataset(spectral_ctx=spectral_ctx)
+        return self.radprops_profile.eval_dataset(spectral_ctx=spectral_ctx)
 
     # --------------------------------------------------------------------------
     #                             Kernel dictionary
@@ -250,7 +249,7 @@ class MolecularAtmosphere(Atmosphere):
             zmax=top,
         )
 
-        radprops = self.radprops_profile.to_dataset(spectral_ctx=ctx.spectral_ctx)
+        radprops = self.radprops_profile.eval_dataset(spectral_ctx=ctx.spectral_ctx)
         albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
 
@@ -323,7 +322,7 @@ class MolecularAtmosphere(Atmosphere):
 
     @classmethod
     def afgl1986(
-        cls: MolecularAtmosphere,
+        cls,
         model: str = "us_standard",
         levels: t.Optional[pint.Quantity] = None,
         concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
@@ -416,17 +415,17 @@ class MolecularAtmosphere(Atmosphere):
 
     @classmethod
     def ussa1976(
-        cls: MolecularAtmosphere,
-        levels: t.Optional[pint.Quantity] = np.linspace(0, 100, 101) * ureg.km,
+        cls,
+        levels: t.Optional[pint.Quantity] = None,
         concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
-        **kwargs: t.MutableMapping[str],
+        **kwargs: t.MutableMapping[str, t.Any],
     ) -> MolecularAtmosphere:
         """
         Molecular atmosphere based on the US Standard Atmosphere (1976) model
         :cite:`NASA1976USStandardAtmosphere`.
 
-        Parameter ``levels`` (:class:`pint.Quantity`):
-            Altitude levels.
+        Parameter ``levels`` (:class:`pint.Quantity` or None):
+            Altitude levels. If ``None``, defaults to [0, 1, ..., 99, 100] km.
 
         Parameter ``concentrations`` (dict[str, :class:`pint.Quantity`])
             Molecules concentrations.
@@ -438,6 +437,9 @@ class MolecularAtmosphere(Atmosphere):
         Returns → :class:`MolecularAtmosphere`:
             U.S. Standard Atmosphere (1976) molecular atmosphere object.
         """
+        if levels is None:
+            levels = np.linspace(0, 100, 101) * ureg.km
+
         ds = us76.make_profile(levels=levels)
 
         if concentrations is not None:

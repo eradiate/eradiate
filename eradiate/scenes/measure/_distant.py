@@ -370,7 +370,12 @@ class DistantMeasure(Measure, ABC):
                 # Collect bins and wavelengths, evaluate spectrum
                 bins = self.spectral_cfg.bins
                 wavelengths = [bin.wcenter.m_as(ureg.nm) for bin in bins] * ureg.nm
-                result = spectrum.eval_ckd(*bins).m_as(k_units)
+
+                # Note: This line assumes that eval_ckd() returns a constant
+                # value over the entire bin
+                result = spectrum.eval_ckd(*(bin.bindexes[0] for bin in bins)).m_as(
+                    k_units
+                )
 
                 # Reorder data by ascending wavelengths
                 indices = wavelengths.argsort()

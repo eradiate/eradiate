@@ -50,6 +50,24 @@ def test_heterogeneous_write_volume_data_files(mode_mono, tmpdir):
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 
 
+def test_heterogeneous_ckd(mode_ckd, tmpdir):
+    """
+    Writes the volume data files and produces a kernel dictionary that can be
+    loaded by the kernel.
+    """
+    ctx = KernelDictContext()
+    with unit_context_config.override({"length": "km"}):
+        atmosphere = HeterogeneousAtmosphere(
+            width=100.0,
+            profile={
+                "type": "afgl1986",
+            },
+            cache_dir=tmpdir,
+        )
+
+    assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
+
+
 def test_heterogeneous_default(mode_mono):
     """
     Assigns default values.

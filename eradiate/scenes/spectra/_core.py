@@ -11,7 +11,7 @@ import eradiate
 from ..._factory import Factory
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
-from ...ckd import Bin
+from ...ckd import Bindex
 from ...contexts import SpectralContext
 from ...exceptions import UnsupportedModeError
 from ...scenes.core import SceneElement
@@ -113,13 +113,13 @@ class Spectrum(SceneElement, ABC):
         Returns → :class:`pint.Quantity`:
             Evaluated spectrum as a scalar.
         """
-        assert spectral_ctx is not None  # Testing safeguard for leftover None values
+        assert spectral_ctx is not None  # Safeguard for leftover None values
 
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return self.eval_mono(spectral_ctx.wavelength).squeeze()
 
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            return self.eval_ckd(spectral_ctx.bin).squeeze()
+            return self.eval_ckd(spectral_ctx.bindex).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -138,14 +138,14 @@ class Spectrum(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def eval_ckd(self, *bins: Bin) -> pint.Quantity:
+    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         """
         Evaluate spectrum in CKD modes.
 
-        Parameter ``*bins`` (:class:`.Bin`):
-            One or several CKD bins for which to evaluate the spectrum.
+        Parameter ``*bindexes`` (:class:`.Bindex`):
+            One or several CKD bindexes for which to evaluate the spectrum.
 
         Returns → :class:`pint.Quantity`:
-            Evaluated spectrum as an array with shape (len(bins),).
+            Evaluated spectrum as an array with shape (len(bindexes),).
         """
         pass
