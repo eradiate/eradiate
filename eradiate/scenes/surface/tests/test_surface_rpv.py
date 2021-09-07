@@ -13,7 +13,7 @@ def test_rpv(mode_mono):
     surface = RPVSurface()
 
     # Check if produced scene can be instantiated
-    kernel_dict = KernelDict.new(surface, ctx=ctx)
+    kernel_dict = KernelDict.from_elements(surface, ctx=ctx)
     assert kernel_dict.load() is not None
 
     # Construct from floats
@@ -33,4 +33,4 @@ def test_rpv(mode_mono):
     )
 
     # Check if produced scene can be instantiated
-    assert KernelDict.new(surface, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(surface, ctx=ctx).load() is not None

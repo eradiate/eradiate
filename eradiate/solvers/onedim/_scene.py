@@ -114,7 +114,7 @@ class OneDimScene(Scene):
                     )
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = KernelDict.new(ctx=ctx)
+        result = KernelDict.from_elements(ctx=ctx)
 
         if self.atmosphere is not None:
             result.add(self.atmosphere, ctx=ctx)

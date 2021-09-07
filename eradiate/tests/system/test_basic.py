@@ -49,7 +49,7 @@ def test_radiometric_accuracy(mode_mono, illumination, spp, li):
     vza = np.linspace(0, 80, 10)
     rho = 0.5
 
-    kernel_dict = KernelDict.new(
+    kernel_dict = KernelDict(
         {
             "type": "scene",
             "surface": {

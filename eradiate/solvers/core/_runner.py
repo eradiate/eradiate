@@ -54,9 +54,7 @@ def runner(kernel_dict: KernelDict, sensor_ids: Optional[List[str]] = None) -> D
     results = dict()
 
     # Run computation
-    from mitsuba.core.xml import load_dict
-
-    kernel_scene = load_dict(kernel_dict.data)
+    kernel_scene = kernel_dict.load()
 
     # Define the list of processed sensors
     if sensor_ids is None:

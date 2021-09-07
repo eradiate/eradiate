@@ -72,7 +72,7 @@ def test_instanced_canopy_element_kernel_dict(mode_mono):
     ).kernel_dict(ctx=ctx)
 
     # The generated kernel dictionary can be instantiated
-    assert KernelDict.new(kernel_dict, ctx=ctx).load()
+    assert KernelDict(kernel_dict).load()
 
 
 def test_instanced_leaf_cloud_from_file(mode_mono, tempfile_spheres):

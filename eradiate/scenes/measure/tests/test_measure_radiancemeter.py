@@ -23,4 +23,4 @@ def test_radiancemeter(mode_mono):
 
     # The kernel dict can be instantiated
     ctx = KernelDictContext()
-    assert KernelDict.new(s, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(s, ctx=ctx).load() is not None

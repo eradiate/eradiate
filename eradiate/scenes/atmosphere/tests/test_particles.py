@@ -3,7 +3,7 @@ import xarray as xr
 
 from eradiate import path_resolver
 from eradiate import unit_registry as ureg
-from eradiate.contexts import SpectralContext, KernelDictContext
+from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.atmosphere._particle_dist import UniformParticleDistribution
 from eradiate.scenes.atmosphere._particles import ParticleLayer
 from eradiate.scenes.core import KernelDict
@@ -13,7 +13,7 @@ def test_particle_load(mode_mono):
     """Produces a kernel dictionary that can be loaded by the kernel."""
     ctx = KernelDictContext()
     particle_layer = ParticleLayer(n_layers=9)
-    assert KernelDict.new(particle_layer, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(particle_layer, ctx=ctx).load() is not None
 
 
 def test_particle_layer():

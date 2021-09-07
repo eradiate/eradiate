@@ -13,5 +13,5 @@ def test_phase_hg(mode_mono):
     phase = HenyeyGreensteinPhaseFunction(g=0.25)
 
     # Check if produced kernel dict can be instantiated
-    kernel_dict = KernelDict.new(phase, ctx=ctx)
+    kernel_dict = KernelDict.from_elements(phase, ctx=ctx)
     assert kernel_dict.load() is not None

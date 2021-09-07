@@ -169,7 +169,7 @@ def test_mesh_tree_element_load(mode_mono, tmp_file, request):
     )
     d = {**tree_element.bsdfs(ctx), **tree_element.shapes(ctx)}
 
-    assert KernelDict.new(d, ctx=ctx).load()
+    assert KernelDict(d).load()
 
 
 def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
@@ -218,7 +218,7 @@ def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
         ]
     )
 
-    assert KernelDict.new(tree, ctx=ctx).load()
+    assert KernelDict.from_elements(tree, ctx=ctx).load()
 
     # check that special converter for the mesh_tree_elements field works as
     # expected

@@ -122,7 +122,7 @@ class RamiScene(Scene):
                         )
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = KernelDict.new()
+        result = KernelDict()
 
         if self.canopy is not None:
             if self.padding > 0:  # We must add extra instances if padding is requested
@@ -135,7 +135,7 @@ class RamiScene(Scene):
                 canopy = self.canopy
                 ctx = ctx.evolve(override_scene_width=max(self.canopy.size[:2]))
 
-            result.add(canopy.kernel_dict(ctx=ctx))
+            result.add(canopy, ctx=ctx)
 
         result.add(
             self.surface,

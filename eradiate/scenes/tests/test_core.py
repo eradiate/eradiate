@@ -1,13 +1,14 @@
 import importlib
 
 import mitsuba
+import numpy as np
 import pytest
 
 from eradiate.exceptions import KernelVariantError
 from eradiate.scenes.core import KernelDict
 
 
-def test_kernel_dict():
+def test_kernel_dict_construct():
     # Object creation is possible only if a variant is set
     importlib.reload(
         mitsuba
@@ -16,14 +17,12 @@ def test_kernel_dict():
         KernelDict()
     mitsuba.set_variant("scalar_mono")
 
-    # Constructor class method initialises an empty kernel scene dict
-    kernel_dict = KernelDict.new()
-    assert kernel_dict == {"type": "scene"}
-
     # variant attribute is set properly
     kernel_dict = KernelDict({})
     assert kernel_dict.variant == "scalar_mono"
 
+
+def test_kernel_dict_check(mode_mono):
     # Check method raises upon missing scene type
     kernel_dict = KernelDict({})
     with pytest.raises(ValueError):
@@ -34,12 +33,45 @@ def test_kernel_dict():
     with pytest.raises(KernelVariantError):
         kernel_dict.check()
 
-    # Load method returns a kernel object
-    mitsuba.set_variant("scalar_mono_double")
-    kernel_dict = KernelDict({"type": "scene", "shape": {"type": "sphere"}})
-    assert kernel_dict.load() is not None
 
-    # Add method merges dicts
-    kernel_dict = KernelDict.new()
-    kernel_dict.add({"shape": {"type": "sphere"}})
-    assert kernel_dict == {"type": "scene", "shape": {"type": "sphere"}}
+def test_kernel_dict_load(mode_mono):
+    # Load method returns a kernel object
+    from mitsuba.render import Scene
+
+    kernel_dict = KernelDict({"type": "scene", "shape": {"type": "sphere"}})
+    assert isinstance(kernel_dict.load(), Scene)
+
+    # Also works if "type" is missing
+    kernel_dict = KernelDict({"shape": {"type": "sphere"}})
+    assert isinstance(kernel_dict.load(), Scene)
+
+
+def test_kernel_dict_post_load(mode_mono):
+    from mitsuba.python.util import traverse
+
+    kernel_dict = KernelDict(
+        data={
+            "type": "directional",
+            "irradiance": {
+                "type": "irregular",
+                "wavelengths": "400, 500",
+                "values": "1, 1",
+            },
+        },
+        post_load={
+            "irradiance.wavelengths": np.array([400.0, 500.0, 600.0]),
+            "irradiance.values": np.array([0.0, 1.0, 2.0]),
+        },
+    )
+
+    # Without post-load update, buffers are initialised as in data
+    obj = kernel_dict.load(post_load_update=False)
+    params = traverse(obj)
+    assert params["irradiance.wavelengths"] == np.array([400.0, 500.0])
+    assert params["irradiance.values"] == np.array([1.0, 1.0])
+
+    # Without post-load update, buffers are initialised as in post_load
+    obj = kernel_dict.load(post_load_update=True)
+    params = traverse(obj)
+    assert params["irradiance.wavelengths"] == np.array([400.0, 500.0, 600.0])
+    assert params["irradiance.values"] == np.array([0.0, 1.0, 2.0])

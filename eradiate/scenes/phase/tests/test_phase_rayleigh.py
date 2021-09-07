@@ -10,5 +10,5 @@ def test_phase_rayleigh(mode_mono):
     phase = RayleighPhaseFunction()
 
     # Check if produced kernel dict can be instantiated
-    kernel_dict = KernelDict.new(phase, ctx=ctx)
+    kernel_dict = KernelDict.from_elements(phase, ctx=ctx)
     assert kernel_dict.load() is not None

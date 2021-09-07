@@ -59,7 +59,7 @@ def test_abstract_tree_dispatch_leaf_cloud(mode_mono, tempfile_leaves):
     assert len(tree.leaf_cloud.leaf_positions) == 5
     assert np.allclose(tree.leaf_cloud.leaf_radii, 0.1 * ureg.m)
     # Produced kernel dict is valid
-    assert KernelDict.new(tree.leaf_cloud, ctx=ctx).load()
+    assert KernelDict.from_elements(tree.leaf_cloud, ctx=ctx).load()
 
     # When passing a dict for the leaf_cloud field, the 'type' param can be omitted
     assert AbstractTree(
@@ -139,4 +139,4 @@ def test_abstract_tree_kernel_dict(mode_mono):
         assert kernel_dict[shape_key]["type"] == "disk"
 
     # Kernel dict is valid
-    assert KernelDict.new(kernel_dict).load()
+    assert KernelDict(kernel_dict).load()

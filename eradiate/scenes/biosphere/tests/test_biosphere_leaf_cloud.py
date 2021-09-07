@@ -237,7 +237,7 @@ def test_leaf_cloud_from_file(mode_mono, tempfile_leaves):
     assert len(cloud.leaf_positions) == 5
     assert np.allclose(cloud.leaf_radii, 0.1 * ureg.m)
     # Produced kernel dict is valid
-    assert KernelDict.new(cloud, ctx=ctx).load()
+    assert KernelDict.from_elements(cloud, ctx=ctx).load()
 
 
 def test_leaf_cloud_kernel_dict(mode_mono):
@@ -268,7 +268,7 @@ def test_leaf_cloud_kernel_dict(mode_mono):
         assert kernel_dict[shape_key]["type"] == "disk"
 
     # Kernel dict is valid
-    assert KernelDict.new(kernel_dict).load()
+    assert KernelDict(kernel_dict).load()
 
 
 def test_surface_area(mode_mono):

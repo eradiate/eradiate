@@ -87,7 +87,7 @@ def test_atmosphere_homogeneous_phase_function(mode_mono, phase_id, ref):
 
     # The resulting object produces a valid kernel dictionary
     ctx = KernelDictContext(ref=ref)
-    kernel_dict = KernelDict.new(r, ctx=ctx)
+    kernel_dict = KernelDict.from_elements(r, ctx=ctx)
     assert kernel_dict.load() is not None
 
 
@@ -124,5 +124,5 @@ def test_atmosphere_homogeneous_kernel_dict(mode_mono, ref):
     assert load_dict(dict_shape) is not None
 
     ctx = KernelDictContext(ref=ref)
-    kernel_dict = KernelDict.new(r, ctx=ctx)
+    kernel_dict = KernelDict.from_elements(r, ctx=ctx)
     assert kernel_dict.load() is not None

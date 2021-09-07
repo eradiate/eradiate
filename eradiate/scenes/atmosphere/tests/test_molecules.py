@@ -13,7 +13,7 @@ def test_molecular_atmosphere_default(mode_mono, tmpdir):
     spectral_ctx = SpectralContext.new(wavelength=550.0)
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
     atmosphere = MolecularAtmosphere()
-    assert KernelDict.new(atmosphere, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def test_molecular_atmosphere_afgl1986(
     atmosphere = MolecularAtmosphere.afgl1986(
         absorption_data_sets=afgl1986_test_absorption_data_sets
     )
-    assert KernelDict.new(atmosphere, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 
 
 @pytest.fixture
@@ -75,4 +75,4 @@ def test_molecular_atmosphere_ussa1976(
     atmosphere = MolecularAtmosphere.ussa1976(
         absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set)
     )
-    assert KernelDict.new(atmosphere, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None

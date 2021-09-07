@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
-from collections import UserDict
-from typing import Dict, Mapping, MutableMapping, Optional, Union
+from collections import abc as collections_abc
+from typing import MutableMapping, Optional
 
 import attr
 import mitsuba
@@ -12,53 +13,83 @@ from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
 
 
-class KernelDict(UserDict):
+def _kernel_dict_get_mts_variant():
+    variant = mitsuba.variant()
+
+    if variant is not None:
+        return variant
+    else:
+        raise KernelVariantError(
+            "a kernel variant must be selected to create a KernelDict instance"
+        )
+
+
+@attr.s
+class KernelDict(collections_abc.MutableMapping):
     """
-    A dictionary designed to contain a scene specification appropriate for
-    instantiation with :func:`~mitsuba.core.xml.load_dict`.
+    A dictionary-like object designed to contain a scene specification
+    appropriate for instantiation with :func:`~mitsuba.core.xml.load_dict`.
 
     :class:`KernelDict` keeps track of the variant it has been created with
     and performs minimal checks to help prevent inconsistent scene creation.
-
-    .. rubric:: Instance attributes
-
-    ``data`` (dict):
-        Wrapped dictionary.
-
-    ``variant`` (str):
-        Kernel variant for which the dictionary is created.
     """
 
-    def __init__(self, *args, **kwargs):
-        """
-        Initialise self and set :attr:`variant` attribute based on currently
-        set variant.
+    data: dict = documented(
+        attr.ib(
+            factory=dict,
+            converter=dict,
+        ),
+        doc="Scene dictionary.",
+        default="{}",
+        type="dict",
+    )
 
-        Raises → :class:`~eradiate.exceptions.KernelVariantError`
-            If no kernel variant is set.
-        """
-        variant = mitsuba.variant()
+    post_load: dict = documented(
+        attr.ib(
+            factory=dict,
+            converter=dict,
+        ),
+        doc="Post-load update dictionary.",
+        default="{}",
+        type="dict",
+    )
 
-        if variant is not None:
-            #: Kernel variant for which the scene is created
-            self.variant = variant
-        else:
-            raise KernelVariantError(
-                "a kernel variant must be selected to create a KernelDict object"
-            )
+    variant: str = documented(
+        attr.ib(
+            factory=_kernel_dict_get_mts_variant,
+            validator=attr.validators.instance_of(str),
+        ),
+        doc="Kernel variant for which the dictionary is created. Defaults to "
+        "currently active variant (if any; otherwise raises).",
+        type="str",
+        default=":func:`mitsuba.set_variant`",
+    )
 
-        super().__init__(*args, **kwargs)
+    def __getitem__(self, k):
+        return self.data.__getitem__(k)
+
+    def __delitem__(self, v):
+        return self.data.__delitem__(v)
+
+    def __len__(self):
+        return self.data.__len__()
+
+    def __iter__(self):
+        return self.data.__iter__()
+
+    def __setitem__(self, k, v):
+        return self.data.__setitem__(k, v)
 
     def check(self):
         """
         Perform basic checks on the dictionary:
 
-        * check that the ``{"type": "scene"}`` parameter is included;
+        * check that the ``"type"`` parameter is included;
         * check if the variant for which the kernel dictionary was created is
           the same as the current one.
 
         Raises → ValueError
-            If the ``{"type": "scene"}`` parameter is missing.
+            If the ``"type"`` parameter is missing.
 
         Raises → :class:`.KernelVariantError`
             If the variant for which the kernel dictionary was created is
@@ -71,83 +102,82 @@ class KernelDict(UserDict):
                 f"incompatible with current variant '{variant}'"
             )
 
-        if self.get("type", None) != "scene":
-            raise ValueError(
-                "kernel scene dictionary is missing {'type': 'scene'} parameters"
-            )
+        if "type" not in self:
+            raise ValueError("kernel scene dictionary is missing a 'type' parameter")
 
-    @classmethod
-    def new(
-        cls,
-        *elements: Union[SceneElement, Mapping],
-        ctx: Optional[KernelDictContext] = None,
-    ):
+    def load(self, post_load_update=True) -> mitsuba.core.Object:
         """
-        Create a kernel dictionary using the passed elements. This variadic
-        function accepts an arbitrary number of positional arguments.
-
-        Parameter ``elements`` (:class:`SceneElement` or dict):
-            Items to add to the newly created kernel dictionary.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext` or None):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation. *This argument is keyword-only and required
-            only if :class:`.SceneElement` instances are passed.*
-
-        Returns → :class:`KernelDict`
-            Initialise kernel dictionary.
-        """
-        result = cls({"type": "scene"})
-        result.add(*elements, ctx=ctx)
-        return result
-
-    def add(
-        self,
-        *elements: Union[SceneElement, Mapping],
-        ctx: Optional[KernelDictContext] = None,
-    ):
-        """
-        Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
-        another dictionary object with the current :class:`KernelDict`.
-
-        Parameter ``elements`` (:class:`SceneElement` or dict):
-            Items to add to the current kernel dictionary. If the item is a
-            :class:`~eradiate.scenes.core.SceneElement` instance, its
-            :meth:`~eradiate.scenes.core.SceneElement.kernel_dict` method will
-            be called with ``ref`` set to ``True``. If it is a dictionary
-            (including a :class:`.KernelDict`), it will be merged without change.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation. *This argument is keyword-only and required
-            only if :class:`.SceneElement` instances are passed.*
-        """
-
-        for element in elements:
-            if hasattr(element, "kernel_dict"):
-                if not isinstance(ctx, KernelDictContext):
-                    raise ValueError(
-                        "parameter 'ctx' must be set when adding SceneElement "
-                        "instances to the kernel dictionary"
-                    )
-                self.update(element.kernel_dict(ctx))
-            else:
-                self.update(element)
-
-    def load(self) -> mitsuba.render.Scene:
-        """
-        Load kernel object from self.
+        Call :func:`~mitsuba.core.xml.load_dict` on self. In addition, a
+        post-load update can be applied.
 
         .. note::
            Requires a valid selected operational mode.
 
-        Returns → :class:`mitsuba.render.Scene`:
-             Kernel object.
-        """
-        self.check()
-        from mitsuba.core.xml import load_dict
+        Parameter ``post_load_update`` (bool):
+            If ``True``, use :func:`~mitsuba.python.util.traverse` and update
+            loaded scene parameters according to data stored in ``post_load``.
 
-        return load_dict(self.data)
+        Return → :class:`mitsuba.core.Object`:
+            Loaded Mitsuba object.
+        """
+        from mitsuba.core.xml import load_dict
+        from mitsuba.python.util import traverse
+
+        if "type" not in self:
+            warnings.warn(
+                "KernelDict is missing 'type' entry, adding type='scene'",
+                UserWarning,
+            )
+            self["type"] = "scene"
+
+        obj = load_dict(self.data)
+
+        if self.post_load and post_load_update:
+            params = traverse(obj)
+            params.keep(list(self.post_load.keys()))
+            for k, v in self.post_load.items():
+                params[k] = v
+
+            params.update()
+
+        return obj
+
+    def add(self, *elements: SceneElement, ctx: KernelDictContext):
+        """
+        Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
+        another dictionary object with the current :class:`KernelDict`.
+
+        Parameter ``*elements`` (:class:`SceneElement`):
+            :class:`~eradiate.scenes.core.SceneElement` instances to add to the
+            scene dictionary.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation. *This argument is keyword-only and required.*
+        """
+
+        for element in elements:
+            self.update(element.kernel_dict(ctx))
+
+    @classmethod
+    def from_elements(cls, *elements: SceneElement, ctx: KernelDictContext):
+        """
+        Create a new :class:`.KernelDict` from one or more scene elements.
+
+        Parameter ``*elements`` (:class:`SceneElement`):
+            :class:`~eradiate.scenes.core.SceneElement` instances to add to the
+            scene dictionary.
+
+        Parameter ``ctx`` (:class:`.KernelDictContext`):
+            A context data structure containing parameters relevant for kernel
+            dictionary generation. *This argument is keyword-only and required.*
+
+        Returns → :class:`KernelDict`:
+            Created scene kernel dictionary.
+        """
+        result = cls()
+        result.add(*elements, ctx=ctx)
+        return result
 
 
 @parse_docs

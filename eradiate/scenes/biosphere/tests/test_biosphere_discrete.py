@@ -115,7 +115,7 @@ def test_discrete_canopy_homogeneous(mode_mono):
     canopy = DiscreteCanopy.homogeneous(
         n_leaves=1, leaf_radius=0.1, l_horizontal=10, l_vertical=3
     )
-    assert KernelDict.new(canopy, ctx=ctx).load()
+    assert KernelDict.from_elements(canopy, ctx=ctx).load()
 
 
 def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves):
@@ -137,7 +137,7 @@ def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves
             },
         ],
     )
-    assert KernelDict.new(canopy, ctx=ctx).load()
+    assert KernelDict.from_elements(canopy, ctx=ctx).load()
 
 
 def test_discrete_canopy_advanced(
@@ -207,7 +207,7 @@ def test_discrete_canopy_advanced(
             ),
         ],
     )
-    assert KernelDict.new(canopy, ctx=ctx).load()
+    assert KernelDict.from_elements(canopy, ctx=ctx).load()
 
 
 def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
@@ -228,7 +228,7 @@ def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
     # The padded canopy object is valid and instantiable
     padded_canopy = canopy.padded_copy(2)
     assert padded_canopy
-    assert KernelDict.new(padded_canopy, ctx=ctx).load()
+    assert KernelDict.from_elements(padded_canopy, ctx=ctx).load()
     # Padded canopy has (2*padding + 1) ** 2 times more instances than original
     assert len(padded_canopy.instances(ctx)) == len(canopy.instances(ctx)) * 25
     # Padded canopy has 2*padding + 1 times larger horizontal size than original

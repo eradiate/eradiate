@@ -47,7 +47,7 @@ def test_heterogeneous_write_volume_data_files(mode_mono, tmpdir):
             cache_dir=tmpdir,
         )
 
-    assert KernelDict.new(atmosphere, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 
 
 def test_heterogeneous_default(mode_mono):

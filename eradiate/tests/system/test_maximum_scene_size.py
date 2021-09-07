@@ -44,7 +44,7 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
         + [2.0 * 10 ** i for i in range(1, 8)]
         + [5.0 * 10 ** i for i in range(1, 8)]
     ):
-        kernel_dict = KernelDict.new(
+        kernel_dict = KernelDict(
             {
                 "type": "scene",
                 "bsdf_surface": {

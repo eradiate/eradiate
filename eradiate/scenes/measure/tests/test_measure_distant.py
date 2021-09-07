@@ -117,25 +117,25 @@ def test_distant_radiance(modes_all):
     # Test default constructor
     d = DistantRadianceMeasure()
     ctx = KernelDictContext()
-    assert KernelDict.new(d, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
 
     # Test target support
     # -- Target a point
     d = DistantRadianceMeasure(target=[0, 0, 0])
-    assert KernelDict.new(d, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
 
     # -- Target an axis-aligned rectangular patch
     d = DistantRadianceMeasure(
         target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
     )
-    assert KernelDict.new(d, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
 
     # Test origin support
     # -- Project origins to a sphere
     d = DistantRadianceMeasure(
         origin={"type": "sphere", "center": [0, 0, 0], "radius": 1}
     )
-    assert KernelDict.new(d, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
 
 
 def test_distant_radiance_postprocessing_mono(modes_all_mono):
@@ -235,23 +235,23 @@ def test_distant_flux(modes_all):
     # Test default constructor
     d = DistantFluxMeasure()
     ctx = KernelDictContext()
-    assert KernelDict.new(d, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
 
     # Test target support
     # -- Target a point
     d = DistantFluxMeasure(target=[0, 0, 0])
-    assert KernelDict.new(d, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
 
     # -- Target an axis-aligned rectangular patch
     d = DistantFluxMeasure(
         target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
     )
-    assert KernelDict.new(d, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
 
     # Test origin support
     # -- Project origins to a sphere
     d = DistantFluxMeasure(origin={"type": "sphere", "center": [0, 0, 0], "radius": 1})
-    assert KernelDict.new(d, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
 
 
 @pytest.mark.parametrize(
