@@ -64,7 +64,9 @@ def is_file(_, attribute, value):
     an existing file. Raises a ``FileNotFoundError`` otherwise.
     """
     if not value.is_file():
-        raise FileNotFoundError(f"{attribute} points to '{str(value)}' (not a file)")
+        raise FileNotFoundError(
+            f"{attribute.name} points to '{str(value)}' (not a file)"
+        )
 
 
 def is_dir(_, attribute, value):
@@ -74,7 +76,7 @@ def is_dir(_, attribute, value):
     """
     if not value.is_dir():
         raise FileNotFoundError(
-            f"{attribute} points to '{str(value)}' (not a directory)"
+            f"{attribute.name} points to '{str(value)}' (not a directory)"
         )
 
 
