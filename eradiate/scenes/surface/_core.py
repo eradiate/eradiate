@@ -11,7 +11,7 @@ import pinttr
 from ..core import SceneElement
 from ... import converters, validators
 from ..._factory import Factory
-from ...attrs import AUTO, _Auto, documented, get_doc, parse_docs
+from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ConfigWarning, OverriddenValueWarning
 from ...units import unit_context_config as ucc
@@ -51,7 +51,7 @@ class Surface(SceneElement, ABC):
         default="0.0 km",
     )
 
-    width: Union[pint.Quantity, _Auto] = documented(
+    width: Union[pint.Quantity, AutoType] = documented(
         pinttr.ib(
             default=AUTO,
             converter=converters.auto_or(

@@ -31,6 +31,12 @@ class _Auto:
         return 0
 
 
+AutoType = _Auto
+"""
+Alias used for typing.
+"""
+
+
 AUTO = _Auto()
 """
 Sentinel to indicate when a dynamic field value is expected to be set automatically.

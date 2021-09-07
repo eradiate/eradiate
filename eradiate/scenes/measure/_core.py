@@ -19,7 +19,7 @@ from ... import ckd, converters, validators
 from ..._factory import Factory
 from ..._mode import ModeFlags
 from ..._util import ensure_array, natsort_alphanum_key
-from ...attrs import AUTO, _Auto, documented, get_doc, parse_docs
+from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
 from ...contexts import (
     CKDSpectralContext,
@@ -270,7 +270,7 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
         default='"10nm"',
     )
 
-    _bins: Union[List[str], _Auto] = documented(
+    _bins: Union[List[str], AutoType] = documented(
         attr.ib(
             default=AUTO,
             converter=converters.auto_or(_ckd_measure_spectral_config_bins_converter),
