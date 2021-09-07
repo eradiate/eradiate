@@ -118,9 +118,7 @@ class OneDimScene(Scene):
 
         if self.atmosphere is not None:
             result.add(self.atmosphere, ctx=ctx)
-            ctx = attr.evolve(
-                ctx, override_scene_width=self.atmosphere.kernel_width(ctx)
-            )
+            ctx = ctx.evolve(override_scene_width=self.atmosphere.kernel_width(ctx))
 
         result.add(
             self.surface, self.illumination, *self.measures, self.integrator, ctx=ctx

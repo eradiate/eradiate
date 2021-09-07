@@ -17,12 +17,23 @@ from .units import unit_context_config as ucc
 from .units import unit_registry as ureg
 
 # ------------------------------------------------------------------------------
+#                                      ABC
+# ------------------------------------------------------------------------------
+
+
+@attr.s
+class Context:
+    def evolve(self, **changes):
+        return attr.evolve(self, **changes)
+
+
+# ------------------------------------------------------------------------------
 #                               Spectral contexts
 # ------------------------------------------------------------------------------
 
 
 @attr.s
-class SpectralContext(ABC):
+class SpectralContext(ABC, Context):
     """
     Context data structure holding state relevant to the evaluation of spectrally
     dependent objects.
@@ -225,7 +236,7 @@ class CKDSpectralContext(SpectralContext):
 
 @parse_docs
 @attr.s
-class KernelDictContext:
+class KernelDictContext(Context):
     """
     Kernel dictionary evaluation context data structure. This class is used
     *e.g.* to store information about the spectral configuration to apply
