@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -276,7 +277,7 @@ class TargetOriginSphere(TargetOrigin):
 
 
 @attr.s
-class DistantMeasure(Measure):
+class DistantMeasure(Measure, ABC):
     """
     Base class for all measures recording radiometric quantities at an infinite
     distance.
