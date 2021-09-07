@@ -80,6 +80,17 @@ def is_dir(_, attribute, value):
         )
 
 
+def has_id(instance, attribute, value):
+    """
+    Validates if ``value`` has an ``id`` field set a non-empty string. Raises
+    a ``ValueError`` otherwise.
+    """
+    if not value.id:
+        raise ValueError(
+            f"while validating {attribute.name}: field must have a valid ID"
+        )
+
+
 def has_len(size):
     """
     Generates a validator which validates if ``value`` is of length ``size``.
