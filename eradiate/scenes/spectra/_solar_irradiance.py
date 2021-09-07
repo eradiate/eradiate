@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Dict
-
 import attr
 import numpy as np
 import pint
 import xarray as xr
 
 from ._core import Spectrum, spectrum_factory
+from ..core import KernelDict
 from ... import data, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bin
@@ -150,12 +149,14 @@ class SolarIrradianceSpectrum(Spectrum):
 
         return result * quantity_units
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         # Apply scaling, build kernel dict
-        return {
-            "spectrum": {
-                "type": "uniform",
-                "value": self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
-                * self.scale,
+        return KernelDict(
+            {
+                "spectrum": {
+                    "type": "uniform",
+                    "value": self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
+                    * self.scale,
+                }
             }
-        }
+        )

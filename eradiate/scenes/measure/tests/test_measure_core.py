@@ -128,7 +128,7 @@ def test_measure(mode_mono):
     # The kernel dict is well-formed
     ctx = KernelDictContext()
     m.spp = 256
-    assert m.kernel_dict(ctx) == {
+    assert m.kernel_dict(ctx).data == {
         m.id: {
             "type": "some_sensor",
             "id": m.id,

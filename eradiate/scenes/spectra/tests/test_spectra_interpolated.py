@@ -8,7 +8,7 @@ from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
 from eradiate.ckd import BinSet
-from eradiate.contexts import KernelDictContext, MonoSpectralContext, SpectralContext
+from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.spectra import spectrum_factory
 from eradiate.scenes.spectra._interpolated import InterpolatedSpectrum
 

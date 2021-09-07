@@ -1,6 +1,5 @@
 import numpy as np
 
-from eradiate.frame import angles_to_direction
 from eradiate.scenes.core import KernelDict
 from eradiate.solvers.core import runner
 

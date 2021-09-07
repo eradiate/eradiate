@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 from abc import ABC, abstractmethod
 from collections import OrderedDict, abc
-from typing import Any, Dict, List, MutableMapping, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import attr
 import numpy as np
@@ -14,7 +14,7 @@ import xarray as xr
 
 import eradiate
 
-from ..core import SceneElement
+from ..core import KernelDict, SceneElement
 from ... import ckd, converters, validators
 from ..._factory import Factory
 from ..._mode import ModeFlags
@@ -903,7 +903,7 @@ class Measure(SceneElement, ABC):
             for sensor_info in self.sensor_infos()
         ]
 
-    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = {
             f"{sensor_info.id}": {
                 **base_dict,
@@ -919,4 +919,4 @@ class Measure(SceneElement, ABC):
                 )
             )
         }
-        return result
+        return KernelDict(result)

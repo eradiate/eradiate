@@ -12,7 +12,7 @@ from ..._factory import Factory
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bin
-from ...contexts import CKDSpectralContext, MonoSpectralContext, SpectralContext
+from ...contexts import SpectralContext
 from ...exceptions import UnsupportedModeError
 from ...scenes.core import SceneElement
 from ...units import PhysicalQuantity

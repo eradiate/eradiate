@@ -1,8 +1,7 @@
-from typing import Dict
-
 import attr
 
 from ._core import Illumination, illumination_factory
+from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
@@ -29,10 +28,12 @@ class ConstantIllumination(Illumination):
         default='1.0 ucc["radiance"]',
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
-        return {
-            self.id: {
-                "type": "constant",
-                "radiance": self.radiance.kernel_dict(ctx=ctx)["spectrum"],
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        return KernelDict(
+            {
+                self.id: {
+                    "type": "constant",
+                    "radiance": self.radiance.kernel_dict(ctx=ctx)["spectrum"],
+                }
             }
-        }
+        )

@@ -9,7 +9,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ..core import SceneElement
+from ..core import KernelDict, SceneElement
 from ... import unit_context_kernel as uck
 from ... import unit_registry as ureg
 from ... import validators
@@ -85,21 +85,6 @@ class Canopy(SceneElement, ABC):
         """
         pass
 
-    @abstractmethod
-    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
-        """
-        Return a dictionary suitable for kernel scene configuration.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns → dict:
-            Dictionary suitable for merge with a kernel scene dictionary
-            (using :func:`~mitsuba.core.xml.load_dict`).
-        """
-        pass
-
 
 @parse_docs
 @attr.s
@@ -141,11 +126,11 @@ class CanopyElement(SceneElement, ABC):
         """
         pass
 
-    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         if not ctx.ref:
-            return self.shapes(ctx=ctx)
+            return KernelDict(self.shapes(ctx=ctx))
         else:
-            return {**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx)}
+            return KernelDict({**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx)})
 
 
 @biosphere_factory.register(type_id="instanced")
@@ -338,9 +323,11 @@ class InstancedCanopyElement(SceneElement):
             for i, position in enumerate(self.instance_positions)
         }
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
-        return {
-            **self.bsdfs(ctx=ctx),
-            **self.shapes(ctx=ctx),
-            **self.instances(ctx=ctx),
-        }
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        return KernelDict(
+            {
+                **self.bsdfs(ctx=ctx),
+                **self.shapes(ctx=ctx),
+                **self.instances(ctx=ctx),
+            }
+        )

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict
-
 import attr
 
 from ._core import PhaseFunction, phase_function_factory
+from ..core import KernelDict
 from ...attrs import parse_docs
 from ...contexts import KernelDictContext
 
@@ -20,5 +19,5 @@ class RayleighPhaseFunction(PhaseFunction):
     atmosphere.
     """
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
-        return {self.id: {"type": "rayleigh"}}
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        return KernelDict({self.id: {"type": "rayleigh"}})

@@ -12,6 +12,7 @@ import pinttr
 from . import InstancedCanopyElement
 from ._core import Canopy, biosphere_factory
 from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
+from ..core import KernelDict
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
@@ -130,18 +131,19 @@ class DiscreteCanopy(Canopy):
             result = {**result, **instanced_canopy_element.instances(ctx)}
         return result
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         if not ctx.ref:
             raise ValueError("'ctx.ref' must be set to True")
 
-        result = {}
+        result = KernelDict()
         for instanced_canopy_element in self.instanced_canopy_elements:
-            result = {
-                **result,
-                **instanced_canopy_element.bsdfs(ctx=ctx),
-                **instanced_canopy_element.shapes(ctx=ctx),
-                **instanced_canopy_element.instances(ctx=ctx),
-            }
+            result.update(
+                {
+                    **instanced_canopy_element.bsdfs(ctx=ctx),
+                    **instanced_canopy_element.shapes(ctx=ctx),
+                    **instanced_canopy_element.instances(ctx=ctx),
+                }
+            )
 
         return result
 

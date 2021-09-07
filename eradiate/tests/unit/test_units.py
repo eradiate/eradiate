@@ -1,4 +1,3 @@
-import pinttr
 import pytest
 from pinttr.exceptions import UnitsError
 

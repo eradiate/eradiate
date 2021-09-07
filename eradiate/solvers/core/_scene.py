@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import List
+from typing import Dict, List
 
 import attr
 import pinttr
 
 from ...attrs import documented, parse_docs
+from ...contexts import KernelDictContext
 from ...scenes.core import SceneElement
 from ...scenes.illumination import (
     ConstantIllumination,

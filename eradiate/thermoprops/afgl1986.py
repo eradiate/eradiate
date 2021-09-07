@@ -7,8 +7,8 @@ from typing import MutableMapping, Optional
 import pint
 import xarray as xr
 
+from .util import compute_scaling_factors, interpolate, rescale_concentration
 from ..data import open
-from .util import interpolate, compute_scaling_factors, rescale_concentration
 
 
 def make_profile(

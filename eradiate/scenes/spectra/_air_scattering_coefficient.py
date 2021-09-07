@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict
-
 import attr
 import numpy as np
 import pint
@@ -9,6 +7,7 @@ import pint
 import eradiate
 
 from ._core import Spectrum, spectrum_factory
+from ..core import KernelDict
 from ..._mode import ModeFlags
 from ...attrs import parse_docs
 from ...ckd import Bin
@@ -89,16 +88,18 @@ class AirScatteringCoefficientSpectrum(Spectrum):
 
     def kernel_dict(self, ctx: KernelDictContext) -> Dict:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            return {
-                "spectrum": {
-                    "type": "uniform",
-                    "value": float(
-                        self.eval(ctx.spectral_ctx).m_as(
-                            uck.get("collision_coefficient")
-                        )
-                    ),
+            return KernelDict(
+                {
+                    "spectrum": {
+                        "type": "uniform",
+                        "value": float(
+                            self.eval(ctx.spectral_ctx).m_as(
+                                uck.get("collision_coefficient")
+                            )
+                        ),
+                    }
                 }
-            }
+            )
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))

@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional
+from typing import Dict, Optional
 
 import attr
 

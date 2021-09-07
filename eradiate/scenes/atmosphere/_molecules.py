@@ -232,8 +232,8 @@ class MolecularAtmosphere(Atmosphere):
     def sigma_t_file(self) -> pathlib.Path:
         return self.cache_dir / self.sigma_t_filename
 
-    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
-        return self.phase.kernel_dict(ctx=ctx)
+    def kernel_phase(self, ctx: KernelDictContext) -> Dict:
+        return self.phase.kernel_dict(ctx=ctx).data
 
     def kernel_media(self, ctx: KernelDictContext) -> Dict:
         length_units = uck.get("length")

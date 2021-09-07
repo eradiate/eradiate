@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from abc import ABC, abstractmethod
 from collections import abc as collections_abc
-from typing import MutableMapping, Optional
+from typing import Dict, Optional
 
 import attr
 import mitsuba
@@ -216,20 +216,26 @@ class SceneElement(ABC):
         default="None",
     )
 
+    def _kernel_dict_id(self) -> Dict:
+        """
+        Return a scene dictionary entry with the object's ``id`` field if it is
+        not ``None``.
+        """
+        result = {}
+        if self.id is not None:
+            result["id"] = self.id
+        return result
+
     @abstractmethod
-    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         """
         Return a dictionary suitable for kernel scene configuration.
-
-        Parameter ``ref`` (bool):
-            If ``True``, use referencing for all relevant nested kernel plugins.
 
         Parameter ``ctx`` (:class:`.KernelDictContext`):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
-            Dictionary suitable for merge with a kernel scene dictionary
-            (using :func:`~mitsuba.core.xml.load_dict`).
+        Returns → :class:`KernelDict`:
+            Kernel dictionary which can be loaded as a Mitsuba object.
         """
         pass

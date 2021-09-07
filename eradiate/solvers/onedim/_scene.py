@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional
+from typing import Dict, Optional
 
 import attr
 
@@ -114,7 +114,7 @@ class OneDimScene(Scene):
                     )
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = KernelDict.from_elements(ctx=ctx)
+        result = KernelDict()
 
         if self.atmosphere is not None:
             result.add(self.atmosphere, ctx=ctx)

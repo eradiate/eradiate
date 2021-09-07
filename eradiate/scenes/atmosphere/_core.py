@@ -3,7 +3,7 @@ from __future__ import annotations
 import pathlib
 import struct
 from abc import ABC, abstractmethod
-from typing import Dict, MutableMapping, Optional, Union
+from typing import Dict, Optional, Union
 
 import attr
 import numpy as np
@@ -11,7 +11,7 @@ import pint
 import pinttr
 import xarray as xr
 
-from ..core import SceneElement
+from ..core import KernelDict, SceneElement
 from ... import converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, documented, get_doc, parse_docs
@@ -124,7 +124,7 @@ class Atmosphere(SceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @abstractmethod
-    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_phase(self, ctx: KernelDictContext) -> Dict:
         """
         Return phase function plugin specifications only.
 
@@ -140,7 +140,7 @@ class Atmosphere(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def kernel_media(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_media(self, ctx: KernelDictContext) -> Dict:
         """
         Return medium plugin specifications only.
 
@@ -156,7 +156,7 @@ class Atmosphere(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def kernel_shapes(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_shapes(self, ctx: KernelDictContext) -> Dict:
         """
         Return shape plugin specifications only.
 
@@ -217,8 +217,8 @@ class Atmosphere(SceneElement, ABC):
         """
         return self.eval_width(ctx=ctx)
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
-        kernel_dict = {}
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        kernel_dict = KernelDict()
 
         if not ctx.ref:
             kernel_dict[self.id] = self.kernel_shapes(ctx=ctx)[f"shape_{self.id}"]

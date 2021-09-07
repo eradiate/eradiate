@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Dict
-
 import attr
 import numpy as np
 import pint
 import pinttr
 
 from ._core import Spectrum, spectrum_factory
+from ..core import KernelDict
 from ...attrs import documented, parse_docs
 from ...ckd import Bin
 from ...contexts import KernelDictContext
@@ -69,13 +68,15 @@ class UniformSpectrum(Spectrum):
         else:
             return np.full((len(bins),), self.value) * ureg.dimensionless
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         kernel_units = uck.get(self.quantity)
         spectral_ctx = ctx.spectral_ctx
 
-        return {
-            "spectrum": {
-                "type": "uniform",
-                "value": float(self.eval(spectral_ctx).m_as(kernel_units)),
+        return KernelDict(
+            {
+                "spectrum": {
+                    "type": "uniform",
+                    "value": float(self.eval(spectral_ctx).m_as(kernel_units)),
+                }
             }
-        }
+        )

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict
-
 import attr
 import numpy as np
 import pint
@@ -10,6 +8,7 @@ import pinttr
 import eradiate
 
 from ._core import Spectrum, spectrum_factory
+from ..core import KernelDict
 from ... import converters, validators
 from ..._mode import ModeFlags
 from ..._util import ensure_array
@@ -143,16 +142,18 @@ class InterpolatedSpectrum(Spectrum):
 
         return result * quantity_units
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            return {
-                "spectrum": {
-                    "type": "uniform",
-                    "value": float(
-                        self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
-                    ),
+            return KernelDict(
+                {
+                    "spectrum": {
+                        "type": "uniform",
+                        "value": float(
+                            self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
+                        ),
+                    }
                 }
-            }
+            )
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))

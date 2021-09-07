@@ -1,8 +1,9 @@
-from typing import Dict, MutableMapping, Optional
+from typing import Dict, Optional
 
 import attr
 
 from ._core import Integrator, integrator_factory
+from ..core import KernelDict
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
@@ -45,7 +46,7 @@ class MonteCarloIntegrator(Integrator):
         default="None",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = {self.id: {}}
 
         if self.max_depth is not None:
@@ -55,7 +56,7 @@ class MonteCarloIntegrator(Integrator):
         if self.hide_emitters is not None:
             result[self.id]["hide_emitters"] = self.hide_emitters
 
-        return result
+        return KernelDict(result)
 
 
 @integrator_factory.register(type_id="path")
@@ -70,7 +71,7 @@ class PathIntegrator(MonteCarloIntegrator):
     interactions.
     """
 
-    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = super(PathIntegrator, self).kernel_dict(ctx)
         result[self.id]["type"] = "path"
         return result
@@ -87,7 +88,7 @@ class VolPathIntegrator(MonteCarloIntegrator):
     It supports multiple scattering and accounts for volume interactions.
     """
 
-    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = super(VolPathIntegrator, self).kernel_dict(ctx)
         result[self.id]["type"] = "volpath"
         return result
@@ -105,7 +106,7 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
 
     use_spectral_mis = attr.ib(default=None, converter=attr.converters.optional(bool))
 
-    def kernel_dict(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = super(VolPathMISIntegrator, self).kernel_dict(ctx)
 
         result[self.id]["type"] = "volpathmis"

@@ -1,10 +1,9 @@
-from typing import Dict
-
 import attr
 import pint
 import pinttr
 
 from ._core import Illumination, illumination_factory
+from ..core import KernelDict
 from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
@@ -66,15 +65,17 @@ class DirectionalIllumination(Illumination):
         default=":class:`SolarIrradianceSpectrum() <.SolarIrradianceSpectrum>`",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
-        return {
-            self.id: {
-                "type": "directional",
-                "direction": list(
-                    -angles_to_direction(
-                        [self.zenith.m_as(ureg.rad), self.azimuth.m_as(ureg.rad)]
-                    ).squeeze(),
-                ),
-                "irradiance": self.irradiance.kernel_dict(ctx=ctx)["spectrum"],
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        return KernelDict(
+            {
+                self.id: {
+                    "type": "directional",
+                    "direction": list(
+                        -angles_to_direction(
+                            [self.zenith.m_as(ureg.rad), self.azimuth.m_as(ureg.rad)]
+                        ).squeeze(),
+                    ),
+                    "irradiance": self.irradiance.kernel_dict(ctx=ctx)["spectrum"],
+                }
             }
-        }
+        )

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Dict
-
 import attr
 
 import eradiate
 
 from ._core import PhaseFunction, phase_function_factory
+from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ..._mode import ModeFlags
@@ -44,16 +43,18 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
         default="0.0",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             # TODO: This is a workaround until the hg plugin accepts spectra for
             #  its g parameter
             g = float(onedict_value(self.g.kernel_dict(ctx=ctx))["value"])
-            return {
-                self.id: {
-                    "type": "hg",
-                    "g": g,
+            return KernelDict(
+                {
+                    self.id: {
+                        "type": "hg",
+                        "g": g,
+                    }
                 }
-            }
+            )
         else:
             raise UnsupportedModeError(supported="monochromatic")

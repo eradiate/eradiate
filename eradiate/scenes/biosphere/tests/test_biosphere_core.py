@@ -5,12 +5,7 @@ import numpy as np
 import pytest
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.biosphere import (
-    AbstractTree,
-    InstancedCanopyElement,
-    LeafCloud,
-    biosphere_factory,
-)
+from eradiate.scenes.biosphere import AbstractTree, InstancedCanopyElement, LeafCloud
 from eradiate.scenes.core import KernelDict
 
 # ------------------------------------------------------------------------------

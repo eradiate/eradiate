@@ -8,7 +8,7 @@ import attr
 import pint
 import pinttr
 
-from ..core import SceneElement
+from ..core import KernelDict, SceneElement
 from ... import converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
@@ -144,7 +144,7 @@ class Surface(SceneElement, ABC):
             else:
                 return 100.0 * ureg.km
 
-    def kernel_dict(self, ctx: KernelDictContext) -> Dict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         kernel_dict = {}
 
         if not ctx.ref:
@@ -153,7 +153,7 @@ class Surface(SceneElement, ABC):
             kernel_dict[f"bsdf_{self.id}"] = self.bsdfs(ctx)[f"bsdf_{self.id}"]
             kernel_dict[self.id] = self.shapes(ctx)[f"shape_{self.id}"]
 
-        return kernel_dict
+        return KernelDict(kernel_dict)
 
     def scaled(self, factor: float) -> Surface:
         """
