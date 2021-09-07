@@ -159,6 +159,20 @@ class KernelDict(collections_abc.MutableMapping):
         for element in elements:
             self.update(element.kernel_dict(ctx))
 
+    def merge(self, other: KernelDict):
+        """
+        Merge another :class:`.KernelDict` with the current one.
+
+        Parameter ``other`` (:class:`.KernelDict`):
+            A kernel dictionary whose main and post-load dictionaries will be
+            used to update the current one.
+        """
+        if self.variant != other.variant:
+            raise KernelVariantError("merged kernel dicts must share the same variant")
+
+        self.data.update(other.data)
+        self.post_load.update(other.post_load)
+
     @classmethod
     def from_elements(cls, *elements: SceneElement, ctx: KernelDictContext):
         """
