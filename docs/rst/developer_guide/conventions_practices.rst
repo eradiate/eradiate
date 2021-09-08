@@ -9,14 +9,28 @@ development team.
 Style
 -----
 
-The Eradiate codebase is written following Python's
-`PEP8 <https://www.python.org/dev/peps/pep-0008/>`_. Its code formatter of
-choice is `Black <https://https://black.readthedocs.io/>`_ and its import
-formatter of choice is `isort <https://pycqa.github.io/isort/>`_ (version 5 or
-later), for which configuration files are provided at the root of the project.
-Editor integration instructions are available
-`for Black <https://black.readthedocs.io/en/stable/integrations/editors.html>`_
-and `for isort <https://github.com/pycqa/isort/wiki/isort-Plugins>`_.
+* The Eradiate codebase is written following Python's
+  `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_. Its code formatter of
+  choice is `Black <https://https://black.readthedocs.io/>`_ and its import
+  formatter of choice is `isort <https://pycqa.github.io/isort/>`_ (version 5 or
+  later), for which configuration files are provided at the root of the project.
+  Editor integration instructions are available
+  `for Black <https://black.readthedocs.io/en/stable/integrations/editors.html>`_
+  and `for isort <https://github.com/pycqa/isort/wiki/isort-Plugins>`_.
+
+* We use the ``"""``-on-separate-lines style for docstrings:
+
+  .. code:: python
+
+     def func(x):
+         """
+         Do something.
+
+         Further detail on what this function does.
+         """
+
+* We use type hints in our library code. We do not use type hints in test code
+  in general.
 
 Code writing
 ------------
