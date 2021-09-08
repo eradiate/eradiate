@@ -32,7 +32,7 @@ class Context:
 # ------------------------------------------------------------------------------
 
 
-@attr.s
+@attr.s(frozen=True)
 class SpectralContext(ABC, Context):
     """
     Context data structure holding state relevant to the evaluation of spectrally
@@ -139,7 +139,7 @@ class SpectralContext(ABC, Context):
 
 
 @parse_docs
-@attr.s
+@attr.s(frozen=True)
 class MonoSpectralContext(SpectralContext):
     """
     Monochromatic spectral context data structure.
@@ -149,6 +149,7 @@ class MonoSpectralContext(SpectralContext):
         pinttr.ib(
             default=ureg.Quantity(550.0, ureg.nm),
             units=ucc.deferred("wavelength"),
+            on_setattr=None,  # frozen classes can't use on_setattr
         ),
         doc="A single wavelength value.\n\nUnit-enabled field "
         "(default: ucc[wavelength]).",
@@ -160,10 +161,6 @@ class MonoSpectralContext(SpectralContext):
     def wavelength(self):
         """Wavelength associated with spectral context."""
         return self._wavelength
-
-    @wavelength.setter
-    def wavelength(self, value):
-        self._wavelength = value
 
     @property
     def spectral_index(self) -> float:
@@ -180,7 +177,7 @@ class MonoSpectralContext(SpectralContext):
 
 
 @parse_docs
-@attr.s
+@attr.s(frozen=True)
 class CKDSpectralContext(SpectralContext):
     """
     CKD spectral context data structure.
@@ -235,7 +232,7 @@ class CKDSpectralContext(SpectralContext):
 
 
 @parse_docs
-@attr.s
+@attr.s(frozen=True)
 class KernelDictContext(Context):
     """
     Kernel dictionary evaluation context data structure. This class is used
@@ -265,7 +262,11 @@ class KernelDictContext(Context):
     )
 
     override_scene_width: Optional[pint.Quantity] = documented(
-        pinttr.ib(default=None, units=ucc.deferred("length")),
+        pinttr.ib(
+            default=None,
+            units=ucc.deferred("length"),
+            on_setattr=None,  # frozen classes can't use on_setattr
+        ),
         doc="If relevant, value which must be used as the scene width "
         "(*e.g.* when surface size must match atmosphere or canopy size).\n"
         "\n"

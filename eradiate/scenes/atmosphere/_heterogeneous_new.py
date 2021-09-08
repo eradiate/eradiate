@@ -178,9 +178,8 @@ class HeterogeneousNewAtmosphere(Atmosphere):
         media = {}
 
         if self.molecular_atmosphere is not None:
-            # override componments' widths
-            ctx.override_scene_width = self.eval_width(ctx=ctx)
-
+            # override component widths
+            ctx = ctx.evolve(override_scene_width=self.eval_width(ctx=ctx))
             media.update(self.molecular_atmosphere.kernel_media(ctx=ctx))
 
             if not ctx.ref:
