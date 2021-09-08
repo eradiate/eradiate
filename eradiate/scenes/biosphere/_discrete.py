@@ -292,10 +292,10 @@ class DiscreteCanopy(Canopy):
     @classmethod
     def leaf_cloud_from_files(
         cls,
+        size: pint.Quantity,
+        leaf_cloud_dicts: t.List[t.MutableMapping],
         padding: int = 0,
         id: str = "discrete_canopy",
-        size: t.Optional[pint.Quantity] = None,
-        leaf_cloud_dicts: t.List[t.MutableMapping] = None,
     ):
         """
         Directly create a leaf cloud canopy from text file specifications,
@@ -316,6 +316,13 @@ class DiscreteCanopy(Canopy):
                   "leaf_transmittance": 0.5,  # optional, leaf transmittance (default: 0.5)
               }
 
+        Parameter ``size`` (array-like):
+            Canopy size as a 3-vector (in metres).
+
+        Parameter ``leaf_cloud_dicts`` (list[dict]):
+            List of dictionary specifying canopy elements and instances (see
+            format above).
+
         Parameter ``padding`` (int):
             Amount of padding around the canopy. Must be positive or zero.
             The resulting padded canopy is a grid of
@@ -324,25 +331,9 @@ class DiscreteCanopy(Canopy):
         Parameter ``id`` (str):
             Canopy ID.
 
-        Parameter ``size`` (array-like):
-            Canopy size as a 3-vector (in metres). Required (setting to ``None``
-            will raise).
-
-        Parameter ``leaf_cloud_dicts`` (list[dict]):
-            List of dictionary specifying canopy elements and instances (see format
-            above). Required (setting to ``None`` will raise).
-
         Returns → :class:`.DiscreteCanopy`:
             Created canopy object.
         """
-        # Check if required kwargs are provided (all args must be kwargs if we
-        # want to use this constructor through from_dict())
-        if size is None:
-            raise ValueError(f"parameter 'size' is required")
-
-        if leaf_cloud_dicts is None:
-            raise ValueError(f"parameter 'leaf_cloud_dicts' is required")
-
         instanced_canopy_elements = []
 
         for leaf_cloud_dict in leaf_cloud_dicts:

@@ -128,7 +128,7 @@ def test_mesh_tree_element_instantiate(mode_mono, tmp_file, request):
     tmp_file = request.getfixturevalue(tmp_file)
 
     # empty constructor raises due to missing mesh description file
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         MeshTreeElement()
 
     # instantiation with supported format succeeds, except for stl

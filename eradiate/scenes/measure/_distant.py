@@ -626,12 +626,12 @@ class DistantReflectanceMeasure(DistantRadianceMeasure):
     type).
     """
 
-    def postprocess(self, illumination=None) -> xr.Dataset:
+    def postprocess(self, illumination: DirectionalIllumination) -> xr.Dataset:
         """
         Return post-processed raw sensor results.
 
         Parameter ``illumination`` (:class:`.DirectionalIllumination`):
-            Incoming radiance value. *This keyword argument is required.*
+            Scene illumination.
 
         Returns → :class:`~xarray.Dataset`:
             Post-processed results.
@@ -639,9 +639,6 @@ class DistantReflectanceMeasure(DistantRadianceMeasure):
         Raises → TypeError:
             If ``illumination`` is missing or if it has an unsupported type.
         """
-        if illumination is None:
-            raise TypeError("missing required keyword argument 'illumination'")
-
         if not isinstance(illumination, DirectionalIllumination):
             TypeError(
                 "keyword argument 'illumination' must be a "
@@ -798,16 +795,13 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
     """
 
     def postprocess(
-        self,
-        illumination: t.Optional[
-            t.Union[DirectionalIllumination, ConstantIllumination]
-        ] = None,
+        self, illumination: t.Union[DirectionalIllumination, ConstantIllumination]
     ) -> xr.Dataset:
         """
         Return post-processed raw sensor results.
 
         Parameter ``illumination`` (:class:`.DirectionalIllumination` or :class:`.ConstantIllumination`):
-            Incoming radiance value. *This keyword argument is required.*
+            Scene illumination.
 
         Returns → :class:`~xarray.Dataset`:
             Post-processed results.
@@ -815,14 +809,11 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
         Raises → TypeError:
             If ``illumination`` is missing or if it has an unsupported type.
         """
-        if illumination is None:
-            raise TypeError("missing required keyword argument 'illumination'")
-
         if not isinstance(
             illumination, (DirectionalIllumination, ConstantIllumination)
         ):
             raise TypeError(
-                "keyword argument 'illumination' must be one of "
+                "parameter 'illumination' must be one of "
                 "(DirectionalIllumination, ConstantIllumination), got a "
                 f"{illumination.__class__.__name__}"
             )

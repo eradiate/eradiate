@@ -191,7 +191,7 @@ class InstancedCanopyElement(SceneElement):
     @classmethod
     def from_file(
         cls,
-        filename: t.Optional[os.PathLike] = None,
+        filename: os.PathLike,
         canopy_element: t.Optional[CanopyElement] = None,
     ):
         """
@@ -209,8 +209,7 @@ class InstancedCanopyElement(SceneElement):
 
         Parameter ``filename`` (path-like):
             Path to the text file specifying the leaves in the canopy.
-            Can be absolute or relative. Required (setting to ``None`` will
-            raise an exception).
+            Can be absolute or relative.
 
         Parameter ``canopy_element`` (:class:`.CanopyElement` or dict or None):
             :class:`.CanopyElement` to be instanced. If a dictionary is passed,
@@ -226,9 +225,6 @@ class InstancedCanopyElement(SceneElement):
         Raises → FileNotFoundError:
             If ``filename`` does not point to an existing file.
         """
-        if filename is None:
-            raise ValueError("parameter 'filename' is required")
-
         if not os.path.isfile(filename):
             raise FileNotFoundError(f"no file at {filename} found.")
 

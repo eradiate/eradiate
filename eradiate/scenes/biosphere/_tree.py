@@ -290,7 +290,7 @@ class MeshTreeElement:
     mesh_filename: t.Optional[Path] = documented(
         attr.ib(
             converter=attr.converters.optional(Path),
-            default=None,
+            kw_only=True,
         ),
         doc="Path to the triangulated mesh data file. This parameter is required.",
         type="path-like",
@@ -298,9 +298,6 @@ class MeshTreeElement:
 
     @mesh_filename.validator
     def _mesh_filename_validator(self, attribute, value):
-        if value is None:
-            raise ValueError("'mesh_filename' is required")
-
         validators.path_exists(self, attribute, value)
 
         if not value.suffix in [".obj", ".ply"]:

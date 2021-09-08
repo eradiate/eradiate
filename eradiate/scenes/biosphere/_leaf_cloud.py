@@ -966,7 +966,7 @@ class LeafCloud(CanopyElement):
     @classmethod
     def from_file(
         cls,
-        filename=None,
+        filename,
         leaf_transmittance=0.5,
         leaf_reflectance=0.5,
         id="leaf_cloud",
@@ -990,8 +990,7 @@ class LeafCloud(CanopyElement):
 
         Parameter ``filename`` (str or PathLike):
             Path to the text file specifying the leaves in the leaf cloud.
-            Can be absolute or relative. Required (setting to ``None`` will
-            raise an exception).
+            Can be absolute or relative.
 
         Parameter ``leaf_reflectance`` (float or :class:`.Spectrum`):
             Reflectance spectrum of the leaves in the cloud. Must be a reflectance
@@ -1013,9 +1012,6 @@ class LeafCloud(CanopyElement):
         Raises → FileNotFoundError:
             If ``filename`` does not point to an existing file.
         """
-        if filename is None:
-            raise ValueError("parameter 'filename' is required")
-
         if not os.path.isfile(filename):
             raise FileNotFoundError(f"no file at {filename} found.")
 
