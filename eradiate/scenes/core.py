@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing as t
-import warnings
 from abc import ABC, abstractmethod
 from collections import abc as collections_abc
 
@@ -25,6 +24,7 @@ def _kernel_dict_get_mts_variant():
         )
 
 
+@parse_docs
 @attr.s
 class KernelDict(collections_abc.MutableMapping):
     """
@@ -106,12 +106,37 @@ class KernelDict(collections_abc.MutableMapping):
         if "type" not in self:
             raise ValueError("kernel scene dictionary is missing a 'type' parameter")
 
+    def fix(self) -> None:
+        if "type" not in self.data:
+            self.data["type"] = "scene"
+
     def load(
         self, strip: bool = True, post_load_update: bool = True
     ) -> mitsuba.core.Object:
         """
         Call :func:`~mitsuba.core.xml.load_dict` on self. In addition, a
         post-load update can be applied.
+
+        If the encapsulated dictionary misses a ``"type"`` key, it will be
+        promoted to a scene dictionary through the addition of
+        ``{"type": "scene"}``. For instance, it means that
+
+        .. code:: python
+
+           {
+               "shape1": {"type": "sphere"},
+               "shape2": {"type": "sphere"},
+           }
+
+        will be interpreted as
+
+        .. code:: python
+
+           {
+               "type": "scene",
+               "shape1": {"type": "sphere"},
+               "shape2": {"type": "sphere"},
+           }
 
         .. note::
            Requires a valid selected operational mode.
@@ -142,18 +167,17 @@ class KernelDict(collections_abc.MutableMapping):
         from mitsuba.python.util import traverse
 
         d = self.data
+        d_extra = {}
 
         if "type" not in self:
             if len(self) == 1 and strip:
+                # Extract plugin dictionary
                 d = onedict_value(d)
             else:
-                warnings.warn(
-                    "KernelDict is missing 'type' entry, adding {'type': 'scene'}",
-                    UserWarning,
-                )
-                d["type"] = "scene"
+                # Promote to scene dictionary
+                d_extra = {"type": "scene"}
 
-        obj = load_dict(d)
+        obj = load_dict({**d, **d_extra})
 
         if self.post_load and post_load_update:
             params = traverse(obj)

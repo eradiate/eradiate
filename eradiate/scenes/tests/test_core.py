@@ -43,9 +43,7 @@ def test_kernel_dict_load(mode_mono):
 
     # Also works if "type" is missing
     kernel_dict = KernelDict({"shape": {"type": "sphere"}})
-    with pytest.warns(UserWarning):
-        obj = kernel_dict.load(strip=False)
-    assert isinstance(obj, Scene)
+    assert isinstance(kernel_dict.load(strip=False), Scene)
 
     # Setting strip to True instantiates a Shape directly...
     kernel_dict = KernelDict({"shape": {"type": "sphere"}})
@@ -58,9 +56,7 @@ def test_kernel_dict_load(mode_mono):
             "shape_2": {"type": "sphere"},
         }
     )
-    with pytest.warns(UserWarning):
-        obj = kernel_dict.load(strip=True)
-    assert isinstance(obj, Scene)
+    assert isinstance(kernel_dict.load(strip=True), Scene)
 
 
 def test_kernel_dict_post_load(mode_mono):
