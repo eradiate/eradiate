@@ -8,6 +8,7 @@ from typing import Dict, Optional
 import attr
 import mitsuba
 
+from .._util import onedict_value
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
@@ -105,13 +106,30 @@ class KernelDict(collections_abc.MutableMapping):
         if "type" not in self:
             raise ValueError("kernel scene dictionary is missing a 'type' parameter")
 
-    def load(self, post_load_update=True) -> mitsuba.core.Object:
+    def load(
+        self, strip: bool = True, post_load_update: bool = True
+    ) -> mitsuba.core.Object:
         """
         Call :func:`~mitsuba.core.xml.load_dict` on self. In addition, a
         post-load update can be applied.
 
         .. note::
            Requires a valid selected operational mode.
+
+        Parameter ``strip`` (bool):
+            If ``True``, if ``data`` has no ``'type'`` entry and if ``data``
+            consists of one nested dictionary, it will be loaded directly.
+            For instance, it means that
+
+            .. code:: python
+
+               {"phase": {"type": "rayleigh"}}
+
+            will be stripped to
+
+            .. code:: python
+
+               {"type": "rayleigh"}
 
         Parameter ``post_load_update`` (bool):
             If ``True``, use :func:`~mitsuba.python.util.traverse` and update
@@ -123,14 +141,19 @@ class KernelDict(collections_abc.MutableMapping):
         from mitsuba.core.xml import load_dict
         from mitsuba.python.util import traverse
 
-        if "type" not in self:
-            warnings.warn(
-                "KernelDict is missing 'type' entry, adding type='scene'",
-                UserWarning,
-            )
-            self["type"] = "scene"
+        d = self.data
 
-        obj = load_dict(self.data)
+        if "type" not in self:
+            if len(self) == 1 and strip:
+                d = onedict_value(d)
+            else:
+                warnings.warn(
+                    "KernelDict is missing 'type' entry, adding {'type': 'scene'}",
+                    UserWarning,
+                )
+                d["type"] = "scene"
+
+        obj = load_dict(d)
 
         if self.post_load and post_load_update:
             params = traverse(obj)
@@ -155,7 +178,6 @@ class KernelDict(collections_abc.MutableMapping):
             A context data structure containing parameters relevant for kernel
             dictionary generation. *This argument is keyword-only and required.*
         """
-
         for element in elements:
             self.update(element.kernel_dict(ctx))
 

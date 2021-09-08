@@ -14,6 +14,7 @@ from ._core import (
     read_binary_grid3d,
     write_binary_grid3d,
 )
+from ..core import KernelDict
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext
 from ...kernel.transform import map_cube, map_unit_cube
@@ -151,11 +152,10 @@ class HeterogeneousAtmosphere(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
-        return {f"phase_{self.id}": {"type": "rayleigh"}}
+    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
+        return KernelDict({f"phase_{self.id}": {"type": "rayleigh"}})
 
-    def kernel_media(self, ctx: KernelDictContext) -> MutableMapping:
-
+    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
         length_units = uck.get("length")
         width = self.kernel_width(ctx).m_as(length_units)
         top = self.top.m_as(length_units)
@@ -179,24 +179,26 @@ class HeterogeneousAtmosphere(Atmosphere):
             filename=str(self.sigma_t_file), values=sigma_t[np.newaxis, np.newaxis, ...]
         )
 
-        return {
-            f"medium_{self.id}": {
-                "type": "heterogeneous",
-                "phase": {"type": "rayleigh"},
-                "sigma_t": {
-                    "type": "gridvolume",
-                    "filename": str(self.sigma_t_file),
-                    "to_world": trafo,
-                },
-                "albedo": {
-                    "type": "gridvolume",
-                    "filename": str(self.albedo_file),
-                    "to_world": trafo,
-                },
+        return KernelDict(
+            {
+                f"medium_{self.id}": {
+                    "type": "heterogeneous",
+                    "phase": {"type": "rayleigh"},
+                    "sigma_t": {
+                        "type": "gridvolume",
+                        "filename": str(self.sigma_t_file),
+                        "to_world": trafo,
+                    },
+                    "albedo": {
+                        "type": "gridvolume",
+                        "filename": str(self.albedo_file),
+                        "to_world": trafo,
+                    },
+                }
             }
-        }
+        )
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
@@ -216,11 +218,13 @@ class HeterogeneousAtmosphere(Atmosphere):
             zmax=top,
         )
 
-        return {
-            f"shape_{self.id}": {
-                "type": "cube",
-                "to_world": trafo,
-                "bsdf": {"type": "null"},
-                "interior": medium,
+        return KernelDict(
+            {
+                f"shape_{self.id}": {
+                    "type": "cube",
+                    "to_world": trafo,
+                    "bsdf": {"type": "null"},
+                    "interior": medium,
+                }
             }
-        }
+        )

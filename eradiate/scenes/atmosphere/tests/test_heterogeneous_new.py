@@ -11,6 +11,7 @@ from eradiate.scenes.atmosphere import (
     ParticleLayer,
 )
 from eradiate.scenes.atmosphere._heterogeneous_new import blend_radprops, overlapping
+from eradiate.scenes.core import KernelDict
 from eradiate.units import unit_registry as ureg
 
 
@@ -37,7 +38,7 @@ def test_heterogeneous_new_kernel_phase_0(mode_mono):
     returns an empty dictionary.
     """
     atmosphere = HeterogeneousNewAtmosphere()
-    assert atmosphere.kernel_phase(ctx=KernelDictContext()) == {}
+    assert atmosphere.kernel_phase(ctx=KernelDictContext()) == KernelDict()
 
 
 def test_heterogeneous_new_kernel_phase_1(mode_mono):
@@ -105,7 +106,7 @@ def test_heterogeneous_new_kernel_media_0(mode_mono):
     returns an empty dictionary.
     """
     atmosphere = HeterogeneousNewAtmosphere()
-    assert atmosphere.kernel_media(ctx=KernelDictContext()) == {}
+    assert atmosphere.kernel_media(ctx=KernelDictContext()) == KernelDict()
 
 
 def test_heterogeneous_new_kernel_media_1(mode_mono):

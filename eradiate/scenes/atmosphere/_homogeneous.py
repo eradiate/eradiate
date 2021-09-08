@@ -5,6 +5,7 @@ import pint
 import pinttr
 
 from ._core import Atmosphere, atmosphere_factory
+from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ..._util import onedict_value
@@ -185,27 +186,31 @@ class HomogeneousAtmosphere(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
         return self.phase.kernel_dict(ctx=ctx)
 
-    def kernel_media(self, ctx: KernelDictContext) -> Dict:
+    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
         if ctx.ref:
             phase = {"type": "ref", "id": self.phase.id}
         else:
             phase = onedict_value(self.kernel_phase(ctx=ctx))
 
-        return {
-            f"medium_{self.id}": {
-                "type": "homogeneous",
-                "phase": phase,
-                "sigma_t": self.eval_sigma_t(ctx.spectral_ctx).m_as(
-                    uck.get("collision_coefficient")
-                ),
-                "albedo": self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo")),
+        return KernelDict(
+            {
+                f"medium_{self.id}": {
+                    "type": "homogeneous",
+                    "phase": phase,
+                    "sigma_t": self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                        uck.get("collision_coefficient")
+                    ),
+                    "albedo": self.eval_albedo(ctx.spectral_ctx).m_as(
+                        uck.get("albedo")
+                    ),
+                }
             }
-        }
+        )
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> Dict:
+    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
@@ -225,11 +230,13 @@ class HomogeneousAtmosphere(Atmosphere):
             zmax=top,
         )
 
-        return {
-            f"shape_{self.id}": {
-                "type": "cube",
-                "to_world": trafo,
-                "bsdf": {"type": "null"},
-                "interior": medium,
+        return KernelDict(
+            {
+                f"shape_{self.id}": {
+                    "type": "cube",
+                    "to_world": trafo,
+                    "bsdf": {"type": "null"},
+                    "interior": medium,
+                }
             }
-        }
+        )

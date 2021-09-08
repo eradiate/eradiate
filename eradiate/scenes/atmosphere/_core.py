@@ -124,7 +124,7 @@ class Atmosphere(SceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @abstractmethod
-    def kernel_phase(self, ctx: KernelDictContext) -> Dict:
+    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
         """
         Return phase function plugin specifications only.
 
@@ -132,15 +132,14 @@ class Atmosphere(SceneElement, ABC):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
-            Return a dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the phase
-            functions attached to the atmosphere.
+        Returns → :class:`.KernelDict`:
+            A kernel dictionary containing all the phase functions attached to
+            the atmosphere.
         """
         pass
 
     @abstractmethod
-    def kernel_media(self, ctx: KernelDictContext) -> Dict:
+    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
         """
         Return medium plugin specifications only.
 
@@ -148,15 +147,14 @@ class Atmosphere(SceneElement, ABC):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
-            Return a dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the media
-            attached to the atmosphere.
+        Returns → :class:`.KernelDict`:
+            A kernel dictionary containing all the media attached to the
+            atmosphere.
         """
         pass
 
     @abstractmethod
-    def kernel_shapes(self, ctx: KernelDictContext) -> Dict:
+    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
         """
         Return shape plugin specifications only.
 
@@ -164,10 +162,9 @@ class Atmosphere(SceneElement, ABC):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
-            attached to the atmosphere.
+        Returns → :class:`.KernelDict`:
+            A kernel dictionary containing all the shapes attached to the
+            atmosphere.
         """
         pass
 
@@ -220,16 +217,14 @@ class Atmosphere(SceneElement, ABC):
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         kernel_dict = KernelDict()
 
-        if not ctx.ref:
-            kernel_dict[self.id] = self.kernel_shapes(ctx=ctx)[f"shape_{self.id}"]
-        else:
-            kernel_dict[f"phase_{self.id}"] = self.kernel_phase(ctx=ctx)[
-                f"phase_{self.id}"
-            ]
-            kernel_dict[f"medium_{self.id}"] = self.kernel_media(ctx=ctx)[
-                f"medium_{self.id}"
-            ]
-            kernel_dict[self.id] = self.kernel_shapes(ctx=ctx)[f"shape_{self.id}"]
+        if ctx.ref:
+            kernel_phase = self.kernel_phase(ctx=ctx)
+            kernel_dict.data[f"phase_{self.id}"] = kernel_phase[f"phase_{self.id}"]
+            kernel_media = self.kernel_media(ctx=ctx)
+            kernel_dict.data[f"medium_{self.id}"] = kernel_media[f"medium_{self.id}"]
+
+        kernel_shapes = self.kernel_shapes(ctx=ctx)
+        kernel_dict.data[self.id] = kernel_shapes[f"shape_{self.id}"]
 
         return kernel_dict
 

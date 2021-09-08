@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pathlib
 import tempfile
-from typing import Dict, MutableMapping, Optional
+from typing import MutableMapping, Optional
 
 import attr
 import numpy as np
@@ -14,6 +14,7 @@ import pint
 import xarray as xr
 
 from ._core import Atmosphere, atmosphere_factory, write_binary_grid3d
+from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
@@ -232,10 +233,10 @@ class MolecularAtmosphere(Atmosphere):
     def sigma_t_file(self) -> pathlib.Path:
         return self.cache_dir / self.sigma_t_filename
 
-    def kernel_phase(self, ctx: KernelDictContext) -> Dict:
-        return self.phase.kernel_dict(ctx=ctx).data
+    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
+        return self.phase.kernel_dict(ctx=ctx)
 
-    def kernel_media(self, ctx: KernelDictContext) -> Dict:
+    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
         length_units = uck.get("length")
         width = self.kernel_width(ctx).m_as(length_units)
         top = self.top.m_as(length_units)
@@ -252,34 +253,40 @@ class MolecularAtmosphere(Atmosphere):
         radprops = self.radprops_profile.to_dataset(spectral_ctx=ctx.spectral_ctx)
         albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
+
         write_binary_grid3d(
             filename=str(self.albedo_file), values=albedo[np.newaxis, np.newaxis, ...]
         )
+
         write_binary_grid3d(
             filename=str(self.sigma_t_file), values=sigma_t[np.newaxis, np.newaxis, ...]
         )
+
         if ctx.ref:
             phase = {"type": "ref", "id": f"phase_{self.id}"}
         else:
             phase = onedict_value(self.kernel_phase(ctx=ctx))
-        return {
-            f"medium_{self.id}": {
-                "type": "heterogeneous",
-                "phase": phase,
-                "albedo": {
-                    "type": "gridvolume",
-                    "filename": str(self.albedo_file),
-                    "to_world": trafo,
-                },
-                "sigma_t": {
-                    "type": "gridvolume",
-                    "filename": str(self.sigma_t_file),
-                    "to_world": trafo,
-                },
-            }
-        }
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> Dict:
+        return KernelDict(
+            {
+                f"medium_{self.id}": {
+                    "type": "heterogeneous",
+                    "phase": phase,
+                    "albedo": {
+                        "type": "gridvolume",
+                        "filename": str(self.albedo_file),
+                        "to_world": trafo,
+                    },
+                    "sigma_t": {
+                        "type": "gridvolume",
+                        "filename": str(self.sigma_t_file),
+                        "to_world": trafo,
+                    },
+                }
+            }
+        )
+
+    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
@@ -299,14 +306,16 @@ class MolecularAtmosphere(Atmosphere):
             zmax=top,
         )
 
-        return {
-            f"shape_{self.id}": {
-                "type": "cube",
-                "to_world": trafo,
-                "bsdf": {"type": "null"},
-                "interior": medium,
+        return KernelDict(
+            {
+                f"shape_{self.id}": {
+                    "type": "cube",
+                    "to_world": trafo,
+                    "bsdf": {"type": "null"},
+                    "interior": medium,
+                }
             }
-        }
+        )
 
     # --------------------------------------------------------------------------
     #                               Constructors

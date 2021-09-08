@@ -36,14 +36,31 @@ def test_kernel_dict_check(mode_mono):
 
 def test_kernel_dict_load(mode_mono):
     # Load method returns a kernel object
-    from mitsuba.render import Scene
+    from mitsuba.render import Scene, Shape
 
     kernel_dict = KernelDict({"type": "scene", "shape": {"type": "sphere"}})
     assert isinstance(kernel_dict.load(), Scene)
 
     # Also works if "type" is missing
     kernel_dict = KernelDict({"shape": {"type": "sphere"}})
-    assert isinstance(kernel_dict.load(), Scene)
+    with pytest.warns(UserWarning):
+        obj = kernel_dict.load(strip=False)
+    assert isinstance(obj, Scene)
+
+    # Setting strip to True instantiates a Shape directly...
+    kernel_dict = KernelDict({"shape": {"type": "sphere"}})
+    assert isinstance(kernel_dict.load(strip=True), Shape)
+
+    # ... but not if the dict has two entries
+    kernel_dict = KernelDict(
+        {
+            "shape_1": {"type": "sphere"},
+            "shape_2": {"type": "sphere"},
+        }
+    )
+    with pytest.warns(UserWarning):
+        obj = kernel_dict.load(strip=True)
+    assert isinstance(obj, Scene)
 
 
 def test_kernel_dict_post_load(mode_mono):

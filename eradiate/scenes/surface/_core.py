@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Dict, MutableMapping, Optional, Union
+from typing import Optional, Union
 
 import attr
 import pint
@@ -73,7 +73,7 @@ class Surface(SceneElement, ABC):
     )
 
     @abstractmethod
-    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
+    def bsdfs(self, ctx: KernelDictContext) -> KernelDict:
         """
         Return BSDF plugin specifications only.
 
@@ -81,14 +81,13 @@ class Surface(SceneElement, ABC):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
-            Return a dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
-            attached to the surface.
+        Returns → :class:`.KernelDict`:
+            A kernel dictionary containing all the BSDFs attached to the
+            surface.
         """
         pass
 
-    def shapes(self, ctx: KernelDictContext) -> Dict:
+    def shapes(self, ctx: KernelDictContext) -> KernelDict:
         """
         Return shape plugin specifications only.
 
@@ -96,10 +95,9 @@ class Surface(SceneElement, ABC):
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
-            attached to the surface.
+        Returns → :class:`.KernelDict`:
+            A kernel dictionary containing all the shapes attached to the
+            surface.
         """
         from mitsuba.core import ScalarTransform4f, ScalarVector3f
 
@@ -114,13 +112,15 @@ class Surface(SceneElement, ABC):
         scale_trafo = ScalarTransform4f.scale(ScalarVector3f(w / 2.0, w / 2.0, 1.0))
         trafo = translate_trafo * scale_trafo
 
-        return {
-            f"shape_{self.id}": {
-                "type": "rectangle",
-                "to_world": trafo,
-                "bsdf": bsdf,
+        return KernelDict(
+            {
+                f"shape_{self.id}": {
+                    "type": "rectangle",
+                    "to_world": trafo,
+                    "bsdf": bsdf,
+                }
             }
-        }
+        )
 
     def kernel_width(self, ctx: KernelDictContext) -> pint.Quantity:
         """

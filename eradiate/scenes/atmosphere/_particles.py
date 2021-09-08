@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pathlib
 import tempfile
-from typing import Any, Dict, MutableMapping, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import attr
 import numpy as np
@@ -21,6 +21,7 @@ from ._particle_dist import (
     UniformParticleDistribution,
     particle_distribution_factory,
 )
+from ..core import KernelDict
 from ... import path_resolver
 from ..._mode import ModeFlags
 from ..._util import onedict_value
@@ -512,16 +513,18 @@ class ParticleLayer(Atmosphere):
             zmax=top,
         )
 
-    def kernel_phase(self, ctx: KernelDictContext) -> MutableMapping:
+    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
         particles_phase = self.eval_phase(spectral_ctx=ctx.spectral_ctx)
-        return {
-            f"phase_{self.id}": {
-                "type": "lutphase",
-                "values": ",".join([str(value) for value in particles_phase.data]),
+        return KernelDict(
+            {
+                f"phase_{self.id}": {
+                    "type": "lutphase",
+                    "values": ",".join([str(value) for value in particles_phase.data]),
+                }
             }
-        }
+        )
 
-    def kernel_media(self, ctx: KernelDictContext) -> Dict:
+    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
         radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
         albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
@@ -538,24 +541,26 @@ class ParticleLayer(Atmosphere):
         else:
             phase = onedict_value(self.kernel_phase(ctx=ctx))
 
-        return {
-            f"medium_{self.id}": {
-                "type": "heterogeneous",
-                "phase": phase,
-                "sigma_t": {
-                    "type": "gridvolume",
-                    "filename": str(self.sigma_t_file),
-                    "to_world": trafo,
-                },
-                "albedo": {
-                    "type": "gridvolume",
-                    "filename": str(self.albedo_file),
-                    "to_world": trafo,
-                },
+        return KernelDict(
+            {
+                f"medium_{self.id}": {
+                    "type": "heterogeneous",
+                    "phase": phase,
+                    "sigma_t": {
+                        "type": "gridvolume",
+                        "filename": str(self.sigma_t_file),
+                        "to_world": trafo,
+                    },
+                    "albedo": {
+                        "type": "gridvolume",
+                        "filename": str(self.albedo_file),
+                        "to_world": trafo,
+                    },
+                }
             }
-        }
+        )
 
-    def kernel_shapes(self, ctx: Optional[KernelDictContext]) -> Dict:
+    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
         if ctx.ref:
             medium = {"type": "ref", "id": f"medium_{self.id}"}
         else:
@@ -575,14 +580,16 @@ class ParticleLayer(Atmosphere):
             zmax=top,
         )
 
-        return {
-            f"shape_{self.id}": {
-                "type": "cube",
-                "to_world": trafo,
-                "bsdf": {"type": "null"},
-                "interior": medium,
+        return KernelDict(
+            {
+                f"shape_{self.id}": {
+                    "type": "cube",
+                    "to_world": trafo,
+                    "bsdf": {"type": "null"},
+                    "interior": medium,
+                }
             }
-        }
+        )
 
     # --------------------------------------------------------------------------
     #                               Miscellaneous
