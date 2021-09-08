@@ -80,7 +80,7 @@ class KernelDict(collections_abc.MutableMapping):
     def __setitem__(self, k, v):
         return self.data.__setitem__(k, v)
 
-    def check(self):
+    def check(self) -> None:
         """
         Perform basic checks on the dictionary:
 
@@ -142,7 +142,7 @@ class KernelDict(collections_abc.MutableMapping):
 
         return obj
 
-    def add(self, *elements: SceneElement, ctx: KernelDictContext):
+    def add(self, *elements: SceneElement, ctx: KernelDictContext) -> None:
         """
         Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
         another dictionary object with the current :class:`KernelDict`.
@@ -159,7 +159,7 @@ class KernelDict(collections_abc.MutableMapping):
         for element in elements:
             self.update(element.kernel_dict(ctx))
 
-    def merge(self, other: KernelDict):
+    def merge(self, other: KernelDict) -> None:
         """
         Merge another :class:`.KernelDict` with the current one.
 
@@ -174,7 +174,9 @@ class KernelDict(collections_abc.MutableMapping):
         self.post_load.update(other.post_load)
 
     @classmethod
-    def from_elements(cls, *elements: SceneElement, ctx: KernelDictContext):
+    def from_elements(
+        cls, *elements: SceneElement, ctx: KernelDictContext
+    ) -> KernelDict:
         """
         Create a new :class:`.KernelDict` from one or more scene elements.
 
