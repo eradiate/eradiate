@@ -60,7 +60,7 @@ cycler==0.10.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2021.8.0
+dask==2021.9.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -81,7 +81,7 @@ execnet==1.9.0
     # via
     #   -c requirements/dev.txt
     #   pytest-xdist
-fsspec==2021.7.0
+fsspec==2021.8.1
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -97,7 +97,7 @@ imagesize==1.2.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==4.6.4
+importlib-metadata==4.8.1
     # via
     #   -c requirements/dev.txt
     #   click
@@ -114,7 +114,7 @@ jinja2==3.0.1
     #   -c requirements/dev.txt
     #   rst2pdf
     #   sphinx
-kiwisolver==1.3.1
+kiwisolver==1.3.2
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -160,7 +160,7 @@ partd==1.2.0
     # via
     #   -c requirements/dev.txt
     #   dask
-pillow==8.3.1
+pillow==8.3.2
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -174,7 +174,7 @@ pinttrs==21.3.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-pluggy==0.13.1
+pluggy==1.0.0
     # via
     #   -c requirements/dev.txt
     #   pytest
@@ -194,7 +194,7 @@ pyparsing==2.4.7
     #   -c requirements/dev.txt
     #   matplotlib
     #   packaging
-pytest==6.2.4
+pytest==6.2.5
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
@@ -241,7 +241,7 @@ requests==2.26.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-rich==10.7.0
+rich==10.9.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -249,7 +249,7 @@ rst2pdf==0.98
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
-ruamel.yaml==0.17.11
+ruamel.yaml==0.17.16
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -316,11 +316,11 @@ toolz==0.11.1
     #   -c requirements/dev.txt
     #   dask
     #   partd
-tqdm==4.62.1
+tqdm==4.62.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-typing-extensions==3.10.0.0
+typing-extensions==3.10.0.2
     # via
     #   -c requirements/dev.txt
     #   importlib-metadata
@@ -339,7 +339,7 @@ zipp==3.5.0
     #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==57.4.0
+setuptools==58.0.3
     # via
     #   -c requirements/dev.txt
     #   cerberus
