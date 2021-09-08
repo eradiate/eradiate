@@ -13,6 +13,8 @@ from docutils.parsers.rst import Directive
 class ExecDirective(Directive):
     """Execute the specified python code and insert the output into the document"""
 
+    # From https://stackoverflow.com/questions/7250659/how-to-use-python-to-programmatically-generate-part-of-sphinx-documentation
+
     has_content = True
 
     def run(self):
@@ -48,3 +50,7 @@ class ExecDirective(Directive):
 
 def setup(app):
     app.add_directive("exec", ExecDirective)
+    return {
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }
