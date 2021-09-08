@@ -2,7 +2,7 @@
 Atmospheric thermophysical properties profiles models according to
 :cite:`Anderson1986AtmosphericConstituentProfiles`.
 """
-from typing import MutableMapping, Optional
+import typing as t
 
 import pint
 import xarray as xr
@@ -13,8 +13,8 @@ from ..data import open
 
 def make_profile(
     model_id: str = "us_standard",
-    levels: Optional[pint.Quantity] = None,
-    concentrations: Optional[MutableMapping[str, pint.Quantity]] = None,
+    levels: t.Optional[pint.Quantity] = None,
+    concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
 ) -> xr.Dataset:
     """Makes the atmospheric profiles from the AFGL's 1986 technical report
     :cite:`Anderson1986AtmosphericConstituentProfiles`.

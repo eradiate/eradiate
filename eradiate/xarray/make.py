@@ -1,6 +1,6 @@
 __all__ = ["make_dataarray"]
 
-from typing import Optional
+import typing as t
 
 import xarray
 import xarray as xr
@@ -9,7 +9,7 @@ from eradiate.xarray.metadata import VarSpec
 
 
 def make_dataarray(
-    data, coords=None, dims=None, var_spec: Optional[VarSpec] = None
+    data, coords=None, dims=None, var_spec: t.Optional[VarSpec] = None
 ) -> xarray.DataArray:
     """
     Create a :class:`~xarray.DataArray` with default metadata.

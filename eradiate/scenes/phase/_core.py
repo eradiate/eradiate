@@ -1,5 +1,5 @@
+import typing as t
 from abc import ABC
-from typing import Optional
 
 import attr
 
@@ -17,7 +17,7 @@ class PhaseFunction(SceneElement, ABC):
     An abstract base class defining common facilities for all phase functions.
     """
 
-    id: Optional[str] = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="phase",
             validator=attr.validators.optional(attr.validators.instance_of(str)),

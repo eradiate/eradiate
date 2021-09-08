@@ -15,7 +15,7 @@ def test_radprops(mode_mono):
     return US76ApproxRadProfile().to_dataset(spectral_ctx=spectral_ctx)
 
 
-def test_write_read_binary_grid3d() -> None:
+def test_write_read_binary_grid3d():
     """Reads what was written."""
     write_values = np.random.random(10).reshape(1, 1, 10)
     tmp_dir = pathlib.Path(tempfile.mkdtemp())

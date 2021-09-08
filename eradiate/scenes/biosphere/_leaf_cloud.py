@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Dict
+import typing as t
 
 import aabbtree
 import attr
@@ -1046,7 +1046,7 @@ class LeafCloud(CanopyElement):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> Dict:
+    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return BSDF plugin specifications.
 
@@ -1068,7 +1068,7 @@ class LeafCloud(CanopyElement):
             }
         }
 
-    def shapes(self, ctx: KernelDictContext) -> Dict:
+    def shapes(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return shape plugin specifications.
 

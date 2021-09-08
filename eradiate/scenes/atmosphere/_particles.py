@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pathlib
 import tempfile
-from typing import Any, Dict, Optional, Union
+import typing as t
 
 import attr
 import numpy as np
@@ -57,7 +57,7 @@ class ParticleLayer(Atmosphere):
     (``dataset``).
     """
 
-    _bottom: Optional[pint.Quantity] = documented(
+    _bottom: t.Optional[pint.Quantity] = documented(
         pinttr.ib(
             default=ureg.Quantity(0.0, ureg.km),
             converter=pinttr.converters.to_units(ucc.deferred("length")),
@@ -74,7 +74,7 @@ class ParticleLayer(Atmosphere):
         default="0 km",
     )
 
-    _top: Optional[pint.Quantity] = documented(
+    _top: t.Optional[pint.Quantity] = documented(
         pinttr.ib(
             units=ucc.deferred("length"),
             default=ureg.Quantity(1.0, ureg.km),
@@ -97,7 +97,7 @@ class ParticleLayer(Atmosphere):
         if instance.bottom >= instance.top:
             raise ValueError("bottom altitude must be lower than top altitude")
 
-    distribution: Optional[ParticleDistribution] = documented(
+    distribution: t.Optional[ParticleDistribution] = documented(
         attr.ib(
             factory=UniformParticleDistribution,
             converter=particle_distribution_factory.convert,
@@ -108,7 +108,7 @@ class ParticleLayer(Atmosphere):
         default=":class:`Uniform`",
     )
 
-    tau_550: Optional[pint.Quantity] = documented(
+    tau_550: t.Optional[pint.Quantity] = documented(
         pinttr.ib(
             units=ucc.deferred("dimensionless"),
             default=ureg.Quantity(0.2, ureg.dimensionless),
@@ -124,7 +124,7 @@ class ParticleLayer(Atmosphere):
         default="0.2",
     )
 
-    n_layers: Optional[int] = documented(
+    n_layers: t.Optional[int] = documented(
         attr.ib(
             default=16,
             converter=int,
@@ -135,7 +135,7 @@ class ParticleLayer(Atmosphere):
         default="16",
     )
 
-    dataset: Optional[str] = documented(
+    dataset: t.Optional[str] = documented(
         attr.ib(
             default=path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc"),
             converter=str,
@@ -145,7 +145,7 @@ class ParticleLayer(Atmosphere):
         type="str",
     )
 
-    albedo_filename: Optional[str] = documented(
+    albedo_filename: t.Optional[str] = documented(
         attr.ib(
             default="albedo.vol",
             converter=str,
@@ -156,7 +156,7 @@ class ParticleLayer(Atmosphere):
         default='"albedo.vol"',
     )
 
-    sigma_t_filename: Optional[str] = documented(
+    sigma_t_filename: t.Optional[str] = documented(
         attr.ib(
             default="sigma_t.vol",
             converter=str,
@@ -167,7 +167,7 @@ class ParticleLayer(Atmosphere):
         default='"sigma_t.vol"',
     )
 
-    weight_filename: Optional[str] = documented(
+    weight_filename: t.Optional[str] = documented(
         attr.ib(
             default="weight.vol",
             converter=attr.converters.optional(str),
@@ -178,7 +178,7 @@ class ParticleLayer(Atmosphere):
         default='"weight.vol"',
     )
 
-    cache_dir: Optional[pathlib.Path] = documented(
+    cache_dir: t.Optional[pathlib.Path] = documented(
         attr.ib(
             default=pathlib.Path(tempfile.mkdtemp()),
             converter=pathlib.Path,
@@ -221,7 +221,7 @@ class ParticleLayer(Atmosphere):
     def bottom(self) -> pint.Quantity:
         return self._bottom
 
-    def eval_width(self, ctx: Optional[KernelDictContext]) -> pint.Quantity:
+    def eval_width(self, ctx: t.Optional[KernelDictContext]) -> pint.Quantity:
         if self.width is AUTO:
             spectral_ctx = ctx.spectral_ctx if ctx is not None else None
             return 10.0 / self.eval_sigma_s(spectral_ctx=spectral_ctx).min()
@@ -257,7 +257,7 @@ class ParticleLayer(Atmosphere):
         z_level = self.z_level
         return (z_level[:-1] + z_level[1:]) / 2.0
 
-    def eval_fractions(self, z_layer: Optional[ureg.Quantity] = None) -> np.ndarray:
+    def eval_fractions(self, z_layer: t.Optional[ureg.Quantity] = None) -> np.ndarray:
         """
         Compute the particle number fraction in the particle layer.
 
@@ -295,7 +295,7 @@ class ParticleLayer(Atmosphere):
     def eval_albedo(
         self,
         spectral_ctx: SpectralContext,
-        z_level: Optional[ureg.Quantity] = None,
+        z_level: t.Optional[ureg.Quantity] = None,
     ) -> pint.Quantity:
         """
         Evaluate albedo given a spectral context.
@@ -322,7 +322,7 @@ class ParticleLayer(Atmosphere):
     def eval_sigma_t(
         self,
         spectral_ctx: SpectralContext,
-        z_level: Optional[ureg.Quantity] = None,
+        z_level: t.Optional[ureg.Quantity] = None,
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient given a spectral context.
@@ -383,7 +383,7 @@ class ParticleLayer(Atmosphere):
     def eval_radprops(
         self,
         spectral_ctx: SpectralContext,
-        z_level: Optional[ureg.Quantity] = None,
+        z_level: t.Optional[ureg.Quantity] = None,
     ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties profile of the
@@ -496,7 +496,7 @@ class ParticleLayer(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _gridvolume_to_world_trafo(self, ctx: KernelDictContext) -> Any:
+    def _gridvolume_to_world_trafo(self, ctx: KernelDictContext) -> t.Any:
         """
         Returns the 'to_world' transformation for gridvolume plugins.
         """
@@ -596,7 +596,9 @@ class ParticleLayer(Atmosphere):
     # --------------------------------------------------------------------------
 
     @classmethod
-    def convert(cls: ParticleLayer, value: Union[ParticleLayer, dict]) -> ParticleLayer:
+    def convert(
+        cls: ParticleLayer, value: t.Union[ParticleLayer, dict]
+    ) -> ParticleLayer:
         """
         Object converter method.
 

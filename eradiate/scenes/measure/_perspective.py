@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+import typing as t
 
 import attr
 import numpy as np
@@ -27,7 +27,7 @@ class PerspectiveCameraMeasure(Measure):
     specifying the origin, viewing direction and 'up' direction of the camera.
     """
 
-    _film_resolution: Tuple[int, int] = documented(
+    _film_resolution: t.Tuple[int, int] = documented(
         attr.ib(
             default=(32, 32),
             validator=attr.validators.deep_iterable(
@@ -102,10 +102,10 @@ class PerspectiveCameraMeasure(Measure):
             )
 
     @property
-    def film_resolution(self) -> Tuple[int, int]:
+    def film_resolution(self) -> t.Tuple[int, int]:
         return self._film_resolution
 
-    def _base_dicts(self) -> List[Dict]:
+    def _base_dicts(self) -> t.List[t.Dict]:
         from mitsuba.core import ScalarTransform4f
 
         target = self.target.m_as(uck.get("length"))

@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+import typing as t
 
 import attr
 
@@ -19,7 +19,7 @@ class MonteCarloIntegrator(Integrator):
     .. warning:: This class should not be instantiated.
     """
 
-    max_depth: Optional[int] = documented(
+    max_depth: t.Optional[int] = documented(
         attr.ib(default=None, converter=attr.converters.optional(int)),
         doc="Longest path depth in the generated measure data (where -1 corresponds "
         "to ∞). A value of 1 will display only visible emitters. 2 will lead to "
@@ -29,7 +29,7 @@ class MonteCarloIntegrator(Integrator):
         default="None",
     )
 
-    rr_depth: Optional[int] = documented(
+    rr_depth: t.Optional[int] = documented(
         attr.ib(default=None, converter=attr.converters.optional(int)),
         doc="Minimum path depth after which the implementation will start to use the "
         "Russian roulette path termination criterion. If set to ``None``, "
@@ -38,7 +38,7 @@ class MonteCarloIntegrator(Integrator):
         default="None",
     )
 
-    hide_emitters: Optional[bool] = documented(
+    hide_emitters: t.Optional[bool] = documented(
         attr.ib(default=None, converter=attr.converters.optional(bool)),
         doc="Hide directly visible emitters. If set to ``None``, "
         "the kernel default value (``false``) will be used.",

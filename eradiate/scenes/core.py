@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import typing as t
 import warnings
 from abc import ABC, abstractmethod
 from collections import abc as collections_abc
-from typing import Dict, Optional
 
 import attr
 import mitsuba
@@ -228,7 +228,7 @@ class SceneElement(ABC):
     classes. It is written using the `attrs <https://www.attrs.org>`_ library.
     """
 
-    id: Optional[str] = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -238,7 +238,7 @@ class SceneElement(ABC):
         default="None",
     )
 
-    def _kernel_dict_id(self) -> Dict:
+    def _kernel_dict_id(self) -> t.Dict:
         """
         Return a scene dictionary entry with the object's ``id`` field if it is
         not ``None``.

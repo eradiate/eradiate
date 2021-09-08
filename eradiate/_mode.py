@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import enum
-from typing import Dict, Optional, Union
+import typing as t
 
 import attr
 import mitsuba
@@ -137,7 +137,7 @@ class Mode:
 
         return "_".join(components)
 
-    def has_flags(self, flags: Union[ModeFlags, str]) -> bool:
+    def has_flags(self, flags: t.Union[ModeFlags, str]) -> bool:
         """
         Check if the currently active mode has the passed flags.
 
@@ -170,7 +170,7 @@ class Mode:
 
 
 # Eradiate's operational mode configuration
-_current_mode: Optional[Mode] = None
+_current_mode: t.Optional[Mode] = None
 
 
 # ------------------------------------------------------------------------------
@@ -178,7 +178,7 @@ _current_mode: Optional[Mode] = None
 # ------------------------------------------------------------------------------
 
 
-def mode() -> Optional[Mode]:
+def mode() -> t.Optional[Mode]:
     """
     Get current operational mode.
 
@@ -188,7 +188,7 @@ def mode() -> Optional[Mode]:
     return _current_mode
 
 
-def modes() -> Dict:
+def modes() -> t.Dict:
     """
     Get list of registered operational modes.
 

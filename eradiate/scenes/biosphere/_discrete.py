@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import itertools
+import typing as t
+from collections.abc import MutableMapping
 from copy import deepcopy
-from typing import Dict, List, MutableMapping, Optional
 
 import attr
 import numpy as np
@@ -57,14 +58,14 @@ class DiscreteCanopy(Canopy):
     #                                   Fields
     # --------------------------------------------------------------------------
 
-    instanced_canopy_elements: List[InstancedCanopyElement] = documented(
+    instanced_canopy_elements: t.List[InstancedCanopyElement] = documented(
         attr.ib(
             factory=list,
             converter=lambda value: [
                 _instanced_canopy_elements_converter(x)
                 for x in pinttr.util.always_iterable(value)
             ]
-            if not isinstance(value, MutableMapping)
+            if not isinstance(value, t.MutableMapping)
             else [_instanced_canopy_elements_converter(value)],
             validator=attr.validators.deep_iterable(
                 member_validator=attr.validators.instance_of(InstancedCanopyElement)
@@ -82,7 +83,7 @@ class DiscreteCanopy(Canopy):
     #                          Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> Dict:
+    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return BSDF plugin specifications.
 
@@ -100,7 +101,7 @@ class DiscreteCanopy(Canopy):
             result = {**result, **instanced_canopy_element.bsdfs(ctx=ctx)}
         return result
 
-    def shapes(self, ctx: KernelDictContext) -> Dict:
+    def shapes(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return shape plugin specifications.
 
@@ -118,7 +119,7 @@ class DiscreteCanopy(Canopy):
             result = {**result, **instanced_canopy_element.shapes(ctx=ctx)}
         return result
 
-    def instances(self, ctx: KernelDictContext) -> Dict:
+    def instances(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return instance plugin specifications.
 
@@ -293,8 +294,8 @@ class DiscreteCanopy(Canopy):
         cls,
         padding: int = 0,
         id: str = "discrete_canopy",
-        size: Optional[pint.Quantity] = None,
-        leaf_cloud_dicts: List[MutableMapping] = None,
+        size: t.Optional[pint.Quantity] = None,
+        leaf_cloud_dicts: t.List[t.MutableMapping] = None,
     ):
         """
         Directly create a leaf cloud canopy from text file specifications,

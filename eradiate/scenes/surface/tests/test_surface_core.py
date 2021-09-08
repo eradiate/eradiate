@@ -1,5 +1,3 @@
-from typing import MutableMapping
-
 import pytest
 
 from eradiate import unit_registry as ureg
@@ -12,7 +10,7 @@ from eradiate.scenes.surface import Surface
 class MyBlackSurface(Surface):
     """A basic implementation for the sake of testing."""
 
-    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
+    def bsdfs(self, ctx: KernelDictContext):
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",

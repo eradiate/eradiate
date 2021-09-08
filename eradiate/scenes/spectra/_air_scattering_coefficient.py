@@ -11,7 +11,7 @@ from ..core import KernelDict
 from ..._mode import ModeFlags
 from ...attrs import parse_docs
 from ...ckd import Bin
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity

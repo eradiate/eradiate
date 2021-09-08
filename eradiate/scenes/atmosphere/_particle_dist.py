@@ -3,8 +3,8 @@ Particle distributions.
 """
 from __future__ import annotations
 
+import typing as t
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import attr
 import numpy as np
@@ -180,7 +180,7 @@ class ArrayParticleDistribution(ParticleDistribution):
     fraction array or :class:`~xarray.DataArray`.
     """
 
-    values: Optional[np.typing.ArrayLike] = documented(
+    values: t.Optional[np.typing.ArrayLike] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(np.array),
@@ -193,7 +193,7 @@ class ArrayParticleDistribution(ParticleDistribution):
         default="``None``",
     )
 
-    data_array: Optional[xr.DataArray] = documented(
+    data_array: t.Optional[xr.DataArray] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(xr.DataArray),

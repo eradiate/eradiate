@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+import typing as t
 
 import attr
 import numpy as np
@@ -64,10 +64,10 @@ class RadiancemeterMeasure(Measure):
             )
 
     @property
-    def film_resolution(self) -> Tuple[int, int]:
+    def film_resolution(self) -> t.Tuple[int, int]:
         return (1, 1)
 
-    def _base_dicts(self) -> List[Dict]:
+    def _base_dicts(self) -> t.List[t.Dict]:
         target = self.target.m_as(uck.get("length"))
         origin = self.origin.m_as(uck.get("length"))
         direction = target - origin

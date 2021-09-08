@@ -1,4 +1,4 @@
-from typing import Dict
+import typing as t
 
 import attr
 
@@ -88,7 +88,7 @@ class RPVSurface(Surface):
         default="-0.1",
     )
 
-    def bsdfs(self, ctx: KernelDictContext) -> Dict:
+    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         return {
             f"bsdf_{self.id}": {
                 "type": "rpv",

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import os
+import typing as t
 from abc import ABC, abstractmethod
-from typing import Dict, MutableMapping, Optional
 
 import attr
 import numpy as np
@@ -54,7 +54,7 @@ class Canopy(SceneElement, ABC):
     )
 
     @abstractmethod
-    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
+    def bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return BSDF plugin specifications only.
 
@@ -70,7 +70,7 @@ class Canopy(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def shapes(self, ctx: KernelDictContext) -> MutableMapping:
+    def shapes(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return shape plugin specifications only.
 
@@ -95,7 +95,7 @@ class CanopyElement(SceneElement, ABC):
     """
 
     @abstractmethod
-    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
+    def bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return BSDF plugin specifications only.
 
@@ -111,7 +111,7 @@ class CanopyElement(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def shapes(self, ctx: KernelDictContext) -> MutableMapping:
+    def shapes(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return shape plugin specifications only.
 
@@ -191,8 +191,8 @@ class InstancedCanopyElement(SceneElement):
     @classmethod
     def from_file(
         cls,
-        filename: Optional[os.PathLike] = None,
-        canopy_element: Optional[CanopyElement] = None,
+        filename: t.Optional[os.PathLike] = None,
+        canopy_element: t.Optional[CanopyElement] = None,
     ):
         """
         Construct a :class:`.InstancedCanopyElement` from a text file specifying
@@ -264,7 +264,7 @@ class InstancedCanopyElement(SceneElement):
     #                        Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> MutableMapping:
+    def bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return BSDF plugin specifications.
 
@@ -278,7 +278,7 @@ class InstancedCanopyElement(SceneElement):
         """
         return self.canopy_element.bsdfs(ctx=ctx)
 
-    def shapes(self, ctx: KernelDictContext) -> Dict:
+    def shapes(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return shape plugin specifications.
 
@@ -298,7 +298,7 @@ class InstancedCanopyElement(SceneElement):
             }
         }
 
-    def instances(self, ctx: KernelDictContext) -> Dict:
+    def instances(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return instance plugin specifications.
 

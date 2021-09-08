@@ -1,7 +1,7 @@
 """
 Heterogeneous atmospheres.
 """
-from typing import Dict, List, Optional, Tuple, Union
+import typing as t
 
 import attr
 import numpy as np
@@ -26,7 +26,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
     Heterogeneous atmosphere scene element [``heterogeneous_new``].
     """
 
-    molecular_atmosphere: Optional[MolecularAtmosphere] = documented(
+    molecular_atmosphere: t.Optional[MolecularAtmosphere] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(atmosphere_factory.convert),
@@ -39,7 +39,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
         default="None",
     )
 
-    particle_layers: List[ParticleLayer] = documented(
+    particle_layers: t.List[ParticleLayer] = documented(
         attr.ib(
             factory=list,
             converter=lambda value: [
@@ -77,7 +77,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
             )
 
     @property
-    def components(self) -> List[Union[MolecularAtmosphere, ParticleLayer]]:
+    def components(self) -> t.List[t.Union[MolecularAtmosphere, ParticleLayer]]:
         result: list = [self.molecular_atmosphere] if self.molecular_atmosphere else []
         result.extend(self.particle_layers)
         return result
@@ -297,7 +297,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
 
 def blend_radprops(
     background: xr.Dataset, foreground: xr.Dataset
-) -> Tuple[xr.Dataset, xr.DataArray]:
+) -> t.Tuple[xr.Dataset, xr.DataArray]:
     """
     Blend radiative properties of two participating media.
 
@@ -367,8 +367,8 @@ def interpolate_radprops(
 
 
 def overlapping(
-    particle_layers: List[ParticleLayer], particle_layer: ParticleLayer
-) -> List[ParticleLayer]:
+    particle_layers: t.List[ParticleLayer], particle_layer: ParticleLayer
+) -> t.List[ParticleLayer]:
     """
     Return the particle layers that are overlapping a given particle layer.
 

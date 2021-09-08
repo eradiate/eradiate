@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import typing as t
 import warnings
 from abc import ABC, abstractmethod
-from typing import Optional, Union
 
 import attr
 import pint
@@ -29,7 +29,7 @@ class Surface(SceneElement, ABC):
     All these surfaces consist of a square parametrised by its width.
     """
 
-    id: Optional[str] = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="surface",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -51,7 +51,7 @@ class Surface(SceneElement, ABC):
         default="0.0 km",
     )
 
-    width: Union[pint.Quantity, AutoType] = documented(
+    width: t.Union[pint.Quantity, AutoType] = documented(
         pinttr.ib(
             default=AUTO,
             converter=converters.auto_or(

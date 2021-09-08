@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import typing as t
 from enum import Enum
-from typing import Optional, Tuple
 
 import attr
 import numpy as np
@@ -132,7 +132,7 @@ class Quad:
             raise ValueError(f"unknown quadrature type '{type}'")
 
     def eval_nodes(
-        self, interval: Optional[Tuple[float, float]] = None
+        self, interval: t.Optional[t.Tuple[float, float]] = None
     ) -> np.typing.ArrayLike:
         """
         Compute nodes scaled to a specific interval.
@@ -150,7 +150,7 @@ class Quad:
         return 0.5 * (a + b + (b - a) * self.nodes)
 
     def integrate(
-        self, values: np.typing.ArrayLike, interval: Optional[Tuple[float, float]]
+        self, values: np.typing.ArrayLike, interval: t.Optional[t.Tuple[float, float]]
     ) -> float:
         """
         Evaluate quadrature rule, accounting for interval scaling.

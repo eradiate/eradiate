@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 import pytest
 import xarray as xr
@@ -316,7 +314,7 @@ def test_interpolate_radprops():
 
 
 @pytest.fixture
-def test_particle_layers() -> List[ParticleLayer]:
+def test_particle_layers():
     """
     Fixture producing ten particle layers from 0 to 10 km (1km thick each).
     """
@@ -336,7 +334,7 @@ def test_overlapping_0():
     assert overlapping(particle_layers=[], particle_layer=particle_layer) == []
 
 
-def test_overlapping_1(test_particle_layers: List[ParticleLayer]):
+def test_overlapping_1(test_particle_layers):
     """
     A layer at [0.5, 1.5] km overlaps the layer at [0.0, 1.0] km and the
     layer at [1.0, 2.0].
@@ -350,7 +348,7 @@ def test_overlapping_1(test_particle_layers: List[ParticleLayer]):
     )
 
 
-def test_overlapping_2(test_particle_layers: List[ParticleLayer]):
+def test_overlapping_2(test_particle_layers):
     """
     A layer at [15.0, 16.0] km does not overlap layers below 10 km.
     """
@@ -363,7 +361,7 @@ def test_overlapping_2(test_particle_layers: List[ParticleLayer]):
     )
 
 
-def test_overlapping_3(test_particle_layers: List[ParticleLayer]):
+def test_overlapping_3(test_particle_layers):
     """
     A layer at [0.0, 1.0] km overlaps the layer at [0.0, 1.0] km.
     """

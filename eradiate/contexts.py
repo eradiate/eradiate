@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import typing as t
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Tuple
 
 import attr
 import pint
@@ -103,7 +103,7 @@ class SpectralContext(ABC, Context):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     @staticmethod
-    def from_dict(d: Dict) -> SpectralContext:
+    def from_dict(d: t.Dict) -> SpectralContext:
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -213,7 +213,7 @@ class CKDSpectralContext(SpectralContext):
         return self._bindex.bin
 
     @property
-    def spectral_index(self) -> Tuple[str, int]:
+    def spectral_index(self) -> t.Tuple[str, int]:
         """
         Spectral index associated with spectral context, equal to active bindex
         (bin ID, quadrature point index pair).
@@ -261,7 +261,7 @@ class KernelDictContext(Context):
         default="True",
     )
 
-    override_scene_width: Optional[pint.Quantity] = documented(
+    override_scene_width: t.Optional[pint.Quantity] = documented(
         pinttr.ib(
             default=None,
             units=ucc.deferred("length"),

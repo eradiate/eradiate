@@ -1,4 +1,4 @@
-from typing import Dict
+import typing as t
 
 import attr
 
@@ -17,7 +17,7 @@ class BlackSurface(Surface):
     This class creates a square surface with a black BRDF attached.
     """
 
-    def bsdfs(self, ctx: KernelDictContext) -> Dict:
+    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",

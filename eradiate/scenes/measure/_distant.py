@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import typing as t
 from abc import ABC
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 import attr
 import numpy as np
@@ -34,7 +34,7 @@ class TargetOrigin:
     Interface for target and origin selection classes used by :class:`DistantMeasure`.
     """
 
-    def kernel_item(self) -> Dict:
+    def kernel_item(self) -> t.Dict:
         """Return kernel item."""
         raise NotImplementedError
 
@@ -64,7 +64,7 @@ class TargetOrigin:
             raise ValueError(f"unknown target type {target_type}")
 
     @staticmethod
-    def convert(value) -> Any:
+    def convert(value) -> t.Any:
         """
         Object converter method.
 
@@ -120,7 +120,7 @@ class TargetOriginPoint(TargetOrigin):
                 f"3-element vector of numbers"
             )
 
-    def kernel_item(self) -> Dict:
+    def kernel_item(self) -> t.Dict:
         """Return kernel item."""
         return self.xyz.m_as(uck.get("length"))
 
@@ -268,7 +268,7 @@ class TargetOriginSphere(TargetOrigin):
         type="float",
     )
 
-    def kernel_item(self) -> Dict:
+    def kernel_item(self) -> t.Dict:
         """Return kernel item."""
         center = self.center.m_as(uck.get("length"))
         radius = self.radius.m_as(uck.get("length"))
@@ -283,7 +283,7 @@ class DistantMeasure(Measure, ABC):
     distance.
     """
 
-    target: Optional[TargetOrigin] = documented(
+    target: t.Optional[TargetOrigin] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(TargetOrigin.convert),
@@ -307,7 +307,7 @@ class DistantMeasure(Measure, ABC):
         default="None",
     )
 
-    origin: Optional[TargetOrigin] = documented(
+    origin: t.Optional[TargetOrigin] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(TargetOrigin.convert),
@@ -329,7 +329,7 @@ class DistantMeasure(Measure, ABC):
     def _postprocess_add_illumination(
         self,
         ds: xr.Dataset,
-        illumination: Union[DirectionalIllumination, ConstantIllumination],
+        illumination: t.Union[DirectionalIllumination, ConstantIllumination],
     ) -> xr.Dataset:
         """
         Processes a measure result dataset and add illumination data and m
@@ -457,7 +457,7 @@ class DistantRadianceMeasure(DistantMeasure):
        kernel plugin.
     """
 
-    _film_resolution: Tuple[int, int] = documented(
+    _film_resolution: t.Tuple[int, int] = documented(
         attr.ib(
             default=(32, 32),
             validator=attr.validators.deep_iterable(
@@ -508,7 +508,7 @@ class DistantRadianceMeasure(DistantMeasure):
     def film_resolution(self):
         return self._film_resolution
 
-    def _base_dicts(self) -> List[Dict]:
+    def _base_dicts(self) -> t.List[t.Dict]:
         result = []
 
         for sensor_info in self.sensor_infos():
@@ -718,7 +718,7 @@ class DistantFluxMeasure(DistantMeasure):
         default="[0, 0, 1]",
     )
 
-    _film_resolution: Tuple[int, int] = documented(
+    _film_resolution: t.Tuple[int, int] = documented(
         attr.ib(
             default=(32, 32),
             validator=attr.validators.deep_iterable(
@@ -732,10 +732,10 @@ class DistantFluxMeasure(DistantMeasure):
     )
 
     @property
-    def film_resolution(self) -> Tuple[int, int]:
+    def film_resolution(self) -> t.Tuple[int, int]:
         return self._film_resolution
 
-    def _base_dicts(self) -> List[Dict]:
+    def _base_dicts(self) -> t.List[t.Dict]:
         from mitsuba.core import ScalarTransform4f, ScalarVector3f, coordinate_system
 
         result = []
@@ -799,8 +799,8 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
 
     def postprocess(
         self,
-        illumination: Optional[
-            Union[DirectionalIllumination, ConstantIllumination]
+        illumination: t.Optional[
+            t.Union[DirectionalIllumination, ConstantIllumination]
         ] = None,
     ) -> xr.Dataset:
         """

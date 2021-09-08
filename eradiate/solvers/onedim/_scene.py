@@ -1,5 +1,5 @@
+import typing as t
 import warnings
-from typing import Dict, Optional
 
 import attr
 
@@ -28,7 +28,7 @@ class OneDimScene(Scene):
     one-dimensional scenes.
     """
 
-    atmosphere: Optional[Atmosphere] = documented(
+    atmosphere: t.Optional[Atmosphere] = documented(
         attr.ib(
             factory=HomogeneousAtmosphere,
             converter=attr.converters.optional(atmosphere_factory.convert),

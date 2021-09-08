@@ -8,8 +8,8 @@ __all__ = [
 
 
 import enum
+import typing as t
 from functools import lru_cache
-from typing import Any, Dict, Union
 
 import pint
 import pinttr
@@ -123,7 +123,7 @@ unit_context_kernel = _make_unit_context()
 # -- Public functions ----------------------------------------------------------
 
 
-def symbol(units: Union[pint.Unit, str]) -> str:
+def symbol(units: t.Union[pint.Unit, str]) -> str:
     """
     Normalise a string or Pint units to a symbol string.
 
@@ -162,8 +162,8 @@ def to_quantity(da: xarray.DataArray) -> pint.Quantity:
 
 
 def interpret_quantities(
-    d: Dict[str, Any],
-    quantity_map: Dict[str, str],
+    d: t.Dict[str, t.Any],
+    quantity_map: t.Dict[str, str],
     uctx: pinttr.UnitContext,
     force=False,
 ):

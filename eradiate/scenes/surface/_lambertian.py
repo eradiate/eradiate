@@ -1,4 +1,4 @@
-from typing import Dict
+import typing as t
 
 import attr
 
@@ -34,7 +34,7 @@ class LambertianSurface(Surface):
         default="0.5",
     )
 
-    def bsdfs(self, ctx: KernelDictContext) -> Dict:
+    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         return {
             f"bsdf_{self.id}": {
                 "type": "diffuse",

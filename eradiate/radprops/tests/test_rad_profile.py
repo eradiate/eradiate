@@ -1,5 +1,4 @@
 import pathlib
-from typing import MutableMapping
 
 import numpy as np
 import pytest
@@ -196,7 +195,7 @@ def test_us76_approx_rad_profile_has_scattering_false(
 
 
 @pytest.fixture
-def afgl1986_test_absorption_data_sets() -> MutableMapping[str, pathlib.Path]:
+def afgl1986_test_absorption_data_sets():
     """
     Fixture to return paths to test absorption data sets for 'afgl_1986'.
     """
@@ -223,9 +222,7 @@ def afgl1986_test_absorption_data_sets() -> MutableMapping[str, pathlib.Path]:
     }
 
 
-def test_afgl1986_rad_profile_default(
-    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
-) -> None:
+def test_afgl1986_rad_profile_default(mode_mono, afgl1986_test_absorption_data_sets):
     """
     Collision coefficient evaluation methods return pint.Quantity objects.
     """
@@ -237,9 +234,7 @@ def test_afgl1986_rad_profile_default(
         assert isinstance(x, ureg.Quantity)
 
 
-def test_afgl1986_rad_profile_levels(
-    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
-) -> None:
+def test_afgl1986_rad_profile_levels(mode_mono, afgl1986_test_absorption_data_sets):
     """
     Collision coefficients' shape match altitude levels shape.
     """
@@ -258,8 +253,8 @@ def test_afgl1986_rad_profile_levels(
 
 
 def test_afgl1986_rad_profile_concentrations(
-    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
-) -> None:
+    mode_mono, afgl1986_test_absorption_data_sets
+):
     """
     Absorption coefficient is twice larger when H2O concentration is doubled.
     """
@@ -287,8 +282,8 @@ def test_afgl1986_rad_profile_concentrations(
 
 
 def test_afgl1986_rad_profile_has_absorption_default(
-    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
-) -> None:
+    mode_mono, afgl1986_test_absorption_data_sets
+):
     """
     Default value for 'has_absorption' is True, hence the absorption
     coefficient is computed and is not zero everywhere at 1650 nm.
@@ -301,8 +296,8 @@ def test_afgl1986_rad_profile_has_absorption_default(
 
 
 def test_afgl1986_rad_profile_has_absorption_true(
-    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
-) -> None:
+    mode_mono, afgl1986_test_absorption_data_sets
+):
     """
     When 'has_absorption' is True, the absorption coefficient is computed
     and is not zero everywhere at 1650 nm.
@@ -317,8 +312,8 @@ def test_afgl1986_rad_profile_has_absorption_true(
 
 
 def test_afgl1986_rad_profile_has_absorption_false(
-    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
-) -> None:
+    mode_mono, afgl1986_test_absorption_data_sets
+):
     """
     When 'has_absorption' is False, the absorption coefficient is not
     computed and is zero everywhere.
@@ -333,8 +328,8 @@ def test_afgl1986_rad_profile_has_absorption_false(
 
 
 def test_afgl1986_rad_profile_has_scattering_default(
-    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
-) -> None:
+    mode_mono, afgl1986_test_absorption_data_sets
+):
     """
     Default value for 'has_scattering' is True, hence the absorption
     coefficient is computed and is not zero everywhere at 550 nm.
@@ -348,7 +343,7 @@ def test_afgl1986_rad_profile_has_scattering_default(
 
 def test_afgl1986_rad_profile_has_scattering_true(
     mode_mono, afgl1986_test_absorption_data_sets
-) -> None:
+):
     """
     When 'has_scattering' is True, the scattering coefficient is computed
     and is not zero everywhere at 550 nm.
@@ -363,8 +358,8 @@ def test_afgl1986_rad_profile_has_scattering_true(
 
 
 def test_afgl1986_rad_profile_has_scattering_false(
-    mode_mono, afgl1986_test_absorption_data_sets: MutableMapping[str, pathlib.Path]
-) -> None:
+    mode_mono, afgl1986_test_absorption_data_sets
+):
     """
     When 'has_scattering' is False, the scattering coefficient is not
     computed and is zero everywhere.

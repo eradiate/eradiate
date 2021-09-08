@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import itertools
+import typing as t
 from abc import ABC, abstractmethod
 from collections import OrderedDict, abc
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 import attr
 import numpy as np
@@ -71,7 +71,7 @@ class MeasureSpectralConfig(ABC):
     """
 
     @abstractmethod
-    def spectral_ctxs(self) -> List[SpectralContext]:
+    def spectral_ctxs(self) -> t.List[SpectralContext]:
         """
         Return a list of :class:`.SpectralContext` objects based on the
         stored spectral configuration. These data structures can be used to
@@ -118,7 +118,7 @@ class MeasureSpectralConfig(ABC):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     @staticmethod
-    def from_dict(d: Dict) -> MeasureSpectralConfig:
+    def from_dict(d: t.Dict) -> MeasureSpectralConfig:
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -138,7 +138,7 @@ class MeasureSpectralConfig(ABC):
         return MeasureSpectralConfig.new(**d_copy)
 
     @staticmethod
-    def convert(value) -> Any:
+    def convert(value) -> t.Any:
         """
         Object converter method.
 
@@ -183,7 +183,7 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
     def wavelengths(self, value):
         self._wavelengths = value
 
-    def spectral_ctxs(self) -> List[MonoSpectralContext]:
+    def spectral_ctxs(self) -> t.List[MonoSpectralContext]:
         return [
             MonoSpectralContext(wavelength=wavelength)
             for wavelength in self._wavelengths
@@ -270,7 +270,7 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
         default='"10nm"',
     )
 
-    _bins: Union[List[str], AutoType] = documented(
+    _bins: t.Union[t.List[str], AutoType] = documented(
         attr.ib(
             default=AUTO,
             converter=converters.auto_or(_ckd_measure_spectral_config_bins_converter),
@@ -298,7 +298,7 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
                 )
 
     @property
-    def bins(self) -> Tuple[Bin]:
+    def bins(self) -> t.Tuple[Bin]:
         """
         List of selected bins.
         """
@@ -309,7 +309,7 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
 
         return self.bin_set.select_bins(*bin_selectors)
 
-    def spectral_ctxs(self) -> List[CKDSpectralContext]:
+    def spectral_ctxs(self) -> t.List[CKDSpectralContext]:
         ctxs = []
 
         for bin in self.bins:
@@ -344,7 +344,7 @@ class MeasureResults:
     :class:`.Measure.postprocess` pipeline.
     """
 
-    raw: Optional[Dict] = documented(
+    raw: t.Optional[t.Dict] = documented(
         attr.ib(
             factory=dict,
             validator=attr.validators.optional(attr.validators.instance_of(dict)),
@@ -486,7 +486,7 @@ class MeasureResults:
         return result_aggregated
 
     @staticmethod
-    def _to_dataset_spectral_coord_metadata() -> Dict:
+    def _to_dataset_spectral_coord_metadata() -> t.Dict:
         """
         Return metadata for the spectral coordinate based on active mode.
 
@@ -511,8 +511,8 @@ class MeasureResults:
 
     @staticmethod
     def _to_dataset_helper_coord_values(
-        raw: Dict,
-    ) -> Tuple[List, List, Tuple[int, int]]:
+        raw: t.Dict,
+    ) -> t.Tuple[t.List, t.List, t.Tuple[int, int]]:
         """
         Collect spectral and sensor coordinate values from raw result dictionary.
 
@@ -555,7 +555,10 @@ class MeasureResults:
 
     @staticmethod
     def _to_dataset_helper_data_values(
-        raw: Dict, spectral_coords: List, sensor_ids: List, film_size: Tuple[int, int]
+        raw: t.Dict,
+        spectral_coords: t.List,
+        sensor_ids: t.List,
+        film_size: t.Tuple[int, int],
     ) -> np.ndarray:
         """
         Collect spectral and sensor coordinate values from raw result dictionary.
@@ -607,7 +610,7 @@ class MeasureResults:
 
     @staticmethod
     def _to_dataset_helper_spp_values(
-        raw: Dict, spectral_coords: List, sensor_ids: List
+        raw: t.Dict, spectral_coords: t.List, sensor_ids: t.List
     ) -> np.ndarray:
         """
         Collect sample count values for each (spectral_index, sensor_index) pair.
@@ -638,8 +641,8 @@ class MeasureResults:
 
     @staticmethod
     def _to_dataset_helper_pixel_coord_values(
-        film_size: Tuple[int, int]
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        film_size: t.Tuple[int, int]
+    ) -> t.Tuple[np.ndarray, np.ndarray]:
         """
         Compute pixel coordinates from a film size.
 
@@ -688,7 +691,7 @@ class Measure(SceneElement, ABC):
     Abstract base class for all measure scene elements.
     """
 
-    id: Optional[str] = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="measure",
             validator=attr.validators.optional((attr.validators.instance_of(str))),
@@ -733,13 +736,13 @@ class Measure(SceneElement, ABC):
 
     @property
     @abstractmethod
-    def film_resolution(self) -> Tuple[int, int]:
+    def film_resolution(self) -> t.Tuple[int, int]:
         """
         Getter for film resolution.
         """
         pass
 
-    def sensor_infos(self) -> List[SensorInfo]:
+    def sensor_infos(self) -> t.List[SensorInfo]:
         """
         Return a tuple of sensor information data structures.
 
@@ -756,7 +759,7 @@ class Measure(SceneElement, ABC):
                 SensorInfo(id=f"{self.id}_{i}", spp=spp) for i, spp in enumerate(spps)
             ]
 
-    def _split_spp(self) -> List[int]:
+    def _split_spp(self) -> t.List[int]:
         """
         Generate sensor specifications, possibly applying sample count splitting
         in single-precision mode.
@@ -868,14 +871,14 @@ class Measure(SceneElement, ABC):
         return result
 
     @abstractmethod
-    def _base_dicts(self) -> List[Dict]:
+    def _base_dicts(self) -> t.List[t.Dict]:
         """
         Return a list (one item per sensor) of dictionaries defining parameters
         not related with the film or the sampler.
         """
         pass
 
-    def _film_dicts(self) -> List[Dict]:
+    def _film_dicts(self) -> t.List[t.Dict]:
         """
         Return a list (one item per sensor) of dictionaries defining parameters
         related with the film.
@@ -893,7 +896,7 @@ class Measure(SceneElement, ABC):
             }
         ] * len(self.sensor_infos())
 
-    def _sampler_dicts(self) -> List[Dict]:
+    def _sampler_dicts(self) -> t.List[t.Dict]:
         """
         Return a list (one item per sensor) of dictionaries defining parameters
         related with the sampler.

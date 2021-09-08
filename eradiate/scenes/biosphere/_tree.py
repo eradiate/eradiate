@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import typing as t
 from abc import ABC
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import attr
 import pint
@@ -71,7 +71,7 @@ class AbstractTree(Tree):
         default='"abstract_tree"',
     )
 
-    leaf_cloud: Optional[LeafCloud] = documented(
+    leaf_cloud: t.Optional[LeafCloud] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(_leaf_cloud_converter),
@@ -127,7 +127,7 @@ class AbstractTree(Tree):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> Dict:
+    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return BSDF plugin specifications.
 
@@ -150,7 +150,7 @@ class AbstractTree(Tree):
 
         return bsdfs_dict
 
-    def shapes(self, ctx: KernelDictContext) -> Dict:
+    def shapes(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return shape plugin specifications.
 
@@ -224,7 +224,7 @@ class MeshTree(Tree):
         default='"mesh_tree"',
     )
 
-    mesh_tree_elements: List[MeshTree] = documented(
+    mesh_tree_elements: t.List[MeshTree] = documented(
         attr.ib(
             factory=list,
             converter=lambda value: [
@@ -245,13 +245,13 @@ class MeshTree(Tree):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> Dict:
+    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         result = {}
         for mesh_tree_element in self.mesh_tree_elements:
             result = {**result, **mesh_tree_element.bsdfs(ctx=ctx)}
         return result
 
-    def shapes(self, ctx: KernelDictContext) -> Dict:
+    def shapes(self, ctx: KernelDictContext) -> t.Dict:
         result = {}
         for mesh_tree_element in self.mesh_tree_elements:
             result = {**result, **mesh_tree_element.shapes(ctx=ctx)}
@@ -277,7 +277,7 @@ class MeshTreeElement:
     a configuration dictionary.
     """
 
-    id: Optional[str] = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="mesh_tree_element",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -287,7 +287,7 @@ class MeshTreeElement:
         default="None",
     )
 
-    mesh_filename: Optional[Path] = documented(
+    mesh_filename: t.Optional[Path] = documented(
         attr.ib(
             converter=attr.converters.optional(Path),
             default=None,
@@ -309,7 +309,7 @@ class MeshTreeElement:
                 f"or '.ply', got {value.suffix}"
             )
 
-    mesh_units: Optional[pint.Unit] = documented(
+    mesh_units: t.Optional[pint.Unit] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(ureg.Unit),
@@ -364,7 +364,7 @@ class MeshTreeElement:
     # --------------------------------------------------------------------------
 
     @staticmethod
-    def from_dict(d: Dict) -> MeshTreeElement:
+    def from_dict(d: t.Dict) -> MeshTreeElement:
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -402,7 +402,7 @@ class MeshTreeElement:
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> Dict:
+    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         return {
             f"bsdf_{self.id}": {
                 "type": "bilambertian",
@@ -411,7 +411,7 @@ class MeshTreeElement:
             }
         }
 
-    def shapes(self, ctx: KernelDictContext) -> Dict:
+    def shapes(self, ctx: KernelDictContext) -> t.Dict:
         from mitsuba.core import ScalarTransform4f
 
         if ctx.ref:

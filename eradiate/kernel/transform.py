@@ -1,9 +1,9 @@
-from typing import Any
+import typing as t
 
 
 def map_unit_cube(
     xmin: float, xmax: float, ymin: float, ymax: float, zmin: float, zmax: float
-) -> Any:
+) -> t.Any:
     """
     Map the unit cube to [xmin, xmax] x [ymin, ymax] x [zmin, zmax].
 
@@ -40,7 +40,7 @@ def map_unit_cube(
 
 def map_cube(
     xmin: float, xmax: float, ymin: float, ymax: float, zmin: float, zmax: float
-) -> Any:
+) -> t.Any:
     """
     Map the cube [-1, 1]^3 to [xmin, xmax] x [ymin, ymax] x [zmin, zmax].
 

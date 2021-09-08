@@ -1,6 +1,6 @@
 import re
+import typing as t
 from numbers import Number
-from typing import Sequence
 
 import numpy as np
 import pint
@@ -32,7 +32,7 @@ def is_vector3(value):
     return (
         (
             isinstance(value, np.ndarray)
-            or (isinstance(value, Sequence) and not isinstance(value, str))
+            or (isinstance(value, t.Sequence) and not isinstance(value, str))
         )
         and len(value) == 3
         and all(map(lambda x: isinstance(x, Number), value))

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import functools
+import typing as t
 from collections import abc
-from typing import Any, Callable, Dict, List, Sequence, Tuple, Union
 
 import attr
 import pint
@@ -78,7 +78,7 @@ class Bin:
         return 0.5 * (self.wmin + self.wmax)
 
     @property
-    def bindexes(self) -> List[Bindex]:
+    def bindexes(self) -> t.List[Bindex]:
         return [Bindex(bin=self, index=i) for i, _ in enumerate(self.quad.nodes)]
 
     @classmethod
@@ -116,7 +116,7 @@ class Bindex:
     )
 
     @classmethod
-    def convert(cls, value) -> Any:
+    def convert(cls, value) -> t.Any:
         """
         If ``value`` is a tuple or a dictionary, try to construct a
         :class:`.Bindex` instance from it. Otherwise, return ``value``
@@ -139,7 +139,7 @@ class Bindex:
 # filter and select bins from a bin set.
 
 
-def bin_filter_ids(ids: Sequence[str]) -> Callable[[Bin], bool]:
+def bin_filter_ids(ids: t.Sequence[str]) -> t.Callable[[Bin], bool]:
     """
     Select bins based on identifiers.
 
@@ -158,7 +158,7 @@ def bin_filter_ids(ids: Sequence[str]) -> Callable[[Bin], bool]:
 
 def bin_filter_interval(
     wmin: pint.Quantity, wmax: pint.Quantity, endpoints: bool = True
-) -> Callable[[Bin], bool]:
+) -> t.Callable[[Bin], bool]:
     """
     Select bins in a wavelength interval.
 
@@ -207,7 +207,7 @@ def bin_filter_interval(
     return filter
 
 
-def bin_filter(type: str, filter_kwargs: Dict[str, Any]):
+def bin_filter(type: str, filter_kwargs: t.Dict[str, t.Any]):
     """
     Create a bin filter function dynamically.
 
@@ -266,7 +266,7 @@ class BinSet:
         type=":class:`.Quad`",
     )
 
-    bins: Tuple[Bin, ...] = documented(
+    bins: t.Tuple[Bin, ...] = documented(
         attr.ib(
             converter=lambda x: tuple(
                 sorted(
@@ -297,7 +297,7 @@ class BinSet:
             )
 
     @property
-    def bin_ids(self) -> List[str]:
+    def bin_ids(self) -> t.List[str]:
         return [bin.id for bin in self.bins]
 
     @property
@@ -310,7 +310,7 @@ class BinSet:
         units = ucc.get("wavelength")
         return ureg.Quantity([bin.wmax.m_as(units) for bin in self.bins], units)
 
-    def filter_bins(self, *filters: Callable[[Bin], bool]) -> Tuple[Bin, ...]:
+    def filter_bins(self, *filters: t.Callable[[Bin], bool]) -> t.Tuple[Bin, ...]:
         """
         Filter bins based on callables.
 
@@ -333,13 +333,13 @@ class BinSet:
 
     def select_bins(
         self,
-        *filter_specs: Union[
+        *filter_specs: t.Union[
             str,
-            Callable[[Bin], bool],
-            Tuple[str, Dict[str, Any]],
-            Dict,
+            t.Callable[[Bin], bool],
+            t.Tuple[str, t.Dict[str, t.Any]],
+            t.Dict,
         ],
-    ) -> Tuple[Bin, ...]:
+    ) -> t.Tuple[Bin, ...]:
         """
         Select a subset of CKD bins. This method is a high-level wrapper for
         :meth:`.filter_bins`.
@@ -364,7 +364,7 @@ class BinSet:
             if isinstance(filter_spec, str):
                 filters.append(bin_filter_ids(ids=(filter_spec,)))
 
-            elif isinstance(filter_spec, Sequence):
+            elif isinstance(filter_spec, t.Sequence):
                 filters.append(bin_filter(*filter_spec))
 
             elif isinstance(filter_spec, abc.Mapping):
@@ -379,7 +379,7 @@ class BinSet:
         return self.filter_bins(*filters)
 
     @classmethod
-    def convert(cls, value) -> Any:
+    def convert(cls, value) -> t.Any:
         """
         If ``value`` is a string, query quadrature definition database with it.
         Otherwise, return ``value`` unchanged.

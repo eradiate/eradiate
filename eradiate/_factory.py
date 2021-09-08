@@ -1,4 +1,4 @@
-from typing import Any, MutableMapping, Optional, Tuple, Type, Union
+import typing as t
 
 import attr
 import dessinemoi
@@ -24,9 +24,9 @@ class Factory(dessinemoi.Factory):
     def _convert_impl(
         self,
         value,
-        allowed_cls: Optional[Union[Type, Tuple[Type]]] = None,
-    ) -> Any:
-        if isinstance(value, MutableMapping):
+        allowed_cls: t.Optional[t.Union[t.Type, t.Tuple[t.Type]]] = None,
+    ) -> t.Any:
+        if isinstance(value, t.MutableMapping):
             # Interpret units and copy value to avoid unintended mutation
             value_copy = pinttr.interpret_units(value, ureg=ureg)
 

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import typing as t
 from abc import ABC
-from typing import Dict, List
 
 import attr
 import pinttr
 
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...scenes.core import SceneElement
 from ...scenes.illumination import (
     ConstantIllumination,
@@ -47,7 +46,7 @@ class Scene(SceneElement, ABC):
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
 
-    measures: List[Measure] = documented(
+    measures: t.List[Measure] = documented(
         attr.ib(
             factory=lambda: [DistantRadianceMeasure()],
             converter=lambda value: [

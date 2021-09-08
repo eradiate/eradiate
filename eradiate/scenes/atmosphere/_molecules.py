@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pathlib
 import tempfile
-from typing import MutableMapping, Optional
+import typing as t
 
 import attr
 import numpy as np
@@ -92,7 +92,7 @@ class MolecularAtmosphere(Atmosphere):
         default="True",
     )
 
-    absorption_data_sets: Optional[MutableMapping[str, str]] = documented(
+    absorption_data_sets: t.Optional[t.MutableMapping[str, str]] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(dict),
@@ -325,9 +325,9 @@ class MolecularAtmosphere(Atmosphere):
     def afgl1986(
         cls: MolecularAtmosphere,
         model: str = "us_standard",
-        levels: Optional[pint.Quantity] = None,
-        concentrations: Optional[MutableMapping[str, pint.Quantity]] = None,
-        **kwargs: MutableMapping[str],
+        levels: t.Optional[pint.Quantity] = None,
+        concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
+        **kwargs: t.MutableMapping[str],
     ) -> MolecularAtmosphere:
         """
         Molecular atmosphere based on the AFGL (1986) atmospheric
@@ -417,9 +417,9 @@ class MolecularAtmosphere(Atmosphere):
     @classmethod
     def ussa1976(
         cls: MolecularAtmosphere,
-        levels: Optional[pint.Quantity] = np.linspace(0, 100, 101) * ureg.km,
-        concentrations: Optional[MutableMapping[str, pint.Quantity]] = None,
-        **kwargs: MutableMapping[str],
+        levels: t.Optional[pint.Quantity] = np.linspace(0, 100, 101) * ureg.km,
+        concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
+        **kwargs: t.MutableMapping[str],
     ) -> MolecularAtmosphere:
         """
         Molecular atmosphere based on the US Standard Atmosphere (1976) model

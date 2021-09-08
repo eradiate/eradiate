@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pathlib
 import struct
+import typing as t
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Union
 
 import attr
 import numpy as np
@@ -34,7 +34,7 @@ class Atmosphere(SceneElement, ABC):
        The shape type is restricted to cuboid shapes at the moment.
     """
 
-    id: Optional[str] = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="atmosphere",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -230,7 +230,7 @@ class Atmosphere(SceneElement, ABC):
 
 
 def write_binary_grid3d(
-    filename: Union[str, pathlib.Path], values: Union[np.ndarray, xr.DataArray]
+    filename: t.Union[str, pathlib.Path], values: t.Union[np.ndarray, xr.DataArray]
 ) -> None:
     """
     Write volume data to a binary file so that a ``gridvolume`` kernel plugin

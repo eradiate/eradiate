@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+import typing as t
 
 import mitsuba
 import numpy as np
@@ -15,7 +15,9 @@ def _check_variant():
         raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
 
-def runner(kernel_dict: KernelDict, sensor_ids: Optional[List[str]] = None) -> Dict:
+def runner(
+    kernel_dict: KernelDict, sensor_ids: t.Optional[t.List[str]] = None
+) -> t.Dict:
     """
     Low-level runner function. Takes a kernel dictionary, instantiates the
     corresponding kernel scene and runs the integrator with all sensors.

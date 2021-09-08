@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import datetime
 import pathlib
+import typing as t
 from abc import ABC, abstractmethod
-from typing import MutableMapping, Optional, Union
 
 import attr
 import numpy as np
@@ -39,13 +39,13 @@ rad_profile_factory = Factory()
     ret=None, args=("nm", "km", "km", "km^-1", "km^-1", "km^-1", ""), strict=False
 )
 def make_dataset(
-    wavelength: Union[pint.Quantity, float],
-    z_level: Union[pint.Quantity, float],
-    z_layer: Optional[Union[pint.Quantity, float]] = None,
-    sigma_a: Optional[Union[pint.Quantity, float]] = None,
-    sigma_s: Optional[Union[pint.Quantity, float]] = None,
-    sigma_t: Optional[Union[pint.Quantity, float]] = None,
-    albedo: Optional[Union[pint.Quantity, float]] = None,
+    wavelength: t.Union[pint.Quantity, float],
+    z_level: t.Union[pint.Quantity, float],
+    z_layer: t.Optional[t.Union[pint.Quantity, float]] = None,
+    sigma_a: t.Optional[t.Union[pint.Quantity, float]] = None,
+    sigma_s: t.Optional[t.Union[pint.Quantity, float]] = None,
+    sigma_t: t.Optional[t.Union[pint.Quantity, float]] = None,
+    albedo: t.Optional[t.Union[pint.Quantity, float]] = None,
 ) -> xr.Dataset:
     """
     Makes an atmospheric radiative properties data set.
@@ -191,7 +191,7 @@ class RadProfile(ABC):
 
     @abstractmethod
     def eval_albedo(
-        self: RadProfile, spectral_ctx: Optional[SpectralContext] = None
+        self: RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         """
         Return albedo.
@@ -207,7 +207,7 @@ class RadProfile(ABC):
 
     @abstractmethod
     def eval_sigma_t(
-        self: RadProfile, spectral_ctx: Optional[SpectralContext] = None
+        self: RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         """
         Return extinction coefficient.
@@ -223,7 +223,7 @@ class RadProfile(ABC):
 
     @abstractmethod
     def eval_sigma_a(
-        self, spectral_ctx: Optional[SpectralContext] = None
+        self, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         """
         Return absorption coefficient.
@@ -239,7 +239,7 @@ class RadProfile(ABC):
 
     @abstractmethod
     def eval_sigma_s(
-        self, spectral_ctx: Optional[SpectralContext] = None
+        self, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         """
         Return scattering coefficient.
@@ -254,7 +254,9 @@ class RadProfile(ABC):
         pass
 
     @abstractmethod
-    def to_dataset(self, spectral_ctx: Optional[SpectralContext] = None) -> xr.Dataset:
+    def to_dataset(
+        self, spectral_ctx: t.Optional[SpectralContext] = None
+    ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the corresponding
         atmospheric profile.
@@ -331,28 +333,28 @@ class ArrayRadProfile(RadProfile):
             )
 
     def eval_albedo(
-        self, spectral_ctx: Optional[SpectralContext] = None
+        self, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         return self.albedo_values
 
     def eval_sigma_t(
-        self, spectral_ctx: Optional[SpectralContext] = None
+        self, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         return self.sigma_t_values
 
     def eval_sigma_a(
-        self, spectral_ctx: Optional[SpectralContext] = None
+        self, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         return self.eval_sigma_t(spectral_ctx) * (1.0 - self.eval_albedo(spectral_ctx))
 
     def eval_sigma_s(
-        self, spectral_ctx: Optional[SpectralContext] = None
+        self, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         return self.eval_sigma_t(spectral_ctx) * self.eval_albedo(spectral_ctx)
 
     @classmethod
     def from_dataset(
-        cls: ArrayRadProfile, path: Union[str, pathlib.Path]
+        cls: ArrayRadProfile, path: t.Union[str, pathlib.Path]
     ) -> ArrayRadProfile:
         ds = xr.open_dataset(path_resolver.resolve(path))
         z_level = to_quantity(ds.z_level)
@@ -361,7 +363,7 @@ class ArrayRadProfile(RadProfile):
         return cls(albedo_values=albedo, sigma_t_values=sigma_t, levels=z_level)
 
     def to_dataset(
-        self: ArrayRadProfile, spectral_ctx: Optional[SpectralContext] = None
+        self: ArrayRadProfile, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> xr.Dataset:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return make_dataset(
@@ -375,7 +377,7 @@ class ArrayRadProfile(RadProfile):
 
 
 def _convert_thermoprops_us76_approx(
-    value: Union[MutableMapping, xr.Dataset]
+    value: t.Union[t.MutableMapping, xr.Dataset]
 ) -> xr.Dataset:
     if isinstance(value, dict):
         return us76.make_profile(**value)
@@ -500,7 +502,7 @@ class US76ApproxRadProfile(RadProfile):
         default="True",
     )
 
-    absorption_data_set: Optional[str] = documented(
+    absorption_data_set: t.Optional[str] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(str),
@@ -598,7 +600,7 @@ class US76ApproxRadProfile(RadProfile):
             raise UnsupportedModeError(supported="monochromatic")
 
     def eval_albedo(
-        self: US76ApproxRadProfile, spectral_ctx: Optional[SpectralContext] = None
+        self: US76ApproxRadProfile, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         """
         Evaluate albedo given spectral context.
@@ -608,7 +610,7 @@ class US76ApproxRadProfile(RadProfile):
         )
 
     def eval_sigma_t(
-        self: US76ApproxRadProfile, spectral_ctx: Optional[SpectralContext] = None
+        self: US76ApproxRadProfile, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient given spectral context.
@@ -616,7 +618,7 @@ class US76ApproxRadProfile(RadProfile):
         return self.eval_sigma_a(spectral_ctx) + self.eval_sigma_s(spectral_ctx)
 
     def to_dataset(
-        self: US76ApproxRadProfile, spectral_ctx: Optional[SpectralContext] = None
+        self: US76ApproxRadProfile, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> xr.Dataset:
         """
         Return a dataset that holds the atmosphere radiative properties.
@@ -638,7 +640,7 @@ class US76ApproxRadProfile(RadProfile):
 
 
 def _convert_thermoprops_afgl1986(
-    value: Union[MutableMapping, xr.Dataset]
+    value: t.Union[t.MutableMapping, xr.Dataset]
 ) -> xr.Dataset:
     if isinstance(value, dict):
         return afgl1986.make_profile(**value)
@@ -693,7 +695,7 @@ class AFGL1986RadProfile(RadProfile):
         default="True",
     )
 
-    absorption_data_sets: Optional[MutableMapping[str, str]] = documented(
+    absorption_data_sets: t.Optional[t.MutableMapping[str, str]] = documented(
         attr.ib(
             factory=dict,
             converter=attr.converters.optional(dict),
@@ -870,21 +872,21 @@ class AFGL1986RadProfile(RadProfile):
             return ureg.Quantity(np.zeros(thermoprops.z_layer.size), "km^-1")
 
     def eval_albedo(
-        self: AFGL1986RadProfile, spectral_ctx: Optional[SpectralContext] = None
+        self: AFGL1986RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         return (self.eval_sigma_s(spectral_ctx) / self.eval_sigma_t(spectral_ctx)).to(
             ureg.dimensionless
         )
 
     def eval_sigma_t(
-        self: AFGL1986RadProfile, spectral_ctx: Optional[SpectralContext] = None
+        self: AFGL1986RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         return self.eval_sigma_s(spectral_ctx=spectral_ctx) + self.eval_sigma_a(
             spectral_ctx=spectral_ctx
         )
 
     def to_dataset(
-        self: AFGL1986RadProfile, spectral_ctx: Optional[SpectralContext] = None
+        self: AFGL1986RadProfile, spectral_ctx: t.Optional[SpectralContext] = None
     ) -> pint.Quantity:
         """
         Return a dataset that holds the atmosphere radiative properties.
