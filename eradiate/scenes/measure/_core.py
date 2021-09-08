@@ -432,7 +432,6 @@ class MeasureResults:
         spectral_coords, sensor_ids, film_size = self._to_dataset_helper_coord_values(
             self.raw
         )
-
         # Collect radiance values
         data = self._to_dataset_helper_data_values(
             self.raw, spectral_coords, sensor_ids, film_size
@@ -482,20 +481,59 @@ class MeasureResults:
         if not aggregate_spps:
             return result
 
-        # Aggregate SPPs and drop sensor ID dimension
-        # Note: This will not work if multiple sensors are used for a purpose
-        # other than SPP splitting; should this happen, this part must be
-        # updated
-        weights = result.data_vars["spp"]
-        result_aggregated = result.assign(
-            {"raw": result["raw"].weighted(weights).mean(dim="sensor_id")},
+        # Else ...
+        sensor_id_prefixes = sorted(
+            set(
+                [
+                    sensor_id.split("_spp")[0]
+                    for sensor_id in list(result["sensor_id"].values)
+                ]
+            )
         )
-        result_aggregated = result_aggregated.assign(
-            {"spp": result_aggregated.data_vars["spp"].sum(dim="sensor_id")},
-        )
-        result_aggregated = result_aggregated.drop_dims("sensor_id")
 
-        # Copy metadata (lost during aggregation)
+        raw_aggregated = []
+        spp_aggregated = []
+        for sensor_id_prefix in sensor_id_prefixes:
+            # Select SPP-varying components for the current sensor ID prefix
+            sensor_ids = [
+                id
+                for id in result.coords["sensor_id"].values
+                if id.startswith(sensor_id_prefix)
+            ]
+            # Aggregate sample counts for the current prefix
+            weights = xr.where(
+                result.coords["sensor_id"].isin(sensor_ids),
+                result.data_vars["spp"],
+                0,
+            )
+            raw_aggregated.append(
+                result["raw"]
+                .weighted(weights)
+                .mean(dim="sensor_id")
+                .expand_dims({"sensor_id": [sensor_id_prefix]}, axis=1)
+            )
+            # Mask spp values so as to only include selected values
+            # The sensor_id coordinate is redefined to strip the spp suffix
+            weights_spp = xr.where(result.coords["sensor_id"].isin(sensor_ids), 1, 0)
+            spp_aggregated.append(
+                result.data_vars["spp"]
+                .weighted(weights_spp)
+                .sum(dim="sensor_id")
+                .expand_dims({"sensor_id": [sensor_id_prefix]}, axis=1)
+            )
+
+        raw = xr.combine_by_coords(raw_aggregated)["raw"]
+        spp = xr.combine_by_coords(spp_aggregated)["spp"]
+
+        result_aggregated = xr.Dataset(
+            data_vars={
+                "raw": raw,
+                "spp": spp,
+                "sensor_id": sensor_id_prefixes,
+            }
+        )
+
+        # Copy metadata
         for var in list(result_aggregated.data_vars) + list(result_aggregated.coords):
             result_aggregated[var].attrs = result[var].attrs.copy()
 
@@ -761,6 +799,13 @@ class Measure(SceneElement, ABC):
     def sensor_infos(self) -> t.List[SensorInfo]:
         """
         Return a tuple of sensor information data structures.
+        Sensor ids are generated with a set of suffixes.
+        E.g. in the case of spp splitting, multiple ids, with
+        the suffix '_sppXX' are generated with XX being
+        an integer number.
+
+        Subclasses may override this method and add other suffixes
+        for their specific purposes.
 
         Returns → list[:class:`.SensorInfo`]:
             List of sensor information data structures.
@@ -772,7 +817,8 @@ class Measure(SceneElement, ABC):
 
         else:
             return [
-                SensorInfo(id=f"{self.id}_{i}", spp=spp) for i, spp in enumerate(spps)
+                SensorInfo(id=f"{self.id}_spp{i}", spp=spp)
+                for i, spp in enumerate(spps)
             ]
 
     def _split_spp(self) -> t.List[int]:

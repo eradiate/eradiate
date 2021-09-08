@@ -23,6 +23,7 @@ from ...scenes.measure._distant import (
     DistantRadianceMeasure,
     DistantReflectanceMeasure,
 )
+from ...scenes.measure._distant_array import DistantArrayReflectanceMeasure
 from ...units import unit_registry as ureg
 
 logger = logging.getLogger(__name__)
@@ -185,7 +186,14 @@ class SolverApp(ABC):
 
             # Prepare measure postprocessing arguments
             measure_kwargs = {}
-            if isinstance(measure, (DistantReflectanceMeasure, DistantAlbedoMeasure)):
+            if isinstance(
+                measure,
+                (
+                    DistantReflectanceMeasure,
+                    DistantAlbedoMeasure,
+                    DistantArrayReflectanceMeasure,
+                ),
+            ):
                 measure_kwargs["illumination"] = self.scene.illumination
 
             # Collect measure results
