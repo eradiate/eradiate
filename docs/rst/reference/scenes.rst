@@ -184,6 +184,8 @@ Measures [eradiate.scenes.measure]
       :toctree: generated/autosummary/
 
       MeasureSpectralConfig
+      _core.MonoMeasureSpectralConfig
+      _core.CKDMeasureSpectralConfig
 
 **Result storage and processing**
 

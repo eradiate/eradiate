@@ -77,6 +77,11 @@ class MeasureSpectralConfig(ABC):
         stored spectral configuration. These data structures can be used to
         drive the evaluation of spectrally dependent components during a
         spectral loop.
+
+        Returns → list[:class:`SpectralContext`]:
+            List of generated spectral contexts. The concrete class
+            (:class:`.MonoSpectralContext`, :class:`.CKDSpectralContext`, etc.)
+            depends on the active mode.
         """
         pass
 
@@ -95,6 +100,17 @@ class MeasureSpectralConfig(ABC):
             Default: [550] nm.
 
             Unit-enabled field (default: ucc[wavelength]).
+
+        .. rubric:: CKD modes [:class:`.CKDMeasureSpectralConfig`]
+
+        Parameter ``bin_set`` (:class:`.BinSet`):
+            CKD bin set definition. If a string is passed, the data
+            repository is queried for the corresponding identifier using
+            :meth:`.BinSet.from_db`. Default: "10nm".
+
+        Parameter ``bins`` (list[str or tuple or dict or callable]):
+            List of CKD bins on which to perform the spectral loop. If unset,
+            all the bins defined by the selected bin set will be covered.
 
         .. seealso::
 
@@ -250,7 +266,7 @@ def _ckd_measure_spectral_config_bins_converter(value):
 class CKDMeasureSpectralConfig(MeasureSpectralConfig):
     """
     A data structure specifying the spectral configuration of a
-    :class:`.Measure` in CKD mode.
+    :class:`.Measure` in CKD modes.
     """
 
     # TODO: replace manual bin selection with automation based on sensor spectral
