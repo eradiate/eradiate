@@ -2,6 +2,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 
 import eradiate
 
@@ -14,6 +15,7 @@ def ensure_output_dir(path):
         os.makedirs(path)
 
 
+@pytest.mark.slow
 def test_albedo(mode_mono):
     """
     Albedo

@@ -4,6 +4,7 @@ from copy import copy
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
@@ -17,6 +18,7 @@ def ensure_output_dir(path):
         os.makedirs(path)
 
 
+@pytest.mark.slow
 def test_spp_splitting(mode_mono):
     """
     SPP splitting test

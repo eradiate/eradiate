@@ -10,6 +10,7 @@ from eradiate.scenes.measure import DistantRadianceMeasure
 from eradiate.solvers.rami import RamiScene, RamiSolverApp
 
 
+@pytest.mark.slow
 def test_rami_scene(mode_mono):
     ctx = KernelDictContext()
 
