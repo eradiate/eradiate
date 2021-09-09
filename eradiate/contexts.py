@@ -110,12 +110,12 @@ class SpectralContext(ABC, Context):
 
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return MonoSpectralContext(**kwargs)
-
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             return CKDSpectralContext(**kwargs)
-
+        elif eradiate.mode().has_flags("ANY_RGB"):
+            return RGBSpectralContext()
         else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+            raise UnsupportedModeError(supported=["monochromatic", "RGB", "ckd"])
 
     @staticmethod
     def from_dict(d: t.Dict) -> SpectralContext:
@@ -249,6 +249,18 @@ class CKDSpectralContext(SpectralContext):
     def spectral_index_formatted(self) -> str:
         """str : Formatted spectral index (human-readable string)."""
         return f"{self.bin.id}:{self.bindex.index}"
+
+
+@parse_docs
+@attr.s
+class RGBSpectralContext(SpectralContext):
+    """
+    RGB spectral context data structure.
+    """
+
+    @property
+    def wavelength(self):
+        raise NotImplementedError("Wavelength is irrelevant in RGB mode.")
 
 
 # ------------------------------------------------------------------------------

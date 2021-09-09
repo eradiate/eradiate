@@ -6,7 +6,12 @@ import numpy as np
 from ...exceptions import KernelVariantError
 from ...scenes.core import KernelDict
 
-_SUPPORTED_VARIANTS = {"scalar_mono", "scalar_mono_double"}
+_SUPPORTED_VARIANTS = {
+    "scalar_mono",
+    "scalar_mono_double",
+    "scalar_rgb",
+    "scalar_rgb_double",
+}
 
 
 def _check_variant() -> None:

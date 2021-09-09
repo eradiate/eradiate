@@ -443,8 +443,34 @@ class MeasureResults:
         if not self.raw:
             raise ValueError("no raw results to convert to xarray.Dataset")
 
-        # Collect spectral coordinate label
-        spectral_coord_label = eradiate.mode().spectral_coord_label
+        if eradiate.mode().has_flags("ANY_MONO"):
+            spectral_coord_label = eradiate.mode().spectral_coord_label
+            spectral_coord_metadata = {
+                "long_name": "wavelength",
+                "units": symbol(ucc.get("wavelength")),
+            }
+        elif eradiate.mode().has_flags("ANY_RGB"):
+            spectral_coord_label = eradiate.mode().spectral_coord_label
+            spectral_coord_metadata = {
+                "long_name": "red-green-blue",
+                "units": symbol(ucc.get("dimensionless")),
+            }
+        # TODO: Add channel dimension to dataset (string-labelled;
+        #  value 'intensity' in mono modes;
+        #  values 'R', 'G', 'B' in render modes)
+        else:
+            raise UnsupportedModeError(supported=["monochromatic", "rgb"])
+
+        # Collect coordinate values
+        spectral_coords = set()
+        sensor_ids = set()
+        film_size = np.zeros((2,), dtype=int)
+
+        for spectral_coord, val in self.raw.items():
+            spectral_coords.add(spectral_coord)
+            for sensor_id, data in val["values"].items():
+                sensor_ids.add(sensor_id)
+                film_size = np.maximum(film_size, data.shape[:2])
 
         # Collect spectral and sensor coordinate values
         spectral_coords, sensor_ids, film_size = self._to_dataset_helper_coord_values(

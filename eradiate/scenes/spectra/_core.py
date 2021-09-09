@@ -55,7 +55,7 @@ class SpectrumFactory(Factory):
             if isinstance(value, dict):
                 try:
                     if (
-                        value["type"] in {"uniform", "interpolated"}
+                        value["type"] in {"uniform", "interpolated", "rgb"}
                         and "quantity" not in value
                     ):
                         return self.convert({**value, "quantity": quantity})

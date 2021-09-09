@@ -7,8 +7,11 @@ import numpy as np
 import pint
 import pinttr
 
+import eradiate
+
 from ._core import Measure, measure_factory
 from ...attrs import documented, parse_docs
+from ...exceptions import UnsupportedModeError
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -65,6 +68,10 @@ class RadiancemeterArrayMeasure(Measure):
                 f"got origins.shape = {self.origins.shape}, "
                 f"directions.shape = {self.directions.shape}"
             )
+
+    def __attrs_post_init__(self):
+        if eradiate.mode().has_flags("ANY_RGB"):
+            raise UnsupportedModeError(unsupported="RGB")
 
     @property
     def film_resolution(self) -> t.Tuple[int, int]:

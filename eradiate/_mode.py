@@ -24,14 +24,14 @@ class ModeFlags(enum.Flag):
     # Eradiate
     ERT_MONO = enum.auto()  #: Mode performs monochromatic simulations
     ERT_CKD = enum.auto()  #: Mode performs correlated-k spectral simulation
-    # ERT_RGB = enum.auto()  #: Mode performs renders RGB images
+    ERT_RGB = enum.auto()  #: Mode performs renders RGB images
 
     # Mitsuba
     MTS_SCALAR = enum.auto()  #: Mode maps to a scalar Mitsuba variant
     # MTS_LLVM = enum.auto()  #: Mode maps to a LLVM Mitsuba variant
     # MTS_AD = enum.auto()  #: Mode maps to an autodiff Mitsuba variant
     MTS_MONO = enum.auto()  #: Mode maps to a monochromatic Mitsuba variant
-    # MTS_RGB = enum.auto()  #: Mode maps to an RGB Mitsuba variant
+    MTS_RGB = enum.auto()  #: Mode maps to an RGB Mitsuba variant
     # MTS_SPECTRAL = enum.auto()  #: Mode maps to a spectral Mitsuba variant
     # MTS_UNPOLARIZED = enum.auto() #: Mode maps to an unpolarised Mitsuba variant
     # MTS_POLARIZED = enum.auto() #: Mode maps to a polarised Mitsuba variant
@@ -50,6 +50,8 @@ class ModeFlags(enum.Flag):
     CKD_DOUBLE = (
         ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
     )  #: CKD mode, double precision
+    RGB = ERT_RGB | MTS_SCALAR | MTS_MONO | MTS_SINGLE  #: RGB mode, single precision
+    RGB_DOUBLE = ERT_RGB | MTS_SCALAR | MTS_DOUBLE  #: RGB mode, double precision>>
 
     # -- Other convenience aliases ---------------------------------------------
 
@@ -58,6 +60,7 @@ class ModeFlags(enum.Flag):
     ANY_SCALAR = MTS_SCALAR  #: Any scalar mode
     ANY_SINGLE = MTS_SINGLE  #: Any single-precision mode
     ANY_DOUBLE = MTS_DOUBLE  #: Any double-precision mode
+    ANY_RGB = MTS_RGB  #: Any RGB variant
 
 
 # ------------------------------------------------------------------------------
@@ -83,6 +86,8 @@ _mode_registry = {
         "flags": ModeFlags.CKD_DOUBLE,
         "spectral_coord_label": "bd",
     },
+    "rgb": {"flags": ModeFlags.RGB},
+    "rgb_double": {"flags": ModeFlags.RGB_DOUBLE},
 }
 
 
@@ -128,6 +133,8 @@ class Mode:
         # Spectral mode selection
         if self.flags & ModeFlags.MTS_MONO:
             components.append("mono")
+        elif self.flags & ModeFlags.MTS_RGB:
+            components.append("rgb")
 
         # Todo: Polarisation mode selection
 
