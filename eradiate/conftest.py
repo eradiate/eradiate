@@ -72,6 +72,8 @@ variant_groups = {
     "all_mono_ckd": [
         x for x in eradiate.modes() if (x.startswith("mono") or x.startswith("ckd"))
     ],
+    "all_single": [x for x in eradiate.modes() if not x.endswith("double")],
+    "all_double": [x for x in eradiate.modes() if x.endswith("double")],
     "all": list(eradiate.modes()),
 }
 
