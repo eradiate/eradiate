@@ -754,6 +754,9 @@ class LeafCloud(CanopyElement):
             If ``avoid_overlap`` is ``True``, number of attempts made at placing
             a leaf without collision before giving up. Default: 1e5.
 
+        Parameter ``**kwargs``:
+            Keyword arguments interpreted by :class:`.CuboidLeafCloudParams`.
+
         Returns → :class:`.LeafCloud`:
             Generated leaf cloud.
         """
@@ -810,6 +813,9 @@ class LeafCloud(CanopyElement):
         Parameter ``seed`` (int):
             Seed for the random number generator.
 
+        Parameter ``**kwargs``:
+            Keyword arguments interpreted by :class:`.SphereLeafCloudParams`.
+
         Returns → :class:`.LeafCloud`:
             Generated leaf cloud.
         """
@@ -855,6 +861,9 @@ class LeafCloud(CanopyElement):
         Parameter ``seed`` (int):
             Seed for the random number generator.
 
+        Parameter ``**kwargs``:
+            Keyword arguments interpreted by :class:`.EllipsoidLeafCloudParams`.
+
         Returns → :class:`.LeafCloud`:
             Generated leaf cloud.
         """
@@ -896,6 +905,9 @@ class LeafCloud(CanopyElement):
 
         Parameter ``seed`` (int):
             Seed for the random number generator.
+
+        Parameter ``**kwargs``:
+            Keyword arguments interpreted by :class:`.CylinderLeafCloudParams`.
 
         Returns → :class:`.LeafCloud`:
             Generated leaf cloud.
@@ -939,6 +951,9 @@ class LeafCloud(CanopyElement):
         Parameter ``seed`` (int):
             Seed for the random number generator.
 
+        Parameter ``**kwargs``:
+            Keyword arguments interpreted by :class:`.ConeLeafCloudParams`.
+
         Returns → :class:`.LeafCloud`:
             Generated leaf cloud.
         """
@@ -967,9 +982,9 @@ class LeafCloud(CanopyElement):
     def from_file(
         cls,
         filename,
-        leaf_transmittance=0.5,
-        leaf_reflectance=0.5,
-        id="leaf_cloud",
+        leaf_transmittance: t.Union[float, Spectrum] = 0.5,
+        leaf_reflectance: t.Union[float, Spectrum] = 0.5,
+        id: str = "leaf_cloud",
     ) -> LeafCloud:
         """
         Construct a :class:`.LeafCloud` from a text file specifying the leaf
