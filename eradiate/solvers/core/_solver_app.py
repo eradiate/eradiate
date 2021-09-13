@@ -93,7 +93,7 @@ class SolverApp(ABC):
         # Instantiate class
         return cls.new(scene=scene)
 
-    def process(self, *measures: t.Union[Measure, int]):
+    def process(self, *measures: t.Union[Measure, int]) -> None:
         """
         Run simulation on the configured scene. Raw results yielded by the
         runner function are stored in ``measure.results``.
@@ -156,7 +156,7 @@ class SolverApp(ABC):
                     # Update progress display
                     pbar.update()
 
-    def postprocess(self, *measures: t.Union[Measure, int]):
+    def postprocess(self, *measures: t.Union[Measure, int]) -> None:
         """
         Post-process raw results stored in a measure's ``results`` field. This
         requires a successful execution of :meth:`process`. Post-processed results
@@ -191,7 +191,7 @@ class SolverApp(ABC):
             # Collect measure results
             self._results[measure.id] = measure.postprocess(**measure_kwargs)
 
-    def run(self, *measures: t.Union[Measure, int]):
+    def run(self, *measures: t.Union[Measure, int]) -> None:
         """
         Perform radiative transfer simulation and post-process results.
         Essentially chains :meth:`process` and :meth:`postprocess`.
