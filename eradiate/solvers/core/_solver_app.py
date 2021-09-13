@@ -129,7 +129,7 @@ class SolverApp(ABC):
                 total=len(spectral_ctxs),
                 unit_scale=1.0,
                 leave=True,
-                bar_format="{desc}{n_fmt}/{total_fmt}|{bar}| {elapsed}, ETA={remaining}",
+                bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
                 disable=config.progress < 1,
             ) as pbar:
                 for spectral_ctx in spectral_ctxs:
