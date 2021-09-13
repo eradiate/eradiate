@@ -23,6 +23,7 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
    core
    data
    exceptions
+   experiments
    factory
    kernel
    math
