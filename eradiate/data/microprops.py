@@ -15,6 +15,9 @@ class _Microprops(DataGetter):
         "shettle_fenn_1979_table_3": "microprops/shettle_fenn_1979_table_3.nc",
         "shettle_fenn_1979_table_4a": "microprops/shettle_fenn_1979_table_4a.nc",
         "shettle_fenn_1979_table_4b": "microprops/shettle_fenn_1979_table_4b.nc",
+        "shettle_fenn_1979_table_5a": "microprops/shettle_fenn_1979_table_5a.nc",
+        "shettle_fenn_1979_table_5b": "microprops/shettle_fenn_1979_table_5b.nc",
+        "shettle_fenn_1979_table_6": "microprops/shettle_fenn_1979_table_6.nc",
     }
 
     @classmethod
