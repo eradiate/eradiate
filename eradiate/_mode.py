@@ -141,11 +141,15 @@ class Mode:
         """
         Check if the currently active mode has the passed flags.
 
-        Parameter ``flags`` (:class:`.ModeFlags` or str):
+        Parameters
+        ----------
+        flags : :class:`.ModeFlags` or str
             Flags to check for. If a string is passed, conversion to a
             :class:`.ModeFlags` instance will be attempted.
 
-        Returns → bool:
+        Returns
+        -------
+        bool
             ``True`` if current mode has the passed flags, ``False`` otherwise.
         """
         if isinstance(flags, str):
@@ -153,7 +157,7 @@ class Mode:
         return self.flags & flags
 
     @staticmethod
-    def new(mode_id) -> Mode:
+    def new(mode_id: str) -> Mode:
         """
         Create a :class:`Mode` instance given its identifier. Available modes are:
 
@@ -161,6 +165,16 @@ class Mode:
         * ``mono_double``: Monochromatic, double-precision
         * ``ckd``: CKD, single-precision
         * ``ckd_double``: CKD, double-precision
+
+        Parameters
+        ----------
+        mode_id : str
+            String identifier for the created :class:`Mode` instance.
+
+        Returns
+        -------
+        :class:`Mode`
+            Created :class:`Mode` instance.
         """
         try:
             mode_kwargs = _mode_registry[mode_id]
@@ -182,7 +196,9 @@ def mode() -> t.Optional[Mode]:
     """
     Get current operational mode.
 
-    Returns → :class:`.Mode` or None
+    Returns
+    -------
+    :class:`.Mode` or None
         Current operational mode.
     """
     return _current_mode
@@ -192,7 +208,9 @@ def modes() -> t.Dict:
     """
     Get list of registered operational modes.
 
-    Returns → dict
+    Returns
+    -------
+    dict
         List of registered operational modes
     """
     return _mode_registry
@@ -206,19 +224,24 @@ def set_mode(mode_id: str):
     modes map to Mitsuba's variants and are used to make contextual decisions
     when relevant during the translation of a scene to its kernel format.
 
-    Parameter ``mode_id`` (str):
+    .. admonition:: Valid mode IDs
+       :class: info
+
+       * ``mono`` (monochromatic mode, single precision)
+       * ``mono_double`` (monochromatic mode, double-precision)
+       * ``ckd`` (CKD mode, single precision)
+       * ``ckd_double`` (CKD mode, double-precision)
+       * ``none`` (no mode selected)
+
+    Parameters
+    ----------
+    mode_id : str
         Mode to be selected (see list below).
 
-    Raises → ValueError:
+    Raises
+    ------
+    ValueError
         ``mode_id`` does not match any of the known mode identifiers.
-
-    .. rubric:: Valid mode IDs
-
-    * ``mono`` (monochromatic mode, single precision)
-    * ``mono_double`` (monochromatic mode, double-precision)
-    * ``ckd`` (CKD mode, single precision)
-    * ``ckd_double`` (CKD mode, double-precision)
-    * ``none`` (no mode selected)
     """
     global _current_mode
 
@@ -237,10 +260,14 @@ def supported_mode(flags):
     """
     Check whether the current mode has specific flags. If not, raise.
 
-    Parameter ``flags`` (:class:`.ModeFlags`):
+    Parameters
+    ----------
+    flags : :class:`.ModeFlags`
         Flags the current mode is expected to have.
 
-    Raises → :class:`UnsupportedModeError`:
+    Raises
+    ------
+    :class:`UnsupportedModeError`
         Current mode does not have the requested flags.
     """
     if mode() is None or not mode().has_flags(flags):
@@ -251,10 +278,14 @@ def unsupported_mode(flags):
     """
     Check whether the current mode has specific flags. If so, raise.
 
-    Parameter ``flags`` (:class:`.ModeFlags`):
+    Parameters
+    ----------
+    flags : :class:`.ModeFlags`
         Flags the current mode is expected not to have.
 
-    Raises → :class:`UnsupportedModeError`:
+    Raises
+    ------
+    :class:`UnsupportedModeError`
         Current mode has the requested flags.
     """
     if mode() is None or mode().has_flags(flags):

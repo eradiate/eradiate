@@ -89,10 +89,13 @@ class KernelDict(collections_abc.MutableMapping):
         * check if the variant for which the kernel dictionary was created is
           the same as the current one.
 
-        Raises → ValueError
+        Raises
+        ------
+
+        ValueError
             If the ``"type"`` parameter is missing.
 
-        Raises → :class:`.KernelVariantError`
+        :class:`.KernelVariantError`
             If the variant for which the kernel dictionary was created is
             not the same as the current one
         """
@@ -141,7 +144,9 @@ class KernelDict(collections_abc.MutableMapping):
         .. note::
            Requires a valid selected operational mode.
 
-        Parameter ``strip`` (bool):
+        Parameters
+        ----------
+        strip : bool
             If ``True``, if ``data`` has no ``'type'`` entry and if ``data``
             consists of one nested dictionary, it will be loaded directly.
             For instance, it means that
@@ -156,11 +161,13 @@ class KernelDict(collections_abc.MutableMapping):
 
                {"type": "rayleigh"}
 
-        Parameter ``post_load_update`` (bool):
+        post_load_update : bool
             If ``True``, use :func:`~mitsuba.python.util.traverse` and update
             loaded scene parameters according to data stored in ``post_load``.
 
-        Return → :class:`mitsuba.core.Object`:
+        Returns
+        -------
+        :class:`mitsuba.core.Object`
             Loaded Mitsuba object.
         """
         from mitsuba.core.xml import load_dict
@@ -194,11 +201,13 @@ class KernelDict(collections_abc.MutableMapping):
         Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
         another dictionary object with the current :class:`KernelDict`.
 
-        Parameter ``*elements`` (:class:`SceneElement`):
+        Parameters
+        ----------
+        *elements : :class:`SceneElement`
             :class:`~eradiate.scenes.core.SceneElement` instances to add to the
             scene dictionary.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation. *This argument is keyword-only and required.*
         """
@@ -209,7 +218,9 @@ class KernelDict(collections_abc.MutableMapping):
         """
         Merge another :class:`.KernelDict` with the current one.
 
-        Parameter ``other`` (:class:`.KernelDict`):
+        Parameters
+        ----------
+        other : :class:`.KernelDict`
             A kernel dictionary whose main and post-load dictionaries will be
             used to update the current one.
         """
@@ -226,15 +237,19 @@ class KernelDict(collections_abc.MutableMapping):
         """
         Create a new :class:`.KernelDict` from one or more scene elements.
 
-        Parameter ``*elements`` (:class:`SceneElement`):
+        Parameters
+        ----------
+        *elements : :class:`SceneElement`
             :class:`~eradiate.scenes.core.SceneElement` instances to add to the
             scene dictionary.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation. *This argument is keyword-only and required.*
 
-        Returns → :class:`KernelDict`:
+        Returns
+        -------
+        :class:`KernelDict`
             Created scene kernel dictionary.
         """
         result = cls()
@@ -277,11 +292,15 @@ class SceneElement(ABC):
         """
         Return a dictionary suitable for kernel scene configuration.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`KernelDict`:
+        Returns
+        -------
+        :class:`KernelDict`
             Kernel dictionary which can be loaded as a Mitsuba object.
         """
         pass

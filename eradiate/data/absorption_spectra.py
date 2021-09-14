@@ -40,8 +40,8 @@ class Group(enum.Enum):
     Data sets group enumeration.
 
     .. note::
-        A group refers to a collection of data sets that differ by their
-        wavenumber bins.
+       A group refers to a collection of data sets that differ by their
+       wavenumber bins.
     """
 
     SPECTRA_US76_U86_4 = (Absorber.us76_u86_4, Engine.SPECTRA)

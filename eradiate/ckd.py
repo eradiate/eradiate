@@ -143,10 +143,14 @@ def bin_filter_ids(ids: t.Sequence[str]) -> t.Callable[[Bin], bool]:
     """
     Select bins based on identifiers.
 
-    Parameter ``ids`` (list[str]):
+    Parameters
+    ----------
+    ids : list[str]
         A sequence of bin identifiers which the defined filter will let through.
 
-    Returns → callable:
+    Returns
+    -------
+    callable
         A callable which returns ``True`` *iff* a bin has a valid identifier.
     """
 
@@ -162,23 +166,29 @@ def bin_filter_interval(
     """
     Select bins in a wavelength interval.
 
-    Parameter ``wmin`` (:class:`pint.Quantity`):
+    Parameters
+    ----------
+    wmin : :class:`pint.Quantity`
         Lower bound of the spectral interval defining the filter.
 
-    Parameter ``wmax`` (:class:`pint.Quantity`):
+    wmax : :class:`pint.Quantity`
         Upper bound of the spectral interval defining the filter. Must be
         equal to or greater than ``wmin``.
 
-    Parameter ``endpoints`` (bool):
+    endpoints : bool
         If ``True``, bins must have at least one of their bounds within the
         interval to be selected.
         If ``False``, bins must have both bounds in the interval to be
         selected.
 
-    Returns → callable:
+    Returns
+    -------
+    callable
         A callable which returns ``True`` *iff* a bin is in the specified interval.
 
-    Raises → ValueError:
+    Raises
+    ------
+    ValueError
         If ``wmin > wmax``.
     """
     if wmin > wmax:
@@ -211,23 +221,28 @@ def bin_filter(type: str, filter_kwargs: t.Dict[str, t.Any]):
     """
     Create a bin filter function dynamically.
 
-    Parameter ``type`` (str):
+    Parameters
+    ----------
+    type : str
         Filter type.
 
-    Parameter ``filter_kwargs`` (dict):
+    filter_kwargs : dict
         Keyword arguments passed to the filter generator.
 
-    Returns → callable:
+    Returns
+    -------
+    callable
         Generated bin filter function.
 
-    .. note::
-       Valid filter types are:
+    Notes
+    -----
+    Valid filter types are:
 
-       * ``all`` (``lambda x: True``);
-       * ``ids`` (:func:`.bin_filter_ids`);
-       * ``interval`` (:func:`.bin_filter_interval`).
+    * ``all`` (``lambda x: True``);
+    * ``ids`` (:func:`.bin_filter_ids`);
+    * ``interval`` (:func:`.bin_filter_interval`).
 
-       See the corresponding API entry for expected arguments.
+    See the corresponding API entry for expected arguments.
     """
     if type == "interval":
         return bin_filter_interval(**filter_kwargs)
@@ -314,10 +329,14 @@ class BinSet:
         """
         Filter bins based on callables.
 
-        Parameter ``filters`` (callable):
+        Parameters
+        ----------
+        filters : callable
             One or several callables with signature ``filter(x: Bin) -> bool``.
 
-        Returns → dict[str, :class:`.Bin`]:
+        Returns
+        -------
+        dict[str, :class:`.Bin`]
             Only bins for which ``filter(bin)`` is ``True`` are returned,
             ordered by their lower bound.
         """
@@ -344,7 +363,9 @@ class BinSet:
         Select a subset of CKD bins. This method is a high-level wrapper for
         :meth:`.filter_bins`.
 
-        Parameter ``filter_specs`` (sequence[str or callable or sequence or dict]):
+        Parameters
+        ----------
+        filter_specs : sequence[str or callable or sequence or dict]
             One or several bin filter specifications. The following are supported:
 
             * a string will select a bin with matching ID (internally, this
@@ -355,7 +376,9 @@ class BinSet:
             * a dict with keys ``type`` and ``filter_kwargs`` will be directly
               forwarded as keyword arguments to :func:`.bin_filter`.
 
-        Returns → dict[str, :class:`.Bin`]:
+        Returns
+        -------
+        dict[str, :class:`.Bin`]
             Selected bins.
         """
         filters = []
@@ -395,14 +418,18 @@ class BinSet:
         Convert a dataset-based bin set definition to a :class:`BinSet`
         instance.
 
-        Parameter ``id`` (str):
+        Parameters
+        ----------
+        id : str
             Data set identifier.
 
-        Parameter ``ds`` (:class:`~xarray.Dataset`):
+        ds : :class:`~xarray.Dataset`
             Dataset from which bin set definition information is to be
             extracted.
 
-        Returns → :class:`.BinSet`:
+        Returns
+        -------
+        :class:`.BinSet`
             Bin set definition.
         """
         # Collect quadrature data
@@ -435,11 +462,15 @@ class BinSet:
            This static function is cached using :func:`functools.lru_cache` for
            optimal performance.
 
-        Parameter ``id`` (str):
+        Parameters
+        ----------
+        id : str
             Data set identifier. The :func:`eradiate.data.open` function will be
             used to load the requested data set.
 
-        Returns → :class:`.BinSet`:
+        Returns
+        -------
+        :class:`.BinSet`
             Bin set definition.
         """
         ds = data.open("ckd_bin_set", id)
@@ -450,12 +481,16 @@ class BinSet:
         """
         Get bin set from node data.
 
-        Parameter ``ds`` (:class:`~xarray.Dataset`):
+        Parameters
+        ----------
+        ds : :class:`~xarray.Dataset`
             Node data to get the bin set for. Data set attributes must have a
             ``bin_set_id`` field referencing a registered bin set definition in
             the Eradiate database.
 
-        Returns → :class:`.BinSet`:
+        Returns
+        -------
+        :class:`.BinSet`
             Bin set definition associated with the passed CKD node data.
         """
 

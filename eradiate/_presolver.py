@@ -48,9 +48,9 @@ class PathResolver(metaclass=Singleton):
         Reset path list to default value:
         ``[$PWD, $ERADIATE_DATA_PATH, $ERADIATE_DIR/resources/data]``.
 
-        .. seealso::
-
-           :ref:`sec-config-env_vars`
+        See Also
+        --------
+        :ref:`sec-config-env_vars` : Environment variable list.
         """
 
         self.clear()
@@ -69,19 +69,26 @@ class PathResolver(metaclass=Singleton):
         """
         Check if a given path is included in the search path list.
 
-        Parameter ``path`` (path-like)
+        Parameters
+        ----------
+        path : path-like
             Path to be searched for.
 
-        Returns → bool
+        Returns
+        -------
+        bool
             True if the path is found.
         """
         path = Path(path).absolute()
         return path in self.paths
 
     def remove(self, item):
-        """Erase the entry at the given index.
+        """
+        Erase the entry at the given index.
 
-        Parameter ``item`` (path-like or int)
+        Parameters
+        ----------
+        item : path-like or int
             If path-like, path to erase from the path list. If index, index in
             the path list where the item to be removed is located.
         """
@@ -100,7 +107,9 @@ class PathResolver(metaclass=Singleton):
         """
         Prepend an entry at the beginning of the list of search paths.
 
-        Parameter ``path`` (path-like)
+        Parameters
+        ----------
+        path : path-like
             Path to prepend to the path list.
         """
         path_absolute = Path(path).absolute()
@@ -113,7 +122,9 @@ class PathResolver(metaclass=Singleton):
         """
         Append an entry to the end of the list of search paths.
 
-        Parameter ``path`` (path-like):
+        Parameters
+        ----------
+        path : path-like
             Path to append to the path list.
         """
         for path in paths:
@@ -127,10 +138,14 @@ class PathResolver(metaclass=Singleton):
         """
         Walk through the list of search paths and try to resolve the input path.
 
-        Parameter ``path`` (path-like):
+        Parameters
+        ----------
+        path : path-like
             Path to try and resolve.
 
-        Returns → :class:`pathlib.Path`:
+        Returns
+        -------
+        :class:`pathlib.Path`:
             If path is found, absolute path to the found item.
             Otherwise, unchanged path.
         """
