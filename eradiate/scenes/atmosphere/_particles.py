@@ -590,22 +590,3 @@ class ParticleLayer(Atmosphere):
                 }
             }
         )
-
-    # --------------------------------------------------------------------------
-    #                               Miscellaneous
-    # --------------------------------------------------------------------------
-
-    @classmethod
-    def convert(
-        cls: ParticleLayer, value: t.Union[ParticleLayer, dict]
-    ) -> ParticleLayer:
-        """
-        Object converter method.
-
-        If ``value`` is a dictionary, this method forwards it to
-        :meth:`.from_dict`. Otherwise, it returns ``value``.
-        """
-        if isinstance(value, dict):
-            return cls.from_dict(value)
-
-        return value

@@ -43,7 +43,8 @@ class HeterogeneousNewAtmosphere(Atmosphere):
         attr.ib(
             factory=list,
             converter=lambda value: [
-                ParticleLayer.convert(element) for element in value
+                atmosphere_factory.convert(element, allowed_cls=ParticleLayer)
+                for element in value
             ],
             validator=attr.validators.deep_iterable(
                 attr.validators.instance_of(ParticleLayer)
