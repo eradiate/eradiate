@@ -94,6 +94,7 @@ html_title = ""
 html_static_path = ["_static"]
 
 # Configure extensions
+extensions.append("sphinx.ext.napoleon")
 extensions.append("sphinx.ext.mathjax")
 extensions.append("sphinx.ext.viewcode")
 extensions.append("sphinx_copybutton")

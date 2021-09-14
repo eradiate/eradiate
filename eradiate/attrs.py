@@ -73,13 +73,17 @@ def _eradiate_formatter(cls_doc, field_docs):
     This docstring formatter is appropriate for Eradiate's current docstring
     format.
 
-    Parameter ``cls_doc`` (str):
+    Parameters
+    ----------
+    cls_doc : str
         Class docstring to extend.
 
-    Parameter ``field_docs`` (dict[str, _FieldDoc]):
+    field_docs : dict[str, _FieldDoc]
         Attributes documentation content.
 
-    Returns → str:
+    Returns
+    -------
+    str
         Updated class docstring.
     """
     # Do nothing if field is not documented
@@ -118,7 +122,8 @@ def _eradiate_formatter(cls_doc, field_docs):
 
 
 def parse_docs(cls):
-    """Extract attribute documentation and update class docstring with it.
+    """
+    Extract attribute documentation and update class docstring with it.
 
     .. admonition:: Notes
 
@@ -130,13 +135,19 @@ def parse_docs(cls):
     for documentation content. It will then update the class's docstring
     based on this content.
 
-    .. seealso:: :func:`documented`
-
-    Parameter ``cls`` (class):
+    Parameters
+    ----------
+    cls : type
         Class whose attributes should be processed.
 
-    Returns → class:
+    Returns
+    -------
+    type
         Updated class.
+
+    See Also
+    --------
+    :func:`documented` : Field documentation definition function.
     """
     formatter = _eradiate_formatter
 
@@ -163,21 +174,26 @@ def parse_docs(cls):
 
 
 def documented(attrib, doc=None, type=None, default=None):
-    """Declare an attrs field as documented.
+    """
+    Declare an attrs field as documented.
 
     .. seealso:: :func:`parse_docs`
 
-    Parameter ``doc`` (str or None):
+    Parameters
+    ----------
+    doc : str or None
         Docstring for the considered field. If set to ``None``, this function
         does nothing.
 
-    Parameter ``type`` (str or None):
+    type : str or None
         Documented type for the considered field.
 
-    Parameter ``default`` (str or None):
+    default : str or None
         Documented default value for the considered field.
 
-    Returns → ``attrs`` attribute:
+    Returns
+    -------
+    attrs`` attribute
         ``attrib``, with metadata updated with documentation contents.
     """
     if doc is not None:
@@ -193,26 +209,32 @@ def documented(attrib, doc=None, type=None, default=None):
 
 
 def get_doc(cls, attrib, field):
-    """Fetch attribute documentation field. Requires fields metadata to be
+    """
+    Fetch attribute documentation field. Requires fields metadata to be
     processed with :func:`documented`.
 
-    Parameter ``cls`` (class):
+    Parameters
+    ----------
+    cls : class
         Class from which to get the attribute.
 
-    Parameter ``attrib`` (str):
+    attrib : str
         Attribute from which to get the doc field.
 
-    Parameter ``field`` ("doc" or "type" or "default"):
+    field : "doc" or "type" or "default"
         Documentation field to query.
 
-    Returns:
-        Queried documentation content.
+    Returns
+    -------
+    Queried documentation content.
 
-    Raises → ValueError:
+    Raises
+    ------
+    ValueError
         If the requested ``field`` is missing from the target attribute's
         metadata.
 
-    Raises → ValueError:
+    ValueError
         If the requested ``field`` is unsupported.
     """
     try:

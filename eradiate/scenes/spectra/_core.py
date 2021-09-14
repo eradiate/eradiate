@@ -36,11 +36,15 @@ class SpectrumFactory(Factory):
 
         * otherwise, it forwards ``value`` to :meth:`.SpectrumFactory.convert`.
 
-        Parameter ``quantity`` (str or :class:`.PhysicalQuantity`):
+        Parameters
+        ----------
+        quantity : str or :class:`.PhysicalQuantity`
             Quantity specifier (converted by :class:`.PhysicalQuantity`).
             See :meth:`.PhysicalQuantity.spectrum` for suitable values.
 
-        Returns → callable:
+        Returns
+        -------
+        callable
             Generated converter.
         """
 
@@ -105,12 +109,16 @@ class Spectrum(SceneElement, ABC):
         Evaluate spectrum based on a spectral context. This method dispatches
         evaluation to specialised methods depending on the active mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns
+        -------
+        :class:`pint.Quantity`
             Evaluated spectrum as a scalar.
         """
         assert spectral_ctx is not None  # Safeguard for leftover None values
@@ -129,10 +137,14 @@ class Spectrum(SceneElement, ABC):
         """
         Evaluate spectrum in monochromatic modes.
 
-        Parameter ``w`` (:class:`pint.Quantity`):
+        Parameters
+        ----------
+        w : :class:`pint.Quantity`
             Wavelength values at which the spectrum is to be evaluated.
 
-        Returns → :class:`pint.Quantity`:
+        Returns
+        -------
+        :class:`pint.Quantity`
             Evaluated spectrum as an array with the same shape as ``w``.
         """
         pass
@@ -142,10 +154,14 @@ class Spectrum(SceneElement, ABC):
         """
         Evaluate spectrum in CKD modes.
 
-        Parameter ``*bindexes`` (:class:`.Bindex`):
+        Parameters
+        ----------
+        *bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
 
-        Returns → :class:`pint.Quantity`:
+        Returns
+        -------
+        :class:`pint.Quantity`
             Evaluated spectrum as an array with shape (len(bindexes),).
         """
         pass
