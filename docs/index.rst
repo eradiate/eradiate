@@ -1,8 +1,4 @@
-.. image:: fig/eradiate-logo-dark-no_bg.png
-   :width: 75%
-   :align: center
-
-Eradiate documentation
+Eradiate Documentation
 ======================
 
 *A New-generation Radiative Transfer Model for the Earth Observation Community*
@@ -49,10 +45,25 @@ work.
    :maxdepth: 3
    :hidden:
    :titlesonly:
+   :caption: For users
 
    rst/getting_started/index
    rst/user_guide/index
    examples/generated/tutorials/index
+
+.. toctree::
+   :maxdepth: 3
+   :hidden:
+   :titlesonly:
+   :caption: For developers/contributors
+
    rst/developer_guide/index
    rst/reference/index
+
+.. toctree::
+   :maxdepth: 3
+   :hidden:
+   :titlesonly:
+   :caption: Other topics
+
    rst/miscellaneous/index
