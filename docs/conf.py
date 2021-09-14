@@ -84,8 +84,9 @@ rst_prolog = r"""
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "pydata_sphinx_theme"
-html_logo = "fig/icon_eradiate.png"
+html_theme = "sphinx_book_theme"
+html_logo = "fig/eradiate-logo-dark-no_bg.png"
+html_title = ""
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -187,7 +188,12 @@ autodoc_mock_imports = [
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {"github_url": "https://github.com/eradiate/eradiate"}
+html_theme_options = {
+    "repository_url": "https://github.com/eradiate/eradiate",
+    "repository_branch": "main",
+    "use_repository_button": True,
+    "use_issues_button": True,
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -209,7 +215,7 @@ html_short_title = "Eradiate"
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = None
+html_favicon = "fig/icon_eradiate.png"
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
