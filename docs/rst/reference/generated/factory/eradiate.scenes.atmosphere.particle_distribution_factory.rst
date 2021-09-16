@@ -1,7 +1,7 @@
-eradiate.scenes.atmosphere._particle_dist.particle_distribution_factory
-=======================================================================
+eradiate.scenes.atmosphere.particle_distribution_factory
+========================================================
 
-.. data:: eradiate.scenes.atmosphere._particle_dist.particle_distribution_factory
+.. data:: eradiate.scenes.atmosphere.particle_distribution_factory
    :annotation: = eradiate._factory.Factory()
 
    Instance of :class:`eradiate._factory.Factory`
