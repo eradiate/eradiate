@@ -1,5 +1,5 @@
-import os
 import glob
+import os
 from importlib import import_module
 from pathlib import Path
 from textwrap import indent
@@ -7,15 +7,13 @@ from textwrap import indent
 import click
 from rich.console import Console
 
-import eradiate
-
 console = Console()
 
 # List of (module, variable) pairs
 FACTORIES = [
     ("eradiate.radprops.rad_profile", "rad_profile_factory"),
     ("eradiate.scenes.atmosphere", "atmosphere_factory"),
-    ("eradiate.scenes.atmosphere._particle_dist", "particle_distribution_factory"),
+    ("eradiate.scenes.atmosphere", "particle_distribution_factory"),
     ("eradiate.scenes.biosphere", "biosphere_factory"),
     ("eradiate.scenes.illumination", "illumination_factory"),
     ("eradiate.scenes.integrators", "integrator_factory"),

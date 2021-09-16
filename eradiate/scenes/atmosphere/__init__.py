@@ -12,8 +12,8 @@ __all__ = [
     "HeterogeneousNewAtmosphere",
     "HomogeneousAtmosphere",
     "MolecularAtmosphere",
-    "atmosphere_factory",
-    "particle_distribution_factory",
     "ParticleDistribution",
     "ParticleLayer",
+    "atmosphere_factory",
+    "particle_distribution_factory",
 ]

@@ -20,9 +20,9 @@ Factory instances
 
    generated/factory/*
 
-* :data:`radprops.particle_dist.particle_distribution_factory`
 * :data:`radprops.rad_profile.rad_profile_factory`
 * :data:`scenes.atmosphere.atmosphere_factory`
+* :data:`scenes.atmosphere.particle_distribution_factory`
 * :data:`scenes.biosphere.biosphere_factory`
 * :data:`scenes.illumination.illumination_factory`
 * :data:`scenes.integrators.integrator_factory`
