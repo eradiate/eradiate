@@ -127,11 +127,16 @@ def symbol(units: t.Union[pint.Unit, str]) -> str:
     """
     Normalise a string or Pint units to a symbol string.
 
-    Parameter ``units`` (:class:`pint.Unit` or srt):
+    Parameters
+    ----------
+    units : :class:`pint.Unit` or str
         Value to convert to a symbol string.
 
-    Returns → str:
-        Symbol string (*e.g.* 'm' for 'metre', 'W / m ** 2' for 'W/m^2', etc.).
+    Returns
+    -------
+    str
+        Symbol string (*e.g.* ``'m'`` for ``'metre'``, ``'W / m ** 2'`` for
+        ``'W/m^2'``, etc.).
     """
     units = unit_registry.Unit(units)
     return format(units, "~")
@@ -142,16 +147,25 @@ def to_quantity(da: xarray.DataArray) -> pint.Quantity:
     Converts a :class:`~xarray.DataArray` to a :class:`~pint.Quantity`.
     The array's ``attrs`` metadata mapping must contain a ``units`` field.
 
-    .. note:: This function can also be used on coordinate variables.
-
-    Parameter ``da`` (:class:`~xarray.DataArray`):
+    Parameters
+    ----------
+    da : DataArray
         :class:`~xarray.DataArray` instance which will be converted.
 
-    Returns → :class:`pint.Quantity`:
+
+    Returns
+    -------
+    quantity
         The corresponding Pint quantity.
 
-    Raises → ValueError:
+    Raises
+    ------
+    ValueError
         If the array's metadata do not contain a ``units`` field.
+
+    Notes
+    -----
+    This function can also be used on coordinate variables.
     """
     try:
         units = da.attrs["units"]
@@ -165,7 +179,7 @@ def interpret_quantities(
     d: t.Dict[str, t.Any],
     quantity_map: t.Dict[str, str],
     uctx: pinttr.UnitContext,
-    force=False,
+    force: bool = False,
 ):
     """
     Advanced unit interpretation and wrapping for dictionaries. This function
@@ -173,22 +187,36 @@ def interpret_quantities(
     a given field. Then, it converts quantities and possibly applies default
     units to fields specified in ``quantity_map`` based on ``uctx``.
 
-    Parameter ``d`` (dict):
+    Parameters
+    ----------
+    d : dict
         Dictionary to apply unit conversion, checking and defaults.
 
-    Parameter ``quantity_map`` (dict[str, str]):
+    quantity_map : dict[str, str]
         Dictionary mapping fields to quantity identifiers (see
-        :class:`eradiate.units.PhysicalQuantity` for valid quantity IDs).
+        :class:`.PhysicalQuantity` for valid quantity IDs).
 
-    Parameter ``uctx`` (:class:`pinttr.UnitContext`):
+    uctx : :class:`pinttr.UnitContext`
         Unit context containing quantity and default units definitions.
 
-    Returns → dict:
+    force : bool, default: False
+        If ``True``, fields specified as quantities will be converted to target
+        units; otherwise, only units compatibility will be checked.
+
+    Returns
+    -------
+    dict
         Dictionary with units interpreted and checked, and default units
         applied to relevant fields.
 
-    Raises → :class:`pinttr.UnitsError`:
+    Raises
+    ------
+    :class:`pinttr.UnitsError`:
         If a field and its mapped quantity have incompatible units.
+
+    See Also
+    --------
+    :class:`.PhysicalQuantity`
     """
     ureg = uctx.ureg
 

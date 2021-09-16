@@ -36,8 +36,8 @@ the second kind of call will try and resolve directly a path using the
         - Spectral response function
 
 """
-
 import os
+import typing as t
 
 import xarray as xr
 
@@ -45,6 +45,7 @@ from .absorption_spectra import _AbsorptionGetter
 from .chemistry import _ChemistryGetter
 from .ckd_absorption import _CKDAbsorptionGetter
 from .ckd_bin_sets import _CKDBinSetGetter
+from .core import DataGetter
 from .solar_irradiance_spectra import _SolarIrradianceGetter
 from .spectral_response_function import _SpectralResponseFunctionGetter
 from .thermoprops_profiles import _ThermoPropsProfilesGetter
@@ -61,31 +62,41 @@ _getters = {
 }
 
 
-def open(category=None, id=None, path=None):
+def open(
+    category: t.Optional[str] = None,
+    id: t.Optional[str] = None,
+    path: t.Optional[os.PathLike] = None,
+) -> xr.Dataset:
     """
     Open a data set.
 
-    Parameter ``category`` (str or None):
+    Parameters
+    ----------
+    category : str, optional
         If ``None``, ``path`` must not be ``None`` .
         Dataset category identifier. Valid data set categories are listed in the
         documentation of the :mod:`~eradiate.data` module.
 
-    Parameter ``id`` (str or None):
+    id : str, optional
         If ``None``, ``path`` must not be ``None`` .
         Dataset identifier inside a given category. See category documentation
         for valid ID values.
 
-    Parameter ``path`` (path-like or None):
+    path : path-like, optional
         If not ``None``, takes precedence over ``category`` and ``id``.
         Path to the requested resource, resolved by the :class:`.PathResolver`.
 
-    Returns → :class:`xarray.Dataset`:
-        Dataset.
+    Returns
+    -------
+    Dataset
+        Queried resource.
 
-    Raises → ValueError:
+    Raises
+    ------
+    ValueError
         The requested resource is not handled.
 
-    Raises → OSError:
+    OSError:
         I/O error while processing a handled resource.
     """
     if path is None:
@@ -109,17 +120,23 @@ def open(category=None, id=None, path=None):
     raise ValueError(f"cannot load resource {fname}")
 
 
-def getter(category):
+def getter(category: str) -> DataGetter:
     """
     Get the getter class for the requested category.
 
-    Parameter ``category`` (str):
+    Parameters
+    ----------
+    category : str
         Dataset category identifier. See :func:`open` for valid categories.
 
-    Returns → :class:`.DataGetter`:
+    Returns
+    -------
+    :class:`.DataGetter`
         Getter class for the requested category.
 
-    Raises → ValueError:
+    Raises
+    ------
+    ValueError
         Unknown requested category.
     """
     try:
@@ -131,28 +148,40 @@ def getter(category):
         )
 
 
-def registered(category):
+def registered(category: str) -> t.List[str]:
     """
     Get a list of registered dataset IDs for a given data set category.
 
-    Parameter ``category`` (str):
+    Parameters
+    ----------
+    category : str
         Dataset category identifier. See :func:`open` for valid categories.
 
-    Returns → list[str]:
+    Returns
+    -------
+    list : str
         List of registered data set IDs for the selected category.
     """
     return getter(category).registered()
 
 
-def find(category):
+def find(category: str):
     """
     Check if the data referenced for a given category exists.
 
-    Parameter ``category`` (str):
+    Parameters
+    ----------
+    category : str
         Dataset category identifier. See :func:`open` for valid categories.
 
-    Returns → dict[str, bool]:
+    Returns
+    -------
+    dict[str, bool]
         Report dictionary containing data set identifiers as keys and Boolean
         values (``True`` if a file exists for this ID, ``False`` otherwise).
+
+    See Also
+    --------
+    :func:`.data.open`
     """
     return getter(category).find()

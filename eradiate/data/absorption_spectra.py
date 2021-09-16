@@ -153,16 +153,20 @@ def find_dataset(wavenumber, absorber, engine):
     Find the dataset corresponding to a given wavenumber,
     absorber and absorption cross section engine.
 
-    Parameter ``wavenumber`` (:class:`~pint.Quantity`):
+    Parameters
+    ----------
+    wavenumber : quantity
         Wavenumber value [cm^-1].
 
-    Parameter ``absorber`` (:class:`Absorber`):
+    absorber : :class:`.Absorber`
         Absorber.
 
-    Parameter ``engine`` (:class:`Engine`):
+    engine : :class:`.Engine`
         Engine used to compute the absorption cross sections.
 
-    Returns → :class:`str`:
+    Returns
+    -------
+    str
         Available dataset id.
     """
     group = _resolve_group(absorber=absorber, engine=engine)
