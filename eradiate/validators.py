@@ -1,3 +1,4 @@
+import typing as t
 from numbers import Number
 
 import attr
@@ -10,8 +11,13 @@ from .units import unit_registry as ureg
 
 def is_number(_, attribute, value):
     """
-    Validates if ``value`` is a number.
-    Raises a ``TypeError`` in case of failure.
+    A validator that raises if the initializer is called with a non-number
+    value.
+
+    Raises
+    ------
+    TypeError
+        If the value is not a :class:`Number`.
     """
     if not isinstance(value, Number):
         raise TypeError(
@@ -21,7 +27,15 @@ def is_number(_, attribute, value):
 
 
 def is_vector3(instance, attribute, value):
-    """Validates if ``value`` is convertible to a 3-vector."""
+    """
+    A validator that raises if the initializer is called with a value which
+    cannot be converted to a (3,) Numpy array.
+
+    Raises
+    ------
+    TypeError
+        If value cannot be converted to a (3,) :class:`numpy.ndarray`.
+    """
     return attr.validators.deep_iterable(
         member_validator=is_number, iterable_validator=has_len(3)
     )(instance, attribute, value)
@@ -29,8 +43,12 @@ def is_vector3(instance, attribute, value):
 
 def is_positive(_, attribute, value):
     """
-    Validates if ``value`` is a positive number.
-    Raises a ``ValueError`` in case of failure.
+    A validator that raises if the initializer is called with a negative value.
+
+    Raises
+    ------
+    ValueError
+        If the value is not positive or zero.
     """
     if value < 0.0:
         raise ValueError(f"{attribute} must be positive or zero, got {value}")
@@ -38,19 +56,30 @@ def is_positive(_, attribute, value):
 
 def all_positive(_, attribute, value):
     """
-    Validates if all elements in ``value`` are positive number.
-    Raises a ``ValueError`` in case of failure.
+    A validator that raises if the initializer is called with a vector
+    containing negative values.
+
+    Raises
+    ------
+    ValueError
+        If not all values are positive.
     """
     if isinstance(value, ureg.Quantity):
         value = value.magnitude
-    if not np.all(np.array(value) >= 0):
+    if np.any(np.array(value) < 0):
         raise ValueError(f"{attribute} must be all positive or zero, got {value}")
 
 
 def path_exists(_, attribute, value):
     """
-    Validates if ``value`` is a :class:`pathlib.Path` and points to
-    an existing target. Raises a ``FileNotFoundError`` otherwise.
+    A validator that succeeds if the initializer is called with a value defining
+    a path to an existing location.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the value is not a :class:`pathlib.Path` which points to an existing
+        location.
     """
     if not value.exists():
         raise FileNotFoundError(
@@ -60,8 +89,14 @@ def path_exists(_, attribute, value):
 
 def is_file(_, attribute, value):
     """
-    Validates if ``value`` is a :class:`pathlib.Path` and points to
-    an existing file. Raises a ``FileNotFoundError`` otherwise.
+    A validator that succeeds if the initializer is called with a value defining
+    a path to an existing file.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the value is not a :class:`pathlib.Path` which points to an existing
+        file.
     """
     if not value.is_file():
         raise FileNotFoundError(
@@ -71,8 +106,14 @@ def is_file(_, attribute, value):
 
 def is_dir(_, attribute, value):
     """
-    Validates if ``value`` is a :class:`pathlib.Path` and points to
-    an existing file. Raises a ``FileNotFoundError`` otherwise.
+    A validator that succeeds if the initializer is called with a value defining
+    a path to an existing directory.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the value is not a :class:`pathlib.Path` which points to an existing
+        directory.
     """
     if not value.is_dir():
         raise FileNotFoundError(
@@ -80,16 +121,20 @@ def is_dir(_, attribute, value):
         )
 
 
-def has_len(size):
+def has_len(size: int):
     """
-    Generates a validator which validates if ``value`` is of length ``size``.
-    The generated validator will raise a ``ValueError`` in case of failure.
+    A validator which raises if the initializer is called with a value of a
+    specified length.
 
-    Parameter ``size`` (int):
-        Size required to pass validation.
+    Parameters
+    ----------
+    size : int
+        Expected size of the validated value.
 
-    Returns → callable(instance, attribute, value):
-        Generated validator.
+    Raises
+    ------
+    ValueError
+        If the value does not have the expected size.
     """
 
     def f(_, attribute, value):
@@ -102,10 +147,21 @@ def has_len(size):
     return f
 
 
-def has_quantity(quantity):
+def has_quantity(quantity: t.Union[PhysicalQuantity, str]):
     """
-    Validates if the validated value has a quantity field matching the
-    ``quantity`` parameter."""
+    A validator that succeeds if the initializer is called with a value
+    featuring a ``quantity`` field set to an expected value.
+
+    Parameters
+    ----------
+    quantity : :class:`.PhysicalQuantity` or str
+        Expected quantity field.
+
+    Raises
+    ------
+    ValueError
+        If the value's ``quantity`` field does not match the expected value.
+    """
 
     quantity = PhysicalQuantity(quantity)
 
@@ -120,16 +176,14 @@ def has_quantity(quantity):
     return f
 
 
-def on_quantity(wrapped_validator):
+def on_quantity(wrapped_validator: t.Callable):
     """
-    Applies a validator to either a value or its magnitude if it is a
-    :class:`pint.Quantity` object.
+    A validator that applies a validator to the magnitude of a value.
 
-    Parameter ``wrapped_validator`` (callable(instance, attribute, value)):
-        A validator to wrap.
-
-    Returns → callable(instance, attribute, value):
-        Wrapped validator.
+    Parameters
+    ----------
+    wrapped_validator : callable
+        The validator applied to the value's magnitude.
     """
 
     def f(instance, attribute, value):
@@ -143,11 +197,12 @@ def on_quantity(wrapped_validator):
 
 def auto_or(*wrapped_validators):
     """
-    Validates if the validated value is ``AUTO`` or if all wrapped validators
-    validate.
+    A validator that allows an attribute to be set to :class:`.AUTO`.
 
-    .. note:: ``wrapped_validators`` is variadic and can therefore be an
-       arbitrary number of validators.
+    Parameters
+    ----------
+    *wrapped_validators : callable
+        Validators to be applied to values not equal to :class:`.AUTO`.
     """
 
     def f(instance, attribute, value):

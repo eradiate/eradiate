@@ -14,6 +14,10 @@ from ...validators import has_quantity
 class ConstantIllumination(Illumination):
     """
     Constant illumination scene element [``constant``].
+
+    Attributes
+    ----------
+    radiance : :class:`.Spectrum`
     """
 
     radiance: Spectrum = documented(
@@ -25,7 +29,7 @@ class ConstantIllumination(Illumination):
         doc="Emitted radiance spectrum. Must be a radiance spectrum "
         "(in W/m^2/sr/nm or compatible units).",
         type="float or :class:`~eradiate.scenes.spectra.Spectrum`",
-        default='1.0 ucc["radiance"]',
+        default="1.0 ucc[radiance]",
     )
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:

@@ -1,6 +1,7 @@
 """attrs-based utility classes and functions"""
 
 import enum
+import typing as t
 from textwrap import dedent, indent
 
 import attr
@@ -51,6 +52,7 @@ class MetadataKey(enum.Enum):
 
     DOC = enum.auto()  #: Documentation for this field (str)
     TYPE = enum.auto()  #: Documented type for this field (str)
+    INIT_TYPE = enum.auto()  #: Documented constructor parameter for this field (str)
     DEFAULT = enum.auto()  #: Documented default value for this field (str)
 
 
@@ -65,13 +67,68 @@ class _FieldDoc:
 
     doc = attr.ib(default=None)
     type = attr.ib(default=None)
+    init_type = attr.ib(default=None)
     default = attr.ib(default=None)
 
 
-def _eradiate_formatter(cls_doc, field_docs):
-    """Appends a section on attributes to a class docstring.
-    This docstring formatter is appropriate for Eradiate's current docstring
-    format.
+# def _eradiate_formatter(cls_doc, field_docs):
+#     """
+#     Appends a section on attributes to a class docstring.
+#     This docstring formatter is appropriate for Eradiate's current docstring
+#     format.
+#
+#     Parameters
+#     ----------
+#     cls_doc : str
+#         Class docstring to extend.
+#
+#     field_docs : dict[str, _FieldDoc]
+#         Attributes documentation content.
+#
+#     Returns
+#     -------
+#     str
+#         Updated class docstring.
+#     """
+#     # Do nothing if field is not documented
+#     if not field_docs:
+#         return cls_doc
+#
+#     docstrings = []
+#
+#     # Create docstring entry for each documented field
+#     for field_name, field_doc in field_docs.items():
+#         type_doc = f": {field_doc.type}" if field_doc.type is not None else ""
+#         default_doc = f" = {field_doc.default}" if field_doc.default is not None else ""
+#
+#         docstrings.append(
+#             f"``{field_name.lstrip('_')}``{type_doc}{default_doc}\n"
+#             f"{indent(field_doc.doc, '    ')}\n"
+#         )
+#
+#     # Assemble entries
+#     if docstrings:
+#         if cls_doc is None:
+#             cls_doc = ""
+#
+#         return "\n".join(
+#             (
+#                 dedent(cls_doc.lstrip("\n")).rstrip(),
+#                 "",
+#                 ".. rubric:: Constructor arguments / instance attributes",
+#                 "",
+#                 "\n".join(docstrings),
+#                 "",
+#             )
+#         )
+#     else:
+#         return cls_doc
+
+
+def _numpy_formatter(cls_doc, field_docs):
+    """
+    Append a section on attributes to a class docstring.
+    This docstring formatter is appropriate for the Numpy docstring format.
 
     Parameters
     ----------
@@ -86,35 +143,66 @@ def _eradiate_formatter(cls_doc, field_docs):
     str
         Updated class docstring.
     """
-    # Do nothing if field is not documented
+    # Do nothing if no field is documented
     if not field_docs:
         return cls_doc
 
-    docstrings = []
+    param_docstrings = []
+    attr_docstrings = []
 
     # Create docstring entry for each documented field
     for field_name, field_doc in field_docs.items():
-        type_doc = f": {field_doc.type}" if field_doc.type is not None else ""
-        default_doc = f" = {field_doc.default}" if field_doc.default is not None else ""
+        field_type = field_doc.type
+        field_init_type = field_doc.init_type
 
-        docstrings.append(
-            f"``{field_name.lstrip('_')}``{type_doc}{default_doc}\n"
+        # Generate constructor parameter docstring entry
+        init_type_doc = f" : {field_init_type}" if field_init_type is not None else ""
+        default_doc = (
+            f", default: {field_doc.default}" if field_doc.default is not None else ""
+        )
+        param_docstrings.append(
+            f"{field_name.lstrip('_')}{init_type_doc}{default_doc}\n"
             f"{indent(field_doc.doc, '    ')}\n"
         )
 
+        # Generate attribute docstring entry
+        type_doc = f" : {field_type}" if field_type is not None else ""
+        if not field_name.startswith("_"):
+            field_doc_brief = field_doc.doc.split(". ")[0].split("\n")[0]
+            attr_docstrings.append(
+                f"{field_name}{type_doc}\n{indent(field_doc_brief, '    ')}\n"
+            )
+
     # Assemble entries
-    if docstrings:
+    if param_docstrings or attr_docstrings:
         if cls_doc is None:
             cls_doc = ""
 
+        cls_doc = dedent(cls_doc.lstrip("\n")).rstrip()
+        cls_doc_split = cls_doc.split("Attributes\n----------")
+
+        try:
+            cls_doc_pre = dedent(cls_doc_split[0].lstrip("\n")).rstrip()
+        except IndexError:
+            cls_doc_pre = ""
+
+        try:
+            cls_doc_post = dedent(cls_doc_split[1].lstrip("\n")).rstrip()
+        except IndexError:
+            cls_doc_post = ""
+
         return "\n".join(
             (
-                dedent(cls_doc.lstrip("\n")).rstrip(),
+                cls_doc_pre,
                 "",
-                ".. rubric:: Constructor arguments / instance attributes",
+                "Parameters",
+                "----------",
+                "\n".join(param_docstrings),
                 "",
-                "\n".join(docstrings),
-                "",
+                "Attributes",
+                "----------",
+                "\n".join(attr_docstrings),
+                cls_doc_post,
             )
         )
     else:
@@ -124,12 +212,6 @@ def _eradiate_formatter(cls_doc, field_docs):
 def parse_docs(cls):
     """
     Extract attribute documentation and update class docstring with it.
-
-    .. admonition:: Notes
-
-       * Meant to be used as a class decorator.
-       * Must be applied **after** ``@attr.s``.
-       * Fields must be documented using :func:`documented`.
 
     This decorator will examine each ``attrs`` attribute and check its metadata
     for documentation content. It will then update the class's docstring
@@ -148,8 +230,15 @@ def parse_docs(cls):
     See Also
     --------
     :func:`documented` : Field documentation definition function.
+
+    Notes
+    -----
+    * Meant to be used as a class decorator.
+    * Must be applied **after** :func:`@attr.s <attr.s>`.
+    * Fields must be documented using :func:`documented`.
+
     """
-    formatter = _eradiate_formatter
+    formatter = _numpy_formatter
 
     docs = {}
     for field in cls.__attrs_attrs__:
@@ -163,6 +252,12 @@ def parse_docs(cls):
             else:
                 docs[field.name].type = str(field.type)
 
+            # Collect field init type
+            if MetadataKey.INIT_TYPE in field.metadata:
+                docs[field.name].init_type = field.metadata[MetadataKey.INIT_TYPE]
+            else:
+                docs[field.name].init_type = docs[field.name].type
+
             # Collect default value
             if MetadataKey.DEFAULT in field.metadata:
                 docs[field.name].default = field.metadata[MetadataKey.DEFAULT]
@@ -173,28 +268,36 @@ def parse_docs(cls):
     return cls
 
 
-def documented(attrib, doc=None, type=None, default=None):
+def documented(attrib, doc=None, type=None, init_type=None, default=None):
     """
     Declare an attrs field as documented.
 
-    .. seealso:: :func:`parse_docs`
-
     Parameters
     ----------
-    doc : str or None
+    attrib : :class:`attr.Attribute`
+        ``attrs`` attribute definition to which documentation is to be attached.
+
+    doc : str, optional
         Docstring for the considered field. If set to ``None``, this function
         does nothing.
 
-    type : str or None
+    type : str, optional
         Documented type for the considered field.
 
-    default : str or None
+    init_type : str, optional
+        Documented constructor parameter for the considered field.
+
+    default : str, optional
         Documented default value for the considered field.
 
     Returns
     -------
-    attrs`` attribute
+    :class:`attr.Attribute`
         ``attrib``, with metadata updated with documentation contents.
+
+    See Also
+    --------
+    :func:`attr.ib`, :func:`pinttr.ib`, :func:`parse_docs`
     """
     if doc is not None:
         attrib.metadata[MetadataKey.DOC] = doc
@@ -202,31 +305,35 @@ def documented(attrib, doc=None, type=None, default=None):
     if type is not None:
         attrib.metadata[MetadataKey.TYPE] = type
 
+    if init_type is not None:
+        attrib.metadata[MetadataKey.INIT_TYPE] = init_type
+
     if default is not None:
         attrib.metadata[MetadataKey.DEFAULT] = default
 
     return attrib
 
 
-def get_doc(cls, attrib, field):
+def get_doc(cls: t.Type, attrib: str, field: str) -> str:
     """
     Fetch attribute documentation field. Requires fields metadata to be
     processed with :func:`documented`.
 
     Parameters
     ----------
-    cls : class
+    cls : type
         Class from which to get the attribute.
 
     attrib : str
         Attribute from which to get the doc field.
 
-    field : "doc" or "type" or "default"
+    field : {"doc", "type", "default"}
         Documentation field to query.
 
     Returns
     -------
-    Queried documentation content.
+    str
+        Queried documentation content.
 
     Raises
     ------
@@ -243,6 +350,9 @@ def get_doc(cls, attrib, field):
 
         if field == "type":
             return attr.fields_dict(cls)[attrib].metadata[MetadataKey.TYPE]
+
+        if field == "init_type":
+            return attr.fields_dict(cls)[attrib].metadata[MetadataKey.INIT_TYPE]
 
         if field == "default":
             return attr.fields_dict(cls)[attrib].metadata[MetadataKey.DEFAULT]

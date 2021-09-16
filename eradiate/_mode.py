@@ -267,7 +267,7 @@ def supported_mode(flags):
 
     Raises
     ------
-    :class:`UnsupportedModeError`
+    :class:`.UnsupportedModeError`
         Current mode does not have the requested flags.
     """
     if mode() is None or not mode().has_flags(flags):
@@ -285,7 +285,7 @@ def unsupported_mode(flags):
 
     Raises
     ------
-    :class:`UnsupportedModeError`
+    :class:`.UnsupportedModeError`
         Current mode has the requested flags.
     """
     if mode() is None or mode().has_flags(flags):

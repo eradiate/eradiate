@@ -94,7 +94,6 @@ html_title = ""
 html_static_path = ["_static"]
 
 # Configure extensions
-extensions.append("sphinx.ext.napoleon")
 extensions.append("sphinx.ext.mathjax")
 extensions.append("sphinx.ext.viewcode")
 extensions.append("sphinx_copybutton")
@@ -166,10 +165,68 @@ autodoc_default_flags = [
     "inherited-members",
 ]
 autodoc_typehints = "none"
+autodoc_member_order = "alphabetical"
+autodoc_preserve_defaults = True
+
+
+def autodoc_skip_member(app, what, name, obj, skip, options):
+    # From https://stackoverflow.com/questions/3757500/connect-sphinx-autodoc-skip-member-to-my-function
+    exclude = isinstance(obj, property)
+    # return True if (skip or exclude) else None  # Can interfere with subsequent skip functions.
+    return True if exclude else None
+
 
 extensions.append("sphinx.ext.autosummary")
 autosummary_generate = True
 autosummary_members = True
+
+# Docstrings
+extensions.append("sphinx.ext.napoleon")
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+napoleon_use_admonition_for_examples = True
+napoleon_use_admonition_for_notes = True
+napoleon_use_admonition_for_references = True
+napoleon_use_param = False
+napoleon_use_rtype = False
+napoleon_custom_sections = [("Attributes", "params_style")]
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    # general terms
+    "sequence": ":term:`sequence`",
+    "iterable": ":term:`iterable`",
+    "callable": ":py:func:`callable`",
+    "dict_like": ":term:`dict-like <mapping>`",
+    "dict-like": ":term:`dict-like <mapping>`",
+    "path-like": ":term:`path-like <path-like object>`",
+    "mapping": ":term:`mapping`",
+    "file-like": ":term:`file-like <file-like object>`",
+    # special terms
+    # "same type as caller": "*same type as caller*",  # does not work, yet
+    # "same type as values": "*same type as values*",  # does not work, yet
+    # stdlib type aliases
+    "MutableMapping": "~collections.abc.MutableMapping",
+    # numpy terms
+    "array_like": ":term:`array_like`",
+    "array-like": ":term:`array-like <array_like>`",
+    "scalar": ":term:`scalar`",
+    "array": ":term:`array`",
+    "hashable": ":term:`hashable <name>`",
+    # objects without namespace
+    "DataArray": "~xarray.DataArray",
+    "Dataset": "~xarray.Dataset",
+    "Variable": "~xarray.Variable",
+    "ndarray": "~numpy.ndarray",
+    "MaskedArray": "~numpy.ma.MaskedArray",
+    "dtype": "~numpy.dtype",
+    # Pint aliases
+    "quantity": ":class:`quantity <pint.Quantity>`",
+    # objects with abbreviated namespace (from pandas)
+    "pd.Index": "~pandas.Index",
+    "pd.NaT": "~pandas.NaT",
+    # local aliases
+    "AUTO": ":data:`~eradiate.attrs.AUTO`",
+}
 
 # Mitsuba modules must be mocked in order to allow compiling docs even if they're not here;
 # this mocking is also done in the ertdocs extension
@@ -331,3 +388,10 @@ latex_logo = "fig/eradiate-logo-dark-no_bg.png"
 
 # If false, no module index is generated.
 # latex_domain_indices = True
+
+
+# -- App setup -----------------------------------------------------------------
+
+
+def setup(app):
+    app.connect("autodoc-skip-member", autodoc_skip_member)

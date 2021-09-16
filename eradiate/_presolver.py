@@ -12,6 +12,11 @@ class PathResolver(metaclass=Singleton):
     It looks for a file or directory given its (possibly relative) name and a
     set of search paths. The implementation walks through the search paths in
     order and stops once the file is found.
+
+    Attributes
+    ----------
+    paths : list of :class:`~pathlib.Path`
+        Stored path list.
     """
 
     def __init__(self):
@@ -50,7 +55,7 @@ class PathResolver(metaclass=Singleton):
 
         See Also
         --------
-        :ref:`sec-config-env_vars` : Environment variable list.
+        :ref:`List of environment variables <sec-config-env_vars>`
         """
 
         self.clear()
@@ -118,19 +123,19 @@ class PathResolver(metaclass=Singleton):
 
         self.paths.insert(0, path_absolute)
 
-    def append(self, *paths):
+    def append(self, *path):
         """
         Append an entry to the end of the list of search paths.
 
         Parameters
         ----------
-        path : path-like
+        *path : path-like
             Path to append to the path list.
         """
-        for path in paths:
-            path_absolute = Path(path).absolute()
+        for _path in path:
+            path_absolute = Path(_path).absolute()
             if not path_absolute.is_dir():
-                raise ValueError(f"{path} is not an existing directory")
+                raise ValueError(f"{_path} is not an existing directory")
 
             self.paths.append(path_absolute)
 
@@ -159,11 +164,21 @@ class PathResolver(metaclass=Singleton):
 
         return path
 
-    def glob(self, pattern):
+    def glob(self, pattern: str):
         """
         Glob the given relative ``pattern`` in all search paths, yielding all
         matching files (of any kind). This function internally uses
         :func:`pathlib.Path.glob` and returns a generator.
+
+        Parameters
+        ----------
+        pattern : str
+            Pattern used for globbing.
+
+        Yields
+        ------
+        :class:`~pathlib.Path`
+            Globbed paths.
         """
         for path_base in self.paths:
             yield from path_base.glob(pattern)

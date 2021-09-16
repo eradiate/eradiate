@@ -25,6 +25,17 @@ from .units import unit_registry as ureg
 class Bin:
     """
     A data class representing a spectral bin in CKD modes.
+
+    Attributes
+    ----------
+    width : quantity
+        Bin spectral width.
+
+    wcenter : quantity
+        Bin central wavelength.
+
+    bindexes : list of :class:`.Bindex`
+        List of associated bindexes.
     """
 
     id: str = documented(
@@ -39,7 +50,8 @@ class Bin:
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
         doc='Bin lower spectral bound.\n\nUnit-enabled field (default: ucc["wavelength"]).',
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
     )
 
     wmax: pint.Quantity = documented(
@@ -48,7 +60,8 @@ class Bin:
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
         doc='Bin upper spectral bound.\n\nUnit-enabled field (default: ucc["wavelength"]).',
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
     )
 
     @wmin.validator
@@ -79,10 +92,11 @@ class Bin:
 
     @property
     def bindexes(self) -> t.List[Bindex]:
+        """List of associated bindexes."""
         return [Bindex(bin=self, index=i) for i, _ in enumerate(self.quad.nodes)]
 
     @classmethod
-    def convert(cls, value):
+    def convert(cls, value: t.Any) -> t.Any:
         """
         If ``value`` is a tuple or a dictionary, try to construct a
         :class:`.Bin` instance from it. Otherwise, return ``value`` unchanged.
@@ -110,7 +124,7 @@ class Bindex:
     )
 
     index: int = documented(
-        attr.ib(int),
+        attr.ib(),
         doc="Quadrature point index.",
         type="int",
     )
@@ -267,6 +281,17 @@ def bin_filter(type: str, filter_kwargs: t.Dict[str, t.Any]):
 class BinSet:
     """
     A data class representing a quadrature definition used in CKD mode.
+
+    Attributes
+    ----------
+    bin_ids : list of str
+        Identifiers of defined spectral bins.
+
+    bin_wmins : quantity
+        Lower bounds of defined spectral bins as a (N,) array.
+
+    bin_wmaxs : quantity
+        Upper bounds of defined spectral bins as a (N,) array.
     """
 
     id: str = documented(
@@ -299,8 +324,9 @@ class BinSet:
             if len(x) >= 5
             else f"{tuple(y.id for y in x)}",
         ),
-        doc="List of bins (automatically ordered upon setting).",
-        type="tuple[:class:`.Bin`, ...]",
+        doc="Sequence of bins (automatically ordered upon setting).",
+        type="tuple of :class:`.Bin`",
+        init_type="sequence of :class:`.Bin`",
     )
 
     @bins.validator
@@ -313,15 +339,36 @@ class BinSet:
 
     @property
     def bin_ids(self) -> t.List[str]:
+        """
+        Return the identifiers of defined spectral bins.
+
+        Returns
+        -------
+        list of str
+        """
         return [bin.id for bin in self.bins]
 
     @property
     def bin_wmins(self) -> pint.Quantity:
+        """
+        Return the lower bounds of defined spectral bins.
+
+        Returns
+        -------
+        quantity
+        """
         units = ucc.get("wavelength")
         return ureg.Quantity([bin.wmin.m_as(units) for bin in self.bins], units)
 
     @property
     def bin_wmaxs(self) -> pint.Quantity:
+        """
+        Return the upper bounds of defined spectral bins.
+
+        Returns
+        -------
+        quantity
+        """
         units = ucc.get("wavelength")
         return ureg.Quantity([bin.wmax.m_as(units) for bin in self.bins], units)
 
@@ -365,7 +412,7 @@ class BinSet:
 
         Parameters
         ----------
-        filter_specs : sequence[str or callable or sequence or dict]
+        filter_specs : sequence of {str, callable, sequence, dict}
             One or several bin filter specifications. The following are supported:
 
             * a string will select a bin with matching ID (internally, this

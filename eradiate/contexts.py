@@ -23,7 +23,22 @@ from .units import unit_registry as ureg
 
 @attr.s
 class Context:
+    """Base class for all context data structures."""
+
     def evolve(self, **changes):
+        """
+        Create a copy of self with changes applied.
+
+        Parameters
+        ----------
+        **changes
+            Keyword changes in the new copy.
+
+        Returns
+        -------
+        <same type as self>
+            A copy of self with ``changes`` incorporated.
+        """
         return attr.evolve(self, **changes)
 
 
@@ -45,11 +60,22 @@ class SpectralContext(ABC, Context):
     While this class is abstract, it should however be the main entry point
     to create :class:`.SpectralContext` child class objects through the
     :meth:`.SpectralContext.new` class method constructor.
+
+    Attributes
+    ----------
+    wavelength : quantity
+        Wavelength associated with spectral context.
+
+    spectral_index
+        Spectral index associated with spectral context.
+
+    spectral_index_formatted : str
+        Spectral index formatted as a human-readable string.
     """
 
     @property
     @abstractmethod
-    def wavelength(self):
+    def wavelength(self) -> pint.Quantity:
         """Wavelength associated with spectral context."""
         # May raise NotImplementedError if irrelevant
         pass
@@ -63,7 +89,7 @@ class SpectralContext(ABC, Context):
     @property
     @abstractmethod
     def spectral_index_formatted(self) -> str:
-        """Formatted spectral index (human-readable string)."""
+        """Spectral index formatted as a human-readable string."""
         pass
 
     @staticmethod
@@ -72,25 +98,25 @@ class SpectralContext(ABC, Context):
         Create a new instance of one of the :class:`SpectralContext` child
         classes. *The instantiated class is defined based on the currently active
         mode.* Keyword arguments are passed to the instantiated class's
-        constructor:
+        constructor.
 
-        .. rubric:: Monochromatic modes [:class:`.MonoSpectralContext`]
+        Parameters
+        ----------
+        **kwargs
+            Keyword arguments depending on the currently active mode (see below
+            for a list of actual keyword arguments).
 
-        Parameter ``wavelength`` (float):
-            Wavelength. Default: 550 nm.
+        wavelength : quantity or float, default: 550 nm
+            **Monochromatic modes** [:class:`.MonoSpectralContext`].
+            Wavelength. Unit-enabled field (default: ucc[wavelength]).
 
-            Unit-enabled field (default: ucc[wavelength]).
+        bindex : :class:`.Bindex`, default: test value (1st quadrature point for the "550" bin of the "10nm_test" bin set)
+            **CKD modes** [:class:`.CKDSpectralContext`].
+            CKD bindex.
 
-        .. rubric:: CKD modes [:class:`.CKDSpectralContext`]
-
-        Parameter ``bindex`` (:class:`.Bindex`):
-            CKD bindex. Default: a test value, defined as the first quadrature
-            point for the ``555`` bin of the ``10nm_test`` bin set.
-
-        .. seealso::
-
-           * :func:`eradiate.mode`
-           * :func:`eradiate.set_mode`
+        See Also
+        --------
+        :func:`eradiate.mode`, :func:`eradiate.set_mode`
         """
 
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
@@ -109,11 +135,19 @@ class SpectralContext(ABC, Context):
         the passed dictionary to merge any field with an associated ``"_units"``
         field into a :class:`pint.Quantity` container.
 
-        Parameter ``d`` (dict):
+        Parameters
+        ----------
+        d : dict
             Configuration dictionary used for initialisation.
 
-        Returns → :class:`.SpectralContext`:
-            Created object.
+        Returns
+        -------
+        :class:`.SpectralContext`
+            Created object. The actual type depends on context.
+
+        See Also
+        --------
+        :meth:`.SpectralContext.new`
         """
 
         # Pre-process dict: apply units to unit-enabled fields
@@ -143,6 +177,17 @@ class SpectralContext(ABC, Context):
 class MonoSpectralContext(SpectralContext):
     """
     Monochromatic spectral context data structure.
+
+    Attributes
+    ----------
+    wavelength : quantity
+        Wavelength associated with spectral context.
+
+    spectral_index
+        Spectral index associated with spectral context.
+
+    spectral_index_formatted : str
+        Spectral index formatted as a human-readable string.
     """
 
     _wavelength: pint.Quantity = documented(
@@ -153,7 +198,8 @@ class MonoSpectralContext(SpectralContext):
         ),
         doc="A single wavelength value.\n\nUnit-enabled field "
         "(default: ucc[wavelength]).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="550.0 nm",
     )
 
@@ -239,6 +285,17 @@ class KernelDictContext(Context):
     *e.g.* to store information about the spectral configuration to apply
     when generating kernel dictionaries associated with a :class:`.SceneElement`
     instance.
+
+    Attributes
+    ----------
+    wavelength : quantity
+        Wavelength associated with spectral context.
+
+    spectral_index
+        Spectral index associated with spectral context.
+
+    spectral_index_formatted : str
+        Spectral index formatted as a human-readable string.
     """
 
     spectral_ctx: SpectralContext = documented(
@@ -272,5 +329,5 @@ class KernelDictContext(Context):
         "\n"
         "Unit-enabled field (default: ucc['length']).",
         type="float or None",
-        default="None",
+        init_type="float, optional",
     )
