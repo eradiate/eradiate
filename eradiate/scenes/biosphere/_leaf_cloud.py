@@ -21,7 +21,8 @@ from ...units import unit_registry as ureg
 
 
 def _inversebeta(mu, nu, rng):
-    """Approximates the inverse beta distribution as given in
+    """
+    Approximates the inverse beta distribution as given in
     :cite:`Ross1991MonteCarloMethods` (appendix 1).
     """
     while True:
@@ -35,7 +36,9 @@ def _inversebeta(mu, nu, rng):
 
 @ureg.wraps(ureg.m, (None, ureg.m, ureg.m, None))
 def _leaf_cloud_positions_cuboid(n_leaves, l_horizontal, l_vertical, rng):
-    """Compute leaf positions for a cuboid-shaped leaf cloud (square footprint)."""
+    """
+    Compute leaf positions for a cuboid-shaped leaf cloud (square footprint).
+    """
     positions = np.empty((n_leaves, 3))
 
     for i in range(n_leaves):
@@ -53,7 +56,8 @@ def _leaf_cloud_positions_cuboid(n_leaves, l_horizontal, l_vertical, rng):
 def _leaf_cloud_positions_cuboid_avoid_overlap(
     n_leaves, l_horizontal, l_vertical, leaf_radius, n_attempts, rng
 ):
-    """Compute leaf positions for a cuboid-shaped leaf cloud (square footprint).
+    """
+    Compute leaf positions for a cuboid-shaped leaf cloud (square footprint).
     This function also performs conservative collision checks to avoid leaf
     overlapping. This process might take a very long time, if the parameters
     specify a very dense leaf cloud. Consider using
@@ -122,8 +126,10 @@ def _leaf_cloud_positions_ellipsoid(n_leaves: int, rng, a: float, b: float, c: f
 
 @ureg.wraps(ureg.m, (None, ureg.m, ureg.m, None))
 def _leaf_cloud_positions_cylinder(n_leaves, radius, l_vertical, rng):
-    """Compute leaf positions for a cylinder-shaped leaf cloud (vertical
-    orientation.)"""
+    """
+    Compute leaf positions for a cylinder-shaped leaf cloud (vertical
+    orientation).
+    """
 
     positions = np.empty((n_leaves, 3))
 
@@ -139,8 +145,10 @@ def _leaf_cloud_positions_cylinder(n_leaves, radius, l_vertical, rng):
 
 @ureg.wraps(ureg.m, (None, ureg.m, ureg.m, None))
 def _leaf_cloud_positions_cone(n_leaves, radius, l_vertical, rng):
-    """Compute leaf positions for a cone-shaped leaf cloud (vertical
-    orientation, tip pointing towards positive z.)"""
+    """
+    Compute leaf positions for a cone-shaped leaf cloud (vertical
+    orientation, tip pointing towards positive z).
+    """
 
     positions = np.empty((n_leaves, 3))
 
@@ -183,7 +191,7 @@ def _leaf_cloud_radii(n_leaves, leaf_radius):
 @attr.s
 class LeafCloudParams:
     """
-    Base class to implement advanced parameter checking for :class:`LeafCloud`
+    Base class to implement advanced parameter checking for :class:`.LeafCloud`
     generators.
     """
 
@@ -279,17 +287,12 @@ class CuboidLeafCloudParams(LeafCloudParams):
     constructor. Parameters without defaults are connected by a dependency
     graph used to compute required parameters (outlined in the figure below).
 
-    .. warning:: In case of over-specification, no consistency check is
-       performed.
+    The following parameter sets are valid:
 
-    .. admonition:: Examples
-
-       The following parameter sets are valid:
-
-       * ``n_leaves``, ``leaf_radius``, ``l_horizontal``, ``l_vertical``;
-       * ``lai``, ``leaf_radius``, ``l_horizontal``, ``l_vertical``;
-       * ``lai``, ``leaf_radius``, ``l_horizontal``, ``hdo``, ``hvr``;
-       * and more!
+    * ``n_leaves``, ``leaf_radius``, ``l_horizontal``, ``l_vertical``;
+    * ``lai``, ``leaf_radius``, ``l_horizontal``, ``l_vertical``;
+    * ``lai``, ``leaf_radius``, ``l_horizontal``, ``hdo``, ``hvr``;
+    * and more!
 
     .. only:: latex
 
@@ -299,31 +302,38 @@ class CuboidLeafCloudParams(LeafCloudParams):
 
        .. figure:: ../../../../fig/cuboid_leaf_cloud_params.svg
 
-    .. seealso:: :meth:`.LeafCloud.cuboid`
+    Warnings
+    --------
+    In case of over-specification, no consistency check is
+    performed.
+
+    See Also
+    --------
+    :meth:`.LeafCloud.cuboid`
     """
 
     _l_horizontal = documented(
         pinttr.ib(default=None, units=ucc.deferred("length")),
-        doc="Leaf cloud horizontal extent. Suggested default: 30 m.\n"
+        doc="Leaf cloud horizontal extent. *Suggested default: 30 m.*\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
     )
 
     _l_vertical = documented(
         pinttr.ib(default=None, units=ucc.deferred("length")),
-        doc="Leaf cloud vertical extent. Suggested default: 3 m.\n"
+        doc="Leaf cloud vertical extent. *Suggested default: 3 m.*\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
     )
 
     _lai = documented(
         pinttr.ib(default=None, units=ureg.dimensionless),
-        doc="Leaf cloud leaf area index (LAI). Physical range: [0, 10]; "
-        "suggested default: 3.\n"
+        doc="Leaf cloud leaf area index (LAI). *Physical range: [0, 10]; "
+        "suggested default: 3.*\n"
         "\n"
-        "Unit-enabled field (default: ucc[dimensionless]).",
+        "Unit-enabled field (default: ucc['dimensionless']).",
         type="float",
     )
 
@@ -331,14 +341,14 @@ class CuboidLeafCloudParams(LeafCloudParams):
         pinttr.ib(default=None, units=ucc.deferred("length")),
         doc="Mean horizontal distance between leaves.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['length']).",
         type="float",
     )
 
     _hvr = documented(
         pinttr.ib(default=None),
         doc="Ratio of mean horizontal leaf distance and vertical leaf cloud extent. "
-        "Suggested default: 0.1.",
+        "*Suggested default: 0.1.*",
         type="float",
     )
 
@@ -416,7 +426,9 @@ class SphereLeafCloudParams(LeafCloudParams):
     Advanced parameter checking class for the sphere :class:`.LeafCloud`
     generator.
 
-    .. seealso:: :meth:`.LeafCloud.sphere`
+    See Also
+    --------
+    :meth:`.LeafCloud.sphere`
     """
 
     _radius = documented(
@@ -441,7 +453,9 @@ class EllipsoidLeafCloudParams(LeafCloudParams):
     are not set by the user, they default to being equal to ``a``.
     Accordingly a sphere of radius ``r`` can be parametrized by setting ``a=r``.
 
-    .. seealso:: :meth:`.LeafCloud.ellipsoid`
+    See Also
+    --------
+    :meth:`.LeafCloud.ellipsoid`
     """
 
     _a = documented(
@@ -501,7 +515,9 @@ class CylinderLeafCloudParams(LeafCloudParams):
     Advanced parameter checking class for the cylinder :class:`.LeafCloud`
     generator.
 
-    .. seealso:: :meth:`.LeafCloud.cylinder`
+    See Also
+    --------
+    :meth:`.LeafCloud.cylinder`
     """
 
     _radius = documented(
@@ -534,7 +550,9 @@ class ConeLeafCloudParams(LeafCloudParams):
     Advanced parameter checking class for the cone :class:`.LeafCloud`
     generator.
 
-    .. seealso:: :meth:`.LeafCloud.cone`
+    See Also
+    --------
+    :meth:`.LeafCloud.cone`
     """
 
     _radius = documented(

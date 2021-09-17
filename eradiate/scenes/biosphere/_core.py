@@ -58,12 +58,16 @@ class Canopy(SceneElement, ABC):
         """
         Return BSDF plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
-            Return a dictionary suitable for merge with a
+        Returns
+        -------
+        dict
+            A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
             attached to the shapes in the canopy.
         """
@@ -74,11 +78,15 @@ class Canopy(SceneElement, ABC):
         """
         Return shape plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             in the canopy.
@@ -99,11 +107,15 @@ class CanopyElement(SceneElement, ABC):
         """
         Return BSDF plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             Return a dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
             attached to the shapes in the canopy.
@@ -115,11 +127,15 @@ class CanopyElement(SceneElement, ABC):
         """
         Return shape plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             in the canopy.
@@ -264,11 +280,15 @@ class InstancedCanopyElement(SceneElement):
         """
         Return BSDF plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             Return a dictionary suitable for merge with a :class:`.KernelDict`
             containing all the BSDFs attached to the shapes in the leaf cloud.
         """
@@ -278,11 +298,15 @@ class InstancedCanopyElement(SceneElement):
         """
         Return shape plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             in the canopy.
@@ -298,11 +322,15 @@ class InstancedCanopyElement(SceneElement):
         """
         Return instance plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing instances.
         """

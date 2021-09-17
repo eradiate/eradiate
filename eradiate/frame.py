@@ -9,19 +9,23 @@ from .units import unit_registry as ureg
 
 
 @ureg.wraps(ret=None, args=("dimensionless", "rad"), strict=False)
-def cos_angle_to_direction(cos_theta, phi):
+def cos_angle_to_direction(cos_theta: ArrayLike, phi: ArrayLike) -> np.ndarray:
     r"""
     Convert a zenith cosine and azimuth angle pair to a direction.
 
-    Parameter ``theta`` (float):
+    Parameters
+    ----------
+    theta : array-like
         Zenith angle cosine [dimensionless].
         Convention: 1 corresponds to zenith, -1 corresponds to nadir.
 
-    Parameter ``phi`` (float):
+    phi : array-like
         Azimuth angle [radian].
         Convention: :math:`2 \pi` corresponds to the X axis.
 
-    Returns → array[float]:
+    Returns
+    -------
+    ndarray
         Direction corresponding to the angular parameters [unitless].
     """
     cos_theta = ensure_array(cos_theta)
@@ -33,19 +37,23 @@ def cos_angle_to_direction(cos_theta, phi):
 
 
 @ureg.wraps(ret=None, args=("rad",), strict=False)
-def angles_to_direction(angles):
+def angles_to_direction(angles: ArrayLike) -> np.ndarray:
     r"""
     Convert a zenith and azimuth angle pair to a direction.
 
-    Parameter ``theta`` (float):
+    Parameters
+    ----------
+    theta : array-like
         Zenith angle [radian].
         Convention: 0 corresponds to zenith, :math:`\pi` corresponds to nadir.
 
-    Parameter ``phi`` (float):
+    phi : array-like
         Azimuth angle [radian].
         Convention: :math:`2 \pi` corresponds to the X axis.
 
-    Returns → array:
+    Returns
+    -------
+    ndarray
         Direction corresponding to the angular parameters [unitless].
     """
     angles = ensure_array(angles)
@@ -58,14 +66,18 @@ def angles_to_direction(angles):
 
 
 @ureg.wraps(ret="rad", args=None, strict=False)
-def direction_to_angles(v: ArrayLike) -> ArrayLike:
+def direction_to_angles(v: ArrayLike) -> np.ndarray:
     """
     Convert a cartesian unit vector to a zenith-azimuth pair.
 
-    Parameter ``v`` (array-like):
+    Parameters
+    ----------
+    v : array-like
         A sequence of 3-vectors (shape (N, 3)) [unitless].
 
-    Returns → array-like:
+    Returns
+    -------
+    array-like
         A sequence of 2-vectors containing zenith and azimuth angles, where
         zenith = 0 corresponds to +z direction (shape (N, 2)) [rad].
     """
@@ -86,22 +98,26 @@ def direction_to_angles(v: ArrayLike) -> ArrayLike:
 def spherical_to_cartesian(r, theta, phi, origin=np.zeros((3,))):
     r"""Convert spherical coordinates to cartesian coordinates
 
-    Parameter ``r`` (float):
+    Parameters
+    ----------
+    r : float
         Radial distance coordinate.
 
-    Parameter ``theta`` (float):
+    theta : float
         Zenith angle coordinate [radian].
         Convention: 0 corresponds to zenith, :math:`\pi` corresponds to nadir.
 
-    Parameter ``phi`` (float):
+    phi : float
         Azimuth angle coordinate [radian].
         Convention: :math:`2 \pi` corresponds to the X axis.
 
-    Parameter ``origin`` (array):
+    origin : array-like
         Shifts the center point of the coordinate system.
 
-    Returns → array[float]:
-        Cartesian coordinates x, y, z.
+    Returns
+    -------
+    ndarray
+        Cartesian coordinates x, y, z as a (3,) array.
     """
     # TODO: Vectorise
 

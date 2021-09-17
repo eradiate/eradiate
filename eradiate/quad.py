@@ -41,16 +41,16 @@ class Quad:
         type=":class:`.QuadType`",
     )
 
-    nodes: np.typing.ArrayLike = documented(
+    nodes: np.ndarray = documented(
         attr.ib(converter=np.array, repr=str_summary_numpy),
         doc="Quadrature rule nodes.",
-        type="array",
+        type="ndarray",
     )
 
-    weights: np.typing.ArrayLike = documented(
+    weights: np.ndarray = documented(
         attr.ib(converter=np.array, repr=str_summary_numpy),
         doc="Quadrature rule weights.",
-        type="array",
+        type="ndarray",
     )
 
     @nodes.validator
@@ -69,10 +69,14 @@ class Quad:
         Initialize a :class:`.Quad` instance with Gauss-Legendre nodes and
         weights.
 
-        Parameter ``n`` (int):
+        Parameters
+        ----------
+        n : int
             Number of quadrature points.
 
-        Returns → :class:`.Quad`:
+        Returns
+        -------
+        :class:`.Quad`
             Gauss-Legendre quadrature definition.
         """
         from mitsuba.core.quad import gauss_legendre
@@ -90,10 +94,14 @@ class Quad:
         Initialize a :class:`.Quad` instance with Gauss-Lobatto nodes and
         weights.
 
-        Parameter ``n`` (int):
+        Parameters
+        ----------
+        n : int
             Number of quadrature points.
 
-        Returns → :class:`.Quad`:
+        Returns
+        -------
+        :class:`.Quad`
             Gauss-Lobatto quadrature definition.
         """
         from mitsuba.core.quad import gauss_lobatto
@@ -110,16 +118,20 @@ class Quad:
         """
         Initialize a :class:`.Quad` instance of the specified type.
 
-        Parameter ``type`` (str):
+        Parameters
+        ----------
+        type : str
             Quadrature rule type. Allowed values are:
 
             * ``gauss_legendre``;
             * ``gauss_lobatto``.
 
-        Parameter ``n`` (int):
+        n : int
             Number of quadrature points.
 
-        Returns → :class:`.Quad`:
+        Returns
+        -------
+        :class:`.Quad`
             Quadrature definition.
         """
         if type == "gauss_legendre":
@@ -137,11 +149,15 @@ class Quad:
         """
         Compute nodes scaled to a specific interval.
 
-        Parameter ``interval`` (tuple[float, float] or None):
-            Interval for which nodes are to be scaled. If ``None``, the default
-            [-1, 1] is used.
+        Parameters
+        ----------
+        interval :  tuple of float, optional
+            Interval for which nodes are to be scaled as a 2-tuple. If ``None``,
+            the default [-1, 1] is used.
 
-        Returns → array:
+        Returns
+        -------
+        nparray
             Scaled node values.
         """
         if interval is None:
@@ -155,14 +171,18 @@ class Quad:
         """
         Evaluate quadrature rule, accounting for interval scaling.
 
-        Parameter ``values`` (array):
+        Parameters
+        ----------
+        values : ndarray
             Function values at quadrature nodes.
 
-        Parameter ``interval`` (tuple[float, float] or None):
-            Interval on which the integral is being computed. If ``None``, the
-            default [-1, 1] is used.
+        interval : tuple of float, optional
+            Interval on which the integral is being computed as a 2-tuple.
+            If ``None``, the default [-1, 1] is used.
 
-        Returns → float:
+        Returns
+        -------
+        float
             Quadrature evaluation for the specified interval.
         """
 
@@ -177,5 +197,10 @@ class Quad:
     def str_summary(self) -> str:
         """
         Return a summarized representation of the current instance.
+
+        Returns
+        -------
+        str
+            Instance summary.
         """
         return f"Quad(type={QuadType(self.type)}, n={len(self.nodes)})"

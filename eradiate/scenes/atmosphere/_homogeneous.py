@@ -66,7 +66,7 @@ class HomogeneousAtmosphere(Atmosphere):
         doc="Atmosphere scattering coefficient value.\n"
         "\n"
         "Can be initialised with a dictionary processed by "
-        ":class:`.SpectrumFactory`.",
+        ":data:`scenes.spectra.spectrum_factory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum` or float",
         default=":class:`AirScatteringCoefficient() <.AirScatteringCoefficient>`",
     )
@@ -84,7 +84,7 @@ class HomogeneousAtmosphere(Atmosphere):
         "absorption.\n"
         "\n"
         "Can be initialised with a dictionary processed by "
-        ":class:`.SpectrumFactory`.",
+        ":data:`scenes.spectra.spectrum_factory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
         default="0.0 ucc['collision_coefficient']",
     )
