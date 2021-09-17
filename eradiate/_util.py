@@ -7,8 +7,34 @@ import pint
 import pinttr
 
 
-def onedict_value(d):
-    """Get the value of a single-entry dictionary."""
+def onedict_value(d: t.Mapping):
+    """
+    Get the value of a single-entry dictionary.
+
+    Parameters
+    ----------
+    d : mapping
+        A single-entry mapping.
+
+    Returns
+    -------
+    object
+        Unwrapped value.
+
+    Raises
+    ------
+    ValueError
+        If ``d`` has more than a single element.
+
+    Notes
+    -----
+    This function is basically ``next(iter(d.values()))`` with a safeguard.
+
+    Examples
+    --------
+    >>> onedict_value({"foo": "bar"})
+    "bar"
+    """
 
     if len(d) != 1:
         raise ValueError(f"dictionary has wrong length (expected 1, got {len(d)}")
@@ -16,15 +42,42 @@ def onedict_value(d):
     return next(iter(d.values()))
 
 
-def ensure_array(x, dtype=None):
-    """Ensure that passed object is a Numpy array."""
+def ensure_array(value: t.Any, dtype: t.Optional[t.Any] = None) -> np.ndarray:
+    """
+    Convert or wrap a value in a Numpy array.
+
+    Parameters
+    ----------
+    value
+        Value to convert to a Numpy array
+
+    dtype : data-type, optional
+        The desired data-type for the array.
+
+    Returns
+    -------
+    ndarray
+        A new array with the passed value.
+    """
     kwargs = dict(dtype=dtype) if dtype is not None else {}
 
-    return np.array(list(pinttr.util.always_iterable(x)), **kwargs)
+    return np.array(list(pinttr.util.always_iterable(value)), **kwargs)
 
 
-def is_vector3(value):
-    """Returns ``True`` if a value can be interpreted as a 3-vector."""
+def is_vector3(value: t.Any):
+    """
+    Check if value can be interpreted as a 3-vector.
+
+    Parameters
+    ----------
+    value
+        Value to be checked.
+
+    Returns
+    -------
+    bool
+        ``True`` if a value can be interpreted as a 3-vector.
+    """
 
     if isinstance(value, pint.Quantity):
         return is_vector3(value.magnitude)
@@ -41,8 +94,16 @@ def is_vector3(value):
 
 def natsort_alphanum_key(x):
     """
-    Simple sort key natural order for string sorting.
-    Taken from https://stackoverflow.com/a/11150413/3645374
+    Simple sort key natural order for string sorting. See [1]_ for details.
+
+    See Also
+    --------
+    `Sorting HOWTO <https://docs.python.org/3/howto/sorting.html>`_
+
+    References
+    ----------
+    .. [1] Natural sorting
+       (`post on Stack Overflow <https://stackoverflow.com/a/11150413/3645374>`_).
     """
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     return tuple(convert(c) for c in re.split("([0-9]+)", x))
@@ -51,26 +112,37 @@ def natsort_alphanum_key(x):
 def natsorted(l):
     """
     Sort a list of strings with natural ordering.
+
+    Parameters
+    ----------
+    l : iterable
+        List to sort.
+
+    Returns
+    -------
+    list
+        List sorted using :func:`natsort_alphanum_key`.
     """
     return sorted(l, key=natsort_alphanum_key)
 
 
 class Singleton(type):
     """
-    A simple singleton implementation.
-    See also
-    https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python.
+    A simple singleton implementation. See [1]_ for details.
 
-    .. admonition:: Example
+    References
+    -------
+    .. [1] Creating a singleton in Python
+           (`post on Stack Overflow <https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python>`_).
 
-        .. code:: python
+    Examples
+    --------
+    >>> class MySingleton(metaclass=Singleton):
+    ... pass
 
-            class MySingleton(metaclass=Singleton):
-                pass
-
-            my_singleton1 = MySingleton()
-            my_singleton2 = MySingleton()
-            assert my_singleton1 is my_singleton2  # Should not fail
+    >>> my_singleton1 = MySingleton()
+    >>> my_singleton2 = MySingleton()
+    >>> assert my_singleton1 is my_singleton2  # Should not fail
     """
 
     _instances = {}

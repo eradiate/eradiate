@@ -4,13 +4,29 @@ from numpy.typing import ArrayLike
 from ._util import ensure_array
 
 
-def square_to_uniform_disk_concentric(sample: ArrayLike) -> ArrayLike:
+def square_to_uniform_disk_concentric(sample: ArrayLike) -> np.ndarray:
     """
     Low-distortion concentric square to disk mapping.
 
-    Parameter ``sample`` (array-like):
-        A (N, 2) array of sample values. The function tries to be flexible with
-        arrays with
+    Parameters
+    ----------
+    sample : array-like
+        A (N, 2) array of sample values.
+
+    Returns
+    -------
+    ndarray
+        Sampled coordinates on the unit disk as a (N, 2) array.
+
+    Notes
+    -----
+    The function tries to be flexible with arrays with (N, 1) and (N,) arrays
+    and attempts reshaping them to (N/2, 2). This, in particular, means that
+    the following call will produce the expected result:
+
+    .. code:: python
+
+       square_to_uniform_disk_concentric((0.5, 0.5))
     """
     # Matches Mitsuba implementation
 
@@ -38,9 +54,30 @@ def square_to_uniform_disk_concentric(sample: ArrayLike) -> ArrayLike:
     return np.vstack((r * c, r * s)).T
 
 
-def square_to_uniform_hemisphere(sample: ArrayLike) -> ArrayLike:
+def square_to_uniform_hemisphere(sample: ArrayLike) -> np.ndarray:
     """
-    Uniformly sample a vector on the unit hemisphere with respect to solid angles.
+    Uniformly sample a vector on the unit hemisphere with respect to solid
+    angles.
+
+    Parameters
+    ----------
+    sample : array-like
+        A (N, 2) array of sample values.
+
+    Returns
+    -------
+    ndarray
+        Sampled coordinates on the unit hemisphere as a (N, 3) array.
+
+    Notes
+    -----
+    The function tries to be flexible with arrays with (N, 1) and (N,) arrays
+    and attempts reshaping them to (N/2, 2). This, in particular, means that
+    the following call will produce the expected result:
+
+    .. code:: python
+
+       square_to_uniform_hemisphere((0.5, 0.5))
     """
     # Matches Mitsuba implementation
 
@@ -56,9 +93,29 @@ def square_to_uniform_hemisphere(sample: ArrayLike) -> ArrayLike:
     return np.vstack((p[..., 0], p[..., 1], z)).T
 
 
-def uniform_hemisphere_to_square(v: ArrayLike) -> ArrayLike:
+def uniform_hemisphere_to_square(v: ArrayLike) -> np.ndarray:
     """
     Inverse of the mapping square_to_uniform_hemisphere.
+
+    Parameters
+    ----------
+    v : array-like
+        A (N, 3) array of vectors on the unit sphere.
+
+    Returns
+    -------
+    ndarray
+        Corresponding coordinates on the [0, 1]² square as a (N, 2) array.
+
+    Notes
+    -----
+    The function tries to be flexible with arrays with (N, 1) and (N,) arrays
+    and attempts reshaping them to (N/3, 3). This, in particular, means that
+    the following call will produce the expected result:
+
+    .. code:: python
+
+       uniform_hemisphere_to_square((0, 0, 1))
     """
     # Matches Mitsuba implementation
 
@@ -74,9 +131,29 @@ def uniform_hemisphere_to_square(v: ArrayLike) -> ArrayLike:
     )
 
 
-def uniform_disk_to_square_concentric(p: ArrayLike) -> ArrayLike:
+def uniform_disk_to_square_concentric(p: ArrayLike) -> np.ndarray:
     """
     Inverse of the mapping square_to_uniform_disk_concentric.
+
+    Parameters
+    ----------
+    p : array-like
+        A (N, 2) array of vectors on the unit disk.
+
+    Returns
+    -------
+    ndarray
+        Corresponding coordinates on the [0, 1]² square as a (N, 2) array.
+
+    Notes
+    -----
+    The function tries to be flexible with arrays with (N, 1) and (N,) arrays
+    and attempts reshaping them to (N/2, 2). This, in particular, means that
+    the following call will produce the expected result:
+
+    .. code:: python
+
+       uniform_disk_to_square_concentric((0, 0))
     """
     # Matches Mitsuba implementation
 

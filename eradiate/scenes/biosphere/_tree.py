@@ -131,11 +131,15 @@ class AbstractTree(Tree):
         """
         Return BSDF plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             Return a dictionary suitable for merge with a :class:`.KernelDict`
             containing all the BSDFs attached to the shapes
             in the abstract tree.
@@ -154,11 +158,15 @@ class AbstractTree(Tree):
         """
         Return shape plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             in the abstract tree.
@@ -367,10 +375,14 @@ class MeshTreeElement:
         the passed dictionary to merge any field with an associated ``"_units"``
         field into a :class:`pint.Quantity` container.
 
-        Parameter ``d`` (dict):
+        Parameters
+        ----------
+        d : dict
             Configuration dictionary used for initialisation.
 
-        Returns → :class:`.MeshTreeElement`:
+        Returns
+        -------
+        :class:`.MeshTreeElement`
             Created object.
         """
 
@@ -381,14 +393,22 @@ class MeshTreeElement:
         return MeshTreeElement(**d_copy)
 
     @staticmethod
-    def convert(value) -> MeshTreeElement:
+    def convert(value: t.Any) -> t.Any:
         """
         Object converter method.
 
         If ``value`` is a dictionary, this method uses :meth:`.from_dict` to
-        create an :class:`.MeshTreeElement`.
+        create an :class:`.MeshTreeElement`. Otherwise, it returns ``value``.
 
-        Otherwise, it returns ``value``.
+        Parameters
+        ----------
+        value
+            Value to attempt conversion of.
+
+        Returns
+        -------
+        any type
+            Converted value.
         """
         if isinstance(value, dict):
             return MeshTreeElement.from_dict(value)

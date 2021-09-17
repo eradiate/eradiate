@@ -1,10 +1,27 @@
 """attrs-based utility classes and functions"""
 
 import enum
+import re
 import typing as t
 from textwrap import dedent, indent
 
 import attr
+
+_NUMPYDOC_SECTION_TITLES = [
+    "Parameters",
+    "Attributes",
+    "Returns",
+    "Yields",
+    "Receives",
+    "Other Parameters",
+    "Raises",
+    "Warns",
+    "Warnings",
+    "See Also",
+    "Notes",
+    "References",
+    "Examples",
+]
 
 
 class _Auto:
@@ -71,58 +88,58 @@ class _FieldDoc:
     default = attr.ib(default=None)
 
 
-# def _eradiate_formatter(cls_doc, field_docs):
-#     """
-#     Appends a section on attributes to a class docstring.
-#     This docstring formatter is appropriate for Eradiate's current docstring
-#     format.
-#
-#     Parameters
-#     ----------
-#     cls_doc : str
-#         Class docstring to extend.
-#
-#     field_docs : dict[str, _FieldDoc]
-#         Attributes documentation content.
-#
-#     Returns
-#     -------
-#     str
-#         Updated class docstring.
-#     """
-#     # Do nothing if field is not documented
-#     if not field_docs:
-#         return cls_doc
-#
-#     docstrings = []
-#
-#     # Create docstring entry for each documented field
-#     for field_name, field_doc in field_docs.items():
-#         type_doc = f": {field_doc.type}" if field_doc.type is not None else ""
-#         default_doc = f" = {field_doc.default}" if field_doc.default is not None else ""
-#
-#         docstrings.append(
-#             f"``{field_name.lstrip('_')}``{type_doc}{default_doc}\n"
-#             f"{indent(field_doc.doc, '    ')}\n"
-#         )
-#
-#     # Assemble entries
-#     if docstrings:
-#         if cls_doc is None:
-#             cls_doc = ""
-#
-#         return "\n".join(
-#             (
-#                 dedent(cls_doc.lstrip("\n")).rstrip(),
-#                 "",
-#                 ".. rubric:: Constructor arguments / instance attributes",
-#                 "",
-#                 "\n".join(docstrings),
-#                 "",
-#             )
-#         )
-#     else:
-#         return cls_doc
+def _eradiate_formatter(cls_doc, field_docs):
+    """
+    Appends a section on attributes to a class docstring.
+    This docstring formatter is appropriate for Eradiate's current docstring
+    format.
+
+    Parameters
+    ----------
+    cls_doc : str
+        Class docstring to extend.
+
+    field_docs : dict[str, _FieldDoc]
+        Attributes documentation content.
+
+    Returns
+    -------
+    str
+        Updated class docstring.
+    """
+    # Do nothing if field is not documented
+    if not field_docs:
+        return cls_doc
+
+    docstrings = []
+
+    # Create docstring entry for each documented field
+    for field_name, field_doc in field_docs.items():
+        type_doc = f": {field_doc.type}" if field_doc.type is not None else ""
+        default_doc = f" = {field_doc.default}" if field_doc.default is not None else ""
+
+        docstrings.append(
+            f"``{field_name.lstrip('_')}``{type_doc}{default_doc}\n"
+            f"{indent(field_doc.doc, '    ')}\n"
+        )
+
+    # Assemble entries
+    if docstrings:
+        if cls_doc is None:
+            cls_doc = ""
+
+        return "\n".join(
+            (
+                dedent(cls_doc.lstrip("\n")).rstrip(),
+                "",
+                ".. rubric:: Constructor arguments / instance attributes",
+                "",
+                "\n".join(docstrings),
+                "",
+            )
+        )
+    else:
+        return cls_doc
 
 
 def _numpy_formatter(cls_doc, field_docs):
@@ -179,32 +196,56 @@ def _numpy_formatter(cls_doc, field_docs):
             cls_doc = ""
 
         cls_doc = dedent(cls_doc.lstrip("\n")).rstrip()
-        cls_doc_split = cls_doc.split("Attributes\n----------")
 
-        try:
-            cls_doc_pre = dedent(cls_doc_split[0].lstrip("\n")).rstrip()
-        except IndexError:
-            cls_doc_pre = ""
+        # We process only sections mentioned in the Numpy doc style
+        # Detect existing sections
+        section_pattern = {}
 
-        try:
-            cls_doc_post = dedent(cls_doc_split[1].lstrip("\n")).rstrip()
-        except IndexError:
-            cls_doc_post = ""
+        for section_title in _NUMPYDOC_SECTION_TITLES:
+            full_section_title = f"{section_title}\n{'-' * len(section_title)}\n"
+            if re.findall(full_section_title, cls_doc):
+                section_pattern[section_title] = full_section_title
 
-        return "\n".join(
-            (
-                cls_doc_pre,
-                "",
-                "Parameters",
-                "----------",
-                "\n".join(param_docstrings),
-                "",
-                "Attributes",
-                "----------",
-                "\n".join(attr_docstrings),
-                cls_doc_post,
-            )
+        # Collect section content
+        section_contents = (
+            re.split("|".join(section_pattern.values()), cls_doc)
+            if section_pattern
+            else [cls_doc]
         )
+
+        sections = {}
+        if len(section_contents) == len(section_pattern) + 1:
+            sections["_description"] = section_contents.pop(0).strip()
+
+        for title, content in zip(section_pattern.keys(), section_contents):
+            sections[title] = content.strip()
+
+        # Append generated docstrings to the relevant section
+        sections["Parameters"] = "\n".join(param_docstrings) + sections.get(
+            "Parameters", ""
+        )
+        sections["Attributes"] = "\n".join(param_docstrings) + sections.get(
+            "Attributes", ""
+        )
+
+        # Generate section full text
+        section_fulltexts = (
+            [sections.pop("_description") + "\n"] if "_description" in sections else []
+        )
+        for section_title in _NUMPYDOC_SECTION_TITLES:
+            try:
+                section_content = sections.pop(section_title)
+            except KeyError:
+                continue
+
+            section_fulltexts.append(
+                f"{section_title}\n{'-' * len(section_title)}\n{section_content}\n"
+            )
+
+        # Assemble the final docstring
+        doc = "\n".join(section_fulltexts) + "\n"
+        return doc
+
     else:
         return cls_doc
 

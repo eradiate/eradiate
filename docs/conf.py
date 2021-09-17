@@ -201,27 +201,29 @@ napoleon_type_aliases = {
     "path-like": ":term:`path-like <path-like object>`",
     "mapping": ":term:`mapping`",
     "file-like": ":term:`file-like <file-like object>`",
-    # special terms
-    # "same type as caller": "*same type as caller*",  # does not work, yet
-    # "same type as values": "*same type as values*",  # does not work, yet
     # stdlib type aliases
     "MutableMapping": "~collections.abc.MutableMapping",
-    # numpy terms
+    # numpy terms and aliases
     "array_like": ":term:`array_like`",
     "array-like": ":term:`array-like <array_like>`",
     "scalar": ":term:`scalar`",
     "array": ":term:`array`",
     "hashable": ":term:`hashable <name>`",
-    # objects without namespace
-    "DataArray": "~xarray.DataArray",
-    "Dataset": "~xarray.Dataset",
-    "Variable": "~xarray.Variable",
     "ndarray": "~numpy.ndarray",
     "MaskedArray": "~numpy.ma.MaskedArray",
     "dtype": "~numpy.dtype",
-    # Pint aliases
+    # matplotlib terms and aliases
+    "matplotlib axes": ":py:class:`matplotlib axes <matplotlib.axes.Axes>`",
+    "axes": ":py:class:`axes <matplotlib.axes.Axes>`",
+    "matplotlib figure": ":py:class:`matplotlib figure <matplotlib.figure.Figure>`",
+    "figure": ":py:class:`figure <matplotlib.figure.Figure>`",
+    # xarray terms and aliases
+    "DataArray": "~xarray.DataArray",
+    "Dataset": "~xarray.Dataset",
+    "Variable": "~xarray.Variable",
+    # pint terms and aliases
     "quantity": ":class:`quantity <pint.Quantity>`",
-    # objects with abbreviated namespace (from pandas)
+    # pandas terms and aliases
     "pd.Index": "~pandas.Index",
     "pd.NaT": "~pandas.NaT",
     # local aliases

@@ -23,10 +23,75 @@ def compute_sigma_a(
     methods: t.Optional[t.Dict[str, str]] = None,
 ) -> pint.Quantity:
     """
-    Computes the monochromatic absorption coefficient at given wavelength,
+    Compute monochromatic absorption coefficient at given wavelength,
     pressure and temperature values.
 
-    The absorption coefficient is computed according to the formula:
+    Parameters
+    ----------
+    ds : Dataset
+        Absorption cross section data set.
+
+    wl : quantity
+        Wavelength [nm].
+
+    p : quantity
+        Pressure [Pa].
+
+        .. note:: If ``p``, ``t`` and ``n`` are arrays, their lengths must be
+           the same.
+
+    t : quantity
+        Temperature [K].
+
+        .. note:: If the coordinate ``t`` is not in the input dataset ``ds``,
+           the interpolation on temperature is not performed.
+
+    n : quantity
+        Number density [m^-3].
+
+        .. note:: If ``n`` is ``None``, the values of ``t`` and ``p`` are then
+           used only to compute the corresponding number density.
+
+    fill_values : dict, optional
+        Mapping of coordinates (in ``["w", "pt"]``) and fill values (either
+        ``None`` or float).
+        If not ``None``, out of bounds values are assigned the fill value
+        during interpolation along the wavelength or pressure and temperature
+        coordinates.
+        If ``None``, out of bounds values will trigger the raise of a
+        ``ValueError``.
+        Only one fill value can be provided for both pressure and temperature
+        coordinates.
+
+    methods : dict, optional
+        Mapping of coordinates (in ``["w", "pt"]``) and interpolation methods.
+        Default interpolation method is linear.
+        Only one interpolation method can be specified for both pressure
+        and temperature coordinates.
+
+    Returns
+    -------
+    quantity
+        Absorption coefficient values.
+
+    Raises
+    ------
+    ValueError
+        When wavelength, pressure, or temperature values are out of the range
+        of the data set and the corresponding fill value in ``fill_values`` is
+        ``None``.
+
+    Warnings
+    --------
+    The values of the absorption cross section at the desired wavelength,
+    pressure and temperature values,
+    :math:`\\sigma_{a\\lambda} (p, T)`,
+    are obtained by interpolating the input absorption cross section data
+    set along the corresponding dimensions.
+
+    Notes
+    -----
+    The absorption coefficient is given by:
 
     .. math::
         k_{a\\lambda} = n \\, \\sigma_{a\\lambda} (p, T)
@@ -39,65 +104,8 @@ def compute_sigma_a(
     * :math:`\\sigma_a` is the absorption cross section [:math:`L^2`],
     * :math:`p` is the pressure [:math:`ML^{-1}T^{-2}`] and
     * :math:`t` is the temperature [:math:`\\Theta`].
-
-    .. warning::
-       The values of the absorption cross section at the desired wavelength,
-       pressure and temperature values,
-       :math:`\\sigma_{a\\lambda} (p, T)`,
-       are obtained by interpolating the input absorption cross section data
-       set along the corresponding dimensions.
-
-    Parameter ``ds`` (:class:`~xarray.Dataset`):
-        Absorption cross section data set.
-
-    Parameter ``wl`` (:class:`~pint.Quantity`):
-        Wavelength.
-
-    Parameter ``p`` (:class:`~pint.Quantity`):
-        Pressure.
-
-        .. note::
-           If ``p``, ``t`` and ``n`` are arrays, their length must be the same.
-
-    Parameter ``t`` (:class:`~pint.Quantity`):
-        Temperature.
-
-        .. note::
-           If the coordinate ``t`` is not in the input dataset ``ds``, the
-           interpolation on temperature is not performed.
-
-    Parameter ``n`` (:class:`~pint.Quantity`, optional):
-        Number density [m^-3].
-
-        .. note::
-           If ``n`` is ``None``, the values of ``t`` and ``p`` are then used
-           only to compute the corresponding number density.
-
-    Parameter ``fill_values`` (dict, optional):
-        Mapping of coordinates (in ``["w", "pt"]``) and fill values (either
-        ``None`` or float).
-        If not ``None``, out of bounds values are assigned the fill value
-        during interpolation along the wavelength or pressure and temperature
-        coordinates.
-        If ``None``, out of bounds values will trigger the raise of a
-        ``ValueError``.
-        Only one fill value can be provided for both pressure and temperature
-        coordinates.
-
-    Parameter ``methods`` (dict, optional):
-        Mapping of coordinates (in ``["w", "pt"]``) and interpolation methods.
-        Default interpolation method is linear.
-        Only one interpolation method can be specified for both pressure
-        and temperature coordinates.
-
-    Returns → :class:`~pint.Quantity`:
-        Absorption coefficient values.
-
-    Raises → ``ValueError``:
-        When wavelength, pressure, or temperature values are out of the range
-        of the data set and the corresponding fill value in ``fill_values`` is
-        ``None``.
     """
+
     if fill_values is None:
         fill_values = dict(w=None, pt=None)
 
