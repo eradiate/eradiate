@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import typing as t
+import warnings
 
 import attr
 import numpy as np
 import pint
-import warnings
 import xarray as xr
 
 from ._core import SensorInfo, measure_factory
@@ -22,7 +22,7 @@ from ...units import unit_registry as ureg
 @attr.s
 class DistantArrayMeasure(DistantMeasure):
     """
-    Distant sensor array measure scene element [``distantarray``].
+    Distant sensor array measure scene element [``distant_array``].
 
     This measure scene element is a thin wrapper around the ``DistantSensor``
     measures. It records either the radiancealong the directions given by the

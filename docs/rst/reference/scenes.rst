@@ -180,10 +180,16 @@ Measures [eradiate.scenes.measure]
 
 **Measure spectral configuration**
 
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   MeasureSpectralConfig
+
+.. dropdown:: Private
+
    .. autosummary::
       :toctree: generated/autosummary/
 
-      MeasureSpectralConfig
       _core.MonoMeasureSpectralConfig
       _core.CKDMeasureSpectralConfig
 
@@ -203,6 +209,8 @@ Measures [eradiate.scenes.measure]
    DistantReflectanceMeasure
    DistantFluxMeasure
    DistantAlbedoMeasure
+   DistantArrayMeasure
+   DistantArrayReflectanceMeasure
    PerspectiveCameraMeasure
    RadiancemeterMeasure
    RadiancemeterArrayMeasure
