@@ -60,8 +60,9 @@ class Atmosphere(SceneElement, ABC):
         "this estimate depends on the concrete class inheriting from this "
         "one.\n"
         "\n"
-        "Unit-enabled field (default unit: ucc['length']).",
-        type="float or AUTO",
+        "Unit-enabled field (default units: ucc['length']).",
+        type="quantity or AUTO",
+        init_type="quantity or float or AUTO",
         default="AUTO",
     )
 
@@ -110,12 +111,16 @@ class Atmosphere(SceneElement, ABC):
         """
         Return the Atmosphere's width.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`~pint.Quantity`:
-            Atmosphere's width.
+        Returns
+        -------
+        quantity
+            Atmosphere width.
         """
         pass
 
@@ -128,11 +133,15 @@ class Atmosphere(SceneElement, ABC):
         """
         Return phase function plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`.KernelDict`:
+        Returns
+        -------
+        :class:`.KernelDict`
             A kernel dictionary containing all the phase functions attached to
             the atmosphere.
         """
@@ -143,11 +152,15 @@ class Atmosphere(SceneElement, ABC):
         """
         Return medium plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`.KernelDict`:
+        Returns
+        -------
+        :class:`.KernelDict`
             A kernel dictionary containing all the media attached to the
             atmosphere.
         """
@@ -158,11 +171,15 @@ class Atmosphere(SceneElement, ABC):
         """
         Return shape plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`.KernelDict`:
+        Returns
+        -------
+        :class:`.KernelDict`
             A kernel dictionary containing all the shapes attached to the
             atmosphere.
         """
@@ -172,11 +189,15 @@ class Atmosphere(SceneElement, ABC):
         """
         Return the height of the kernel object delimiting the atmosphere.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Height of the kernel object delimiting the atmosphere
         """
         return self.height + self.kernel_offset(ctx=ctx)
@@ -187,17 +208,21 @@ class Atmosphere(SceneElement, ABC):
         atmosphere. The created cuboid shape will be shifted towards negative
         Z values by this amount.
 
-        .. note::
-
-           This is required to ensure that the surface is the only shape
-           which can be intersected at ground level during ray tracing.
-
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Vertical offset of cuboid shape.
+
+        Notes
+        -----
+        This offset is required to ensure that the surface is the only shape
+        which can be intersected at ground level during ray tracing.
         """
         return self.height * 1e-3
 
@@ -205,11 +230,15 @@ class Atmosphere(SceneElement, ABC):
         """
         Return width of the kernel object delimiting the atmosphere.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Width of the kernel object delimiting the atmosphere.
         """
         return self.eval_width(ctx=ctx)
@@ -236,10 +265,14 @@ def write_binary_grid3d(
     Write volume data to a binary file so that a ``gridvolume`` kernel plugin
     can be instantiated with that file.
 
-    Parameter ``filename`` (path-like):
+    Parameters
+    ----------
+    filename : path-like
         File name.
 
-    Parameter ``values`` (:class:`~numpy.ndarray` or :class:`~xarray.DataArray`):
+    Parameters
+    ----------
+    values : ndarray or DataArray
         Data array to output to the volume data file. This array must 3 or 4
         dimensions (x, y, z, spectrum). If the array is 3-dimensional, it will
         automatically be assumed to have only one spectral channel.
@@ -286,10 +319,15 @@ def write_binary_grid3d(
 def read_binary_grid3d(filename: str) -> np.ndarray:
     """
     Reads a volume data binary file.
-    Parameter ``filename`` (str):
+
+    Parameters
+    ----------
+    filename : str
         File name.
 
-    Returns → :class:`~numpy.ndarray`:
+    Returns
+    -------
+    ndarray
         Values.
     """
 

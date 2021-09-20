@@ -10,9 +10,8 @@ import numpy as np
 import scipy.constants
 import xarray as xr
 
-import eradiate.data as data
-
 from . import profile_dataset_spec
+from .. import data
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 
@@ -28,7 +27,7 @@ def compute_column_number_density(ds, species):
     The column number density is computed according to the formula:
 
     .. math::
-      N = \\sum_{i=0}^{L-1} n_i \\, (z_{i+1} - z_i)
+       N = \\sum_{i=0}^{L-1} n_i \\, (z_{i+1} - z_i)
 
     where
 
@@ -37,13 +36,17 @@ def compute_column_number_density(ds, species):
     :math:`n_i` are the number densities of that given species inside the
     :math:`L` atmospheric layers.
 
-    Parameter ``ds`` (:class:`xarray.Dataset`):
+    Parameters
+    ----------
+    ds : Dataset
         Atmosphere thermophysical properties data set.
 
-    Parameter ``species`` (str):
+    species : str
         Species.
 
-    Returns → :class:`~pint.Quantity`:
+    Returns
+    -------
+    quantity
         Column number density.
     """
     mr = ds.mr.sel(species=species).values
@@ -55,12 +58,13 @@ def compute_column_number_density(ds, species):
 
 
 def compute_column_mass_density(ds, species):
-    """Computes the column (mass) density of a given species in an atmospheric
+    """
+    Computes the column (mass) density of a given species in an atmospheric
     profile.
     The column mass density is computed according to the formula:
 
     .. math::
-      \\sigma = N * m_u
+       \\sigma = N * m_u
 
     where
 
@@ -68,13 +72,17 @@ def compute_column_mass_density(ds, species):
     :math:`N` is the column number density,
     :math:`m_u` is the atomic mass constant.
 
-    Parameter ``ds`` (:class:`xarray.Dataset`):
+    Parameters
+    ----------
+    ds : Dataset
         Atmosphere thermophysical properties data set.
 
-    Parameter ``species`` (str):
+    species : str
         Species.
 
-    Returns → :class:`ureg.Quantity`:
+    Returns
+    -------
+    quantity
         Column mass density.
     """
     molecular_mass = data.open(category="chemistry", id="molecular_masses")
@@ -83,16 +91,21 @@ def compute_column_mass_density(ds, species):
 
 
 def compute_number_density_at_surface(ds, species):
-    """Compute the number density at the surface of a given species in an
+    """
+    Compute the number density at the surface of a given species in an
     atmospheric profile.
 
-    Parameter ``ds`` (:class:`xarray.Dataset`):
+    Parameters
+    ----------
+    ds : Dataset
         Atmosphere thermophysical properties data set.
 
-    Parameter ``species`` (str):
+    species : str
         Species.
 
-    Returns → :class:`~pint.Quantity`:
+    Returns
+    -------
+    :class:`~pint.Quantity`
         Number density at the surface.
     """
     surface_mr = to_quantity(ds.mr.sel(species=species))[0]
@@ -104,13 +117,17 @@ def compute_mass_density_at_surface(ds, species):
     """Compute the mass density at the surface of a given species in an
     atmospheric profile.
 
-    Parameter ``ds`` (:class:`xarray.Dataset`):
+    Parameters
+    ----------
+    ds : Dataset
         Atmosphere thermophysical properties data set.
 
-    Parameter ``species`` (str):
+    species : str
         Species.
 
-    Returns → :class:`ureg.Quantity`:
+    Returns
+    -------
+    quantity
         Mass density at the surface.
     """
     molecular_mass = data.open(category="chemistry", id="molecular_masses")
@@ -125,10 +142,12 @@ def compute_scaling_factors(ds, concentration):
     that the integrated number/mass density and/or the number/mass density at
     the surface, match given values.
 
-    Parameter ``ds`` (:class:`xarray.Dataset`):
+    Parameters
+    ----------
+    ds : Dataset
         Atmosphere thermophysical properties data set.
 
-    Parameter ``concentration`` (dict):
+    concentration : dict
         Mapping of species (str) and target concentration
         (:class:`~pint.Quantity`).
 
@@ -141,7 +160,7 @@ def compute_scaling_factors(ds, concentration):
         :math:`N_{\mathrm{initial}}`:
 
         .. math::
-            f = \\frac{N_{\mathrm{target}}}{N_{\mathrm{initial}}}
+           f = \\frac{N_{\mathrm{target}}}{N_{\mathrm{initial}}}
 
         If the target concentration has dimensions of mass times inverse square
         length (:math:`[ML^{-2}]`), the value is interpreted as a column (mass)
@@ -152,7 +171,7 @@ def compute_scaling_factors(ds, concentration):
         :math:`\\sigma_{\mathrm{initial}}`:
 
         .. math::
-            f = \\frac{\\sigma_{\mathrm{target}}}{\\sigma_{\mathrm{initial}}}
+           f = \\frac{\\sigma_{\mathrm{target}}}{\\sigma_{\mathrm{initial}}}
 
         If the target concentration has dimensions of inverse cubic length
         (:math:`[L^{-3}]`), the value is interpreted as a number density at the
@@ -163,7 +182,7 @@ def compute_scaling_factors(ds, concentration):
         :math:`n_{\mathrm{surface, initial}}`:
 
         .. math::
-            f = \\frac{n_{\mathrm{surface, target}}}{n_{\mathrm{surface, initial}}}
+           f = \\frac{n_{\mathrm{surface, target}}}{n_{\mathrm{surface, initial}}}
 
         If the target concentration has dimensions of inverse cubic length
         (:math:`[ML^{-3}]`), the value is interpreted as a mass density at the
@@ -174,7 +193,7 @@ def compute_scaling_factors(ds, concentration):
         :math:`\\sigma_{\mathrm{surface, initial}}`:
 
         .. math::
-            f = \\frac{\\sigma_{\mathrm{surface, target}}}{\\sigma_{\mathrm{surface, initial}}}
+           f = \\frac{\\sigma_{\mathrm{surface, target}}}{\\sigma_{\mathrm{surface, initial}}}
 
         If the target concentration is dimensionless, the value is
         interpreted as a mixing ratio at the surface for that given species
@@ -185,9 +204,11 @@ def compute_scaling_factors(ds, concentration):
         :math:`x_{\mathrm{surface, initial}}`:
 
         .. math::
-            f = \\frac{x_{\mathrm{target}}}{x_{\mathrm{initial}}}
+           f = \\frac{x_{\mathrm{target}}}{x_{\mathrm{initial}}}
 
-    Returns → dict:
+    Returns
+    -------
+    dict
         Mapping of species (str) and scaling factors (float).
     """
     factors = {}
@@ -224,10 +245,14 @@ def human_readable(items):
 
     Example: ``["a", "b", "c"]`` -> ``"a, b and c"``
 
-    Parameter ``elements`` (list):
+    Parameters
+    ----------
+    elements : list
         List.
 
-    Returns → str:
+    Returns
+    -------
+    str
         Human readable text.
     """
     x = f"{items[0]}"
@@ -243,21 +268,23 @@ def rescale_concentration(ds, factors, inplace=False):
     Rescale mixing ratios in an atmosphere thermophysical properties data
     set by given factors for each species.
 
-    Parameter ``ds`` (:class:`xarray.Dataset`):
+    Parameters
+    ----------
+    ds : Dataset
         Initial atmosphere thermophysical properties data set.
 
-    Parameter ``factors`` (dict):
+    factors : dict
         Mapping of species (str) and scaling factors (float).
 
-        Mapping of the species and corresponding scaling factors.
-
-    Parameter ``inplace`` (bool):
+    inplace : bool
         If ``True``, the atmosphere thermophysical properties data set object
         is modified.
         Else, a new atmosphere thermophysical properties data set object is
         returned.
 
-    Returns → :class:`~xarray.Dataset`:
+    Returns
+    -------
+    Dataset
         Rescaled atmosphere thermophysical properties data set.
     """
     if not inplace:
@@ -293,22 +320,21 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
     Interpolates an atmosphere thermophysical properties data set onto a
     new level altitude mesh.
 
-    .. note::
-        Returns a new atmosphere thermophysical properties data set object.
-
-    Parameter ``ds`` (:class:`xarray.Dataset`):
+    Parameters
+    ----------
+    ds : Dataset
         Initial atmosphere thermophysical properties data set.
 
-    Parameter ``z_level`` (:class:`numpy.ndarray`):
+    z_level : ndarray
         Level altitude mesh [km].
 
-    Parameter ``method`` (str):
+    method : str
         The method used to interpolate (same for all data variables).
         Choose from ``"linear"``, ``"nearest"``, ``"zero"``, ``"slinear"``, ``"quadratic"``, and ``"cubic"``.
 
         Default: ``"linear"``.
 
-    Parameter ``conserve_columns`` (bool):
+    conserve_columns : bool
         If ``True``, multiply the number densities in the atmosphere
         thermophysical properties data set so that the column number densities
         in the initial and interpolated atmosphere thermophysical properties
@@ -316,8 +342,14 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
 
         Default: ``False``.
 
-    Returns → :class:`xarray.Dataset`:
-        Interpolated atmosphere thermophysical properties data set
+    Returns
+    -------
+    Dataset
+        Interpolated atmosphere thermophysical properties data set.
+
+    Notes
+    -----
+    Returns a new atmosphere thermophysical properties data set object.
     """
     z_level = ureg.Quantity(z_level, "km")
     z_layer = (z_level[1:] + z_level[:-1]) / 2.0
@@ -347,17 +379,23 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
 
 @ureg.wraps(ret="Pa", args="K", strict=False)
 def water_vapor_saturation_pressure(t):
-    """Computes the water vapor saturation pressure over liquid water or ice,
-    at the given temperature.
+    """
+    Computes the water vapor saturation pressure over liquid water or ice, at
+    the given temperature.
 
-    .. note::
-        Valid for pressures larger than the triple point pressure (~611 Pa).
-
-    Parameter ``t`` (float):
+    Parameters
+    ----------
+    t : float
         Temperature [K].
 
-    Returns → :class:`pint.Quantity`:
+    Returns
+    -------
+    quantity
         Water vapor saturation pressure.
+
+    Notes
+    -----
+    Valid for pressures larger than the triple point pressure (~611 Pa).
     """
     if t >= 273.15:  # water is liquid
         p = ureg.Quantity(iapws.iapws97._PSat_T(t), "MPa")
@@ -368,7 +406,8 @@ def water_vapor_saturation_pressure(t):
 
 @ureg.wraps(ret=ureg.dimensionless, args=("Pa", "K"), strict=False)
 def equilibrium_water_vapor_fraction(p, t):
-    """Computes the water vapor volume fraction at equilibrium, i.e., when the
+    """
+    Computes the water vapor volume fraction at equilibrium, i.e., when the
     rate of condensation of water vapor equals the rate of evaporation of
     liquid water or ice, depending on the temperature.
 
@@ -386,23 +425,29 @@ def equilibrium_water_vapor_fraction(p, t):
 
     This water vapor volume fraction corresponds to a relative humidity of 100%.
 
-    .. note::
-       For some values of the pressure and temperature, the equilibrium does
-       not exist.
-       An exception is raised in those cases.
-
-    Parameter ``p`` (float):
+    Parameters
+    ----------
+    p : float
         Pressure [Pa].
 
-    Parameter ``t`` (float):
+    t : float
         Temperature [K].
 
-    Returns → :class:`pint.Quantity`:
+    Returns
+    -------
+    quantity
         Water vapor volume fraction.
 
-    Raises → ValueError:
+    Raises
+    ------
+    ValueError
         If equilibrium cannot be reached in the pressure and temperature
         conditions.
+
+    Notes
+    -----
+    For some values of the pressure and temperature, the equilibrium does not
+    exist. An exception is raised in those cases.
     """
     p_water_vapor = water_vapor_saturation_pressure(t).magnitude
     if p_water_vapor <= p:
@@ -419,15 +464,19 @@ def make_profile_regular(profile, atol):
     Converts the atmosphere thermophysical properties data set with an
     irregular altitude mesh to a profile defined over a regular altitude mesh.
 
-    Parameter ``profile`` (:class:`~xarray.Dataset`):
+    Parameters
+    ----------
+    profile : :class:`~xarray.Dataset`
         Original atmosphere thermophysical properties data set, defined over
         an irregular altitude mesh.
 
-    Parameter ``atol`` (float):
+    atol : float
         Absolute tolerance used in the conversion of the irregular altitude
         mesh to a regular altitude mesh.
 
-    Returns → :class:`~xarray.Dataset`:
+    Returns
+    -------
+    Dataset
         Converted atmosphere thermophysical properties data set, defined over
         a regular altitude mesh.
     """
@@ -494,24 +543,30 @@ def _to_regular(mesh, atol):
     """
     Converts an irregular altitude mesh into a regular altitude mesh.
 
-    .. note::
-        The bound altitudes in the irregular altitude mesh remain the same in
-        the output regular altitude mesh. Only the intermediate node altitudes
-        are modified.
-
-    .. warning::
-        The algorithm is not optimised to find the approximating regular mesh
-        with the smallest number of layers. Depending on the value of ``atol``,
-        the resulting mesh size can be large.
-
-    Parameter ``mesh`` (:class:`numpy.ndarray`):
+    Parameters
+    ----------
+    mesh : ndarray
         Irregular altitude mesh with values sorted in increasing order.
 
-    Parameter ``atol`` (float):
+    atol : float
         Absolute tolerance used in the conversion.
 
-    Returns -> :class:`numpy.ndarray`:
+    Returns
+    -------
+    ndarray
         Regular altitude mesh.
+
+    Warnings
+    --------
+    The algorithm is not optimised to find the approximating regular mesh with
+    the smallest number of layers. Depending on the value of ``atol``, the
+    resulting mesh size can be large.
+
+    Notes
+    -----
+    The bound altitudes in the irregular altitude mesh remain the same in
+        the output regular altitude mesh. Only the intermediate node altitudes
+        are modified.
     """
 
     n, _ = _find_regular_params_gcd(mesh, atol)
@@ -528,23 +583,28 @@ def _find_regular_params_gcd(mesh, unit_number=1.0):
     This GCD is used to define the constant cells width of the approximating
     regular mesh.
 
-    .. warning::
-        There are no safeguards regarding how large the number of cells in the
-        regular mesh can be. Use the parameter ``unit_number`` with caution.
-
-    Parameter ``mesh`` (:class:`~numpy.ndarray`):
+    Parameters
+    ----------
+    mesh : ndarray
         1-D array with floating point values.
         Values must be sorted by increasing order.
 
-    Parameter ``unit_number`` (float):
+    unit_number : float, default: 1.0
         Defines the unit used to convert the floating point numbers to integer.
         numbers.
 
-        Default: 1.
+    Returns
+    -------
+    int
+        Number of points in the regular mesh.
 
-    Returns -> Tuple[int, float]:
-        Number of points (int) in the regular mesh and the value of the
-        constant cells width (float).
+    float
+        Value of the constant cells width.
+
+    Warnings
+    --------
+    There are no safeguards regarding how large the number of cells in the
+    regular mesh can be. Use the parameter ``unit_number`` with caution.
     """
 
     # Convert float cell widths to integer cell widths
@@ -574,13 +634,16 @@ def _find_regular_params_gcd(mesh, unit_number=1.0):
 
 
 # def find_regular_params_tol(mesh, rtol=1e-3, n_cells_max=10000):
-#     r"""Finds the number of cells and constant cell width of the regular 1-D
+#     r"""
+#     Finds the number of cells and constant cell width of the regular 1-D
 #     mesh that approximates a 1-D irregular mesh the best.
 #
-#     Parameter ``mesh`` (:class:`~numpy.ndarray`):
+#     Parameters
+#     ----------
+#     mesh : ndarray
 #         Irregular 1-D mesh. Values must be sorted in increasing order.
 #
-#     Parameter ``rtol`` (float):
+#     rtol : float
 #         Relative tolerance on the cells widths. This parameter controls the
 #         accuracy of the approximation.
 #         The parameters of the approximating regular mesh are computed so that
@@ -590,15 +653,18 @@ def _find_regular_params_gcd(mesh, unit_number=1.0):
 #
 #         Default: 1e-3
 #
-#     Parameter ``n_cells_max`` (float):
+#     n_cells_max : float
 #         Maximum number of cells in the regular mesh. This parameter controls the
 #         size of the resulting regular mesh.
 #
 #         Default: 10000
 #
-#     Returns -> Tuple[int, float]:
-#         Number of cells (int) and constant cells width (float) in the
-#         approximating regular mesh.
+#     Returns
+#     -------
+#     int
+#         Number of cells in the approximating regular mesh.
+#     float
+#         Constant cells width in the approximating regular mesh.
 #     """
 #
 #     raise NotImplemented

@@ -58,7 +58,7 @@ class ParticleLayer(Atmosphere):
     (``dataset``).
     """
 
-    _bottom: t.Optional[pint.Quantity] = documented(
+    _bottom: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity(0.0, ureg.km),
             converter=pinttr.converters.to_units(ucc.deferred("length")),
@@ -71,11 +71,12 @@ class ParticleLayer(Atmosphere):
         doc="Bottom altitude of the particle layer.\n"
         "\n"
         "Unit-enabled field (default: ucc[length])",
-        type="float",
+        type="quantity",
+        init_type="float or quantity",
         default="0 km",
     )
 
-    _top: t.Optional[pint.Quantity] = documented(
+    _top: pint.Quantity = documented(
         pinttr.ib(
             units=ucc.deferred("length"),
             default=ureg.Quantity(1.0, ureg.km),
@@ -88,7 +89,8 @@ class ParticleLayer(Atmosphere):
         doc="Top altitude of the particle layer.\n"
         "\n"
         "Unit-enabled field (default: ucc[length]).",
-        type="float",
+        type="quantity",
+        init_type="float or quantity",
         default="1 km.",
     )
 
@@ -98,18 +100,19 @@ class ParticleLayer(Atmosphere):
         if instance.bottom >= instance.top:
             raise ValueError("bottom altitude must be lower than top altitude")
 
-    distribution: t.Optional[ParticleDistribution] = documented(
+    distribution: ParticleDistribution = documented(
         attr.ib(
             factory=UniformParticleDistribution,
             converter=particle_distribution_factory.convert,
             validator=attr.validators.instance_of(ParticleDistribution),
         ),
         doc="Particle distribution.",
-        type="dict or :class:`ParticleDistribution`",
+        init_type=":class:`ParticleDistribution` or dict",
+        type=":class:`ParticleDistribution`",
         default=":class:`Uniform`",
     )
 
-    tau_550: t.Optional[pint.Quantity] = documented(
+    tau_550: pint.Quantity = documented(
         pinttr.ib(
             units=ucc.deferred("dimensionless"),
             default=ureg.Quantity(0.2, ureg.dimensionless),
@@ -121,22 +124,23 @@ class ParticleLayer(Atmosphere):
         doc="Extinction optical thickness at the wavelength of 550 nm.\n"
         "\n"
         "Unit-enabled field (default: ucc[dimensionless]).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="0.2",
     )
 
-    n_layers: t.Optional[int] = documented(
+    n_layers: int = documented(
         attr.ib(
             default=16,
             converter=int,
             validator=attr.validators.instance_of(int),
         ),
-        doc="Number of layers inside the particle layer.\n",
+        doc="Number of layers inside the particle layer.",
         type="int",
         default="16",
     )
 
-    dataset: t.Optional[str] = documented(
+    dataset: str = documented(
         attr.ib(
             default=path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc"),
             converter=str,
@@ -146,7 +150,7 @@ class ParticleLayer(Atmosphere):
         type="str",
     )
 
-    albedo_filename: t.Optional[str] = documented(
+    albedo_filename: str = documented(
         attr.ib(
             default="albedo.vol",
             converter=str,
@@ -174,20 +178,22 @@ class ParticleLayer(Atmosphere):
             converter=attr.converters.optional(str),
             validator=attr.validators.optional(attr.validators.instance_of(str)),
         ),
-        doc="Name of the weight volume data file if the phase function is of type ``blendphase``.",
+        doc="Name of the weight volume data file if the phase function is of "
+        'type ``"blendphase"``.',
         type="str",
         default='"weight.vol"',
     )
 
-    cache_dir: t.Optional[pathlib.Path] = documented(
+    cache_dir: pathlib.Path = documented(
         attr.ib(
             default=pathlib.Path(tempfile.mkdtemp()),
             converter=pathlib.Path,
             validator=attr.validators.instance_of(pathlib.Path),
         ),
         doc="Path to a cache directory where volume data files will be created.",
-        type="path-like",
-        default="Temporary directory",
+        init_type="path-like",
+        type=":class:`pathlib.Path`",
+        default="temporary directory",
     )
 
     def __attrs_post_init__(self):
@@ -238,7 +244,9 @@ class ParticleLayer(Atmosphere):
         from the layer's bottom altitude to the layer's top altitude with
         a number of points specified by ``n_layer + 1``.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Level altitude mesh.
         """
         return np.linspace(start=self.bottom, stop=self.top, num=self.n_layers + 1)
@@ -252,7 +260,9 @@ class ParticleLayer(Atmosphere):
         from the layer's bottom altitude to the layer's top altitude with
         a number of points specified by ``n_layer``.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Layer altitude mesh.
         """
         z_level = self.z_level
@@ -262,7 +272,9 @@ class ParticleLayer(Atmosphere):
         """
         Compute the particle number fraction in the particle layer.
 
-        Returns → :class:`~numpy.ndarray`:
+        Returns
+        -------
+        ndarray
             Particles fractions.
         """
         return self.distribution.eval_fraction(self.z_layer)
@@ -279,7 +291,9 @@ class ParticleLayer(Atmosphere):
         a :math:`\\mu` (``mu``) coordinate for the scattering angle cosine
         (:math:`\\mu \\in [-1, 1]`).
 
-        Returns → :class:`~xarray.DataArray`:
+        Returns
+        -------
+        DataArray
             Phase function.
         """
         ds = xr.open_dataset(self.dataset)
@@ -295,12 +309,16 @@ class ParticleLayer(Atmosphere):
         dispatches evaluation to specialised methods depending on the active
         mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
@@ -314,7 +332,6 @@ class ParticleLayer(Atmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
-
         ds = xr.open_dataset(self.dataset)
         wavelengths = w.m_as(ds.w.attrs["units"])
         interpolated_albedo = ds.albedo.interp(w=wavelengths)
@@ -329,12 +346,16 @@ class ParticleLayer(Atmosphere):
         """
         Evaluate extinction coefficient given a spectral context.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Particle layer extinction coefficient.
         """
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
@@ -369,12 +390,16 @@ class ParticleLayer(Atmosphere):
         """
         Evaluate absorption coefficient given a spectral context.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Particle layer extinction coefficient.
         """
         # TODO: no z_level here?
@@ -391,12 +416,16 @@ class ParticleLayer(Atmosphere):
         """
         Evaluate absorption coefficient given a spectral context.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Particle layer absorption coefficient.
         """
         return self.eval_sigma_t_mono(w) - self.eval_sigma_s_mono(w)
@@ -408,12 +437,15 @@ class ParticleLayer(Atmosphere):
         """
         Evaluate scattering coefficient given a spectral context.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        quantity
             Particle layer scattering coefficient.
         """
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
@@ -431,20 +463,21 @@ class ParticleLayer(Atmosphere):
     def eval_sigma_s_ckd(self, *bindexes: Bindex):
         raise NotImplementedError
 
-    def eval_radprops(
-        self,
-        spectral_ctx: SpectralContext
-    ) -> xr.Dataset:
+    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties profile of the
         particle layer.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Particle layer radiative properties profile dataset.
         """
         # TODO: Rename eval_dataset()?
@@ -519,16 +552,20 @@ class ParticleLayer(Atmosphere):
 
         where :math:`tau` is the particle layer optical thickness.
 
-        Parameter ``ki`` (:class:`~pint.Quantity` or :class:`~np.ndarray`):
+        Parameters
+        ----------
+        ki : quantity or ndarray
             Dimensionless extinction coefficients values [].
 
-        Parameter ``dz`` (:class:`~pint.Quantity` or :class:`~np.ndarray`):
+        dz : quantity or ndarray
             Layer divisions thickness [km].
 
-        Parameter ``tau`` (float):
+        tau : float
             Layer optical thickness (dimensionless).
 
-        Returns → :class:`~pint.Quantity`
+        Returns
+        -------
+        quantity
             Normalised extinction coefficients.
         """
         return ki * tau / (np.sum(ki) * dz)

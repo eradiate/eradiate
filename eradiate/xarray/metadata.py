@@ -22,29 +22,34 @@ def validate_metadata(
     spec: DataSpec,
     normalize: bool = False,
     allow_unknown: bool = False,
-):
+) -> t.Dict:
     """
     Validate (and possibly normalise) metadata fields of the ``data``
     parameter based on a data specification.
 
-    Parameter ``data``:
+    Parameters
+    ----------
+    data : Dataset or DataArray or :class:`xarray.Coordinate`
         Either a dataset, data array / data variable or coordinate variable to
         validate the metadata of.
 
-    Parameter ``spec`` (:class:`DataSpec`):
-        Appropriate :class:`DataSpec` child class matching the type of ``data``.
+    spec : :class:`.DataSpec`
+        Appropriate :class:`.DataSpec` child class matching the type of ``data``.
 
-    Parameter ``normalize`` (bool):
+    normalize : bool
         If ``True``, also normalise metadata.
 
-    Parameter ``allow_unknown`` (bool):
+    allow_unknown : bool
         If ``True``, allows unknown keys.
 
-    Returns:
+    Returns
+    -------
         If ``normalize`` is ``True``, normalised metadata dictionary; otherwise,
         unmodified metadata dictionary.
 
-    Raises → ValueError:
+    Raises
+    ------
+    ValueError
         Got errors during metadata validation.
     """
     v = cerberus.Validator(schema=spec.schema, allow_unknown=allow_unknown)
@@ -64,8 +69,10 @@ class DataSpec:
 
     @property
     def schema(self) -> t.Dict:
-        """Cerberus schema for metadata validation and normalisation. This
-        default implementation raises a NotImplementedError."""
+        """
+        Cerberus schema for metadata validation and normalisation. This
+        default implementation raises NotImplementedError.
+        """
         raise NotImplementedError
 
 
@@ -89,14 +96,14 @@ class CoordSpec(DataSpec):
         "to be confused with dimensionless), *i.e.* it should be applied no unit. "
         "This is typically useful for coordinates consisting of string labels, "
         "which do not have units and are not used for computation. ",
-        type="str or None",
+        type="str, optional",
     )
 
     long_name: t.Optional[str] = documented(
         attr.ib(),
         doc="`Long name as implied by the CF-convention "
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#long-name>`_.",
-        type="str",
+        type="str, optional",
     )
 
     @property
@@ -137,7 +144,9 @@ class CoordSpecRegistry:
     This class also serves stored objects, either individually or as consistent
     collections.
 
-    .. note:: This class should not be instantiated.
+    Warnings
+    --------
+    This class should not be instantiated.
     """
 
     #: Coordinate specification registry (dict[str, :class:`CoordSpec`]).
@@ -152,10 +161,12 @@ class CoordSpecRegistry:
         """
         Add a :class:`CoordSpec` instance to the registry.
 
-        Parameter ``spec_id`` (str):
+        Parameters
+        ----------
+        spec_id : str
             Registry keyword.
 
-        Parameter ``coord_spec`` (:class:`CoordSpec`):
+        coord_spec : :class:`.CoordSpec`
             Registered object.
         """
         cls.registry[spec_id] = coord_spec
@@ -167,10 +178,12 @@ class CoordSpecRegistry:
         Registered coordinate specifications must be already registered
         to this registry (see :meth:`register`).
 
-        Parameter ``collection_id`` (str):
+        Parameters
+        ----------
+        collection_id : str
             Registry keyword.
 
-        Parameter ``coord_spec_ids`` (list[str]):
+        coord_spec_ids : (list[str]):
             List of coordinate specification registry keys to add to the created
             collection.
         """
@@ -180,12 +193,17 @@ class CoordSpecRegistry:
 
     @classmethod
     def get(cls, coord_spec_id: str) -> CoordSpec:
-        """Query the registry for a coordinate specification.
+        """
+        Query the registry for a coordinate specification.
 
-        Parameter ``coord_spec_id`` (str):
+        Parameters
+        ----------
+        coord_spec_id : str
             Coordinate specification identifier to lookup in the registry.
 
-        Returns → :class:`CoordSpec`:
+        Returns
+        -------
+        :class:`.CoordSpec`:
             Looked up coordinate specification.
         """
         return cls.registry[coord_spec_id]
@@ -195,12 +213,17 @@ class CoordSpecRegistry:
         """
         Query the collection registry for a coordinate specification collection.
 
-        Parameter ``collection_id`` (str):
+        Parameters
+        ----------
+        collection_id : str
             Coordinate specification collection identifier to lookup in the
             registry.
 
-        Returns → dict[str, :class:`CoordSpec`]:
-            Looked up coordinate specification collection.
+        Returns
+        -------
+        dict
+            Looked up coordinate specification collection as a ``{str: CoordSpec}``
+            mapping.
         """
         return cls.registry_collections[collection_id]
 
@@ -209,10 +232,13 @@ class CoordSpecRegistry:
         """Attempt conversion of ``x`` to a coordinate specification collection.
         This class method is intended for use as an ``attrs`` converter.
 
-        Parameter ``x``:
+        Parameters
+        ----------
+        x
             Object to attempt conversion of.
 
-        Returns:
+        Returns
+        -------
             If ``x`` is a string, the result of :meth:`get_collection` is
             returned. Otherwise, ``x`` is returned unchanged.
         """
@@ -311,7 +337,7 @@ class VarSpec(DataSpec):
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#standard-name>`_. "
         "If ``None``, ``long_name`` must be ``None``. If not ``None``, "
         "``long_name`` must not be ``None``.",
-        type="str or None",
+        type="str, optional",
     )
 
     units: t.Optional[str] = documented(
@@ -325,7 +351,7 @@ class VarSpec(DataSpec):
         "to be confused with dimensionless), *i.e.* it should be applied no unit. "
         "This is typically useful for coordinates consisting of string labels, "
         "which do not have units and are not used for computation.",
-        type="str or None",
+        type="str, optional",
     )
 
     long_name: t.Optional[str] = documented(
@@ -340,7 +366,7 @@ class VarSpec(DataSpec):
         "\n"
         ".. warning:: Either both or none of ``standard_name`` and "
         "``long_name`` must be ``None``.",
-        type="str or None",
+        type="str, optional",
     )
 
     coord_specs: t.Dict[str, CoordSpec] = documented(
@@ -353,7 +379,7 @@ class VarSpec(DataSpec):
         "If a string is passed, it will be converted to a coordinate "
         "specification collection using "
         ":meth:`CoordSpecRegistry.str_to_collection`.",
-        type="str or dict[str, :class:`CoordSpec`]",
+        type="str or dict[str, CoordSpec]",
     )
 
     def __attrs_post_init__(self):
@@ -370,8 +396,10 @@ class VarSpec(DataSpec):
 
     @property
     def schema(self) -> t.Dict:
-        """Cerberus schema for metadata validation and normalisation. The
-        generated schema can be found in the source code."""
+        """
+        Cerberus schema for metadata validation and normalisation. The
+        generated schema can be found in the source code.
+        """
         result = {
             "standard_name": {
                 "allowed": [self.standard_name],
@@ -412,8 +440,10 @@ class DatasetSpec(DataSpec):
     """
     Specification for a dataset.
 
-    .. warning:: Either all or none of ``convention``, ``title``, ``history``,
-       ``source`` and ``references`` must be ``None``.
+    Warnings
+    --------
+    Either all or none of ``convention``, ``title``, ``history``, ``source``
+    and ``references`` must be ``None``.
     """
 
     convention: t.Optional[str] = documented(
@@ -424,8 +454,7 @@ class DatasetSpec(DataSpec):
         doc="`Convention used for metadata "
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#_overview>`_. "
         'Usually set to ``"CF-1.8".``',
-        type="str or None",
-        default="None",
+        type="str, optional",
     )
 
     title: t.Optional[str] = documented(
@@ -435,8 +464,7 @@ class DatasetSpec(DataSpec):
         ),
         doc="`Dataset title as implied by the CF-convention "
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.",
-        type="str or None",
-        default="None",
+        type="str, optional",
     )
 
     history: t.Optional[str] = documented(
@@ -446,8 +474,7 @@ class DatasetSpec(DataSpec):
         ),
         doc="`Dataset history as implied by the CF-convention "
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.",
-        type="str or None",
-        default="None",
+        type="str, optional",
     )
 
     source: t.Optional[str] = documented(
@@ -457,8 +484,7 @@ class DatasetSpec(DataSpec):
         ),
         doc="`Dataset production method as implied by the CF-convention "
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.",
-        type="str or None",
-        default="None",
+        type="str, optional",
     )
 
     references: t.Optional[str] = documented(
@@ -469,8 +495,7 @@ class DatasetSpec(DataSpec):
         doc="`References describing the data or its production process as "
         "implied by the CF-convention "
         "<http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#description-of-file-contents>`_.",
-        type="str or None",
-        default="None",
+        type="str, optional",
     )
 
     var_specs: t.Dict[str, CoordSpec] = documented(
@@ -479,8 +504,8 @@ class DatasetSpec(DataSpec):
             validator=[attr.validators.instance_of(dict), _var_specs_validator],
         ),
         doc="Specification for data variables. Empty dicts are allowed.",
-        type="dict[str, :class:`CoordSpec`]",
-        default="dict()",
+        type="dict[str, CoordSpec]",
+        default="{}",
     )
 
     coord_specs: t.Dict[str, CoordSpec] = documented(
@@ -493,8 +518,8 @@ class DatasetSpec(DataSpec):
         "If a string is passed, it will be converted to a coordinate "
         "specification collection using "
         ":meth:`CoordSpecRegistry.str_to_collection`.",
-        type="str or dict[str, :class:`CoordSpec`]",
-        default="dict()",
+        type="str or dict[str, CoordSpec]",
+        default="{}",
     )
 
     def __attrs_post_init__(self):
@@ -517,8 +542,10 @@ class DatasetSpec(DataSpec):
 
     @property
     def schema(self) -> t.Dict:
-        """Cerberus schema for metadata validation and normalisation. The
-        generated schema can be found in the source code."""
+        """
+        Cerberus schema for metadata validation and normalisation. The generated
+        schema can be found in the source code.
+        """
 
         params = {
             "convention": self.convention,

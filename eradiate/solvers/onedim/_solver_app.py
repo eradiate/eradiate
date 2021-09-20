@@ -22,7 +22,7 @@ class OneDimSolverApp(SolverApp):
 
     _SCENE_TYPE = OneDimScene
 
-    scene = documented(
+    scene: OneDimScene = documented(
         attr.ib(
             factory=OneDimScene,
             converter=lambda x: OneDimScene(**x)
@@ -35,6 +35,7 @@ class OneDimSolverApp(SolverApp):
         "interpreted by "
         ":meth:`OneDimScene.from_dict() <.OneDimScene.from_dict>`.",
         type=":class:`OneDimScene`",
+        init_type=":class:`OneDimScene` or dict",
         default=":class:`OneDimScene() <.OneDimScene>`",
     )
 

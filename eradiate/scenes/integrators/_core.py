@@ -1,3 +1,5 @@
+import typing as t
+
 import attr
 
 from ..core import SceneElement
@@ -14,7 +16,7 @@ class Integrator(SceneElement):
     Abstract base class for all integrator elements.
     """
 
-    id: str = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="integrator",
             validator=attr.validators.optional(attr.validators.instance_of(str)),

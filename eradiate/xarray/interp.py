@@ -2,7 +2,6 @@ __all__ = ["film_to_angular"]
 
 import numpy as np
 import xarray as xr
-from numpy.typing import ArrayLike
 
 from ..frame import angles_to_direction
 from ..warp import uniform_hemisphere_to_square
@@ -10,8 +9,8 @@ from ..warp import uniform_hemisphere_to_square
 
 def film_to_angular(
     da: xr.DataArray,
-    theta: ArrayLike,
-    phi: ArrayLike,
+    theta: np.typing.ArrayLike,
+    phi: np.typing.ArrayLike,
     x_label: str = "x",
     y_label: str = "y",
     theta_label: str = "theta",
@@ -20,28 +19,32 @@ def film_to_angular(
     """
     Interpolate a hemispherical film data array on an angular grid.
 
-    Parameter ``da`` (:class:`xarray.DataArray`):
+    Parameters
+    ----------
+    da : DataArray
         Data array with film coordinate pixels to interpolate on an angular grid.
 
-    Parameter ``theta`` (array-like):
+    theta : array-like
         List of zenith angle values.
 
-    Parameter ``phi`` (array-like):
+    phi : array-like
         List of azimuth angle values.
 
-    Parameter ``x_label`` (str):
+    x_label : str, default: "x"
         Label for the width pixel coordinate.
 
-    Parameter ``y_label`` (str):
+    y_label : str, default: "y"
         Label for the height pixel coordinate.
 
-    Parameter ``theta_label`` (str):
+    theta_label : str, default: "theta"
         Label for the zenith angle coordinate.
 
-    Parameter ``phi_label`` (str):
+    phi_label : str, default: "phi"
         Label for the azimuth angle coordinate.
 
-    Returns → :class:`xarray.DataArray`:
+    Returns
+    -------
+    DataArray
         Data array interpolated on the specified angular grid.
     """
 

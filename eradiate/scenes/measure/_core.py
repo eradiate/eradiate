@@ -78,7 +78,9 @@ class MeasureSpectralConfig(ABC):
         drive the evaluation of spectrally dependent components during a
         spectral loop.
 
-        Returns → list[:class:`SpectralContext`]:
+        Returns
+        -------
+        list of :class:`.SpectralContext`
             List of generated spectral contexts. The concrete class
             (:class:`.MonoSpectralContext`, :class:`.CKDSpectralContext`, etc.)
             depends on the active mode.
@@ -91,31 +93,33 @@ class MeasureSpectralConfig(ABC):
         Create a new instance of one of the :class:`.SpectralContext` child
         classes. *The instantiated class is defined based on the currently active
         mode.* Keyword arguments are passed to the instantiated class's
-        constructor:
+        constructor.
 
-        .. rubric:: Monochromatic modes [:class:`.MonoMeasureSpectralConfig`]
+        Parameters
+        ----------
+        **kwargs
+            Keyword arguments depending on the currently active mode (see below
+            for a list of actual keyword arguments).
 
-        Parameter ``wavelengths`` (:class:`pint.Quantity`):
+        wavelengths : quantity, default: [550] nm
+            **Monochromatic modes** [:class:`.MonoMeasureSpectralConfig`].
             List of wavelengths (automatically converted to a Numpy array).
-            Default: [550] nm.
+            *Unit-enabled field (default: ucc[wavelength]).*
 
-            Unit-enabled field (default: ucc[wavelength]).
-
-        .. rubric:: CKD modes [:class:`.CKDMeasureSpectralConfig`]
-
-        Parameter ``bin_set`` (:class:`.BinSet`):
+        bin_set : :class:`.BinSet` or str, default: "10nm"
+            **CKD modes** [:class:`.CKDMeasureSpectralConfig`].
             CKD bin set definition. If a string is passed, the data
             repository is queried for the corresponding identifier using
-            :meth:`.BinSet.from_db`. Default: "10nm".
+            :meth:`.BinSet.from_db`.
 
-        Parameter ``bins`` (list[str or tuple or dict or callable]):
+        bins : list of (str or tuple or dict or callable)
+            **CKD modes** [:class:`.CKDSpectralContext`].
             List of CKD bins on which to perform the spectral loop. If unset,
             all the bins defined by the selected bin set will be covered.
 
-        .. seealso::
-
-           * :func:`eradiate.mode`
-           * :func:`eradiate.set_mode`
+        See Also
+        --------
+        :func:`eradiate.mode`, :func:`eradiate.set_mode`
         """
         mode = eradiate.mode()
 
@@ -140,10 +144,14 @@ class MeasureSpectralConfig(ABC):
         the passed dictionary to merge any field with an associated ``"_units"``
         field into a :class:`pint.Quantity` container.
 
-        Parameter ``d`` (dict):
+        Parameters
+        ----------
+        d : dict
             Configuration dictionary used for initialisation.
 
-        Returns → :class:`.MeasureSpectralConfig`:
+        Returns
+        -------
+        :class:`.MeasureSpectralConfig`
             Created object.
         """
 
@@ -154,7 +162,7 @@ class MeasureSpectralConfig(ABC):
         return MeasureSpectralConfig.new(**d_copy)
 
     @staticmethod
-    def convert(value) -> t.Any:
+    def convert(value: t.Any) -> t.Any:
         """
         Object converter method.
 
@@ -187,7 +195,8 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
         ),
         doc="List of wavelengths on which to perform the monochromatic spectral "
         "loop.\n\nUnit-enabled field (default: ucc['wavelength']).",
-        type="array",
+        type="quantity",
+        init_type="quantity or array-like",
         default="[550.0] nm",
     )
 
@@ -282,7 +291,8 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
         doc="CKD bin set definition. If a string is passed, the data "
         "repository is queried for the corresponding identifier using "
         ":meth:`.BinSet.from_db`.",
-        type=":class:`~.ckd.BinSet` or str",
+        type=":class:`~.ckd.BinSet`",
+        init_type=":class:`~.ckd.BinSet` or str",
         default='"10nm"',
     )
 
@@ -294,7 +304,8 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
         doc="List of CKD bins on which to perform the spectral loop. If set to "
         "``AUTO``, all the bins relevant to the selected spectral response will be "
         "covered.",
-        type="list[str or tuple or dict or callable] or AUTO",
+        type="list of str or AUTO",
+        init_type="list of (str or tuple or dict or callable) or AUTO",
         default="AUTO",
     )
 
@@ -316,7 +327,10 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
     @property
     def bins(self) -> t.Tuple[Bin]:
         """
-        List of selected bins.
+        Returns
+        -------
+        tuple of :class:`.Bin`
+            List of selected bins.
         """
         if self._bins is not AUTO:
             bin_selectors = self._bins
@@ -360,7 +374,7 @@ class MeasureResults:
     :class:`.Measure.postprocess` pipeline.
     """
 
-    raw: t.Optional[t.Dict] = documented(
+    raw: t.Dict = documented(
         attr.ib(
             factory=dict,
             validator=attr.validators.optional(attr.validators.instance_of(dict)),
@@ -413,12 +427,16 @@ class MeasureResults:
 
         .. important:: The spectral coordinate is sorted.
 
-        Parameter ``aggregate_spps`` (bool):
+        Parameters
+        ----------
+        aggregate_spps : bool
             If ``True``, perform split SPP aggregation (*i.e.* sum results using
             SPP values as weights). This will result in the ``sensor_id``
             dimension being dropped.
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Raw sensor data repacked as a :class:`~xarray.Dataset`.
         """
 
@@ -546,7 +564,9 @@ class MeasureResults:
         """
         Return metadata for the spectral coordinate based on active mode.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             Metadata dictionary, ready to attach to the appropriate xarray
             coordinate object.
         """
@@ -572,18 +592,23 @@ class MeasureResults:
         """
         Collect spectral and sensor coordinate values from raw result dictionary.
 
-        Parameter ``raw`` (dict):
+        Parameters
+        ----------
+        raw : dict
             Raw result dictionary.
 
-        Returns → tuple(list, list, tuple[int, int]):
-            A tuple with:
+        Returns
+        -------
+        spectral_coords : list
+            Spectral coordinate values, sorted in ascending order (in CKD modes,
+            numeric string bin IDs are sorted in natural order, meaning that
+            "1000" will indeed be after "900").
 
-            * ``spectral_coords``: spectral coordinate values, sorted in
-              ascending order (in CKD modes, numeric string bin IDs are sorted
-              in natural order, meaning that "1000" will indeed be after "900");
-            * ``sensor_ids``: sensor coordinate values, sorted in ascending
-              order;
-            * ``film_size``: sensor film size as a (int, int) pair.
+        sensor_ids : list
+            Sensor coordinate values, sorted in ascending order.
+
+        film_size : tuple
+            Sensor film size as a (int, int) pair.
         """
         spectral_coords = set()
         sensor_ids = set()
@@ -619,19 +644,23 @@ class MeasureResults:
         """
         Collect spectral and sensor coordinate values from raw result dictionary.
 
-        Parameter ``raw`` (dict):
+        Parameters
+        ----------
+        raw : dict
             Raw result dictionary.
 
-        Parameter ``spectral_coords`` (list):
+        spectral_coords : list
             Spectral coordinate values.
 
-        Parameter ``sensor_ids`` (list):
+        sensor_ids : list
             Sensor coordinate values.
 
-        Parameter ``film_size`` (tuple[int, int]):
+        film_size : tuple[int, int]
             Sensor film size.
 
-        Returns → array:
+        Returns
+        -------
+        ndarray
             Sensor data values as a Numpy array. Dimensions are ordered as follows:
 
             * spectral;
@@ -671,16 +700,20 @@ class MeasureResults:
         """
         Collect sample count values for each (spectral_index, sensor_index) pair.
 
-         Parameter ``raw`` (dict):
+        Parameters
+        ----------
+        raw : dict
             Raw result dictionary.
 
-        Parameter ``spectral_coords`` (list):
+        spectral_coords : list
             Spectral coordinate values.
 
-        Parameter ``sensor_ids`` (list):
+        sensor_ids : list
             Sensor coordinate values.
 
-        Returns → array:
+        Returns
+        -------
+        array
             Sample count for each spectral channel and each sensor.
             Dimensions are ordered as follows:
 
@@ -702,11 +735,18 @@ class MeasureResults:
         """
         Compute pixel coordinates from a film size.
 
-        Parameter ``film_size`` (tuple[int, int]):
-            Film size.
+        Parameters
+        ----------
+        film_size : tuple of int
+            Film size as a (int, int) pair.
 
-        Returns → tuple[array, array]:
-            (x, y) arrays with pixel coordinates in the [0, 1] × [0, 1] space.
+        Returns
+        -------
+        x : array
+            x pixel coordinates in the [0, 1] × [0, 1] space.
+
+        y : array
+            y pixel coordinates in the [0, 1] × [0, 1] space.
         """
 
         # Compute pixel film coordinates
@@ -721,10 +761,14 @@ class MeasureResults:
         """
         Create spectral index based on current mode.
 
-        Parameter ``spectral_coords`` (array-like):
+        Parameters
+        ----------
+        spectral_coords : array-like
             List of spectral coordinate values.
 
-        Returns → :class:`pandas.Index`:
+        Returns
+        -------
+        pd.Index
             Generated index (possibly a multi-index).
         """
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
@@ -764,9 +808,10 @@ class Measure(SceneElement, ABC):
         ),
         doc="Spectral configuration of the measure. Must match the current "
         "operational mode. Can be passed as a dictionary, which will be "
-        "interpreted by :meth:`MeasureSpectralConfig.from_dict`.",
-        type=":meth:`MeasureSpectralConfig.new() <.MeasureSpectralConfig.new>`",
-        default="None",
+        "interpreted by :meth:`.MeasureSpectralConfig.from_dict`.",
+        type=":class:`.MeasureSpectralConfig`",
+        init_type=":class:`.MeasureSpectralConfig` or dict",
+        default=":meth:`MeasureSpectralConfig.new() <.MeasureSpectralConfig.new>`",
     )
 
     spp: int = documented(
@@ -779,8 +824,8 @@ class Measure(SceneElement, ABC):
     results: MeasureResults = documented(
         attr.ib(factory=MeasureResults),
         doc="Storage for raw results yielded by the kernel.",
-        default=":class:`MeasureResults() <.MeasureResults>`",
         type=":class:`.MeasureResults`",
+        default=":class:`MeasureResults() <.MeasureResults>`",
     )
 
     # Private attributes
@@ -809,7 +854,9 @@ class Measure(SceneElement, ABC):
         Subclasses may override this method and add other suffixes
         for their specific purposes.
 
-        Returns → list[:class:`.SensorInfo`]:
+        Returns
+        -------
+        list of :class:`.SensorInfo`
             List of sensor information data structures.
         """
         spps = self._split_spp()
@@ -836,7 +883,9 @@ class Measure(SceneElement, ABC):
         Sensor records will have to be combined using
         :meth:`.postprocess_results`.
 
-        Returns → list[int]:
+        Returns
+        -------
+        list of int
             List of split SPPs if relevant.
         """
 
@@ -862,7 +911,9 @@ class Measure(SceneElement, ABC):
         aggregates SPP-split raw results and computes CKD quadrature if relevant.
         Overloads can perform additional post-processing tasks and add metadata.
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Post-processed results.
         """
         result = self.results.to_dataset(aggregate_spps=True)
@@ -876,13 +927,17 @@ class Measure(SceneElement, ABC):
         """
         Evaluate quadrature in CKD mode and reindex data.
 
-        Parameter ``ds`` (:class:`xarray.Dataset`):
+        Parameters
+        ----------
+        ds : Dataset
             Raw result dataset as generated by the
             :meth:`.MeasureResults.to_dataset` method, *i.e.* with a ``raw``
             data variable and  a multi-level index attached to a ``bd``
             dimension.
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Post-processed results with the quadrature computed for each film
             pixel, and the ``bd`` dimension replaced by a wavelength dimension
             coordinate.

@@ -14,10 +14,6 @@ from ...validators import has_quantity
 class ConstantIllumination(Illumination):
     """
     Constant illumination scene element [``constant``].
-
-    Attributes
-    ----------
-    radiance : :class:`.Spectrum`
     """
 
     radiance: Spectrum = documented(
@@ -27,8 +23,9 @@ class ConstantIllumination(Illumination):
             validator=[attr.validators.instance_of(Spectrum), has_quantity("radiance")],
         ),
         doc="Emitted radiance spectrum. Must be a radiance spectrum "
-        "(in W/m^2/sr/nm or compatible units).",
-        type="float or :class:`~eradiate.scenes.spectra.Spectrum`",
+        "(in W/m²/sr/nm or compatible units).",
+        type=":class:`~eradiate.scenes.spectra.Spectrum`",
+        init_type=":class:`~eradiate.scenes.spectra.Spectrum` or dict or float",
         default="1.0 ucc[radiance]",
     )
 

@@ -31,7 +31,8 @@ class DirectionalIllumination(Illumination):
             units=ucc.deferred("angle"),
         ),
         doc="Zenith angle.\n\nUnit-enabled field (default units: ucc[angle]).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="0.0 deg",
     )
 
@@ -44,7 +45,8 @@ class DirectionalIllumination(Illumination):
         doc="Azimuth angle value.\n"
         "\n"
         "Unit-enabled field (default units: ucc[angle]).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="0.0 deg",
     )
 
@@ -58,10 +60,11 @@ class DirectionalIllumination(Illumination):
             ],
         ),
         doc="Emitted power flux in the plane orthogonal to the illumination direction. "
-        "Must be an irradiance spectrum (in W/m^2/nm or compatible unit). "
+        "Must be an irradiance spectrum (in W/m²/nm or compatible unit). "
         "Can be initialised with a dictionary processed by "
         ":meth:`.SpectrumFactory.convert`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
+        init_type=":class:`~eradiate.scenes.spectra.Spectrum` or dict or float",
         default=":class:`SolarIrradianceSpectrum() <.SolarIrradianceSpectrum>`",
     )
 

@@ -61,7 +61,7 @@ class AbstractTree(Tree):
     used to shift the leaf cloud **in addition** to the trunk's extent.
     """
 
-    id: str = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="abstract_tree",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -81,21 +81,23 @@ class AbstractTree(Tree):
         "be interpreted by :data:`.biosphere_factory`. If the latter case, the "
         '``"type"`` parameter, if omitted, will implicitly be set to '
         '``"leaf_cloud"``.',
-        type=":class:`.LeafCloud`",
-        default="None",
+        type=":class:`.LeafCloud`, optional",
+        init_type=":class:`.LeafCloud` or dict, optional",
     )
 
     trunk_height: pint.Quantity = documented(
         pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Trunk height.\n\nUnit-enabled field (default: ucc['length']).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="1.0 m",
     )
 
     trunk_radius: pint.Quantity = documented(
         pinttr.ib(default=0.1 * ureg.m, units=ucc.deferred("length")),
         doc="Trunk radius.\n\nUnit-enabled field (default: ucc['length']).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="0.1 m",
     )
 
@@ -111,6 +113,7 @@ class AbstractTree(Tree):
         doc="Reflectance spectrum of the trunk. "
         "Must be a reflectance spectrum (dimensionless).",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.5",
     )
 
@@ -119,7 +122,8 @@ class AbstractTree(Tree):
         doc="Additional offset for the leaf cloud. 3-vector.\n"
         "\n"
         "Unit-enabled field (default: ucc['length'])",
-        type="array-like",
+        type="quantity",
+        init_type="array-like",
         default="[0, 0, 0]",
     )
 
@@ -219,7 +223,7 @@ class MeshTree(Tree):
     the tree.
 
     The mesh will be interpreted in local coordinates and should be used in an
-    :class:`InstancedCanopyElement` to place at arbitrary positions in a scene.
+    :class:`.InstancedCanopyElement` to place at arbitrary positions in a scene.
     """
 
     id: str = documented(
@@ -245,7 +249,8 @@ class MeshTree(Tree):
         "initialised with a :class:`.InstancedCanopyElement`, which will be "
         "automatically wrapped into a list. Dictionary-based specifications are "
         "allowed as well.",
-        type="list[:class:`.InstancedCanopyElement`]",
+        type="list of :class:`.InstancedCanopyElement`",
+        init_type="list of (InstancedCanopyElement | dict)",
         default="[]",
     )
 
@@ -291,17 +296,17 @@ class MeshTreeElement:
             validator=attr.validators.optional(attr.validators.instance_of(str)),
         ),
         doc="User-defined object identifier.",
-        type="str or None",
-        default="None",
+        type="str, optional",
     )
 
-    mesh_filename: t.Optional[Path] = documented(
+    mesh_filename: Path = documented(
         attr.ib(
-            converter=attr.converters.optional(Path),
+            converter=Path,
             kw_only=True,
         ),
         doc="Path to the triangulated mesh data file. This parameter is required.",
-        type="path-like",
+        type=":class:`pathlib.Path`",
+        init_type="path-like",
     )
 
     @mesh_filename.validator
@@ -322,8 +327,8 @@ class MeshTreeElement:
         doc="Units the mesh was defined in. Used to convert to kernel units. "
         "If this value is ``None``, the mesh is interpreted as being defined in"
         "kernel units.",
-        type="str or :class:`pint.Unit` or None",
-        default="None",
+        type=":class:`pint.Unit`, optional",
+        init_type="str or :class:`pint.Unit`, optional",
     )
 
     @mesh_units.validator
@@ -346,6 +351,7 @@ class MeshTreeElement:
         doc="Reflectance of the object. "
         "Must be a reflectance spectrum (dimensionless).",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.5",
     )
 
@@ -361,6 +367,7 @@ class MeshTreeElement:
         doc="Transmittance of the object. "
         "Must be a transmittance spectrum (dimensionless).",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.0",
     )
 

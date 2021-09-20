@@ -55,7 +55,8 @@ class MolecularAtmosphere(Atmosphere):
             validator=attr.validators.instance_of(xr.Dataset),
         ),
         doc="Thermophysical properties.",
-        type=":class:`~xarray.Dataset`",
+        type="Dataset",
+        default=":meth:`us76.make_profile() <eradiate.thermoprops.us76.make_profile>`",
     )
 
     phase: PhaseFunction = documented(
@@ -212,10 +213,14 @@ class MolecularAtmosphere(Atmosphere):
         """
         Evaluates the molecular atmosphere's radiative properties.
 
-        Parameter ``spectral_ctx`` (:class:`SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`SpectralContext`
             Spectral context.
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        :class:`~xarray.Dataset`
             Radiative properties dataset.
         """
         return self.radprops_profile.eval_dataset(spectral_ctx=spectral_ctx)
@@ -333,6 +338,28 @@ class MolecularAtmosphere(Atmosphere):
         thermophysical properties profiles
         :cite:`Anderson1986AtmosphericConstituentProfiles`.
 
+        Parameters
+        ----------
+        model : {"us_standard", "tropical", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter"}, default: "us_standard"
+            AFGL (1986) model identifier.
+
+        levels : quantity
+            Altitude levels.
+
+        concentrations : dict
+            Molecules concentrations as a ``{str: quantity}`` mapping.
+
+        **kwargs
+            Keyword arguments passed to the :class:`.MolecularAtmosphere`
+            constructor.
+
+        Returns
+        -------
+        :class:`MolecularAtmosphere`
+            AFGL (1986) molecular atmosphere.
+
+        Notes
+        -----
         :cite:`Anderson1986AtmosphericConstituentProfiles` defines six models,
         listed in the table below.
 
@@ -364,14 +391,14 @@ class MolecularAtmosphere(Atmosphere):
 
         .. attention::
 
-            The original altitude mesh specified by
-            :cite:`Anderson1986AtmosphericConstituentProfiles` is a piece-wise
-            regular altitude mesh with an altitude step of 1 km from 0 to 25 km,
-            2.5 km from 25 km to 50 km and 5 km from 50 km to 120 km.
-            Since the Eradiate kernel only supports regular altitude mesh, the
-            original atmospheric thermophysical properties profiles were
-            interpolated on the regular altitude mesh with an altitude step of 1 km
-            from 0 to 120 km.
+           The original altitude mesh specified by
+           :cite:`Anderson1986AtmosphericConstituentProfiles` is a piecewise
+           regular altitude mesh with an altitude step of 1 km from 0 to 25 km,
+           2.5 km from 25 km to 50 km and 5 km from 50 km to 120 km.
+           Since the Eradiate kernel only supports regular altitude mesh, the
+           original atmospheric thermophysical properties profiles were
+           interpolated on the regular altitude mesh with an altitude step of 1 km
+           from 0 to 120 km.
 
         Although the altitude meshes of the interpolated
         :cite:`Anderson1986AtmosphericConstituentProfiles` profiles is fixed,
@@ -385,22 +412,6 @@ class MolecularAtmosphere(Atmosphere):
         However, this class allows you to rescale the concentrations of each
         individual molecular species to custom concentration values.
         Custom concentrations can be provided in different units.
-
-        Parameter ``model`` (str):
-            AFGL (1986) model identifier.
-
-        Parameter ``levels`` (:class:`pint.Quantity`):
-            Altitude levels.
-
-        Parameter ``concentrations`` (dict[str, :class:`pint.Quantity`]):
-            Molecules concentrations.
-
-        Parameter ``**kwargs`` (dict[str]):
-            Keyword arguments passed to :class:`MolecularAtmosphere`'s
-            constructor.
-
-        Returns → :class:`MolecularAtmosphere`:
-            AFGL (1986) molecular atmosphere.
         """
         ds = afgl1986.make_profile(model_id=model)
 
@@ -424,17 +435,21 @@ class MolecularAtmosphere(Atmosphere):
         Molecular atmosphere based on the US Standard Atmosphere (1976) model
         :cite:`NASA1976USStandardAtmosphere`.
 
-        Parameter ``levels`` (:class:`pint.Quantity` or None):
+        Parameters
+        ----------
+        levels : quantity, optional
             Altitude levels. If ``None``, defaults to [0, 1, ..., 99, 100] km.
 
-        Parameter ``concentrations`` (dict[str, :class:`pint.Quantity`])
-            Molecules concentrations.
+        concentrations : dict
+            Molecules concentrations as a ``{str: quantity}`` mapping.
 
-        Parameter ``**kwargs`` (dict[str]):
-            Keyword arguments passed to :class:`MolecularAtmosphere`'s
+        **kwargs
+            Keyword arguments passed to the :class:`MolecularAtmosphere`
             constructor.
 
-        Returns → :class:`MolecularAtmosphere`:
+        Returns
+        -------
+        :class:`.MolecularAtmosphere`
             U.S. Standard Atmosphere (1976) molecular atmosphere object.
         """
         if levels is None:

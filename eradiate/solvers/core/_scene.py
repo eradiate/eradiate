@@ -42,7 +42,8 @@ class Scene(SceneElement, ABC):
         "This parameter can be specified as a dictionary which will be "
         "interpreted by "
         ":meth:`IlluminationFactory.convert() <.IlluminationFactory.convert>`.",
-        type=":class:`.DirectionalIllumination` or dict",
+        type=":class:`.DirectionalIllumination`",
+        init_type=":class:`.DirectionalIllumination` or dict",
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
 
@@ -67,7 +68,7 @@ class Scene(SceneElement, ABC):
         ".. note:: The target zone will be overridden using canopy "
         "parameters if unset. If no canopy is specified, surface size "
         "parameters will be used.",
-        type="list[:class:`.Measure`] or list[dict] or :class:`.Measure` or dict",
+        init_type="list of (Measure|dict) or :class:`.Measure` or dict",
         default=":class:`DistantMeasure() <.DistantMeasure>`",
     )
 
@@ -92,7 +93,8 @@ class Scene(SceneElement, ABC):
         "This parameter can be specified as a dictionary which will be "
         "interpreted by "
         ":meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`.",
-        type=":class:`.Integrator` or dict",
+        type=":class:`.Integrator`",
+        init_type=":class:`.Integrator` or dict",
         default=":class:`PathIntegrator() <.PathIntegrator>`",
     )
 

@@ -40,6 +40,7 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
         doc="Asymmetry parameter. Must be dimensionless. "
         "Must be in :math:`]-1, 1[`.",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.0",
     )
 

@@ -99,12 +99,16 @@ class SolverApp(ABC):
         Run simulation on the configured scene. Raw results yielded by the
         runner function are stored in ``measure.results``.
 
-        .. seealso:: :meth:`postprocess`, :meth:`run`
-
-        Parameter ``*measures`` (:class:`.Measure` or int):
+        Parameters
+        ----------
+        *measures : :class:`.Measure` or int
             One or several measures for which to compute radiative transfer.
             Alternatively, indexes in the measure array can be passed.
             If no value is passed, all measures are processed.
+
+        See Also
+        --------
+        :meth:`postprocess`, :meth:`run`
         """
         # Mode safeguard
         if not eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
@@ -163,16 +167,22 @@ class SolverApp(ABC):
         requires a successful execution of :meth:`process`. Post-processed results
         are stored in ``self.results``.
 
-        Parameter ``*measure`` (:class:`.Measure` or int):
+        Parameters
+        ----------
+        *measure : :class:`.Measure` or int
             One or several measures for which to perform post-processing.
             Alternatively, indexes in the measure array can be passed.
             If no value is passed, all measures are processed.
 
-        Raises → ValueError:
+        Raises
+        ------
+        ValueError
             If ``measure.raw_results`` is ``None``, *i.e.* if :meth:`process`
             has not been successfully run.
 
-        .. seealso:: :meth:`process`, :meth:`run`
+        See Also
+        --------
+        :meth:`process`, :meth:`run`
         """
         if not eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -204,7 +214,9 @@ class SolverApp(ABC):
         Perform radiative transfer simulation and post-process results.
         Essentially chains :meth:`process` and :meth:`postprocess`.
 
-        Parameter ``*measures`` (:class:`.Measure` or int):
+        Parameters
+        ----------
+        *measures : :class:`.Measure` or int
             One or several measures for which to compute radiative transfer.
             Alternatively, indexes in the measure array can be passed.
             If no value is passed, all measures are processed.
@@ -216,7 +228,9 @@ class SolverApp(ABC):
         """
         Save results to NetCDF files.
 
-        Parameter ``fname_prefix`` (str):
+        Parameters
+        ----------
+        fname_prefix : str
             Filename prefix for result storage. A NetCDF file is created for
             each measure.
         """
@@ -231,7 +245,9 @@ class SolverApp(ABC):
         """
         Make default plots for stored results and save them to the hard drive.
 
-        Parameter ``fname_prefix`` (str):
+        Parameters
+        ----------
+        fname_prefix : str
             Filename prefix for plot files. A plot file is create for each
             computed quantity of each measure.
         """

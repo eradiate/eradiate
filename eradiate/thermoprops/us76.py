@@ -25,29 +25,31 @@ from ..units import unit_registry as ureg
 
 @ureg.wraps(ret=None, args="m", strict=False)
 def make_profile(levels=ureg.Quantity(np.linspace(0.0, 1e5, 51), "m")):
-    r"""Makes an atmosphere vertical profile based on the
-    US Standard Atmosphere 1976 thermophysical model.
+    r"""
+    Makes an atmosphere vertical profile based on the US Standard Atmosphere
+    1976 thermophysical model.
 
-    .. note::
-
-        The pressure, temperature and number densities given in each layer of
-        the altitude mesh are computed at the altitude of the layers centers.
-        In other words, the layer's middle is taken as the altitude
-        representative of the whole layer. For example, in a layer with lower
-        and upper altitudes of 1000 and 2000 m, the thermophysical variables
-        are computed at the altitude of 1500 m.
-
-    Parameter ``levels`` (array):
+    Parameters
+    ----------
+    levels : array-like, default: np.linspace(0, 1e5, 51) * ureg.m
         Levels altitudes [m]. The values must be sorted by increasing order.
-
         Valid range: 0 to 1e6 m.
 
-        Default value: Q_(np.linspace(0., 1e5, 51), "m")
-
-    Returns → :class:`~xarray.Dataset`:
+    Returns
+    -------
+    Dataset
         Data set holding the values of the pressure, temperature,
         total number density and number densities of the individual
         gas species in each layer.
+
+    Notes
+    -----
+    The pressure, temperature and number densities given in each layer of
+    the altitude mesh are computed at the altitude of the layers centers.
+    In other words, the layer's middle is taken as the altitude
+    representative of the whole layer. For example, in a layer with lower
+    and upper altitudes of 1000 and 2000 m, the thermophysical variables
+    are computed at the altitude of 1500 m.
     """
 
     if np.any(levels > 1e6) or np.any(levels < 0.0):
@@ -393,24 +395,30 @@ DIMS = {
 
 @ureg.wraps(ret=None, args=("m", None), strict=False)
 def create(z, variables=None):
-    r"""Creates a US Standard Atmosphere 1976 data set using specified altitudes
+    """
+    Creates a US Standard Atmosphere 1976 data set using specified altitudes
     values.
 
-    .. warning::
-        The returned U.S. Standard Atmosphere 1976 data set is not an
-        atmospheric vertical profile data set. See
-        :func:`eradiate.thermoprops.us76.make_profile`
-        if you are interested in generating an atmospheric vertical profile
-        based on the U.S. Standard Atmosphere 1976 model.
-
-    Parameter ``z`` (array):
+    Parameters
+    ----------
+    z : array-like
         1-D array with altitude values [m].
 
-    Parameter ``variable`` (list):
+    variables : list, optional
         Names of the variables to compute.
 
-    Returns → :class:`~xarray.Dataset`:
+    Returns
+    -------
+    Dataset
         Data set holding the values of the different atmospheric variables.
+
+    Warnings
+    --------
+    The returned U.S. Standard Atmosphere 1976 data set is not an
+    atmospheric vertical profile data set. See
+    :func:`eradiate.thermoprops.us76.make_profile`
+    if you are interested in generating an atmospheric vertical profile
+    based on the U.S. Standard Atmosphere 1976 model.
     """
 
     if np.any(z < 0.0):
@@ -450,21 +458,26 @@ def create(z, variables=None):
 
 
 def compute_low_altitude(data_set, mask=None, inplace=False):
-    r"""Computes the US Standard Atmosphere 1976 in the low-altitude region.
+    r"""
+    Computes the US Standard Atmosphere 1976 in the low-altitude region.
 
-    Parameter ``data_set`` (xr.Dataset):
+    Parameters
+    ----------
+    data_set : Dataset
         Data set to compute.
 
-    Parameter ``mask`` (xr.DataArray):
+    mask : DataArray, optional
         Mask to select the region of the data set to compute.
         By default, the mask selects the entire data set.
 
-    Parameter ``inplace`` (bool):
+    inplace : bool, default: False
         If true, modifies ``data_set`` in place, else returns a copy of
         ``data_set``.
         Default: False.
 
-    Returns → None or :class:`~xarray.Dataset`:
+    Returns
+    -------
+    Dataset or None
         If ``inplace`` is True, returns nothing, else returns a copy of
         ``data_set``.
         the values of the computed variables.
@@ -530,21 +543,26 @@ def compute_low_altitude(data_set, mask=None, inplace=False):
 
 
 def compute_high_altitude(data_set, mask=None, inplace=False):
-    r"""Computes the US Standard Atmosphere 1976 in the high-altitude region.
+    r"""
+    Computes the US Standard Atmosphere 1976 in the high-altitude region.
 
-    Parameter ``data_set`` (xr.Dataset):
+    Parameters
+    ----------
+    data_set : Dataset
         Data set to compute.
 
-    Parameter ``mask`` (xr.DataArray):
+    mask : DataArray, optional
         Mask to select the region of the data set to compute.
         By default, the mask selects the entire data set.
 
-    Parameter ``inplace`` (bool):
+    inplace : bool, default: False
         If true, modifies ``data_set`` in place, else returns a copy of
         ``data_set``.
         Default: False.
 
-    Returns → None or :class:`~xarray.Dataset`:
+    Returns
+    -------
+    Dataset or None
         If ``inplace`` is True, returns nothing, else returns a copy of
         ``data_set``.
     """
@@ -603,12 +621,17 @@ def compute_high_altitude(data_set, mask=None, inplace=False):
 
 @ureg.wraps(ret=None, args="m", strict=False)
 def init_data_set(z):
-    r"""Initialises the data set.
+    r"""
+    Initialises the data set.
 
-    Parameter ``z`` (array):
+    Parameters
+    ----------
+    z : array
         Altitudes values [m]
 
-    Returns → :class:`~xarray.Dataset`:
+    Returns
+    -------
+    Dataset
         Initialised data set.
     """
     data_vars = {}
@@ -649,11 +672,17 @@ def init_data_set(z):
 
 
 def compute_levels_temperature_and_pressure_low_altitude():
-    r"""Computes the temperature and the pressure values at the 8 levels
+    r"""
+    Computes the temperature and the pressure values at the 8 levels
     of the low-altitude model.
 
-    Returns → array, array:
-         Levels temperature values [K] and levels pressure values [Pa].
+    Returns
+    -------
+    array
+         Levels temperature values [K].
+
+    array
+        Levels pressure values [Pa].
     """
     tb = [T0]
     pb = [P0]
@@ -674,7 +703,8 @@ def compute_levels_temperature_and_pressure_low_altitude():
 
 @ureg.wraps(ret=None, args="km", strict=False)
 def compute_number_densities_high_altitude(altitudes):
-    r"""Computes the number density of the individual species in the
+    r"""
+    Computes the number density of the individual species in the
     high-altitude region.
 
     .. note::
@@ -683,10 +713,14 @@ def compute_number_densities_high_altitude(altitudes):
         individual species. This gridded data is then interpolated at the query
         ``altitudes`` using a linear interpolation scheme in logarithmic space.
 
-    Parameter ``altitudes`` (array-like):
+    Parameters
+    ----------
+    altitudes : array-like
         Altitude value(s) [km].
 
-    Returns → array:
+    Returns
+    -------
+    ndarray
         Number densities of the individual species and total number density at
         the given altitudes [m^-3].
         The number densities of the individual species are stored in a single
@@ -821,12 +855,17 @@ def compute_number_densities_high_altitude(altitudes):
 
 @ureg.wraps(ret=None, args="km", strict=False)
 def compute_mean_molar_mass_high_altitude(z):
-    r"""Computes the mean molar mass in the high-altitude region.
+    r"""
+    Computes the mean molar mass in the high-altitude region.
 
-    Parameter ``z`` (array):
+    Parameters
+    ----------
+    z : array
         Altitude [km].
 
-    Returns → array:
+    Returns
+    -------
+    ndarray
         Mean molar mass [kg/mol].
     """
     return np.where(z <= 100.0, M0, M["N2"])
@@ -839,7 +878,9 @@ def compute_temperature_high_altitude(altitude):
     Parameter ``altitude`` (array):
         Altitude values [km].
 
-    Returns → array:
+    Returns
+    -------
+    array:
         Temperature values [K].
     """
     r0 = R0 / 1e3  # km
@@ -853,7 +894,9 @@ def compute_temperature_high_altitude(altitude):
         Parameter ``z`` (float):
             Altitude [km].
 
-        Returns → float:
+        Returns
+        -------
+        float:
             Temperature [K].
         """
         if Z7 <= z <= Z8:
@@ -874,12 +917,17 @@ def compute_temperature_high_altitude(altitude):
 
 @ureg.wraps(ret=None, args="km", strict=False)
 def compute_temperature_gradient_high_altitude(altitude):
-    r"""Computes the temperature gradient in the high-altitude region.
+    r"""
+    Computes the temperature gradient in the high-altitude region.
 
-    Parameter ``altitude`` (array):
+    Parameters
+    ----------
+    altitude : array
         Altitude values [km].
 
-    Returns → array:
+    Returns
+    -------
+    ndarray
         Temperature gradient values [K/m].
     """
     a = -76.3232  # [dimensionless]
@@ -891,7 +939,9 @@ def compute_temperature_gradient_high_altitude(altitude):
         Parameter ``z`` (float):
             Altitude [km].
 
-        Returns → float:
+        Returns
+        -------
+        float:
             Temperature gradient [K/km].
         """
         if Z7 <= z <= Z8:
@@ -916,22 +966,29 @@ def compute_temperature_gradient_high_altitude(altitude):
 
 @ureg.wraps(ret=None, args=("m^-3", "K", "m^-1*s^-1", "m^-1*s^-1"), strict=False)
 def thermal_diffusion_coefficient(background, temperature, a, b):
-    r"""Computes the thermal diffusion coefficient values in the
-    high-altitude region.
+    r"""
+    Computes the thermal diffusion coefficient values in the high-altitude
+    region.
 
-    Parameter ``n`` (array):
+    Parameters
+    ----------
+    n : array
         Background number density values [m^-3].
 
-    Parameter ``t`` (array):
+    Parameters
+    ----------
+    t : array
         Temperature values [K].
 
-    Parameter ``a`` (float):
+    a : float
         Thermal diffusion constant a [m^-1*s^-1].
 
-    Parameter ``b`` (float):
+    b : float
         Thermal diffusion constant b [m^-1*s^-1].
 
-    Returns → array:
+    Returns
+    -------
+    array
         Values of the thermal diffusion coefficient [m^2/s].
     """
     return (a / background) * np.power(temperature / 273.15, b)
@@ -939,17 +996,23 @@ def thermal_diffusion_coefficient(background, temperature, a, b):
 
 @ureg.wraps(ret=None, args="km", strict=False)
 def eddy_diffusion_coefficient(z):
-    r"""Computes the values of the Eddy diffusion coefficient in the
-    high-altitude region.
+    r"""
+    Computes the values of the Eddy diffusion coefficient in the high-altitude
+    region.
 
-    .. note::
-        Valid in the altitude region :math:`86 <= z <= 150` km.
-
-    Parameter ``z`` (array):
+    Parameters
+    ----------
+    z : array
         Altitude values [km].
 
-    Returns → array:
+    Returns
+    -------
+    array
         Eddy diffusion coefficient values [m^2/s].
+
+    Notes
+    -----
+    Valid in the altitude region :math:`86 <= z <= 150` km.
     """
     return np.where(
         z < 95.0, K_7, K_7 * np.exp(1.0 - (400.0 / (400.0 - np.square(z - 95.0))))
@@ -962,37 +1025,42 @@ def eddy_diffusion_coefficient(z):
     strict=False,
 )
 def f_below_115_km(g, t, dt_dz, m, mi, alpha, d, k):
-    r"""Evaluates the function :math:`f` defined by equation (36) in
+    r"""
+    Evaluates the function :math:`f` defined by equation (36) in
     :cite:`NASA1976USStandardAtmosphere` in the altitude region :math:`86
     <= z <= 115` km.
 
-    Parameter ``g`` (float or array-like):
+    Parameters
+    ----------
+    g : float or array-like
         Values of gravity at the different altitudes [m / s^2].
 
-    Parameter ``t`` (float or array-like):
+    t : float or array-like
         Values of temperature at the different altitudes [K].
 
-    Parameter ``dt_dz`` (float or array-like):
+    dt_dz : float or array-like
         Values of temperature gradient at the different altitudes [K/m].
 
-    Parameter ``m`` (float):
+    m : float
         Molar mass [kg/mol].
 
-    Parameter ``mi`` (float):
+    mi : float
         Species molar mass [kg/mol]
 
-    Parameter ``alpha`` (float):
+    alpha : float
         Alpha thermal diffusion constant [dimensionless].
 
-    Parameter ``d`` (float or array-like):
+    d : float or array-like
         Values of the thermal diffusion coefficient at the different altitudes
         [m^2/s].
 
-    Parameter ``k`` (float or array-like):
+    k : float or array-like
         Values of the Eddy diffusion coefficient at the different altitudes
         [m^2/s].
 
-    Returns → array:
+    Returns
+    -------
+    array
         Values of the function f at the different altitudes [m^-1].
     """
     return (g / (R * t)) * (d / (d + k)) * (mi + (m * k) / d + (alpha * R * dt_dz) / g)
@@ -1000,26 +1068,31 @@ def f_below_115_km(g, t, dt_dz, m, mi, alpha, d, k):
 
 @ureg.wraps(ret=None, args=("m/s^2", "K", "K/m", "kg/mol", None), strict=False)
 def f_above_115_km(g, t, dt_dz, mi, alpha):
-    r"""Evaluates the function :math:`f` defined by equation (36) in
+    r"""
+    Evaluates the function :math:`f` defined by equation (36) in
     :cite:`NASA1976USStandardAtmosphere` in the altitude region :math:`115 <
     z <= 1000` km.
 
-    Parameter ``g`` (float or array-like):
+    Parameters
+    ----------
+    g : float or array-like
         Values of gravity at the different altitudes [m/s^2].
 
-    Parameter ``t`` (float or array-like):
+    t : float or array-like
         Values of temperature at the different altitudes [K].
 
-    Parameter ``dt_dz`` (float or array-like):
+    dt_dz : float or array-like
         Values of temperature gradient at the different altitudes [K/m].
 
-    Parameter ``mi`` (float):
+    mi : float
         Species molar mass [kg/mol]
 
-    Parameter ``alpha`` (float):
+    alpha : float
         Alpha thermal diffusion constant [dimensionless].
 
-    Returns → array:
+    Returns
+    -------
+    array
         Values of the function f at the different altitudes [m^-1].
     """
     return (g / (R * t)) * (mi + ((alpha * R) / g) * dt_dz)
@@ -1031,34 +1104,39 @@ def f_above_115_km(g, t, dt_dz, mi, alpha):
     strict=False,
 )
 def thermal_diffusion_term(species, grid, g, t, dt_dz, m, d, k):
-    r"""Computes the thermal diffusion term of a given species in the
+    r"""
+    Computes the thermal diffusion term of a given species in the
     high-altitude region.
 
-    Parameter ``species`` (str):
+    Parameters
+    ----------
+    species : str
         Species.
 
-    Parameter ``grid`` (array):
+    grid : array
         Altitude grid [km].
 
-    Parameter ``g`` (array):
+    g : array
         Values of the gravity on the altitude grid [m/s^2].
 
-    Parameter ``t`` (array):
+    t : array
         Values of the temperature on the altitude grid [K].
 
-    Parameter ``dt_dz`` (array):
+    dt_dz : array
         Values of the temperature gradient on the altitude grid [K/m].
 
-    Parameter ``m`` (array):
+    m : array
         Values of the mean molar mass on the altitude grid [kg/mol].
 
-    Parameter ``d`` (array):
+    d : array
         Values of the molecular diffusion coefficient on the altitude grid, for altitudes < 115 km [m^2/s].
 
-    Parameter ``k`` (array):
+    k : array
         Values of the eddy diffusion coefficient on the altitude grid, for altitudes < 115 km [m^2/s].
 
-    Returns → array:
+    Returns
+    -------
+    array
         Values of the thermal diffusion term [km^-1].
     """
     fo1 = f_below_115_km(
@@ -1083,28 +1161,33 @@ def thermal_diffusion_term(species, grid, g, t, dt_dz, m, d, k):
 
 @ureg.wraps(ret=None, args=("km", "m/s^2", "K", "K/m", "m^2/s", "m^2/s"), strict=False)
 def thermal_diffusion_term_atomic_oxygen(grid, g, t, dt_dz, d, k):
-    r"""Computes the thermal diffusion term of atomic oxygen in the
-    high-altitude region.
+    r"""
+    Computes the thermal diffusion term of atomic oxygen in the high-altitude
+    region.
 
-    Parameter ``grid`` (array):
+    Parameters
+    ----------
+    grid : array
         Altitude grid [km].
 
-    Parameter ``g`` (array):
+    g : array
         Values of the gravity on the altitude grid [m/s^2].
 
-    Parameter ``t`` (array):
+    t : array
         Values of the temperature on the altitude grid [K].
 
-    Parameter ``dt_dz`` (array):
+    dt_dz : array
         Values of the temperature gradient on the altitude grid [K/m].
 
-    Parameter ``d`` (array):
+    d : array
         Values of thermal diffusion coefficient on the altitude grid [m^2/s].
 
-    Parameter ``k`` (array):
+    k : array
         Values of the Eddy diffusion coefficient on the altitude grid [m^2/s].
 
-    Returns → array:
+    Returns
+    -------
+    array:
         Values of the thermal diffusion term [km^-1].
     """
     mask1, mask2 = grid < 115.0, grid >= 115.0
@@ -1122,35 +1205,41 @@ def thermal_diffusion_term_atomic_oxygen(grid, g, t, dt_dz, d, k):
     ret=None, args=("m", "km^-3", "km^-3", "km", "km", "km^-3", "km^-3"), strict=False
 )
 def velocity_term_hump(z, q1, q2, u1, u2, w1, w2):
-    r"""Computes the transport term given by equation (37) in
+    r"""
+    Computes the transport term given by equation (37) in
     :cite:`NASA1976USStandardAtmosphere`.
 
-    .. note::
-        Valid in the altitude region: 86 km <= z <= 150 km
-
-    Parameter ``z`` (float or array-like):
+    Parameters
+    ----------
+    z : float or array-like
         Altitude [km].
 
-    Parameter ``q1`` (float):
+    q1 : float
         Value of the Q constant [km^-3].
 
-    Parameter ``q2`` (float):
+    q2 : float
         Value of the q constant [km^-3].
 
-    Parameter ``u1`` (float):
+    u1 : float
         Value of the U constant [km].
 
-    Parameter ``u2`` (float)
+    u2 : floa
         Value of the u constant [km].
 
-    Parameter ``w1`` (float)
+    w1 : floa
         Value of the W constant [km^-3].
 
-    Parameter ``w2`` (float)
+    w2 : floa
         Value of the w constant [km^-3].
 
-    Returns → float or array-like:
+    Returns
+    -------
+    float or array-like:
         Values of the transport term [km^-1].
+
+    Notes
+    -----
+    Valid in the altitude region: 86 km <= z <= 150 km
     """
     # @formatter:off
     return (
@@ -1162,26 +1251,32 @@ def velocity_term_hump(z, q1, q2, u1, u2, w1, w2):
 
 @ureg.wraps(ret=None, args=("km", "km^-3", "km^-3", "km^-3"), strict=False)
 def velocity_term_no_hump(z, q1, u1, w1):
-    r"""Computes the transport term given by equation (37) in
+    r"""
+    Computes the transport term given by equation (37) in
     :cite:`NASA1976USStandardAtmosphere` where the second term is zero.
 
-    .. note::
-        Valid in the altitude region :math:`86 <= z <= 150` km.
-
-    Parameter ``z`` (float or array-like):
+    Parameters
+    ----------
+    z : float or array-like
         Altitude [km].
 
-    Parameter ``q1`` (float):
+    q1 : float
         Value of the Q constant [km^-3].
 
-    Parameter ``u1`` (float):
+    u1 : float
         Value of the U constant [km].
 
-    Parameter ``w1`` (float)
+    w1 : floa
         Value of the W constant [km^-3].
 
-    Returns → float or array-like:
+    Returns
+    -------
+    float or array-like:
         Values of the transport term [km^-1].
+
+    Notes
+    -----
+    Valid in the altitude region :math:`86 <= z <= 150` km.
     """
     # @formatter:off
     return (
@@ -1192,20 +1287,25 @@ def velocity_term_no_hump(z, q1, u1, w1):
 
 @ureg.wraps(ret=None, args=(None, "km"), strict=False)
 def velocity_term(species, grid):
-    r"""Computes the velocity term of a given species in the
-    high-altitude region.
+    r"""
+    Computes the velocity term of a given species in the high-altitude region.
 
-    .. note::
-        Not valid for atomic oxygen. See :func:`velocity_term_atomic_oxygen`
-
-    Parameter ``species`` (str):
+    Parameters
+    ----------
+    species : str
         Species.
 
-    Parameter ``grid`` (array):
+    grid : array
         Altitude grid [km].
 
-    Returns → array:
+    Returns
+    -------
+    array:
         Values of the velocity terms [km^-1].
+
+    Notes
+    -----
+    Not valid for atomic oxygen. See :func:`velocity_term_atomic_oxygen`
     """
     x1 = velocity_term_no_hump(
         grid[grid <= 150.0], Q1[species], U1[species], W1[species]
@@ -1220,12 +1320,17 @@ def velocity_term(species, grid):
 
 @ureg.wraps(ret=None, args="km", strict=False)
 def velocity_term_atomic_oxygen(grid):
-    r"""Computes the velocity term of atomic oxygen in the high-altitude region.
+    r"""
+    Computes the velocity term of atomic oxygen in the high-altitude region.
 
-    Parameter ``grid`` (array):
+    Parameters
+    ----------
+    grid : array
         Altitude grid [km].
 
-    Returns → array:
+    Returns
+    -------
+    array:
         Values of the velocity term [km^-1].
     """
     mask1, mask2 = grid <= 150.0, grid > 150.0
@@ -1243,20 +1348,26 @@ def velocity_term_atomic_oxygen(grid):
 
 @ureg.wraps(ret=None, args=("km", None), strict=False)
 def tau_function(z_grid, below_500=True):
-    r"""Computes the integral given by equation (40) in
+    r"""
+    Computes the integral given by equation (40) in
     :cite:`NASA1976USStandardAtmosphere` at each point of an altitude grid.
 
-    .. note::
-        Valid for altitudes between 150 km and 500 km.
-
-    Parameter ``z_grid`` (array-like):
+    Parameters
+    ----------
+    z_grid : array-like
         Altitude grid (values sorted by ascending order) to use for integration [km].
 
-    Parameter ``below_500`` (bool):
+    below_500 : bool
         True if altitudes in z_grid are lower than 500 km, False otherwise.
 
-    Returns → array:
+    Returns
+    -------
+    array:
         Integral evaluations [dimensionless].
+
+    Notes
+    -----
+    Valid for altitudes between 150 km and 500 km.
     """
     if below_500:
         z_grid = z_grid[::-1]
@@ -1276,16 +1387,21 @@ def tau_function(z_grid, below_500=True):
 
 
 def log_interp1d(x, y):
-    """Computes the linear interpolation of :math:`y(x)` in logarithmic space.
+    """
+    Computes the linear interpolation of :math:`y(x)` in logarithmic space.
 
-    Parameter ``x`` (array):
+    Parameters
+    ----------
+    x : array
         1-D array of real value.
 
-    Parameter ``y`` (array):
+    y : array
         N-D array of real values. The length of y along the interpolation axis
         must be equal to the length of x.
 
-    Returns → callable:
+    Returns
+    -------
+    callable:
         Function whose call method uses interpolation to find the value of new
         points.
     """
@@ -1301,15 +1417,20 @@ def log_interp1d(x, y):
 
 @ureg.wraps(ret=None, args=("m", "Pa", "K"), strict=False)
 def compute_pressure_low_altitude(h, pb, tb):
-    r"""Computes the pressure in the low-altitude region.
+    r"""
+    Computes the pressure in the low-altitude region.
 
-    Parameter ``h`` (array):
+    Parameters
+    ----------
+    h : array
         Geopotential height values [m].
 
-    Parameter ``p_levels`` (array-like):
+    p_levels : array-like
         Levels pressure [Pa].
 
-    Returns → array:
+    Returns
+    -------
+    array:
         Pressure values [Pa].
     """
     # we create a mask for each layer
@@ -1332,22 +1453,27 @@ def compute_pressure_low_altitude(h, pb, tb):
 
 @ureg.wraps(ret=None, args=("m", "m", "Pa", "K"), strict=False)
 def compute_pressure_low_altitude_zero_gradient(h, hb, pb, tb):
-    r"""Computes the pressure in the low-altitude region when the temperature
+    r"""
+    Computes the pressure in the low-altitude region when the temperature
     gradient is zero.
 
-    Parameter ``h`` (float or array-like):
+    Parameters
+    ----------
+    h : float or array-like
         Geopotential height [m].
 
-    Parameter ``hb`` (float or array-like):
+    hb : float or array-like
         Geopotential height at the bottom of the layer [m].
 
-    Parameter ``pb`` (float or array-like):
+    pb : float or array-like
         Pressure at the bottom of the layer [Pa].
 
-    Parameter ``tb`` (float or array-like):
+    tb : float or array-like
         Temperature at the bottom of the layer [K].
 
-    Returns → float or array-like:
+    Returns
+    -------
+    float or array-like:
         Pressure [Pa].
     """
     return pb * np.exp(-G0 * M0 * (h - hb) / (R * tb))
@@ -1355,22 +1481,27 @@ def compute_pressure_low_altitude_zero_gradient(h, hb, pb, tb):
 
 @ureg.wraps(ret=None, args=("m", "m", "Pa", "K", "K/m"), strict=False)
 def compute_pressure_low_altitude_non_zero_gradient(h, hb, pb, tb, lkb):
-    r"""Computes the pressure in the low-altitude region when the temperature
+    r"""
+    Computes the pressure in the low-altitude region when the temperature
     gradient is non-zero.
 
-    Parameter ``h`` (float or array-like):
+    Parameters
+    ----------
+    h : float or array-like
         Geopotential height [m].
 
-    Parameter ``hb`` (float or array-like):
+    hb : float or array-like
         Geopotential height at the bottom of the layer [m].
 
-    Parameter ``pb`` (float or array-like):
+    pb : float or array-like
         Pressure at the bottom of the layer [Pa].
 
-    Parameter ``tb`` (float or array-like):
+    tb : float or array-like
         Temperature at the bottom of the layer [K].
 
-    Returns → float or array-like:
+    Returns
+    -------
+    float or array-like:
         Pressure [Pa].
     """
     return pb * np.power(tb / (tb + lkb * (h - hb)), G0 * M0 / (R * lkb))
@@ -1378,15 +1509,20 @@ def compute_pressure_low_altitude_non_zero_gradient(h, hb, pb, tb, lkb):
 
 @ureg.wraps(ret=None, args=("m", "K"), strict=False)
 def compute_temperature_low_altitude(h, tb):
-    r"""Computes the temperature in the low-altitude region.
+    r"""
+    Computes the temperature in the low-altitude region.
 
-    Parameter ``h`` (array):
+    Parameters
+    ----------
+    h : array
         Geopotential height values [m].
 
-    Parameter ``tb`` (array-like):
+    tb : array-like
         Levels temperature values [K].
 
-    Returns → array:
+    Returns
+    -------
+    array:
         Temperature [K].
     """
     # we create a mask for each layer
@@ -1405,12 +1541,17 @@ def compute_temperature_low_altitude(h, tb):
 
 @ureg.wraps(ret=None, args="m", strict=False)
 def to_altitude(h):
-    r"""Converts geopotential height to (geometric) altitude.
+    r"""
+    Converts geopotential height to (geometric) altitude.
 
-    Parameter ``h`` (float or array-like):
+    Parameters
+    ----------
+    h : float or array-like
         Geopotential altitude [m].
 
-    Returns → float or array-like:
+    Returns
+    -------
+    float or array-like:
         Altitude [m]
     """
     return R0 * h / (R0 - h)
@@ -1418,12 +1559,17 @@ def to_altitude(h):
 
 @ureg.wraps(ret=None, args="m", strict=False)
 def to_geopotential_height(z):
-    r"""Converts altitude to geopotential height.
+    r"""
+    Converts altitude to geopotential height.
 
-    Parameter ``z`` (float or array-like):
+    Parameters
+    ----------
+    z : float or array-like
         Altitude [m].
 
-    Returns → float or array-like:
+    Returns
+    -------
+    float or array-like:
         Geopotential height [m]
     """
     return R0 * z / (R0 + z)
@@ -1431,12 +1577,17 @@ def to_geopotential_height(z):
 
 @ureg.wraps(ret=None, args="m", strict=False)
 def compute_gravity(z):
-    r"""Computes the gravity.
+    r"""
+    Computes the gravity.
 
-    Parameter ``z`` (float or array-like):
+    Parameters
+    ----------
+    z : float or array-like
         Altitude [m].
 
-    Returns → float or array-like:
+    Returns
+    -------
+    float or array-like:
         Gravity [m/s^2].
     """
     return G0 * np.power((R0 / (R0 + z)), 2.0)

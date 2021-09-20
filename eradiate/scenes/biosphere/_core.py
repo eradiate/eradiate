@@ -28,7 +28,7 @@ class Canopy(SceneElement, ABC):
     An abstract base class defining a base type for all canopies.
     """
 
-    id: str = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="canopy",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -38,7 +38,7 @@ class Canopy(SceneElement, ABC):
         default='"canopy"',
     )
 
-    size: pint.Quantity = documented(
+    size: t.Optional[pint.Quantity] = documented(
         pinttr.ib(
             default=None,
             validator=attr.validators.optional(
@@ -50,7 +50,8 @@ class Canopy(SceneElement, ABC):
             units=ucc.deferred("length"),
         ),
         doc="Canopy size as a 3-vector.\n\nUnit-enabled field (default: ucc['length']).",
-        type="array-like",
+        type="quantity",
+        init_type="array-like",
     )
 
     @abstractmethod
@@ -166,7 +167,7 @@ class InstancedCanopyElement(SceneElement):
           from_file
     """
 
-    canopy_element: CanopyElement = documented(
+    canopy_element: t.Optional[CanopyElement] = documented(
         attr.ib(
             default=None,
             validator=attr.validators.optional(
@@ -176,8 +177,7 @@ class InstancedCanopyElement(SceneElement):
         ),
         doc="Instanced canopy element. Can be specified as a dictionary, which "
         "will be converted by :data:`.biosphere_factory`.",
-        type=":class:`.CanopyElement`",
-        default="None",
+        type=":class:`.CanopyElement`, optional",
     )
 
     instance_positions: pint.Quantity = documented(
@@ -188,7 +188,8 @@ class InstancedCanopyElement(SceneElement):
         doc="Instance positions as an (n, 3)-array.\n"
         "\n"
         "Unit-enabled field (default: ucc['length'])",
-        type="array-like",
+        type="quantity",
+        init_type="array-like",
         default="[]",
     )
 
@@ -223,22 +224,28 @@ class InstancedCanopyElement(SceneElement):
 
            Location coordinates are assumed to be given in meters.
 
-        Parameter ``filename`` (path-like):
+        Parameters
+        ----------
+        filename : path-like
             Path to the text file specifying the leaves in the canopy.
             Can be absolute or relative.
 
-        Parameter ``canopy_element`` (:class:`.CanopyElement` or dict or None):
+        canopy_element : :class:`.CanopyElement` or dict, optional
             :class:`.CanopyElement` to be instanced. If a dictionary is passed,
             if is interpreted by :data:`.biosphere_factory`. If set to
             ``None``, an empty leaf cloud will be created.
 
-        Returns → :class:`.InstancedCanopyElement`:
+        Returns
+        -------
+        :class:`.InstancedCanopyElement`
             Created :class:`.InstancedCanopyElement`.
 
-        Raises → ValueError:
+        Raises
+        ------
+        ValueError
             If ``filename`` is set to ``None``.
 
-        Raises → FileNotFoundError:
+        FileNotFoundError
             If ``filename`` does not point to an existing file.
         """
         if not os.path.isfile(filename):

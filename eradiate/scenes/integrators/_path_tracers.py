@@ -23,27 +23,24 @@ class MonteCarloIntegrator(Integrator):
         attr.ib(default=None, converter=attr.converters.optional(int)),
         doc="Longest path depth in the generated measure data (where -1 corresponds "
         "to ∞). A value of 1 will display only visible emitters. 2 will lead to "
-        "direct illumination (no multiple scattering), etc. If set to ``None``, "
+        "direct illumination (no multiple scattering), etc. If unset, "
         "the kernel default value (-1) will be used.",
-        type="int",
-        default="None",
+        type="int, optional",
     )
 
     rr_depth: t.Optional[int] = documented(
         attr.ib(default=None, converter=attr.converters.optional(int)),
         doc="Minimum path depth after which the implementation will start to use the "
-        "Russian roulette path termination criterion. If set to ``None``, "
+        "Russian roulette path termination criterion. If unset, "
         "the kernel default value (5) will be used.",
-        type="int",
-        default="None",
+        type="int, optional",
     )
 
     hide_emitters: t.Optional[bool] = documented(
         attr.ib(default=None, converter=attr.converters.optional(bool)),
-        doc="Hide directly visible emitters. If set to ``None``, "
+        doc="Hide directly visible emitters. If unset, "
         "the kernel default value (``false``) will be used.",
-        type="bool",
-        default="None",
+        type="bool, optional",
     )
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:

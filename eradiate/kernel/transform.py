@@ -3,33 +3,38 @@ import typing as t
 
 def map_unit_cube(
     xmin: float, xmax: float, ymin: float, ymax: float, zmin: float, zmax: float
-) -> t.Any:
+) -> "mitsuba.core.ScalarTransform4f":
     """
     Map the unit cube to [xmin, xmax] x [ymin, ymax] x [zmin, zmax].
 
-    .. note::
-        You must select a Mitsuba variant before calling this function.
-
-    Parameter ``xmin`` (float):
+    Parameters
+    ----------
+    xmin : float
         Minimum X value.
 
-    Parameter ``xmax`` (float):
+    xmax : float
         Maximum X value.
 
-    Parameter ``ymin`` (float):
+    ymin : float
         Minimum Y value.
 
-    Parameter ``ymax`` (float):
+    ymax : float
         Maximum Y value.
 
-    Parameter ``zmin`` (float):
+    zmin : float
         Minimum Z value.
 
-    Parameter ``zmax`` (float):
+    zmax : float
         Maximum Z value.
 
-    Returns → :class:`~mitsuba.core.ScalarTransform4f`
+    Returns
+    -------
+    :class:`~mitsuba.core.ScalarTransform4f`
         Transform matrix.
+
+    Warnings
+    --------
+    You must select a Mitsuba variant before calling this function.
     """
     from mitsuba.core import ScalarTransform4f
 
@@ -40,33 +45,38 @@ def map_unit_cube(
 
 def map_cube(
     xmin: float, xmax: float, ymin: float, ymax: float, zmin: float, zmax: float
-) -> t.Any:
+) -> "mitsuba.core.ScalarTransform4f":
     """
     Map the cube [-1, 1]^3 to [xmin, xmax] x [ymin, ymax] x [zmin, zmax].
 
-    .. note::
-        You must select a Mitsuba variant before calling this function.
-
-    Parameter ``xmin`` (float):
+    Parameters
+    ----------
+    xmin : float
         Minimum X value.
 
-    Parameter ``xmax`` (float):
+    xmax : float
         Maximum X value.
 
-    Parameter ``ymin`` (float):
+    ymin : float
         Minimum Y value.
 
-    Parameter ``ymax`` (float):
+    ymax : float
         Maximum Y value.
 
-    Parameter ``zmin`` (float):
+    zmin : float
         Minimum Z value.
 
-    Parameter ``zmax`` (float):
+    zmax : float
         Maximum Z value.
 
-    Returns → :class:`~mitsuba.core.ScalarTransform4f`
+    Returns
+    -------
+    :class:`~mitsuba.core.ScalarTransform4f`
         Transform matrix.
+
+    Warnings
+    --------
+    You must select a Mitsuba variant before calling this function.
     """
     from mitsuba.core import ScalarTransform4f
 

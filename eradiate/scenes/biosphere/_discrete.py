@@ -75,7 +75,7 @@ class DiscreteCanopy(Canopy):
         "initialised with a :class:`.InstancedCanopyElement`, which will be "
         "automatically wrapped into a list. Dictionary-based specifications are "
         "allowed as well.",
-        type="list[:class:`.InstancedCanopyElement`]",
+        type="list of :class:`.InstancedCanopyElement`",
         default="[]",
     )
 
@@ -87,11 +87,15 @@ class DiscreteCanopy(Canopy):
         """
         Return BSDF plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             Return a dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
             attached to the shapes in the canopy.
@@ -105,11 +109,15 @@ class DiscreteCanopy(Canopy):
         """
         Return shape plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             in the canopy.
@@ -123,7 +131,9 @@ class DiscreteCanopy(Canopy):
         """
         Return instance plugin specifications.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing instances.
         """
@@ -156,13 +166,17 @@ class DiscreteCanopy(Canopy):
         """
         Return a copy of the current canopy padded with additional copies.
 
-        Parameter ``padding`` (int):
+        Parameters
+        ----------
+        padding : int
             Amount of padding around the canopy. Must be positive or zero.
             The resulting padded canopy is a grid of
             :math:`2 \\times \\mathit{padding} + 1` copies.
 
-        Returns → :class:`.DiscreteCanopy`:
-            Padded copy.
+        Returns
+        -------
+        :class:`.DiscreteCanopy`
+            Padded copy of self.
         """
         if padding < 0:
             raise ValueError("padding must be >= 0")
@@ -223,16 +237,20 @@ class DiscreteCanopy(Canopy):
         Create a discrete canopy and pad it with copies of itself. Keyword
         arguments are forwarded to the default constructor.
 
-        Parameter ``padding`` (int):
+        Parameters
+        ----------
+        padding : int
             Amount of padding around the canopy. Must be positive or zero.
             The resulting padded canopy is a grid of
             :math:`2 \\times \\mathit{padding} + 1` copies.
 
-        Parameter ``**kwargs``:
+        **kwargs``
             Keyword arguments forwarded to the :class:`.DiscreteCanopy`
             constructor.
 
-        Returns → :class:`.DiscreteCanopy`:
+        Returns
+        -------
+        :class:`.DiscreteCanopy`
             Padded discrete canopy.
         """
         return cls(**kwargs).padded_copy(padding)
@@ -248,22 +266,27 @@ class DiscreteCanopy(Canopy):
         Generate a homogeneous discrete canopy, possibly padded with copies of
         itself.
 
-        Parameter ``padding`` (int):
+        Parameters
+        ----------
+        padding : int
             Amount of padding around the canopy. Must be positive or zero.
             The resulting padded canopy is a grid of
             :math:`2 \\times \\mathit{padding} + 1` copies.
 
-        Parameter ``id`` (str):
+        id : str, default: "homogeneous_discrete_canopy"
             Canopy object ID.
 
-        Parameter ``**leaf_cloud_kwargs``:
+        **leaf_cloud_kwargs
             Keyword arguments forwarded to :meth:`.LeafCloud.cuboid`.
 
-            .. note::
-               The leaf cloud's ID will be set to ``f"{id}_leaf_cloud"``.
-
-        Returns → :class:`.DiscreteCanopy`:
+        Returns
+        -------
+        :class:`.DiscreteCanopy`
             Created canopy object.
+
+        Notes
+        -----
+        The leaf cloud's ID will be set to ``f"{id}_leaf_cloud"``.
         """
         # Check parameters
         leaf_cloud_params = CuboidLeafCloudParams(**leaf_cloud_kwargs)
@@ -316,22 +339,26 @@ class DiscreteCanopy(Canopy):
                   "leaf_transmittance": 0.5,  # optional, leaf transmittance (default: 0.5)
               }
 
-        Parameter ``size`` (array-like):
+        Parameters
+        ----------
+        size : quantity
             Canopy size as a 3-vector (in metres).
 
-        Parameter ``leaf_cloud_dicts`` (list[dict]):
+        leaf_cloud_dicts : list of dict
             List of dictionary specifying canopy elements and instances (see
             format above).
 
-        Parameter ``padding`` (int):
+        padding : int, default: 0
             Amount of padding around the canopy. Must be positive or zero.
             The resulting padded canopy is a grid of
             :math:`2 \\times \\mathit{padding} + 1` copies.
 
-        Parameter ``id`` (str):
+        id : str, default: "discrete_canopy"
             Canopy ID.
 
-        Returns → :class:`.DiscreteCanopy`:
+        Returns
+        -------
+        :class:`.DiscreteCanopy`
             Created canopy object.
         """
         instanced_canopy_elements = []

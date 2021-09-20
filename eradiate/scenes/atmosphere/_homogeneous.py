@@ -34,7 +34,8 @@ class HomogeneousAtmosphere(Atmosphere):
             units=ucc.deferred("length"),
         ),
         doc="Atmosphere's bottom altitude.\n\nUnit-enabled field (default: ucc[length])",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="0 km",
     )
 
@@ -44,7 +45,8 @@ class HomogeneousAtmosphere(Atmosphere):
             units=ucc.deferred("length"),
         ),
         doc="Atmosphere's top altitude.\n\nUnit-enabled field (default: ucc[length]).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="10 km.",
     )
 
@@ -66,7 +68,7 @@ class HomogeneousAtmosphere(Atmosphere):
         doc="Atmosphere scattering coefficient value.\n"
         "\n"
         "Can be initialised with a dictionary processed by "
-        ":data:`scenes.spectra.spectrum_factory`.",
+        ":data:`~eradiate.scenes.spectra.spectrum_factory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum` or float",
         default=":class:`AirScatteringCoefficient() <.AirScatteringCoefficient>`",
     )
@@ -84,9 +86,9 @@ class HomogeneousAtmosphere(Atmosphere):
         "absorption.\n"
         "\n"
         "Can be initialised with a dictionary processed by "
-        ":data:`scenes.spectra.spectrum_factory`.",
+        ":data:`~eradiate.scenes.spectra.spectrum_factory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
-        default="0.0 ucc['collision_coefficient']",
+        default="0.0 ucc[collision_coefficient]",
     )
 
     phase: PhaseFunction = documented(
@@ -130,11 +132,15 @@ class HomogeneousAtmosphere(Atmosphere):
         """
         Return albedo.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Albedo.
         """
         return self.eval_sigma_s(spectral_ctx) / (
@@ -145,11 +151,15 @@ class HomogeneousAtmosphere(Atmosphere):
         """
         Return absorption coefficient.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Absorption coefficient.
         """
         return self.sigma_a.eval(spectral_ctx)
@@ -158,11 +168,15 @@ class HomogeneousAtmosphere(Atmosphere):
         """
         Return scattering coefficient.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Scattering coefficient.
         """
         return self.sigma_s.eval(spectral_ctx)
@@ -171,11 +185,15 @@ class HomogeneousAtmosphere(Atmosphere):
         """
         Return extinction coefficient.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Extinction coefficient.
         """
         return self.eval_sigma_a(spectral_ctx) + self.eval_sigma_s(spectral_ctx)
