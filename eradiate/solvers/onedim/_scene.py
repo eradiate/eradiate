@@ -38,7 +38,8 @@ class OneDimScene(Scene):
         "be added. "
         "This parameter can be specified as a dictionary which will be "
         "interpreted by :data:`.atmosphere_factory`.",
-        type=":class:`.Atmosphere` or dict or None",
+        type=":class:`.Atmosphere`, optional",
+        init_type=":class:`.Atmosphere` or dict, optional",
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )
 
@@ -52,7 +53,8 @@ class OneDimScene(Scene):
         "This parameter can be specified as a dictionary which will be "
         "interpreted by "
         ":meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`.",
-        type=":class:`.Surface` or dict",
+        type=":class:`.Surface`",
+        init_type=":class:`.Surface` or dict",
         default=":class:`LambertianSurface() <.LambertianSurface>`",
     )
 

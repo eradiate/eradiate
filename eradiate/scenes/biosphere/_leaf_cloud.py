@@ -609,13 +609,21 @@ class LeafCloud(CanopyElement):
           ellipsoid
           from_file
           sphere
+
+    Attributes
+    ----------
+    n_leaves : int
+        Number of leaves in the leaf cloud.
+
+    surface_area : quantity
+        Total surface area of the leaf cloud.
     """
 
     # --------------------------------------------------------------------------
     #                                 Fields
     # --------------------------------------------------------------------------
 
-    id: str = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="leaf_cloud",
             validator=attr.validators.optional(attr.validators.instance_of(str)),
@@ -630,7 +638,8 @@ class LeafCloud(CanopyElement):
         doc="Leaf positions in cartesian coordinates as a (n, 3)-array.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="array-like",
+        type="quantity",
+        init_type="array-like",
         default="[]",
     )
 
@@ -638,7 +647,7 @@ class LeafCloud(CanopyElement):
         attr.ib(factory=list, converter=np.array),
         doc="Leaf orientations (normal vectors) in Cartesian coordinates as a "
         "(n, 3)-array.",
-        type="array",
+        type="ndarray",
         default="[]",
     )
 
@@ -652,7 +661,8 @@ class LeafCloud(CanopyElement):
             units=ucc.deferred("length"),
         ),
         doc="Leaf radii as a n-array.\n\nUnit-enabled field (default: ucc[length]).",
-        type="array-like",
+        init_type="array-like",
+        type="quantity",
         default="[]",
     )
 
@@ -698,6 +708,7 @@ class LeafCloud(CanopyElement):
         doc="Reflectance spectrum of the leaves in the cloud. "
         "Must be a reflectance spectrum (dimensionless).",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.5",
     )
 
@@ -713,6 +724,7 @@ class LeafCloud(CanopyElement):
         doc="Transmittance spectrum of the leaves in the cloud. "
         "Must be a transmittance spectrum (dimensionless).",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.5",
     )
 
@@ -721,10 +733,14 @@ class LeafCloud(CanopyElement):
     # --------------------------------------------------------------------------
 
     def n_leaves(self) -> int:
-        """Return the number of leaves in the leaf cloud.
+        """
+        Return the number of leaves in the leaf cloud.
 
-        Returns → int:
-            Number of leaves in the leaf cloud."""
+        Returns
+        -------
+        int
+            Number of leaves in the leaf cloud.
+        """
         return len(self.leaf_positions)
 
     def surface_area(self) -> pint.Quantity:
@@ -750,8 +766,6 @@ class LeafCloud(CanopyElement):
         :class:`.CuboidLeafCloudParams` class, which allows for many parameter
         combinations.
 
-        .. seealso:: :class:`.CuboidLeafCloudParams`
-
         The produced leaf cloud uniformly covers the
         :math:`(x, y, z) \\in \\left[ -\\dfrac{l_h}{2}, + \\dfrac{l_h}{2} \\right] \\times \\left[ -\\dfrac{l_h}{2}, + \\dfrac{l_h}{2} \\right] \\times [0, l_v]`
         region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
@@ -761,22 +775,30 @@ class LeafCloud(CanopyElement):
         Finally, extra parameters control the random number generator and a
         basic and conservative leaf collision detection algorithm.
 
-        Parameter ``seed`` (int):
+        Parameters
+        ----------
+        seed : int
             Seed for the random number generator.
 
-        Parameter ``avoid_overlap`` (bool):
+        avoid_overlap : bool
             If ``True``, generate leaf positions with strict collision checks to
             avoid overlapping.
 
-        Parameter ``n_attempts`` (int):
+        n_attempts : int
             If ``avoid_overlap`` is ``True``, number of attempts made at placing
             a leaf without collision before giving up. Default: 1e5.
 
-        Parameter ``**kwargs``:
+        **kwargs
             Keyword arguments interpreted by :class:`.CuboidLeafCloudParams`.
 
-        Returns → :class:`.LeafCloud`:
+        Returns
+        -------
+        :class:`.LeafCloud`:
             Generated leaf cloud.
+
+        See Also
+        --------
+        :class:`.CuboidLeafCloudParams`
         """
         rng = np.random.default_rng(seed=seed)
         n_attempts = kwargs.pop("n_attempts", int(1e5))
@@ -819,8 +841,6 @@ class LeafCloud(CanopyElement):
         Generate a leaf cloud with spherical shape. Parameters are checked by
         the :class:`.SphereLeafCloudParams` class.
 
-        .. seealso:: :class:`.SphereLeafCloudParams`
-
         The produced leaf cloud covers uniformly the :math:`r < \\mathtt{radius}`
         region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
         of an approximated inverse beta distribution
@@ -828,14 +848,22 @@ class LeafCloud(CanopyElement):
 
         An additional parameter controls the random number generator.
 
-        Parameter ``seed`` (int):
+        Parameters
+        ----------
+        seed : int
             Seed for the random number generator.
 
-        Parameter ``**kwargs``:
+        **kwargs
             Keyword arguments interpreted by :class:`.SphereLeafCloudParams`.
 
-        Returns → :class:`.LeafCloud`:
+        Returns
+        -------
+        :class:`.LeafCloud`
             Generated leaf cloud.
+
+        See Also
+        --------
+        :class:`.SphereLeafCloudParams`
         """
         rng = np.random.default_rng(seed=seed)
         params = SphereLeafCloudParams(**kwargs)
@@ -865,8 +893,6 @@ class LeafCloud(CanopyElement):
         Generate a leaf cloud with ellipsoid shape. Parameters are checked by
         the :class:`.EllipsoidLeafCloudParams` class.
 
-        .. seealso:: :class:`.EllipsoidLeafCloudParams`
-
         The produced leaf cloud covers uniformly the volume enclosed by
         :math:`\\frac{x^2}{a^2} + \\frac{y^2}{b^2} + \\frac{z^2}{c^2}= 1` .
 
@@ -876,14 +902,22 @@ class LeafCloud(CanopyElement):
 
         An additional parameter controls the random number generator.
 
-        Parameter ``seed`` (int):
+        Parameters
+        ----------
+        seed : int
             Seed for the random number generator.
 
-        Parameter ``**kwargs``:
+        **kwargs
             Keyword arguments interpreted by :class:`.EllipsoidLeafCloudParams`.
 
-        Returns → :class:`.LeafCloud`:
+        Returns
+        -------
+        :class:`.LeafCloud`
             Generated leaf cloud.
+
+        See Also
+        --------
+        :class:`.EllipsoidLeafCloudParams`
         """
         rng = np.random.default_rng(seed=seed)
         params = EllipsoidLeafCloudParams(**kwargs)
@@ -911,8 +945,6 @@ class LeafCloud(CanopyElement):
         Generate a leaf cloud with a cylindrical shape (vertical orientation).
         Parameters are checked by the :class:`.CylinderLeafCloudParams` class.
 
-        .. seealso:: :class:`.CylinderLeafCloudParams`
-
         The produced leaf cloud covers uniformly the
         :math:`r < \\mathtt{radius}, z \\in [0, l_v]`
         region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
@@ -921,14 +953,22 @@ class LeafCloud(CanopyElement):
 
         An additional parameter controls the random number generator.
 
-        Parameter ``seed`` (int):
+        Parameters
+        ----------
+        seed : int
             Seed for the random number generator.
 
-        Parameter ``**kwargs``:
+        **kwargs
             Keyword arguments interpreted by :class:`.CylinderLeafCloudParams`.
 
-        Returns → :class:`.LeafCloud`:
+        Returns
+        -------
+        :class:`.LeafCloud`
             Generated leaf cloud.
+
+        See Also
+        --------
+        :class:`.CylinderLeafCloudParams`
         """
         rng = np.random.default_rng(seed=seed)
         params = CylinderLeafCloudParams(**kwargs)
@@ -956,8 +996,6 @@ class LeafCloud(CanopyElement):
         Generate a leaf cloud with a right conical shape (vertical orientation).
         Parameters are checked by the :class:`.ConeLeafCloudParams` class.
 
-        .. seealso:: :class:`.ConeLeafCloudParams`
-
         The produced leaf cloud covers uniformly the
         :math:`r < \\mathtt{radius} \\cdot \\left( 1 - \\frac{z}{l_v} \\right), z \\in [0, l_v]`
         region. Leaf orientation is controlled by the ``mu`` and ``nu`` parameters
@@ -966,14 +1004,22 @@ class LeafCloud(CanopyElement):
 
         An additional parameter controls the random number generator.
 
-        Parameter ``seed`` (int):
+        Parameters
+        ----------
+        seed : int
             Seed for the random number generator.
 
-        Parameter ``**kwargs``:
+        **kwargs
             Keyword arguments interpreted by :class:`.ConeLeafCloudParams`.
 
-        Returns → :class:`.LeafCloud`:
+        Returns
+        -------
+        :class:`.LeafCloud`
             Generated leaf cloud.
+
+        See Also
+        --------
+        :class:`.ConeLeafCloudParams`
         """
         rng = np.random.default_rng(seed=seed)
         params = ConeLeafCloudParams(**kwargs)
@@ -1021,28 +1067,33 @@ class LeafCloud(CanopyElement):
 
            Location coordinates are assumed to be given in meters.
 
-        Parameter ``filename`` (str or PathLike):
+        Parameters
+        ----------
+        filename : path-like
             Path to the text file specifying the leaves in the leaf cloud.
             Can be absolute or relative.
 
-        Parameter ``leaf_reflectance`` (float or :class:`.Spectrum`):
+        leaf_reflectance : :class:`.Spectrum` or float
             Reflectance spectrum of the leaves in the cloud. Must be a reflectance
             spectrum (dimensionless). Default: 0.5.
 
-        Parameter ``leaf_transmittance`` (float or :class:`.Spectrum`):
+        leaf_transmittance : :class:`.Spectrum` of float
             Transmittance spectrum of the leaves in the cloud. Must be a
             transmittance spectrum (dimensionless). Default: 0.5.
 
-        Parameter ``id`` (str):
-            ID of the created :class:`LeafCloud` instance.
+        id : str
+            ID of the created :class:`.LeafCloud` instance.
 
-        Returns → :class:`.LeafCloud`:
+        Returns
+        -------
+        :class:`.LeafCloud`:
             Generated leaf cloud.
 
-        Raises → ValueError:
-            If ``filename`` is set to ``None``.
-
-        Raises → FileNotFoundError:
+        Raises
+        ------
+        Raises
+        ------
+        FileNotFoundError
             If ``filename`` does not point to an existing file.
         """
         if not os.path.isfile(filename):
@@ -1147,15 +1198,21 @@ class LeafCloud(CanopyElement):
         """
         Return a copy of self translated by the vector ``xyz``.
 
-        Parameter ``xyz`` (:class:`pint.Quantity`):
+        Parameters
+        ----------
+        xyz : :class:`pint.Quantity`
             A 3-vector or a (N, 3)-array by which leaves will be translated. If
             (N, 3) variant is used, the array shape must match that of
             ``leaf_positions``.
 
-        Returns → :class:`LeafCloud`:
+        Returns
+        -------
+        :class:`LeafCloud`
             Translated copy of self.
 
-        Raises → ValueError:
+        Raises
+        ------
+        ValueError
             Sizes of ``xyz`` and ``self.leaf_positions`` are incompatible.
         """
         if xyz.ndim <= 1:

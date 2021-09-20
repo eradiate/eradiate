@@ -51,8 +51,14 @@ class TargetOrigin:
         * ``rectangle``: :class:`TargetOriginRectangle`
         * ``sphere``: :class:`TargetOriginSphere`
 
-        Parameter ``target_type`` (str):
+        Parameters
+        ----------
+        target_type : str
             Identifier of one of the supported child classes.
+
+        Returns
+        -------
+        :class:`.TargetOrigin`
         """
         if target_type == "point":
             return TargetOriginPoint(*args, **kwargs)
@@ -143,7 +149,8 @@ class TargetOriginRectangle(TargetOrigin):
         doc="Lower bound on the X axis.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
     )
 
     xmax: pint.Quantity = documented(
@@ -154,7 +161,8 @@ class TargetOriginRectangle(TargetOrigin):
         doc="Upper bound on the X axis.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
     )
 
     ymin: pint.Quantity = documented(
@@ -165,7 +173,8 @@ class TargetOriginRectangle(TargetOrigin):
         doc="Lower bound on the Y axis.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
     )
 
     ymax: pint.Quantity = documented(
@@ -176,7 +185,8 @@ class TargetOriginRectangle(TargetOrigin):
         doc="Upper bound on the Y axis.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
     )
 
     z: pint.Quantity = documented(
@@ -188,7 +198,8 @@ class TargetOriginRectangle(TargetOrigin):
         doc="Altitude of the plane enclosing the rectangle.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="0.0",
     )
 
@@ -218,7 +229,7 @@ class TargetOriginRectangle(TargetOrigin):
                 f"be lower than 'ymax"
             )
 
-    def kernel_item(self):
+    def kernel_item(self) -> t.Dict:
         """Return kernel item."""
         from mitsuba.core import ScalarTransform4f
 
@@ -248,7 +259,8 @@ class TargetOriginSphere(TargetOrigin):
     center: pint.Quantity = documented(
         pinttr.ib(units=ucc.deferred("length")),
         doc="Center coordinates.\n" "\n" "Unit-enabled field (default: ucc['length']).",
-        type="array-like",
+        type="quantity",
+        init_type="array-like",
     )
 
     @center.validator
@@ -265,7 +277,8 @@ class TargetOriginSphere(TargetOrigin):
             validator=[pinttr.validators.has_compatible_units, validators.is_positive],
         ),
         doc="Sphere radius.\n\nUnit-enabled field (default: ucc['length']).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
     )
 
     def kernel_item(self) -> t.Dict:
@@ -303,8 +316,8 @@ class DistantMeasure(Measure, ABC):
         "elements (which will be converted to a :class:`.TargetOriginPoint`) "
         "or a dictionary interpreted by "
         ":meth:`TargetOrigin.convert() <.TargetOrigin.convert>`.",
-        type=":class:`.TargetOrigin` or None",
-        default="None",
+        type=":class:`.TargetOrigin`, optional",
+        init_type=":class:`.TargetOrigin` or dict, optional",
     )
 
     origin: t.Optional[TargetOrigin] = documented(
@@ -322,8 +335,8 @@ class DistantMeasure(Measure, ABC):
         "to the shape specified as origin. The origin can be specified using "
         "a dictionary interpreted by "
         ":meth:`TargetOrigin.convert() <.TargetOrigin.convert>`.",
-        type=":class:`.TargetOriginSphere` or None",
-        default="None",
+        type=":class:`.TargetOrigin`, optional",
+        init_type=":class:`.TargetOrigin` or dict, optional",
     )
 
     def _postprocess_add_illumination(
@@ -336,16 +349,22 @@ class DistantMeasure(Measure, ABC):
         etadata to it. This function is to be used as part of the
         post-processing pipeline and is optional.
 
-        Parameter ``ds`` (:class:`xarray.Dataset`):
+        Parameters
+        ----------
+        ds : Dataset
             Result dataset.
 
-        Parameter ``illumination`` (:class:`.DirectionalIllumination` or :class:`ConstantIllumination`):
+        illumination : :class:`.DirectionalIllumination` or :class:`ConstantIllumination`
             Illumination whose data is to be added to the result data set.
 
-        Returns → :class:`xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Updated result dataset.
 
-        Raises → TypeError:
+        Raises
+        ------
+        TypeError
             If ``illumination`` has an unsupported type.
         """
         k_irradiance_units = uck.get("irradiance")
@@ -458,8 +477,10 @@ class DistantRadianceMeasure(DistantMeasure):
     This feature is useful if one wants to compute the average radiance leaving
     a particular subset of the scene.
 
-    .. note:: This scene element is a thin wrapper around the ``distant`` sensor
-       kernel plugin.
+    Notes
+    -----
+    This scene element is a thin wrapper around the ``distant`` sensor kernel
+    plugin.
     """
 
     _film_resolution: t.Tuple[int, int] = documented(
@@ -638,13 +659,19 @@ class DistantReflectanceMeasure(DistantRadianceMeasure):
         """
         Return post-processed raw sensor results.
 
-        Parameter ``illumination`` (:class:`.DirectionalIllumination`):
+        Parameters
+        ----------
+        illumination : :class:`.DirectionalIllumination`
             Scene illumination.
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Post-processed results.
 
-        Raises → TypeError:
+        Raises
+        ------
+        TypeError
             If ``illumination`` is missing or if it has an unsupported type.
         """
         if not isinstance(illumination, DirectionalIllumination):
@@ -698,17 +725,16 @@ class DistantFluxMeasure(DistantMeasure):
     This feature is useful if one wants to compute the average flux leaving
     a particular subset of the scene.
 
-    .. admonition:: Notes
-       :class: note
-
-       * Setting the ``target`` parameter is required to get meaningful results.
-         Solver applications should take care of setting it appropriately.
-       * The film resolution can be adjusted to manually stratify film sampling
-         and reduce variance in results. The default 32x32 is generally a good
-         choice, but scenes with sharp reflection lobes may benefit from higher
-         values.
-       * This scene element is a thin wrapper around the ``distantflux``
-         sensor kernel plugin.
+    Notes
+    -----
+    * Setting the ``target`` parameter is required to get meaningful results.
+      Solver applications should take care of setting it appropriately.
+    * The film resolution can be adjusted to manually stratify film sampling
+      and reduce variance in results. The default 32x32 is generally a good
+      choice, but scenes with sharp reflection lobes may benefit from higher
+      values.
+    * This scene element is a thin wrapper around the ``distantflux``
+      sensor kernel plugin.
     """
 
     direction: np.ndarray = documented(
@@ -815,13 +841,17 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
         """
         Return post-processed raw sensor results.
 
-        Parameter ``illumination`` (:class:`.DirectionalIllumination` or :class:`.ConstantIllumination`):
+        illumination : :class:`.DirectionalIllumination` or :class:`.ConstantIllumination`
             Scene illumination.
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Post-processed results.
 
-        Raises → TypeError:
+        Raises
+        ------
+        TypeError
             If ``illumination`` is missing or if it has an unsupported type.
         """
         if not isinstance(

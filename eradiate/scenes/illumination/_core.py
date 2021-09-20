@@ -1,3 +1,4 @@
+import typing as t
 from abc import ABC
 
 import attr
@@ -16,7 +17,7 @@ class Illumination(SceneElement, ABC):
     Abstract base class for all illumination scene elements.
     """
 
-    id: str = documented(
+    id: t.Optional[str] = documented(
         attr.ib(
             default="illumination",
             validator=attr.validators.optional(attr.validators.instance_of(str)),

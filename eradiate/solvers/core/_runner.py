@@ -9,7 +9,7 @@ from ...scenes.core import KernelDict
 _SUPPORTED_VARIANTS = {"scalar_mono", "scalar_mono_double"}
 
 
-def _check_variant():
+def _check_variant() -> None:
     variant = mitsuba.variant()
     if variant not in _SUPPORTED_VARIANTS:
         raise KernelVariantError(f"unsupported kernel variant '{variant}'")
@@ -25,14 +25,18 @@ def runner(
     .. important:: Prior to usage, a kernel variant must be selected using
        :func:`~mitsuba.set_variant`.
 
-    Parameter ``kernel_dict`` (:class:`.KernelDict`):
+    Parameters
+    ----------
+    kernel_dict : :class:`.KernelDict`
         Dictionary describing the kernel scene.
 
-    Parameter ``sensor_ids`` (list[str] or None):
-        Identifiers of the sensors for which the integrator is run. If set to
-        ``None``, all sensors are selected.
+    sensor_ids : list of str, optional
+        Identifiers of the sensors for which the integrator is run. If unset,
+        all sensors are selected.
 
-    Returns → dict:
+    Returns
+    -------
+    dict
         Nested dictionaries with the following structure:
 
         .. code:: python

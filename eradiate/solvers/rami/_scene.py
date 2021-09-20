@@ -35,7 +35,8 @@ class RamiScene(Scene):
         "interpreted by "
         ":meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`. "
         ".. note:: Surface size will be overridden using canopy parameters.",
-        type=":class:`.Surface` or dict",
+        type=":class:`.Surface`",
+        init_type=":class:`.Surface` or dict",
         default=":class:`LambertianSurface() <.LambertianSurface>`",
     )
 
@@ -56,7 +57,8 @@ class RamiScene(Scene):
         "This parameter can be specified as a dictionary which will be "
         "interpreted by "
         ":meth:`BiosphereFactory.convert() <.BiosphereFactory.convert>`.",
-        type=":class:`.Canopy` or dict",
+        type=":class:`.Canopy`, optional",
+        init_type=":class:`.Canopy` or dict, optional",
         default=":class:`HomogeneousDiscreteCanopy() <.HomogeneousDiscreteCanopy>`",
     )
 

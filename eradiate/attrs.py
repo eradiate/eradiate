@@ -185,7 +185,7 @@ def _numpy_formatter(cls_doc, field_docs):
         # Generate attribute docstring entry
         type_doc = f" : {field_type}" if field_type is not None else ""
         if not field_name.startswith("_"):
-            field_doc_brief = field_doc.doc.split(". ")[0].strip()
+            field_doc_brief = re.split(r"\. |\.\n", field_doc.doc)[0].strip()
             if not field_doc_brief.endswith("."):
                 field_doc_brief += "."
             attr_docstrings.append(

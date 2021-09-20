@@ -64,8 +64,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
             ),
         ),
         doc="Molecular atmosphere.",
-        type=":class:`.MolecularAtmosphere` or None",
-        default="None",
+        type=":class:`.MolecularAtmosphere`, optional",
     )
 
     particle_layers: t.List[ParticleLayer] = documented(
@@ -77,7 +76,7 @@ class HeterogeneousNewAtmosphere(Atmosphere):
             ),
         ),
         doc="Particle layers.",
-        type="list[:class:`.ParticleLayer`]",
+        type="list of :class:`.ParticleLayer`",
         default="[]",
     )
 
@@ -91,8 +90,10 @@ class HeterogeneousNewAtmosphere(Atmosphere):
                 ids.add(component.id)
             else:
                 raise ValueError(
-                    f"while validating {attribute.name}: found duplicate component ID '{component.id}'; "
-                    f"all components (molecular atmosphere and particle layers) must have different IDs"
+                    f"while validating {attribute.name}: found duplicate "
+                    f"component ID '{component.id}'; "
+                    f"all components (molecular atmosphere and particle layers) "
+                    f"must have different IDs"
                 )
 
     @molecular_atmosphere.validator
@@ -145,19 +146,24 @@ class HeterogeneousNewAtmosphere(Atmosphere):
         """
         Return phase function plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`.KernelDict`:
+        Returns
+        -------
+        :class:`.KernelDict`
             A kernel dictionary containing all the phase functions attached to
             the atmosphere.
 
-        .. note::
-           One phase plugin specification per component (molecular atmosphere and
-           particle layers) is generated.
-           For example, if there are one molecular atmosphere and two particle
-           layers, the returned kernel dictionary has three entries.
+        Notes
+        -----
+        One phase plugin specification per component (molecular atmosphere and
+        particle layers) is generated.
+        For example, if there are one molecular atmosphere and two particle
+        layers, the returned kernel dictionary has three entries.
         """
         phases = KernelDict()
 
@@ -210,19 +216,23 @@ class HeterogeneousNewAtmosphere(Atmosphere):
         """
         Return medium plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`.KernelDict`:
+        Returns
+        ------- : :class:`.KernelDict`
             A kernel dictionary containing all the media attached to the
             atmosphere.
 
-        .. note::
-           One medium plugin specification per component (molecular atmosphere
-           and particle layers) is generated.
-           For example, if there are one molecular atmosphere and two particle
-           layers, the returned kernel dictionary has three entries.
+        Notes
+        -----
+        One medium plugin specification per component (molecular atmosphere and
+        particle layers) is generated.
+        For example, if there are one molecular atmosphere and two particle
+        layers, the returned kernel dictionary has three entries.
         """
         media = KernelDict()
 
@@ -294,19 +304,24 @@ class HeterogeneousNewAtmosphere(Atmosphere):
         """
         Return shape plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`.KernelDict`:
+        Returns
+        -------
+        :class:`.KernelDict`
             A kernel dictionary containing all the shapes attached to the
             atmosphere.
 
-        .. note::
-           One shape plugin specification per component (molecular atmosphere and
-           particle layers) is generated.
-           For example, if there are one molecular atmosphere and two particle
-           layers, the returned kernel dictionary has three entries.
+        Notes
+        -----
+        One shape plugin specification per component (molecular atmosphere and
+        particle layers) is generated.
+        For example, if there are one molecular atmosphere and two particle
+        layers, the returned kernel dictionary has three entries.
         """
         shapes = KernelDict()
 
@@ -328,12 +343,15 @@ def blend_radprops(
     """
     Blend radiative properties of two participating media.
 
-    .. note::
-       Assumes 'z_layer' is in same units in 'molecules' and in 'particles'.
-
-    Returns → Tuple[:class:`~xarray.Dataset`, :class:`~xarray.DataArray`]:
+    Returns
+    -------
+    tuple[:class:`~xarray.Dataset`, :class:`~xarray.DataArray`]
         Radiative properties resulting from the blending of the two participating
         media, in the altitude range of the foreground participating medium.
+
+    Notes
+    -----
+    Assumes 'z_layer' is in same units in 'molecules' and in 'particles'.
     """
     background = interpolate_radprops(
         radprops=background, new_z_layer=to_quantity(foreground.z_layer)
@@ -362,13 +380,17 @@ def interpolate_radprops(
 
     Out of bounds values are replaced with zeros.
 
-    Parameter ``radprops`` (:class:`~xarray.Dataset`):
+    Parameters
+    ----------
+    radprops : :class:`~xarray.Dataset`
         Radiative property data set.
 
-    Parameter ``new_z_layer`` (:class:`~pint.Quantity`):
+    new_z_layer : :class:`~pint.Quantity`)
         Layer altitude grid to interpolate onto.
 
-    Returns → :class:`~xarray.Dataset`:
+    Returns
+    -------
+    :class:`~xarray.Dataset`
         Interpolated radiative propery data set.
     """
     mask = (new_z_layer >= to_quantity(radprops.z_level).min()) & (
@@ -399,13 +421,17 @@ def overlapping(
     """
     Return the particle layers that are overlapping a given particle layer.
 
-    Parameter ``particle_layers`` (list[:class:`.ParticleLayer`]):
+    Parameters
+    ----------
+     particle_layers : list of :class:`.ParticleLayer`
         List of particle layers to check for overlap.
 
-    Parameter ``particle_layer`` (:class:`.ParticleLayer`):
+    particle_layer : :class:`.ParticleLayer`
         The given particle layer.
 
-    Returns → list[:class:`.ParticleLayer`]:
+    Returns
+    -------
+    list of :class:`.ParticleLayer`
         Overlapping particle layers.
     """
     return [

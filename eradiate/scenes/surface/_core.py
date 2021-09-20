@@ -47,7 +47,8 @@ class Surface(SceneElement, ABC):
             validator=[validators.is_positive, pinttr.validators.has_compatible_units],
         ),
         doc="Surface geopotential altitude (referenced to Earth's mean sea level).",
-        type="float",
+        type="quantity",
+        init_type="quantity or float",
         default="0.0 km",
     )
 
@@ -77,11 +78,15 @@ class Surface(SceneElement, ABC):
         """
         Return BSDF plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`.KernelDict`:
+        Returns
+        -------
+        :class:`.KernelDict`
             A kernel dictionary containing all the BSDFs attached to the
             surface.
         """
@@ -91,11 +96,15 @@ class Surface(SceneElement, ABC):
         """
         Return shape plugin specifications only.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`.KernelDict`:
+        Returns
+        -------
+        :class:`.KernelDict`
             A kernel dictionary containing all the shapes attached to the
             surface.
         """
@@ -127,11 +136,15 @@ class Surface(SceneElement, ABC):
         Return width of kernel object, possibly overridden by
         ``ctx.override_scene_width``.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → :class:`pint.Quantity`:
+        Returns
+        -------
+        quantity
             Kernel object width.
         """
         if ctx is not None and ctx.override_scene_width is not None:
@@ -159,10 +172,14 @@ class Surface(SceneElement, ABC):
         """
         Return a copy of self scaled by a given factor.
 
-        Parameter ``factor`` (float):
+        Parameters
+        ----------
+        factor : float
             Scaling factor.
 
-        Returns → :class:`.Surface`:
+        Returns
+        -------
+        :class:`.Surface`
             Scaled copy of self.
         """
         if self.width is AUTO:

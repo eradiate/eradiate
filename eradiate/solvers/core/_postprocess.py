@@ -1,8 +1,11 @@
+import xarray as xr
+
 from ... import data
 
 
-def apply_srf(da, srf):
-    r"""Computes the weighted mean of some data with a wavelength dimension,
+def apply_srf(da: xr.Dataset, srf: str) -> xr.DataArray:
+    r"""
+    Compute the weighted mean of some data with a wavelength dimension,
     where the weights are taken from the values of an instrument spectral
     response function.
 
@@ -36,17 +39,21 @@ def apply_srf(da, srf):
             apply_srf(results, "sentinel_3a-slstr-1")
 
 
-    Parameter ``da`` (:class:`~xarray.DataArray`):
+    Parameters
+    ----------
+    da : DataArray
         A data array with (at least) a wavelength dimension (labeled ``"w"``).
 
-    Parameter ``srf`` (str):
+    srf : str
         Spectral response function datasets identifier.
 
         See the list of available spectral response function datasets in the
         :class:`~eradiate.data.spectral_response_function`
         module.
 
-    Return → :class:`~xarray.DataArray`:
+    Returns
+    -------
+    DataArray
         Weighted-mean of the data along the wavelength dimension.
     """
     dataset = data.open(category="spectral_response_function", id=srf)

@@ -7,24 +7,32 @@ from .metadata import validate_metadata
 
 @xr.register_dataarray_accessor("ert")
 class EradiateDataArrayAccessor:
-    """Convenience wrapper for operations on :class:`~xarray.DataArray`
-    instances. Accessed as a ``DataArray.ert`` property."""
+    """
+    Convenience wrapper for operations on :class:`~xarray.DataArray`
+    instances. Accessed as a ``DataArray.ert`` property.
+    """
 
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
 
     def validate_metadata(self, var_spec, normalize=False, allow_unknown=True):
-        """Validate the metadata for the wrapped :class:`~xarray.DataArray`.
-        This function wraps :func:`validate_metadata`.
+        """
+        Validate the metadata for the wrapped :class:`~xarray.DataArray`.
+        This function wraps :func:`.validate_metadata`.
 
-        Parameter ``var_spec`` (:class:`VarSpec`):
+        Parameters
+        ----------
+        var_spec : :class:`.VarSpec`
             Data variable specification used to validate the data. If
             ``var_spec.standard_name`` is ``None``, no metadata validation
             will be attempted on the variable: only coordinate variable metadata
             validation will be performed.
 
-        Parameter ``normalize`` (bool):
+        normalize : bool
             If ``True``, also normalise metadata in-place.
+
+        allow_unknown : bool
+            If ``True``, unknown attributes are allowed.
         """
         dataarray = self._obj
 
@@ -89,19 +97,22 @@ class EradiateDatasetAccessor:
         self._obj = xarray_obj
 
     def validate_metadata(self, dataset_spec, normalize=False, allow_unknown=True):
-        """Validate the metadata for the wrapped :class:`~xarray.Dataset`.
+        """
+        Validate the metadata for the wrapped :class:`~xarray.Dataset`.
         This function wraps :func:`validate_metadata`.
 
-        Parameter ``dataset_spec`` (:class:`DatsetSpec`):
+        Parameters
+        ----------
+        dataset_spec : :class:`DatsetSpec`
             Dataset specification used to validate the data.
             If ``dataset_spec.title`` is ``None``, no metadata validation
             will be attempted on the dataset: only data and coordinate variable
             metadata validation will be performed.
 
-        Parameter ``normalize`` (bool):
+        normalize : bool
             If ``True``, also normalise metadata in-place.
 
-        Parameter ``allow_unknown`` (bool):
+        allow_unknown : bool
             If ``True``, unknown attributes are allowed.
         """
         dataset = self._obj

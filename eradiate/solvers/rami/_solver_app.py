@@ -23,7 +23,7 @@ class RamiSolverApp(SolverApp):
 
     _SCENE_TYPE = RamiScene
 
-    scene = documented(
+    scene: RamiScene = documented(
         attr.ib(
             factory=RamiScene,
             converter=lambda x: RamiScene(**x) if isinstance(x, MutableMapping) else x,
@@ -33,6 +33,7 @@ class RamiSolverApp(SolverApp):
         "This parameter can be specified as a dictionary which will be "
         "interpreted by :meth:`RamiScene.from_dict() <.RamiScene.from_dict>`.",
         type=":class:`RamiScene`",
+        init_type=":class:`RamiScene` or dict",
         default=":class:`RamiScene() <RamiScene>`",
     )
 

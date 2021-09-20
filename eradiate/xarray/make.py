@@ -14,20 +14,24 @@ def make_dataarray(
     """
     Create a :class:`~xarray.DataArray` with default metadata.
 
-    Parameter ``data``:
+    Parameters
+    ----------
+    data
         Data forwarded to the :class:`~xarray.DataArray` constructor.
 
-    Parameter ``coords``:
+    coords
         Coordinates forwarded to the :class:`~xarray.DataArray` constructor.
 
-    Parameter ``dims``:
+    dims
         Dimension names forwarded to the :class:`~xarray.DataArray` constructor.
 
-    Parameter ``var_spec`` (:class:`.VarSpec` or None):
+    var_spec : :class:`.VarSpec`, optional
         If not ``None``, data variable specification used to apply default
         metadata.
 
-    Returns → :class:`xarray.DataArray`:
+    Returns
+    -------
+    DataArray
         Created :class:`~xarray.DataArray`.
     """
 

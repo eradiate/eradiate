@@ -193,25 +193,25 @@ napoleon_custom_sections = [("Attributes", "params_style")]
 napoleon_preprocess_types = True
 napoleon_type_aliases = {
     # general terms
-    "sequence": ":term:`sequence`",
-    "iterable": ":term:`iterable`",
     "callable": ":py:func:`callable`",
     "dict_like": ":term:`dict-like <mapping>`",
     "dict-like": ":term:`dict-like <mapping>`",
+    "file-like": ":term:`file-like <file-like object>`",
+    "iterable": ":term:`iterable`",
     "path-like": ":term:`path-like <path-like object>`",
     "mapping": ":term:`mapping`",
-    "file-like": ":term:`file-like <file-like object>`",
+    "sequence": ":term:`sequence`",
     # stdlib type aliases
     "MutableMapping": "~collections.abc.MutableMapping",
     # numpy terms and aliases
+    "array": ":term:`array`",
     "array_like": ":term:`array_like`",
     "array-like": ":term:`array-like <array_like>`",
-    "scalar": ":term:`scalar`",
-    "array": ":term:`array`",
+    "dtype": "~numpy.dtype",
     "hashable": ":term:`hashable <name>`",
     "ndarray": "~numpy.ndarray",
+    "scalar": ":term:`scalar`",
     "MaskedArray": "~numpy.ma.MaskedArray",
-    "dtype": "~numpy.dtype",
     # matplotlib terms and aliases
     "matplotlib axes": ":py:class:`matplotlib axes <matplotlib.axes.Axes>`",
     "axes": ":py:class:`axes <matplotlib.axes.Axes>`",

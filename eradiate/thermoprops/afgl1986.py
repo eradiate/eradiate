@@ -16,9 +16,28 @@ def make_profile(
     levels: t.Optional[pint.Quantity] = None,
     concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
 ) -> xr.Dataset:
-    """Makes the atmospheric profiles from the AFGL's 1986 technical report
+    """
+    Makes the atmospheric profiles from the AFGL's 1986 technical report
     :cite:`Anderson1986AtmosphericConstituentProfiles`.
 
+    Parameters
+    ----------
+    model_id : {"us_standard", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter", "tropical"}, default: "us_standard"
+        Model identifier.
+
+    levels : quantity or array
+        Altitude levels.
+
+    concentrations : dict, optional
+        Molecules concentrations as a {str: quantity} mapping.
+
+    Returns
+    -------
+    Dataset
+        Atmospheric profile.
+
+    Notes
+    -----
     :cite:`Anderson1986AtmosphericConstituentProfiles` defines six models,
     listed in the table below.
 
@@ -49,14 +68,14 @@ def make_profile(
          - U.S. Standard (1976)
 
     .. attention::
-        The original altitude mesh specified by
-        :cite:`Anderson1986AtmosphericConstituentProfiles` is a piece-wise
-        regular altitude mesh with an altitude step of 1 km from 0 to 25 km,
-        2.5 km from 25 km to 50 km and 5 km from 50 km to 120 km.
-        Since the Eradiate kernel only supports regular altitude mesh, the
-        original atmospheric thermophysical properties profiles were
-        interpolated on the regular altitude mesh with an altitude step of 1 km
-        from 0 to 120 km.
+       The original altitude mesh specified by
+       :cite:`Anderson1986AtmosphericConstituentProfiles` is a piece-wise
+       regular altitude mesh with an altitude step of 1 km from 0 to 25 km,
+       2.5 km from 25 km to 50 km and 5 km from 50 km to 120 km.
+       Since the Eradiate kernel only supports regular altitude mesh, the
+       original atmospheric thermophysical properties profiles were
+       interpolated on the regular altitude mesh with an altitude step of 1 km
+       from 0 to 120 km.
 
     Although the altitude meshes of the interpolated
     :cite:`Anderson1986AtmosphericConstituentProfiles` profiles is fixed,
@@ -72,22 +91,6 @@ def make_profile(
     For more information about rescaling process and the supported
     concentration units, refer to the documentation of
     :func:`~eradiate.thermoprops.util.compute_scaling_factors`.
-
-    Parameter ``model_id`` (str):
-        Choose from ``"midlatitude_summer"``, ``"midlatitude_winter"``,
-        ``"subarctic_summer"``, ``"subarctic_winter"``, ``"tropical"`` and
-        ``"us_standard"``.
-
-        Default: ``"us_standard"``
-
-    Parameter ``levels`` (:class:`~pint.Quantity`):
-        Altitude levels.
-
-    Parameter ``concentrations`` (Dict[str, :class:`~pint.Quantity`]):
-        Molecules concentrations.
-
-    Returns → :class:`~xarray.Dataset`:
-        Atmospheric profile.
     """
     thermoprops = open(category="thermoprops_profiles", id="afgl1986-" + model_id)
     if levels is not None:

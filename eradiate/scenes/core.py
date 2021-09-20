@@ -273,8 +273,7 @@ class SceneElement(ABC):
             validator=attr.validators.optional(attr.validators.instance_of(str)),
         ),
         doc="User-defined object identifier.",
-        type="str or None",
-        default="None",
+        type="str, optional",
     )
 
     def _kernel_dict_id(self) -> t.Dict:
@@ -300,7 +299,7 @@ class SceneElement(ABC):
 
         Returns
         -------
-        :class:`KernelDict`
+        :class:`.KernelDict`
             Kernel dictionary which can be loaded as a Mitsuba object.
         """
         pass

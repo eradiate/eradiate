@@ -40,6 +40,7 @@ class RPVSurface(Surface):
         doc="Amplitude parameter. Must be dimensionless. "
         "Should be in :math:`[0, 1]`.",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict or float",
         default="0.183",
     )
 
@@ -55,6 +56,7 @@ class RPVSurface(Surface):
         doc="Hot spot parameter. Must be dimensionless. "
         "Should be in :math:`[0, 1]`.",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict or float",
         default="0.183",
     )
 
@@ -70,6 +72,7 @@ class RPVSurface(Surface):
         doc="Bowl-shape parameter. Must be dimensionless. "
         "Should be in :math:`[0, 2]`.",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict or float",
         default="0.780",
     )
 
@@ -85,6 +88,7 @@ class RPVSurface(Surface):
         doc="Asymmetry parameter. Must be dimensionless. "
         "Should be in :math:`[-1, 1]`.",
         type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict or float",
         default="-0.1",
     )
 
