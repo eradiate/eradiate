@@ -5,6 +5,7 @@ monochromatic absorption cross section spectra for molecules.
 import contextlib
 import os
 import pathlib
+import tempfile
 import typing as t
 
 import hapi
@@ -61,7 +62,7 @@ def query_hitran(
     molecules: t.List[str],
     wavenumber_min: pint.Quantity,
     wavenumber_max: pint.Quantity,
-    path: str,
+    path: t.Optional[str] = None,
 ) -> str:
     """
     Query HITRAN for given molecules and wavenumber range.
@@ -70,6 +71,9 @@ def query_hitran(
     For each molecule, all isotopologues are selected.
     """
     # TODO: create one table per molecule?
+
+    if path is None:
+        path = tempfile.TemporaryDirectory().name
 
     isotopologue_ids = []
     for molecule in molecules:
@@ -200,6 +204,7 @@ def compute_absorption_cross_section(
     truncation_distance_in_hwhm: int = 50,
     pressure: pint.Quantity = ureg.Quantity(101325.0, "Pa"),
     temperature: pint.Quantity = ureg.Quantity(296.0, "K"),
+    hitran_data_dir: t.Optional[str] = None,
 ) -> xr.DataArray:
     """
     Compute the absorption cross section as a function of wavenumber, pressure
@@ -208,13 +213,12 @@ def compute_absorption_cross_section(
     If ``pressure`` and ``temperature`` are arrays, we loop over the cartesian
     product of the two arrays.
     """
-    # query HITRAN
-    path = "./hapi_data"  # directory where to save the HITRAN query
+    # fetch spectroscopic parameters from HITRAN
     source_table = query_hitran(
         molecules=[molecule],
         wavenumber_min=wavenumber_min,
         wavenumber_max=wavenumber_max,
-        path=path,
+        path=hitran_data_dir,
     )
 
     data_sets_grid = []
