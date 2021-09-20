@@ -93,7 +93,7 @@ def test_make_absorption_cross_section_data_array():
     assert isinstance(da, xr.DataArray)
 
 
-def test_compute_absorption_cross_section_helper():
+def test_compute_absorption_cross_section_helper(tmpdir):
     """
     Returns a xarray.DataArray.
     """
@@ -106,6 +106,7 @@ def test_compute_absorption_cross_section_helper():
             molecules=[molecule],
             wavenumber_min=wavenumber_min,
             wavenumber_max=wavenumber_max,
+            path=tmpdir,
         ),
         molecule=molecule,
         wavenumber_min=wavenumber_min,
@@ -115,7 +116,7 @@ def test_compute_absorption_cross_section_helper():
     assert isinstance(da, xr.DataArray)
 
 
-def test_compute_absorption_cross_section():
+def test_compute_absorption_cross_section(tmpdir):
     molecule = "CO2"
     wavenumber_min = ureg.Quantity(5000, "cm^-1")
     wavenumber_max = ureg.Quantity(5010, "cm^-1")
@@ -124,6 +125,7 @@ def test_compute_absorption_cross_section():
         molecule=molecule,
         wavenumber_min=wavenumber_min,
         wavenumber_max=wavenumber_max,
+        hitran_data_dir=tmpdir,
     )
 
     assert isinstance(da, xr.DataArray)
