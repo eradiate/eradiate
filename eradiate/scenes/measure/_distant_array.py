@@ -45,15 +45,19 @@ class DistantArrayMeasure(DistantMeasure):
         Contruct a :class:`.DistantArrayMeasure` from directions specified in
         (zenith, azimuth) angle pairs.
 
-        Parameter ``angles`` (array-like):
+        Parameters
+        ----------
+        angles : array-like
             Directions given by 2-vectors of zenith and azimuth angles
             in degrees.
 
-         Parameter ``**kwargs``:
+        **kwargs
             Keyword arguments forwarded to the :class:`.DistantArrayMeasure`
             constructor.
 
-        Returns → :class:`.DistantArrayMeasure`:
+        Returns
+        -------
+        :class:`.DistantArrayMeasure`
             Created measure object.
         """
         if isinstance(angles, pint.Quantity):
@@ -87,29 +91,33 @@ class DistantArrayMeasure(DistantMeasure):
         a number of steps. If both are given, the number of steps takes precedence and a warning is
         issued.
 
-        Parameter ``zenith_angle`` (float):
+        Parameters
+        ----------
+        zenith_angle : float
             Zenith angle that defines the ring in the hemisphere.
             Zenith is measured relative to the ``direction`` parameter
 
             This parameter can be given as a float in degrees or a :class:`pint.Quantity`.
 
-        Parameter ``direction`` (array-like):
+        direction : array-like
             Direction that defines the hemisphere in which the azimuthal ring is positioned.
             The ``zenith_angle`` parameter defines a constant angle with respect to this
             direction.
 
-        Parameter ``azimuth_resolution`` (float):
+        azimuth_resolution : float
             Angular resolution along the azimuthal ring. Can be given as a :class:`pint.Quantity`
             or a float in degrees.
 
-        Parameter ``azimuth_steps`` (float):
+        azimuth_steps : float
             Number of steps along the azimuthal ring.
 
-        Parameter ``**kwargs``:
+        **kwargs
             Keyword arguments forwarded to the :class:`.DistantArrayMeasure`
             constructor.
 
-        Returns → :class:`.DistantArrayMeasure`:
+        Returns
+        -------
+        :class:`.DistantArrayMeasure`:
             Created measure object.
         """
         from mitsuba.core import Frame3f
@@ -263,13 +271,19 @@ class DistantArrayReflectanceMeasure(DistantArrayMeasure):
         """
         Return post-processed raw sensor results.
 
-        Parameter ``illumination`` (:class:`.DirectionalIllumination`):
+        Parameters
+        ----------
+        illumination : :class:`.DirectionalIllumination`
             Incoming radiance value. *This keyword argument is required.*
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        :class:`~xarray.Dataset`:
             Post-processed results.
 
-        Raises → TypeError:
+        Raises
+        ------
+        TypeError
             If ``illumination`` is missing or if it has an unsupported type.
         """
         if illumination is None:

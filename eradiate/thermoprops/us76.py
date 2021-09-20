@@ -873,9 +873,12 @@ def compute_mean_molar_mass_high_altitude(z):
 
 @ureg.wraps(ret=None, args="km", strict=False)
 def compute_temperature_high_altitude(altitude):
-    r"""Computes the temperature in the high-altitude region.
+    r"""
+    Computes the temperature in the high-altitude region.
 
-    Parameter ``altitude`` (array):
+    Parameters
+    ----------
+    altitude : array
         Altitude values [km].
 
     Returns
@@ -889,9 +892,12 @@ def compute_temperature_high_altitude(altitude):
     tc = 263.1905  # K
 
     def t(z):
-        r"""Compute the temperature at a given altitude.
+        r"""
+        Compute the temperature at a given altitude.
 
-        Parameter ``z`` (float):
+        Parameters
+        ----------
+        z : float
             Altitude [km].
 
         Returns
@@ -934,9 +940,12 @@ def compute_temperature_gradient_high_altitude(altitude):
     b = -19.9429  # km
 
     def gradient(z):
-        r"""Computes the temperature gradient at a given altitude.
+        r"""
+        Computes the temperature gradient at a given altitude.
 
-        Parameter ``z`` (float):
+        Parameters
+        ----------
+        z : float
             Altitude [km].
 
         Returns

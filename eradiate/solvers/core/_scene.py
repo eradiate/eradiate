@@ -110,11 +110,14 @@ class Scene(SceneElement, ABC):
         Create from dictionary. This constructor implements a unit processing
         step based on :func:`pinttr.interpret_units`.
 
-        Parameter ``d`` (dict):
+        Parameters
+        ----------
+        d : dict
             Dictionary.
 
-        Returns → :class:`Scene`:
-
+        Returns
+        -------
+        :class:`Scene`
         """
         d_copy = pinttr.interpret_units(d, ureg=ureg)
         return cls(**d_copy)

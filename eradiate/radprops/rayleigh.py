@@ -20,12 +20,16 @@ def kf(ratio: float = 0.0279) -> float:
     """
     Compute the King correction factor.
 
-    Parameter ``ratio`` (float):
+    Parameters
+    ----------
+    ratio : float
         Depolarisation ratio [dimensionless].
         The default value is the mean depolarisation ratio for dry air given by
         :cite:`Young1980RevisedDepolarizationCorrections`.
 
-    Returns → float:
+    Returns
+    -------
+    float
         King correction factor [dimensionless].
     """
 
@@ -61,24 +65,28 @@ def compute_sigma_s_air(
     :math:`\eta` is the air refractive index and
     :math:`F` is the air King factor.
 
-    Parameter ``wavelength`` (:class:`~pint.Quantity`):
+    Parameters
+    ----------
+    wavelength : quantity
         Wavelength [nm].
 
-    Parameter ``number_density`` (:class:`~pint.Quantity`):
+    number_density : quantity
         Number density of the scattering particles [km^-3].
 
-    Parameter ``king_factor`` (float):
+    king_factor : float
         King correction factor of the scattering particles [dimensionless].
         Default value is the air effective King factor at 550 nm as given by
         :cite:`Bates1984RayleighScatteringAir`. Overridden by a call to
         :func:`kf` if ``depolarisation_ratio`` is set.
 
-    Parameter ``depolarisation_ratio`` (float or None):
+    depolarisation_ratio : (float or None):
         Depolarisation ratio [dimensionless].
         If this parameter is set, then its value is used to compute the value of
         the corresponding King factor and supersedes ``king_factor``.
 
-    Returns → :class:`~pint.Quantity`:
+    Returns
+    -------
+    quantity
         Scattering coefficient.
     """
     if depolarisation_ratio is not None:
@@ -118,15 +126,19 @@ def air_refractive_index(
     The number density dependence is computed using a simple proportionality
     rule.
 
-    Parameter ``wavelength`` (:class:`~pint.Quantity`):
+    Parameters
+    ----------
+    wavelength : quantity
         Wavelength.
 
-    Parameter ``number_density`` (:class:`~pint.Quantity`):
+    number_density : quantity
         Number density.
 
         Default: Air number density at 101325 Pa and 288.15 K.
 
-    Returns → float or array:
+    Returns
+    -------
+    float or ndarray
         Air refractive index value(s).
     """
 

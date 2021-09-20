@@ -50,10 +50,14 @@ class ParticleDistribution(ABC):
         """
         Evaluate the particle number fraction as a function of altitude.
 
-        Parameter ``z`` (:class:`pint.Quantity`):
+        Parameters
+        ----------
+        z : quantity
             Altitude values.
 
-        Return → :class:`~numpy.ndarray`:
+        Returns
+        -------
+        ndarray
             Particle number fraction.
         """
         pass

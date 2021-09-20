@@ -50,31 +50,35 @@ def make_dataset(
     """
     Makes an atmospheric radiative properties data set.
 
-    Parameter ``wavelength`` (float):
+    Parameters
+    ----------
+    wavelength : float
         Wavelength [nm].
 
-    Parameter ``z_level`` (array):
+    z_level : array
         Level altitudes [km].
 
-    Parameter ``z_layer`` (array):
+    z_layer : array
         Layer altitudes [km].
 
         If ``None``, the layer altitudes are computed automatically, so that
         they are halfway between the adjacent altitude levels.
 
-    Parameter ``sigma_a`` (array):
+    sigma_a : array
         Absorption coefficient values [km^-1].
 
-    Parameter ``sigma_s`` (array):
+    sigma_s : array
         Scattering coefficient values [km^-1].
 
-    Parameter ``sigma_t`` (array):
+    sigma_t : array
         Extinction coefficient values [km^-1].
 
-    Parameter ``albedo`` (array):
+    albedo : array
         Albedo values [/].
 
-    Returns → :class:`~xarray.Dataset`:
+    Returns
+    -------
+    Dataset
         Atmosphere radiative properties data set.
     """
     if z_layer is None:
@@ -177,16 +181,16 @@ class RadProfile(ABC):
     from this one must implement methods which return the albedo and collision
     coefficients as Pint-wrapped Numpy arrays.
 
-    .. warning::
+    Warnings
+    --------
 
-       Arrays returned by the :meth:`albedo`, :meth:`sigma_a`, :meth:`sigma_s`
-       and :meth:`sigma_t` methods **must** be 3D. Should the profile
-       be one-dimensional, invariant dimensions can be set to 1.
+    Arrays returned by the :meth:`albedo`, :meth:`sigma_a`, :meth:`sigma_s`
+    and :meth:`sigma_t` methods **must** be 3D. Should the profile
+    be one-dimensional, invariant dimensions can be set to 1.
 
-    .. seealso::
-
-       :class:`.RadProfileFactory`
-
+    See Also
+    --------
+    :class:`.RadProfileFactory`
     """
 
     def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
@@ -195,12 +199,16 @@ class RadProfile(ABC):
         dispatches evaluation to specialised methods depending on the active
         mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
@@ -218,10 +226,14 @@ class RadProfile(ABC):
         """
         Evaluate albedo spectrum in monochromatic modes.
 
-        Parameter ``w`` (:class:`pint.Quantity`):
+        Parameters
+        ----------
+        w : quantity
             Wavelength values at which the spectrum is to be evaluated.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated profile albedo as an array with shape (n_layers, len(w)).
         """
         raise NotImplementedError
@@ -230,10 +242,14 @@ class RadProfile(ABC):
         """
         Evaluate albedo spectrum in CKD modes.
 
-        Parameter ``*bindexes`` (:class:`.Bindex`):
+        Parameters
+        ----------
+        *bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated profile albedo as an array with shape (n_layers, len(bindexes)).
         """
         raise NotImplementedError
@@ -244,12 +260,16 @@ class RadProfile(ABC):
         This method dispatches evaluation to specialised methods depending on
         the active mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
@@ -267,10 +287,14 @@ class RadProfile(ABC):
         """
         Evaluate extinction coefficient spectrum in monochromatic modes.
 
-        Parameter ``w`` (:class:`pint.Quantity`):
+        Parameters
+        ----------
+        w : quantity
             Wavelength values at which the spectrum is to be evaluated.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated profile extinction coefficient as an array with shape
             (n_layers, len(w)).
         """
@@ -280,10 +304,14 @@ class RadProfile(ABC):
         """
         Evaluate extinction coefficient spectrum in CKD modes.
 
-        Parameter ``*bindexes`` (:class:`.Bindex`):
+        Parameters
+        ----------
+        *bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated profile extinction coefficient as an array with shape
             (n_layers, len(bindexes)).
         """
@@ -295,12 +323,16 @@ class RadProfile(ABC):
         This method dispatches evaluation to specialised methods depending on
         the active mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
@@ -318,10 +350,14 @@ class RadProfile(ABC):
         """
         Evaluate absorption coefficient spectrum in monochromatic modes.
 
-        Parameter ``w`` (:class:`pint.Quantity`):
+        Parameters
+        ----------
+        w : quantity
             Wavelength values at which the spectrum is to be evaluated.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated profile absorption coefficient as an array with shape
             (n_layers, len(w)).
         """
@@ -331,10 +367,14 @@ class RadProfile(ABC):
         """
         Evaluate absorption coefficient spectrum in CKD modes.
 
-        Parameter ``*bindexes`` (:class:`.Bindex`):
+        Parameters
+        ----------
+        *bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated profile absorption coefficient as an array with shape
             (n_layers, len(bindexes)).
         """
@@ -346,12 +386,16 @@ class RadProfile(ABC):
         This method dispatches evaluation to specialised methods depending on
         the active mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
-        Returns → :class:`pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
@@ -369,10 +413,14 @@ class RadProfile(ABC):
         """
         Evaluate scattering coefficient spectrum in monochromatic modes.
 
-        Parameter ``w`` (:class:`pint.Quantity`):
+        Parameters
+        ----------
+        w : quantity
             Wavelength values at which the spectrum is to be evaluated.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated profile scattering coefficient as an array with shape
             (n_layers, len(w)).
         """
@@ -382,10 +430,14 @@ class RadProfile(ABC):
         """
         Evaluate scattering coefficient spectrum in CKD modes.
 
-        Parameter ``*bindexes`` (:class:`.Bindex`):
+        Parameters
+        ----------
+        *bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
 
-        Returns → :class:`~pint.Quantity`:
+        Returns
+        -------
+        quantity
             Evaluated profile scattering coefficient as an array with shape
             (n_layers, len(bindexes)).
         """
@@ -397,11 +449,15 @@ class RadProfile(ABC):
         atmospheric profile. This method dispatches evaluation to specialised
         methods depending on the active mode.
 
-        Parameter ``spectral_ctx`` (:class:`.SpectralContext`):
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Radiative properties dataset.
         """
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
@@ -418,10 +474,14 @@ class RadProfile(ABC):
         Return a dataset that holds the radiative properties of the corresponding
         atmospheric profile in monochromatic modes.
 
-        Parameter ``w`` (:class:`pint.Quantity`):
+        Parameters
+        ----------
+        w : quantity
             Wavelength values at which spectra are to be evaluated.
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Radiative properties dataset.
         """
         raise NotImplementedError
@@ -431,10 +491,14 @@ class RadProfile(ABC):
         Return a dataset that holds the radiative properties of the corresponding
         atmospheric profile in CKD modes
 
-        Parameter ``*bindexes`` (:class:`.Bindex`):
+        Parameters
+        ----------
+        *bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate spectra.
 
-        Returns → :class:`~xarray.Dataset`:
+        Returns
+        -------
+        Dataset
             Radiative properties dataset.
         """
         raise NotImplementedError
@@ -921,22 +985,26 @@ class AFGL1986RadProfile(RadProfile):
         Compute the absorption coefficient using a custom absorption data set
         file.
 
-        Parameter ``path`` (str):
+        Parameters
+        ----------
+        path : (str):
             Path to data set file.
 
-        Parameter ``wavelength`` (float):
+        wavelength : float
             Wavelength  [nm].
 
-        Parameter ``n_absorber`` (float):
+        n_absorber : float
             Absorber number density [m^-3].
 
-        Parameter ``p`` (float):
+        p : float
             Pressure [Pa].
 
-        Parameter ``t`` (float):
+        t : float
             Temperature [K].
 
-        Returns → ():
+        Returns
+        -------
+        quantity
             Absorption coefficient [km^-1].
         """
         dataset = xr.open_dataset(path)
@@ -955,8 +1023,10 @@ class AFGL1986RadProfile(RadProfile):
         """
         Evaluate absorption coefficient given a spectral context.
 
-        .. note:: Extrapolate to zero when wavelength, pressure and/or
-           temperature are out of bounds.
+        Notes
+        -----
+        Extrapolate to zero when wavelength, pressure and/or temperature are out
+        of bounds.
         """
         profile = self.thermoprops
         if self.has_absorption:

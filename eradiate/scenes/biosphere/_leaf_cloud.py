@@ -1114,11 +1114,15 @@ class LeafCloud(CanopyElement):
         """
         Return BSDF plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             Return a dictionary suitable for merge with a :class:`.KernelDict`
             containing all the BSDFs attached to the shapes in the leaf cloud.
         """
@@ -1136,11 +1140,15 @@ class LeafCloud(CanopyElement):
         """
         Return shape plugin specifications.
 
-        Parameter ``ctx`` (:class:`.KernelDictContext`):
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
-        Returns → dict:
+        Returns
+        -------
+        dict
             A dictionary suitable for merge with a :class:`.KernelDict`
             containing all the shapes in the leaf cloud.
         """
