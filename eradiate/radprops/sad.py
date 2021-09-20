@@ -214,43 +214,62 @@ def compute_absorption_cross_section(
     product of the two arrays.
     """
     # fetch spectroscopic parameters from HITRAN
-    source_table = query_hitran(
-        molecules=[molecule],
-        wavenumber_min=wavenumber_min,
-        wavenumber_max=wavenumber_max,
-        path=hitran_data_dir,
-    )
+    try:
+        source_table = query_hitran(
+            molecules=[molecule],
+            wavenumber_min=wavenumber_min,
+            wavenumber_max=wavenumber_max,
+            path=hitran_data_dir,
+        )
+        data_sets_grid = []
+        for p in ensure_array(pressure):
+            inner_grid = []
+            for t in ensure_array(temperature):
+                _da = compute_absorption_cross_section_helper(
+                    source_table=source_table,
+                    molecule=molecule,
+                    wavenumber_min=wavenumber_min,
+                    wavenumber_max=wavenumber_max,
+                    wavenumber_step=wavenumber_step,
+                    truncation_distance_in_hwhm=truncation_distance_in_hwhm,
+                    pressure=p,
+                    temperature=t,
+                )
+                inner_grid.append(_da)
+            data_sets_grid.append(inner_grid)
 
-    data_sets_grid = []
-    for p in ensure_array(pressure):
-        inner_grid = []
-        for t in ensure_array(temperature):
-            _da = compute_absorption_cross_section_helper(
-                source_table=source_table,
-                molecule=molecule,
-                wavenumber_min=wavenumber_min,
-                wavenumber_max=wavenumber_max,
-                wavenumber_step=wavenumber_step,
-                truncation_distance_in_hwhm=truncation_distance_in_hwhm,
-                pressure=p,
-                temperature=t,
+        da = xr.combine_nested(data_sets_grid, concat_dim=["p", "t"])
+
+        # update attrs for concatenation dimensions (i.e. 'p' and 't')
+        da.p.attrs.update(
+            dict(
+                standard_name="air_pressure", long_name="pressure", units=pressure.units
             )
-            inner_grid.append(_da)
-        data_sets_grid.append(inner_grid)
+        )
+        da.t.attrs.update(
+            standard_name="air_temperature",
+            long_name="temperature",
+            units=temperature.units,
+        )
 
-    da = xr.combine_nested(data_sets_grid, concat_dim=["p", "t"])
+        # update general attributes
+        da.attrs.update(_da.attrs)
 
-    # update attrs for concatenation dimensions (i.e. 'p' and 't')
-    da.p.attrs.update(
-        dict(standard_name="air_pressure", long_name="pressure", units=pressure.units)
-    )
-    da.t.attrs.update(
-        standard_name="air_temperature",
-        long_name="temperature",
-        units=temperature.units,
-    )
+        return da
 
-    # update general attributes
-    da.attrs.update(_da.attrs)
-
-    return da
+    except Exception:
+        # assume that molecule does not absorb in specified wavenumber range
+        p = ensure_array(pressure)
+        t = ensure_array(temperature)
+        return make_absorption_cross_section_data_array(
+            wavenumber=ureg.Quantity(
+                np.array([wavenumber_max.m_as("cm^-1"), wavenumber_max.m_as("cm^-1")]),
+                "cm^-1",
+            ),
+            absorption_cross_section=ureg.Quantity(
+                np.zeros((2, len(p), len(t))), "m^2"
+            ),
+            molecule=molecule,
+            pressure=p,
+            temperature=t,
+        )
