@@ -275,6 +275,7 @@ class KernelDictContext(Context):
         doc="Spectral context (used to evaluate quantities with any degree "
         "or kind of dependency vs spectrally varying quantities).",
         type=":class:`.SpectralContext`",
+        init_type=":class:`.SpectralContext` or dict",
         default=":meth:`SpectralContext.new() <.SpectralContext.new>`",
     )
 
@@ -296,6 +297,6 @@ class KernelDictContext(Context):
         "(*e.g.* when surface size must match atmosphere or canopy size).\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="float or None",
-        init_type="float, optional",
+        type="quantity, optional",
+        init_type="quantity or float, optional",
     )
