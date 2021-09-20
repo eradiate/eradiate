@@ -888,11 +888,13 @@ class Measure(SceneElement, ABC):
             coordinate.
         """
         bins = list(OrderedDict.fromkeys(ds.bin.to_index()))  # (deduplicate list)
+        sensor_ids = ds.sensor_id.values
         ys = ds.y.values
         xs = ds.x.values
         quad = self.spectral_cfg.bin_set.quad
 
         n_bin = len(bins)
+        n_sensor_ids = len(sensor_ids)
         n_y = len(ys)
         n_x = len(xs)
 
@@ -905,8 +907,13 @@ class Measure(SceneElement, ABC):
 
         # Init storage
         result = xr.Dataset(
-            {"raw": (("w", "y", "x"), np.zeros((n_bin, n_y, n_x)))},
-            coords={"w": wavelengths, "y": ys, "x": xs},
+            {
+                "raw": (
+                    ("w", "sensor_id", "y", "x"),
+                    np.zeros((n_bin, n_sensor_ids, n_y, n_x)),
+                )
+            },
+            coords={"w": wavelengths, "sensor_id": sensor_ids, "y": ys, "x": xs},
         )
 
         # For each bin and each pixel, compute quadrature and store the result
@@ -916,9 +923,12 @@ class Measure(SceneElement, ABC):
             # Rationale: Avoid using xarray's indexing in this loop for
             # performance reasons (wrong data indexing method will result in
             # 10x+ speed reduction)
-            for (i_y, i_x) in itertools.product(range(n_y), range(n_x)):
-                result.raw.values[i_bin, i_y, i_x] = quad.integrate(
-                    values_at_nodes[:, i_y, i_x], interval=np.array([0.0, 1.0])
+            for (i_sensor_id, i_y, i_x) in itertools.product(
+                range(n_sensor_ids), range(n_y), range(n_x)
+            ):
+                result.raw.values[i_bin, i_sensor_id, i_y, i_x] = quad.integrate(
+                    values_at_nodes[:, i_sensor_id, i_y, i_x],
+                    interval=np.array([0.0, 1.0]),
                 )
 
         # Copy lost metadata

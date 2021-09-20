@@ -292,7 +292,7 @@ def test_distant_flux_postprocessing_mono(modes_all_mono):
     # spectral loop iterations
     ds = d.postprocess()
     assert "flux" in ds.data_vars
-    assert ds["flux"].shape == (2, 1)
+    assert ds["flux"].shape == (2,)
     assert np.allclose(ds.flux, 1.0 * 16 * 32)
 
 
@@ -326,6 +326,7 @@ def test_distant_flux_postprocessing_ckd(modes_all_ckd):
     # Postprocessing succeeds and flux field has the same size as the number of
     # selected CKD bins
     ds = d.postprocess()
+    print(ds)
     assert "flux" in ds.data_vars
     assert ds["flux"].shape == (2,)
     assert np.allclose(ds.flux, 1.0 * 16 * 32)

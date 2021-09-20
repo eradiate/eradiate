@@ -557,6 +557,9 @@ class DistantRadianceMeasure(DistantMeasure):
         if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             ds = self._postprocess_ckd_eval_quad(ds)
 
+        # Safely trim sensor_id dimension
+        ds = ds.squeeze(dim="sensor_id", drop=True)
+
         # Rename raw field to outgoing radiance
         ds = ds.rename(raw="lo")
         ds["lo"].attrs = {
@@ -771,8 +774,15 @@ class DistantFluxMeasure(DistantMeasure):
         return result
 
     def _postprocess_fetch_results(self) -> xr.Dataset:
-        # Collect results and add appropriate metadata
-        ds = super(DistantFluxMeasure, self).postprocess()
+        # Collect raw results, compute CKD quadrature, add appropriate metadata
+        # Setting drop=True ensures that the sensor_id dimension is removed
+        ds = self.results.to_dataset(aggregate_spps=True)
+
+        if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            ds = self._postprocess_ckd_eval_quad(ds)
+
+        # Safely trim sensor_id dimension
+        ds = ds.squeeze(dim="sensor_id", drop=True)
 
         # Add aggregate flux density field
         ds["flux"] = ds["raw"].sum(dim=("x", "y"))
