@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
@@ -116,8 +117,13 @@ def test_compute_absorption_cross_section_helper(tmpdir):
     assert isinstance(da, xr.DataArray)
 
 
-def test_compute_absorption_cross_section(tmpdir):
-    molecule = "CO2"
+@pytest.mark.parametrize(
+    "molecule", ["H2O", "CO2", "O3", "N2O", "CO", "CH4", "O2", "NO", "SO2", "NO2"]
+)
+def test_compute_absorption_cross_section(tmpdir, molecule):
+    """
+    Returns a xarray.DataArray.
+    """
     wavenumber_min = ureg.Quantity(5000, "cm^-1")
     wavenumber_max = ureg.Quantity(5010, "cm^-1")
 
