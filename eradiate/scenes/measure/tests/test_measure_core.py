@@ -64,22 +64,22 @@ def test_measure_results(mode_mono):
         raw={
             550.0: {
                 "values": {
-                    "sensor_0": np.zeros((3, 3)),
-                    "sensor_1": np.ones((3, 3)),
+                    "sensor_spp0": np.zeros((3, 3)),
+                    "sensor_spp1": np.ones((3, 3)),
                 },
                 "spp": {
-                    "sensor_0": 100,
-                    "sensor_1": 50,
+                    "sensor_spp0": 100,
+                    "sensor_spp1": 50,
                 },
             },
             600.0: {
                 "values": {
-                    "sensor_0": np.ones((3, 3)),
-                    "sensor_1": np.zeros((3, 3)),
+                    "sensor_spp0": np.ones((3, 3)),
+                    "sensor_spp1": np.zeros((3, 3)),
                 },
                 "spp": {
-                    "sensor_0": 100,
-                    "sensor_1": 50,
+                    "sensor_spp0": 100,
+                    "sensor_spp1": 50,
                 },
             },
         }
@@ -95,9 +95,9 @@ def test_measure_results(mode_mono):
     # Check SPP aggregation
     ds = results.to_dataset(aggregate_spps=True)
     assert set(ds.data_vars) == {"raw", "spp"}
-    assert set(ds.coords) == {"w", "x", "y"}
-    assert ds.raw.shape == (2, 3, 3)
-    assert ds.spp.shape == (2,)
+    assert set(ds.coords) == {"sensor_id", "w", "x", "y"}
+    assert ds.raw.shape == (2, 1, 3, 3)
+    assert ds.spp.shape == (2, 1)
     assert np.allclose(ds["spp"], (150, 150))
 
 
@@ -164,9 +164,9 @@ def test_measure_spp_splitting(mode_mono):
     m = MyMeasure(id="my_measure", spp=256, spp_splitting_threshold=100)
     assert m._split_spp() == [100, 100, 56]
     assert m.sensor_infos() == [
-        SensorInfo(id="my_measure_0", spp=100),
-        SensorInfo(id="my_measure_1", spp=100),
-        SensorInfo(id="my_measure_2", spp=56),
+        SensorInfo(id="my_measure_spp0", spp=100),
+        SensorInfo(id="my_measure_spp1", spp=100),
+        SensorInfo(id="my_measure_spp2", spp=56),
     ]
 
     # fmt: off

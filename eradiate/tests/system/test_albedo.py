@@ -209,4 +209,4 @@ def test_albedo(mode_mono):
         plt.close()
 
         # Check results
-        assert np.allclose(results["albedo"].values, expected, atol=1e-3)
+        assert np.allclose(np.squeeze(results["albedo"].values), expected, atol=1e-3)

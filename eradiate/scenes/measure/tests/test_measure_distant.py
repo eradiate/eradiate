@@ -292,7 +292,7 @@ def test_distant_flux_postprocessing_mono(modes_all_mono):
     # spectral loop iterations
     ds = d.postprocess()
     assert "flux" in ds.data_vars
-    assert ds["flux"].shape == (2,)
+    assert ds["flux"].shape == (2, 1)
     assert np.allclose(ds.flux, 1.0 * 16 * 32)
 
 

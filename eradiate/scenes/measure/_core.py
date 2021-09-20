@@ -511,6 +511,7 @@ class MeasureResults:
                 .weighted(weights)
                 .mean(dim="sensor_id")
                 .expand_dims({"sensor_id": [sensor_id_prefix]}, axis=1)
+                .to_dataset()
             )
             # Mask spp values so as to only include selected values
             # The sensor_id coordinate is redefined to strip the spp suffix
@@ -520,6 +521,7 @@ class MeasureResults:
                 .weighted(weights_spp)
                 .sum(dim="sensor_id")
                 .expand_dims({"sensor_id": [sensor_id_prefix]}, axis=1)
+                .to_dataset()
             )
 
         raw = xr.combine_by_coords(raw_aggregated)["raw"]
