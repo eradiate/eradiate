@@ -60,23 +60,12 @@ class SpectralContext(ABC, Context):
     While this class is abstract, it should however be the main entry point
     to create :class:`.SpectralContext` child class objects through the
     :meth:`.SpectralContext.new` class method constructor.
-
-    Attributes
-    ----------
-    wavelength : quantity
-        Wavelength associated with spectral context.
-
-    spectral_index
-        Spectral index associated with spectral context.
-
-    spectral_index_formatted : str
-        Spectral index formatted as a human-readable string.
     """
 
     @property
     @abstractmethod
     def wavelength(self) -> pint.Quantity:
-        """Wavelength associated with spectral context."""
+        """quantity : Wavelength associated with spectral context."""
         # May raise NotImplementedError if irrelevant
         pass
 
@@ -89,7 +78,7 @@ class SpectralContext(ABC, Context):
     @property
     @abstractmethod
     def spectral_index_formatted(self) -> str:
-        """Spectral index formatted as a human-readable string."""
+        """str : Spectral index formatted as a human-readable string."""
         pass
 
     @staticmethod
@@ -177,17 +166,6 @@ class SpectralContext(ABC, Context):
 class MonoSpectralContext(SpectralContext):
     """
     Monochromatic spectral context data structure.
-
-    Attributes
-    ----------
-    wavelength : quantity
-        Wavelength associated with spectral context.
-
-    spectral_index
-        Spectral index associated with spectral context.
-
-    spectral_index_formatted : str
-        Spectral index formatted as a human-readable string.
     """
 
     _wavelength: pint.Quantity = documented(
@@ -205,7 +183,7 @@ class MonoSpectralContext(SpectralContext):
 
     @property
     def wavelength(self):
-        """Wavelength associated with spectral context."""
+        """quantity : Wavelength associated with spectral context."""
         return self._wavelength
 
     @property
@@ -218,7 +196,7 @@ class MonoSpectralContext(SpectralContext):
 
     @property
     def spectral_index_formatted(self) -> str:
-        """Formatted spectral index (human-readable string)."""
+        """str : Formatted spectral index (human-readable string)."""
         return f"{self._wavelength:g~P}"
 
 
@@ -246,7 +224,7 @@ class CKDSpectralContext(SpectralContext):
     @property
     def wavelength(self) -> pint.Quantity:
         """
-        Wavelength associated with spectral context. Alias for
+        quantity : Wavelength associated with spectral context. Alias for
         ``self._bindex.bin.wcenter``.
         """
         return self.bindex.bin.wcenter
@@ -254,21 +232,22 @@ class CKDSpectralContext(SpectralContext):
     @property
     def bin(self) -> Bin:
         """
-        Bin associated with spectral context. Alias for ``self._bindex.bin``.
+        :class:`.Bin` : Bin associated with spectral context. Alias for
+            ``self._bindex.bin``.
         """
         return self.bindex.bin
 
     @property
     def spectral_index(self) -> t.Tuple[str, int]:
         """
-        Spectral index associated with spectral context, equal to active bindex
-        (bin ID, quadrature point index pair).
+        tuple[str, int] : Spectral index associated with spectral context, equal to active
+            bindex (bin ID, quadrature point index pair).
         """
         return self.bin.id, self.bindex.index
 
     @property
     def spectral_index_formatted(self) -> str:
-        """Formatted spectral index (human-readable string)."""
+        """str : Formatted spectral index (human-readable string)."""
         return f"{self.bin.id}:{self.bindex.index}"
 
 
@@ -285,17 +264,6 @@ class KernelDictContext(Context):
     *e.g.* to store information about the spectral configuration to apply
     when generating kernel dictionaries associated with a :class:`.SceneElement`
     instance.
-
-    Attributes
-    ----------
-    wavelength : quantity
-        Wavelength associated with spectral context.
-
-    spectral_index
-        Spectral index associated with spectral context.
-
-    spectral_index_formatted : str
-        Spectral index formatted as a human-readable string.
     """
 
     spectral_ctx: SpectralContext = documented(

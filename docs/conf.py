@@ -189,7 +189,7 @@ napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = True
 napoleon_use_param = False
 napoleon_use_rtype = False
-napoleon_custom_sections = [("Attributes", "params_style")]
+napoleon_custom_sections = [("Fields", "params_style")]
 napoleon_preprocess_types = True
 napoleon_type_aliases = {
     # general terms
@@ -395,5 +395,6 @@ latex_logo = "fig/eradiate-logo-dark-no_bg.png"
 # -- App setup -----------------------------------------------------------------
 
 
-def setup(app):
-    app.connect("autodoc-skip-member", autodoc_skip_member)
+# Disabled until we're sure we don't want to filter out properties
+# def setup(app):
+#     app.connect("autodoc-skip-member", autodoc_skip_member)

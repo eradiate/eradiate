@@ -25,17 +25,6 @@ from .units import unit_registry as ureg
 class Bin:
     """
     A data class representing a spectral bin in CKD modes.
-
-    Attributes
-    ----------
-    width : quantity
-        Bin spectral width.
-
-    wcenter : quantity
-        Bin central wavelength.
-
-    bindexes : list of :class:`.Bindex`
-        List of associated bindexes.
     """
 
     id: str = documented(
@@ -82,17 +71,17 @@ class Bin:
 
     @property
     def width(self) -> pint.Quantity:
-        """Bin spectral width."""
+        """quantity : Bin spectral width."""
         return self.wmax - self.wmin
 
     @property
     def wcenter(self) -> pint.Quantity:
-        """Bin central wavelength."""
+        """quantity : Bin central wavelength."""
         return 0.5 * (self.wmin + self.wmax)
 
     @property
     def bindexes(self) -> t.List[Bindex]:
-        """List of associated bindexes."""
+        """list of :class:`.Bindex` : List of associated bindexes."""
         return [Bindex(bin=self, index=i) for i, _ in enumerate(self.quad.nodes)]
 
     @classmethod
@@ -281,17 +270,6 @@ def bin_filter(type: str, filter_kwargs: t.Dict[str, t.Any]):
 class BinSet:
     """
     A data class representing a quadrature definition used in CKD mode.
-
-    Attributes
-    ----------
-    bin_ids : list of str
-        Identifiers of defined spectral bins.
-
-    bin_wmins : quantity
-        Lower bounds of defined spectral bins as a (N,) array.
-
-    bin_wmaxs : quantity
-        Upper bounds of defined spectral bins as a (N,) array.
     """
 
     id: str = documented(
@@ -340,22 +318,14 @@ class BinSet:
     @property
     def bin_ids(self) -> t.List[str]:
         """
-        Return the identifiers of defined spectral bins.
-
-        Returns
-        -------
-        list of str
+        list of str : Return the identifiers of defined spectral bins.
         """
         return [bin.id for bin in self.bins]
 
     @property
     def bin_wmins(self) -> pint.Quantity:
         """
-        Return the lower bounds of defined spectral bins.
-
-        Returns
-        -------
-        quantity
+        quantity : Return the lower bounds of defined spectral bins.
         """
         units = ucc.get("wavelength")
         return ureg.Quantity([bin.wmin.m_as(units) for bin in self.bins], units)
@@ -363,11 +333,7 @@ class BinSet:
     @property
     def bin_wmaxs(self) -> pint.Quantity:
         """
-        Return the upper bounds of defined spectral bins.
-
-        Returns
-        -------
-        quantity
+        quantity : Return the upper bounds of defined spectral bins.
         """
         units = ucc.get("wavelength")
         return ureg.Quantity([bin.wmax.m_as(units) for bin in self.bins], units)

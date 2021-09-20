@@ -839,7 +839,7 @@ class Measure(SceneElement, ABC):
     @abstractmethod
     def film_resolution(self) -> t.Tuple[int, int]:
         """
-        Getter for film resolution.
+        tuple: Getter for film resolution as a (int, int) pair.
         """
         pass
 
