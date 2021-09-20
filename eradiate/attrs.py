@@ -185,7 +185,9 @@ def _numpy_formatter(cls_doc, field_docs):
         # Generate attribute docstring entry
         type_doc = f" : {field_type}" if field_type is not None else ""
         if not field_name.startswith("_"):
-            field_doc_brief = field_doc.doc.split(". ")[0].split("\n")[0]
+            field_doc_brief = field_doc.doc.split(". ")[0].strip()
+            if not field_doc_brief.endswith("."):
+                field_doc_brief += "."
             attr_docstrings.append(
                 f"{field_name}{type_doc}\n{indent(field_doc_brief, '    ')}\n"
             )
@@ -224,7 +226,7 @@ def _numpy_formatter(cls_doc, field_docs):
         sections["Parameters"] = "\n".join(param_docstrings) + sections.get(
             "Parameters", ""
         )
-        sections["Attributes"] = "\n".join(param_docstrings) + sections.get(
+        sections["Attributes"] = "\n".join(attr_docstrings) + sections.get(
             "Attributes", ""
         )
 
