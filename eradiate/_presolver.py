@@ -13,8 +13,8 @@ class PathResolver(metaclass=Singleton):
     set of search paths. The implementation walks through the search paths in
     order and stops once the file is found.
 
-    Attributes
-    ----------
+    Fields
+    ------
     paths : list of :class:`~pathlib.Path`
         Stored path list.
     """

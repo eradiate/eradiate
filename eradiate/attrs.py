@@ -9,6 +9,7 @@ import attr
 
 _NUMPYDOC_SECTION_TITLES = [
     "Parameters",
+    "Fields",
     "Attributes",
     "Returns",
     "Yields",
@@ -226,9 +227,7 @@ def _numpy_formatter(cls_doc, field_docs):
         sections["Parameters"] = "\n".join(param_docstrings) + sections.get(
             "Parameters", ""
         )
-        sections["Attributes"] = "\n".join(attr_docstrings) + sections.get(
-            "Attributes", ""
-        )
+        sections["Fields"] = "\n".join(attr_docstrings) + sections.get("Fields", "")
 
         # Generate section full text
         section_fulltexts = (

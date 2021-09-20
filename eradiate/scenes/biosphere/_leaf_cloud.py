@@ -609,14 +609,6 @@ class LeafCloud(CanopyElement):
           ellipsoid
           from_file
           sphere
-
-    Attributes
-    ----------
-    n_leaves : int
-        Number of leaves in the leaf cloud.
-
-    surface_area : quantity
-        Total surface area of the leaf cloud.
     """
 
     # --------------------------------------------------------------------------
@@ -734,21 +726,13 @@ class LeafCloud(CanopyElement):
 
     def n_leaves(self) -> int:
         """
-        Return the number of leaves in the leaf cloud.
-
-        Returns
-        -------
-        int
-            Number of leaves in the leaf cloud.
+        int : Number of leaves in the leaf cloud.
         """
         return len(self.leaf_positions)
 
     def surface_area(self) -> pint.Quantity:
         """
-        Compute total surface area of the leaf cloud.
-
-        Returns → pint.Quantity:
-            Total surface area as a :class:`~pint.Quantity`.
+        quantity : Total surface area as a :class:`~pint.Quantity`.
         """
         return np.sum(np.pi * self.leaf_radii * self.leaf_radii).squeeze()
 
