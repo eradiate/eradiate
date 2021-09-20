@@ -13,7 +13,7 @@ import numpy as np
 import pint
 import xarray as xr
 
-from ..units import unit_registry as ureg
+from ..units import unit_registry as ureg, to_quantity
 
 # TODO: parse https://hitran.org/docs/iso-meta/ to automatically update isotopologues and corresponding abundances
 ISOTOPOLOGUE_IDS = dict(
@@ -193,6 +193,35 @@ def compute_absorption_cross_section_helper(
         molecule=molecule,
         pressure=pressure,
         temperature=temperature,
+    )
+
+
+def to_wavelength(da: xr.DataArray) -> xr.DataArray:
+    """
+    Change spectral coordinate representation in a data array from
+    wavenumber to wavelength.
+    """
+    wavenumber = to_quantity(da.w)
+    wavelength = (1.0 / wavenumber).to("nm")
+
+    return xr.DataArray(
+        da.data,
+        dims=da.dims,  # we keep the same label for wavelength coordinate
+        coords={
+            **{c: da[c] for c in list(da.coords) if c != "w"},
+            **{
+                "w": (
+                    "w",
+                    wavelength.magnitude,
+                    dict(
+                        standard_name="radiation_wavelength",
+                        long_name="wavelength",
+                        units=wavelength.units,
+                    ),
+                )
+            },
+        },
+        attrs=da.attrs,
     )
 
 
