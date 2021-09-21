@@ -35,7 +35,7 @@ def test_distant_array_radiance(modes_all):
 
     # Test from_angles constructor
     d = DistantArrayMeasure.from_angles([(0, 0), (90, 0)])
-    assert np.allclose(d.directions, [[0, 0, -1], [-1, 0, 0]])
+    assert np.allclose(d.directions, [[0, 0, 1], [1, 0, 0]])
 
     ctx = KernelDictContext()
     assert KernelDict.from_elements(d, ctx=ctx).load() is not None
@@ -54,7 +54,7 @@ def test_distant_array_radiance(modes_all):
         "angles": [(0, 0), (90, 0)],
     }
     d = measure_factory.convert(measure_dict)
-    assert np.allclose(d.directions, [[0, 0, -1], [-1, 0, 0]])
+    assert np.allclose(d.directions, [[0, 0, 1], [1, 0, 0]])
 
 
 def test_distant_array_reflectance(modes_all):
@@ -82,7 +82,7 @@ def test_distant_array_reflectance(modes_all):
 
     # Test from_angles constructor
     d = DistantArrayReflectanceMeasure.from_angles([(0, 0), (90, 0)])
-    assert np.allclose(d.directions, [[0, 0, -1], [-1, 0, 0]])
+    assert np.allclose(d.directions, [[0, 0, 1], [1, 0, 0]])
 
     ctx = KernelDictContext()
     assert KernelDict.from_elements(d, ctx=ctx).load() is not None
@@ -101,23 +101,38 @@ def test_distant_array_reflectance(modes_all):
         "angles": [(0, 0), (90, 0)],
     }
     d = measure_factory.convert(measure_dict)
-    assert np.allclose(d.directions, [[0, 0, -1], [-1, 0, 0]])
+    assert np.allclose(d.directions, [[0, 0, 1], [1, 0, 0]])
 
 
 def test_azimuthal_ring_constructor(modes_all):
     # Default direction, azim resolution
     d = DistantArrayMeasure.azimuthal_ring(zenith_angle=90, azimuth_resolution=90)
-    assert np.allclose(d.directions, [[-1, 0, 0], [0, -1, 0], [1, 0, 0], [0, 1, 0]])
+    assert np.allclose(d.directions, [[1, 0, 0], [0, 1, 0], [-1, 0, 0], [0, -1, 0]])
 
     # Default direction, azim steps
     d = DistantArrayMeasure.azimuthal_ring(zenith_angle=45, azimuth_steps=180)
     assert len(d.directions) == 180
 
+    # Angles translate correctly into directions
+    d = DistantArrayMeasure.azimuthal_ring(zenith_angle=45, azimuth_steps=360)
+    angles_derived = [
+        (np.arccos(direction[2]), np.arctan2(direction[1], direction[0]))
+        for direction in d.directions
+    ]
+    assert np.allclose([theta for (theta, _) in angles_derived], np.deg2rad(45))
+    # compare cos(phi) to circumvent the issue of phi wrapping around from pi
+    # -pi
+    assert np.allclose(
+        [np.cos(phi) for (_, phi) in angles_derived],
+        [np.cos(phi_ref) for phi_ref in np.linspace(0, 2 * np.pi, 360, endpoint=False)],
+        atol=0.001,
+    )
+
     # Custom direction
     d = DistantArrayMeasure.azimuthal_ring(
         direction=[1, 0, 0], zenith_angle=90, azimuth_resolution=90
     )
-    assert np.allclose(d.directions, [[0, 0, -1], [0, -1, 0], [0, 0, 1], [0, 1, 0]])
+    assert np.allclose(d.directions, [[0, 0, 1], [0, 1, 0], [0, 0, -1], [0, -1, 0]])
 
     # Dict construction
     measure_dict = {
@@ -128,4 +143,4 @@ def test_azimuthal_ring_constructor(modes_all):
         "azimuth_resolution": 90,
     }
     d = measure_factory.convert(measure_dict)
-    assert np.allclose(d.directions, [[-1, 0, 0], [0, -1, 0], [1, 0, 0], [0, 1, 0]])
+    assert np.allclose(d.directions, [[1, 0, 0], [0, 1, 0], [-1, 0, 0], [0, -1, 0]])

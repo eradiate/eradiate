@@ -67,9 +67,9 @@ class DistantArrayMeasure(DistantMeasure):
 
         directions = [
             [
-                np.sin(theta) * np.cos(phi) * -1,
-                np.sin(theta) * np.sin(phi) * -1,
-                np.cos(theta) * -1,
+                np.sin(theta) * np.cos(phi),
+                np.sin(theta) * np.sin(phi),
+                np.cos(theta),
             ]
             for (theta, phi) in directions_converted
         ]
@@ -158,7 +158,7 @@ class DistantArrayMeasure(DistantMeasure):
                 "Neither azimuth resolution or number of steps were defined."
             )
 
-        directions_prelim = [
+        directions = [
             frame.to_local(
                 np.array(
                     [
@@ -170,8 +170,6 @@ class DistantArrayMeasure(DistantMeasure):
             )
             for phi in azimuth_angles
         ]
-
-        directions = [dp * -1 for dp in directions_prelim]
 
         return cls(directions=directions, **kwargs)
 
@@ -185,8 +183,14 @@ class DistantArrayMeasure(DistantMeasure):
 
     def sensor_infos(self) -> t.List[SensorInfo]:
         spps = self._split_spp()
+        sensor_count = len(self.directions)
 
-        ids = [f"{self.id}_ms{i}" for i in range(len(self.directions))]
+        # determine order of magnitude for sensor count and pad the numerical
+        # part of sensor_id accordingly
+        string_padding = int(np.log10(sensor_count)) + 1
+        ids = [
+            f"{self.id}_ms" + f"{i}".zfill(string_padding) for i in range(sensor_count)
+        ]
 
         if len(spps) == 1:
             return [SensorInfo(id=id, spp=spps[0]) for id in ids]
@@ -200,7 +204,7 @@ class DistantArrayMeasure(DistantMeasure):
 
     def _postprocess_add_directions(self, ds: xr.Dataset) -> xr.Dataset:
         ds = ds.assign_coords(
-            {"directions": ([str(direction) for direction in self.directions],)}
+            {"directions": ([str(direction) for direction in self.directions])}
         )
 
         return ds

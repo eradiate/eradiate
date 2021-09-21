@@ -123,13 +123,13 @@ def test_measure(mode_mono):
     m = MyMeasure()
 
     # This measure has a single sensor associated to it
-    assert m.sensor_infos() == [SensorInfo(id=m.id, spp=m.spp)]
+    assert m.sensor_infos() == [SensorInfo(id=f"{m.id}_ms0", spp=m.spp)]
 
     # The kernel dict is well-formed
     ctx = KernelDictContext()
     m.spp = 256
     assert m.kernel_dict(ctx).data == {
-        m.id: {
+        f"{m.id}_ms0": {
             "type": "some_sensor",
             "id": m.id,
             "film": {
@@ -164,9 +164,9 @@ def test_measure_spp_splitting(mode_mono):
     m = MyMeasure(id="my_measure", spp=256, spp_splitting_threshold=100)
     assert m._split_spp() == [100, 100, 56]
     assert m.sensor_infos() == [
-        SensorInfo(id="my_measure_spp0", spp=100),
-        SensorInfo(id="my_measure_spp1", spp=100),
-        SensorInfo(id="my_measure_spp2", spp=56),
+        SensorInfo(id="my_measure_ms0_spp0", spp=100),
+        SensorInfo(id="my_measure_ms0_spp1", spp=100),
+        SensorInfo(id="my_measure_ms0_spp2", spp=56),
     ]
 
     # fmt: off

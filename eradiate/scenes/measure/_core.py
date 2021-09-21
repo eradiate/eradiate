@@ -18,7 +18,7 @@ from ..core import KernelDict, SceneElement
 from ... import ckd, converters, validators
 from ..._factory import Factory
 from ..._mode import ModeFlags
-from ..._util import ensure_array, natsort_alphanum_key
+from ..._util import deduplicate, ensure_array, natsort_alphanum_key
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
 from ...contexts import (
@@ -499,14 +499,11 @@ class MeasureResults:
         if not aggregate_spps:
             return result
 
-        # Else ...
-        sensor_id_prefixes = sorted(
-            set(
-                [
-                    sensor_id.split("_spp")[0]
-                    for sensor_id in list(result["sensor_id"].values)
-                ]
-            )
+        sensor_id_prefixes = deduplicate(
+            [
+                sensor_id.split("_spp")[0]
+                for sensor_id in list(result["sensor_id"].values)
+            ]
         )
 
         raw_aggregated = []
@@ -516,7 +513,7 @@ class MeasureResults:
             sensor_ids = [
                 id
                 for id in result.coords["sensor_id"].values
-                if id.startswith(sensor_id_prefix)
+                if id.split("_spp")[0] == sensor_id_prefix
             ]
             # Aggregate sample counts for the current prefix
             weights = xr.where(
@@ -528,7 +525,10 @@ class MeasureResults:
                 result["raw"]
                 .weighted(weights)
                 .mean(dim="sensor_id")
-                .expand_dims({"sensor_id": [sensor_id_prefix]}, axis=1)
+                .expand_dims(
+                    {"sensor_id": [sensor_id_prefix]},
+                    axis=1,
+                )
                 .to_dataset()
             )
             # Mask spp values so as to only include selected values
@@ -538,12 +538,16 @@ class MeasureResults:
                 result.data_vars["spp"]
                 .weighted(weights_spp)
                 .sum(dim="sensor_id")
-                .expand_dims({"sensor_id": [sensor_id_prefix]}, axis=1)
+                .expand_dims(
+                    {"sensor_id": [sensor_id_prefix]},
+                    axis=1,
+                )
                 .to_dataset()
             )
 
-        raw = xr.combine_by_coords(raw_aggregated)["raw"]
-        spp = xr.combine_by_coords(spp_aggregated)["spp"]
+        raw = xr.concat(raw_aggregated, "sensor_id")["raw"]
+
+        spp = xr.concat(spp_aggregated, "sensor_id")["spp"]
 
         result_aggregated = xr.Dataset(
             data_vars={
@@ -611,13 +615,14 @@ class MeasureResults:
             Sensor film size as a (int, int) pair.
         """
         spectral_coords = set()
-        sensor_ids = set()
+        sensor_ids = list()
         film_size = np.zeros((2,), dtype=int)
 
         for spectral_coord, val in raw.items():
             spectral_coords.add(spectral_coord)
             for sensor_id, data in val["values"].items():
-                sensor_ids.add(sensor_id)
+                if sensor_id not in sensor_ids:
+                    sensor_ids.append(sensor_id)
                 film_size = np.maximum(film_size, data.shape[:2])
 
         if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
@@ -862,11 +867,11 @@ class Measure(SceneElement, ABC):
         spps = self._split_spp()
 
         if len(spps) == 1:
-            return [SensorInfo(id=f"{self.id}", spp=spps[0])]
+            return [SensorInfo(id=f"{self.id}_ms0", spp=spps[0])]
 
         else:
             return [
-                SensorInfo(id=f"{self.id}_spp{i}", spp=spp)
+                SensorInfo(id=f"{self.id}_ms0_spp{i}", spp=spp)
                 for i, spp in enumerate(spps)
             ]
 
