@@ -31,7 +31,8 @@ def display_canopy(canopy, distance=85):
 
     # Build kernel scene dictionary suitable for visualisation
     # (we'll render only direct illumination for optimal speed)
-    kernel_dict = eradiate.scenes.core.KernelDict.new(
+    kernel_dict = eradiate.scenes.core.KernelDict()
+    kernel_dict.add(
         eradiate.scenes.measure.PerspectiveCameraMeasure(
             id="camera",
             film_resolution=(640, 480),
@@ -73,10 +74,11 @@ def display_canopy(canopy, distance=85):
 # Abstract discrete canopies are implemented by the :class:`.DiscreteCanopy`
 # class. It is available as a top-level scene element, meaning that it can be
 # directly added to a scene and instantiated using the
-# :class:`.BiosphereFactory`.
+# :data:`biosphere factory <.biosphere_factory>`.
 #
 # A :class:`.DiscreteCanopy` consists of one or several
-# :class:`.CanopyElement`s, *i.e.* set of floating discs and possible trunks.
+# :class:`.CanopyElement` instances, *i.e.* set of floating discs and possible
+# trunks.
 # :class:`.CanopyElement` implements two sub-classes, :class:`.LeafCloud` and
 # :class:`.AbstractTree`, the latter holds a :class:`.LeafCloud` plus
 # specification for a cylindrical trunk. The leaf clouds can be made of a large
