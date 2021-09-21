@@ -7,7 +7,7 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import ModeError
 from eradiate.radprops.rad_profile import AFGL1986RadProfile
-from eradiate.scenes.atmosphere import HomogeneousAtmosphere, HeterogeneousAtmosphere
+from eradiate.scenes.atmosphere import HeterogeneousAtmosphere, HomogeneousAtmosphere
 from eradiate.scenes.measure._distant import DistantRadianceMeasure
 from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
 
@@ -69,7 +69,7 @@ def test_onedim_scene_ckd(mode_ckd):
     ctx = KernelDictContext()
     s = OneDimScene(
         atmosphere=HeterogeneousAtmosphere(profile=AFGL1986RadProfile()),
-        surface={"type": "lambertian", "width": 100.0, "width_units": "m"},
+        surface={"type": "lambertian"},
         measures={"type": "distant_radiance", "id": "distant_measure"},
     )
     assert s.kernel_dict(ctx=ctx).load() is not None
