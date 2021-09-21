@@ -225,7 +225,7 @@ class CKDSpectralContext(SpectralContext):
     def wavelength(self) -> pint.Quantity:
         """
         quantity : Wavelength associated with spectral context. Alias for
-        ``self._bindex.bin.wcenter``.
+            ``self.bindex.bin.wcenter``.
         """
         return self.bindex.bin.wcenter
 
@@ -233,7 +233,7 @@ class CKDSpectralContext(SpectralContext):
     def bin(self) -> Bin:
         """
         :class:`.Bin` : Bin associated with spectral context. Alias for
-            ``self._bindex.bin``.
+            ``self.bindex.bin``.
         """
         return self.bindex.bin
 
