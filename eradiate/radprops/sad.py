@@ -196,33 +196,36 @@ def compute_absorption_cross_section_helper(
     )
 
 
-def to_wavelength(da: xr.DataArray) -> xr.DataArray:
+def to_wavelength_as_spectral_coord(da: xr.DataArray) -> xr.DataArray:
     """
-    Change spectral coordinate representation in a data array from
-    wavenumber to wavelength.
+    Change spectral coordinate representation in a data array to be wavelength.
     """
-    wavenumber = to_quantity(da.w)
-    wavelength = (1.0 / wavenumber).to("nm")
+    if da.w.standard_name == "radiation_wavelength":
+        # it looks like there is nothing to do
+        return da
+    else:
+        wavenumber = to_quantity(da.w)
+        wavelength = (1.0 / wavenumber).to("nm")
 
-    return xr.DataArray(
-        da.data,
-        dims=da.dims,  # we keep the same label for wavelength coordinate
-        coords={
-            **{c: da[c] for c in list(da.coords) if c != "w"},
-            **{
-                "w": (
-                    "w",
-                    wavelength.magnitude,
-                    dict(
-                        standard_name="radiation_wavelength",
-                        long_name="wavelength",
-                        units=wavelength.units,
-                    ),
-                )
+        return xr.DataArray(
+            da.data,
+            dims=da.dims,  # we keep the same label for wavelength coordinate
+            coords={
+                **{c: da[c] for c in list(da.coords) if c != "w"},
+                **{
+                    "w": (
+                        "w",
+                        wavelength.magnitude,
+                        dict(
+                            standard_name="radiation_wavelength",
+                            long_name="wavelength",
+                            units=wavelength.units,
+                        ),
+                    )
+                },
             },
-        },
-        attrs=da.attrs,
-    )
+            attrs=da.attrs,
+        )
 
 
 def compute_absorption_cross_section(
@@ -234,6 +237,7 @@ def compute_absorption_cross_section(
     pressure: pint.Quantity = ureg.Quantity(101325.0, "Pa"),
     temperature: pint.Quantity = ureg.Quantity(296.0, "K"),
     hitran_data_dir: t.Optional[str] = None,
+    to_wavelength: bool = False,
 ) -> xr.DataArray:
     """
     Compute the absorption cross section as a function of wavenumber, pressure
@@ -284,7 +288,10 @@ def compute_absorption_cross_section(
         # update general attributes
         da.attrs.update(_da.attrs)
 
-        return da
+        if to_wavelength:
+            return to_wavelength_as_spectral_coord(da)
+        else:
+            return da
 
     except Exception:
         # assume that molecule does not absorb in specified wavenumber range
