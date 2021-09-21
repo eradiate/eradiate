@@ -51,7 +51,7 @@ class DistantArrayMeasure(DistantMeasure):
             Directions given by 2-vectors of zenith and azimuth angles
             in degrees.
 
-        **kwargs
+        **kwargs : dict, optional
             Keyword arguments forwarded to the :class:`.DistantArrayMeasure`
             constructor.
 
@@ -85,11 +85,11 @@ class DistantArrayMeasure(DistantMeasure):
         **kwargs,
     ):
         """
-        Construct a :class:`.DistantArrayMeasure`, covering a ring of constant zenith angle in the
-        hemisphere given by the direction parameter.
-        The angular resolution along the azimuthal ring can be defined by either the resolution or
-        a number of steps. If both are given, the number of steps takes precedence and a warning is
-        issued.
+        Construct a :class:`.DistantArrayMeasure`, covering a ring of constant
+        zenith angle in the hemisphere given by the direction parameter.
+        The angular resolution along the azimuthal ring can be defined by either
+        the resolution or a number of steps. If both are given, the number of
+        steps takes precedence and a warning is issued.
 
         Parameters
         ----------
@@ -97,21 +97,22 @@ class DistantArrayMeasure(DistantMeasure):
             Zenith angle that defines the ring in the hemisphere.
             Zenith is measured relative to the ``direction`` parameter
 
-            This parameter can be given as a float in degrees or a :class:`pint.Quantity`.
+            This parameter can be given as a float in degrees or a
+            :class:`pint.Quantity`.
 
         direction : array-like
-            Direction that defines the hemisphere in which the azimuthal ring is positioned.
-            The ``zenith_angle`` parameter defines a constant angle with respect to this
-            direction.
+            Direction that defines the hemisphere in which the azimuthal ring is
+            positioned. The ``zenith_angle`` parameter defines a constant angle
+            with respect to this direction.
 
         azimuth_resolution : float
-            Angular resolution along the azimuthal ring. Can be given as a :class:`pint.Quantity`
-            or a float in degrees.
+            Angular resolution along the azimuthal ring. Can be given as a
+            :class:`pint.Quantity` or a float in degrees.
 
         azimuth_steps : float
             Number of steps along the azimuthal ring.
 
-        **kwargs
+        **kwargs : dict, optional
             Keyword arguments forwarded to the :class:`.DistantArrayMeasure`
             constructor.
 
@@ -154,7 +155,7 @@ class DistantArrayMeasure(DistantMeasure):
 
         else:
             raise ValueError(
-                "Neither azmiuth resolution or number of steps were defined."
+                "Neither azimuth resolution or number of steps were defined."
             )
 
         directions_prelim = [

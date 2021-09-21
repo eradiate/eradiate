@@ -97,7 +97,7 @@ class MeasureSpectralConfig(ABC):
 
         Parameters
         ----------
-        **kwargs
+        **kwargs : dict, optional
             Keyword arguments depending on the currently active mode (see below
             for a list of actual keyword arguments).
 

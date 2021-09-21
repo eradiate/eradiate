@@ -156,7 +156,7 @@ intersphinx_mapping = {
 extensions.append("sphinx.ext.todo")
 todo_include_todos = True
 
-# Autodoc and autosummary options
+# Autodoc options
 extensions.append("sphinx.ext.autodoc")
 autodoc_default_flags = [
     "members",
@@ -168,14 +168,7 @@ autodoc_typehints = "none"
 autodoc_member_order = "alphabetical"
 autodoc_preserve_defaults = True
 
-
-def autodoc_skip_member(app, what, name, obj, skip, options):
-    # From https://stackoverflow.com/questions/3757500/connect-sphinx-autodoc-skip-member-to-my-function
-    exclude = isinstance(obj, property)
-    # return True if (skip or exclude) else None  # Can interfere with subsequent skip functions.
-    return True if exclude else None
-
-
+# Autosummary options
 extensions.append("sphinx.ext.autosummary")
 autosummary_generate = True
 autosummary_members = True
@@ -390,11 +383,3 @@ latex_logo = "fig/eradiate-logo-dark-no_bg.png"
 
 # If false, no module index is generated.
 # latex_domain_indices = True
-
-
-# -- App setup -----------------------------------------------------------------
-
-
-# Disabled until we're sure we don't want to filter out properties
-# def setup(app):
-#     app.connect("autodoc-skip-member", autodoc_skip_member)
