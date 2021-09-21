@@ -34,7 +34,7 @@ the European Commission's Copernicus programme. The design phase was funded by
 the MetEOC-3 project.
 
 Eradiate's core development team consists of Yves Govaerts, Vincent Leroy,
-Yvan Nollet and Sebastian Schunke.
+Yvan Nollet, Sebastian Schunke and Nicolas Misk.
 
 Eradiate uses as its computational kernel a modified copy of the
 `Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_ renderer.
