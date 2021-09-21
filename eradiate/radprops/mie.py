@@ -1,5 +1,5 @@
 """
-Core module.
+Mie scattering properties computation.
 """
 import typing as t
 
