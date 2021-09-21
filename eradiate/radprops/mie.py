@@ -44,10 +44,23 @@ def compute_properties(
     :class:`~xarray.DataArray`
         Radiative properties.
     """
-    dsi = []
+    datasets = []
+    m_max = m.values.max()
+    m_min = m.values.min()
     for wavelength in w:
-        dsi.append(compute_mono_properties(w=wavelength, rdist=rdist, m=m, mu=mu))
-    return xr.concat(dsi, dim="w")
+        m_value = complex(
+            m.interp(w=wavelength, kwargs=dict(fill_value=(m_min, m_max))).values
+        )
+        ds = compute_mono_properties(w=wavelength, rdist=rdist, m=m_value, mu=mu)
+        datasets.append(ds)
+
+    dataset = xr.concat(datasets, dim="w")
+
+    dataset.phase.attrs.update(ds.phase.attrs)
+    dataset.sigma_t.attrs.update(ds.sigma_t.attrs)
+    dataset.albedo.attrs.update(ds.albedo.attrs)
+
+    return dataset
 
 
 @ureg.wraps(
@@ -241,8 +254,8 @@ def make_data_set(
     return xr.Dataset(
         data_vars={
             "phase": (
-                ["w", "r", "m", "mu"],
-                phase.reshape(1, 1, 1, len(mu)),
+                ["w", "r", "mu"],
+                phase.reshape(1, 1, len(mu)),
                 dict(
                     standard_name="scattering_phase_function",
                     long_name="scattering phase function",
@@ -250,8 +263,8 @@ def make_data_set(
                 ),
             ),
             "sigma_t": (
-                ["w", "r", "m"],
-                np.array([sigma_t]).reshape(1, 1, 1),
+                ["w", "r"],
+                np.array([sigma_t]).reshape(1, 1),
                 dict(
                     standard_name="extinction_cross_section",
                     long_name="extinction cross section",
@@ -259,8 +272,8 @@ def make_data_set(
                 ),
             ),
             "albedo": (
-                ["w", "r", "m"],
-                np.array([albedo]).reshape(1, 1, 1),
+                ["w", "r"],
+                np.array([albedo]).reshape(1, 1),
                 dict(standard_name="albedo", long_name="albedo", units=""),
             ),
         },
