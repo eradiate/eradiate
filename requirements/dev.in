@@ -2,7 +2,7 @@
 -r tests.in
 black
 bump2version
-conda-lock
+conda-lock>=0.12
 coverage
 ipython
 ipywidgets
