@@ -46,7 +46,7 @@ dependencies:
   - twine
   # docs
   - mock
-  - pydata-sphinx-theme
+  - sphinx-book-theme
   - sphinx>=3.1
   - sphinxcontrib-bibtex>=2.0
   - sphinx-copybutton
