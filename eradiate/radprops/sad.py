@@ -3,17 +3,21 @@ Wrapper around hapi (https://github.com/hitranonline/hapi) to compute
 monochromatic absorption cross section spectra for molecules.
 """
 import contextlib
+import io
 import os
 import pathlib
 import tempfile
 import typing as t
 
-import hapi
+with contextlib.redirect_stdout(io.StringIO()):
+    import hapi
+
 import numpy as np
 import pint
 import xarray as xr
 
-from ..units import unit_registry as ureg, to_quantity
+from ..units import to_quantity
+from ..units import unit_registry as ureg
 
 # TODO: parse https://hitran.org/docs/iso-meta/ to automatically update isotopologues and corresponding abundances
 ISOTOPOLOGUE_IDS = dict(
@@ -86,12 +90,13 @@ def query_hitran(
     )
 
     with working_directory(path):
-        hapi.fetch_by_ids(
-            TableName=table_name,
-            iso_id_list=isotopologue_ids,
-            numin=wavenumber_min.m_as("cm^-1"),
-            numax=wavenumber_max.m_as("cm^-1"),
-        )
+        with contextlib.redirect_stdout(io.StringIO()):
+            hapi.fetch_by_ids(
+                TableName=table_name,
+                iso_id_list=isotopologue_ids,
+                numin=wavenumber_min.m_as("cm^-1"),
+                numax=wavenumber_max.m_as("cm^-1"),
+            )
 
     return table_name
 
@@ -176,16 +181,20 @@ def compute_absorption_cross_section_helper(
     # It seems that absorptionCoefficient_Voigt will use the natural relative
     # abundances when mixing each molecule' isotopologues, so we do not
     # need to specify these relative abundances.
-    nu, coef = hapi.absorptionCoefficient_Voigt(
-        SourceTables=source_table,
-        WavenumberRange=(wavenumber_min.m_as("cm^-1"), wavenumber_max.m_as("cm^-1")),
-        WavenumberStep=wavenumber_step.m_as("cm^-1"),
-        WavenumberWingHW=truncation_distance_in_hwhm,
-        Environment=dict(p=pressure.m_as("atm"), T=temperature.m_as("kelvin")),
-        GammaL="gamma_air",
-        IntensityThreshold=0.0,
-        HITRAN_units=True,  # that means the returned quantity is an absorption cross section with values in units of cm^2
-    )
+    with contextlib.redirect_stdout(io.StringIO()):
+        nu, coef = hapi.absorptionCoefficient_Voigt(
+            SourceTables=source_table,
+            WavenumberRange=(
+                wavenumber_min.m_as("cm^-1"),
+                wavenumber_max.m_as("cm^-1"),
+            ),
+            WavenumberStep=wavenumber_step.m_as("cm^-1"),
+            WavenumberWingHW=truncation_distance_in_hwhm,
+            Environment=dict(p=pressure.m_as("atm"), T=temperature.m_as("kelvin")),
+            GammaL="gamma_air",
+            IntensityThreshold=0.0,
+            HITRAN_units=True,  # that means the returned quantity is an absorption cross section with values in units of cm^2
+        )
 
     return make_absorption_cross_section_data_array(
         wavenumber=ureg.Quantity(nu, "cm^-1"),
