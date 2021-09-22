@@ -19,20 +19,31 @@ class DataGetter:
 
     @classmethod
     def open(cls, id):
-        """Open requested data set. No default implementation.
+        """
+        Open requested data set. No default implementation.
 
-        Returns → :class:`xarray.Dataset`:
+        Parameters
+        ----------
+        id : str
+            Identifier used for the request.
+
+        Returns
+        -------
+        Dataset
             Requested data set.
         """
         raise NotImplementedError
 
     @classmethod
     def find(cls):
-        """Check if registered data could be found.
+        """
+        Check if registered data could be found.
 
-        Returns → dict[str, bool]:
-            Report dictionary containing data set identifiers as keys and
-            Boolean values (``True`` if a file exists for this ID, ``False``
-            otherwise).
+        Returns
+        -------
+        dict
+            Report dictionary (``{str: bool}``) with data set identifiers as
+            keys and Boolean values (``True`` if a file exists for this ID,
+            ``False`` otherwise).
         """
         raise NotImplementedError

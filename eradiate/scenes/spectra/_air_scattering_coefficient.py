@@ -36,8 +36,12 @@ class AirScatteringCoefficientSpectrum(Spectrum):
     """
     Air scattering coefficient spectrum.
 
-    .. seealso:: :func:`~eradiate.radprops.rayleigh.compute_sigma_s_air`
+    See Also
+    --------
+    :func:`~eradiate.radprops.rayleigh.compute_sigma_s_air`
 
+    Notes
+    -----
     Evaluation is as follows:
 
     * in ``mono_*`` modes, the spectrum is evaluated at the spectral context

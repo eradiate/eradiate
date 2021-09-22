@@ -841,6 +841,8 @@ class DistantAlbedoMeasure(DistantFluxMeasure):
         """
         Return post-processed raw sensor results.
 
+        Parameters
+        ----------
         illumination : :class:`.DirectionalIllumination` or :class:`.ConstantIllumination`
             Scene illumination.
 

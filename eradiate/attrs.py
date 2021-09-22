@@ -30,7 +30,9 @@ class _Auto:
     Sentinel class to indicate when a dynamic field value is expected to be
     set automatically. ``_Auto`` is a singleton. There is only ever one of it.
 
-    .. note:: ``bool(_Auto)`` evaluates to ``False``.
+    Notes
+    -----
+    ``bool(_Auto)`` evaluates to ``False``.
     """
 
     _singleton = None
