@@ -4,8 +4,8 @@ Particle layers.
 from __future__ import annotations
 
 import pathlib
-import tempfile
 import typing as t
+import warnings
 
 import attr
 import numpy as np
@@ -15,7 +15,7 @@ import xarray as xr
 
 import eradiate
 
-from ._core import Atmosphere, atmosphere_factory, write_binary_grid3d
+from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._particle_dist import (
     ParticleDistribution,
     UniformParticleDistribution,
@@ -24,15 +24,12 @@ from ._particle_dist import (
 from ..core import KernelDict
 from ... import path_resolver
 from ..._mode import ModeFlags
-from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
-from ...exceptions import UnsupportedModeError
-from ...kernel.transform import map_cube, map_unit_cube
+from ...exceptions import OverriddenValueWarning, UnsupportedModeError
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
-from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...validators import is_positive
 
@@ -40,7 +37,7 @@ from ...validators import is_positive
 @atmosphere_factory.register(type_id="particle_layer")
 @parse_docs
 @attr.s
-class ParticleLayer(Atmosphere):
+class ParticleLayer(AbstractHeterogeneousAtmosphere):
     """
     Particle layer scene element [``particle_layer``].
 
@@ -152,28 +149,6 @@ class ParticleLayer(Atmosphere):
         type="str",
     )
 
-    albedo_filename: str = documented(
-        attr.ib(
-            default="albedo.vol",
-            converter=str,
-            validator=attr.validators.instance_of(str),
-        ),
-        doc="Name of the albedo volume data file.",
-        type="str",
-        default='"albedo.vol"',
-    )
-
-    sigma_t_filename: t.Optional[str] = documented(
-        attr.ib(
-            default="sigma_t.vol",
-            converter=str,
-            validator=attr.validators.instance_of(str),
-        ),
-        doc="Name of the extinction coefficient volume data file.",
-        type="str",
-        default='"sigma_t.vol"',
-    )
-
     weight_filename: t.Optional[str] = documented(
         attr.ib(
             default="weight.vol",
@@ -186,33 +161,9 @@ class ParticleLayer(Atmosphere):
         default='"weight.vol"',
     )
 
-    cache_dir: pathlib.Path = documented(
-        attr.ib(
-            default=pathlib.Path(tempfile.mkdtemp()),
-            converter=pathlib.Path,
-            validator=attr.validators.instance_of(pathlib.Path),
-        ),
-        doc="Path to a cache directory where volume data files will be created.",
-        init_type="path-like",
-        type=":class:`pathlib.Path`",
-        default="temporary directory",
-    )
-
-    def __attrs_post_init__(self):
-        # Prepare cache directory in case we'd need it
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-
     # --------------------------------------------------------------------------
     #                        Volume data files
     # --------------------------------------------------------------------------
-
-    @property
-    def albedo_file(self) -> pathlib.Path:
-        return self.cache_dir / self.albedo_filename
-
-    @property
-    def sigma_t_file(self) -> pathlib.Path:
-        return self.cache_dir / self.sigma_t_filename
 
     @property
     def weight_file(self) -> pathlib.Path:
@@ -231,11 +182,17 @@ class ParticleLayer(Atmosphere):
         return self._bottom
 
     def eval_width(self, ctx: t.Optional[KernelDictContext]) -> pint.Quantity:
-        if self.width is AUTO:
-            spectral_ctx = ctx.spectral_ctx if ctx is not None else None
-            return 10.0 / self.eval_sigma_s(spectral_ctx=spectral_ctx).min()
+        if ctx is not None and ctx.override_scene_width is not None:
+            if self.width is not AUTO:
+                warnings.warn(OverriddenValueWarning("Overriding particle layer width"))
+            return ctx.override_scene_width
+
         else:
-            return self.width
+            if self.width is AUTO:
+                spectral_ctx = ctx.spectral_ctx if ctx is not None else None
+                return 10.0 / self.eval_sigma_s(spectral_ctx=spectral_ctx).min()
+            else:
+                return self.width
 
     @property
     def z_level(self) -> pint.Quantity:
@@ -299,10 +256,10 @@ class ParticleLayer(Atmosphere):
             Phase function.
         """
         ds = xr.open_dataset(self.dataset)
-        return (
-            ds.phase.sel(i=0)
-            .sel(j=0)
-            .interp(w=spectral_ctx.wavelength.magnitude, kwargs=dict(bounds_error=True))
+        return ds.phase.sel(i=0, j=0).interp(
+            w=spectral_ctx.wavelength.m_as(ds.w.units),
+            mu=np.linspace(-1, 1, 201),
+            kwargs=dict(bounds_error=True),
         )
 
     def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
@@ -372,21 +329,28 @@ class ParticleLayer(Atmosphere):
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
 
         ds = xr.open_dataset(self.dataset)
+
+        # find the extinction data variable
+        for dv in ds.data_vars:
+            standard_name = ds[dv].standard_name
+            if "extinction" in standard_name:
+                extinction = ds[dv]
+
         ds_w_units = ureg.Unit(ds.w.attrs["units"])
         wavelength = w.m_as(ds_w_units)
-        sigma_t = to_quantity(ds.sigma_t.interp(w=wavelength))
-        sigma_t_550 = to_quantity(
-            ds.sigma_t.interp(w=ureg.convert(550.0, ureg.nm, ds_w_units))
+        xs_t = to_quantity(extinction.interp(w=wavelength))
+        xs_t_550 = to_quantity(
+            extinction.interp(w=ureg.convert(550.0, ureg.nm, ds_w_units))
         )
         fractions = self.eval_fractions()
-        sigma_t_array = sigma_t_550 * fractions
+        sigma_t_array = xs_t_550 * fractions
         dz = (self.top - self.bottom) / self.n_layers
         normalized_sigma_t_array = self._normalize_to_tau(
             ki=sigma_t_array.magnitude,
             dz=dz,
             tau=self.tau_550,
         )
-        return normalized_sigma_t_array * sigma_t / sigma_t_550
+        return normalized_sigma_t_array * xs_t / xs_t_550
 
     def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         raise NotImplementedError
@@ -494,8 +458,8 @@ class ParticleLayer(Atmosphere):
             return xr.Dataset(
                 data_vars={
                     "sigma_t": (
-                        ("z_layer"),
-                        sigma_t.magnitude,
+                        "z_layer",
+                        np.atleast_1d(sigma_t.magnitude),
                         dict(
                             standard_name="extinction_coefficient",
                             long_name="extinction coefficient",
@@ -503,8 +467,8 @@ class ParticleLayer(Atmosphere):
                         ),
                     ),
                     "albedo": (
-                        ("z_layer"),
-                        albedo.magnitude,
+                        "z_layer",
+                        np.atleast_1d(albedo.magnitude),
                         dict(
                             standard_name="albedo",
                             long_name="albedo",
@@ -531,7 +495,7 @@ class ParticleLayer(Atmosphere):
                             units=self.z_level.units,
                         ),
                     ),
-                    "wavelength": (
+                    "w": (
                         "w",
                         [wavelength.magnitude],
                         dict(
@@ -579,23 +543,6 @@ class ParticleLayer(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _gridvolume_to_world_trafo(self, ctx: KernelDictContext) -> t.Any:
-        """
-        Returns the 'to_world' transformation for gridvolume plugins.
-        """
-        length_units = uck.get("length")
-        width = self.kernel_width(ctx).m_as(length_units)
-        top = self.top.m_as(length_units)
-        bottom = self.bottom.m_as(length_units)
-        return map_unit_cube(
-            xmin=-width / 2.0,
-            xmax=width / 2.0,
-            ymin=-width / 2.0,
-            ymax=width / 2.0,
-            zmin=bottom,
-            zmax=top,
-        )
-
     def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
         particles_phase = self.eval_phase(spectral_ctx=ctx.spectral_ctx)
         return KernelDict(
@@ -603,73 +550,6 @@ class ParticleLayer(Atmosphere):
                 f"phase_{self.id}": {
                     "type": "lutphase",
                     "values": ",".join([str(value) for value in particles_phase.data]),
-                }
-            }
-        )
-
-    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
-        radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
-        albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
-        sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
-        write_binary_grid3d(
-            filename=str(self.albedo_file), values=albedo[np.newaxis, np.newaxis, ...]
-        )
-        write_binary_grid3d(
-            filename=str(self.sigma_t_file), values=sigma_t[np.newaxis, np.newaxis, ...]
-        )
-        trafo = self._gridvolume_to_world_trafo(ctx=ctx)
-
-        if ctx.ref:
-            phase = {"type": "ref", "id": f"phase_{self.id}"}
-        else:
-            phase = onedict_value(self.kernel_phase(ctx=ctx))
-
-        return KernelDict(
-            {
-                f"medium_{self.id}": {
-                    "type": "heterogeneous",
-                    "phase": phase,
-                    "sigma_t": {
-                        "type": "gridvolume",
-                        "filename": str(self.sigma_t_file),
-                        "to_world": trafo,
-                    },
-                    "albedo": {
-                        "type": "gridvolume",
-                        "filename": str(self.albedo_file),
-                        "to_world": trafo,
-                    },
-                }
-            }
-        )
-
-    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
-        if ctx.ref:
-            medium = {"type": "ref", "id": f"medium_{self.id}"}
-        else:
-            medium = self.kernel_media(ctx)[f"medium_{self.id}"]
-
-        length_units = uck.get("length")
-        width = self.kernel_width(ctx).m_as(length_units)
-        bottom = self.bottom.m_as(length_units)
-        top = self.top.m_as(length_units)
-        offset = self.kernel_offset(ctx).m_as(length_units)
-        trafo = map_cube(
-            xmin=-width / 2.0,
-            xmax=width / 2.0,
-            ymin=-width / 2.0,
-            ymax=width / 2.0,
-            zmin=bottom - offset,
-            zmax=top,
-        )
-
-        return KernelDict(
-            {
-                f"shape_{self.id}": {
-                    "type": "cube",
-                    "to_world": trafo,
-                    "bsdf": {"type": "null"},
-                    "interior": medium,
                 }
             }
         )

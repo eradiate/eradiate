@@ -1,3 +1,6 @@
+import pathlib
+
+import numpy as np
 import pytest
 import xarray as xr
 
@@ -73,8 +76,55 @@ def test_particle_layer_radprops(mode_mono, test_dataset):
     )
 
 
-def test_particle_layer_eval_phase(test_dataset):
+def test_particle_layer_eval_phase(mode_mono, test_dataset):
     """Method 'eval_phase' returns a 'DataArray'."""
     layer = ParticleLayer(dataset=test_dataset)
     spectral_ctx = SpectralContext.new()
     assert isinstance(layer.eval_phase(spectral_ctx=spectral_ctx), xr.DataArray)
+
+
+def test_particle_layer_eval_phase_order(mode_mono, tmpdir):
+    """
+    Returns phase function values by increasing order of scattering anle cosine
+    values.
+    """
+
+    def make_ds(mu, phase):
+        return xr.Dataset(
+            data_vars={
+                "sigma_t": ("w", np.zeros(2)),
+                "albedo": ("w", np.zeros(2)),
+                "phase": (
+                    ["w", "mu", "i", "j"],
+                    phase[:, :, np.newaxis, np.newaxis],
+                ),
+            },
+            coords={
+                "w": ("w", [240.0, 2800.0], dict(units="nm")),
+                "mu": ("mu", mu),
+                "i": ("i", [0]),
+                "j": ("j", [0]),
+            },
+        )
+
+    ds_mu_increasing = make_ds(
+        mu=np.linspace(-1, 1, 3), phase=np.array([np.arange(1, 4), np.arange(1, 4)])
+    )
+    path_mu_increasing = pathlib.Path(tmpdir, "ds_mu_increasing.nc")
+    ds_mu_increasing.to_netcdf(path_mu_increasing)
+
+    ds_mu_decreasing = make_ds(
+        mu=np.linspace(1, -1, 3),
+        phase=np.array([np.arange(3, 0, -1), np.arange(3, 0, -1)]),
+    )
+    path_mu_decreasing = pathlib.Path(tmpdir, "ds_mu_decreasing.nc")
+    ds_mu_decreasing.to_netcdf(path_mu_decreasing)
+
+    spectral_ctx = SpectralContext.new()
+    layer_mu_increasing = ParticleLayer(dataset=path_mu_increasing)
+    phase_mu_increasing = layer_mu_increasing.eval_phase(spectral_ctx)
+
+    layer_mu_decreasing = ParticleLayer(dataset=path_mu_decreasing)
+    phase_mu_decreasing = layer_mu_decreasing.eval_phase(spectral_ctx)
+
+    assert np.all(phase_mu_increasing.values == phase_mu_decreasing.values)

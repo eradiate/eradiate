@@ -4,22 +4,20 @@ Molecular atmospheres.
 
 from __future__ import annotations
 
-import pathlib
-import tempfile
 import typing as t
+import warnings
 
 import attr
 import numpy as np
 import pint
 import xarray as xr
 
-from ._core import Atmosphere, atmosphere_factory, write_binary_grid3d
+from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
-from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...kernel.transform import map_cube, map_unit_cube
+from ...exceptions import OverriddenValueWarning
 from ...radprops.rad_profile import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
 from ...thermoprops import afgl1986, us76
 from ...thermoprops.util import (
@@ -28,14 +26,13 @@ from ...thermoprops.util import (
     rescale_concentration,
 )
 from ...units import to_quantity
-from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
 @atmosphere_factory.register(type_id="molecular", dict_constructor="afgl1986")
 @parse_docs
 @attr.s
-class MolecularAtmosphere(Atmosphere):
+class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     """
     Molecular atmosphere scene element [``molecular``].
 
@@ -108,46 +105,8 @@ class MolecularAtmosphere(Atmosphere):
         type="dict",
     )
 
-    albedo_filename: str = documented(
-        attr.ib(
-            default="albedo.vol",
-            converter=str,
-            validator=attr.validators.instance_of(str),
-        ),
-        doc="Name of the albedo volume data file.",
-        type="str",
-        default='"albedo.vol"',
-    )
-
-    sigma_t_filename: str = documented(
-        attr.ib(
-            default="sigma_t.vol",
-            converter=str,
-            validator=attr.validators.instance_of(str),
-        ),
-        doc="Name of the extinction coefficient volume data file.",
-        type="str",
-        default='"sigma_t.vol"',
-    )
-
-    cache_dir: pathlib.Path = documented(
-        attr.ib(
-            default=pathlib.Path(tempfile.mkdtemp()),
-            converter=pathlib.Path,
-            validator=attr.validators.instance_of(pathlib.Path),
-        ),
-        doc="Path to a cache directory where volume data files will be created.",
-        type="path-like",
-        default="Temporary directory",
-    )
-
-    def __attrs_post_init__(self) -> None:
-        # Prepare cache directory in case we'd need it
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-
-        self.update()
-
     def update(self) -> None:
+        super(MolecularAtmosphere, self).update()
         self.phase.id = f"phase_{self.id}"
 
     # --------------------------------------------------------------------------
@@ -167,18 +126,23 @@ class MolecularAtmosphere(Atmosphere):
         return self._thermoprops
 
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
-        if self.width is AUTO:
-            min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
-
-            if min_sigma_s <= 0.0:
-                raise ValueError(
-                    "cannot compute width automatically when scattering "
-                    "coefficient reaches zero"
+        if ctx is not None and ctx.override_scene_width is not None:
+            if self.width is not AUTO:
+                warnings.warn(OverriddenValueWarning("Overriding particle layer width"))
+            return ctx.override_scene_width
+        else:
+            if self.width is AUTO:
+                min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
+                width = np.divide(
+                    10.0,
+                    min_sigma_s,
+                    where=min_sigma_s != 0.0,
+                    out=np.array([np.inf]),
                 )
 
-            return min(10.0 / min_sigma_s, ureg.Quantity(1e3, "km"))
-        else:
-            return self.width
+                return min(width, ureg.Quantity(1e3, "km"))
+            else:
+                return self.width
 
     # --------------------------------------------------------------------------
     #                             Radiative properties
@@ -227,97 +191,8 @@ class MolecularAtmosphere(Atmosphere):
     #                             Kernel dictionary
     # --------------------------------------------------------------------------
 
-    @property
-    def albedo_file(self) -> pathlib.Path:
-        return self.cache_dir / self.albedo_filename
-
-    @property
-    def sigma_t_file(self) -> pathlib.Path:
-        return self.cache_dir / self.sigma_t_filename
-
     def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
         return self.phase.kernel_dict(ctx=ctx)
-
-    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
-        length_units = uck.get("length")
-        width = self.kernel_width(ctx).m_as(length_units)
-        top = self.top.m_as(length_units)
-        bottom = self.bottom.m_as(length_units)
-        trafo = map_unit_cube(
-            xmin=-width / 2.0,
-            xmax=width / 2.0,
-            ymin=-width / 2.0,
-            ymax=width / 2.0,
-            zmin=bottom,
-            zmax=top,
-        )
-
-        radprops = self.radprops_profile.eval_dataset(spectral_ctx=ctx.spectral_ctx)
-        albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
-        sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
-
-        write_binary_grid3d(
-            filename=str(self.albedo_file), values=albedo[np.newaxis, np.newaxis, ...]
-        )
-
-        write_binary_grid3d(
-            filename=str(self.sigma_t_file), values=sigma_t[np.newaxis, np.newaxis, ...]
-        )
-
-        if ctx.ref:
-            phase = {"type": "ref", "id": f"phase_{self.id}"}
-        else:
-            phase = onedict_value(self.kernel_phase(ctx=ctx))
-
-        return KernelDict(
-            {
-                f"medium_{self.id}": {
-                    "type": "heterogeneous",
-                    "phase": phase,
-                    "albedo": {
-                        "type": "gridvolume",
-                        "filename": str(self.albedo_file),
-                        "to_world": trafo,
-                    },
-                    "sigma_t": {
-                        "type": "gridvolume",
-                        "filename": str(self.sigma_t_file),
-                        "to_world": trafo,
-                    },
-                }
-            }
-        )
-
-    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
-        if ctx.ref:
-            medium = {"type": "ref", "id": f"medium_{self.id}"}
-        else:
-            medium = self.kernel_media(ctx)[f"medium_{self.id}"]
-
-        length_units = uck.get("length")
-        width = self.kernel_width(ctx).m_as(length_units)
-        bottom = self.bottom.m_as(length_units)
-        top = self.top.m_as(length_units)
-        offset = self.kernel_offset(ctx).m_as(length_units)
-        trafo = map_cube(
-            xmin=-width / 2.0,
-            xmax=width / 2.0,
-            ymin=-width / 2.0,
-            ymax=width / 2.0,
-            zmin=bottom - offset,
-            zmax=top,
-        )
-
-        return KernelDict(
-            {
-                f"shape_{self.id}": {
-                    "type": "cube",
-                    "to_world": trafo,
-                    "bsdf": {"type": "null"},
-                    "interior": medium,
-                }
-            }
-        )
 
     # --------------------------------------------------------------------------
     #                               Constructors

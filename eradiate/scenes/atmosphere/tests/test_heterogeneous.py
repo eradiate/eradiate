@@ -36,7 +36,7 @@ def test_heterogeneous_kernel_phase_0(mode_mono):
     returns an empty dictionary.
     """
     atmosphere = HeterogeneousAtmosphere()
-    assert atmosphere.kernel_phase(ctx=KernelDictContext()) == KernelDict()
+    assert atmosphere.kernel_phase(ctx=KernelDictContext()) == {}
 
 
 def test_heterogeneous_kernel_phase_1(mode_mono):
@@ -68,9 +68,9 @@ def test_heterogeneous_kernel_phase_2(mode_mono):
 def test_heterogeneous_kernel_phase_3(mode_mono):
     """
     If there is a molecular atmosphere and one particle layer, 'kernel_phase'
-    returns a dictionary with two entries:
-      * the first entry matches the molecular atmosphere 'kernel_phase' output.
-      * the second entry is a 'blendphase' plugin specification dictionary.
+    returns a 'blendphase' plugin dictionary with two nested phase function
+    plugins directionaries matching the molecular atmosphere and particle
+    layer phase function plugin dictionaries, respectively.
     """
     ctx = KernelDictContext()
     molecular_atmosphere = MolecularAtmosphere(id="molecules")
@@ -78,33 +78,26 @@ def test_heterogeneous_kernel_phase_3(mode_mono):
     atmosphere = HeterogeneousAtmosphere(
         molecular_atmosphere=molecular_atmosphere, particle_layers=[particle_layer]
     )
-    phases = atmosphere.kernel_phase(ctx=ctx)
-    assert len(list(phases.keys())) == 2
-    assert all(
-        [
-            phase in phases
-            for phase in [
-                f"phase_{molecular_atmosphere.id}",
-                f"phase_{particle_layer.id}",
-            ]
-        ]
+    phase = atmosphere.kernel_phase(ctx=ctx)
+    assert phase.data["phase_atmosphere"]["type"] == "blendphase"
+    assert (
+        phase.data["phase_atmosphere"]["phase_molecules"]
+        == molecular_atmosphere.kernel_phase(ctx=ctx).data["phase_molecules"]
     )
     assert (
-        phases[f"phase_{molecular_atmosphere.id}"]
-        == molecular_atmosphere.kernel_phase(ctx=ctx)[
-            f"phase_{molecular_atmosphere.id}"
-        ]
+        phase.data["phase_atmosphere"]["phase_particles"]
+        == particle_layer.kernel_phase(ctx=ctx).data["phase_particles"]
     )
-    assert phases[f"phase_{particle_layer.id}"]["type"] == "blendphase"
 
 
 def test_heterogeneous_kernel_media_0(mode_mono):
     """
     If there is no molecular atmosphere and no particle layers, 'kernel_media'
-    returns an empty dictionary.
+    returns a 'heterogeneous' medium plugin specification dictionary.
     """
     atmosphere = HeterogeneousAtmosphere()
-    assert atmosphere.kernel_media(ctx=KernelDictContext()) == KernelDict()
+    medium = atmosphere.kernel_media(ctx=KernelDictContext())
+    assert medium.data["medium_atmosphere"]["type"] == "heterogeneous"
 
 
 def test_heterogeneous_kernel_media_1(mode_mono):
@@ -136,37 +129,18 @@ def test_heterogeneous_kernel_media_2(mode_mono):
 def test_heterogeneous_kernel_media_3(mode_mono):
     """
     If there is a molecular atmosphere and one particle layer, 'kernel_media'
-    returns a dictionary with two entries:
-      * the first entry matches the molecular atmosphere 'kernel_media' output.
-      * the second entry matches the particle layer's 'kernel_media' output.
+    returns 'heterogeneous' plugin dictionary
     """
-    ctx = KernelDictContext()
+    ctx = KernelDictContext(ref=True)
     molecular_atmosphere = MolecularAtmosphere(id="molecules")
     particle_layer = ParticleLayer(id="particles")
     atmosphere = HeterogeneousAtmosphere(
         molecular_atmosphere=molecular_atmosphere, particle_layers=[particle_layer]
     )
-    media = atmosphere.kernel_media(ctx=ctx)
-    assert len(list(media.keys())) == 2
-    assert all(
-        [
-            medium in media
-            for medium in [
-                f"medium_{molecular_atmosphere.id}",
-                f"medium_{particle_layer.id}",
-            ]
-        ]
-    )
-    assert (
-        media[f"medium_{molecular_atmosphere.id}"]
-        == molecular_atmosphere.kernel_media(ctx=ctx)[
-            f"medium_{molecular_atmosphere.id}"
-        ]
-    )
-    assert (
-        media[f"medium_{particle_layer.id}"]
-        == particle_layer.kernel_media(ctx=ctx)[f"medium_{particle_layer.id}"]
-    )
+    media = atmosphere.kernel_media(ctx=ctx).data["medium_atmosphere"]
+    assert media["type"] == "heterogeneous"
+    assert media["phase"]["type"] == "ref"
+    assert media["phase"]["id"] == "phase_atmosphere"
 
 
 @pytest.fixture
