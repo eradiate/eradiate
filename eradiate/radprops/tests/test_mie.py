@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
@@ -87,7 +88,18 @@ def test_compute_mono_properties():
     assert isinstance(ds, xr.Dataset)
 
 
-def test_compute_properties():
+@pytest.fixture
+def test_refractive_index():
+    return xr.DataArray(
+        np.array([1.5 - 0.1j, 1.5 - 0.01j], dtype=complex),
+        dims="w",
+        coords={
+            "w": ("w", np.array([240.0, 2800.0]), dict(units="nm")),
+        },
+    )
+
+
+def test_compute_properties(test_refractive_index):
     """
     Returns a xarray.Dataset.
     """
@@ -99,6 +111,6 @@ def test_compute_properties():
     ds = compute_properties(
         w=np.linspace(500, 600, 3),
         rdist=rdist,
-        m=1.5 - 0.1j,
+        m=test_refractive_index,
     )
     assert isinstance(ds, xr.Dataset)
