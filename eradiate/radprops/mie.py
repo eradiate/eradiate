@@ -8,8 +8,9 @@ import numpy as np
 import pint
 import xarray as xr
 
-
 from ..units import unit_registry as ureg
+
+xr.set_options(keep_attrs=True)
 
 _DEFAULT_MU = np.linspace(-1, 1, 201)
 
@@ -54,13 +55,7 @@ def compute_properties(
         ds = compute_mono_properties(w=wavelength, rdist=rdist, m=m_value, mu=mu)
         datasets.append(ds)
 
-    dataset = xr.concat(datasets, dim="w")
-
-    dataset.phase.attrs.update(ds.phase.attrs)
-    dataset.sigma_t.attrs.update(ds.sigma_t.attrs)
-    dataset.albedo.attrs.update(ds.albedo.attrs)
-
-    return dataset
+    return xr.concat(datasets, dim="w")
 
 
 @ureg.wraps(
@@ -189,7 +184,7 @@ def compute_mono_properties_single_radius(
 
     # compute extinction cross section and albedo
     area = np.array(np.pi) * (r.to("m")) ** 2
-    sigma_t = qext * area
+    xs_t = qext * area
     albedo = ureg.Quantity(qsca / qext, "")
 
     # compute phase function
@@ -200,7 +195,7 @@ def compute_mono_properties_single_radius(
 
     return make_data_set(
         phase=phase,
-        sigma_t=sigma_t,
+        xs_t=xs_t,
         albedo=albedo,
         w=w,
         r=r,
@@ -214,7 +209,7 @@ def compute_mono_properties_single_radius(
 )
 def make_data_set(
     phase: t.Union[pint.Quantity, np.ndarray],
-    sigma_t: t.Union[pint.Quantity, float],
+    xs_t: t.Union[pint.Quantity, float],
     albedo: t.Union[pint.Quantity, float],
     w: t.Union[pint.Quantity, float],
     r: t.Union[pint.Quantity, float],
@@ -229,7 +224,7 @@ def make_data_set(
     phase: :class:`~pint.Quantity` or :class:`~numpy.ndarray`
         Scattering phase function [steradian^-1].
 
-    sigma_t: :class:`~pint.Quantity` or float
+    xs_t: :class:`~pint.Quantity` or float
         Extinction cross section [m^2].
 
     albedo: :class:`~pint.Quantity` or float)
@@ -262,9 +257,9 @@ def make_data_set(
                     units="steradian^-1",
                 ),
             ),
-            "sigma_t": (
+            "xs_t": (
                 ["w", "r"],
-                np.array([sigma_t]).reshape(1, 1),
+                np.array([xs_t]).reshape(1, 1),
                 dict(
                     standard_name="extinction_cross_section",
                     long_name="extinction cross section",

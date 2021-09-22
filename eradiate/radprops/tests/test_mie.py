@@ -17,7 +17,7 @@ def test_make_data_test():
     """
     ds = make_data_set(
         phase=np.random.rand((50)),
-        sigma_t=1e-2,
+        xs_t=1e-2,
         albedo=0.96,
         w=550.0,
         r=1.0,
