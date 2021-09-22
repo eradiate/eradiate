@@ -6,8 +6,11 @@ from eradiate import path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import ModeError
-from eradiate.radprops.rad_profile import AFGL1986RadProfile
-from eradiate.scenes.atmosphere import HeterogeneousAtmosphere, HomogeneousAtmosphere
+from eradiate.scenes.atmosphere import (
+    HomogeneousAtmosphere,
+    HeterogeneousAtmosphere,
+    MolecularAtmosphere,
+)
 from eradiate.scenes.measure._distant import DistantRadianceMeasure
 from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
 
@@ -68,7 +71,9 @@ def test_onedim_scene_ckd(mode_ckd):
     """
     ctx = KernelDictContext()
     s = OneDimScene(
-        atmosphere=HeterogeneousAtmosphere(profile=AFGL1986RadProfile()),
+        atmosphere=HeterogeneousAtmosphere(
+            molecular_atmosphere=MolecularAtmosphere.afgl1986()
+        ),
         surface={"type": "lambertian"},
         measures={"type": "distant_radiance", "id": "distant_measure"},
     )
@@ -101,9 +106,9 @@ def test_onedim_scene_real_life(mode_mono):
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "profile": {
-                "type": "us76_approx",
-                "absorption_data_set": test_absorption_data_set,
+            "molecular_atmosphere": {
+                "type": "molecular_atmosphere",
+                "construct": "ussa1976",
             },
         },
         illumination={"type": "directional", "zenith": 45.0},

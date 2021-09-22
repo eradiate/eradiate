@@ -120,7 +120,7 @@ atmosphere are supported.
 Homogeneous atmosphere [:class:`.HomogeneousAtmosphere`, ``homogeneous``]
     The atmosphere has spatially invariant radiative properties.
 
-Heterogeneous atmosphere [:class:`.HeterogeneousAtmosphere`, ``heterogeneous``]
+Heterogeneous atmosphere [:class:`.HeterogeneousAtmosphereLegacy`, ``heterogeneous_legacy``]
     The atmosphere has spatially varying radiative properties along the
     altitude coordinate. Absorption and Rayleigh scattering are currently
     supported.

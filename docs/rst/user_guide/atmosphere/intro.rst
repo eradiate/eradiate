@@ -96,7 +96,7 @@ Eradiate provides two atmosphere types:
   (:class:`~eradiate.scenes.atmosphere.HomogeneousAtmosphere`): radiative
   properties are uniform within the atmosphere.
 * heterogeneous atmosphere
-  (:class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere`): radiative
+  (:class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphereLegacy`): radiative
   properties are non-uniform within the atmosphere.
 
 .. image:: fig/atmosphere-classes.png

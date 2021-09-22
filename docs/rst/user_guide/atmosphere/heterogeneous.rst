@@ -32,7 +32,7 @@ The scattering phase function is set to the
 :ref:`Rayleigh scattering phase function <sec-atmosphere-molecular-scattering>`
 (with a depolarisation factor set to zero) within the whole atmosphere.
 
-The :class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere` constructor
+The :class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphereLegacy` constructor
 requires that you provide the radiative properties profile using either
 
 * a :class:`~eradiate.radprops.rad_profile.RadProfile` object or

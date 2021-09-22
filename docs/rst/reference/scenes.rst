@@ -39,8 +39,8 @@ Atmosphere [eradiate.scenes.atmosphere]
    :toctree: generated/autosummary/
 
    HomogeneousAtmosphere
+   HeterogeneousAtmosphereLegacy
    HeterogeneousAtmosphere
-   HeterogeneousNewAtmosphere
    MolecularAtmosphere
    ParticleLayer
 

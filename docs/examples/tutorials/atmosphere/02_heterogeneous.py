@@ -33,7 +33,7 @@ from eradiate import unit_registry as ureg
 # --------------------
 # Create a heterogeneous atmosphere with:
 
-atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere()
+atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphereLegacy()
 
 # %%
 # The default constructor uses a default radiative properties profile
@@ -52,7 +52,7 @@ atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere()
 # an approximated radiative properties profile corresponding to the
 # :mod:`~eradiate.thermoprops.us76` atmosphere thermophysical model.
 
-atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
+atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphereLegacy(
     profile=eradiate.radprops.US76ApproxRadProfile()
 )
 
@@ -76,9 +76,9 @@ atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
 
 import numpy as np
 
-atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
+atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphereLegacy(
     profile=eradiate.radprops.US76ApproxRadProfile(
-        levels=ureg.Quantity(np.linspace(0, 120, 61), "km")
+        thermoprops=dict(levels=ureg.Quantity(np.linspace(0, 120, 61), "km"))
     )
 )
 
@@ -93,9 +93,11 @@ atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
 # For example, you can define a completely arbitrary level altitude mesh with
 # four layers of varying thicknesses:
 
-atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
+atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphereLegacy(
     profile=eradiate.radprops.US76ApproxRadProfile(
-        levels=ureg.Quantity(np.array([0.0, 4.0, 12.0, 64.0, 100.0]), "km")
+        thermoprops=dict(
+            levels=ureg.Quantity(np.array([0.0, 4.0, 12.0, 64.0, 100.0]), "km")
+        )
     )
 )
 
@@ -104,9 +106,9 @@ atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
 # --------------------------
 # Set the atmosphere's width using the ``width`` attribute:
 
-atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
+atmosphere = eradiate.scenes.atmosphere.HeterogeneousAtmosphereLegacy(
     profile=eradiate.radprops.US76ApproxRadProfile(
-        levels=ureg.Quantity(np.linspace(0, 120, 61), "km")
+        thermoprops=dict(levels=ureg.Quantity(np.linspace(0, 120, 61), "km"))
     ),
     width=ureg.Quantity(500, "km"),
 )
@@ -140,7 +142,7 @@ print(atmosphere.width.to("km"))
 # You can fetch the atmospheric radiative properties profile into a data set:
 
 spectral_ctx = eradiate.contexts.SpectralContext.new()
-ds = atmosphere.profile.to_dataset(spectral_ctx)
+ds = atmosphere.profile.eval_dataset(spectral_ctx)
 ds
 
 # %%
@@ -150,3 +152,5 @@ ds
 
 ds.sigma_t.plot(yscale="log")
 plt.show()
+
+# %%
