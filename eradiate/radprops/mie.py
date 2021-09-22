@@ -249,11 +249,11 @@ def make_data_set(
     return xr.Dataset(
         data_vars={
             "phase": (
-                ["w", "r", "mu"],
-                phase.reshape(1, 1, len(mu)),
+                ["w", "r", "mu", "i", "j"],
+                phase.reshape(1, 1, len(mu), 1, 1),
                 dict(
-                    standard_name="scattering_phase_function",
-                    long_name="scattering phase function",
+                    standard_name="scattering_phase_matrix",
+                    long_name="scattering phase matrix",
                     units="steradian^-1",
                 ),
             ),
@@ -307,6 +307,20 @@ def make_data_set(
                     standard_name="scattering_angle_cosine",
                     long_name="scattering angle cosine",
                     units="",
+                ),
+            ),
+            "i": (
+                "i",
+                [0],
+                dict(
+                    long_name="matrix row index",
+                ),
+            ),
+            "j": (
+                "j",
+                [0],
+                dict(
+                    long_name="matrix column index",
                 ),
             ),
         },
