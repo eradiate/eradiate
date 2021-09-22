@@ -42,20 +42,21 @@ from ...validators import is_positive
 class ParticleLayer(Atmosphere):
     """
     Particle layer.
+
     The particle layer has a vertical extension specified by a bottom altitude
-    (set by ``bottom``) and a top altitude (set by ``top``).
+    (set by `bottom`) and a top altitude (set by `top`).
     Inside the layer, the particles number is distributed according to a
-    distribution (set by ``distribution``).
+    distribution (set by `distribution`).
     See :mod:`~eradiate.scenes.atmosphere.particle_dist` for the available distribution
     types and corresponding parameters.
     The particle layer is itself divided into a number of (sub-)layers
-    (``n_layers``) to allow to describe the variations of the particles number
+    (`n_layers`) to allow to describe the variations of the particles number
     with altitude.
     The total number of particles in the layer is adjusted so that the
     particle layer's optical thickness at 550 nm meet a specified value
-    (``tau_550``).
+    (`tau_550`).
     The particles radiative properties are specified by a data set
-    (``dataset``).
+    (`dataset`).
     """
 
     _bottom: pint.Quantity = documented(
@@ -370,18 +371,21 @@ class ParticleLayer(Atmosphere):
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
 
         ds = xr.open_dataset(self.dataset)
-        wavelengths = w.m_as(ds.w.attrs["units"])
-        interpolated_sigma_t = ds.sigma_t.interp(w=wavelengths)
-        sigma_t = to_quantity(interpolated_sigma_t)
+        ds_w_units = ureg.Unit(ds.w.attrs["units"])
+        wavelength = w.m_as(ds_w_units)
+        sigma_t = to_quantity(ds.sigma_t.interp(w=wavelength))
+        sigma_t_550 = to_quantity(
+            ds.sigma_t.interp(w=ureg.convert(550.0, ureg.nm, ds_w_units))
+        )
         fractions = self.eval_fractions()
-        sigma_t_array = sigma_t * fractions
+        sigma_t_array = sigma_t_550 * fractions
         dz = (self.top - self.bottom) / self.n_layers
         normalized_sigma_t_array = self._normalize_to_tau(
             ki=sigma_t_array.magnitude,
             dz=dz,
             tau=self.tau_550,
         )
-        return normalized_sigma_t_array
+        return normalized_sigma_t_array * sigma_t / sigma_t_550
 
     def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         raise NotImplementedError
@@ -543,7 +547,7 @@ class ParticleLayer(Atmosphere):
 
     @staticmethod
     @ureg.wraps(ret="km^-1", args=("", "km", ""), strict=False)
-    def _normalize_to_tau(ki: np.ndarray, dz: np.ndarray, tau: float) -> np.ndarray:
+    def _normalize_to_tau(ki: np.ndarray, dz: np.ndarray, tau: float) -> pint.Quantity:
         r"""
         Normalise extinction coefficient values :math:`k_i` so that:
 
