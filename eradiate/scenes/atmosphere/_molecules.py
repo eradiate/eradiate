@@ -7,6 +7,7 @@ from __future__ import annotations
 import pathlib
 import tempfile
 import typing as t
+import warnings
 
 import attr
 import numpy as np
@@ -19,6 +20,7 @@ from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
+from ...exceptions import OverriddenValueWarning
 from ...kernel.transform import map_cube, map_unit_cube
 from ...radprops.rad_profile import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
 from ...thermoprops import afgl1986, us76
@@ -167,18 +169,25 @@ class MolecularAtmosphere(Atmosphere):
         return self._thermoprops
 
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
-        if self.width is AUTO:
-            min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
-
-            if min_sigma_s <= 0.0:
-                raise ValueError(
-                    "cannot compute width automatically when scattering "
-                    "coefficient reaches zero"
+        if ctx.override_scene_width is not None:
+            if self.width is not AUTO:
+                warnings.warn(
+                    OverriddenValueWarning("Overriding molecular atmosphere width")
+                )
+            return ctx.override_scene_width
+        else:
+            if self.width is AUTO:
+                min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
+                width = np.divide(
+                    10.0,
+                    min_sigma_s,
+                    where=min_sigma_s != 0.0,
+                    out=np.zeros_like(np.inf),
                 )
 
-            return min(10.0 / min_sigma_s, ureg.Quantity(1e3, "km"))
-        else:
-            return self.width
+                return min(width, ureg.Quantity(1e3, "km"))
+            else:
+                return self.width
 
     # --------------------------------------------------------------------------
     #                             Radiative properties

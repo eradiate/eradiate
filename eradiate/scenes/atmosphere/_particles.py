@@ -6,6 +6,7 @@ from __future__ import annotations
 import pathlib
 import tempfile
 import typing as t
+import warnings
 
 import attr
 import numpy as np
@@ -28,7 +29,7 @@ from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
-from ...exceptions import UnsupportedModeError
+from ...exceptions import OverriddenValueWarning, UnsupportedModeError
 from ...kernel.transform import map_cube, map_unit_cube
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
@@ -231,11 +232,16 @@ class ParticleLayer(Atmosphere):
         return self._bottom
 
     def eval_width(self, ctx: t.Optional[KernelDictContext]) -> pint.Quantity:
-        if self.width is AUTO:
-            spectral_ctx = ctx.spectral_ctx if ctx is not None else None
-            return 10.0 / self.eval_sigma_s(spectral_ctx=spectral_ctx).min()
+        if ctx.override_scene_width is not None:
+            if self.width is not AUTO:
+                warnings.warn(OverriddenValueWarning("Overriding particle layer width"))
+            return ctx.override_scene_width
         else:
-            return self.width
+            if self.width is AUTO:
+                spectral_ctx = ctx.spectral_ctx
+                return 10.0 / self.eval_sigma_s(spectral_ctx=spectral_ctx).min()
+            else:
+                return self.width
 
     @property
     def z_level(self) -> pint.Quantity:
