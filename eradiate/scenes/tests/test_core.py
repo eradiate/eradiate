@@ -88,3 +88,40 @@ def test_kernel_dict_post_load(mode_mono):
     params = traverse(obj)
     assert params["irradiance.wavelengths"] == np.array([400.0, 500.0, 600.0])
     assert params["irradiance.values"] == np.array([0.0, 1.0, 2.0])
+
+
+def test_kernel_dict_duplicate_id():
+    from eradiate.contexts import KernelDictContext
+    from eradiate.scenes.illumination import illumination_factory
+
+    # Upon trying to add a scene element, whose ID is already present
+    # in the KernelDict, a Warning must be issued.
+    with pytest.warns(Warning):
+        kd = KernelDict(
+            {
+                "testmeasure": {
+                    "type": "directional",
+                    "id": "testmeasure",
+                    "irradiance": {
+                        "type": "interpolated",
+                        "wavelengths": [400, 500],
+                        "values": [1, 1],
+                    },
+                }
+            }
+        )
+
+        kd.add(
+            illumination_factory.convert(
+                {
+                    "type": "directional",
+                    "id": "testmeasure",
+                    "irradiance": {
+                        "type": "interpolated",
+                        "wavelengths": [400, 500],
+                        "values": [2, 2],
+                    },
+                }
+            ),
+            ctx=KernelDictContext(),
+        )

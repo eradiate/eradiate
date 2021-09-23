@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+import warnings
 from abc import ABC, abstractmethod
 from collections import abc as collections_abc
 
@@ -79,6 +80,13 @@ class KernelDict(collections_abc.MutableMapping):
         return self.data.__iter__()
 
     def __setitem__(self, k, v):
+        try:
+            self.data.__getitem__(k)
+            warnings.warn(
+                f"Duplicate key '{k}' will be overwritten. Are you trying to add scene elements with duplicate IDs to this KernelDict?"
+            )
+        except KeyError:
+            pass
         return self.data.__setitem__(k, v)
 
     def check(self) -> None:
