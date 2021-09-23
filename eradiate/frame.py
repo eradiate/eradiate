@@ -96,7 +96,8 @@ def direction_to_angles(v: ArrayLike) -> np.ndarray:
 
 @ureg.wraps(ret=None, args=(None, "rad", "rad", None), strict=False)
 def spherical_to_cartesian(r, theta, phi, origin=np.zeros((3,))):
-    r"""Convert spherical coordinates to cartesian coordinates
+    r"""
+    Convert spherical coordinates to cartesian coordinates
 
     Parameters
     ----------
