@@ -280,7 +280,6 @@ def parse_docs(cls):
     * Meant to be used as a class decorator.
     * Must be applied **after** :func:`@attr.s <attr.s>`.
     * Fields must be documented using :func:`documented`.
-
     """
     formatter = _numpy_formatter
 

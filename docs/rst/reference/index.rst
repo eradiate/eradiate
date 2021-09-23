@@ -16,8 +16,8 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
 .. toctree::
    :maxdepth: 2
 
-   class_writing
    ckd
+   class_writing
    config
    contexts
    core
