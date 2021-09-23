@@ -40,12 +40,12 @@ def test_spectra_interpolated_construct(modes_all):
         InterpolatedSpectrum(
             quantity="irradiance",
             wavelengths=[500.0, 600.0],
-            values=[0.0, 1.0] * ureg["W/m^2"],
+            values=[0.0, 1.0] * ureg("W/m^2"),
         )
     with pytest.raises(pinttr.exceptions.UnitsError):
         InterpolatedSpectrum(
             quantity="irradiance",
-            wavelengths=[500.0, 600.0] * ureg["s"],
+            wavelengths=[500.0, 600.0] * ureg.s,
             values=[0.0, 1.0],
         )
 
@@ -79,8 +79,8 @@ def test_interpolated_eval(modes_all):
     # consistent with values
     spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
     assert spectrum.eval(spectral_ctx) == expected
-    spectrum.values *= ureg["W/m^2/nm"]
-    assert spectrum.eval(spectral_ctx) == expected * ureg["W/m^2/nm"]
+    spectrum.values *= ureg("W/m^2/nm")
+    assert spectrum.eval(spectral_ctx) == expected * ureg("W/m^2/nm")
 
     # Spectrum with quantity performs linear interpolation and yields units
     # consistent with quantity

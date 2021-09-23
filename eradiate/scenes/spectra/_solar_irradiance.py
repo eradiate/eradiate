@@ -105,7 +105,7 @@ class SolarIrradianceSpectrum(Spectrum):
         return super(SolarIrradianceSpectrum, self).eval(spectral_ctx)
 
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
-        w_units = ureg[self.data.ssi.w.attrs["units"]]
+        w_units = ureg(self.data.ssi.w.attrs["units"])
         irradiance = to_quantity(
             self.data.ssi.interp(w=w.m_as(w_units), method="linear")
         )
