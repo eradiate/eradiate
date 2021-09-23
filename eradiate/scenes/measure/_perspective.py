@@ -81,6 +81,27 @@ class PerspectiveCameraMeasure(Measure):
         default="[0, 0, 1]",
     )
 
+    far_clip: pint.Quantity = documented(
+        pinttr.ib(
+            default=1e4 * ureg.km,
+            units=ucc.deferred("length"),
+        ),
+        doc="Distance to the far clip plane.\n"
+        "\n"
+        "Unit-enabled field (default: ucc[length]).",
+        type="quantity",
+        init_type="quantity of float",
+        default="10 000 km",
+    )
+
+    fov: pint.Quantity = documented(
+        pinttr.ib(default=50.0 * ureg.deg, units=ureg.deg),
+        doc="Camera field of view.\n\nUnit-enabled field (default: degree).",
+        type="quantity",
+        init_type="quantity or float",
+        default="50°",
+    )
+
     @target.validator
     @origin.validator
     def _target_origin_validator(self, attribute, value):
@@ -117,7 +138,8 @@ class PerspectiveCameraMeasure(Measure):
                 {
                     "type": "perspective",
                     "id": sensor_info.id,
-                    "far_clip": 1e7,
+                    "far_clip": self.far_clip.m_as(uck.get("length")),
+                    "fov": self.fov.m_as(ureg.deg),
                     "to_world": ScalarTransform4f.look_at(
                         origin=origin, target=target, up=self.up
                     ),
