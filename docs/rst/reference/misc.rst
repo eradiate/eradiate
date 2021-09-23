@@ -8,6 +8,7 @@ Private: Miscellaneous support components [eradiate._util]
    :toctree: generated/autosummary/
 
    Singleton
+   deduplicate
    ensure_array
    is_vector3
    natsort_alphanum_key

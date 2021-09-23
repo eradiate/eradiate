@@ -1,5 +1,6 @@
 import re
 import typing as t
+from collections import OrderedDict
 from numbers import Number
 
 import numpy as np
@@ -167,3 +168,29 @@ def str_summary_numpy(x):
             array_str = ("\n" + " " * len(prefix)).join(split)
 
         return f"{prefix}{array_str})"
+
+
+def deduplicate(value: t.Sequence, preserve_order: bool = True) -> t.List:
+    """
+    Remove duplicates from a sequence.
+
+    Parameters
+    ---------
+    value : sequence
+        Sequence to remove duplicates from.
+
+    preserve_order : bool, optional, default: True
+        If ``True``, preserve item ordering. The first occurrence of duplicated
+        items is kept. Setting to ``False`` may slightly improve performance.
+
+    Returns
+    -------
+    list
+        List of values with duplicates removed.
+    """
+
+    if preserve_order:
+        return list(OrderedDict.fromkeys(value))
+
+    else:
+        return list(set(value))
