@@ -29,7 +29,7 @@ class LambertianSurface(Surface):
             ],
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
-        "processed by :class:`.SpectrumFactory`.",
+        "processed by :data:`.spectrum_factory`.",
         type=":class:`.Spectrum`",
         init_type=":class:`.Spectrum` or dict or float",
         default="0.5",
