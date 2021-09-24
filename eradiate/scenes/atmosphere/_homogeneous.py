@@ -123,7 +123,7 @@ class HomogeneousAtmosphere(Atmosphere):
 
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         if self.width is AUTO:
-            spectral_ctx = ctx.spectral_ctx if ctx is not None else None
+            spectral_ctx = ctx.spectral_ctx
             return 10.0 / self.eval_sigma_s(spectral_ctx)
         else:
             return self.width

@@ -147,7 +147,7 @@ class Surface(SceneElement, ABC):
         quantity
             Kernel object width.
         """
-        if ctx is not None and ctx.override_scene_width is not None:
+        if ctx.override_scene_width is not None:
             if self.width is not AUTO:
                 warnings.warn(OverriddenValueWarning("Overriding surface width"))
             return ctx.override_scene_width

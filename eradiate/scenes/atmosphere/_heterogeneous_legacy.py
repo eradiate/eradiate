@@ -125,7 +125,7 @@ class HeterogeneousAtmosphereLegacy(Atmosphere):
 
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         if self.width is AUTO:
-            spectral_ctx = ctx.spectral_ctx if ctx is not None else None
+            spectral_ctx = ctx.spectral_ctx
 
             if self.profile is None:
                 albedo = ureg.Quantity(
