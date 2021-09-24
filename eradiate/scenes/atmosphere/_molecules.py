@@ -32,14 +32,12 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
-@atmosphere_factory.register(
-    type_id="molecular_atmosphere", dict_constructor="afgl1986"
-)
+@atmosphere_factory.register(type_id="molecular", dict_constructor="afgl1986")
 @parse_docs
 @attr.s
 class MolecularAtmosphere(Atmosphere):
     """
-    Molecular atmosphere.
+    Molecular atmosphere scene element [``molecular``].
 
     .. admonition:: Class method constructors
 

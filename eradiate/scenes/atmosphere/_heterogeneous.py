@@ -21,7 +21,7 @@ from ...units import unit_registry as ureg
 
 def _heterogeneous_atmosphere_molecular_converter(value):
     if isinstance(value, cabc.MutableMapping) and ("type" not in value):
-        value["type"] = "molecular_atmosphere"
+        value["type"] = "molecular"
     return atmosphere_factory.convert(value, allowed_cls=MolecularAtmosphere)
 
 
@@ -63,8 +63,12 @@ class HeterogeneousAtmosphere(Atmosphere):
                 attr.validators.instance_of(MolecularAtmosphere)
             ),
         ),
-        doc="Molecular atmosphere.",
+        doc="Molecular atmosphere. Can be specified as a dictionary interpreted "
+        'by :data:`.atmosphere_factory`; in that case, the ``"type"`` parameter '
+        'can be ommitted and will automatically be set to \'``"molecular"``.',
         type=":class:`.MolecularAtmosphere`, optional",
+        init_type=":class:`.MolecularAtmosphere` or dict, optional",
+        default="None",
     )
 
     particle_layers: t.List[ParticleLayer] = documented(
@@ -75,7 +79,10 @@ class HeterogeneousAtmosphere(Atmosphere):
                 attr.validators.instance_of(ParticleLayer)
             ),
         ),
-        doc="Particle layers.",
+        doc="Particle layers. Can be specified as a dictionary interpreted "
+        "by :data:`.atmosphere_factory`; in that case, the ``type`` parameter "
+        "can be ommitted and will automatically be set to "
+        "``particle_layer``.",
         type="list of :class:`.ParticleLayer`",
         default="[]",
     )
@@ -223,7 +230,8 @@ class HeterogeneousAtmosphere(Atmosphere):
             dictionary generation.
 
         Returns
-        ------- : :class:`.KernelDict`
+        -------
+        :class:`.KernelDict`
             A kernel dictionary containing all the media attached to the
             atmosphere.
 

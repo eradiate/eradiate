@@ -15,7 +15,7 @@ import xarray as xr
 
 import eradiate
 
-from ._core import Atmosphere, write_binary_grid3d
+from ._core import Atmosphere, atmosphere_factory, write_binary_grid3d
 from ._particle_dist import (
     ParticleDistribution,
     UniformParticleDistribution,
@@ -37,18 +37,19 @@ from ...units import unit_registry as ureg
 from ...validators import is_positive
 
 
+@atmosphere_factory.register(type_id="particle_layer")
 @parse_docs
 @attr.s
 class ParticleLayer(Atmosphere):
     """
-    Particle layer.
+    Particle layer scene element [``particle_layer``].
 
     The particle layer has a vertical extension specified by a bottom altitude
     (set by `bottom`) and a top altitude (set by `top`).
     Inside the layer, the particles number is distributed according to a
     distribution (set by `distribution`).
-    See :mod:`~eradiate.scenes.atmosphere.particle_dist` for the available distribution
-    types and corresponding parameters.
+    See :mod:`~eradiate.scenes.atmosphere.particle_dist` for the available
+    distribution types and corresponding parameters.
     The particle layer is itself divided into a number of (sub-)layers
     (`n_layers`) to allow to describe the variations of the particles number
     with altitude.

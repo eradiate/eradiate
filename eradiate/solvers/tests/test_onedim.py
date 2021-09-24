@@ -7,8 +7,8 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import ModeError
 from eradiate.scenes.atmosphere import (
-    HomogeneousAtmosphere,
     HeterogeneousAtmosphere,
+    HomogeneousAtmosphere,
     MolecularAtmosphere,
 )
 from eradiate.scenes.measure._distant import DistantRadianceMeasure
@@ -106,10 +106,7 @@ def test_onedim_scene_real_life(mode_mono):
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "type": "molecular_atmosphere",
-                "construct": "ussa1976",
-            },
+            "molecular_atmosphere": {"construct": "ussa1976"},
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures={"type": "distant_reflectance", "id": "toa"},
