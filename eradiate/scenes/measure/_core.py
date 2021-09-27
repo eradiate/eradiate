@@ -18,7 +18,7 @@ from ..core import KernelDict, SceneElement
 from ... import ckd, converters, validators
 from ..._factory import Factory
 from ..._mode import ModeFlags
-from ..._util import deduplicate, ensure_array, natsort_alphanum_key
+from ..._util import deduplicate, natsort_alphanum_key
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
 from ...contexts import (
@@ -189,7 +189,7 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
         pinttr.ib(
             default=ureg.Quantity([550.0], ureg.nm),
             units=ucc.deferred("wavelength"),
-            converter=lambda x: converters.on_quantity(ensure_array)(
+            converter=lambda x: converters.on_quantity(np.atleast_1d)(
                 pinttr.converters.ensure_units(x, ucc.get("wavelength"))
             ),
         ),

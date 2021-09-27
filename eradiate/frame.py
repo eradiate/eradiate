@@ -4,7 +4,6 @@ import numpy as np
 import pint
 from numpy.typing import ArrayLike
 
-from ._util import ensure_array
 from .units import unit_registry as ureg
 
 
@@ -28,8 +27,8 @@ def cos_angle_to_direction(cos_theta: ArrayLike, phi: ArrayLike) -> np.ndarray:
     ndarray
         Direction corresponding to the angular parameters [unitless].
     """
-    cos_theta = ensure_array(cos_theta)
-    phi = ensure_array(phi)
+    cos_theta = np.atleast_1d(cos_theta)
+    phi = np.atleast_1d(phi)
 
     sin_theta = np.sqrt(1.0 - np.multiply(cos_theta, cos_theta))
     sin_phi, cos_phi = np.sin(phi), np.cos(phi)
@@ -56,7 +55,7 @@ def angles_to_direction(angles: ArrayLike) -> np.ndarray:
     ndarray
         Direction corresponding to the angular parameters [unitless].
     """
-    angles = ensure_array(angles)
+    angles = np.atleast_1d(angles)
     if angles.ndim < 2:
         angles = angles.reshape((angles.size // 2, 2))
     if angles.ndim > 2 or angles.shape[1] != 2:
@@ -81,7 +80,7 @@ def direction_to_angles(v: ArrayLike) -> np.ndarray:
         A sequence of 2-vectors containing zenith and azimuth angles, where
         zenith = 0 corresponds to +z direction (shape (N, 2)) [rad].
     """
-    v = ensure_array(v)
+    v = np.atleast_1d(v)
     if v.ndim < 2:
         v = v.reshape((v.size // 3, 3))
     if v.ndim > 2 or v.shape[1] != 3:

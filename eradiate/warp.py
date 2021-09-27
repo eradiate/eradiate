@@ -1,8 +1,6 @@
 import numpy as np
 from numpy.typing import ArrayLike
 
-from ._util import ensure_array
-
 
 def square_to_uniform_disk_concentric(sample: ArrayLike) -> np.ndarray:
     """
@@ -30,7 +28,7 @@ def square_to_uniform_disk_concentric(sample: ArrayLike) -> np.ndarray:
     """
     # Matches Mitsuba implementation
 
-    sample = ensure_array(sample)
+    sample = np.atleast_1d(sample)
     if sample.ndim < 2:
         sample = sample.reshape((sample.size // 2, 2))
     if sample.ndim > 2 or sample.shape[1] != 2:
@@ -81,7 +79,7 @@ def square_to_uniform_hemisphere(sample: ArrayLike) -> np.ndarray:
     """
     # Matches Mitsuba implementation
 
-    sample = ensure_array(sample)
+    sample = np.atleast_1d(sample)
     if sample.ndim < 2:
         sample = sample.reshape((sample.size // 2, 2))
     if sample.ndim > 2 or sample.shape[1] != 2:
@@ -119,7 +117,7 @@ def uniform_hemisphere_to_square(v: ArrayLike) -> np.ndarray:
     """
     # Matches Mitsuba implementation
 
-    v = ensure_array(v)
+    v = np.atleast_1d(v)
     if v.ndim < 2:
         v = v.reshape((v.size // 3, 3))
     if v.ndim > 2 or v.shape[1] != 3:
@@ -157,7 +155,7 @@ def uniform_disk_to_square_concentric(p: ArrayLike) -> np.ndarray:
     """
     # Matches Mitsuba implementation
 
-    p = ensure_array(p)
+    p = np.atleast_1d(p)
     if p.ndim < 2:
         p = p.reshape((p.size // 2, 2))
     if p.ndim > 2 or p.shape[1] != 2:

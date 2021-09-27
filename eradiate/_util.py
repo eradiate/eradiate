@@ -1,5 +1,6 @@
 import re
 import typing as t
+import warnings
 from collections import OrderedDict
 from numbers import Number
 
@@ -47,6 +48,10 @@ def ensure_array(value: t.Any, dtype: t.Optional[t.Any] = None) -> np.ndarray:
     """
     Convert or wrap a value in a Numpy array.
 
+    .. deprecated:: 0.0.1
+       This function is redundant with :func:`numpy.atleast_1d`, which should
+       be used instead.
+
     Parameters
     ----------
     value
@@ -60,6 +65,11 @@ def ensure_array(value: t.Any, dtype: t.Optional[t.Any] = None) -> np.ndarray:
     ndarray
         A new array with the passed value.
     """
+    warnings.warn(
+        "ensure_array() is deprecated, please use numpy.atleast_1d() instead",
+        DeprecationWarning,
+    )
+
     kwargs = dict(dtype=dtype) if dtype is not None else {}
 
     return np.array(list(pinttr.util.always_iterable(value)), **kwargs)

@@ -11,9 +11,8 @@ from ._core import Spectrum, spectrum_factory
 from ..core import KernelDict
 from ... import converters, validators
 from ..._mode import ModeFlags
-from ..._util import ensure_array
 from ...attrs import documented, parse_docs
-from ...ckd import Bin, Bindex
+from ...ckd import Bindex
 from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
 from ...units import unit_context_config as ucc
@@ -47,7 +46,7 @@ class InterpolatedSpectrum(Spectrum):
     )
 
     values: pint.Quantity = documented(
-        attr.ib(default=None, converter=converters.on_quantity(ensure_array)),
+        attr.ib(default=None, converter=converters.on_quantity(np.atleast_1d)),
         doc="Uniform spectrum value. If a float is passed and ``quantity`` is not "
         "``None``, it is automatically converted to appropriate configuration "
         "default units. If a :class:`~pint.Quantity` is passed and ``quantity`` "
