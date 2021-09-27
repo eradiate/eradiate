@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from eradiate import path_resolver
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
@@ -11,6 +12,13 @@ from eradiate.scenes.atmosphere import (
 from eradiate.scenes.atmosphere._heterogeneous import blend_radprops, overlapping
 from eradiate.scenes.core import KernelDict
 from eradiate.units import unit_registry as ureg
+
+
+@pytest.fixture
+def ussa76_approx_test_absorption_data_set():
+    return path_resolver.resolve(
+        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
+    )
 
 
 def test_heterogeneous_ids():
@@ -65,7 +73,9 @@ def test_heterogeneous_kernel_phase_2(mode_mono):
     assert atmosphere.kernel_phase(ctx=ctx) == particle_layer.kernel_phase(ctx=ctx)
 
 
-def test_heterogeneous_kernel_phase_3(mode_mono):
+def test_heterogeneous_kernel_phase_3(
+    mode_mono, ussa76_approx_test_absorption_data_set
+):
     """
     If there is a molecular atmosphere and one particle layer, 'kernel_phase'
     returns a 'blendphase' plugin dictionary with two nested phase function
@@ -73,7 +83,10 @@ def test_heterogeneous_kernel_phase_3(mode_mono):
     layer phase function plugin dictionaries, respectively.
     """
     ctx = KernelDictContext()
-    molecular_atmosphere = MolecularAtmosphere(id="molecules")
+    molecular_atmosphere = MolecularAtmosphere(
+        id="molecules",
+        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set),
+    )
     particle_layer = ParticleLayer(id="particles")
     atmosphere = HeterogeneousAtmosphere(
         molecular_atmosphere=molecular_atmosphere, particle_layers=[particle_layer]
@@ -100,21 +113,27 @@ def test_heterogeneous_kernel_media_0(mode_mono):
     assert medium.data["medium_atmosphere"]["type"] == "heterogeneous"
 
 
-def test_heterogeneous_kernel_media_1(mode_mono):
+def test_heterogeneous_kernel_media_1(
+    mode_mono, ussa76_approx_test_absorption_data_set
+):
     """
     If there is a molecular atmosphere but no particle layers, 'kernel_media'
     returns a dictionary that matches the dictionary returned by the molecular
     atmosphere's 'kernel_media' method.
     """
     ctx = KernelDictContext()
-    molecular_atmosphere = MolecularAtmosphere()
+    molecular_atmosphere = MolecularAtmosphere(
+        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set)
+    )
     atmosphere = HeterogeneousAtmosphere(molecular_atmosphere=molecular_atmosphere)
     assert atmosphere.kernel_media(ctx=ctx) == molecular_atmosphere.kernel_media(
         ctx=ctx
     )
 
 
-def test_heterogeneous_kernel_media_2(mode_mono):
+def test_heterogeneous_kernel_media_2(
+    mode_mono, ussa76_approx_test_absorption_data_set
+):
     """
     If there is no molecular atmosphere but one particle layer, 'kernel_media'
     returns a dictionary that matches the dictionary returned by the particle
@@ -126,13 +145,18 @@ def test_heterogeneous_kernel_media_2(mode_mono):
     assert atmosphere.kernel_media(ctx=ctx) == particle_layer.kernel_media(ctx=ctx)
 
 
-def test_heterogeneous_kernel_media_3(mode_mono):
+def test_heterogeneous_kernel_media_3(
+    mode_mono, ussa76_approx_test_absorption_data_set
+):
     """
     If there is a molecular atmosphere and one particle layer, 'kernel_media'
     returns 'heterogeneous' plugin dictionary
     """
     ctx = KernelDictContext(ref=True)
-    molecular_atmosphere = MolecularAtmosphere(id="molecules")
+    molecular_atmosphere = MolecularAtmosphere(
+        id="molecules",
+        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set),
+    )
     particle_layer = ParticleLayer(id="particles")
     atmosphere = HeterogeneousAtmosphere(
         molecular_atmosphere=molecular_atmosphere, particle_layers=[particle_layer]

@@ -106,7 +106,10 @@ def test_onedim_scene_real_life(mode_mono):
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {"construct": "ussa1976"},
+            "molecular_atmosphere": {
+                "construct": "ussa1976",
+                "absorption_data_sets": dict(us76_u86_4=test_absorption_data_set),
+            },
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures={"type": "distant_reflectance", "id": "toa"},
