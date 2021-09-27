@@ -7,12 +7,16 @@ from eradiate.scenes.atmosphere import MolecularAtmosphere
 from eradiate.scenes.core import KernelDict
 
 
-def test_molecular_atmosphere_default(mode_mono, tmpdir):
+def test_molecular_atmosphere_default(
+    mode_mono, tmpdir, ussa76_approx_test_absorption_data_set
+):
     """Default MolecularAtmosphere constructor produces a valid kernel
     dictionary."""
     spectral_ctx = SpectralContext.new(wavelength=550.0)
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    atmosphere = MolecularAtmosphere()
+    atmosphere = MolecularAtmosphere(
+        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set)
+    )
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 
 
