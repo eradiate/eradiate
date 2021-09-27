@@ -88,7 +88,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         default="True",
     )
 
-    absorption_data_sets: t.Optional[t.MutableMapping[str, str]] = documented(
+    absorption_data_sets: t.Optional[t.Dict[str, str]] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(dict),

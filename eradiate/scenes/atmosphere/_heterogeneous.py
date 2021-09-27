@@ -183,7 +183,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @property
     def components(self) -> t.List[t.Union[MolecularAtmosphere, ParticleLayer]]:
-        result: list = [self.molecular_atmosphere] if self.molecular_atmosphere else []
+        result = [self.molecular_atmosphere] if self.molecular_atmosphere else []
         result.extend(self.particle_layers)
         return result
 
