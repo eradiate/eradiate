@@ -66,8 +66,8 @@ surface
 #
 #    * tutorials (usage):
 #
-#       * :ref:`sphx_glr_examples_generated_tutorials_atmosphere_01_homogeneous.py`
-#       * :ref:`sphx_glr_examples_generated_tutorials_atmosphere_02_heterogeneous.py`.
+#      * :ref:`sphx_glr_examples_generated_tutorials_atmosphere_01_homogeneous.py`
+#      * :ref:`sphx_glr_examples_generated_tutorials_atmosphere_02_heterogeneous.py`.
 #
 # We will configure our atmosphere as follows:
 #

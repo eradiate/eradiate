@@ -2,6 +2,7 @@
 Eradiate's computational kernel, based on the Mitsuba 2 rendering system.
 """
 
+# Check if Mitsuba can be imported successfully
 try:
     import mitsuba
 except (ImportError, ModuleNotFoundError) as e:
@@ -10,6 +11,7 @@ except (ImportError, ModuleNotFoundError) as e:
         "it to your $PYTHONPATH?"
     ) from e
 
+# Check whether the detected Mitsuba package is the Eradiate kernel
 try:
     getattr(mitsuba, "ERADIATE_KERNEL")
 except AttributeError as e:
