@@ -106,6 +106,15 @@ class InterpolatedSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.interp(w, self.wavelengths, self.values, left=0.0, right=0.0)
 
+    def eval_rgb(self) -> pint.Quantity:
+        return np.interp(
+            [600, 500, 400] * ureg.nm,
+            self.wavelengths,
+            self.values,
+            left=0.0,
+            right=0.0,
+        )
+
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         # Spectrum is averaged over spectral bin
 

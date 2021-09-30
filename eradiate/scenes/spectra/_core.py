@@ -129,6 +129,9 @@ class Spectrum(SceneElement, ABC):
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             return self.eval_ckd(spectral_ctx.bindex).squeeze()
 
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return self.eval_rgb().squeeze()
+
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
@@ -146,6 +149,18 @@ class Spectrum(SceneElement, ABC):
         -------
         :class:`pint.Quantity`
             Evaluated spectrum as an array with the same shape as ``w``.
+        """
+        pass
+
+    @abstractmethod
+    def eval_rgb(self) -> pint.Quantity:
+        """
+        Evaluate spectrum in rgb modes.
+
+        Returns
+        -------
+        :class:`pint.Quantity`
+            Evaluated spectrum as an array with shape (3,).
         """
         pass
 

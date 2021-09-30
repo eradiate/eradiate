@@ -169,7 +169,7 @@ class SolverApp(ABC):
 
         Parameters
         ----------
-        *measure : :class:`.Measure` or int
+        *measures : :class:`.Measure` or int
             One or several measures for which to perform post-processing.
             Alternatively, indexes in the measure array can be passed.
             If no value is passed, all measures are processed.

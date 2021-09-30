@@ -116,6 +116,17 @@ class SolarIrradianceSpectrum(Spectrum):
 
         return irradiance
 
+    def eval_rgb(self) -> pint.Quantity:
+        w_units = ureg(self.data.ssi.w.attrs["units"])
+        wavelengths = ([600, 500, 400] * ureg.nm).m_as(w_units)
+        irradiance = to_quantity(self.data.ssi.interp(w=wavelengths, method="linear"))
+
+        # Raise if out of bounds or ill-formed dataset
+        if np.any(np.isnan(irradiance.magnitude)):
+            raise ValueError("dataset interpolation returned nan")
+
+        return irradiance
+
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         # Spectrum is averaged over spectral bin
 

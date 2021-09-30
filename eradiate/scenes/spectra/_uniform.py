@@ -62,6 +62,12 @@ class UniformSpectrum(Spectrum):
         else:
             return np.full_like(w, self.value) * ureg.dimensionless
 
+    def eval_rgb(self) -> pint.Quantity:
+        if isinstance(self.value, pint.Quantity):
+            return np.full_like(3, self.value.m) * self.value.units
+        else:
+            return np.full_like(3, self.value) * ureg.dimensionless
+
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         if isinstance(self.value, pint.Quantity):
             return np.full((len(bindexes),), self.value.m) * self.value.units
