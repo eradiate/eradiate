@@ -5,11 +5,14 @@ import numpy as np
 import pint
 import pinttr
 
+import eradiate
+
 from ._core import Spectrum, spectrum_factory
 from ..core import KernelDict
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext
+from ..._mode import ModeFlags
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -64,9 +67,9 @@ class UniformSpectrum(Spectrum):
 
     def eval_rgb(self) -> pint.Quantity:
         if isinstance(self.value, pint.Quantity):
-            return np.full_like(3, self.value.m) * self.value.units
+            return np.full((3,), self.value.m) * self.value.units
         else:
-            return np.full_like(3, self.value) * ureg.dimensionless
+            return np.full((3,), self.value) * ureg.dimensionless
 
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         if isinstance(self.value, pint.Quantity):
@@ -75,14 +78,25 @@ class UniformSpectrum(Spectrum):
             return np.full((len(bindexes),), self.value) * ureg.dimensionless
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        kernel_units = uck.get(self.quantity)
-        spectral_ctx = ctx.spectral_ctx
-
-        return KernelDict(
-            {
-                "spectrum": {
-                    "type": "uniform",
-                    "value": float(self.eval(spectral_ctx).m_as(kernel_units)),
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
+            return KernelDict(
+                {
+                    "spectrum": {
+                        "type": "uniform",
+                        "value": float(
+                            self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
+                        ),
+                    }
                 }
-            }
-        )
+            )
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return KernelDict(
+                {
+                    "spectrum": {
+                        "type": "rgb",
+                        "value": self.eval(ctx.spectral_ctx).m_as(
+                            uck.get(self.quantity)
+                        ),
+                    }
+                }
+            )

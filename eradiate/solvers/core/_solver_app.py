@@ -111,8 +111,10 @@ class SolverApp(ABC):
         :meth:`postprocess`, :meth:`run`
         """
         # Mode safeguard
-        if not eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        if not eradiate.mode().has_flags(
+            ModeFlags.ANY_MONO | ModeFlags.ANY_CKD | ModeFlags.ANY_RGB
+        ):
+            raise UnsupportedModeError(supported=("monochromatic", "ckd", "rgb"))
 
         if not measures:
             measures = self.scene.measures
@@ -184,8 +186,10 @@ class SolverApp(ABC):
         --------
         :meth:`process`, :meth:`run`
         """
-        if not eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        if not eradiate.mode().has_flags(
+            ModeFlags.ANY_MONO | ModeFlags.ANY_CKD | ModeFlags.ANY_RGB
+        ):
+            raise UnsupportedModeError(supported=("monochromatic", "ckd", "rgb"))
 
         if not measures:
             measures = self.scene.measures

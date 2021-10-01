@@ -78,7 +78,7 @@ class OneDimScene(Scene):
 
     def __attrs_pre_init__(self):
         # Only tested with monochromatic and CKD modes
-        supported_mode(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD)
+        supported_mode(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD | ModeFlags.ANY_RGB)
 
     def update(self):
         # Parts of the init sequence we could take care of using converters

@@ -25,6 +25,7 @@ from ...contexts import (
     CKDSpectralContext,
     KernelDictContext,
     MonoSpectralContext,
+    RGBSpectralContext,
     SpectralContext,
 )
 from ...exceptions import ModeError, UnsupportedModeError
@@ -134,8 +135,11 @@ class MeasureSpectralConfig(ABC):
         elif mode.has_flags(ModeFlags.ANY_CKD):
             return CKDMeasureSpectralConfig(**kwargs)
 
+        elif mode.has_flags(ModeFlags.ANY_RGB):
+            return RGBMeasureSpectralConfig(**kwargs)
+
         else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+            raise UnsupportedModeError(supported=("monochromatic", "ckd", "rgb"))
 
     @staticmethod
     def from_dict(d: t.Dict) -> MeasureSpectralConfig:
@@ -213,6 +217,18 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
             MonoSpectralContext(wavelength=wavelength)
             for wavelength in self._wavelengths
         ]
+
+
+@parse_docs
+@attr.s
+class RGBMeasureSpectralConfig(MeasureSpectralConfig):
+    """
+    A data structure specifying the spectral configuration of a :class:`.Measure`
+    in RGB modes.
+    """
+
+    def spectral_ctxs(self) -> t.List[RGBSpectralContext]:
+        return [RGBSpectralContext()]
 
 
 def _ckd_measure_spectral_config_bins_converter(value):
@@ -461,17 +477,6 @@ class MeasureResults:
         else:
             raise UnsupportedModeError(supported=["monochromatic", "rgb"])
 
-        # Collect coordinate values
-        spectral_coords = set()
-        sensor_ids = set()
-        film_size = np.zeros((2,), dtype=int)
-
-        for spectral_coord, val in self.raw.items():
-            spectral_coords.add(spectral_coord)
-            for sensor_id, data in val["values"].items():
-                sensor_ids.add(sensor_id)
-                film_size = np.maximum(film_size, data.shape[:2])
-
         # Collect spectral and sensor coordinate values
         spectral_coords, sensor_ids, film_size = self._to_dataset_helper_coord_values(
             self.raw
@@ -491,36 +496,78 @@ class MeasureResults:
         spectral_index = self._to_dataset_helper_spectral_index(spectral_coords)
 
         # Construct dataset
-        result = xr.Dataset(
-            data_vars=(
-                {
-                    "raw": (
-                        [spectral_coord_label, "sensor_id", "y", "x"],
-                        data,
-                        {"long_name": "raw sensor values"},
-                    ),
-                    "spp": (
-                        [spectral_coord_label, "sensor_id"],
-                        spps,
-                        {"long_name": "sample count"},
-                    ),
-                }
-            ),
-            coords={
-                "x": ("x", xs, {"long_name": "film width coordinate"}),
-                "y": ("y", ys, {"long_name": "film height coordinate"}),
-                spectral_coord_label: (
-                    spectral_coord_label,
-                    spectral_index,
-                    self._to_dataset_spectral_coord_metadata(),
+        if eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            result = xr.Dataset(
+                data_vars=(
+                    {
+                        "raw": (
+                            [spectral_coord_label, "sensor_id", "y", "x", "channel"],
+                            data,
+                            {"long_name": "raw sensor values"},
+                        ),
+                        "spp": (
+                            [spectral_coord_label, "sensor_id"],
+                            spps,
+                            {"long_name": "sample count"},
+                        ),
+                    }
                 ),
-                "sensor_id": (
-                    "sensor_id",
-                    sensor_ids,
-                    {"long_name": "sensor ID"},
+                coords={
+                    "x": ("x", xs, {"long_name": "film width coordinate"}),
+                    "y": ("y", ys, {"long_name": "film height coordinate"}),
+                    "channel": (
+                        "channel",
+                        ["R", "G", "B"],
+                        {"long_name": "color channel"},
+                    ),
+                    spectral_coord_label: (
+                        spectral_coord_label,
+                        spectral_index,
+                        self._to_dataset_spectral_coord_metadata(),
+                    ),
+                    "sensor_id": (
+                        "sensor_id",
+                        sensor_ids,
+                        {"long_name": "sensor ID"},
+                    ),
+                },
+            )
+        else:
+            result = xr.Dataset(
+                data_vars=(
+                    {
+                        "raw": (
+                            [spectral_coord_label, "sensor_id", "y", "x", "channel"],
+                            data,
+                            {"long_name": "raw sensor values"},
+                        ),
+                        "spp": (
+                            [spectral_coord_label, "sensor_id"],
+                            spps,
+                            {"long_name": "sample count"},
+                        ),
+                    }
                 ),
-            },
-        )
+                coords={
+                    "x": ("x", xs, {"long_name": "film width coordinate"}),
+                    "y": ("y", ys, {"long_name": "film height coordinate"}),
+                    "channel": {
+                        "channel",
+                        ["intensity"],
+                        {"long_name": "intensity channel"},
+                    },
+                    spectral_coord_label: (
+                        spectral_coord_label,
+                        spectral_index,
+                        self._to_dataset_spectral_coord_metadata(),
+                    ),
+                    "sensor_id": (
+                        "sensor_id",
+                        sensor_ids,
+                        {"long_name": "sensor ID"},
+                    ),
+                },
+            )
 
         if not aggregate_spps:
             return result
@@ -611,7 +658,8 @@ class MeasureResults:
 
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             return {"long_name": "bindex"}
-
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return {"long_name": "red, green, blue"}
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
@@ -698,29 +746,48 @@ class MeasureResults:
             * sensor;
             * pixel index.
         """
-        if not eradiate.mode().has_flags(ModeFlags.MTS_MONO | ModeFlags.ANY_CKD):
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-        data = np.full(
-            (
-                len(spectral_coords),
-                len(sensor_ids),
-                *film_size,  # Note: Row-major order (width x comes last)
-            ),
-            np.nan,
-        )
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
+            data = np.full(
+                (
+                    len(spectral_coords),
+                    len(sensor_ids),
+                    *film_size,  # Note: Row-major order (width x comes last)
+                ),
+                np.nan,
+            )
 
-        for i_spectral, spectral_coord in enumerate(spectral_coords):
-            for i_sensor, sensor_id in enumerate(sensor_ids):
-                # Note: This doesn't handle heterogeneous sensor film sizes
-                # (i.e. cases in which sensors have different film sizes).
-                # To add support for it, blitting is probably a good approach
-                # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
-                data[i_spectral, i_sensor] = raw[spectral_coord]["values"][sensor_id][
-                    ..., 0
-                ]
-                # This latter indexing selects only one channel in the raw data
-                # array: this works with mono variants but will fail otherwise
+            for i_spectral, spectral_coord in enumerate(spectral_coords):
+                for i_sensor, sensor_id in enumerate(sensor_ids):
+                    # Note: This doesn't handle heterogeneous sensor film sizes
+                    # (i.e. cases in which sensors have different film sizes).
+                    # To add support for it, blitting is probably a good approach
+                    # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
+                    data[i_spectral, i_sensor] = raw[spectral_coord]["values"][
+                        sensor_id
+                    ][..., 0]
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            data = np.full(
+                (
+                    len(spectral_coords),
+                    len(sensor_ids),
+                    *film_size,  # Note: Row-major order (width x comes last)
+                    3,
+                ),
+                np.nan,
+            )
+
+            for i_spectral, spectral_coord in enumerate(spectral_coords):
+                for i_sensor, sensor_id in enumerate(sensor_ids):
+                    # Note: This doesn't handle heterogeneous sensor film sizes
+                    # (i.e. cases in which sensors have different film sizes).
+                    # To add support for it, blitting is probably a good approach
+                    # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
+                    data[i_spectral, i_sensor] = raw[spectral_coord]["values"][
+                        sensor_id
+                    ]
+        else:
+            raise UnsupportedModeError(supported=("monochromatic", "ckd", "rgb"))
 
         return data
 
@@ -802,7 +869,7 @@ class MeasureResults:
         pd.Index
             Generated index (possibly a multi-index).
         """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_RGB):
             return pd.Index(spectral_coords)
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             return pd.MultiIndex.from_tuples(spectral_coords, names=("bin", "index"))
@@ -1043,13 +1110,18 @@ class Measure(SceneElement, ABC):
         Return a list (one item per sensor) of dictionaries defining parameters
         related with the film.
         """
+        if eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            pixel_format = "rgb"
+        else:
+            pixel_format = "luminance"
+
         return [
             {
                 "film": {
                     "type": "hdrfilm",
                     "width": self.film_resolution[0],
                     "height": self.film_resolution[1],
-                    "pixel_format": "luminance",
+                    "pixel_format": pixel_format,
                     "component_format": "float32",
                     "rfilter": {"type": "box"},
                 }

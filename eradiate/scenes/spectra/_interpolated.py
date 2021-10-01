@@ -93,6 +93,12 @@ class InterpolatedSpectrum(Spectrum):
                 f"{self.values.shape}"
             )
 
+        # Check that wavelengths are ordered, needed for interpolation
+        if not (all(i < j for i, j in zip(value, value[1:]))):
+            raise ValueError(
+                f"Wavelengths must be monotonically increasing, got {value}"
+            )
+
     def __attrs_post_init__(self):
         self.update()
 
@@ -107,6 +113,7 @@ class InterpolatedSpectrum(Spectrum):
         return np.interp(w, self.wavelengths, self.values, left=0.0, right=0.0)
 
     def eval_rgb(self) -> pint.Quantity:
+        print(self.values)
         return np.interp(
             [600, 500, 400] * ureg.nm,
             self.wavelengths,
@@ -160,6 +167,17 @@ class InterpolatedSpectrum(Spectrum):
                         "type": "uniform",
                         "value": float(
                             self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
+                        ),
+                    }
+                }
+            )
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return KernelDict(
+                {
+                    "spectrum": {
+                        "type": "rgb",
+                        "value": self.eval(ctx.spectral_ctx).m_as(
+                            uck.get(self.quantity)
                         ),
                     }
                 }

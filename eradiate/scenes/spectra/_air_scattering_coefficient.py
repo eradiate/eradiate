@@ -60,6 +60,13 @@ class AirScatteringCoefficientSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return compute_sigma_s_air(wavelength=w)
 
+    def eval_rgb(self) -> pint.Quantity:
+        quantity_units = ucc.get(self.quantity)
+        return [
+            compute_sigma_s_air(wavelength=wavelength).m_as(quantity_units)
+            for wavelength in [600, 500, 400] * ureg.nm
+        ] * quantity_units
+
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         # Spectrum is averaged over spectral bin
 
@@ -107,6 +114,16 @@ class AirScatteringCoefficientSpectrum(Spectrum):
                     }
                 }
             )
-
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return KernelDict(
+                {
+                    "spectrum": {
+                        "type": "rgb",
+                        "value": self.eval(ctx.spectral_ctx).m_as(
+                            uck.get("collision_coefficient")
+                        ),
+                    }
+                }
+            )
         else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+            raise UnsupportedModeError(supported=("monochromatic", "ckd", "rgb"))

@@ -47,7 +47,7 @@ class OneDimSolverApp(SolverApp):
         )
 
         # Only tested with monochromatic and CKD modes
-        supported_mode(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD)
+        supported_mode(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD | ModeFlags.ANY_RGB)
 
     def postprocess(self, measure=None):
         # Select measure

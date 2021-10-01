@@ -18,6 +18,7 @@ from ...scenes.measure import (
     DistantMeasure,
     DistantRadianceMeasure,
     Measure,
+    PerspectiveCameraMeasure,
     measure_factory,
 )
 from ...units import unit_registry as ureg
@@ -76,11 +77,14 @@ class Scene(SceneElement, ABC):
     def _measures_validator(self, attribute, value):
         for element in value:
             # Check measure type
-            if not isinstance(element, DistantMeasure):
+            if not (
+                isinstance(element, DistantMeasure)
+                or isinstance(element, PerspectiveCameraMeasure)
+            ):
                 raise TypeError(
                     f"while validating {attribute.name}: must be a list of "
                     f"objects of one of the following types: "
-                    f"(DistantMeasure)"
+                    f"(DistantMeasure, PerspectiveCameraMeasure)"
                 )
 
     integrator: Integrator = documented(

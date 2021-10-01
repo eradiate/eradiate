@@ -262,6 +262,16 @@ class RGBSpectralContext(SpectralContext):
     def wavelength(self):
         raise NotImplementedError("Wavelength is irrelevant in RGB mode.")
 
+    @property
+    def spectral_index(self) -> str:
+        """Spectral index associated with spectral context."""
+        return "rgb"
+
+    @property
+    def spectral_index_formatted(self) -> str:
+        """str : Spectral index formatted as a human-readable string."""
+        return "rgb"
+
 
 # ------------------------------------------------------------------------------
 #                         Kernel dictionary contexts
