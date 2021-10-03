@@ -370,7 +370,7 @@ def get_doc(cls: t.Type, attrib: str, field: str) -> str:
     attrib : str
         Attribute from which to get the doc field.
 
-    field : {"doc", "type", "default"}
+    field : {"doc", "type", "init_type", "default"}
         Documentation field to query.
 
     Returns
