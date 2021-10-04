@@ -65,7 +65,8 @@ Sentinel to indicate when a dynamic field value is expected to be set automatica
 
 
 class MetadataKey(enum.Enum):
-    """Attribute metadata keys.
+    """
+    Attribute metadata keys.
 
     These Enum values should be used as metadata attribute keys.
     """
@@ -74,6 +75,14 @@ class MetadataKey(enum.Enum):
     TYPE = enum.auto()  #: Documented type for this field (str)
     INIT_TYPE = enum.auto()  #: Documented constructor parameter for this field (str)
     DEFAULT = enum.auto()  #: Documented default value for this field (str)
+
+
+class DocFlags(enum.Flag):
+    """
+    Extra flags used to pass information about docs.
+    """
+
+    NOINIT = "noinit"
 
 
 # ------------------------------------------------------------------------------
@@ -176,24 +185,29 @@ def _numpy_formatter(cls_doc, field_docs):
         field_init_type = field_doc.init_type
 
         # Generate constructor parameter docstring entry
-        init_type_doc = f" : {field_init_type}" if field_init_type is not None else ""
-        default_doc = (
-            f", default: {field_doc.default}" if field_doc.default is not None else ""
-        )
-        param_docstrings.append(
-            f"{field_name.lstrip('_')}{init_type_doc}{default_doc}\n"
-            f"{indent(field_doc.doc, '    ')}\n"
-        )
-
-        # Generate attribute docstring entry
-        type_doc = f" : {field_type}" if field_type is not None else ""
-        if not field_name.startswith("_"):
-            field_doc_brief = re.split(r"\. |\.\n", field_doc.doc)[0].strip()
-            if not field_doc_brief.endswith("."):
-                field_doc_brief += "."
-            attr_docstrings.append(
-                f"{field_name}{type_doc}\n{indent(field_doc_brief, '    ')}\n"
+        if field_init_type is not DocFlags.NOINIT:
+            init_type_doc = (
+                f" : {field_init_type}" if field_init_type is not None else ""
             )
+            default_doc = (
+                f", default: {field_doc.default}"
+                if field_doc.default is not None
+                else ""
+            )
+            param_docstrings.append(
+                f"{field_name.lstrip('_')}{init_type_doc}{default_doc}\n"
+                f"{indent(field_doc.doc, '    ')}\n"
+            )
+
+            # Generate attribute docstring entry
+            type_doc = f" : {field_type}" if field_type is not None else ""
+            if not field_name.startswith("_"):
+                field_doc_brief = re.split(r"\. |\.\n", field_doc.doc)[0].strip()
+                if not field_doc_brief.endswith("."):
+                    field_doc_brief += "."
+                attr_docstrings.append(
+                    f"{field_name}{type_doc}\n{indent(field_doc_brief, '    ')}\n"
+                )
 
     # Assemble entries
     if param_docstrings or attr_docstrings:
@@ -298,6 +312,8 @@ def parse_docs(cls):
             # Collect field init type
             if MetadataKey.INIT_TYPE in field.metadata:
                 docs[field.name].init_type = field.metadata[MetadataKey.INIT_TYPE]
+            elif field.init is False:
+                docs[field.name].init_type = DocFlags.NOINIT
             else:
                 docs[field.name].init_type = docs[field.name].type
 
