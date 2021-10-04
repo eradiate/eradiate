@@ -1,4 +1,5 @@
 import datetime
+import warnings
 from collections.abc import MutableMapping
 
 import attr
@@ -40,6 +41,11 @@ class OneDimSolverApp(SolverApp):
     )
 
     def __attrs_pre_init__(self):
+        warnings.warn(
+            "OneDimSolverApp is deprecated, use RamiExperiment instead",
+            DeprecationWarning,
+        )
+
         # Only tested with monochromatic and CKD modes
         supported_mode(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD)
 

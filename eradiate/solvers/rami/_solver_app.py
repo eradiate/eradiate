@@ -1,4 +1,5 @@
 import datetime
+import warnings
 from collections.abc import MutableMapping
 
 import attr
@@ -38,6 +39,11 @@ class RamiSolverApp(SolverApp):
     )
 
     def __attrs_pre_init__(self):
+        warnings.warn(
+            "RamiSolverApp is deprecated, use RamiExperiment instead",
+            DeprecationWarning,
+        )
+
         # Only tested with monochromatic modes
         supported_mode(ModeFlags.ANY_MONO)
 
