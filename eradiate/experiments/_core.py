@@ -195,11 +195,8 @@ class Experiment(ABC):
         attr.ib(factory=dict, init=False, repr=False),
         doc="Post-processed simulation results. Each entry uses a measure ID as "
         "its key and holds a value consisting of a :class:`~xarray.Dataset` "
-        "holding one variable per physical quantity computed by the measure.\n"
-        "\n"
-        ".. note:: This field is read-only and is not accessible as a "
-        "constructor argument.",
-        type="dict",
+        "holding one variable per physical quantity computed by the measure.",
+        type="dict[str, dataset]",
     )
 
     @property
