@@ -183,7 +183,7 @@ class CoordSpecRegistry:
         collection_id : str
             Registry keyword.
 
-        coord_spec_ids : (list[str]):
+        coord_spec_ids : list of str
             List of coordinate specification registry keys to add to the created
             collection.
         """

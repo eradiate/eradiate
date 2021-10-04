@@ -148,7 +148,7 @@ def bin_filter_ids(ids: t.Sequence[str]) -> t.Callable[[Bin], bool]:
 
     Parameters
     ----------
-    ids : list[str]
+    ids : list of str
         A sequence of bin identifiers which the defined filter will let through.
 
     Returns
