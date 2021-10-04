@@ -10,7 +10,7 @@ from ..exceptions import OverriddenValueWarning
 from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
-from ..scenes.measure import DistantMeasure
+from ..scenes.measure import DistantMeasure, Measure
 from ..scenes.measure._distant import TargetOriginPoint, TargetOriginSphere
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc
@@ -125,3 +125,11 @@ class OneDimExperiment(EarthObservationExperiment):
                     measure.origin = TargetOriginSphere(
                         center=measure.target.xyz, radius=radius
                     )
+
+    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
+        result = super(OneDimExperiment, self)._dataset_metadata(measure)
+
+        if isinstance(measure, DistantMeasure):
+            result["title"] = "Top-of-atmosphere simulation results"
+
+        return result

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 import typing as t
 from abc import ABC, abstractmethod
@@ -372,6 +373,32 @@ class Experiment(ABC):
 
             # Collect measure results
             self._results[measure.id] = measure.postprocess(**measure_kwargs)
+
+            # Apply additional metadata
+            self._results[measure.id].attrs.update(self._dataset_metadata(measure))
+
+    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
+        """
+        Generate additional metadata applied to dataset after post-processing.
+        Default implementation returns an empty dictionary.
+
+        Parameters
+        ----------
+        measure : :class:`.Measure`
+            Measure for which the metadata is created.
+
+        Returns
+        -------
+        dict[str, str]
+            Metadata to be attached to the produced dataset.
+        """
+        return {
+            "convention": "CF-1.8",
+            "source": f"eradiate, version {eradiate.__version__}",
+            "history": f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+            f"data creation - {self.__class__.__name__}.postprocess()",
+            "references": "",
+        }
 
     @abstractmethod
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:

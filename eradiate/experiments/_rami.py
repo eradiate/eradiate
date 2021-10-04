@@ -12,7 +12,7 @@ from ..exceptions import OverriddenValueWarning
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
-from ..scenes.measure import DistantMeasure
+from ..scenes.measure import DistantMeasure, Measure
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 
 
@@ -157,3 +157,11 @@ class RamiExperiment(EarthObservationExperiment):
                             ymin=-0.5 * self.surface.kernel_width(ctx),
                             ymax=0.5 * self.surface.kernel_width(ctx),
                         )
+
+    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
+        result = super(RamiExperiment, self)._dataset_metadata(measure)
+
+        if isinstance(measure, DistantMeasure):
+            result["title"] = "Top-of-canopy simulation results"
+
+        return result
