@@ -2,9 +2,9 @@
 
 import numpy as np
 
+from eradiate.experiments import OneDimExperiment
 from eradiate.scenes.measure import DistantReflectanceMeasure
 from eradiate.scenes.surface import LambertianSurface
-from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
 
 
 def test_ckd_basic(modes_all_ckd):
@@ -17,8 +17,8 @@ def test_ckd_basic(modes_all_ckd):
     (preprocessing, spectral loop, postprocessing) works.
     """
 
-    # Configure scene and app, run solver and postprocess results
-    scene = OneDimScene(
+    # Configure experiment, run and postprocess results
+    exp = OneDimExperiment(
         atmosphere=None,
         surface=LambertianSurface(reflectance=1.0),
         measures=[
@@ -35,9 +35,7 @@ def test_ckd_basic(modes_all_ckd):
             )
         ],
     )
-
-    app = OneDimSolverApp(scene)
-    app.run()
+    exp.run()
 
     # Reflectance is uniform, equal to 1
-    assert np.allclose(app.results["measure"].data_vars["brf"], 1.0)
+    assert np.allclose(exp.results["measure"].data_vars["brf"], 1.0)

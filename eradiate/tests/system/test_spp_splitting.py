@@ -63,13 +63,12 @@ def test_spp_splitting(mode_mono):
     )
     illumination = eradiate.scenes.illumination.DirectionalIllumination(irradiance=1.0)
 
-    scene = eradiate.solvers.onedim.OneDimScene(
+    exp = eradiate.experiments.OneDimExperiment(
         atmosphere=None,
         surface=surface,
         illumination=illumination,
         measures=measure,
     )
-    solver = eradiate.solvers.onedim.OneDimSolverApp(scene)
 
     threshold = 5
     thresholds = [10 ** 10, 10 ** threshold]
@@ -87,16 +86,16 @@ def test_spp_splitting(mode_mono):
     )
 
     for spp_splitting_threshold in thresholds:
-        solver.scene.measures[0]._spp_splitting_threshold = spp_splitting_threshold
+        exp.measures[0]._spp_splitting_threshold = spp_splitting_threshold
 
         for mode in modes:
             eradiate.set_mode(mode)
 
             for spp in spps:
-                solver.scene.measures[0].spp = spp
-                solver.run()
+                exp.measures[0].spp = spp
+                exp.run()
                 results[spp_splitting_threshold, mode][spp] = float(
-                    solver.results["measure"].brf
+                    exp.results["measure"].brf
                 )
 
     # Save plot for report

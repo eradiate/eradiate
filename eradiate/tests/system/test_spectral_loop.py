@@ -1,12 +1,11 @@
 import numpy as np
 import pytest
 
+from eradiate.experiments import OneDimExperiment, RamiExperiment
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.measure import DistantReflectanceMeasure
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 from eradiate.scenes.surface import LambertianSurface
-from eradiate.solvers.onedim import OneDimScene, OneDimSolverApp
-from eradiate.solvers.rami import RamiScene, RamiSolverApp
 
 
 @pytest.mark.parametrize("cls", ["onedim", "rami"])
@@ -47,12 +46,10 @@ def test_spectral_loop(mode_mono, cls, wavelengths, irradiance):
     All BRF values are equal to 1.
     """
     if cls == "onedim":
-        cls_app = OneDimSolverApp
-        cls_scene = OneDimScene
+        cls_exp = OneDimExperiment
         kwargs = {"atmosphere": None}
     elif cls == "rami":
-        cls_app = RamiSolverApp
-        cls_scene = RamiScene
+        cls_exp = RamiExperiment
         kwargs = {"canopy": None}
     else:
         raise ValueError
@@ -62,20 +59,18 @@ def test_spectral_loop(mode_mono, cls, wavelengths, irradiance):
     elif irradiance == "solar":
         illumination = DirectionalIllumination(irradiance=SolarIrradianceSpectrum())
 
-    app = cls_app(
-        scene=cls_scene(
-            surface=LambertianSurface(reflectance=1.0),
-            illumination=illumination,
-            measures=[
-                DistantReflectanceMeasure(
-                    film_resolution=(1, 1),
-                    spp=1,
-                    spectral_cfg={"wavelengths": wavelengths},
-                )
-            ],
-            **kwargs,
-        )
+    exp = cls_exp(
+        surface=LambertianSurface(reflectance=1.0),
+        illumination=illumination,
+        measures=[
+            DistantReflectanceMeasure(
+                film_resolution=(1, 1),
+                spp=1,
+                spectral_cfg={"wavelengths": wavelengths},
+            )
+        ],
+        **kwargs,
     )
 
-    app.run()
-    assert np.allclose(np.squeeze(app.results["measure"].brf.values), 1.0)
+    exp.run()
+    assert np.allclose(np.squeeze(exp.results["measure"].brf.values), 1.0)
