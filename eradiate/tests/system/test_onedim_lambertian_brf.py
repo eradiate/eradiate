@@ -67,7 +67,8 @@ def test_measured_lambertian_brf(mode_mono_double):
     for illumination_zenith in illumination_zenith_values:
         results[illumination_zenith] = {}
         for reflectance in reflectance_values:
-            scene = eradiate.solvers.onedim.OneDimScene(
+            # Run simulation
+            exp = eradiate.experiments.OneDimExperiment(
                 illumination={
                     "type": "directional",
                     "zenith": illumination_zenith,
@@ -85,12 +86,9 @@ def test_measured_lambertian_brf(mode_mono_double):
                 },
                 atmosphere=None,
             )
+            exp.run()
 
-            # Run simulation
-            app = eradiate.solvers.onedim.OneDimSolverApp(scene=scene)
-            app.run()
-
-            results[illumination_zenith][reflectance] = app.results["toa_pplane"]
+            results[illumination_zenith][reflectance] = exp.results["toa_pplane"]
 
     # Plot results
     for illumination_zenith in illumination_zenith_values:

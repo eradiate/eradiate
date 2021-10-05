@@ -63,109 +63,101 @@ def test_albedo(mode_mono):
        :width: 100%
 
     """
-    apps = {
-        "onedim_directional": eradiate.solvers.onedim.OneDimSolverApp(
-            scene={
-                "measures": [
-                    {
-                        "type": "distant_albedo",
-                        "spectral_cfg": {
-                            "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
-                        },
-                        "film_resolution": (64, 64),
-                        "spp": 100,
-                    }
-                ],
-                "atmosphere": None,
-                "surface": {
-                    "type": "lambertian",
-                    "reflectance": {
-                        "type": "interpolated",
-                        "wavelengths": [500.0, 700.0],
-                        "values": [0.0, 1.0],
+    exps = {
+        "onedim_directional": eradiate.experiments.OneDimExperiment(
+            measures=[
+                {
+                    "type": "distant_albedo",
+                    "spectral_cfg": {
+                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
+                    "film_resolution": (64, 64),
+                    "spp": 100,
+                }
+            ],
+            atmosphere=None,
+            surface={
+                "type": "lambertian",
+                "reflectance": {
+                    "type": "interpolated",
+                    "wavelengths": [500.0, 700.0],
+                    "values": [0.0, 1.0],
                 },
-                "illumination": {"type": "directional", "zenith": 0.0},
-            }
+            },
+            illumination={"type": "directional", "zenith": 0.0},
         ),
-        "onedim_constant": eradiate.solvers.onedim.OneDimSolverApp(
-            scene={
-                "measures": [
-                    {
-                        "type": "distant_albedo",
-                        "spectral_cfg": {
-                            "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
-                        },
-                        "film_resolution": (64, 64),
-                        "spp": 100,
-                    }
-                ],
-                "atmosphere": None,
-                "surface": {
-                    "type": "lambertian",
-                    "reflectance": {
-                        "type": "interpolated",
-                        "wavelengths": [500.0, 700.0],
-                        "values": [0.0, 1.0],
+        "onedim_constant": eradiate.experiments.OneDimExperiment(
+            measures=[
+                {
+                    "type": "distant_albedo",
+                    "spectral_cfg": {
+                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
+                    "film_resolution": (64, 64),
+                    "spp": 100,
+                }
+            ],
+            atmosphere=None,
+            surface={
+                "type": "lambertian",
+                "reflectance": {
+                    "type": "interpolated",
+                    "wavelengths": [500.0, 700.0],
+                    "values": [0.0, 1.0],
                 },
-                "illumination": {"type": "constant"},
-            }
+            },
+            illumination={"type": "constant"},
         ),
-        "rami_directional": eradiate.solvers.rami.RamiSolverApp(
-            scene={
-                "measures": [
-                    {
-                        "type": "distant_albedo",
-                        "spectral_cfg": {
-                            "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
-                        },
-                        "film_resolution": (64, 64),
-                        "spp": 100,
-                    }
-                ],
-                "canopy": None,
-                "surface": {
-                    "type": "lambertian",
-                    "reflectance": {
-                        "type": "interpolated",
-                        "wavelengths": [500.0, 700.0],
-                        "values": [0.0, 1.0],
+        "rami_directional": eradiate.experiments.RamiExperiment(
+            measures=[
+                {
+                    "type": "distant_albedo",
+                    "spectral_cfg": {
+                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
+                    "film_resolution": (64, 64),
+                    "spp": 100,
+                }
+            ],
+            canopy=None,
+            surface={
+                "type": "lambertian",
+                "reflectance": {
+                    "type": "interpolated",
+                    "wavelengths": [500.0, 700.0],
+                    "values": [0.0, 1.0],
                 },
-                "illumination": {"type": "directional", "zenith": 0.0},
-            }
+            },
+            illumination={"type": "directional", "zenith": 0.0},
         ),
-        "rami_constant": eradiate.solvers.rami.RamiSolverApp(
-            scene={
-                "measures": [
-                    {
-                        "type": "distant_albedo",
-                        "spectral_cfg": {
-                            "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
-                        },
-                        "film_resolution": (64, 64),
-                        "spp": 100,
-                    }
-                ],
-                "canopy": None,
-                "surface": {
-                    "type": "lambertian",
-                    "reflectance": {
-                        "type": "interpolated",
-                        "wavelengths": [500.0, 700.0],
-                        "values": [0.0, 1.0],
+        "rami_constant": eradiate.experiments.RamiExperiment(
+            measures=[
+                {
+                    "type": "distant_albedo",
+                    "spectral_cfg": {
+                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
+                    "film_resolution": (64, 64),
+                    "spp": 100,
+                }
+            ],
+            canopy=None,
+            surface={
+                "type": "lambertian",
+                "reflectance": {
+                    "type": "interpolated",
+                    "wavelengths": [500.0, 700.0],
+                    "values": [0.0, 1.0],
                 },
-                "illumination": {"type": "directional", "zenith": 0.0},
-            }
+            },
+            illumination={"type": "directional", "zenith": 0.0},
         ),
     }
 
-    for app_name, app in apps.items():
+    for exp_name, exp in exps.items():
         # Run simulation
-        app.run()
-        results = app.results["measure"]
+        exp.run()
+        results = exp.results["measure"]
 
         # Plot results
         fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 5))
@@ -198,10 +190,10 @@ def test_albedo(mode_mono):
             ax2.yaxis.offsetText.set_visible(False)
             ax2.yaxis.set_label_text(f"×$10^{{{int(exp)}}}$")
 
-        plt.suptitle(f"Case: {app_name}")
+        plt.suptitle(f"Case: {exp_name}")
         plt.tight_layout()
 
-        filename = f"albedo_{app_name}.png"
+        filename = f"albedo_{exp_name}.png"
         ensure_output_dir(os.path.join(output_dir, "plots"))
         fname_plot = os.path.join(output_dir, "plots", filename)
 

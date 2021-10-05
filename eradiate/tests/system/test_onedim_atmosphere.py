@@ -24,18 +24,16 @@ def test_heterogeneous_atmosphere_contains_particle_layer(mode_mono, bottom, tau
     layer = eradiate.scenes.atmosphere.ParticleLayer(
         bottom=bottom, top=top, tau_550=tau_550
     )
-    config1 = {"atmosphere": layer}
-    app1 = eradiate.solvers.onedim.OneDimSolverApp(config1)
-    app1.run()
-    results1 = app1.results["measure"].lo.values
+    exp1 = eradiate.experiments.OneDimExperiment(atmosphere=layer)
+    exp1.run()
+    results1 = exp1.results["measure"].lo.values
 
     # heterogeneous atmosphere with a particle layer
-    config2 = {
-        "atmosphere": {"type": "heterogeneous", "particle_layers": [layer]},
-    }
-    app2 = eradiate.solvers.onedim.OneDimSolverApp(config2)
-    app2.run()
-    results2 = app2.results["measure"].lo.values
+    exp2 = eradiate.experiments.OneDimExperiment(
+        atmosphere={"type": "heterogeneous", "particle_layers": [layer]}
+    )
+    exp2.run()
+    results2 = exp2.results["measure"].lo.values
 
     assert np.all(results1 == results2)
 
@@ -53,20 +51,19 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
        molecular atmosphere
     """
     # non absorbing molecular atmosphere
-    config1 = {
-        "atmosphere": {
+    exp1 = eradiate.experiments.OneDimExperiment(
+        atmosphere={
             "type": "molecular",
             "has_absorption": False,
             "has_scattering": has_scattering,
         }
-    }
-    app1 = eradiate.solvers.onedim.OneDimSolverApp(config1)
-    app1.run()
-    results1 = app1.results["measure"].lo.values
+    )
+    exp1.run()
+    results1 = exp1.results["measure"].lo.values
 
     # heterogeneous atmopshere with a non-absorbing molecular atmosphere
-    config2 = {
-        "atmosphere": {
+    exp2 = eradiate.experiments.OneDimExperiment(
+        atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {
                 "type": "molecular",
@@ -74,9 +71,8 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
                 "has_scattering": has_scattering,
             },
         }
-    }
-    app2 = eradiate.solvers.onedim.OneDimSolverApp(config2)
-    app2.run()
-    results2 = app2.results["measure"].lo.values
+    )
+    exp2.run()
+    results2 = exp2.results["measure"].lo.values
 
     assert np.all(results1 == results2)

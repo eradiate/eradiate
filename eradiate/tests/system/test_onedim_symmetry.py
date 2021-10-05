@@ -70,7 +70,8 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     spp = int(1e6)
     n_vza = 17
 
-    scene = eradiate.solvers.onedim.OneDimScene(
+    # Run simulation
+    exp = eradiate.experiments.OneDimExperiment(
         illumination={"type": "directional", "zenith": 0.0, "azimuth": 0.0},
         measures={
             "type": "distant_reflectance",
@@ -91,13 +92,10 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
             },
         }[atmosphere],
     )
-
-    # Run simulation
-    app = eradiate.solvers.onedim.OneDimSolverApp(scene=scene)
-    app.run()
+    exp.run()
 
     # Post-process results
-    results = app.results["toa_pplane"]
+    results = exp.results["toa_pplane"]
     results["diff"] = (
         results["lo"].dims,
         (
