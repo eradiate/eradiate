@@ -86,12 +86,14 @@ def test_onedim_solver_app_new():
     # Should raise if no mode is set
     with pytest.raises(ModeError):
         eradiate.set_mode("none")
-        OneDimSolverApp.new()
+        with pytest.warns(DeprecationWarning):
+            OneDimSolverApp.new()
 
     # Should successfully construct a OneDimSolver otherwise
     for mode in ("mono", "mono_double", "ckd", "ckd_double"):
         eradiate.set_mode(mode)
-        OneDimSolverApp.new()
+        with pytest.warns(DeprecationWarning):
+            OneDimSolverApp.new()
 
 
 @pytest.mark.slow
@@ -119,7 +121,8 @@ def test_onedim_scene_real_life(mode_mono):
 
 def test_onedim_solver_app_construct(modes_all):
     # Test default configuration handling
-    app = OneDimSolverApp()
+    with pytest.warns(DeprecationWarning):
+        app = OneDimSolverApp()
     assert app.scene is not None
 
 
@@ -134,18 +137,19 @@ def test_onedim_solver_app_run(mode_mono):
     We assert the correct setting of the DataArray coordinates and dimensions,
     as well as the correct setting of data.
     """
-    app = OneDimSolverApp(
-        scene=OneDimScene(
-            measures=[
-                {
-                    "type": "distant_reflectance",
-                    "id": "toa_hsphere",
-                    "film_resolution": (32, 32),
-                    "spp": 1000,
-                },
-            ]
+    with pytest.warns(DeprecationWarning):
+        app = OneDimSolverApp(
+            scene=OneDimScene(
+                measures=[
+                    {
+                        "type": "distant_reflectance",
+                        "id": "toa_hsphere",
+                        "film_resolution": (32, 32),
+                        "spp": 1000,
+                    },
+                ]
+            )
         )
-    )
 
     app.run()
 
@@ -192,7 +196,8 @@ def test_onedim_solver_app_postprocessing(mode_mono):
         },
     )
 
-    app = OneDimSolverApp(scene=scene)
+    with pytest.warns(DeprecationWarning):
+        app = OneDimSolverApp(scene=scene)
     app.run()
 
     results = app.results["toa_hsphere"]
