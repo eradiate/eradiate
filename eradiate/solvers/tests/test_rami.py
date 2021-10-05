@@ -71,12 +71,14 @@ def test_rami_solver_app_new():
     # Should raise if no mode is set
     with pytest.raises(ModeError):
         eradiate.set_mode("none")
-        RamiSolverApp.new()
+        with pytest.warns(DeprecationWarning):
+            RamiSolverApp.new()
 
     # Should successfully construct a OneDimSolver otherwise
     for mode in ("mono", "mono_double"):
         eradiate.set_mode(mode)
-        RamiSolverApp.new()
+        with pytest.warns(DeprecationWarning):
+            RamiSolverApp.new()
 
 
 def test_rami_scene_real_life(mode_mono):
@@ -109,18 +111,19 @@ def test_rami_solver_app_run(mode_mono):
     We assert the correct setting of the DataArray coordinates and dimensions,
     as well as the correct setting of data.
     """
-    app = RamiSolverApp(
-        scene=RamiScene(
-            measures=[
-                {
-                    "type": "distant_reflectance",
-                    "id": "toa_hsphere",
-                    "film_resolution": (32, 32),
-                    "spp": 1000,
-                },
-            ]
+    with pytest.warns(DeprecationWarning):
+        app = RamiSolverApp(
+            scene=RamiScene(
+                measures=[
+                    {
+                        "type": "distant_reflectance",
+                        "id": "toa_hsphere",
+                        "film_resolution": (32, 32),
+                        "spp": 1000,
+                    },
+                ]
+            )
         )
-    )
 
     app.run()
 
