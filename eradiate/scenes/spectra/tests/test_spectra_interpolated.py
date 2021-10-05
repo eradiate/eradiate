@@ -67,6 +67,10 @@ def test_interpolated_eval(modes_all):
         spectral_ctx = SpectralContext.new(wavelength=550.0)
         expected = 0.5
 
+    elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+        spectral_ctx = SpectralContext.new()
+        expected = [1.0, 0.0, 0.0]
+
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
         bin = BinSet.from_db("10nm_test").select_bins("550")[0]
         spectral_ctx = SpectralContext.new(bindex=bin.bindexes[0])
@@ -78,9 +82,9 @@ def test_interpolated_eval(modes_all):
     # Spectrum without quantity performs linear interpolation and yields units
     # consistent with values
     spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
-    assert spectrum.eval(spectral_ctx) == expected
+    assert np.allclose(spectrum.eval(spectral_ctx), expected)
     spectrum.values *= ureg("W/m^2/nm")
-    assert spectrum.eval(spectral_ctx) == expected * ureg("W/m^2/nm")
+    assert np.allclose(spectrum.eval(spectral_ctx), expected * ureg("W/m^2/nm"))
 
     # Spectrum with quantity performs linear interpolation and yields units
     # consistent with quantity
@@ -88,10 +92,10 @@ def test_interpolated_eval(modes_all):
         quantity="irradiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
     )
     # Interpolation returns quantity
-    assert spectrum.eval(spectral_ctx) == expected * ucc.get("irradiance")
+    assert np.allclose(spectrum.eval(spectral_ctx), expected * ucc.get("irradiance"))
 
 
-def test_spectra_interpolated_kernel_dict(modes_all_mono):
+def test_spectra_interpolated_kernel_dict(modes_all):
     from mitsuba.core.xml import load_dict
 
     ctx = KernelDictContext(spectral_ctx=SpectralContext.new(wavelength=550.0))

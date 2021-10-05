@@ -339,9 +339,9 @@ class DistantMeasure(Measure, ABC):
         init_type=":class:`.TargetOrigin` or dict, optional",
     )
 
-    def __attrs_post_init__(self):
+    def __attrs_pre_init__(self):
         if eradiate.mode().has_flags("ANY_RGB"):
-            raise UnsupportedModeError(unsupported="RGB")
+            raise UnsupportedModeError(unsupported="rgb")
 
     def _postprocess_add_illumination(
         self,

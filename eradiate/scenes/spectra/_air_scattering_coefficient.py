@@ -62,10 +62,15 @@ class AirScatteringCoefficientSpectrum(Spectrum):
 
     def eval_rgb(self) -> pint.Quantity:
         quantity_units = ucc.get(self.quantity)
-        return [
-            compute_sigma_s_air(wavelength=wavelength).m_as(quantity_units)
-            for wavelength in [600, 500, 400] * ureg.nm
-        ] * quantity_units
+        return (
+            np.array(
+                [
+                    compute_sigma_s_air(wavelength=wavelength).m_as(quantity_units)
+                    for wavelength in [600, 500, 400] * ureg.nm
+                ]
+            )
+            * quantity_units
+        )
 
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         # Spectrum is averaged over spectral bin
@@ -115,12 +120,16 @@ class AirScatteringCoefficientSpectrum(Spectrum):
                 }
             )
         elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            from mitsuba.core import ScalarColor3f
+
             return KernelDict(
                 {
                     "spectrum": {
-                        "type": "rgb",
-                        "value": self.eval(ctx.spectral_ctx).m_as(
-                            uck.get("collision_coefficient")
+                        "type": "srgb",
+                        "color": list(
+                            self.eval(ctx.spectral_ctx).m_as(
+                                uck.get("collision_coefficient")
+                            )
                         ),
                     }
                 }

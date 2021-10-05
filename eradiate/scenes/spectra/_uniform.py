@@ -93,9 +93,9 @@ class UniformSpectrum(Spectrum):
             return KernelDict(
                 {
                     "spectrum": {
-                        "type": "rgb",
-                        "value": self.eval(ctx.spectral_ctx).m_as(
-                            uck.get(self.quantity)
+                        "type": "srgb",
+                        "color": list(
+                            self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
                         ),
                     }
                 }

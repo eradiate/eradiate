@@ -112,7 +112,7 @@ class SpectralContext(ABC, Context):
             return MonoSpectralContext(**kwargs)
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             return CKDSpectralContext(**kwargs)
-        elif eradiate.mode().has_flags("ANY_RGB"):
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
             return RGBSpectralContext()
         else:
             raise UnsupportedModeError(supported=["monochromatic", "RGB", "ckd"])

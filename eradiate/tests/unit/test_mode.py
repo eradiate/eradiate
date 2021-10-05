@@ -63,7 +63,15 @@ def test_supported_mode():
 
         supported_mode("ANY_CKD")
 
-    for mode in ["mono", "ckd"]:
+    for mode in ["rgb", "rgb_double"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            supported_mode("ANY_MONO")
+
+        supported_mode("ANY_RGB")
+
+    for mode in ["mono", "ckd", "rgb"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
@@ -71,7 +79,7 @@ def test_supported_mode():
 
         supported_mode("ANY_SINGLE")
 
-    for mode in ["mono_double", "ckd_double"]:
+    for mode in ["mono_double", "ckd_double", "rgb_double"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
@@ -97,7 +105,15 @@ def test_unsupported_mode():
 
         unsupported_mode("ANY_MONO")
 
-    for mode in ["mono", "ckd"]:
+    for mode in ["rgb", "rgb_double"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            unsupported_mode("ANY_RGB")
+
+        unsupported_mode("ANY_MONO")
+
+    for mode in ["mono", "ckd", "rgb"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
@@ -105,7 +121,7 @@ def test_unsupported_mode():
 
         unsupported_mode("ANY_DOUBLE")
 
-    for mode in ["mono_double", "ckd_double"]:
+    for mode in ["mono_double", "ckd_double", "rgb_double"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):

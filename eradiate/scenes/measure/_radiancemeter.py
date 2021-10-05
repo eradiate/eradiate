@@ -72,7 +72,7 @@ class RadiancemeterMeasure(Measure):
 
     def __attrs_post_init__(self):
         if eradiate.mode().has_flags("ANY_RGB"):
-            raise UnsupportedModeError(unsupported="RGB")
+            raise UnsupportedModeError(unsupported="rgb")
 
     def _base_dicts(self) -> t.List[t.Dict]:
         target = self.target.m_as(uck.get("length"))

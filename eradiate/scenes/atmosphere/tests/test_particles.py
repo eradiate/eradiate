@@ -12,7 +12,7 @@ from eradiate.scenes.atmosphere._particles import ParticleLayer
 from eradiate.scenes.core import KernelDict
 
 
-def test_particle_load(mode_mono):
+def test_particle_load(modes_all_mono_rgb):
     """Produces a kernel dictionary that can be loaded by the kernel."""
     ctx = KernelDictContext()
     particle_layer = ParticleLayer(n_layers=9)
@@ -64,7 +64,7 @@ def test_dataset():
     return path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc")
 
 
-def test_particle_layer_radprops(mode_mono, test_dataset):
+def test_particle_layer_radprops(modes_all_mono_rgb, test_dataset):
     """Method 'radprops' returns data set with expected data_vars and coords."""
     layer = ParticleLayer(dataset=test_dataset)
     spectral_ctx = SpectralContext.new()
@@ -76,14 +76,14 @@ def test_particle_layer_radprops(mode_mono, test_dataset):
     )
 
 
-def test_particle_layer_eval_phase(mode_mono, test_dataset):
+def test_particle_layer_eval_phase(modes_all_mono_rgb, test_dataset):
     """Method 'eval_phase' returns a 'DataArray'."""
     layer = ParticleLayer(dataset=test_dataset)
     spectral_ctx = SpectralContext.new()
     assert isinstance(layer.eval_phase(spectral_ctx=spectral_ctx), xr.DataArray)
 
 
-def test_particle_layer_eval_phase_order(mode_mono, tmpdir):
+def test_particle_layer_eval_phase_order(modes_all_mono_rgb, tmpdir):
     """
     Returns phase function values by increasing order of scattering anle cosine
     values.

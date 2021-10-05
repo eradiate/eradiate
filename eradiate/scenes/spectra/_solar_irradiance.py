@@ -183,8 +183,8 @@ class SolarIrradianceSpectrum(Spectrum):
                 {
                     "spectrum": {
                         "type": "rgb",
-                        "value": self.eval(ctx.spectral_ctx).m_as(
-                            uck.get(self.quantity)
+                        "value": list(
+                            self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
                         ),
                     }
                 }

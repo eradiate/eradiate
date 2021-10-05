@@ -2,7 +2,12 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
 from eradiate.ckd import Bin
-from eradiate.contexts import CKDSpectralContext, MonoSpectralContext, SpectralContext
+from eradiate.contexts import (
+    CKDSpectralContext,
+    MonoSpectralContext,
+    SpectralContext,
+    RGBSpectralContext,
+)
 from eradiate.quad import Quad
 
 
@@ -16,6 +21,8 @@ def test_spectral_context_new(modes_all):
         assert isinstance(SpectralContext.new(), MonoSpectralContext)
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
         assert isinstance(SpectralContext.new(), CKDSpectralContext)
+    elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+        assert isinstance(SpectralContext.new(), RGBSpectralContext)
     else:
         # All modes must have a context: this test fails if the mode has no
         # associated spectral context

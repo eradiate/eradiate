@@ -88,15 +88,15 @@ def test_measure_results(mode_mono):
     # Check most raw form of results
     ds = results.to_dataset()
     assert set(ds.data_vars) == {"raw", "spp"}
-    assert set(ds.coords) == {"sensor_id", "w", "x", "y"}
-    assert ds.raw.shape == (2, 2, 3, 3)
+    assert set(ds.coords) == {"sensor_id", "w", "x", "y", "channel"}
+    assert ds.raw.shape == (2, 2, 3, 3, 1)
     assert ds.spp.shape == (2, 2)
 
     # Check SPP aggregation
     ds = results.to_dataset(aggregate_spps=True)
     assert set(ds.data_vars) == {"raw", "spp"}
-    assert set(ds.coords) == {"sensor_id", "w", "x", "y"}
-    assert ds.raw.shape == (2, 1, 3, 3)
+    assert set(ds.coords) == {"sensor_id", "w", "x", "y", "channel"}
+    assert ds.raw.shape == (2, 1, 3, 3, 1)
     assert ds.spp.shape == (2, 1)
     assert np.allclose(ds["spp"], (150, 150))
 

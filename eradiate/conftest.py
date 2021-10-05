@@ -69,8 +69,12 @@ def generate_fixture_group(name, modes):
 variant_groups = {
     "all_mono": [x for x in eradiate.modes() if x.startswith("mono")],
     "all_ckd": [x for x in eradiate.modes() if x.startswith("ckd")],
+    "all_rgb": [x for x in eradiate.modes() if x.startswith("rgb")],
     "all_mono_ckd": [
         x for x in eradiate.modes() if (x.startswith("mono") or x.startswith("ckd"))
+    ],
+    "all_mono_rgb": [
+        x for x in eradiate.modes() if (x.startswith("mono") or x.startswith("rgb"))
     ],
     "all_single": [x for x in eradiate.modes() if not x.endswith("double")],
     "all_double": [x for x in eradiate.modes() if x.endswith("double")],

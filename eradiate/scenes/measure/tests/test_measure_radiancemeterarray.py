@@ -1,4 +1,7 @@
+import pytest
+
 from eradiate.contexts import KernelDictContext
+from eradiate.exceptions import UnsupportedModeError
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure._radiancemeterarray import RadiancemeterArrayMeasure
 
@@ -26,7 +29,7 @@ def test_radiancemeterarray_noargs(mode_mono):
     assert KernelDict.from_elements(s, ctx=ctx).load() is not None
 
 
-def test_radiancemeter_args(mode_mono):
+def test_radiancemeterarray_args(mode_mono):
     # Instantiation succeeds
     s = RadiancemeterArrayMeasure(
         origins=[[0, 0, 0]] * 3, directions=[[1, 0, 0], [0, 1, 0], [0, 0, 1]]
@@ -49,3 +52,8 @@ def test_radiancemeter_args(mode_mono):
     # The kernel dict can be instantiated
     ctx = KernelDictContext()
     assert KernelDict.from_elements(s, ctx=ctx).load() is not None
+
+
+def test_radiancemeterarray_unsupported_mode(modes_all_rgb):
+    with pytest.raises(UnsupportedModeError):
+        s = RadiancemeterArrayMeasure()

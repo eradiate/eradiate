@@ -59,6 +59,6 @@ def test_runner_fail():
     # Runner raises if unsupported variant is active
     import mitsuba
 
-    mitsuba.set_variant("scalar_rgb")
+    mitsuba.set_variant("packet_rgb")
     with pytest.raises(KernelVariantError):
         runner(kernel_dict)

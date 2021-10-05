@@ -94,7 +94,7 @@ class InterpolatedSpectrum(Spectrum):
             )
 
         # Check that wavelengths are ordered, needed for interpolation
-        if not (all(i < j for i, j in zip(value, value[1:]))):
+        if not (all(i <= j for i, j in zip(value, value[1:]))):
             raise ValueError(
                 f"Wavelengths must be monotonically increasing, got {value}"
             )
@@ -175,9 +175,9 @@ class InterpolatedSpectrum(Spectrum):
             return KernelDict(
                 {
                     "spectrum": {
-                        "type": "rgb",
-                        "value": self.eval(ctx.spectral_ctx).m_as(
-                            uck.get(self.quantity)
+                        "type": "srgb",
+                        "color": list(
+                            self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
                         ),
                     }
                 }

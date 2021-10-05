@@ -256,8 +256,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             Phase function.
         """
         ds = xr.open_dataset(self.dataset)
+        if eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            w = (550.0 * ureg.nm).m_as(ds.w.units)
+        else:
+            w = spectral_ctx.wavelength.m_as(ds.w.units)
+
         return ds.phase.sel(i=0, j=0).interp(
-            w=spectral_ctx.wavelength.m_as(ds.w.units),
+            w=w,
             mu=np.linspace(-1, 1, 201),
             kwargs=dict(bounds_error=True),
         )
@@ -286,6 +291,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             return self.eval_albedo_ckd(spectral_ctx.bindex).squeeze()
+
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return self.eval_albedo_mono(550.0 * ureg.nm).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -322,6 +330,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             return self.eval_sigma_t_ckd(spectral_ctx.bindex).squeeze()
+
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return self.eval_sigma_t_mono(550.0 * ureg.nm).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -423,6 +434,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             return self.eval_sigma_a_ckd(spectral_ctx.bindex).squeeze()
 
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return self.eval_sigma_a_mono(550.0 * ureg.nm).squeeze()
+
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
@@ -451,10 +465,14 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         """
         # TODO: Rename eval_dataset()?
 
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_RGB):
             sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx)
             albedo = self.eval_albedo(spectral_ctx=spectral_ctx)
-            wavelength = spectral_ctx.wavelength
+            wavelength = (
+                spectral_ctx.wavelength
+                if eradiate.mode().has_flags(ModeFlags.ANY_MONO)
+                else 550.0 * ureg.nm
+            )
             return xr.Dataset(
                 data_vars={
                     "sigma_t": (
@@ -508,7 +526,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             ).isel(w=0)
 
         else:
-            raise UnsupportedModeError(supported="monochromatic")
+            raise UnsupportedModeError(supported="monochromatic, rgb")
 
     @staticmethod
     @ureg.wraps(ret="km^-1", args=("", "km", ""), strict=False)

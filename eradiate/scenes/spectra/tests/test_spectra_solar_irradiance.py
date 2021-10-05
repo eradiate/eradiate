@@ -52,6 +52,14 @@ def test_solar_irradiance_eval(modes_all):
         # Reference value computed manually
         assert np.allclose(s.eval(spectral_ctx), ureg.Quantity(1.87938, "W/m^2/nm"))
 
+    elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+        spectral_ctx = SpectralContext.new()
+        # Reference value computed manually
+        assert np.allclose(
+            s.eval(spectral_ctx),
+            ureg.Quantity([1.742798, 1.933927, 1.739175], "W/m^2/nm"),
+        )
+
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
         bin_set = BinSet.from_db("10nm_test")
         bin = bin_set.select_bins("550")[0]

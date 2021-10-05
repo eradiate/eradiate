@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from eradiate.contexts import KernelDictContext
+from eradiate.exceptions import UnsupportedModeError
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure import measure_factory
 from eradiate.scenes.measure._distant_array import (
@@ -10,7 +11,7 @@ from eradiate.scenes.measure._distant_array import (
 )
 
 
-def test_distant_array_radiance(modes_all):
+def test_distant_array_radiance(modes_all_mono_ckd):
     # Test default constructor
     d = DistantArrayMeasure()
 
@@ -57,7 +58,7 @@ def test_distant_array_radiance(modes_all):
     assert np.allclose(d.directions, [[0, 0, 1], [1, 0, 0]])
 
 
-def test_distant_array_reflectance(modes_all):
+def test_distant_array_reflectance(modes_all_mono_ckd):
     # Test default constructor
     d = DistantArrayReflectanceMeasure()
 
@@ -104,7 +105,7 @@ def test_distant_array_reflectance(modes_all):
     assert np.allclose(d.directions, [[0, 0, 1], [1, 0, 0]])
 
 
-def test_azimuthal_ring_constructor(modes_all):
+def test_azimuthal_ring_constructor(modes_all_mono_ckd):
     # Default direction, azim resolution
     d = DistantArrayMeasure.azimuthal_ring(zenith_angle=90, azimuth_resolution=90)
     assert np.allclose(d.directions, [[1, 0, 0], [0, 1, 0], [-1, 0, 0], [0, -1, 0]])
@@ -144,3 +145,10 @@ def test_azimuthal_ring_constructor(modes_all):
     }
     d = measure_factory.convert(measure_dict)
     assert np.allclose(d.directions, [[1, 0, 0], [0, 1, 0], [-1, 0, 0], [0, -1, 0]])
+
+
+def test_distant_unsupported_mode(modes_all_rgb):
+    with pytest.raises(UnsupportedModeError):
+        d = DistantArrayReflectanceMeasure()
+    with pytest.raises(UnsupportedModeError):
+        d = DistantArrayMeasure()

@@ -7,6 +7,7 @@ from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
 from eradiate.contexts import KernelDictContext
+from eradiate.exceptions import UnsupportedModeError
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure._distant import (
     DistantFluxMeasure,
@@ -113,7 +114,14 @@ def test_target_origin(modes_all):
             TargetOrigin.convert({"xyz": [1, 1, 0]})
 
 
-def test_distant_radiance(modes_all):
+def test_distant_unsupported_mode(modes_all_rgb):
+    with pytest.raises(UnsupportedModeError):
+        d = DistantRadianceMeasure()
+    with pytest.raises(UnsupportedModeError):
+        d = DistantFluxMeasure()
+
+
+def test_distant_radiance(modes_all_mono_ckd):
     # Test default constructor
     d = DistantRadianceMeasure()
     ctx = KernelDictContext()
@@ -231,7 +239,7 @@ def test_distant_radiance_postprocessing_ckd(modes_all_ckd):
     assert np.allclose(ds.vaa, 0.0)
 
 
-def test_distant_flux(modes_all):
+def test_distant_flux(modes_all_mono_ckd):
     # Test default constructor
     d = DistantFluxMeasure()
     ctx = KernelDictContext()
@@ -267,7 +275,7 @@ def test_distant_flux(modes_all):
         ),
     ],
 )
-def test_distant_flux_direction(modes_all, direction, frame):
+def test_distant_flux_direction(modes_all_mono_ckd, direction, frame):
     d = DistantFluxMeasure(direction=direction)
     ctx = KernelDictContext()
     to_world = onedict_value(d.kernel_dict(ctx))["to_world"]
@@ -292,7 +300,7 @@ def test_distant_flux_postprocessing_mono(modes_all_mono):
     # spectral loop iterations
     ds = d.postprocess()
     assert "flux" in ds.data_vars
-    assert ds["flux"].shape == (2,)
+    assert ds["flux"].shape == (2, 1)
     assert np.allclose(ds.flux, 1.0 * 16 * 32)
 
 
@@ -326,7 +334,6 @@ def test_distant_flux_postprocessing_ckd(modes_all_ckd):
     # Postprocessing succeeds and flux field has the same size as the number of
     # selected CKD bins
     ds = d.postprocess()
-    print(ds)
     assert "flux" in ds.data_vars
     assert ds["flux"].shape == (2,)
     assert np.allclose(ds.flux, 1.0 * 16 * 32)

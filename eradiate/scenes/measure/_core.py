@@ -465,6 +465,12 @@ class MeasureResults:
                 "long_name": "wavelength",
                 "units": symbol(ucc.get("wavelength")),
             }
+        elif eradiate.mode().has_flags("ANY_CKD"):
+            spectral_coord_label = eradiate.mode().spectral_coord_label
+            spectral_coord_metadata = {
+                "long_name": "bindex",
+                "units": symbol(ucc.get("wavelength")),  # I don't know what to put here
+            }
         elif eradiate.mode().has_flags("ANY_RGB"):
             spectral_coord_label = eradiate.mode().spectral_coord_label
             spectral_coord_metadata = {
@@ -475,7 +481,7 @@ class MeasureResults:
         #  value 'intensity' in mono modes;
         #  values 'R', 'G', 'B' in render modes)
         else:
-            raise UnsupportedModeError(supported=["monochromatic", "rgb"])
+            raise UnsupportedModeError(supported=["monochromatic", "rgb", "ckd"])
 
         # Collect spectral and sensor coordinate values
         spectral_coords, sensor_ids, film_size = self._to_dataset_helper_coord_values(
@@ -551,11 +557,11 @@ class MeasureResults:
                 coords={
                     "x": ("x", xs, {"long_name": "film width coordinate"}),
                     "y": ("y", ys, {"long_name": "film height coordinate"}),
-                    "channel": {
+                    "channel": (
                         "channel",
                         ["intensity"],
                         {"long_name": "intensity channel"},
-                    },
+                    ),
                     spectral_coord_label: (
                         spectral_coord_label,
                         spectral_index,
@@ -753,6 +759,7 @@ class MeasureResults:
                     len(spectral_coords),
                     len(sensor_ids),
                     *film_size,  # Note: Row-major order (width x comes last)
+                    1,
                 ),
                 np.nan,
             )
@@ -763,7 +770,7 @@ class MeasureResults:
                     # (i.e. cases in which sensors have different film sizes).
                     # To add support for it, blitting is probably a good approach
                     # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
-                    data[i_spectral, i_sensor] = raw[spectral_coord]["values"][
+                    data[i_spectral, i_sensor, ..., 0] = raw[spectral_coord]["values"][
                         sensor_id
                     ][..., 0]
         elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):

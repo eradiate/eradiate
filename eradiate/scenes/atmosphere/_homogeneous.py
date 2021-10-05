@@ -1,11 +1,15 @@
 import attr
+import numpy as np
 import pint
 import pinttr
+
+import eradiate
 
 from ._core import Atmosphere, atmosphere_factory
 from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
+from ..._mode import ModeFlags
 from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
@@ -124,7 +128,7 @@ class HomogeneousAtmosphere(Atmosphere):
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         if self.width is AUTO:
             spectral_ctx = ctx.spectral_ctx
-            return 10.0 / self.eval_sigma_s(spectral_ctx)
+            return np.max(10.0 / self.eval_sigma_s(spectral_ctx))
         else:
             return self.width
 
@@ -162,7 +166,10 @@ class HomogeneousAtmosphere(Atmosphere):
         quantity
             Absorption coefficient.
         """
-        return self.sigma_a.eval(spectral_ctx)
+        if eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return self.sigma_a.eval_mono(w=550.0 * ureg.nm)
+        else:
+            return self.sigma_a.eval(spectral_ctx)
 
     def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
@@ -179,7 +186,10 @@ class HomogeneousAtmosphere(Atmosphere):
         quantity
             Scattering coefficient.
         """
-        return self.sigma_s.eval(spectral_ctx)
+        if eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            return self.sigma_s.eval_mono(w=550 * ureg.nm)
+        else:
+            return self.sigma_s.eval(spectral_ctx)
 
     def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """

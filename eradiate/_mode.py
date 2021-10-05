@@ -51,7 +51,9 @@ class ModeFlags(enum.Flag):
         ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
     )  #: CKD mode, double precision
     RGB = ERT_RGB | MTS_SCALAR | MTS_RGB | MTS_SINGLE  #: RGB mode, single precision
-    RGB_DOUBLE = ERT_RGB | MTS_SCALAR | MTS_DOUBLE  #: RGB mode, double precision>>
+    RGB_DOUBLE = (
+        ERT_RGB | MTS_RGB | MTS_SCALAR | MTS_DOUBLE
+    )  #: RGB mode, double precision>>
 
     # -- Other convenience aliases ---------------------------------------------
 

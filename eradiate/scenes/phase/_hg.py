@@ -57,5 +57,17 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
                     }
                 }
             )
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+            # TODO: This is a workaround until the hg plugin accepts spectra for
+            #  its g parameter
+            g = float(onedict_value(self.g.kernel_dict(ctx=ctx))["color"][0])
+            return KernelDict(
+                {
+                    self.id: {
+                        "type": "hg",
+                        "g": g,
+                    }
+                }
+            )
         else:
-            raise UnsupportedModeError(supported="monochromatic")
+            raise UnsupportedModeError(supported="monochromatic, rgb")

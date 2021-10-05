@@ -1,3 +1,4 @@
+import eradiate
 import numpy as np
 import pint
 import pinttr
@@ -5,6 +6,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
+from eradiate._mode import ModeFlags
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
@@ -12,7 +14,7 @@ from eradiate.scenes.core import KernelDict
 from eradiate.scenes.phase import RayleighPhaseFunction, phase_function_factory
 
 
-def test_atmosphere_homogeneous_default(mode_mono):
+def test_atmosphere_homogeneous_default(modes_all_mono_rgb):
     """
     Applies default attributes values.
     """
@@ -22,7 +24,7 @@ def test_atmosphere_homogeneous_default(mode_mono):
     assert isinstance(r.phase, RayleighPhaseFunction)
 
 
-def test_atmosphere_homogeneous_sigma_s(mode_mono):
+def test_atmosphere_homogeneous_sigma_s(modes_all_mono_rgb):
     """
     Assigns custom 'sigma_s' value.
     """
@@ -31,7 +33,7 @@ def test_atmosphere_homogeneous_sigma_s(mode_mono):
     assert r.eval_sigma_s(spectral_ctx) == ureg.Quantity(1e-5, ureg.m ** -1)
 
 
-def test_atmosphere_homogeneous_top(mode_mono):
+def test_atmosphere_homogeneous_top(modes_all_mono_rgb):
     """
     Assigns custom 'top' value.
     """
@@ -39,7 +41,7 @@ def test_atmosphere_homogeneous_top(mode_mono):
     assert r.top == 8.0 * ureg.km
 
 
-def test_atmosphere_homogeneous_top_invalid_units(mode_mono):
+def test_atmosphere_homogeneous_top_invalid_units(modes_all_mono_rgb):
     """
     Raises when invalid units are passed to 'top'.
     """
@@ -47,7 +49,7 @@ def test_atmosphere_homogeneous_top_invalid_units(mode_mono):
         HomogeneousAtmosphere(top=10 * ureg.s)
 
 
-def test_atmosphere_homogeneous_width_invalid_units(mode_mono):
+def test_atmosphere_homogeneous_width_invalid_units(modes_all_mono_rgb):
     """
     Raises when invalid units are passed to 'width'.
     """
@@ -55,7 +57,7 @@ def test_atmosphere_homogeneous_width_invalid_units(mode_mono):
         HomogeneousAtmosphere(width=5 * ureg.m ** 2)
 
 
-def test_atmosphere_homogeneous_sigma_s_invalid_units(mode_mono):
+def test_atmosphere_homogeneous_sigma_s_invalid_units(modes_all_mono_rgb):
     """
     Raises when invalid units are passed to 'sigma_s'.
     """
@@ -63,7 +65,7 @@ def test_atmosphere_homogeneous_sigma_s_invalid_units(mode_mono):
         HomogeneousAtmosphere(sigma_s=1e-7 * ureg.m)
 
 
-def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
+def test_atmosphere_homogeneous_top_invalid_value(modes_all_mono_rgb):
     """
     Raises when invalid value is passed to 'top'.
     """
@@ -71,7 +73,7 @@ def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
         HomogeneousAtmosphere(top=-100.0)
 
 
-def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
+def test_atmosphere_homogeneous_top_invalid_value(modes_all_mono_rgb):
     """
     Raises when invalid value is passed to 'width'.
     """
@@ -81,7 +83,7 @@ def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
 
 @pytest.mark.parametrize("phase_id", phase_function_factory.registry.keys())
 @pytest.mark.parametrize("ref", (False, True))
-def test_atmosphere_homogeneous_phase_function(mode_mono, phase_id, ref):
+def test_atmosphere_homogeneous_phase_function(modes_all_mono_rgb, phase_id, ref):
     """Supports all available phase function types."""
     r = HomogeneousAtmosphere(phase={"type": phase_id})
 
@@ -91,20 +93,23 @@ def test_atmosphere_homogeneous_phase_function(mode_mono, phase_id, ref):
     assert kernel_dict.load() is not None
 
 
-def test_atmosphere_homogeneous_width(mode_mono):
+def test_atmosphere_homogeneous_width(modes_all_mono_rgb):
     """
     Automatically sets width to ten times the scattering mean free path.
     """
     r = HomogeneousAtmosphere()
     ctx = KernelDictContext()
-    wavelength = ctx.spectral_ctx.wavelength
+    if eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+        wavelength = 550.0 * ureg.nm
+    else:
+        wavelength = ctx.spectral_ctx.wavelength
     assert np.isclose(
         r.kernel_width(ctx), 10.0 / compute_sigma_s_air(wavelength=wavelength)
     )
 
 
 @pytest.mark.parametrize("ref", (False, True))
-def test_atmosphere_homogeneous_kernel_dict(mode_mono, ref):
+def test_atmosphere_homogeneous_kernel_dict(modes_all_mono_rgb, ref):
     """
     Produces kernel dictionaries that can be loaded by the kernel.
     """
