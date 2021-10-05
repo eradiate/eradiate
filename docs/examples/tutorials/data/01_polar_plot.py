@@ -19,26 +19,24 @@ import eradiate
 
 eradiate.set_mode("mono_double")
 
-app = eradiate.solvers.onedim.OneDimSolverApp(
-    scene={
-        "atmosphere": {"type": "heterogeneous"},
-        "illumination": {
-            "type": "directional",
-            "zenith": 45.0,
-            "azimuth": 45.0,
-        },
-        "surface": {"type": "rpv"},
-        "measures": [
-            {
-                "type": "distant_reflectance",
-                "film_resolution": (64, 64),
-                "spp": 1000,
-            }
-        ],
-    }
+exp = eradiate.experiments.OneDimExperiment(
+    atmosphere={"type": "heterogeneous_legacy"},
+    illumination={
+        "type": "directional",
+        "zenith": 45.0,
+        "azimuth": 45.0,
+    },
+    surface={"type": "rpv"},
+    measures=[
+        {
+            "type": "distant_reflectance",
+            "film_resolution": (64, 64),
+            "spp": 1000,
+        }
+    ],
 )
 
-app.run()
+exp.run()
 
 # %%
 # Our simulation is complete. We can now visualise our
@@ -46,7 +44,7 @@ app.run()
 
 import matplotlib.pyplot as plt
 
-brf = app.results["measure"].brf.squeeze()
+brf = exp.results["measure"].brf.squeeze()
 brf.plot()
 plt.show()
 
