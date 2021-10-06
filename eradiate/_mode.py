@@ -88,8 +88,8 @@ _mode_registry = {
         "flags": ModeFlags.CKD_DOUBLE,
         "spectral_coord_label": "bd",
     },
-    "rgb": {"flags": ModeFlags.RGB, "spectral_coord_label": "rgb"},
-    "rgb_double": {"flags": ModeFlags.RGB_DOUBLE, "spectral_coord_label": "rgb"},
+    "rgb": {"flags": ModeFlags.RGB, "spectral_coord_label": "channel"},
+    "rgb_double": {"flags": ModeFlags.RGB_DOUBLE, "spectral_coord_label": "channel"},
 }
 
 

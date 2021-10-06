@@ -70,4 +70,4 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
                 }
             )
         else:
-            raise UnsupportedModeError(supported="monochromatic, rgb")
+            raise UnsupportedModeError(supported=("monochromatic", "rgb"))

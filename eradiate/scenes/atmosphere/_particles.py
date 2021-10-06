@@ -526,7 +526,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             ).isel(w=0)
 
         else:
-            raise UnsupportedModeError(supported="monochromatic, rgb")
+            raise UnsupportedModeError(supported=("monochromatic", "rgb"))
 
     @staticmethod
     @ureg.wraps(ret="km^-1", args=("", "km", ""), strict=False)

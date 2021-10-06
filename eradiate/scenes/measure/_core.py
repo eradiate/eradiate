@@ -459,27 +459,23 @@ class MeasureResults:
         if not self.raw:
             raise ValueError("no raw results to convert to xarray.Dataset")
 
-        if eradiate.mode().has_flags("ANY_MONO"):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             spectral_coord_label = eradiate.mode().spectral_coord_label
             spectral_coord_metadata = {
                 "long_name": "wavelength",
                 "units": symbol(ucc.get("wavelength")),
             }
-        elif eradiate.mode().has_flags("ANY_CKD"):
+        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             spectral_coord_label = eradiate.mode().spectral_coord_label
             spectral_coord_metadata = {
                 "long_name": "bindex",
-                "units": symbol(ucc.get("wavelength")),  # I don't know what to put here
             }
-        elif eradiate.mode().has_flags("ANY_RGB"):
+        elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
             spectral_coord_label = eradiate.mode().spectral_coord_label
             spectral_coord_metadata = {
                 "long_name": "red-green-blue",
                 "units": symbol(ucc.get("dimensionless")),
             }
-        # TODO: Add channel dimension to dataset (string-labelled;
-        #  value 'intensity' in mono modes;
-        #  values 'R', 'G', 'B' in render modes)
         else:
             raise UnsupportedModeError(supported=["monochromatic", "rgb", "ckd"])
 
@@ -667,7 +663,7 @@ class MeasureResults:
         elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
             return {"long_name": "red, green, blue"}
         else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+            raise UnsupportedModeError(supported=("monochromatic", "ckd", "rgb"))
 
     @staticmethod
     def _to_dataset_helper_coord_values(
@@ -773,6 +769,9 @@ class MeasureResults:
                     data[i_spectral, i_sensor, ..., 0] = raw[spectral_coord]["values"][
                         sensor_id
                     ][..., 0]
+                    # This latter indexing selects only one channel in the raw data
+                    # array: this works with mono variants but will fail otherwise
+
         elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
             data = np.full(
                 (
@@ -793,6 +792,7 @@ class MeasureResults:
                     data[i_spectral, i_sensor] = raw[spectral_coord]["values"][
                         sensor_id
                     ]
+
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd", "rgb"))
 

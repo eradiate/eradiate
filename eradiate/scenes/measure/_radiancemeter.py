@@ -70,7 +70,7 @@ class RadiancemeterMeasure(Measure):
     def film_resolution(self) -> t.Tuple[int, int]:
         return (1, 1)
 
-    def __attrs_post_init__(self):
+    def __attrs_pre_init__(self):
         if eradiate.mode().has_flags("ANY_RGB"):
             raise UnsupportedModeError(unsupported="rgb")
 

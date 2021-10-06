@@ -115,7 +115,7 @@ class SpectralContext(ABC, Context):
         elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
             return RGBSpectralContext()
         else:
-            raise UnsupportedModeError(supported=["monochromatic", "RGB", "ckd"])
+            raise UnsupportedModeError(supported=["monochromatic", "rgb", "ckd"])
 
     @staticmethod
     def from_dict(d: t.Dict) -> SpectralContext:
