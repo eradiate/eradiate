@@ -14,6 +14,7 @@ Core [eradiate.scenes.core]
 
    SceneElement
    KernelDict
+   BoundingBox
 
 .. _sec-reference-scenes-atmosphere:
 

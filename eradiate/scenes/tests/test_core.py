@@ -2,10 +2,12 @@ import importlib
 
 import mitsuba
 import numpy as np
+import pint
 import pytest
 
+from eradiate import unit_registry as ureg
 from eradiate.exceptions import KernelVariantError
-from eradiate.scenes.core import KernelDict
+from eradiate.scenes.core import BoundingBox, KernelDict
 
 
 def test_kernel_dict_construct():
@@ -125,3 +127,43 @@ def test_kernel_dict_duplicate_id():
             ),
             ctx=KernelDictContext(),
         )
+
+
+def test_bbox():
+    # Instantiation with correctly ordered unitless values works
+    bbox = BoundingBox([0, 0, 0], [1, 1, 1])
+    assert bbox.units == ureg.m
+
+    # Instantiation with correctly ordered unit-attached values works
+    bbox = BoundingBox([0, 0, 0] * ureg.m, [1, 1, 1] * ureg.m)
+    assert bbox.min.units == ureg.m
+
+    # Extents are correctly computed
+    assert np.allclose([1, 2, 3] * ureg.m, BoundingBox([0, 0, 0], [1, 2, 3]).extents)
+
+    # Extent shapes must be compatible
+    with pytest.raises(ValueError):
+        BoundingBox([0, 0], [1, 1, 1])
+    with pytest.raises(ValueError):
+        BoundingBox([0, 0, 0], [[1, 1, 1]])
+
+    # Unit mismatch raises
+    with pytest.raises(pint.DimensionalityError):
+        BoundingBox([0, 0] * ureg.m, [1, 1] * ureg.s)
+
+
+def test_bbox_convert():
+    bbox_ref = BoundingBox([0, 0, 0], [1, 1, 1])
+
+    bbox_convert = BoundingBox.convert([[0, 0, 0], [1, 1, 1]])
+    assert np.allclose(bbox_ref.min, bbox_convert.min)
+    assert np.allclose(bbox_ref.max, bbox_convert.max)
+
+    bbox_convert = BoundingBox.convert(np.array([[0, 0, 0], [1, 1, 1]]))
+    assert np.allclose(bbox_ref.min, bbox_convert.min)
+    assert np.allclose(bbox_ref.max, bbox_convert.max)
+
+    bbox_ref = BoundingBox([0, 0, 0] * ureg.m, [1, 1, 1] * ureg.m)
+    bbox_convert = BoundingBox.convert([[0, 0, 0], [1, 1, 1]] * ureg.m)
+    assert np.allclose(bbox_ref.min, bbox_convert.min)
+    assert np.allclose(bbox_ref.max, bbox_convert.max)

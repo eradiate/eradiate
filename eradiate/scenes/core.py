@@ -4,14 +4,20 @@ import typing as t
 import warnings
 from abc import ABC, abstractmethod
 from collections import abc as collections_abc
+from typing import Mapping, Sequence
 
 import attr
 import mitsuba
+import numpy as np
+import pint
+import pinttr
 
+from .. import unit_context_config as ucc
 from .._util import onedict_value
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
+from ..units import unit_registry as ureg
 
 
 def _kernel_dict_get_mts_variant():
@@ -32,7 +38,7 @@ class KernelDict(collections_abc.MutableMapping):
     A dictionary-like object designed to contain a scene specification
     appropriate for instantiation with :func:`~mitsuba.core.xml.load_dict`.
 
-    :class:`KernelDict` keeps track of the variant it has been created with
+    :class:`.KernelDict` keeps track of the variant it has been created with
     and performs minimal checks to help prevent inconsistent scene creation.
     """
 
@@ -313,3 +319,101 @@ class SceneElement(ABC):
             Kernel dictionary which can be loaded as a Mitsuba object.
         """
         pass
+
+
+@parse_docs
+@attr.s(frozen=True)
+class BoundingBox:
+    """
+    A basic data class representing an axis-aligned bounding box with
+    unit-valued corners.
+
+    Notes
+    -----
+    Instances are immutable.
+    """
+
+    min: pint.Quantity = documented(
+        pinttr.ib(
+            units=ucc.get("length"),
+            on_setattr=None,  # frozen instance: on_setattr must be disabled
+        ),
+        type="quantity",
+        init_type="array-like or quantity",
+        doc="Min corner.",
+    )
+
+    max: pint.Quantity = documented(
+        pinttr.ib(
+            units=ucc.get("length"),
+            on_setattr=None,  # frozen instance: on_setattr must be disabled
+        ),
+        type="quantity",
+        init_type="array-like or quantity",
+        doc="Max corner.",
+    )
+
+    @min.validator
+    @max.validator
+    def _min_max_validator(self, attribute, value):
+        if not self.min.shape == self.max.shape:
+            raise ValueError(
+                f"while validating {attribute.name}: 'min' and 'max' must "
+                f"have the same shape (got {self.min.shape} and {self.max.shape})"
+            )
+        if not np.all(np.less(self.min, self.max)):
+            raise ValueError(
+                f"while validating {attribute.name}: 'min' must be strictly "
+                "less than 'max'"
+            )
+
+    @classmethod
+    def convert(
+        cls, value: t.Union[t.Sequence, t.Mapping, np.typing.ArrayLike, pint.Quantity]
+    ) -> t.Any:
+        """
+        Attempt conversion of a value to a :class:`BoundingBox`.
+
+        Parameters
+        ----------
+        value
+            Value to convert.
+
+        Returns
+        -------
+        any
+            If `value` is an array-like, a quantity or a mapping, conversion will
+            be attempted. Otherwise, `value` is returned unmodified.
+        """
+        if isinstance(value, (np.ndarray, pint.Quantity)):
+            return cls(value[0, :], value[1, :])
+
+        elif isinstance(value, Sequence):
+            return cls(*value)
+
+        elif isinstance(value, Mapping):
+            return cls(**pinttr.interpret_units(value, ureg=ureg))
+
+        else:
+            return value
+
+    @property
+    def shape(self):
+        """
+        tuple: Shape of `min` and `max` arrays.
+        """
+        return self.min.shape
+
+    @property
+    def extents(self) -> pint.Quantity:
+        """
+        :class:`pint.Quantity`: Extent in all dimensions.
+        """
+        return self.max - self.min
+
+    @property
+    def units(self):
+        """
+        :class:`pint.Unit`: Units of `min` and `max` arrays.
+        """
+        return self.min.units
