@@ -1,3 +1,4 @@
+from ._blend import BlendPhaseFunction
 from ._core import PhaseFunction, phase_function_factory
 from ._hg import HenyeyGreensteinPhaseFunction
 from ._isotropic import IsotropicPhaseFunction
@@ -9,4 +10,5 @@ __all__ = [
     "IsotropicPhaseFunction",
     "RayleighPhaseFunction",
     "HenyeyGreensteinPhaseFunction",
+    "BlendPhaseFunction",
 ]
