@@ -363,20 +363,42 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
+    def _shape_transform(
+        self, ctx: KernelDictContext
+    ) -> "mitsuba.core.ScalarTransform4f":
+        length_units = uck.get("length")
+        width = self.kernel_width(ctx).m_as(length_units)
+        bottom = self.bottom.m_as(length_units)
+        top = self.top.m_as(length_units)
+        offset = self.kernel_offset(ctx).m_as(length_units)
+
+        return map_cube(
+            xmin=-0.5 * width,
+            xmax=0.5 * width,
+            ymin=-0.5 * width,
+            ymax=0.5 * width,
+            zmin=bottom - offset,
+            zmax=top,
+        )
+
+    def _gridvolume_transform(
+        self, ctx: KernelDictContext
+    ) -> "mitsuba.core.ScalarTransform4f":
         length_units = uck.get("length")
         width = self.kernel_width(ctx).m_as(length_units)
         top = self.top.m_as(length_units)
         bottom = self.bottom.m_as(length_units)
-        trafo = map_unit_cube(
-            xmin=-width / 2.0,
-            xmax=width / 2.0,
-            ymin=-width / 2.0,
-            ymax=width / 2.0,
+
+        return map_unit_cube(
+            xmin=-0.5 * width,
+            xmax=0.5 * width,
+            ymin=-0.5 * width,
+            ymax=0.5 * width,
             zmin=bottom,
             zmax=top,
         )
 
+    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
         radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
         albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
@@ -393,6 +415,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             phase = {"type": "ref", "id": f"phase_{self.id}"}
         else:
             phase = onedict_value(self.kernel_phase(ctx=ctx))
+
+        trafo = self._gridvolume_transform(ctx)
 
         return KernelDict(
             {
@@ -419,25 +443,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         else:
             medium = self.kernel_media(ctx)[f"medium_{self.id}"]
 
-        length_units = uck.get("length")
-        width = self.kernel_width(ctx).m_as(length_units)
-        bottom = self.bottom.m_as(length_units)
-        top = self.top.m_as(length_units)
-        offset = self.kernel_offset(ctx).m_as(length_units)
-        trafo = map_cube(
-            xmin=-width / 2.0,
-            xmax=width / 2.0,
-            ymin=-width / 2.0,
-            ymax=width / 2.0,
-            zmin=bottom - offset,
-            zmax=top,
-        )
-
         return KernelDict(
             {
                 f"shape_{self.id}": {
                     "type": "cube",
-                    "to_world": trafo,
+                    "to_world": self._shape_transform(ctx),
                     "bsdf": {"type": "null"},
                     "interior": medium,
                 }
