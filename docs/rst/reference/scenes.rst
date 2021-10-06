@@ -255,6 +255,7 @@ Phase functions [eradiate.scenes.phase]
    IsotropicPhaseFunction
    RayleighPhaseFunction
    HenyeyGreensteinPhaseFunction
+   BlendPhaseFunction
 
 .. _sec-reference-scenes-integrators:
 

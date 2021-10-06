@@ -79,7 +79,11 @@ def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
         HomogeneousAtmosphere(width=-50.0)
 
 
-@pytest.mark.parametrize("phase_id", phase_function_factory.registry.keys())
+@pytest.mark.parametrize(
+    "phase_id",
+    set(phase_function_factory.registry.keys())
+    - {"blend_phase"},  # Exclude phase functions without no default parametrisation
+)
 @pytest.mark.parametrize("ref", (False, True))
 def test_atmosphere_homogeneous_phase_function(mode_mono, phase_id, ref):
     """Supports all available phase function types."""
