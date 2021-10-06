@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 
 from eradiate.contexts import SpectralContext
+from eradiate.kernel.gridvolume import read_binary_grid3d, write_binary_grid3d
 from eradiate.radprops.rad_profile import US76ApproxRadProfile
-from eradiate.scenes.atmosphere._core import read_binary_grid3d, write_binary_grid3d
 
 
 @pytest.fixture

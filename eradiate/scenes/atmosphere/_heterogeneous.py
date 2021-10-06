@@ -10,16 +10,13 @@ import numpy as np
 import pint
 import xarray as xr
 
-from ._core import (
-    AbstractHeterogeneousAtmosphere,
-    atmosphere_factory,
-    write_binary_grid3d,
-)
+from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecules import MolecularAtmosphere
 from ._particles import ParticleLayer
 from ..core import KernelDict
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
+from ...kernel.gridvolume import write_binary_grid3d
 from ...kernel.transform import map_unit_cube
 from ...units import to_quantity
 from ...units import unit_context_kernel as uck

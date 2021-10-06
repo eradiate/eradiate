@@ -16,3 +16,14 @@ Customised Mitsuba 2 [eradiate.kernel.mitsuba]
    :type: url
    :text: Go to Eradiate Kernel docs
    :classes: btn-outline-primary btn-block
+
+Volume data file I/O routines [eradiate.kernel.gridvolume]
+----------------------------------------------------------
+
+.. currentmodule:: eradiate.kernel.gridvolume
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   write_binary_grid3d
+   read_binary_grid3d
