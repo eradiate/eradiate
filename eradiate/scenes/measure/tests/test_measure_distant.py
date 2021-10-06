@@ -114,13 +114,6 @@ def test_target_origin(modes_all):
             TargetOrigin.convert({"xyz": [1, 1, 0]})
 
 
-def test_distant_unsupported_mode(modes_all_rgb):
-    with pytest.raises(UnsupportedModeError):
-        d = DistantRadianceMeasure()
-    with pytest.raises(UnsupportedModeError):
-        d = DistantFluxMeasure()
-
-
 def test_distant_radiance(modes_all_mono_ckd):
     # Test default constructor
     d = DistantRadianceMeasure()
@@ -335,5 +328,5 @@ def test_distant_flux_postprocessing_ckd(modes_all_ckd):
     # selected CKD bins
     ds = d.postprocess()
     assert "flux" in ds.data_vars
-    assert ds["flux"].shape == (2,)
+    assert ds["flux"].shape == (2, 1)
     assert np.allclose(ds.flux, 1.0 * 16 * 32)

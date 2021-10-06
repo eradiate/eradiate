@@ -1069,11 +1069,17 @@ class Measure(SceneElement, ABC):
         result = xr.Dataset(
             {
                 "raw": (
-                    ("w", "sensor_id", "y", "x"),
-                    np.zeros((n_bin, n_sensor_ids, n_y, n_x)),
+                    ("w", "sensor_id", "y", "x", "channel"),
+                    np.zeros((n_bin, n_sensor_ids, n_y, n_x, 1)),
                 )
             },
-            coords={"w": wavelengths, "sensor_id": sensor_ids, "y": ys, "x": xs},
+            coords={
+                "w": wavelengths,
+                "sensor_id": sensor_ids,
+                "y": ys,
+                "x": xs,
+                "channel": ["intensity"],
+            },
         )
 
         # For each bin and each pixel, compute quadrature and store the result
@@ -1086,8 +1092,8 @@ class Measure(SceneElement, ABC):
             for (i_sensor_id, i_y, i_x) in itertools.product(
                 range(n_sensor_ids), range(n_y), range(n_x)
             ):
-                result.raw.values[i_bin, i_sensor_id, i_y, i_x] = quad.integrate(
-                    values_at_nodes[:, i_sensor_id, i_y, i_x],
+                result.raw.values[i_bin, i_sensor_id, i_y, i_x, 0] = quad.integrate(
+                    values_at_nodes[:, i_sensor_id, i_y, i_x, 0],
                     interval=np.array([0.0, 1.0]),
                 )
 

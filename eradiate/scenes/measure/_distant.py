@@ -339,10 +339,6 @@ class DistantMeasure(Measure, ABC):
         init_type=":class:`.TargetOrigin` or dict, optional",
     )
 
-    def __attrs_pre_init__(self):
-        if eradiate.mode().has_flags("ANY_RGB"):
-            raise UnsupportedModeError(unsupported="rgb")
-
     def _postprocess_add_illumination(
         self,
         ds: xr.Dataset,
@@ -407,6 +403,9 @@ class DistantMeasure(Measure, ABC):
                 result = result[indices]
 
                 return result
+
+            elif eradiate.mode().has_flags(ModeFlags.ANY_RGB):
+                return spectrum.eval_rgb().m_as(k_units)
 
             else:
                 raise UnsupportedModeError(supported=("monochromatic", "ckd"))

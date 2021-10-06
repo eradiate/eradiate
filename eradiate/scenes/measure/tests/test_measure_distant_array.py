@@ -145,10 +145,3 @@ def test_azimuthal_ring_constructor(modes_all_mono_ckd):
     }
     d = measure_factory.convert(measure_dict)
     assert np.allclose(d.directions, [[1, 0, 0], [0, 1, 0], [-1, 0, 0], [0, -1, 0]])
-
-
-def test_distant_unsupported_mode(modes_all_rgb):
-    with pytest.raises(UnsupportedModeError):
-        d = DistantArrayReflectanceMeasure()
-    with pytest.raises(UnsupportedModeError):
-        d = DistantArrayMeasure()

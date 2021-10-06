@@ -113,7 +113,6 @@ class InterpolatedSpectrum(Spectrum):
         return np.interp(w, self.wavelengths, self.values, left=0.0, right=0.0)
 
     def eval_rgb(self) -> pint.Quantity:
-        print(self.values)
         return np.interp(
             [600, 500, 400] * ureg.nm,
             self.wavelengths,

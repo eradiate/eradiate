@@ -121,7 +121,7 @@ def test_rami_experiment_run_detailed(mode_mono):
     assert set(results.data_vars) == {"irradiance", "brf", "brdf", "lo", "spp"}
 
     # ... dimensions
-    assert set(results["lo"].dims) == {"sza", "saa", "x", "y", "w"}
+    assert set(results["lo"].dims) == {"sza", "saa", "x", "y", "w", "channel"}
     assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
 
     # ... and other coordinates
@@ -133,6 +133,7 @@ def test_rami_experiment_run_detailed(mode_mono):
         "x",
         "y",
         "w",
+        "channel",
     }
     assert set(results["irradiance"].coords) == {"sza", "saa", "w"}
 
