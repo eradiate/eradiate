@@ -252,6 +252,7 @@ Phase functions [eradiate.scenes.phase]
 .. autosummary::
    :toctree: generated/autosummary/
 
+   IsotropicPhaseFunction
    RayleighPhaseFunction
    HenyeyGreensteinPhaseFunction
 
