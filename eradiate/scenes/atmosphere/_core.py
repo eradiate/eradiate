@@ -83,10 +83,7 @@ class Atmosphere(SceneElement, ABC):
     @abstractmethod
     def bottom(self) -> pint.Quantity:
         """
-        Return the atmosphere's bottom altitude.
-
-        Returns → :class:`~pint.Quantity`:
-            Atmosphere's bottom altitude.
+        pint.Quantity: Atmosphere bottom altitude.
         """
         pass
 
@@ -94,20 +91,14 @@ class Atmosphere(SceneElement, ABC):
     @abstractmethod
     def top(self) -> pint.Quantity:
         """
-        Return the atmosphere's top altitude.
-
-        Returns → :class:`~pint.Quantity`:
-            Atmosphere's top altitude.
+        pint.Quantity: Atmosphere top altitude.
         """
         pass
 
     @property
     def height(self) -> pint.Quantity:
         """
-        Return the atmosphere's height.
-
-        Returns → :class:`~pint.Quantity`:
-            Atmosphere's height.
+        pint.Quantity: Atmosphere height.
         """
         return self.top - self.bottom
 
@@ -257,12 +248,12 @@ class Atmosphere(SceneElement, ABC):
 
         if ctx.ref:
             kernel_phase = self.kernel_phase(ctx=ctx)
-            kernel_dict.data[f"phase_{self.id}"] = kernel_phase[f"phase_{self.id}"]
+            kernel_dict.data[f"phase_{self.id}"] = onedict_value(kernel_phase)
             kernel_media = self.kernel_media(ctx=ctx)
-            kernel_dict.data[f"medium_{self.id}"] = kernel_media[f"medium_{self.id}"]
+            kernel_dict.data[f"medium_{self.id}"] = onedict_value(kernel_media)
 
         kernel_shapes = self.kernel_shapes(ctx=ctx)
-        kernel_dict.data[self.id] = kernel_shapes[f"shape_{self.id}"]
+        kernel_dict.data[self.id] = onedict_value(kernel_shapes)
 
         return kernel_dict
 
@@ -275,26 +266,28 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     interface common to all heterogeneous atmosphere models.
     """
 
-    sigma_t_filename: str = documented(
+    _sigma_t_filename: t.Optional[str] = documented(
         attr.ib(
-            default="sigma_t.vol",
-            converter=str,
-            validator=attr.validators.instance_of(str),
+            default=None,
+            converter=attr.converters.optional(str),
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
         ),
-        doc="Name of the extinction coefficient volume data file.",
-        type="str",
-        default='"sigma_t.vol"',
+        doc="Name of the extinction coefficient volume data file. If unset, a "
+        "file name will be generated automatically.",
+        type="str or None",
+        init_type="str, optional",
     )
 
-    albedo_filename: str = documented(
+    _albedo_filename: str = documented(
         attr.ib(
-            default="albedo.vol",
-            converter=str,
-            validator=attr.validators.instance_of(str),
+            default=None,
+            converter=attr.converters.optional(str),
+            validator=attr.validators.optional(attr.validators.instance_of(str)),
         ),
-        doc="Name of the albedo volume data file.",
-        type="str",
-        default='"albedo.vol"',
+        doc="Name of the albedo volume data file. If unset, a file name will "
+        "be generated automatically.",
+        type="str or None",
+        init_type="str, optional",
     )
 
     cache_dir: pathlib.Path = documented(
@@ -322,12 +315,40 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     # --------------------------------------------------------------------------
 
     @property
-    def albedo_file(self) -> pathlib.Path:
-        return self.cache_dir / self.albedo_filename
+    def sigma_t_filename(self) -> str:
+        """
+        str: Name of the extinction coefficient volume data file.
+        """
+        return (
+            self._sigma_t_filename
+            if self._sigma_t_filename is not None
+            else f"{self.id}_sigma_t.vol"
+        )
 
     @property
     def sigma_t_file(self) -> pathlib.Path:
+        """
+        path: Absolute path to the extinction coefficient volume data file
+        """
         return self.cache_dir / self.sigma_t_filename
+
+    @property
+    def albedo_filename(self) -> str:
+        """
+        str: Name of the albedo volume data file.
+        """
+        return (
+            self._albedo_filename
+            if self._albedo_filename is not None
+            else f"{self.id}_sigma_t.vol"
+        )
+
+    @property
+    def albedo_file(self) -> pathlib.Path:
+        """
+        path: Absolute path to the albedo volume data file.
+        """
+        return self.cache_dir / self.albedo_filename
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -400,7 +421,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
         radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
-        albedo = to_quantity(radprops.albedo).m_as(uck.get("albedo"))
+        albedo = radprops.albedo.values
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
 
         write_binary_grid3d(
