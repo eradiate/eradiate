@@ -9,7 +9,7 @@ import pint
 import pinttr
 
 
-def onedict_value(d: t.Mapping):
+def onedict_value(d: t.Mapping) -> t.Any:
     """
     Get the value of a single-entry dictionary.
 
