@@ -13,6 +13,8 @@ from ...contexts import KernelDictContext
 @attr.s
 class RayleighPhaseFunction(PhaseFunction):
     """
+    Rayleigh phase function [``rayleigh``].
+
     The Rayleigh phase function models scattering by particles with a
     characteristic size much smaller than the considered radiation wavelength.
     It is typically used to represent scattering by gas molecules in the

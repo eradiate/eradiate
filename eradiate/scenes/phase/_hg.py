@@ -20,6 +20,8 @@ from ...exceptions import UnsupportedModeError
 @attr.s
 class HenyeyGreensteinPhaseFunction(PhaseFunction):
     """
+    Henyey-Greenstein phase function [``hg``].
+
     The Henyey-Greenstein phase function :cite:`Henyey1941Diffuse` models
     scattering in an isotropic medium. The scattering pattern is controlled by
     its :math:`g` parameter, which is equal to the phase function's asymmetry
