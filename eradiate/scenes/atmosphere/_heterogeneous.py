@@ -1,7 +1,8 @@
 """
 Heterogeneous atmospheres.
 """
-import pathlib
+from __future__ import annotations
+
 import typing as t
 from collections import abc as cabc
 
@@ -14,12 +15,11 @@ from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecules import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
 from ..core import KernelDict
+from ..phase import BlendPhaseFunction
+from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...kernel.gridvolume import write_binary_grid3d
-from ...kernel.transform import map_unit_cube
 from ...units import to_quantity
-from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
@@ -114,8 +114,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         ),
         doc="Molecular atmosphere. Can be specified as a dictionary interpreted "
         'by :data:`.atmosphere_factory`; in that case, the ``"type"`` parameter '
-        'can be ommitted and will automatically be set to \'``"molecular"``.',
-        type=":class:`.MolecularAtmosphere`, optional",
+        'can be omitted and will automatically be set to \'``"molecular"``.',
+        type=":class:`.MolecularAtmosphere` or None",
         init_type=":class:`.MolecularAtmosphere` or dict, optional",
         default="None",
     )
@@ -130,53 +130,18 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         ),
         doc="Particle layers. Can be specified as a dictionary interpreted "
         "by :data:`.atmosphere_factory`; in that case, the ``type`` parameter "
-        "can be ommitted and will automatically be set to "
+        "can be omitted and will automatically be set to "
         "``particle_layer``.",
         type="list of :class:`.ParticleLayer`",
+        init_type="list of :class:`.ParticleLayer`, optional",
         default="[]",
     )
 
-    weight_filename: str = documented(
-        attr.ib(
-            default="weight.vol",
-            converter=str,
-            validator=attr.validators.instance_of(str),
-        ),
-        doc="Name of the weight volume data file",
-        type="str",
-        default='"weight.vol"',
-    )
-
-    @particle_layers.validator
-    def _validate_particle_layer(instance, attribute, value):
-        if len(value) > 1:
-            raise NotImplementedError(
-                "Support for more than one particle layer is not yet available."
-            )
-
     @molecular_atmosphere.validator
     @particle_layers.validator
-    def _validate_ids(instance, attribute, value):
-        ids = set()
-
-        for component in instance.components:
-            if not component.id in ids:
-                ids.add(component.id)
-            else:
-                raise ValueError(
-                    f"while validating {attribute.name}: found duplicate "
-                    f"component ID '{component.id}'; "
-                    f"all components (molecular atmosphere and particle layers) "
-                    f"must have different IDs"
-                )
-
-    @molecular_atmosphere.validator
-    @particle_layers.validator
-    def _validate_widths(instance, attribute, value):
-        if not all([component.width is AUTO for component in instance.components]):
-            raise ValueError(
-                "all components must have their 'width' attribute set to 'AUTO'"
-            )
+    def _component_validator(self, attribute, value):
+        if not all([component.width is AUTO for component in self.components]):
+            raise ValueError("all components must have their 'width' field set to AUTO")
 
     @property
     def components(self) -> t.List[t.Union[MolecularAtmosphere, ParticleLayer]]:
@@ -184,13 +149,13 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         result.extend(self.particle_layers)
         return result
 
-    # --------------------------------------------------------------------------
-    #                        Volume data files
-    # --------------------------------------------------------------------------
+    def update(self):
+        super().update()
 
-    @property
-    def weight_file(self) -> pathlib.Path:
-        return self.cache_dir / self.weight_filename
+        # Force IDs and cache directories
+        for i, component in enumerate(self.components):
+            component.id = f"{self.id}_component_{i}"
+            component.cache_dir = self.cache_dir
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
@@ -231,60 +196,66 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def _high_res_z_layer(self) -> pint.Quantity:
         """
         A high-resolution layer altitude mesh to interpolate the components'
-        radiative properties on, before computinf the total radiative
+        radiative properties on, before computing the total radiative
         properties.
         """
         z_level = np.linspace(self.bottom, self.top, 100001)
-        z_layer = (z_level[1:] + z_level[:-1]) / 2.0
+        z_layer = 0.5 * (z_level[1:] + z_level[:-1])
         return z_layer
 
-    def eval_radprops(self, spectral_ctx: SpectralContext) -> t.Optional[xr.Dataset]:
+    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
         """
-        Evaluates the total (molecular atmosphere + particle layer) radiative
-        properties.
+        Evaluate the extinction coefficients and albedo profiles.
 
-        If there is no molecular atmosphere, the radiative properties of the
-        particle layer are returned.
-        If there is no particle layer, the radiative properties of the molecular
-        atmosphere are returned.
-        If there is a molecular atmosphere and a particle layer, their
-        radiative properties are interpolated on a high resolution altitude
-        mesh before the total radiative properties are computed.
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Returns
+        -------
+        Dataset
+            A dataset containing with the following variables for the specified
+            spectral context:
+
+            * ``sigma_t``: extinction coefficient;
+            * ``albedo``: albedo.
+
+            Coordinates are the following:
+
+            * ``z``: altitude.
         """
-        # Nothing
-        if self.molecular_atmosphere is None and not self.particle_layers:
+        components = self.components
+
+        # Nothing: return zeros
+        if len(components) == 0:
             return _zero_radprops(spectral_ctx)
-        # Only a particle layer
-        elif self.molecular_atmosphere is None and self.particle_layers:
-            return self.particle_layers[0].eval_radprops(spectral_ctx)
-        # Only a molecular atmosphere
-        elif self.molecular_atmosphere is not None and not self.particle_layers:
-            return self.molecular_atmosphere.eval_radprops(spectral_ctx)
-        # Both a molecular atmosphere and a particle layer
+
+        # Single component: just forward encapsulated component
+        elif len(components) == 1:
+            return components[0].eval_radprops(spectral_ctx)
+
+        # Two components or more: interpolate all components on a fine grid and
+        # aggregate collision coefficients
         else:
             hrz = self._high_res_z_layer()
+            sigma_ss = []
+            sigma_ts = []
 
-            molecular = interpolate_radprops(
-                self.molecular_atmosphere.eval_radprops(spectral_ctx),
-                new_z_layer=hrz,
-            )
-
-            layer = interpolate_radprops(
-                radprops=self.particle_layers[0].eval_radprops(spectral_ctx),
-                new_z_layer=hrz,
-            )
-
-            # total radiative properties
-            with xr.set_options(keep_attrs=True):
-                sigma_t = molecular.sigma_t + layer.sigma_t
-                albedo = np.divide(
-                    layer.albedo * layer.sigma_t + molecular.albedo * molecular.sigma_t,
-                    sigma_t,
-                    where=sigma_t != 0.0,
-                    out=np.ones_like(sigma_t),
+            for component in components:
+                radprops = interpolate_radprops(
+                    component.eval_radprops(spectral_ctx), new_z_layer=hrz
                 )
-                weight = np.divide(
-                    layer.sigma_t,
+                sigma_ts.append(radprops.sigma_t)
+                sigma_ss.append(radprops.sigma_t * radprops.albedo)
+
+            with xr.set_options(keep_attrs=True):
+                sigma_t = sum(sigma_ts)
+                sigma_s = sum(sigma_ss)
+                albedo = np.divide(
+                    sigma_s,
                     sigma_t,
                     where=sigma_t != 0.0,
                     out=np.ones_like(sigma_t),
@@ -294,7 +265,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 data_vars={
                     "sigma_t": sigma_t,
                     "albedo": albedo,
-                    "weight": weight,
                 }
             )
 
@@ -302,22 +272,19 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _gridvolume_to_world_trafo(self, ctx: KernelDictContext) -> t.Any:
-        """
-        Returns the 'to_world' transformation for gridvolume plugins.
-        """
-        length_units = uck.get("length")
-        width = self.kernel_width(ctx).m_as(length_units)
-        top = self.top.m_as(length_units)
-        bottom = self.bottom.m_as(length_units)
-        return map_unit_cube(
-            xmin=-width / 2.0,
-            xmax=width / 2.0,
-            ymin=-width / 2.0,
-            ymax=width / 2.0,
-            zmin=bottom,
-            zmax=top,
-        )
+    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
+        if len(self.components) == 0:
+            return KernelDict()
+
+        else:
+            return super().kernel_shapes(ctx)
+
+    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
+        if len(self.components) == 0:
+            return KernelDict()
+
+        else:
+            return super().kernel_media(ctx)
 
     def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
         """
@@ -335,88 +302,51 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             A kernel dictionary containing all the phase functions attached to
             the atmosphere.
         """
-        # nothing
-        if self.molecular_atmosphere is None and not self.particle_layers:
-            return {}
+        components = self.components
 
-        # only a particle particle
-        elif self.molecular_atmosphere is None:
-            particle_layer = self.particle_layers[0]
+        # Nothing: return empty dict
+        if len(components) == 0:
+            return KernelDict()
+
+        # Single component: just forward encapsulated component
+        elif len(components) == 1:
             return KernelDict(
                 {
-                    f"phase_{self.id}": particle_layer.kernel_phase(ctx).data[
-                        f"phase_{particle_layer.id}"
-                    ]
+                    f"phase_{self.id}": onedict_value(
+                        components[0].kernel_phase(ctx).data
+                    )
                 }
             )
-        # only a molecular atmosphere
-        elif not self.particle_layers:
-            return KernelDict(
-                {
-                    f"phase_{self.id}": self.molecular_atmosphere.kernel_phase(
-                        ctx
-                    ).data[f"phase_{self.molecular_atmosphere.id}"]
-                }
-            )
-        # a molecular atmosphere and a molecular particle layer
+
+        # Two components or more: blend phase functions
         else:
-            radprops = self.eval_radprops(ctx.spectral_ctx)
-            write_binary_grid3d(
-                filename=self.weight_file,
-                values=radprops.weight.values[np.newaxis, np.newaxis, ...],
-            )
-            return KernelDict(
-                {
-                    f"phase_{self.id}": {
-                        "type": "blendphase",
-                        "weight": {
-                            "type": "gridvolume",
-                            "filename": str(self.weight_file),
-                            "to_world": self._gridvolume_to_world_trafo(ctx=ctx),
-                        },
-                        **self.molecular_atmosphere.kernel_phase(ctx=ctx),
-                        **self.particle_layers[0].kernel_phase(ctx=ctx),
-                    }
-                }
+            # Component weights are given by the scattering coefficient:
+            # we collect values and interpolate on the global grid
+            hrz = self._high_res_z_layer()
+            sigma_ss = []
+
+            for component in components:
+                radprops = interpolate_radprops(
+                    component.eval_radprops(ctx.spectral_ctx), new_z_layer=hrz
+                )
+                sigma_ss.append(radprops.sigma_t * radprops.albedo)
+
+            # Construct a blended phase function based on those weighting values
+            phase = BlendPhaseFunction(
+                components=[component.phase for component in components],
+                weights=sigma_ss,
             )
 
+            return phase.kernel_dict(ctx)
 
-def blend_radprops(
-    background: xr.Dataset, foreground: xr.Dataset
-) -> t.Tuple[xr.Dataset, xr.DataArray]:
-    """
-    Blend radiative properties of two participating media.
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        # Shortcut: an empty HeterogeneousAtmosphere returns no kernel object
+        components = self.components
+        if len(components) == 0:
+            return KernelDict()
 
-    Returns
-    -------
-    tuple[:class:`~xarray.Dataset`, :class:`~xarray.DataArray`]
-        Radiative properties resulting from the blending of the two participating
-        media, in the altitude range of the foreground participating medium.
-
-    Notes
-    -----
-    Assumes 'z_layer' is in same units in 'molecules' and in 'particles'.
-    """
-    background = interpolate_radprops(
-        radprops=background, new_z_layer=to_quantity(foreground.z_layer)
-    )
-
-    with xr.set_options(keep_attrs=True):
-        blend_sigma_t = background.sigma_t + foreground.sigma_t
-        background_ratio = xr.where(
-            blend_sigma_t != 0.0, background.sigma_t / blend_sigma_t, 0.5
-        )  # broadcast 0.5
-        foreground_ratio = xr.where(
-            blend_sigma_t != 0.0, foreground.sigma_t / blend_sigma_t, 0.5
-        )  # broadcast 0.5
-        blend_albedo = (
-            background.albedo * background_ratio + foreground.albedo * foreground_ratio
-        )
-
-    blended_radprops = xr.Dataset(
-        data_vars={"sigma_t": blend_sigma_t, "albedo": blend_albedo}
-    )
-    return (blended_radprops, foreground_ratio)
+        else:
+            return super().kernel_dict(ctx)
 
 
 def interpolate_radprops(
@@ -437,8 +367,8 @@ def interpolate_radprops(
 
     Returns
     -------
-    :class:`~xarray.Dataset`
-        Interpolated radiative propery data set.
+    interpolated : Dataset
+        Interpolated radiative property data set.
     """
     mask = (new_z_layer >= to_quantity(radprops.z_level).min()) & (
         new_z_layer <= to_quantity(radprops.z_level).max()
@@ -464,30 +394,3 @@ def interpolate_radprops(
         )
 
     return interpolated
-
-
-def overlapping(
-    particle_layers: t.List[ParticleLayer], particle_layer: ParticleLayer
-) -> t.List[ParticleLayer]:
-    """
-    Return the particle layers that are overlapping a given particle layer.
-
-    Parameters
-    ----------
-     particle_layers : list of :class:`.ParticleLayer`
-        List of particle layers to check for overlap.
-
-    particle_layer : :class:`.ParticleLayer`
-        The given particle layer.
-
-    Returns
-    -------
-    list of :class:`.ParticleLayer`
-        Overlapping particle layers.
-    """
-    return [
-        layer
-        for layer in particle_layers
-        if particle_layer.top >= layer.top > particle_layer.bottom
-        or particle_layer.top > layer.bottom >= particle_layer.bottom
-    ]
