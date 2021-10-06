@@ -8,12 +8,11 @@ import pytest
 from eradiate import path_resolver, unit_context_config
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
+from eradiate.kernel.gridvolume import read_binary_grid3d, write_binary_grid3d
 from eradiate.radprops import US76ApproxRadProfile
 from eradiate.radprops.rad_profile import AFGL1986RadProfile, ArrayRadProfile
 from eradiate.scenes.atmosphere._heterogeneous_legacy import (
     HeterogeneousAtmosphereLegacy,
-    read_binary_grid3d,
-    write_binary_grid3d,
 )
 from eradiate.scenes.core import KernelDict
 

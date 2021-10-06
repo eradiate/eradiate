@@ -11,15 +11,11 @@ import attr
 import numpy as np
 import pint
 
-from ._core import (
-    Atmosphere,
-    atmosphere_factory,
-    read_binary_grid3d,
-    write_binary_grid3d,
-)
+from ._core import Atmosphere, atmosphere_factory
 from ..core import KernelDict
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext
+from ...kernel.gridvolume import read_binary_grid3d, write_binary_grid3d
 from ...kernel.transform import map_cube, map_unit_cube
 from ...radprops import rad_profile_factory
 from ...radprops.rad_profile import RadProfile, US76ApproxRadProfile
