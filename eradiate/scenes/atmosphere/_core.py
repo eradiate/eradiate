@@ -299,7 +299,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     cache_dir: pathlib.Path = documented(
         attr.ib(
-            default=pathlib.Path(tempfile.mkdtemp()),
+            factory=lambda: pathlib.Path(tempfile.mkdtemp()),
             converter=pathlib.Path,
             validator=attr.validators.instance_of(pathlib.Path),
         ),
