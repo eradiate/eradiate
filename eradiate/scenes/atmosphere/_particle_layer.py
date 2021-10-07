@@ -22,7 +22,8 @@ from ._particle_dist import (
     particle_distribution_factory,
 )
 from ..core import KernelDict
-from ... import path_resolver
+from ..phase import TabulatedPhaseFunction
+from ... import path_resolver, validators
 from ..._mode import ModeFlags
 from ...attrs import AUTO, documented, parse_docs
 from ...ckd import Bindex
@@ -95,9 +96,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     @_bottom.validator
     @_top.validator
-    def _bottom_and_top_validator(instance, attribute, value):
-        if instance.bottom >= instance.top:
-            raise ValueError("bottom altitude must be lower than top altitude")
+    def _bottom_top_validator(self, attribute, value):
+        if self.bottom >= self.top:
+            raise ValueError(
+                f"while validating '{attribute.name}': bottom altitude must be "
+                "lower than top altitude "
+                f"(got bottom={self.bottom}, top={self.top})"
+            )
 
     distribution: ParticleDistribution = documented(
         attr.ib(
@@ -106,9 +111,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             validator=attr.validators.instance_of(ParticleDistribution),
         ),
         doc="Particle distribution.",
-        init_type=":class:`ParticleDistribution` or dict",
-        type=":class:`ParticleDistribution`",
-        default=":class:`Uniform`",
+        init_type=":class:`.ParticleDistribution` or dict, optional",
+        type=":class:`.ParticleDistribution`",
+        default=":class:`UniformParticleDistribution() <.UniformParticleDistribution>`",
     )
 
     tau_550: pint.Quantity = documented(
@@ -134,40 +139,31 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             converter=int,
             validator=attr.validators.instance_of(int),
         ),
-        doc="Number of layers inside the particle layer.",
+        doc="Number of layers in which the particle layer is discretised.",
         type="int",
         default="16",
     )
 
-    dataset: str = documented(
+    # TODO: replace with actual data set and load through data interface
+    # TODO: change defaults to production data
+    dataset: pathlib.Path = documented(
         attr.ib(
             default=path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc"),
-            converter=str,
-            validator=attr.validators.instance_of(str),
+            converter=path_resolver.resolve,
+            validator=[attr.validators.instance_of(pathlib.Path), validators.is_file],
         ),
-        doc="Particles radiative properties data set path.",
-        type="str",
+        doc="Path to particle radiative property data set. Defaults to testing data.",
+        type="Path",
+        init_type="path-like",
     )
 
-    weight_filename: t.Optional[str] = documented(
-        attr.ib(
-            default="weight.vol",
-            converter=attr.converters.optional(str),
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
-        ),
-        doc="Name of the weight volume data file if the phase function is of "
-        'type ``"blendphase"``.',
-        type="str",
-        default='"weight.vol"',
-    )
+    _phase: t.Optional[TabulatedPhaseFunction] = attr.ib(default=None, init=False)
 
-    # --------------------------------------------------------------------------
-    #                        Volume data files
-    # --------------------------------------------------------------------------
+    def update(self) -> None:
+        super().update()
 
-    @property
-    def weight_file(self) -> pathlib.Path:
-        return self.cache_dir / self.weight_filename
+        with xr.open_dataset(self.dataset) as ds:
+            self._phase = TabulatedPhaseFunction(id=f"phase_{self.id}", data=ds.phase)
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -181,8 +177,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def bottom(self) -> pint.Quantity:
         return self._bottom
 
-    def eval_width(self, ctx: t.Optional[KernelDictContext]) -> pint.Quantity:
-        if ctx is not None and ctx.override_scene_width is not None:
+    def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
+        if ctx.override_scene_width is not None:
             if self.width is not AUTO:
                 warnings.warn(OverriddenValueWarning("Overriding particle layer width"))
             return ctx.override_scene_width
@@ -225,7 +221,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             Layer altitude mesh.
         """
         z_level = self.z_level
-        return (z_level[:-1] + z_level[1:]) / 2.0
+        return 0.5 * (z_level[:-1] + z_level[1:])
 
     def eval_fractions(self) -> np.ndarray:
         """
@@ -241,26 +237,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
     #                       Radiative properties
     # --------------------------------------------------------------------------
-
-    def eval_phase(self, spectral_ctx: SpectralContext) -> xr.DataArray:
-        """
-        Evaluate the phase function.
-
-        The phase function is represented by a :class:`~xarray.DataArray` with
-        a :math:`\\mu` (``mu``) coordinate for the scattering angle cosine
-        (:math:`\\mu \\in [-1, 1]`).
-
-        Returns
-        -------
-        DataArray
-            Phase function.
-        """
-        ds = xr.open_dataset(self.dataset)
-        return ds.phase.sel(i=0, j=0).interp(
-            w=spectral_ctx.wavelength.m_as(ds.w.units),
-            mu=np.linspace(-1, 1, 201),
-            kwargs=dict(bounds_error=True),
-        )
 
     def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
@@ -299,7 +275,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return albedo_array
 
     def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        raise NotImplementedError
+        w_units = ureg.nm
+        w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
+        return self.eval_albedo_mono(w)
 
     def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
@@ -327,16 +305,15 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
+        with xr.open_dataset(self.dataset) as ds:
+            ds_w_units = ureg(ds.w.attrs["units"])
 
-        ds = xr.open_dataset(self.dataset)
+            # find the extinction data variable
+            for dv in ds.data_vars:
+                standard_name = ds[dv].standard_name
+                if "extinction" in standard_name:
+                    extinction = ds[dv]
 
-        # find the extinction data variable
-        for dv in ds.data_vars:
-            standard_name = ds[dv].standard_name
-            if "extinction" in standard_name:
-                extinction = ds[dv]
-
-        ds_w_units = ureg.Unit(ds.w.attrs["units"])
         wavelength = w.m_as(ds_w_units)
         xs_t = to_quantity(extinction.interp(w=wavelength))
         xs_t_550 = to_quantity(
@@ -353,7 +330,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return normalized_sigma_t_array * xs_t / xs_t_550
 
     def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        raise NotImplementedError
+        w_units = ureg.nm
+        w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
+        return self.eval_sigma_t_mono(w)
 
     def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
@@ -371,7 +350,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         quantity
             Particle layer extinction coefficient.
         """
-        # TODO: no z_level here?
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
 
@@ -382,25 +360,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
-        """
-        Evaluate absorption coefficient given a spectral context.
-
-        Parameters
-        ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
-
-        Returns
-        -------
-        quantity
-            Particle layer absorption coefficient.
-        """
         return self.eval_sigma_t_mono(w) - self.eval_sigma_s_mono(w)
 
     def eval_sigma_a_ckd(self, *bindexes: Bindex):
-        raise NotImplementedError
+        return self.eval_sigma_t_ckd(*bindexes) - self.eval_sigma_s_ckd(*bindexes)
 
     def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
@@ -414,6 +377,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             quadrature point index in CKD mode).
 
         Returns
+        -------
         quantity
             Particle layer scattering coefficient.
         """
@@ -430,7 +394,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return self.eval_sigma_t_mono(w) * self.eval_albedo_mono(w)
 
     def eval_sigma_s_ckd(self, *bindexes: Bindex):
-        raise NotImplementedError
+        return self.eval_sigma_t_ckd(*bindexes) * self.eval_albedo_ckd(*bindexes)
 
     def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
         """
@@ -449,12 +413,11 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         Dataset
             Particle layer radiative properties profile dataset.
         """
-        # TODO: Rename eval_dataset()?
-
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
             sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx)
             albedo = self.eval_albedo(spectral_ctx=spectral_ctx)
             wavelength = spectral_ctx.wavelength
+
             return xr.Dataset(
                 data_vars={
                     "sigma_t": (
@@ -508,7 +471,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             ).isel(w=0)
 
         else:
-            raise UnsupportedModeError(supported="monochromatic")
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     @staticmethod
     @ureg.wraps(ret="km^-1", args=("", "km", ""), strict=False)
@@ -517,9 +480,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         Normalise extinction coefficient values :math:`k_i` so that:
 
         .. math::
-            \sum_i k_i \Delta z = \tau_{550}
+           \sum_i k_i \Delta z = \tau_{550}
 
-        where :math:`tau` is the particle layer optical thickness.
+        where :math:`\tau` is the particle layer optical thickness.
 
         Parameters
         ----------
@@ -543,13 +506,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
+    @property
+    def phase(self) -> TabulatedPhaseFunction:
+        return self._phase
+
     def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
-        particles_phase = self.eval_phase(spectral_ctx=ctx.spectral_ctx)
-        return KernelDict(
-            {
-                f"phase_{self.id}": {
-                    "type": "lutphase",
-                    "values": ",".join([str(value) for value in particles_phase.data]),
-                }
-            }
-        )
+        return self.phase.kernel_dict(ctx)

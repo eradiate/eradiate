@@ -12,7 +12,7 @@ import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecules import MolecularAtmosphere
-from ._particles import ParticleLayer
+from ._particle_layer import ParticleLayer
 from ..core import KernelDict
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext

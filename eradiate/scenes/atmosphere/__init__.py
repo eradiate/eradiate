@@ -4,7 +4,7 @@ from ._heterogeneous import HeterogeneousAtmosphere
 from ._homogeneous import HomogeneousAtmosphere
 from ._molecules import MolecularAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
-from ._particles import ParticleLayer
+from ._particle_layer import ParticleLayer
 
 __all__ = [
     "Atmosphere",
