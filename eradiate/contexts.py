@@ -305,3 +305,18 @@ class KernelDictContext(Context):
         type="quantity, optional",
         init_type="quantity or float, optional",
     )
+
+    override_canopy_width: t.Optional[pint.Quantity] = documented(
+        pinttr.ib(
+            default=None,
+            units=ucc.deferred("length"),
+            on_setattr=None,  # frozen classes can't use on_setattr
+        ),
+        doc="If relevant, value which must be used as the canopy width "
+        "(*e.g.* when the size of the central patch in a :class:`.CentralPatchSurface` "
+        "has to match a padded canopy).\n"
+        "\n"
+        "Unit-enabled field (default: ucc['length']).",
+        type="quantity or None",
+        init_type="quantity or float, optional",
+    )
