@@ -12,6 +12,7 @@ Experiment simulation [eradiate.experiments]
    EarthObservationExperiment
    OneDimExperiment
    RamiExperiment
+   Rami4ATMExperiment
 
 **Solver internals**
 

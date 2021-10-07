@@ -125,6 +125,7 @@ Surfaces [eradiate.scenes.surface]
    :toctree: generated/autosummary/
 
    BlackSurface
+   CentralPatchSurface
    CheckerboardSurface
    LambertianSurface
    RPVSurface
