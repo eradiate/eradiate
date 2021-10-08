@@ -281,7 +281,9 @@ class SceneElement(ABC):
             validator=attr.validators.optional(attr.validators.instance_of(str)),
         ),
         doc="User-defined object identifier.",
-        type="str, optional",
+        type="str or None",
+        init_type="str, optional",
+        default="None",
     )
 
     def _kernel_dict_id(self) -> t.Dict:

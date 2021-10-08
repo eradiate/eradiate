@@ -24,5 +24,6 @@ class Illumination(SceneElement, ABC):
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),
+        init_type=get_doc(SceneElement, "id", "init_type"),
         default='"illumination"',
     )
