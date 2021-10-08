@@ -12,7 +12,7 @@ import pint
 import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
-from ._molecules import MolecularAtmosphere
+from ._molecular_atmosphere import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
 from ..core import KernelDict
 from ..phase import BlendPhaseFunction

@@ -172,19 +172,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             raise NotImplementedError("Unsupported thermophysical properties data set.")
 
     def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
-        """
-        Evaluates the molecular atmosphere's radiative properties.
-
-        Parameters
-        ----------
-        spectral_ctx : :class:`SpectralContext`
-            Spectral context.
-
-        Returns
-        -------
-        :class:`~xarray.Dataset`
-            Radiative properties dataset.
-        """
         return self.radprops_profile.eval_dataset(spectral_ctx=spectral_ctx)
 
     # --------------------------------------------------------------------------
