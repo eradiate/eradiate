@@ -1,4 +1,5 @@
-"""Test cases of the _molecules module."""
+"""Test cases of the _molecular_atmosphere module."""
+
 import pytest
 
 from eradiate import path_resolver
