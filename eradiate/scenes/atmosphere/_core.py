@@ -355,7 +355,8 @@ def read_binary_grid3d(filename: str) -> np.ndarray:
 @attr.s
 class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     """
-    Heterogeneous atmosphere abstract base class.
+    Heterogeneous atmosphere abstract base class. This class defines the basic
+    interface common to all heterogeneous atmosphere models.
     """
 
     sigma_t_filename: str = documented(

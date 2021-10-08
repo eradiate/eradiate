@@ -27,6 +27,7 @@ Atmosphere [eradiate.scenes.atmosphere]
    :toctree: generated/autosummary/
 
    Atmosphere
+   AbstractHeterogeneousAtmosphere
 
 **Factories**
 
