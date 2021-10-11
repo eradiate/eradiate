@@ -130,7 +130,9 @@ class SolarIrradianceSpectrum(Spectrum):
             wmax_m = bin.wmax.m_as(wavelength_units)
 
             # -- Collect relevant spectral coordinate values
-            w_m = to_quantity(self.data.ssi.w).m_as(wavelength_units)
+            w_m = ureg.convert(
+                self.data.ssi.w.values, self.data.ssi.w.attrs["units"], wavelength_units
+            )
             w = (
                 np.hstack(
                     (
