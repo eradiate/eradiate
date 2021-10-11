@@ -27,3 +27,24 @@ Volume data file I/O routines [eradiate.kernel.gridvolume]
 
    write_binary_grid3d
    read_binary_grid3d
+
+Logging [eradiate.kernel.logging]
+---------------------------------
+
+.. currentmodule:: eradiate.kernel.logging
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   install_logging
+
+Geometric transforms [eradiate.kernel.transform]
+------------------------------------------------
+
+.. currentmodule:: eradiate.kernel.transform
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   map_cube
+   map_unit_cube
