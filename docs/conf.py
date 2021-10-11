@@ -196,6 +196,7 @@ napoleon_type_aliases = {
     "sequence": ":term:`sequence`",
     # stdlib type aliases
     "MutableMapping": "~collections.abc.MutableMapping",
+    "Path": "~pathlib.Path",
     # numpy terms and aliases
     "array": ":term:`array`",
     "array_like": ":term:`array_like`",
