@@ -1,4 +1,4 @@
-import pathlib
+import os
 import struct
 import typing as t
 
@@ -7,7 +7,7 @@ import xarray as xr
 
 
 def write_binary_grid3d(
-    filename: t.Union[str, pathlib.Path], values: t.Union[np.ndarray, xr.DataArray]
+    filename: os.PathLike, values: t.Union[np.ndarray, xr.DataArray]
 ) -> None:
     """
     Write volume data to a binary file so that a ``gridvolume`` kernel plugin

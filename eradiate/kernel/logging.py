@@ -82,9 +82,14 @@ def _get_logger():
     return Thread.thread().logger()
 
 
-def install_logging(force=False):
+def install_logging(force: bool = False) -> None:
     """
-    Install logging
+    Activate Python logging framework for Mitsuba.
+
+    Parameters
+    ----------
+    force : bool, optional
+        If ``True``, force-reactivate logging.
     """
     global mts_logger
 
