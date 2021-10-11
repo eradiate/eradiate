@@ -170,9 +170,19 @@ class BlendPhaseFunction(PhaseFunction):
             phase_dict_2 = onedict_value(self.components[1].kernel_dict(ctx))
 
         else:
-            marginal_weights = self.weights[1:, ...] / np.sum(
-                self.weights[1:, ...], axis=0
+            sub_weights = self.weights[1:, ...]
+            sum_sub_weights = np.sum(self.weights[1:, ...], axis=0)
+
+            # Zero divisions might occur when the last component has zero
+            # scattering coefficient. In order to prevent those to happen, we
+            # detect them and assign 1 to the last probability.
+            marginal_weights = np.divide(
+                sub_weights,
+                sum_sub_weights,
+                where=sum_sub_weights != 0.0,
+                out=np.ones_like(sub_weights),
             )
+
             phase_dict_2 = onedict_value(
                 BlendPhaseFunction(
                     id=f"{self.id}_phase2",
