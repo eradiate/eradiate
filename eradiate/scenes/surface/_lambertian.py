@@ -3,6 +3,7 @@ import typing as t
 import attr
 
 from ._core import Surface, surface_factory
+from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
@@ -35,10 +36,12 @@ class LambertianSurface(Surface):
         default="0.5",
     )
 
-    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
-        return {
-            f"bsdf_{self.id}": {
-                "type": "diffuse",
-                "reflectance": self.reflectance.kernel_dict(ctx=ctx)["spectrum"],
+    def bsdfs(self, ctx: KernelDictContext) -> KernelDict:
+        return KernelDict(
+            {
+                f"bsdf_{self.id}": {
+                    "type": "diffuse",
+                    "reflectance": self.reflectance.kernel_dict(ctx=ctx)["spectrum"],
+                }
             }
-        }
+        )

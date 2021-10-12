@@ -3,6 +3,7 @@ import typing as t
 import attr
 
 from ._core import Surface, surface_factory
+from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ..._util import onedict_value
@@ -24,8 +25,10 @@ class RPVSurface(Surface):
     The default configuration corresponds to grassland (visible light)
     (:cite:`Rahman1993CoupledSurfaceatmosphereReflectance`, Table 1).
 
-    .. note:: Parameter names are defined as per the symbols used in the
-       Eradiate Scientific Handbook :cite:`EradiateScientificHandbook2020`.
+    Notes
+    -----
+    Parameter names are defined as per the symbols used in the Eradiate
+    Scientific Handbook :cite:`EradiateScientificHandbook2020`.
     """
 
     rho_0: Spectrum = documented(
@@ -92,13 +95,15 @@ class RPVSurface(Surface):
         default="-0.1",
     )
 
-    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
-        return {
-            f"bsdf_{self.id}": {
-                "type": "rpv",
-                "rho_0": onedict_value(self.rho_0.kernel_dict(ctx)),
-                "rho_c": onedict_value(self.rho_c.kernel_dict(ctx)),
-                "k": onedict_value(self.k.kernel_dict(ctx)),
-                "g": onedict_value(self.g.kernel_dict(ctx)),
+    def bsdfs(self, ctx: KernelDictContext) -> KernelDict:
+        return KernelDict(
+            {
+                f"bsdf_{self.id}": {
+                    "type": "rpv",
+                    "rho_0": onedict_value(self.rho_0.kernel_dict(ctx)),
+                    "rho_c": onedict_value(self.rho_c.kernel_dict(ctx)),
+                    "k": onedict_value(self.k.kernel_dict(ctx)),
+                    "g": onedict_value(self.g.kernel_dict(ctx)),
+                }
             }
-        }
+        )

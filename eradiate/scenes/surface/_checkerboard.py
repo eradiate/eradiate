@@ -3,6 +3,7 @@ import typing as t
 import attr
 
 from ._core import Surface, surface_factory
+from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
@@ -61,17 +62,19 @@ class CheckerboardSurface(Surface):
         default=2.0,
     )
 
-    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
+    def bsdfs(self, ctx: KernelDictContext) -> KernelDict:
         from mitsuba.core import ScalarTransform4f
 
-        return {
-            f"bsdf_{self.id}": {
-                "type": "diffuse",
-                "reflectance": {
-                    "type": "checkerboard",
-                    "color0": self.reflectance_a.kernel_dict(ctx=ctx)["spectrum"],
-                    "color1": self.reflectance_b.kernel_dict(ctx=ctx)["spectrum"],
-                    "to_uv": ScalarTransform4f.scale(self.scale_pattern),
-                },
+        return KernelDict(
+            {
+                f"bsdf_{self.id}": {
+                    "type": "diffuse",
+                    "reflectance": {
+                        "type": "checkerboard",
+                        "color0": self.reflectance_a.kernel_dict(ctx=ctx)["spectrum"],
+                        "color1": self.reflectance_b.kernel_dict(ctx=ctx)["spectrum"],
+                        "to_uv": ScalarTransform4f.scale(self.scale_pattern),
+                    },
+                }
             }
-        }
+        )
