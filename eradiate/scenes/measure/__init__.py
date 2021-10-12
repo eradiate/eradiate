@@ -7,9 +7,9 @@ from ._distant import (
     DistantReflectanceMeasure,
 )
 from ._distant_array import DistantArrayMeasure, DistantArrayReflectanceMeasure
+from ._multi_radiancemeter import MultiRadiancemeterMeasure
 from ._perspective import PerspectiveCameraMeasure
 from ._radiancemeter import RadiancemeterMeasure
-from ._radiancemeterarray import RadiancemeterArrayMeasure
 
 __all__ = [
     "Measure",
@@ -25,5 +25,5 @@ __all__ = [
     "DistantArrayReflectanceMeasure",
     "PerspectiveCameraMeasure",
     "RadiancemeterMeasure",
-    "RadiancemeterArrayMeasure",
+    "MultiRadiancemeterMeasure",
 ]

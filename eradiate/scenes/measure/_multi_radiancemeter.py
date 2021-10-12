@@ -14,14 +14,14 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
-@measure_factory.register(type_id="radiancemeterarray")
+@measure_factory.register(type_id="multi_radiancemeter")
 @parse_docs
 @attr.s
-class RadiancemeterArrayMeasure(Measure):
+class MultiRadiancemeterMeasure(Measure):
     """
-    Radiance meter array measure scene element [``radiancemeterarray``].
+    Radiance meter array measure scene element [``multi_radiancemeter``].
 
-    This measure scene element is a thin wrapper around the ``radiancemeterarray``
+    This measure scene element is a thin wrapper around the ``mradiancemeter``
     sensor kernel plugin. It records the incident power per unit area per unit
     solid angle along a number of rays defined by its ``origins`` and
     ``directions`` parameters.
@@ -78,7 +78,7 @@ class RadiancemeterArrayMeasure(Measure):
         for sensor_info in self.sensor_infos():
             result.append(
                 {
-                    "type": "radiancemeterarray",
+                    "type": "mradiancemeter",
                     "id": sensor_info.id,
                     "origins": ", ".join([str(x) for x in origins.ravel(order="C")]),
                     "directions": ", ".join(

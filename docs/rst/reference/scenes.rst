@@ -216,7 +216,7 @@ Measures [eradiate.scenes.measure]
    DistantArrayReflectanceMeasure
    PerspectiveCameraMeasure
    RadiancemeterMeasure
-   RadiancemeterArrayMeasure
+   MultiRadiancemeterMeasure
 
 **Target and origin specification for DistantMeasure**
 

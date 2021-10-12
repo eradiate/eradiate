@@ -1,11 +1,11 @@
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.measure._radiancemeterarray import RadiancemeterArrayMeasure
+from eradiate.scenes.measure._multi_radiancemeter import MultiRadiancemeterMeasure
 
 
-def test_radiancemeterarray_noargs(mode_mono):
+def test_multi_radiancemeter_noargs(mode_mono):
     # Instantiation succeeds
-    s = RadiancemeterArrayMeasure()
+    s = MultiRadiancemeterMeasure()
 
     # Film is appropriately set
     # fmt: off
@@ -26,9 +26,9 @@ def test_radiancemeterarray_noargs(mode_mono):
     assert KernelDict.from_elements(s, ctx=ctx).load() is not None
 
 
-def test_radiancemeter_args(mode_mono):
+def test_multi_radiancemeter_args(mode_mono):
     # Instantiation succeeds
-    s = RadiancemeterArrayMeasure(
+    s = MultiRadiancemeterMeasure(
         origins=[[0, 0, 0]] * 3, directions=[[1, 0, 0], [0, 1, 0], [0, 0, 1]]
     )
 
