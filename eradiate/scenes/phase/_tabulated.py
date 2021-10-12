@@ -122,7 +122,7 @@ class TabulatedPhaseFunction(PhaseFunction):
         return KernelDict(
             {
                 self.id: {
-                    "type": "lutphase",
+                    "type": "tabphase",
                     "values": ",".join(
                         map(str, [value for value in self.eval(ctx.spectral_ctx)])
                     ),
