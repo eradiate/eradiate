@@ -623,7 +623,7 @@ class MeasureResults:
             for sensor_id, data in val["values"].items():
                 if sensor_id not in sensor_ids:
                     sensor_ids.append(sensor_id)
-                film_size = np.maximum(film_size, data.shape[:2])
+                film_size = np.maximum(film_size, data.img.values.shape[:2])
 
         if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             spectral_coords_sort_key = lambda x: (
@@ -690,9 +690,9 @@ class MeasureResults:
                 # (i.e. cases in which sensors have different film sizes).
                 # To add support for it, blitting is probably a good approach
                 # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
-                data[i_spectral, i_sensor] = raw[spectral_coord]["values"][sensor_id][
-                    ..., 0
-                ]
+                data[i_spectral, i_sensor] = raw[spectral_coord]["values"][
+                    sensor_id
+                ].img.values[..., 0]
                 # This latter indexing selects only one channel in the raw data
                 # array: this works with mono variants but will fail otherwise
 

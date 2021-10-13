@@ -19,6 +19,7 @@ from .._mode import ModeFlags, supported_mode
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError, UnsupportedModeError
+from ..kernel import bitmap_to_dataset
 from ..scenes.core import KernelDict
 from ..scenes.illumination import (
     ConstantIllumination,
@@ -84,9 +85,9 @@ def mitsuba_run(
 
        {
            "values": {
-               "sensor_0": data_0, # Arrays of shape (width, height, n_channels)
-               "sensor_1": data_1, # (n_channels == 1 for mono variants, possibly more)
-               ...
+               "sensor_0": data_0, # xarray.Dataset with 'img' variable of shape
+               "sensor_1": data_1, # (width, height, n_channels)
+               ...                 # (n_channels == 1 for mono variants, 3 for RGB)
            },
            "spp": {
                "sensor_0": sample_count_0,
@@ -123,7 +124,7 @@ def mitsuba_run(
 
         # Collect results
         film = sensor.film()
-        result = np.array(film.bitmap(), dtype=float)
+        result = bitmap_to_dataset(film.bitmap(), dtype=float)
 
         sensor_id = str(sensor.id())
         if not sensor_id:  # Assign default ID if sensor doesn't have one
