@@ -13,6 +13,7 @@ from ._pipeline import PipelineStep
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...exceptions import UnsupportedModeError
+from ...units import unit_context_config as ucc
 
 # ------------------------------------------------------------------------------
 #                       Post-processing pipeline steps
@@ -21,13 +22,26 @@ from ...exceptions import UnsupportedModeError
 
 def _spectral_dims():
     if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-        return ("w",)
+        return (
+            (
+                "w",
+                {
+                    "standard_name": "wavelength",
+                    "long_name": "wavelength",
+                    "units": ucc.get("wavelength"),
+                },
+            ),
+        )
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-        return ("bin", "index")
+        return (
+            ("bin", {"standard_name": "ckd_name", "long_name": "CKD bin"}),
+            ("index", {"standard_name": "ckd_index", "long_name": "CKD index"}),
+        )
     else:
         raise UnsupportedModeError
 
 
+@parse_docs
 @attr.s
 class Assemble(PipelineStep):
     """
@@ -46,17 +60,62 @@ class Assemble(PipelineStep):
     count if ``"spp"`` is part of the requested sensor dimensions.
     """
 
-    prefix = attr.ib(default=r".*")
-    sensor_dims = attr.ib(
-        default=[],
-        validator=attr.validators.instance_of((list, tuple)),
+    prefix: str = documented(
+        attr.ib(default=r".*"),
+        default="r'.*'",
+        type="str",
+        init_type="str, optional",
+        doc="Prefix string used to match sensor IDs. The default value will "
+        "match anything.",
+    )
+
+    sensor_dims: t.Sequence = documented(
+        attr.ib(
+            factory=list,
+            validator=attr.validators.instance_of((list, tuple)),
+        ),
+        default="[]",
+        type="list of (str or tuple)",
+        init_type="list of (str or tuple), optional",
+        doc="List of sensor dimensions. Each list item can be a string or a "
+        "(dimension, metadata) pair.",
+    )
+
+    img_var: t.Union[str, t.Tuple[str, t.Dict]] = documented(
+        attr.ib(default="img"),
+        default="img",
+        type="str or tuple[str, dict]",
+        init_type="str or tuple[str, dict], optional",
+        doc="Name of the variable containing sensor data. Optionally, a "
+        "(name, metadata) pair can be passed.",
     )
 
     def transform(self, x: t.Dict) -> xr.Dataset:
         # Basic preparation
         prefix = self.prefix
-        sensor_dims = self.sensor_dims
-        spectral_dims = _spectral_dims()
+
+        sensor_dims = []
+        sensor_dim_metadata = {}
+
+        for y in self.sensor_dims:
+            if isinstance(y, str):
+                sensor_dims.append(y)
+                sensor_dim_metadata[y] = {}
+            else:
+                sensor_dims.append(y[0])
+                sensor_dim_metadata[y[0]] = y[1]
+
+        spectral_dims = []
+        spectral_dim_metadata = {}
+
+        for y in _spectral_dims():
+            if isinstance(y, str):
+                spectral_dims.append(y)
+                spectral_dim_metadata[y] = {}
+            else:
+                spectral_dims.append(y[0])
+                spectral_dim_metadata[y[0]] = y[1]
+
         sensor_datasets = []
 
         regex = re.compile(
@@ -112,7 +171,39 @@ class Assemble(PipelineStep):
                 sensor_datasets.append(ds)
 
         # Combine all the data
-        return xr.merge(sensor_datasets)
+        with xr.set_options(keep_attrs=True):
+            result = xr.merge(sensor_datasets)
+
+        # Apply metadata to new dimensions
+        for sensor_dim in sensor_dims:
+            result[f"{sensor_dim}_index"].attrs = sensor_dim_metadata[sensor_dim]
+
+        if "spp" not in sensor_dims:
+            result["spp_index"].attrs = {
+                "standard_name": "spp_index",
+                "long_name": "SPP index",
+            }
+
+        for spectral_dim in spectral_dims:
+            result[spectral_dim].attrs = spectral_dim_metadata[spectral_dim]
+
+        # Apply metadata to data variables
+        if isinstance(self.img_var, str):
+            img_var = self.img_var
+            img_var_metadata = {}
+        else:
+            img_var = self.img_var[0]
+            img_var_metadata = self.img_var[1]
+
+        result = result.rename({"img": img_var})
+        result[img_var].attrs.update(img_var_metadata)
+
+        result["spp"].attrs = {
+            "standard_name": "sample_count",
+            "long_name": "sample count",
+        }
+
+        return result
 
 
 @attr.s
