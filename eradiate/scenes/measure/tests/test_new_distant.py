@@ -1,23 +1,99 @@
+import numpy as np
+import pytest
+
 import eradiate
 from eradiate.scenes.measure._new_distant import Assemble
 
 
-def test_pipeline_step_assemble_mono_ms_spp(mode_mono):
-    # Generate some test data
-    # We use a multi-sensor, sample count-split setup
+@pytest.fixture(scope="module")
+def results_mono_ms_spp():
+    # Multi-sensor, sample count-split setup
+    eradiate.set_mode("mono")
     exp = eradiate.experiments.OneDimExperiment(
+        atmosphere=None,
+        surface={"type": "lambertian", "reflectance": 1.0},
+        illumination={"type": "directional", "irradiance": 2.0},
         measures=[
             {
                 "type": "distant_array",
-                "directions": [[0, 0, -1], [0, -0.7, -0.7]],
+                "directions": [[0, 0, 1], [0, 0.7, 0.7]],
                 "spp": 250,
                 "spectral_cfg": {"wavelengths": [500.0]},
             }
-        ]
+        ],
     )
     exp.measures[0]._spp_splitting_threshold = 100
     exp.process()
-    values = exp.measures[0].results.raw
+    return exp.measures[0].results.raw
+
+
+@pytest.fixture(scope="module")
+def results_ckd_ms_spp():
+    # Multi-sensor, sample count-split setup
+    eradiate.set_mode("ckd")
+    exp = eradiate.experiments.OneDimExperiment(
+        atmosphere=None,
+        surface={"type": "lambertian", "reflectance": 1.0},
+        illumination={"type": "directional", "irradiance": 2.0},
+        measures=[
+            {
+                "type": "distant_array",
+                "directions": [[0, 0, 1], [0, 0.7, 0.7]],
+                "spp": 250,
+                "spectral_cfg": {"bins": ["500"]},
+            }
+        ],
+    )
+    exp.measures[0]._spp_splitting_threshold = 100
+    exp.process()
+    return exp.measures[0].results.raw
+
+
+@pytest.fixture(scope="module")
+def results_mono_spp():
+    # Single-sensor, sample count-split setup
+    eradiate.set_mode("mono")
+    exp = eradiate.experiments.OneDimExperiment(
+        atmosphere=None,
+        surface={"type": "lambertian", "reflectance": 1.0},
+        illumination={"type": "directional", "irradiance": 2.0},
+        measures=[
+            {
+                "type": "distant",
+                "film_resolution": (32, 32),
+                "spp": 250,
+                "spectral_cfg": {"wavelengths": [500.0]},
+            }
+        ],
+    )
+    exp.measures[0]._spp_splitting_threshold = 100
+    exp.process()
+    return exp.measures[0].results.raw
+
+
+@pytest.fixture(scope="module")
+def results_mono():
+    # Single-sensor setup, no sample count-split
+    eradiate.set_mode("mono")
+    exp = eradiate.experiments.OneDimExperiment(
+        atmosphere=None,
+        surface={"type": "lambertian", "reflectance": 1.0},
+        illumination={"type": "directional", "irradiance": 2.0},
+        measures=[
+            {
+                "type": "distant",
+                "film_resolution": (32, 32),
+                "spp": 250,
+                "spectral_cfg": {"wavelengths": [500.0]},
+            }
+        ],
+    )
+    exp.process()
+    return exp.measures[0].results.raw
+
+
+def test_pipeline_step_assemble_mono_ms_spp(results_mono_ms_spp):
+    values = results_mono_ms_spp
 
     # Configure this pipeline step according to the used sensor
     step = Assemble(sensor_dims=("ms", "spp"))
@@ -34,23 +110,13 @@ def test_pipeline_step_assemble_mono_ms_spp(mode_mono):
     }
     assert set(result.keys()) == {"img", "spp"}
 
+    # Check radiance and sample count values
+    assert np.allclose(2.0 / np.pi, result.img.values)
+    assert np.all([100, 100, 50] == result.spp.values)
 
-def test_pipeline_step_assemble_ckd_ms_spp(mode_ckd):
-    # Generate some test data
-    # We use a multi-sensor, sample count-split setup
-    exp = eradiate.experiments.OneDimExperiment(
-        measures=[
-            {
-                "type": "distant_array",
-                "directions": [[0, 0, -1], [0, -0.7, -0.7]],
-                "spp": 250,
-                "spectral_cfg": {"bins": ["500"]},
-            }
-        ]
-    )
-    exp.measures[0]._spp_splitting_threshold = 100
-    exp.process()
-    values = exp.measures[0].results.raw
+
+def test_pipeline_step_assemble_ckd_ms_spp(results_ckd_ms_spp):
+    values = results_ckd_ms_spp
 
     # Configure this pipeline step according to the used sensor
     step = Assemble(sensor_dims=("ms", "spp"))
@@ -68,23 +134,13 @@ def test_pipeline_step_assemble_ckd_ms_spp(mode_ckd):
     }
     assert set(result.keys()) == {"img", "spp"}
 
+    # Check radiance and sample count values
+    assert np.allclose(2.0 / np.pi, result.img.values)
+    assert np.all([100, 100, 50] == result.spp.values)
 
-def test_pipeline_step_assemble_mono_spp(mode_mono):
-    # Generate some test data
-    # We use a sample count-split setup
-    exp = eradiate.experiments.OneDimExperiment(
-        measures=[
-            {
-                "type": "distant",
-                "film_resolution": (32, 32),
-                "spp": 250,
-                "spectral_cfg": {"wavelengths": [500.0]},
-            }
-        ]
-    )
-    exp.measures[0]._spp_splitting_threshold = 100
-    exp.process()
-    values = exp.measures[0].results.raw
+
+def test_pipeline_step_assemble_mono_spp(results_mono_spp):
+    values = results_mono_spp
 
     # Configure this pipeline step according to the used sensor
     step = Assemble(sensor_dims=("spp",))
@@ -100,25 +156,16 @@ def test_pipeline_step_assemble_mono_spp(mode_mono):
     }
     assert set(result.keys()) == {"img", "spp"}
 
+    # Check radiance and sample count values
+    assert np.allclose(2.0 / np.pi, result.img.values)
+    assert np.all([100, 100, 50] == result.spp.values)
 
-def test_pipeline_step_assemble_mono(mode_mono):
-    # Generate some test data
-    # We use a sample count-split setup
-    exp = eradiate.experiments.OneDimExperiment(
-        measures=[
-            {
-                "type": "distant",
-                "film_resolution": (32, 32),
-                "spp": 250,
-                "spectral_cfg": {"wavelengths": [500.0]},
-            }
-        ]
-    )
-    exp.process()
-    values = exp.measures[0].results.raw
+
+def test_pipeline_step_assemble_mono(results_mono):
+    values = results_mono
 
     # Configure this pipeline step according to the used sensor
-    step = Assemble(sensor_dims=())
+    step = Assemble()
     result = step.transform(values)
 
     # Check that all dimensions are here as expected
@@ -130,3 +177,7 @@ def test_pipeline_step_assemble_mono(mode_mono):
         "channel": 1,
     }
     assert set(result.keys()) == {"img", "spp"}
+
+    # Check radiance and sample count values
+    assert np.allclose(2.0 / np.pi, result.img.values)
+    assert np.all([250] == result.spp.values)
