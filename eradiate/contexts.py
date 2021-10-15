@@ -9,6 +9,7 @@ import pinttr
 
 import eradiate
 
+from . import validators
 from ._mode import ModeFlags
 from .attrs import documented, parse_docs
 from .ckd import Bin, Bindex, BinSet
@@ -180,6 +181,10 @@ class MonoSpectralContext(SpectralContext):
         init_type="quantity or float",
         default="550.0 nm",
     )
+
+    @_wavelength.validator
+    def _wavelength_validator(self, attribute, value):
+        validators.on_quantity(validators.is_scalar)(self, attribute, value)
 
     @property
     def wavelength(self):

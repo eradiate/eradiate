@@ -9,6 +9,20 @@ from .units import PhysicalQuantity
 from .units import unit_registry as ureg
 
 
+def is_scalar(_, attribute, value):
+    """
+    A validator that raises if the initializer is called with a non-scalar
+    value.
+
+    Raises
+    ------
+    TypeError
+        If the value is not scalar.
+    """
+    if not np.isscalar(value):
+        raise TypeError(f"'{attribute.name}' must be scalar, got {value}")
+
+
 def is_number(_, attribute, value):
     """
     A validator that raises if the initializer is called with a non-number
