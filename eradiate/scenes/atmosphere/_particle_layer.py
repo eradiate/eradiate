@@ -426,7 +426,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="extinction_coefficient",
                             long_name="extinction coefficient",
-                            units=sigma_t.units,
+                            units=f"{sigma_t.units:~P}",
                         ),
                     ),
                     "albedo": (
@@ -435,7 +435,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="albedo",
                             long_name="albedo",
-                            units=albedo.units,
+                            units=f"{albedo.units:~P}",
                         ),
                     ),
                 },
@@ -446,7 +446,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="layer_altitude",
                             long_name="layer altitude",
-                            units=self.z_layer.units,
+                            units=f"{self.z_layer.units:~P}",
                         ),
                     ),
                     "z_level": (
@@ -455,7 +455,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="level_altitude",
                             long_name="level altitude",
-                            units=self.z_level.units,
+                            units=f"{self.z_level.units:~P}",
                         ),
                     ),
                     "w": (
@@ -464,7 +464,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="wavelength",
                             long_name="wavelength",
-                            units=wavelength.units,
+                            units=f"{wavelength.units:~P}",
                         ),
                     ),
                 },
