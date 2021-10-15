@@ -2,19 +2,24 @@ import typing as t
 import warnings
 
 import attr
-import numpy as np
 
-from ._core import EarthObservationExperiment, Experiment
+from ._core import EarthObservationExperiment
 from .. import validators
-from ..attrs import AUTO, documented, get_doc, parse_docs
+from .. import converters
+from ..attrs import AUTO, documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import OverriddenValueWarning
 from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.core import KernelDict
-from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
+from ..scenes.integrators import (
+    Integrator,
+    VolPathIntegrator,
+    PathIntegrator,
+    integrator_factory,
+)
 from ..scenes.measure import DistantMeasure, Measure
-from ..scenes.measure._distant import TargetOriginPoint
+from ..scenes.measure._distant import TargetOriginPoint, TargetOriginSphere
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc
 
@@ -32,12 +37,13 @@ class Rami4ATMExperiment(EarthObservationExperiment):
     A post-initialisation step will constrain the measure setup if a
     :class:`.DistantMeasure` is used and no target is defined:
 
-    * if a canopy is defined, the target will be set to the canopy unit cell
+    * if a canopy is defined, the target will be set to the top of the canopy unit cell
       (*i.e.* without its padding);
     * if no canopy is defined, the target will be set according to the atmosphere
       (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere altitude);
     * if neither atmosphere nor canopy are defined, the target is set to
       [0, 0, 0].
+
     """
 
     atmosphere: t.Optional[Atmosphere] = documented(
@@ -110,17 +116,34 @@ class Rami4ATMExperiment(EarthObservationExperiment):
                 )
             )
 
-    integrator: Integrator = documented(
+    _integrator: Integrator = documented(
         attr.ib(
-            factory=VolPathIntegrator,
-            converter=integrator_factory.convert,
-            validator=attr.validators.instance_of(Integrator),
+            default=AUTO,
+            converter=converters.auto_or(integrator_factory.convert),
+            validator=validators.auto_or(
+                attr.validators.instance_of(Integrator),
+            ),
         ),
-        doc=get_doc(Experiment, attrib="integrator", field="doc"),
-        type=get_doc(Experiment, attrib="integrator", field="type"),
-        init_type=get_doc(Experiment, attrib="integrator", field="init_type"),
-        default=":class:`VolPathIntegrator() <.VolPathIntegrator>`",
+        doc="Monte Carlo integration algorithm specification. "
+        "This parameter can be specified as a dictionary which will be "
+        "interpreted by "
+        ":meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`."
+        "If set to AUTO, the integrator will be set depending on the presence of an atmosphere."
+        "If an atmosphere is defined the integrator defaults to :class:`.VolPathIntegrator`"
+        "otherwise a :class:`.PathIntegrator` will be used.",
+        type=":class:`.Integrator` or AUTO",
+        init_type=":class:`.Integrator` or dict or AUTO",
+        default="AUTO",
     )
+
+    @property
+    def integrator(self) -> Integrator:
+        if self._integrator is AUTO:
+            if self.atmosphere is not None:
+                return VolPathIntegrator()
+            else:
+                return PathIntegrator()
+        return self._integrator
 
     def __attrs_post_init__(self):
         self._normalize_measures()
@@ -194,6 +217,17 @@ class Rami4ATMExperiment(EarthObservationExperiment):
                             target_point = [0.0, 0.0, 0.0] * ucc.get("length")
 
                         measure.target = TargetOriginPoint(target_point)
+
+                        if measure.origin is None:
+                            radius = (
+                                self.atmosphere.top / 100.0
+                                if self.atmosphere is not None
+                                else 1.0 * ucc.get("length")
+                            )
+
+                        measure.origin = TargetOriginSphere(
+                            center=measure.target.xyz, radius=radius
+                        )
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(Rami4ATMExperiment, self)._dataset_metadata(measure)

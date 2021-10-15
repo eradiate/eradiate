@@ -29,7 +29,7 @@ class RamiExperiment(EarthObservationExperiment):
     A post-initialisation step will constrain the measure setup if a
     :class:`.DistantMeasure` is used and no target is defined:
 
-    * if a canopy is defined, the target will be set to the canopy unit cell
+    * if a canopy is defined, the target will be set to the top of the canopy unit cell
       (*i.e.* without its padding);
     * if no canopy is defined, the target will be set to [0, 0, 0].
     """
@@ -85,15 +85,15 @@ class RamiExperiment(EarthObservationExperiment):
                 OverriddenValueWarning("surface size will be overridden by canopy")
             )
 
-    integrator: Integrator = documented(
+    _integrator: Integrator = documented(
         attr.ib(
             factory=PathIntegrator,
             converter=integrator_factory.convert,
             validator=attr.validators.instance_of(Integrator),
         ),
-        doc=get_doc(Experiment, attrib="integrator", field="doc"),
-        type=get_doc(Experiment, attrib="integrator", field="type"),
-        init_type=get_doc(Experiment, attrib="integrator", field="init_type"),
+        doc=get_doc(Experiment, attrib="_integrator", field="doc"),
+        type=get_doc(Experiment, attrib="_integrator", field="type"),
+        init_type=get_doc(Experiment, attrib="_integrator", field="init_type"),
         default=":class:`PathIntegrator() <.PathIntegrator>`",
     )
 
@@ -147,6 +147,7 @@ class RamiExperiment(EarthObservationExperiment):
                             xmax=0.5 * self.canopy.size[0],
                             ymin=-0.5 * self.canopy.size[1],
                             ymax=0.5 * self.canopy.size[1],
+                            z=self.canopy.size[2],
                         )
                     else:
                         ctx = KernelDictContext()

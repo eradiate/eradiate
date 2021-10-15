@@ -176,7 +176,7 @@ class Experiment(ABC):
         default=":class:`DistantRadianceMeasure() <.DistantRadianceMeasure>`",
     )
 
-    integrator: Integrator = documented(
+    _integrator: Integrator = documented(
         attr.ib(
             factory=PathIntegrator,
             converter=integrator_factory.convert,
@@ -197,6 +197,10 @@ class Experiment(ABC):
         "holding one variable per physical quantity computed by the measure.",
         type="dict[str, dataset]",
     )
+
+    @property
+    def integrator(self) -> Integrator:
+        return self._integrator
 
     @property
     def results(self) -> t.Dict[str, xr.Dataset]:

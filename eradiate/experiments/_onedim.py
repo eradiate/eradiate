@@ -69,15 +69,15 @@ class OneDimExperiment(EarthObservationExperiment):
                 OverriddenValueWarning("surface size will be overridden by atmosphere")
             )
 
-    integrator: Integrator = documented(
+    _integrator: Integrator = documented(
         attr.ib(
             factory=VolPathIntegrator,
             converter=integrator_factory.convert,
             validator=attr.validators.instance_of(Integrator),
         ),
-        doc=get_doc(Experiment, attrib="integrator", field="doc"),
-        type=get_doc(Experiment, attrib="integrator", field="type"),
-        init_type=get_doc(Experiment, attrib="integrator", field="init_type"),
+        doc=get_doc(Experiment, attrib="_integrator", field="doc"),
+        type=get_doc(Experiment, attrib="_integrator", field="type"),
+        init_type=get_doc(Experiment, attrib="_integrator", field="init_type"),
         default=":class:`VolPathIntegrator() <.VolPathIntegrator>`",
     )
 
