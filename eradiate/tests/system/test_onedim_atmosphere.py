@@ -12,7 +12,22 @@ from eradiate import unit_registry as ureg
 @pytest.mark.parametrize("tau_550", [0.1, 1.0, 10.0])
 def test_heterogeneous_atmosphere_contains_particle_layer(mode_mono, bottom, tau_550):
     """
-    HeterogeneousAtmosphere is a good container for a ParticleLayer.
+    HeterogeneousAtmosphere is a good container for a ParticleLayer
+    ===============================================================
+
+    This testcase asserts that the HeterogeneousAtmosphere class can act as a container for
+    other atmosphere objects.
+
+
+    Rationale
+    ---------
+
+    Run a OneDimExperiment with two different atmosphere definitions.
+    First define an atmosphere that is directly made up from a single particle layer.
+    Second define a heterogeneous atmosphere that contains *only* one particle layer.
+
+    Expected behaviour
+    ------------------
 
     Same results are produced for a scene consisting of
     * a particle layer
@@ -43,12 +58,27 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
     mode_mono, has_scattering
 ):
     """
-    HeterogeneouAtmosphere is a good container for a MolecularAtmosphere.
+    HeterogeneousAtmosphere is a good container for a MolecularAtmosphere
+    =====================================================================
+
+    This testcase asserts that the HeterogeneousAtmosphere class can act as a container for
+    other atmosphere objects.
+
+
+    Rationale
+    ---------
+
+    Run a OneDimExperiment with two different atmosphere definitions.
+    First define an atmosphere that is directly made up from a non-absorbing molecular atmosphere.
+    Second define a heterogeneous atmosphere that contains *only* a non-absorbing molecular atmosphere.
+
+    Expected behaviour
+    ------------------
 
     Same results are produced for a scene consisting of:
        * a non-absorbing molecular atmosphere
        * a heterogeneous atmosphere that (only) contains that non-absorbing
-       molecular atmosphere
+         molecular atmosphere
     """
     # non absorbing molecular atmosphere
     exp1 = eradiate.experiments.OneDimExperiment(
