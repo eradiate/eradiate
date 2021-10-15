@@ -20,6 +20,7 @@ from ..._util import onedict_value
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...units import to_quantity
+from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
 
@@ -241,6 +242,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         # aggregate collision coefficients
         else:
             hrz = self._high_res_z_layer()
+            sigma_units = ucc.get("collision_coefficient")
             sigma_ss = []
             sigma_ts = []
 
@@ -248,25 +250,59 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 radprops = interpolate_radprops(
                     component.eval_radprops(spectral_ctx), new_z_layer=hrz
                 )
-                sigma_ts.append(radprops.sigma_t)
-                sigma_ss.append(radprops.sigma_t * radprops.albedo)
-
-            with xr.set_options(keep_attrs=True):
-                sigma_t = sum(sigma_ts)
-                sigma_s = sum(sigma_ss)
-                albedo = np.divide(
-                    sigma_s,
-                    sigma_t,
-                    where=sigma_t != 0.0,
-                    out=np.ones_like(sigma_t),
+                # We store only the
+                sigma_ts.append(to_quantity(radprops.sigma_t).m_as(sigma_units))
+                sigma_ss.append(
+                    (to_quantity(radprops.sigma_t) * radprops.albedo.values).m_as(
+                        sigma_units
+                    )
                 )
 
-            return xr.Dataset(
-                data_vars={
-                    "sigma_t": sigma_t,
-                    "albedo": albedo,
-                }
+            sigma_t = sum(sigma_ts)
+            sigma_s = sum(sigma_ss)
+
+            albedo = np.divide(
+                sigma_s,
+                sigma_t,
+                where=sigma_t != 0.0,
+                out=np.ones_like(sigma_t),
             )
+
+            result = xr.Dataset(
+                data_vars={
+                    "sigma_t": (
+                        "z_layer",
+                        sigma_t,
+                        {
+                            "units": f"{sigma_units:~P}",
+                            "standard_name": "extinction_coefficient",
+                            "long_name": "extinction coefficient",
+                        },
+                    ),
+                    "albedo": (
+                        "z_layer",
+                        albedo,
+                        {
+                            "standard_name": "albedo",
+                            "long_name": "albedo",
+                            "units": "",
+                        },
+                    ),
+                },
+                coords={
+                    "z_layer": (
+                        "z_layer",
+                        hrz.magnitude,
+                        {
+                            "units": f"{hrz.units:~P}",
+                            "standard_name": "layer_altitude",
+                            "long_name": "layer altitude",
+                        },
+                    )
+                },
+            )
+
+            return result
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
