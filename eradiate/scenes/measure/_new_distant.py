@@ -14,6 +14,7 @@ from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...exceptions import UnsupportedModeError
 from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
 
 # ------------------------------------------------------------------------------
 #                       Post-processing pipeline steps
@@ -208,6 +209,17 @@ class Assemble(PipelineStep):
 
 @attr.s
 class AggregateSampleCount(PipelineStep):
+    """
+    Aggregate sample count.
+
+    This post-processing pipeline step aggregates sample counts:
+
+    * it computes the average of sensor values weighted by the sample count;
+    * it sums the ``spp`` dimension.
+
+    No dimension is dropped during this step.
+    """
+
     def transform(self, x: t.Any) -> t.Any:
         with xr.set_options(keep_attrs=True):
             result = x.weighted(x.spp).mean(dim="spp_index")
@@ -231,8 +243,21 @@ class MultiDistantMeasure(Measure):
     )
 
     post_processing_pipeline = attr.ib(
-        default=[
-            ("assemble", Assemble(sensor_dims=("spp",))),
+        factory=lambda: [
+            (
+                "assemble",
+                Assemble(
+                    sensor_dims=("spp",),
+                    img_var=(
+                        "lo",
+                        {
+                            "units": uck.get("radiance"),
+                            "standard_name": "leaving_radiance",
+                            "long_name": "leaving radiance",
+                        },
+                    ),
+                ),
+            ),
             ("aggregate_sample_count", AggregateSampleCount()),
             # ("map_viewing_angles", MapViewingAngles()),
             # ("add_illumination", AddIllumination()),
