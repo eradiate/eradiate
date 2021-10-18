@@ -10,9 +10,11 @@ import eradiate
 
 from ._core import Measure
 from ._distant import TargetOrigin, TargetOriginPoint, TargetOriginRectangle
-from ._pipeline import PipelineStep
+from ._pipeline import Pipeline, PipelineStep
+from ..core import KernelDict
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
+from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -234,8 +236,8 @@ class AggregateSampleCount(PipelineStep):
 @attr.s
 class AddViewingAngles(PipelineStep):
     """
-    Create new ``vza`` and ``vaa`` variables mapping viewing angles to other
-    coordinates.
+    Create new ``vza`` and ``vaa`` coordinate variables mapping viewing angles
+    to other coordinates.
     """
 
     dimension = attr.ib()
@@ -302,19 +304,18 @@ class MultiDistantMeasure(Measure):
                 ),
             ),
             ("aggregate_sample_count", AggregateSampleCount()),
-            # ("add_viewing_angles", AddViewingAngles()),
             # ("add_illumination", AddIllumination()),
             # ("compute_reflectance", ComputeReflectance()),
-        ]
+            # ("add_viewing_angles", AddViewingAngles()),
+        ],
+        converter=Pipeline,
     )
 
-    def sensor_coords(self):
-        """
-        Compute sensor coordinates.
-        """
-        return {"spp": ("spp", self._split_spps(), {"long_name": "sample count"})}
+    @property
+    def film_resolution(self) -> t.Tuple[int, int]:
+        return (self.directions.shape[0], 1)
 
-    def sensor_id(self, i_spp=None):
+    def _sensor_id(self, i_spp=None):
         """
         Assemble a sensor ID from indexes on sensor coordinates.
         """
@@ -324,3 +325,46 @@ class MultiDistantMeasure(Measure):
             components.append(f"spp{i_spp}")
 
         return "_".join(components)
+
+    def _kernel_dict(self, spp, sensor_id):
+        result = {
+            "type": "mdistant",
+            "id": sensor_id,
+            "directions": ",".join(map(str, self.directions.ravel(order="C"))),
+            "sampler": {
+                "type": "independent",
+                "sample_count": spp,
+            },
+            "film": {
+                "type": "hdrfilm",
+                "width": self.film_resolution[0],
+                "height": self.film_resolution[1],
+                "pixel_format": "luminance",
+                "component_format": "float32",
+                "rfilter": {"type": "box"},
+            },
+        }
+
+        if self.target is not None:
+            result["target"] = self.target.kernel_item()
+
+        return result
+
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        spps = self._split_spp()
+
+        if len(spps) > 1:
+            sensor_ids = [self._sensor_id(i_spp) for i_spp, _ in enumerate(spps)]
+
+        else:
+            sensor_ids = [self.id]
+
+        result = KernelDict()
+
+        for spp, sensor_id in zip(spps, sensor_ids):
+            result.data[sensor_id] = self._kernel_dict(spp, sensor_id)
+
+        return result
+
+    def _base_dicts(self) -> t.List[t.Dict]:
+        raise NotImplementedError

@@ -1,8 +1,14 @@
 import numpy as np
 import pytest
+from rich.pretty import pprint
 
 import eradiate
-from eradiate.scenes.measure._new_distant import AggregateSampleCount, Assemble
+from eradiate.contexts import KernelDictContext
+from eradiate.scenes.measure._new_distant import (
+    AggregateSampleCount,
+    Assemble,
+    MultiDistantMeasure,
+)
 
 
 @pytest.fixture(scope="module")
@@ -201,3 +207,16 @@ def test_pipeline_step_aggregate_sample_count(results_mono_spp):
     assert result.spp == 250
     # Radiance values are averaged
     assert np.allclose(2.0 / np.pi, result.img.values)
+
+
+def test_multi_distant_measure_construct(mode_mono):
+    """Basic constructor testing for MultiDistantMeasure."""
+
+    ctx = KernelDictContext()
+
+    # Constructing without argument succeeds
+    measure = MultiDistantMeasure()
+
+    # The produced kernel dictionary can be instantiated
+    kernel_dict = measure.kernel_dict(ctx)
+    assert kernel_dict.load().expand()[0]
