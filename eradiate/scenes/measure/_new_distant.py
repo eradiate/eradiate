@@ -9,6 +9,7 @@ from pinttr.util import always_iterable
 import eradiate
 
 from ._core import Measure
+from ._distant import TargetOrigin, TargetOriginPoint, TargetOriginRectangle
 from ._pipeline import PipelineStep
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
@@ -57,8 +58,8 @@ class Assemble(PipelineStep):
     by aggregation steps. Film dimensions are left unmodified and retain their
     metadata.
 
-    An ``img`` variable hold sensor results; a ``spp`` variable holds sample
-    count if ``"spp"`` is part of the requested sensor dimensions.
+    An ``img`` variable holds sensor values. An ``spp`` variable holds sample
+    count.
     """
 
     prefix: str = documented(
@@ -217,7 +218,8 @@ class AggregateSampleCount(PipelineStep):
     * it computes the average of sensor values weighted by the sample count;
     * it sums the ``spp`` dimension.
 
-    No dimension is dropped during this step.
+    The ``spp_index`` dimension is dropped during this step and the ``spp``
+    variable ends up with no dimension.
     """
 
     def transform(self, x: t.Any) -> t.Any:
@@ -226,6 +228,22 @@ class AggregateSampleCount(PipelineStep):
             result["spp"] = x.spp.sum()
 
         return result
+
+
+@parse_docs
+@attr.s
+class AddViewingAngles(PipelineStep):
+    """
+    Create new ``vza`` and ``vaa`` variables mapping viewing angles to other
+    coordinates.
+    """
+
+    dimension = attr.ib()
+    vza = attr.ib()
+    vaa = attr.ib()
+
+    def transform(self, x: t.Any) -> t.Any:
+        pass
 
 
 @parse_docs
@@ -240,6 +258,31 @@ class MultiDistantMeasure(Measure):
         type="ndarray",
         init_type="array-like",
         default="[[0, 0, -1]]",
+    )
+
+    target: t.Optional[TargetOrigin] = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(TargetOrigin.convert),
+            validator=attr.validators.optional(
+                attr.validators.instance_of(
+                    (
+                        TargetOriginPoint,
+                        TargetOriginRectangle,
+                    )
+                )
+            ),
+            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
+        ),
+        doc="Target specification. The target can be specified using an "
+        "array-like with 3 elements (which will be converted to a "
+        ":class:`.TargetOriginPoint`) or a dictionary interpreted by "
+        ":meth:`TargetOrigin.convert() <.TargetOrigin.convert>`. If set to "
+        "``None`` (not recommended), the default target point selection "
+        "method is used: rays will not target a particular region of the "
+        "scene.",
+        type=":class:`.TargetOrigin` or None",
+        init_type=":class:`.TargetOrigin` or dict or array-like, optional",
     )
 
     post_processing_pipeline = attr.ib(
@@ -259,7 +302,7 @@ class MultiDistantMeasure(Measure):
                 ),
             ),
             ("aggregate_sample_count", AggregateSampleCount()),
-            # ("map_viewing_angles", MapViewingAngles()),
+            # ("add_viewing_angles", AddViewingAngles()),
             # ("add_illumination", AddIllumination()),
             # ("compute_reflectance", ComputeReflectance()),
         ]

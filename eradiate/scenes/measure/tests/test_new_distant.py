@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.scenes.measure._new_distant import Assemble
+from eradiate.scenes.measure._new_distant import AggregateSampleCount, Assemble
 
 
 @pytest.fixture(scope="module")
@@ -181,3 +181,23 @@ def test_pipeline_step_assemble_mono(results_mono):
     # Check radiance and sample count values
     assert np.allclose(2.0 / np.pi, result.img.values)
     assert np.all([250] == result.spp.values)
+
+
+def test_pipeline_step_aggregate_sample_count(results_mono_spp):
+    # Initialise test data
+    step = Assemble(sensor_dims=("spp",))
+    values = step.transform(results_mono_spp)
+
+    # Configure step
+    step = AggregateSampleCount()
+    result = step.transform(values)
+
+    # spp dimension is not here
+    assert "spp_index" not in result.coords
+    # spp variable is still here
+    assert "spp" in result.data_vars
+
+    # Sample counts are summed
+    assert result.spp == 250
+    # Radiance values are averaged
+    assert np.allclose(2.0 / np.pi, result.img.values)
