@@ -28,6 +28,10 @@ from ..contexts import SpectralContext
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
 from ..exceptions import UnsupportedModeError
 from ..thermoprops import afgl1986, us76
+from ..thermoprops.util import (
+    compute_column_mass_density,
+    compute_column_number_density,
+)
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -820,8 +824,8 @@ class US76ApproxRadProfile(RadProfile):
         ).to("dimensionless")
 
     def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        sigma_s = self.eval_sigma_s_ckd(bindexes=bindexes)
-        sigma_t = self.eval_sigma_t_ckd(bindexes=bindexes)
+        sigma_s = self.eval_sigma_s_ckd(*bindexes)
+        sigma_t = self.eval_sigma_t_ckd(*bindexes)
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
@@ -1077,17 +1081,27 @@ class AFGL1986RadProfile(RadProfile):
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
     def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        # TODO: avoid using test data set here
-        # TODO: check that model is us_standard and that bin is available in
-        # data set
         ds = eradiate.data.open(
-            category="ckd_absorption", id="afgl_1986-us_standard-10nm_test"
+            category="ckd_absorption", id="afgl_1986-us_standard-10nm"
         )
+        # evaluate H2O and O3 concentrations
+        h2o_concentration = compute_column_mass_density(
+            ds=self.thermoprops, species="H2O"
+        )
+        o3_concentration = compute_column_number_density(
+            ds=self.thermoprops, species="O3"
+        )
+
         z = to_quantity(self.thermoprops.z_layer).m_as(ds.z.units)
         return ureg.Quantity(
             [
                 ds.k.sel(bd=(bindex.bin.id, bindex.index))
-                .interp(z=z, kwargs=dict(fill_value=0.0))
+                .interp(
+                    z=z,
+                    H2O=h2o_concentration.m_as(ds["H2O"].units),
+                    O3=o3_concentration.m_as(ds["O3"].units),
+                    kwargs=dict(fill_value=0.0),
+                )
                 .values
                 for bindex in bindexes
             ],

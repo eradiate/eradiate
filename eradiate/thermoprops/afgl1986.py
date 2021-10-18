@@ -7,8 +7,11 @@ import typing as t
 import pint
 import xarray as xr
 
+import eradiate
+
 from .util import compute_scaling_factors, interpolate, rescale_concentration
 from ..data import open
+from .._mode import ModeFlags
 
 
 def make_profile(
@@ -25,8 +28,10 @@ def make_profile(
     model_id : {"us_standard", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter", "tropical"}, default: "us_standard"
         Model identifier.
 
-    levels : quantity or array
-        Altitude levels.
+    levels : quantity or array, optional
+        Altitude levels. The array must contain at least two values.
+        If not provided, the atmospheric profile is built using the data set's
+        altitude levels.
 
     concentrations : dict, optional
         Molecules concentrations as a {str: quantity} mapping.
@@ -92,7 +97,21 @@ def make_profile(
     concentration units, refer to the documentation of
     :func:`~eradiate.thermoprops.util.compute_scaling_factors`.
     """
+    if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        if model_id != "us_standard":
+            raise NotImplementedError(
+                "In CKD mode, only the 'us_standard' model is supported."
+            )
+        species = set(concentrations.keys()) if concentrations else set()
+        unhandled = species - {"H2O", "O3"}
+
+        if unhandled:
+            raise NotImplementedError(
+                f"species '{unhandled}' cannot be rescaled in ckd mode"
+            )
+
     thermoprops = open(category="thermoprops_profiles", id="afgl1986-" + model_id)
+
     if levels is not None:
         thermoprops = interpolate(ds=thermoprops, z_level=levels, conserve_columns=True)
 

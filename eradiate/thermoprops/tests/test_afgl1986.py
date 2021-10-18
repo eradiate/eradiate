@@ -22,7 +22,7 @@ from eradiate.units import unit_registry as ureg
         "us_standard",
     ],
 )
-def test_make_profile(model_id: str) -> None:
+def test_make_profile(mode_mono, model_id):
     """
     All thermophysical properties profile can be made.
     """
@@ -49,7 +49,7 @@ def test_make_profile(model_id: str) -> None:
         ureg.Quantity(np.linspace(0, 40, 41), "km"),
     ],
 )
-def test_make_profile_levels(model_id: str, levels: pint.Quantity) -> None:
+def test_make_profile_levels(mode_mono, model_id, levels):
     """
     Atmospheric thermophysical profile altitude levels array has the same
     shape as the input 'levels'.
@@ -77,7 +77,7 @@ def test_make_profile_levels(model_id: str, levels: pint.Quantity) -> None:
         ureg.Quantity(np.linspace(0, 40, 41), "km"),
     ],
 )
-def test_make_profile_concentrations(model_id: str, levels: pint.Quantity) -> None:
+def test_make_profile_concentrations(mode_mono, model_id, levels):
     """
     Concentration-rescaled profile concentrations match the input concentrations.
     """
@@ -119,9 +119,7 @@ def test_make_profile_concentrations(model_id: str, levels: pint.Quantity) -> No
         ureg.Quantity(np.linspace(0, 40, 41), "km"),
     ],
 )
-def test_make_profile_concentrations_invalid(
-    model_id: str, levels: pint.Quantity
-) -> None:
+def test_make_profile_concentrations_invalid(mode_mono, model_id, levels):
     """
     Too large concentrations raise.
     """

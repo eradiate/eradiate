@@ -498,7 +498,7 @@ class BinSet:
         ----------
         ds : :class:`~xarray.Dataset`
             Node data to get the bin set for. Data set attributes must have a
-            ``bin_set_id`` field referencing a registered bin set definition in
+            ``bin_set`` field referencing a registered bin set definition in
             the Eradiate database.
 
         Returns
