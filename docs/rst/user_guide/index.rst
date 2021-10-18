@@ -7,6 +7,7 @@ User guide
    :maxdepth: 1
 
    basic_concepts
+   conventions
    package_structure
    onedim_solver_app
    unit_guide_user
