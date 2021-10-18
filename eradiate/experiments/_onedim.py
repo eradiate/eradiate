@@ -56,8 +56,7 @@ class OneDimExperiment(EarthObservationExperiment):
         ),
         doc="Surface specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by "
-        ":meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`.",
+        "interpreted by :data:`.surface_factory`.",
         type=":class:`.Surface`",
         init_type=":class:`.Surface` or dict",
         default=":class:`LambertianSurface() <.LambertianSurface>`",

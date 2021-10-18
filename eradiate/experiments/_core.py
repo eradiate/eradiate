@@ -184,8 +184,7 @@ class Experiment(ABC):
         ),
         doc="Monte Carlo integration algorithm specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by "
-        ":meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`.",
+        "interpreted by :data:`.integrator_factory`.",
         type=":class:`.Integrator`",
         init_type=":class:`.Integrator` or dict",
         default=":class:`PathIntegrator() <.PathIntegrator>`",
@@ -434,8 +433,7 @@ class EarthObservationExperiment(Experiment, ABC):
         ),
         doc="Illumination specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by "
-        ":meth:`IlluminationFactory.convert() <.IlluminationFactory.convert>`.",
+        "interpreted by :data:`.illumination_factory`.",
         type=":class:`.DirectionalIllumination` or dict",
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )

@@ -42,8 +42,7 @@ class RamiExperiment(EarthObservationExperiment):
         ),
         doc="Canopy specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by "
-        ":meth:`BiosphereFactory.convert() <.BiosphereFactory.convert>`.",
+        "interpreted by :data:`.biosphere_factory`.",
         type=":class:`.Canopy` or None",
         init_type=":class:`.Canopy` or dict or None",
         default="None",
@@ -70,9 +69,10 @@ class RamiExperiment(EarthObservationExperiment):
         ),
         doc="Surface specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by "
-        ":meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`. "
-        ".. note:: Surface size will be overridden using canopy parameters.",
+        "interpreted by :data:`.surface_factory`.\n"
+        "\n"
+        ".. note::\n"
+        "   Surface size will be overridden using canopy parameters.",
         type=":class:`.Surface`",
         init_type=":class:`.Surface` or dict",
         default=":class:`LambertianSurface() <.LambertianSurface>`",

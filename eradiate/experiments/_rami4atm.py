@@ -35,8 +35,9 @@ class Rami4ATMExperiment(EarthObservationExperiment):
     * if a canopy is defined, the target will be set to the canopy unit cell
       (*i.e.* without its padding);
     * if no canopy is defined, the target will be set according to the atmosphere
-      (*i.e.* to [0, 0, toa] with toa the height of the atmosphere)
-    + if neither atmosphere nor canopy are defined, the target is set to [0, 0, 0]
+      (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere altitude);
+    * if neither atmosphere nor canopy are defined, the target is set to
+      [0, 0, 0].
     """
 
     atmosphere: t.Optional[Atmosphere] = documented(
@@ -62,8 +63,7 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         ),
         doc="Canopy specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by "
-        ":meth:`BiosphereFactory.convert() <.BiosphereFactory.convert>`.",
+        "interpreted by :data:`.biosphere_factory`.",
         type=":class:`.Canopy` or None",
         init_type=":class:`.Canopy` or dict or None, optional",
         default="None",
@@ -78,7 +78,8 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         "will add one copy in every direction, yielding a 3×3 patch. A "
         "value of 2 will yield a 5×5 patch, etc. The optimal padding level "
         "depends on the scene.",
-        type="int, optional",
+        type="int",
+        init_type="int, optional",
         default="0",
     )
 
@@ -90,10 +91,11 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         ),
         doc="Surface specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by "
-        ":meth:`SurfaceFactory.convert() <.SurfaceFactory.convert>`. "
-        ".. note:: Surface size will be overridden using canopy and atmosphere "
-        "parameters, if they are defined.",
+        "interpreted by :data:`.surface_factory`.\n"
+        "\n"
+        ".. note::\n"
+        "   Surface size will be overridden using canopy and atmosphere "
+        "   parameters, if they are defined.",
         type=":class:`.Surface`",
         init_type=":class:`.Surface` or dict",
         default=":class:`LambertianSurface() <.LambertianSurface>`",
