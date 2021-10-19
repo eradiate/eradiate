@@ -155,33 +155,85 @@ class Pipeline:
 
         self.update()
 
-    def transform(self, x: t.Any) -> t.Any:
+    def transform(
+        self,
+        x: t.Any,
+        start: t.Optional[t.Union[int, str]] = None,
+        stop: t.Optional[t.Union[int, str]] = None,
+        stop_after: t.Optional[t.Union[int, str]] = None,
+        step: t.Optional[t.Union[int, str]] = None,
+    ) -> t.Any:
         """
-        Apply the pipeline to a given data.
+        Apply the pipeline to a given data. Keyword arguments can be used to
+        restrict pipeline execution to selected steps.
 
         Parameters
         ----------
         x
             Data to apply the pipeline to.
 
+        start : int or str, optional
+            If set, start execution at indexed step.
+
+        stop : int or str, optional
+            If set, stop execution at step preceding indexed step.
+
+        stop_after : int or str, optional
+            If set, stop execution after indexed step. Takes precedence over
+            `stop`.
+
+        step : int or str, option
+            If set, execute indexed step only. Takes precedence on all other
+            step selectors.
+
         Returns
         -------
         xt
             Processed data.
         """
+        if step is not None:
+            if isinstance(step, str):
+                step = self._step_index(step)
+
+            return self.steps[step][1].transform(x)
+
+        if isinstance(start, str):
+            start = self._step_index(start)
+
+        if isinstance(stop_after, str):
+            stop_after = self._step_index(stop_after)
+
+        if stop_after:
+            stop = stop_after + 1
+
+        if isinstance(stop, str):
+            stop = self._step_index(stop)
+
         xt = x
-        for _, _, transform in self._iter():
+        for _, _, transform in self._iter(start, stop):
             xt = transform.transform(xt)
         return xt
 
-    def _iter(self):
+    def _iter(self, start: t.Optional[int] = None, stop: t.Optional[int] = None):
         """
         Generate (idx, name, trans) tuples from self.steps.
         """
-        stop = len(self.steps)
+        if start is None:
+            start = 0
 
-        for idx, (name, trans) in enumerate(itertools.islice(self.steps, 0, stop)):
+        if stop is None:
+            stop = len(self.steps)
+
+        for idx, (name, trans) in enumerate(itertools.islice(self.steps, start, stop)):
             yield idx, name, trans
+
+    @classmethod
+    def convert(cls, x: t.Any) -> t.Any:
+        if isinstance(x, (tuple, list)):
+            return cls(x)
+
+        else:
+            return x
 
 
 # ------------------------------------------------------------------------------
