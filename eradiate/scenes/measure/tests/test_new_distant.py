@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
-from rich.pretty import pprint
 
 import eradiate
+from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.measure._new_distant import (
     AggregateSampleCount,
@@ -220,3 +220,43 @@ def test_multi_distant_measure_construct(mode_mono):
     # The produced kernel dictionary can be instantiated
     kernel_dict = measure.kernel_dict(ctx)
     assert kernel_dict.load().expand()[0]
+
+
+def test_multi_distant_measure_viewing_angles(mode_mono):
+    # Viewing angle computation is correct
+    measure = MultiDistantMeasure(
+        directions=[
+            [0, 0, -1],
+            [-1, 0, -1],
+            [0, -1, -1],
+            [-1, -1, -1],
+        ]
+    )
+
+    assert np.allclose(
+        [
+            [0, 0],
+            [45, 0],
+            [45, 90],
+            [np.rad2deg(np.arccos(1 / np.sqrt(3))), 45],
+        ]
+        * ureg.deg,
+        measure.viewing_angles,
+    )
+
+
+def test_multi_distant_measure_from_viewing_angles(mode_mono):
+    # Constructing from viewing angles yields correct directions
+    angles = [
+        (0, 0),
+        (45, 0),
+        (90, 0),
+        (45, 0),
+        (45, 45),
+        (45, 90),
+        (90, 0),
+        (90, 45),
+        (90, 90),
+    ]
+    measure = MultiDistantMeasure.from_viewing_angles(angles)
+    assert np.allclose(angles * ureg.deg, measure.viewing_angles)
