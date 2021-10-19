@@ -3,6 +3,8 @@ import typing as t
 
 import attr
 import numpy as np
+import pint
+import pinttr
 import xarray as xr
 from pinttr.util import always_iterable
 
@@ -16,6 +18,7 @@ from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
+from ...frame import angles_to_direction, direction_to_angles
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
@@ -304,12 +307,50 @@ class MultiDistantMeasure(Measure):
                 ),
             ),
             ("aggregate_sample_count", AggregateSampleCount()),
+            # ("add_viewing_angles", AddViewingAngles()),
             # ("add_illumination", AddIllumination()),
             # ("compute_reflectance", ComputeReflectance()),
-            # ("add_viewing_angles", AddViewingAngles()),
         ],
         converter=Pipeline,
     )
+
+    @classmethod
+    def from_viewing_angles(cls, angles: np.typing.ArrayLike, **kwargs):
+        """
+        Construct a :class:`.MultiDistantMeasure` using viewing angles instead
+        of raw directions.
+
+        Parameters
+        ----------
+        angles : array-like
+            A list of (zenith, azimuth) pairs, possibly wrapped in a
+            :class:`~pint.Quantity`. Unitless values are automatically converted
+            to configuration units by the configuration unit context
+            (:data:`.unit_config_context`).
+
+        **kwargs
+            Any keyword argument (except `direction`) to be forwarded to
+            :class:`MultiDistantMeasure() <.MultiDistantMeasure>`.
+
+        Returns
+        -------
+        MultiDistantMeasure
+        """
+        if "directions" in kwargs:
+            raise TypeError(
+                "from_viewing_angles() got an unexpected keyword argument 'directions'"
+            )
+
+        angles = pinttr.util.ensure_units(angles, default_units=ucc.get("angle"))
+        directions = -angles_to_direction(angles)
+        return cls(directions=directions, **kwargs)
+
+    @property
+    def viewing_angles(self) -> pint.Quantity:
+        """
+        quantity: Viewing angles computed from stored ``directions``.
+        """
+        return direction_to_angles(-self.directions).to(ucc.get("angle"))
 
     @property
     def film_resolution(self) -> t.Tuple[int, int]:
