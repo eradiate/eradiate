@@ -34,6 +34,7 @@ from ..scenes.measure import (
     DistantReflectanceMeasure,
     Measure,
     MeasureResults,
+    MultiDistantMeasure,
     measure_factory,
 )
 
@@ -163,7 +164,9 @@ class Experiment(ABC):
             if not isinstance(value, dict)
             else [measure_factory.convert(value)],
             validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(DistantMeasure)
+                member_validator=attr.validators.instance_of(
+                    (DistantMeasure, MultiDistantMeasure)
+                )
             ),
         ),
         doc="List of measure specifications. The passed list may contain "

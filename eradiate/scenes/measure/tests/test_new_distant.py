@@ -1,9 +1,11 @@
 import numpy as np
 import pytest
+from rich.pretty import pprint
 
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
+from eradiate.experiments import OneDimExperiment
 from eradiate.scenes.measure._new_distant import (
     AggregateSampleCount,
     Assemble,
@@ -216,6 +218,7 @@ def test_multi_distant_measure_construct(mode_mono):
 
     # Constructing without argument succeeds
     measure = MultiDistantMeasure()
+    pprint(measure)
 
     # The produced kernel dictionary can be instantiated
     kernel_dict = measure.kernel_dict(ctx)
@@ -260,3 +263,25 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
     ]
     measure = MultiDistantMeasure.from_viewing_angles(angles)
     assert np.allclose(angles * ureg.deg, measure.viewing_angles)
+    # TODO: handle negative zenith values
+
+
+def test_multi_distant_measure_add_viewing_angles(mode_mono):
+    # Initialise test data
+    exp = OneDimExperiment(
+        atmosphere=None,
+        measures=MultiDistantMeasure.from_viewing_angles(
+            [(theta, 0) for theta in [-45, 0, 45]],
+            spp=1,
+        ),
+    )
+    exp.process()
+    values = exp.measures[0].results.raw
+
+    # Collect post-processing pipeline and apply steps prior to "add_viewing_angles"
+    pipeline = exp.measures[0].post_processing_pipeline
+    # pipeline.named_steps["assemble"].sensor_dims = []
+    print(values)
+    values = pipeline.transform(values, stop_after="add_viewing_angles")
+    # TODO: fix VZA sign
+    print(values)
