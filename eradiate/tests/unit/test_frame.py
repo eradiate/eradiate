@@ -73,14 +73,46 @@ def test_direction_to_angles():
     # Old-style call
     assert np.allclose(direction_to_angles([0, 0, 1]), (0, 0))
     assert np.allclose(
-        direction_to_angles([np.sqrt(2) / 2, np.sqrt(2) / 2, 0]).m_as("deg"),
+        direction_to_angles([np.sqrt(2) / 2, np.sqrt(2) / 2, 0]).m_as(ureg.deg),
         [90.0, 45.0],
+    )
+    assert np.allclose(
+        direction_to_angles([1, 1, 0]).m_as(ureg.deg),
+        [90.0, 45.0],
+    )
+    assert np.allclose(
+        direction_to_angles(
+            [1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)],
+        ).m_as(ureg.rad),
+        [np.arccos(1 / np.sqrt(3)), 0.25 * np.pi],
+    )
+    assert np.allclose(
+        direction_to_angles([1, 1, 1]).m_as(ureg.rad),
+        [np.arccos(1 / np.sqrt(3)), 0.25 * np.pi],
     )
 
     # Vectorised call
     assert np.allclose(
-        direction_to_angles([[0, 0, 1], [1, 0, 0], [0, 1, 0], [0, 0, -1]]),
-        [[0, 0], [0.5 * np.pi, 0], [0.5 * np.pi, 0.5 * np.pi], [np.pi, 0.0]],
+        direction_to_angles(
+            [
+                [0, 0, 1],
+                [1, 0, 1],
+                [0, 1, 1],
+                [1, 0, 0],
+                [0, 1, 0],
+                [1, 1, 1],
+                [0, 0, -1],
+            ]
+        ),
+        [
+            [0, 0],
+            [0.25 * np.pi, 0],
+            [0.25 * np.pi, 0.5 * np.pi],
+            [0.5 * np.pi, 0],
+            [0.5 * np.pi, 0.5 * np.pi],
+            [np.arccos(1 / np.sqrt(3)), 0.25 * np.pi],
+            [np.pi, 0.0],
+        ],
     )
 
 
