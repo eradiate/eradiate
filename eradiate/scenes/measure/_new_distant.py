@@ -1,5 +1,6 @@
 import re
 import typing as t
+import warnings
 
 import attr
 import numpy as np
@@ -10,17 +11,20 @@ from pinttr.util import always_iterable
 
 import eradiate
 
-from ._core import Measure
+from ._core import Measure, SensorInfo
 from ._distant import TargetOrigin, TargetOriginPoint, TargetOriginRectangle
 from ._pipeline import Pipeline, PipelineStep
 from ..core import KernelDict
+from ... import validators
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
 from ...frame import angles_to_direction, direction_to_angles
+from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 # ------------------------------------------------------------------------------
 #                       Post-processing pipeline steps
@@ -237,23 +241,75 @@ class AggregateSampleCount(PipelineStep):
 
 @parse_docs
 @attr.s
-class AddViewingAngles(PipelineStep):
-    """
-    Create new ``vza`` and ``vaa`` coordinate variables mapping viewing angles
-    to other coordinates.
-    """
-
-    dimension = attr.ib()
-    vza = attr.ib()
-    vaa = attr.ib()
-
-    def transform(self, x: t.Any) -> t.Any:
-        pass
-
-
-@parse_docs
-@attr.s
 class MultiDistantMeasure(Measure):
+
+    # --------------------------------------------------------------------------
+    #                  Specific post-processing pipeline steps
+    # --------------------------------------------------------------------------
+
+    @attr.s
+    class AddViewingAngles(PipelineStep):
+        """
+        Create new ``vza`` and ``vaa`` coordinate variables mapping viewing angles
+        to other coordinates.
+        """
+
+        multi_distant = attr.ib(
+            repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)"
+        )
+
+        def transform(self, x: t.Any) -> t.Any:
+            viewing_angles = self.multi_distant.viewing_angles
+
+            # Collect zenith and azimuth values
+            theta = viewing_angles[:, 0].m_as(ureg.deg).reshape(-1, 1)
+            phi = viewing_angles[:, 1].m_as(ureg.deg).reshape(-1, 1)
+
+            with xr.set_options(keep_attrs=True):
+                result = x.assign_coords(
+                    {
+                        "vza": (
+                            ("x_index", "y_index"),
+                            theta,
+                            {
+                                "standard_name": "viewing_zenith_angle",
+                                "long_name": "viewing zenith angle",
+                                "units": symbol("deg"),
+                            },
+                        ),
+                        "vaa": (
+                            ("x_index", "y_index"),
+                            phi,
+                            {
+                                "standard_name": "viewing_azimuth_angle",
+                                "long_name": "viewing azimuth angle",
+                                "units": symbol("deg"),
+                            },
+                        ),
+                    }
+                )
+
+            return result
+
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
+
+    split_spp: t.Optional[int] = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(int),
+            validator=attr.validators.optional(validators.is_positive),
+        ),
+        type="int",
+        init_type="int, optional",
+        doc="If set, this measure will be split into multiple sensors, each "
+        "with a sample count lower or equal to `split_spp`. This parameter "
+        "should be used in single-precision modes when the sample count is "
+        "higher than 100,000 (very high sample count might result in floating "
+        "point number precision issues otherwise).",
+    )
+
     directions: np.ndarray = documented(
         attr.ib(
             default=np.array([[0.0, 0.0, -1.0]]),
@@ -290,29 +346,81 @@ class MultiDistantMeasure(Measure):
         init_type=":class:`.TargetOrigin` or dict or array-like, optional",
     )
 
-    post_processing_pipeline = attr.ib(
-        factory=lambda: [
-            (
-                "assemble",
-                Assemble(
-                    sensor_dims=("spp",),
-                    img_var=(
-                        "lo",
-                        {
-                            "units": uck.get("radiance"),
-                            "standard_name": "leaving_radiance",
-                            "long_name": "leaving radiance",
-                        },
-                    ),
-                ),
-            ),
-            ("aggregate_sample_count", AggregateSampleCount()),
-            # ("add_viewing_angles", AddViewingAngles()),
-            # ("add_illumination", AddIllumination()),
-            # ("compute_reflectance", ComputeReflectance()),
-        ],
-        converter=Pipeline,
+    post_processing_pipeline: Pipeline = documented(
+        attr.ib(
+            converter=Pipeline.convert,
+            validator=attr.validators.instance_of(Pipeline),
+        ),
+        doc="Post-processing pipeline. This parameter defaults to a basic "
+        "pipeline suitable for most commonly encountered situations.",
+        type=":class:`.Pipeline`",
+        init_type=":class:`.Pipeline` or list of tuple, optional",
     )
+
+    @post_processing_pipeline.default
+    def default_pipeline(self):
+        """
+        Generate a default post-processing pipeline. It includes the following
+        steps:
+
+        1. :class:`.Assemble`
+        2. :class:`.AggregateSampleCount`
+        3. :class:`.AddViewingAngles`
+
+        Returns
+        -------
+        :class:`.Pipeline`
+        """
+        assemble = Assemble(
+            sensor_dims=["spp"] if self.split_spp else [],
+            img_var=(
+                "lo",
+                {
+                    "units": uck.get("radiance"),
+                    "standard_name": "leaving_radiance",
+                    "long_name": "leaving radiance",
+                },
+            ),
+        )
+        add_viewing_angles = MultiDistantMeasure.AddViewingAngles(multi_distant=self)
+
+        return Pipeline(
+            [
+                ("assemble", assemble),
+                ("aggregate_sample_count", AggregateSampleCount()),
+                ("add_viewing_angles", add_viewing_angles),
+                # ("add_illumination", AddIllumination()),
+                # ("compute_reflectance", ComputeReflectance()),
+            ]
+        )
+
+    def __attrs_post_init__(self):
+        if (
+            eradiate.mode().has_flags(ModeFlags.ANY_SINGLE)
+            and self.spp > 10e5
+            and self.split_spp is None
+        ):
+            warnings.warn(
+                "In single-precision modes, setting a sample count ('spp') to "
+                "values greater than 100,000 may result in floating point "
+                "precision issues: using the measure's 'split_spp' parameter is "
+                "recommended."
+            )
+
+    @property
+    def viewing_angles(self) -> pint.Quantity:
+        """
+        quantity: Viewing angles computed from stored ``directions``.
+        """
+        return direction_to_angles(-self.directions).to(ucc.get("angle"))
+
+    @property
+    def film_resolution(self) -> t.Tuple[int, int]:
+        return (self.directions.shape[0], 1)
+
+    # --------------------------------------------------------------------------
+    #                         Additional constructors
+    # --------------------------------------------------------------------------
 
     @classmethod
     def from_viewing_angles(cls, angles: np.typing.ArrayLike, **kwargs):
@@ -345,16 +453,21 @@ class MultiDistantMeasure(Measure):
         directions = -angles_to_direction(angles)
         return cls(directions=directions, **kwargs)
 
-    @property
-    def viewing_angles(self) -> pint.Quantity:
-        """
-        quantity: Viewing angles computed from stored ``directions``.
-        """
-        return direction_to_angles(-self.directions).to(ucc.get("angle"))
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
 
-    @property
-    def film_resolution(self) -> t.Tuple[int, int]:
-        return (self.directions.shape[0], 1)
+    def _sensor_spps(self) -> t.List[int]:
+        if self.split_spp is not None and self.spp > self._spp_splitting_threshold:
+            spps = [self.split_spp] * int(self.spp / self.split_spp)
+
+            if self.spp % self.split_spp:
+                spps.append(self.spp % self.split_spp)
+
+            return spps
+
+        else:
+            return [self.spp]
 
     def _sensor_id(self, i_spp=None):
         """
@@ -367,7 +480,14 @@ class MultiDistantMeasure(Measure):
 
         return "_".join(components)
 
-    def _kernel_dict(self, spp, sensor_id):
+    def _sensor_ids(self) -> t.List[str]:
+        if self.split_spp is not None and self.spp > self._spp_splitting_threshold:
+            return [self._sensor_id(i) for i, _ in enumerate(self._sensor_spps())]
+
+        else:
+            return [self._sensor_id()]
+
+    def _kernel_dict(self, sensor_id, spp):
         result = {
             "type": "mdistant",
             "id": sensor_id,
@@ -391,19 +511,23 @@ class MultiDistantMeasure(Measure):
 
         return result
 
+    def sensor_infos(self) -> t.List[SensorInfo]:
+        return [
+            SensorInfo(id=id, spp=spp)
+            for id, spp in zip(self._sensor_ids(), self._sensor_spps())
+        ]
+
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        spps = self._split_spp()
+        sensor_ids, sensor_spps = [], []
 
-        if len(spps) > 1:
-            sensor_ids = [self._sensor_id(i_spp) for i_spp, _ in enumerate(spps)]
-
-        else:
-            sensor_ids = [self.id]
+        for x in self.sensor_infos():
+            sensor_ids.append(x.id)
+            sensor_spps.append(x.spp)
 
         result = KernelDict()
 
-        for spp, sensor_id in zip(spps, sensor_ids):
-            result.data[sensor_id] = self._kernel_dict(spp, sensor_id)
+        for spp, sensor_id in zip(sensor_spps, sensor_ids):
+            result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
 
         return result
 
