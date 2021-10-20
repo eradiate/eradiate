@@ -38,17 +38,21 @@ def cos_angle_to_direction(cos_theta: ArrayLike, phi: ArrayLike) -> np.ndarray:
 @ureg.wraps(ret=None, args=("rad",), strict=False)
 def angles_to_direction(angles: ArrayLike) -> np.ndarray:
     r"""
-    Convert a zenith and azimuth angle pair to a direction.
+    Convert a zenith and azimuth angle pair to a direction unit vector.
 
     Parameters
     ----------
     theta : array-like
         Zenith angle [radian].
-        Convention: 0 corresponds to zenith, :math:`\pi` corresponds to nadir.
+        0 corresponds to zenith, :math:`\pi/2` corresponds to the XY plane,
+        :math:`\pi` corresponds to nadir.
+        Negative values are allowed; :math:`(\theta, \varphi)`
+        then maps to :math:`(| \theta |, \varphi + \pi)`.
 
     phi : array-like
         Azimuth angle [radian].
-        Convention: :math:`2 \pi` corresponds to the X axis.
+        0 corresponds to the X axis, :math:`\pi / 2` corresponds to the Y axis
+        (*i.e.* rotation is counter-clockwise).
 
     Returns
     -------
@@ -60,6 +64,10 @@ def angles_to_direction(angles: ArrayLike) -> np.ndarray:
         angles = angles.reshape((angles.size // 2, 2))
     if angles.ndim > 2 or angles.shape[1] != 2:
         raise ValueError(f"array must be of shape (N, 2), got {angles.shape}")
+
+    negative_zenith = angles[:, 0] < 0
+    angles[negative_zenith, 0] *= -1
+    angles[negative_zenith, 1] += np.pi
 
     return cos_angle_to_direction(np.cos(angles[:, 0]), angles[:, 1])
 
