@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import typing as t
 import warnings
@@ -7,7 +9,7 @@ import numpy as np
 import pint
 import pinttr
 import xarray as xr
-from pinttr.util import always_iterable
+from pinttr.util import always_iterable, ensure_units
 
 import eradiate
 
@@ -25,6 +27,123 @@ from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+
+# ------------------------------------------------------------------------------
+#                             Local utilities
+# ------------------------------------------------------------------------------
+
+_is_sorted = lambda a: np.all(a[:-1] <= a[1:])
+
+
+def _angles_in_plane(
+    plane: float,
+    theta: np.typing.ArrayLike,
+    phi: np.typing.ArrayLike,
+    raise_exc: bool = True,
+):
+    """
+    Check that a set of (zenith, azimuth) pairs belong to a given hemisphere
+    plane cut.
+
+    Parameters
+    ----------
+
+    plane : float
+        Plane cut orientation in degrees.
+
+    theta : ndarray
+        List of zenith angle values with (N,) shape in degrees.
+
+    phi : ndarray
+        List of azimuth angle values with (N,) shape.
+
+    raise_exc : bool, optional
+        If ``True``, raise if not all directions are snapped to the specified
+        hemisphere plane cut.
+
+    Returns
+    -------
+    in_plane_positive, in_plane_negative
+        Masks indicating indexes of directions contained in the positive (resp.
+        negative) half-plane.
+
+    Raises
+    ------
+    ValueError
+        If not all directions are snapped to the specified hemisphere plane cut.
+    """
+    in_plane_positive = np.isclose(plane, phi) | np.isclose(0.0, theta)
+    in_plane_negative = np.isclose((plane + 180) % 360, phi) & ~in_plane_positive
+    in_plane = in_plane_positive | in_plane_negative
+
+    if raise_exc and not (np.all(in_plane)):
+        raise ValueError(
+            "This step was configured to map plane cut data, but "
+            "the input data contains off-plane points"
+        )
+
+    return in_plane_positive, in_plane_negative
+
+
+@ureg.wraps(ret=("deg", "deg"), args=("deg", "deg", "deg"), strict=True)
+def _remap_viewing_angles_plane(
+    plane: np.typing.ArrayLike,
+    theta: np.typing.ArrayLike,
+    phi: np.typing.ArrayLike,
+) -> t.Tuple[np.typing.ArrayLike, np.typing.ArrayLike]:
+    r"""
+    Remap viewing angles to a hemispherical plane cut.
+
+    Parameters
+    ----------
+    plane : quantity
+         Plane cut orientation (scalar value).
+
+    theta : quantity
+        List of zenith angle values with (N,) shape.
+
+    phi : quantity
+        List of azimuth angle values with (N,) shape.
+
+    Returns
+    -------
+    theta : quantity
+        List of zenith angle values in :math:`[-\pi, \pi]` with (N,) shape.
+
+    phi : quantity
+        List of azimuth angle values in :math:`[0, 2\pi]` with (N,) shape
+        (equal to `plane` modulo :math:`\pi`).
+
+    Warns
+    -----
+
+    """
+    # Normalise all angles
+    plane = plane % 360
+    theta = theta % 360
+    phi = phi % 360
+
+    # Check that phi values are compatible with requested plane
+    in_plane_positive, in_plane_negative = _angles_in_plane(plane, theta, phi)
+
+    # Check if any point is allocated to both half-planes (uncomment to debug)
+    # assert not np.any(in_plane_positive & in_plane_negative)
+
+    # Normalise zenith values
+    theta = np.where(in_plane_positive, theta, -theta)
+
+    # Normalise azimuth values
+    phi = np.full_like(theta, plane)
+
+    # Check ordering and warn if it is not strictly increasing
+    if not _is_sorted(theta):
+        warnings.warn(
+            "Viewing zenith angle values are sorted sorted in ascending order, "
+            "you might want to consider changing direction definitions."
+        )
+
+    return theta, phi
+
 
 # ------------------------------------------------------------------------------
 #                       Post-processing pipeline steps
@@ -254,23 +373,49 @@ class MultiDistantMeasure(Measure):
         to other coordinates.
         """
 
-        multi_distant = attr.ib(
-            repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)"
+        multi_distant: MultiDistantMeasure = documented(
+            attr.ib(
+                repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)",
+            ),
+            doc="A :class:`.MultiDistantMeasure` instance from which the "
+            "processed data originates.",
+            type=":class:`.MultiDistantMeasure`",
+        )
+
+        @multi_distant.validator
+        def _multi_distant_validator(self, attribute, value):
+            # We must use a decorated validator definition because
+            # MultiDistantMeasure isn't defined in the class definition scope
+            attr.validators.instance_of(MultiDistantMeasure)(self, attribute, value)
+
+        plane: t.Optional[pint.Quantity] = documented(
+            pinttr.ib(default=None, units=ucc.deferred("angle")),
+            doc="If set, indicates that the angles are to be mapped to a "
+            "hemisphere plane cut. The value then defines the orientation of "
+            "the plane cut. Directions with an azimuth equal to `plane` are "
+            "mapped to positive zenith values; directions with an azimuth "
+            "equal to `plane` + 180° are mapped to negative zenith values.",
+            type="quantity or None",
+            init_type="quantity, optional",
+            default="None",
         )
 
         def transform(self, x: t.Any) -> t.Any:
             viewing_angles = self.multi_distant.viewing_angles
 
             # Collect zenith and azimuth values
-            theta = viewing_angles[:, 0].m_as(ureg.deg).reshape(-1, 1)
-            phi = viewing_angles[:, 1].m_as(ureg.deg).reshape(-1, 1)
+            theta = viewing_angles[:, 0]
+            phi = viewing_angles[:, 1]
+
+            if self.plane is not None:
+                theta, phi = _remap_viewing_angles_plane(self.plane, theta, phi)
 
             with xr.set_options(keep_attrs=True):
                 result = x.assign_coords(
                     {
                         "vza": (
                             ("x_index", "y_index"),
-                            theta,
+                            theta.m_as(ureg.deg).reshape((-1, 1)),
                             {
                                 "standard_name": "viewing_zenith_angle",
                                 "long_name": "viewing zenith angle",
@@ -279,7 +424,7 @@ class MultiDistantMeasure(Measure):
                         ),
                         "vaa": (
                             ("x_index", "y_index"),
-                            phi,
+                            phi.m_as(ureg.deg).reshape((-1, 1)),
                             {
                                 "standard_name": "viewing_azimuth_angle",
                                 "long_name": "viewing azimuth angle",
@@ -309,6 +454,20 @@ class MultiDistantMeasure(Measure):
         "higher than 100,000 (very high sample count might result in floating "
         "point number precision issues otherwise).",
     )
+
+    @split_spp.validator
+    def _split_spp_validator(self, attribute, value):
+        if (
+            eradiate.mode().has_flags(ModeFlags.ANY_SINGLE)
+            and self.spp > 1e5
+            and self.split_spp is None
+        ):
+            warnings.warn(
+                "In single-precision modes, setting a sample count ('spp') to "
+                "values greater than 100,000 may result in floating point "
+                "precision issues: using the measure's 'split_spp' parameter is "
+                "recommended."
+            )
 
     directions: np.ndarray = documented(
         attr.ib(
@@ -382,7 +541,7 @@ class MultiDistantMeasure(Measure):
                 },
             ),
         )
-        add_viewing_angles = MultiDistantMeasure.AddViewingAngles(multi_distant=self)
+        add_viewing_angles = self.AddViewingAngles(multi_distant=self)
 
         return Pipeline(
             [
@@ -394,23 +553,12 @@ class MultiDistantMeasure(Measure):
             ]
         )
 
-    def __attrs_post_init__(self):
-        if (
-            eradiate.mode().has_flags(ModeFlags.ANY_SINGLE)
-            and self.spp > 10e5
-            and self.split_spp is None
-        ):
-            warnings.warn(
-                "In single-precision modes, setting a sample count ('spp') to "
-                "values greater than 100,000 may result in floating point "
-                "precision issues: using the measure's 'split_spp' parameter is "
-                "recommended."
-            )
-
     @property
     def viewing_angles(self) -> pint.Quantity:
         """
-        quantity: Viewing angles computed from stored ``directions``.
+        quantity: Viewing angles computed from stored `directions` as a (N, 2)
+            array, where N is the number of directions. The second dimension
+            is ordered as (zenith, azimuth).
         """
         return direction_to_angles(-self.directions).to(ucc.get("angle"))
 
@@ -423,7 +571,12 @@ class MultiDistantMeasure(Measure):
     # --------------------------------------------------------------------------
 
     @classmethod
-    def from_viewing_angles(cls, angles: np.typing.ArrayLike, **kwargs):
+    def from_viewing_angles(
+        cls,
+        angles: np.typing.ArrayLike,
+        plane: t.Optional[np.typing.ArrayLike] = None,
+        **kwargs,
+    ):
         """
         Construct a :class:`.MultiDistantMeasure` using viewing angles instead
         of raw directions.
@@ -434,6 +587,12 @@ class MultiDistantMeasure(Measure):
             A list of (zenith, azimuth) pairs, possibly wrapped in a
             :class:`~pint.Quantity`. Unitless values are automatically converted
             to configuration units by the configuration unit context
+            (:data:`.unit_config_context`).
+
+        plane : float or quantity
+            If all directions are expected to be within a hemisphere plane cut,
+            the azimuth value of that plane. Unitless values are automatically
+            converted to configuration units by the configuration unit context
             (:data:`.unit_config_context`).
 
         **kwargs
@@ -451,7 +610,21 @@ class MultiDistantMeasure(Measure):
 
         angles = pinttr.util.ensure_units(angles, default_units=ucc.get("angle"))
         directions = -angles_to_direction(angles)
-        return cls(directions=directions, **kwargs)
+        result = cls(directions=directions, **kwargs)
+
+        if plane is not None:
+            plane = ensure_units(plane, default_units=ucc.get("angle"))
+            # Check that all specified directions are in the requested plane
+            _angles_in_plane(
+                plane.m_as(ureg.deg),
+                angles[:, 0].m_as(ureg.deg),
+                angles[:, 1].m_as(ureg.deg),
+                raise_exc=True,
+            )
+            # Update post-processing pipeline
+            result.post_processing_pipeline.plane = plane
+
+        return result
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
