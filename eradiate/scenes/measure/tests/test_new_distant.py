@@ -10,6 +10,7 @@ from eradiate.scenes.measure._new_distant import (
     AggregateSampleCount,
     Assemble,
     MultiDistantMeasure,
+    _remap_viewing_angles_plane,
 )
 
 
@@ -263,25 +264,73 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
     ]
     measure = MultiDistantMeasure.from_viewing_angles(angles)
     assert np.allclose(angles * ureg.deg, measure.viewing_angles)
-    # TODO: handle negative zenith values
 
 
-def test_multi_distant_measure_add_viewing_angles(mode_mono):
+def test_remap_viewing_angles_plane():
+    # Usage with "normal" parameters
+    theta, phi = _remap_viewing_angles_plane(
+        0 * ureg.deg,
+        [60, 45, 0, 45, 60] * ureg.deg,
+        [-180, -180, 0, 0, 0] * ureg.deg,
+    )
+    assert np.allclose(theta, [-60, -45, 0, 45, 60] * ureg.deg)
+    assert np.allclose(phi, 0 * ureg.deg)
+
+    # Usage with "exotic" parameters
+    theta, phi = _remap_viewing_angles_plane(
+        0 * ureg.deg,
+        [60, 45, 0, 45, 60] * ureg.deg,
+        [-180, 180, 90, 720, 0] * ureg.deg,
+    )
+    assert np.allclose(theta, [-60, -45, 0, 45, 60] * ureg.deg)
+    assert np.allclose(phi, 0 * ureg.deg)
+
+    # Improper direction ordering is detected
+    with pytest.warns(Warning):
+        theta, phi = _remap_viewing_angles_plane(
+            180 * ureg.deg,
+            [45, 0, 45] * ureg.deg,
+            [-180, 0, 0] * ureg.deg,
+        )
+    assert np.allclose(theta, [45, 0, -45] * ureg.deg)
+    assert np.allclose(phi, 180 * ureg.deg)
+
+
+@pytest.mark.parametrize(
+    "plane, expected_zenith, expected_azimuth",
+    (
+        (False, [60, 45, 0, 45, 60], [180, 180, 0, 0, 0]),
+        (True, [-60, -45, 0, 45, 60], [0, 0, 0, 0, 0]),
+    ),
+    ids=("no_plane", "plane"),
+)
+def test_multi_distant_measure_add_viewing_angles(
+    mode_mono, plane, expected_zenith, expected_azimuth
+):
     # Initialise test data
     exp = OneDimExperiment(
         atmosphere=None,
         measures=MultiDistantMeasure.from_viewing_angles(
-            [(theta, 0) for theta in [-45, 0, 45]],
+            [(theta, 0) for theta in [-60, -45, 0, 45, 60]],
             spp=1,
         ),
     )
     exp.process()
-    values = exp.measures[0].results.raw
+    measure = exp.measures[0]
 
     # Collect post-processing pipeline and apply steps prior to "add_viewing_angles"
-    pipeline = exp.measures[0].post_processing_pipeline
-    # pipeline.named_steps["assemble"].sensor_dims = []
-    print(values)
-    values = pipeline.transform(values, stop_after="add_viewing_angles")
-    # TODO: fix VZA sign
-    print(values)
+    pipeline = measure.post_processing_pipeline
+    values = pipeline.transform(measure.results.raw, stop="add_viewing_angles")
+    add_viewing_angles = pipeline.named_steps["add_viewing_angles"]
+    if plane:
+        add_viewing_angles.plane = 0 * ureg.deg
+
+    result = add_viewing_angles.transform(values)
+
+    # Produced dataset has viewing angle coordinates
+    assert "vza" in result.coords
+    assert "vaa" in result.coords
+
+    # Viewing angles are set to appropriate values
+    assert np.allclose(expected_zenith, result.coords["vza"].values.ravel())
+    assert np.allclose(expected_azimuth, result.coords["vaa"].values.ravel())
