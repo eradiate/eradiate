@@ -200,6 +200,9 @@ class Experiment(ABC):
 
     @property
     def integrator(self) -> Integrator:
+        """
+        :class:`.Integrator`: Integrator used to solve the radiative transfer equation.
+        """
         return self._integrator
 
     @property
