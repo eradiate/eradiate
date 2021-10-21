@@ -43,24 +43,29 @@ class RPVSurface(Surface):
         doc="Amplitude parameter. Must be dimensionless. "
         "Should be in :math:`[0, 1]`.",
         type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict or float",
+        init_type=":class:`.Spectrum` or dict or float, optional",
         default="0.183",
     )
 
-    rho_c: Spectrum = documented(
+    rho_c: t.Optional[Spectrum] = documented(
         attr.ib(
-            default=0.183,
-            converter=spectrum_factory.converter("dimensionless"),
-            validator=[
-                attr.validators.instance_of(Spectrum),
-                validators.has_quantity("dimensionless"),
-            ],
+            default=None,
+            converter=attr.converters.optional(
+                spectrum_factory.converter("dimensionless")
+            ),
+            validator=attr.validators.optional(
+                (
+                    attr.validators.instance_of(Spectrum),
+                    validators.has_quantity("dimensionless"),
+                )
+            ),
         ),
         doc="Hot spot parameter. Must be dimensionless. "
-        "Should be in :math:`[0, 1]`.",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict or float",
-        default="0.183",
+        r"Should be in :math:`[0, 1]`. If unset, :math:`\rho_\mathrm{c}` "
+        r"defaults to the kernel plugin default (equal to :math:`\rho_0`).",
+        type=":class:`.Spectrum` or None",
+        init_type=":class:`.Spectrum` or dict or float or None, optional",
+        default="None",
     )
 
     k: Spectrum = documented(
@@ -75,7 +80,7 @@ class RPVSurface(Surface):
         doc="Bowl-shape parameter. Must be dimensionless. "
         "Should be in :math:`[0, 2]`.",
         type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict or float",
+        init_type=":class:`.Spectrum` or dict or float, optional",
         default="0.780",
     )
 
@@ -91,19 +96,23 @@ class RPVSurface(Surface):
         doc="Asymmetry parameter. Must be dimensionless. "
         "Should be in :math:`[-1, 1]`.",
         type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict or float",
+        init_type=":class:`.Spectrum` or dict or float, optional",
         default="-0.1",
     )
 
     def bsdfs(self, ctx: KernelDictContext) -> KernelDict:
-        return KernelDict(
+        result = KernelDict(
             {
                 f"bsdf_{self.id}": {
                     "type": "rpv",
                     "rho_0": onedict_value(self.rho_0.kernel_dict(ctx)),
-                    "rho_c": onedict_value(self.rho_c.kernel_dict(ctx)),
                     "k": onedict_value(self.k.kernel_dict(ctx)),
                     "g": onedict_value(self.g.kernel_dict(ctx)),
                 }
             }
         )
+
+        if self.rho_c is not None:
+            result.data["rho_c"] = onedict_value(self.rho_c.kernel_dict(ctx))
+
+        return result
