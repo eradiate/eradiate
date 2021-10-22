@@ -18,23 +18,6 @@ library, whose data model is based on NetCDF. Xarray provides a comprehensive,
 robust and convenient interface to read, write, manipulate and visualise NetCDF
 data.
 
-.. _sec-user_guide-manual_download:
-
-Adding manually downloaded data
--------------------------------
-
-Due to the impracticality of storing large data sets with the code base,
-Eradiate does not ship all data required to run simulations.
-Certain large data sets are hosted on a `FTP server <https://eradiate.eu/data>`_
-and must be downloaded manually.
-
-The data are served as compressed archives, including their containing folders.
-To install the downloaded data, first decompress the archive into a temporary
-location. The decompressed folder can then be placed directly in the
-``resources/data`` folder and typical file managers will be able to merge the
-two file trees, placing the data files in the correct location in the local file
-tree.
-
 Accessing shipped data
 ----------------------
 

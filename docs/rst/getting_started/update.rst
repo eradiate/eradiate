@@ -69,3 +69,12 @@ necessary. In that case, the ``conda-init`` target can be used:
 
 If something goes wrong during that process, an environment reset should solve
 most issues (see :ref:`sec-getting_started-install-setup_conda`).
+
+Update large data sets
+----------------------
+
+Fetch updated large data sets by running the ``ertdownload`` script again:
+
+.. code:: bash
+
+   ertdownload
