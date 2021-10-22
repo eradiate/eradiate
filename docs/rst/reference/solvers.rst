@@ -3,6 +3,10 @@
 High-level solvers [eradiate.solvers]
 =====================================
 
+.. warning::
+   This module is deprecated and superseded by
+   :ref:`eradiate.experiments <sec-reference-experiments>`.
+
 Core infrastructure [eradiate.solvers.core]
 -------------------------------------------
 .. currentmodule:: eradiate.solvers.core
