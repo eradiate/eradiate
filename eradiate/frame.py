@@ -143,3 +143,52 @@ def spherical_to_cartesian(r, theta, phi, origin=np.zeros((3,))):
             r * np.cos(theta) + origin[2]
         ])
     # fmt: on
+
+
+def angles_in_hplane(
+    plane: float,
+    theta: np.typing.ArrayLike,
+    phi: np.typing.ArrayLike,
+    raise_exc: bool = True,
+):
+    """
+    Check that a set of (zenith, azimuth) pairs belong to a given hemisphere
+    plane cut.
+
+    Parameters
+    ----------
+    plane : float
+        Plane cut orientation in degrees.
+
+    theta : ndarray
+        List of zenith angle values with (N,) shape in degrees.
+
+    phi : ndarray
+        List of azimuth angle values with (N,) shape.
+
+    raise_exc : bool, optional
+        If ``True``, raise if not all directions are snapped to the specified
+        hemisphere plane cut.
+
+    Returns
+    -------
+    in_plane_positive, in_plane_negative
+        Masks indicating indexes of directions contained in the positive (resp.
+        negative) half-plane.
+
+    Raises
+    ------
+    ValueError
+        If not all directions are snapped to the specified hemisphere plane cut.
+    """
+    in_plane_positive = np.isclose(plane, phi) | np.isclose(0.0, theta)
+    in_plane_negative = np.isclose((plane + 180) % 360, phi) & ~in_plane_positive
+    in_plane = in_plane_positive | in_plane_negative
+
+    if raise_exc and not (np.all(in_plane)):
+        raise ValueError(
+            "This step was configured to map plane cut data, but "
+            "the input data contains off-plane points"
+        )
+
+    return in_plane_positive, in_plane_negative

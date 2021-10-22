@@ -1,10 +1,11 @@
 import pytest
 
-from eradiate.scenes.measure._pipeline import ApplyCallable, Pipeline, _camel_to_snake
+from eradiate._util import camel_to_snake
+from eradiate.pipelines._core import ApplyCallable, Pipeline
 
 
 def test_pipeline_camel_to_snake():
-    assert _camel_to_snake("SomeKindOfThing") == "some_kind_of_thing"
+    assert camel_to_snake("SomeKindOfThing") == "some_kind_of_thing"
 
 
 def test_pipeline_step_apply_callable():
