@@ -1,23 +1,18 @@
 from __future__ import annotations
 
 import itertools
-import re
 import typing as t
 from abc import ABC, abstractmethod
 from collections import Counter
 
 import attr
 
-# ------------------------------------------------------------------------------
-#                               Utility functions
-# ------------------------------------------------------------------------------
-from eradiate.attrs import documented, parse_docs
+from .._util import camel_to_snake
+from ..attrs import documented, parse_docs
 
-
-def _camel_to_snake(name):
-    # from https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
-    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+# ------------------------------------------------------------------------------
+#                                Local utilities
+# ------------------------------------------------------------------------------
 
 
 def _pipeline_steps_converter(value):
@@ -25,7 +20,7 @@ def _pipeline_steps_converter(value):
 
     for i, step in enumerate(value):
         if isinstance(step, PipelineStep):
-            result.append((f"{i}_{_camel_to_snake(step.__class__.__name__)}", step))
+            result.append((f"{i}_{camel_to_snake(step.__class__.__name__)}", step))
         else:
             result.append(step)
 
@@ -33,7 +28,7 @@ def _pipeline_steps_converter(value):
 
 
 # ------------------------------------------------------------------------------
-#                             Main pipeline definition
+#                          Basic classes and interfaces
 # ------------------------------------------------------------------------------
 
 
@@ -234,11 +229,6 @@ class Pipeline:
 
         else:
             return x
-
-
-# ------------------------------------------------------------------------------
-#                             Pipeline step definitions
-# ------------------------------------------------------------------------------
 
 
 @attr.s

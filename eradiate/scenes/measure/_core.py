@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 import itertools
 import typing as t
 from abc import ABC, abstractmethod
@@ -33,6 +34,11 @@ from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
 measure_factory = Factory()
+
+
+# ------------------------------------------------------------------------------
+#                           Utility data structures
+# ------------------------------------------------------------------------------
 
 
 @parse_docs
