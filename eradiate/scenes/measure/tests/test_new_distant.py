@@ -334,3 +334,14 @@ def test_multi_distant_measure_add_viewing_angles(
     # Viewing angles are set to appropriate values
     assert np.allclose(expected_zenith, result.coords["vza"].values.ravel())
     assert np.allclose(expected_azimuth, result.coords["vaa"].values.ravel())
+
+
+def test_multi_distant_measure_plane(mode_mono):
+    # Constructing from plane yields correct directions
+    zeniths = [-60, -45, 0, 45, 60]
+    azimuth = 45
+    measure = MultiDistantMeasure.plane(azimuth, zeniths)
+    assert np.allclose(
+        [[60, -135], [45, -135], [0, 0], [45, 45], [60, 45]] * ureg.deg,
+        measure.viewing_angles,
+    )

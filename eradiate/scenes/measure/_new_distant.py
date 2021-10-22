@@ -626,6 +626,50 @@ class MultiDistantMeasure(Measure):
 
         return result
 
+    @classmethod
+    def plane(
+        cls, azimuth: np.typing.ArrayLike, zeniths: np.typing.ArrayLike, **kwargs
+    ):
+        """
+        Construct a :class:`.MultiDistantMeasure` with directions in a
+        hemisphere plane cut.
+
+        Parameters
+        ----------
+        azimuth : float or quantity
+            Azimuth of the hemisphere plane cut. Unitless values are
+            automatically converted to configuration units by the configuration
+            unit context (:data:`.unit_config_context`).
+
+        zeniths : array-like
+            Direction zenith values as a (N,)-shaped array. Unitless values are
+            automatically converted to configuration units by the configuration
+            unit context (:data:`.unit_config_context`). Negative values are
+            converted to positive values in the `azimuth` + 180° half-plane.
+
+        **kwargs
+            Any keyword argument (except `direction`) to be forwarded to
+            :class:`MultiDistantMeasure() <.MultiDistantMeasure>`.
+
+        Returns
+        -------
+        MultiDistantMeasure
+        """
+        if "directions" in kwargs:
+            raise TypeError("plane() got an unexpected keyword argument 'directions'")
+
+        # Check and normalise parameters
+        angles = np.empty((np.atleast_1d(zeniths).shape[0], 2))
+        angle_units = ucc.get("angle")
+        angles[:, 0] = ensure_units(zeniths, default_units=angle_units).m_as(
+            angle_units
+        )
+        azimuth = ensure_units(azimuth, default_units=angle_units)
+        angles[:, 1] = azimuth.m_as(angle_units)
+
+        # Generate directions and return
+        return cls.from_viewing_angles(angles, plane=azimuth, **kwargs)
+
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
