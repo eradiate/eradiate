@@ -20,6 +20,10 @@ eradiate.scenes.surface.surface_factory
 
       * - ``black``
         - :class:`BlackSurface`
+      * - ``central_patch``
+        - :class:`CentralPatchSurface`
+      * - ``checkerboard``
+        - :class:`CheckerboardSurface`
       * - ``lambertian``
         - :class:`LambertianSurface`
       * - ``rpv``

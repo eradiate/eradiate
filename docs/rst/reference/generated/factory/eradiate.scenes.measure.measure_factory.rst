@@ -32,10 +32,10 @@ eradiate.scenes.measure.measure_factory
         - :class:`DistantRadianceMeasure`
       * - ``distant_reflectance``
         - :class:`DistantReflectanceMeasure`
+      * - ``multi_radiancemeter``
+        - :class:`MultiRadiancemeterMeasure`
       * - ``perspective``
         - :class:`PerspectiveCameraMeasure`
       * - ``radiancemeter``
         - :class:`RadiancemeterMeasure`
-      * - ``radiancemeterarray``
-        - :class:`RadiancemeterArrayMeasure`
 

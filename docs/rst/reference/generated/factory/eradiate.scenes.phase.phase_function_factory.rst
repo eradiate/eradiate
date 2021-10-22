@@ -18,8 +18,14 @@ eradiate.scenes.phase.phase_function_factory
    .. list-table::
       :widths: 25 75
 
+      * - ``blend_phase``
+        - :class:`BlendPhaseFunction`
       * - ``hg``
         - :class:`HenyeyGreensteinPhaseFunction`
+      * - ``isotropic``
+        - :class:`IsotropicPhaseFunction`
       * - ``rayleigh``
         - :class:`RayleighPhaseFunction`
+      * - ``tab_phase``
+        - :class:`TabulatedPhaseFunction`
 
