@@ -17,7 +17,7 @@ def format_help_dicts_rst(help_dicts, display_defaults=False):
         help_str += f"   *{'Required' if help_dict['required'] else 'Optional'}"
 
         if help_dict.get("default") and display_defaults:
-            help_str += f", Default={help_dict['default']}* "
+            help_str += f", default={repr(help_dict['default'])}.* "
         else:
             help_str += "*. "
 

@@ -17,4 +17,4 @@ Environment variables
 
 .. exec::
    from eradiate._config import EradiateConfig, format_help_dicts_rst
-   print(EradiateConfig.generate_help(formatter=format_help_dicts_rst))
+   print(EradiateConfig.generate_help(formatter=format_help_dicts_rst, display_defaults=True))
