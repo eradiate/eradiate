@@ -1,3 +1,4 @@
+import os.path
 import pathlib
 import warnings
 
@@ -79,6 +80,12 @@ class EradiateConfig:
                     f"paths to nonexisting directories {[str(x) for x in do_not_exist]}"
                 )
             )
+
+    download_dir = environ.var(
+        default="$ERADIATE_DIR/resources/data/downloads",
+        converter=lambda x: pathlib.Path(os.path.expandvars(x)).absolute(),
+        help="Path to the Eradiate download directory.",
+    )
 
     progress = environ.var(
         default=2,
