@@ -4,7 +4,7 @@ from eradiate.pipelines._gather import Gather
 
 
 def test_pipeline_step_gather_mono_ms_spp(results_mono_ms_spp):
-    values = results_mono_ms_spp
+    values = results_mono_ms_spp[0]
 
     # Configure this pipeline step according to the used sensor
     step = Gather(sensor_dims=("ms", "spp"))
@@ -27,7 +27,7 @@ def test_pipeline_step_gather_mono_ms_spp(results_mono_ms_spp):
 
 
 def test_pipeline_step_assemble_ckd_ms_spp(results_ckd_ms_spp):
-    values = results_ckd_ms_spp
+    values = results_ckd_ms_spp[0]
 
     # Configure this pipeline step according to the used sensor
     step = Gather(sensor_dims=("ms", "spp"))
@@ -51,7 +51,7 @@ def test_pipeline_step_assemble_ckd_ms_spp(results_ckd_ms_spp):
 
 
 def test_pipeline_step_assemble_mono_spp(results_mono_spp):
-    values = results_mono_spp
+    values = results_mono_spp[0]
 
     # Configure this pipeline step according to the used sensor
     step = Gather(sensor_dims=("spp",))
@@ -73,7 +73,7 @@ def test_pipeline_step_assemble_mono_spp(results_mono_spp):
 
 
 def test_pipeline_step_assemble_mono(results_mono):
-    values = results_mono
+    values = results_mono[0]
 
     # Configure this pipeline step according to the used sensor
     step = Gather()

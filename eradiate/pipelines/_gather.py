@@ -75,9 +75,9 @@ class Gather(PipelineStep):
         "(dimension, metadata) pair.",
     )
 
-    img_var: t.Union[str, t.Tuple[str, t.Dict]] = documented(
+    var: t.Union[str, t.Tuple[str, t.Dict]] = documented(
         attr.ib(default="img"),
-        default="img",
+        default='"img"',
         type="str or tuple[str, dict]",
         init_type="str or tuple[str, dict], optional",
         doc="Name of the variable containing sensor data. Optionally, a "
@@ -182,15 +182,15 @@ class Gather(PipelineStep):
             result[spectral_dim].attrs = spectral_dim_metadata[spectral_dim]
 
         # Apply metadata to data variables
-        if isinstance(self.img_var, str):
-            img_var = self.img_var
-            img_var_metadata = {}
+        if isinstance(self.var, str):
+            var = self.var
+            var_metadata = {}
         else:
-            img_var = self.img_var[0]
-            img_var_metadata = self.img_var[1]
+            var = self.var[0]
+            var_metadata = self.var[1]
 
-        result = result.rename({"img": img_var})
-        result[img_var].attrs.update(img_var_metadata)
+        result = result.rename({"img": var})
+        result[var].attrs.update(var_metadata)
 
         result["spp"].attrs = {
             "standard_name": "sample_count",
