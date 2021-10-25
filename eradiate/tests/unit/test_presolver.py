@@ -27,11 +27,11 @@ def test_contains(presolver):
 def test_remove(presolver):
     # Remove from item
     presolver.remove(os.getcwd())
-    assert len(presolver) == 1
+    assert len(presolver) == 2
 
     # Remove from index
     presolver.remove(0)
-    assert len(presolver) == 0
+    assert len(presolver) == 1
 
     # We expect a removal attempt with a nonexisting item to raise
     with pytest.raises(ValueError):
@@ -69,8 +69,9 @@ def test_resolve(presolver):
 
     # We expect the test script to find its own location
     assert str(presolver.resolve("tests/")) == os.path.join(base, "tests")
-    assert str(presolver.resolve("tests/unit/test_presolver.py")) == \
-           os.path.join(base, "tests/unit/test_presolver.py")
+    assert str(presolver.resolve("tests/unit/test_presolver.py")) == os.path.join(
+        base, "tests/unit/test_presolver.py"
+    )
 
     # We expect to get the original path if the file is not found
     assert str(presolver.resolve("some_file.py")) == "some_file.py"

@@ -1081,7 +1081,7 @@ class AFGL1986RadProfile(RadProfile):
         # TODO: check that model is us_standard and that bin is available in
         # data set
         ds = eradiate.data.open(
-            category="ckd_absorption", id="afgl1986-us_standard-10nm_test"
+            category="ckd_absorption", id="afgl_1986-us_standard-10nm_test"
         )
         z = to_quantity(self.thermoprops.z_layer).m_as(ds.z.units)
         return ureg.Quantity(
