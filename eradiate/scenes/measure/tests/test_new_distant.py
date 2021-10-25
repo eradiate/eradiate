@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from rich.pretty import pprint
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
@@ -47,6 +46,11 @@ def test_multi_distant_measure_viewing_angles(mode_mono):
         measure.viewing_angles,
     )
 
+    # Directions which would normally map to the [-π, 0] domain are normalised
+    # to [0, 2π]
+    measure = MultiDistantMeasure(directions=[[0, 1, -1]])
+    assert np.allclose([45, 270] * ureg.deg, measure.viewing_angles)
+
 
 def test_multi_distant_measure_from_viewing_angles(mode_mono):
     """
@@ -75,24 +79,9 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
 
     # Construct an azimuthal ring
     zeniths = 45
-    azimuths = np.arange(-180, 180, 45)
+    azimuths = np.arange(0, 360, 45)
     measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
     assert measure.hplane is None
 
     angles = np.array((np.full_like(azimuths, zeniths), azimuths)).T
     assert np.allclose(angles * ureg.deg, measure.viewing_angles)
-
-
-def test_multi_distant_measure_plane(mode_mono):
-    """
-    Unit tests for :meth:`.MultiDistantMeasure.plane`.
-    """
-
-    # Constructing from plane yields correct directions
-    zeniths = [-60, -45, 0, 45, 60]
-    azimuth = 45
-    measure = MultiDistantMeasure.plane(azimuth, zeniths)
-    assert np.allclose(
-        [[60, -135], [45, -135], [0, 0], [45, 45], [60, 45]] * ureg.deg,
-        measure.viewing_angles,
-    )
