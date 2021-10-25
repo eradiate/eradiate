@@ -7,7 +7,6 @@ import attr
 import numpy as np
 import pint
 import pinttr
-from pinttr.util import ensure_units
 
 import eradiate
 
@@ -133,7 +132,12 @@ class MultiDistantMeasure(Measure):
             array, where N is the number of directions. The second dimension
             is ordered as (zenith, azimuth).
         """
-        return direction_to_angles(-self.directions).to(ucc.get("angle"))
+        angle_units = ucc.get("angle")
+        angles = direction_to_angles(-self.directions).to(angle_units)
+
+        # Normalise azimuth to [0, 2π]
+        angles[:, 1] %= 360.0 * ureg.deg
+        return angles
 
     @property
     def film_resolution(self) -> t.Tuple[int, int]:
