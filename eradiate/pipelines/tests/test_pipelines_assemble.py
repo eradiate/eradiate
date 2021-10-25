@@ -8,7 +8,9 @@ from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
 from eradiate.exceptions import UnsupportedModeError
 from eradiate.experiments import OneDimExperiment
-from eradiate.pipelines._assemble import _remap_viewing_angles_plane
+from eradiate.pipelines._assemble import AddViewingAngles, _remap_viewing_angles_plane
+from eradiate.pipelines._core import Pipeline
+from eradiate.pipelines._gather import Gather
 from eradiate.scenes.measure import MultiDistantMeasure
 
 
@@ -43,21 +45,23 @@ def test_remap_viewing_angles_plane():
 
 
 @pytest.mark.parametrize(
-    "plane, expected_zenith, expected_azimuth",
+    "hplane, expected_zenith, expected_azimuth",
     (
         (False, [60, 45, 0, 45, 60], [180, 180, 0, 0, 0]),
         (True, [-60, -45, 0, 45, 60], [0, 0, 0, 0, 0]),
     ),
-    ids=("no_plane", "plane"),
+    ids=("no_hplane", "hplane"),
 )
 def test_multi_distant_measure_add_viewing_angles(
-    mode_mono, plane, expected_zenith, expected_azimuth
+    mode_mono, hplane, expected_zenith, expected_azimuth
 ):
     # Initialise test data
     exp = OneDimExperiment(
         atmosphere=None,
         measures=MultiDistantMeasure.from_viewing_angles(
-            [(theta, 0) for theta in [-60, -45, 0, 45, 60]],
+            zeniths=[-60, -45, 0, 45, 60],
+            azimuths=0.0,
+            auto_hplane=hplane,
             spp=1,
         ),
     )
@@ -65,13 +69,10 @@ def test_multi_distant_measure_add_viewing_angles(
     measure = exp.measures[0]
 
     # Collect post-processing pipeline and apply steps prior to "add_viewing_angles"
-    pipeline = measure.pipeline
-    values = pipeline.transform(measure.results.raw, stop="add_viewing_angles")
-    add_viewing_angles = pipeline.named_steps["add_viewing_angles"]
-    if plane:
-        add_viewing_angles.plane = 0 * ureg.deg
+    values = Gather(var="lo").transform(measure.results.raw)
 
-    result = add_viewing_angles.transform(values)
+    step = AddViewingAngles(measure=measure)
+    result = step.transform(values)
 
     # Produced dataset has viewing angle coordinates
     assert "vza" in result.coords

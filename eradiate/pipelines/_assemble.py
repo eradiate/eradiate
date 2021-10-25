@@ -64,14 +64,15 @@ class AddViewingAngles(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
-        viewing_angles = self.multi_distant.viewing_angles
+        measure = self.measure
+        viewing_angles = measure.viewing_angles
 
         # Collect zenith and azimuth values
         theta = viewing_angles[:, 0]
         phi = viewing_angles[:, 1]
 
-        if self.plane is not None:
-            theta, phi = _remap_viewing_angles_plane(self.plane, theta, phi)
+        if measure.hplane is not None:
+            theta, phi = _remap_viewing_angles_plane(measure.hplane, theta, phi)
 
         with xr.set_options(keep_attrs=True):
             result = x.assign_coords(
