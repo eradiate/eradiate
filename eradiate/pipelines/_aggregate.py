@@ -14,6 +14,7 @@ from ..attrs import documented, parse_docs
 from ..scenes.measure import Measure
 from ..units import symbol
 from ..units import unit_context_config as ucc
+from ..units import unit_context_kernel as uck
 
 
 @parse_docs
@@ -142,3 +143,41 @@ class AggregateCKDQuad(PipelineStep):
 
         # Final output has a spectral coordinate but retains bin ID coordinate
         return result.drop_dims("index")
+
+
+@parse_docs
+@attr.s
+class AggregateRadiosity(PipelineStep):
+    """
+    Aggregate flux density field.
+    """
+
+    sector_radiosity_var: str = documented(
+        attr.ib(default="sector_radiosity", validator=attr.validators.instance_of(str)),
+        doc="Name of the variable containing radiosity values for the "
+        "hemisphere sector corresponding to each film pixel. This quantity is "
+        "expressed in flux units (typically W/m²) and, when summed over the "
+        "entire film, aggregates into a radiosity.",
+        type="str",
+        default='"sector_radiosity"',
+    )
+
+    radiosity_var: str = documented(
+        attr.ib(default="radiosity", validator=attr.validators.instance_of(str)),
+        doc="Name of the variable storing the computed radiosity "
+        "(leaving flux) value.",
+        type="str",
+        default='"radiosity"',
+    )
+
+    def transform(self, x: t.Any) -> t.Any:
+        result = x.copy()
+
+        result[self.radiosity_var] = result[self.var].sum(dim=("x", "y"))
+        result[self.radiosity_var].attrs = {
+            "standard_name": "toa_outgoing_flux_density_per_unit_wavelength",
+            "long_name": "top-of-atmosphere outgoing spectral flux density",
+            "units": symbol(uck.get("irradiance")),
+        }
+
+        return result
