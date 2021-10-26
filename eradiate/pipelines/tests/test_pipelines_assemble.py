@@ -1,14 +1,16 @@
-from pprint import pprint
-
 import numpy as np
 import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
-from eradiate.exceptions import UnsupportedModeError
 from eradiate.experiments import OneDimExperiment
-from eradiate.pipelines._assemble import AddViewingAngles, _remap_viewing_angles_plane
+from eradiate.pipelines._aggregate import AggregateCKDQuad
+from eradiate.pipelines._assemble import (
+    AddIllumination,
+    AddViewingAngles,
+    _remap_viewing_angles_plane,
+)
 from eradiate.pipelines._core import Pipeline
 from eradiate.pipelines._gather import Gather
 from eradiate.scenes.measure import MultiDistantMeasure
@@ -68,7 +70,7 @@ def test_multi_distant_measure_add_viewing_angles(
     exp.process()
     measure = exp.measures[0]
 
-    # Collect post-processing pipeline and apply steps prior to "add_viewing_angles"
+    # Apply basic post-processing
     values = Gather(var="lo").transform(measure.results.raw)
 
     step = AddViewingAngles(measure=measure)
@@ -83,26 +85,40 @@ def test_multi_distant_measure_add_viewing_angles(
     assert np.allclose(expected_azimuth, result.coords["vaa"].values.ravel())
 
 
-def test_pipelines_add_illumination(mode_ckd):
+@pytest.mark.parametrize(
+    "illumination_type, expected_dims",
+    [
+        ("directional", ["sza", "saa"]),
+        ("constant", []),
+    ],
+    ids=["directional", "constant"],
+)
+def test_pipelines_add_illumination(modes_all_single, illumination_type, expected_dims):
     # Initialise test data
     if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
         spectral_cfg = {"wavelengths": [540.0, 550.0, 560.0]}
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
         spectral_cfg = {"bins": ["540", "550", "560"]}
     else:
-        raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        pytest.skip(f"unsupported mode {eradiate.mode().id}")
 
     exp = OneDimExperiment(
         atmosphere=None,
+        illumination={"type": illumination_type},
         measures=MultiDistantMeasure(spectral_cfg=spectral_cfg),
     )
     exp.process()
     measure = exp.measures[0]
-    pprint(measure)
 
-    # Collect post-processing pipeline and apply steps prior to "add_viewing_angles"
-    pipeline = measure.pipeline
-    values = pipeline.transform(measure.results.raw, stop="add_viewing_angles")
-    add_viewing_angles = pipeline.named_steps["add_viewing_angles"]
-    result = add_viewing_angles.transform(values)
-    pprint(result)
+    # Apply basic post-processing
+    values = Pipeline(
+        steps=[
+            ("gather", Gather(var="lo")),
+            ("aggregate_ckd_quad", AggregateCKDQuad(var="lo", measure=measure)),
+        ]
+    ).transform(measure.results.raw)
+
+    step = AddIllumination(illumination=exp.illumination, measure=measure)
+    result = step.transform(values)
+    assert all(dim in result.dims for dim in expected_dims)
+    assert "irradiance" in result.data_vars
