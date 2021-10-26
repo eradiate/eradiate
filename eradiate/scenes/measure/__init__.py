@@ -7,8 +7,8 @@ from ._distant import (
     DistantReflectanceMeasure,
 )
 from ._distant_array import DistantArrayMeasure, DistantArrayReflectanceMeasure
+from ._multi_distant import MultiDistantMeasure
 from ._multi_radiancemeter import MultiRadiancemeterMeasure
-from ._new_distant import MultiDistantMeasure
 from ._perspective import PerspectiveCameraMeasure
 from ._radiancemeter import RadiancemeterMeasure
 

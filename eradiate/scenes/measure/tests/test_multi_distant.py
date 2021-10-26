@@ -3,7 +3,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.measure._new_distant import MultiDistantMeasure
+from eradiate.scenes.measure._multi_distant import MultiDistantMeasure
 
 
 def test_multi_distant_measure_construct(mode_mono):

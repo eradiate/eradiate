@@ -25,7 +25,7 @@ class DistantArrayMeasure(DistantMeasure):
     Distant sensor array measure scene element [``distant_array``].
 
     This measure scene element is a thin wrapper around the ``DistantSensor``
-    measures. It records either the radiancealong the directions given by the
+    measures. It records the radiance along the directions given by the
     ``directions`` parameter.
     """
 
