@@ -3,7 +3,6 @@
 import numpy as np
 
 from eradiate.experiments import OneDimExperiment
-from eradiate.scenes.measure import DistantReflectanceMeasure
 from eradiate.scenes.surface import LambertianSurface
 
 

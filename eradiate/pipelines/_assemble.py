@@ -30,11 +30,10 @@ class AddIllumination(PipelineStep):
     This post-processing pipeline step adds illumination data:
 
     * if `illumination` is a :class:`.DirectionalIllumination` instance, then
-      an ``irradiance`` data variable is created, with dimensions ``sza`` and
-      ``vaa``, which holds the incoming top-of-scene flux with respect to a
-      horizontal surface;
+      a data variable (holding the incoming top-of-scene flux with respect to a
+      horizontal surface) is created, with dimensions ``sza`` and ``vaa``;
     * if `illumination` is a :class:`.ConstantIllumination` instance, then
-      the ``irradiance`` data variable has no coordinate.
+      the created data variable has no coordinate.
     """
 
     illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
@@ -56,6 +55,13 @@ class AddIllumination(PipelineStep):
         ),
         doc="A :class:`.Measure` instance from the data originates.",
         type=":class:`.Measure`",
+    )
+
+    irradiance_var: str = documented(
+        attr.ib(default="irradiance", validator=attr.validators.instance_of(str)),
+        doc="Name of the variable storing irradiance (incoming flux) values.",
+        type="str",
+        default='"irradiance"',
     )
 
     def transform(self, x: t.Any) -> t.Any:
@@ -125,7 +131,7 @@ class AddIllumination(PipelineStep):
             irradiances = eval_illumination_spectrum("irradiance", k_irradiance_units)
 
             # Add irradiance variable
-            result["irradiance"] = (
+            result[self.irradiance_var] = (
                 ("sza", "saa", "w"),
                 (irradiances * cos_sza).reshape((1, 1, len(irradiances))),
             )
@@ -136,7 +142,7 @@ class AddIllumination(PipelineStep):
             radiances = eval_illumination_spectrum("radiance", k_radiance_units)
 
             # Add irradiance variable
-            result["irradiance"] = (
+            result[self.irradiance_var] = (
                 ("w",),
                 np.pi * radiances.reshape((len(radiances),)),
             )
@@ -148,7 +154,7 @@ class AddIllumination(PipelineStep):
                 f"{illumination.__class__.__name__}"
             )
 
-        result["irradiance"].attrs = {
+        result[self.irradiance_var].attrs = {
             "standard_name": "horizontal_solar_irradiance_per_unit_wavelength",
             "long_name": "horizontal spectral irradiance",
             "units": symbol(k_irradiance_units),

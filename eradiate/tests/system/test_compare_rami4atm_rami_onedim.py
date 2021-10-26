@@ -1,12 +1,11 @@
 import os
+
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 
-import matplotlib.pyplot as plt
-import matplotlib
-import numpy as np
-
 import eradiate
-
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.units import unit_registry as ureg
 
@@ -96,7 +95,7 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza):
     )
     measures = eradiate.scenes.measure.measure_factory.convert(
         {
-            "type": "distant_reflectance",
+            "type": "distant",
             "id": "measure",
             "film_resolution": (21, 1),
             "spp": 1e4,
@@ -224,7 +223,7 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai):
     )
     measures = eradiate.scenes.measure.measure_factory.convert(
         {
-            "type": "distant_reflectance",
+            "type": "distant",
             "id": "measure",
             "film_resolution": (41, 1),
             "spp": 1e4,

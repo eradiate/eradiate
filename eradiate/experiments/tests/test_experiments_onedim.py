@@ -12,7 +12,7 @@ from eradiate.scenes.atmosphere import (
     HomogeneousAtmosphere,
     MolecularAtmosphere,
 )
-from eradiate.scenes.measure import MeasureSpectralConfig
+from eradiate.scenes.measure import MeasureSpectralConfig, MultiDistantMeasure
 
 
 def test_onedim_experiment_construct_default(modes_all):
@@ -27,29 +27,25 @@ def test_onedim_experiment_construct_measures(modes_all):
     A variety of measure specifications are acceptable
     """
     # Init with a single measure (not wrapped in a sequence)
-    assert OneDimExperiment(measures=DistantRadianceMeasure())
+    assert OneDimExperiment(measures=MultiDistantMeasure())
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert OneDimExperiment(measures=[{"type": "distant_radiance"}])
+    assert OneDimExperiment(measures=[{"type": "distant"}])
     # -- Not wrapped in a sequence
-    assert OneDimExperiment(measures={"type": "distant_radiance"})
+    assert OneDimExperiment(measures={"type": "distant"})
 
 
 def test_onedim_experiment_construct_normalize_measures(mode_mono):
     # When setting atmosphere to None, measure target is at ground level
     exp = OneDimExperiment(atmosphere=None)
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
-    # ... and measure ray origins are projected to a sphere of radius 1 m
-    assert np.allclose(exp.measures[0].origin.radius, 1.0 * ureg.m)
 
     # When atmosphere is set, measure target is at TOA
     exp = OneDimExperiment(atmosphere=HomogeneousAtmosphere(top=100.0 * ureg.km))
     assert np.allclose(
         exp.measures[0].target.xyz, [0, 0, exp.atmosphere.top.m_as(ureg.m)] * ureg.m
     )
-    # ... and measure ray origins are projected to a sphere of radius TOA / 100
-    assert np.allclose(exp.measures[0].origin.radius, 0.01 * exp.atmosphere.top)
 
 
 def test_onedim_experiment_ckd(mode_ckd):
@@ -62,9 +58,9 @@ def test_onedim_experiment_ckd(mode_ckd):
             molecular_atmosphere=MolecularAtmosphere.afgl_1986()
         ),
         surface={"type": "lambertian"},
-        measures={"type": "distant_radiance", "id": "distant_measure"},
+        measures={"type": "distant", "id": "distant_measure"},
     )
-    assert exp.kernel_dict(ctx=ctx).load() is not None
+    assert exp.kernel_dict(ctx=ctx).load()
 
 
 def test_onedim_experiment_kernel_dict(modes_all):
@@ -89,7 +85,7 @@ def test_onedim_experiment_kernel_dict(modes_all):
     exp = OneDimExperiment(
         atmosphere=None,
         surface={"type": "lambertian", "width": 100.0, "width_units": "m"},
-        measures={"type": "distant_radiance", "id": "distant_measure"},
+        measures={"type": "distant", "id": "distant_measure"},
     )
     # -- Surface width is not overridden
     kernel_dict = exp.kernel_dict(ctx)
@@ -119,7 +115,7 @@ def test_onedim_experiment_real_life(mode_mono):
             },
         },
         illumination={"type": "directional", "zenith": 45.0},
-        measures={"type": "distant_reflectance", "id": "toa"},
+        measures={"type": "distant", "id": "toa"},
     )
     assert exp.kernel_dict(ctx=ctx).load() is not None
 
@@ -160,7 +156,7 @@ def test_onedim_experiment_run_detailed(modes_all):
     exp = OneDimExperiment(
         measures=[
             {
-                "type": "distant_reflectance",
+                "type": "hemispherical_distant",
                 "id": "toa_hsphere",
                 "film_resolution": (32, 32),
                 "spp": 1000,

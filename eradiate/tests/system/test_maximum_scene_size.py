@@ -1,7 +1,7 @@
 import numpy as np
 
+from eradiate.experiments import mitsuba_run
 from eradiate.scenes.core import KernelDict
-from eradiate.solvers.core import runner
 
 
 def test_maximum_scene_size(mode_mono_double, json_metadata):
@@ -80,7 +80,7 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
             }
         )
 
-        result = runner(kernel_dict)["values"]["measure"].squeeze()
+        result = mitsuba_run(kernel_dict)["values"]["measure"].img
         results[scene_size] = np.allclose(result, expected, rtol=1e-5)
 
     # Report test metrics

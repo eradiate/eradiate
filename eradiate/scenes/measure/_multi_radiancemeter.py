@@ -133,3 +133,11 @@ class MultiRadiancemeterMeasure(Measure):
             result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
 
         return result
+
+    # --------------------------------------------------------------------------
+    #                        Post-processing information
+    # --------------------------------------------------------------------------
+
+    @property
+    def var(self) -> str:
+        return "radiance"
