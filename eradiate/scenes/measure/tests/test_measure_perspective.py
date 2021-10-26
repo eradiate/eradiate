@@ -9,7 +9,7 @@ def test_perspective(mode_mono):
     # Constructor
     d = PerspectiveCameraMeasure()
     ctx = KernelDictContext()
-    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
+    assert KernelDict.from_elements(d, ctx=ctx).load()
 
     # Origin and target cannot be the same
     for point in [[0, 0, 0], [1, 1, 1], [-1, 0.5, 1.3333]]:
