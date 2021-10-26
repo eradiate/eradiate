@@ -5,11 +5,11 @@ import typing as t
 import attr
 import numpy as np
 
-from ._core import Measure, measure_factory
+from ._core import Measure, MeasureFlags, measure_factory
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
 from ... import validators
-from ...attrs import documented, parse_docs
+from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 
 
@@ -95,6 +95,12 @@ class DistantFluxMeasure(Measure):
     @property
     def film_resolution(self) -> t.Tuple[int, int]:
         return self._film_resolution
+
+    flags: MeasureFlags = documented(
+        attr.ib(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
+        doc=get_doc(Measure, "flags", "doc"),
+        type=get_doc(Measure, "flags", "type"),
+    )
 
     # --------------------------------------------------------------------------
     #                        Kernel dictionary generation

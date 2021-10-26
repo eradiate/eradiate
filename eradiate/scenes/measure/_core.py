@@ -1,36 +1,27 @@
 from __future__ import annotations
 
 import enum
-import itertools
 import typing as t
 import warnings
 from abc import ABC, abstractmethod
-from collections import OrderedDict, abc
+from collections import abc
 
 import attr
 import numpy as np
-import pandas as pd
 import pint
 import pinttr
-import xarray as xr
 
 import eradiate
 
-from ..core import KernelDict, SceneElement
+from ..core import SceneElement
 from ... import ckd, converters, validators
 from ..._factory import Factory
 from ..._mode import ModeFlags
-from ..._util import deduplicate, natsort_alphanum_key
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
-from ...contexts import (
-    CKDSpectralContext,
-    KernelDictContext,
-    MonoSpectralContext,
-    SpectralContext,
-)
+from ...contexts import CKDSpectralContext, MonoSpectralContext, SpectralContext
 from ...exceptions import ModeError, UnsupportedModeError
-from ...units import interpret_quantities, symbol
+from ...units import interpret_quantities
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
@@ -335,6 +326,16 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
 # ------------------------------------------------------------------------------
 
 
+class MeasureFlags(enum.Flag):
+    """
+    Measure flags.
+    """
+
+    DISTANT = (
+        enum.auto()
+    )  #: Measure records radiometric quantities at an infinite distance from the scene.
+
+
 def _str_summary_raw(x):
     if not x:
         return "{}"
@@ -373,6 +374,12 @@ class Measure(SceneElement, ABC):
     # --------------------------------------------------------------------------
     #                           Fields and properties
     # --------------------------------------------------------------------------
+
+    flags: MeasureFlags = documented(
+        attr.ib(default=0, converter=MeasureFlags, init=False),
+        doc="Measure flags.",
+        type=":class:`.MeasureFlags",
+    )
 
     id: t.Optional[str] = documented(
         attr.ib(

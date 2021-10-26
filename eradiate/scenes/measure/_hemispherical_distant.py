@@ -10,11 +10,11 @@ import pinttr
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 
-from ._core import Measure, measure_factory
+from ._core import Measure, MeasureFlags, measure_factory
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
 from ... import validators
-from ...attrs import documented, parse_docs
+from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 
 
@@ -102,6 +102,12 @@ class HemisphericalDistantMeasure(Measure):
     @property
     def film_resolution(self):
         return self._film_resolution
+
+    flags: MeasureFlags = documented(
+        attr.ib(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
+        doc=get_doc(Measure, "flags", "doc"),
+        type=get_doc(Measure, "flags", "type"),
+    )
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
