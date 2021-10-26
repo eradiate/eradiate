@@ -10,8 +10,8 @@ import pinttr
 
 import eradiate
 
-from ._core import Measure, SensorInfo
-from ._distant import TargetOrigin, TargetOriginPoint, TargetOriginRectangle
+from ._core import Measure, SensorInfo, measure_factory
+from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
 from ... import validators
 from ..._mode import ModeFlags
@@ -22,9 +22,20 @@ from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
 
+@measure_factory.register(type_id="multi_distant")
 @parse_docs
 @attr.s
 class MultiDistantMeasure(Measure):
+    """
+    Multi-distant radiance measure scene element [``multi_distant``].
+
+    This scene element creates a measure consisting of an array of
+    radiancemeters positioned at an infinite distance from the scene. In
+    practice, it can be used to compute the radiance leaving a scene at the
+    top of the atmosphere (or canopy if there is no atmosphere). Coupled to
+    appropriate post-processing operations, scene reflectance can be derived
+    from the radiance values it produces.
+    """
 
     # --------------------------------------------------------------------------
     #                           Fields and properties
@@ -100,15 +111,15 @@ class MultiDistantMeasure(Measure):
         default="[[0, 0, -1]]",
     )
 
-    target: t.Optional[TargetOrigin] = documented(
+    target: t.Optional[Target] = documented(
         attr.ib(
             default=None,
-            converter=attr.converters.optional(TargetOrigin.convert),
+            converter=attr.converters.optional(Target.convert),
             validator=attr.validators.optional(
                 attr.validators.instance_of(
                     (
-                        TargetOriginPoint,
-                        TargetOriginRectangle,
+                        TargetPoint,
+                        TargetRectangle,
                     )
                 )
             ),

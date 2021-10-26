@@ -4,8 +4,7 @@ import warnings
 import attr
 
 from ._core import EarthObservationExperiment
-from .. import validators
-from .. import converters
+from .. import converters, validators
 from ..attrs import AUTO, documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import OverriddenValueWarning
@@ -14,12 +13,12 @@ from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.core import KernelDict
 from ..scenes.integrators import (
     Integrator,
-    VolPathIntegrator,
     PathIntegrator,
+    VolPathIntegrator,
     integrator_factory,
 )
 from ..scenes.measure import DistantMeasure, Measure
-from ..scenes.measure._distant import TargetOriginPoint, TargetOriginSphere
+from ..scenes.measure._target import TargetPoint, TargetSphere
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc
 
@@ -216,7 +215,7 @@ class Rami4ATMExperiment(EarthObservationExperiment):
                         else:
                             target_point = [0.0, 0.0, 0.0] * ucc.get("length")
 
-                        measure.target = TargetOriginPoint(target_point)
+                        measure.target = TargetPoint(target_point)
 
                         if measure.origin is None:
                             radius = (
@@ -225,7 +224,7 @@ class Rami4ATMExperiment(EarthObservationExperiment):
                                 else 1.0 * ucc.get("length")
                             )
 
-                        measure.origin = TargetOriginSphere(
+                        measure.origin = TargetSphere(
                             center=measure.target.xyz, radius=radius
                         )
 
