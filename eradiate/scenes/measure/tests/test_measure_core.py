@@ -4,7 +4,6 @@ from eradiate.contexts import CKDSpectralContext, KernelDictContext, MonoSpectra
 from eradiate.scenes.measure._core import (
     CKDMeasureSpectralConfig,
     Measure,
-    MeasureResults,
     MeasureSpectralConfig,
     MonoMeasureSpectralConfig,
     SensorInfo,
@@ -53,52 +52,6 @@ def test_ckd_spectral_config(modes_all_ckd):
     ctxs = cfg.spectral_ctxs()
     assert len(ctxs) == 96
     assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
-
-
-def test_measure_results(mode_mono):
-    """
-    Unit tests for :class:`.MeasureResults`.
-    """
-    results = MeasureResults(
-        # This is our test input
-        raw={
-            550.0: {
-                "values": {
-                    "sensor_spp0": np.zeros((3, 3)),
-                    "sensor_spp1": np.ones((3, 3)),
-                },
-                "spp": {
-                    "sensor_spp0": 100,
-                    "sensor_spp1": 50,
-                },
-            },
-            600.0: {
-                "values": {
-                    "sensor_spp0": np.ones((3, 3)),
-                    "sensor_spp1": np.zeros((3, 3)),
-                },
-                "spp": {
-                    "sensor_spp0": 100,
-                    "sensor_spp1": 50,
-                },
-            },
-        }
-    )
-
-    # Check most raw form of results
-    ds = results.to_dataset()
-    assert set(ds.data_vars) == {"raw", "spp"}
-    assert set(ds.coords) == {"sensor_id", "w", "x", "y"}
-    assert ds.raw.shape == (2, 2, 3, 3)
-    assert ds.spp.shape == (2, 2)
-
-    # Check SPP aggregation
-    ds = results.to_dataset(aggregate_spps=True)
-    assert set(ds.data_vars) == {"raw", "spp"}
-    assert set(ds.coords) == {"sensor_id", "w", "x", "y"}
-    assert ds.raw.shape == (2, 1, 3, 3)
-    assert ds.spp.shape == (2, 1)
-    assert np.allclose(ds["spp"], (150, 150))
 
 
 def test_measure(mode_mono):

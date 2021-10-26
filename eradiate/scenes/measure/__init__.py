@@ -1,4 +1,4 @@
-from ._core import Measure, MeasureResults, MeasureSpectralConfig, measure_factory
+from ._core import Measure, MeasureSpectralConfig, measure_factory
 from ._distant import (
     DistantAlbedoMeasure,
     DistantFluxMeasure,
@@ -16,7 +16,6 @@ __all__ = [
     "Measure",
     "MeasureSpectralConfig",
     "measure_factory",
-    "MeasureResults",
     "DistantMeasure",
     "DistantAlbedoMeasure",
     "DistantFluxMeasure",

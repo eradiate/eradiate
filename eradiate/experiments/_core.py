@@ -33,7 +33,6 @@ from ..scenes.measure import (
     DistantRadianceMeasure,
     DistantReflectanceMeasure,
     Measure,
-    MeasureResults,
     MultiDistantMeasure,
     measure_factory,
 )
@@ -303,7 +302,7 @@ class Experiment(ABC):
             logger.info(f"Processing measure '{measure.id}'")
 
             # Reset measure results
-            measure.results = MeasureResults()
+            measure.results = {}
 
             # Spectral loop
             spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
@@ -335,7 +334,7 @@ class Experiment(ABC):
                     run_results = mitsuba_run(kernel_dict, sensor_ids)
 
                     # Store results
-                    measure.results.raw[spectral_ctx.spectral_index] = run_results
+                    measure.results[spectral_ctx.spectral_index] = run_results
 
                     # Update progress display
                     pbar.update()

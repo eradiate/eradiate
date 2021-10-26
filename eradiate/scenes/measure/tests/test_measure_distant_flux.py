@@ -1,0 +1,48 @@
+import enoki as ek
+import pytest
+
+from eradiate._util import onedict_value
+from eradiate.contexts import KernelDictContext
+from eradiate.scenes.core import KernelDict
+from eradiate.scenes.measure._distant_flux import DistantFluxMeasure
+
+
+def test_measure_distant_flux_construct(modes_all):
+    # Test default constructor
+    d = DistantFluxMeasure()
+    ctx = KernelDictContext()
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
+
+    # Test target support
+    # -- Target a point
+    d = DistantFluxMeasure(target=[0, 0, 0])
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
+
+    # -- Target an axis-aligned rectangular patch
+    d = DistantFluxMeasure(
+        target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
+    )
+    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
+
+
+@pytest.mark.parametrize(
+    ["direction", "frame"],
+    [
+        (
+            [1, 0, 0],
+            [[0, 0, -1], [0, 1, 0], [1, 0, 0]],
+        ),
+        (
+            [0, 0, 1],
+            [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        ),
+    ],
+)
+def test_measure_distant_flux_direction(modes_all, direction, frame):
+    d = DistantFluxMeasure(direction=direction)
+    ctx = KernelDictContext()
+    to_world = onedict_value(d.kernel_dict(ctx))["to_world"]
+    # The reference frame is rotated as expected
+    assert ek.allclose(to_world.transform_vector([1, 0, 0]), frame[0])
+    assert ek.allclose(to_world.transform_vector([0, 1, 0]), frame[1])
+    assert ek.allclose(to_world.transform_vector([0, 0, 1]), frame[2])

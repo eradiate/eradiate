@@ -8,7 +8,7 @@ import numpy as np
 import pint
 import xarray as xr
 
-from ._core import SensorInfo, measure_factory
+from ._core import measure_factory
 from ._distant import DistantMeasure
 from ..illumination import DirectionalIllumination
 from ...attrs import documented, parse_docs
@@ -231,9 +231,6 @@ class DistantArrayMeasure(DistantMeasure):
 
             if self.target is not None:
                 d["ray_target"] = self.target.kernel_item()
-
-            if self.origin is not None:
-                d["ray_origin"] = self.origin.kernel_item()
 
             result.append(d)
 

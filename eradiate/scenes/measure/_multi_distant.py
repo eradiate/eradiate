@@ -1,20 +1,15 @@
 from __future__ import annotations
 
 import typing as t
-import warnings
 
 import attr
 import numpy as np
 import pint
 import pinttr
 
-import eradiate
-
-from ._core import Measure, SensorInfo, measure_factory
+from ._core import Measure, measure_factory
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
-from ... import validators
-from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...frame import angles_in_hplane, angles_to_direction, direction_to_angles
@@ -70,35 +65,6 @@ class MultiDistantMeasure(Measure):
                 f"while validating '{attribute.name}': 'directions' are not all "
                 "part of the same hemisphere plane cut"
             ) from e
-
-    split_spp: t.Optional[int] = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(int),
-            validator=attr.validators.optional(validators.is_positive),
-        ),
-        type="int",
-        init_type="int, optional",
-        doc="If set, this measure will be split into multiple sensors, each "
-        "with a sample count lower or equal to `split_spp`. This parameter "
-        "should be used in single-precision modes when the sample count is "
-        "higher than 100,000 (very high sample count might result in floating "
-        "point number precision issues otherwise).",
-    )
-
-    @split_spp.validator
-    def _split_spp_validator(self, attribute, value):
-        if (
-            eradiate.mode().has_flags(ModeFlags.ANY_SINGLE)
-            and self.spp > 1e5
-            and self.split_spp is None
-        ):
-            warnings.warn(
-                "In single-precision modes, setting a sample count ('spp') to "
-                "values greater than 100,000 may result in floating point "
-                "precision issues: using the measure's 'split_spp' parameter is "
-                "recommended."
-            )
 
     directions: np.ndarray = documented(
         attr.ib(
@@ -232,36 +198,6 @@ class MultiDistantMeasure(Measure):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _sensor_spps(self) -> t.List[int]:
-        if self.split_spp is not None and self.spp > self._spp_splitting_threshold:
-            spps = [self.split_spp] * int(self.spp / self.split_spp)
-
-            if self.spp % self.split_spp:
-                spps.append(self.spp % self.split_spp)
-
-            return spps
-
-        else:
-            return [self.spp]
-
-    def _sensor_id(self, i_spp=None):
-        """
-        Assemble a sensor ID from indexes on sensor coordinates.
-        """
-        components = [self.id]
-
-        if i_spp is not None:
-            components.append(f"spp{i_spp}")
-
-        return "_".join(components)
-
-    def _sensor_ids(self) -> t.List[str]:
-        if self.split_spp is not None and self.spp > self._spp_splitting_threshold:
-            return [self._sensor_id(i) for i, _ in enumerate(self._sensor_spps())]
-
-        else:
-            return [self._sensor_id()]
-
     def _kernel_dict(self, sensor_id, spp):
         result = {
             "type": "mdistant",
@@ -286,25 +222,12 @@ class MultiDistantMeasure(Measure):
 
         return result
 
-    def sensor_infos(self) -> t.List[SensorInfo]:
-        return [
-            SensorInfo(id=id, spp=spp)
-            for id, spp in zip(self._sensor_ids(), self._sensor_spps())
-        ]
-
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        sensor_ids, sensor_spps = [], []
-
-        for x in self.sensor_infos():
-            sensor_ids.append(x.id)
-            sensor_spps.append(x.spp)
-
+        sensor_ids = self._sensor_ids()
+        sensor_spps = self._sensor_spps()
         result = KernelDict()
 
         for spp, sensor_id in zip(sensor_spps, sensor_ids):
             result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
 
         return result
-
-    def _base_dicts(self) -> t.List[t.Dict]:
-        raise NotImplementedError
