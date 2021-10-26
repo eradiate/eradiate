@@ -4,11 +4,14 @@ from ._multi_distant import MultiDistantMeasure
 from ._multi_radiancemeter import MultiRadiancemeterMeasure
 from ._perspective import PerspectiveCameraMeasure
 from ._radiancemeter import RadiancemeterMeasure
+from ._target import TargetPoint, TargetRectangle
 
 __all__ = [
     "Measure",
     "MeasureSpectralConfig",
     "measure_factory",
+    "TargetPoint",
+    "TargetRectangle",
     "PerspectiveCameraMeasure",
     "RadiancemeterMeasure",
     "MultiRadiancemeterMeasure",
