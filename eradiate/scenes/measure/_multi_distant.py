@@ -57,8 +57,8 @@ class MultiDistantMeasure(Measure):
         try:
             angles_in_hplane(
                 value.m_as(ureg.deg),
-                angles[:, 0],
-                angles[:, 1],
+                angles[:, :, 0],
+                angles[:, :, 1],
                 raise_exc=True,
             )
         except ValueError as e:
@@ -106,16 +106,16 @@ class MultiDistantMeasure(Measure):
     @property
     def viewing_angles(self) -> pint.Quantity:
         """
-        quantity: Viewing angles computed from stored `directions` as a (N, 2)
-            array, where N is the number of directions. The second dimension
-            is ordered as (zenith, azimuth).
+        quantity: Viewing angles computed from stored `directions` as a
+            (N, 1, 2) array, where N is the number of directions. The last
+            dimension is ordered as (zenith, azimuth).
         """
         angle_units = ucc.get("angle")
         angles = direction_to_angles(-self.directions).to(angle_units)
 
         # Normalise azimuth to [0, 2π]
         angles[:, 1] %= 360.0 * ureg.deg
-        return angles
+        return angles.reshape((-1, 1, 2))
 
     @property
     def film_resolution(self) -> t.Tuple[int, int]:

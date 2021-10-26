@@ -16,6 +16,8 @@ from ..core import KernelDict
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
+from ...frame import direction_to_angles
+from ...warp import square_to_uniform_hemisphere
 
 
 @measure_factory.register(type_id="hemispherical_distant")
@@ -108,6 +110,38 @@ class HemisphericalDistantMeasure(Measure):
         doc=get_doc(Measure, "flags", "doc"),
         type=get_doc(Measure, "flags", "type"),
     )
+
+    @property
+    def viewing_angles(self) -> pint.Quantity:
+        """
+        quantity: Viewing angles computed from stored film coordinates as a
+            (width, height, 2) array. The last dimension is ordered as
+            (zenith, azimuth).
+        """
+        # Compute viewing angles at pixel locations
+        # Angle computation must match the kernel plugin's direction sampling
+        # routine
+        angle_units = ucc.get("angle")
+
+        # Compute pixel locations in film coordinates
+        xs = (
+            np.linspace(0, 1, self.film_resolution[0], endpoint=False)
+            + 0.5 / self.film_resolution[0]
+        )
+        ys = (
+            np.linspace(0, 1, self.film_resolution[1], endpoint=False)
+            + 0.5 / self.film_resolution[1]
+        )
+
+        # Compute corresponding angles
+        xy = np.array([(x, y) for x in xs for y in ys])
+        angles = direction_to_angles(square_to_uniform_hemisphere(xy)).to(angle_units)
+
+        # Normalise azimuth to [0, 2π]
+        angles[:, 1] %= 360.0 * ureg.deg
+
+        # Reshape array to match film size on first 2 dimensions
+        return angles.reshape((len(xs), len(ys), 2))
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation

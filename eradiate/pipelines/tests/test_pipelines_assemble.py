@@ -14,6 +14,7 @@ from eradiate.pipelines._assemble import (
 from eradiate.pipelines._core import Pipeline
 from eradiate.pipelines._gather import Gather
 from eradiate.scenes.measure import MultiDistantMeasure
+from eradiate.scenes.measure._hemispherical_distant import HemisphericalDistantMeasure
 
 
 def test_remap_viewing_angles_plane():
@@ -47,26 +48,58 @@ def test_remap_viewing_angles_plane():
 
 
 @pytest.mark.parametrize(
-    "hplane, expected_zenith, expected_azimuth",
+    "measure_type, expected_zenith, expected_azimuth",
     (
-        (False, [60, 45, 0, 45, 60], [180, 180, 0, 0, 0]),
-        (True, [-60, -45, 0, 45, 60], [0, 0, 0, 0, 0]),
+        ("multi_distant-nohplane", [60, 45, 0, 45, 60], [180, 180, 0, 0, 0]),
+        ("multi_distant-hplane", [-60, -45, 0, 45, 60], [0, 0, 0, 0, 0]),
+        (
+            "hemispherical_distant",
+            [
+                [41.409622, 41.409622],
+                [41.409622, 41.409622],
+            ],
+            [
+                [225, 135],
+                [315, 45],
+            ],
+        ),
     ),
-    ids=("no_hplane", "hplane"),
+    ids=(
+        "multi_distant-nohplane",
+        "multi_distant-hplane",
+        "hemispherical_distant",
+    ),
 )
-def test_multi_distant_measure_add_viewing_angles(
-    mode_mono, hplane, expected_zenith, expected_azimuth
+def test_pipelines_add_viewing_angles(
+    mode_mono, measure_type, expected_zenith, expected_azimuth
 ):
     # Initialise test data
-    exp = OneDimExperiment(
-        atmosphere=None,
-        measures=MultiDistantMeasure.from_viewing_angles(
+    if measure_type == "multi_distant-nohplane":
+        measure = MultiDistantMeasure.from_viewing_angles(
             zeniths=[-60, -45, 0, 45, 60],
             azimuths=0.0,
-            auto_hplane=hplane,
+            auto_hplane=False,
             spp=1,
-        ),
-    )
+        )
+
+    elif measure_type == "multi_distant-hplane":
+        measure = MultiDistantMeasure.from_viewing_angles(
+            zeniths=[-60, -45, 0, 45, 60],
+            azimuths=0.0,
+            auto_hplane=True,
+            spp=1,
+        )
+
+    elif measure_type == "hemispherical_distant":
+        measure = HemisphericalDistantMeasure(
+            film_resolution=(2, 2),
+            spp=1,
+        )
+
+    else:
+        assert False
+
+    exp = OneDimExperiment(atmosphere=None, measures=measure)
     exp.process()
     measure = exp.measures[0]
 
@@ -81,8 +114,8 @@ def test_multi_distant_measure_add_viewing_angles(
     assert "vaa" in result.coords
 
     # Viewing angles are set to appropriate values
-    assert np.allclose(expected_zenith, result.coords["vza"].values.ravel())
-    assert np.allclose(expected_azimuth, result.coords["vaa"].values.ravel())
+    assert np.allclose(expected_zenith, result.coords["vza"].values.squeeze())
+    assert np.allclose(expected_azimuth, result.coords["vaa"].values.squeeze())
 
 
 @pytest.mark.parametrize(

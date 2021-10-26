@@ -15,7 +15,7 @@ from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..frame import angles_in_hplane
 from ..scenes.illumination import ConstantIllumination, DirectionalIllumination
-from ..scenes.measure import Measure
+from ..scenes.measure import Measure, MultiDistantMeasure
 from ..scenes.spectra import Spectrum
 from ..units import symbol, to_quantity
 from ..units import unit_context_kernel as uck
@@ -184,18 +184,24 @@ class AddViewingAngles(PipelineStep):
         viewing_angles = measure.viewing_angles
 
         # Collect zenith and azimuth values
-        theta = viewing_angles[:, 0]
-        phi = viewing_angles[:, 1]
+        theta = viewing_angles[:, :, 0]
+        phi = viewing_angles[:, :, 1]
 
-        if measure.hplane is not None:
-            theta, phi = _remap_viewing_angles_plane(measure.hplane, theta, phi)
+        # Handle special case of hemisphere plane cut
+        if isinstance(measure, MultiDistantMeasure) and measure.hplane is not None:
+            # Note: Flattening angle arrays is required
+            theta_remapped, phi_remapped = _remap_viewing_angles_plane(
+                measure.hplane, theta.ravel(), phi.ravel()
+            )
+            theta = theta_remapped.reshape(theta.shape)
+            phi = phi_remapped.reshape(phi.shape)
 
         with xr.set_options(keep_attrs=True):
             result = x.assign_coords(
                 {
                     "vza": (
                         ("x_index", "y_index"),
-                        theta.m_as(ureg.deg).reshape((-1, 1)),
+                        theta.m_as(ureg.deg),
                         {
                             "standard_name": "viewing_zenith_angle",
                             "long_name": "viewing zenith angle",
@@ -204,7 +210,7 @@ class AddViewingAngles(PipelineStep):
                     ),
                     "vaa": (
                         ("x_index", "y_index"),
-                        phi.m_as(ureg.deg).reshape((-1, 1)),
+                        phi.m_as(ureg.deg),
                         {
                             "standard_name": "viewing_azimuth_angle",
                             "long_name": "viewing azimuth angle",
