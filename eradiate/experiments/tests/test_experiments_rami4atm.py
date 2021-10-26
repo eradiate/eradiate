@@ -7,7 +7,7 @@ from eradiate.contexts import KernelDictContext
 from eradiate.experiments._rami4atm import Rami4ATMExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.biosphere import DiscreteCanopy
-from eradiate.scenes.measure import DistantRadianceMeasure
+from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import CentralPatchSurface, LambertianSurface
 
 
