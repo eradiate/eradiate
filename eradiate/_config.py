@@ -5,7 +5,7 @@ import warnings
 import environ
 from environ.exceptions import ConfigError
 
-from eradiate.exceptions import ConfigWarning
+from .exceptions import ConfigWarning
 
 
 def format_help_dicts_rst(help_dicts, display_defaults=False):
