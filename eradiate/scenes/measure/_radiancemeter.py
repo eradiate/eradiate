@@ -8,8 +8,10 @@ import pint
 import pinttr
 
 from ._core import Measure, measure_factory
+from ..core import KernelDict
 from ... import validators
 from ...attrs import documented, parse_docs
+from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -26,6 +28,10 @@ class RadiancemeterMeasure(Measure):
     sensor kernel plugin. It records the incident power per unit area per unit
     solid angle along a certain ray.
     """
+
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
 
     origin: pint.Quantity = documented(
         pinttr.ib(
@@ -67,20 +73,42 @@ class RadiancemeterMeasure(Measure):
     def film_resolution(self) -> t.Tuple[int, int]:
         return (1, 1)
 
-    def _base_dicts(self) -> t.List[t.Dict]:
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
+
+    def _kernel_dict(self, sensor_id, spp):
         target = self.target.m_as(uck.get("length"))
         origin = self.origin.m_as(uck.get("length"))
         direction = target - origin
-        result = []
 
-        for sensor_info in self.sensor_infos():
-            result.append(
-                {
-                    "type": "radiancemeter",
-                    "id": sensor_info.id,
-                    "origin": origin,
-                    "direction": direction,
-                }
-            )
+        result = {
+            "type": "radiancemeter",
+            "id": sensor_id,
+            "origin": origin,
+            "direction": direction,
+            "sampler": {
+                "type": "independent",
+                "sample_count": spp,
+            },
+            "film": {
+                "type": "hdrfilm",
+                "width": self.film_resolution[0],
+                "height": self.film_resolution[1],
+                "pixel_format": "luminance",
+                "component_format": "float32",
+                "rfilter": {"type": "box"},
+            },
+        }
+
+        return result
+
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        sensor_ids = self._sensor_ids()
+        sensor_spps = self._sensor_spps()
+        result = KernelDict()
+
+        for spp, sensor_id in zip(sensor_spps, sensor_ids):
+            result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
 
         return result
