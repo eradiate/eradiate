@@ -12,7 +12,7 @@ from eradiate.scenes.atmosphere import (
     HomogeneousAtmosphere,
     MolecularAtmosphere,
 )
-from eradiate.scenes.measure import DistantRadianceMeasure, MeasureSpectralConfig
+from eradiate.scenes.measure import MeasureSpectralConfig
 
 
 def test_onedim_experiment_construct_default(modes_all):

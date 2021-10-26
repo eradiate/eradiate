@@ -5,7 +5,7 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.experiments._rami import RamiExperiment
 from eradiate.scenes.biosphere import DiscreteCanopy
-from eradiate.scenes.measure import DistantRadianceMeasure
+from eradiate.scenes.measure import MultiDistantMeasure
 
 
 def test_rami_experiment_construct_default(mode_mono):
@@ -21,13 +21,13 @@ def test_rami_experiment_construct_measures(mode_mono):
     """
 
     # Init with a single measure (not wrapped in a sequence)
-    assert RamiExperiment(measures=DistantRadianceMeasure())
+    assert RamiExperiment(measures=MultiDistantMeasure())
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert RamiExperiment(measures=[{"type": "distant_radiance"}])
+    assert RamiExperiment(measures=[{"type": "distant"}])
     # -- Not wrapped in a sequence
-    assert RamiExperiment(measures={"type": "distant_radiance"})
+    assert RamiExperiment(measures={"type": "distant"})
 
 
 @pytest.mark.parametrize("padding", (0, 1))
@@ -43,7 +43,7 @@ def test_rami_experiment_construct_normalize_measures(mode_mono, padding):
             l_vertical=2.0 * ureg.m,
             padding=padding,
         ),
-        measures=DistantRadianceMeasure(),
+        measures=MultiDistantMeasure(),
     )
     target = exp.measures[0].target
     canopy = exp.canopy
