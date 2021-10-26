@@ -11,7 +11,7 @@ from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_fa
 from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import DistantMeasure, Measure
-from ..scenes.measure._target import TargetPoint, TargetSphere
+from ..scenes.measure._target import TargetPoint
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc
 
@@ -113,17 +113,6 @@ class OneDimExperiment(EarthObservationExperiment):
                         target_point = [0.0, 0.0, 0.0] * ucc.get("length")
 
                     measure.target = TargetPoint(target_point)
-
-                if measure.origin is None:
-                    radius = (
-                        self.atmosphere.top / 100.0
-                        if self.atmosphere is not None
-                        else 1.0 * ucc.get("length")
-                    )
-
-                    measure.origin = TargetSphere(
-                        center=measure.target.xyz, radius=radius
-                    )
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(OneDimExperiment, self)._dataset_metadata(measure)

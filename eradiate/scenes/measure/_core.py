@@ -3,6 +3,7 @@ from __future__ import annotations
 import enum
 import itertools
 import typing as t
+import warnings
 from abc import ABC, abstractmethod
 from collections import OrderedDict, abc
 
@@ -34,32 +35,6 @@ from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
 measure_factory = Factory()
-
-
-# ------------------------------------------------------------------------------
-#                           Utility data structures
-# ------------------------------------------------------------------------------
-
-
-@parse_docs
-@attr.s(frozen=True)
-class SensorInfo:
-    """
-    Data type to store information about a sensor associated with a measure.
-    Instances are immutable.
-    """
-
-    id: str = documented(
-        attr.ib(),
-        doc="Sensor unique identifier.",
-        type="str",
-    )
-
-    spp: int = documented(
-        attr.ib(),
-        doc="Sensor sample count.",
-        type="int",
-    )
 
 
 # ------------------------------------------------------------------------------
@@ -356,7 +331,7 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
 
 
 # ------------------------------------------------------------------------------
-#                     Raw result storage and basic processing
+#                             Measure base class
 # ------------------------------------------------------------------------------
 
 
@@ -370,437 +345,34 @@ def _str_summary_raw(x):
 
 @parse_docs
 @attr.s
-class MeasureResults:
-    """
-    Data structure storing simulation results corresponding to a measure before
-    post-processing. A ``raw`` field stores raw sensor results as nested
-    dictionaries (see corresponding field documentation for further detail).
-    The :meth:`~.MeasureResults.to_dataset` repacks the data as a
-    :class:`~xarray.Dataset`, which is the data structure operated on by the
-    :class:`.Measure.postprocess` pipeline.
-    """
-
-    raw: t.Dict = documented(
-        attr.ib(
-            factory=dict,
-            validator=attr.validators.optional(attr.validators.instance_of(dict)),
-            repr=_str_summary_raw,
-        ),
-        doc="Raw results stored as nested dictionaries with the following structure:\n"
-        "\n"
-        ".. code:: python\n\n"
-        "   {\n"
-        "       spectral_key_0: {\n"
-        '           "values": {\n'
-        '               "sensor_0": data_0,\n'
-        '               "sensor_1": data_1,\n'
-        "               ...\n"
-        "           },\n"
-        '           "spp": {\n'
-        '               "sensor_0": sample_count_0,\n'
-        '               "sensor_1": sample_count_1,\n'
-        "               ...\n"
-        "           },\n"
-        "       },\n"
-        "       spectral_key_1: {\n"
-        '           "values": {\n'
-        '               "sensor_0": data_0,\n'
-        '               "sensor_1": data_1,\n'
-        "               ...\n"
-        "           },\n"
-        '           "spp": {\n'
-        '               "sensor_0": sample_count_0,\n'
-        '               "sensor_1": sample_count_1,\n'
-        "               ...\n"
-        "           },\n"
-        "       },\n"
-        "       ...\n"
-        "   }\n",
-        type="dict",
-        default="{}",
-    )
-
-    def to_dataset(self, aggregate_spps: bool = False) -> xr.Dataset:
-        """
-        Repack raw results as a :class:`xarray.Dataset`. Dimension coordinates are
-        as follows:
-
-        * spectral coordinate (varies vs active mode)
-        * ``sensor_id``: kernel sensor identified (for SPP split, dropped if
-          ``aggregate_spps`` is ``True``)
-        * ``y``: film height
-        * ``x``: film width
-
-        .. important:: The spectral coordinate is sorted.
-
-        Parameters
-        ----------
-        aggregate_spps : bool
-            If ``True``, perform split SPP aggregation (*i.e.* sum results using
-            SPP values as weights). This will result in the ``sensor_id``
-            dimension being dropped.
-
-        Returns
-        -------
-        Dataset
-            Raw sensor data repacked as a :class:`~xarray.Dataset`.
-        """
-
-        if not self.raw:
-            raise ValueError("no raw results to convert to xarray.Dataset")
-
-        # Collect spectral coordinate label
-        spectral_coord_label = eradiate.mode().spectral_coord_label
-
-        # Collect spectral and sensor coordinate values
-        spectral_coords, sensor_ids, film_size = self._to_dataset_helper_coord_values(
-            self.raw
-        )
-        # Collect radiance values
-        data = self._to_dataset_helper_data_values(
-            self.raw, spectral_coords, sensor_ids, film_size
-        )
-
-        # Collect sample counts
-        spps = self._to_dataset_helper_spp_values(self.raw, spectral_coords, sensor_ids)
-
-        # Compute pixel film coordinates
-        xs, ys = self._to_dataset_helper_pixel_coord_values(film_size)
-
-        # Construct index if relevant
-        spectral_index = self._to_dataset_helper_spectral_index(spectral_coords)
-
-        # Construct dataset
-        result = xr.Dataset(
-            data_vars=(
-                {
-                    "raw": (
-                        [spectral_coord_label, "sensor_id", "y", "x"],
-                        data,
-                        {"long_name": "raw sensor values"},
-                    ),
-                    "spp": (
-                        [spectral_coord_label, "sensor_id"],
-                        spps,
-                        {"long_name": "sample count"},
-                    ),
-                }
-            ),
-            coords={
-                "x": ("x", xs, {"long_name": "film width coordinate"}),
-                "y": ("y", ys, {"long_name": "film height coordinate"}),
-                spectral_coord_label: (
-                    spectral_coord_label,
-                    spectral_index,
-                    self._to_dataset_spectral_coord_metadata(),
-                ),
-                "sensor_id": (
-                    "sensor_id",
-                    sensor_ids,
-                    {"long_name": "sensor ID"},
-                ),
-            },
-        )
-
-        if not aggregate_spps:
-            return result
-
-        sensor_id_prefixes = deduplicate(
-            [
-                sensor_id.split("_spp")[0]
-                for sensor_id in list(result["sensor_id"].values)
-            ]
-        )
-
-        raw_aggregated = []
-        spp_aggregated = []
-        for sensor_id_prefix in sensor_id_prefixes:
-            # Select SPP-varying components for the current sensor ID prefix
-            sensor_ids = [
-                id
-                for id in result.coords["sensor_id"].values
-                if id.split("_spp")[0] == sensor_id_prefix
-            ]
-            # Aggregate sample counts for the current prefix
-            weights = xr.where(
-                result.coords["sensor_id"].isin(sensor_ids),
-                result.data_vars["spp"],
-                0,
-            )
-            raw_aggregated.append(
-                result["raw"]
-                .weighted(weights)
-                .mean(dim="sensor_id")
-                .expand_dims(
-                    {"sensor_id": [sensor_id_prefix]},
-                    axis=1,
-                )
-                .to_dataset()
-            )
-            # Mask spp values so as to only include selected values
-            # The sensor_id coordinate is redefined to strip the spp suffix
-            weights_spp = xr.where(result.coords["sensor_id"].isin(sensor_ids), 1, 0)
-            spp_aggregated.append(
-                result.data_vars["spp"]
-                .weighted(weights_spp)
-                .sum(dim="sensor_id")
-                .expand_dims(
-                    {"sensor_id": [sensor_id_prefix]},
-                    axis=1,
-                )
-                .to_dataset()
-            )
-
-        raw = xr.concat(raw_aggregated, "sensor_id")["raw"]
-
-        spp = xr.concat(spp_aggregated, "sensor_id")["spp"]
-
-        result_aggregated = xr.Dataset(
-            data_vars={
-                "raw": raw,
-                "spp": spp,
-                "sensor_id": sensor_id_prefixes,
-            }
-        )
-
-        # Copy metadata
-        for var in list(result_aggregated.data_vars) + list(result_aggregated.coords):
-            result_aggregated[var].attrs = result[var].attrs.copy()
-
-        return result_aggregated
-
-    @staticmethod
-    def _to_dataset_spectral_coord_metadata() -> t.Dict:
-        """
-        Return metadata for the spectral coordinate based on active mode.
-
-        Returns
-        -------
-        dict
-            Metadata dictionary, ready to attach to the appropriate xarray
-            coordinate object.
-        """
-        wavelength_units = ucc.get("wavelength")
-
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            return {
-                "standard_name": "wavelength",
-                "long_name": "wavelength",
-                "units": symbol(wavelength_units),
-            }
-
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            return {"long_name": "bindex"}
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
-
-    @staticmethod
-    def _to_dataset_helper_coord_values(
-        raw: t.Dict,
-    ) -> t.Tuple[t.List, t.List, t.Tuple[int, int]]:
-        """
-        Collect spectral and sensor coordinate values from raw result dictionary.
-
-        Parameters
-        ----------
-        raw : dict
-            Raw result dictionary.
-
-        Returns
-        -------
-        spectral_coords : list
-            Spectral coordinate values, sorted in ascending order (in CKD modes,
-            numeric string bin IDs are sorted in natural order, meaning that
-            "1000" will indeed be after "900").
-
-        sensor_ids : list
-            Sensor coordinate values, sorted in ascending order.
-
-        film_size : tuple
-            Sensor film size as a (int, int) pair.
-        """
-        spectral_coords = set()
-        sensor_ids = list()
-        film_size = np.zeros((2,), dtype=int)
-
-        for spectral_coord, val in raw.items():
-            spectral_coords.add(spectral_coord)
-            for sensor_id, data in val["values"].items():
-                if sensor_id not in sensor_ids:
-                    sensor_ids.append(sensor_id)
-                film_size = np.maximum(film_size, data.img.values.shape[:2])
-
-        if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            spectral_coords_sort_key = lambda x: (
-                *natsort_alphanum_key(x[0]),
-                int(x[1]),
-            )
-        else:
-            spectral_coords_sort_key = lambda x: x
-
-        return (
-            sorted(spectral_coords, key=spectral_coords_sort_key),
-            sorted(sensor_ids),
-            tuple(film_size),
-        )
-
-    @staticmethod
-    def _to_dataset_helper_data_values(
-        raw: t.Dict,
-        spectral_coords: t.List,
-        sensor_ids: t.List,
-        film_size: t.Tuple[int, int],
-    ) -> np.ndarray:
-        """
-        Collect spectral and sensor coordinate values from raw result dictionary.
-
-        Parameters
-        ----------
-        raw : dict
-            Raw result dictionary.
-
-        spectral_coords : list
-            Spectral coordinate values.
-
-        sensor_ids : list
-            Sensor coordinate values.
-
-        film_size : tuple[int, int]
-            Sensor film size.
-
-        Returns
-        -------
-        ndarray
-            Sensor data values as a Numpy array. Dimensions are ordered as follows:
-
-            * spectral;
-            * sensor;
-            * pixel index.
-        """
-        if not eradiate.mode().has_flags(ModeFlags.MTS_MONO | ModeFlags.ANY_CKD):
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
-
-        data = np.full(
-            (
-                len(spectral_coords),
-                len(sensor_ids),
-                *film_size,  # Note: Row-major order (width x comes last)
-            ),
-            np.nan,
-        )
-
-        for i_spectral, spectral_coord in enumerate(spectral_coords):
-            for i_sensor, sensor_id in enumerate(sensor_ids):
-                # Note: This doesn't handle heterogeneous sensor film sizes
-                # (i.e. cases in which sensors have different film sizes).
-                # To add support for it, blitting is probably a good approach
-                # https://stackoverflow.com/questions/28676187/numpy-blit-copy-part-of-an-array-to-another-one-with-a-different-size
-                data[i_spectral, i_sensor] = raw[spectral_coord]["values"][
-                    sensor_id
-                ].img.values[..., 0]
-                # This latter indexing selects only one channel in the raw data
-                # array: this works with mono variants but will fail otherwise
-
-        return data
-
-    @staticmethod
-    def _to_dataset_helper_spp_values(
-        raw: t.Dict, spectral_coords: t.List, sensor_ids: t.List
-    ) -> np.ndarray:
-        """
-        Collect sample count values for each (spectral_index, sensor_index) pair.
-
-        Parameters
-        ----------
-        raw : dict
-            Raw result dictionary.
-
-        spectral_coords : list
-            Spectral coordinate values.
-
-        sensor_ids : list
-            Sensor coordinate values.
-
-        Returns
-        -------
-        array
-            Sample count for each spectral channel and each sensor.
-            Dimensions are ordered as follows:
-
-            * spectral;
-            * sensor.
-        """
-        spps = np.full((len(spectral_coords), len(sensor_ids)), np.nan, dtype=int)
-
-        for i_spectral, spectral_coord in enumerate(spectral_coords):
-            for i_sensor, sensor_id in enumerate(sensor_ids):
-                spps[i_spectral, i_sensor] = raw[spectral_coord]["spp"][sensor_id]
-
-        return spps
-
-    @staticmethod
-    def _to_dataset_helper_pixel_coord_values(
-        film_size: t.Tuple[int, int]
-    ) -> t.Tuple[np.ndarray, np.ndarray]:
-        """
-        Compute pixel coordinates from a film size.
-
-        Parameters
-        ----------
-        film_size : tuple of int
-            Film size as a (int, int) pair.
-
-        Returns
-        -------
-        x : array
-            x pixel coordinates in the [0, 1] × [0, 1] space.
-
-        y : array
-            y pixel coordinates in the [0, 1] × [0, 1] space.
-        """
-
-        # Compute pixel film coordinates
-        # As mentioned before, raw data shape is (y, x)
-        xs = np.arange(0.5, film_size[1], 1.0) / film_size[1]
-        ys = np.arange(0.5, film_size[0], 1.0) / film_size[0]
-
-        return xs, ys
-
-    @staticmethod
-    def _to_dataset_helper_spectral_index(spectral_coords):
-        """
-        Create spectral index based on current mode.
-
-        Parameters
-        ----------
-        spectral_coords : array-like
-            List of spectral coordinate values.
-
-        Returns
-        -------
-        pd.Index
-            Generated index (possibly a multi-index).
-        """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            return pd.Index(spectral_coords)
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            return pd.MultiIndex.from_tuples(spectral_coords, names=("bin", "index"))
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
-
-
-# ------------------------------------------------------------------------------
-#                             Measure base class
-# ------------------------------------------------------------------------------
-
-
-@parse_docs
-@attr.s
 class Measure(SceneElement, ABC):
     """
     Abstract base class for all measure scene elements.
+
+    Notes
+    -----
+    Raw results stored in the `results` field as nested dictionaries with the
+    following structure:
+
+    .. code:: python
+
+       {
+           spectral_key_0: dict_0,
+           spectral_key_1: dict_1,
+           ...
+       }
+
+    Keys are spectral loop indexes; values are nested dictionaries produced by
+    :func:`.run_mitsuba`.
+
+    See Also
+    --------
+    :func:`.run_mitsuba`
     """
+
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
 
     id: t.Optional[str] = documented(
         attr.ib(
@@ -833,19 +405,41 @@ class Measure(SceneElement, ABC):
         default="32",
     )
 
-    results: MeasureResults = documented(
-        attr.ib(factory=MeasureResults),
+    results: t.Dict = documented(
+        attr.ib(factory=dict, repr=_str_summary_raw),
         doc="Storage for raw results yielded by the kernel.",
-        type=":class:`.MeasureResults`",
-        default=":class:`MeasureResults() <.MeasureResults>`",
+        type="dict",
+        default="{}",
     )
 
-    # Private attributes
-    # Sample count which, if exceeded, should trigger sample count splitting in
-    # single-precision modes
-    _spp_splitting_threshold: int = attr.ib(
-        default=int(1e5), converter=int, validator=validators.is_positive, repr=False
+    split_spp: t.Optional[int] = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(int),
+            validator=attr.validators.optional(validators.is_positive),
+        ),
+        type="int",
+        init_type="int, optional",
+        doc="If set, this measure will be split into multiple sensors, each "
+        "with a sample count lower or equal to `split_spp`. This parameter "
+        "should be used in single-precision modes when the sample count is "
+        "higher than 100,000 (very high sample count might result in floating "
+        "point number precision issues otherwise).",
     )
+
+    @split_spp.validator
+    def _split_spp_validator(self, attribute, value):
+        if (
+            eradiate.mode().has_flags(ModeFlags.ANY_SINGLE)
+            and self.spp > 1e5
+            and self.split_spp is None
+        ):
+            warnings.warn(
+                "In single-precision modes, setting a sample count ('spp') to "
+                "values greater than 100,000 may result in floating point "
+                "precision issues: using the measure's 'split_spp' parameter is "
+                "recommended."
+            )
 
     @property
     @abstractmethod
@@ -855,212 +449,46 @@ class Measure(SceneElement, ABC):
         """
         pass
 
-    def sensor_infos(self) -> t.List[SensorInfo]:
+    # --------------------------------------------------------------------------
+    #                        Kernel dictionary generation
+    # --------------------------------------------------------------------------
+
+    def _sensor_id(self, i_spp=None):
         """
-        Return a tuple of sensor information data structures.
-        Sensor ids are generated with a set of suffixes.
-        E.g. in the case of spp splitting, multiple ids, with
-        the suffix '_sppXX' are generated with XX being
-        an integer number.
-
-        Subclasses may override this method and add other suffixes
-        for their specific purposes.
-
-        Returns
-        -------
-        list of :class:`.SensorInfo`
-            List of sensor information data structures.
+        Assemble a sensor ID from indexes on sensor coordinates. This basic
+        implementation assumes that the only sensor dimension is ``i_spp``.
         """
-        spps = self._split_spp()
+        components = [self.id]
 
-        if len(spps) == 1:
-            return [SensorInfo(id=f"{self.id}_ms0", spp=spps[0])]
+        if i_spp is not None:
+            components.append(f"spp{i_spp}")
 
-        else:
-            return [
-                SensorInfo(id=f"{self.id}_ms0_spp{i}", spp=spp)
-                for i, spp in enumerate(spps)
-            ]
+        return "_".join(components)
 
-    def _split_spp(self) -> t.List[int]:
+    def _sensor_spps(self) -> t.List[int]:
         """
-        Generate sensor specifications, possibly applying sample count splitting
-        in single-precision mode.
-
-        Sample count (or SPP) splitting consists in splitting sample
-        count among multiple sensors if a high enough sample count (*i.e.*
-        greater than ``self._spp_splitting_threshold``) is requested when using
-        a single-precision mode in order to preserve the accuracy of results.
-
-        Sensor records will have to be combined using
-        :meth:`.postprocess_results`.
+        Generate a list of sample counts, possibly accounting for a sample count
+        splitting strategy.
 
         Returns
         -------
         list of int
-            List of split SPPs if relevant.
+            List of split sample counts.
         """
+        if self.split_spp is not None and self.spp > self.split_spp:
+            spps = [self.split_spp] * int(self.spp / self.split_spp)
 
-        if (
-            not eradiate.mode().has_flags(ModeFlags.ANY_DOUBLE)
-            and self.spp > self._spp_splitting_threshold
-        ):
-            spps = [
-                self._spp_splitting_threshold
-                for i in range(int(self.spp / self._spp_splitting_threshold))
-            ]
-            if self.spp % self._spp_splitting_threshold:
-                spps.append(self.spp % self._spp_splitting_threshold)
+            if self.spp % self.split_spp:
+                spps.append(self.spp % self.split_spp)
 
             return spps
 
         else:
             return [self.spp]
 
-    def postprocess(self) -> xr.Dataset:
-        """
-        Measure post-processing pipeline. The default implementation simply
-        aggregates SPP-split raw results and computes CKD quadrature if relevant.
-        Overloads can perform additional post-processing tasks and add metadata.
+    def _sensor_ids(self) -> t.List[str]:
+        if self.split_spp is not None and self.spp > self.split_spp:
+            return [self._sensor_id(i) for i, _ in enumerate(self._sensor_spps())]
 
-        Returns
-        -------
-        Dataset
-            Post-processed results.
-        """
-        result = self.results.to_dataset(aggregate_spps=True)
-
-        if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            result = self._postprocess_ckd_eval_quad(result)
-
-        return result
-
-    def _postprocess_ckd_eval_quad(self, ds: xr.Dataset) -> xr.Dataset:
-        """
-        Evaluate quadrature in CKD mode and reindex data.
-
-        Parameters
-        ----------
-        ds : Dataset
-            Raw result dataset as generated by the
-            :meth:`.MeasureResults.to_dataset` method, *i.e.* with a ``raw``
-            data variable and  a multi-level index attached to a ``bd``
-            dimension.
-
-        Returns
-        -------
-        Dataset
-            Post-processed results with the quadrature computed for each film
-            pixel, and the ``bd`` dimension replaced by a wavelength dimension
-            coordinate.
-        """
-        bins = list(OrderedDict.fromkeys(ds.bin.to_index()))  # (deduplicate list)
-        sensor_ids = ds.sensor_id.values
-        ys = ds.y.values
-        xs = ds.x.values
-        quad = self.spectral_cfg.bin_set.quad
-
-        n_bin = len(bins)
-        n_sensor_ids = len(sensor_ids)
-        n_y = len(ys)
-        n_x = len(xs)
-
-        # Collect wavelengths associated with each bin
-        wavelength_units = ucc.get("wavelength")
-        wavelengths = [
-            bin.wcenter.m_as(wavelength_units)
-            for bin in self.spectral_cfg.bin_set.select_bins(("ids", {"ids": bins}))
-        ]
-
-        # Init storage
-        result = xr.Dataset(
-            {
-                "raw": (
-                    ("w", "sensor_id", "y", "x"),
-                    np.zeros((n_bin, n_sensor_ids, n_y, n_x)),
-                )
-            },
-            coords={"w": wavelengths, "sensor_id": sensor_ids, "y": ys, "x": xs},
-        )
-
-        # For each bin and each pixel, compute quadrature and store the result
-        for i_bin, bin in enumerate(bins):
-            values_at_nodes = ds.raw.sel(bin=bin).values
-
-            # Rationale: Avoid using xarray's indexing in this loop for
-            # performance reasons (wrong data indexing method will result in
-            # 10x+ speed reduction)
-            for (i_sensor_id, i_y, i_x) in itertools.product(
-                range(n_sensor_ids), range(n_y), range(n_x)
-            ):
-                result.raw.values[i_bin, i_sensor_id, i_y, i_x] = quad.integrate(
-                    values_at_nodes[:, i_sensor_id, i_y, i_x],
-                    interval=np.array([0.0, 1.0]),
-                )
-
-        # Copy lost metadata
-        for var in list(result.data_vars) + list(result.coords):
-            if var == "w":
-                result[var].attrs = {
-                    "standard_name": "wavelength",
-                    "long_description": "wavelength",
-                    "units": symbol(wavelength_units),
-                }
-            else:
-                result[var].attrs = ds[var].attrs.copy()
-
-        return result
-
-    @abstractmethod
-    def _base_dicts(self) -> t.List[t.Dict]:
-        """
-        Return a list (one item per sensor) of dictionaries defining parameters
-        not related with the film or the sampler.
-        """
-        pass
-
-    def _film_dicts(self) -> t.List[t.Dict]:
-        """
-        Return a list (one item per sensor) of dictionaries defining parameters
-        related with the film.
-        """
-        return [
-            {
-                "film": {
-                    "type": "hdrfilm",
-                    "width": self.film_resolution[0],
-                    "height": self.film_resolution[1],
-                    "pixel_format": "luminance",
-                    "component_format": "float32",
-                    "rfilter": {"type": "box"},
-                }
-            }
-        ] * len(self.sensor_infos())
-
-    def _sampler_dicts(self) -> t.List[t.Dict]:
-        """
-        Return a list (one item per sensor) of dictionaries defining parameters
-        related with the sampler.
-        """
-        return [
-            {"sampler": {"type": "independent", "sample_count": sensor_info.spp}}
-            for sensor_info in self.sensor_infos()
-        ]
-
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = {
-            f"{sensor_info.id}": {
-                **base_dict,
-                **sampler_dict,
-                **film_dict,
-            }
-            for i, (sensor_info, base_dict, sampler_dict, film_dict) in enumerate(
-                zip(
-                    self.sensor_infos(),
-                    self._base_dicts(),
-                    self._sampler_dicts(),
-                    self._film_dicts(),
-                )
-            )
-        }
-        return KernelDict(result)
+        else:
+            return [self._sensor_id()]

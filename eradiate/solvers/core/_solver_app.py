@@ -17,7 +17,7 @@ from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ModeError, UnsupportedModeError
-from ...scenes.measure import Measure, MeasureResults
+from ...scenes.measure import Measure
 from ...scenes.measure._distant import (
     DistantAlbedoMeasure,
     DistantRadianceMeasure,

@@ -12,7 +12,7 @@ import xarray as xr
 import eradiate
 
 from ._core import Measure, measure_factory
-from ._target import Target, TargetPoint, TargetRectangle, TargetSphere
+from ._target import Target, TargetPoint, TargetRectangle
 from ..illumination import ConstantIllumination, DirectionalIllumination
 from ..spectra import Spectrum
 from ... import validators
@@ -53,25 +53,6 @@ class DistantMeasure(Measure, ABC):
         "scene. The target can be specified using an array-like with 3 "
         "elements (which will be converted to a :class:`.TargetOriginPoint`) "
         "or a dictionary interpreted by "
-        ":meth:`TargetOrigin.convert() <.TargetOrigin.convert>`.",
-        type=":class:`.TargetOrigin`, optional",
-        init_type=":class:`.TargetOrigin` or dict, optional",
-    )
-
-    origin: t.Optional[Target] = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(Target.convert),
-            validator=attr.validators.optional(
-                attr.validators.instance_of((TargetSphere,))
-            ),
-            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
-        ),
-        doc="Ray origin specification. If set to ``None``, the default origin "
-        "point selection strategy is used: ray origins will be projected to "
-        "the scene's bounding sphere. Otherwise, ray origins are projected "
-        "to the shape specified as origin. The origin can be specified using "
-        "a dictionary interpreted by "
         ":meth:`TargetOrigin.convert() <.TargetOrigin.convert>`.",
         type=":class:`.TargetOrigin`, optional",
         init_type=":class:`.TargetOrigin` or dict, optional",
@@ -290,9 +271,6 @@ class DistantRadianceMeasure(DistantMeasure):
             if self.target is not None:
                 d["ray_target"] = self.target.kernel_item()
 
-            if self.origin is not None:
-                d["ray_origin"] = self.origin.kernel_item()
-
             if self.flip_directions is not None:
                 d["flip_directions"] = self.flip_directions
 
@@ -450,7 +428,6 @@ class DistantReflectanceMeasure(DistantRadianceMeasure):
         return ds
 
 
-@measure_factory.register(type_id="distant_flux")
 @parse_docs
 @attr.s
 class DistantFluxMeasure(DistantMeasure):
