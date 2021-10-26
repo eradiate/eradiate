@@ -434,7 +434,7 @@ class EarthObservationExperiment(Experiment, ABC):
     all feature illumination from a distant source such as the Sun.
     """
 
-    illumination: DirectionalIllumination = documented(
+    illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
         attr.ib(
             factory=DirectionalIllumination,
             converter=illumination_factory.convert,
@@ -445,6 +445,8 @@ class EarthObservationExperiment(Experiment, ABC):
         doc="Illumination specification. "
         "This parameter can be specified as a dictionary which will be "
         "interpreted by :data:`.illumination_factory`.",
-        type=":class:`.DirectionalIllumination` or dict",
+        type=":class:`.DirectionalIllumination` or :class:`.ConstantIllumination`",
+        init_type=":class:`.DirectionalIllumination` or "
+        ":class:`.ConstantIllumination` or dict",
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
