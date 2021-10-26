@@ -7,16 +7,17 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Measure, measure_factory
+from ._core import Measure, MeasureFlags, measure_factory
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
-from ...attrs import documented, parse_docs
+from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...frame import angles_in_hplane, angles_to_direction, direction_to_angles
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
 
+@measure_factory.register(type_id="distant", allow_aliases=True)
 @measure_factory.register(type_id="multi_distant")
 @parse_docs
 @attr.s
@@ -119,6 +120,12 @@ class MultiDistantMeasure(Measure):
     @property
     def film_resolution(self) -> t.Tuple[int, int]:
         return (self.directions.shape[0], 1)
+
+    flags: MeasureFlags = documented(
+        attr.ib(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
+        doc=get_doc(Measure, "flags", "doc"),
+        type=get_doc(Measure, "flags", "type"),
+    )
 
     # --------------------------------------------------------------------------
     #                         Additional constructors

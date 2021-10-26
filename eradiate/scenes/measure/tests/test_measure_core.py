@@ -1,7 +1,10 @@
+import attr
+
 from eradiate.contexts import CKDSpectralContext, MonoSpectralContext
 from eradiate.scenes.measure._core import (
     CKDMeasureSpectralConfig,
     Measure,
+    MeasureFlags,
     MeasureSpectralConfig,
     MonoMeasureSpectralConfig,
 )
@@ -49,6 +52,26 @@ def test_ckd_spectral_config(modes_all_ckd):
     ctxs = cfg.spectral_ctxs()
     assert len(ctxs) == 96
     assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
+
+
+def test_measure_flags(mode_mono):
+    @attr.s
+    class MyMeasure(Measure):
+        flags = attr.ib(
+            default=MeasureFlags.DISTANT,
+            converter=MeasureFlags,
+            init=False,
+        )
+
+        @property
+        def film_resolution(self):
+            return (32, 32)
+
+        def kernel_dict(self, ctx):
+            pass
+
+    measure = MyMeasure()
+    assert measure.flags & MeasureFlags.DISTANT
 
 
 def test_measure_spp_splitting(mode_mono):
