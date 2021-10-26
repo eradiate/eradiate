@@ -8,7 +8,9 @@ import pint
 import pinttr
 
 from ._core import Measure, measure_factory
+from ..core import KernelDict
 from ...attrs import documented, parse_docs
+from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -26,6 +28,10 @@ class MultiRadiancemeterMeasure(Measure):
     solid angle along a number of rays defined by its ``origins`` and
     ``directions`` parameters.
     """
+
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
 
     origins: pint.Quantity = documented(
         pinttr.ib(
@@ -70,6 +76,10 @@ class MultiRadiancemeterMeasure(Measure):
     def film_resolution(self) -> t.Tuple[int, int]:
         return (self.origins.shape[0], 1)
 
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
+
     def _base_dicts(self) -> t.List[t.Dict]:
         origins = self.origins.m_as(uck.get("length"))
         directions = self.directions
@@ -80,11 +90,46 @@ class MultiRadiancemeterMeasure(Measure):
                 {
                     "type": "mradiancemeter",
                     "id": sensor_info.id,
-                    "origins": ", ".join([str(x) for x in origins.ravel(order="C")]),
+                    "origins": ",".join([str(x) for x in origins.ravel(order="C")]),
                     "directions": ", ".join(
                         [str(x) for x in directions.ravel(order="C")]
                     ),
                 }
             )
+
+        return result
+
+    def _kernel_dict(self, sensor_id, spp):
+        origins = self.origins.m_as(uck.get("length"))
+        directions = self.directions
+
+        result = {
+            "type": "mradiancemeter",
+            "id": sensor_id,
+            "origins": ",".join([str(x) for x in origins.ravel(order="C")]),
+            "directions": ", ".join([str(x) for x in directions.ravel(order="C")]),
+            "sampler": {
+                "type": "independent",
+                "sample_count": spp,
+            },
+            "film": {
+                "type": "hdrfilm",
+                "width": self.film_resolution[0],
+                "height": self.film_resolution[1],
+                "pixel_format": "luminance",
+                "component_format": "float32",
+                "rfilter": {"type": "box"},
+            },
+        }
+
+        return result
+
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        sensor_ids = self._sensor_ids()
+        sensor_spps = self._sensor_spps()
+        result = KernelDict()
+
+        for spp, sensor_id in zip(sensor_spps, sensor_ids):
+            result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
 
         return result
