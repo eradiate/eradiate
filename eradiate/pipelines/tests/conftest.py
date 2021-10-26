@@ -22,7 +22,7 @@ def results_mono_ms_spp():
     )
     exp.measures[0]._spp_splitting_threshold = 100
     exp.process()
-    return exp.measures[0].results.raw, exp
+    return exp.measures[0].results, exp
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +44,7 @@ def results_ckd_ms_spp():
     )
     exp.measures[0]._spp_splitting_threshold = 100
     exp.process()
-    return exp.measures[0].results.raw, exp
+    return exp.measures[0].results, exp
 
 
 @pytest.fixture(scope="module")
@@ -66,7 +66,7 @@ def results_mono_spp():
     )
     exp.measures[0]._spp_splitting_threshold = 100
     exp.process()
-    return exp.measures[0].results.raw, exp
+    return exp.measures[0].results, exp
 
 
 @pytest.fixture(scope="module")
@@ -87,7 +87,7 @@ def results_mono():
         ],
     )
     exp.process()
-    return exp.measures[0].results.raw, exp
+    return exp.measures[0].results, exp
 
 
 @pytest.fixture(scope="module")
@@ -108,4 +108,4 @@ def results_ckd():
         ],
     )
     exp.process()
-    return exp.measures[0].results.raw, exp
+    return exp.measures[0].results, exp

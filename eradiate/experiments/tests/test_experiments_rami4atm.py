@@ -24,13 +24,13 @@ def test_ramiatm_experiment_construct_measures(mode_mono):
     """
 
     # Init with a single measure (not wrapped in a sequence)
-    assert Rami4ATMExperiment(measures=DistantRadianceMeasure())
+    assert Rami4ATMExperiment(measures=MultiDistantMeasure())
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert Rami4ATMExperiment(measures=[{"type": "distant_radiance"}])
+    assert Rami4ATMExperiment(measures=[{"type": "distant"}])
     # -- Not wrapped in a sequence
-    assert Rami4ATMExperiment(measures={"type": "distant_radiance"})
+    assert Rami4ATMExperiment(measures={"type": "distant"})
 
 
 @pytest.mark.parametrize("padding", (0, 1))
@@ -46,7 +46,7 @@ def test_ramiatm_experiment_construct_normalize_measures(mode_mono, padding):
             l_vertical=2.0 * ureg.m,
             padding=padding,
         ),
-        measures=DistantRadianceMeasure(),
+        measures=MultiDistantMeasure(),
     )
     target = exp.measures[0].target
     canopy = exp.canopy
@@ -66,7 +66,7 @@ def test_ramiatm_experiment_construct_normalize_measures(mode_mono, padding):
             l_vertical=2.0 * ureg.m,
             padding=padding,
         ),
-        measures=DistantRadianceMeasure(),
+        measures=MultiDistantMeasure(),
     )
     target = exp.measures[0].target
     canopy = exp.canopy

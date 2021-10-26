@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
+from eradiate.experiments import mitsuba_run
 from eradiate.scenes.core import KernelDict
-from eradiate.solvers.core import runner
 
 
 @pytest.mark.parametrize("illumination,spp", [("directional", 1), ("constant", 256000)])
@@ -95,5 +95,5 @@ def test_radiometric_accuracy(mode_mono, illumination, spp, li):
     else:
         raise ValueError(f"unsupported illumination '{illumination}'")
 
-    result = runner(kernel_dict)["values"]["measure"]
+    result = mitsuba_run(kernel_dict)["values"]["measure"].img
     assert np.allclose(result, theoretical_solution, rtol=1e-3)

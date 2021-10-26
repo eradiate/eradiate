@@ -7,19 +7,19 @@ from abc import ABC, abstractmethod
 
 import attr
 import mitsuba
-import numpy as np
 import pinttr
 import xarray as xr
 from tqdm import tqdm
 
 import eradiate
 
-from .. import config
+from .. import config, pipelines
 from .._mode import ModeFlags, supported_mode
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError, UnsupportedModeError
 from ..kernel import bitmap_to_dataset
+from ..pipelines._core import Pipeline
 from ..scenes.core import KernelDict
 from ..scenes.illumination import (
     ConstantIllumination,
@@ -27,7 +27,14 @@ from ..scenes.illumination import (
     illumination_factory,
 )
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
-from ..scenes.measure import Measure, MultiDistantMeasure, measure_factory
+from ..scenes.measure import (
+    DistantFluxMeasure,
+    Measure,
+    MultiDistantMeasure,
+    measure_factory,
+)
+from ..scenes.measure._core import MeasureFlags
+from ..scenes.measure._hemispherical_distant import HemisphericalDistantMeasure
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +153,10 @@ class Experiment(ABC):
     Base class for experiment simulations.
     """
 
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
+
     measures: t.List[Measure] = documented(
         attr.ib(
             factory=lambda: [MultiDistantMeasure()],
@@ -155,7 +166,7 @@ class Experiment(ABC):
             if not isinstance(value, dict)
             else [measure_factory.convert(value)],
             validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of((MultiDistantMeasure,))
+                member_validator=attr.validators.instance_of(Measure)
             ),
         ),
         doc="List of measure specifications. The passed list may contain "
@@ -183,6 +194,13 @@ class Experiment(ABC):
         default=":class:`PathIntegrator() <.PathIntegrator>`",
     )
 
+    @property
+    def integrator(self) -> Integrator:
+        """
+        :class:`.Integrator`: Integrator used to solve the radiative transfer equation.
+        """
+        return self._integrator
+
     _results: t.Dict[str, xr.Dataset] = documented(
         attr.ib(factory=dict, init=False, repr=False),
         doc="Post-processed simulation results. Each entry uses a measure ID as "
@@ -190,13 +208,6 @@ class Experiment(ABC):
         "holding one variable per physical quantity computed by the measure.",
         type="dict[str, dataset]",
     )
-
-    @property
-    def integrator(self) -> Integrator:
-        """
-        :class:`.Integrator`: Integrator used to solve the radiative transfer equation.
-        """
-        return self._integrator
 
     @property
     def results(self) -> t.Dict[str, xr.Dataset]:
@@ -209,6 +220,10 @@ class Experiment(ABC):
             Dictionary mapping measure IDs to xarray datasets.
         """
         return self._results
+
+    # --------------------------------------------------------------------------
+    #                          Additional constructors
+    # --------------------------------------------------------------------------
 
     @classmethod
     def from_dict(cls, d: t.Mapping) -> Experiment:
@@ -227,6 +242,10 @@ class Experiment(ABC):
         """
         raise NotImplementedError
 
+    # --------------------------------------------------------------------------
+    #                              Processing
+    # --------------------------------------------------------------------------
+
     def run(self, *measures: t.Union[Measure, int]) -> None:
         """
         Perform radiative transfer simulation and post-process results.
@@ -242,25 +261,11 @@ class Experiment(ABC):
 
         See Also
         --------
-        :meth:`.preprocess`, :meth:`.process`, :meth:`.postprocess`
+        :meth:`.process`, :meth:`.postprocess`
 
         """
-        self.preprocess(*measures)
         self.process(*measures)
         self.postprocess(*measures)
-
-    def preprocess(self, *measures: t.Union[Measure, int]) -> None:
-        """
-        Pre-process internal state if relevant.
-
-        Parameters
-        ----------
-        *measures : :class:`.Measure` or int
-            One or several measures for which to compute radiative transfer.
-            Alternatively, indexes in the measure array can be passed.
-            If no value is passed, all measures are processed.
-        """
-        pass
 
     def process(self, *measures: t.Union[Measure, int]) -> None:
         """
@@ -315,9 +320,7 @@ class Experiment(ABC):
                     ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
 
                     # Collect sensor IDs
-                    sensor_ids = [
-                        sensor_info.id for sensor_info in measure.sensor_infos()
-                    ]
+                    sensor_ids = measure._sensor_ids()
 
                     # Run simulation
                     kernel_dict = self.kernel_dict(ctx=ctx)
@@ -329,11 +332,17 @@ class Experiment(ABC):
                     # Update progress display
                     pbar.update()
 
-    def postprocess(self, *measures: t.Union[Measure, int]) -> None:
+    @abstractmethod
+    def pipelines(self, measures: t.List[Measure]) -> t.List[Pipeline]:
+        pass
+
+    def postprocess(
+        self, *measures: t.Union[Measure, int], pipeline_kwargs=None
+    ) -> None:
         """
         Post-process raw results stored in a measure's ``results`` field. This
-        requires a successful execution of :meth:`.process`. Post-processed results
-        are stored in ``self.results``.
+        requires a successful execution of :meth:`.process`. Post-processed
+        results are stored in ``self.results``.
 
         Parameters
         ----------
@@ -341,6 +350,10 @@ class Experiment(ABC):
             One or several measures for which to perform post-processing.
             Alternatively, indexes in the measure array can be passed.
             If no value is passed, all measures are processed.
+
+        pipeline_kwargs
+            A dictionary of pipeline keyword arguments forwarded to
+            :meth:`.Pipeline.transform`.
 
         Raises
         ------
@@ -352,23 +365,22 @@ class Experiment(ABC):
         --------
         :meth:`.process`, :meth:`.run`
         """
-        if not eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
-
         if not measures:
             measures = self.measures
 
-        for measure in measures:
-            if isinstance(measure, int):
-                measure = self.measures[measure]
+        # Convert integer values to measure entries
+        measures = [
+            self.measures[measure] if isinstance(measure, int) else measure
+            for measure in measures
+        ]
 
-            # Prepare measure postprocessing arguments
-            measure_kwargs = {}
-            if isinstance(measure, (DistantReflectanceMeasure, DistantAlbedoMeasure)):
-                measure_kwargs["illumination"] = self.illumination
+        # Collect pipelines
+        pipelines = self.pipelines(measures)
 
+        # Apply pipelines
+        for measure, pipeline in zip(measures, pipelines):
             # Collect measure results
-            self._results[measure.id] = measure.postprocess(**measure_kwargs)
+            self._results[measure.id] = pipeline.transform(measure.results)
 
             # Apply additional metadata
             self._results[measure.id].attrs.update(self._dataset_metadata(measure))
@@ -376,7 +388,6 @@ class Experiment(ABC):
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         """
         Generate additional metadata applied to dataset after post-processing.
-        Default implementation returns an empty dictionary.
 
         Parameters
         ----------
@@ -439,3 +450,72 @@ class EarthObservationExperiment(Experiment, ABC):
         ":class:`.ConstantIllumination` or dict",
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
+
+    def pipelines(self, measures: t.List[Measure]) -> t.List[pipelines.Pipeline]:
+        result = []
+
+        for measure in measures:
+            pipeline = pipelines.Pipeline()
+
+            # Gather
+            pipeline.add(
+                "gather",
+                pipelines.Gather(sensor_dims=measure.sensor_dims, var=measure.var),
+            )
+
+            # Aggregate
+            pipeline.add("aggregate_sample_count", pipelines.AggregateSampleCount())
+            pipeline.add(
+                "aggregate_ckd_quad",
+                pipelines.AggregateCKDQuad(measure=measure, var=measure.var),
+            )
+
+            if isinstance(measure, (DistantFluxMeasure,)):
+                pipeline.add(
+                    "aggregate_radiosity",
+                    pipelines.AggregateRadiosity(
+                        sector_radiosity_var=measure.var,
+                        radiosity_var="radiosity",
+                    ),
+                )
+
+            # Assemble
+            pipeline.add(
+                "add_illumination",
+                pipelines.AddIllumination(
+                    illumination=self.illumination,
+                    measure=measure,
+                    irradiance_var="irradiance",
+                ),
+            )
+
+            if measure.flags & MeasureFlags.DISTANT:
+                pipeline.add(
+                    "add_viewing_angles", pipelines.AddViewingAngles(measure=measure)
+                )
+
+            # Compute
+            if isinstance(measure, (MultiDistantMeasure, HemisphericalDistantMeasure)):
+                pipeline.add(
+                    "compute_reflectance",
+                    pipelines.ComputeReflectance(
+                        radiance_var="radiance",
+                        irradiance_var="irradiance",
+                        brdf_var="brdf",
+                        brf_var="brf",
+                    ),
+                )
+
+            elif isinstance(measure, (DistantFluxMeasure,)):
+                pipeline.add(
+                    "compute_albedo",
+                    pipelines.ComputeAlbedo(
+                        radiosity_var="radiosity",
+                        irradiance_var="irradiance",
+                        albedo_var="albedo",
+                    ),
+                )
+
+            result.append(pipeline)
+
+        return result

@@ -460,6 +460,12 @@ class Measure(SceneElement, ABC):
     #                        Kernel dictionary generation
     # --------------------------------------------------------------------------
 
+    def _split_spp_active(self) -> bool:
+        """
+        Return ``True`` iff sample count split shall be activated.
+        """
+        return self.split_spp is not None and self.spp > self.split_spp
+
     def _sensor_id(self, i_spp=None):
         """
         Assemble a sensor ID from indexes on sensor coordinates. This basic
@@ -482,7 +488,7 @@ class Measure(SceneElement, ABC):
         list of int
             List of split sample counts.
         """
-        if self.split_spp is not None and self.spp > self.split_spp:
+        if self._split_spp_active():
             spps = [self.split_spp] * int(self.spp / self.split_spp)
 
             if self.spp % self.split_spp:
@@ -499,3 +505,18 @@ class Measure(SceneElement, ABC):
 
         else:
             return [self._sensor_id()]
+
+    # --------------------------------------------------------------------------
+    #                        Post-processing information
+    # --------------------------------------------------------------------------
+
+    @property
+    def var(self) -> str:
+        return "img"
+
+    @property
+    def sensor_dims(self) -> t.Tuple[str]:
+        if self._split_spp_active():
+            return ("spp",)
+        else:
+            return tuple()

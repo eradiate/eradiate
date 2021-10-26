@@ -71,7 +71,7 @@ def test_multi_distant_measure_add_viewing_angles(
     measure = exp.measures[0]
 
     # Apply basic post-processing
-    values = Gather(var="lo").transform(measure.results.raw)
+    values = Gather(var="lo").transform(measure.results)
 
     step = AddViewingAngles(measure=measure)
     result = step.transform(values)
@@ -116,7 +116,7 @@ def test_pipelines_add_illumination(modes_all_single, illumination_type, expecte
             ("gather", Gather(var="lo")),
             ("aggregate_ckd_quad", AggregateCKDQuad(var="lo", measure=measure)),
         ]
-    ).transform(measure.results.raw)
+    ).transform(measure.results)
 
     step = AddIllumination(illumination=exp.illumination, measure=measure)
     result = step.transform(values)

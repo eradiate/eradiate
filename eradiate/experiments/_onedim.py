@@ -11,6 +11,7 @@ from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_fa
 from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import Measure, TargetPoint
+from ..scenes.measure._core import MeasureFlags
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc
 
@@ -26,7 +27,7 @@ class OneDimExperiment(EarthObservationExperiment):
     Notes
     -----
     A post-initialisation step will constrain the measure setup if a
-    :class:`.DistantMeasure` is used and no target is defined:
+    distant measure is used and no target is defined:
 
     * if an atmosphere is defined, the target will be set to [0, 0, TOA];
     * if no atmosphere is defined, the target will be set to [0, 0, 0].
@@ -103,7 +104,7 @@ class OneDimExperiment(EarthObservationExperiment):
         overridden if relevant.
         """
         for measure in self.measures:
-            if isinstance(measure, DistantMeasure):
+            if measure.flags & MeasureFlags.DISTANT:
                 if measure.target is None:
                     if self.atmosphere is not None:
                         toa = self.atmosphere.top
@@ -116,7 +117,7 @@ class OneDimExperiment(EarthObservationExperiment):
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(OneDimExperiment, self)._dataset_metadata(measure)
 
-        if isinstance(measure, DistantMeasure):
+        if measure.flags & MeasureFlags.DISTANT:
             result["title"] = "Top-of-atmosphere simulation results"
 
         return result

@@ -3,7 +3,7 @@ import pytest
 
 from eradiate.experiments import OneDimExperiment, RamiExperiment
 from eradiate.scenes.illumination import DirectionalIllumination
-from eradiate.scenes.measure import DistantReflectanceMeasure
+from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 from eradiate.scenes.surface import LambertianSurface
 
@@ -63,8 +63,7 @@ def test_spectral_loop(mode_mono, cls, wavelengths, irradiance):
         surface=LambertianSurface(reflectance=1.0),
         illumination=illumination,
         measures=[
-            DistantReflectanceMeasure(
-                film_resolution=(1, 1),
+            MultiDistantMeasure(
                 spp=1,
                 spectral_cfg={"wavelengths": wavelengths},
             )
