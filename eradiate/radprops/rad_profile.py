@@ -1082,7 +1082,7 @@ class AFGL1986RadProfile(RadProfile):
 
     def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         ds = eradiate.data.open(
-            category="ckd_absorption", id="afgl_1986-us_standard-10nm"
+            category="ckd_absorption", id="afgl1986-us_standard-10nm"
         )
         # evaluate H2O and O3 concentrations
         h2o_concentration = compute_column_mass_density(

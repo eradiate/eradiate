@@ -42,8 +42,8 @@ Metadata:
 
 class _CKDAbsorptionGetter(DataGetter):
     PATHS = {
-        "afgl_1986-us_standard-10nm_test": "ckd/absorption/10nm_test/afgl_1986-us_standard-10nm_test.nc",
-        "afgl_1986-us_standard-10nm": "ckd/absorption/10nm/afgl_1986-us_standard-10nm.nc",
+        "afgl1986-us_standard-10nm_test": "ckd/absorption/10nm_test/afgl1986-us_standard-10nm_test.nc",
+        "afgl1986-us_standard-10nm": "ckd/absorption/10nm/afgl1986-us_standard-10nm.nc",
     }
 
     @classmethod

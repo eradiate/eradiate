@@ -206,7 +206,7 @@ def test_us76_approx_rad_profile_has_scattering_false(
 @pytest.fixture
 def afgl1986_test_absorption_data_sets():
     """
-    Fixture to return paths to test absorption data sets for 'afgl_1986'.
+    Fixture to return paths to test absorption data sets for 'afgl1986'.
     """
     return {
         "CH4": path_resolver.resolve(
