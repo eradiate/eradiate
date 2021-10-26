@@ -27,15 +27,7 @@ from ..scenes.illumination import (
     illumination_factory,
 )
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
-from ..scenes.measure import (
-    DistantAlbedoMeasure,
-    DistantMeasure,
-    DistantRadianceMeasure,
-    DistantReflectanceMeasure,
-    Measure,
-    MultiDistantMeasure,
-    measure_factory,
-)
+from ..scenes.measure import Measure, MultiDistantMeasure, measure_factory
 
 logger = logging.getLogger(__name__)
 
@@ -156,16 +148,14 @@ class Experiment(ABC):
 
     measures: t.List[Measure] = documented(
         attr.ib(
-            factory=lambda: [DistantRadianceMeasure()],
+            factory=lambda: [MultiDistantMeasure()],
             converter=lambda value: [
                 measure_factory.convert(x) for x in pinttr.util.always_iterable(value)
             ]
             if not isinstance(value, dict)
             else [measure_factory.convert(value)],
             validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(
-                    (DistantMeasure, MultiDistantMeasure)
-                )
+                member_validator=attr.validators.instance_of((MultiDistantMeasure,))
             ),
         ),
         doc="List of measure specifications. The passed list may contain "

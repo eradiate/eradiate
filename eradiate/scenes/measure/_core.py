@@ -385,6 +385,13 @@ class Measure(SceneElement, ABC):
         default='"measure"',
     )
 
+    results: t.Dict = documented(
+        attr.ib(factory=dict, repr=_str_summary_raw),
+        doc="Storage for raw results yielded by the kernel.",
+        type="dict",
+        default="{}",
+    )
+
     spectral_cfg: MeasureSpectralConfig = documented(
         attr.ib(
             factory=MeasureSpectralConfig.new,
@@ -403,13 +410,6 @@ class Measure(SceneElement, ABC):
         doc="Number of samples per pixel.",
         type="int",
         default="32",
-    )
-
-    results: t.Dict = documented(
-        attr.ib(factory=dict, repr=_str_summary_raw),
-        doc="Storage for raw results yielded by the kernel.",
-        type="dict",
-        default="{}",
     )
 
     split_spp: t.Optional[int] = documented(

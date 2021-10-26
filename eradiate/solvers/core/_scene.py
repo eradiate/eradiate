@@ -14,12 +14,7 @@ from ...scenes.illumination import (
     illumination_factory,
 )
 from ...scenes.integrators import Integrator, PathIntegrator, integrator_factory
-from ...scenes.measure import (
-    DistantMeasure,
-    DistantRadianceMeasure,
-    Measure,
-    measure_factory,
-)
+from ...scenes.measure import Measure, measure_factory
 from ...units import unit_registry as ureg
 
 
