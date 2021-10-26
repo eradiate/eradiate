@@ -11,7 +11,6 @@ from ...exceptions import OverriddenValueWarning
 from ...scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ...scenes.core import KernelDict
 from ...scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
-from ...scenes.measure._distant import DistantMeasure
 from ...scenes.measure._target import TargetPoint
 from ...scenes.surface import LambertianSurface, Surface, surface_factory
 from ...units import unit_context_config as ucc

@@ -17,7 +17,7 @@ from ..scenes.integrators import (
     VolPathIntegrator,
     integrator_factory,
 )
-from ..scenes.measure import DistantMeasure, Measure
+from ..scenes.measure import Measure
 from ..scenes.measure._target import TargetPoint
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc

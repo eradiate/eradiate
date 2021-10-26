@@ -18,12 +18,6 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import ModeError, UnsupportedModeError
 from ...scenes.measure import Measure
-from ...scenes.measure._distant import (
-    DistantAlbedoMeasure,
-    DistantRadianceMeasure,
-    DistantReflectanceMeasure,
-)
-from ...scenes.measure._distant_array import DistantArrayReflectanceMeasure
 from ...units import unit_registry as ureg
 
 logger = logging.getLogger(__name__)

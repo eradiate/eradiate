@@ -1,12 +1,9 @@
-import numpy as np
-
-from eradiate.contexts import CKDSpectralContext, KernelDictContext, MonoSpectralContext
+from eradiate.contexts import CKDSpectralContext, MonoSpectralContext
 from eradiate.scenes.measure._core import (
     CKDMeasureSpectralConfig,
     Measure,
     MeasureSpectralConfig,
     MonoMeasureSpectralConfig,
-    SensorInfo,
 )
 
 
@@ -54,53 +51,6 @@ def test_ckd_spectral_config(modes_all_ckd):
     assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
 
 
-def test_measure(mode_mono):
-    """
-    Unit tests for :class:`.Measure`.
-    """
-
-    # Concrete class to test
-    class MyMeasure(Measure):
-        @property
-        def film_resolution(self):
-            return (640, 480)
-
-        def _base_dicts(self):
-            return [
-                {
-                    "type": "some_sensor",
-                    "id": self.id,
-                }
-            ]
-
-    m = MyMeasure()
-
-    # This measure has a single sensor associated to it
-    assert m.sensor_infos() == [SensorInfo(id=f"{m.id}_ms0", spp=m.spp)]
-
-    # The kernel dict is well-formed
-    ctx = KernelDictContext()
-    m.spp = 256
-    assert m.kernel_dict(ctx).data == {
-        f"{m.id}_ms0": {
-            "type": "some_sensor",
-            "id": m.id,
-            "film": {
-                "type": "hdrfilm",
-                "width": 640,
-                "height": 480,
-                "pixel_format": "luminance",
-                "component_format": "float32",
-                "rfilter": {"type": "box"},
-            },
-            "sampler": {
-                "type": "independent",
-                "sample_count": 256,
-            },
-        }
-    }
-
-
 def test_measure_spp_splitting(mode_mono):
     """
     Unit tests for SPP splitting.
@@ -111,32 +61,9 @@ def test_measure_spp_splitting(mode_mono):
         def film_resolution(self):
             return (32, 32)
 
-        def _base_dicts(self):
+        def kernel_dict(self, ctx):
             pass
 
-    m = MyMeasure(id="my_measure", spp=256, spp_splitting_threshold=100)
-    assert m._split_spp() == [100, 100, 56]
-    assert m.sensor_infos() == [
-        SensorInfo(id="my_measure_ms0_spp0", spp=100),
-        SensorInfo(id="my_measure_ms0_spp1", spp=100),
-        SensorInfo(id="my_measure_ms0_spp2", spp=56),
-    ]
-
-    # fmt: off
-    assert m._film_dicts() == [{
-        "film": {
-            "type": "hdrfilm",
-            "width": 32,
-            "height": 32,
-            "pixel_format": "luminance",
-            "component_format": "float32",
-            "rfilter": {"type": "box"},
-        }
-    }] * 3
-    # fmt: on
-
-    assert m._sampler_dicts() == [
-        {"sampler": {"type": "independent", "sample_count": 100}},
-        {"sampler": {"type": "independent", "sample_count": 100}},
-        {"sampler": {"type": "independent", "sample_count": 56}},
-    ]
+    m = MyMeasure(id="my_measure", spp=256, split_spp=100)
+    assert m._sensor_spps() == [100, 100, 56]
+    assert m._sensor_ids() == ["my_measure_spp0", "my_measure_spp1", "my_measure_spp2"]
