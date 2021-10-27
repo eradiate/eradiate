@@ -12,6 +12,23 @@ Data sets access
 All spectral response function data sets required by Eradiate are available
 within Eradiate using :meth:`eradiate.data.open`.
 
+.. _sec-user_guide-data-srf-naming_convention:
+
+Identifiers format
+^^^^^^^^^^^^^^^^^^
+
+Identifiers for spectral response function are built according to the format
+``platform-instrument-band.nc`` where:
+
+* ``platform`` identifies the platform (e.g. satellite's name)
+* ``instrument`` identifies the instrument onboard the platform,
+* ``band`` specifies the spectral band of the instrument that is being
+  characterised.
+
+For example the spectral response function data set of the SLSTR instrument
+onboard Sentinel-3B and in the spectral band number 5 has the identifier
+``sentinel_3b-slstr-5``.
+
 Structure
 ---------
 
@@ -33,17 +50,6 @@ The following additional data set attributes are provided:
 * ``platform``: platform identifier (e.g. ``sentinel_3b``)
 * ``instrument``: instrument identifier (e.g. ``slstr``)
 * ``band``: spectral band number (e.g. ``5``)
-
-.. _sec-user_guide-data-srf-naming_convention:
-
-Naming convention
------------------
-
-Data sets files are named according the following convention:
-``platform-instrument-band.nc``.
-For example the spectral response function data set of the SLSTR instrument
-onboard Sentinel-3B and in the spectral band number 5 is named
-``sentinel_3b-slstr-5.nc``.
 
 Visualise the data
 ------------------

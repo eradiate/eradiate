@@ -13,6 +13,16 @@ Data sets access
 All atmosphere thermophysical properties data sets required by Eradiate are 
 available within Eradiate using :meth:`eradiate.data.open`.
 
+Identifiers format
+^^^^^^^^^^^^^^^^^^
+
+Identifiers for thermophysical properties data sets
+are constructed based on the format ``author_year-title`` where:
+
+* ``author`` specifies the author of the data set,
+* ``year`` stands for the year in which the data set was published,
+* ``title`` is the data set title.
+
 Structure
 ---------
 

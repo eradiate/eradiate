@@ -7,11 +7,23 @@ Absorption cross section data sets provide the monochromatic absorption cross
 section spectrum of a given absorbing species at specific pressure and
 temperature conditions.
 
-
 Data sets access
 ----------------
-All data sets are hosted at
+Due to their extremely large size (almost 1TB), most data sets are not 
+distributed.
+Distributed data sets are hosted at
 `https://eradiate.eu/data <https://eradiate.eu/data>`_.
+
+Identifiers format
+^^^^^^^^^^^^^^^^^^
+
+Identifiers for absorption cross section data sets
+are constructed based on the format ``absorber-engine-wmin_wmax`` where:
+
+* ``absorber`` is the name of the absorber (e.g. ``CH4``),
+* ``engine`` indicates the absorption cross section engine used (e.g. ``spectra``),
+* ``wmin`` is the minimum wavenumber value in ``cm^-1``,
+* ``wmax`` is the maximum wavenumber value in ``cm^-1``.
 
 Structure
 ---------

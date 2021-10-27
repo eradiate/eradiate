@@ -22,12 +22,12 @@ Metadata
     * ``quadrature_type`` (str): quadrature type
     * ``quadrature_n`` (int): number of quadrature points
 
-Absorption spectra
-------------------
+Quadrature points
+-----------------
 
-Absorption spectra are shipped in the form of NetCDF datasets. Below is the
+CKD quadrature points are shipped in the form of NetCDF datasets. Below is the
 minimal dataset structure required for Eradiate to be able to interpret CKD
-absorption data.
+quadrature points data sets.
 
 Coordinates (* means also dimension)
     * ``*z`` (float): altitude
@@ -35,10 +35,11 @@ Coordinates (* means also dimension)
       NetCDF variables and data is reindexed upon loading:
 
       * ``bin [bd]`` (str): bin name
-      * ``index [bd]`` (int): index value within bin, *i.e.* quadrature node index
+      * ``index [bd]`` (int): quadrature point index
 
 Variables
-    * ``k [z, bd]`` (float): absorption coefficient in :math:`m^{-1}`
+    * ``k [z, bd]`` (float): quadrature point absorption coefficient value
+      [:math:`\text{length}^{-1}`]
 
 Metadata
     * ``bin_set`` (str): ID of the associated bin set
