@@ -329,14 +329,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             validator=attr.validators.optional(attr.validators.instance_of(float)),
         ),
         doc="If set, the extinction coefficient is scaled by the corresponding "
-        "amount during computation. If the medium consists of multiple "
-        "components:\n"
-        "\n"
-        "* the top-level component's scaling takes precedence;\n"
-        "* component scaling will not scale phase function weights and will "
-        "  therefore produce inconsistent results.\n"
-        "\n"
-        "This field is only useful for debugging purposes.",
+        "amount during computation.",
         type="float or None",
         init_type="float, optional",
         default="None",

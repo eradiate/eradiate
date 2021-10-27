@@ -133,10 +133,10 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "their 'width' field set to AUTO"
             )
 
-        if self.scale is not None and value.scale is not None:
-            warnings.warn(
-                "Heterogeneous atmosphere scaling takes precedence over "
-                "molecular atmosphere scaling"
+        if value.scale is not None:
+            raise ValueError(
+                f"while validating {attribute.name}: components cannot be "
+                "scaled individually"
             )
 
     particle_layers: t.List[ParticleLayer] = documented(
@@ -164,12 +164,10 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 f"their 'width' field set to AUTO"
             )
 
-        if self.scale is not None and not all(
-            component.scale is None for component in value
-        ):
-            warnings.warn(
-                "Heterogeneous atmosphere scaling takes precedence over "
-                "particle layer scaling"
+        if not all(component.scale is None for component in value):
+            raise ValueError(
+                f"while validating {attribute.name}: components cannot be "
+                "scaled individually"
             )
 
     @property
