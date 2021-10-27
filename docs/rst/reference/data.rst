@@ -24,7 +24,7 @@ Data sets
    :toctree: generated/autosummary/
 
    absorption_spectra
-   thermoprops_profiles
+   thermoprops
    solar_irradiance_spectra
    spectral_response_function
    ckd_bin_sets

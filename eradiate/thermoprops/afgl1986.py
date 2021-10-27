@@ -110,7 +110,7 @@ def make_profile(
                 f"species '{unhandled}' cannot be rescaled in ckd mode"
             )
 
-    thermoprops = open(category="thermoprops_profiles", id="afgl1986-" + model_id)
+    thermoprops = open(category="thermoprops", id="afgl_1986-" + model_id)
 
     if levels is not None:
         thermoprops = interpolate(ds=thermoprops, z_level=levels, conserve_columns=True)
