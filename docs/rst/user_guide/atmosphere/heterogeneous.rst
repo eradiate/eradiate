@@ -49,7 +49,7 @@ Radiative properties profiles objects
 There are several types of radiative properties profile objects.
 
 ``afgl_1986``
-~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 The :class:`~eradiate.radprops.rad_profile.AFGL1986RadProfile` 
 (identifier: ``afgl_1986``) class allows to create an atmosphere radiative
