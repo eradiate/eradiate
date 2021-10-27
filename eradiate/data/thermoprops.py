@@ -9,12 +9,12 @@ from .._presolver import path_resolver as _presolver
 
 class _ThermoPropsProfilesGetter(DataGetter):
     PATHS = {
-        "afgl1986-midlatitude_summer": "thermoprops_profiles/afgl1986-midlatitude_summer.nc",
-        "afgl1986-midlatitude_winter": "thermoprops_profiles/afgl1986-midlatitude_winter.nc",
-        "afgl1986-subarctic_summer": "thermoprops_profiles/afgl1986-subarctic_summer.nc",
-        "afgl1986-subarctic_winter": "thermoprops_profiles/afgl1986-subarctic_winter.nc",
-        "afgl1986-tropical": "thermoprops_profiles/afgl1986-tropical.nc",
-        "afgl1986-us_standard": "thermoprops_profiles/afgl1986-us_standard.nc",
+        "afgl_1986-midlatitude_summer": "thermoprops/afgl_1986-midlatitude_summer.nc",
+        "afgl_1986-midlatitude_winter": "thermoprops/afgl_1986-midlatitude_winter.nc",
+        "afgl_1986-subarctic_summer": "thermoprops/afgl_1986-subarctic_summer.nc",
+        "afgl_1986-subarctic_winter": "thermoprops/afgl_1986-subarctic_winter.nc",
+        "afgl_1986-tropical": "thermoprops/afgl_1986-tropical.nc",
+        "afgl_1986-us_standard": "thermoprops/afgl_1986-us_standard.nc",
     }
 
     @classmethod

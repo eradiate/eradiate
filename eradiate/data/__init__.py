@@ -28,8 +28,8 @@ the second kind of call will try and resolve directly a path using the
 
       * - :class:`absorption_cross_section_spectrum <eradiate.data.absorption_spectra>`
         - Absorption cross section spectrum
-      * - :class:`thermoprops_profiles <eradiate.data.thermoprops_profiles>`
-        - Atmospheric thermophysical properties profiles
+      * - :class:`thermoprops <eradiate.data.thermoprops>`
+        - Atmosphere thermophysical properties
       * - :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
         - Solar irradiance spectrum
       * - :class:`spectral_response_function <eradiate.data.spectral_response_function>`
@@ -48,7 +48,7 @@ from .ckd_bin_sets import _CKDBinSetGetter
 from .core import DataGetter
 from .solar_irradiance_spectra import _SolarIrradianceGetter
 from .spectral_response_function import _SpectralResponseFunctionGetter
-from .thermoprops_profiles import _ThermoPropsProfilesGetter
+from .thermoprops import _ThermoPropsProfilesGetter
 from .. import path_resolver as _presolver
 
 _getters = {
@@ -56,7 +56,7 @@ _getters = {
     "chemistry": _ChemistryGetter,
     "ckd_absorption": _CKDAbsorptionGetter,
     "ckd_bin_set": _CKDBinSetGetter,
-    "thermoprops_profiles": _ThermoPropsProfilesGetter,
+    "thermoprops": _ThermoPropsProfilesGetter,
     "solar_irradiance_spectrum": _SolarIrradianceGetter,
     "spectral_response_function": _SpectralResponseFunctionGetter,
 }
