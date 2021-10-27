@@ -2,6 +2,7 @@ import re
 import typing as t
 
 import attr
+import numpy as np
 import xarray as xr
 from pinttr.util import always_iterable
 
@@ -154,19 +155,25 @@ class Gather(PipelineStep):
                 # Add spp dimension even though sample count split did not
                 # produce any extra sensor
                 if "spp" not in sensor_dims:
-                    spectral_coords["spp_index"] = [0]
+                    sensor_coords["spp_index"] = [0]
 
                 # Add spectral and sensor dimensions to img array
-                ds["img"] = ds.img.expand_dims(dim={**spectral_coords, **sensor_coords})
+                all_coords = {**spectral_coords, **sensor_coords}
+                ds["img"] = ds.img.expand_dims(dim=all_coords)
 
                 # Package spp in a data array
-                ds["spp"] = ("spp_index", [spp])
+                all_dims = list(all_coords.keys())
+                ds["spp"] = (all_dims, np.reshape(spp, [1 for _ in all_dims]))
 
                 sensor_datasets.append(ds)
 
         # Combine all the data
         with xr.set_options(keep_attrs=True):
             result = xr.merge(sensor_datasets)
+
+        # Drop "channel" dimension when using a mono variant
+        if eradiate.mode().has_flags(ModeFlags.MTS_MONO):
+            result = result.squeeze("channel", drop=True)
 
         # Apply metadata to new dimensions
         for sensor_dim in sensor_dims:
