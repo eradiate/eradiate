@@ -90,6 +90,7 @@ def test_pipeline_transform():
         3, stop="mod_7"
     )
     assert pipeline.transform(3, stop_after=1) == pipeline.transform(3, stop=2)
+    assert pipeline.transform(3, stop_after=0) == pipeline.transform(3, stop=1)
 
     # Step selector executes a single step
     assert 3 % 7 == pipeline.transform(3, step="mod_7")
