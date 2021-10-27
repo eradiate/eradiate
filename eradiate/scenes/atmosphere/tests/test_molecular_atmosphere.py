@@ -29,7 +29,7 @@ def test_molecular_atmosphere_scale(mode_mono):
 
 
 @pytest.fixture
-def afgl1986_test_absorption_data_sets():
+def afgl_1986_test_absorption_data_sets():
     return {
         "CH4": path_resolver.resolve(
             "tests/spectra/absorption/CH4-spectra-4000_11502.nc"
@@ -53,17 +53,17 @@ def afgl1986_test_absorption_data_sets():
     }
 
 
-def test_molecular_atmosphere_afgl1986(
+def test_molecular_atmosphere_afgl_1986(
     mode_mono,
     tmpdir,
-    afgl1986_test_absorption_data_sets,
+    afgl_1986_test_absorption_data_sets,
 ):
-    """MolecularAtmosphere 'afgl1986' constructor produces a valid kernel
+    """MolecularAtmosphere 'afgl_1986' constructor produces a valid kernel
     dictionary."""
     spectral_ctx = SpectralContext.new(wavelength=550.0)
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    atmosphere = MolecularAtmosphere.afgl1986(
-        absorption_data_sets=afgl1986_test_absorption_data_sets
+    atmosphere = MolecularAtmosphere.afgl_1986(
+        absorption_data_sets=afgl_1986_test_absorption_data_sets
     )
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 

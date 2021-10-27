@@ -72,7 +72,7 @@ def test_onedim_scene_ckd(mode_ckd):
     ctx = KernelDictContext()
     s = OneDimScene(
         atmosphere=HeterogeneousAtmosphere(
-            molecular_atmosphere=MolecularAtmosphere.afgl1986()
+            molecular_atmosphere=MolecularAtmosphere.afgl_1986()
         ),
         surface={"type": "lambertian"},
         measures={"type": "distant_radiance", "id": "distant_measure"},

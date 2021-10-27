@@ -3,7 +3,7 @@ import pint
 import pytest
 import xarray as xr
 
-from eradiate.thermoprops.afgl1986 import make_profile
+from eradiate.thermoprops.afgl_1986 import make_profile
 from eradiate.thermoprops.util import (
     compute_column_number_density,
     compute_number_density_at_surface,

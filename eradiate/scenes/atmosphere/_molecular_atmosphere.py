@@ -19,7 +19,7 @@ from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import OverriddenValueWarning
 from ...radprops.rad_profile import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
-from ...thermoprops import afgl1986, us76
+from ...thermoprops import afgl_1986, us76
 from ...thermoprops.util import (
     compute_scaling_factors,
     interpolate,
@@ -29,7 +29,7 @@ from ...units import to_quantity
 from ...units import unit_registry as ureg
 
 
-@atmosphere_factory.register(type_id="molecular", dict_constructor="afgl1986")
+@atmosphere_factory.register(type_id="molecular", dict_constructor="afgl_1986")
 @parse_docs
 @attr.s
 class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
@@ -40,7 +40,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
        .. autosummary::
 
-          afgl1986
+          afgl_1986
           ussa1976
     """
 
@@ -186,7 +186,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
 
     @classmethod
-    def afgl1986(
+    def afgl_1986(
         cls,
         model: str = "us_standard",
         levels: t.Optional[pint.Quantity] = None,
@@ -273,7 +273,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         individual molecular species to custom concentration values.
         Custom concentrations can be provided in different units.
         """
-        ds = afgl1986.make_profile(model_id=model)
+        ds = afgl_1986.make_profile(model_id=model)
 
         if levels is not None:
             ds = interpolate(ds=ds, z_level=levels, conserve_columns=True)

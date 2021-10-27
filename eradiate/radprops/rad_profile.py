@@ -27,7 +27,7 @@ from ..ckd import Bindex
 from ..contexts import SpectralContext
 from ..data.absorption_spectra import Absorber, Engine, find_dataset
 from ..exceptions import UnsupportedModeError
-from ..thermoprops import afgl1986, us76
+from ..thermoprops import afgl_1986, us76
 from ..thermoprops.util import (
     compute_column_mass_density,
     compute_column_number_density,
@@ -859,16 +859,16 @@ class US76ApproxRadProfile(RadProfile):
             ).squeeze()
 
 
-def _convert_thermoprops_afgl1986(
+def _convert_thermoprops_afgl_1986(
     value: t.Union[t.MutableMapping, xr.Dataset]
 ) -> xr.Dataset:
     if isinstance(value, dict):
-        return afgl1986.make_profile(**value)
+        return afgl_1986.make_profile(**value)
     else:
         return value
 
 
-@rad_profile_factory.register(type_id="afgl1986")
+@rad_profile_factory.register(type_id="afgl_1986")
 @parse_docs
 @attr.s
 class AFGL1986RadProfile(RadProfile):
@@ -880,13 +880,13 @@ class AFGL1986RadProfile(RadProfile):
 
     _thermoprops: xr.Dataset = documented(
         attr.ib(
-            factory=lambda: afgl1986.make_profile(),
-            converter=_convert_thermoprops_afgl1986,
+            factory=lambda: afgl_1986.make_profile(),
+            converter=_convert_thermoprops_afgl_1986,
             validator=attr.validators.instance_of(xr.Dataset),
         ),
         doc="Thermophysical properties.",
         type=":class:`~xarray.Dataset`",
-        default=":func:`~eradiate.thermoprops.afgl1986.make_profile`",
+        default=":func:`~eradiate.thermoprops.afgl_1986.make_profile`",
     )
 
     has_absorption: bool = documented(
