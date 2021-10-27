@@ -68,7 +68,7 @@ class AddIllumination(PipelineStep):
         k_irradiance_units = uck.get("irradiance")
         illumination = self.illumination
         measure = self.measure
-        result = x.copy()
+        result = x.copy(deep=False)
 
         # Collect spectral coordinate values for verification purposes
         wavelengths_dataset = to_quantity(x.w)

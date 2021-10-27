@@ -45,7 +45,7 @@ class ComputeReflectance(PipelineStep):
 
     def transform(self, x: t.Any) -> t.Any:
         # Compute BRDF and BRF
-        result = x.copy()
+        result = x.copy(deep=False)
 
         # We assume that all quantities are stored in kernel units
         result[self.brdf_var] = result[self.radiance_var] / result[self.irradiance_var]
@@ -95,7 +95,7 @@ class ComputeAlbedo(PipelineStep):
 
     def transform(self, x: t.Any) -> t.Any:
         # Compute albedo
-        result = x.copy()
+        result = x.copy(deep=False)
 
         # We assume that all quantities are stored in kernel units
         result[self.albedo_var] = (

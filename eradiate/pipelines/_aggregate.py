@@ -171,7 +171,7 @@ class AggregateRadiosity(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
-        result = x.copy()
+        result = x.copy(deep=False)
 
         result[self.radiosity_var] = result[self.var].sum(dim=("x", "y"))
         result[self.radiosity_var].attrs = {
