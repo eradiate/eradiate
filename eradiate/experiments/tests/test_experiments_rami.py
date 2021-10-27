@@ -90,9 +90,14 @@ def test_rami_experiment_real_life(mode_mono):
             "l_vertical": 2.0 * ureg.m,
         },
         illumination={"type": "directional", "zenith": 45.0},
-        measures={"type": "distant_reflectance"},
+        measures={
+            "type": "distant",
+            "construct": "hplane",
+            "zeniths": np.arange(-60, 61, 5),
+            "azimuths": 0.0,
+        },
     )
-    assert exp.kernel_dict(ctx=ctx).load() is not None
+    assert exp.kernel_dict(ctx=ctx).load()
 
 
 @pytest.mark.slow
@@ -105,7 +110,7 @@ def test_rami_experiment_run_detailed(mode_mono):
     exp = RamiExperiment(
         measures=[
             {
-                "type": "distant_reflectance",
+                "type": "hemispherical_distant",
                 "id": "toa_hsphere",
                 "film_resolution": (32, 32),
                 "spp": 1000,
@@ -118,23 +123,23 @@ def test_rami_experiment_run_detailed(mode_mono):
     results = exp.results["toa_hsphere"]
 
     # Post-processing creates expected variables ...
-    assert set(results.data_vars) == {"irradiance", "brf", "brdf", "lo", "spp"}
+    assert set(results.data_vars) == {"irradiance", "brf", "brdf", "radiance", "spp"}
 
     # ... dimensions
-    assert set(results["lo"].dims) == {"sza", "saa", "x", "y", "w"}
+    assert set(results["radiance"].dims) == {"sza", "saa", "x_index", "y_index", "w"}
     assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
 
     # ... and other coordinates
-    assert set(results["lo"].coords) == {
+    assert set(results["radiance"].coords) == {
         "sza",
         "saa",
         "vza",
         "vaa",
-        "x",
-        "y",
+        "x_index",
+        "y_index",
         "w",
     }
     assert set(results["irradiance"].coords) == {"sza", "saa", "w"}
 
     # We just check that we record something as expected
-    assert np.all(results["lo"].data > 0.0)
+    assert np.all(results["radiance"].data > 0.0)

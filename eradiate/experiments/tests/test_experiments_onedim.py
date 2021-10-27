@@ -172,7 +172,7 @@ def test_onedim_experiment_run_detailed(modes_all):
     results = exp.results["toa_hsphere"]
 
     # Post-processing creates expected variables ...
-    expected = {"irradiance", "brf", "brdf", "lo"}
+    expected = {"irradiance", "brf", "brdf", "radiance"}
 
     if not eradiate.mode().has_flags(ModeFlags.ANY_CKD):
         expected.add("spp")  # This variable is irrelevant in non-CKD modes
@@ -180,11 +180,11 @@ def test_onedim_experiment_run_detailed(modes_all):
     assert set(results.data_vars) == expected
 
     # ... dimensions
-    assert set(results["lo"].dims) == {"sza", "saa", "x", "y", "w"}
+    assert set(results["radiance"].dims) == {"sza", "saa", "x_index", "y_index", "w"}
     assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
 
     # ... and other coordinates
-    assert set(results["lo"].coords) == {
+    assert set(results["radiance"].coords) == {
         "sza",
         "saa",
         "vza",
@@ -196,4 +196,4 @@ def test_onedim_experiment_run_detailed(modes_all):
     assert set(results["irradiance"].coords) == {"sza", "saa", "w"}
 
     # We just check that we record something as expected
-    assert np.all(results["lo"].data > 0.0)
+    assert np.all(results["radiance"].data > 0.0)

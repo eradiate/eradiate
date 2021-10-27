@@ -18,6 +18,7 @@ from ..scenes.integrators import (
     integrator_factory,
 )
 from ..scenes.measure import Measure, TargetPoint
+from ..scenes.measure._core import MeasureFlags
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc
 
@@ -196,7 +197,7 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         """
         for measure in self.measures:
             # Override ray target location if relevant
-            if isinstance(measure, DistantMeasure):
+            if measure.is_distant():
                 if measure.target is None:
                     if self.canopy is not None:
                         measure.target = dict(
@@ -216,21 +217,10 @@ class Rami4ATMExperiment(EarthObservationExperiment):
 
                         measure.target = TargetPoint(target_point)
 
-                        if measure.origin is None:
-                            radius = (
-                                self.atmosphere.top / 100.0
-                                if self.atmosphere is not None
-                                else 1.0 * ucc.get("length")
-                            )
-
-                        measure.origin = TargetSphere(
-                            center=measure.target.xyz, radius=radius
-                        )
-
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(Rami4ATMExperiment, self)._dataset_metadata(measure)
 
-        if isinstance(measure, DistantMeasure):
+        if measure.is_distant():
             result["title"] = "Top-of-atmosphere simulation results"
 
         return result
