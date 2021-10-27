@@ -36,8 +36,7 @@ def make_profile(
 
     Parameters
     ----------
-    model_id : {"us_standard", "midlatitude_summer", "midlatitude_winter",
-    "subarctic_summer", "subarctic_winter", "tropical"}, default: "us_standard"
+    model_id : {"us_standard", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter", "tropical"}, default: "us_standard"
         Model identifier.
 
     levels : quantity or array, optional
