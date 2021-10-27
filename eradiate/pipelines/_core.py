@@ -177,7 +177,7 @@ class Pipeline:
             If set, stop execution after indexed step. Takes precedence over
             `stop`.
 
-        step : int or str, option
+        step : int or str, optional
             If set, execute indexed step only. Takes precedence on all other
             step selectors.
 
@@ -198,7 +198,7 @@ class Pipeline:
         if isinstance(stop_after, str):
             stop_after = self._step_index(stop_after)
 
-        if stop_after:
+        if stop_after is not None:
             stop = stop_after + 1
 
         if isinstance(stop, str):
