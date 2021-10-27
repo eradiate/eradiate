@@ -8,7 +8,7 @@ from eradiate import path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.contexts import SpectralContext
 from eradiate.radprops import AFGL1986RadProfile, ArrayRadProfile, US76ApproxRadProfile
-from eradiate.thermoprops.afgl1986 import make_profile as make_profile_afgl1986
+from eradiate.thermoprops.afgl_1986 import make_profile as make_profile_afgl_1986
 from eradiate.thermoprops.util import compute_column_number_density
 
 
@@ -204,7 +204,7 @@ def test_us76_approx_rad_profile_has_scattering_false(
 
 
 @pytest.fixture
-def afgl1986_test_absorption_data_sets():
+def afgl_1986_test_absorption_data_sets():
     """
     Fixture to return paths to test absorption data sets for 'afgl_1986'.
     """
@@ -231,11 +231,11 @@ def afgl1986_test_absorption_data_sets():
     }
 
 
-def test_afgl1986_rad_profile_default(mode_mono, afgl1986_test_absorption_data_sets):
+def test_afgl_1986_rad_profile_default(mode_mono, afgl_1986_test_absorption_data_sets):
     """
     Collision coefficient evaluation methods return pint.Quantity objects.
     """
-    p = AFGL1986RadProfile(absorption_data_sets=afgl1986_test_absorption_data_sets)
+    p = AFGL1986RadProfile(absorption_data_sets=afgl_1986_test_absorption_data_sets)
 
     spectral_ctx = SpectralContext.new(wavelength=1500.0)
     for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
@@ -243,7 +243,7 @@ def test_afgl1986_rad_profile_default(mode_mono, afgl1986_test_absorption_data_s
         assert isinstance(x, ureg.Quantity)
 
 
-def test_afgl1986_rad_profile_default_ckd(mode_ckd):
+def test_afgl_1986_rad_profile_default_ckd(mode_ckd):
     """
     Collision coefficient evaluation methods return pint.Quantity objects.
     """
@@ -255,7 +255,7 @@ def test_afgl1986_rad_profile_default_ckd(mode_ckd):
         assert isinstance(x, ureg.Quantity)
 
 
-def test_afgl1986_rad_profile_levels(mode_mono, afgl1986_test_absorption_data_sets):
+def test_afgl_1986_rad_profile_levels(mode_mono, afgl_1986_test_absorption_data_sets):
     """
     Collision coefficients' shape match altitude levels shape.
     """
@@ -264,7 +264,7 @@ def test_afgl1986_rad_profile_levels(mode_mono, afgl1986_test_absorption_data_se
         thermoprops=dict(
             levels=ureg.Quantity(np.linspace(0.0, 100.0, n_layers + 1), "km")
         ),
-        absorption_data_sets=afgl1986_test_absorption_data_sets,
+        absorption_data_sets=afgl_1986_test_absorption_data_sets,
     )
 
     spectral_ctx = SpectralContext.new(wavelength=550.0)
@@ -273,17 +273,18 @@ def test_afgl1986_rad_profile_levels(mode_mono, afgl1986_test_absorption_data_se
         assert x.shape == (n_layers,)
 
 
-def test_afgl1986_rad_profile_concentrations(
-    mode_mono, afgl1986_test_absorption_data_sets
+def test_afgl_1986_rad_profile_concentrations(
+    mode_mono, afgl_1986_test_absorption_data_sets
 ):
     """
     Absorption coefficient is twice larger when H2O concentration is doubled.
     """
 
-    thermoprops = make_profile_afgl1986()
+    thermoprops = make_profile_afgl_1986()
     column_amount_H2O = compute_column_number_density(ds=thermoprops, species="H2O")
     p1 = AFGL1986RadProfile(
-        thermoprops=thermoprops, absorption_data_sets=afgl1986_test_absorption_data_sets
+        thermoprops=thermoprops,
+        absorption_data_sets=afgl_1986_test_absorption_data_sets,
     )
 
     p2 = AFGL1986RadProfile(
@@ -292,7 +293,7 @@ def test_afgl1986_rad_profile_concentrations(
                 "H2O": 2 * column_amount_H2O,
             }
         ),
-        absorption_data_sets=afgl1986_test_absorption_data_sets,
+        absorption_data_sets=afgl_1986_test_absorption_data_sets,
     )
     spectral_ctx = SpectralContext.new(wavelength=1500.0 * ureg.nm)
 
@@ -302,29 +303,29 @@ def test_afgl1986_rad_profile_concentrations(
     assert np.allclose(sigma_a_doubled, 2 * sigma_a_initial, rtol=1e-2)
 
 
-def test_afgl1986_rad_profile_has_absorption_default(
-    mode_mono, afgl1986_test_absorption_data_sets
+def test_afgl_1986_rad_profile_has_absorption_default(
+    mode_mono, afgl_1986_test_absorption_data_sets
 ):
     """
     Default value for 'has_absorption' is True, hence the absorption
     coefficient is computed and is not zero everywhere at 1650 nm.
     """
-    p = AFGL1986RadProfile(absorption_data_sets=afgl1986_test_absorption_data_sets)
+    p = AFGL1986RadProfile(absorption_data_sets=afgl_1986_test_absorption_data_sets)
     assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
     ds = p.eval_dataset(spectral_ctx)
     assert (ds.sigma_a.values != 0.0).any()
 
 
-def test_afgl1986_rad_profile_has_absorption_true(
-    mode_mono, afgl1986_test_absorption_data_sets
+def test_afgl_1986_rad_profile_has_absorption_true(
+    mode_mono, afgl_1986_test_absorption_data_sets
 ):
     """
     When 'has_absorption' is True, the absorption coefficient is computed
     and is not zero everywhere at 1650 nm.
     """
     p = AFGL1986RadProfile(
-        has_absorption=True, absorption_data_sets=afgl1986_test_absorption_data_sets
+        has_absorption=True, absorption_data_sets=afgl_1986_test_absorption_data_sets
     )
     assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
@@ -332,15 +333,15 @@ def test_afgl1986_rad_profile_has_absorption_true(
     assert (ds.sigma_a.values != 0.0).any()
 
 
-def test_afgl1986_rad_profile_has_absorption_false(
-    mode_mono, afgl1986_test_absorption_data_sets
+def test_afgl_1986_rad_profile_has_absorption_false(
+    mode_mono, afgl_1986_test_absorption_data_sets
 ):
     """
     When 'has_absorption' is False, the absorption coefficient is not
     computed and is zero everywhere.
     """
     p = AFGL1986RadProfile(
-        has_absorption=False, absorption_data_sets=afgl1986_test_absorption_data_sets
+        has_absorption=False, absorption_data_sets=afgl_1986_test_absorption_data_sets
     )
     assert not p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
@@ -348,29 +349,29 @@ def test_afgl1986_rad_profile_has_absorption_false(
     assert (ds.sigma_a.values == 0.0).all()
 
 
-def test_afgl1986_rad_profile_has_scattering_default(
-    mode_mono, afgl1986_test_absorption_data_sets
+def test_afgl_1986_rad_profile_has_scattering_default(
+    mode_mono, afgl_1986_test_absorption_data_sets
 ):
     """
     Default value for 'has_scattering' is True, hence the absorption
     coefficient is computed and is not zero everywhere at 550 nm.
     """
-    p = AFGL1986RadProfile(absorption_data_sets=afgl1986_test_absorption_data_sets)
+    p = AFGL1986RadProfile(absorption_data_sets=afgl_1986_test_absorption_data_sets)
     assert p.has_scattering
     spectral_ctx = SpectralContext.new(wavelength=550.0)
     ds = p.eval_dataset(spectral_ctx)
     assert (ds.sigma_s.values != 0.0).any()
 
 
-def test_afgl1986_rad_profile_has_scattering_true(
-    mode_mono, afgl1986_test_absorption_data_sets
+def test_afgl_1986_rad_profile_has_scattering_true(
+    mode_mono, afgl_1986_test_absorption_data_sets
 ):
     """
     When 'has_scattering' is True, the scattering coefficient is computed
     and is not zero everywhere at 550 nm.
     """
     p = AFGL1986RadProfile(
-        has_scattering=True, absorption_data_sets=afgl1986_test_absorption_data_sets
+        has_scattering=True, absorption_data_sets=afgl_1986_test_absorption_data_sets
     )
     assert p.has_scattering
     spectral_ctx = SpectralContext.new(wavelength=550.0)
@@ -378,15 +379,15 @@ def test_afgl1986_rad_profile_has_scattering_true(
     assert (ds.sigma_s.values != 0.0).any()
 
 
-def test_afgl1986_rad_profile_has_scattering_false(
-    mode_mono, afgl1986_test_absorption_data_sets
+def test_afgl_1986_rad_profile_has_scattering_false(
+    mode_mono, afgl_1986_test_absorption_data_sets
 ):
     """
     When 'has_scattering' is False, the scattering coefficient is not
     computed and is zero everywhere.
     """
     p = AFGL1986RadProfile(
-        has_scattering=False, absorption_data_sets=afgl1986_test_absorption_data_sets
+        has_scattering=False, absorption_data_sets=afgl_1986_test_absorption_data_sets
     )
     assert not p.has_scattering
     spectral_ctx = SpectralContext.new(wavelength=550.0)
@@ -404,7 +405,7 @@ def test_afgl1986_rad_profile_has_scattering_false(
         "tropical",
     ],
 )
-def test_afgl1986_rad_profile_model_id_ckd_not_implemented(mode_ckd, model_id):
+def test_afgl_1986_rad_profile_model_id_ckd_not_implemented(mode_ckd, model_id):
     """
     Models other than 'us_standard' are not implemented in CKD mode.
     """
@@ -416,7 +417,7 @@ def test_afgl1986_rad_profile_model_id_ckd_not_implemented(mode_ckd, model_id):
     "molecule",
     ["CO2", "N2O", "CO", "CH4", "O2"],
 )
-def test_afgl1986_rad_profile_concentrations_ckd_not_implemented(mode_ckd, molecule):
+def test_afgl_1986_rad_profile_concentrations_ckd_not_implemented(mode_ckd, molecule):
     """
     Concentrations rescaling is not implemented for molecules other than
     H2O and O3 in CKD mode.

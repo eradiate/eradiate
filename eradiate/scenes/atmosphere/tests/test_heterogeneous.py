@@ -47,7 +47,7 @@ def test_atmosphere_heterogeneous_single(
                 absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
             )
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            component = MolecularAtmosphere.afgl1986()
+            component = MolecularAtmosphere.afgl_1986()
         else:
             pytest.skip(f"unsupported mode '{eradiate.mode().id}'")
 
@@ -71,7 +71,7 @@ def test_atmosphere_heterogeneous_multi(modes_all_single, path_to_ussa76_approx_
             absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
         )
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-        molecular_atmosphere = MolecularAtmosphere.afgl1986()
+        molecular_atmosphere = MolecularAtmosphere.afgl_1986()
     else:
         pytest.skip(f"unsupported mode '{eradiate.mode().id}'")
 

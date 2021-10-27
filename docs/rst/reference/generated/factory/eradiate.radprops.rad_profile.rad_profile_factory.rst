@@ -18,7 +18,7 @@ eradiate.radprops.rad_profile.rad_profile_factory
    .. list-table::
       :widths: 25 75
 
-      * - ``afgl1986``
+      * - ``afgl_1986``
         - :class:`AFGL1986RadProfile`
       * - ``array``
         - :class:`ArrayRadProfile`

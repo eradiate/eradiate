@@ -48,11 +48,11 @@ Radiative properties profiles objects
 
 There are several types of radiative properties profile objects.
 
-``afgl1986``
+``afgl_1986``
 ~~~~~~~~~~~~
 
 The :class:`~eradiate.radprops.rad_profile.AFGL1986RadProfile` 
-(identifier: ``afgl1986``) class allows to create an atmosphere radiative
+(identifier: ``afgl_1986``) class allows to create an atmosphere radiative
 properties profile corresponding to the AFGL (1986)
 :cite:`Anderson1986AtmosphericConstituentProfiles`
 atmosphere thermophysical properties profile models.
@@ -79,7 +79,7 @@ thermophysical model.
 Radiative properties profile derived from a thermophysical properties profile
 -----------------------------------------------------------------------------
 
-The ``afgl1986`` and ``us76_approx`` radiative properties profiles are derived
+The ``afgl_1986`` and ``us76_approx`` radiative properties profiles are derived
 from their corresponding thermophysical properties profiles as illustrated by
 the figure below.
 

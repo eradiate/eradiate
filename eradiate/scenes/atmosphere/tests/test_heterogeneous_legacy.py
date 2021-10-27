@@ -59,7 +59,7 @@ def test_heterogeneous_ckd(mode_ckd, tmpdir):
         atmosphere = HeterogeneousAtmosphereLegacy(
             width=100.0,
             profile={
-                "type": "afgl1986",
+                "type": "afgl_1986",
             },
             cache_dir=tmpdir,
         )
@@ -130,7 +130,7 @@ def test_absorption_data_sets():
     }
 
 
-def test_heterogeneous_get_top_afgl1986(mode_mono, tmpdir, test_absorption_data_sets):
+def test_heterogeneous_get_top_afgl_1986(mode_mono, tmpdir, test_absorption_data_sets):
     """
     Sets the atmosphere top to the maximum altitude level value in the
     underlying AFGL1986RadProfile.
