@@ -152,7 +152,7 @@ class HeterogeneousAtmosphereLegacy(Atmosphere):
     # --------------------------------------------------------------------------
 
     def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
-        return KernelDict({f"phase_{self.id}": {"type": "rayleigh"}})
+        return KernelDict({self.id_phase: {"type": "rayleigh"}})
 
     def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
         length_units = uck.get("length")

@@ -163,7 +163,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         super().update()
 
         with xr.open_dataset(self.dataset) as ds:
-            self._phase = TabulatedPhaseFunction(id=f"phase_{self.id}", data=ds.phase)
+            self._phase = TabulatedPhaseFunction(id=self.id_phase, data=ds.phase)
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties

@@ -128,6 +128,27 @@ class Atmosphere(SceneElement, ABC):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
+    @property
+    def id_shape(self):
+        """
+        str: Kernel dictionary key of the atmosphere's shape object.
+        """
+        return f"shape_{self.id}"
+
+    @property
+    def id_medium(self):
+        """
+        str: Kernel dictionary key of the atmosphere's medium object.
+        """
+        return f"medium_{self.id}"
+
+    @property
+    def id_phase(self):
+        """
+        str: Kernel dictionary key of the atmosphere's phase function object.
+        """
+        return f"phase_{self.id}"
+
     @abstractmethod
     def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
         """
@@ -248,9 +269,9 @@ class Atmosphere(SceneElement, ABC):
 
         if ctx.ref:
             kernel_phase = self.kernel_phase(ctx=ctx)
-            kernel_dict.data[f"phase_{self.id}"] = onedict_value(kernel_phase)
+            kernel_dict.data[self.id_phase] = onedict_value(kernel_phase)
             kernel_media = self.kernel_media(ctx=ctx)
-            kernel_dict.data[f"medium_{self.id}"] = onedict_value(kernel_media)
+            kernel_dict.data[self.id_medium] = onedict_value(kernel_media)
 
         kernel_shapes = self.kernel_shapes(ctx=ctx)
         kernel_dict.data[self.id] = onedict_value(kernel_shapes)
@@ -457,7 +478,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         # Set up phase function
         if ctx.ref:
-            phase = {"type": "ref", "id": f"phase_{self.id}"}
+            phase = {"type": "ref", "id": self.id_phase}
         else:
             phase = onedict_value(self.kernel_phase(ctx=ctx))
 
@@ -483,17 +504,17 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             medium_dict["scale"] = self.scale
 
         # Wrap it in a KernelDict
-        return KernelDict({f"medium_{self.id}": medium_dict})
+        return KernelDict({self.id_medium: medium_dict})
 
     def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
         if ctx.ref:
-            medium = {"type": "ref", "id": f"medium_{self.id}"}
+            medium = {"type": "ref", "id": self.id_medium}
         else:
-            medium = self.kernel_media(ctx)[f"medium_{self.id}"]
+            medium = self.kernel_media(ctx)[self.id_medium]
 
         return KernelDict(
             {
-                f"shape_{self.id}": {
+                self.id_shape: {
                     "type": "cube",
                     "to_world": self._shape_transform(ctx),
                     "bsdf": {"type": "null"},

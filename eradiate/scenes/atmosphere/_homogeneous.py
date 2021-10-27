@@ -103,7 +103,7 @@ class HomogeneousAtmosphere(Atmosphere):
         self.update()
 
     def update(self) -> None:
-        self.phase.id = f"phase_{self.id}"
+        self.phase.id = self.id_phase
 
     # --------------------------------------------------------------------------
     #                               Properties
@@ -213,7 +213,7 @@ class HomogeneousAtmosphere(Atmosphere):
 
         return KernelDict(
             {
-                f"medium_{self.id}": {
+                self.id_medium: {
                     "type": "homogeneous",
                     "phase": phase,
                     "sigma_t": self.eval_sigma_t(ctx.spectral_ctx).m_as(
@@ -228,9 +228,9 @@ class HomogeneousAtmosphere(Atmosphere):
 
     def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
         if ctx.ref:
-            medium = {"type": "ref", "id": f"medium_{self.id}"}
+            medium = {"type": "ref", "id": self.id_medium}
         else:
-            medium = self.kernel_media(ctx=ctx)[f"medium_{self.id}"]
+            medium = self.kernel_media(ctx=ctx)[self.id_medium]
 
         length_units = uck.get("length")
         width = self.kernel_width(ctx=ctx).m_as(length_units)

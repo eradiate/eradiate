@@ -107,7 +107,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     def update(self) -> None:
         super(MolecularAtmosphere, self).update()
-        self.phase.id = f"phase_{self.id}"
+        self.phase.id = self.id_phase
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties

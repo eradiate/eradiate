@@ -375,11 +375,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         # Single component: just forward encapsulated component
         elif len(components) == 1:
             return KernelDict(
-                {
-                    f"phase_{self.id}": onedict_value(
-                        components[0].kernel_phase(ctx).data
-                    )
-                }
+                {self.id_phase: onedict_value(components[0].kernel_phase(ctx).data)}
             )
 
         # Two components or more: blend phase functions
