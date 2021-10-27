@@ -20,12 +20,24 @@ def make_profile(
     concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
 ) -> xr.Dataset:
     """
-    Makes the atmospheric profiles from the AFGL's 1986 technical report
+    Return atmosphere thermophysical properties based on atmosphere models
+    defined in AFGL's 1986 technical report
     :cite:`Anderson1986AtmosphericConstituentProfiles`.
+
+    This function lets you interpolate the atmosphere thermophysical properties
+    on a different level altitude mesh than the original.
+
+    You can also rescale the molecules' fractions so that target concentrations
+    are met for these molecules.
+    Target concentrations can be provided in different units.
+    For more information about rescaling process and the supported
+    concentration units, refer to the documentation of
+    :func:`~eradiate.thermoprops.util.compute_scaling_factors`.
 
     Parameters
     ----------
-    model_id : {"us_standard", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter", "tropical"}, default: "us_standard"
+    model_id : {"us_standard", "midlatitude_summer", "midlatitude_winter",
+    "subarctic_summer", "subarctic_winter", "tropical"}, default: "us_standard"
         Model identifier.
 
     levels : quantity or array, optional
@@ -39,14 +51,14 @@ def make_profile(
     Returns
     -------
     Dataset
-        Atmospheric profile.
+        Atmosphere thermophysical properties.
 
     Notes
     -----
     :cite:`Anderson1986AtmosphericConstituentProfiles` defines six models,
     listed in the table below.
 
-    .. list-table:: AFGL (1986) atmospheric thermophysical properties profiles models
+    .. list-table:: AFGL (1986) atmospheric thermophysical properties models
        :widths: 2 4 4
        :header-rows: 1
 
@@ -82,20 +94,8 @@ def make_profile(
        interpolated on the regular altitude mesh with an altitude step of 1 km
        from 0 to 120 km.
 
-    Although the altitude meshes of the interpolated
-    :cite:`Anderson1986AtmosphericConstituentProfiles` profiles is fixed,
-    this function lets you define a custom altitude mesh (regular or irregular).
-
     All six models include the following six absorbing molecular species:
     H2O, CO2, O3, N2O, CO, CH4 and O2.
-    The concentrations of these species in the atmosphere is fixed by
-    :cite:`Anderson1986AtmosphericConstituentProfiles`.
-    However, this function allows you to rescale the concentrations of each
-    individual molecular species to custom concentration values.
-    Custom concentrations can be provided in different units.
-    For more information about rescaling process and the supported
-    concentration units, refer to the documentation of
-    :func:`~eradiate.thermoprops.util.compute_scaling_factors`.
     """
     if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
         if model_id != "us_standard":
