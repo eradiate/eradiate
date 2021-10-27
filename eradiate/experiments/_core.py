@@ -368,6 +368,9 @@ class Experiment(ABC):
         if not measures:
             measures = self.measures
 
+        if pipeline_kwargs is None:
+            pipeline_kwargs = {}
+
         # Convert integer values to measure entries
         measures = [
             self.measures[measure] if isinstance(measure, int) else measure
@@ -380,7 +383,9 @@ class Experiment(ABC):
         # Apply pipelines
         for measure, pipeline in zip(measures, pipelines):
             # Collect measure results
-            self._results[measure.id] = pipeline.transform(measure.results)
+            self._results[measure.id] = pipeline.transform(
+                measure.results, **pipeline_kwargs
+            )
 
             # Apply additional metadata
             self._results[measure.id].attrs.update(self._dataset_metadata(measure))
