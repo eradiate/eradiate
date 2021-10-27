@@ -489,7 +489,7 @@ class EarthObservationExperiment(Experiment, ABC):
                 ),
             )
 
-            if measure.flags & MeasureFlags.DISTANT:
+            if measure.is_distant():
                 pipeline.add(
                     "add_viewing_angles", pipelines.AddViewingAngles(measure=measure)
                 )

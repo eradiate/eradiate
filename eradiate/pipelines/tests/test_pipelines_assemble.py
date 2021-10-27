@@ -104,7 +104,7 @@ def test_pipelines_add_viewing_angles(
     measure = exp.measures[0]
 
     # Apply basic post-processing
-    values = Gather(var="lo").transform(measure.results)
+    values = Gather(var="radiance").transform(measure.results)
 
     step = AddViewingAngles(measure=measure)
     result = step.transform(values)
@@ -146,8 +146,8 @@ def test_pipelines_add_illumination(modes_all_single, illumination_type, expecte
     # Apply basic post-processing
     values = Pipeline(
         steps=[
-            ("gather", Gather(var="lo")),
-            ("aggregate_ckd_quad", AggregateCKDQuad(var="lo", measure=measure)),
+            ("gather", Gather(var="radiance")),
+            ("aggregate_ckd_quad", AggregateCKDQuad(var="radiance", measure=measure)),
         ]
     ).transform(measure.results)
 

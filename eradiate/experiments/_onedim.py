@@ -104,7 +104,7 @@ class OneDimExperiment(EarthObservationExperiment):
         overridden if relevant.
         """
         for measure in self.measures:
-            if measure.flags & MeasureFlags.DISTANT:
+            if measure.is_distant():
                 if measure.target is None:
                     if self.atmosphere is not None:
                         toa = self.atmosphere.top
@@ -117,7 +117,7 @@ class OneDimExperiment(EarthObservationExperiment):
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(OneDimExperiment, self)._dataset_metadata(measure)
 
-        if measure.flags & MeasureFlags.DISTANT:
+        if measure.is_distant():
             result["title"] = "Top-of-atmosphere simulation results"
 
         return result

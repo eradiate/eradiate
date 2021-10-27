@@ -13,6 +13,7 @@ from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import Measure
+from ..scenes.measure._core import MeasureFlags
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 
 
@@ -138,7 +139,7 @@ class RamiExperiment(EarthObservationExperiment):
         """
         for measure in self.measures:
             # Override ray target location if relevant
-            if isinstance(measure, DistantMeasure):
+            if measure.is_distant():
                 if measure.target is None:
                     if self.canopy is not None:
                         measure.target = dict(

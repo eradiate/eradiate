@@ -29,11 +29,13 @@ def test_pipeline_step_aggregate_sample_count(results_mono_spp):
 def test_pipeline_step_aggregate_ckd(results_ckd):
     # Initialise test data
     raw_results, exp = results_ckd
-    step = Gather(sensor_dims=[], var=("lo", {"units": symbol(uck.get("radiance"))}))
+    step = Gather(
+        sensor_dims=[], var=("radiance", {"units": symbol(uck.get("radiance"))})
+    )
     values = step.transform(raw_results)
 
     # Configure step
-    step = AggregateCKDQuad(measure=exp.measures[0], var="lo")
+    step = AggregateCKDQuad(measure=exp.measures[0], var="radiance")
     result = step.transform(values)
 
     # Dimension and variable checks

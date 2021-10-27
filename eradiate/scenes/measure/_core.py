@@ -457,14 +457,21 @@ class Measure(SceneElement, ABC):
         pass
 
     # --------------------------------------------------------------------------
-    #                        Kernel dictionary generation
+    #                             Flag-style queries
     # --------------------------------------------------------------------------
 
-    def _split_spp_active(self) -> bool:
+    def is_distant(self):
+        return self.flags & MeasureFlags.DISTANT
+
+    def is_split(self) -> bool:
         """
         Return ``True`` iff sample count split shall be activated.
         """
         return self.split_spp is not None and self.spp > self.split_spp
+
+    # --------------------------------------------------------------------------
+    #                        Kernel dictionary generation
+    # --------------------------------------------------------------------------
 
     def _sensor_id(self, i_spp=None):
         """
@@ -488,7 +495,7 @@ class Measure(SceneElement, ABC):
         list of int
             List of split sample counts.
         """
-        if self._split_spp_active():
+        if self.is_split():
             spps = [self.split_spp] * int(self.spp / self.split_spp)
 
             if self.spp % self.split_spp:
@@ -516,7 +523,7 @@ class Measure(SceneElement, ABC):
 
     @property
     def sensor_dims(self) -> t.Tuple[str]:
-        if self._split_spp_active():
+        if self.is_split():
             return ("spp",)
         else:
             return tuple()

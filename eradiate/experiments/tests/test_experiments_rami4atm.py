@@ -207,14 +207,14 @@ def test_ramiatm_experiment_run_detailed(mode_mono):
     results = exp.results["toa_hsphere"]
 
     # Post-processing creates expected variables ...
-    assert set(results.data_vars) == {"irradiance", "brf", "brdf", "lo", "spp"}
+    assert set(results.data_vars) == {"irradiance", "brf", "brdf", "radiance", "spp"}
 
     # ... dimensions
-    assert set(results["lo"].dims) == {"sza", "saa", "x", "y", "w"}
+    assert set(results["radiance"].dims) == {"sza", "saa", "x", "y", "w"}
     assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
 
     # ... and other coordinates
-    assert set(results["lo"].coords) == {
+    assert set(results["radiance"].coords) == {
         "sza",
         "saa",
         "vza",
@@ -226,4 +226,4 @@ def test_ramiatm_experiment_run_detailed(mode_mono):
     assert set(results["irradiance"].coords) == {"sza", "saa", "w"}
 
     # We just check that we record something as expected
-    assert np.all(results["lo"].data > 0.0)
+    assert np.all(results["radiance"].data > 0.0)

@@ -97,20 +97,20 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     # Post-process results
     results = exp.results["toa_pplane"]
     results["diff"] = (
-        results["lo"].dims,
+        results["radiance"].dims,
         (
             results.lo
-            - results.lo.squeeze().loc[::-1].data.reshape(results["lo"].shape)
+            - results.lo.squeeze().loc[::-1].data.reshape(results["radiance"].shape)
         ).data,
     )
     results["lo_reversed"] = (
-        results["lo"].dims,
-        results.lo.squeeze().loc[::-1].data.reshape(results["lo"].shape).data,
+        results["radiance"].dims,
+        results.lo.squeeze().loc[::-1].data.reshape(results["radiance"].shape).data,
     )
 
     # Plot results
     fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(5, 2.5))
-    results["lo"].plot(ax=ax1, x="vza")
+    results["radiance"].plot(ax=ax1, x="vza")
     results["lo_reversed"].plot(ax=ax1, x="vza")
     results["diff"].plot(ax=ax2, x="vza")
     remove_xylabels(from_=[ax1, ax2])
@@ -129,5 +129,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
 
     # Check symmetry
     assert np.allclose(
-        results["lo"].squeeze(), results["lo"].squeeze().loc[::-1].data, rtol=5e-3
+        results["radiance"].squeeze(),
+        results["radiance"].squeeze().loc[::-1].data,
+        rtol=5e-3,
     )
