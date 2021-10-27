@@ -301,6 +301,26 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         default="Temporary directory",
     )
 
+    scale: t.Optional[float] = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(float),
+            validator=attr.validators.optional(attr.validators.instance_of(float)),
+        ),
+        doc="If set, the extinction coefficient is scaled by the corresponding "
+        "amount during computation. If the medium consists of multiple "
+        "components:\n"
+        "\n"
+        "* the top-level component's scaling takes precedence;\n"
+        "* component scaling will not scale phase function weights and will "
+        "  therefore produce inconsistent results.\n"
+        "\n"
+        "This field is only useful for debugging purposes.",
+        type="float or None",
+        init_type="float, optional",
+        default="None",
+    )
+
     def __attrs_post_init__(self) -> None:
         self.update()
 
@@ -420,43 +440,50 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         )
 
     def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
+        # Collect extinction properties
         radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
         albedo = radprops.albedo.values
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
 
+        # Write them to volume data files
         write_binary_grid3d(
-            filename=str(self.albedo_file), values=albedo[np.newaxis, np.newaxis, ...]
+            filename=str(self.albedo_file),
+            values=albedo[np.newaxis, np.newaxis, ...],
+        )
+        write_binary_grid3d(
+            filename=str(self.sigma_t_file),
+            values=sigma_t[np.newaxis, np.newaxis, ...],
         )
 
-        write_binary_grid3d(
-            filename=str(self.sigma_t_file), values=sigma_t[np.newaxis, np.newaxis, ...]
-        )
-
+        # Set up phase function
         if ctx.ref:
             phase = {"type": "ref", "id": f"phase_{self.id}"}
         else:
             phase = onedict_value(self.kernel_phase(ctx=ctx))
 
+        # Create medium dictionary
         trafo = self._gridvolume_transform(ctx)
 
-        return KernelDict(
-            {
-                f"medium_{self.id}": {
-                    "type": "heterogeneous",
-                    "phase": phase,
-                    "albedo": {
-                        "type": "gridvolume",
-                        "filename": str(self.albedo_file),
-                        "to_world": trafo,
-                    },
-                    "sigma_t": {
-                        "type": "gridvolume",
-                        "filename": str(self.sigma_t_file),
-                        "to_world": trafo,
-                    },
-                }
-            }
-        )
+        medium_dict = {
+            "type": "heterogeneous",
+            "phase": phase,
+            "albedo": {
+                "type": "gridvolume",
+                "filename": str(self.albedo_file),
+                "to_world": trafo,
+            },
+            "sigma_t": {
+                "type": "gridvolume",
+                "filename": str(self.sigma_t_file),
+                "to_world": trafo,
+            },
+        }
+
+        if self.scale is not None:
+            medium_dict["scale"] = self.scale
+
+        # Wrap it in a KernelDict
+        return KernelDict({f"medium_{self.id}": medium_dict})
 
     def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
         if ctx.ref:

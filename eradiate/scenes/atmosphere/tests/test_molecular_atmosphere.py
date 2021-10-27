@@ -21,6 +21,13 @@ def test_molecular_atmosphere_default(
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 
 
+def test_molecular_atmosphere_scale(mode_mono):
+    ctx = KernelDictContext()
+    d = MolecularAtmosphere(scale=2.0).kernel_dict(ctx)
+    assert d["medium_atmosphere"]["scale"] == 2.0
+    assert d.load()
+
+
 @pytest.fixture
 def afgl1986_test_absorption_data_sets():
     return {

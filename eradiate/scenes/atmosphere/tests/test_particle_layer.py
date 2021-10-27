@@ -12,6 +12,13 @@ def test_particle_layer_construct_basic(mode_mono):
     assert ParticleLayer(n_layers=9)
 
 
+def test_particle_layer_scale(mode_mono):
+    ctx = KernelDictContext()
+    d = ParticleLayer(scale=2.0).kernel_dict(ctx)
+    assert d["medium_atmosphere"]["scale"] == 2.0
+    assert d.load()
+
+
 def test_particle_layer_construct_attrs():
     """Assigns parameters to expected values."""
     bottom = ureg.Quantity(1.2, "km")

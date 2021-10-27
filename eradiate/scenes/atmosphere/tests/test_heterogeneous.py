@@ -91,3 +91,16 @@ def test_atmosphere_heterogeneous_multi(modes_all_single, path_to_ussa76_approx_
     # Produced kernel dict can be loaded
     kernel_dict = atmosphere.kernel_dict(ctx)
     assert kernel_dict.load()
+
+
+def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
+    ctx = KernelDictContext()
+    d = HeterogeneousAtmosphere(
+        molecular_atmosphere=MolecularAtmosphere.ussa1976(
+            absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
+        ),
+        particle_layers=[ParticleLayer() for _ in range(2)],
+        scale=2.0,
+    ).kernel_dict(ctx)
+    assert d["medium_atmosphere"]["scale"] == 2.0
+    assert d.load()

@@ -4,6 +4,7 @@ Heterogeneous atmospheres.
 from __future__ import annotations
 
 import typing as t
+import warnings
 from collections import abc as cabc
 
 import attr
@@ -121,6 +122,23 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         default="None",
     )
 
+    @molecular_atmosphere.validator
+    def _molecular_atmosphere_validator(self, attribute, value):
+        if value is None:
+            return
+
+        if value.width is not AUTO:
+            raise ValueError(
+                f"while validating {attribute.name}: all components must have "
+                "their 'width' field set to AUTO"
+            )
+
+        if self.scale is not None and value.scale is not None:
+            warnings.warn(
+                "Heterogeneous atmosphere scaling takes precedence over "
+                "molecular atmosphere scaling"
+            )
+
     particle_layers: t.List[ParticleLayer] = documented(
         attr.ib(
             factory=list,
@@ -138,11 +156,21 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         default="[]",
     )
 
-    @molecular_atmosphere.validator
     @particle_layers.validator
     def _component_validator(self, attribute, value):
-        if not all([component.width is AUTO for component in self.components]):
-            raise ValueError("all components must have their 'width' field set to AUTO")
+        if not all([component.width is AUTO for component in value]):
+            raise ValueError(
+                f"while validating {attribute.name}: all components must have "
+                f"their 'width' field set to AUTO"
+            )
+
+        if self.scale is not None and not all(
+            component.scale is None for component in value
+        ):
+            warnings.warn(
+                "Heterogeneous atmosphere scaling takes precedence over "
+                "particle layer scaling"
+            )
 
     @property
     def components(self) -> t.List[t.Union[MolecularAtmosphere, ParticleLayer]]:
