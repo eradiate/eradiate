@@ -12,8 +12,18 @@ Data sets access
 ----------------
 
 All solar irradiance spectrum data sets required by Eradiate are available
-within Eradiate using :meth:`eradiate.data.open` except ``solid_2017`` that
-must be downloaded (scroll down below for the download link).
+within Eradiate using :meth:`eradiate.data.open`.
+
+Identifiers format
+^^^^^^^^^^^^^^^^^^
+
+Identifiers for solar irradiance spectrum data sets (except ``blackbody_sun``)
+are constructed based on the format ``author_year[_extra]`` where:
+
+* ``author`` denotes the author of the data set,
+* ``year`` stands for the year in which the data set was published,
+* ``extra`` (optional) includes additional information, such as a data set post-processing
+  operation.
 
 Structure
 ---------
@@ -98,13 +108,6 @@ irradiance spectra from 1978-11-7 to 2014-12-31. Wavelength range: [0.5,
 :cite:`Haberreiter2017ObservationalSolarIrradiance`. See also
 `the Cal/Val Portal of the Committee on Earth Observation Satellites
 <http://calvalportal.ceos.org/solar-irradiance-spectrum>`_
-
-.. note::
-  Due to its larger size, the ``solid_2017`` dataset is not shipped with the
-  code base. You can download it from the eradiate FTP server
-  (`download link <https://eradiate.eu/data/solid_2017.zip>`_).
-  Extract the archive into a temporary location then copy-merge the folder
-  in ``resources/data``.
   
 ``solid_2017_mean``
 ^^^^^^^^^^^^^^^^^^^

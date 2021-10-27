@@ -25,15 +25,15 @@ Eradiate ships with a series of data sets located in its ``resources/data``
 directory. Some of the larger data sets consist of aggregates of many NetCDF
 files, while others are stand-alone NetCDF files. In order to provide a simple
 and unified interface, Eradiate references data sets in a registry which can be
-queried using the :mod:`eradiate.data` module.
+queried using the :mod:`~eradiate.data` module.
 
 Data sets are grouped by category, *e.g.* solar irradiance spectrum, absorption
 spectrum, etc. The complete list of registered categories can be found in the
-reference documentation for the :mod:`eradiate.data` module. Each data set is
+reference documentation for the :mod:`~eradiate.data` module. Each data set is
 then referenced by an identifier unique in its category. The pair
 (category, identifier) therefore identifies a data set completely.
 
-To load a specific data set, the :func:`eradiate.data.open` function should be
+To open a specific data set, the :func:`eradiate.data.open` function should be
 used:
 
 .. code-block:: python
