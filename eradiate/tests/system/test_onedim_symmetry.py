@@ -74,9 +74,11 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     exp = eradiate.experiments.OneDimExperiment(
         illumination={"type": "directional", "zenith": 0.0, "azimuth": 0.0},
         measures={
-            "type": "distant_reflectance",
+            "type": "distant",
             "id": "toa_pplane",
-            "film_resolution": (n_vza, 1),
+            "construct": "from_viewing_angles",
+            "zeniths": np.linspace(-90, 90, n_vza),
+            "azimuths": 0.0,
             "spp": spp,
         },
         surface={
@@ -99,19 +101,26 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     results["diff"] = (
         results["radiance"].dims,
         (
-            results.lo
-            - results.lo.squeeze().loc[::-1].data.reshape(results["radiance"].shape)
+            results["radiance"]
+            - results["radiance"]
+            .squeeze()
+            .loc[::-1]
+            .data.reshape(results["radiance"].shape)
         ).data,
     )
-    results["lo_reversed"] = (
+    results["radiance_reversed"] = (
         results["radiance"].dims,
-        results.lo.squeeze().loc[::-1].data.reshape(results["radiance"].shape).data,
+        results["radiance"]
+        .squeeze()
+        .loc[::-1]
+        .data.reshape(results["radiance"].shape)
+        .data,
     )
 
     # Plot results
     fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(5, 2.5))
     results["radiance"].plot(ax=ax1, x="vza")
-    results["lo_reversed"].plot(ax=ax1, x="vza")
+    results["radiance_reversed"].plot(ax=ax1, x="vza")
     results["diff"].plot(ax=ax2, x="vza")
     remove_xylabels(from_=[ax1, ax2])
     ax2.yaxis.tick_right()

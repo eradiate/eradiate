@@ -41,14 +41,14 @@ def test_heterogeneous_atmosphere_contains_particle_layer(mode_mono, bottom, tau
     )
     exp1 = eradiate.experiments.OneDimExperiment(atmosphere=layer)
     exp1.run()
-    results1 = exp1.results["measure"].lo.values
+    results1 = exp1.results["measure"]["radiance"].values
 
     # heterogeneous atmosphere with a particle layer
     exp2 = eradiate.experiments.OneDimExperiment(
         atmosphere={"type": "heterogeneous", "particle_layers": [layer]}
     )
     exp2.run()
-    results2 = exp2.results["measure"].lo.values
+    results2 = exp2.results["measure"]["radiance"].values
 
     assert np.all(results1 == results2)
 
@@ -89,7 +89,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
         }
     )
     exp1.run()
-    results1 = exp1.results["measure"].lo.values
+    results1 = exp1.results["measure"]["radiance"].values
 
     # heterogeneous atmopshere with a non-absorbing molecular atmosphere
     exp2 = eradiate.experiments.OneDimExperiment(
@@ -103,6 +103,6 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
         }
     )
     exp2.run()
-    results2 = exp2.results["measure"].lo.values
+    results2 = exp2.results["measure"]["radiance"].values
 
     assert np.all(results1 == results2)

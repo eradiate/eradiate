@@ -67,7 +67,7 @@ def test_albedo(mode_mono):
         "onedim_directional": eradiate.experiments.OneDimExperiment(
             measures=[
                 {
-                    "type": "distant_albedo",
+                    "type": "distant_flux",
                     "spectral_cfg": {
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
@@ -89,7 +89,7 @@ def test_albedo(mode_mono):
         "onedim_constant": eradiate.experiments.OneDimExperiment(
             measures=[
                 {
-                    "type": "distant_albedo",
+                    "type": "distant_flux",
                     "spectral_cfg": {
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
@@ -111,7 +111,7 @@ def test_albedo(mode_mono):
         "rami_directional": eradiate.experiments.RamiExperiment(
             measures=[
                 {
-                    "type": "distant_albedo",
+                    "type": "distant_flux",
                     "spectral_cfg": {
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
@@ -133,7 +133,7 @@ def test_albedo(mode_mono):
         "rami_constant": eradiate.experiments.RamiExperiment(
             measures=[
                 {
-                    "type": "distant_albedo",
+                    "type": "distant_flux",
                     "spectral_cfg": {
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },

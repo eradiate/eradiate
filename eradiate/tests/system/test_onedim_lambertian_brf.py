@@ -75,9 +75,11 @@ def test_measured_lambertian_brf(mode_mono_double):
                     "azimuth": 0.0,
                 },
                 measures={
-                    "type": "distant_reflectance",
+                    "type": "distant",
                     "id": "toa_pplane",
-                    "film_resolution": (n_vza, 1),
+                    "construct": "from_viewing_angles",
+                    "zeniths": np.linspace(-90, 90, n_vza),
+                    "azimuths": 0.0,
                     "spp": spp,
                 },
                 surface={

@@ -35,7 +35,7 @@ def test_spp_splitting(mode_mono):
 
     We compute the BRF for a Cartesian product of the following configurations:
 
-    * SPP splitting thresholds: 1e5 (default behaviour), 1e10 (disable SPP splitting);
+    * SPP splitting thresholds: 1e5, disabled;
     * operational mode: monochromatic single-precision, monochromatic double-precision;
     * SPP: a series of values following a geometric progression around a central value of
       1e5.
@@ -54,39 +54,42 @@ def test_spp_splitting(mode_mono):
     .. image:: generated/plots/test_spp_splitting.png
        :width: 66%
     """
-    surface = eradiate.scenes.surface.LambertianSurface(
-        width=1.0 * ureg.m, reflectance=1.0
-    )
-    measure = eradiate.scenes.measure.DistantReflectanceMeasure(
-        target=[0, 0, 0],
-        film_resolution=(1, 1),
-    )
-    illumination = eradiate.scenes.illumination.DirectionalIllumination(irradiance=1.0)
-
+    # Basic scene setup
     exp = eradiate.experiments.OneDimExperiment(
         atmosphere=None,
-        surface=surface,
-        illumination=illumination,
-        measures=measure,
+        surface=eradiate.scenes.surface.LambertianSurface(
+            width=1.0 * ureg.m, reflectance=1.0
+        ),
+        illumination=eradiate.scenes.illumination.DirectionalIllumination(
+            irradiance=1.0
+        ),
+        measures=eradiate.scenes.measure.MultiDistantMeasure(target=[0, 0, 0]),
     )
 
-    threshold = 5
-    thresholds = [10 ** 10, 10 ** threshold]
+    # Generate test matrix
     modes = ["mono", "mono_double"]
-    spps = [10 ** (threshold - 1), 10 ** threshold, 10 ** (threshold + 1)]
+    pivot_threshold = 5
+    spp_splits = [None, 10 ** pivot_threshold]
+    spp_split_labels = ["none", "1e5"]
+    spps = [
+        10 ** (pivot_threshold - 1),
+        10 ** pivot_threshold,
+        10 ** (pivot_threshold + 1),
+    ]
     for spp in copy(spps[:-1]):
         spps.append(2 * spp)
         spps.append(5 * spp)
     spps.sort()
+
     results = pd.DataFrame(
         index=pd.Index(spps, name="spp"),
         columns=pd.MultiIndex.from_product(
-            (thresholds, modes), names=["threshold", "mode"]
+            (spp_split_labels, modes), names=["threshold", "mode"]
         ),
     )
 
-    for spp_splitting_threshold in thresholds:
-        exp.measures[0]._spp_splitting_threshold = spp_splitting_threshold
+    for spp_split, spp_split_label in zip(spp_splits, spp_split_labels):
+        exp.measures[0].split_spp = spp_split
 
         for mode in modes:
             eradiate.set_mode(mode)
@@ -94,9 +97,7 @@ def test_spp_splitting(mode_mono):
             for spp in spps:
                 exp.measures[0].spp = spp
                 exp.run()
-                results[spp_splitting_threshold, mode][spp] = float(
-                    exp.results["measure"].brf
-                )
+                results[spp_split_label, mode][spp] = float(exp.results["measure"].brf)
 
     # Save plot for report
     fig, _ = plt.subplots(1, 2, figsize=(10, 4))
@@ -121,13 +122,14 @@ def test_spp_splitting(mode_mono):
     )
     # Single-precision configurations yield wrong results without SPP splitting for SPP > 1e5
     assert not np.allclose(
-        results.loc[1e5 + 1 :, idx[10 ** 10, "mono"]].to_numpy(dtype=float),
+        results.loc[1e5 + 1 :, idx["none", "mono"]].to_numpy(dtype=float),
         1.0,
         rtol=1e-3,
     )
     # Single-precision configurations to yield correct results with SPP splitting for SPP > 1e5
+    print(results)
     assert np.allclose(
-        results.loc[1e5 + 1 :, idx[10 ** 5, "mono"]].to_numpy(dtype=float),
+        results.loc[1e5 + 1 :, idx["1e5", "mono"]].to_numpy(dtype=float),
         1.0,
         rtol=1e-3,
     )
