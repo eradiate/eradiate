@@ -1,9 +1,15 @@
 import numpy as np
 
-from eradiate.pipelines._aggregate import AggregateCKDQuad, AggregateSampleCount
+from eradiate.experiments import OneDimExperiment
+from eradiate.pipelines._aggregate import (
+    AggregateCKDQuad,
+    AggregateRadiosity,
+    AggregateSampleCount,
+)
 from eradiate.pipelines._gather import Gather
 from eradiate.units import symbol
 from eradiate.units import unit_context_kernel as uck
+from eradiate.units import unit_registry as ureg
 
 
 def test_pipeline_step_aggregate_sample_count(results_mono_spp):
@@ -54,3 +60,40 @@ def test_pipeline_step_aggregate_ckd(results_ckd):
     assert result["radiance"].attrs == values["radiance"].attrs
     # Sample counts are averaged
     assert result.spp == 250
+
+
+def test_pipeline_step_aggregate_radiosity(mode_mono):
+    # Initialise test data
+    irradiance = 2.0
+
+    exp = OneDimExperiment(
+        atmosphere=None,
+        surface={"type": "lambertian", "reflectance": 1.0},
+        illumination={"type": "directional", "irradiance": irradiance},
+        measures=[
+            {
+                "type": "distant_flux",
+                "film_resolution": (32, 32),
+                "spp": 1000,
+                "spectral_cfg": {"wavelengths": [550.0]},
+            }
+        ],
+    )
+    exp.process()
+    values = Gather(
+        sensor_dims=[],
+        var=("sector_radiosity", {"units": symbol(uck.get("irradiance"))}),
+    ).transform(exp.measures[0].results)
+    print(values)
+
+    # Configure and apply step
+    step = AggregateRadiosity(
+        sector_radiosity_var="sector_radiosity", radiosity_var="radiosity"
+    )
+    result = step.transform(values)
+
+    # Check that radiosity dimensions are correct
+    print(result)
+    assert not {"x_index", "y_index"}.issubset(result["radiosity"].dims)
+    # This setup conserves energy
+    assert np.isclose(irradiance, result["radiosity"], rtol=1e-4)
