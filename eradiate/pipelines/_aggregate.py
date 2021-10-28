@@ -35,7 +35,7 @@ class AggregateSampleCount(PipelineStep):
     def transform(self, x: t.Any) -> t.Any:
         with xr.set_options(keep_attrs=True):
             result = x.weighted(x.spp).mean(dim="spp_index")
-            result["spp"] = x.spp.sum()
+            result["spp"] = x.spp.sum(dim="spp_index")
 
         return result
 

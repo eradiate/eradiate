@@ -19,6 +19,8 @@ def test_pipeline_step_aggregate_sample_count(results_mono_spp):
     assert "spp_index" not in result.coords
     # spp variable is still here
     assert "spp" in result.data_vars
+    # spp variable is indexed only on spectral coordinate
+    assert set(result.spp.dims) == set(values.spp.dims) - {"spp_index"}
 
     # Sample counts are summed
     assert result.spp == 250
