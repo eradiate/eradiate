@@ -97,7 +97,9 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza):
         {
             "type": "distant",
             "id": "measure",
-            "film_resolution": (21, 1),
+            "construct": "from_viewing_angles",
+            "zeniths": np.linspace(-90, 90, 19),
+            "azimuths": 0.0,
             "spp": 1e4,
         }
     )
@@ -124,12 +126,12 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza):
     ax = plt.gca()
     ax.plot(
         np.squeeze(onedim.results["measure"].vza.values),
-        np.squeeze(onedim.results["measure"].lo.values),
+        np.squeeze(onedim.results["measure"]["radiance"].values),
         label="rami",
     )
     ax.plot(
         np.squeeze(r4a.results["measure"].vza.values),
-        np.squeeze(r4a.results["measure"].lo.values),
+        np.squeeze(r4a.results["measure"]["radiance"].values),
         label="r4a",
     )
     plt.xlabel("Signed viewing zenith angle [deg]")
@@ -147,7 +149,8 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza):
     plt.close()
 
     assert np.all(
-        onedim.results["measure"].lo.values == r4a.results["measure"].lo.values
+        onedim.results["measure"]["radiance"].values
+        == r4a.results["measure"]["radiance"].values
     )
 
 
@@ -225,7 +228,9 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai):
         {
             "type": "distant",
             "id": "measure",
-            "film_resolution": (41, 1),
+            "construct": "from_viewing_angles",
+            "zeniths": np.linspace(-90, 90, 19),
+            "azimuths": 0.0,
             "spp": 1e4,
         }
     )
@@ -252,12 +257,12 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai):
     ax = plt.gca()
     ax.plot(
         np.squeeze(rami.results["measure"].vza.values),
-        np.squeeze(rami.results["measure"].lo.values),
+        np.squeeze(rami.results["measure"]["radiance"].values),
         label="rami",
     )
     ax.plot(
         np.squeeze(r4a.results["measure"].vza.values),
-        np.squeeze(r4a.results["measure"].lo.values),
+        np.squeeze(r4a.results["measure"]["radiance"].values),
         label="r4a",
     )
     plt.xlabel("Signed viewing zenith angle [deg]")
@@ -274,7 +279,10 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai):
     fig.savefig(fname_plot, dpi=200)
     plt.close()
 
-    assert np.all(rami.results["measure"].lo.values == r4a.results["measure"].lo.values)
+    assert np.all(
+        rami.results["measure"]["radiance"].values
+        == r4a.results["measure"]["radiance"].values
+    )
 
 
 matplotlib.rcParams["text.usetex"] = False
