@@ -160,14 +160,14 @@ def update_docstring(doc, name, report):
         )
 
     resultstring = f"""
-:Test result: 
+:Test result:
 
 * {result}
 
 """
     locationstring = f":Test location: {location}"
 
-    firstpart = "\n".join([firstpart, resultstring, locationstring])
+    firstpart = "\n\n".join([firstpart, locationstring, resultstring])
     doc = "".join([firstpart, splitstring, lastpart, metric, "\n\n--------\n\n"])
 
     return doc
@@ -193,7 +193,7 @@ This section contains the specification for the system and system tests in Eradi
 The tests are documented by presenting their general concept, e.g. what is tested, followed
 by the test setup and execution, which includes critical points about the implementation and
 finally the expected behaviour of the software under test and how the success or failure of
-the test is asserted.    
+the test is asserted.
 """
 
     body = ""

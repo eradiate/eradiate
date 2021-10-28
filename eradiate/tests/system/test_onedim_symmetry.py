@@ -119,9 +119,9 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
 
     # Plot results
     fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(5, 2.5))
-    results["radiance"].plot(ax=ax1, x="vza")
-    results["radiance_reversed"].plot(ax=ax1, x="vza")
-    results["diff"].plot(ax=ax2, x="vza")
+    results["radiance"].plot(ax=ax1, x="vza", marker=".", ls="--")
+    results["radiance_reversed"].plot(ax=ax1, x="vza", marker=".", ls="--")
+    results["diff"].plot(ax=ax2, x="vza", marker=".", ls="--")
     remove_xylabels(from_=[ax1, ax2])
     ax2.yaxis.tick_right()
     ax1.set_title("")

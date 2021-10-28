@@ -127,12 +127,16 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza):
     ax.plot(
         np.squeeze(onedim.results["measure"].vza.values),
         np.squeeze(onedim.results["measure"]["radiance"].values),
-        label="rami",
+        label="onedim",
+        marker=".",
+        ls="--",
     )
     ax.plot(
         np.squeeze(r4a.results["measure"].vza.values),
         np.squeeze(r4a.results["measure"]["radiance"].values),
         label="r4a",
+        marker=".",
+        ls="--",
     )
     plt.xlabel("Signed viewing zenith angle [deg]")
     plt.xlim([-100, 150])
@@ -171,7 +175,7 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai):
     Both experiments are set up with the same surface and atmosphere:
 
     * Geometry: a square surface with unit size and a Lambertian BRDF with
-      reflectance :math:`\rho = 0.25.
+      reflectance :math:`\rho = 0.25`.
     * Illumination: Directional illumination with a zenith angle
       :math:`\theta \in [0.0, 30.0, 60.0]°`.
     * Atmosphere: None
@@ -259,11 +263,15 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai):
         np.squeeze(rami.results["measure"].vza.values),
         np.squeeze(rami.results["measure"]["radiance"].values),
         label="rami",
+        marker=".",
+        ls="--",
     )
     ax.plot(
         np.squeeze(r4a.results["measure"].vza.values),
         np.squeeze(r4a.results["measure"]["radiance"].values),
         label="r4a",
+        marker=".",
+        ls="--",
     )
     plt.xlabel("Signed viewing zenith angle [deg]")
     plt.xlim([-100, 150])
