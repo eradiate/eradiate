@@ -2,7 +2,9 @@
 
 import numpy as np
 
+from eradiate import unit_registry as ureg
 from eradiate.experiments import OneDimExperiment
+from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import LambertianSurface
 
 
@@ -21,7 +23,9 @@ def test_ckd_basic(modes_all_ckd):
         atmosphere=None,
         surface=LambertianSurface(reflectance=1.0),
         measures=[
-            DistantReflectanceMeasure(
+            MultiDistantMeasure.from_viewing_angles(
+                zeniths=np.arange(-60, 61, 5) * ureg.deg,
+                azimuths=0.0 * ureg.deg,
                 spectral_cfg={
                     "bin_set": "10nm_test",
                     "bins": [
@@ -30,7 +34,7 @@ def test_ckd_basic(modes_all_ckd):
                         "570",
                         "510",
                     ],  # We specify bins in arbitrary order on purpose
-                }
+                },
             )
         ],
     )
