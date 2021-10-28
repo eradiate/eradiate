@@ -17,6 +17,46 @@ from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.measure._hemispherical_distant import HemisphericalDistantMeasure
 
 
+@pytest.mark.parametrize(
+    "illumination_type, expected_dims",
+    [
+        ("directional", ["sza", "saa"]),
+        ("constant", []),
+    ],
+    ids=["directional", "constant"],
+)
+def test_pipelines_add_illumination(modes_all_single, illumination_type, expected_dims):
+    # Initialise test data
+    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        spectral_cfg = {"wavelengths": [540.0, 550.0, 560.0]}
+    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        spectral_cfg = {"bins": ["540", "550", "560"]}
+    else:
+        pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
+
+    exp = OneDimExperiment(
+        atmosphere=None,
+        illumination={"type": illumination_type},
+        measures=MultiDistantMeasure(spectral_cfg=spectral_cfg),
+    )
+    exp.process()
+    measure = exp.measures[0]
+
+    # Apply basic post-processing
+    values = Pipeline(
+        steps=[
+            ("gather", Gather(var="radiance")),
+            ("aggregate_ckd_quad", AggregateCKDQuad(var="radiance", measure=measure)),
+        ]
+    ).transform(measure.results)
+
+    step = AddIllumination(illumination=exp.illumination, measure=measure)
+    result = step.transform(values)
+    # Irradiance is here and is indexed in Sun angles and spectral coordinate
+    irradiance = result.data_vars["irradiance"]
+    assert set(irradiance.dims) == {"w"}.union(set(expected_dims))
+
+
 def test_remap_viewing_angles_plane():
     # Usage with "normal" parameters
     theta, phi = _remap_viewing_angles_plane(
@@ -116,42 +156,3 @@ def test_pipelines_add_viewing_angles(
     # Viewing angles are set to appropriate values
     assert np.allclose(expected_zenith, result.coords["vza"].values.squeeze())
     assert np.allclose(expected_azimuth, result.coords["vaa"].values.squeeze())
-
-
-@pytest.mark.parametrize(
-    "illumination_type, expected_dims",
-    [
-        ("directional", ["sza", "saa"]),
-        ("constant", []),
-    ],
-    ids=["directional", "constant"],
-)
-def test_pipelines_add_illumination(modes_all_single, illumination_type, expected_dims):
-    # Initialise test data
-    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-        spectral_cfg = {"wavelengths": [540.0, 550.0, 560.0]}
-    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-        spectral_cfg = {"bins": ["540", "550", "560"]}
-    else:
-        pytest.skip(f"unsupported mode {eradiate.mode().id}")
-
-    exp = OneDimExperiment(
-        atmosphere=None,
-        illumination={"type": illumination_type},
-        measures=MultiDistantMeasure(spectral_cfg=spectral_cfg),
-    )
-    exp.process()
-    measure = exp.measures[0]
-
-    # Apply basic post-processing
-    values = Pipeline(
-        steps=[
-            ("gather", Gather(var="radiance")),
-            ("aggregate_ckd_quad", AggregateCKDQuad(var="radiance", measure=measure)),
-        ]
-    ).transform(measure.results)
-
-    step = AddIllumination(illumination=exp.illumination, measure=measure)
-    result = step.transform(values)
-    assert all(dim in result.dims for dim in expected_dims)
-    assert "irradiance" in result.data_vars
