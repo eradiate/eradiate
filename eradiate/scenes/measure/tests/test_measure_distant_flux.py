@@ -1,6 +1,8 @@
 import enoki as ek
+import numpy as np
 import pytest
 
+from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import KernelDict
@@ -46,3 +48,24 @@ def test_measure_distant_flux_direction(modes_all, direction, frame):
     assert ek.allclose(to_world.transform_vector([1, 0, 0]), frame[0])
     assert ek.allclose(to_world.transform_vector([0, 1, 0]), frame[1])
     assert ek.allclose(to_world.transform_vector([0, 0, 1]), frame[2])
+
+
+def test_measure_distant_flux_viewing_angles(mode_mono):
+    # Test default constructor
+    d = DistantFluxMeasure(film_resolution=(2, 2))
+    expected = (
+        np.array(
+            [
+                [
+                    (41.409622, 225),
+                    (41.409622, 135),
+                ],
+                [
+                    (41.409622, 315),
+                    (41.409622, 45),
+                ],
+            ]
+        )
+        * ureg.deg
+    )
+    assert np.allclose(expected, d.viewing_angles)
