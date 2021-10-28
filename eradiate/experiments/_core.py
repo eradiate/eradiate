@@ -249,8 +249,7 @@ class Experiment(ABC):
     def run(self, *measures: t.Union[Measure, int]) -> None:
         """
         Perform radiative transfer simulation and post-process results.
-        Essentially chains :meth:`.preprocess`, :meth:`.process` and
-        :meth:`.postprocess`.
+        Essentially chains :meth:`.process` and :meth:`.postprocess`.
 
         Parameters
         ----------
@@ -333,7 +332,26 @@ class Experiment(ABC):
                     pbar.update()
 
     @abstractmethod
-    def pipelines(self, measures: t.List[Measure]) -> t.List[Pipeline]:
+    def pipeline(
+        self, *measures: t.Union[Measure, int]
+    ) -> t.Union[Pipeline, t.Tuple[Pipeline, ...]]:
+        """
+        Request post-processing pipeline for a given measure.
+
+        Parameters
+        ----------
+        *measures : :class:`.Measure` or int
+            One or several measures for which to get a post-processing pipeline.
+            If integer values are passed, they are used to query the measure
+            list.
+
+        Returns
+        -------
+        pipelines : :class:`.Pipeline` or tuple of :class:`.Pipeline`
+            If a single measure is passed, a single :class:`.Pipeline` instance
+            is returned; if multiple measures are passed, a tuple of pipelines
+            is returned.
+        """
         pass
 
     def postprocess(
@@ -377,11 +395,10 @@ class Experiment(ABC):
             for measure in measures
         ]
 
-        # Collect pipelines
-        pipelines = self.pipelines(measures)
-
         # Apply pipelines
-        for measure, pipeline in zip(measures, pipelines):
+        for measure in measures:
+            pipeline = self.pipeline(measure)
+
             # Collect measure results
             self._results[measure.id] = pipeline.transform(
                 measure.results, **pipeline_kwargs
@@ -456,7 +473,9 @@ class EarthObservationExperiment(Experiment, ABC):
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
 
-    def pipelines(self, measures: t.List[Measure]) -> t.List[pipelines.Pipeline]:
+    def pipeline(
+        self, *measures: t.Union[Measure, int]
+    ) -> t.Union[Pipeline, t.Tuple[Pipeline, ...]]:
         result = []
 
         for measure in measures:
@@ -523,4 +542,4 @@ class EarthObservationExperiment(Experiment, ABC):
 
             result.append(pipeline)
 
-        return result
+        return result[0] if len(result) == 1 else tuple(result)
