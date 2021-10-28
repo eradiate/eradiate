@@ -35,16 +35,19 @@ def test_multi_distant_measure_viewing_angles(mode_mono):
         ]
     )
 
-    assert np.allclose(
-        [
-            [0, 0],
-            [45, 0],
-            [45, 90],
-            [np.rad2deg(np.arccos(1 / np.sqrt(3))), 45],
-        ]
-        * ureg.deg,
-        measure.viewing_angles,
+    expected = (
+        np.array(
+            [
+                [0, 0],
+                [45, 0],
+                [45, 90],
+                [np.rad2deg(np.arccos(1 / np.sqrt(3))), 45],
+            ]
+        ).reshape((4, 1, 2))
+        * ureg.deg
     )
+
+    assert np.allclose(expected, measure.viewing_angles)
 
     # Directions which would normally map to the [-π, 0] domain are normalised
     # to [0, 2π]
@@ -59,10 +62,10 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
     # Construct from viewing angles not in a hemisphere plane cut
     zeniths = [0, 45, 90, 45, 45, 45, 90, 90, 90]
     azimuths = [0, 0, 0, 0, 45, 90, 0, 45, 90]
-    angles = np.array((zeniths, azimuths)).T
+    angles = np.reshape(np.stack((zeniths, azimuths), axis=-1), (-1, 1, 2)) * ureg.deg
 
     measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
-    assert np.allclose(angles * ureg.deg, measure.viewing_angles)
+    assert np.allclose(angles, measure.viewing_angles)
 
     # Specifying the hplane param will have the validation step raise
     with pytest.raises(ValueError):
@@ -74,8 +77,14 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
     measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
     assert measure.hplane == 0.0 * ureg.deg
 
-    angles = np.array((np.abs(zeniths), [180, 180, 180, 180, 0, 0, 0, 0, 0])).T
-    assert np.allclose(angles * ureg.deg, measure.viewing_angles)
+    angles = (
+        np.reshape(
+            np.stack((np.abs(zeniths), [180, 180, 180, 180, 0, 0, 0, 0, 0]), axis=-1),
+            (-1, 1, 2),
+        )
+        * ureg.deg
+    )
+    assert np.allclose(angles, measure.viewing_angles)
 
     # Construct an azimuthal ring
     zeniths = 45
@@ -83,5 +92,11 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
     measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
     assert measure.hplane is None
 
-    angles = np.array((np.full_like(azimuths, zeniths), azimuths)).T
-    assert np.allclose(angles * ureg.deg, measure.viewing_angles)
+    angles = (
+        np.reshape(
+            np.stack((np.full_like(azimuths, zeniths), azimuths), axis=-1),
+            (-1, 1, 2),
+        )
+        * ureg.deg
+    )
+    assert np.allclose(angles, measure.viewing_angles)
