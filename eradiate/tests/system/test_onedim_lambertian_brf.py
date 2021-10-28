@@ -98,7 +98,7 @@ def test_measured_lambertian_brf(mode_mono_double):
         ax1 = plt.gca()
         for reflectance in reflectance_values:
             results[illumination_zenith][reflectance].brf.plot(
-                ax=ax1, x="vza", linewidth=0.5
+                ax=ax1, x="vza"
             )
         filename = f"test_measured_lambertian_brf_{illumination_zenith}.png"
         ensure_output_dir(os.path.join(output_dir, "plots"))
