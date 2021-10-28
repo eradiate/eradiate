@@ -198,7 +198,9 @@ class AggregateRadiosity(PipelineStep):
     def transform(self, x: t.Any) -> t.Any:
         result = x.copy(deep=False)
 
-        result[self.radiosity_var] = result[self.var].sum(dim=("x", "y"))
+        result[self.radiosity_var] = result[self.sector_radiosity_var].sum(
+            dim=("x_index", "y_index")
+        )
         result[self.radiosity_var].attrs = {
             "standard_name": "toa_outgoing_flux_density_per_unit_wavelength",
             "long_name": "top-of-atmosphere outgoing spectral flux density",
