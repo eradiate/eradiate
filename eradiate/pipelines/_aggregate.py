@@ -45,6 +45,19 @@ class AggregateSampleCount(PipelineStep):
 class AggregateCKDQuad(PipelineStep):
     """
     Compute CKD quadrature.
+
+    In CKD modes, this pipeline step aggregates spectral data and computes
+    evaluates the selected quadrature rule. The following updates to the input
+    data are expected:
+
+    * the ``index`` dimension is dropped;
+    * a ``w`` coordinate, indexed on the ``bin`` dimension, is created and holds
+      the central wavelength of bins.
+
+    Notes
+    -----
+    * The ``spp`` variable is averaged on the ``index`` dimension.
+    * In non-CKD modes, this step is a no-op.
     """
 
     measure: Measure = documented(
@@ -125,6 +138,10 @@ class AggregateCKDQuad(PipelineStep):
 
         result = result.assign({var: aggregated})
         result[var].attrs = x[var].attrs
+
+        # Average the 'spp' variable over the 'index' dimension
+        with xr.set_options(keep_attrs=True):
+            result["spp"] = x.spp.mean(dim="index")
 
         # Add spectral coordinate
         result = result.assign_coords(

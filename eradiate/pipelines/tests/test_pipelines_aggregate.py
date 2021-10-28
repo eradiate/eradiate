@@ -42,9 +42,12 @@ def test_pipeline_step_aggregate_ckd(results_ckd):
     assert "index" not in result.dims
     assert "bin" in result.dims
     assert "w" in result.coords
+    assert "spp" in result.data_vars
     assert result.w.dims == ("bin",)
 
     # In the present case, the quadrature evaluates to 2/π
-    assert np.allclose(2.0 / np.pi, result.lo.values)
+    assert np.allclose(2.0 / np.pi, result["radiance"].values)
     # Metadata of the variable for which aggregation is performed are copied
-    assert result.lo.attrs == values.lo.attrs
+    assert result["radiance"].attrs == values["radiance"].attrs
+    # Sample counts are averaged
+    assert result.spp == 250
