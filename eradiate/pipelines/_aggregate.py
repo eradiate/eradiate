@@ -51,8 +51,11 @@ class AggregateCKDQuad(PipelineStep):
     data are expected:
 
     * the ``index`` dimension is dropped;
-    * a ``w`` coordinate, indexed on the ``bin`` dimension, is created and holds
-      the central wavelength of bins.
+    * the ``bin`` dimension is renamed ``w``;
+    * the ``bin`` coordinate persists and is indexed by ``w``;
+    * a ``w`` coordinate is created and contains the central wavelength of each
+      bin.
+
 
     Notes
     -----
@@ -158,8 +161,13 @@ class AggregateCKDQuad(PipelineStep):
             }
         )
 
-        # Final output has a spectral coordinate but retains bin ID coordinate
-        return result.drop_dims("index")
+        # Swap the 'bin' and 'w' dimensions
+        result = result.swap_dims({"bin": "w"})
+
+        # Remove the 'index' dimension
+        result = result.drop_dims("index")
+
+        return result
 
 
 @parse_docs

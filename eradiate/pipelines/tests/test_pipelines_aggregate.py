@@ -42,10 +42,11 @@ def test_pipeline_step_aggregate_ckd(results_ckd):
 
     # Dimension and variable checks
     assert "index" not in result.dims
-    assert "bin" in result.dims
-    assert "w" in result.coords
+    assert "w" in result.dims
+    assert "bin" not in result.dims
+    assert "bin" in result.coords
     assert "spp" in result.data_vars
-    assert result.w.dims == ("bin",)
+    assert result.bin.dims == ("w",)
 
     # In the present case, the quadrature evaluates to 2/π
     assert np.allclose(2.0 / np.pi, result["radiance"].values)
