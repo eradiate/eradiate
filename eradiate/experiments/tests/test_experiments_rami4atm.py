@@ -179,7 +179,12 @@ def test_ramiatm_experiment_real_life(mode_mono):
             "l_vertical": 2.0 * ureg.m,
         },
         illumination={"type": "directional", "zenith": 45.0},
-        measures={"type": "distant_reflectance"},
+        measures={
+            "type": "distant",
+            "construct": "from_viewing_angles",
+            "zeniths": np.arange(-60, 61, 5),
+            "azimuths": 0.0,
+        },
     )
     assert exp.kernel_dict(ctx=ctx).load() is not None
 
@@ -194,35 +199,29 @@ def test_ramiatm_experiment_run_detailed(mode_mono):
     exp = Rami4ATMExperiment(
         measures=[
             {
-                "type": "distant_reflectance",
-                "id": "toa_hsphere",
-                "film_resolution": (32, 32),
-                "spp": 1000,
+                "id": "toa_brf",
+                "type": "distant",
+                "construct": "from_viewing_angles",
+                "zeniths": np.arange(-60, 61, 5),
+                "azimuths": 0.0,
             },
         ]
     )
 
     exp.run()
 
-    results = exp.results["toa_hsphere"]
+    results = exp.results["toa_brf"]
 
     # Post-processing creates expected variables ...
     assert set(results.data_vars) == {"irradiance", "brf", "brdf", "radiance", "spp"}
 
     # ... dimensions
-    assert set(results["radiance"].dims) == {"sza", "saa", "x", "y", "w"}
+    assert set(results["radiance"].dims) == {"sza", "saa", "x_index", "y_index", "w"}
     assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
 
     # ... and other coordinates
-    assert set(results["radiance"].coords) == {
-        "sza",
-        "saa",
-        "vza",
-        "vaa",
-        "x",
-        "y",
-        "w",
-    }
+    expected_coords = {"sza", "saa", "vza", "vaa", "x", "x_index", "y", "y_index", "w"}
+    assert set(results["radiance"].coords) == expected_coords
     assert set(results["irradiance"].coords) == {"sza", "saa", "w"}
 
     # We just check that we record something as expected
