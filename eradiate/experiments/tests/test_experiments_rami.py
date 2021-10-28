@@ -92,7 +92,7 @@ def test_rami_experiment_real_life(mode_mono):
         illumination={"type": "directional", "zenith": 45.0},
         measures={
             "type": "distant",
-            "construct": "hplane",
+            "construct": "from_viewing_angles",
             "zeniths": np.arange(-60, 61, 5),
             "azimuths": 0.0,
         },
@@ -130,15 +130,8 @@ def test_rami_experiment_run_detailed(mode_mono):
     assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
 
     # ... and other coordinates
-    assert set(results["radiance"].coords) == {
-        "sza",
-        "saa",
-        "vza",
-        "vaa",
-        "x_index",
-        "y_index",
-        "w",
-    }
+    expected_coords = {"sza", "saa", "vza", "vaa", "x_index", "x", "y_index", "y", "w"}
+    assert set(results["radiance"].coords) == expected_coords
     assert set(results["irradiance"].coords) == {"sza", "saa", "w"}
 
     # We just check that we record something as expected

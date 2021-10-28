@@ -163,7 +163,7 @@ class RamiExperiment(EarthObservationExperiment):
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(RamiExperiment, self)._dataset_metadata(measure)
 
-        if isinstance(measure, DistantMeasure):
+        if measure.is_distant():
             result["title"] = "Top-of-canopy simulation results"
 
         return result
