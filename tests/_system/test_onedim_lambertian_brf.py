@@ -2,13 +2,10 @@
 
 import os
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 import eradiate
-
-matplotlib.rcParams["text.usetex"] = True
 
 eradiate_dir = os.environ["ERADIATE_DIR"]
 output_dir = os.path.join(eradiate_dir, "test_report", "generated")
@@ -19,7 +16,7 @@ def ensure_output_dir(path):
         os.makedirs(path)
 
 
-def test_measured_lambertian_brf(mode_mono_double):
+def test_onedim_lambertian_brf(mode_mono_double):
     r"""
     Measured lambertian BRF
     =======================
@@ -49,13 +46,13 @@ def test_measured_lambertian_brf(mode_mono_double):
     Results
     -------
 
-    .. image:: generated/plots/test_measured_lambertian_brf_0.0.png
+    .. image:: generated/plots/test_onedim_lambertian_brf_0.0.png
        :width: 75%
 
-    .. image:: generated/plots/test_measured_lambertian_brf_30.0.png
+    .. image:: generated/plots/test_onedim_lambertian_brf_30.0.png
        :width: 75%
 
-    .. image:: generated/plots/test_measured_lambertian_brf_60.0.png
+    .. image:: generated/plots/test_onedim_lambertian_brf_60.0.png
        :width: 75%
     """
     spp = 1
@@ -97,20 +94,19 @@ def test_measured_lambertian_brf(mode_mono_double):
         fig = plt.figure(figsize=(6, 3))
         ax1 = plt.gca()
         for reflectance in reflectance_values:
-            results[illumination_zenith][reflectance].brf.plot(
-                ax=ax1, x="vza"
-            )
-        filename = f"test_measured_lambertian_brf_{illumination_zenith}.png"
+            results[illumination_zenith][reflectance].brf.plot(ax=ax1, x="vza")
+        filename = f"test_onedim_lambertian_brf_{illumination_zenith}.png"
         ensure_output_dir(os.path.join(output_dir, "plots"))
         fname_plot = os.path.join(output_dir, "plots", filename)
-        plt.xlabel("Signed viewing zenith angle [deg]")
-        plt.xlim([-100, 150])
+        plt.xlabel("Signed viewing zenith angle [°]")
         plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
         plt.ylabel("BRF [dimensionless]")
         plt.title(fr"$\theta$ = {illumination_zenith}°")
         plt.legend(
-            [fr"$\rho$ = {reflectance}" for reflectance in reflectance_values],
-            loc="center right",
+            [f"{reflectance}" for reflectance in reflectance_values],
+            title=r"$\rho$",
+            loc="center left",
+            bbox_to_anchor=(1, 0.5),
         )
         plt.tight_layout()
         fig.savefig(fname_plot, dpi=200)
@@ -121,6 +117,3 @@ def test_measured_lambertian_brf(mode_mono_double):
             assert np.allclose(
                 results[illumination_zenith][reflectance].brf, reflectance
             )
-
-
-matplotlib.rcParams["text.usetex"] = False

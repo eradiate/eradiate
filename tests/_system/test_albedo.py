@@ -50,16 +50,16 @@ def test_albedo(mode_mono):
     Results
     -------
 
-    .. image:: generated/plots/albedo_onedim_directional.png
+    .. image:: generated/plots/test_albedo_onedim_directional.png
        :width: 100%
 
-    .. image:: generated/plots/albedo_rami_directional.png
+    .. image:: generated/plots/test_albedo_rami_directional.png
        :width: 100%
 
-    .. image:: generated/plots/albedo_onedim_constant.png
+    .. image:: generated/plots/test_albedo_onedim_constant.png
        :width: 100%
 
-    .. image:: generated/plots/albedo_rami_constant.png
+    .. image:: generated/plots/test_albedo_rami_constant.png
        :width: 100%
 
     """
@@ -193,7 +193,7 @@ def test_albedo(mode_mono):
         plt.suptitle(f"Case: {exp_name}")
         plt.tight_layout()
 
-        filename = f"albedo_{exp_name}.png"
+        filename = f"test_albedo_{exp_name}.png"
         ensure_output_dir(os.path.join(output_dir, "plots"))
         fname_plot = os.path.join(output_dir, "plots", filename)
 

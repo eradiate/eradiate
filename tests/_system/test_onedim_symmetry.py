@@ -57,14 +57,14 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     inspection of the result symmetry. On the right of each pair the absolute
     difference between these two curves is shown, for a more quantitative visualization.
 
-    .. image:: generated/plots/lambertian_none.png
+    .. image:: generated/plots/test_symmetry_zenith_lambertian_none.png
        :width: 45%
-    .. image:: generated/plots/lambertian_homogeneous.png
+    .. image:: generated/plots/test_symmetry_zenith_lambertian_homogeneous.png
        :width: 45%
 
-    .. image:: generated/plots/rpv_none.png
+    .. image:: generated/plots/test_symmetry_zenith_rpv_none.png
        :width: 45%
-    .. image:: generated/plots/rpv_homogeneous.png
+    .. image:: generated/plots/test_symmetry_zenith_rpv_homogeneous.png
        :width: 45%
     """
     spp = int(1e6)
@@ -129,7 +129,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     plt.suptitle(f"Surface: {surface}, Atmosphere: {str(atmosphere)}")
     plt.tight_layout()
 
-    filename = f"{surface}_{str(atmosphere)}.png"
+    filename = f"test_symmetry_zenith_{surface}_{str(atmosphere)}.png"
     ensure_output_dir(os.path.join(output_dir, "plots"))
     fname_plot = os.path.join(output_dir, "plots", filename)
 

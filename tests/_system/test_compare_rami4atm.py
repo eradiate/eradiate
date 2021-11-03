@@ -1,6 +1,5 @@
 import os
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -8,8 +7,6 @@ import pytest
 import eradiate
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.units import unit_registry as ureg
-
-matplotlib.rcParams["text.usetex"] = True
 
 eradiate_dir = os.environ["ERADIATE_DIR"]
 output_dir = os.path.join(eradiate_dir, "test_report", "generated")
@@ -55,25 +52,25 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza):
     Results
     -------
 
-    .. image:: generated/plots/test_compare_r4a_onedim_0.0_0.0.png
+    .. image:: generated/plots/test_compare_rami4atm_onedim_0.0_0.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_r4a_onedim_0.0_0.5.png
+    .. image:: generated/plots/test_compare_rami4atm_onedim_0.0_0.5.png
        :width: 30%
-    .. image:: generated/plots/test_compare_r4a_onedim_0.0_1.0.png
-       :width: 30%
-
-    .. image:: generated/plots/test_compare_r4a_onedim_30.0_0.0.png
-       :width: 30%
-    .. image:: generated/plots/test_compare_r4a_onedim_30.0_0.5.png
-       :width: 30%
-    .. image:: generated/plots/test_compare_r4a_onedim_30.0_1.0.png
+    .. image:: generated/plots/test_compare_rami4atm_onedim_0.0_1.0.png
        :width: 30%
 
-    .. image:: generated/plots/test_compare_r4a_onedim_60.0_0.0.png
+    .. image:: generated/plots/test_compare_rami4atm_onedim_30.0_0.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_r4a_onedim_60.0_0.5.png
+    .. image:: generated/plots/test_compare_rami4atm_onedim_30.0_0.5.png
        :width: 30%
-    .. image:: generated/plots/test_compare_r4a_onedim_60.0_1.0.png
+    .. image:: generated/plots/test_compare_rami4atm_onedim_30.0_1.0.png
+       :width: 30%
+
+    .. image:: generated/plots/test_compare_rami4atm_onedim_60.0_0.0.png
+       :width: 30%
+    .. image:: generated/plots/test_compare_rami4atm_onedim_60.0_0.5.png
+       :width: 30%
+    .. image:: generated/plots/test_compare_rami4atm_onedim_60.0_1.0.png
        :width: 30%
     """
 
@@ -138,14 +135,13 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza):
         marker=".",
         ls="--",
     )
-    plt.xlabel("Signed viewing zenith angle [deg]")
-    plt.xlim([-100, 150])
+    plt.xlabel("Signed viewing zenith angle [°]")
     plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
     plt.ylabel("BRF [dimensionless]")
-    plt.title(fr"sza = {sza} - $\rho$ = {reflectance}")
-    plt.legend(loc="center right")
+    plt.title(fr"SZA = {sza} — $\rho$ = {reflectance}")
+    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
-    filename = f"test_compare_r4a_onedim_{sza}_{reflectance}.png"
+    filename = f"test_compare_rami4atm_onedim_{sza}_{reflectance}.png"
     ensure_output_dir(os.path.join(output_dir, "plots"))
     fname_plot = os.path.join(output_dir, "plots", filename)
     plt.tight_layout()
@@ -193,25 +189,25 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai):
     Results
     -------
 
-    .. image:: generated/plots/test_compare_r4a_rami_0.0_1.0.png
+    .. image:: generated/plots/test_compare_rami4atm_rami_0.0_1.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_r4a_rami_0.0_2.0.png
+    .. image:: generated/plots/test_compare_rami4atm_rami_0.0_2.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_r4a_rami_0.0_3.0.png
-       :width: 30%
-
-    .. image:: generated/plots/test_compare_r4a_rami_30.0_1.0.png
-       :width: 30%
-    .. image:: generated/plots/test_compare_r4a_rami_30.0_2.0.png
-       :width: 30%
-    .. image:: generated/plots/test_compare_r4a_rami_30.0_3.0.png
+    .. image:: generated/plots/test_compare_rami4atm_rami_0.0_3.0.png
        :width: 30%
 
-    .. image:: generated/plots/test_compare_r4a_rami_60.0_1.0.png
+    .. image:: generated/plots/test_compare_rami4atm_rami_30.0_1.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_r4a_rami_60.0_2.0.png
+    .. image:: generated/plots/test_compare_rami4atm_rami_30.0_2.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_r4a_rami_60.0_3.0.png
+    .. image:: generated/plots/test_compare_rami4atm_rami_30.0_3.0.png
+       :width: 30%
+
+    .. image:: generated/plots/test_compare_rami4atm_rami_60.0_1.0.png
+       :width: 30%
+    .. image:: generated/plots/test_compare_rami4atm_rami_60.0_2.0.png
+       :width: 30%
+    .. image:: generated/plots/test_compare_rami4atm_rami_60.0_3.0.png
        :width: 30%
     """
 
@@ -273,14 +269,13 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai):
         marker=".",
         ls="--",
     )
-    plt.xlabel("Signed viewing zenith angle [deg]")
-    plt.xlim([-100, 150])
+    plt.xlabel("Signed viewing zenith angle [°]")
     plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
     plt.ylabel("BRF [dimensionless]")
-    plt.title(f"sza = {sza} - LAI = {lai}")
-    plt.legend(loc="center right")
+    plt.title(f"SZA = {sza} — LAI = {lai}")
+    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
-    filename = f"test_compare_r4a_rami_{sza}_{lai}.png"
+    filename = f"test_compare_rami4atm_rami_{sza}_{lai}.png"
     ensure_output_dir(os.path.join(output_dir, "plots"))
     fname_plot = os.path.join(output_dir, "plots", filename)
     plt.tight_layout()
@@ -291,6 +286,3 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai):
         rami.results["measure"]["radiance"].values
         == r4a.results["measure"]["radiance"].values
     )
-
-
-matplotlib.rcParams["text.usetex"] = False
