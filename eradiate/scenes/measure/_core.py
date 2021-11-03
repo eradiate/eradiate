@@ -341,7 +341,11 @@ def _str_summary_raw(x):
         return "{}"
 
     keys = list(x.keys())
-    return f"dict<{len(keys)} items>({{{keys[0]}: {{...}} , ... }})"
+
+    if len(keys) == 1:
+        return f"dict<1 item>({{{keys[0]}: {{...}} }})"
+    else:
+        return f"dict<{len(keys)} items>({{{keys[0]}: {{...}} , ... }})"
 
 
 @parse_docs
