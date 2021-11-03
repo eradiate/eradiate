@@ -209,7 +209,7 @@ the test is asserted.
 def generate():
     print("Parsing test specification and generating documents for report")
     eradiate_dir = pathlib.Path(os.environ["ERADIATE_DIR"])
-    test_dir = eradiate_dir / "eradiate" / "tests" / "system"
+    test_dir = eradiate_dir / "tests" / "_system"
     output_dir = eradiate_dir / "test_report" / "generated"
     if not pathlib.Path.exists(output_dir):
         os.mkdir(output_dir)

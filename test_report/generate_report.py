@@ -101,7 +101,7 @@ def cli():
         # run_pytest(target_dir=os.path.join(kernel_dir, "src"),
         #            json_report_file=os.path.join(build_dir, 'report_kernel.json'))
         run_pytest(
-            target_dir=os.path.join(eradiate_dir, "eradiate"),
+            target_dir=os.path.join(eradiate_dir, "tests"),
             json_report_file=os.path.join(build_dir, "report_eradiate.json"),
         )
 

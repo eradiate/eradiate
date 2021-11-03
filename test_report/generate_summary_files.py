@@ -42,8 +42,11 @@ def group_results_unittests(report):
 
 
 def create_summary_table(report):
-    """Creates the summary section of the test report.
-    This includes the test execution timestamp, the tested git revision and the number of passed, failed and skipped tests."""
+    """
+    Creates the summary section of the test report.
+    This includes the test execution timestamp, the tested git revision and the
+    number of passed, failed and skipped tests.
+    """
 
     date = datetime.fromtimestamp(report["created"]).strftime("%Y-%m-%d")
     time = datetime.fromtimestamp(report["created"]).strftime("%H:%M:%S")
@@ -55,8 +58,9 @@ def create_summary_table(report):
 Summary
 *******
 
-This table contains the results of all tests that were executed in the creation of this test report. Additionally
-it contains the git revision that was used as well as the time of execution.
+This table contains the results of all tests that were executed in the creation 
+of this test report. Additionally it contains the git revision that was used as 
+well as the time of execution.
 """
 
     try:
