@@ -43,7 +43,7 @@ class EradiateConfig:
 
     @dir.validator
     def _dir_validator(self, var, dir):
-        eradiate_init = dir / "eradiate" / "__init__.py"
+        eradiate_init = dir / "src" / "eradiate" / "__init__.py"
 
         if not eradiate_init.is_file():
             raise ConfigError(
