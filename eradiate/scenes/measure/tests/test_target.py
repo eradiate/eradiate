@@ -11,7 +11,7 @@ from eradiate.scenes.measure._target import Target, TargetPoint, TargetRectangle
 def test_target_origin(modes_all):
     from mitsuba.core import Point3f
 
-    # TargetOriginPoint: basic constructor
+    # TargetPoint: basic constructor
     with ucc.override({"length": "km"}):
         t = TargetPoint([0, 0, 0])
         assert t.xyz.units == ureg.km
@@ -19,12 +19,12 @@ def test_target_origin(modes_all):
     with pytest.raises(ValueError):
         TargetPoint(0)
 
-    # TargetOriginPoint: check kernel item
+    # TargetPoint: check kernel item
     with ucc.override({"length": "km"}), uck.override({"length": "m"}):
         t = TargetPoint([1, 2, 0])
         assert ek.allclose(t.kernel_item(), [1000, 2000, 0])
 
-    # TargetOriginRectangle: basic constructor
+    # TargetRectangle: basic constructor
     with ucc.override({"length": "km"}):
         t = TargetRectangle(0, 1, 0, 1)
         assert t.xmin == 0.0 * ureg.km
@@ -45,7 +45,7 @@ def test_target_origin(modes_all):
     with pytest.raises(ValueError):
         TargetRectangle(0, 1, 1, -1)
 
-    # TargetOriginRectangle: check kernel item
+    # TargetRectangle: check kernel item
     t = TargetRectangle(-1, 1, -1, 1)
 
     with uck.override({"length": "mm"}):  # Tricky: we can't compare transforms directly
