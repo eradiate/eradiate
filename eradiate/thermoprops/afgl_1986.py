@@ -2,6 +2,7 @@
 Atmospheric thermophysical properties profiles models according to
 :cite:`Anderson1986AtmosphericConstituentProfiles`.
 """
+
 import typing as t
 
 import pint
@@ -10,8 +11,8 @@ import xarray as xr
 import eradiate
 
 from .util import compute_scaling_factors, interpolate, rescale_concentration
-from ..data import open
 from .._mode import ModeFlags
+from ..data import open
 
 
 def make_profile(

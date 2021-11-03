@@ -1,18 +1,13 @@
-import typing as t
-
 import attr
-import pint
-import pinttr
 
 import eradiate
+
 from ._core import Surface, surface_factory
 from ._lambertian import LambertianSurface
 from ..core import KernelDict
-from ... import converters, validators
 from ..._util import onedict_value
-from ...attrs import documented, parse_docs, AUTO, AutoType
+from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext
-from ...units import unit_context_config as ucc
 
 
 @surface_factory.register(type_id="central_patch")

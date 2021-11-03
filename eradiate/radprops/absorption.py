@@ -1,9 +1,11 @@
 """
 Functions to compute monochromatic absorption.
 """
+
+import typing as t
+
 import numpy as np
 import pint
-import typing as t
 import xarray as xr
 from scipy.constants import physical_constants
 
