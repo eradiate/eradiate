@@ -9,10 +9,9 @@ from eradiate.pipelines._aggregate import (
 from eradiate.pipelines._gather import Gather
 from eradiate.units import symbol
 from eradiate.units import unit_context_kernel as uck
-from eradiate.units import unit_registry as ureg
 
 
-def test_pipeline_step_aggregate_sample_count(results_mono_spp):
+def test_aggregate_sample_count(results_mono_spp):
     # Initialise test data
     step = Gather(sensor_dims=("spp",))
     values = step.transform(results_mono_spp[0])
@@ -34,7 +33,7 @@ def test_pipeline_step_aggregate_sample_count(results_mono_spp):
     assert np.allclose(2.0 / np.pi, result.img.values)
 
 
-def test_pipeline_step_aggregate_ckd(results_ckd):
+def test_aggregate_ckd(results_ckd):
     # Initialise test data
     raw_results, exp = results_ckd
     step = Gather(
@@ -62,7 +61,7 @@ def test_pipeline_step_aggregate_ckd(results_ckd):
     assert result.spp == 250
 
 
-def test_pipeline_step_aggregate_radiosity(mode_mono):
+def test_aggregate_radiosity(mode_mono):
     # Initialise test data
     irradiance = 2.0
 

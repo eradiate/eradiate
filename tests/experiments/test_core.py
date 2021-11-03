@@ -5,7 +5,7 @@ from eradiate.experiments import mitsuba_run
 from eradiate.scenes.core import KernelDict
 
 
-def test_experiments_mitsuba_run(modes_all):
+def test_mitsuba_run(modes_all):
     # Use on a simple scene
     kernel_dict = KernelDict(
         {
@@ -46,7 +46,7 @@ def test_experiments_mitsuba_run(modes_all):
     assert "my_sensor" in results["spp"]
 
 
-def test_experiments_mitsuba_run_fail():
+def test_mitsuba_run_fail():
     kernel_dict = {
         "type": "scene",
         "shape": {"type": "rectangle"},

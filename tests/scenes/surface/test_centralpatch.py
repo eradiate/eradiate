@@ -1,6 +1,5 @@
-import pytest
-
 import numpy as np
+import pytest
 
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import KernelDict
@@ -8,7 +7,7 @@ from eradiate.scenes.surface import CentralPatchSurface, LambertianSurface
 from eradiate.units import unit_registry as ureg
 
 
-def test_surface_centralpatch_instantiate(mode_mono):
+def test_centralpatch_instantiate(mode_mono):
     ctx = KernelDictContext()
 
     # Default constructor
@@ -43,7 +42,7 @@ def test_surface_centralpatch_instantiate(mode_mono):
     assert KernelDict.from_elements(cs, ctx=ctx).load() is not None
 
 
-def test_surface_centralpatch_compute_scale(modes_all_double):
+def test_centralpatch_compute_scale(modes_all_double):
     ctx = KernelDictContext()
     cs = CentralPatchSurface(
         width=10 * ureg.m, central_patch=LambertianSurface(width=1 * ureg.m)
@@ -58,7 +57,7 @@ def test_surface_centralpatch_compute_scale(modes_all_double):
     assert np.allclose(scale, 1.6666666666667)
 
 
-def test_surface_centralpatch_scale_kernel_dict(mode_mono):
+def test_centralpatch_scale_kernel_dict(mode_mono):
     from mitsuba.core import ScalarTransform4f
 
     cs = CentralPatchSurface(

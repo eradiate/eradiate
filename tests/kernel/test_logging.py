@@ -5,12 +5,12 @@ import pytest
 import eradiate
 
 
-def test_kernel_logging_setup(mode_mono):
+def test_logging_setup(mode_mono):
     eradiate.kernel.logging.install_logging()
     assert eradiate.kernel.logging.mts_logger is eradiate.kernel.logging._get_logger()
 
 
-def test_kernel_logging_mitsuba(mode_mono, caplog):
+def test_logging_mitsuba(mode_mono, caplog):
     eradiate.kernel.logging.install_logging()
     from mitsuba.core import Log, LogLevel
 

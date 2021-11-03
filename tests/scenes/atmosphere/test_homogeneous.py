@@ -12,7 +12,7 @@ from eradiate.scenes.core import KernelDict
 from eradiate.scenes.phase import RayleighPhaseFunction, phase_function_factory
 
 
-def test_atmosphere_homogeneous_default(mode_mono):
+def test_homogeneous_default(mode_mono):
     """
     Applies default attributes values.
     """
@@ -22,7 +22,7 @@ def test_atmosphere_homogeneous_default(mode_mono):
     assert isinstance(r.phase, RayleighPhaseFunction)
 
 
-def test_atmosphere_homogeneous_sigma_s(mode_mono):
+def test_homogeneous_sigma_s(mode_mono):
     """
     Assigns custom 'sigma_s' value.
     """
@@ -31,7 +31,7 @@ def test_atmosphere_homogeneous_sigma_s(mode_mono):
     assert r.eval_sigma_s(spectral_ctx) == ureg.Quantity(1e-5, ureg.m ** -1)
 
 
-def test_atmosphere_homogeneous_top(mode_mono):
+def test_homogeneous_top(mode_mono):
     """
     Assigns custom 'top' value.
     """
@@ -39,7 +39,7 @@ def test_atmosphere_homogeneous_top(mode_mono):
     assert r.top == 8.0 * ureg.km
 
 
-def test_atmosphere_homogeneous_top_invalid_units(mode_mono):
+def test_homogeneous_top_invalid_units(mode_mono):
     """
     Raises when invalid units are passed to 'top'.
     """
@@ -47,7 +47,7 @@ def test_atmosphere_homogeneous_top_invalid_units(mode_mono):
         HomogeneousAtmosphere(top=10 * ureg.s)
 
 
-def test_atmosphere_homogeneous_width_invalid_units(mode_mono):
+def test_homogeneous_width_invalid_units(mode_mono):
     """
     Raises when invalid units are passed to 'width'.
     """
@@ -55,7 +55,7 @@ def test_atmosphere_homogeneous_width_invalid_units(mode_mono):
         HomogeneousAtmosphere(width=5 * ureg.m ** 2)
 
 
-def test_atmosphere_homogeneous_sigma_s_invalid_units(mode_mono):
+def test_homogeneous_sigma_s_invalid_units(mode_mono):
     """
     Raises when invalid units are passed to 'sigma_s'.
     """
@@ -63,7 +63,7 @@ def test_atmosphere_homogeneous_sigma_s_invalid_units(mode_mono):
         HomogeneousAtmosphere(sigma_s=1e-7 * ureg.m)
 
 
-def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
+def test_homogeneous_top_invalid_value(mode_mono):
     """
     Raises when invalid value is passed to 'top'.
     """
@@ -71,7 +71,7 @@ def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
         HomogeneousAtmosphere(top=-100.0)
 
 
-def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
+def test_homogeneous_top_invalid_value(mode_mono):
     """
     Raises when invalid value is passed to 'width'.
     """
@@ -88,7 +88,7 @@ def test_atmosphere_homogeneous_top_invalid_value(mode_mono):
     },  # Exclude phase functions with no default parametrisation
 )
 @pytest.mark.parametrize("ref", (False, True))
-def test_atmosphere_homogeneous_phase_function(mode_mono, phase_id, ref):
+def test_homogeneous_phase_function(mode_mono, phase_id, ref):
     """Supports all available phase function types."""
     r = HomogeneousAtmosphere(phase={"type": phase_id})
 
@@ -98,7 +98,7 @@ def test_atmosphere_homogeneous_phase_function(mode_mono, phase_id, ref):
     assert kernel_dict.load() is not None
 
 
-def test_atmosphere_homogeneous_width(mode_mono):
+def test_homogeneous_width(mode_mono):
     """
     Automatically sets width to ten times the scattering mean free path.
     """
@@ -111,7 +111,7 @@ def test_atmosphere_homogeneous_width(mode_mono):
 
 
 @pytest.mark.parametrize("ref", (False, True))
-def test_atmosphere_homogeneous_kernel_dict(mode_mono, ref):
+def test_homogeneous_kernel_dict(mode_mono, ref):
     """
     Produces kernel dictionaries that can be loaded by the kernel.
     """

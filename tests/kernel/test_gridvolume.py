@@ -2,17 +2,8 @@ import pathlib
 import tempfile
 
 import numpy as np
-import pytest
 
-from eradiate.contexts import SpectralContext
 from eradiate.kernel.gridvolume import read_binary_grid3d, write_binary_grid3d
-from eradiate.radprops.rad_profile import US76ApproxRadProfile
-
-
-@pytest.fixture
-def test_radprops(mode_mono):
-    spectral_ctx = SpectralContext.new(wavelength=550.0)
-    return US76ApproxRadProfile().to_dataset(spectral_ctx=spectral_ctx)
 
 
 def test_write_read_binary_grid3d():

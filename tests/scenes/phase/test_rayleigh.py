@@ -3,7 +3,7 @@ from eradiate.scenes.core import KernelDict
 from eradiate.scenes.phase import RayleighPhaseFunction
 
 
-def test_phase_rayleigh(modes_all):
+def test_rayleigh(modes_all):
     ctx = KernelDictContext()
 
     # Default constructor

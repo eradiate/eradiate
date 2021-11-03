@@ -74,7 +74,7 @@ def test_measure_flags(mode_mono):
     assert measure.flags & MeasureFlags.DISTANT
 
 
-def test_measure_spp_splitting(mode_mono):
+def test_spp_splitting(mode_mono):
     """
     Unit tests for SPP splitting.
     """

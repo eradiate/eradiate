@@ -6,7 +6,7 @@ from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure._hemispherical_distant import HemisphericalDistantMeasure
 
 
-def test_measure_hemispherical_distant(modes_all):
+def test_hemispherical_distant(modes_all):
     # Test default constructor
     d = HemisphericalDistantMeasure()
     ctx = KernelDictContext()
@@ -24,7 +24,7 @@ def test_measure_hemispherical_distant(modes_all):
     assert KernelDict.from_elements(d, ctx=ctx).load() is not None
 
 
-def test_measure_hemispherical_distant_viewing_angles(mode_mono):
+def test_hemispherical_distant_viewing_angles(mode_mono):
     # Test default constructor
     d = HemisphericalDistantMeasure(film_resolution=(2, 2))
     expected = (
