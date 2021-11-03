@@ -57,7 +57,7 @@ class Gather(PipelineStep):
 
     prefix: str = documented(
         attr.ib(default=r".*"),
-        default="r'.*'",
+        default='".*"',
         type="str",
         init_type="str, optional",
         doc="Prefix string used to match sensor IDs. The default value will "
