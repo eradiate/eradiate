@@ -101,13 +101,13 @@ class MultiDistantMeasure(Measure):
         ),
         doc="Target specification. The target can be specified using an "
         "array-like with 3 elements (which will be converted to a "
-        ":class:`.TargetOriginPoint`) or a dictionary interpreted by "
-        ":meth:`TargetOrigin.convert() <.TargetOrigin.convert>`. If set to "
+        ":class:`.TargetPoint`) or a dictionary interpreted by "
+        ":meth:`Target.convert() <.Target.convert>`. If set to "
         "``None`` (not recommended), the default target point selection "
         "method is used: rays will not target a particular region of the "
         "scene.",
-        type=":class:`.TargetOrigin` or None",
-        init_type=":class:`.TargetOrigin` or dict or array-like, optional",
+        type=":class:`.Target` or None",
+        init_type=":class:`.Target` or dict or array-like, optional",
     )
 
     @property

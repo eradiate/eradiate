@@ -36,13 +36,15 @@ class PerspectiveCameraMeasure(Measure):
     _film_resolution: t.Tuple[int, int] = documented(
         attr.ib(
             default=(32, 32),
+            converter=tuple,
             validator=attr.validators.deep_iterable(
                 member_validator=attr.validators.instance_of(int),
                 iterable_validator=validators.has_len(2),
             ),
         ),
         doc="Film resolution as a (width, height) 2-tuple.",
-        type="array-like",
+        type="tuple of int",
+        init_type="array-like",
         default="(32, 32)",
     )
 
@@ -59,7 +61,8 @@ class PerspectiveCameraMeasure(Measure):
         doc="A 3-vector specifying the position of the camera.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="array-like",
+        type="quantity",
+        init_type="array-like",
         default="[1, 1, 1] m",
     )
 
@@ -72,7 +75,8 @@ class PerspectiveCameraMeasure(Measure):
         doc="Point location targeted by the camera.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="array-like[float, float, float]",
+        type="quantity",
+        init_type="array-like",
         default="[0, 0, 0] m",
     )
 

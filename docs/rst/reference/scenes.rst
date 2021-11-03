@@ -167,6 +167,7 @@ Measures [eradiate.scenes.measure]
    :toctree: generated/autosummary/
 
    Measure
+   Target
 
 **Factories**
 
