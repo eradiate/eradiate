@@ -29,6 +29,7 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
    math
    misc
    notebook
+   pipelines
    plot
    radprops
    scenes
