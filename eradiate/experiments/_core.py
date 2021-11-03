@@ -175,9 +175,9 @@ class Experiment(ABC):
         "Optionally, a single :class:`.Measure` or dictionary specification "
         "may be passed and will automatically be wrapped into a list.",
         type="list of :class:`.Measure`",
-        init_type="list of :class:`.Measure` or list of dict or :class:`.Measure` or "
-        "dict",
-        default=":class:`DistantRadianceMeasure() <.DistantRadianceMeasure>`",
+        init_type="list of :class:`.Measure` or list of dict or "
+        ":class:`.Measure` or dict",
+        default=":class:`MultiDistantMeasure() <.MultiDistantMeasure>`",
     )
 
     _integrator: Integrator = documented(
@@ -355,7 +355,9 @@ class Experiment(ABC):
         pass
 
     def postprocess(
-        self, *measures: t.Union[Measure, int], pipeline_kwargs=None
+        self,
+        *measures: t.Union[Measure, int],
+        pipeline_kwargs: t.Optional[t.Dict] = None,
     ) -> None:
         """
         Post-process raw results stored in a measure's ``results`` field. This
@@ -369,14 +371,14 @@ class Experiment(ABC):
             Alternatively, indexes in the measure array can be passed.
             If no value is passed, all measures are processed.
 
-        pipeline_kwargs
+        pipeline_kwargs : dict, optional
             A dictionary of pipeline keyword arguments forwarded to
             :meth:`.Pipeline.transform`.
 
         Raises
         ------
         ValueError
-            If ``measure.raw_results`` is ``None``, *i.e.* if :meth:`.process`
+            If ``measure.results`` is ``None``, *i.e.* if :meth:`.process`
             has not been successfully run.
 
         See Also
