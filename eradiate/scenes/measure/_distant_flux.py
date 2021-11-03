@@ -22,8 +22,10 @@ from ...warp import square_to_uniform_hemisphere
 @attr.s
 class DistantFluxMeasure(Measure):
     """
-    Record the exitant flux density (in W/m²(/nm)) at infinite distance in a
-    hemisphere defined by its ``direction`` parameter.
+    Distant radiosity measure scene element [``distantflux``].
+
+    This measure records the [spectral] radiosity (in W/m²[/nm]) at an infinite
+    distance in a hemisphere defined by its ``direction`` parameter.
 
     When used with a backward tracing algorithm, rays traced by the sensor
     target a shape which can be controlled through the ``target`` parameter.
@@ -33,13 +35,11 @@ class DistantFluxMeasure(Measure):
     Notes
     -----
     * Setting the ``target`` parameter is required to get meaningful results.
-      Solver applications should take care of setting it appropriately.
+      Experiment classes should take care of setting it appropriately.
     * The film resolution can be adjusted to manually stratify film sampling
       and reduce variance in results. The default 32x32 is generally a good
       choice, but scenes with sharp reflection lobes may benefit from higher
       values.
-    * This scene element is a thin wrapper around the ``distantflux``
-      sensor kernel plugin.
     """
 
     # --------------------------------------------------------------------------

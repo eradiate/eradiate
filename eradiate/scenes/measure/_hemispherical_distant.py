@@ -20,10 +20,31 @@ from ...frame import direction_to_angles
 from ...warp import square_to_uniform_hemisphere
 
 
-@measure_factory.register(type_id="hemispherical_distant")
+@measure_factory.register(type_id="hdistant", allow_aliases=True)
+@measure_factory.register(type_id="hemispherical_distant", allow_aliases=True)
 @parse_docs
 @attr.s
 class HemisphericalDistantMeasure(Measure):
+    """
+    Hemispherical distant radiance measure scene element
+    [``hdistant``, ``hemispherical_distant``].
+
+    This scene element records radiance leaving the scene in a hemisphere
+    defined by its ``direction`` parameter. A distinctive feature of this
+    measure is that it samples continuously the direction space instead of
+    computing radiance values for a fixed set of directions, thus potentially
+    capturing effects much harder to distinguish using *e.g.* the
+    :class:`.MultiDistantMeasure` class. On the other side, features located
+    at a precise angle will not be captured very well by this measure.
+
+    This measure is useful to get a global view of leaving radiance patterns
+    over a surface.
+
+    Notes
+    -----
+    * Setting the ``target`` parameter is required to get meaningful results.
+      Experiment classes should take care of setting it appropriately.
+    """
 
     # --------------------------------------------------------------------------
     #                           Fields and properties
