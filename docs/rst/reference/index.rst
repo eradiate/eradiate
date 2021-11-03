@@ -33,7 +33,6 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
    plot
    radprops
    scenes
-   solvers
    thermoprops
    units
    xarray
