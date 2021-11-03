@@ -16,12 +16,14 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
+@measure_factory.register(type_id="mradiancemeter", allow_aliases=True)
 @measure_factory.register(type_id="multi_radiancemeter")
 @parse_docs
 @attr.s
 class MultiRadiancemeterMeasure(Measure):
     """
-    Radiance meter array measure scene element [``multi_radiancemeter``].
+    Radiance meter array measure scene element [``mradiancemeter``,
+    ``multi_radiancemeter``].
 
     This measure scene element is a thin wrapper around the ``mradiancemeter``
     sensor kernel plugin. It records the incident power per unit area per unit
@@ -38,10 +40,11 @@ class MultiRadiancemeterMeasure(Measure):
             default=ureg.Quantity([[0.0, 0.0, 0.0]], ureg.m),
             units=ucc.deferred("length"),
         ),
-        doc="A sequence of 3D points specifying radiance meter array positions.\n"
+        doc="A sequence of points specifying radiance meter array positions.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="array-like",
+        type="quantity",
+        init_type="array-like",
         default="[[0, 0, 0]] m",
     )
 
@@ -51,7 +54,8 @@ class MultiRadiancemeterMeasure(Measure):
             converter=np.array,
         ),
         doc="A sequence of 3-vectors specifying radiance meter array directions.",
-        type="array-like",
+        type="quantity",
+        init_type="array-like",
         default="[[0, 0, 1]]",
     )
 
@@ -80,25 +84,6 @@ class MultiRadiancemeterMeasure(Measure):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _base_dicts(self) -> t.List[t.Dict]:
-        origins = self.origins.m_as(uck.get("length"))
-        directions = self.directions
-        result = []
-
-        for sensor_info in self.sensor_infos():
-            result.append(
-                {
-                    "type": "mradiancemeter",
-                    "id": sensor_info.id,
-                    "origins": ",".join([str(x) for x in origins.ravel(order="C")]),
-                    "directions": ", ".join(
-                        [str(x) for x in directions.ravel(order="C")]
-                    ),
-                }
-            )
-
-        return result
-
     def _kernel_dict(self, sensor_id, spp):
         origins = self.origins.m_as(uck.get("length"))
         directions = self.directions
@@ -106,8 +91,8 @@ class MultiRadiancemeterMeasure(Measure):
         result = {
             "type": "mradiancemeter",
             "id": sensor_id,
-            "origins": ",".join([str(x) for x in origins.ravel(order="C")]),
-            "directions": ", ".join([str(x) for x in directions.ravel(order="C")]),
+            "origins": ",".join(map(str, origins.ravel(order="C"))),
+            "directions": ",".join(map(str, directions.ravel(order="C"))),
             "sampler": {
                 "type": "independent",
                 "sample_count": spp,

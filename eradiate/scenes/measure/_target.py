@@ -33,17 +33,17 @@ class Target:
 
         Currently supported classes:
 
-        * ``point``: :class:`TargetOriginPoint`
-        * ``rectangle``: :class:`TargetOriginRectangle`
+        * ``point``: :class:`.TargetPoint`
+        * ``rectangle``: :class:`.TargetRectangle`
 
         Parameters
         ----------
-        target_type : str
+        target_type : {"point", "rectangle"}
             Identifier of one of the supported child classes.
 
         Returns
         -------
-        :class:`.TargetOrigin`
+        :class:`.Target`
         """
         if target_type == "point":
             return TargetPoint(*args, **kwargs)
@@ -98,7 +98,8 @@ class TargetPoint(Target):
     xyz: pint.Quantity = documented(
         pinttr.ib(units=ucc.deferred("length")),
         doc="Point coordinates.\n\nUnit-enabled field (default: ucc['length']).",
-        type="array-like",
+        type="quantity",
+        init_type="array-like",
     )
 
     @xyz.validator

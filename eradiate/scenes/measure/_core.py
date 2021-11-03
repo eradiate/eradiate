@@ -354,6 +354,10 @@ class Measure(SceneElement, ABC):
     """
     Abstract base class for all measure scene elements.
 
+    See Also
+    --------
+    :func:`.mitsuba_run`
+
     Notes
     -----
     Raw results stored in the `results` field as nested dictionaries with the
@@ -368,11 +372,7 @@ class Measure(SceneElement, ABC):
        }
 
     Keys are spectral loop indexes; values are nested dictionaries produced by
-    :func:`.run_mitsuba`.
-
-    See Also
-    --------
-    :func:`.run_mitsuba`
+    :func:`.mitsuba_run`.
     """
 
     # --------------------------------------------------------------------------
@@ -465,6 +465,10 @@ class Measure(SceneElement, ABC):
     # --------------------------------------------------------------------------
 
     def is_distant(self):
+        """
+        Return ``True`` iff measure records radiometric quantities at infinite
+        distance.
+        """
         return self.flags & MeasureFlags.DISTANT
 
     def is_split(self) -> bool:

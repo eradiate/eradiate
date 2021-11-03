@@ -5,13 +5,16 @@ from ._multi_distant import MultiDistantMeasure
 from ._multi_radiancemeter import MultiRadiancemeterMeasure
 from ._perspective import PerspectiveCameraMeasure
 from ._radiancemeter import RadiancemeterMeasure
-from ._target import TargetPoint, TargetRectangle
+from ._target import Target, TargetPoint, TargetRectangle
 
 __all__ = [
-    # Basic infrastructure
+    # Interfaces
     "Measure",
-    "MeasureSpectralConfig",
+    "Target",
+    # Factories
     "measure_factory",
+    # Utility data structures
+    "MeasureSpectralConfig",
     # Distant measure targeting
     "TargetPoint",
     "TargetRectangle",

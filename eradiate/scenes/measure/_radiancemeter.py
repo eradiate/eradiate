@@ -42,7 +42,8 @@ class RadiancemeterMeasure(Measure):
         doc="A 3-element vector specifying the position of the radiance meter.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="array-like[float, float, float]",
+        type="quantity",
+        init_type="array-like",
         default="[0, 0, 0] m",
     )
 
@@ -55,7 +56,8 @@ class RadiancemeterMeasure(Measure):
         doc="A 3-element vector specifying the location targeted by the sensor.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
-        type="array[float, float, float]",
+        type="quantity",
+        init_type="array-like",
         default="[0, 0, 1] m",
     )
 
