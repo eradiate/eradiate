@@ -64,13 +64,13 @@ def test_resolve(presolver):
     presolver.clear()
 
     # We add a path
-    base = os.path.join(os.getenv("ERADIATE_DIR"), "eradiate")
+    base = os.getenv("ERADIATE_DIR")
     presolver.append(base)
 
     # We expect the test script to find its own location
-    assert str(presolver.resolve("tests/")) == os.path.join(base, "tests")
-    assert str(presolver.resolve("tests/unit/test_presolver.py")) == os.path.join(
-        base, "tests/unit/test_presolver.py"
+    assert os.path.join(base, "tests") == str(presolver.resolve("tests/"))
+    assert os.path.join(base, "tests/test_presolver.py") == str(
+        presolver.resolve("tests/test_presolver.py")
     )
 
     # We expect to get the original path if the file is not found

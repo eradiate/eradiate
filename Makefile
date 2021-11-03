@@ -101,13 +101,13 @@ docs-clean:
 .PHONY: pytest pytest-slow pytest-notslow pytest-formatters
 
 pytest:
-	pytest eradiate
+	pytest tests
 
 pytest-slow:
-	pytest -m "slow" eradiate
+	pytest -m "slow" tests
 
 pytest-notslow:
-	pytest -m "not slow" eradiate
+	pytest -m "not slow" tests
 
 pytest-formatters:
-	pytest --black --isort --ignore-glob="*test_*.py" eradiate
+	pytest --black --isort src
