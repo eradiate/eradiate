@@ -18,12 +18,14 @@ from ...units import unit_registry as ureg
 
 
 @measure_factory.register(type_id="distant", allow_aliases=True)
-@measure_factory.register(type_id="multi_distant")
+@measure_factory.register(type_id="mdistant", allow_aliases=True)
+@measure_factory.register(type_id="multi_distant", allow_aliases=True)
 @parse_docs
 @attr.s
 class MultiDistantMeasure(Measure):
     """
-    Multi-distant radiance measure scene element [``multi_distant``].
+    Multi-distant radiance measure scene element [``distant``, ``mdistant``,
+    ``multi_distant``].
 
     This scene element creates a measure consisting of an array of
     radiancemeters positioned at an infinite distance from the scene. In
@@ -31,6 +33,11 @@ class MultiDistantMeasure(Measure):
     top of the atmosphere (or canopy if there is no atmosphere). Coupled to
     appropriate post-processing operations, scene reflectance can be derived
     from the radiance values it produces.
+
+    Notes
+    -----
+    * Setting the ``target`` parameter is required to get meaningful results.
+      Experiment classes should take care of setting it appropriately.
     """
 
     # --------------------------------------------------------------------------

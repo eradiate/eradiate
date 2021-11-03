@@ -167,20 +167,10 @@ Measures [eradiate.scenes.measure]
    :toctree: generated/autosummary/
 
    Measure
-   DistantMeasure
 
 **Factories**
 
 * :data:`measure_factory`
-
-**Sensor information data structure**
-
-.. dropdown:: Private
-
-   .. autosummary::
-      :toctree: generated/autosummary/
-
-      _core.SensorInfo
 
 **Measure spectral configuration**
 
@@ -197,40 +187,25 @@ Measures [eradiate.scenes.measure]
       _core.MonoMeasureSpectralConfig
       _core.CKDMeasureSpectralConfig
 
-**Result storage and processing**
-
-.. autosummary::
-   :toctree: generated/autosummary/
-
-   MeasureResults
-
 **Scene elements**
 
 .. autosummary::
    :toctree: generated/autosummary/
 
-   DistantRadianceMeasure
-   DistantReflectanceMeasure
+   MultiDistantMeasure
    DistantFluxMeasure
-   DistantAlbedoMeasure
-   DistantArrayMeasure
-   DistantArrayReflectanceMeasure
-   PerspectiveCameraMeasure
+   HemisphericalDistantMeasure
    RadiancemeterMeasure
    MultiRadiancemeterMeasure
-   MultiDistantMeasure
+   PerspectiveCameraMeasure
 
-**Target and origin specification for DistantMeasure**
+**Distant measure target definition**
 
-.. dropdown:: Private
+.. autosummary::
+  :toctree: generated/autosummary/
 
-   .. autosummary::
-      :toctree: generated/autosummary/
-
-      _distant.TargetOrigin
-      _distant.TargetOriginPoint
-      _distant.TargetOriginRectangle
-      _distant.TargetOriginSphere
+  TargetPoint
+  TargetRectangle
 
 .. _sec-reference-scenes-phase_functions:
 
