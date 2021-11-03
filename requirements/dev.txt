@@ -217,7 +217,9 @@ locket==0.2.1
 markupsafe==2.0.1
     # via jinja2
 matplotlib==3.4.3
-    # via -r requirements/main.in
+    # via
+    #   -r requirements/main.in
+    #   seaborn
 matplotlib-inline==0.1.3
     # via
     #   ipykernel
@@ -261,6 +263,7 @@ numpy==1.21.3
     #   netcdf4
     #   pandas
     #   scipy
+    #   seaborn
     #   xarray
 packaging==21.2
     # via
@@ -273,7 +276,9 @@ packaging==21.2
     #   rst2pdf
     #   sphinx
 pandas==1.3.4
-    # via xarray
+    # via
+    #   seaborn
+    #   xarray
 pandocfilters==1.5.0
     # via nbconvert
 parso==0.8.2
@@ -414,6 +419,9 @@ scipy==1.7.1
     # via
     #   -r requirements/main.in
     #   iapws
+    #   seaborn
+seaborn==0.11.2
+    # via -r requirements/tests.in
 send2trash==1.8.0
     # via
     #   jupyter-server
@@ -430,7 +438,7 @@ sniffio==1.2.0
     # via anyio
 snowballstemmer==2.1.0
     # via sphinx
-soupsieve==2.2.1
+soupsieve==2.3
     # via beautifulsoup4
 sphinx==4.2.0
     # via

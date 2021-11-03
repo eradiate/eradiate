@@ -3,6 +3,13 @@ import pytest
 import eradiate
 from eradiate import data
 
+try:
+    import seaborn as sns
+
+    sns.set_theme(style="ticks", rc={"image.cmap": "viridis"})
+except ImportError:
+    pass
+
 # ------------------------------------------------------------------------------
 #                           Kernel variant fixtures
 # ------------------------------------------------------------------------------

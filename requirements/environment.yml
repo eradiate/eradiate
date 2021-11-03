@@ -29,6 +29,7 @@ dependencies:
   - pytest-metadata
   - pytest-xdist
   - rst2pdf
+  - seaborn
   - sphinx
   - tabulate
   # dev
