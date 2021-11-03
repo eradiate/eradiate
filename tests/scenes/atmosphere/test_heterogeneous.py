@@ -18,7 +18,7 @@ def path_to_ussa76_approx_data():
     )
 
 
-def test_atmosphere_heterogeneous_empty(modes_all_single):
+def test_heterogeneous_empty(modes_all_single):
     """
     Unit tests for a HeterogeneousAtmosphere with no components.
     """
@@ -34,9 +34,7 @@ def test_atmosphere_heterogeneous_empty(modes_all_single):
 
 
 @pytest.mark.parametrize("components", ("molecular", "particle"))
-def test_atmosphere_heterogeneous_single(
-    modes_all_single, components, path_to_ussa76_approx_data
-):
+def test_heterogeneous_single(modes_all_single, components, path_to_ussa76_approx_data):
     """
     Unit tests for a HeterogeneousAtmosphere with a single component.
     """
@@ -61,7 +59,7 @@ def test_atmosphere_heterogeneous_single(
     assert atmosphere.kernel_dict(ctx).load()
 
 
-def test_atmosphere_heterogeneous_multi(modes_all_single, path_to_ussa76_approx_data):
+def test_heterogeneous_multi(modes_all_single, path_to_ussa76_approx_data):
     """
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """

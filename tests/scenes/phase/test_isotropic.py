@@ -1,16 +1,13 @@
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import KernelDict
-from eradiate.scenes.phase import HenyeyGreensteinPhaseFunction
+from eradiate.scenes.phase import IsotropicPhaseFunction
 
 
-def test_phase_hg(mode_mono):
+def test_isotropic(modes_all):
     ctx = KernelDictContext()
 
     # Default constructor
-    phase = HenyeyGreensteinPhaseFunction()
-
-    # Construct with custom asymmetry parameter
-    phase = HenyeyGreensteinPhaseFunction(g=0.25)
+    phase = IsotropicPhaseFunction()
 
     # Check if produced kernel dict can be instantiated
     kernel_dict = KernelDict.from_elements(phase, ctx=ctx)

@@ -9,7 +9,7 @@ from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure._distant_flux import DistantFluxMeasure
 
 
-def test_measure_distant_flux_construct(modes_all):
+def test_distant_flux_construct(modes_all):
     # Test default constructor
     d = DistantFluxMeasure()
     ctx = KernelDictContext()
@@ -40,7 +40,7 @@ def test_measure_distant_flux_construct(modes_all):
         ),
     ],
 )
-def test_measure_distant_flux_direction(modes_all, direction, frame):
+def test_distant_flux_direction(modes_all, direction, frame):
     d = DistantFluxMeasure(direction=direction)
     ctx = KernelDictContext()
     to_world = onedict_value(d.kernel_dict(ctx))["to_world"]
@@ -50,7 +50,7 @@ def test_measure_distant_flux_direction(modes_all, direction, frame):
     assert ek.allclose(to_world.transform_vector([0, 0, 1]), frame[2])
 
 
-def test_measure_distant_flux_viewing_angles(mode_mono):
+def test_distant_flux_viewing_angles(mode_mono):
     # Test default constructor
     d = DistantFluxMeasure(film_resolution=(2, 2))
     expected = (

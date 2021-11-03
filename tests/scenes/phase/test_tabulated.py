@@ -18,7 +18,7 @@ def dataset():
     return result
 
 
-def test_phase_tabulated_basic(modes_all, dataset):
+def test_tabulated_basic(modes_all, dataset):
     # The phase function can be constructed
     phase = TabulatedPhaseFunction(data=dataset.phase)
 
@@ -30,7 +30,7 @@ def test_phase_tabulated_basic(modes_all, dataset):
     assert kernel_dict.load()
 
 
-def test_phase_tabulated_order(mode_mono, tmpdir):
+def test_tabulated_order(mode_mono, tmpdir):
     """
     TabulatedPhaseFunction returns phase function values by increasing order of
     scattering angle cosine values, regardless how its input is ordered.

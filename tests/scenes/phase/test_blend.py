@@ -8,7 +8,7 @@ from eradiate.contexts import KernelDictContext
 from eradiate.scenes.phase._blend import BlendPhaseFunction
 
 
-def test_phase_blend_construct_basic():
+def test_blend_construct_basic():
     """
     Test instantiation with simple weight values.
     """
@@ -45,7 +45,7 @@ def test_phase_blend_construct_basic():
         )
 
 
-def test_phase_blend_bbox(mode_mono):
+def test_blend_bbox(mode_mono):
     """
     Test bounding box and grid volume transform.
     """
@@ -75,7 +75,7 @@ def test_phase_blend_bbox(mode_mono):
     )
 
 
-def test_phase_blend_kernel_dict(mode_mono):
+def test_blend_kernel_dict(mode_mono):
     ctx = KernelDictContext()
 
     # With 2 components
@@ -112,7 +112,7 @@ def test_phase_blend_kernel_dict(mode_mono):
     assert kernel_dict.load()
 
 
-def test_phase_blend_array(modes_all):
+def test_blend_array(modes_all):
     """
     Test instantiation and kernel dict generation with an array of weights.
     """

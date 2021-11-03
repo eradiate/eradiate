@@ -3,7 +3,7 @@ from eradiate.scenes.core import KernelDict
 from eradiate.scenes.surface import CheckerboardSurface
 
 
-def test_surface_checkerboard(mode_mono):
+def test_checkerboard(mode_mono):
     ctx = KernelDictContext()
 
     # Default constructor

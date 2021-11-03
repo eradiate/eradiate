@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate._util import Singleton, deduplicate, is_vector3, natsorted
+from eradiate._util import Singleton, camel_to_snake, deduplicate, is_vector3, natsorted
 
 
 def test_singleton():
@@ -44,3 +44,7 @@ def test_deduplicate():
     assert deduplicate([2, 1, 3, 1], preserve_order=True) == [2, 1, 3]
     assert deduplicate([2, 1, 3, 1], preserve_order=False) == [1, 2, 3]
     # Note: this latter test may not be reproducible, we might have to change it
+
+
+def test_pipeline_camel_to_snake():
+    assert camel_to_snake("SomeKindOfThing") == "some_kind_of_thing"

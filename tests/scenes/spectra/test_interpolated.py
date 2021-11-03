@@ -13,7 +13,7 @@ from eradiate.scenes.spectra import spectrum_factory
 from eradiate.scenes.spectra._interpolated import InterpolatedSpectrum
 
 
-def test_spectra_interpolated_construct(modes_all):
+def test_interpolated_construct(modes_all):
     # Instantiating without argument fails
     with pytest.raises(TypeError):
         InterpolatedSpectrum()
@@ -91,7 +91,7 @@ def test_interpolated_eval(modes_all):
     assert spectrum.eval(spectral_ctx) == expected * ucc.get("irradiance")
 
 
-def test_spectra_interpolated_kernel_dict(modes_all_mono):
+def test_interpolated_kernel_dict(modes_all_mono):
     from mitsuba.core.xml import load_dict
 
     ctx = KernelDictContext(spectral_ctx=SpectralContext.new(wavelength=550.0))

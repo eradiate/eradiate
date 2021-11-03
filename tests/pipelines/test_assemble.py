@@ -25,7 +25,7 @@ from eradiate.scenes.measure._hemispherical_distant import HemisphericalDistantM
     ],
     ids=["directional", "constant"],
 )
-def test_pipelines_add_illumination(modes_all_single, illumination_type, expected_dims):
+def test_add_illumination(modes_all_single, illumination_type, expected_dims):
     # Initialise test data
     if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
         spectral_cfg = {"wavelengths": [540.0, 550.0, 560.0]}
@@ -110,9 +110,7 @@ def test_remap_viewing_angles_plane():
         "hemispherical_distant",
     ),
 )
-def test_pipelines_add_viewing_angles(
-    mode_mono, measure_type, expected_zenith, expected_azimuth
-):
+def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_azimuth):
     # Initialise test data
     if measure_type == "multi_distant-nohplane":
         measure = MultiDistantMeasure.from_viewing_angles(

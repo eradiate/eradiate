@@ -11,14 +11,14 @@ from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import CentralPatchSurface, LambertianSurface
 
 
-def test_ramiatm_experiment_construct_default(mode_mono):
+def test_rami4atm_experiment_construct_default(mode_mono):
     """
     Rami4ATMExperiment initialises with default params in all modes
     """
     assert Rami4ATMExperiment()
 
 
-def test_ramiatm_experiment_construct_measures(mode_mono):
+def test_rami4atm_experiment_construct_measures(mode_mono):
     """
     A variety of measure specifications are acceptable
     """
@@ -34,7 +34,7 @@ def test_ramiatm_experiment_construct_measures(mode_mono):
 
 
 @pytest.mark.parametrize("padding", (0, 1))
-def test_ramiatm_experiment_construct_normalize_measures(mode_mono, padding):
+def test_rami4atm_experiment_construct_normalize_measures(mode_mono, padding):
 
     # When canopy is not None, measure target matches canopy unit cell
     exp = Rami4ATMExperiment(
