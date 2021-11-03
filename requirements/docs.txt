@@ -246,7 +246,7 @@ snowballstemmer==2.1.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-soupsieve==2.2.1
+soupsieve==2.3
     # via
     #   -c requirements/dev.txt
     #   beautifulsoup4
