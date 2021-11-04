@@ -374,7 +374,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         return (
             self._albedo_filename
             if self._albedo_filename is not None
-            else f"{self.id}_sigma_t.vol"
+            else f"{self.id}_albedo.vol"
         )
 
     @property
