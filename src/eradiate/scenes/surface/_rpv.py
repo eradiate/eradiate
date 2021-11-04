@@ -54,10 +54,10 @@ class RPVSurface(Surface):
                 spectrum_factory.converter("dimensionless")
             ),
             validator=attr.validators.optional(
-                (
+                [
                     attr.validators.instance_of(Spectrum),
                     validators.has_quantity("dimensionless"),
-                )
+                ]
             ),
         ),
         doc="Hot spot parameter. Must be dimensionless. "
