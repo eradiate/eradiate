@@ -10,11 +10,10 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.plot import remove_xylabels
 
-eradiate_dir = os.environ["ERADIATE_DIR"]
-output_dir = os.path.join(eradiate_dir, "test_report", "generated")
+output_dir = os.path.join(eradiate.config.dir, "test_report", "generated")
 
 
-def ensure_output_dir(path):
+def ensure_dir(path):
     if not os.path.isdir(path):
         os.makedirs(path)
 
@@ -77,7 +76,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
             "type": "distant",
             "id": "toa_pplane",
             "construct": "from_viewing_angles",
-            "zeniths": np.linspace(-90, 90, n_vza),
+            "zeniths": np.linspace(-89, 89, n_vza),
             "azimuths": 0.0,
             "spp": spp,
         },
@@ -98,23 +97,14 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
 
     # Post-process results
     results = exp.results["toa_pplane"]
+    radiance = results["radiance"].squeeze().values
     results["diff"] = (
         results["radiance"].dims,
-        (
-            results["radiance"]
-            - results["radiance"]
-            .squeeze()
-            .loc[::-1]
-            .data.reshape(results["radiance"].shape)
-        ).data,
+        (radiance - radiance[::-1]).reshape(results["radiance"].shape),
     )
     results["radiance_reversed"] = (
         results["radiance"].dims,
-        results["radiance"]
-        .squeeze()
-        .loc[::-1]
-        .data.reshape(results["radiance"].shape)
-        .data,
+        radiance[::-1].reshape(results["radiance"].shape),
     )
 
     # Plot results
@@ -130,7 +120,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     plt.tight_layout()
 
     filename = f"test_symmetry_zenith_{surface}_{str(atmosphere)}.png"
-    ensure_output_dir(os.path.join(output_dir, "plots"))
+    ensure_dir(os.path.join(output_dir, "plots"))
     fname_plot = os.path.join(output_dir, "plots", filename)
 
     fig.savefig(fname_plot, dpi=200)
