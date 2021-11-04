@@ -298,6 +298,9 @@ class Experiment(ABC):
             # Reset measure results
             measure.results = {}
 
+            # Collect sensor IDs
+            sensor_ids = measure._sensor_ids()
+
             # Spectral loop
             spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
 
@@ -309,20 +312,15 @@ class Experiment(ABC):
                 bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
                 disable=config.progress < 1,
             ) as pbar:
-                for spectral_ctx in spectral_ctxs:
+                for kernel_dict, ctx in self.kernel_dicts(measure):
+                    spectral_ctx = ctx.spectral_ctx
+
                     pbar.set_description(
                         f"Spectral loop [{spectral_ctx.spectral_index_formatted}]",
                         refresh=True,
                     )
 
-                    # Initialise context
-                    ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
-
-                    # Collect sensor IDs
-                    sensor_ids = measure._sensor_ids()
-
                     # Run simulation
-                    kernel_dict = self.kernel_dict(ctx=ctx)
                     run_results = mitsuba_run(kernel_dict, sensor_ids)
 
                     # Store results
@@ -448,6 +446,37 @@ class Experiment(ABC):
             Kernel dictionary which can be loaded as a Mitsuba object.
         """
         pass
+
+    def kernel_dicts(
+        self,
+        measure: t.Union[Measure, int],
+    ) -> t.Generator[t.Tuple[KernelDict, KernelDictContext], None, None]:
+        """
+        A generator which returns kernel dictionaries (and the associated
+        context) relevant to a given measure.
+
+        Parameters
+        ----------
+        measure : .Measure or int
+            Measure for which kernel dictionaries are to be generated.
+            Alternatively, the index in the ``self.measure`` list can be passed.
+
+        Yields
+        ------
+        kernel_dict : .KernelDict
+            Generated kernel dictionary.
+
+        ctx : .KernelDictContext
+            Context used to generate ``kernel_dict``.
+        """
+        if isinstance(measure, int):
+            measure = self.measures[measure]
+
+        spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
+
+        for spectral_ctx in spectral_ctxs:
+            ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
+            yield self.kernel_dict(ctx=ctx), ctx
 
 
 @parse_docs
