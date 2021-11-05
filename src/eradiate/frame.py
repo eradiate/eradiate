@@ -164,7 +164,7 @@ def angles_in_hplane(
         List of zenith angle values with (N,) shape in degrees.
 
     phi : ndarray
-        List of azimuth angle values with (N,) shape.
+        List of azimuth angle values with (N,) shape in degrees.
 
     raise_exc : bool, optional
         If ``True``, raise if not all directions are snapped to the specified
@@ -181,14 +181,16 @@ def angles_in_hplane(
     ValueError
         If not all directions are snapped to the specified hemisphere plane cut.
     """
+    # Normalise input parameters
+    phi = np.where(theta >= 0.0, phi % 360, (phi + 180) % 360)
+    theta = np.where(theta >= 0.0, theta, -theta)
+
+    # Assign angle pairs to positive or negative half-plane
     in_plane_positive = np.isclose(plane, phi) | np.isclose(0.0, theta)
     in_plane_negative = np.isclose((plane + 180) % 360, phi) & ~in_plane_positive
     in_plane = in_plane_positive | in_plane_negative
 
     if raise_exc and not (np.all(in_plane)):
-        raise ValueError(
-            "This step was configured to map plane cut data, but "
-            "the input data contains off-plane points"
-        )
+        raise ValueError("found off-plane directions")
 
     return in_plane_positive, in_plane_negative

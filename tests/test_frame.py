@@ -1,7 +1,9 @@
 import numpy as np
+import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.frame import (
+    angles_in_hplane,
     angles_to_direction,
     cos_angle_to_direction,
     direction_to_angles,
@@ -128,3 +130,46 @@ def test_spherical_to_cartesian():
     phi = np.deg2rad(30)
     d = spherical_to_cartesian(r, theta, phi)
     assert np.allclose(d, ureg.Quantity([3.0 / 2.0, np.sqrt(3) / 2.0, 1.0], "km"))
+
+
+@pytest.mark.parametrize(
+    "theta, phi, plane, expected_plane",
+    [
+        (0, 0, 0, "p"),
+        (45, 0, 0, "p"),
+        (-45, 0, 0, "n"),
+        (90, 0, 0, "p"),
+        (-90, 0, 0, "n"),
+        (0, 180, 0, "p"),
+        (45, 180, 0, "n"),
+        (-45, 180, 0, "p"),
+        (90, 180, 0, "n"),
+        (-90, 180, 0, "p"),
+        (0, 0, 180, "p"),
+        (45, 0, 180, "n"),
+        (-45, 0, 180, "p"),
+        (90, 0, 180, "n"),
+        (-90, 0, 180, "p"),
+        (0, 180, 180, "p"),
+        (45, 180, 180, "p"),
+        (-45, 180, 180, "n"),
+        (90, 180, 180, "p"),
+        (-90, 180, 180, "n"),
+        (0, 0, 45, "p"),
+        (45, 0, 45, None),
+        (-45, 0, 45, None),
+        (45, 0, -45, None),
+        (-45, 0, -45, None),
+    ],
+)
+def test_angles_in_hplane(theta, phi, plane, expected_plane):
+    p, n = angles_in_hplane(plane, theta, phi, raise_exc=False)
+
+    if expected_plane == "p":
+        assert p and not n
+
+    if expected_plane == "n":
+        assert n and not p
+
+    if expected_plane is None:
+        assert not p and not n

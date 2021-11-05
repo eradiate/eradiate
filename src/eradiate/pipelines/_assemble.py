@@ -262,7 +262,9 @@ def _remap_viewing_angles_plane(
     phi = phi % 360.0
 
     # Check that phi values are compatible with requested plane
-    in_plane_positive, in_plane_negative = angles_in_hplane(plane, theta, phi)
+    in_plane_positive, in_plane_negative = angles_in_hplane(
+        plane, theta, phi, raise_exc=True
+    )
 
     # Check if any point is allocated to both half-planes (uncomment to debug)
     # assert not np.any(in_plane_positive & in_plane_negative)
