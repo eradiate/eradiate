@@ -189,7 +189,7 @@ def write_to_file(test_dict, output_dir):
 Detailed system-test results
 *********************************
 
-This section contains the specification for the system and system tests in Eradiate.
+This section contains the specification for the system tests in Eradiate.
 The tests are documented by presenting their general concept, e.g. what is tested, followed
 by the test setup and execution, which includes critical points about the implementation and
 finally the expected behaviour of the software under test and how the success or failure of
