@@ -86,6 +86,21 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
     )
     assert np.allclose(angles, measure.viewing_angles)
 
+    # Construct from viewing angles within the same plane using a single azimuth value
+    zeniths = np.array([-60, -45, -30, -15, 0, 15, 30, 45, 60])
+    azimuths = 180
+    measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
+    assert measure.hplane == 180.0 * ureg.deg
+
+    angles = (
+        np.reshape(
+            np.stack((np.abs(zeniths), [0, 0, 0, 0, 180, 180, 180, 180, 180]), axis=-1),
+            (-1, 1, 2),
+        )
+        * ureg.deg
+    )
+    assert np.allclose(angles, measure.viewing_angles)
+
     # Construct an azimuthal ring
     zeniths = 45
     azimuths = np.arange(0, 360, 45)

@@ -120,8 +120,12 @@ class MultiDistantMeasure(Measure):
         angle_units = ucc.get("angle")
         angles = direction_to_angles(-self.directions).to(angle_units)
 
+        # Snap zero values to avoid close-to-360° azimuths
+        angles[:, 1] = np.where(np.isclose(angles[:, 1], 0.0), 0.0, angles[:, 1])
+
         # Normalise azimuth to [0, 2π]
         angles[:, 1] %= 360.0 * ureg.deg
+
         return angles.reshape((-1, 1, 2))
 
     @property
