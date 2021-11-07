@@ -4,21 +4,22 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
 import codecs
 import datetime
 import os
 import re
 import sys
 
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+#
+
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath("./_ext"))
-sys.path.append(os.path.abspath(".."))
+sys.path.append(os.path.abspath("../src"))
 
 
 # -- Project information -----------------------------------------------------
@@ -49,7 +50,7 @@ def find_version(*file_paths):
 project = "Eradiate"
 copyright = f"2020-{datetime.datetime.now().year}, The Eradiate Team"
 author = "The Eradiate Team"
-release = find_version("../eradiate/__init__.py")
+release = find_version("../src/eradiate/__init__.py")
 version = release.rsplit(".", 1)[0]
 
 # -- General configuration ---------------------------------------------------
