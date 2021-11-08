@@ -161,14 +161,14 @@ def has_len(size: int):
     return f
 
 
-def has_quantity(quantity: t.Union[PhysicalQuantity, str]):
+def has_quantity(quantity: t.Union[PhysicalQuantity, str, None]):
     """
     A validator that succeeds if the initializer is called with a value
     featuring a ``quantity`` field set to an expected value.
 
     Parameters
     ----------
-    quantity : :class:`.PhysicalQuantity` or str
+    quantity : :class:`.PhysicalQuantity` or str or None
         Expected quantity field.
 
     Raises
@@ -176,8 +176,8 @@ def has_quantity(quantity: t.Union[PhysicalQuantity, str]):
     ValueError
         If the value's ``quantity`` field does not match the expected value.
     """
-
-    quantity = PhysicalQuantity(quantity)
+    if quantity is not None:
+        quantity = PhysicalQuantity(quantity)
 
     def f(_, attribute, value):
         if value.quantity != quantity:
