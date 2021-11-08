@@ -1,6 +1,7 @@
 import os
 import tempfile
 
+import attr
 import numpy as np
 import pytest
 
@@ -8,7 +9,7 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere._leaf_cloud import (
     LeafCloud,
-    _inversebeta,
+    _sample_lad,
     _leaf_cloud_orientations,
     _leaf_cloud_positions_cuboid,
     _leaf_cloud_positions_cuboid_avoid_overlap,
@@ -22,6 +23,19 @@ from eradiate.scenes.core import KernelDict
 @pytest.fixture(scope="function")
 def rng():
     yield np.random.default_rng(seed=12345)
+
+
+@pytest.fixture(scope="function")
+def rng_mock():
+    @attr.s
+    class RngMock:
+        values = attr.ib(converter=np.atleast_1d)
+
+        def random(self, n=1):
+            selector = np.array([i % len(self.values) for i in range(n)])
+            return self.values[selector].squeeze()
+
+    yield RngMock
 
 
 @pytest.fixture(scope="module")
@@ -40,9 +54,22 @@ def tempfile_leaves():
 # -- Basic function tests ------------------------------------------------------
 
 
-def test_inversebeta(rng):
-    """Unit tests for :func:`_inversebeta`."""
-    assert np.allclose(_inversebeta(1, 1, rng), 0.4178246)
+def test_sample_lad(rng_mock):
+    """
+    Unit tests for :func:`_sample_lad`.
+    The RNG Mock lets us test assert the probability of sampling a certain
+    value from the Goel and Strebel LAD function.
+
+    The a member of the mock represents the theta sample and is mapped
+    to the [0, pi/2.] range.
+    The b member represents the rejection sample value.
+    """
+
+    rng = rng_mock([0.1, 0.45])
+    assert np.allclose(_sample_lad(2.531, 1.096, rng), np.pi / 20.0)
+
+    rng = rng_mock([0.9, 0.45])
+    assert np.allclose(_sample_lad(1.096, 2.531, rng), np.pi / 2.0 * 0.9)
 
 
 def test_leaf_cloud_positions_cuboid(rng):
@@ -76,11 +103,13 @@ def test_leaf_cloud_positions_cylinder(rng):
     assert np.allclose(positions, [0.04495472, 0.3135521, 0.79736546] * ureg.m)
 
 
-def test_leaf_cloud_orientations(rng):
+def test_leaf_cloud_orientations(rng_mock):
     """Unit tests for :func:`_leaf_cloud_orientations`."""
-    orientations = _leaf_cloud_orientations(1, 1, 1, rng)
+    rng = rng_mock([0.1, 0.45])
+
+    orientations = _leaf_cloud_orientations(1, 2.531, 1.096, rng)
     assert orientations.shape == (1, 3)
-    assert np.allclose(orientations, [0.36553973, 0.85464537, 0.36873025])
+    assert np.allclose(orientations, [0.1265581, 0.09194987, 0.98768834])
 
 
 def test_leaf_cloud_radii():

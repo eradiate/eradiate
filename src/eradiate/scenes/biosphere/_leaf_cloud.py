@@ -8,6 +8,8 @@ import attr
 import numpy as np
 import pint
 import pinttr
+import scipy as sp
+import scipy.special
 
 from ._core import CanopyElement, biosphere_factory
 from ..core import SceneElement
@@ -20,18 +22,28 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
-def _inversebeta(mu, nu, rng):
+def _sample_lad(mu, nu, rng):
     """
-    Approximates the inverse beta distribution as given in
-    :cite:`Ross1991MonteCarloMethods` (appendix 1).
+    Generate an angle sample from the Leaf angle distribution function according to
+    :cite:`GoelStrebel1984`, using the rejection method.
     """
+
     while True:
         rands = rng.random(2)
-        s1 = np.power(rands[0], 1.0 / mu)
-        s2 = np.power(rands[1], 1.0 / nu)
-        s = s1 + s2
-        if s <= 1:
-            return s1 / s
+        theta_candidate = rands[0] * np.pi / 2.0
+        gs_lad = (
+            2.0
+            / np.pi
+            * sp.special.gamma(mu + nu)
+            / (sp.special.gamma(mu) * sp.special.gamma(mu))
+            * pow((1 - (2 * theta_candidate) / np.pi), mu - 1)
+            * pow((2 * theta_candidate) / np.pi, nu - 1)
+        )
+
+        # scaling factor for the rejection method set to 2.0 to encompass the
+        # entire distribution
+        if rands[1] * 2.0 <= gs_lad:
+            return theta_candidate
 
 
 @ureg.wraps(ureg.m, (None, ureg.m, ureg.m, None))
@@ -169,8 +181,8 @@ def _leaf_cloud_orientations(n_leaves, mu, nu, rng):
     """Compute leaf orientations."""
     orientations = np.empty((n_leaves, 3))
     for i in range(np.shape(orientations)[0]):
-        theta = np.rad2deg(_inversebeta(mu, nu, rng))
-        phi = rng.random() * 360.0
+        theta = _sample_lad(mu, nu, rng)
+        phi = rng.random() * 2.0 * np.pi
 
         orientations[i, :] = [
             np.sin(theta) * np.cos(phi),
