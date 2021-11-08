@@ -10,12 +10,20 @@ import typing as t
 
 import matplotlib.pyplot as _plt
 import numpy as np
+import seaborn as sns
 import xarray.plot
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from xarray.plot import FacetGrid
 
 # -- Utility functions ---------------------------------------------------------
+
+
+def set_style():
+    """
+    Apply Eradiate matplotlib style (uses Seaborn).
+    """
+    sns.set_theme(style="ticks", rc={"image.cmap": "viridis"})
 
 
 def detect_axes(from_=None):

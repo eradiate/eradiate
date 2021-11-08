@@ -15,3 +15,4 @@ Utility functions
    make_ticks
    remove_xylabels
    remove_xyticks
+   set_style
