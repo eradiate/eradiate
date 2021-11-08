@@ -1,3 +1,4 @@
+# Detect platform
 ifeq ($(OS), Windows_NT)
 	PLATFORM := win-64
 else
@@ -56,13 +57,13 @@ pip-update: pip-lock pip-init
 # Lock conda dependencies
 conda-lock:
 	python requirements/make_conda_env.py -o requirements/environment.yml --quiet
-	conda-lock --file requirements/environment.yml \
+	conda-lock --mamba --file requirements/environment.yml \
 	    --filename-template "requirements/environment-{platform}.lock" \
 	    -p $(PLATFORM)
 
 conda-lock-all:
 	python requirements/make_conda_env.py -o requirements/environment.yml --quiet
-	conda-lock --file requirements/environment.yml \
+	conda-lock --mamba --file requirements/environment.yml \
 	    --filename-template "requirements/environment-{platform}.lock" \
 	    -p osx-64 -p linux-64
 
