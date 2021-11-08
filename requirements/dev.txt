@@ -83,7 +83,7 @@ coverage==6.1.1
     # via -r requirements/dev.in
 cycler==0.11.0
     # via matplotlib
-dask==2021.10.0
+dask==2021.11.0
     # via -r requirements/main.in
 debugpy==1.5.1
     # via ipykernel
@@ -116,7 +116,7 @@ execnet==1.9.0
     # via pytest-xdist
 filelock==3.3.2
     # via ensureconda
-fsspec==2021.10.1
+fsspec==2021.11.0
     # via dask
 iapws==1.5.2
     # via -r requirements/main.in
@@ -138,7 +138,8 @@ importlib-metadata==4.8.1
     #   pytest
     #   rst2pdf
     #   twine
-    #   xarray
+importlib-resources==5.4.0
+    # via jsonschema
 iniconfig==1.1.1
     # via pytest
 ipykernel==6.5.0
@@ -175,7 +176,7 @@ jinja2==3.0.2
     #   sphinx
 json5==0.9.6
     # via jupyterlab-server
-jsonschema==4.1.2
+jsonschema==4.2.1
     # via
     #   jupyterlab-server
     #   nbformat
@@ -198,7 +199,7 @@ jupyter-server==1.11.2
     #   jupyterlab
     #   jupyterlab-server
     #   nbclassic
-jupyterlab==3.2.1
+jupyterlab==3.2.2
     # via -r requirements/dev.in
 jupyterlab-pygments==0.1.2
     # via nbconvert
@@ -232,7 +233,7 @@ mypy-extensions==0.4.3
     # via black
 nbclassic==0.3.4
     # via jupyterlab
-nbclient==0.5.4
+nbclient==0.5.5
     # via nbconvert
 nbconvert==6.2.0
     # via
@@ -255,7 +256,7 @@ notebook==6.4.5
     # via
     #   nbclassic
     #   widgetsnbextension
-numpy==1.21.3
+numpy==1.21.4
     # via
     #   -r requirements/main.in
     #   cftime
@@ -315,13 +316,13 @@ prometheus-client==0.12.0
     # via
     #   jupyter-server
     #   notebook
-prompt-toolkit==3.0.21
+prompt-toolkit==3.0.22
     # via ipython
 ptyprocess==0.7.0
     # via
     #   pexpect
     #   terminado
-py==1.10.0
+py==1.11.0
     # via
     #   pytest
     #   pytest-forked
@@ -331,7 +332,7 @@ pybtex==0.24.0
     #   sphinxcontrib-bibtex
 pybtex-docutils==1.0.1
     # via sphinxcontrib-bibtex
-pycparser==2.20
+pycparser==2.21
     # via cffi
 pydantic==1.8.2
     # via conda-lock
@@ -407,7 +408,7 @@ requests-toolbelt==0.9.1
     # via twine
 rfc3986==1.5.0
     # via twine
-rich==10.12.0
+rich==10.13.0
     # via -r requirements/main.in
 rst2pdf==0.98
     # via -r requirements/tests.in
@@ -415,13 +416,13 @@ ruamel.yaml==0.17.17
     # via -r requirements/main.in
 ruamel.yaml.clib==0.2.6
     # via ruamel.yaml
-scipy==1.7.1
+scipy==1.7.2
     # via
     #   -r requirements/main.in
     #   iapws
     #   seaborn
 seaborn==0.11.2
-    # via -r requirements/tests.in
+    # via -r requirements/main.in
 send2trash==1.8.0
     # via
     #   jupyter-server
@@ -490,7 +491,7 @@ tomli==1.2.2
     # via
     #   black
     #   pep517
-toolz==0.11.1
+toolz==0.11.2
     # via
     #   dask
     #   partd
@@ -531,7 +532,6 @@ typing-extensions==3.10.0.2
     #   pydantic
     #   rich
     #   tinydb
-    #   xarray
 urllib3==1.26.7
     # via requests
 wcwidth==0.2.5
@@ -544,11 +544,12 @@ wheel==0.37.0
     # via pip-tools
 widgetsnbextension==3.5.2
     # via ipywidgets
-xarray==0.20.0
+xarray==0.19.0
     # via -r requirements/main.in
 zipp==3.6.0
     # via
     #   importlib-metadata
+    #   importlib-resources
     #   pep517
 
 # The following packages are considered to be unsafe in a requirements file:
@@ -556,10 +557,11 @@ pip==21.3.1
     # via
     #   -r requirements/dev.in
     #   pip-tools
-setuptools==58.4.0
+setuptools==58.5.3
     # via
     #   -r requirements/dev.in
     #   cerberus
     #   ipython
     #   pip-tools
     #   sphinx
+    #   xarray

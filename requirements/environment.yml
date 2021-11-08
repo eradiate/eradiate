@@ -21,15 +21,15 @@ dependencies:
   - rich
   - ruamel.yaml
   - scipy
+  - seaborn
   - tqdm
-  - xarray
+  - xarray>=0.19,!=0.20.*
   # tests
   - pytest
   - pytest-json-report
   - pytest-metadata
   - pytest-xdist
   - rst2pdf
-  - seaborn
   - sphinx
   - tabulate
   # dev
