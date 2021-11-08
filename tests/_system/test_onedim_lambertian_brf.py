@@ -31,7 +31,7 @@ def test_onedim_lambertian_brf(mode_mono_double):
       reflectance :math:`\rho \in [0.0, 0.3, 0.5, 0.7, 1.0]`.
     * Illumination: Directional illumination with a zenith angle
       :math:`\theta \in [0.0, 30.0, 60.0]°`.
-    * Sensor: Distant reflectance measure covering a plane (1001 angular points,
+    * Sensor: Multi-distant measure covering a plane (1001 angular points,
       1 sample per pixel) and targeting (0, 0, 0).
       We take an odd number of angular points to ensure that the special value
       :math:`\theta = 0°` is included.
