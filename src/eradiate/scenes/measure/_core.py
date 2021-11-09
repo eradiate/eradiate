@@ -14,7 +14,8 @@ import pinttr
 import eradiate
 
 from ..core import SceneElement
-from ... import ckd, converters, validators
+from ..spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum, spectrum_factory
+from ... import ckd, converters, data, validators
 from ..._factory import Factory
 from ..._mode import ModeFlags
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
@@ -33,6 +34,22 @@ measure_factory = Factory()
 # ------------------------------------------------------------------------------
 
 
+def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
+    if isinstance(value, str):
+        ds = data.open("spectral_response_function", value)
+        ds.load()
+        ds.close()
+
+        w = ureg.Quantity(ds.w.values, ds.w.attrs["units"])
+        srf = ds.data_vars["srf"].values
+        return InterpolatedSpectrum(quantity=None, wavelengths=w, values=srf)
+
+    converter = spectrum_factory.converter(quantity=None)
+    return converter(value)
+
+
+@parse_docs
+@attr.s
 class MeasureSpectralConfig(ABC):
     """
     Data structure specifying the spectral configuration of a :class:`.Measure`.
@@ -41,6 +58,28 @@ class MeasureSpectralConfig(ABC):
     to create :class:`.MeasureSpectralConfig` child class objects through the
     :meth:`.MeasureSpectralConfig.new` class method constructor.
     """
+
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
+
+    srf: Spectrum = documented(
+        attr.ib(
+            factory=lambda: UniformSpectrum(value=1.0),
+            converter=_measure_spectral_config_srf_converter,
+            validator=validators.has_quantity(None),
+        ),
+        doc="Spectral response function. If a string is passed, the "
+        "corresponding shipped SRF data will be loaded from the Eradiate "
+        "database. Other types will be converted by :data:`.spectrum_factory`.",
+        type=".Spectrum",
+        init_type="str or .Spectrum or dict or float",
+        default=":class:`UniformSpectrum(value=1.0) <.UniformSpectrum>`",
+    )
+
+    # --------------------------------------------------------------------------
+    #                         Spectral context generation
+    # --------------------------------------------------------------------------
 
     @abstractmethod
     def spectral_ctxs(self) -> t.List[SpectralContext]:
@@ -58,6 +97,10 @@ class MeasureSpectralConfig(ABC):
             depends on the active mode.
         """
         pass
+
+    # --------------------------------------------------------------------------
+    #                         Class method constructors
+    # --------------------------------------------------------------------------
 
     @staticmethod
     def new(**kwargs) -> MeasureSpectralConfig:
@@ -157,6 +200,10 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
     in monochromatic modes.
     """
 
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
+
     _wavelengths: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity([550.0], ureg.nm),
@@ -180,17 +227,31 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
     def wavelengths(self, value):
         self._wavelengths = value
 
+    def __attrs_post_init__(self):
+        # Special post-init check to ensure that wavelengths and spectral
+        # response are compatible
+        srf = self.srf.eval_mono(self.wavelengths)
+
+        if np.allclose(srf, 0.0):
+            raise ValueError(
+                "specified spectral response function evaluates to 0 at every "
+                "selected wavelength"
+            )
+
+    # --------------------------------------------------------------------------
+    #                         Spectral context generation
+    # --------------------------------------------------------------------------
+
     def spectral_ctxs(self) -> t.List[MonoSpectralContext]:
         return [
             MonoSpectralContext(wavelength=wavelength)
             for wavelength in self._wavelengths
+            if not np.isclose(self.srf.eval_mono(wavelength), 0.0)
         ]
 
 
 def _ckd_measure_spectral_config_bins_converter(value):
     # Converter for CKDMeasureSpectralConfig.bins
-    #
-
     if isinstance(value, str):
         value = [value]
 
@@ -242,6 +303,34 @@ def _ckd_measure_spectral_config_bins_converter(value):
     return bin_set_specs
 
 
+def _active(bin: Bin, srf: Spectrum) -> bool:
+    """
+    Test whether a spectral bin is selected by a spectral response function.
+
+    Parameters
+    ----------
+    bin : .Bin
+        CKD bin to test.
+
+    srf : .Spectrum
+        Spectral response function.
+
+    Returns
+    -------
+    bool
+        ``True`` if the bin partially or totally overlaps the support of the SRF
+        (*i.e.* where it is not zero), ``False`` otherwise.
+
+    Notes
+    -----
+    Here, "`support <https://en.wikipedia.org/wiki/Support_(mathematics)>`_"
+    means the domain where the function takes nonzero values.
+    It can be compact (*i.e.* in a single piece) or not (*i.e.* have "holes" or
+    be infinite).
+    """
+    return bool(srf.integral(bin.wmin, bin.wmax) > 0.0)
+
+
 @parse_docs
 @attr.s(frozen=True)
 class CKDMeasureSpectralConfig(MeasureSpectralConfig):
@@ -250,9 +339,9 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
     :class:`.Measure` in CKD modes.
     """
 
-    # TODO: replace manual bin selection with automation based on sensor spectral
-    #  response (with a system to easily design arbitrary SSRs for cases where an
-    #  instrument is not simulated)
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
 
     bin_set: ckd.BinSet = documented(
         attr.ib(
@@ -304,12 +393,18 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
         tuple of :class:`.Bin`
             List of selected bins.
         """
-        if self._bins is not AUTO:
-            bin_selectors = self._bins
+        if self._bins is AUTO:
+            # Use the SRF
+            bin_selectors = [lambda x: _active(x, self.srf)]
         else:
-            bin_selectors = [lambda x: True]
+            # Select bins manually using the selector syntax
+            bin_selectors = self._bins
 
         return self.bin_set.select_bins(*bin_selectors)
+
+    # --------------------------------------------------------------------------
+    #                         Spectral context generation
+    # --------------------------------------------------------------------------
 
     def spectral_ctxs(self) -> t.List[CKDSpectralContext]:
         ctxs = []

@@ -1,13 +1,47 @@
 import attr
+import pytest
 
+from eradiate import unit_registry as ureg
+from eradiate.ckd import Bin
 from eradiate.contexts import CKDSpectralContext, MonoSpectralContext
+from eradiate.quad import Quad
 from eradiate.scenes.measure._core import (
     CKDMeasureSpectralConfig,
     Measure,
     MeasureFlags,
     MeasureSpectralConfig,
     MonoMeasureSpectralConfig,
+    _active,
 )
+from eradiate.scenes.spectra import InterpolatedSpectrum, UniformSpectrum
+
+
+def test_active(mode_mono):
+    # Bins are unconditionally selected when using a uniform SRF
+    assert _active(
+        Bin(id=id, wmin=545.0, wmax=555.0, quad=Quad.new("gauss_legendre", 16)),
+        UniformSpectrum(value=1.0),
+    )
+
+    # Bins are selected when included in the support of an interpolated SRF
+    assert _active(
+        Bin(id=id, wmin=545.0, wmax=555.0, quad=Quad.new("gauss_legendre", 16)),
+        InterpolatedSpectrum(wavelengths=[500.0, 600.0] * ureg.nm, values=[1.0, 1.0]),
+    )
+
+    # Bins are selected when partially overlapping the support of an
+    # interpolated SRF
+    assert _active(
+        Bin(id=id, wmin=480.0, wmax=510.0, quad=Quad.new("gauss_legendre", 16)),
+        InterpolatedSpectrum(wavelengths=[500.0, 600.0] * ureg.nm, values=[1.0, 1.0]),
+    )
+
+    # Bins are not selected when not overlapping the support of an interpolated
+    # SRF
+    assert not _active(
+        Bin(id=id, wmin=610.0, wmax=615.0, quad=Quad.new("gauss_legendre", 16)),
+        InterpolatedSpectrum(wavelengths=[500.0, 600.0] * ureg.nm, values=[1.0, 1.0]),
+    )
 
 
 def test_mono_spectral_config(modes_all_mono):
@@ -23,6 +57,37 @@ def test_mono_spectral_config(modes_all_mono):
     ctxs = cfg.spectral_ctxs()
     assert len(ctxs) == 2
     assert all(isinstance(ctx, MonoSpectralContext) for ctx in ctxs)
+
+    # Selecting wavelengths outside SRF range raises
+    with pytest.raises(ValueError):
+        MeasureSpectralConfig.new(
+            wavelengths=[500.0, 600.0],
+            srf={
+                "type": "interpolated",
+                "wavelengths": [300.0, 400.0],
+                "values": [1.0, 1.0],
+            },
+        )
+
+    # Works with at least one wavelength in SRF range
+    cfg = MeasureSpectralConfig.new(
+        wavelengths=[300.0, 550.0],
+        srf={
+            "type": "interpolated",
+            "wavelengths": [500.0, 600.0],
+            "values": [1.0, 1.0],
+        },
+    )
+
+    # Off-SRF values are filtered out
+    assert len(cfg.spectral_ctxs()) == 1
+
+    # A SRF can be loaded from the hard drive using its ID
+    cfg = MeasureSpectralConfig.new(
+        wavelengths=[640.0, 650.0, 660.0],
+        srf="sentinel_2a-msi-4",
+    )
+    assert len(cfg.spectral_ctxs()) == 2  # The 640 nm point is filtered out
 
 
 def test_ckd_spectral_config(modes_all_ckd):
@@ -52,6 +117,10 @@ def test_ckd_spectral_config(modes_all_ckd):
     ctxs = cfg.spectral_ctxs()
     assert len(ctxs) == 96
     assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
+
+    # Using the S2A-MSI-B4 SRF results in 4 * 16 = 64 contexts being generated
+    cfg = MeasureSpectralConfig.new(bin_set="10nm", srf="sentinel_2a-msi-4")
+    assert len(cfg.spectral_ctxs()) == 64
 
 
 def test_measure_flags(mode_mono):
