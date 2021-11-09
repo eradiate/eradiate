@@ -54,3 +54,11 @@ def test_uniform(modes_all):
         ctx = KernelDictContext()
         d = s.kernel_dict(ctx)
         assert np.allclose(d["spectrum"]["value"], 1e-3)
+
+
+def test_integral(mode_mono):
+    s = UniformSpectrum(value=0.5)
+    assert s.integral(300.0, 400.0) == 50.0 * ureg.nm
+
+    s = UniformSpectrum(quantity="collision_coefficient", value=0.5)
+    assert s.integral(300.0, 400.0) == 50.0 * ureg("nm / m")

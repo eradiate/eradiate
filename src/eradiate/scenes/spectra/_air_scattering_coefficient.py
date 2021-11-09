@@ -110,3 +110,6 @@ class AirScatteringCoefficientSpectrum(Spectrum):
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+    def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
+        raise NotImplementedError

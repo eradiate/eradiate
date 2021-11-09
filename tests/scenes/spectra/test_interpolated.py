@@ -63,6 +63,58 @@ def test_interpolated_construct(modes_all):
     )
 
 
+def test_interpolated_integral(mode_mono):
+    s = InterpolatedSpectrum(
+        wavelengths=[500.0, 525.0, 550.0, 575.0, 600.0],
+        values=[0.0, 0.25, 0.5, 0.75, 1.0],
+    )
+
+    # Easy case: integrate over full interval
+    assert np.isclose(
+        50.0 * ureg.nm, s.integral(500.0 * ureg.nm, 600.0 * ureg.nm), rtol=1e-10
+    )
+
+    # Min or max falls in-between two coordinate values
+    assert np.isclose(
+        42.0 * ureg.nm, s.integral(540.0 * ureg.nm, 600.0 * ureg.nm), rtol=1e-10
+    )
+    assert np.isclose(
+        28.0 * ureg.nm, s.integral(550.0 * ureg.nm, 590.0 * ureg.nm), rtol=1e-10
+    )
+    assert np.isclose(
+        32.5 * ureg.nm, s.integral(540.0 * ureg.nm, 590.0 * ureg.nm), rtol=1e-10
+    )
+    assert np.isclose(
+        3.5 * ureg.nm, s.integral(530.0 * ureg.nm, 540.0 * ureg.nm), rtol=1e-10
+    )
+
+    # Integrating on an interval not intersecting the support yields 0
+    assert np.isclose(
+        0.0 * ureg.nm, s.integral(400.0 * ureg.nm, 450.0 * ureg.nm), atol=1e-10
+    )
+    assert np.isclose(
+        0.0 * ureg.nm, s.integral(400.0 * ureg.nm, 500.0 * ureg.nm), atol=1e-10
+    )
+    assert np.isclose(
+        0.0 * ureg.nm, s.integral(650.0 * ureg.nm, 700.0 * ureg.nm), atol=1e-10
+    )
+    assert np.isclose(
+        0.0 * ureg.nm, s.integral(600.0 * ureg.nm, 700.0 * ureg.nm), atol=1e-10
+    )
+
+    # Integrating on an interval covering the whole support yields correct
+    # integral values
+    assert np.isclose(
+        50.0 * ureg.nm, s.integral(450.0 * ureg.nm, 650.0 * ureg.nm), rtol=1e-10
+    )
+    assert np.isclose(
+        50.0 * ureg.nm, s.integral(500.0 * ureg.nm, 650.0 * ureg.nm), rtol=1e-10
+    )
+    assert np.isclose(
+        50.0 * ureg.nm, s.integral(450.0 * ureg.nm, 600.0 * ureg.nm), rtol=1e-10
+    )
+
+
 def test_interpolated_eval(modes_all):
     if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
         spectral_ctx = SpectralContext.new(wavelength=550.0)

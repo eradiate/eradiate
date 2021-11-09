@@ -147,6 +147,42 @@ class InterpolatedSpectrum(Spectrum):
 
         return result * quantity_units
 
+    def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
+        # Collect spectral coordinates
+        wavelength_units = self.wavelengths.units
+        s_w = self.wavelengths.m
+        s_wmin = s_w.min()
+        s_wmax = s_w.max()
+
+        # Select all spectral mesh vertices between wmin and wmax, as well as
+        # the bounds themselves
+        wmin = wmin.m_as(wavelength_units)
+        wmax = wmax.m_as(wavelength_units)
+        w = [wmin, *s_w[np.where(np.logical_and(wmin < s_w, s_w < wmax))[0]], wmax]
+
+        # Make explicit the fact that the function underlying this spectrum has
+        # a finite support by padding the s_wmin and s_wmax values with a very
+        # small margin
+        eps = 1e-12  # nm
+
+        try:
+            w.insert(w.index(s_wmin), s_wmin - eps)
+        except ValueError:
+            pass
+
+        try:
+            w.insert(w.index(s_wmax) + 1, s_wmax + eps)
+        except ValueError:
+            pass
+
+        # Evaluate spectrum at wavelengths
+        w.sort()
+        w = w * wavelength_units
+        interp = self.eval_mono(w)
+
+        # Compute integral
+        return np.trapz(interp, w)
+
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
             return KernelDict(
