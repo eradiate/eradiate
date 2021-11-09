@@ -12,6 +12,7 @@ Exceptions
 
    KernelVariantError
    ModeError
+   UnsupportedModeError
 
 Warnings
 --------
@@ -21,3 +22,4 @@ Warnings
    :toctree: generated/autosummary/
 
    ConfigWarning
+   OverriddenValueWarning

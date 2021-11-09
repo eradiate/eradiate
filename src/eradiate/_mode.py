@@ -198,7 +198,7 @@ def mode() -> t.Optional[Mode]:
 
     Returns
     -------
-    :class:`.Mode` or None
+    .Mode or None
         Current operational mode.
     """
     return _current_mode
@@ -262,12 +262,12 @@ def supported_mode(flags):
 
     Parameters
     ----------
-    flags : :class:`.ModeFlags`
+    flags : .ModeFlags
         Flags the current mode is expected to have.
 
     Raises
     ------
-    :class:`.UnsupportedModeError`
+    .UnsupportedModeError
         Current mode does not have the requested flags.
     """
     if mode() is None or not mode().has_flags(flags):
@@ -280,12 +280,12 @@ def unsupported_mode(flags):
 
     Parameters
     ----------
-    flags : :class:`.ModeFlags`
+    flags : .ModeFlags
         Flags the current mode is expected not to have.
 
     Raises
     ------
-    :class:`.UnsupportedModeError`
+    .UnsupportedModeError
         Current mode has the requested flags.
     """
     if mode() is None or mode().has_flags(flags):

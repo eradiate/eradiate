@@ -96,7 +96,7 @@ def open(
     ValueError
         The requested resource is not handled.
 
-    OSError:
+    OSError
         I/O error while processing a handled resource.
     """
     if path is None:
