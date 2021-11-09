@@ -165,3 +165,23 @@ class Spectrum(SceneElement, ABC):
             Evaluated spectrum as an array with shape (len(bindexes),).
         """
         pass
+
+    @abstractmethod
+    def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
+        """
+        Compute the integral of the spectrum on a given interval.
+
+        Parameters
+        ----------
+        wmin : quantity
+            Integration interval's lower bound.
+
+        wmax : quantity
+            Integration interval's upper bound.
+
+        Returns
+        -------
+        quantity
+            Computed integral value.
+        """
+        pass

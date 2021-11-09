@@ -164,3 +164,6 @@ class SolarIrradianceSpectrum(Spectrum):
                 }
             }
         )
+
+    def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
+        raise NotImplementedError

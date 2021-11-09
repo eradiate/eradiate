@@ -71,6 +71,11 @@ class UniformSpectrum(Spectrum):
         else:
             return np.full((len(bindexes),), self.value) * ureg.dimensionless
 
+    def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
+        wmin = pinttr.util.ensure_units(wmin, ucc.get("wavelength"))
+        wmax = pinttr.util.ensure_units(wmax, ucc.get("wavelength"))
+        return self.value * (wmax - wmin)
+
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         kernel_units = uck.get(self.quantity)
         spectral_ctx = ctx.spectral_ctx
