@@ -18,7 +18,7 @@ def test_interpolated_construct(modes_all):
     with pytest.raises(TypeError):
         InterpolatedSpectrum()
     # Instantiating with missing argument fails
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         InterpolatedSpectrum(wavelengths=[500.0, 600.0])
     with pytest.raises(TypeError):
         InterpolatedSpectrum(values=[0.0, 1.0])
@@ -28,6 +28,7 @@ def test_interpolated_construct(modes_all):
 
     # Instantiating with no quantity applies no units
     spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
+    assert spectrum.quantity is None
     assert isinstance(spectrum.values, np.ndarray)
     # Instantiating with a quantity applies units
     spectrum = InterpolatedSpectrum(

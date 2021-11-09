@@ -38,20 +38,24 @@ class InterpolatedSpectrum(Spectrum):
 
     wavelengths: pint.Quantity = documented(
         pinttr.ib(
-            default=None,
             units=ucc.deferred("wavelength"),
+            kw_only=True,
         ),
         doc="Wavelengths defining the interpolation grid.",
-        type=":class:`pint.Quantity`",
+        type="quantity",
     )
 
     values: pint.Quantity = documented(
-        attr.ib(default=None, converter=converters.on_quantity(np.atleast_1d)),
+        attr.ib(
+            converter=converters.on_quantity(np.atleast_1d),
+            kw_only=True,
+        ),
         doc="Uniform spectrum value. If a float is passed and ``quantity`` is not "
         "``None``, it is automatically converted to appropriate configuration "
         "default units. If a :class:`~pint.Quantity` is passed and ``quantity`` "
         "is not ``None``, units will be checked for consistency.",
-        type="float or :class:`~pint.Quantity`",
+        type="quantity",
+        init_type="array-like",
     )
 
     @values.validator
