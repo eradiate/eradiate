@@ -312,7 +312,7 @@ class AddSpectralResponseFunction(PipelineStep):
         result = x.copy(deep=False)
 
         # Evaluate SRF
-        w = ureg.Quantity(result.w.values, result.w.attrs["units"])
+        w = to_quantity(result.w)
         srf = self.measure.spectral_cfg.srf.eval_mono(w)
 
         # Add SRF variable to dataset
