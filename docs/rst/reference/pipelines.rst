@@ -45,3 +45,4 @@ Compute steps
 
    ComputeReflectance
    ComputeAlbedo
+   ApplySpectralResponseFunction
