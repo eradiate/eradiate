@@ -29,7 +29,7 @@ def _spectral_dims():
         )
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
         return (
-            ("bin", {"standard_name": "ckd_name", "long_name": "CKD bin"}),
+            ("bin", {"standard_name": "ckd_bin", "long_name": "CKD bin"}),
             ("index", {"standard_name": "ckd_index", "long_name": "CKD index"}),
         )
     else:
