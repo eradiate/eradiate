@@ -554,6 +554,10 @@ class EarthObservationExperiment(Experiment, ABC):
                     "add_viewing_angles", pipelines.AddViewingAngles(measure=measure)
                 )
 
+            pipeline.add(
+                "add_srf", pipelines.AddSpectralResponseFunction(measure=measure)
+            )
+
             # Compute
             if isinstance(measure, (MultiDistantMeasure, HemisphericalDistantMeasure)):
                 pipeline.add(

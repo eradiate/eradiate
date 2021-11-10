@@ -36,6 +36,7 @@ Assemble steps
 
    AddViewingAngles
    AddIllumination
+   AddSpectralResponseFunction
 
 Compute steps
 -------------
