@@ -8,6 +8,7 @@ from eradiate.experiments import OneDimExperiment
 from eradiate.pipelines._aggregate import AggregateCKDQuad
 from eradiate.pipelines._assemble import (
     AddIllumination,
+    AddSpectralResponseFunction,
     AddViewingAngles,
     _remap_viewing_angles_plane,
 )
@@ -154,3 +155,37 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
     # Viewing angles are set to appropriate values
     assert np.allclose(expected_zenith, result.coords["vza"].values.squeeze())
     assert np.allclose(expected_azimuth, result.coords["vaa"].values.squeeze())
+
+
+def test_add_srf(modes_all_single):
+    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        spectral_cfg = {"wavelengths": [550.0]}
+    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        spectral_cfg = {"bins": ["550"]}
+    else:
+        pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
+
+    exp = OneDimExperiment(
+        atmosphere=None,
+        measures=MultiDistantMeasure.from_viewing_angles(
+            zeniths=[-60, -45, 0, 45, 60],
+            azimuths=0.0,
+            spp=1,
+            spectral_cfg=spectral_cfg,
+        ),
+    )
+    exp.process()
+    measure = exp.measures[0]
+
+    # Apply basic post-processing
+    values = Pipeline(
+        [Gather(var="radiance"), AggregateCKDQuad(var="radiance", measure=measure)]
+    ).transform(measure.results)
+
+    step = AddSpectralResponseFunction(measure=measure)
+    result = step.transform(values)
+
+    # The spectral response function is added to the dataset as a data variable
+    assert "srf" in result.data_vars
+    # Its only dimension is wavelength
+    assert set(result.srf.dims) == {"w"}

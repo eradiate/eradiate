@@ -287,3 +287,40 @@ def _remap_viewing_angles_plane(
 
 
 _is_sorted = lambda a: np.all(a[:-1] <= a[1:])
+
+
+@parse_docs
+@attr.s
+class AddSpectralResponseFunction(PipelineStep):
+    """
+    Add spectral response function data.
+
+    This post-processing pipeline step adds spectral response function data to
+    the processed dataset.
+    """
+
+    measure: Measure = documented(
+        attr.ib(
+            validator=attr.validators.instance_of(Measure),
+            repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)",
+        ),
+        doc="A :class:`.Measure` instance from which the processed data originates.",
+        type=":class:`.Measure`",
+    )
+
+    def transform(self, x: t.Any) -> t.Any:
+        result = x.copy(deep=False)
+
+        # Evaluate SRF
+        w = ureg.Quantity(result.w.values, result.w.attrs["units"])
+        srf = self.measure.spectral_cfg.srf.eval_mono(w)
+
+        # Add SRF variable to dataset
+        result["srf"] = ("w", srf)
+        result.srf.attrs = {
+            "standard_name": "spectral_response_function",
+            "long_name": "srf",
+            "units": "",
+        }
+
+        return result
