@@ -50,8 +50,12 @@ def test_aggregate_ckd(results_ckd):
     assert "w" in result.dims
     assert "bin" not in result.dims
     assert "bin" in result.coords
+    assert "bin_wmin" in result.coords
+    assert "bin_wmax" in result.coords
     assert "spp" in result.data_vars
     assert result.bin.dims == ("w",)
+    assert result.bin_wmin.dims == ("w",)
+    assert result.bin_wmax.dims == ("w",)
 
     # In the present case, the quadrature evaluates to 2/π
     assert np.allclose(2.0 / np.pi, result["radiance"].values)
