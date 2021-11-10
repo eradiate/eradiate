@@ -54,7 +54,9 @@ class AggregateCKDQuad(PipelineStep):
     * the ``bin`` dimension is renamed ``w``;
     * the ``bin`` coordinate persists and is indexed by ``w``;
     * a ``w`` coordinate is created and contains the central wavelength of each
-      bin.
+      bin;
+    * a ``bin_wmin`` (resp. ``bin_wmax``) coordinate is created and contains the
+      lower (resp. upper) spectral bound of each bin.
 
 
     Notes
@@ -97,12 +99,16 @@ class AggregateCKDQuad(PipelineStep):
 
         # Collect wavelengths associated with each bin
         wavelength_units = ucc.get("wavelength")
-        wavelengths = [
-            bin.wcenter.m_as(wavelength_units)
-            for bin in self.measure.spectral_cfg.bin_set.select_bins(
-                ("ids", {"ids": bins})
-            )
-        ]
+        wavelengths = []
+        bin_wmins = []
+        bin_wmaxs = []
+
+        for bin in self.measure.spectral_cfg.bin_set.select_bins(
+            ("ids", {"ids": bins})
+        ):
+            wavelengths.append(bin.wcenter.m_as(wavelength_units))
+            bin_wmins.append(bin.wmin.m_as(wavelength_units))
+            bin_wmaxs.append(bin.wmax.m_as(wavelength_units))
 
         result = x
         var = self.var
@@ -146,7 +152,7 @@ class AggregateCKDQuad(PipelineStep):
         with xr.set_options(keep_attrs=True):
             result["spp"] = x.spp.mean(dim="index")
 
-        # Add spectral coordinate
+        # Add spectral coordinates
         result = result.assign_coords(
             {
                 "w": (
@@ -157,7 +163,25 @@ class AggregateCKDQuad(PipelineStep):
                         "long_description": "wavelength",
                         "units": symbol(wavelength_units),
                     },
-                )
+                ),
+                "bin_wmin": (
+                    "bin",
+                    bin_wmins,
+                    {
+                        "standard_name": "bin_wmin",
+                        "long_description": "spectral bin lower bound",
+                        "units": symbol(wavelength_units),
+                    },
+                ),
+                "bin_wmax": (
+                    "bin",
+                    bin_wmaxs,
+                    {
+                        "standard_name": "bin_wmax",
+                        "long_description": "spectral bin upper bound",
+                        "units": symbol(wavelength_units),
+                    },
+                ),
             }
         )
 

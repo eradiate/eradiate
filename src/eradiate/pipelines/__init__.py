@@ -12,11 +12,11 @@ __all__ = [
     "Gather",
     # Aggregate steps
     "AggregateCKDQuad",
-    "AggregateSampleCount",
     "AggregateRadiosity",
+    "AggregateSampleCount",
     # Assemble steps
-    "AddViewingAngles",
     "AddIllumination",
+    "AddViewingAngles",
     # Compute steps
     "ComputeReflectance",
     "ComputeAlbedo",
