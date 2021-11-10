@@ -149,7 +149,7 @@ class AddIllumination(PipelineStep):
 
         else:
             raise TypeError(
-                "keyword argument 'illumination' must be one of "
+                "field 'illumination' must be one of "
                 "(DirectionalIllumination, ConstantIllumination), got a "
                 f"{illumination.__class__.__name__}"
             )
@@ -163,6 +163,7 @@ class AddIllumination(PipelineStep):
         return result
 
 
+@parse_docs
 @attr.s
 class AddViewingAngles(PipelineStep):
     """
