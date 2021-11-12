@@ -509,6 +509,12 @@ class EarthObservationExperiment(Experiment, ABC):
     ) -> t.Union[Pipeline, t.Tuple[Pipeline, ...]]:
         result = []
 
+        # Convert integer values to measure entries
+        measures = [
+            self.measures[measure] if isinstance(measure, int) else measure
+            for measure in measures
+        ]
+
         for measure in measures:
             pipeline = pipelines.Pipeline()
 
