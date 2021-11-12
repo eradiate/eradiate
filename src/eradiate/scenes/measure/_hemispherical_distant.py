@@ -220,6 +220,6 @@ class HemisphericalDistantMeasure(Measure):
     def var(self) -> t.Tuple[str, t.Dict]:
         return "radiance", {
             "standard_name": "radiance",
-            "long_description": "radiance",
+            "long_name": "radiance",
             "units": symbol(uck.get("radiance")),
         }

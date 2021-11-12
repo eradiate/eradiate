@@ -194,6 +194,6 @@ class DistantFluxMeasure(Measure):
     def var(self) -> t.Tuple[str, t.Dict]:
         return "sector_radiosity", {
             "standard_name": "sector_radiosity",
-            "long_description": "sector radiosity",
+            "long_name": "sector radiosity",
             "units": symbol(uck.get("irradiance")),
         }
