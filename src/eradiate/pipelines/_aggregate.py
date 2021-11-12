@@ -160,7 +160,7 @@ class AggregateCKDQuad(PipelineStep):
                     wavelengths,
                     {
                         "standard_name": "wavelength",
-                        "long_description": "wavelength",
+                        "long_name": "wavelength",
                         "units": symbol(wavelength_units),
                     },
                 ),
@@ -169,7 +169,7 @@ class AggregateCKDQuad(PipelineStep):
                     bin_wmins,
                     {
                         "standard_name": "bin_wmin",
-                        "long_description": "spectral bin lower bound",
+                        "long_name": "spectral bin lower bound",
                         "units": symbol(wavelength_units),
                     },
                 ),
@@ -178,7 +178,7 @@ class AggregateCKDQuad(PipelineStep):
                     bin_wmaxs,
                     {
                         "standard_name": "bin_wmax",
-                        "long_description": "spectral bin upper bound",
+                        "long_name": "spectral bin upper bound",
                         "units": symbol(wavelength_units),
                     },
                 ),
