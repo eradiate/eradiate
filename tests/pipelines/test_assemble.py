@@ -5,17 +5,16 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
 from eradiate.experiments import OneDimExperiment
-from eradiate.pipelines._aggregate import AggregateCKDQuad
-from eradiate.pipelines._assemble import (
+from eradiate.pipelines import (
     AddIllumination,
     AddSpectralResponseFunction,
     AddViewingAngles,
-    _remap_viewing_angles_plane,
+    AggregateCKDQuad,
+    Gather,
+    Pipeline,
 )
-from eradiate.pipelines._core import Pipeline
-from eradiate.pipelines._gather import Gather
-from eradiate.scenes.measure import MultiDistantMeasure
-from eradiate.scenes.measure._hemispherical_distant import HemisphericalDistantMeasure
+from eradiate.pipelines._assemble import _remap_viewing_angles_plane
+from eradiate.scenes.measure import HemisphericalDistantMeasure, MultiDistantMeasure
 
 
 @pytest.mark.parametrize(
@@ -188,4 +187,4 @@ def test_add_srf(modes_all_single):
     # The spectral response function is added to the dataset as a data variable
     assert "srf" in result.data_vars
     # Its only dimension is wavelength
-    assert set(result.srf.dims) == {"w"}
+    assert set(result.srf.dims) == {"srf_w"}

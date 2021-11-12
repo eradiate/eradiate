@@ -4,6 +4,7 @@ import warnings
 import attr
 import numpy as np
 import pint
+import pinttr
 import xarray as xr
 
 import eradiate
@@ -16,7 +17,7 @@ from ..exceptions import UnsupportedModeError
 from ..frame import angles_in_hplane
 from ..scenes.illumination import ConstantIllumination, DirectionalIllumination
 from ..scenes.measure import Measure, MultiDistantMeasure
-from ..scenes.spectra import Spectrum
+from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum
 from ..units import symbol, to_quantity
 from ..units import unit_context_kernel as uck
 
@@ -312,14 +313,42 @@ class AddSpectralResponseFunction(PipelineStep):
         result = x.copy(deep=False)
 
         # Evaluate SRF
-        w = to_quantity(result.w)
-        srf = self.measure.spectral_cfg.srf.eval_mono(w)
+        srf = self.measure.spectral_cfg.srf
+
+        if isinstance(srf, InterpolatedSpectrum):
+            srf_w = srf.wavelengths
+            srf_values = pinttr.util.ensure_units(srf.values, ureg.dimensionless)
+
+        elif isinstance(srf, UniformSpectrum):
+            srf_w = to_quantity(result.w)
+            srf_values = pinttr.util.ensure_units(
+                srf.eval_mono(srf_w), ureg.dimensionless
+            )
+
+        else:
+            raise TypeError(f"unsupported SRF type '{srf.__class__.__name__}'")
+
+        # Add SRF spectral coordinates to dataset
+        w_units = ureg.nm
+        result = result.assign_coords(
+            {
+                "srf_w": (
+                    "srf_w",
+                    srf_w.m_as(w_units),
+                    {
+                        "standard_name": "wavelength",
+                        "long_name": "wavelength",
+                        "units": "nm",
+                    },
+                )
+            }
+        )
 
         # Add SRF variable to dataset
-        result["srf"] = ("w", srf)
+        result["srf"] = ("srf_w", srf_values.m)
         result.srf.attrs = {
             "standard_name": "spectral_response_function",
-            "long_name": "srf",
+            "long_name": "spectral response function",
             "units": "",
         }
 
