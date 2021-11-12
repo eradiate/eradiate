@@ -17,9 +17,9 @@ from .. import config, pipelines
 from .._mode import ModeFlags, supported_mode
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
-from ..exceptions import KernelVariantError, UnsupportedModeError
+from ..exceptions import KernelVariantError
 from ..kernel import bitmap_to_dataset
-from ..pipelines._core import Pipeline
+from ..pipelines import Pipeline
 from ..scenes.core import KernelDict
 from ..scenes.illumination import (
     ConstantIllumination,
@@ -29,12 +29,11 @@ from ..scenes.illumination import (
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import (
     DistantFluxMeasure,
+    HemisphericalDistantMeasure,
     Measure,
     MultiDistantMeasure,
     measure_factory,
 )
-from ..scenes.measure._core import MeasureFlags
-from ..scenes.measure._hemispherical_distant import HemisphericalDistantMeasure
 
 logger = logging.getLogger(__name__)
 

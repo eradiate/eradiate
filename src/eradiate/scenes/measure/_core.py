@@ -559,7 +559,7 @@ class Measure(SceneElement, ABC):
     #                             Flag-style queries
     # --------------------------------------------------------------------------
 
-    def is_distant(self):
+    def is_distant(self) -> bool:
         """
         Return ``True`` iff measure records radiometric quantities at infinite
         distance.
@@ -576,10 +576,15 @@ class Measure(SceneElement, ABC):
     #                        Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _sensor_id(self, i_spp=None):
+    def _sensor_id(self, i_spp=None) -> str:
         """
         Assemble a sensor ID from indexes on sensor coordinates. This basic
         implementation assumes that the only sensor dimension is ``i_spp``.
+
+        Returns
+        -------
+        str
+            Generated sensor ID.
         """
         components = [self.id]
 
@@ -610,6 +615,14 @@ class Measure(SceneElement, ABC):
             return [self.spp]
 
     def _sensor_ids(self) -> t.List[str]:
+        """
+        Return list of sensor IDs for the current measure.
+
+        Returns
+        -------
+        list of str
+            List of sensor IDs.
+        """
         if self.split_spp is not None and self.spp > self.split_spp:
             return [self._sensor_id(i) for i, _ in enumerate(self._sensor_spps())]
 
@@ -626,6 +639,9 @@ class Measure(SceneElement, ABC):
 
     @property
     def sensor_dims(self) -> t.Tuple[str]:
+        """
+        tuple of str: List of sensor dimension labels.
+        """
         if self.is_split():
             return ("spp",)
         else:
