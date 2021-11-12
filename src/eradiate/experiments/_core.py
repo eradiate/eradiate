@@ -561,14 +561,6 @@ class EarthObservationExperiment(Experiment, ABC):
             # Compute
             if isinstance(measure, (MultiDistantMeasure, HemisphericalDistantMeasure)):
                 pipeline.add(
-                    "apply_srf",
-                    pipelines.ApplySpectralResponseFunction(
-                        measure=measure,
-                        vars=["radiance", "irradiance"],
-                    ),
-                )
-
-                pipeline.add(
                     "compute_reflectance",
                     pipelines.ComputeReflectance(
                         radiance_var="radiance",
@@ -578,25 +570,26 @@ class EarthObservationExperiment(Experiment, ABC):
                     ),
                 )
 
-                pipeline.add(
-                    "compute_reflectance_srf",
-                    pipelines.ComputeReflectance(
-                        radiance_var="radiance_srf",
-                        irradiance_var="irradiance_srf",
-                        brdf_var="brdf_srf",
-                        brf_var="brf_srf",
-                    ),
-                )
+                if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+                    pipeline.add(
+                        "apply_srf",
+                        pipelines.ApplySpectralResponseFunction(
+                            measure=measure,
+                            vars=["radiance", "irradiance"],
+                        ),
+                    )
+
+                    pipeline.add(
+                        "compute_reflectance_srf",
+                        pipelines.ComputeReflectance(
+                            radiance_var="radiance_srf",
+                            irradiance_var="irradiance_srf",
+                            brdf_var="brdf_srf",
+                            brf_var="brf_srf",
+                        ),
+                    )
 
             elif isinstance(measure, (DistantFluxMeasure,)):
-                pipeline.add(
-                    "apply_srf",
-                    pipelines.ApplySpectralResponseFunction(
-                        measure=measure,
-                        vars=["radiosity", "irradiance"],
-                    ),
-                )
-
                 pipeline.add(
                     "compute_albedo",
                     pipelines.ComputeAlbedo(
@@ -606,14 +599,23 @@ class EarthObservationExperiment(Experiment, ABC):
                     ),
                 )
 
-                pipeline.add(
-                    "compute_albedo_srf",
-                    pipelines.ComputeAlbedo(
-                        radiosity_var="radiosity_srf",
-                        irradiance_var="irradiance_srf",
-                        albedo_var="albedo_srf",
-                    ),
-                )
+                if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+                    pipeline.add(
+                        "apply_srf",
+                        pipelines.ApplySpectralResponseFunction(
+                            measure=measure,
+                            vars=["radiosity", "irradiance"],
+                        ),
+                    )
+
+                    pipeline.add(
+                        "compute_albedo_srf",
+                        pipelines.ComputeAlbedo(
+                            radiosity_var="radiosity_srf",
+                            irradiance_var="irradiance_srf",
+                            albedo_var="albedo_srf",
+                        ),
+                    )
 
             result.append(pipeline)
 

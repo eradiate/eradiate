@@ -9,7 +9,7 @@ from pinttr.util import always_iterable
 from ._core import PipelineStep
 from ..attrs import documented, parse_docs
 from ..scenes.measure import Measure
-from ..scenes.spectra import InterpolatedSpectrum
+from ..scenes.spectra import InterpolatedSpectrum, UniformSpectrum
 from ..units import symbol, to_quantity
 from ..units import unit_registry as ureg
 
@@ -27,8 +27,8 @@ class ApplySpectralResponseFunction(PipelineStep):
     Notes
     -----
     The processed dataset is expected to have a ``bin`` coordinate, associated
-    with bounds ``wmin`` and ``wmax``. If not, it becomes a no-op. In practice,
-    this means that nothing will happen in monochromatic modes.
+    with bounds ``bin_wmin`` and ``bin_wmax``. If not, :meth:`transform` will
+    raise an exception.
     """
 
     measure: Measure = documented(
@@ -56,8 +56,13 @@ class ApplySpectralResponseFunction(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
-        with xr.set_options(keep_attrs=True):
-            result = x.copy(deep=False)
+        result = x.copy(deep=False)
+
+        if not {"bin_wmin", "bin_wmax"}.issubset(set(result.coords.keys())):
+            raise ValueError(
+                "input data is missing 'bin_wmin' and/or 'bin_wmax' coordinates"
+            )
+
         measure = self.measure
 
         # Evaluate integral of spectral response function within selected interval
@@ -66,17 +71,32 @@ class ApplySpectralResponseFunction(PipelineStep):
         srf = measure.spectral_cfg.srf
         srf_int = srf.integral(wmin, wmax)
 
+        if isinstance(srf, InterpolatedSpectrum):
+            srf_w = srf.wavelengths
+        elif isinstance(srf, UniformSpectrum):
+            srf_w = np.array([]) * ureg.nm
+        else:
+            raise TypeError(f"unhandled SRF type '{srf.__class__.__name__}'")
+
         for var in self.vars:
             # Evaluate integral of product of variable and SRF within selected interval
-            # Note: Spectral grid is the finest between data and SRF grids
             data_w = to_quantity(result.w)
-            srf_w = srf.wavelengths
-            w_units = data_w.units
 
+            # Spectral grid is the finest between data and SRF grids
+            w_units = data_w.units
             w_m = np.array(sorted(set(data_w.m_as(w_units)) | set(srf_w.m_as(w_units))))
-            var_values = result[var].interp(
-                w=w_m, method="nearest", kwargs={"fill_value": "extrapolate"}
-            )
+
+            # If data var has length 1 on spectral dimension, directly select
+            # the value instead of using interpolation (it's a known scipy issue)
+            if len(result[var].w) == 1:
+                var_values = result[var].sel(w=w_m, method="nearest")
+
+            # Otherwise, use nearest neighbour interpolation (we assume that var
+            # is constant over each spectral bin)
+            else:
+                var_values = result[var].interp(
+                    w=w_m, method="nearest", kwargs={"fill_value": "extrapolate"}
+                )
 
             srf_values = srf.eval_mono(w_m * w_units).reshape(
                 [-1 if dim == "w" else 1 for dim in var_values.dims]
