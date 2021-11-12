@@ -183,5 +183,5 @@ class PerspectiveCameraMeasure(Measure):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> str:
-        return "img"
+    def var(self) -> t.Tuple[str, t.Dict]:
+        return "img", dict()

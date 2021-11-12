@@ -17,6 +17,8 @@ from ... import validators
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...frame import direction_to_angles
+from ...units import symbol
+from ...units import unit_context_kernel as uck
 from ...warp import square_to_uniform_hemisphere
 
 
@@ -215,5 +217,9 @@ class HemisphericalDistantMeasure(Measure):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> str:
-        return "radiance"
+    def var(self) -> t.Tuple[str, t.Dict]:
+        return "radiance", {
+            "standard_name": "radiance",
+            "long_description": "radiance",
+            "units": symbol(uck.get("radiance")),
+        }

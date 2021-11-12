@@ -13,7 +13,9 @@ from ..core import KernelDict
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...frame import angles_in_hplane, angles_to_direction, direction_to_angles
+from ...units import symbol
 from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
@@ -255,5 +257,9 @@ class MultiDistantMeasure(Measure):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> str:
-        return "radiance"
+    def var(self) -> t.Tuple[str, t.Dict]:
+        return "radiance", {
+            "standard_name": "radiance",
+            "long_description": "radiance",
+            "units": symbol(uck.get("radiance")),
+        }

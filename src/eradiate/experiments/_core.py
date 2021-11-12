@@ -527,14 +527,14 @@ class EarthObservationExperiment(Experiment, ABC):
             pipeline.add("aggregate_sample_count", pipelines.AggregateSampleCount())
             pipeline.add(
                 "aggregate_ckd_quad",
-                pipelines.AggregateCKDQuad(measure=measure, var=measure.var),
+                pipelines.AggregateCKDQuad(measure=measure, var=measure.var[0]),
             )
 
             if isinstance(measure, (DistantFluxMeasure,)):
                 pipeline.add(
                     "aggregate_radiosity",
                     pipelines.AggregateRadiosity(
-                        sector_radiosity_var=measure.var,
+                        sector_radiosity_var=measure.var[0],
                         radiosity_var="radiosity",
                     ),
                 )

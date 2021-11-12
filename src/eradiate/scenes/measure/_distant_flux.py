@@ -12,7 +12,9 @@ from ... import validators
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...frame import direction_to_angles
+from ...units import symbol
 from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...warp import square_to_uniform_hemisphere
 
@@ -189,5 +191,9 @@ class DistantFluxMeasure(Measure):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> str:
-        return "sector_radiosity"
+    def var(self) -> t.Tuple[str, t.Dict]:
+        return "sector_radiosity", {
+            "standard_name": "sector_radiosity",
+            "long_description": "sector radiosity",
+            "units": symbol(uck.get("irradiance")),
+        }

@@ -634,8 +634,11 @@ class Measure(SceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> str:
-        return "img"
+    def var(self) -> t.Tuple[str, t.Dict]:
+        """
+        str, dict: Post-processing variable field name and metadata.
+        """
+        return "img", dict()
 
     @property
     def sensor_dims(self) -> t.Tuple[str]:

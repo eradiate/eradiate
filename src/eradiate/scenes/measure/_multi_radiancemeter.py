@@ -11,6 +11,7 @@ from ._core import Measure, measure_factory
 from ..core import KernelDict
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
+from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -124,5 +125,9 @@ class MultiRadiancemeterMeasure(Measure):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> str:
-        return "radiance"
+    def var(self) -> t.Tuple[str, t.Dict]:
+        return "radiance", {
+            "standard_name": "radiance",
+            "long_description": "radiance",
+            "units": symbol(uck.get("radiance")),
+        }
