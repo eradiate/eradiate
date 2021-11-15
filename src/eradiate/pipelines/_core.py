@@ -134,12 +134,12 @@ class Pipeline:
 
         if before is not None:
             if after is not None:
-                raise ValueError("parameters `before` and `after` cannot both be set")
+                raise ValueError("cannot set both 'before' and 'after' parameters")
             position = self._step_index(before)
 
         if after is not None:
             if before is not None:
-                raise ValueError("parameters `before` and `after` cannot both be set")
+                raise ValueError("cannot set both 'before' and 'after' parameters")
             position = self._step_index(after) + 1
 
         if position is None:
