@@ -2,8 +2,6 @@ import typing as t
 
 import attr
 import numpy as np
-import pint
-import xarray as xr
 from pinttr.util import always_iterable
 
 from ._core import PipelineStep
@@ -74,7 +72,7 @@ class ApplySpectralResponseFunction(PipelineStep):
         if isinstance(srf, InterpolatedSpectrum):
             srf_w = srf.wavelengths
         elif isinstance(srf, UniformSpectrum):
-            srf_w = np.array([]) * ureg.nm
+            srf_w = np.array([wmin.m_as(ureg.nm), wmax.m_as(ureg.nm)]) * ureg.nm
         else:
             raise TypeError(f"unhandled SRF type '{srf.__class__.__name__}'")
 
@@ -89,7 +87,13 @@ class ApplySpectralResponseFunction(PipelineStep):
             # If data var has length 1 on spectral dimension, directly select
             # the value instead of using interpolation (it's a known scipy issue)
             if len(result[var].w) == 1:
-                var_values = result[var].sel(w=w_m, method="nearest")
+                # Note: The tricky thing is to recreate and extend the 'w'
+                # dimension with the same axis index as in the original data
+                var_values = (
+                    result[var]
+                    .isel(w=0, drop=True)
+                    .expand_dims(w=w_m, axis=result[var].get_axis_num("w"))
+                )
 
             # Otherwise, use nearest neighbour interpolation (we assume that var
             # is constant over each spectral bin)
@@ -98,8 +102,10 @@ class ApplySpectralResponseFunction(PipelineStep):
                     w=w_m, method="nearest", kwargs={"fill_value": "extrapolate"}
                 )
 
-            srf_values = srf.eval_mono(w_m * w_units).reshape(
-                [-1 if dim == "w" else 1 for dim in var_values.dims]
+            srf_values = (
+                srf.eval_mono(w_m * w_units)
+                .reshape([-1 if dim == "w" else 1 for dim in var_values.dims])
+                .magnitude
             )
             var_srf_int = (var_values * srf_values).integrate("w")
 
