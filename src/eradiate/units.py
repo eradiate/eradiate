@@ -4,6 +4,7 @@ __all__ = [
     "unit_context_config",
     "unit_context_kernel",
     "unit_registry",
+    "PhysicalQuantity",
 ]
 
 
