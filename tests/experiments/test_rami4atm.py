@@ -213,7 +213,14 @@ def test_ramiatm_experiment_run_detailed(mode_mono):
     results = exp.results["toa_brf"]
 
     # Post-processing creates expected variables ...
-    assert set(results.data_vars) == {"irradiance", "brf", "brdf", "radiance", "spp"}
+    assert set(results.data_vars) == {
+        "irradiance",
+        "brf",
+        "brdf",
+        "radiance",
+        "spp",
+        "srf",
+    }
 
     # ... dimensions
     assert set(results["radiance"].dims) == {"sza", "saa", "x_index", "y_index", "w"}

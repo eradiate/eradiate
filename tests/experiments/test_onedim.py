@@ -170,7 +170,9 @@ def test_onedim_experiment_run_detailed(modes_all):
     results = exp.results["toa_hsphere"]
 
     # Post-processing creates expected variables ...
-    expected = {"irradiance", "brf", "brdf", "radiance", "spp"}
+    expected = {"irradiance", "brf", "brdf", "radiance", "spp", "srf"}
+    if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        expected |= {"irradiance_srf", "brf_srf", "brdf_srf", "radiance_srf"}
     assert set(results.data_vars) == expected
 
     # ... dimensions
@@ -180,12 +182,12 @@ def test_onedim_experiment_run_detailed(modes_all):
     # ... and other coordinates
     expected_coords = {"sza", "saa", "vza", "vaa", "x", "y", "x_index", "y_index", "w"}
     if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-        expected_coords.add("bin")
+        expected_coords |= {"bin", "bin_wmin", "bin_wmax"}
     assert set(results["radiance"].coords) == expected_coords
 
     expected_coords = {"sza", "saa", "w"}
     if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-        expected_coords.add("bin")
+        expected_coords |= {"bin", "bin_wmin", "bin_wmax"}
     assert set(results["irradiance"].coords) == expected_coords
 
     # We just check that we record something as expected
