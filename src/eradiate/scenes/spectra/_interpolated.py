@@ -17,7 +17,6 @@ from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
-from ...units import unit_registry as ureg
 
 
 @spectrum_factory.register(type_id="interpolated")
@@ -60,7 +59,7 @@ class InterpolatedSpectrum(Spectrum):
 
     @values.validator
     def _values_validator(self, attribute, value):
-        if self.quantity is not None and isinstance(value, pint.Quantity):
+        if isinstance(value, pint.Quantity):
             expected_units = ucc.get(self.quantity)
 
             if not pinttr.util.units_compatible(expected_units, value.units):
@@ -102,22 +101,18 @@ class InterpolatedSpectrum(Spectrum):
 
     def update(self):
         # Apply appropriate units to values field
-        if self.quantity is not None and self.values is not None:
-            self.values = pinttr.converters.ensure_units(
-                self.values, ucc.get(self.quantity)
-            )
+        self.values = pinttr.converters.ensure_units(
+            self.values, ucc.get(self.quantity)
+        )
 
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.interp(w, self.wavelengths, self.values, left=0.0, right=0.0)
 
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         # Spectrum is averaged over spectral bin
-
         result = np.zeros((len(bindexes),))
         wavelength_units = ucc.get("wavelength")
-        quantity_units = (
-            self.values.units if hasattr(self.values, "units") else ureg.dimensionless
-        )
+        quantity_units = self.values.units
 
         for i_bindex, bindex in enumerate(bindexes):
             bin = bindex.bin

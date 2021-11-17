@@ -1,4 +1,5 @@
 import numpy as np
+import pint
 import pinttr
 import pytest
 
@@ -11,6 +12,7 @@ from eradiate.ckd import BinSet
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.spectra import spectrum_factory
 from eradiate.scenes.spectra._interpolated import InterpolatedSpectrum
+from eradiate.units import PhysicalQuantity
 
 
 def test_interpolated_construct(modes_all):
@@ -26,10 +28,10 @@ def test_interpolated_construct(modes_all):
     with pytest.raises(ValueError):
         InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0, 2.0])
 
-    # Instantiating with no quantity applies no units
+    # Instantiating with no quantity makes spectrum dimensionless
     spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
-    assert spectrum.quantity is None
-    assert isinstance(spectrum.values, np.ndarray)
+    assert spectrum.quantity is PhysicalQuantity.DIMENSIONLESS
+    assert isinstance(spectrum.values, pint.Quantity)
     # Instantiating with a quantity applies units
     spectrum = InterpolatedSpectrum(
         quantity="irradiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
@@ -113,6 +115,32 @@ def test_interpolated_integral(mode_mono):
     assert np.isclose(
         50.0 * ureg.nm, s.integral(450.0 * ureg.nm, 600.0 * ureg.nm), rtol=1e-10
     )
+
+
+@pytest.mark.parametrize(
+    "quantity, values, w, expected",
+    [
+        (
+            "dimensionless",
+            [0.0, 1.0],
+            [450.0, 500.0, 550.0, 600.0, 650.0] * ureg.nm,
+            [0.0, 0.0, 0.5, 1.0, 0.0],
+        ),
+        (
+            "collision_coefficient",
+            [0.0, 1.0],
+            [450.0, 500.0, 550.0, 600.0, 650.0] * ureg.nm,
+            [0.0, 0.0, 0.5, 1.0, 0.0] * ureg.m ** -1,
+        ),
+    ],
+)
+def test_interpolated_eval_mono(mode_mono, quantity, values, w, expected):
+    # No quantity, unitless value
+    eval = InterpolatedSpectrum(
+        quantity=quantity, values=values, wavelengths=[500.0, 600.0]
+    ).eval_mono(w)
+    assert np.all(expected == eval)
+    assert isinstance(eval, pint.Quantity)
 
 
 def test_interpolated_eval(modes_all):

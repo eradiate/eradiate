@@ -22,7 +22,7 @@ from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
 from ...contexts import CKDSpectralContext, MonoSpectralContext, SpectralContext
 from ...exceptions import ModeError, UnsupportedModeError
-from ...units import interpret_quantities
+from ...units import PhysicalQuantity, interpret_quantities
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
@@ -42,9 +42,9 @@ def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
 
         w = ureg.Quantity(ds.w.values, ds.w.attrs["units"])
         srf = ds.data_vars["srf"].values
-        return InterpolatedSpectrum(quantity=None, wavelengths=w, values=srf)
+        return InterpolatedSpectrum(quantity="dimensionless", wavelengths=w, values=srf)
 
-    converter = spectrum_factory.converter(quantity=None)
+    converter = spectrum_factory.converter(quantity="dimensionless")
     return converter(value)
 
 
@@ -67,7 +67,7 @@ class MeasureSpectralConfig(ABC):
         attr.ib(
             factory=lambda: UniformSpectrum(value=1.0),
             converter=_measure_spectral_config_srf_converter,
-            validator=validators.has_quantity(None),
+            validator=validators.has_quantity(PhysicalQuantity.DIMENSIONLESS),
         ),
         doc="Spectral response function. If a string is passed, the "
         "corresponding shipped SRF data will be loaded from the Eradiate "
@@ -166,7 +166,7 @@ class MeasureSpectralConfig(ABC):
 
         Returns
         -------
-        :class:`.MeasureSpectralConfig`
+        spectral_cfg : .MeasureSpectralConfig
             Created object.
         """
 

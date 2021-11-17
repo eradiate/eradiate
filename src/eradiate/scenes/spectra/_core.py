@@ -4,6 +4,7 @@ import typing as t
 from abc import ABC, abstractmethod
 
 import attr
+import numpy as np
 import pint
 
 import eradiate
@@ -19,7 +20,9 @@ from ...units import PhysicalQuantity
 
 
 class SpectrumFactory(Factory):
-    def converter(self, quantity: t.Any) -> t.Callable[[t.Any], t.Any]:
+    def converter(
+        self, quantity: t.Union[str, PhysicalQuantity]
+    ) -> t.Callable[[t.Any], t.Any]:
         """
         Generate a converter wrapping :meth:`SpectrumFactory.convert` to
         handle defaults for shortened spectrum definitions. The produced
@@ -38,7 +41,7 @@ class SpectrumFactory(Factory):
 
         Parameters
         ----------
-        quantity : str or :class:`.PhysicalQuantity`
+        quantity : str or .PhysicalQuantity
             Quantity specifier (converted by :class:`.PhysicalQuantity`).
             See :meth:`.PhysicalQuantity.spectrum` for suitable values.
 
@@ -79,25 +82,22 @@ class Spectrum(SceneElement, ABC):
 
     quantity: PhysicalQuantity = documented(
         attr.ib(
-            default=None,
-            converter=attr.converters.optional(PhysicalQuantity),
+            default="dimensionless",
+            converter=PhysicalQuantity,
             repr=lambda x: str(x),
         ),
-        doc="Physical quantity which the spectrum represents. If not ``None``, "
-        "the specified quantity must be one which varies with wavelength. "
+        doc="Physical quantity which the spectrum represents. The specified "
+        "quantity must be one which varies with wavelength. "
         "See :meth:`.PhysicalQuantity.spectrum` for allowed values.\n"
         "\n"
         "Child classes should implement value units validation and conversion "
-        "based on ``quantity``. In particular, no unit validation or conversion "
-        "should occur if ``quantity`` is ``None``.",
-        type="str or :class:`.PhysicalQuantity` or None",
+        "based on ``quantity``.",
+        type=":class:`.PhysicalQuantity`",
+        init_type=":class:`.PhysicalQuantity` or str",
     )
 
     @quantity.validator
     def _quantity_validator(self, attribute, value):
-        if value is None:
-            return
-
         if value not in PhysicalQuantity.spectrum():
             raise ValueError(
                 f"while validating {attribute.name}: "
@@ -118,11 +118,9 @@ class Spectrum(SceneElement, ABC):
 
         Returns
         -------
-        :class:`pint.Quantity`
+        value : quantity
             Evaluated spectrum as a scalar.
         """
-        assert spectral_ctx is not None  # Safeguard for leftover None values
-
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             return self.eval_mono(spectral_ctx.wavelength).squeeze()
 
@@ -139,12 +137,12 @@ class Spectrum(SceneElement, ABC):
 
         Parameters
         ----------
-        w : :class:`pint.Quantity`
+        w : quantity
             Wavelength values at which the spectrum is to be evaluated.
 
         Returns
         -------
-        :class:`pint.Quantity`
+        value : quantity
             Evaluated spectrum as an array with the same shape as ``w``.
         """
         pass
@@ -156,12 +154,12 @@ class Spectrum(SceneElement, ABC):
 
         Parameters
         ----------
-        *bindexes : :class:`.Bindex`
+        *bindexes : .Bindex
             One or several CKD bindexes for which to evaluate the spectrum.
 
         Returns
         -------
-        :class:`pint.Quantity`
+        value : quantity
             Evaluated spectrum as an array with shape (len(bindexes),).
         """
         pass
@@ -181,7 +179,7 @@ class Spectrum(SceneElement, ABC):
 
         Returns
         -------
-        quantity
+        value : quantity
             Computed integral value.
         """
         pass

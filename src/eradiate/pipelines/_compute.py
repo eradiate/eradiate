@@ -107,6 +107,7 @@ class ApplySpectralResponseFunction(PipelineStep):
                 .reshape([-1 if dim == "w" else 1 for dim in var_values.dims])
                 .magnitude
             )
+            assert isinstance(srf_values, np.ndarray)  # Check for leftover bugs
             var_srf_int = (var_values * srf_values).integrate("w")
 
             # Apply SRF to variable and store result

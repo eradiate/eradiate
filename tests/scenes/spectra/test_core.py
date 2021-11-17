@@ -5,11 +5,11 @@ from eradiate import unit_registry as ureg
 from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
 
 
-def test_converter(modes_all_mono):
+def test_converter(mode_mono):
     # Dicts are correctly processed
-    s = spectrum_factory.converter("radiance")({"type": "uniform"})
+    s = spectrum_factory.converter("radiance")({"type": "uniform", "value": 1.0})
     assert s == UniformSpectrum(quantity="radiance", value=1.0)
-    s = spectrum_factory.converter("irradiance")({"type": "uniform"})
+    s = spectrum_factory.converter("irradiance")({"type": "uniform", "value": 1.0})
     assert s == UniformSpectrum(quantity="irradiance", value=1.0)
 
     # Floats and quantities are correctly processed

@@ -12,7 +12,6 @@ from ...ckd import Bindex
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
-from ...units import unit_registry as ureg
 
 
 @spectrum_factory.register(type_id="uniform")
@@ -24,21 +23,16 @@ class UniformSpectrum(Spectrum):
     """
 
     value: pint.Quantity = documented(
-        attr.ib(
-            default=1.0,
-            repr=lambda x: f"{x:~P}" if isinstance(x, pint.Quantity) else f"{x}",
-        ),
-        doc="Uniform spectrum value. If a float is passed and ``quantity`` is not "
-        "``None``, it is automatically converted to appropriate configuration "
-        "default units. If a :class:`~pint.Quantity` is passed and ``quantity`` "
-        "is not ``None``, units will be checked for consistency.",
-        type="float or :class:`~pint.Quantity`",
-        default="1.0 <quantity units>",
+        attr.ib(repr=lambda x: f"{x:~P}", kw_only=True),
+        doc="Uniform spectrum value. If a float is passed, it is automatically converted "
+        "to appropriate configuration default units.",
+        type=":class:`~pint.Quantity`",
+        init_type="float or :class:`~pint.Quantity`",
     )
 
     @value.validator
     def _value_validator(self, attribute, value):
-        if self.quantity is not None and isinstance(value, pint.Quantity):
+        if isinstance(value, pint.Quantity):
             expected_units = ucc.get(self.quantity)
 
             if not pinttr.util.units_compatible(expected_units, value.units):
@@ -54,22 +48,13 @@ class UniformSpectrum(Spectrum):
         self.update()
 
     def update(self):
-        if self.quantity is not None and self.value is not None:
-            self.value = pinttr.converters.ensure_units(
-                self.value, ucc.get(self.quantity)
-            )
+        self.value = pinttr.converters.ensure_units(self.value, ucc.get(self.quantity))
 
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
-        if isinstance(self.value, pint.Quantity):
-            return np.full_like(w, self.value.m) * self.value.units
-        else:
-            return np.full_like(w, self.value) * ureg.dimensionless
+        return np.full_like(w, self.value.m) * self.value.units
 
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        if isinstance(self.value, pint.Quantity):
-            return np.full((len(bindexes),), self.value.m) * self.value.units
-        else:
-            return np.full((len(bindexes),), self.value) * ureg.dimensionless
+        return np.full((len(bindexes),), self.value.m) * self.value.units
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         wmin = pinttr.util.ensure_units(wmin, ucc.get("wavelength"))

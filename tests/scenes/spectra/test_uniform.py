@@ -1,4 +1,5 @@
 import numpy as np
+import pint
 import pinttr
 import pytest
 
@@ -14,16 +15,21 @@ from eradiate.units import PhysicalQuantity
 def test_uniform(modes_all):
     from mitsuba.core.xml import load_dict
 
-    # Instantiate without argument
-    UniformSpectrum()
+    # Instantiate with value only
+    s = UniformSpectrum(value=1.0)
+    assert s.quantity is PhysicalQuantity.DIMENSIONLESS
+    assert s.value == 1.0 * ureg.dimensionless
 
-    # Instantiate with only quantity
-    UniformSpectrum(quantity=PhysicalQuantity.COLLISION_COEFFICIENT)
-    UniformSpectrum(quantity="collision_coefficient")
+    # Instantiate with value and quantity
+    s = UniformSpectrum(value=1.0, quantity=PhysicalQuantity.COLLISION_COEFFICIENT)
+    assert s.value == 1.0 * ureg.m ** -1
+    UniformSpectrum(value=1.0, quantity="collision_coefficient")
+    assert s.quantity == PhysicalQuantity.COLLISION_COEFFICIENT
+    assert s.value == 1.0 * ureg.m ** -1
 
     # Instantiate with unsupported quantity
     with pytest.raises(ValueError):
-        UniformSpectrum(quantity="speed")
+        UniformSpectrum(value=1.0, quantity="speed")
 
     # Instantiate with all arguments
     s = UniformSpectrum(quantity="collision_coefficient", value=1.0)
@@ -54,6 +60,22 @@ def test_uniform(modes_all):
         ctx = KernelDictContext()
         d = s.kernel_dict(ctx)
         assert np.allclose(d["spectrum"]["value"], 1e-3)
+
+
+@pytest.mark.parametrize(
+    "quantity, value, w, expected",
+    [
+        ("dimensionless", 1.0, 550.0, 1.0),
+        ("dimensionless", 1.0, [500.0, 600.0] * ureg.nm, 1.0),
+        ("collision_coefficient", 1.0, 550.0, 1.0 * ureg.m ** -1),
+        ("collision_coefficient", 1.0, [500.0, 600.0] * ureg.nm, 1.0 * ureg.m ** -1),
+    ],
+)
+def test_uniform_eval_mono(mode_mono, quantity, value, w, expected):
+    # No quantity, unitless value
+    eval = UniformSpectrum(quantity=quantity, value=value).eval_mono(w)
+    assert np.all(expected == eval)
+    assert isinstance(eval, pint.Quantity)
 
 
 def test_integral(mode_mono):
