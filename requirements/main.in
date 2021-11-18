@@ -1,5 +1,6 @@
 -c dev.txt
 aabbtree
+astropy
 attrs
 click
 cerberus
@@ -12,6 +13,7 @@ netcdf4
 numpy
 pint
 pinttrs>=21.3.0
+python-dateutil
 rich
 ruamel.yaml
 scipy

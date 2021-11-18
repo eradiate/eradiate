@@ -6,6 +6,7 @@ dependencies:
   - python=3.7
   # main
   - aabbtree
+  - astropy
   - attrs
   - click
   - cerberus
@@ -18,6 +19,7 @@ dependencies:
   - numpy
   - pint
   - pinttrs>=21.3.0
+  - python-dateutil
   - rich
   - ruamel.yaml
   - scipy
