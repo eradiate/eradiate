@@ -135,7 +135,7 @@ def test_550(reflectance):
     ================================================================
 
     This test checks the results consistency between mono_double and ckd_double
-    modes in the [545, 555] nm wavelength bin.
+    modes in the [549.5, 550.5] nm wavelength bin.
 
     Rationale
     ---------
@@ -155,7 +155,7 @@ def test_550(reflectance):
     ------------------
 
     The [545, 555] nm - integrated BRF results obtained with the `mono_double`
-    and `ckd_double` modes should agree within 5%.
+    and `ckd_double` modes should agree within 10%.
 
     The `mono_double` BRF results are spectrally averaged according to the
     following formula:
@@ -200,8 +200,11 @@ def test_550(reflectance):
     # Settings
     zeniths = np.linspace(-75, 75, 11)
     spp = 1e4
-    wavelengths = np.linspace(545.0, 555.0, 1001) * ureg.nm  # mono mode setting
-    bin_set = "10nm"  # ckd mode setting
+    wavelength_min = 549.5 * ureg.nm
+    wavelength_max = 550.5 * ureg.nm
+    wavenumbers = np.linspace(1 / wavelength_max, 1 / wavelength_min, 1001)
+    wavelengths = 1 / wavenumbers  # mono mode setting
+    bin_set = "1nm"  # ckd mode setting
     bins = "550"  # ckd mode setting
 
     # Monochromatic experiment
@@ -215,7 +218,9 @@ def test_550(reflectance):
         mono_exp.run()
     mono_results = mono_exp.results["measure"]
 
-    wavelength_bin_width = (wavelengths[-1] - wavelengths[0]).m_as(mono_results.w.units)
+    wavelength_bin_width = (wavelengths.max() - wavelengths.min()).m_as(
+        mono_results.w.attrs["units"]
+    )
     mono_results_integrated = mono_results.integrate(coord="w") / wavelength_bin_width
 
     # CKD experiment
@@ -237,14 +242,14 @@ def test_550(reflectance):
         ckd_results=ckd_results,
         mono_results_averaged=mono_results_integrated,
         fname_plot=fname_plot,
-        wavelength_bin="[545, 555] nm",
+        wavelength_bin="[549.5, 550.5] nm",
         reflectance=reflectance,
     )
 
-    # Assert averaged mono results are consistent with ckd results
+    # Assert averaged mono results are consistent with ckd results within 10 %
     mono_brf = mono_results_integrated.brf.squeeze().values
     ckd_brf = ckd_results.brf.squeeze().values
-    assert np.allclose(mono_brf, ckd_brf, rtol=5e-2)
+    assert np.allclose(mono_brf, ckd_brf, rtol=0.1)
 
 
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
@@ -267,7 +272,7 @@ def test_1050(reflectance):
     ================================================================
 
     This test checks the results consistency between mono_double and ckd_double
-    modes in the [1045, 1055] nm wavelength bin.
+    modes in the [1049.5, 1050.5] nm wavelength bin.
 
     Rationale
     ---------
@@ -286,8 +291,8 @@ def test_1050(reflectance):
     Expected behaviour
     ------------------
 
-    The [1045, 1055] nm - integrated BRF results obtained with the `mono_double`
-    and `ckd_double` modes should agree within 5%.
+    The [1049.5, 1050.5] nm - integrated BRF results obtained with the
+    `mono_double` and `ckd_double` modes should agree within 10%.
 
     The `mono_double` BRF results are spectrally averaged according to the
     following formula:
@@ -332,8 +337,11 @@ def test_1050(reflectance):
     # Settings
     zeniths = np.linspace(-75, 75, 11)
     spp = 1e4
-    wavelengths = np.linspace(1045.0, 1055.0, 1001) * ureg.nm  # mono mode setting
-    bin_set = "10nm"  # ckd mode setting
+    wavelength_min = 1049.5 * ureg.nm
+    wavelength_max = 1050.5 * ureg.nm
+    wavenumbers = np.linspace(1 / wavelength_max, 1 / wavelength_min, 1001)
+    wavelengths = 1 / wavenumbers  # mono mode setting
+    bin_set = "1nm"  # ckd mode setting
     bins = "1050"  # ckd mode setting
 
     # Monochromatic experiment
@@ -347,7 +355,9 @@ def test_1050(reflectance):
         mono_exp.run()
     mono_results = mono_exp.results["measure"]
 
-    wavelength_bin_width = (wavelengths[-1] - wavelengths[0]).m_as(mono_results.w.units)
+    wavelength_bin_width = (wavelengths.max() - wavelengths.min()).m_as(
+        mono_results.w.attrs["units"]
+    )
     mono_results_averaged = mono_results.integrate(coord="w") / wavelength_bin_width
 
     # CKD experiment
@@ -369,11 +379,11 @@ def test_1050(reflectance):
         ckd_results=ckd_results,
         mono_results_averaged=mono_results_averaged,
         fname_plot=fname_plot,
-        wavelength_bin="[1045, 1055] nm",
+        wavelength_bin="[1049.5, 1050.5] nm",
         reflectance=reflectance,
     )
 
-    # Assert averaged mono results are consistent with ckd results
+    # Assert averaged mono results are consistent with ckd results within 10 %
     mono_brf = mono_results_averaged.brf.squeeze().values
     ckd_brf = ckd_results.brf.squeeze().values
-    assert np.allclose(mono_brf, ckd_brf, rtol=5e-2)
+    assert np.allclose(mono_brf, ckd_brf, rtol=0.1)

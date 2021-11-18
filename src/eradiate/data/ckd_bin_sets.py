@@ -31,8 +31,8 @@ Metadata:
 
 class _CKDBinSetGetter(DataGetter):
     PATHS = {
+        "1nm": "ckd/bin_sets/1nm.nc",
         "10nm": "ckd/bin_sets/10nm.nc",
-        "10nm_test": "ckd/bin_sets/10nm_test.nc",
     }
 
     @classmethod
