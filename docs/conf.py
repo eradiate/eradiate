@@ -140,7 +140,9 @@ panels_add_bootstrap_css = False
 # Intersphinx configuration for cross-project referencing
 extensions.append("sphinx.ext.intersphinx")
 intersphinx_mapping = {
+    "astropy": ("https://docs.astropy.org/en/stable/", None),
     "attr": ("https://www.attrs.org/en/stable/", None),
+    "dateutil": ("https://dateutil.readthedocs.io/en/stable/", None),
     "dessinemoi": ("https://dessinemoi.readthedocs.io/en/latest/", None),
     "matplotlib": ("https://matplotlib.org/", None),
     "mitsuba": ("https://eradiate-kernel.readthedocs.io/en/latest/", None),
@@ -188,6 +190,7 @@ napoleon_preprocess_types = True
 napoleon_type_aliases = {
     # general terms
     "callable": ":py:func:`callable`",
+    "datetime": ":py:class:`~datetime.datetime`",
     "dict_like": ":term:`dict-like <mapping>`",
     "dict-like": ":term:`dict-like <mapping>`",
     "file-like": ":term:`file-like <file-like object>`",

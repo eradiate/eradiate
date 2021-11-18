@@ -12,6 +12,10 @@ alabaster==0.7.12
     # via
     #   -c requirements/dev.txt
     #   sphinx
+astropy==4.3.1
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/main.in
 attrs==21.2.0
     # via
     #   -c requirements/dev.txt
@@ -65,7 +69,7 @@ cycler==0.11.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2021.11.0
+dask==2021.11.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -86,6 +90,10 @@ environ-config==21.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+fonttools==4.28.1
+    # via
+    #   -c requirements/dev.txt
+    #   matplotlib
 fsspec==2021.11.0
     # via
     #   -c requirements/dev.txt
@@ -98,15 +106,16 @@ idna==3.3
     # via
     #   -c requirements/dev.txt
     #   requests
-imagesize==1.2.0
+imagesize==1.3.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==4.8.1
+importlib-metadata==4.8.2
     # via
     #   -c requirements/dev.txt
+    #   astropy
     #   pint
-jinja2==3.0.2
+jinja2==3.0.3
     # via
     #   -c requirements/dev.txt
     #   sphinx
@@ -126,7 +135,7 @@ markupsafe==2.0.1
     # via
     #   -c requirements/dev.txt
     #   jinja2
-matplotlib==3.4.3
+matplotlib==3.5.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -143,18 +152,22 @@ numpy==1.21.4
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+    #   astropy
     #   cftime
     #   matplotlib
     #   netcdf4
     #   pandas
+    #   pyerfa
     #   scipy
     #   seaborn
     #   xarray
-packaging==21.2
+packaging==21.3
     # via
     #   -c requirements/dev.txt
     #   dask
+    #   matplotlib
     #   pint
+    #   setuptools-scm
     #   sphinx
 pandas==1.3.4
     # via
@@ -187,16 +200,20 @@ pybtex-docutils==1.0.1
     # via
     #   -c requirements/dev.txt
     #   sphinxcontrib-bibtex
-pydata-sphinx-theme==0.6.3
+pydata-sphinx-theme==0.7.2
     # via
     #   -c requirements/dev.txt
     #   sphinx-book-theme
+pyerfa==2.0.0.1
+    # via
+    #   -c requirements/dev.txt
+    #   astropy
 pygments==2.10.0
     # via
     #   -c requirements/dev.txt
     #   rich
     #   sphinx
-pyparsing==2.4.7
+pyparsing==3.0.6
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -204,6 +221,7 @@ pyparsing==2.4.7
 python-dateutil==2.8.2
     # via
     #   -c requirements/dev.txt
+    #   -r requirements/main.in
     #   matplotlib
     #   pandas
 pytz==2021.3
@@ -221,7 +239,7 @@ requests==2.26.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-rich==10.13.0
+rich==10.14.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -243,21 +261,25 @@ seaborn==0.11.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+setuptools-scm==6.3.2
+    # via
+    #   -c requirements/dev.txt
+    #   matplotlib
 six==1.16.0
     # via
     #   -c requirements/dev.txt
     #   latexcodec
     #   pybtex
     #   python-dateutil
-snowballstemmer==2.1.0
+snowballstemmer==2.2.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-soupsieve==2.3
+soupsieve==2.3.1
     # via
     #   -c requirements/dev.txt
     #   beautifulsoup4
-sphinx==4.2.0
+sphinx==4.3.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -267,7 +289,7 @@ sphinx==4.2.0
     #   sphinx-gallery
     #   sphinx-panels
     #   sphinxcontrib-bibtex
-sphinx-book-theme==0.1.6
+sphinx-book-theme==0.1.7
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -275,7 +297,7 @@ sphinx-copybutton==0.4.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx-gallery==0.10.0
+sphinx-gallery==0.10.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -315,6 +337,10 @@ tinydb==4.5.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
+tomli==1.2.2
+    # via
+    #   -c requirements/dev.txt
+    #   setuptools-scm
 toolz==0.11.2
     # via
     #   -c requirements/dev.txt
@@ -344,9 +370,10 @@ zipp==3.6.0
     #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==58.5.3
+setuptools==59.1.1
     # via
     #   -c requirements/dev.txt
     #   cerberus
+    #   setuptools-scm
     #   sphinx
     #   xarray
