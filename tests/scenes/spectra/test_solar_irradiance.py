@@ -4,14 +4,13 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
-from eradiate._util import onedict_value
 from eradiate.ckd import BinSet
 from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.scenes.core import KernelDict
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 
 
 def test_solar_irradiance(mode_mono):
-    from mitsuba.core.xml import load_dict
 
     # Default context
     ctx = KernelDictContext()
@@ -24,11 +23,11 @@ def test_solar_irradiance(mode_mono):
         SolarIrradianceSpectrum(dataset="doesnt_exist")
 
     # Produced kernel dict is valid
-    assert load_dict(onedict_value(s.kernel_dict(ctx))) is not None
+    assert KernelDict.from_elements(s, ctx=ctx).load()
 
     # A more detailed specification still produces a valid object
     s = SolarIrradianceSpectrum(scale=2.0)
-    assert load_dict(onedict_value(s.kernel_dict(ctx))) is not None
+    assert KernelDict.from_elements(s, ctx=ctx).load()
 
     # Element doesn't work out of the supported spectral range
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
@@ -40,7 +39,7 @@ def test_solar_irradiance(mode_mono):
     # solid_2017_mean dataset can be used
     ctx = KernelDictContext()
     s = SolarIrradianceSpectrum(dataset="solid_2017_mean")
-    assert load_dict(onedict_value(s.kernel_dict(ctx)))
+    assert KernelDict.from_elements(s, ctx=ctx).load()
 
 
 def test_solar_irradiance_eval(modes_all):
@@ -62,3 +61,26 @@ def test_solar_irradiance_eval(modes_all):
 
     else:
         assert False
+
+
+def test_solar_irradiance_scale(mode_mono):
+    s = SolarIrradianceSpectrum(dataset="thuillier_2003")
+
+    # We can scale the spectrum using a float
+    s_scaled_float = SolarIrradianceSpectrum(dataset="thuillier_2003", scale=10.0)
+    assert (
+        s_scaled_float.eval_mono(550.0 * ureg.nm) == s.eval_mono(550.0 * ureg.nm) * 10.0
+    )
+
+
+def test_solar_irradiance_datetime(mode_mono):
+    s = SolarIrradianceSpectrum(dataset="thuillier_2003")
+
+    # We can also use a datetime to scale the spectrum
+    s_scaled_datetime = SolarIrradianceSpectrum(
+        dataset="thuillier_2003", datetime="2021-11-18"
+    )
+    assert np.isclose(
+        s_scaled_datetime.eval_mono(550.0 * ureg.nm),
+        s.eval_mono(550.0 * ureg.nm) * 0.98854537 ** 2,
+    )
