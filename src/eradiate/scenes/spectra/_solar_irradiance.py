@@ -1,6 +1,13 @@
 from __future__ import annotations
 
+import datetime
+import typing as t
+
+import astropy.coordinates
+import astropy.time
+import astropy.units
 import attr
+import dateutil
 import numpy as np
 import pint
 import xarray as xr
@@ -26,28 +33,40 @@ class SolarIrradianceSpectrum(Spectrum):
 
     This scene element produces the scene dictionary required to
     instantiate a kernel plugin using the Sun irradiance spectrum. The data set
-    used by this element is controlled by the ``dataset`` attribute (see
+    used by this element is controlled by the ``dataset`` field (see
     :mod:`eradiate.data.solar_irradiance_spectra` for available data sets).
 
-    The spectral range of the data sets shipped can vary and an attempt for use
-    outside of the supported spectral range will raise a :class:`ValueError`
-    upon calling :meth:`kernel_dict`.
+    Notes
+    ------
 
-    The generated kernel dictionary varies based on the selected mode of
-    operation. The ``scale`` parameter can be used to adjust the value based on
-    unit conversion or to account for variations of the Sun-planet distance.
+    * The spectral range of the data sets shipped can vary and an attempt for
+      use outside of the supported spectral range will raise a
+      :class:`ValueError` upon calling :meth:`kernel_dict`.
 
-    The produced kernel dictionary automatically adjusts its irradiance units
-    depending on the selected kernel default units.
+    * The spectrum is automatically adjusted when the ``datetime`` field is set.
+      Datasets without a time dimension are assumed to be normalised to a given
+      Earth-Sun distance and the data is scaled based on the actual Earth-Sun
+      distance for the specified date, computed using the ephemeris of
+      :func:`astropy.coordinates.get_sun`.
 
-    Evaluation is as follows:
+    * The ``scale`` field can be used to apply additional arbitrary scaling.
+      It is mostly used for debugging purposes.
 
-    * in ``mono_*`` modes, the spectrum is evaluated at the spectral context
-      wavelength;
-    * in ``ckd_*`` modes, the spectrum is evaluated as the average value over
-      the spectral context bin (the integral is computed using a trapezoid
-      rule).
+    * The evaluation method depends on the active mode:
+
+      * in ``mono_*`` modes, the spectrum is evaluated at the spectral context
+        wavelength;
+      * in ``ckd_*`` modes, the spectrum is evaluated as the average value over
+        the spectral context bin (the integral is computed using a trapezoid
+        rule).
+
+    * The produced kernel dictionary automatically adjusts its irradiance units
+      depending on the selected kernel default units.
     """
+
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
 
     quantity: PhysicalQuantity = attr.ib(
         default=PhysicalQuantity.IRRADIANCE, init=False, repr=False
@@ -59,19 +78,9 @@ class SolarIrradianceSpectrum(Spectrum):
             validator=attr.validators.instance_of(str),
         ),
         doc="Dataset identifier. Allowed values: see "
-        ":attr:`solar irradiance dataset documentation <eradiate.data.solar_irradiance_spectra>`. "
-        'Default: ``"thuillier_2003"``. ',
+        ":attr:`solar irradiance dataset documentation <eradiate.data.solar_irradiance_spectra>`.",
         type="str",
-    )
-
-    scale: float = documented(
-        attr.ib(
-            default=1.0,
-            converter=float,
-            validator=validators.is_positive,
-        ),
-        doc="Scaling factor. Default: 1.",
-        type="float",
+        default='``"thuiller_2003"``',
     )
 
     @dataset.validator
@@ -83,15 +92,59 @@ class SolarIrradianceSpectrum(Spectrum):
                 f"{data.registered('solar_irradiance_spectrum')}"
             )
 
+    scale: float = documented(
+        attr.ib(default=1.0, converter=float, validator=validators.is_positive),
+        doc="Arbitrary scaling factor.",
+        type="float or datetime",
+        init_type="float or datetime or str",
+        default="1.0",
+    )
+
+    datetime: t.Optional[datetime.datetime] = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(dateutil.parser.parse),
+        ),
+        type="datetime or None",
+        init_type="datetime or str, optional",
+        doc="Date for which the spectrum is to be evaluated. An ISO "
+        "string can be passed and will be interpreted by "
+        ":meth:`dateutil.parser.parse`.",
+    )
+
     data: xr.Dataset = attr.ib(init=False, repr=False)
 
     @data.default
     def _data_factory(self):
         # Load dataset
         try:
-            return data.open("solar_irradiance_spectrum", self.dataset)
+            ds = data.open("solar_irradiance_spectrum", self.dataset)
+            ds.load()
+            ds.close()
+            return ds
         except KeyError as e:
             raise ValueError(f"unknown dataset {self.dataset}") from e
+
+    def _scale_earth_sun_distance(self) -> float:
+        """
+        Compute scaling factor applied to the irradiance spectrum based on the
+        Earth-Sun distance.
+        """
+        # Note: We assume that the loaded dataset is for a reference
+        # Earth-Sun distance of 1 AU
+        if self.datetime is None:
+            return 1.0
+
+        else:
+            return (
+                float(
+                    astropy.coordinates.get_sun(
+                        astropy.time.Time(self.datetime)
+                    ).distance
+                    / astropy.units.au
+                )
+                ** 2
+            )
 
     def eval(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         if self.dataset == "solid_2017":
@@ -114,7 +167,7 @@ class SolarIrradianceSpectrum(Spectrum):
         if np.any(np.isnan(irradiance.magnitude)):
             raise ValueError("dataset interpolation returned nan")
 
-        return irradiance
+        return irradiance * self.scale * self._scale_earth_sun_distance()
 
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         # Spectrum is averaged over spectral bin
@@ -155,12 +208,12 @@ class SolarIrradianceSpectrum(Spectrum):
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         # Apply scaling, build kernel dict
+        value = float(self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance")))
         return KernelDict(
             {
                 "spectrum": {
                     "type": "uniform",
-                    "value": self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
-                    * self.scale,
+                    "value": value,
                 }
             }
         )
