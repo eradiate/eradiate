@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import pathlib
 import typing as t
-import warnings
 
 import attr
 import numpy as np
@@ -28,7 +27,7 @@ from ..._mode import ModeFlags
 from ...attrs import AUTO, documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
-from ...exceptions import OverriddenValueWarning, UnsupportedModeError
+from ...exceptions import UnsupportedModeError
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -179,8 +178,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         if ctx.override_scene_width is not None:
-            if self.width is not AUTO:
-                warnings.warn(OverriddenValueWarning("Overriding particle layer width"))
             return ctx.override_scene_width
 
         else:

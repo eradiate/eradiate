@@ -5,7 +5,6 @@ Molecular atmospheres.
 from __future__ import annotations
 
 import typing as t
-import warnings
 
 import attr
 import numpy as np
@@ -17,7 +16,6 @@ from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...exceptions import OverriddenValueWarning
 from ...radprops.rad_profile import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
 from ...thermoprops import afgl_1986, us76
 from ...thermoprops.util import (
@@ -127,8 +125,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         if ctx is not None and ctx.override_scene_width is not None:
-            if self.width is not AUTO:
-                warnings.warn(OverriddenValueWarning("Overriding particle layer width"))
             return ctx.override_scene_width
         else:
             if self.width is AUTO:

@@ -66,7 +66,10 @@ class OneDimExperiment(EarthObservationExperiment):
     def _surface_validator(self, attribute, value):
         if self.atmosphere and value.width is not AUTO:
             warnings.warn(
-                OverriddenValueWarning("surface size will be overridden by atmosphere")
+                OverriddenValueWarning(
+                    "user-defined surface width will be overridden by "
+                    "atmosphere width"
+                )
             )
 
     _integrator: Integrator = documented(
@@ -87,6 +90,7 @@ class OneDimExperiment(EarthObservationExperiment):
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = KernelDict({"type": "scene"})
 
+        # Note: Surface width is always set equal to atmosphere width
         if self.atmosphere is not None:
             result.add(self.atmosphere, ctx=ctx)
             ctx = ctx.evolve(override_scene_width=self.atmosphere.kernel_width(ctx))

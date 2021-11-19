@@ -18,9 +18,9 @@ from ..scenes.integrators import (
     integrator_factory,
 )
 from ..scenes.measure import Measure, TargetPoint
-from ..scenes.measure._core import MeasureFlags
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc
+from ..units import unit_registry as ureg
 
 
 @parse_docs
@@ -111,7 +111,8 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         if (self.canopy or self.atmosphere) and value.width is not AUTO:
             warnings.warn(
                 OverriddenValueWarning(
-                    "surface size will be overridden by canopy or atmosphere"
+                    "user-defined surface width will be overridden by canopy "
+                    "or atmosphere size"
                 )
             )
 
@@ -150,10 +151,12 @@ class Rami4ATMExperiment(EarthObservationExperiment):
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = KernelDict()
 
+        # Note: Surface width is always set equal to the largest between the
+        # atmosphere and canopy sizes
         if self.atmosphere is not None:
             atm_width = self.atmosphere.kernel_width(ctx)
         else:
-            atm_width = 0.0
+            atm_width = 0.0 * ureg.m
 
         if self.canopy is not None:
             if self.padding > 0:  # We must add extra instances if padding is requested
@@ -163,7 +166,7 @@ class Rami4ATMExperiment(EarthObservationExperiment):
                 canopy = self.canopy
                 canopy_width = max(canopy.size[:2])
         else:
-            canopy_width = 0.0
+            canopy_width = 0.0 * ureg.m
             canopy = None
 
         scene_width = max(atm_width, canopy_width)

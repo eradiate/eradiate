@@ -83,7 +83,9 @@ class RamiExperiment(EarthObservationExperiment):
     def _surface_validator(self, attribute, value):
         if self.canopy and value.width is not AUTO:
             warnings.warn(
-                OverriddenValueWarning("surface size will be overridden by canopy")
+                OverriddenValueWarning(
+                    "user-defined surface width will be overridden by canopy size"
+                )
             )
 
     _integrator: Integrator = documented(
@@ -108,6 +110,7 @@ class RamiExperiment(EarthObservationExperiment):
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = KernelDict()
 
+        # Note: Surface width is always adapted to the canopy extent
         if self.canopy is not None:
             if self.padding > 0:  # We must add extra instances if padding is requested
                 canopy = self.canopy.padded_copy(self.padding)

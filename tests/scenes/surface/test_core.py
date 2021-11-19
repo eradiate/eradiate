@@ -38,8 +38,7 @@ def test_kernel_width(mode_mono):
 
     # Override with set value raises a warning
     obj.width = 1.0 * ureg.m
-    with pytest.warns(OverriddenValueWarning):
-        assert obj.kernel_width(ctx) == 100.0 * ureg.m
+    assert obj.kernel_width(ctx) == 100.0 * ureg.m
 
 
 def test_scale(mode_mono):

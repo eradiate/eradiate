@@ -13,7 +13,7 @@ from ... import converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
-from ...exceptions import ConfigWarning, OverriddenValueWarning
+from ...exceptions import ConfigWarning
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -149,8 +149,6 @@ class Surface(SceneElement, ABC):
             Kernel object width.
         """
         if ctx.override_scene_width is not None:
-            if self.width is not AUTO:
-                warnings.warn(OverriddenValueWarning("Overriding surface width"))
             return ctx.override_scene_width
         else:
             if self.width is not AUTO:
