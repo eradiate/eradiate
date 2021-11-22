@@ -12,10 +12,6 @@ anyio==3.3.4
     # via jupyter-server
 appdirs==1.4.4
     # via ensureconda
-appnope==0.1.2
-    # via
-    #   ipykernel
-    #   ipython
 argcomplete==1.12.3
     # via ipykernel
 argon2-cffi==21.1.0
@@ -55,7 +51,9 @@ cerberus==1.3.4
 certifi==2021.10.8
     # via requests
 cffi==1.15.0
-    # via argon2-cffi
+    # via
+    #   argon2-cffi
+    #   cryptography
 cftime==1.5.1.1
     # via netcdf4
 charset-normalizer==2.0.7
@@ -83,9 +81,11 @@ conda-lock==0.13.1
     # via -r requirements/dev.in
 coverage==6.1.2
     # via -r requirements/dev.in
+cryptography==36.0.0
+    # via secretstorage
 cycler==0.11.0
     # via matplotlib
-dask==2021.11.1
+dask==2021.11.2
     # via -r requirements/main.in
 debugpy==1.5.1
     # via ipykernel
@@ -118,7 +118,7 @@ execnet==1.9.0
     # via pytest-xdist
 filelock==3.4.0
     # via ensureconda
-fonttools==4.28.1
+fonttools==4.28.2
     # via matplotlib
 fsspec==2021.11.0
     # via dask
@@ -147,7 +147,7 @@ importlib-resources==5.4.0
     # via jsonschema
 iniconfig==1.1.1
     # via pytest
-ipykernel==6.5.0
+ipykernel==6.5.1
     # via
     #   ipywidgets
     #   notebook
@@ -169,6 +169,10 @@ isort==5.10.1
     # via -r requirements/dev.in
 jedi==0.18.1
     # via ipython
+jeepney==0.7.1
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.0.3
     # via
     #   conda-lock
@@ -238,7 +242,7 @@ mypy-extensions==0.4.3
     # via black
 nbclassic==0.3.4
     # via jupyterlab
-nbclient==0.5.8
+nbclient==0.5.9
     # via nbconvert
 nbconvert==6.3.0
     # via
@@ -316,7 +320,7 @@ pinttrs==21.3.1
     # via -r requirements/main.in
 pip-tools==6.4.0
     # via -r requirements/dev.in
-pkginfo==1.7.1
+pkginfo==1.8.1
     # via twine
 platformdirs==2.4.0
     # via black
@@ -436,6 +440,8 @@ scipy==1.7.2
     #   seaborn
 seaborn==0.11.2
     # via -r requirements/main.in
+secretstorage==3.3.1
+    # via keyring
 send2trash==1.8.0
     # via
     #   jupyter-server
@@ -456,7 +462,7 @@ snowballstemmer==2.2.0
     # via sphinx
 soupsieve==2.3.1
     # via beautifulsoup4
-sphinx==4.3.0
+sphinx==4.2.0
     # via
     #   -r requirements/docs.in
     #   -r requirements/tests.in
@@ -573,7 +579,7 @@ pip==21.3.1
     # via
     #   -r requirements/dev.in
     #   pip-tools
-setuptools==59.1.1
+setuptools==59.2.0
     # via
     #   -r requirements/dev.in
     #   cerberus

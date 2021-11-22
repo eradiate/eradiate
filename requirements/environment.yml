@@ -50,7 +50,7 @@ dependencies:
   # docs
   - mock
   - sphinx-book-theme
-  - sphinx>=3.1
+  - sphinx>=3.1,!=4.3.*
   - sphinxcontrib-bibtex>=2.0
   - sphinx-copybutton
   - sphinx-gallery
