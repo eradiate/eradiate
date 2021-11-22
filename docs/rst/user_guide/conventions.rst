@@ -4,19 +4,20 @@ Conventions in Eradiate
 =======================
 
 Eradiate aims at building bridges between communities. In some cases, this can
-however lead to difficult situations due to identical wording or names meaning
-different things. For concepts, Eradiate has a glossary; for other things
+however lead to difficult situations due to identical phrases or names meaning
+different things. For concepts, Eradiate has a
+:ref:`glossary <sec-user_guide-basic_concepts>`; for other things
 bound to a convention (*e.g.* the practical definition of angles used in
 spherical coordinates), this page should settle things.
 
 Local coordinate definition
 ---------------------------
 
-Internally, Eradiate and its kernel Mitsuba use Cartesian coordinates to locate
-scene objects. Scene construction, when relevant, map the X, Y and Z axes to the
-local East, North and up directions at the origin location. Note that this does
-not mean that Eradiate always uses an East, North, up (ENU) coordinate system:
-this is only relevant when planetary curvature can be neglected.
+Internally, Eradiate and its kernel Mitsuba 2 use Cartesian coordinates to
+locate scene objects. Scene construction, when relevant, map the X, Y and Z axes
+to the local East, North and up directions at the origin location. Note that
+this does not mean that Eradiate always uses an East, North, up (ENU) coordinate
+system: this is only relevant when planetary curvature can be neglected.
 
 Local illumination and viewing angle definition
 -----------------------------------------------
