@@ -15,6 +15,10 @@ This guide covers all steps necessary to get Eradiate running on your machine.
    * integrating Eradiate in your workflow can be a bit constraining if you have
      specific requirements on package versions.
 
+.. note::
+   If you are interested in running Eradiate with Docker, see the
+   :ref:`dedicated page <sec-getting_started-docker>`.
+
 Prerequisites
 -------------
 
@@ -112,7 +116,7 @@ Cloning the repository
 
    Eradiate relies on the `Git source code management tool <https://git-scm.com/>`_.
    It also depends on multiple external dependencies, some of which (*e.g.* its
-   computational kernel based on
+   radiometric kernel based on
    `Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_) are directly
    referred to using
    `Git submodules <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_.
@@ -145,8 +149,9 @@ can be changed to your liking. We will first create an empty environment:
 
    conda create --name eradiate
 
-.. warning:: If an environment with the same name exists, you will be prompted
-   for overwrite.
+.. warning::
+   If an environment with the same name exists, you will be prompted for
+   overwrite.
 
 This produces an empty environment, which we then activate:
 
@@ -277,7 +282,7 @@ Download these data sets by running the following script:
 
 Total download file size is less than 180 MB.
 
-
+.. _sec-getting_started-install-verify_installation:
 
 Verifying the installation
 --------------------------
