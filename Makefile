@@ -24,7 +24,7 @@ pip-update-tools:
 
 # Update .in files
 pip-update-in-files:
-	python requirements/make_pip_in_files.py --quiet
+	python3 requirements/make_pip_in_files.py --quiet
 
 # Lock pip dependencies
 # Dev must be compiled first because it constrains the others
@@ -56,23 +56,23 @@ pip-update: pip-lock pip-init
 
 # Lock conda dependencies
 conda-lock:
-	python requirements/make_conda_env.py -o requirements/environment.yml --quiet
+	python3 requirements/make_conda_env.py -o requirements/environment.yml --quiet
 	conda-lock --mamba --file requirements/environment.yml \
 	    --filename-template "requirements/environment-{platform}.lock" \
 	    -p $(PLATFORM)
 
 conda-lock-all:
-	python requirements/make_conda_env.py -o requirements/environment.yml --quiet
+	python3 requirements/make_conda_env.py -o requirements/environment.yml --quiet
 	conda-lock --mamba --file requirements/environment.yml \
 	    --filename-template "requirements/environment-{platform}.lock" \
 	    -p osx-64 -p linux-64
 
 # Initialise development environment
 conda-init:
-	python requirements/check_conda_env.py
+	python3 requirements/check_conda_env.py
 	conda config --env --add channels conda-forge --add channels eradiate
 	conda update --file requirements/environment-$(PLATFORM).lock
-	python requirements/copy_envvars.py
+	python3 requirements/copy_envvars.py
 	pip install --editable . --no-deps
 
 conda-update: conda-lock-all conda-init
