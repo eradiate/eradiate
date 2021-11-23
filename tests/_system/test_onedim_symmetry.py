@@ -10,8 +10,6 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.plot import remove_xylabels
 
-output_dir = os.path.join(eradiate.config.dir, "test_report", "generated")
-
 
 def ensure_dir(path):
     if not os.path.isdir(path):
@@ -21,7 +19,7 @@ def ensure_dir(path):
 @pytest.mark.parametrize("atmosphere", ["none", "homogeneous"])
 @pytest.mark.parametrize("surface", ["lambertian", "rpv"])
 @pytest.mark.slow
-def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
+def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
     r"""
     Result symmetry
     ===============
@@ -120,8 +118,8 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere):
     plt.tight_layout()
 
     filename = f"test_symmetry_zenith_{surface}_{str(atmosphere)}.png"
-    ensure_dir(os.path.join(output_dir, "plots"))
-    fname_plot = os.path.join(output_dir, "plots", filename)
+    ensure_dir(os.path.join(artefact_dir, "plots"))
+    fname_plot = os.path.join(artefact_dir, "plots", filename)
 
     fig.savefig(fname_plot, dpi=200)
     plt.close()

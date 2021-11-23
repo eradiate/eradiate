@@ -6,9 +6,6 @@ import pytest
 
 import eradiate
 
-eradiate_dir = eradiate.config.dir
-output_dir = os.path.join(eradiate_dir, "test_report", "generated")
-
 
 def ensure_output_dir(path):
     if not os.path.isdir(path):
@@ -16,7 +13,7 @@ def ensure_output_dir(path):
 
 
 @pytest.mark.slow
-def test_albedo(mode_mono):
+def test_albedo(mode_mono, systemtest_outdir):
     """
     Albedo
     ======
@@ -194,8 +191,8 @@ def test_albedo(mode_mono):
         plt.tight_layout()
 
         filename = f"test_albedo_{exp_name}.png"
-        ensure_output_dir(os.path.join(output_dir, "plots"))
-        fname_plot = os.path.join(output_dir, "plots", filename)
+        ensure_output_dir(os.path.join(systemtest_outdir, "plots"))
+        fname_plot = os.path.join(systemtest_outdir, "plots", filename)
 
         fig.savefig(fname_plot, dpi=200)
         plt.close()
