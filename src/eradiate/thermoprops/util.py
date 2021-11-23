@@ -86,6 +86,9 @@ def compute_column_mass_density(ds, species):
         Column mass density.
     """
     molecular_mass = data.open(category="chemistry", id="molecular_masses")
+    molecular_mass.load()
+    molecular_mass.close()
+
     m = molecular_mass.m.sel(s=species).values * ATOMIC_MASS_CONSTANT
     return m * compute_column_number_density(ds=ds, species=species)
 
@@ -131,6 +134,9 @@ def compute_mass_density_at_surface(ds, species):
         Mass density at the surface.
     """
     molecular_mass = data.open(category="chemistry", id="molecular_masses")
+    molecular_mass.load()
+    molecular_mass.close()
+
     m = to_quantity(molecular_mass.m.sel(s=species)) * ATOMIC_MASS_CONSTANT
     return m * compute_number_density_at_surface(ds=ds, species=species)
 

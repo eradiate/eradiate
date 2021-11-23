@@ -276,7 +276,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 radprops = interpolate_radprops(
                     component.eval_radprops(spectral_ctx), new_z_layer=hrz
                 )
-                # We store only the
+                # We store only the magnitude
                 sigma_ts.append(to_quantity(radprops.sigma_t).m_as(sigma_units))
                 sigma_ss.append(
                     (to_quantity(radprops.sigma_t) * radprops.albedo.values).m_as(

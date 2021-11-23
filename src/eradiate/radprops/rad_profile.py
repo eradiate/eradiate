@@ -768,7 +768,10 @@ class US76ApproxRadProfile(RadProfile):
             absorber=Absorber.us76_u86_4,
             engine=Engine.SPECTRA,
         )
-        return data.open(category="absorption_spectrum", id=dataset_id)
+        ds = data.open(category="absorption_spectrum", id=dataset_id)
+        ds.load()
+        ds.close()
+        return ds
 
     def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
         profile = self.thermoprops

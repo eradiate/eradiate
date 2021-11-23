@@ -487,6 +487,8 @@ class BinSet:
             Bin set definition.
         """
         ds = data.open("ckd_bin_set", id)
+        ds.load()
+        ds.close()
         return BinSet.from_dataset(id=id, ds=ds)
 
     @staticmethod
@@ -506,5 +508,4 @@ class BinSet:
         :class:`.BinSet`
             Bin set definition associated with the passed CKD node data.
         """
-
         return BinSet.from_db(ds.attrs["bin_set"])

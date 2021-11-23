@@ -89,6 +89,9 @@ def test_ckd_bin_set_constructors(mode_ckd):
 
     # Load from node (i.e. gas absorption) dataset
     ds = data.open("ckd_absorption", "afgl_1986-us_standard-10nm_test")
+    ds.load()
+    ds.close()
+
     bin_set = BinSet.from_node_dataset(ds)
     assert bin_set.id == "10nm_test"
 
