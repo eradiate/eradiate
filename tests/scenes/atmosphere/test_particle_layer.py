@@ -1,14 +1,17 @@
+import numpy as np
 import pytest
+import xarray as xr
 
 from eradiate import path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.atmosphere._particle_dist import UniformParticleDistribution
 from eradiate.scenes.atmosphere._particle_layer import ParticleLayer
+from eradiate.units import to_quantity
 
 
 def test_particle_layer_construct_basic(mode_mono):
-    # Construction succeeds with basic parameters
+    """Construction succeeds with basic parameters."""
     assert ParticleLayer(n_layers=9)
 
 
@@ -85,8 +88,8 @@ def test_dataset():
     return path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc")
 
 
-def test_particle_layer_radprops(mode_mono, test_dataset):
-    """Method 'radprops' returns data set with expected data_vars and coords."""
+def test_particle_layer_eval_radprops(mode_mono, test_dataset):
+    """Method 'eval_radprops' returns dataset with expected datavars and coords."""
     layer = ParticleLayer(dataset=test_dataset)
     spectral_ctx = SpectralContext.new()
     ds = layer.eval_radprops(spectral_ctx)
@@ -95,3 +98,51 @@ def test_particle_layer_radprops(mode_mono, test_dataset):
     assert all([coord in ds.coords for coord in expected_coords]) and all(
         [var in ds.data_vars for var in expected_data_vars]
     )
+
+
+@pytest.mark.parametrize("tau_550", [0.1, 0.5, 1.0, 5.0])
+def test_particle_layer_eval_sigma_t(mode_mono, tau_550, test_dataset):
+    r"""Spectral dependance of extinction is accounted for.
+
+    If :math:`\sigma_t(\lambda)` denotes the extinction coefficient at the
+    wavelength :math:`\lambda`, then the optical thickness of a uniform
+    particle layer is :math:`\tau(\lambda) = \sigma_t(\lambda) \, \Delta z`
+    where :math:`\Delta z` is the layer's thickness.
+    It follows that:
+
+    .. math::
+
+       \frac{\tau(\lambda)}{\tau(550\, \mathrm{nm})} =
+       \frac{\sigma(\lambda)}{\sigma(550\, \mathrm{nm})}
+
+    which is what we assert in this test.
+    """
+    wavelengths = np.linspace(500.0, 1500.0, 11) * ureg.nm
+    tau_550 = tau_550 * ureg.dimensionless
+
+    # tau_550 = 1.0 * ureg.dimensionless
+    layer = ParticleLayer(
+        dataset=test_dataset,
+        bottom=0.0 * ureg.km,
+        top=1.0 * ureg.km,
+        distribution={"type": "uniform"},
+        n_layers=1,
+        tau_550=tau_550,
+    )
+
+    # layer optical thickness @ current wavelengths
+    tau = np.empty_like(wavelengths) * ureg.dimensionless
+
+    for i, w in enumerate(wavelengths):
+        spectral_ctx = SpectralContext.new(wavelength=w)
+        tau[i] = layer.eval_sigma_t(spectral_ctx) * layer.height
+
+    # data set extinction @ running wavelength and 550 nm
+    with xr.open_dataset(test_dataset) as ds:
+        w_units = ureg(ds.w.attrs["units"])
+        sigma_t = to_quantity(ds.sigma_t.interp(w=wavelengths.m_as(w_units)))
+        sigma_t_550 = to_quantity(ds.sigma_t.interp(w=(550.0 * ureg.nm).m_as(w_units)))
+
+    # the spectral dependence of the optical thickness and extinction coefficient
+    # match, so the below ratios must match
+    assert np.allclose(tau / tau_550, sigma_t / sigma_t_550)
