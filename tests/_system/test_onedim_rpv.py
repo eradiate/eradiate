@@ -10,9 +10,6 @@ import xarray as xr
 import eradiate
 from eradiate import unit_registry as ureg
 
-eradiate_dir = os.environ["ERADIATE_DIR"]
-output_dir = os.path.join(eradiate_dir, "test_report", "generated")
-
 
 def ensure_output_dir(path):
     if not os.path.isdir(path):
@@ -25,7 +22,7 @@ def map_to_0_360(x: float) -> float:
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
 def test_film_to_angular_coord_conversion_multi_distant(
-    mode_mono_double, illumination_azimuth
+    mode_mono_double, illumination_azimuth, artefact_dir
 ):
     r"""
     Film to angular coordinates conversion (`multi_distant`)
@@ -191,7 +188,7 @@ def test_film_to_angular_coord_conversion_multi_distant(
         )
         return forward_brf.mean().values > backward_brf.mean().values
 
-    def make_figure(results, g, forward=True):
+    def make_figure(results, g, artefact_dir, forward=True):
         brf = results.brf
         brf_forward = select_forward_brf(
             brf=brf,
@@ -263,14 +260,14 @@ def test_film_to_angular_coord_conversion_multi_distant(
         )
         plt.title("backward BRF")
         filename = f"test_ftacc_multi_distant_{desc.lower()}_{illumination_azimuth}.png"
-        ensure_output_dir(os.path.join(output_dir, "plots"))
-        fname_plot = os.path.join(output_dir, "plots", filename)
+        ensure_output_dir(os.path.join(artefact_dir, "plots"))
+        fname_plot = os.path.join(artefact_dir, "plots", filename)
         plt.tight_layout()
         fig.savefig(fname_plot, dpi=200)
         plt.close()
 
-    make_figure(results=results1, g=g1, forward=True)
-    make_figure(results=results2, g=g2, forward=False)
+    make_figure(results=results1, g=g1, artefact_dir=artefact_dir, forward=True)
+    make_figure(results=results2, g=g2, artefact_dir=artefact_dir, forward=False)
 
     assert is_forward_scattering(
         brf=results1.brf,
@@ -411,6 +408,7 @@ def make_figure(
     illumination_azimuth: float,
     measure: str,
     res: int,
+    artefact_dir,
 ):
     if forward:
         desc = "Forward"
@@ -449,8 +447,8 @@ def make_figure(
     plt.text(s=f"mean = {mean:.2e}", x=res / 2, y=res / 2, ha="center", color="red")
     plt.title(f"backward {name}")
     filename = f"test_ftacc_{measure}_{desc.lower()}_{illumination_azimuth}.png"
-    ensure_output_dir(os.path.join(output_dir, "plots"))
-    fname_plot = os.path.join(output_dir, "plots", filename)
+    ensure_output_dir(os.path.join(artefact_dir, "plots"))
+    fname_plot = os.path.join(artefact_dir, "plots", filename)
     plt.tight_layout()
     fig.savefig(fname_plot, dpi=200)
     plt.close()
@@ -458,7 +456,7 @@ def make_figure(
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
 def test_film_to_angular_coord_conversion_distant_flux(
-    mode_mono_double, illumination_azimuth
+    mode_mono_double, illumination_azimuth, artefact_dir
 ):
     r"""
     Film to angular coordinates conversion (`distant_flux`)
@@ -602,6 +600,7 @@ def test_film_to_angular_coord_conversion_distant_flux(
         illumination_azimuth=illumination_azimuth,
         measure="distant_flux",
         res=res,
+        artefact_dir=artefact_dir,
     )
     make_figure(
         results=results2,
@@ -611,6 +610,7 @@ def test_film_to_angular_coord_conversion_distant_flux(
         illumination_azimuth=illumination_azimuth,
         measure="distant_flux",
         res=res,
+        artefact_dir=artefact_dir,
     )
 
     assert is_forward_scattering(
@@ -627,7 +627,7 @@ def test_film_to_angular_coord_conversion_distant_flux(
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
 def test_film_to_angular_coord_conversion_hemispherical_distant(
-    mode_mono_double, illumination_azimuth
+    mode_mono_double, illumination_azimuth, artefact_dir
 ):
     r"""
     Film to angular coordinates conversion (`hdistant`)
@@ -771,6 +771,7 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
         illumination_azimuth=illumination_azimuth,
         measure="hdistant",
         res=res,
+        artefact_dir=artefact_dir,
     )
     make_figure(
         results=results2,
@@ -780,6 +781,7 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
         illumination_azimuth=illumination_azimuth,
         measure="hdistant",
         res=res,
+        artefact_dir=artefact_dir,
     )
 
     assert is_forward_scattering(

@@ -9,9 +9,6 @@ import eradiate
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 
-eradiate_dir = os.environ["ERADIATE_DIR"]
-output_dir = os.path.join(eradiate_dir, "test_report", "generated")
-
 
 def ensure_output_dir(path):
     if not os.path.isdir(path):
@@ -130,7 +127,7 @@ def make_figure(
 @pytest.mark.skipif_data_not_found("absorption_spectrum", "H2O-spectra-18200_18300")
 @pytest.mark.skipif_data_not_found("absorption_spectrum", "H2O-spectra-18300_18400")
 @pytest.mark.slow
-def test_550(reflectance):
+def test_550(reflectance, artefact_dir):
     r"""
     Results consistency between `mono_double` and `ckd_double` modes
     ================================================================
@@ -237,8 +234,8 @@ def test_550(reflectance):
 
     # Make figure
     filename = f"test_onedim_ckd_vs_mono_{bins}_{reflectance}.png"
-    ensure_output_dir(os.path.join(output_dir, "plots"))
-    fname_plot = os.path.join(output_dir, "plots", filename)
+    ensure_output_dir(os.path.join(artefact_dir, "plots"))
+    fname_plot = os.path.join(artefact_dir, "plots", filename)
     make_figure(
         ckd_results=ckd_results,
         mono_results_averaged=mono_results_integrated,
@@ -267,7 +264,7 @@ def test_550(reflectance):
 @pytest.mark.skipif_data_not_found("absorption_spectrum", "O2-spectra-9400_9500")
 @pytest.mark.skipif_data_not_found("absorption_spectrum", "O2-spectra-9500_9600")
 @pytest.mark.slow
-def test_1050(reflectance):
+def test_1050(reflectance, artefact_dir):
     r"""
     Results consistency between `mono_double` and `ckd_double` modes
     ================================================================
@@ -374,8 +371,8 @@ def test_1050(reflectance):
 
     # Make figure
     filename = f"test_onedim_ckd_vs_mono_{bins}_{reflectance}.png"
-    ensure_output_dir(os.path.join(output_dir, "plots"))
-    fname_plot = os.path.join(output_dir, "plots", filename)
+    ensure_output_dir(os.path.join(artefact_dir, "plots"))
+    fname_plot = os.path.join(artefact_dir, "plots", filename)
     make_figure(
         ckd_results=ckd_results,
         mono_results_averaged=mono_results_averaged,

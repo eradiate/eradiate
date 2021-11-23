@@ -105,9 +105,16 @@ class EradiateConfig:
         help="Path to the Eradiate download directory.",
     )
 
+    systemtest_output_dir = environ.var(
+        default="$ERADIATE_DIR/test_report/generated",
+        converter=lambda x: pathlib.Path(os.path.expandvars(x)).absolute(),
+        help="Path to the Eradiate system test plot outputs.",
+    )
+
     #: An integer flag setting the level of progress display
     #: [0: None; 1: Spectral loop; 2: Kernel]. Only affects tqdm-based
     #: progress bars.
+
     progress = environ.var(
         default=2,
         converter=int,

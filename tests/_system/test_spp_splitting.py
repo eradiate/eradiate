@@ -9,9 +9,6 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 
-eradiate_dir = os.environ["ERADIATE_DIR"]
-output_dir = os.path.join(eradiate_dir, "test_report", "generated")
-
 
 def ensure_output_dir(path):
     if not os.path.isdir(path):
@@ -19,7 +16,7 @@ def ensure_output_dir(path):
 
 
 @pytest.mark.slow
-def test_spp_splitting(mode_mono):
+def test_spp_splitting(mode_mono, artefact_dir):
     """
     SPP splitting test
     ==================
@@ -107,8 +104,8 @@ def test_spp_splitting(mode_mono):
     plt.tight_layout()
 
     filename = "test_spp_splitting.png"
-    ensure_output_dir(os.path.join(output_dir, "plots"))
-    fname_plot = os.path.join(output_dir, "plots", filename)
+    ensure_output_dir(os.path.join(artefact_dir, "plots"))
+    fname_plot = os.path.join(artefact_dir, "plots", filename)
 
     fig.savefig(fname_plot, dpi=200)
     plt.close()
