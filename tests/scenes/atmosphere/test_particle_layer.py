@@ -101,8 +101,9 @@ def test_particle_layer_eval_radprops(mode_mono, test_dataset):
 
 
 @pytest.mark.parametrize("tau_550", [0.1, 0.5, 1.0, 5.0])
-def test_particle_layer_eval_sigma_t(mode_mono, tau_550, test_dataset):
-    r"""Spectral dependance of extinction is accounted for.
+def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_550, test_dataset):
+    r"""
+    Spectral dependency of extinction is accounted for.
 
     If :math:`\sigma_t(\lambda)` denotes the extinction coefficient at the
     wavelength :math:`\lambda`, then the optical thickness of a uniform
@@ -117,7 +118,7 @@ def test_particle_layer_eval_sigma_t(mode_mono, tau_550, test_dataset):
 
     which is what we assert in this test.
     """
-    wavelengths = np.linspace(500.0, 1500.0, 11) * ureg.nm
+    wavelengths = np.linspace(500.0, 1500.0, 1001) * ureg.nm
     tau_550 = tau_550 * ureg.dimensionless
 
     # tau_550 = 1.0 * ureg.dimensionless
@@ -131,11 +132,7 @@ def test_particle_layer_eval_sigma_t(mode_mono, tau_550, test_dataset):
     )
 
     # layer optical thickness @ current wavelengths
-    tau = np.empty_like(wavelengths) * ureg.dimensionless
-
-    for i, w in enumerate(wavelengths):
-        spectral_ctx = SpectralContext.new(wavelength=w)
-        tau[i] = layer.eval_sigma_t(spectral_ctx) * layer.height
+    tau = layer.eval_sigma_t_mono(wavelengths) * layer.height
 
     # data set extinction @ running wavelength and 550 nm
     with xr.open_dataset(test_dataset) as ds:
