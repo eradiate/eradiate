@@ -86,20 +86,15 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         default="True",
     )
 
-    absorption_data_sets: t.Optional[t.Dict[str, str]] = documented(
+    absorption_data_sets: t.Dict[str, str] = documented(
         attr.ib(
-            default=None,
-            converter=attr.converters.optional(dict),
-            validator=attr.validators.optional(attr.validators.instance_of(dict)),
+            factory=dict,
+            converter=dict,
+            validator=attr.validators.instance_of(dict),
         ),
-        doc="Mapping of species and absorption data set files paths. If "
-        "``None``, the default absorption data sets are used to compute "
-        "the absorption coefficient. If not ``None``, the absorption data "
-        "set files whose paths are provided in the mapping will be used to "
-        "compute the absorption coefficient. If the mapping does not "
-        "include all species from the atmospheric "
-        "thermophysical profile, the default data sets will be used to "
-        "compute the absorption coefficient of the corresponding species.",
+        doc="Mapping of species and absorption data set files paths. For "
+        "species not listed in the mapping, the default absorption data sets "
+        "are used.",
         type="dict",
     )
 
@@ -147,10 +142,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def radprops_profile(self) -> RadProfile:
         if self.thermoprops.title == "U.S. Standard Atmosphere 1976":
-            if self.absorption_data_sets is not None:
-                absorption_data_set = self.absorption_data_sets["us76_u86_4"]
-            else:
-                absorption_data_set = None
+            absorption_data_set = (
+                None
+                if self.absorption_data_sets == {}
+                else self.absorption_data_sets["us76_u86_4"]
+            )
             return US76ApproxRadProfile(
                 thermoprops=self.thermoprops,
                 has_scattering=self.has_scattering,

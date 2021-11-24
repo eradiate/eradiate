@@ -932,14 +932,14 @@ class AFGL1986RadProfile(RadProfile):
         default="True",
     )
 
-    absorption_data_sets: t.Optional[t.MutableMapping[str, str]] = documented(
+    absorption_data_sets: t.MutableMapping[str, str] = documented(
         attr.ib(
             factory=dict,
-            converter=attr.converters.optional(dict),
-            validator=attr.validators.optional(attr.validators.instance_of(dict)),
+            converter=dict,
+            validator=attr.validators.instance_of(dict),
         ),
         doc="Mapping of species and absorption data set files paths. If "
-        "``None``, the default absorption data sets are used to compute "
+        "``{}``, the default absorption data sets are used to compute "
         "the absorption coefficient. If not ``None``, the absorption data "
         "set files whose paths are provided in the mapping will be used to "
         "compute the absorption coefficient. If the mapping does not "

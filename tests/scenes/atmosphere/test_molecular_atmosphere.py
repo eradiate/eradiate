@@ -8,19 +8,21 @@ from eradiate.scenes.atmosphere import MolecularAtmosphere
 from eradiate.scenes.core import KernelDict
 
 
-def test_molecular_atmosphere_default(
-    mode_mono, tmpdir, ussa76_approx_test_absorption_data_set
-):
+@pytest.mark.skipif_data_not_found(
+    "absorption_spectrum", "us76_u86_4-spectra-18000_19000"
+)
+def test_molecular_atmosphere_default(mode_mono, tmpdir):
     """Default MolecularAtmosphere constructor produces a valid kernel
     dictionary."""
     spectral_ctx = SpectralContext.new(wavelength=550.0)
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    atmosphere = MolecularAtmosphere(
-        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set)
-    )
+    atmosphere = MolecularAtmosphere()
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 
 
+@pytest.mark.skipif_data_not_found(
+    "absorption_spectrum", "us76_u86_4-spectra-18000_19000"
+)
 def test_molecular_atmosphere_scale(mode_mono):
     ctx = KernelDictContext()
     d = MolecularAtmosphere(scale=2.0).kernel_dict(ctx)
@@ -68,23 +70,13 @@ def test_molecular_atmosphere_afgl_1986(
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 
 
-@pytest.fixture
-def ussa76_approx_test_absorption_data_set():
-    return path_resolver.resolve(
-        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
-    )
-
-
-def test_molecular_atmosphere_ussa1976(
-    mode_mono,
-    tmpdir,
-    ussa76_approx_test_absorption_data_set,
-):
+@pytest.mark.skipif_data_not_found(
+    "absorption_spectrum", "us76_u86_4-spectra-18000_19000"
+)
+def test_molecular_atmosphere_ussa1976(mode_mono, tmpdir):
     """MolecularAtmosphere 'ussa1976' constructor produces a valid kernel
     dictionary."""
     spectral_ctx = SpectralContext.new(wavelength=550.0)
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    atmosphere = MolecularAtmosphere.ussa1976(
-        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set)
-    )
+    atmosphere = MolecularAtmosphere.ussa1976()
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
