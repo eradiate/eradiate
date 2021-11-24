@@ -1,6 +1,3 @@
-[submodule "ext/mitsuba2"]
-	path = ext/mitsuba2
-	url = https://github.com/eradiate/eradiate-kernel.git
 [submodule "resources/data"]
 	path = resources/data
 	url = https://github.com/eradiate/eradiate-data.git
