@@ -3,6 +3,8 @@
 Atmosphere thermophysical properties
 ====================================
 
+.. warning:: This content is outdated.
+
 An atmosphere thermophysical properties data set provide the spatial variation
 of air pressure, air temperature, air number density and individual species
 mixing ratios.
@@ -10,7 +12,7 @@ mixing ratios.
 Data sets access
 ----------------
 
-All atmosphere thermophysical properties data sets required by Eradiate are 
+All atmosphere thermophysical properties data sets required by Eradiate are
 available within Eradiate using :meth:`eradiate.data.open`.
 
 Identifiers format

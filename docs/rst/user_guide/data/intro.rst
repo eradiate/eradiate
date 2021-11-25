@@ -3,6 +3,8 @@
 Introduction
 ============
 
+.. warning:: This content is outdated.
+
 Eradiate ships, processes and produces data. This guide presents:
 
 * the rationale underlying data models used in Eradiate;

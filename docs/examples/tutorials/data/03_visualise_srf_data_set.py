@@ -4,6 +4,9 @@ Visualise spectral response function data sets
 """
 
 # %%
+# .. warning:: This content is outdated.
+
+# %%
 # This tutorial illustrates how to visualise the data from a
 # :ref:`spectral response function data set <sec-user_guide-data-srf>`.
 

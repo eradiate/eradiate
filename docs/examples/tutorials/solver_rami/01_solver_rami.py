@@ -2,6 +2,9 @@
 RAMI solver application
 =======================
 
+# %%
+# .. warning:: This content is outdated.
+
 This tutorial gives a practical overview of the RAMI solver application class
 :class:`.RamiSolverApp`. This application simulates radiative transfer on scenes
 typically used in the RAMI benchmarking exercise.

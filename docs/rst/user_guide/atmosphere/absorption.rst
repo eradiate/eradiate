@@ -3,6 +3,8 @@
 Molecular absorption
 ====================
 
+.. warning:: This content is outdated.
+
 There are several ways to compute molecular absorption.
 The most general and accurate way is the *monochromatic model*, also known as
 the *line-by-line model*.

@@ -4,6 +4,9 @@ Visualise a atmosphere thermophysical properties data set
 """
 
 # %%
+# .. warning:: This content is outdated.
+
+# %%
 # This tutorial illustrates how to visualise an atmosphere thermophysical
 # properties data set.
 # In order to make the plots, we import the matplotlib library:

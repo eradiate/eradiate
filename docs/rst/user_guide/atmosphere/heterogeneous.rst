@@ -3,6 +3,8 @@
 Heterogeneous atmospheres
 =========================
 
+.. warning:: This content is outdated.
+
 .. image:: fig/atmosphere-heterogeneous.png
    :align: center
    :scale: 50
@@ -51,7 +53,7 @@ There are several types of radiative properties profile objects.
 ``afgl_1986``
 ~~~~~~~~~~~~~
 
-The :class:`~eradiate.radprops.rad_profile.AFGL1986RadProfile` 
+The :class:`~eradiate.radprops.rad_profile.AFGL1986RadProfile`
 (identifier: ``afgl_1986``) class allows to create an atmosphere radiative
 properties profile corresponding to the AFGL (1986)
 :cite:`Anderson1986AtmosphericConstituentProfiles`

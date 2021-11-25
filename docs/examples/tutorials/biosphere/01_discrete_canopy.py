@@ -4,6 +4,9 @@ Discrete canopy tutorial
 """
 
 # %%
+# .. warning:: This content is outdated.
+
+# %%
 # This tutorial provides practical examples to use the :class:`.DiscreteCanopy`
 # class. As usual, we start by importing the Eradiate module and setting up
 # an alias to the unit registry:

@@ -3,14 +3,16 @@
 Atmosphere radiative properties
 ===============================
 
-An atmosphere radiative properties data set provide the collision (absorption, 
+.. warning:: This content is outdated.
+
+An atmosphere radiative properties data set provide the collision (absorption,
 extinction, scattering) coefficient and albedo values within the atmosphere.
 
 Data sets access
 ----------------
 
 Atmosphere radiative properties data sets are created by
-:class:`~eradiate.radprops.rad_profile.RadProfile` objects' 
+:class:`~eradiate.radprops.rad_profile.RadProfile` objects'
 :meth:`~eradiate.radprops.rad_profile.RadProfile.to_dataset` method.
 
 Structure

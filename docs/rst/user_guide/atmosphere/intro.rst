@@ -3,6 +3,8 @@
 Introduction
 ============
 
+.. warning:: This content is outdated.
+
 Assumptions
 -----------
 

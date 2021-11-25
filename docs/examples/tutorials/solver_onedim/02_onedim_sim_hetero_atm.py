@@ -4,6 +4,9 @@
 """
 
 # %%
+# .. warning:: This content is outdated.
+
+# %%
 # This tutorial illustrates how to perform simulations on heterogeneous
 # atmospheres using :class:`.OneDimSolverApp`.
 #

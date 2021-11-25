@@ -4,6 +4,9 @@ Homogeneous atmospheres
 """
 
 # %%
+# .. warning:: This content is outdated.
+
+# %%
 # This tutorial illustrates how to create a homogeneous atmosphere.
 # We begin by setting the eradiate operational mode to the monochromatic mode
 # and set the wavelength to 550 nm:

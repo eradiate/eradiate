@@ -4,6 +4,9 @@ Solar irradiance spectrum data sets
 """
 
 # %%
+# .. warning:: This content is outdated.
+
+# %%
 # .. admonition:: What you will learn
 #
 #   In this tutorial, you will learn:

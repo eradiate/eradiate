@@ -3,6 +3,8 @@
 Data guide
 ==========
 
+.. warning:: This content is outdated.
+
 .. toctree::
    :maxdepth: 2
 

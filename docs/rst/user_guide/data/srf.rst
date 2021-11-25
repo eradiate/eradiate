@@ -3,6 +3,8 @@
 Spectral response function
 ==========================
 
+.. warning:: This content is outdated.
+
 A spectral response function data set provide the spectral response of a
 given instrument on a specific platform and in a specific spectral band.
 

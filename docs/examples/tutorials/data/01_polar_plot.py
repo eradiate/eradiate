@@ -4,6 +4,9 @@ Polar plot in angular coordinates
 """
 
 # %%
+# .. warning:: This content is outdated.
+
+# %%
 # This tutorial shows how to plot reflectance data in polar
 # coordinates.
 

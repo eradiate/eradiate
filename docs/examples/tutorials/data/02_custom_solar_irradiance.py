@@ -4,6 +4,9 @@ Custom solar irradiance spectrum
 """
 
 # %%
+# .. warning:: This content is outdated.
+
+# %%
 # This tutorial illustrates how to add your own solar irradiance spectrum
 # dataset from a data file that includes wavelength and solar spectral
 # irradiance values, and use it within Eradiate.

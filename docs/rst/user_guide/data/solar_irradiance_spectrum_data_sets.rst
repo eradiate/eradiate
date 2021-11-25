@@ -3,6 +3,8 @@
 Solar irradiance spectrum
 =========================
 
+.. warning:: This content is outdated.
+
 A solar irradiance spectrum data set provide the Sun's spectral irradiance
 spectrum at a Sun-Earth distance of 1 astronomical unit.
 Solar irradiance spectrum data may come from observations -- e.g. using a
@@ -108,7 +110,7 @@ irradiance spectra from 1978-11-7 to 2014-12-31. Wavelength range: [0.5,
 :cite:`Haberreiter2017ObservationalSolarIrradiance`. See also
 `the Cal/Val Portal of the Committee on Earth Observation Satellites
 <http://calvalportal.ceos.org/solar-irradiance-spectrum>`_
-  
+
 ``solid_2017_mean``
 ^^^^^^^^^^^^^^^^^^^
 

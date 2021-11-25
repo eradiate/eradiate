@@ -4,6 +4,10 @@ One-dimensional solver application
 """
 
 # %%
+# .. warning:: This content is outdated.
+
+
+# %%
 #
 # This tutorial introduces a classical workflow with one-dimensional scenes
 # using the :class:`.OneDimSolverApp` class. It simulates radiative transfer in

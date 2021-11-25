@@ -3,13 +3,15 @@
 Absorption cross section
 ========================
 
+.. warning:: This content is outdated.
+
 Absorption cross section data sets provide the monochromatic absorption cross
 section spectrum of a given absorbing species at specific pressure and
 temperature conditions.
 
 Data sets access
 ----------------
-Due to their extremely large size (almost 1TB), most data sets are not 
+Due to their extremely large size (almost 1TB), most data sets are not
 distributed.
 Distributed data sets are hosted at
 `https://eradiate.eu/data <https://eradiate.eu/data>`_.

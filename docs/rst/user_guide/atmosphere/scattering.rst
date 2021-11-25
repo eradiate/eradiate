@@ -3,6 +3,8 @@
 Molecular scattering
 ====================
 
+.. warning:: This content is outdated.
+
 Scattering of light by molecules is computed using the Rayleigh approximation
 (see :cite:`Liou2002IntroductionAtmosphericRadiation`, section 3.3.1 for
 example).
@@ -91,4 +93,3 @@ where
   and temperature (101325 Pa, 288.15 K) and
 * :math:`\eta_0` is the air refractive index under standard conditions of
   pressure and temperature.
-

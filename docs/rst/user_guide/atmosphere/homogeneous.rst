@@ -3,6 +3,8 @@
 Homogeneous atmospheres
 =======================
 
+.. warning:: This content is outdated.
+
 .. image:: fig/atmosphere-homogeneous.png
    :align: center
    :scale: 50
