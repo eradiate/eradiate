@@ -100,7 +100,7 @@ class SpectralContext(ABC, Context):
             **Monochromatic modes** [:class:`.MonoSpectralContext`].
             Wavelength. Unit-enabled field (default: ucc[wavelength]).
 
-        bindex : :class:`.Bindex`, default: test value (1st quadrature point for the "550" bin of the "10nm_test" bin set)
+        bindex : :class:`.Bindex`, default: test value (1st quadrature point for the "550" bin of the "10nm" bin set)
             **CKD modes** [:class:`.CKDSpectralContext`].
             CKD bindex.
 
@@ -215,7 +215,7 @@ class CKDSpectralContext(SpectralContext):
     bindex: Bindex = documented(
         attr.ib(
             factory=lambda: Bindex(
-                BinSet.from_db("10nm_test").select_bins("550")[0],
+                BinSet.from_db("10nm").select_bins("550")[0],
                 0,
             ),
             converter=Bindex.convert,

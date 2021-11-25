@@ -127,7 +127,7 @@ def test_onedim_experiment_run_basic(modes_all):
     if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
         spectral_cfg = MeasureSpectralConfig.new(wavelengths=550.0 * ureg.nm)
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-        spectral_cfg = MeasureSpectralConfig.new(bin_set="10nm_test", bins="550")
+        spectral_cfg = MeasureSpectralConfig.new(bin_set="10nm", bins="550")
     else:
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
 

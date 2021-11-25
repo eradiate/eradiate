@@ -149,7 +149,7 @@ def test_interpolated_eval(modes_all):
         expected = 0.5
 
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-        bin = BinSet.from_db("10nm_test").select_bins("550")[0]
+        bin = BinSet.from_db("10nm").select_bins("550")[0]
         spectral_ctx = SpectralContext.new(bindex=bin.bindexes[0])
         expected = 0.5
 

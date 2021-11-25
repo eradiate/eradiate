@@ -88,19 +88,19 @@ def test_ckd_bin_set_constructors(mode_ckd):
     assert bin_set.id == "10nm"
 
     # Load from node (i.e. gas absorption) dataset
-    ds = data.open("ckd_absorption", "afgl_1986-us_standard-10nm_test")
+    ds = data.open("ckd_absorption", "afgl_1986-us_standard-10nm")
     ds.load()
     ds.close()
 
     bin_set = BinSet.from_node_dataset(ds)
-    assert bin_set.id == "10nm_test"
+    assert bin_set.id == "10nm"
 
 
 def test_ckd_bin_set_filter(mode_ckd):
     """
     Unit tests for :meth:`eradiate.ckd.BinSet.filter_bins`.
     """
-    bin_set = BinSet.from_db("10nm_test")
+    bin_set = BinSet.from_db("10nm")
 
     # We get a single bin using wmin == wmax
     filter = bin_filter_interval(wmin=550 * ureg.nm, wmax=550 * ureg.nm, endpoints=True)
@@ -163,7 +163,7 @@ def test_ckd_bin_set_select(mode_ckd):
     Unit tests for :meth:`eradiate.ckd.BinSet.select_bins`.
     """
 
-    bin_set = BinSet.from_db("10nm_test")
+    bin_set = BinSet.from_db("10nm")
 
     # Select with an explicit filter
     filter = bin_filter_interval(wmin=550 * ureg.nm, wmax=560 * ureg.nm)

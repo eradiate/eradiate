@@ -27,7 +27,7 @@ def test_ckd_basic(modes_all_ckd):
                 zeniths=np.arange(-60, 61, 5) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
                 spectral_cfg={
-                    "bin_set": "10nm_test",
+                    "bin_set": "10nm",
                     "bins": [
                         "550",
                         "560",

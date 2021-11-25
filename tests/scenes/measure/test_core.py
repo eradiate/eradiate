@@ -96,7 +96,7 @@ def test_ckd_spectral_config(modes_all_ckd):
     """
     # The new() class method constructor selects an appropriate config class
     # depending on the active mode
-    cfg = MeasureSpectralConfig.new(bin_set="10nm_test", bins=["540", "550"])
+    cfg = MeasureSpectralConfig.new(bin_set="10nm", bins=["540", "550"])
     assert isinstance(cfg, CKDMeasureSpectralConfig)
 
     # Generated spectral contexts are of the appropriate type and in correct numbers
@@ -106,7 +106,7 @@ def test_ckd_spectral_config(modes_all_ckd):
 
     # In CKD mode, we can also select bins with an interval specification
     cfg = MeasureSpectralConfig.new(
-        bin_set="10nm_test",
+        bin_set="10nm",
         bins=[
             ("interval", {"wmin": 500.0, "wmax": 520.0}),
             {"type": "interval", "filter_kwargs": {"wmin": 530.0, "wmax": 550.0}},
