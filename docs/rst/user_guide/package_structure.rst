@@ -27,19 +27,16 @@ Scene generation [:ref:`eradiate.scenes <sec-reference-scenes>`]
     illumination and measures in the scene on which you'll run your radiative
     transfer simulation.
 
-Experiments [:ref:`eradiate.solvers <sec-reference-experiments>`]
+Experiments [:ref:`eradiate.experiments <sec-reference-experiments>`]
     In this package, you will find interfaces to trigger simulation runs,
     including pre- and post-processing operations.
 
-Low-level computational kernel
-------------------------------
+Radiometric kernel
+------------------
 
 Kernel [:ref:`eradiate.kernel <sec-reference-kernel>`]
-    This module provides low-level interface components to Eradiate's
-    radiometric kernel (a modified version of the Mitsuba 2 rendering system).
-    Currently, this package simply checks that the kernel is installed and
-    can be imported. The ``experiment`` package is, under the hood, a high-level
-    interface to the kernel components.
+    This module provides functionality related with Eradiate's radiometric
+    kernel (a modified version of the Mitsuba 2 rendering system).
 
 Data handling and visualisation
 -------------------------------
@@ -56,7 +53,7 @@ Post-processing pipeline definitions [:ref:`eradiate.pipelines <sec-reference-pi
 
 Plotting [:ref:`eradiate.plot <sec-reference-plot>`]
     This module defines utility functions to create
-    `matplotlib <https://matplotlib.org>`_-based visualisations of Eradiate's
+    `Matplotlib <https://matplotlib.org>`_-based visualisations of Eradiate's
     input and output data.
 
 Physical properties
@@ -91,5 +88,5 @@ Exceptions [:ref:`eradiate.exceptions <sec-reference-exceptions>`]
     This module contains exception and warning definitions.
 
 Miscellaneous [:ref:`eradiate._util <sec-reference-misc>`]
-    This module contains support components which don't fit in any of the
+    This module contains other support components which don't fit in any of the
     aforementioned classification entries.

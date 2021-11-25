@@ -108,10 +108,14 @@ Glossary
 
    Measure
      A high-level interface to one or several :term:`sensors <sensor>`. Measures
-     can perform post-processing tasks requiring the assembly of multiple sensor
-     results. They also output their results as high-level data structures
-     (*e.g.* xarray labelled arrays).
+     are associated to specific post-processing tasks managed by
+     :class:`.Experiment` instances.
+
+   Scene
+     All kernel-level components required to perform a single radiative transfer
+     simulation. The includes geometric shapes defining surfaces and volumes,
+     radiative properties attached to them, emitters, sensors and an integrator.
 
    Sensor
      A kernel component which records radiance samples and stores them to a
-     :term:`film`.
+     :term:`film`. Eradiate creates sensors from :term:`measures <measure>`.

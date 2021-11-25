@@ -71,9 +71,7 @@ a user can override them if it seems more convenient in their context.
 
       # This sets the default length unit to kilometre
       with ucc.override(length="km"):
-          my_atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(
-              toa_altitude=100.0
-          )
+          my_atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(top=100.0)
 
    This will create a :class:`.HomogeneousAtmosphere` object with a
    height of 100 km. It is equivalent to the default
@@ -82,7 +80,7 @@ a user can override them if it seems more convenient in their context.
 
       import eradiate
       eradiate.set_mode("mono")
-      my_atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(toa_altitude=100.0e3)
+      my_atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(top=100e3)
 
 Fields specified as "unit-enabled" are stored as Pint :class:`~pint.Quantity`
 objects and can be passed as such. Eradiate ships its own unit registry
@@ -95,7 +93,7 @@ be
       import eradiate
       from eradiate import unit_registry as ureg
       my_atmosphere = eradiate.scenes.atmosphere.HomogeneousAtmosphere(
-          toa_altitude=100.0 * ureg.km
+          top=100.0 * ureg.km
       )
 
 If one tries to set ``height`` with a value which has wrong units, a
@@ -103,7 +101,7 @@ If one tries to set ``height`` with a value which has wrong units, a
 
 .. code-block:: python
 
-   my_atmosphere.toa_altitude = 100 * ureg.s  # This will raise a UnitsError
+   my_atmosphere.top = 100 * ureg.s  # This will raise a UnitsError
 
 .. _sec-user_guide-unit_guide_user-field_unit_documentation:
 
