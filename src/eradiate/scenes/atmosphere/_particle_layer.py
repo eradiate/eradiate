@@ -379,10 +379,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             Particle layer scattering coefficient.
         """
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_sigma_s_mono(spectral_ctx.wavelength).squeeze()
 
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            return self.eval_sigma_a_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_sigma_s_ckd(spectral_ctx.bindex).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
