@@ -182,8 +182,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
         else:
             if self.width is AUTO:
-                spectral_ctx = ctx.spectral_ctx if ctx is not None else None
-                return 10.0 / self.eval_sigma_s(spectral_ctx=spectral_ctx).min()
+                min_sigma_s = self.eval_sigma_s(spectral_ctx=ctx.spectral_ctx).min()
+                width = 10.0 / min_sigma_s if min_sigma_s != 0.0 else np.inf * ureg.m
+                return min(width, 1000 * ureg.km)
             else:
                 return self.width
 

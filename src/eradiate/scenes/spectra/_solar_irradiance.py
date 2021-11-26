@@ -80,7 +80,7 @@ class SolarIrradianceSpectrum(Spectrum):
         doc="Dataset identifier. Allowed values: see "
         ":attr:`solar irradiance dataset documentation <eradiate.data.solar_irradiance_spectra>`.",
         type="str",
-        default='``"thuiller_2003"``',
+        default='"thuiller_2003"',
     )
 
     @dataset.validator
