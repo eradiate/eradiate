@@ -12,6 +12,7 @@ from ..core import KernelDict
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
+from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -184,4 +185,8 @@ class PerspectiveCameraMeasure(Measure):
 
     @property
     def var(self) -> t.Tuple[str, t.Dict]:
-        return "img", dict()
+        return "radiance", {
+            "standard_name": "radiance",
+            "long_name": "radiance",
+            "units": symbol(uck.get("radiance")),
+        }

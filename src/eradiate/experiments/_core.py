@@ -32,6 +32,7 @@ from ..scenes.measure import (
     HemisphericalDistantMeasure,
     Measure,
     MultiDistantMeasure,
+    PerspectiveCameraMeasure,
     measure_factory,
 )
 
