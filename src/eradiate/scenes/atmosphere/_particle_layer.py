@@ -264,9 +264,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
-        ds = xr.open_dataset(self.dataset)
-        wavelengths = w.m_as(ds.w.attrs["units"])
-        interpolated_albedo = ds.albedo.interp(w=wavelengths)
+        with xr.open_dataset(self.dataset) as ds:
+            wavelengths = w.m_as(ds.w.attrs["units"])
+            interpolated_albedo = ds.albedo.interp(w=wavelengths)
+
         albedo = to_quantity(interpolated_albedo)
         albedo_array = albedo * np.ones(self.n_layers)
         return albedo_array

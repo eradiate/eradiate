@@ -486,10 +486,9 @@ class BinSet:
         :class:`.BinSet`
             Bin set definition.
         """
-        ds = data.open("ckd_bin_set", id)
-        ds.load()
-        ds.close()
-        return BinSet.from_dataset(id=id, ds=ds)
+        with data.open("ckd_bin_set", id) as ds:
+            result = BinSet.from_dataset(id=id, ds=ds)
+        return result
 
     @staticmethod
     def from_node_dataset(ds: xr.Dataset):

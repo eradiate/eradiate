@@ -595,10 +595,10 @@ class ArrayRadProfile(RadProfile):
 
     @classmethod
     def from_dataset(cls, path: t.Union[str, pathlib.Path]) -> ArrayRadProfile:
-        ds = xr.open_dataset(path_resolver.resolve(path))
-        z_level = to_quantity(ds.z_level)
-        albedo = to_quantity(ds.albedo)
-        sigma_t = to_quantity(ds.sigma_t)
+        with xr.open_dataset(path_resolver.resolve(path)) as ds:
+            z_level = to_quantity(ds.z_level)
+            albedo = to_quantity(ds.albedo)
+            sigma_t = to_quantity(ds.sigma_t)
         return cls(albedo_values=albedo, sigma_t_values=sigma_t, levels=z_level)
 
 
@@ -756,7 +756,7 @@ class US76ApproxRadProfile(RadProfile):
         return to_quantity(self.thermoprops.z_level)
 
     @staticmethod
-    def default_absorption_data_set(wavelength: pint.Quantity) -> xr.Dataset:
+    def open_default_absorption_data_set(wavelength: pint.Quantity) -> xr.Dataset:
         """
         Return default absorption data set.
         """
@@ -768,22 +768,19 @@ class US76ApproxRadProfile(RadProfile):
             absorber=Absorber.us76_u86_4,
             engine=Engine.SPECTRA,
         )
-        ds = data.open(category="absorption_spectrum", id=dataset_id)
-        ds.load()
-        ds.close()
-        return ds
+        return data.open(category="absorption_spectrum", id=dataset_id)
 
     def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
         profile = self.thermoprops
         if self.has_absorption:
             if self.absorption_data_set is None:  # ! this is never tested
-                data_set = self.default_absorption_data_set(wavelength=w)
+                ds = self.open_default_absorption_data_set(wavelength=w)
             else:
-                data_set = xr.open_dataset(self.absorption_data_set)
+                ds = xr.open_dataset(self.absorption_data_set)
 
             # Compute scattering coefficient
-            return compute_sigma_a(
-                ds=data_set,
+            result = compute_sigma_a(
+                ds=ds,
                 wl=w,
                 p=to_quantity(profile.p),
                 n=to_quantity(profile.n),
@@ -795,12 +792,17 @@ class US76ApproxRadProfile(RadProfile):
                 # number density is so small compared to that at the sea level that
                 # we assume it is negligible.
             )
+            ds.close()
+
+            return result
+
         else:
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
     def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         raise NotImplementedError(
-            "CKD data sets are not yet available for the U.S. Standard Atmosphere 1976 atmopshere model."
+            "CKD data sets are not yet available for the U.S. Standard "
+            "Atmosphere 1976 atmopshere model."
         )
 
     def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
@@ -964,17 +966,17 @@ class AFGL1986RadProfile(RadProfile):
                 absorber=absorber,
                 engine=Engine.SPECTRA,
             )
-            dataset = data.open(category="absorption_spectrum", id=dataset_id)
-            sigma_a_absorber = compute_sigma_a(
-                ds=dataset,
-                wl=wavelength,
-                p=p,
-                t=t,
-                n=n_absorber,
-                fill_values=dict(
-                    w=0.0, pt=0.0
-                ),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
-            )
+            with data.open(category="absorption_spectrum", id=dataset_id) as dataset:
+                sigma_a_absorber = compute_sigma_a(
+                    ds=dataset,
+                    wl=wavelength,
+                    p=p,
+                    t=t,
+                    n=n_absorber,
+                    fill_values=dict(
+                        w=0.0, pt=0.0
+                    ),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
+                )
         except ValueError:  # no data at current wavelength/wavenumber
             sigma_a_absorber = ureg.Quantity(np.zeros(len(p)), "km^-1")
 
@@ -1014,17 +1016,17 @@ class AFGL1986RadProfile(RadProfile):
         quantity
             Absorption coefficient [km^-1].
         """
-        dataset = xr.open_dataset(path)
-        return compute_sigma_a(
-            ds=dataset,
-            wl=wavelength,
-            p=p,
-            t=t,
-            n=n_absorber,
-            fill_values=dict(
-                w=0.0, pt=0.0
-            ),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
-        )
+        with xr.open_dataset(path) as dataset:
+            return compute_sigma_a(
+                ds=dataset,
+                wl=wavelength,
+                p=p,
+                t=t,
+                n=n_absorber,
+                fill_values=dict(
+                    w=0.0, pt=0.0
+                ),  # extrapolate to zero along wavenumber and pressure and temperature dimensions
+            )
 
     def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
         """
@@ -1084,32 +1086,33 @@ class AFGL1986RadProfile(RadProfile):
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
     def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        ds = eradiate.data.open(
+        with eradiate.data.open(
             category="ckd_absorption", id="afgl_1986-us_standard-10nm"
-        )
-        # evaluate H2O and O3 concentrations
-        h2o_concentration = compute_column_mass_density(
-            ds=self.thermoprops, species="H2O"
-        )
-        o3_concentration = compute_column_number_density(
-            ds=self.thermoprops, species="O3"
-        )
+        ) as ds:
+            # evaluate H2O and O3 concentrations
+            h2o_concentration = compute_column_mass_density(
+                ds=self.thermoprops, species="H2O"
+            )
+            o3_concentration = compute_column_number_density(
+                ds=self.thermoprops, species="O3"
+            )
 
-        z = to_quantity(self.thermoprops.z_layer).m_as(ds.z.units)
-        return ureg.Quantity(
-            [
-                ds.k.sel(bd=(bindex.bin.id, bindex.index))
-                .interp(
-                    z=z,
-                    H2O=h2o_concentration.m_as(ds["H2O"].units),
-                    O3=o3_concentration.m_as(ds["O3"].units),
-                    kwargs=dict(fill_value=0.0),
-                )
-                .values
-                for bindex in bindexes
-            ],
-            ds.k.units,
-        )
+            z = to_quantity(self.thermoprops.z_layer).m_as(ds.z.units)
+
+            return ureg.Quantity(
+                [
+                    ds.k.sel(bd=(bindex.bin.id, bindex.index))
+                    .interp(
+                        z=z,
+                        H2O=h2o_concentration.m_as(ds["H2O"].units),
+                        O3=o3_concentration.m_as(ds["O3"].units),
+                        kwargs=dict(fill_value=0.0),
+                    )
+                    .values
+                    for bindex in bindexes
+                ],
+                ds.k.units,
+            )
 
     def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
         thermoprops = self.thermoprops
