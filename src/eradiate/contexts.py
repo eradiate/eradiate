@@ -224,6 +224,19 @@ class CKDSpectralContext(SpectralContext):
         doc="The bindex value corresponding to this spectral context. "
         "The default value is a simple placeholder used for testing purposes.",
         type=":class:`.Bindex`",
+        init_type=":class:`.Bindex` or tuple or dict, optional",
+    )
+
+    bin_set: t.Optional[BinSet] = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(BinSet.convert),
+            validator=attr.validators.optional(attr.validators.instance_of(BinSet)),
+        ),
+        doc="If relevant, the bin set from which ``bindex`` originates.",
+        type=":class:`.BinSet` or None",
+        init_type=":class:`.BinSet` or str, optional",
+        default="None",
     )
 
     @property

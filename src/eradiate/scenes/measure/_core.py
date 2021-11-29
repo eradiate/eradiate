@@ -406,10 +406,11 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
 
     def spectral_ctxs(self) -> t.List[CKDSpectralContext]:
         ctxs = []
+        bin_set = self.bin_set
 
         for bin in self.bins:
             for bindex in bin.bindexes:
-                ctxs.append(CKDSpectralContext(bindex))
+                ctxs.append(CKDSpectralContext(bindex, bin_set))
 
         return ctxs
 
