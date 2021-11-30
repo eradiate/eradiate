@@ -65,7 +65,7 @@ def test_molecular_atmosphere_afgl_1986(
     spectral_ctx = SpectralContext.new(wavelength=550.0)
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
     atmosphere = MolecularAtmosphere.afgl_1986(
-        absorption_data_sets=afgl_1986_test_absorption_data_sets
+        absorption_data_sets_mono=afgl_1986_test_absorption_data_sets
     )
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 

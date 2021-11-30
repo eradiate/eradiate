@@ -86,7 +86,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         default="True",
     )
 
-    absorption_data_sets: t.Dict[str, str] = documented(
+    absorption_data_sets_mono: t.Dict[str, str] = documented(
         attr.ib(
             factory=dict,
             converter=dict,
@@ -94,7 +94,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         ),
         doc="Mapping of species and absorption data set files paths. For "
         "species not listed in the mapping, the default absorption data sets "
-        "are used.",
+        "are used."
+        "In CKD mode, this parameter is irrelevant and will be ignored.",
         type="dict",
     )
 
@@ -144,8 +145,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         if self.thermoprops.title == "U.S. Standard Atmosphere 1976":
             absorption_data_set = (
                 None
-                if self.absorption_data_sets == {}
-                else self.absorption_data_sets["us76_u86_4"]
+                if self.absorption_data_sets_mono == {}
+                else self.absorption_data_sets_mono["us76_u86_4"]
             )
             return US76ApproxRadProfile(
                 thermoprops=self.thermoprops,
@@ -158,7 +159,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 thermoprops=self.thermoprops,
                 has_scattering=self.has_scattering,
                 has_absorption=self.has_absorption,
-                absorption_data_sets=self.absorption_data_sets,
+                absorption_data_sets=self.absorption_data_sets_mono,
             )
         else:
             raise NotImplementedError("Unsupported thermophysical properties data set.")
