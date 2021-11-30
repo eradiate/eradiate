@@ -45,7 +45,7 @@ def test_heterogeneous_single(
     if components == "molecular":
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
             component = MolecularAtmosphere.ussa1976(
-                absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
+                absorption_data_sets_mono={"us76_u86_4": path_to_ussa76_approx_data},
             )
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
             component = MolecularAtmosphere.afgl_1986()
@@ -70,7 +70,7 @@ def test_heterogeneous_multi(modes_all_single, bin_set, path_to_ussa76_approx_da
     # Construct succeeds
     if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
         molecular_atmosphere = MolecularAtmosphere.ussa1976(
-            absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
+            absorption_data_sets_mono={"us76_u86_4": path_to_ussa76_approx_data},
         )
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
         molecular_atmosphere = MolecularAtmosphere.afgl_1986()
@@ -99,7 +99,7 @@ def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
     ctx = KernelDictContext()
     d = HeterogeneousAtmosphere(
         molecular_atmosphere=MolecularAtmosphere.ussa1976(
-            absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
+            absorption_data_sets_mono={"us76_u86_4": path_to_ussa76_approx_data},
         ),
         particle_layers=[ParticleLayer() for _ in range(2)],
         scale=2.0,

@@ -98,7 +98,7 @@ def test_heterogeneous_get_top_us76(mode_mono, tmpdir, test_absorption_data_set)
     """
     atmosphere = HeterogeneousAtmosphereLegacy(
         profile=US76ApproxRadProfile(
-            absorption_data_set=test_absorption_data_set,
+            absorption_data_set_mono=test_absorption_data_set,
             thermoprops=dict(levels=ureg.Quantity(np.linspace(0, 86, 87), "km")),
         ),
         cache_dir=tmpdir,
@@ -138,7 +138,7 @@ def test_heterogeneous_get_top_afgl_1986(mode_mono, tmpdir, test_absorption_data
     """
     a = HeterogeneousAtmosphereLegacy(
         profile=AFGL1986RadProfile(
-            absorption_data_sets=test_absorption_data_sets,
+            absorption_data_sets_mono=test_absorption_data_sets,
             thermoprops=dict(
                 model_id="us_standard",
                 levels=ureg.Quantity(np.linspace(0, 100, 101), "km"),

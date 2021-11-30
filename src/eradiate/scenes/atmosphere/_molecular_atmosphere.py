@@ -143,7 +143,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def radprops_profile(self) -> RadProfile:
         if self.thermoprops.title == "U.S. Standard Atmosphere 1976":
-            absorption_data_set = (
+            absorption_data_set_mono = (
                 None
                 if self.absorption_data_sets_mono == {}
                 else self.absorption_data_sets_mono["us76_u86_4"]
@@ -152,14 +152,14 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 thermoprops=self.thermoprops,
                 has_scattering=self.has_scattering,
                 has_absorption=self.has_absorption,
-                absorption_data_set=absorption_data_set,
+                absorption_data_set_mono=absorption_data_set_mono,
             )
         elif "AFGL (1986)" in self.thermoprops.title:
             return AFGL1986RadProfile(
                 thermoprops=self.thermoprops,
                 has_scattering=self.has_scattering,
                 has_absorption=self.has_absorption,
-                absorption_data_sets=self.absorption_data_sets_mono,
+                absorption_data_sets_mono=self.absorption_data_sets_mono,
             )
         else:
             raise NotImplementedError("Unsupported thermophysical properties data set.")
