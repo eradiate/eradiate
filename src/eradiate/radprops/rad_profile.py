@@ -744,10 +744,12 @@ class US76ApproxRadProfile(RadProfile):
             converter=attr.converters.optional(str),
             validator=attr.validators.optional(attr.validators.instance_of(str)),
         ),
-        doc="Absorption data set file path. If ``None``, the default "
-        "absorption data sets will be used to compute the absorption "
-        "coefficient. Otherwise, the absorption data set whose path is "
-        "provided will be used to compute the absorption coefficient.",
+        doc="Absorption data set file path."
+        "In monochromatic mode, if ``None``, the default absorption data sets "
+        "will be used to compute the absorption coefficient. "
+        "Otherwise, the absorption data set whose path is "
+        "provided will be used to compute the absorption coefficient."
+        "In CKD mode, this parameter is irrelevant and will be ignored.",
         type="str",
     )
 
@@ -938,14 +940,16 @@ class AFGL1986RadProfile(RadProfile):
             converter=dict,
             validator=attr.validators.instance_of(dict),
         ),
-        doc="Mapping of species and absorption data set files paths. If "
+        doc="Mapping of species and absorption data set files paths."
+        "In monochromatic mode, if "
         "``{}``, the default absorption data sets are used to compute "
         "the absorption coefficient. If not ``None``, the absorption data "
         "set files whose paths are provided in the mapping will be used to "
         "compute the absorption coefficient. If the mapping does not "
         "include all species from the AFGL (1986) atmospheric "
         "thermophysical profile, the default data sets will be used to "
-        "compute the absorption coefficient of the corresponding species.",
+        "compute the absorption coefficient of the corresponding species."
+        "In CKD mode, this parameter is irrelevant and will be ignored.",
         type="dict",
         default="{}",
     )
