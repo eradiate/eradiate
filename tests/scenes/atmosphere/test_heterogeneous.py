@@ -3,7 +3,7 @@ import pytest
 import eradiate
 from eradiate import path_resolver
 from eradiate._mode import ModeFlags
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import CKDSpectralContext, KernelDictContext
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     MolecularAtmosphere,
@@ -34,7 +34,10 @@ def test_heterogeneous_empty(modes_all_single):
 
 
 @pytest.mark.parametrize("components", ("molecular", "particle"))
-def test_heterogeneous_single(modes_all_single, components, path_to_ussa76_approx_data):
+@pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
+def test_heterogeneous_single(
+    modes_all_single, components, bin_set, path_to_ussa76_approx_data
+):
     """
     Unit tests for a HeterogeneousAtmosphere with a single component.
     """
@@ -55,11 +58,12 @@ def test_heterogeneous_single(modes_all_single, components, path_to_ussa76_appro
         atmosphere = HeterogeneousAtmosphere(particle_layers=[component])
 
     # Produced kernel dict can be loaded
-    ctx = KernelDictContext()
+    ctx = KernelDictContext(spectral_ctx=CKDSpectralContext(bin_set=bin_set))
     assert atmosphere.kernel_dict(ctx).load()
 
 
-def test_heterogeneous_multi(modes_all_single, path_to_ussa76_approx_data):
+@pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
+def test_heterogeneous_multi(modes_all_single, bin_set, path_to_ussa76_approx_data):
     """
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """
@@ -79,7 +83,7 @@ def test_heterogeneous_multi(modes_all_single, path_to_ussa76_approx_data):
     )
 
     # Radiative property metadata are correct
-    ctx = KernelDictContext()
+    ctx = KernelDictContext(spectral_ctx=CKDSpectralContext(bin_set=bin_set))
 
     # Kernel dict production succeeds
     assert atmosphere.kernel_phase(ctx)

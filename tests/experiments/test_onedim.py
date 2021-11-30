@@ -4,7 +4,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import CKDSpectralContext, KernelDictContext
 from eradiate.exceptions import ModeError, UnsupportedModeError
 from eradiate.experiments._onedim import OneDimExperiment
 from eradiate.scenes.atmosphere import (
@@ -48,11 +48,12 @@ def test_onedim_experiment_construct_normalize_measures(mode_mono):
     )
 
 
-def test_onedim_experiment_ckd(mode_ckd):
+@pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
+def test_onedim_experiment_ckd(mode_ckd, bin_set):
     """
     OneDimExperiment with heterogeneous atmosphere in CKD mode can be created.
     """
-    ctx = KernelDictContext()
+    ctx = KernelDictContext(spectral_ctx=CKDSpectralContext(bin_set=bin_set))
     exp = OneDimExperiment(
         atmosphere=HeterogeneousAtmosphere(
             molecular_atmosphere=MolecularAtmosphere.afgl_1986()

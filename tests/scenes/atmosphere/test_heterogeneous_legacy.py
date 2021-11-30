@@ -7,7 +7,7 @@ import pytest
 
 from eradiate import path_resolver, unit_context_config
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import CKDSpectralContext, KernelDictContext
 from eradiate.kernel.gridvolume import read_binary_grid3d, write_binary_grid3d
 from eradiate.radprops import US76ApproxRadProfile
 from eradiate.radprops.rad_profile import AFGL1986RadProfile, ArrayRadProfile
@@ -49,12 +49,13 @@ def test_heterogeneous_write_volume_data_files(mode_mono, tmpdir):
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
 
 
-def test_heterogeneous_ckd(mode_ckd, tmpdir):
+@pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
+def test_heterogeneous_ckd(mode_ckd, bin_set, tmpdir):
     """
     Writes the volume data files and produces a kernel dictionary that can be
     loaded by the kernel.
     """
-    ctx = KernelDictContext()
+    ctx = KernelDictContext(spectral_ctx=CKDSpectralContext(bin_set=bin_set))
     with unit_context_config.override({"length": "km"}):
         atmosphere = HeterogeneousAtmosphereLegacy(
             width=100.0,
