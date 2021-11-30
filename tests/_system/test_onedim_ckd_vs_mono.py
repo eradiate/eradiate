@@ -155,7 +155,7 @@ def test_550(reflectance):
     ------------------
 
     The [545, 555] nm - integrated BRF results obtained with the `mono_double`
-    and `ckd_double` modes should agree within 10%.
+    and `ckd_double` modes should agree within 5 %.
 
     The `mono_double` BRF results are spectrally averaged according to the
     following formula:
@@ -246,10 +246,10 @@ def test_550(reflectance):
         reflectance=reflectance,
     )
 
-    # Assert averaged mono results are consistent with ckd results within 10 %
+    # Assert averaged mono results are consistent with ckd results within 5 %
     mono_brf = mono_results_integrated.brf.squeeze().values
     ckd_brf = ckd_results.brf.squeeze().values
-    assert np.allclose(mono_brf, ckd_brf, rtol=0.1)
+    assert np.allclose(mono_brf, ckd_brf, rtol=0.05)
 
 
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
@@ -292,7 +292,7 @@ def test_1050(reflectance):
     ------------------
 
     The [1049.5, 1050.5] nm - integrated BRF results obtained with the
-    `mono_double` and `ckd_double` modes should agree within 10%.
+    `mono_double` and `ckd_double` modes should agree within 5 %.
 
     The `mono_double` BRF results are spectrally averaged according to the
     following formula:
@@ -383,7 +383,7 @@ def test_1050(reflectance):
         reflectance=reflectance,
     )
 
-    # Assert averaged mono results are consistent with ckd results within 10 %
+    # Assert averaged mono results are consistent with ckd results within 5 %
     mono_brf = mono_results_averaged.brf.squeeze().values
     ckd_brf = ckd_results.brf.squeeze().values
-    assert np.allclose(mono_brf, ckd_brf, rtol=0.1)
+    assert np.allclose(mono_brf, ckd_brf, rtol=0.05)
