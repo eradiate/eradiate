@@ -13,6 +13,11 @@ from eradiate.thermoprops.util import compute_column_number_density
 from eradiate.scenes.measure._core import CKDMeasureSpectralConfig
 
 
+# ------------------------------------------------------------------------------
+#                            ArrayRadProfile
+# ------------------------------------------------------------------------------
+
+
 def test_array_rad_props_profile(mode_mono):
     """
     Assigns attributes.
@@ -60,6 +65,11 @@ def test_array_rad_props_profile_invalid_values(mode_mono):
             albedo_values=np.linspace(0.0, 1.0, 11),
             sigma_t_values=np.linspace(0.0, 1e-5, 10),
         )
+
+
+# ------------------------------------------------------------------------------
+#                            US76ApproxRadProfile
+# ------------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -212,6 +222,11 @@ def test_us76_approx_rad_profile_has_scattering_false(
     spectral_ctx = SpectralContext.new(wavelength=550.0)
     ds = p.eval_dataset(spectral_ctx)
     assert (ds.sigma_s.values == 0.0).all()
+
+
+# ------------------------------------------------------------------------------
+#                            AFGL1986RadProfile
+# ------------------------------------------------------------------------------
 
 
 @pytest.fixture
