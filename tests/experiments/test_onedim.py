@@ -5,7 +5,6 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
 from eradiate.contexts import CKDSpectralContext, KernelDictContext
-from eradiate.exceptions import ModeError, UnsupportedModeError
 from eradiate.experiments._onedim import OneDimExperiment
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
