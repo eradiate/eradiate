@@ -446,18 +446,3 @@ def test_afgl_1986_rad_profile_ckd_10nm(mode_ckd, bin):
     spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
     assert isinstance(p.eval_sigma_a(spectral_ctx), pint.Quantity)
 
-
-@pytest.mark.parametrize("bin", ["1680", "2150"])
-def test_afgl_1986_rad_profile_ckd_10nm_invalid(mode_ckd, bin):
-    """
-    Cannot evaluate absorption coefficient in missing bins.
-
-    These bins are missing due to an error in the datasets generating process.
-    """
-    p = AFGL1986RadProfile()
-    bin = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins=bin).bins[0]
-    bindex = eradiate.ckd.Bindex(bin=bin, index=3)
-    spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
-
-    with pytest.raises(KeyError):
-        p.eval_sigma_a(spectral_ctx)
