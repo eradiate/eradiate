@@ -491,7 +491,7 @@ class Measure(SceneElement, ABC):
     )
 
     results: t.Dict = documented(
-        attr.ib(factory=dict, repr=_str_summary_raw),
+        attr.ib(factory=dict, repr=_str_summary_raw, init=False),
         doc="Storage for raw results yielded by the kernel.",
         type="dict",
         default="{}",
