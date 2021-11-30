@@ -345,7 +345,9 @@ class RadProfile(ABC):
             return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
 
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            return self.eval_sigma_a_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_sigma_a_ckd(
+                spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
+            ).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -367,7 +369,7 @@ class RadProfile(ABC):
         """
         raise NotImplementedError
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
         """
         Evaluate absorption coefficient spectrum in CKD modes.
 
@@ -375,6 +377,9 @@ class RadProfile(ABC):
         ----------
         *bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
+
+        bin_set_id : str
+            CKD bin set identifier.
 
         Returns
         -------
@@ -468,7 +473,9 @@ class RadProfile(ABC):
             return self.eval_dataset_mono(spectral_ctx.wavelength).squeeze()
 
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
-            return self.eval_dataset_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_dataset_ckd(
+                spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
+            ).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -490,7 +497,7 @@ class RadProfile(ABC):
         """
         raise NotImplementedError
 
-    def eval_dataset_ckd(self, *bindexes: Bindex) -> xr.Dataset:
+    def eval_dataset_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the corresponding
         atmospheric profile in CKD modes
@@ -499,6 +506,9 @@ class RadProfile(ABC):
         ----------
         *bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate spectra.
+
+        bin_set_id : str
+            CKD bin set identifier.
 
         Returns
         -------
@@ -799,7 +809,7 @@ class US76ApproxRadProfile(RadProfile):
         else:
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
         raise NotImplementedError(
             "CKD data sets are not yet available for the U.S. Standard "
             "Atmosphere 1976 atmopshere model."
@@ -828,9 +838,9 @@ class US76ApproxRadProfile(RadProfile):
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    def eval_albedo_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
         sigma_s = self.eval_sigma_s_ckd(*bindexes)
-        sigma_t = self.eval_sigma_t_ckd(*bindexes)
+        sigma_t = self.eval_sigma_t_ckd(*bindexes, bin_set_id=bin_set_id)
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
@@ -838,8 +848,10 @@ class US76ApproxRadProfile(RadProfile):
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
         return self.eval_sigma_a_mono(w) + self.eval_sigma_s_mono(w)
 
-    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        return self.eval_sigma_a_ckd(bindexes) + self.eval_sigma_s_ckd(bindexes)
+    def eval_sigma_t_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(
+            *bindexes, bin_set_id=bin_set_id
+        ) + self.eval_sigma_s_ckd(bindexes)
 
     def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
         profile = self.thermoprops
@@ -851,7 +863,7 @@ class US76ApproxRadProfile(RadProfile):
             sigma_s=self.eval_sigma_s_mono(w),
         ).squeeze()
 
-    def eval_dataset_ckd(self, *bindexes: Bindex) -> xr.Dataset:
+    def eval_dataset_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
         if len(bindexes) > 1:
             raise NotImplementedError
         else:
@@ -859,7 +871,7 @@ class US76ApproxRadProfile(RadProfile):
                 wavelength=bindexes[0].bin.wcenter,
                 z_level=to_quantity(self.thermoprops.z_level),
                 z_layer=to_quantity(self.thermoprops.z_layer),
-                sigma_a=self.eval_sigma_a_ckd(*bindexes),
+                sigma_a=self.eval_sigma_a_ckd(*bindexes, bin_set_id=bin_set_id),
                 sigma_s=self.eval_sigma_s_ckd(*bindexes),
             ).squeeze()
 
@@ -1085,9 +1097,11 @@ class AFGL1986RadProfile(RadProfile):
         else:
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
+        if bin_set_id is None:
+            raise ValueError("You must provide 'bin_set'")
         with eradiate.data.open(
-            category="ckd_absorption", id="afgl_1986-us_standard-10nm"
+            category="ckd_absorption", id=f"afgl_1986-us_standard-{bin_set_id}"
         ) as ds:
             # evaluate H2O and O3 concentrations
             h2o_concentration = compute_column_mass_density(
@@ -1135,9 +1149,9 @@ class AFGL1986RadProfile(RadProfile):
             ureg.dimensionless
         )
 
-    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    def eval_albedo_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
         sigma_s = self.eval_sigma_s_ckd(*bindexes)
-        sigma_t = self.eval_sigma_t_ckd(*bindexes)
+        sigma_t = self.eval_sigma_t_ckd(*bindexes, bin_set_id=bin_set_id)
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
@@ -1145,8 +1159,10 @@ class AFGL1986RadProfile(RadProfile):
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
         return self.eval_sigma_s_mono(w) + self.eval_sigma_a_mono(w)
 
-    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        return self.eval_sigma_a_ckd(*bindexes) + self.eval_sigma_s_ckd(*bindexes)
+    def eval_sigma_t_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(
+            *bindexes, bin_set_id=bin_set_id
+        ) + self.eval_sigma_s_ckd(*bindexes)
 
     def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
         return make_dataset(
@@ -1157,7 +1173,7 @@ class AFGL1986RadProfile(RadProfile):
             sigma_s=self.eval_sigma_s_mono(w),
         ).squeeze()
 
-    def eval_dataset_ckd(self, *bindexes: Bindex) -> xr.Dataset:
+    def eval_dataset_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
         if len(bindexes) > 1:
             raise NotImplementedError
         else:
@@ -1165,6 +1181,6 @@ class AFGL1986RadProfile(RadProfile):
                 wavelength=bindexes[0].bin.wcenter,
                 z_level=to_quantity(self.thermoprops.z_level),
                 z_layer=to_quantity(self.thermoprops.z_layer),
-                sigma_a=self.eval_sigma_a_ckd(*bindexes),
+                sigma_a=self.eval_sigma_a_ckd(*bindexes, bin_set_id=bin_set_id),
                 sigma_s=self.eval_sigma_s_ckd(*bindexes),
             ).squeeze()

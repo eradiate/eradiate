@@ -249,10 +249,15 @@ def test_afgl_1986_rad_profile_default_ckd(mode_ckd):
     """
     p = AFGL1986RadProfile()
 
-    spectral_ctx = SpectralContext.new()
-    for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
-        x = getattr(p, f"eval_{field}_ckd")(spectral_ctx.bindex)
+    spectral_ctx = SpectralContext.new(bin_set="10nm")
+    for field in ["albedo", "sigma_a", "sigma_t"]:
+        x = getattr(p, f"eval_{field}_ckd")(
+            spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
+        )
         assert isinstance(x, ureg.Quantity)
+
+    sigma_s = p.eval_sigma_s_ckd(spectral_ctx.bindex)
+    assert isinstance(sigma_s, ureg.Quantity)
 
 
 def test_afgl_1986_rad_profile_levels(mode_mono, afgl_1986_test_absorption_data_sets):
@@ -438,7 +443,7 @@ def test_afgl_1986_rad_profile_ckd_10nm(mode_ckd, bin):
     p = AFGL1986RadProfile()
     bin = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins=bin).bins[0]
     bindex = eradiate.ckd.Bindex(bin=bin, index=3)
-    spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex)
+    spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
     assert isinstance(p.eval_sigma_a(spectral_ctx), pint.Quantity)
 
 
@@ -452,7 +457,7 @@ def test_afgl_1986_rad_profile_ckd_10nm_invalid(mode_ckd, bin):
     p = AFGL1986RadProfile()
     bin = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins=bin).bins[0]
     bindex = eradiate.ckd.Bindex(bin=bin, index=3)
-    spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex)
+    spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
 
     with pytest.raises(KeyError):
         p.eval_sigma_a(spectral_ctx)
