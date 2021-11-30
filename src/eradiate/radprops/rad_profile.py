@@ -738,7 +738,7 @@ class US76ApproxRadProfile(RadProfile):
         default="True",
     )
 
-    absorption_data_set: t.Optional[str] = documented(
+    absorption_data_set_mono: t.Optional[str] = documented(
         attr.ib(
             default=None,
             converter=attr.converters.optional(str),
@@ -785,10 +785,10 @@ class US76ApproxRadProfile(RadProfile):
     def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
         profile = self.thermoprops
         if self.has_absorption:
-            if self.absorption_data_set is None:  # ! this is never tested
+            if self.absorption_data_set_mono is None:  # ! this is never tested
                 ds = self.open_default_absorption_data_set(wavelength=w)
             else:
-                ds = xr.open_dataset(self.absorption_data_set)
+                ds = xr.open_dataset(self.absorption_data_set_mono)
 
             # Compute scattering coefficient
             result = compute_sigma_a(
@@ -934,7 +934,7 @@ class AFGL1986RadProfile(RadProfile):
         default="True",
     )
 
-    absorption_data_sets: t.MutableMapping[str, str] = documented(
+    absorption_data_sets_mono: t.MutableMapping[str, str] = documented(
         attr.ib(
             factory=dict,
             converter=dict,
@@ -1076,9 +1076,9 @@ class AFGL1986RadProfile(RadProfile):
             for i, absorber in enumerate(absorbers):
                 n_absorber = n * to_quantity(mr.sel(species=absorber.value))
 
-                if absorber.value in self.absorption_data_sets:
+                if absorber.value in self.absorption_data_sets_mono:
                     sigma_a_absorber = self._compute_sigma_a_absorber_from_data_set(
-                        path=self.absorption_data_sets[absorber.value],
+                        path=self.absorption_data_sets_mono[absorber.value],
                         wavelength=wavelength,
                         n_absorber=n_absorber,
                         p=p,
