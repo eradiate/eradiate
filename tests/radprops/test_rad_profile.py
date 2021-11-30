@@ -10,6 +10,7 @@ from eradiate.contexts import SpectralContext
 from eradiate.radprops import AFGL1986RadProfile, ArrayRadProfile, US76ApproxRadProfile
 from eradiate.thermoprops.afgl_1986 import make_profile as make_profile_afgl_1986
 from eradiate.thermoprops.util import compute_column_number_density
+from eradiate.scenes.measure._core import CKDMeasureSpectralConfig
 
 
 def test_array_rad_props_profile(mode_mono):
@@ -434,15 +435,26 @@ def test_afgl_1986_rad_profile_concentrations_ckd_not_implemented(mode_ckd, mole
 
 
 @pytest.mark.parametrize(
-    "bin", ["280", "550", "790", "1040", "1270", "1590", "2220", "2400"]
+    "bins", ["280", "550", "790", "1040", "1270", "1590", "2220", "2400"]
 )
-def test_afgl_1986_rad_profile_ckd_10nm(mode_ckd, bin):
+def test_afgl_1986_rad_profile_ckd_10nm(mode_ckd, bins):
     """
     Can evaluate absorption coefficient.
     """
     p = AFGL1986RadProfile()
-    bin = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins=bin).bins[0]
-    bindex = eradiate.ckd.Bindex(bin=bin, index=3)
-    spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
+    spectral_config = CKDMeasureSpectralConfig(bin_set="10nm", bins=bins)
+    spectral_ctx = spectral_config.spectral_ctxs()[0]
     assert isinstance(p.eval_sigma_a(spectral_ctx), pint.Quantity)
 
+
+@pytest.mark.parametrize(
+    "bins", ["281", "552", "793", "1044", "1275", "1596", "2227", "2399"]
+)
+def test_afgl_1986_rad_profile_ckd_1nm(mode_ckd, bins):
+    """
+    Can evaluate absorption coefficient.
+    """
+    p = AFGL1986RadProfile()
+    spectral_config = CKDMeasureSpectralConfig(bin_set="1nm", bins=bins)
+    spectral_ctx = spectral_config.spectral_ctxs()[0]
+    assert isinstance(p.eval_sigma_a(spectral_ctx), pint.Quantity)
