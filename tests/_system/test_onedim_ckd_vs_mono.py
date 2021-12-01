@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate import unit_registry as ureg, unit_context_kernel as uck
+from eradiate import unit_context_kernel as uck
+from eradiate import unit_registry as ureg
 
 eradiate_dir = os.environ["ERADIATE_DIR"]
 output_dir = os.path.join(eradiate_dir, "test_report", "generated")

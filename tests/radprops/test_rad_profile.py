@@ -445,4 +445,3 @@ def test_afgl_1986_rad_profile_ckd_10nm(mode_ckd, bin):
     bindex = eradiate.ckd.Bindex(bin=bin, index=3)
     spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
     assert isinstance(p.eval_sigma_a(spectral_ctx), pint.Quantity)
-
