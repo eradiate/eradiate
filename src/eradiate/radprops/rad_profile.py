@@ -1136,7 +1136,7 @@ class AFGL1986RadProfile(RadProfile):
                 number_density=to_quantity(thermoprops.n),
             )
         else:
-            return ureg.Quantity(np.zeros(thermoprops.z_layer.size), "km^-1")
+            return ureg.Quantity(np.zeros((1, thermoprops.z_layer.size)), "km^-1")
 
     def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         wavelengths = ureg.Quantity(
