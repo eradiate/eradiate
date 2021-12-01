@@ -76,7 +76,7 @@ def rayleigh_radprops():
 
 
 def init_experiment(bottom, top, sigma_a, sigma_s, phase, r, w, spp):
-    assert eradiate.mode().id == "mono"
+    assert eradiate.mode().id == "mono_double"
 
     return eradiate.experiments.OneDimExperiment(
         measures=[
@@ -118,6 +118,7 @@ def make_figure(fname_plot, brf_1, brf_2):
     brf_1.plot(**params)
     brf_2.plot(**params)
     plt.legend(["experiment 1", "experiment 2"])
+    plt.title(f"w = {to_quantity(brf_1.w).squeeze():~}")
     plt.tight_layout()
     fig.savefig(fname_plot, dpi=200)
     plt.close()
@@ -128,7 +129,7 @@ def make_figure(fname_plot, brf_1, brf_2):
     np.array([280.0, 400.0, 550.0, 650.0, 1000.0, 1500.0, 2400.0]) * ureg.nm,
 )
 @pytest.mark.slow
-def test(mode_mono, rayleigh_radprops, w):
+def test(mode_mono_double, rayleigh_radprops, w):
     r"""
     Equivalency of plugin and tabulated versions of Rayleigh phase function
     =======================================================================
@@ -158,7 +159,7 @@ def test(mode_mono, rayleigh_radprops, w):
     ------------------
 
     Distant bi-directional reflectance factors measured by both experiments must
-    agree within 1%, outliers excluded.
+    agree within 0.01%, outliers excluded.
 
     Results
     -------
@@ -207,8 +208,7 @@ def test(mode_mono, rayleigh_radprops, w):
         spp=spp,
     )
 
-    with eradiate.unit_context_kernel.override(length="km"):
-        experiment_1.run()
+    experiment_1.run()
 
     experiment_2 = init_experiment(
         bottom=bottom,
@@ -221,8 +221,7 @@ def test(mode_mono, rayleigh_radprops, w):
         spp=spp,
     )
 
-    with eradiate.unit_context_kernel.override(length="km"):
-        experiment_2.run()
+    experiment_2.run()
 
     brf_1 = experiment_1.results["measure"]["brf"]
     brf_2 = experiment_2.results["measure"]["brf"]
@@ -241,6 +240,6 @@ def test(mode_mono, rayleigh_radprops, w):
     assert np.allclose(
         brf_1.where(no_outliers).values,
         brf_2.where(no_outliers).values,
-        rtol=1e-2,
+        rtol=1e-4,
         equal_nan=True,
     )
