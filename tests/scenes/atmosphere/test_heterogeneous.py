@@ -106,3 +106,22 @@ def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
     ).kernel_dict(ctx)
     assert d["medium_atmosphere"]["scale"] == 2.0
     assert d.load()
+
+
+def test_heterogeneous_blend_switches(mode_mono):
+    # Rayleigh-only atmosphere + particle layer combination works
+    assert HeterogeneousAtmosphere(
+        molecular_atmosphere=MolecularAtmosphere.ussa1976(
+            has_absorption=False, has_scattering=True
+        ),
+        particle_layers=[ParticleLayer()],
+    )
+
+    # Purely absorbing atmosphere + particle layer combination is not allowed
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere(
+            molecular_atmosphere=MolecularAtmosphere.ussa1976(
+                has_absorption=True, has_scattering=False
+            ),
+            particle_layers=[ParticleLayer()],
+        )

@@ -4,7 +4,6 @@ Heterogeneous atmospheres.
 from __future__ import annotations
 
 import typing as t
-import warnings
 from collections import abc as cabc
 
 import attr
@@ -139,6 +138,13 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
+        if self.particle_layers and (value.has_absorption and not value.has_scattering):
+            raise ValueError(
+                f"while validating {attribute.name}: a purely absorbing "
+                "molecular atmosphere cannot be mixed with particle layers; this "
+                "will be addressed in a future release"
+            )
+
     particle_layers: t.List[ParticleLayer] = documented(
         attr.ib(
             factory=list,
@@ -157,7 +163,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     @particle_layers.validator
-    def _component_validator(self, attribute, value):
+    def _particle_layers_validator(self, attribute, value):
         if not all([component.width is AUTO for component in value]):
             raise ValueError(
                 f"while validating {attribute.name}: all components must have "

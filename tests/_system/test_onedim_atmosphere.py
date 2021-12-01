@@ -53,24 +53,22 @@ def test_heterogeneous_atmosphere_contains_particle_layer(mode_mono, bottom, tau
     assert np.all(results1 == results2)
 
 
-@pytest.mark.parametrize("has_scattering", [True, False])
-def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
-    mode_mono, has_scattering
-):
+def test_heterogeneous_atmosphere_contains_molecular_atmosphere(mode_mono):
     """
     HeterogeneousAtmosphere is a good container for a MolecularAtmosphere
     =====================================================================
 
-    This testcase asserts that the HeterogeneousAtmosphere class can act as a container for
-    other atmosphere objects.
-
+    This testcase asserts that the HeterogeneousAtmosphere class can act as a
+    container for other atmosphere objects.
 
     Rationale
     ---------
 
     Run a OneDimExperiment with two different atmosphere definitions.
-    First define an atmosphere that is directly made up from a non-absorbing molecular atmosphere.
-    Second define a heterogeneous atmosphere that contains *only* a non-absorbing molecular atmosphere.
+    First define an atmosphere that is directly made up from a non-absorbing
+    molecular atmosphere.
+    Second define a heterogeneous atmosphere that contains *only* a
+    non-absorbing molecular atmosphere.
 
     Expected behaviour
     ------------------
@@ -82,11 +80,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
     """
     # non absorbing molecular atmosphere
     exp1 = eradiate.experiments.OneDimExperiment(
-        atmosphere={
-            "type": "molecular",
-            "has_absorption": False,
-            "has_scattering": has_scattering,
-        }
+        atmosphere={"type": "molecular", "has_absorption": False}
     )
     exp1.run()
     results1 = exp1.results["measure"]["radiance"].values
@@ -95,11 +89,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
     exp2 = eradiate.experiments.OneDimExperiment(
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "type": "molecular",
-                "has_absorption": False,
-                "has_scattering": has_scattering,
-            },
+            "molecular_atmosphere": {"type": "molecular", "has_absorption": False},
         }
     )
     exp2.run()

@@ -64,7 +64,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         attr.ib(
             default=True,
             converter=bool,
-            validator=attr.validators.instance_of(bool),
         ),
         doc="Absorption switch. If ``True``, the absorption coefficient is "
         "computed. Else, the absorption coefficient is not computed and "
@@ -77,7 +76,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         attr.ib(
             default=True,
             converter=bool,
-            validator=attr.validators.instance_of(bool),
         ),
         doc="Scattering switch. If ``True``, the scattering coefficient is "
         "computed. Else, the scattering coefficient is not computed and "
@@ -85,6 +83,15 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         type="bool",
         default="True",
     )
+
+    @has_absorption.validator
+    @has_scattering.validator
+    def _switch_validator(self, attribute, value):
+        if not self.has_absorption and not self.has_scattering:
+            raise ValueError(
+                f"while validating {attribute.name}: at least one of 'has_absorption' "
+                "and 'has_scattering' must be True"
+            )
 
     absorption_data_sets: t.Optional[t.Dict[str, str]] = documented(
         attr.ib(
