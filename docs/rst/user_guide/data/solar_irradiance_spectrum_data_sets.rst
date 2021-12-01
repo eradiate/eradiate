@@ -140,14 +140,14 @@ on 14 April 2008. Wavelength range: [116.5, 2399.95] nm (the wavelengthes
 minimum conditions. The WHI campaign produced three spectra, corresponding to
 three time periods (numbered 1, 2, 3 here):
 
-  - ``whi_2008_1``: from 2008-03-25 to 2008-03-29, "sunspot active" spectrum.
-    Total solar irradiance: 1360.70 W/m^2.
+- ``whi_2008_1``: from 2008-03-25 to 2008-03-29, "sunspot active" spectrum.
+  Total solar irradiance: 1360.70 W/m^2.
 
-  - ``whi_2008_2``: from 2008-03-29 to 2008-04-4, "faculae active" spectrum.
-    Total solar irradiance: 1360.94 W/m^2.
+- ``whi_2008_2``: from 2008-03-29 to 2008-04-4, "faculae active" spectrum.
+  Total solar irradiance: 1360.94 W/m^2.
 
-  - ``whi_2008_3``: from 2008-04-10 to 2008-04-16, "quiet sun" spectrum.
-    Total solar irradiance: 1360.84 W/m^2.
+- ``whi_2008_3``: from 2008-04-10 to 2008-04-16, "quiet sun" spectrum.
+  Total solar irradiance: 1360.84 W/m^2.
 
 ``whi_2008`` is an alias to the quiet sun spectrum ``whi_2008_3``.
 Reference: :cite:`Woods2008SolarIrradianceReference`.

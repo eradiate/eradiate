@@ -33,8 +33,12 @@ class SolarIrradianceSpectrum(Spectrum):
 
     This scene element produces the scene dictionary required to
     instantiate a kernel plugin using the Sun irradiance spectrum. The data set
-    used by this element is controlled by the ``dataset`` field (see
-    :mod:`eradiate.data.solar_irradiance_spectra` for available data sets).
+    used by this element is controlled by the ``dataset`` field.
+
+    See Also
+    --------
+
+    :ref:`Solar irradiance spectrum data guide <sec-user_guide-data-solar_irradiance_spectrum_data_sets>`
 
     Notes
     ------
@@ -78,7 +82,7 @@ class SolarIrradianceSpectrum(Spectrum):
             validator=attr.validators.instance_of(str),
         ),
         doc="Dataset identifier. Allowed values: see "
-        ":attr:`solar irradiance dataset documentation <eradiate.data.solar_irradiance_spectra>`.",
+        ":ref:`sec-user_guide-data-solar_irradiance_spectrum_data_sets`.",
         type="str",
         default='"thuiller_2003"',
     )
@@ -88,7 +92,7 @@ class SolarIrradianceSpectrum(Spectrum):
         if value not in data.registered("solar_irradiance_spectrum"):
             raise ValueError(
                 f"while setting {attribute.name}: '{value}' not in "
-                f"list of supported solar irradiance spectra "
+                "list of supported solar irradiance spectra "
                 f"{data.registered('solar_irradiance_spectrum')}"
             )
 
