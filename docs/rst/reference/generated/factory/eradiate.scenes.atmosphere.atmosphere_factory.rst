@@ -20,8 +20,6 @@ eradiate.scenes.atmosphere.atmosphere_factory
 
       * - ``heterogeneous``
         - :class:`HeterogeneousAtmosphere`
-      * - ``heterogeneous_legacy``
-        - :class:`HeterogeneousAtmosphereLegacy`
       * - ``homogeneous``
         - :class:`HomogeneousAtmosphere`
       * - ``molecular``

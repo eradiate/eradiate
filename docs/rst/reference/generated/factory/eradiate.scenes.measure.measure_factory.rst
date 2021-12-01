@@ -19,19 +19,19 @@ eradiate.scenes.measure.measure_factory
       :widths: 25 75
 
       * - ``distant``
-        - :class:`DistantRadianceMeasure`
-      * - ``distant_albedo``
-        - :class:`DistantAlbedoMeasure`
-      * - ``distant_array``
-        - :class:`DistantArrayMeasure`
-      * - ``distant_array_reflectance``
-        - :class:`DistantArrayReflectanceMeasure`
+        - :class:`MultiDistantMeasure`
       * - ``distant_flux``
         - :class:`DistantFluxMeasure`
-      * - ``distant_radiance``
-        - :class:`DistantRadianceMeasure`
-      * - ``distant_reflectance``
-        - :class:`DistantReflectanceMeasure`
+      * - ``hdistant``
+        - :class:`HemisphericalDistantMeasure`
+      * - ``hemispherical_distant``
+        - :class:`HemisphericalDistantMeasure`
+      * - ``mdistant``
+        - :class:`MultiDistantMeasure`
+      * - ``mradiancemeter``
+        - :class:`MultiRadiancemeterMeasure`
+      * - ``multi_distant``
+        - :class:`MultiDistantMeasure`
       * - ``multi_radiancemeter``
         - :class:`MultiRadiancemeterMeasure`
       * - ``perspective``
