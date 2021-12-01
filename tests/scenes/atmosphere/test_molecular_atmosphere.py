@@ -1,5 +1,6 @@
 """Test cases of the _molecular_atmosphere module."""
 
+import numpy as np
 import pytest
 
 from eradiate import path_resolver
@@ -88,3 +89,19 @@ def test_molecular_atmosphere_ussa1976(
         absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set)
     )
     assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
+
+
+def test_molecular_atmosphere_switches(mode_mono):
+    # Absorption can be deactivated
+    atmosphere = MolecularAtmosphere(has_absorption=False)
+    ctx = KernelDictContext()
+    assert np.all(atmosphere.eval_radprops(ctx.spectral_ctx).sigma_a == 0.0)
+
+    # Scattering can be deactivated
+    atmosphere = MolecularAtmosphere(has_scattering=False)
+    ctx = KernelDictContext()
+    assert np.all(atmosphere.eval_radprops(ctx.spectral_ctx).sigma_s == 0.0)
+
+    # At least one must be active
+    with pytest.raises(ValueError):
+        MolecularAtmosphere(has_absorption=False, has_scattering=False)
