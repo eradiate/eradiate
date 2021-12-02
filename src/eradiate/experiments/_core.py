@@ -9,7 +9,7 @@ import attr
 import mitsuba
 import pinttr
 import xarray as xr
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 import eradiate
 

@@ -8,7 +8,7 @@ from zipfile import ZipFile
 import click
 import requests
 import ruamel.yaml as yaml
-import tqdm
+from tqdm.auto import tqdm
 
 import eradiate
 
@@ -46,7 +46,7 @@ def download_url(url: str, chunk_size: int = 1024) -> Path:
     file_name = url_to_name(url=url)
     path = Path(eradiate.config.dir, file_name)
 
-    with requests.get(url=url, stream=True) as r, open(path, "wb") as f, tqdm.tqdm(
+    with requests.get(url=url, stream=True) as r, open(path, "wb") as f, tqdm(
         unit="B",  # unit string to be displayed.
         unit_scale=True,  # let tqdm to determine the scale in kilo, mega..etc.
         unit_divisor=1024,  # is used when unit_scale is true
@@ -88,10 +88,10 @@ def cli():
 
     print(f"Downloading from {root_url}")
 
-    for archive in tqdm.tqdm(DESTINATION, desc="Global progress", leave=True):
+    for archive in tqdm(DESTINATION, desc="Global progress", leave=True):
         url = root_url + archive
         archive_file = download_url(url=url)
-        tqdm.tqdm.write(f"Extracting archive ...")
+        tqdm.write(f"Extracting archive ...")
         extract(file=archive_file, destination=DOWNLOAD_DIR / DESTINATION[archive])
 
     print("Done")
