@@ -19,11 +19,21 @@ from xarray.plot import FacetGrid
 # -- Utility functions ---------------------------------------------------------
 
 
-def set_style():
+def set_style(rc=None):
     """
-    Apply Eradiate matplotlib style (uses Seaborn).
+    Apply Eradiate Matplotlib style (the Seaborn ``ticks`` style with the
+    viridis colormap).
+
+    Parameters
+    ----------
+    rc : dict, optional
+        A Matplotlib rc parameter dictionary to be applied in addition to the
+        Eradiate style.
     """
-    sns.set_theme(style="ticks", rc={"image.cmap": "viridis"})
+    if rc is None:
+        rc = {}
+
+    sns.set_theme(style="ticks", rc={"image.cmap": "viridis", **rc})
 
 
 def detect_axes(from_=None):
