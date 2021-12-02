@@ -511,10 +511,10 @@ class Measure(SceneElement, ABC):
     )
 
     spp: int = documented(
-        attr.ib(default=32, converter=int, validator=validators.is_positive),
+        attr.ib(default=1000, converter=int, validator=validators.is_positive),
         doc="Number of samples per pixel.",
         type="int",
-        default="32",
+        default="1000",
     )
 
     split_spp: t.Optional[int] = documented(

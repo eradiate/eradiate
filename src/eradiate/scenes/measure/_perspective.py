@@ -34,6 +34,13 @@ class PerspectiveCameraMeasure(Measure):
     #                           Fields and properties
     # --------------------------------------------------------------------------
 
+    spp: int = documented(
+        attr.ib(default=32, converter=int, validator=validators.is_positive),
+        doc="Number of samples per pixel.",
+        type="int",
+        default="32",
+    )
+
     _film_resolution: t.Tuple[int, int] = documented(
         attr.ib(
             default=(32, 32),
