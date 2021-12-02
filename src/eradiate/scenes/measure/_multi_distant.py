@@ -36,6 +36,12 @@ class MultiDistantMeasure(Measure):
     appropriate post-processing operations, scene reflectance can be derived
     from the radiance values it produces.
 
+    .. admonition:: Class method constructors
+
+       .. autosummary::
+
+          from_viewing_angles
+
     Notes
     -----
     * Setting the ``target`` parameter is required to get meaningful results.
