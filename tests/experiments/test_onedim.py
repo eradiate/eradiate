@@ -5,7 +5,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
 from eradiate.contexts import CKDSpectralContext, KernelDictContext
-from eradiate.experiments._onedim import OneDimExperiment
+from eradiate.experiments._onedim import OneDimExperiment, measure_inside_atmosphere
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     HomogeneousAtmosphere,
@@ -63,6 +63,25 @@ def test_onedim_experiment_ckd(mode_ckd, bin_set):
     assert exp.kernel_dict(ctx=ctx).load()
 
 
+def test_onedim_measure_inside_atmosphere(mode_mono):
+    ctx = KernelDictContext()
+    atm = HeterogeneousAtmosphere(molecular_atmosphere=MolecularAtmosphere.afgl_1986())
+
+    s1 = eradiate.scenes.measure.MultiDistantMeasure()
+    s2 = eradiate.scenes.measure.PerspectiveCameraMeasure(
+        origin=[1, 1, 1], target=[0, 0, 0]
+    )
+    s3 = eradiate.scenes.measure.MultiRadiancemeterMeasure(
+        origins=[[1, 1, 1], [0, 0, 1000000]], directions=[[0, 0, -1], [0, 0, -1]]
+    )
+
+    assert not measure_inside_atmosphere(atm, s1, ctx)
+    assert measure_inside_atmosphere(atm, s2, ctx)
+
+    with pytest.raises(ValueError):
+        measure_inside_atmosphere(atm, s3, ctx)
+
+
 def test_onedim_experiment_kernel_dict(modes_all):
     """
     Test non-trivial kernel dict generation behaviour.
@@ -85,7 +104,10 @@ def test_onedim_experiment_kernel_dict(modes_all):
     exp = OneDimExperiment(
         atmosphere=None,
         surface={"type": "lambertian", "width": 100.0, "width_units": "m"},
-        measures={"type": "distant", "id": "distant_measure"},
+        measures=[
+            {"type": "distant", "id": "distant_measure"},
+            {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
+        ],
     )
     # -- Surface width is not overridden
     kernel_dict = exp.kernel_dict(ctx)
@@ -95,6 +117,10 @@ def test_onedim_experiment_kernel_dict(modes_all):
     )
     # -- Atmosphere is not in kernel dictionary
     assert "atmosphere" not in kernel_dict
+
+    # -- Measures get no external medium assigned
+    assert "medium" not in kernel_dict["distant_measure"]
+    assert "medium" not in kernel_dict["radiancemeter"]
 
 
 @pytest.mark.slow
@@ -115,9 +141,54 @@ def test_onedim_experiment_real_life(mode_mono):
             },
         },
         illumination={"type": "directional", "zenith": 45.0},
-        measures={"type": "distant", "id": "toa"},
+        measures=[
+            {"type": "distant", "id": "distant_measure"},
+            {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
+        ],
     )
     assert exp.kernel_dict(ctx=ctx).load() is not None
+
+    # -- Distant measures get no external medium
+    assert "medium" not in exp.kernel_dict(ctx=ctx)["distant_measure"]
+
+    # -- Radiancemeter inside the atmosphere must have a medium assigned
+    assert exp.kernel_dict(ctx=ctx)["radiancemeter"]["medium"] == {
+        "type": "ref",
+        "id": "medium_atmosphere",
+    }
+
+
+def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
+    # A MultiRadiancemeter measure must have all origins inside the atmosphere or none.
+    # A mix of both will raise an error.
+
+    ctx = KernelDictContext()
+
+    # Construct with typical parameters
+    test_absorption_data_set = eradiate.path_resolver.resolve(
+        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
+    )
+    exp = OneDimExperiment(
+        surface={"type": "rpv"},
+        atmosphere={
+            "type": "heterogeneous",
+            "molecular_atmosphere": {
+                "construct": "ussa1976",
+                "absorption_data_sets": dict(us76_u86_4=test_absorption_data_set),
+            },
+        },
+        illumination={"type": "directional", "zenith": 45.0},
+        measures=[
+            {
+                "type": "multi_radiancemeter",
+                "origins": [[1, 0, 0], [1000000, 0, 0]],
+                "directions": [[0, 0, -1], [0, 0, -1]],
+                "id": "multi_radiancemeter",
+            },
+        ],
+    )
+    with pytest.raises(ValueError):
+        exp.kernel_dict(ctx=ctx)
 
 
 def test_onedim_experiment_run_basic(modes_all):

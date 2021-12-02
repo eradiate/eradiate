@@ -93,12 +93,20 @@ def test_ramiatm_experiment_kernel_dict(mode_mono, padding):
             l_vertical=2.0 * ureg.m,
             padding=padding,
         ),
+        measures=[
+            {"type": "distant", "id": "distant_measure"},
+            {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
+        ],
     )
     kernel_scene = s.kernel_dict(ctx)
     assert np.allclose(
         kernel_scene["surface"]["to_world"].transform_point([1, -1, 0]),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
+
+    # -- Measures get no external medium assigned
+    assert "medium" not in kernel_scene["distant_measure"]
+    assert "medium" not in kernel_scene["radiancemeter"]
 
     # Surface width is appropriately inherited from atmosphere
     s = Rami4ATMExperiment(
@@ -179,14 +187,27 @@ def test_ramiatm_experiment_real_life(mode_mono):
             "l_vertical": 2.0 * ureg.m,
         },
         illumination={"type": "directional", "zenith": 45.0},
-        measures={
-            "type": "distant",
-            "construct": "from_viewing_angles",
-            "zeniths": np.arange(-60, 61, 5),
-            "azimuths": 0.0,
-        },
+        measures=[
+            {
+                "type": "distant",
+                "construct": "from_viewing_angles",
+                "zeniths": np.arange(-60, 61, 5),
+                "azimuths": 0.0,
+                "id": "distant",
+            },
+            {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
+        ],
     )
     assert exp.kernel_dict(ctx=ctx).load() is not None
+
+    # -- Distant measures get no external medium
+    assert "medium" not in exp.kernel_dict(ctx=ctx)["distant"]
+
+    # -- Radiancemeter inside the atmosphere must have a medium assigned
+    assert exp.kernel_dict(ctx=ctx)["radiancemeter"]["medium"] == {
+        "type": "ref",
+        "id": "medium_atmosphere",
+    }
 
 
 @pytest.mark.slow
@@ -233,3 +254,44 @@ def test_ramiatm_experiment_run_detailed(mode_mono):
 
     # We just check that we record something as expected
     assert np.all(results["radiance"].data > 0.0)
+
+
+def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
+    # A MultiRadiancemeter measure must have all origins inside the atmosphere or none.
+    # A mix of both will raise an error.
+
+    ctx = KernelDictContext()
+
+    # Construct with typical parameters
+    test_absorption_data_set = eradiate.path_resolver.resolve(
+        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
+    )
+    exp = Rami4ATMExperiment(
+        surface={"type": "rpv"},
+        atmosphere={
+            "type": "heterogeneous",
+            "molecular_atmosphere": {
+                "construct": "ussa1976",
+                "absorption_data_sets": dict(us76_u86_4=test_absorption_data_set),
+            },
+        },
+        canopy={
+            "type": "discrete_canopy",
+            "construct": "homogeneous",
+            "lai": 3.0,
+            "leaf_radius": 0.1 * ureg.m,
+            "l_horizontal": 10.0 * ureg.m,
+            "l_vertical": 2.0 * ureg.m,
+        },
+        illumination={"type": "directional", "zenith": 45.0},
+        measures=[
+            {
+                "type": "multi_radiancemeter",
+                "origins": [[1, 0, 0], [1000000, 0, 0]],
+                "directions": [[0, 0, -1], [0, 0, -1]],
+                "id": "multi_radiancemeter",
+            },
+        ],
+    )
+    with pytest.raises(ValueError):
+        exp.kernel_dict(ctx=ctx)

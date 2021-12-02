@@ -4,6 +4,7 @@ import warnings
 import attr
 
 from ._core import EarthObservationExperiment
+from ._onedim import measure_inside_atmosphere
 from .. import converters, validators
 from ..attrs import AUTO, documented, parse_docs
 from ..contexts import KernelDictContext
@@ -17,7 +18,8 @@ from ..scenes.integrators import (
     VolPathIntegrator,
     integrator_factory,
 )
-from ..scenes.measure import Measure, TargetPoint
+from ..scenes.measure import Measure, MultiRadiancemeterMeasure, TargetPoint
+from ..scenes.measure._core import MeasureFlags
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -42,6 +44,12 @@ class Rami4ATMExperiment(EarthObservationExperiment):
       (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere altitude);
     * if neither atmosphere nor canopy are defined, the target is set to
       [0, 0, 0].
+
+    This experiment supports arbitrary measure positioning, except for
+    :class:`.MultiRadiancemeterMeasure`, for which subsensors are required to
+    be either all inside or all outside of the atmosphere. If an unsuitable
+    configuration is detected, a :class:`ValueError` will be raised during
+    initialisation.
 
     """
 
@@ -181,14 +189,28 @@ class Rami4ATMExperiment(EarthObservationExperiment):
 
         if self.atmosphere is not None:
             result.add(self.atmosphere, ctx=ctx)
+            ctx = ctx.evolve(
+                override_scene_width=self.atmosphere.kernel_width(ctx),
+            )
 
-        result.add(
-            self.surface,
-            self.illumination,
-            *self.measures,
-            self.integrator,
-            ctx=ctx,
-        )
+            for measure in self.measures:
+                if measure_inside_atmosphere(self.atmosphere, measure, ctx):
+                    result.add(
+                        measure,
+                        ctx=ctx.evolve(atmosphere_medium_id=self.atmosphere.id_medium),
+                    )
+                else:
+                    result.add(measure, ctx=ctx)
+
+            result.add(self.surface, self.illumination, self.integrator, ctx=ctx)
+        else:
+            result.add(
+                self.surface,
+                self.illumination,
+                *self.measures,
+                self.integrator,
+                ctx=ctx
+            )
 
         return result
 

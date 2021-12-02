@@ -10,10 +10,36 @@ from ..exceptions import OverriddenValueWarning
 from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
-from ..scenes.measure import Measure, TargetPoint
+from ..scenes.measure import Measure, MultiRadiancemeterMeasure, TargetPoint
 from ..scenes.measure._core import MeasureFlags
 from ..scenes.surface import LambertianSurface, Surface, surface_factory
 from ..units import unit_context_config as ucc
+
+
+def measure_inside_atmosphere(atmosphere, measure, ctx):
+    """
+    Evaluate whether a sensor is placed within an atmosphere.
+
+    Raises a ValueError if called with a :class:`MultiRadiancemeterMeasure` with
+    origins both inside and outside of the atmosphere.
+    """
+    bbox = atmosphere.eval_bbox(ctx)
+
+    if isinstance(measure, MultiRadiancemeterMeasure):
+        inside = [bbox.contains(origin) for origin in measure.origins]
+        if all(inside):
+            return True
+        elif not any(inside):
+            return False
+        else:
+            raise ValueError(
+                "Inconsistent placement of Multiradiancemeter origins. "
+                "Origins must lie either all inside or all outside of the atmosphere."
+            )
+    elif measure.flags & MeasureFlags.DISTANT:
+        return False
+    else:
+        return bbox.contains(measure.origin)
 
 
 @parse_docs
@@ -31,6 +57,12 @@ class OneDimExperiment(EarthObservationExperiment):
 
     * if an atmosphere is defined, the target will be set to [0, 0, TOA];
     * if no atmosphere is defined, the target will be set to [0, 0, 0].
+
+    This experiment supports arbitrary measure positioning, except for
+    :class:`.MultiRadiancemeterMeasure`, for which subsensors are required to
+    be either all inside or all outside of the atmosphere. If an unsuitable
+    configuration is detected, a :class:`ValueError` will be raised during
+    initialisation..
     """
 
     atmosphere: t.Optional[Atmosphere] = documented(
@@ -93,11 +125,28 @@ class OneDimExperiment(EarthObservationExperiment):
         # Note: Surface width is always set equal to atmosphere width
         if self.atmosphere is not None:
             result.add(self.atmosphere, ctx=ctx)
-            ctx = ctx.evolve(override_scene_width=self.atmosphere.kernel_width(ctx))
+            ctx = ctx.evolve(
+                override_scene_width=self.atmosphere.kernel_width(ctx),
+            )
 
-        result.add(
-            self.surface, self.illumination, *self.measures, self.integrator, ctx=ctx
-        )
+            for measure in self.measures:
+                if measure_inside_atmosphere(self.atmosphere, measure, ctx):
+                    result.add(
+                        measure,
+                        ctx=ctx.evolve(atmosphere_medium_id=self.atmosphere.id_medium),
+                    )
+                else:
+                    result.add(measure, ctx=ctx)
+
+            result.add(self.surface, self.illumination, self.integrator, ctx=ctx)
+        else:
+            result.add(
+                self.surface,
+                self.illumination,
+                *self.measures,
+                self.integrator,
+                ctx=ctx
+            )
 
         return result
 
