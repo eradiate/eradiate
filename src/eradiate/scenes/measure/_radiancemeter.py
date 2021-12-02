@@ -112,7 +112,15 @@ class RadiancemeterMeasure(Measure):
         result = KernelDict()
 
         for spp, sensor_id in zip(sensor_spps, sensor_ids):
-            result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
+            if ctx.atmosphere_medium_id is not None:
+                result_dict = self._kernel_dict(sensor_id, spp)
+                result_dict["medium"] = {
+                    "type": "ref",
+                    "id": ctx.atmosphere_medium_id,
+                }
+                result.data[sensor_id] = result_dict
+            else:
+                result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
 
         return result
 

@@ -11,7 +11,7 @@ import pint
 import pinttr
 import xarray as xr
 
-from ..core import KernelDict, SceneElement
+from ..core import BoundingBox, KernelDict, SceneElement
 from ... import converters
 from ... import unit_context_kernel as uck
 from ... import validators
@@ -123,6 +123,21 @@ class Atmosphere(SceneElement, ABC):
             Atmosphere width.
         """
         pass
+
+    def eval_bbox(self, ctx):
+        """
+        Evaluate and return the bounding box enclosing the atmosphere's volume.
+        """
+        length_units = ucc.get("length")
+
+        k_width = self.eval_width(ctx).m_as(length_units)
+        k_bottom = (self.bottom - self.kernel_offset(ctx)).m_as(length_units)
+        k_top = self.top.m_as(length_units)
+
+        return BoundingBox(
+            [-k_width / 2.0, -k_width / 2.0, k_bottom] * length_units,
+            [k_width / 2.0, k_width / 2.0, k_top] * length_units,
+        )
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation

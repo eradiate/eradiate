@@ -305,6 +305,14 @@ class KernelDictContext(Context):
         default="True",
     )
 
+    atmosphere_medium_id: t.Optional[str] = documented(
+        attr.ib(default=None, converter=attr.converters.optional(str)),
+        doc="If relevant, a kernel medium ID to reference by other kernel components.",
+        type="str or None",
+        init_type="str, optional",
+        default="None",
+    )
+
     override_scene_width: t.Optional[pint.Quantity] = documented(
         pinttr.ib(
             default=None,
