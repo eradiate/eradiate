@@ -11,6 +11,7 @@ import mitsuba
 import numpy as np
 import pint
 import pinttr
+from pinttr.util import ensure_units
 
 from .. import unit_context_config as ucc
 from .._util import onedict_value
@@ -417,3 +418,32 @@ class BoundingBox:
         :class:`pint.Unit`: Units of `min` and `max` arrays.
         """
         return self.min.units
+
+    def contains(self, p: np.typing.ArrayLike, strict: bool = False) -> bool:
+        """
+        Test whether a point lies within the bounding box.
+
+        Parameters
+        ----------
+        p : quantity or array-like
+            An array of shape (3,) (resp. (N, 3)) representing one (resp. N)
+            points. If a unitless value is passed, it is interpreted as
+            ``ucc["length"]``.
+
+        strict : bool
+            If ``True``, comparison is done using strict inequalities (<, >).
+
+        Returns
+        -------
+        result : array of bool or bool
+            ``True`` iff ``p`` in within the bounding box.
+        """
+        p = np.atleast_2d(ensure_units(p, ucc.get("length")))
+
+        cmp = (
+            np.logical_and(p > self.min, p < self.max)
+            if strict
+            else np.logical_and(p >= self.min, p <= self.max)
+        )
+
+        return np.all(cmp, axis=1)

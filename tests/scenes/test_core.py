@@ -167,3 +167,15 @@ def test_bbox_convert():
     bbox_convert = BoundingBox.convert([[0, 0, 0], [1, 1, 1]] * ureg.m)
     assert np.allclose(bbox_ref.min, bbox_convert.min)
     assert np.allclose(bbox_ref.max, bbox_convert.max)
+
+
+def test_bbox_contains():
+    bbox = BoundingBox([0, 0, 0], [1, 1, 1])
+
+    # Works with a single point
+    assert bbox.contains([0.5, 0.5, 0.5])
+    assert not bbox.contains([0.5, 0.5, -0.5])
+    assert not bbox.contains([0.5, 0.5, 0.5] * ureg.km)
+
+    # Works with multiple points
+    assert np.all(bbox.contains([[0.5, 0.5, 0.5], [0.5, -0.5, 0.5]]) == [True, False])
