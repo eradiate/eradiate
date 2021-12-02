@@ -3,8 +3,6 @@
 Solar irradiance spectrum
 =========================
 
-.. warning:: This content is outdated.
-
 A solar irradiance spectrum data set provide the Sun's spectral irradiance
 spectrum at a Sun-Earth distance of 1 astronomical unit.
 Solar irradiance spectrum data may come from observations -- e.g. using a
