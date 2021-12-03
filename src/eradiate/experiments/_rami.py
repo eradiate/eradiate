@@ -28,7 +28,7 @@ class RamiExperiment(EarthObservationExperiment):
     Notes
     -----
     A post-initialisation step will constrain the measure setup if a
-    :class:`.DistantMeasure` is used and no target is defined:
+    distant measure is used and no target is defined:
 
     * if a canopy is defined, the target will be set to the top of the canopy unit cell
       (*i.e.* without its padding);

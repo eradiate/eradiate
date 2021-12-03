@@ -33,8 +33,9 @@ def measure_inside_atmosphere(atmosphere, measure, ctx):
             return False
         else:
             raise ValueError(
-                "Inconsistent placement of Multiradiancemeter origins. "
-                "Origins must lie either all inside or all outside of the atmosphere."
+                "Inconsistent placement of MultiRadiancemeterMeasure origins. "
+                "Origins must lie either all inside or all outside of the "
+                "atmosphere."
             )
     elif measure.flags & MeasureFlags.DISTANT:
         return False
@@ -52,17 +53,17 @@ class OneDimExperiment(EarthObservationExperiment):
 
     Notes
     -----
-    A post-initialisation step will constrain the measure setup if a
-    distant measure is used and no target is defined:
+    * A post-initialisation step will constrain the measure setup if a
+      distant measure is used and no target is defined:
 
-    * if an atmosphere is defined, the target will be set to [0, 0, TOA];
-    * if no atmosphere is defined, the target will be set to [0, 0, 0].
+      * if an atmosphere is defined, the target will be set to [0, 0, TOA];
+      * if no atmosphere is defined, the target will be set to [0, 0, 0].
 
-    This experiment supports arbitrary measure positioning, except for
-    :class:`.MultiRadiancemeterMeasure`, for which subsensors are required to
-    be either all inside or all outside of the atmosphere. If an unsuitable
-    configuration is detected, a :class:`ValueError` will be raised during
-    initialisation..
+    * This experiment supports arbitrary measure positioning, except for
+      :class:`.MultiRadiancemeterMeasure`, for which subsensor origins are
+      required to be either all inside or all outside of the atmosphere. If an
+      unsuitable configuration is detected, a :class:`ValueError` will be raised
+      during initialisation.
     """
 
     atmosphere: t.Optional[Atmosphere] = documented(
