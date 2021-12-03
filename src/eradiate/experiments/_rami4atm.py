@@ -35,22 +35,21 @@ class Rami4ATMExperiment(EarthObservationExperiment):
 
     Notes
     -----
-    A post-initialisation step will constrain the measure setup if a
-    :class:`.DistantMeasure` is used and no target is defined:
+    * A post-initialisation step will constrain the measure setup if a
+      distant measure is used and no target is defined:
 
-    * if a canopy is defined, the target will be set to the top of the canopy unit cell
-      (*i.e.* without its padding);
-    * if no canopy is defined, the target will be set according to the atmosphere
-      (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere altitude);
-    * if neither atmosphere nor canopy are defined, the target is set to
-      [0, 0, 0].
+      * if a canopy is defined, the target will be set to the top of the canopy unit cell
+        (*i.e.* without its padding);
+      * if no canopy is defined, the target will be set according to the atmosphere
+        (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere altitude);
+      * if neither atmosphere nor canopy are defined, the target is set to
+        [0, 0, 0].
 
-    This experiment supports arbitrary measure positioning, except for
-    :class:`.MultiRadiancemeterMeasure`, for which subsensors are required to
-    be either all inside or all outside of the atmosphere. If an unsuitable
-    configuration is detected, a :class:`ValueError` will be raised during
-    initialisation.
-
+    * This experiment supports arbitrary measure positioning, except for
+      :class:`.MultiRadiancemeterMeasure`, for which subsensor origins are
+      required to be either all inside or all outside of the atmosphere. If an
+      unsuitable configuration is detected, a :class:`ValueError` will be raised
+      during initialisation.
     """
 
     atmosphere: t.Optional[Atmosphere] = documented(

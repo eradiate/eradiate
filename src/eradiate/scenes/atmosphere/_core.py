@@ -113,20 +113,31 @@ class Atmosphere(SceneElement, ABC):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : .KernelDictContext
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
         Returns
         -------
-        quantity
+        width : quantity
             Atmosphere width.
         """
         pass
 
-    def eval_bbox(self, ctx):
+    def eval_bbox(self, ctx: KernelDictContext) -> BoundingBox:
         """
-        Evaluate and return the bounding box enclosing the atmosphere's volume.
+        Evaluate the bounding box enclosing the atmosphere's volume.
+
+        Parameters
+        ----------
+        ctx : .KernelDictContext
+            A context data structure containing parameters relevant for kernel
+            dictionary generation.
+
+        Returns
+        -------
+        bbox : .BoundingBox
+            Calculated bounding box.
         """
         length_units = ucc.get("length")
 
@@ -171,13 +182,13 @@ class Atmosphere(SceneElement, ABC):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : .KernelDictContext
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
         Returns
         -------
-        :class:`.KernelDict`
+        kernel_dict : .KernelDict
             A kernel dictionary containing all the phase functions attached to
             the atmosphere.
         """
@@ -190,13 +201,13 @@ class Atmosphere(SceneElement, ABC):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : .KernelDictContext
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
         Returns
         -------
-        :class:`.KernelDict`
+        kernel_dict : .KernelDict
             A kernel dictionary containing all the media attached to the
             atmosphere.
         """
@@ -209,13 +220,13 @@ class Atmosphere(SceneElement, ABC):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : .KernelDictContext
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
         Returns
         -------
-        :class:`.KernelDict`
+        kernel_dict : .KernelDict
             A kernel dictionary containing all the shapes attached to the
             atmosphere.
         """
@@ -227,13 +238,13 @@ class Atmosphere(SceneElement, ABC):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : .KernelDictContext
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
         Returns
         -------
-        quantity
+        height : quantity
             Height of the kernel object delimiting the atmosphere
         """
         return self.height + self.kernel_offset(ctx=ctx)
@@ -246,13 +257,13 @@ class Atmosphere(SceneElement, ABC):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : .KernelDictContext
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
         Returns
         -------
-        quantity
+        offset : quantity
             Vertical offset of cuboid shape.
 
         Notes
@@ -268,13 +279,13 @@ class Atmosphere(SceneElement, ABC):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : .KernelDictContext
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 
         Returns
         -------
-        quantity
+        width : quantity
             Width of the kernel object delimiting the atmosphere.
         """
         return self.eval_width(ctx=ctx)
@@ -417,7 +428,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        spectral_ctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
