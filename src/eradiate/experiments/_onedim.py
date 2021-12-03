@@ -26,7 +26,7 @@ def measure_inside_atmosphere(atmosphere, measure, ctx):
     bbox = atmosphere.eval_bbox(ctx)
 
     if isinstance(measure, MultiRadiancemeterMeasure):
-        inside = [bbox.contains(origin) for origin in measure.origins]
+        inside = bbox.contains(measure.origins)
         if all(inside):
             return True
         elif not any(inside):
