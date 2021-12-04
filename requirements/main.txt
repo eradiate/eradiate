@@ -59,7 +59,7 @@ environ-config==21.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-fonttools==4.28.2
+fonttools==4.28.3
     # via
     #   -c requirements/dev.txt
     #   matplotlib

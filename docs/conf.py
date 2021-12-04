@@ -168,13 +168,17 @@ autodoc_default_flags = [
     "inherited-members",
 ]
 autodoc_typehints = "none"
-autodoc_member_order = "alphabetical"
+autodoc_member_order = "groupwise"
 autodoc_preserve_defaults = False
 
 # Autosummary options
 extensions.append("sphinx.ext.autosummary")
 autosummary_generate = True
 autosummary_members = True
+
+# Autosummary tables in autodoc
+extensions.append("autodocsumm")
+autodoc_default_options = {"autosummary": True}
 
 # Docstrings
 extensions.append("sphinx.ext.napoleon")

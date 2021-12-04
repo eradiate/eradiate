@@ -32,6 +32,8 @@ attrs==21.2.0
     #   jsonschema
     #   pinttrs
     #   pytest
+autodocsumm==0.2.7
+    # via -r requirements/docs.in
 babel==2.9.1
     # via
     #   jupyterlab-server
@@ -58,7 +60,7 @@ cffi==1.15.0
     # via argon2-cffi
 cftime==1.5.1.1
     # via netcdf4
-charset-normalizer==2.0.8
+charset-normalizer==2.0.9
     # via requests
 click==7.1.2
     # via
@@ -118,7 +120,7 @@ execnet==1.9.0
     # via pytest-xdist
 filelock==3.4.0
     # via ensureconda
-fonttools==4.28.2
+fonttools==4.28.3
     # via matplotlib
 fsspec==2021.11.1
     # via dask
@@ -460,6 +462,7 @@ sphinx==4.2.0
     # via
     #   -r requirements/docs.in
     #   -r requirements/tests.in
+    #   autodocsumm
     #   pydata-sphinx-theme
     #   sphinx-book-theme
     #   sphinx-copybutton
@@ -538,7 +541,7 @@ traitlets==5.1.1
     #   notebook
 twine==3.7.0
     # via -r requirements/dev.in
-typed-ast==1.5.0
+typed-ast==1.5.1
     # via black
 typing-extensions==3.10.0.2
     # via

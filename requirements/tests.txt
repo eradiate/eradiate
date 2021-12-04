@@ -40,7 +40,7 @@ cftime==1.5.1.1
     # via
     #   -c requirements/dev.txt
     #   netcdf4
-charset-normalizer==2.0.8
+charset-normalizer==2.0.9
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -85,7 +85,7 @@ execnet==1.9.0
     # via
     #   -c requirements/dev.txt
     #   pytest-xdist
-fonttools==4.28.2
+fonttools==4.28.3
     # via
     #   -c requirements/dev.txt
     #   matplotlib
