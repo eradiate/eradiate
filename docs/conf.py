@@ -184,12 +184,9 @@ autodoc_default_options = {"autosummary": True}
 extensions.append("sphinx.ext.napoleon")
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
-napoleon_use_admonition_for_examples = True
-napoleon_use_admonition_for_notes = True
-napoleon_use_admonition_for_references = True
 napoleon_use_param = False
 napoleon_use_rtype = False
-napoleon_custom_sections = [("Fields", "params_style")]
+napoleon_custom_sections = ["Fields"]
 napoleon_preprocess_types = True
 napoleon_type_aliases = {
     # general terms
