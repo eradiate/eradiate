@@ -169,7 +169,7 @@ autodoc_default_flags = [
 ]
 autodoc_typehints = "none"
 autodoc_member_order = "alphabetical"
-autodoc_preserve_defaults = True
+autodoc_preserve_defaults = False
 
 # Autosummary options
 extensions.append("sphinx.ext.autosummary")
