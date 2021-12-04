@@ -71,7 +71,7 @@ class Atmosphere(SceneElement, ABC):
         "\n"
         "Unit-enabled field (default units: ucc['length']).",
         type="quantity or AUTO",
-        init_type="quantity or float or AUTO",
+        init_type="quantity or float, optional",
         default="AUTO",
     )
 
