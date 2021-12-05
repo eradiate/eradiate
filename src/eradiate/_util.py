@@ -48,7 +48,7 @@ def ensure_array(value: t.Any, dtype: t.Optional[t.Any] = None) -> np.ndarray:
     """
     Convert or wrap a value in a Numpy array.
 
-    .. deprecated:: 0.0.1
+    .. deprecated:: 0.21.1
        This function is redundant with :func:`numpy.atleast_1d`, which should
        be used instead.
 
