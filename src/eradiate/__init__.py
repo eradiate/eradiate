@@ -1,6 +1,6 @@
 """The Eradiate radiative transfer simulation software package."""
 
-__version__ = "0.21.0"  #: Eradiate version number.
+__version__ = "0.21.1"  #: Eradiate version number.
 
 # -- Workaround: pre-import modules clashing with Mitsuba's import code --------
 
