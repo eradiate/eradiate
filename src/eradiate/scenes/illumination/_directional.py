@@ -26,8 +26,8 @@ class DirectionalIllumination(Illumination):
 
     zenith: pint.Quantity = documented(
         pinttr.ib(
-            default=ureg.Quantity(0.0, ureg.deg),
-            validator=is_positive,
+            default=0.0 * ureg.deg,
+            validator=[is_positive, pinttr.validators.has_compatible_units],
             units=ucc.deferred("angle"),
         ),
         doc="Zenith angle.\n\nUnit-enabled field (default units: ucc[angle]).",
@@ -38,8 +38,8 @@ class DirectionalIllumination(Illumination):
 
     azimuth: pint.Quantity = documented(
         pinttr.ib(
-            default=ureg.Quantity(0.0, ureg.deg),
-            validator=is_positive,
+            default=0.0 * ureg.deg,
+            validator=[is_positive, pinttr.validators.has_compatible_units],
             units=ucc.deferred("angle"),
         ),
         doc="Azimuth angle value.\n"

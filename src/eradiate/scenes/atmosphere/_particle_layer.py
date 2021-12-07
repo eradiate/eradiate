@@ -60,7 +60,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     _bottom: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity(0.0, ureg.km),
-            converter=pinttr.converters.to_units(ucc.deferred("length")),
             validator=[
                 is_positive,
                 pinttr.validators.has_compatible_units,
@@ -79,7 +78,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         pinttr.ib(
             units=ucc.deferred("length"),
             default=ureg.Quantity(1.0, ureg.km),
-            converter=pinttr.converters.to_units(ucc.deferred("length")),
             validator=[
                 is_positive,
                 pinttr.validators.has_compatible_units,

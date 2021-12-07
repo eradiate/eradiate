@@ -70,7 +70,7 @@ class HemisphericalDistantMeasure(Measure):
     orientation: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity(0.0, ureg.deg),
-            validator=validators.is_positive,
+            validator=[validators.is_positive, pinttr.validators.has_compatible_units],
             units=ucc.deferred("angle"),
         ),
         doc="Azimuth angle defining the orientation of the sensor in the "

@@ -63,7 +63,7 @@ class PerspectiveCameraMeasure(Measure):
     origin: pint.Quantity = documented(
         pinttr.ib(
             factory=lambda: [1, 1, 1] * ureg.m,
-            validator=validators.has_len(3),
+            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="A 3-vector specifying the position of the camera.\n"
@@ -77,7 +77,7 @@ class PerspectiveCameraMeasure(Measure):
     target: pint.Quantity = documented(
         pinttr.ib(
             factory=lambda: [0, 0, 0] * ureg.m,
-            validator=validators.has_len(3),
+            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="Point location targeted by the camera.\n"

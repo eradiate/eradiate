@@ -102,11 +102,7 @@ class ExponentialParticleDistribution(ParticleDistribution):
     where :math:`\lambda` is the rate parameter and :math:`z` is the altitude.
     """
     rate: pint.Quantity = documented(
-        pinttr.ib(
-            units=ucc.deferred("collision_coefficient"),
-            converter=pinttr.converters.to_units(ucc.deferred("collision_coefficient")),
-            validator=pinttr.validators.has_compatible_units,
-        ),
+        pinttr.ib(units=ucc.deferred("collision_coefficient")),
         doc="Rate parameter of the exponential distribution.\n"
         "\n"
         "Unit-enabled field (default: ucc['collision_coefficient']).",
@@ -142,11 +138,7 @@ class GaussianParticleDistribution(ParticleDistribution):
     the standard deviation of the distribution.
     """
     mean: pint.Quantity = documented(
-        pinttr.ib(
-            units=ucc.deferred("length"),
-            converter=pinttr.converters.to_units(ucc.deferred("length")),
-            validator=pinttr.validators.has_compatible_units,
-        ),
+        pinttr.ib(units=ucc.deferred("length")),
         doc="Mean (expectation) of the distribution. "
         "If ``None``, set to the middle of the layer.\n"
         "\n"
@@ -154,11 +146,7 @@ class GaussianParticleDistribution(ParticleDistribution):
         type="float",
     )
     std: pint.Quantity = documented(
-        pinttr.ib(
-            units=ucc.deferred("length"),
-            converter=pinttr.converters.to_units(ucc.deferred("length")),
-            validator=pinttr.validators.has_compatible_units,
-        ),
+        pinttr.ib(units=ucc.deferred("length")),
         doc="Standard deviation of the distribution. If ``None``, set to one "
         "sixth of the layer thickness so that half the layer thickness "
         "equals three standard deviations.\n"

@@ -37,7 +37,7 @@ class RadiancemeterMeasure(Measure):
     origin: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity([0.0, 0.0, 0.0], ureg.m),
-            validator=validators.has_len(3),
+            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="A 3-element vector specifying the position of the radiance meter.\n"
@@ -51,7 +51,7 @@ class RadiancemeterMeasure(Measure):
     target: pint.Quantity = documented(
         pinttr.ib(
             default=ureg.Quantity([0.0, 0.0, 1.0], ureg.m),
-            validator=validators.has_len(3),
+            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="A 3-element vector specifying the location targeted by the sensor.\n"

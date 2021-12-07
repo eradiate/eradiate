@@ -528,11 +528,7 @@ class ArrayRadProfile(RadProfile):
     """
 
     levels: pint.Quantity = documented(
-        pinttr.ib(
-            converter=pinttr.converters.to_units(ucc.deferred("length")),
-            validator=pinttr.validators.has_compatible_units,
-            units=ucc.deferred("length"),
-        ),
+        pinttr.ib(units=ucc.deferred("length")),
         doc="Level altitudes. **Required, no default**.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -541,7 +537,7 @@ class ArrayRadProfile(RadProfile):
 
     albedo_values: pint.Quantity = documented(
         pinttr.ib(
-            validator=validators.all_positive,
+            validator=[validators.all_positive, pinttr.validators.has_compatible_units],
             units=ureg.dimensionless,
         ),
         doc="An array specifying albedo values. **Required, no default**.\n"
@@ -552,7 +548,7 @@ class ArrayRadProfile(RadProfile):
 
     sigma_t_values: pint.Quantity = documented(
         pinttr.ib(
-            validator=validators.all_positive,
+            validator=[validators.all_positive, pinttr.validators.has_compatible_units],
             units=ucc.deferred("collision_coefficient"),
         ),
         doc="An array specifying extinction coefficient values. **Required, no "

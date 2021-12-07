@@ -44,7 +44,6 @@ class Surface(SceneElement, ABC):
         pinttr.ib(
             default=ureg.Quantity(0.0, "km"),
             units=ucc.deferred("length"),
-            converter=pinttr.converters.to_units(ucc.deferred("length")),
             validator=[validators.is_positive, pinttr.validators.has_compatible_units],
         ),
         doc="Surface geopotential altitude (referenced to Earth's mean sea level).",
@@ -59,10 +58,9 @@ class Surface(SceneElement, ABC):
             converter=converters.auto_or(
                 pinttr.converters.to_units(ucc.deferred("length"))
             ),
-            validator=[
-                validators.auto_or(validators.is_positive),
-                validators.auto_or(pinttr.validators.has_compatible_units),
-            ],
+            validator=validators.auto_or(
+                validators.is_positive, pinttr.validators.has_compatible_units
+            ),
             units=ucc.deferred("length"),
         ),
         doc="Surface size. During kernel dictionary construction, ``AUTO`` "
