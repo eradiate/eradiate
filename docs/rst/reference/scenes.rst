@@ -277,6 +277,13 @@ Spectra [eradiate.scenes.spectra]
 
 * :data:`spectrum_factory`
 
+.. dropdown:: Private
+
+   .. autosummary::
+      :toctree: generated/autosummary/
+
+      _core.SpectrumFactory
+
 **Scene elements**
 
 .. autosummary::
