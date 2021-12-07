@@ -1,3 +1,7 @@
+"""
+Logging facilities.
+"""
+
 import logging
 import re
 

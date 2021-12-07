@@ -1,13 +1,14 @@
-.. _sec-reference-scenes:
+``eradiate.scenes``
+===================
 
-Scene generation [eradiate.scenes]
-==================================
+.. automodule:: eradiate.scenes
 
-.. _sec-reference-scenes-core:
+``eradiate.scenes.core``
+------------------------
 
-Core [eradiate.scenes.core]
----------------------------
-.. currentmodule:: eradiate.scenes.core
+.. automodule:: eradiate.scenes.core
+
+.. py:currentmodule:: eradiate.scenes.core
 
 .. autosummary::
    :toctree: generated/autosummary/
@@ -16,11 +17,12 @@ Core [eradiate.scenes.core]
    KernelDict
    BoundingBox
 
-.. _sec-reference-scenes-atmosphere:
+``eradiate.scenes.atmosphere``
+------------------------------
 
-Atmosphere [eradiate.scenes.atmosphere]
----------------------------------------
-.. currentmodule:: eradiate.scenes.atmosphere
+.. automodule:: eradiate.scenes.atmosphere
+
+.. py:currentmodule:: eradiate.scenes.atmosphere
 
 **Interfaces**
 
@@ -52,11 +54,12 @@ Atmosphere [eradiate.scenes.atmosphere]
 
    ParticleDistribution
 
-.. _sec-reference-scenes-biosphere:
+``eradiate.scenes.biosphere``
+-----------------------------
 
-Biosphere [eradiate.scenes.biosphere]
--------------------------------------
-.. currentmodule:: eradiate.scenes.biosphere
+.. automodule:: eradiate.scenes.biosphere
+
+.. py:currentmodule:: eradiate.scenes.biosphere
 
 **Interfaces**
 
@@ -101,11 +104,12 @@ Biosphere [eradiate.scenes.biosphere]
       _leaf_cloud.EllipsoidLeafCloudParams
       _leaf_cloud.SphereLeafCloudParams
 
-.. _sec-reference-scenes-surface:
+``eradiate.scenes.surface``
+---------------------------
 
-Surfaces [eradiate.scenes.surface]
-----------------------------------
-.. currentmodule:: eradiate.scenes.surface
+.. automodule:: eradiate.scenes.surface
+
+.. py:currentmodule:: eradiate.scenes.surface
 
 **Interfaces**
 
@@ -129,11 +133,12 @@ Surfaces [eradiate.scenes.surface]
    LambertianSurface
    RPVSurface
 
-.. _sec-reference-scenes-illumination:
+``eradiate.scenes.illumination``
+--------------------------------
 
-Illumination [eradiate.scenes.illumination]
--------------------------------------------
-.. currentmodule:: eradiate.scenes.illumination
+.. automodule:: eradiate.scenes.illumination
+
+.. py:currentmodule:: eradiate.scenes.illumination
 
 **Interfaces**
 
@@ -154,11 +159,12 @@ Illumination [eradiate.scenes.illumination]
    DirectionalIllumination
    ConstantIllumination
 
-.. _sec-reference-scenes-measure:
+``eradiate.scenes.measure``
+---------------------------
 
-Measures [eradiate.scenes.measure]
-----------------------------------
-.. currentmodule:: eradiate.scenes.measure
+.. automodule:: eradiate.scenes.measure
+
+.. py:currentmodule:: eradiate.scenes.measure
 
 **Interfaces**
 
@@ -207,11 +213,12 @@ Measures [eradiate.scenes.measure]
   TargetPoint
   TargetRectangle
 
-.. _sec-reference-scenes-phase_functions:
+``eradiate.scenes.phase``
+-------------------------
 
-Phase functions [eradiate.scenes.phase]
----------------------------------------
-.. currentmodule:: eradiate.scenes.phase
+.. automodule:: eradiate.scenes.phase
+
+.. py:currentmodule:: eradiate.scenes.phase
 
 **Interfaces**
 
@@ -234,11 +241,12 @@ Phase functions [eradiate.scenes.phase]
    HenyeyGreensteinPhaseFunction
    BlendPhaseFunction
 
-.. _sec-reference-scenes-integrators:
+``eradiate.scenes.integrators``
+-------------------------------
 
-Integrators [eradiate.scenes.integrators]
------------------------------------------
-.. currentmodule:: eradiate.scenes.integrators
+.. automodule:: eradiate.scenes.integrators
+
+.. py:currentmodule:: eradiate.scenes.integrators
 
 **Interfaces**
 
@@ -260,11 +268,12 @@ Integrators [eradiate.scenes.integrators]
    VolPathIntegrator
    VolPathMISIntegrator
 
-.. _sec-reference-scenes-spectra:
+``eradiate.scenes.spectra``
+---------------------------
 
-Spectra [eradiate.scenes.spectra]
----------------------------------
-.. currentmodule:: eradiate.scenes.spectra
+.. automodule:: eradiate.scenes.spectra
+
+.. py:currentmodule:: eradiate.scenes.spectra
 
 **Interfaces**
 

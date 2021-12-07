@@ -1,13 +1,9 @@
-.. _sec-reference-thermoprops:
-
-Thermophysical properties [eradiate.thermoprops]
-================================================
-
-.. rubric:: Description
+``eradiate.thermoprops``
+========================
 
 .. automodule:: eradiate.thermoprops
 
-.. currentmodule:: eradiate.thermoprops
+.. py:currentmodule:: eradiate.thermoprops
 
 .. rubric:: Modules
 

@@ -1,9 +1,9 @@
-.. _sec-reference-data:
+``eradiate.data``
+=================
 
-Data handling [eradiate.data]
-=============================
+.. automodule:: eradiate.data
 
-.. currentmodule:: eradiate.data
+.. py:currentmodule:: eradiate.data
 
 Access
 ------

@@ -1,22 +1,33 @@
-.. _sec-reference-experiments:
+``eradiate.experiments``
+========================
 
-Experiment simulation [eradiate.experiments]
-============================================
+.. automodule:: eradiate.experiments
 
-.. currentmodule:: eradiate.experiments
+.. py:currentmodule:: eradiate.experiments
+
+Concrete classes
+----------------
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   OneDimExperiment
+   RamiExperiment
+   Rami4ATMExperiment
+
+Interfaces
+----------
 
 .. autosummary::
    :toctree: generated/autosummary/
 
    Experiment
    EarthObservationExperiment
-   OneDimExperiment
-   RamiExperiment
-   Rami4ATMExperiment
 
-**Solver internals**
+Functions
+---------
 
 .. autosummary::
    :toctree: generated/autosummary/
 
-      mitsuba_run
+   mitsuba_run

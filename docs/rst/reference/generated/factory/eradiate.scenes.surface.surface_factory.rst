@@ -9,7 +9,7 @@ eradiate.scenes.surface.surface_factory
 =======================================
 
 .. data:: eradiate.scenes.surface.surface_factory
-   :annotation: = eradiate._factory.Factory()
+   :annotation:
 
    Instance of :class:`eradiate._factory.Factory`
 

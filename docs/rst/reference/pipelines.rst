@@ -1,9 +1,9 @@
-.. _sec-reference-pipelines:
+``eradiate.pipelines``
+======================
 
-Pipelines [eradiate.pipelines]
-==============================
+.. automodule:: eradiate.pipelines
 
-.. currentmodule:: eradiate.pipelines
+.. py:currentmodule:: eradiate.pipelines
 
 Basic pipeline infrastructure
 -----------------------------

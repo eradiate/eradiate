@@ -1,5 +1,7 @@
 """
-Eradiate's computational kernel, based on the Mitsuba 2 rendering system.
+Eradiate's computational kernel is based on the Mitsuba 2 rendering system.
+Eradiate imports the :mod:`mitsuba` module and makes a basic check to detect if
+it is not our customised version.
 """
 
 # Check if Mitsuba can be imported successfully

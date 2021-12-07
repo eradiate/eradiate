@@ -9,7 +9,7 @@ eradiate.scenes.measure.measure_factory
 =======================================
 
 .. data:: eradiate.scenes.measure.measure_factory
-   :annotation: = eradiate._factory.Factory()
+   :annotation:
 
    Instance of :class:`eradiate._factory.Factory`
 

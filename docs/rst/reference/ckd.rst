@@ -1,9 +1,9 @@
-.. _sec-reference-ckd:
+``eradiate.ckd``
+================
 
-CKD mode data structures [eradiate.ckd]
-=======================================
+.. automodule:: eradiate.ckd
 
-.. currentmodule:: eradiate.ckd
+.. py:currentmodule:: eradiate.ckd
 
 Data structures
 ---------------

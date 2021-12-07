@@ -1,30 +1,38 @@
-.. _sec-reference-xarray:
+``eradiate.xarray``
+===================
 
-Dataset and array management [eradiate.xarray]
-==============================================
+.. automodule:: eradiate.xarray
 
-Creation [eradiate.xarray.make]
--------------------------------
-.. currentmodule:: eradiate.xarray.make
+``eradiate.xarray.make``
+------------------------
+
+.. automodule:: eradiate.xarray.make
+
+.. py:currentmodule:: eradiate.xarray.make
 
 .. autosummary::
    :toctree: generated/autosummary/
 
    make_dataarray
 
-Interpolation [eradiate.xarray.interp]
---------------------------------------
+``eradiate.xarray.interp``
+--------------------------
 
-.. currentmodule:: eradiate.xarray.interp
+.. automodule:: eradiate.xarray.interp
+
+.. py:currentmodule:: eradiate.xarray.interp
 
 .. autosummary::
    :toctree: generated/autosummary/
 
    film_to_angular
 
-Metadata specification and validation [eradiate.xarray.metadata]
-----------------------------------------------------------------
-.. currentmodule:: eradiate.xarray.metadata
+``eradiate.xarray.metadata``
+----------------------------
+
+.. automodule:: eradiate.xarray.metadata
+
+.. py:currentmodule:: eradiate.xarray.metadata
 
 .. autosummary::
    :toctree: generated/autosummary/
@@ -36,9 +44,12 @@ Metadata specification and validation [eradiate.xarray.metadata]
    DatasetSpec
    CoordSpecRegistry
 
-Private: Accessors [eradiate.xarray._accessors]
------------------------------------------------
-.. currentmodule:: eradiate.xarray._accessors
+``eradiate.xarray._accessors``
+------------------------------
+
+.. automodule:: eradiate.xarray._accessors
+
+.. py:currentmodule:: eradiate.xarray._accessors
 
 .. autosummary::
    :toctree: generated/autosummary/
