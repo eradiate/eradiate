@@ -4,7 +4,6 @@ import typing as t
 from abc import ABC, abstractmethod
 
 import attr
-import numpy as np
 import pint
 
 import eradiate
