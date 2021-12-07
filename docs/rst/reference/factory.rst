@@ -1,17 +1,12 @@
-.. _sec-reference-factory:
+``eradiate._factory``
+=====================
 
-Private: Factories [eradiate._factory]
-======================================
-.. currentmodule:: eradiate._factory
+.. automodule:: eradiate._factory
+   :no-autosummary:
 
-.. autosummary::
-   :toctree: generated/autosummary/
-
-   Factory
-
-Factory instances
------------------
-.. currentmodule:: eradiate
+List of ``Factory`` instances
+-----------------------------
+.. py:currentmodule:: eradiate
 
 .. toctree::
    :hidden:
@@ -30,3 +25,10 @@ Factory instances
 * :data:`scenes.phase.phase_function_factory`
 * :data:`scenes.spectra.spectrum_factory`
 * :data:`scenes.surface.surface_factory`
+
+.. py:currentmodule:: eradiate._factory
+
+.. autoclass:: Factory
+   :members:
+   :inherited-members:
+   :no-autosummary:

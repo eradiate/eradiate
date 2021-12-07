@@ -13,26 +13,42 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
    become part of the API, they need to be either transferred to a public module
    or exposed in a public module.
 
-.. toctree::
-   :maxdepth: 2
+Alphabetical list of modules
+----------------------------
 
+.. toctree::
+   :maxdepth: 1
+
+   eradiate_core
+   attrs
    ckd
-   class_writing
-   config
+   converters
    contexts
-   core
    data
    exceptions
    experiments
-   factory
+   frame
    kernel
-   math
-   misc
    notebook
    pipelines
    plot
+   quad
    radprops
    scenes
    thermoprops
    units
+   validators
+   warp
    xarray
+
+Private modules
+---------------
+
+.. toctree::
+   :maxdepth: 1
+
+   config
+   factory
+   mode
+   presolver
+   util

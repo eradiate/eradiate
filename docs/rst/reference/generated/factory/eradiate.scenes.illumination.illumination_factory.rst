@@ -9,7 +9,7 @@ eradiate.scenes.illumination.illumination_factory
 =================================================
 
 .. data:: eradiate.scenes.illumination.illumination_factory
-   :annotation: = eradiate._factory.Factory()
+   :annotation:
 
    Instance of :class:`eradiate._factory.Factory`
 

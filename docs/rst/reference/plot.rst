@@ -1,12 +1,13 @@
-.. _sec-reference-plot:
+``eradiate.plot``
+=================
 
-Plotting [eradiate.plot]
-========================
+.. automodule:: eradiate.plot
 
-.. currentmodule:: eradiate.plot
+.. py:currentmodule:: eradiate.plot
 
 Utility functions
 -----------------
+
 .. autosummary::
    :toctree: generated/autosummary/
 

@@ -90,4 +90,4 @@ factory, please make sure you:
 * update the special API RST files (see also
   :ref:`sec-developer_guide-documentation-api-build`);
 * add your new factory to the list of instances in the
-  :ref:`sec-reference-factory` document (``docs/rst/reference/factory.rst``).
+  :mod:`eradiate._factory` documentation (``docs/rst/reference/factory.rst``).

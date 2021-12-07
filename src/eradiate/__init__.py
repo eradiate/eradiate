@@ -1,41 +1,77 @@
 """The Eradiate radiative transfer simulation software package."""
 
-__version__ = "0.21.1"  #: Eradiate version number.
+#: Eradiate version string.
+__version__ = "0.21.1"
 
 # -- Workaround: pre-import modules clashing with Mitsuba's import code --------
+import pint
 
 __import__("astropy.coordinates")
 __import__("xarray")
 
 # -- Global configuration ------------------------------------------------------
 
-from ._config import config  # isort: skip
+from . import _config  # isort: skip
+
+#: Global configuration data structure.
+#: Alias to :data:`eradiate._config.config`.
+#: See also: :class:`eradiate._config.EradiateConfig`.
+config = _config.config
 
 # -- Path resolver -------------------------------------------------------------
 
 # fmt: off
 from ._presolver import PathResolver  # isort: skip
+
+#: Global path resolver.
+#: See also: :class:`.PathResolver`.
 path_resolver = PathResolver()
+
 del PathResolver
 # fmt: on
 
 # -- Unit management facilities ------------------------------------------------
 
-from .units import (  # isort: skip
-    unit_context_config,
-    unit_context_kernel,
-    unit_registry,
-)
+from . import units  # isort: skip
+
+#: Global unit registry.
+#: Alias to :data:`eradiate.units.unit_registry`.
+#: See also: :class:`pint.UnitRegistry`.
+unit_registry = units.unit_registry
+
+#: Configuration unit context.
+#: Alias to :data:`eradiate.units.unit_context_config`.
+#: See also: :class:`pinttr.UnitContext`.
+unit_context_config = units.unit_context_config
+
+#: Kernel unit context.
+#: Alias to :data:`eradiate.units.unit_context_kernel`.
+#: See also: :class:`pinttr.UnitContext`.
+unit_context_kernel = units.unit_context_kernel
 
 # -- Operational mode definition -----------------------------------------------
 
-from ._mode import (  # isort: skip
-    mode,
-    set_mode,
-    modes,
-    supported_mode,
-    unsupported_mode,
-)
+from . import _mode
+
+#: Get the current operational mode.
+#: Alias to :func:`eradiate._mode.mode`.
+mode = _mode.mode
+
+#: Get a list of registered operational modes.
+#: Alias to :func:`eradiate._mode.modes`.
+modes = _mode.modes
+
+#: Set Eradiate's operational mode.
+#: Alias to :func:`eradiate._mode.set_mode`.
+set_mode = _mode.set_mode
+
+#: Raise if the current mode doesn't has specific flags.
+#: Alias to :func:`eradiate._mode.supported_mode`.
+supported_mode = _mode.supported_mode
+
+#: Raise if the current mode has specific flags.
+#: Alias to :func:`eradiate._mode.unsupported_mode`.
+unsupported_mode = _mode.unsupported_mode
 
 # ------------------------------------------------------------------------------
 
@@ -50,7 +86,6 @@ from . import (
     pipelines,
     plot,
     scenes,
-    units,
     validators,
     xarray,
 )

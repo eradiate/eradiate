@@ -9,39 +9,56 @@ import pint
 import pinttr
 
 
-def onedict_value(d: t.Mapping) -> t.Any:
+class Singleton(type):
     """
-    Get the value of a single-entry dictionary.
+    A simple singleton implementation. See [1]_ for details.
 
-    Parameters
-    ----------
-    d : mapping
-        A single-entry mapping.
-
-    Returns
+    References
     -------
-    object
-        Unwrapped value.
-
-    Raises
-    ------
-    ValueError
-        If ``d`` has more than a single element.
-
-    Notes
-    -----
-    This function is basically ``next(iter(d.values()))`` with a safeguard.
+    .. [1] `Creating a singleton in Python on Stack Overflow <https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python>`_.
 
     Examples
     --------
-    >>> onedict_value({"foo": "bar"})
-    "bar"
+    >>> class MySingleton(metaclass=Singleton):
+    ... pass
+
+    >>> my_singleton1 = MySingleton()
+    >>> my_singleton2 = MySingleton()
+    >>> assert my_singleton1 is my_singleton2  # Should not fail
     """
 
-    if len(d) != 1:
-        raise ValueError(f"dictionary has wrong length (expected 1, got {len(d)}")
+    _instances = {}
 
-    return next(iter(d.values()))
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+def deduplicate(value: t.Sequence, preserve_order: bool = True) -> t.List:
+    """
+    Remove duplicates from a sequence.
+
+    Parameters
+    ---------
+    value : sequence
+        Sequence to remove duplicates from.
+
+    preserve_order : bool, optional, default: True
+        If ``True``, preserve item ordering. The first occurrence of duplicated
+        items is kept. Setting to ``False`` may slightly improve performance.
+
+    Returns
+    -------
+    list
+        List of values with duplicates removed.
+    """
+
+    if preserve_order:
+        return list(OrderedDict.fromkeys(value))
+
+    else:
+        return list(set(value))
 
 
 def ensure_array(value: t.Any, dtype: t.Optional[t.Any] = None) -> np.ndarray:
@@ -105,7 +122,7 @@ def is_vector3(value: t.Any):
 
 def natsort_alphanum_key(x):
     """
-    Simple sort key natural order for string sorting. See [1]_ for details.
+    Simple sort key natural order for string sorting. See [2]_ for details.
 
     See Also
     --------
@@ -113,8 +130,7 @@ def natsort_alphanum_key(x):
 
     References
     ----------
-    .. [1] Natural sorting
-       (`post on Stack Overflow <https://stackoverflow.com/a/11150413/3645374>`_).
+    .. [2] `Natural sorting on Stack Overflow <https://stackoverflow.com/a/11150413/3645374>`_.
     """
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     return tuple(convert(c) for c in re.split("([0-9]+)", x))
@@ -137,33 +153,6 @@ def natsorted(l):
     return sorted(l, key=natsort_alphanum_key)
 
 
-class Singleton(type):
-    """
-    A simple singleton implementation. See [1]_ for details.
-
-    References
-    -------
-    .. [1] Creating a singleton in Python
-           (`post on Stack Overflow <https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python>`_).
-
-    Examples
-    --------
-    >>> class MySingleton(metaclass=Singleton):
-    ... pass
-
-    >>> my_singleton1 = MySingleton()
-    >>> my_singleton2 = MySingleton()
-    >>> assert my_singleton1 is my_singleton2  # Should not fail
-    """
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
 def str_summary_numpy(x):
     with np.printoptions(
         threshold=4, edgeitems=2, formatter={"float_kind": lambda x: f"{x:g}"}
@@ -180,30 +169,39 @@ def str_summary_numpy(x):
         return f"{prefix}{array_str})"
 
 
-def deduplicate(value: t.Sequence, preserve_order: bool = True) -> t.List:
+def onedict_value(d: t.Mapping) -> t.Any:
     """
-    Remove duplicates from a sequence.
+    Get the value of a single-entry dictionary.
 
     Parameters
-    ---------
-    value : sequence
-        Sequence to remove duplicates from.
-
-    preserve_order : bool, optional, default: True
-        If ``True``, preserve item ordering. The first occurrence of duplicated
-        items is kept. Setting to ``False`` may slightly improve performance.
+    ----------
+    d : mapping
+        A single-entry mapping.
 
     Returns
     -------
-    list
-        List of values with duplicates removed.
+    object
+        Unwrapped value.
+
+    Raises
+    ------
+    ValueError
+        If ``d`` has more than a single element.
+
+    Notes
+    -----
+    This function is basically ``next(iter(d.values()))`` with a safeguard.
+
+    Examples
+    --------
+    >>> onedict_value({"foo": "bar"})
+    "bar"
     """
 
-    if preserve_order:
-        return list(OrderedDict.fromkeys(value))
+    if len(d) != 1:
+        raise ValueError(f"dictionary has wrong length (expected 1, got {len(d)}")
 
-    else:
-        return list(set(value))
+    return next(iter(d.values()))
 
 
 def camel_to_snake(name):

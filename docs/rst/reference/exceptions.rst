@@ -1,25 +1,23 @@
-.. _sec-reference-exceptions:
+``eradiate.exceptions``
+=======================
 
-Exceptions and warnings [eradiate.exceptions]
-=============================================
+.. automodule:: eradiate.exceptions
+
+.. py:currentmodule:: eradiate.exceptions
 
 Exceptions
 ----------
-.. currentmodule:: eradiate.exceptions
 
-.. autosummary::
-   :toctree: generated/autosummary/
+.. autoclass:: KernelVariantError
 
-   KernelVariantError
-   ModeError
-   UnsupportedModeError
+.. autoclass:: ModeError
+
+.. autoclass:: UnsupportedModeError
+
 
 Warnings
 --------
-.. currentmodule:: eradiate.exceptions
 
-.. autosummary::
-   :toctree: generated/autosummary/
+.. autoclass:: ConfigWarning
 
-   ConfigWarning
-   OverriddenValueWarning
+.. autoclass:: OverriddenValueWarning

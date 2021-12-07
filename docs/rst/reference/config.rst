@@ -1,14 +1,23 @@
 .. _sec-config:
 
-Configuration [eradiate._config]
-================================
+``eradiate._config``
+====================
 
-.. currentmodule:: eradiate._config
+.. automodule:: eradiate._config
 
-.. autosummary::
-   :toctree: generated/autosummary/
+.. py:currentmodule:: eradiate._config
 
-   EradiateConfig
+Classes
+-------
+
+.. autoclass:: EradiateConfig
+   :members:
+
+Attributes
+----------
+
+.. autodata:: config
+   :annotation:
 
 .. _sec-config-env_vars:
 

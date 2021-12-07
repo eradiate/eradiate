@@ -1,3 +1,8 @@
+"""
+Geometric transforms.
+"""
+
+
 def map_unit_cube(
     xmin: float, xmax: float, ymin: float, ymax: float, zmin: float, zmax: float
 ) -> "mitsuba.core.ScalarTransform4f":

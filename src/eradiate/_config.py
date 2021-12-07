@@ -1,3 +1,10 @@
+"""
+Global configuration components. The centric part is the
+:class:`.EradiateConfig` class, whose defaults can be set using environment
+variables. A single instance :data:`.config` is aliased in the top-level module
+for convenience.
+"""
+
 import os.path
 import pathlib
 import warnings
@@ -32,10 +39,19 @@ def format_help_dicts_rst(help_dicts, display_defaults=False):
 @environ.config(prefix="ERADIATE")
 class EradiateConfig:
     """
-    Global configuration for Eradiate. This configuration object is written with
-    the `environ-config library <https://environ-config.readthedocs.io>`_.
+    Global configuration for Eradiate.
+
+    This class, instantiated once as the :data:`eradiate.config` attribute,
+    contains global configuration parameters for Eradiate. It is initialised
+    using :ref:`environment variables <sec-config-env_vars>` as defaults.
+
+    See Also
+    --------
+    :data:`eradiate.config`,
+    `the environ-config library <https://environ-config.readthedocs.io>`_
     """
 
+    #: Path to the Eradiate source directory.
     dir = environ.var(
         converter=lambda x: pathlib.Path(x).absolute(),
         help="Path to the Eradiate source directory.",
@@ -54,6 +70,7 @@ class EradiateConfig:
                 "source the provided setpath.sh script."
             ) from FileNotFoundError(eradiate_init)
 
+    #: A colon-separated list of paths where to search for data files.
     data_path = environ.var(
         default=None,
         converter=lambda x: [pathlib.Path(y) for y in x.split(":") if y]
@@ -81,12 +98,16 @@ class EradiateConfig:
                 )
             )
 
+    #: Path to the Eradiate download directory.
     download_dir = environ.var(
         default="$ERADIATE_DIR/resources/data/downloads",
         converter=lambda x: pathlib.Path(os.path.expandvars(x)).absolute(),
         help="Path to the Eradiate download directory.",
     )
 
+    #: An integer flag setting the level of progress display
+    #: [0: None; 1: Spectral loop; 2: Kernel]. Only affects tqdm-based
+    #: progress bars.
     progress = environ.var(
         default=2,
         converter=int,
@@ -97,6 +118,8 @@ class EradiateConfig:
 
 
 try:
+    #: Global configuration object instance.
+    #: See :class:`EradiateConfig`.
     config = EradiateConfig.from_environ()
 
 except environ.exceptions.MissingEnvValueError as e:

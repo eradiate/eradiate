@@ -24,7 +24,7 @@ from .units import unit_registry as ureg
 
 @attr.s
 class Context:
-    """Base class for all context data structures."""
+    """Abstract base class for all context data structures."""
 
     def evolve(self, **changes):
         """
@@ -51,8 +51,8 @@ class Context:
 @attr.s(frozen=True)
 class SpectralContext(ABC, Context):
     """
-    Context data structure holding state relevant to the evaluation of spectrally
-    dependent objects.
+    Context data structure holding state relevant to the evaluation of
+    spectrally dependent objects. This class is abstract.
 
     This object is usually used as part of a :class:`.KernelDictContext` to pass
     around spectral information to kernel dictionary emission methods which

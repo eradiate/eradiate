@@ -1,4 +1,4 @@
-""" Frame and angle manipulation utilities. """
+"""Frame and angle manipulation utilities."""
 
 import numpy as np
 import pint

@@ -8,34 +8,36 @@ kind of call will search Eradiate's data registry for a valid data set;
 the second kind of call will try and resolve directly a path using the
 :class:`.PathResolver`.
 
-.. admonition:: Examples
+.. rubric:: Valid data set categories
 
-   The following code accesses the Thuillier irradiance spectrum
-   :cite:`Thuillier2003SolarSpectralIrradiance`:
+.. list-table::
+   :widths: 1 1
 
-   .. code:: python
+   * - :class:`absorption_cross_section_spectrum <eradiate.data.absorption_spectra>`
+     - Absorption cross section spectrum
+   * - :class:`thermoprops <eradiate.data.thermoprops>`
+     - Atmosphere thermophysical properties
+   * - :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
+     - Solar irradiance spectrum
+   * - :class:`spectral_response_function <eradiate.data.spectral_response_function>`
+     - Spectral response function
 
-      import eradiate.data as data
-      # first-kind call to ``open()``
-      ds = data.open("solar_irradiance_spectrum", "thuillier_2003")
-      # second-kind call to ``open()``
-      ds = data.open(path="spectra/thuillier_2003.nc")
 
-.. admonition:: Valid data set categories
+Examples
+--------
 
-   .. list-table::
-      :widths: 1 1
+The following code accesses the Thuillier irradiance spectrum
+:cite:`Thuillier2003SolarSpectralIrradiance`:
 
-      * - :class:`absorption_cross_section_spectrum <eradiate.data.absorption_spectra>`
-        - Absorption cross section spectrum
-      * - :class:`thermoprops <eradiate.data.thermoprops>`
-        - Atmosphere thermophysical properties
-      * - :class:`solar_irradiance_spectrum <eradiate.data.solar_irradiance_spectra>`
-        - Solar irradiance spectrum
-      * - :class:`spectral_response_function <eradiate.data.spectral_response_function>`
-        - Spectral response function
+.. code:: python
 
+   import eradiate.data as data
+   # first-kind call to ``open()``
+   ds = data.open("solar_irradiance_spectrum", "thuillier_2003")
+   # second-kind call to ``open()``
+   ds = data.open(path="spectra/thuillier_2003.nc")
 """
+
 import os
 import typing as t
 

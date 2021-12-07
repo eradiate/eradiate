@@ -1,13 +1,9 @@
-.. _sec-reference-radprops:
-
-Radiative properties [eradiate.radprops]
-========================================
-
-.. rubric:: Description
+``eradiate.radprops``
+=====================
 
 .. automodule:: eradiate.radprops
 
-.. currentmodule:: eradiate.radprops
+.. py:currentmodule:: eradiate.radprops
 
 .. rubric:: Modules
 

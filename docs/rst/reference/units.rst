@@ -1,40 +1,35 @@
-.. _sec-reference-units:
+``eradiate.units``
+==================
 
-Unit support [eradiate.units]
-=============================
-.. currentmodule:: eradiate.units
+.. automodule:: eradiate.units
 
-Unit registry (aliased in the :mod:`eradiate` module)
------------------------------------------------------
+.. py:currentmodule:: eradiate.units
 
-.. autosummary::
-  :toctree: generated/autosummary/
+Attributes
+----------
 
-   unit_registry
+.. autodata:: unit_context_config
+   :annotation:
 
-Unit contexts (aliased in the :mod:`eradiate` module)
------------------------------------------------------
+.. autodata:: unit_context_kernel
+   :annotation:
 
-.. autosummary::
-  :toctree: generated/autosummary/
+.. autodata:: unit_registry
+   :annotation:
 
-   unit_context_config
-   unit_context_kernel
+Enumerations
+------------
 
-Physical quantity unit definitions
-----------------------------------
+.. autoclass:: PhysicalQuantity
+   :members:
+   :no-autosummary:
 
-.. autosummary::
-  :toctree: generated/autosummary/
-
-   PhysicalQuantity
-
-Utility functions
+Functions
 -----------------
 
-.. autosummary::
-   :toctree: generated/autosummary/
+.. autofunction:: interpret_quantities
 
-   interpret_quantities
-   symbol
-   to_quantity
+.. autofunction:: symbol
+
+.. autofunction:: to_quantity
+

@@ -21,8 +21,7 @@ from pinttr.util import units_compatible
 # -- Global data members -------------------------------------------------------
 
 #: Unit registry common to all Eradiate components. All units used in Eradiate
-#: must be created using this registry.
-
+#: must be created using this registry. Aliased in :mod:`eradiate`.
 unit_registry = pint.UnitRegistry()
 
 unit_registry.define("dobson_unit = 2.687e20 * meter^-2 = du = dobson = dobson_units")
@@ -114,10 +113,12 @@ def _make_unit_context():
     return uctx
 
 
-#: Unit context used when interpreting config dictionaries
+#: Unit context used when interpreting config dictionaries.
+#: Aliased in :mod:`eradiate`.
 unit_context_config = _make_unit_context()
 
-#: Unit context used when building kernel dictionaries
+#: Unit context used when building kernel dictionaries.
+#: Aliased in :mod:`eradiate`.
 unit_context_kernel = _make_unit_context()
 
 

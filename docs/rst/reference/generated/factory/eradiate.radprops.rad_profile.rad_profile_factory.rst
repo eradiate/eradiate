@@ -9,7 +9,7 @@ eradiate.radprops.rad_profile.rad_profile_factory
 =================================================
 
 .. data:: eradiate.radprops.rad_profile.rad_profile_factory
-   :annotation: = eradiate._factory.Factory()
+   :annotation:
 
    Instance of :class:`eradiate._factory.Factory`
 

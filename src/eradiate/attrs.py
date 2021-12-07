@@ -1,4 +1,4 @@
-"""attrs-based utility classes and functions"""
+"""``attrs``-based utility classes and functions"""
 
 import enum
 import re
@@ -52,16 +52,12 @@ class _Auto:
         return 0
 
 
+#: Typing alias for :data:`.AUTO`.
 AutoType = _Auto
-"""
-Alias used for typing.
-"""
 
-
+#: Sentinel to indicate when a dynamic field value is expected to be set
+#: automatically.
 AUTO = _Auto()
-"""
-Sentinel to indicate when a dynamic field value is expected to be set automatically.
-"""
 
 
 class MetadataKey(enum.Enum):

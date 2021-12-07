@@ -1,13 +1,14 @@
-.. _sec-reference-contexts:
+``eradiate.contexts``
+=====================
 
-Context data structures [eradiate.contexts]
-===========================================
+.. automodule:: eradiate.contexts
 
-.. currentmodule:: eradiate.contexts
+.. py:currentmodule:: eradiate.contexts
 
 .. autosummary::
    :toctree: generated/autosummary/
 
+   Context
    KernelDictContext
    SpectralContext
    MonoSpectralContext

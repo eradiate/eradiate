@@ -9,7 +9,7 @@ eradiate.scenes.spectra.spectrum_factory
 ========================================
 
 .. data:: eradiate.scenes.spectra.spectrum_factory
-   :annotation: = eradiate.scenes.spectra._core.SpectrumFactory()
+   :annotation:
 
    Instance of :class:`eradiate.scenes.spectra._core.SpectrumFactory`
 

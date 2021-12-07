@@ -57,7 +57,7 @@ def factory_data_docs(modname, varname, uline="="):
 {underline}
 
 .. data:: {modname}.{varname}
-   :annotation: = {factory.__class__.__module__}.{factory.__class__.__qualname__}()
+   :annotation:
 
    Instance of :class:`{factory.__class__.__module__}.{factory.__class__.__qualname__}`
 

@@ -1,3 +1,6 @@
+"""
+Notebook support components.
+"""
 import rich.pretty
 
 from . import kernel

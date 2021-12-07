@@ -1,10 +1,6 @@
-.. _sec-reference-notebook:
+``eradiate.notebook``
+=====================
 
-Notebook support components [eradiate.notebook]
-===============================================
-.. currentmodule:: eradiate.notebook
-
-.. autosummary::
-   :toctree: generated/autosummary/
-
-   install
+.. automodule:: eradiate.notebook
+   :members:
+   :no-autosummary:

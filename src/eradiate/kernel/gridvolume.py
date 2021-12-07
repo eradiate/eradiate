@@ -1,3 +1,7 @@
+"""
+Volume data file I/O helpers.
+"""
+
 import os
 import struct
 import typing as t
