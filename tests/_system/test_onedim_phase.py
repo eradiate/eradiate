@@ -4,75 +4,10 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import seaborn
-import xarray as xr
 
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.units import to_quantity
-
-seaborn.set_style("ticks")
-
-eradiate_dir = os.environ["ERADIATE_DIR"]
-output_dir = os.path.join(eradiate_dir, "test_report", "generated")
-
-
-@pytest.fixture
-def rayleigh_radprops():
-    """
-    Radiative properties of a Rayleigh scattering medium in [280, 2400] nm.
-    """
-    w = np.linspace(279.0, 2401.0, 10000) * ureg.nm
-
-    # Collision coefficients
-    sigma_s = eradiate.radprops.rayleigh.compute_sigma_s_air(wavelength=w)
-    albedo = np.ones_like(sigma_s) * ureg.dimensionless  # no absorption
-    sigma_t = sigma_s * albedo
-
-    # Phase function
-    # Note: rayleigh phase function does not change with wavelength
-    def rayleigh_phase_function(mu):
-        magnitude = 3.0 * (1 + np.square(mu)) / (16 * np.pi)
-        return magnitude / ureg.steradian
-
-    mu = np.linspace(-1.0, 1.0)
-    arrays = [rayleigh_phase_function(mu) for _ in w]
-    phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
-
-    return xr.Dataset(
-        data_vars={
-            "sigma_t": (
-                "w",
-                sigma_t.magnitude,
-                dict(
-                    standard_name="air_volume_extinction_coefficient",
-                    units=f"{sigma_t.units:~}",
-                ),
-            ),
-            "albedo": (
-                "w",
-                albedo.magnitude,
-                dict(
-                    standard_name="single_scattering_albedo", units=f"{albedo.units:~}"
-                ),
-            ),
-            "phase": (
-                ("w", "mu", "i", "j"),
-                phase.magnitude,
-                dict(standard_name="scattering_phase_matrix", units=f"{phase.units:~}"),
-            ),
-        },
-        coords={
-            "w": ("w", w.magnitude, dict(units=f"{w.units:~}")),
-            "mu": (
-                "mu",
-                mu,
-                dict(standard_name="scattering_angle_cosine", units="dimensionless"),
-            ),
-            "i": ("i", [0]),
-            "j": ("j", [0]),
-        },
-    )
 
 
 def init_experiment(bottom, top, sigma_a, sigma_s, phase, r, w, spp):
@@ -107,11 +42,6 @@ def init_experiment(bottom, top, sigma_a, sigma_s, phase, r, w, spp):
     )
 
 
-def ensure_output_dir(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-
 def make_figure(fname_plot, brf_1, brf_2):
     fig = plt.figure(figsize=(8, 5))
     params = dict(x="vza", ls="dotted", marker=".")
@@ -129,7 +59,7 @@ def make_figure(fname_plot, brf_1, brf_2):
     np.array([280.0, 400.0, 550.0, 650.0, 1000.0, 1500.0, 2400.0]) * ureg.nm,
 )
 @pytest.mark.slow
-def test(mode_mono_double, rayleigh_radprops, w):
+def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir):
     r"""
     Equivalency of plugin and tabulated versions of Rayleigh phase function
     =======================================================================
@@ -190,12 +120,14 @@ def test(mode_mono_double, rayleigh_radprops, w):
     sigma_s_1 = eradiate.scenes.spectra.AirScatteringCoefficientSpectrum()
     phase_1 = eradiate.scenes.phase.RayleighPhaseFunction()
 
-    w_units = rayleigh_radprops.w.attrs["units"]
-    sigma_t = to_quantity(rayleigh_radprops.sigma_t.interp(w=w.m_as(w_units)))
-    albedo = to_quantity(rayleigh_radprops.albedo.interp(w=w.m_as(w_units)))
+    w_units = onedim_rayleigh_radprops.w.attrs["units"]
+    sigma_t = to_quantity(onedim_rayleigh_radprops.sigma_t.interp(w=w.m_as(w_units)))
+    albedo = to_quantity(onedim_rayleigh_radprops.albedo.interp(w=w.m_as(w_units)))
     sigma_s_2 = sigma_t * albedo
     sigma_a_2 = sigma_t * (1.0 - albedo)
-    phase_2 = eradiate.scenes.phase.TabulatedPhaseFunction(data=rayleigh_radprops.phase)
+    phase_2 = eradiate.scenes.phase.TabulatedPhaseFunction(
+        data=onedim_rayleigh_radprops.phase
+    )
 
     experiment_1 = init_experiment(
         bottom=bottom,
@@ -228,8 +160,9 @@ def test(mode_mono_double, rayleigh_radprops, w):
 
     # Make figure
     filename = f"test_onedim_phase_{w.magnitude}.png"
-    ensure_output_dir(os.path.join(output_dir, "plots"))
-    fname_plot = os.path.join(output_dir, "plots", filename)
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
     make_figure(fname_plot=fname_plot, brf_1=brf_1, brf_2=brf_2)
 
     # exclude outliers that are due to the batman issue

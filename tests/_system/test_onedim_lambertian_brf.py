@@ -8,11 +8,6 @@ import numpy as np
 import eradiate
 
 
-def ensure_output_dir(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-
 def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
     r"""
     Measured lambertian BRF
@@ -93,8 +88,9 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
         for reflectance in reflectance_values:
             results[illumination_zenith][reflectance].brf.plot(ax=ax1, x="vza")
         filename = f"test_onedim_lambertian_brf_{illumination_zenith}.png"
-        ensure_output_dir(os.path.join(artefact_dir, "plots"))
-        fname_plot = os.path.join(artefact_dir, "plots", filename)
+        outdir = os.path.join(artefact_dir, "plots")
+        os.makedirs(outdir, exist_ok=True)
+        fname_plot = os.path.join(outdir, filename)
         plt.xlabel("Signed viewing zenith angle [°]")
         plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
         plt.ylabel("BRF [dimensionless]")

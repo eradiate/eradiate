@@ -1,20 +1,25 @@
 """Test cases targetting the particle layer component of a 1D experiment."""
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import seaborn
 
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.units import to_quantity
 
-from .test_onedim_phase import ensure_output_dir, make_figure, rayleigh_radprops
 
-seaborn.set_style("ticks")
-
-eradiate_dir = os.environ["ERADIATE_DIR"]
-output_dir = os.path.join(eradiate_dir, "test_report", "generated")
+def make_figure(fname_plot, brf_1, brf_2):
+    fig = plt.figure(figsize=(8, 5))
+    params = dict(x="vza", ls="dotted", marker=".")
+    brf_1.plot(**params)
+    brf_2.plot(**params)
+    plt.legend(["experiment 1", "experiment 2"])
+    plt.title(f"w = {to_quantity(brf_1.w).squeeze():~}")
+    plt.tight_layout()
+    fig.savefig(fname_plot, dpi=200)
+    plt.close()
 
 
 def init_experiment_particle_layer(bottom, top, dataset_path, tau_550, r, w, spp):
@@ -92,7 +97,7 @@ def init_experiment_homogeneous_atmosphere(
     np.array([280.0, 400.0, 550.0, 650.0, 1000.0, 1500.0, 2400.0]) * ureg.nm,
 )
 @pytest.mark.slow
-def test(tmpdir, rayleigh_radprops, w):
+def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir):
     r"""
     Equivalency of homogeneous atmosphere and corresponding particle layer
     ======================================================================
@@ -150,12 +155,14 @@ def test(tmpdir, rayleigh_radprops, w):
     bottom = 0.0 * ureg.km
     top = 5.0 * ureg.km
 
-    w_units = rayleigh_radprops.w.attrs["units"]
-    sigma_t = to_quantity(rayleigh_radprops.sigma_t.interp(w=w.m_as(w_units)))
-    albedo = to_quantity(rayleigh_radprops.albedo.interp(w=w.m_as(w_units)))
+    w_units = onedim_rayleigh_radprops.w.attrs["units"]
+    sigma_t = to_quantity(onedim_rayleigh_radprops.sigma_t.interp(w=w.m_as(w_units)))
+    albedo = to_quantity(onedim_rayleigh_radprops.albedo.interp(w=w.m_as(w_units)))
     sigma_s = sigma_t * albedo
     sigma_a = sigma_t * (1.0 - albedo)
-    phase = eradiate.scenes.phase.TabulatedPhaseFunction(data=rayleigh_radprops.phase)
+    phase = eradiate.scenes.phase.TabulatedPhaseFunction(
+        data=onedim_rayleigh_radprops.phase
+    )
 
     sigma_s_550 = eradiate.radprops.rayleigh.compute_sigma_s_air(
         wavelength=550.0 * ureg.nm
@@ -164,7 +171,7 @@ def test(tmpdir, rayleigh_radprops, w):
     tau_550 = sigma_s_550 * height
 
     dataset_path = tmpdir / "radprops.nc"
-    rayleigh_radprops.to_netcdf(dataset_path)
+    onedim_rayleigh_radprops.to_netcdf(dataset_path)
 
     experiment_1 = init_experiment_particle_layer(
         bottom=bottom,
@@ -196,8 +203,9 @@ def test(tmpdir, rayleigh_radprops, w):
 
     # Make figure
     filename = f"test_onedim_particle_layer_{w.magnitude}.png"
-    ensure_output_dir(os.path.join(output_dir, "plots"))
-    fname_plot = os.path.join(output_dir, "plots", filename)
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
     make_figure(fname_plot=fname_plot, brf_1=brf_1, brf_2=brf_2)
 
     # exclude outliers that are due to the batman issue

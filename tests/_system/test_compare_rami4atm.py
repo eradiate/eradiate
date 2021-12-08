@@ -9,11 +9,6 @@ from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.units import unit_registry as ureg
 
 
-def ensure_output_dir(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-
 @pytest.mark.slow
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
 @pytest.mark.parametrize("sza", [0.0, 30.0, 60.0])
@@ -139,8 +134,9 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza, artefact_di
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
     filename = f"test_compare_rami4atm_onedim_{sza}_{reflectance}.png"
-    ensure_output_dir(os.path.join(artefact_dir, "plots"))
-    fname_plot = os.path.join(artefact_dir, "plots", filename)
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
     plt.tight_layout()
     fig.savefig(fname_plot, dpi=200)
     plt.close()
@@ -273,8 +269,9 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai, artefact_dir):
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
     filename = f"test_compare_rami4atm_rami_{sza}_{lai}.png"
-    ensure_output_dir(os.path.join(artefact_dir, "plots"))
-    fname_plot = os.path.join(artefact_dir, "plots", filename)
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
     plt.tight_layout()
     fig.savefig(fname_plot, dpi=200)
     plt.close()

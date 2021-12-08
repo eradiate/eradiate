@@ -11,11 +11,6 @@ import eradiate
 from eradiate import unit_registry as ureg
 
 
-def ensure_output_dir(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-
 def map_to_0_360(x: float) -> float:
     return x % 360
 
@@ -260,8 +255,9 @@ def test_film_to_angular_coord_conversion_multi_distant(
         )
         plt.title("backward BRF")
         filename = f"test_ftacc_multi_distant_{desc.lower()}_{illumination_azimuth}.png"
-        ensure_output_dir(os.path.join(artefact_dir, "plots"))
-        fname_plot = os.path.join(artefact_dir, "plots", filename)
+        outdir = os.path.join(artefact_dir, "plots")
+        os.makedirs(outdir, exist_ok=True)
+        fname_plot = os.path.join(outdir, filename)
         plt.tight_layout()
         fig.savefig(fname_plot, dpi=200)
         plt.close()
@@ -447,8 +443,9 @@ def make_figure(
     plt.text(s=f"mean = {mean:.2e}", x=res / 2, y=res / 2, ha="center", color="red")
     plt.title(f"backward {name}")
     filename = f"test_ftacc_{measure}_{desc.lower()}_{illumination_azimuth}.png"
-    ensure_output_dir(os.path.join(artefact_dir, "plots"))
-    fname_plot = os.path.join(artefact_dir, "plots", filename)
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
     plt.tight_layout()
     fig.savefig(fname_plot, dpi=200)
     plt.close()

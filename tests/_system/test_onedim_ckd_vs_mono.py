@@ -10,11 +10,6 @@ from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 
 
-def ensure_output_dir(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-
 def init_mono_experiment(wavelengths, spp, reflectance, zeniths):
     """
     Initialise the monochromatic experiment.
@@ -234,8 +229,9 @@ def test_550(reflectance, artefact_dir):
 
     # Make figure
     filename = f"test_onedim_ckd_vs_mono_{bins}_{reflectance}.png"
-    ensure_output_dir(os.path.join(artefact_dir, "plots"))
-    fname_plot = os.path.join(artefact_dir, "plots", filename)
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
     make_figure(
         ckd_results=ckd_results,
         mono_results_averaged=mono_results_integrated,
@@ -371,8 +367,9 @@ def test_1050(reflectance, artefact_dir):
 
     # Make figure
     filename = f"test_onedim_ckd_vs_mono_{bins}_{reflectance}.png"
-    ensure_output_dir(os.path.join(artefact_dir, "plots"))
-    fname_plot = os.path.join(artefact_dir, "plots", filename)
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
     make_figure(
         ckd_results=ckd_results,
         mono_results_averaged=mono_results_averaged,

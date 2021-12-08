@@ -10,11 +10,6 @@ import eradiate
 from eradiate import unit_registry as ureg
 
 
-def ensure_output_dir(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-
 @pytest.mark.slow
 def test_spp_splitting(mode_mono, artefact_dir):
     """
@@ -104,8 +99,9 @@ def test_spp_splitting(mode_mono, artefact_dir):
     plt.tight_layout()
 
     filename = "test_spp_splitting.png"
-    ensure_output_dir(os.path.join(artefact_dir, "plots"))
-    fname_plot = os.path.join(artefact_dir, "plots", filename)
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
 
     fig.savefig(fname_plot, dpi=200)
     plt.close()
