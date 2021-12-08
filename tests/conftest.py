@@ -86,16 +86,16 @@ for name, variants in variant_groups.items():
 del generate_fixture_group
 
 # ------------------------------------------------------------------------------
-#           Adding a customizable output dir for test artifacts
+#               Customizable output dir for test artifacts
 # ------------------------------------------------------------------------------
 
 
 def pytest_addoption(parser):
     eradiate_dir = os.environ.get("ERADIATE_DIR", ".")
     parser.addoption(
-        "--artefact_dir",
+        "--artefact-dir",
         action="store",
-        default=os.path.join(eradiate_dir, "test_report/generated/plots"),
+        default=os.path.join(eradiate_dir, "build/test_artefacts/"),
     )
 
 
@@ -103,8 +103,10 @@ def pytest_generate_tests(metafunc):
     # This is called for every test. Only get/set command line arguments
     # if the argument is specified in the list of test "fixturenames".
     option_value = metafunc.config.option.artefact_dir
+
     if not os.path.isdir(option_value):
         os.makedirs(option_value)
+
     if "artefact_dir" in metafunc.fixturenames:
         metafunc.parametrize("artefact_dir", [option_value])
 

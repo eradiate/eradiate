@@ -19,7 +19,6 @@ build/
 docs/_build/
 docs/examples/generated/
 docs/rst/reference/generated/autosummary/
-test_report/generated/
 
 # Coverage
 .coverage
