@@ -13,7 +13,7 @@ def ensure_output_dir(path):
 
 
 @pytest.mark.slow
-def test_albedo(mode_mono, systemtest_outdir):
+def test_albedo(mode_mono, artefact_dir):
     """
     Albedo
     ======
@@ -191,8 +191,8 @@ def test_albedo(mode_mono, systemtest_outdir):
         plt.tight_layout()
 
         filename = f"test_albedo_{exp_name}.png"
-        ensure_output_dir(os.path.join(systemtest_outdir, "plots"))
-        fname_plot = os.path.join(systemtest_outdir, "plots", filename)
+        ensure_output_dir(os.path.join(artefact_dir, "plots"))
+        fname_plot = os.path.join(artefact_dir, "plots", filename)
 
         fig.savefig(fname_plot, dpi=200)
         plt.close()
