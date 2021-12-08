@@ -3,7 +3,6 @@ import os
 import pytest
 
 import eradiate
-from eradiate import data
 
 eradiate.plot.set_style()
 
@@ -116,30 +115,6 @@ def pytest_generate_tests(metafunc):
 # ------------------------------------------------------------------------------
 
 
-def pytest_runtest_setup(item):
-    for mark in item.iter_markers(name="skipif_data_not_found"):
-        if "dataset_category" not in mark.kwargs:
-            dataset_category = mark.args[0]
-        else:
-            dataset_category = mark.kwargs["dataset_category"]
-
-        if "dataset_id" not in mark.kwargs:
-            dataset_id = mark.args[1]
-        else:
-            dataset_id = mark.kwargs["dataset_id"]
-
-        # Try to get path to dataset file
-        dataset_path = data.getter(dataset_category).PATHS[dataset_id]
-
-        # If the data is missing, we skip the test
-        if not data.find(dataset_category)[dataset_id]:
-            pytest.skip(
-                f"Could not find dataset '{dataset_category}.{dataset_id}'; "
-                f"please download dataset files and place them in "
-                f"'data/{dataset_path}' directory."
-            )
-
-
 def pytest_configure(config):
     markexpr = config.getoption("markexpr", "False")
 
@@ -150,13 +125,4 @@ def pytest_configure(config):
 
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with -m 'not slow')"
-    )
-
-    config.addinivalue_line(
-        "markers",
-        "skipif_data_not_found(dataset_category, dataset_id): "
-        "skip the given test function if the referenced dataset is not found. "
-        "Example: skipif_dataset_not_found('absorption_spectrum', "
-        "'us76_approx') skips if the 'absorption_spectrum.us76_approx' files "
-        "cannot be found in paths resolved by Eradiate.",
     )

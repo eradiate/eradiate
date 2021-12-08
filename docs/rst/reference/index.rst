@@ -35,6 +35,7 @@ Alphabetical list of modules
    quad
    radprops
    scenes
+   test_tools
    thermoprops
    units
    validators

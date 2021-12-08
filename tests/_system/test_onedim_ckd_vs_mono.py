@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 import eradiate
+from eradiate import test_tools
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 
@@ -117,10 +118,6 @@ def make_figure(
 
 
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "H2O-spectra-18000_18100")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "H2O-spectra-18100_18200")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "H2O-spectra-18200_18300")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "H2O-spectra-18300_18400")
 @pytest.mark.slow
 def test_550(reflectance, artefact_dir):
     r"""
@@ -200,6 +197,26 @@ def test_550(reflectance, artefact_dir):
     bin_set = "1nm"  # ckd mode setting
     bins = "550"  # ckd mode setting
 
+    # Determine artefact filename
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(
+        outdir, f"test_onedim_ckd_vs_mono_{bins}_{reflectance}.png"
+    )
+
+    # Skip if data is missing, but still create an artefact
+    for dataset_id in [
+        "H2O-spectra-18000_18100",
+        "H2O-spectra-18100_18200",
+        "H2O-spectra-18200_18300",
+        "H2O-spectra-18300_18400",
+    ]:
+        test_tools.skipif_data_not_found(
+            "absorption_spectrum",
+            dataset_id,
+            action=lambda: test_tools.missing_artefact(fname_plot),
+        )
+
     # Monochromatic experiment
     mono_exp = init_mono_experiment(
         wavelengths=wavelengths,
@@ -228,10 +245,6 @@ def test_550(reflectance, artefact_dir):
     ckd_results = ckd_exp.results["measure"]
 
     # Make figure
-    filename = f"test_onedim_ckd_vs_mono_{bins}_{reflectance}.png"
-    outdir = os.path.join(artefact_dir, "plots")
-    os.makedirs(outdir, exist_ok=True)
-    fname_plot = os.path.join(outdir, filename)
     make_figure(
         ckd_results=ckd_results,
         mono_results_averaged=mono_results_integrated,
@@ -247,18 +260,6 @@ def test_550(reflectance, artefact_dir):
 
 
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "H2O-spectra-9400_9500")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "H2O-spectra-9500_9600")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "CO2-spectra-9400_9500")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "CO2-spectra-9500_9600")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "N2O-spectra-9400_9500")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "N2O-spectra-9500_9600")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "CO-spectra-9400_9500")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "CO-spectra-9500_9600")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "CH4-spectra-9400_9500")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "CH4-spectra-9500_9600")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "O2-spectra-9400_9500")
-@pytest.mark.skipif_data_not_found("absorption_spectrum", "O2-spectra-9500_9600")
 @pytest.mark.slow
 def test_1050(reflectance, artefact_dir):
     r"""
@@ -338,6 +339,34 @@ def test_1050(reflectance, artefact_dir):
     bin_set = "1nm"  # ckd mode setting
     bins = "1050"  # ckd mode setting
 
+    # Determine artefact filename
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(
+        outdir, f"test_onedim_ckd_vs_mono_{bins}_{reflectance}.png"
+    )
+
+    # Skip if data is missing, but still create an artefact
+    for dataset_id in [
+        "H2O-spectra-9400_9500",
+        "H2O-spectra-9500_9600",
+        "CO2-spectra-9400_9500",
+        "CO2-spectra-9500_9600",
+        "N2O-spectra-9400_9500",
+        "N2O-spectra-9500_9600",
+        "CO-spectra-9400_9500",
+        "CO-spectra-9500_9600",
+        "CH4-spectra-9400_9500",
+        "CH4-spectra-9500_9600",
+        "O2-spectra-9400_9500",
+        "O2-spectra-9500_9600",
+    ]:
+        test_tools.skipif_data_not_found(
+            "absorption_spectrum",
+            dataset_id,
+            action=lambda: test_tools.missing_artefact(fname_plot),
+        )
+
     # Monochromatic experiment
     mono_exp = init_mono_experiment(
         wavelengths=wavelengths,
@@ -366,10 +395,6 @@ def test_1050(reflectance, artefact_dir):
     ckd_results = ckd_exp.results["measure"]
 
     # Make figure
-    filename = f"test_onedim_ckd_vs_mono_{bins}_{reflectance}.png"
-    outdir = os.path.join(artefact_dir, "plots")
-    os.makedirs(outdir, exist_ok=True)
-    fname_plot = os.path.join(outdir, filename)
     make_figure(
         ckd_results=ckd_results,
         mono_results_averaged=mono_results_averaged,
