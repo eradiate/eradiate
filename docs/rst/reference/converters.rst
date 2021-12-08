@@ -3,3 +3,4 @@
 
 .. automodule:: eradiate.converters
    :members:
+   :no-autosummary:

@@ -11,8 +11,7 @@ from .units import unit_registry as ureg
 
 def is_scalar(_, attribute, value):
     """
-    A validator that raises if the initializer is called with a non-scalar
-    value.
+    Validate iff value is of scalar type in the sense of Numpy.
 
     Raises
     ------
@@ -25,8 +24,7 @@ def is_scalar(_, attribute, value):
 
 def is_number(_, attribute, value):
     """
-    A validator that raises if the initializer is called with a non-number
-    value.
+    Validate iff value is of a numeric type.
 
     Raises
     ------
@@ -42,8 +40,7 @@ def is_number(_, attribute, value):
 
 def is_vector3(instance, attribute, value):
     """
-    A validator that raises if the initializer is called with a value which
-    cannot be converted to a (3,) Numpy array.
+    Validate iff value can be converted to a (3,) Numpy array.
 
     Raises
     ------
@@ -57,7 +54,7 @@ def is_vector3(instance, attribute, value):
 
 def is_positive(_, attribute, value):
     """
-    A validator that raises if the initializer is called with a negative value.
+    Validate iff value is a positive number.
 
     Raises
     ------
@@ -70,8 +67,7 @@ def is_positive(_, attribute, value):
 
 def all_positive(_, attribute, value):
     """
-    A validator that raises if the initializer is called with a vector
-    containing negative values.
+    Validate iff value is a vector with all its values positive.
 
     Raises
     ------
@@ -86,8 +82,8 @@ def all_positive(_, attribute, value):
 
 def path_exists(_, attribute, value):
     """
-    A validator that succeeds if the initializer is called with a value defining
-    a path to an existing location.
+    Validate iff initializer is called with a value defining a path to an
+    existing location.
 
     Raises
     ------
@@ -103,8 +99,8 @@ def path_exists(_, attribute, value):
 
 def is_file(_, attribute, value):
     """
-    A validator that succeeds if the initializer is called with a value defining
-    a path to an existing file.
+    Validate iff initializer is called with a value defining a path to an
+    existing file.
 
     Raises
     ------
@@ -120,8 +116,8 @@ def is_file(_, attribute, value):
 
 def is_dir(_, attribute, value):
     """
-    A validator that succeeds if the initializer is called with a value defining
-    a path to an existing directory.
+    Validate iff initializer is called with a value defining a path to an
+    existing fildirectory.
 
     Raises
     ------
@@ -137,8 +133,7 @@ def is_dir(_, attribute, value):
 
 def has_len(size: int):
     """
-    A validator which raises if the initializer is called with a value of a
-    specified length.
+    Validate iff value is a vector with specified length.
 
     Parameters
     ----------
@@ -163,8 +158,8 @@ def has_len(size: int):
 
 def has_quantity(quantity: t.Union[PhysicalQuantity, str, None]):
     """
-    A validator that succeeds if the initializer is called with a value
-    featuring a ``quantity`` field set to an expected value.
+    Validate iff initializer is called with a value  featuring a ``quantity``
+    field set to an expected value.
 
     Parameters
     ----------
@@ -192,7 +187,7 @@ def has_quantity(quantity: t.Union[PhysicalQuantity, str, None]):
 
 def on_quantity(wrapped_validator: t.Callable):
     """
-    A validator that applies a validator to the magnitude of a value.
+    Apply a validator to the magnitude of a quantity.
 
     Parameters
     ----------
@@ -211,7 +206,7 @@ def on_quantity(wrapped_validator: t.Callable):
 
 def auto_or(*wrapped_validators):
     """
-    A validator that allows an attribute to be set to :class:`.AUTO`.
+    Allow for an attribute to be set to :class:`.AUTO`.
 
     Parameters
     ----------
