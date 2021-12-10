@@ -31,6 +31,7 @@
 
    Atmosphere
    AbstractHeterogeneousAtmosphere
+   ParticleDistribution
 
 **Factories**
 
@@ -47,12 +48,16 @@
    MolecularAtmosphere
    ParticleLayer
 
-**Particle distribution**
+**Particle distributions**
 
 .. autosummary::
    :toctree: generated/autosummary
 
-   ParticleDistribution
+   ArrayParticleDistribution
+   ExponentialParticleDistribution
+   InterpolatorParticleDistribution
+   GaussianParticleDistribution
+   UniformParticleDistribution
 
 ``eradiate.scenes.biosphere``
 -----------------------------

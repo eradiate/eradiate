@@ -152,6 +152,7 @@ intersphinx_mapping = {
     "pinttrs": ("https://pinttrs.readthedocs.io/en/latest/", None),
     "python": ("https://docs.python.org/3/", None),
     "rich": ("https://rich.readthedocs.io/en/latest/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "xarray": ("http://xarray.pydata.org/en/stable/", None),
 }
 
