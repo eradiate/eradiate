@@ -34,6 +34,18 @@ from ...units import unit_registry as ureg
 from ...validators import is_positive
 
 
+def _particle_layer_distribution_converter(value):
+    if isinstance(value, str):
+        if value == "uniform":
+            return particle_distribution_factory.convert({"type": "uniform"})
+        elif value == "gaussian":
+            return particle_distribution_factory.convert({"type": "gaussian"})
+        elif value == "exponential":
+            return particle_distribution_factory.convert({"type": "exponential"})
+
+    return particle_distribution_factory.convert(value)
+
+
 @atmosphere_factory.register(type_id="particle_layer")
 @parse_docs
 @attr.s
@@ -103,14 +115,19 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     distribution: ParticleDistribution = documented(
         attr.ib(
-            factory=UniformParticleDistribution,
-            converter=particle_distribution_factory.convert,
+            default="uniform",
+            converter=_particle_layer_distribution_converter,
             validator=attr.validators.instance_of(ParticleDistribution),
         ),
-        doc="Particle distribution.",
-        init_type=":class:`.ParticleDistribution` or dict, optional",
+        doc="Particle distribution. Simple defaults can be set using a string: "
+        '``"uniform"`` (resp. ``"gaussian"``, ``"exponential"``) is converted to '
+        ":class:`UniformParticleDistribution() <.UniformParticleDistribution>` "
+        "(resp. :class:`GaussianParticleDistribution() <.GaussianParticleDistribution>`, "
+        ":class:`ExponentialParticleDistribution() <.ExponentialParticleDistribution>`).",
+        init_type=":class:`.ParticleDistribution` or dict or "
+        '{"uniform", "gaussian", "exponential"}, optional',
         type=":class:`.ParticleDistribution`",
-        default=":class:`.UniformParticleDistribution() <.UniformParticleDistribution>`",
+        default='"uniform"',
     )
 
     tau_550: pint.Quantity = documented(
