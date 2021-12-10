@@ -1,24 +1,25 @@
 """
 Particle distributions.
+
+Particle distributions define how the particle number fraction varies with
+altitude. The particle layer is split into a number of divisions
+(sub-layers) wherein the particle number fraction is evaluated.
+
+Notes
+-----
+Particle distributions are not normalised. The parent caller is responsible
+for normalising returned values.
 """
-from __future__ import annotations
 
 import typing as t
 from abc import ABC, abstractmethod
 
 import attr
 import numpy as np
-import pint
-import pinttr
-import xarray as xr
-from pinttr.util import units_compatible
-from scipy.stats import expon, norm
+import scipy.interpolate
 
 from ..._factory import Factory
 from ...attrs import documented, parse_docs
-from ...units import unit_context_config as ucc
-from ...units import unit_registry as ureg
-from ...validators import all_positive
 
 particle_distribution_factory = Factory()
 
@@ -26,40 +27,17 @@ particle_distribution_factory = Factory()
 @parse_docs
 @attr.s
 class ParticleDistribution(ABC):
-    r"""
-    An abstract base class for particle distributions.
+    """
+    Abstract base class for particle distributions used to define particle
+    layers.
 
-    Particle distributions help define particle layers.
-
-    Particle distributions define how particle number fraction vary with
-    altitude.
-    The particle layer is split into a number of divisions (sub-layers),
-    wherein the particle number fraction is evaluated.
-
-    The particle number fraction vertical distribution is normalised so that:
-
-    .. math::
-        \sum_i f_i = 1
-
-    where :math:`f_i` is the particle number fraction in the layer division
-    :math:`i`.
+    In practice, particle distributions are callables with the signature
+    ``f(x: np.typing.ArrayLike) -> np.ndarray`` and are evaluated over the
+    interval [0, 1].
     """
 
     @abstractmethod
-    def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        """
-        Evaluate the particle number fraction as a function of altitude.
-
-        Parameters
-        ----------
-        z : quantity
-            Altitude values.
-
-        Returns
-        -------
-        ndarray
-            Particle number fraction.
-        """
+    def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
         pass
 
 
@@ -68,22 +46,47 @@ class ParticleDistribution(ABC):
 @attr.s
 class UniformParticleDistribution(ParticleDistribution):
     r"""
-    Uniform particle distribution.
-
-    Particle number fraction values are computed using the uniform probability
-    distribution function:
+    Uniform particle distribution. Returns values given by the uniform PDF
 
     .. math::
-        f(z) = \frac{1}{z_{\rm top} - z_{\rm bottom}}, \quad
-        z \in [z_{\rm top}, z_{\rm bottom}]
+       f : x \mapsto \left\{
+           \begin{array}{ll}
+               \frac{1}{b - a} & \mathrm{if} \ x \in [a, b] \\
+               0 & \mathrm{otherwise}
+           \end{array}
+       \right.
 
-    where :math:`z_{\rm top}` and :math:`z_{\rm bottom}` are the layer top and bottom
-    altitudes, respectively.
+    where :math:`a = \mathtt{bounds[0]}` and :math:`b = \mathtt{bounds[1]}`.
     """
 
-    def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        f = np.ones(len(z))
-        return f / f.sum()
+    bounds: np.ndarray = documented(
+        attr.ib(default=[0.0, 1.0], converter=lambda x: np.atleast_1d(np.squeeze(x))),
+        type="array",
+        init_type="array-like, optional",
+        default="[0, 1]",
+        doc="Bounds of the distribution's interval.",
+    )
+
+    @bounds.validator
+    def _bounds_validator(self, attribute, value):
+        if len(value) != 2:
+            raise ValueError(
+                f"while validating '{attribute.name}': passed array must have "
+                "exactly 2 elements"
+            )
+
+        if value[1] <= value[0]:
+            raise ValueError(
+                f"while validating '{attribute.name}': bounds must be sorted in "
+                "ascending order "
+            )
+
+    def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
+        return np.where(
+            np.logical_or(x < self.bounds[0], x > self.bounds[1]),
+            np.zeros_like(x),
+            np.full_like(x, 1.0 / (self.bounds[1] - self.bounds[0])),
+        )
 
 
 @particle_distribution_factory.register(type_id="exponential")
@@ -91,30 +94,23 @@ class UniformParticleDistribution(ParticleDistribution):
 @attr.s
 class ExponentialParticleDistribution(ParticleDistribution):
     r"""
-    Exponential particle distribution.
-
-    Particle number fraction values are computed using the exponential
-    probability distribution function:
-
-    .. math::
-       f(z) = \lambda  \exp \left( -\lambda z \right)
-
-    where :math:`\lambda` is the rate parameter and :math:`z` is the altitude.
+    Exponential particle distribution. Returns values given by the exponential
+    PDF
+    :math:`f : x \mapsto \frac{1}{\beta} \exp \left( - x / \beta \right)`
+    where :math:`\beta = \mathtt{scale}`.
     """
-    rate: pint.Quantity = documented(
-        pinttr.ib(units=ucc.deferred("collision_coefficient")),
-        doc="Rate parameter of the exponential distribution.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['collision_coefficient']).",
+    scale: float = documented(
+        attr.ib(default=5.0, converter=float),
         type="float",
+        init_type="float, optional",
+        default="5.0",
+        doc="Scale parameter of the exponential function. The default value "
+        "ensures that the integral of the exponential PDF over the interval "
+        "[0, 1] is equal to 99.3%.",
     )
 
-    def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        x = z.magnitude
-        loc = z.magnitude.min()
-        scale = (1.0 / self.rate).m_as(z.units)
-        f = expon.pdf(x=x, loc=loc, scale=scale)
-        return f / f.sum()
+    def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
+        return np.exp(-x / self.scale) / self.scale
 
 
 @particle_distribution_factory.register(type_id="gaussian")
@@ -122,45 +118,42 @@ class ExponentialParticleDistribution(ParticleDistribution):
 @attr.s
 class GaussianParticleDistribution(ParticleDistribution):
     r"""
-    Gaussian particle distribution.
-
-    Particle number fraction values are computed using the Gaussian probability
-    distribution function:
+    Gaussian particle distribution. Returns values given by the Gaussian
+    PDF
 
     .. math::
-        f(z) = \frac{1}{2 \pi \sigma}
-        \exp{\left[
-            -\frac{1}{2}
-            \left( \frac{z - \mu}{\sigma} \right)^2
-        \right]}
+       f : x \mapsto \frac{1}{2 \pi \cdot \sigma}
+           \exp \left[
+             -\frac{1}{2}
+             \left( \frac{x - \mu}{\sigma} \right)^2
+           \right]
 
-    where :math:`\mu` is the mean of the distribution and :math:`\sigma` is
-    the standard deviation of the distribution.
+    where :math:`\mu = \mathtt{mean}` and :math:`\sigma = \mathtt{std}`.
     """
-    mean: pint.Quantity = documented(
-        pinttr.ib(units=ucc.deferred("length")),
-        doc="Mean (expectation) of the distribution. "
-        "If ``None``, set to the middle of the layer.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
+
+    mean: float = documented(
+        attr.ib(default=0.5, converter=float),
         type="float",
-    )
-    std: pint.Quantity = documented(
-        pinttr.ib(units=ucc.deferred("length")),
-        doc="Standard deviation of the distribution. If ``None``, set to one "
-        "sixth of the layer thickness so that half the layer thickness "
-        "equals three standard deviations.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="float",
+        init_type="float, optional",
+        default="0.5",
+        doc="Mean of the Gaussian PDF. The default value places the mean in "
+        "the middle of the particle layer (at :math:`x = 0.5`).",
     )
 
-    def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        x = z.magnitude
-        loc = self.mean.to(z.units).magnitude
-        scale = self.std.to(z.units).magnitude
-        f = norm.pdf(x=x, loc=loc, scale=scale)
-        return f / f.sum()
+    std: float = documented(
+        attr.ib(default=0.5 / 3, converter=float),
+        type="float",
+        init_type="float, optional",
+        default="1/6",
+        doc=r"Standard deviation of the Gaussian PDF. The default value is "
+        "such that the integral of the Gaussian PDF over the "
+        ":math:`[\mu - 0.5, \mu + 0.5]` interval is about 99.7% (3σ).",
+    )
+
+    def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
+        return np.exp(-0.5 * np.square((x - self.mean) / self.std)) / (
+            self.std * np.sqrt(2.0 * np.pi)
+        )
 
 
 @particle_distribution_factory.register(type_id="array")
@@ -168,104 +161,146 @@ class GaussianParticleDistribution(ParticleDistribution):
 @attr.s
 class ArrayParticleDistribution(ParticleDistribution):
     """
-    Flexible particle distribution specified either by a particle number
-    fraction array or :class:`~xarray.DataArray`.
+    Particle distribution specified by an array of values.
     """
 
-    values: t.Optional[np.typing.ArrayLike] = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(np.array),
-            validator=attr.validators.optional(
-                [attr.validators.instance_of(np.ndarray), all_positive]
-            ),
-        ),
-        doc="Particle number fraction values on a regular altitude mesh.",
-        type="array or None",
-        default="``None``",
+    values: np.typing.ArrayLike = documented(
+        attr.ib(converter=np.array, kw_only=True),
+        type="ndarray",
+        init_type="array-like",
+        doc="An array of particle fraction values.",
     )
-
-    data_array: t.Optional[xr.DataArray] = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(xr.DataArray),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(xr.DataArray)
-            ),
-        ),
-        doc="Particle distribution data array. Number fraction as a "
-        "function of altitude (``z``).\n"
-        "Note that number fraction do not need to be normalised.",
-        type=":class:`~xarray.DataArray` or None",
-        default="``None``",
-    )
-
-    @data_array.validator
-    def _validate_data_array(instance, attribute, value):
-        if value is not None and not np.all(value.data >= 0.0):
-            raise ValueError("'data_array' data must be all positive.")
 
     @values.validator
-    @data_array.validator
-    def _validate_values_and_data_array(instance, attribute, value):
-        if instance.values is None and instance.data_array is None:
-            raise ValueError("You must specify 'values' or 'data_array'.")
-        elif instance.values is not None and instance.data_array is not None:
+    def _values_validator(self, attribute, value):
+        if value.ndim != 1:
             raise ValueError(
-                "You cannot specify both 'values' and 'data_array' simultaneously."
+                f"while validating {attribute.name}: only 1D arrays are allowed"
             )
 
-    @data_array.validator
-    def _validate_data_array_and_values(instance, attribute, value):
-        if value is not None:
-            if not "z" in value.coords:
-                raise ValueError("Attribute 'data_array' must have a 'z' coordinate")
-            else:
-                try:
-                    units = ureg.Unit(value.z.units)
-                    if not units_compatible(units, ureg.Unit("m")):
-                        raise ValueError(
-                            f"Coordinate 'z' of attribute "
-                            f"'data_array' must have units"
-                            f"compatible with m^-1 (got {units})."
-                        )
-                except AttributeError:
-                    raise ValueError(
-                        "Coordinate 'z' of attribute 'data_array' must have units."
-                    )
+        if len(value) < 2:
+            raise ValueError(
+                f"while validating {attribute.name}: array must have at least 2 "
+                "elements"
+            )
+
+    coords: np.ndarray = documented(
+        attr.ib(
+            default=attr.Factory(
+                lambda x: np.arange(
+                    0.5 / len(x.values),
+                    1,
+                    1 / len(x.values),
+                ),
+                takes_self=True,
+            ),
+            converter=np.array,
+        ),
+        type="ndarray",
+        init_type="array-like, optional",
+        doc="Coordinates to which passed values are mapped. This array must "
+        "have the same shape as ``values``. The default value positions values "
+        "at the centers of a regular grid with nodes defined "
+        "by :code:`np.linspace(0, 1, len(values))`.",
+    )
+
+    @coords.validator
+    def _coords_validator(self, attribute, value):
+        if value.shape != self.values.shape:
+            raise ValueError(
+                f"while validating '{attribute.name}': coordinate and value "
+                "array shapes must be the same"
+            )
 
     method: str = documented(
         attr.ib(
-            default="linear", converter=str, validator=attr.validators.instance_of(str)
+            default="linear",
+            converter=str,
+            validator=attr.validators.in_(
+                {
+                    "linear",
+                    "nearest",
+                    "nearest-up",
+                    "zero",
+                    "slinear",
+                    "quadratic",
+                    "cubic",
+                    "previous",
+                    "next",
+                }
+            ),
         ),
-        doc="Method to interpolate the data along the altitude. \n"
-        "This parameter is passed to :meth:`xarray.DataArray.interp`.",
         type="str",
-        default='``"linear"``',
+        init_type='{ "linear", "nearest", "nearest-up", "zero", "slinear", '
+        '"quadratic", "cubic", "previous", "next" }',
+        default='"linear"',
+        doc="Interpolation method. See :class:`scipy.interpolate.interp1d` "
+        "(*kind*) for more information.",
     )
 
-    def eval_fraction(self, z: pint.Quantity) -> np.ndarray:
-        if self.values is not None:
-            data_array = xr.DataArray(
-                data=self.values,
-                coords={
-                    "z": (
-                        "z",
-                        np.linspace(
-                            start=z.to("m").magnitude.min(),
-                            stop=z.to("m").magnitude.max(),
-                            num=len(self.values),
-                        ),
-                        {"units": "m"},
-                    )
-                },
-                dims=["z"],
-            )
-        else:
-            data_array = self.data_array
+    extrapolate: str = documented(
+        attr.ib(
+            default="zero",
+            converter=str,
+            validator=attr.validators.in_({"zero", "nearest", "method", "nan"}),
+        ),
+        type="str",
+        init_type='{ "zero", "nearest", "method", "nan" }',
+        default='"zero"',
+        doc="Extrapolation method used when evaluation is requested outside of "
+        ":math:`[\mathtt{coords[0]}, \mathtt{coords[-1]}]`. "
+        "See :class:`scipy.interpolate.interp1d` (*fill_value*) for more "
+        "information. Settings map as follows:\n"
+        "\n"
+        ".. list-table::\n\n"
+        "   * - ``ArrayParticleDistribution`` (`extrapolate`)\n"
+        "     - ``interp1d`` (`fill_value`)\n"
+        '   * - ``"zero"``\n'
+        "     - ``0.0``\n"
+        '   * - ``"nearest"``\n'
+        "     - ``(values[0], values[-1])``\n"
+        '   * - ``"method"``\n'
+        "     - ``extrapolate``\n"
+        '   * - ``"nan"``\n'
+        "     - ``np.nan``\n",
+    )
 
-        x = z.to(data_array.z.units).magnitude
-        f = data_array.interp(
-            coords={"z": x}, method=self.method, kwargs=dict(fill_value=0.0)
+    def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
+        if self.extrapolate == "zero":
+            fill_value = 0.0
+        elif self.extrapolate == "nearest":
+            fill_value = (self.values[0], self.values[-1])
+        elif self.extrapolate == "method":
+            fill_value = "extrapolate"
+        else:
+            fill_value = np.nan
+
+        f = scipy.interpolate.interp1d(
+            self.coords,
+            self.values,
+            kind=self.method,
+            bounds_error=False,
+            fill_value=fill_value,
         )
-        return f.values / f.values.sum()  # Normalise fractions
+        return f(x)
+
+
+@particle_distribution_factory.register(type_id="interpolator")
+@parse_docs
+@attr.s
+class InterpolatorParticleDistribution(ParticleDistribution):
+    """
+    A flexible particle distribution which redirects its calls to an
+    encapsulated callable.
+    """
+
+    interpolator: t.Callable[[np.typing.ArrayLike], np.ndarray] = documented(
+        attr.ib(validator=attr.validators.is_callable, kw_only=True),
+        type="callable",
+        doc="A callable with signature "
+        ":code:`f(x: np.typing.ArrayLike) -> np.ndarray`. Typically, "
+        "a :class:`scipy.interpolate.interp1d`.",
+    )
+
+    def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
+        return self.interpolator(x)

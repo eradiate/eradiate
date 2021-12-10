@@ -110,7 +110,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         doc="Particle distribution.",
         init_type=":class:`.ParticleDistribution` or dict, optional",
         type=":class:`.ParticleDistribution`",
-        default=":class:`UniformParticleDistribution() <.UniformParticleDistribution>`",
+        default=":class:`.UniformParticleDistribution() <.UniformParticleDistribution>`",
     )
 
     tau_550: pint.Quantity = documented(
@@ -226,9 +226,12 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         Returns
         -------
         ndarray
-            Particles fractions.
+            Particle fractions.
         """
-        return self.distribution.eval_fraction(self.z_layer)
+        x = (self.z_layer - self.bottom) / (self.top - self.bottom)
+        fractions = self.distribution(x.magnitude)
+        fractions /= np.sum(fractions)
+        return fractions
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
