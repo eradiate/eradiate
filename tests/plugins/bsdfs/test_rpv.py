@@ -7,7 +7,7 @@ import mitsuba
 
 def test_create_rpv3(variant_scalar_rgb):
     # Test constructor of 3-parameter version of RPV
-    from mitsuba.core.xml import load_dict
+    from mitsuba.core import load_dict
     from mitsuba.render import BSDFFlags
 
     rpv = load_dict({"type": "rpv"})
@@ -81,8 +81,7 @@ def test_eval(variant_llvm_rgb, rho_0, k, g):
     """Test the eval method of the RPV plugin, comparing to a reference
     implementation."""
 
-    from mitsuba.core.xml import load_dict
-    from mitsuba.core import Vector3f
+    from mitsuba.core import load_dict, Vector3f
     from mitsuba.render import BSDFContext, SurfaceInteraction3f
 
     rpv = load_dict({
@@ -112,8 +111,7 @@ def test_eval_diffuse(variant_llvm_rgb, rho_0):
     Compare a degenerate RPV case with a diffuse BRDF.
     """
 
-    from mitsuba.core.xml import load_dict
-    from mitsuba.core import Vector3f
+    from mitsuba.core import load_dict, Vector3f
     from mitsuba.render import BSDFContext, SurfaceInteraction3f
 
     k = 1.0

@@ -50,7 +50,7 @@ def dict_scene(origins, directions, width, spp, radiance):
 
 
 def test_construct(variant_scalar_rgb):
-    from mitsuba.core.xml import load_dict
+    from mitsuba.core import load_dict
 
     # Instantiate with 1 or 2 direction
     for origins, directions in [
@@ -83,7 +83,7 @@ def test_sample_ray_compare(variant_scalar_rgb):
     produced by the radiancemeter plugin.
     """
 
-    from mitsuba.core.xml import load_dict
+    from mitsuba.core import load_dict
 
     for origin, direction in [
         ([-1, 0, 0], [-2, 1, -10]),
@@ -145,8 +145,7 @@ def test_sample_ray_multi(variant_scalar_rgb):
     correct component is picked.
     """
 
-    from mitsuba.core.xml import load_dict
-    from mitsuba.core import ScalarVector3f
+    from mitsuba.core import load_dict, ScalarVector3f
 
     sensor = load_dict(dict_sensor("0, 0, 0, 1, 0, 1", "1, 0, 0, 1, 1, 1", 2))
     print(sensor)
@@ -173,7 +172,7 @@ def test_render(variant_scalar_rgb, radiance):
     Test render results with a simple scene.
     """
 
-    from mitsuba.core.xml import load_dict
+    from mitsuba.core import load_dict
 
     scene_dict = dict_scene(
         "1, 0, 0, 0, 1, 0, 0, 0, 1", "1, 0, 0, 0, -1, 0, 0, 0, -1", 3, 1, radiance
@@ -191,8 +190,7 @@ def test_render_complex(variant_scalar_rgb):
     surfaces with different reflectances.
     """
 
-    from mitsuba.core import ScalarTransform4f
-    from mitsuba.core.xml import load_dict
+    from mitsuba.core import load_dict, ScalarTransform4f
 
     scene_dict = {
         "type": "scene",

@@ -4,7 +4,7 @@ import enoki as ek
 
 def test_instantiation(variant_scalar_rgb):
     from mitsuba.render import BSDFFlags
-    from mitsuba.core.xml import load_dict
+    from mitsuba.core import load_dict
 
     b = load_dict({"type": "bilambertian"})
     assert b is not None
@@ -20,9 +20,8 @@ def test_instantiation(variant_scalar_rgb):
 
 
 def test_eval_pdf(variant_scalar_rgb):
-    from mitsuba.core.xml import load_dict
     from mitsuba.render import BSDFContext, SurfaceInteraction3f
-    from mitsuba.core import Frame3f, ScalarVector3f
+    from mitsuba.core import load_dict, Frame3f, ScalarVector3f
 
     for (r, t) in [
         (0.2, 0.4),
