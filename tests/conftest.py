@@ -31,8 +31,8 @@ for variant in [
     "scalar_mono_polarized",
     "scalar_rgb",
     "scalar_spectral",
-    "packet_rgb",
-    "packet_spectral",
+    "llvm_rgb",
+    "llvm_spectral",
 ]:
     generate_fixture(variant)
 del generate_fixture
