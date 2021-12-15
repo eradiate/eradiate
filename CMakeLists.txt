@@ -14,6 +14,9 @@ project(mitsuba
 # Build dependencies
 add_subdirectory(ext)
 
+# Mitsuba-related CMake settings
+include(ext/cmake-defaults/CMakeLists.txt)
+
 # Build plugins
 # Note: Not a very nice CMake setup, likely this could be done better
 get_filename_component(ERT_MITSUBA_DIR "ext/mitsuba2" ABSOLUTE)
