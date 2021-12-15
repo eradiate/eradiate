@@ -37,7 +37,7 @@ def _kernel_dict_get_mts_variant():
 class KernelDict(collections_abc.MutableMapping):
     """
     A dictionary-like object designed to contain a scene specification
-    appropriate for instantiation with :func:`~mitsuba.core.xml.load_dict`.
+    appropriate for instantiation with :func:`~mitsuba.core.load_dict`.
 
     :class:`.KernelDict` keeps track of the variant it has been created with
     and performs minimal checks to help prevent inconsistent scene creation.
@@ -132,7 +132,7 @@ class KernelDict(collections_abc.MutableMapping):
         self, strip: bool = True, post_load_update: bool = True
     ) -> mitsuba.core.Object:
         """
-        Call :func:`~mitsuba.core.xml.load_dict` on self. In addition, a
+        Call :func:`~mitsuba.core.load_dict` on self. In addition, a
         post-load update can be applied.
 
         If the encapsulated dictionary misses a ``"type"`` key, it will be
@@ -185,7 +185,7 @@ class KernelDict(collections_abc.MutableMapping):
         :class:`mitsuba.core.Object`
             Loaded Mitsuba object.
         """
-        from mitsuba.core.xml import load_dict
+        from mitsuba.core import load_dict
         from mitsuba.python.util import traverse
 
         d = self.data
