@@ -1,6 +1,7 @@
 [submodule "resources/data"]
 	path = resources/data
 	url = https://github.com/eradiate/eradiate-data.git
+	shallow = true
 [submodule "ext/mitsuba2"]
 	path = ext/mitsuba2
 	url = git@github.com:leroyvn/mitsuba2-next.git
