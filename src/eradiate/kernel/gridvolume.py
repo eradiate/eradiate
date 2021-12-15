@@ -43,7 +43,7 @@ def write_binary_grid3d(
             f"'values' must have 3 or 4 dimensions " f"(got shape {values.shape})"
         )
 
-    # note: this is an exact copy of the function write_binary_grid3d from
+    # Note: this is an exact copy of the function write_binary_grid3d from
     # https://github.com/mitsuba-renderer/mitsuba-data/blob/master/tests/scenes/participating_media/create_volume_data.py
 
     with open(filename, "wb") as f:
