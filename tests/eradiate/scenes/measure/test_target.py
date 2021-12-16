@@ -51,13 +51,13 @@ def test_target_origin(modes_all):
     with uck.override({"length": "mm"}):  # Tricky: we can't compare transforms directly
         kernel_item = t.kernel_item()["to_world"]
         assert ek.allclose(
-            kernel_item.transform_point(Point3f(-1, -1, 0)), [-1000, -1000, 0]
+            kernel_item.transform_affine(Point3f(-1, -1, 0)), [-1000, -1000, 0]
         )
         assert ek.allclose(
-            kernel_item.transform_point(Point3f(1, 1, 0)), [1000, 1000, 0]
+            kernel_item.transform_affine(Point3f(1, 1, 0)), [1000, 1000, 0]
         )
         assert ek.allclose(
-            kernel_item.transform_point(Point3f(1, 1, 42)), [1000, 1000, 42]
+            kernel_item.transform_affine(Point3f(1, 1, 42)), [1000, 1000, 42]
         )
 
     # Factory: basic test

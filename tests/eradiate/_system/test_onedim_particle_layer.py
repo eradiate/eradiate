@@ -31,7 +31,7 @@ def init_experiment_particle_layer(bottom, top, dataset_path, tau_550, r, w, spp
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
                     wavelengths=w,
                 ),
-                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
+                zeniths=np.linspace(-75, 75, 51) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
                 spp=spp,
             )
@@ -69,7 +69,7 @@ def init_experiment_homogeneous_atmosphere(
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
                     wavelengths=w,
                 ),
-                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
+                zeniths=np.linspace(-75, 75, 51) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
                 spp=spp,
             )
@@ -94,7 +94,7 @@ def init_experiment_homogeneous_atmosphere(
 
 @pytest.mark.parametrize(
     "w",
-    np.array([280.0, 400.0, 550.0, 650.0, 1000.0, 1500.0, 2400.0]) * ureg.nm,
+    [280, 400, 550, 650, 1000, 1500, 2400],
 )
 @pytest.mark.slow
 def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir):
@@ -150,6 +150,7 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir):
     .. image:: generated/plots/test_onedim_particle_layer_2400.0.png
        :width: 95%
     """
+    w = w * ureg.nm
     spp = 1e3
     reflectance = 0.35
     bottom = 0.0 * ureg.km
@@ -194,9 +195,8 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir):
         spp=spp,
     )
 
-    with eradiate.unit_context_kernel.override(length="km"):
-        experiment_1.run()
-        experiment_2.run()
+    experiment_1.run()
+    experiment_2.run()
 
     brf_1 = experiment_1.results["measure"]["brf"]
     brf_2 = experiment_2.results["measure"]["brf"]
@@ -209,13 +209,8 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir):
     make_figure(fname_plot=fname_plot, brf_1=brf_1, brf_2=brf_2)
 
     # exclude outliers that are due to the batman issue
-    outliers_1 = np.isclose(brf_1.values, reflectance, rtol=1e-5)
-    outliers_2 = np.isclose(brf_2.values, reflectance, rtol=1e-5)
-    no_outliers = ~outliers_1 & ~outliers_2
+    outcome = np.allclose(brf_1.values, brf_2.values, atol=reflectance * 1e-3)
 
-    assert np.allclose(
-        brf_1.where(no_outliers).values,
-        brf_2.where(no_outliers).values,
-        rtol=1e-2,
-        equal_nan=True,
-    )
+    if outcome is False:
+        print(f"Test failed, see artefact {fname_plot}")
+        assert False

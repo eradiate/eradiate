@@ -19,7 +19,7 @@ def init_experiment(bottom, top, sigma_a, sigma_s, phase, r, w, spp):
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
                     wavelengths=w,
                 ),
-                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
+                zeniths=np.linspace(-75, 75, 51) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
                 spp=spp,
             )
@@ -56,7 +56,7 @@ def make_figure(fname_plot, brf_1, brf_2):
 
 @pytest.mark.parametrize(
     "w",
-    np.array([280.0, 400.0, 550.0, 650.0, 1000.0, 1500.0, 2400.0]) * ureg.nm,
+    [280, 400, 550, 650, 1000, 1500, 2400],
 )
 @pytest.mark.slow
 def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir):
@@ -111,6 +111,7 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir):
     .. image:: generated/plots/test_onedim_phase_2400.0.png
        :width: 95%
     """
+    w = w * ureg.nm
     spp = 1e3
     reflectance = 0.35
     bottom = 0.0 * ureg.km
@@ -140,8 +141,6 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir):
         spp=spp,
     )
 
-    experiment_1.run()
-
     experiment_2 = init_experiment(
         bottom=bottom,
         top=top,
@@ -153,6 +152,7 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir):
         spp=spp,
     )
 
+    experiment_1.run()
     experiment_2.run()
 
     brf_1 = experiment_1.results["measure"]["brf"]
@@ -165,14 +165,8 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir):
     fname_plot = os.path.join(outdir, filename)
     make_figure(fname_plot=fname_plot, brf_1=brf_1, brf_2=brf_2)
 
-    # exclude outliers that are due to the batman issue
-    outliers_1 = np.isclose(brf_1.values, reflectance, rtol=1e-5)
-    outliers_2 = np.isclose(brf_2.values, reflectance, rtol=1e-5)
-    no_outliers = ~outliers_1 & ~outliers_2
+    outcome = np.allclose(brf_1.values, brf_2.values, rtol=1e-4)
 
-    assert np.allclose(
-        brf_1.where(no_outliers).values,
-        brf_2.where(no_outliers).values,
-        rtol=1e-4,
-        equal_nan=True,
-    )
+    if outcome is False:
+        print(f"Test failed, see artefact {fname_plot}")
+        assert False

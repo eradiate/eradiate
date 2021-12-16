@@ -13,8 +13,6 @@ from eradiate.units import PhysicalQuantity
 
 
 def test_uniform(modes_all):
-    from mitsuba.core.xml import load_dict
-
     # Instantiate with value only
     s = UniformSpectrum(value=1.0)
     assert s.quantity is PhysicalQuantity.DIMENSIONLESS
@@ -51,7 +49,7 @@ def test_uniform(modes_all):
 
     # Produced kernel dict is valid
     ctx = KernelDictContext()
-    assert load_dict(onedict_value(s.kernel_dict(ctx))) is not None
+    assert s.kernel_dict(ctx).load() is not None
 
     # Unit scaling is properly applied
     with ucc.override({"radiance": "W/m^2/sr/nm"}):

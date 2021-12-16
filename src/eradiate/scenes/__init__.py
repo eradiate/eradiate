@@ -5,6 +5,7 @@ from . import (
     illumination,
     integrators,
     measure,
+    phase,
     spectra,
     surface,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "illumination",
     "integrators",
     "measure",
+    "phase",
     "spectra",
     "surface",
 ]

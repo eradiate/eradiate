@@ -115,7 +115,7 @@ def test_homogeneous_kernel_dict(mode_mono, ref):
     """
     Produces kernel dictionaries that can be loaded by the kernel.
     """
-    from mitsuba.core.xml import load_dict
+    from mitsuba.core import load_dict
 
     r = HomogeneousAtmosphere()
 

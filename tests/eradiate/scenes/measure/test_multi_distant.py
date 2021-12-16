@@ -18,7 +18,7 @@ def test_multi_distant_measure_construct(mode_mono):
 
     # The produced kernel dictionary can be instantiated
     kernel_dict = measure.kernel_dict(ctx)
-    assert kernel_dict.load().expand()[0]
+    assert kernel_dict.load()
 
 
 def test_multi_distant_measure_viewing_angles(mode_mono):

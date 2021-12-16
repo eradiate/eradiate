@@ -79,7 +79,7 @@ def test_rami4atm_experiment_construct_normalize_measures(mode_mono, padding):
 
 @pytest.mark.parametrize("padding", (0, 1))
 def test_ramiatm_experiment_kernel_dict(mode_mono, padding):
-    from mitsuba.core import ScalarTransform4f
+    from mitsuba.core import Point3f, ScalarTransform4f
 
     ctx = KernelDictContext()
 
@@ -100,7 +100,7 @@ def test_ramiatm_experiment_kernel_dict(mode_mono, padding):
     )
     kernel_scene = s.kernel_dict(ctx)
     assert np.allclose(
-        kernel_scene["surface"]["to_world"].transform_point([1, -1, 0]),
+        kernel_scene["surface"]["to_world"].transform_affine(Point3f(1, -1, 0)),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
 

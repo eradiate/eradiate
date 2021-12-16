@@ -92,13 +92,6 @@ class HemisphericalDistantMeasure(Measure):
         default="[0, 0, 1]",
     )
 
-    flip_directions = documented(
-        attr.ib(default=None, converter=attr.converters.optional(bool)),
-        doc=" If ``True``, sampled directions will be flipped.",
-        type="bool",
-        default="False",
-    )
-
     target: t.Optional[Target] = documented(
         attr.ib(
             default=None,
@@ -171,15 +164,26 @@ class HemisphericalDistantMeasure(Measure):
     # --------------------------------------------------------------------------
 
     def _kernel_dict(self, sensor_id, spp):
+        import enoki as ek
+        from mitsuba.core import ScalarTransform4f, ScalarVector3f
+
+        up = ek.normalize(
+            ek.cross(
+                ScalarVector3f(self.direction),
+                ScalarVector3f(
+                    np.cos(self.orientation.m_as(ureg.rad)),
+                    np.sin(self.orientation.m_as(ureg.rad)),
+                    0.0,
+                ),
+            )
+        )
+
         result = {
-            "type": "distant",
+            "type": "hdistant",
             "id": sensor_id,
-            "direction": self.direction,
-            "orientation": [
-                np.cos(self.orientation.m_as(ureg.rad)),
-                np.sin(self.orientation.m_as(ureg.rad)),
-                0.0,
-            ],
+            "to_world": ScalarTransform4f.look_at(
+                origin=[0.0, 0.0, 0.0], target=self.direction, up=up
+            ),
             "sampler": {
                 "type": "independent",
                 "sample_count": spp,
@@ -195,10 +199,7 @@ class HemisphericalDistantMeasure(Measure):
         }
 
         if self.target is not None:
-            result["ray_target"] = self.target.kernel_item()
-
-        if self.flip_directions is not None:
-            result["flip_directions"] = self.flip_directions
+            result["target"] = self.target.kernel_item()
 
         return result
 

@@ -65,7 +65,7 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
                 "measure": {
                     "type": "distant",
                     "id": "measure",
-                    "ray_target": [0, 0, 0],
+                    "target": [0, 0, 0],
                     "sampler": {"type": "independent", "sample_count": spp},
                     "film": {
                         "type": "hdrfilm",

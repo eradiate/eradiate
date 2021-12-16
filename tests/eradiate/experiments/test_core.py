@@ -13,7 +13,7 @@ def test_mitsuba_run(modes_all):
             "shape": {"type": "rectangle"},
             "illumination": {"type": "constant"},
             "sensor_0": {
-                "type": "distant",
+                "type": "hdistant",
                 "film": {
                     "type": "hdrfilm",
                     "pixel_format": "luminance",
@@ -22,7 +22,7 @@ def test_mitsuba_run(modes_all):
             },
             "sensor_1": {
                 "id": "my_sensor",
-                "type": "distant",
+                "type": "hdistant",
                 "film": {
                     "type": "hdrfilm",
                     "pixel_format": "luminance",
@@ -39,8 +39,8 @@ def test_mitsuba_run(modes_all):
     assert "spp" in results
 
     # Sensors without ID have a default key
-    assert "__sensor_0" in results["values"]
-    assert "__sensor_0" in results["spp"]
+    assert "sensor_0" in results["values"]
+    assert "sensor_0" in results["spp"]
     # Sensors with ID have their ID as key
     assert "my_sensor" in results["values"]
     assert "my_sensor" in results["spp"]

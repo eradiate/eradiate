@@ -173,8 +173,6 @@ def test_interpolated_eval(modes_all):
 
 
 def test_interpolated_kernel_dict(modes_all_mono):
-    from mitsuba.core.xml import load_dict
-
     ctx = KernelDictContext(spectral_ctx=SpectralContext.new(wavelength=550.0))
 
     spectrum = InterpolatedSpectrum(
@@ -185,7 +183,7 @@ def test_interpolated_kernel_dict(modes_all_mono):
     )
 
     # Produced kernel dict is valid
-    assert load_dict(spectrum.kernel_dict(ctx)["spectrum"]) is not None
+    assert spectrum.kernel_dict(ctx).load() is not None
 
     # Unit scaling is properly applied
     with ucc.override({"radiance": "W/m^2/sr/nm"}):

@@ -28,6 +28,4 @@ def test_air_scattering_coefficient(modes_all_mono_ckd):
     assert np.allclose(value, expected)
 
     # The associated kernel dict is correctly formed and can be loaded
-    from mitsuba.core.xml import load_dict
-
-    assert load_dict(onedict_value(s.kernel_dict(ctx=ctx))) is not None
+    assert s.kernel_dict(ctx=ctx).load() is not None

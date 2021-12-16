@@ -77,7 +77,7 @@ class CentralPatchSurface(Surface):
         Compute the scaling parameter for the bitmap texture in the blendbsdf.
         """
         if self.central_patch.width is AUTO and not ctx.override_canopy_width:
-            return 1
+            return 1.0
         else:
             width = ctx.override_scene_width if ctx.override_scene_width else self.width
             patch_width = (
@@ -86,7 +86,7 @@ class CentralPatchSurface(Surface):
                 else self.central_patch.width
             )
             # the size of the central patch is one third of the overall size of the texture
-            return width / (3 * patch_width)
+            return (width / (3 * patch_width)).m_as("dimensionless")
 
     def bsdfs(self, ctx: KernelDictContext) -> KernelDict:
         from mitsuba.core import ScalarTransform4f

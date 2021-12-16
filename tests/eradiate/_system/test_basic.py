@@ -1,16 +1,25 @@
 """A series of basic one-dimensional test cases."""
 
+from contextlib import nullcontext
+
 import numpy as np
 import pytest
 
+import eradiate
+import eradiate.scenes as ertsc
+from eradiate import unit_registry as ureg
+from eradiate._mode import ModeFlags
+from eradiate.contexts import KernelDictContext
 from eradiate.experiments import mitsuba_run
 from eradiate.scenes.core import KernelDict
 
 
-@pytest.mark.parametrize("illumination,spp", [("directional", 1), ("constant", 256000)])
+@pytest.mark.parametrize(
+    "illumination, spp", [("directional", 1), ("constant", 256000)]
+)
 @pytest.mark.parametrize("li", [0.1, 1.0, 10.0])
 @pytest.mark.slow
-def test_radiometric_accuracy(mode_mono, illumination, spp, li):
+def test_radiometric_accuracy(modes_all_mono, illumination, spp, li):
     r"""
     Radiometric check (``path``)
     ============================
@@ -49,51 +58,34 @@ def test_radiometric_accuracy(mode_mono, illumination, spp, li):
     vza = np.linspace(0, 80, 10)
     rho = 0.5
 
-    kernel_dict = KernelDict(
-        {
-            "type": "scene",
-            "surface": {
-                "type": "rectangle",
-                "bsdf": {
-                    "type": "diffuse",
-                    "reflectance": rho,
-                },
-            },
-            "measure": {
-                "type": "distant",
-                "id": "measure",
-                "ray_target": [0, 0, 0],
-                "sampler": {"type": "independent", "sample_count": spp},
-                "film": {
-                    "type": "hdrfilm",
-                    "width": len(vza),
-                    "height": 1,
-                    "pixel_format": "luminance",
-                    "component_format": "float32",
-                    "rfilter": {"type": "box"},
-                },
-            },
-            "integrator": {"type": "path"},
-        }
-    )
+    # Ignore warning in single precision
+    with pytest.warns(UserWarning) if (
+        eradiate.mode().has_flags(ModeFlags.MTS_SINGLE) and spp > 100000
+    ) else nullcontext():
+        measure = ertsc.measure.MultiDistantMeasure.from_viewing_angles(
+            zeniths=vza, azimuths=0.0, target=[0, 0, 0], spp=spp
+        )
+
+    elements = [
+        ertsc.surface.LambertianSurface(reflectance=rho, width=2.0 * ureg.m),
+        measure,
+        ertsc.integrators.PathIntegrator(),
+    ]
 
     if illumination == "directional":
-        kernel_dict["illumination"] = {
-            "type": "directional",
-            "direction": [0, 0, -1],
-            "irradiance": {"type": "uniform", "value": li},
-        }
+        elements.append(
+            ertsc.illumination.DirectionalIllumination(zenith=0.0, irradiance=li)
+        )
         theoretical_solution = np.full_like(vza, rho * li / np.pi)
 
     elif illumination == "constant":
-        kernel_dict["illumination"] = {
-            "type": "constant",
-            "radiance": {"type": "uniform", "value": li},
-        }
+        elements.append(ertsc.illumination.ConstantIllumination(radiance=li))
         theoretical_solution = np.full_like(vza, rho * li)
 
     else:
         raise ValueError(f"unsupported illumination '{illumination}'")
 
+    ctx = KernelDictContext()
+    kernel_dict = KernelDict.from_elements(*elements, ctx=ctx)
     result = mitsuba_run(kernel_dict)["values"]["measure"].img
     assert np.allclose(result, theoretical_solution, rtol=1e-3)

@@ -7,6 +7,8 @@ def test_map_unit_cube(mode_mono):
     """
     Returns a transformation that maps old cube vertices to new cube vertices.
     """
+    from mitsuba.core import Point3f
+
     trafo = map_unit_cube(1, 2, 3, 4, 5, 6)
 
     vertices = [
@@ -33,15 +35,17 @@ def test_map_unit_cube(mode_mono):
 
     for vertex, new_vertex in zip(vertices, new_vertices):
         assert ek.allclose(
-            trafo.transform_point(vertex),
+            trafo.transform_affine(Point3f(vertex)),
             new_vertex,
         )
 
 
-def test_map_cube():
+def test_map_cube(mode_mono):
     """
     Returns a transformation that maps old cube vertices to new cube vertices.
     """
+    from mitsuba.core import Point3f
+
     trafo = map_cube(1, 2, 3, 4, 5, 6)
 
     vertices = [
@@ -68,6 +72,6 @@ def test_map_cube():
 
     for vertex, new_vertex in zip(vertices, new_vertices):
         assert ek.allclose(
-            trafo.transform_point(vertex),
+            trafo.transform_affine(Point3f(vertex)),
             new_vertex,
         )

@@ -126,8 +126,9 @@ def mitsuba_run(
         result = bitmap_to_dataset(film.bitmap(), dtype=float)
 
         sensor_id = str(sensor.id())
-        if not sensor_id:  # Assign default ID if sensor doesn't have one
-            sensor_id = f"__sensor_{i_sensor}"
+        # Raise if sensor doesn't have an ID (shouldn't happen since Mitsuba
+        # should assign defaults based on scene dict keys)
+        assert sensor_id
 
         if "values" not in results:
             results["values"] = {}
