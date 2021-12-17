@@ -1,17 +1,19 @@
 import numpy as np
 
+import eradiate
+from eradiate._mode import ModeFlags
 from eradiate.experiments import mitsuba_run
 from eradiate.scenes.core import KernelDict
 
 
-def test_maximum_scene_size(mode_mono_double, json_metadata):
+def test_maximum_scene_size(modes_all_mono, json_metadata):
     r"""
     Maximum scene size (``path``)
     =============================
 
     This test searches for an order of magnitude of the maximum size a scene using
-    a ``distant`` sensor without ray origin control can have. An arbitrary threshold
-    is used as the pass/fail criterion for regression control.
+    a ``hdistant`` sensor without ray origin control can have. An arbitrary
+    threshold is used as the pass/fail criterion for regression control.
 
     Rationale
     ---------
@@ -20,29 +22,35 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
       and a Lambertian BRDF with reflectance :math:`\rho = 0.5`.
     - Illumination: a directional light source at the zenith with radiance
       :math:`L_\mathrm{i} = 1.0`.
-    - Sensor: a ``distant`` sensor targeting (0, 0, 0) with default ray origin control.
+    - Sensor: a ``hdistant`` sensor targeting (0, 0, 0).
 
     Expected behaviour
     ------------------
 
-    For all scene sizes below the parametrized size :code:`min_expected_size`
-    the computational results must be equal to the theoretical prediction within
-    a relative tolerance of 1e-5.
+    For all scene sizes below the parametrized size :code:`expected_min_size`
+    the computational results must be equal to the theoretical prediction.
+    Tolerance is set according to the defaults for :func:`numpy.allclose`.
+    Metrics are reported only for the double precision version of this test.
     """
     from mitsuba.core import ScalarTransform4f, ScalarVector3f
 
-    min_expected_size = 1e2
-    results = dict()
+    expected_min_size = 1e8 if eradiate.mode().has_flags(ModeFlags.MTS_MONO) else 1e12
     spp = 1
     rho = 0.5
     li = 1.0
     expected = rho * li / np.pi
+    max_i = 12
+    scene_sizes = np.array(
+        sorted(
+            [10.0 ** i for i in range(1, max_i)]
+            + [2.0 * 10 ** i for i in range(1, max_i)]
+            + [5.0 * 10 ** i for i in range(1, max_i)]
+            + [10.0 ** max_i]
+        )
+    )
+    passed = np.full_like(scene_sizes, False, dtype=bool)
 
-    for scene_size in sorted(
-        [10.0 ** i for i in range(1, 9)]
-        + [2.0 * 10 ** i for i in range(1, 8)]
-        + [5.0 * 10 ** i for i in range(1, 8)]
-    ):
+    for i, scene_size in enumerate(scene_sizes):
         kernel_dict = KernelDict(
             {
                 "type": "scene",
@@ -63,7 +71,7 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
                     "irradiance": li,
                 },
                 "measure": {
-                    "type": "distant",
+                    "type": "hdistant",
                     "id": "measure",
                     "target": [0, 0, 0],
                     "sampler": {"type": "independent", "sample_count": spp},
@@ -81,27 +89,22 @@ def test_maximum_scene_size(mode_mono_double, json_metadata):
         )
 
         result = mitsuba_run(kernel_dict)["values"]["measure"].img
-        results[scene_size] = np.allclose(result, expected, rtol=1e-5)
+        passed[i] = np.allclose(result, expected)
 
     # Report test metrics
-    passed_sizes = [size for size in results if results[size]]
-    maxsize = np.max(passed_sizes)
+    max_size = float(np.max(scene_sizes[passed])) if np.any(passed) else 0.0
 
-    json_metadata["metrics"] = {
-        "test_maximum_scene_size": {
-            "name": "Maximum scene size",
-            "description": "The maximum scene size is:",
-            "value": f"{float(maxsize):1.1e}",
-            "units": "length units",
+    if eradiate.mode().has_flags(ModeFlags.MTS_DOUBLE):
+        json_metadata["metrics"] = {
+            "test_maximum_scene_size": {
+                "name": "Maximum scene size",
+                "description": "The maximum scene size is: ",
+                "value": f"{max_size:1.1e}",
+                "units": "length units",
+            }
         }
-    }
 
-    # Final assertion
-    assert np.all(
-        [
-            result
-            for result in [
-                results[size] for size in results if size <= min_expected_size
-            ]
-        ]
-    )
+    # Maximum size for which result is correct is greater than requested min size
+    assert max_size >= expected_min_size
+    # All sizes below the threshold produce correct results
+    assert np.all(passed[scene_sizes <= expected_min_size])
