@@ -98,16 +98,15 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_generate_tests(metafunc):
-    # This is called for every test. Only get/set command line arguments
-    # if the argument is specified in the list of test "fixturenames".
-    option_value = metafunc.config.option.artefact_dir
+# See: https://stackoverflow.com/a/55301318/3645374
+@pytest.fixture(scope="session")
+def artefact_dir(pytestconfig):
+    option_value = pytestconfig.getoption("artefact_dir")
 
     if not os.path.isdir(option_value):
         os.makedirs(option_value)
 
-    if "artefact_dir" in metafunc.fixturenames:
-        metafunc.parametrize("artefact_dir", [option_value])
+    return option_value
 
 
 # ------------------------------------------------------------------------------
