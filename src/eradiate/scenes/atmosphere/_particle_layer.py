@@ -15,11 +15,7 @@ import xarray as xr
 import eradiate
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
-from ._particle_dist import (
-    ParticleDistribution,
-    UniformParticleDistribution,
-    particle_distribution_factory,
-)
+from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import KernelDict
 from ..phase import TabulatedPhaseFunction
 from ... import path_resolver, validators
