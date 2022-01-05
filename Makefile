@@ -111,4 +111,4 @@ pytest-notslow:
 	pytest -m "not slow" tests
 
 pytest-formatters:
-	pytest --black --isort src
+	pytest --black --isort src/eradiate
