@@ -16,15 +16,32 @@ arbitrary number of light sources, possibly accounting for polarisation.
 Where Should I Go?
 ------------------
 
-:ref:`Getting started<sec-getting_started>`
-    Learn about Eradiate, how to get it and how to compile it.
-:ref:`User guide<sec-user_guide>`
-    Learn how to use Eradiate's applications and API.
-:ref:`Developer guide<sec-developer_guide>`
-    Learn how to work with Eradiate's source code and modify it.
-:ref:`Reference<sec-reference>`
-    The complete API reference.
+.. grid:: 1 2 auto auto
+   :gutter: 3
 
+   .. grid-item-card:: :octicon:`download` Getting started
+      :link: sec-getting_started
+      :link-type: ref
+
+      Learn about Eradiate, how to get it and how to compile it.
+
+   .. grid-item-card:: :octicon:`mortar-board` User guide
+      :link: sec-user_guide
+      :link-type: ref
+
+      Learn how to use Eradiate's applications and API.
+
+   .. grid-item-card:: :octicon:`terminal` Developer guide
+      :link: sec-developer_guide
+      :link-type: ref
+
+      Learn how to work with Eradiate's source code and modify it.
+
+   .. grid-item-card:: :octicon:`file-code` Reference
+      :link: sec-reference
+      :link-type: ref
+
+      The complete API reference.
 
 About
 -----
