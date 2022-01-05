@@ -9,3 +9,10 @@ source = [
 omit = [
     "*/tests/*",
 ]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    # Ignore this warning issued by outdated dependencies
+    "ignore:distutils Version classes are deprecated:DeprecationWarning",
+]
