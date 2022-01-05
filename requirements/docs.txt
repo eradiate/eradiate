@@ -16,7 +16,7 @@ astropy==5.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-attrs==21.2.0
+attrs==21.4.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -48,7 +48,7 @@ cftime==1.5.1.1
     # via
     #   -c requirements/dev.txt
     #   netcdf4
-charset-normalizer==2.0.9
+charset-normalizer==2.0.10
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -65,6 +65,7 @@ colorama==0.4.4
     # via
     #   -c requirements/dev.txt
     #   rich
+    #   sphinx-autobuild
 commonmark==0.9.1
     # via
     #   -c requirements/dev.txt
@@ -88,13 +89,12 @@ docutils==0.16
     #   pydata-sphinx-theme
     #   sphinx
     #   sphinx-book-theme
-    #   sphinx-panels
     #   sphinxcontrib-bibtex
 environ-config==21.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-fonttools==4.28.3
+fonttools==4.28.5
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -126,6 +126,10 @@ latexcodec==2.0.1
     # via
     #   -c requirements/dev.txt
     #   pybtex
+livereload==2.6.3
+    # via
+    #   -c requirements/dev.txt
+    #   sphinx-autobuild
 locket==0.2.1
     # via
     #   -c requirements/dev.txt
@@ -147,7 +151,7 @@ netcdf4==1.5.8
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-numpy==1.21.4
+numpy==1.22.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -177,7 +181,7 @@ partd==1.2.0
     # via
     #   -c requirements/dev.txt
     #   dask
-pillow==8.4.0
+pillow==9.0.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -207,7 +211,7 @@ pyerfa==2.0.0.1
     # via
     #   -c requirements/dev.txt
     #   astropy
-pygments==2.10.0
+pygments==2.11.1
     # via
     #   -c requirements/dev.txt
     #   rich
@@ -235,15 +239,15 @@ pyyaml==6.0
     #   dask
     #   pybtex
     #   sphinx-book-theme
-requests==2.26.0
+requests==2.27.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-rich==10.16.0
+rich==10.16.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-ruamel.yaml==0.17.17
+ruamel.yaml==0.17.20
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -265,6 +269,7 @@ six==1.16.0
     # via
     #   -c requirements/dev.txt
     #   latexcodec
+    #   livereload
     #   pybtex
     #   python-dateutil
 snowballstemmer==2.2.0
@@ -281,12 +286,17 @@ sphinx==4.2.0
     #   -r requirements/docs.in
     #   autodocsumm
     #   pydata-sphinx-theme
+    #   sphinx-autobuild
     #   sphinx-book-theme
     #   sphinx-copybutton
+    #   sphinx-design
     #   sphinx-gallery
-    #   sphinx-panels
     #   sphinxcontrib-bibtex
-sphinx-book-theme==0.1.7
+sphinx-autobuild==2021.3.14
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/docs.in
+sphinx-book-theme==0.1.8
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -294,11 +304,11 @@ sphinx-copybutton==0.4.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx-gallery==0.10.1
+sphinx-design==0.0.13
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx-panels==0.6.0
+sphinx-gallery==0.10.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -339,6 +349,10 @@ toolz==0.11.2
     #   -c requirements/dev.txt
     #   dask
     #   partd
+tornado==6.1
+    # via
+    #   -c requirements/dev.txt
+    #   livereload
 tqdm==4.62.3
     # via
     #   -c requirements/dev.txt
@@ -353,7 +367,7 @@ xarray==0.19.0
     #   -r requirements/main.in
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==59.6.0
+setuptools==60.2.0
     # via
     #   -c requirements/dev.txt
     #   cerberus

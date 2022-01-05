@@ -24,7 +24,7 @@ argon2-cffi-bindings==21.2.0
     # via argon2-cffi
 astropy==5.0
     # via -r requirements/main.in
-attrs==21.2.0
+attrs==21.4.0
     # via
     #   -r requirements/main.in
     #   dessinemoi
@@ -60,7 +60,7 @@ cffi==1.15.0
     # via argon2-cffi-bindings
 cftime==1.5.1.1
     # via netcdf4
-charset-normalizer==2.0.9
+charset-normalizer==2.0.10
     # via requests
 click==7.1.2
     # via
@@ -78,6 +78,7 @@ cloudpickle==2.0.0
 colorama==0.4.4
     # via
     #   rich
+    #   sphinx-autobuild
     #   twine
 commonmark==0.9.1
     # via rich
@@ -105,7 +106,6 @@ docutils==0.16
     #   rst2pdf
     #   sphinx
     #   sphinx-book-theme
-    #   sphinx-panels
     #   sphinxcontrib-bibtex
 ensureconda==1.4.1
     # via conda-lock
@@ -118,9 +118,9 @@ environ-config==21.2.0
     # via -r requirements/main.in
 execnet==1.9.0
     # via pytest-xdist
-filelock==3.4.0
+filelock==3.4.2
     # via ensureconda
-fonttools==4.28.3
+fonttools==4.28.5
     # via matplotlib
 fsspec==2021.11.1
     # via dask
@@ -132,7 +132,7 @@ idna==3.3
     #   requests
 imagesize==1.3.0
     # via sphinx
-importlib-metadata==4.8.2
+importlib-metadata==4.10.0
     # via
     #   keyring
     #   rst2pdf
@@ -141,11 +141,11 @@ importlib-resources==5.4.0
     # via jsonschema
 iniconfig==1.1.1
     # via pytest
-ipykernel==6.6.0
+ipykernel==6.6.1
     # via
     #   ipywidgets
     #   notebook
-ipython==7.30.1
+ipython==7.31.0
     # via
     #   -r requirements/dev.in
     #   ipykernel
@@ -175,7 +175,7 @@ jinja2==3.0.3
     #   sphinx
 json5==0.9.6
     # via jupyterlab-server
-jsonschema==4.2.1
+jsonschema==4.3.3
     # via
     #   jupyterlab-server
     #   nbformat
@@ -202,16 +202,18 @@ jupyterlab==3.2.5
     # via -r requirements/dev.in
 jupyterlab-pygments==0.1.2
     # via nbconvert
-jupyterlab-server==2.9.0
+jupyterlab-server==2.10.2
     # via jupyterlab
 jupyterlab-widgets==1.0.2
     # via ipywidgets
-keyring==23.4.0
+keyring==23.5.0
     # via twine
 kiwisolver==1.3.2
     # via matplotlib
 latexcodec==2.0.1
     # via pybtex
+livereload==2.6.3
+    # via sphinx-autobuild
 locket==0.2.1
     # via partd
 markupsafe==2.0.1
@@ -234,7 +236,7 @@ nbclassic==0.3.4
     # via jupyterlab
 nbclient==0.5.9
     # via nbconvert
-nbconvert==6.3.0
+nbconvert==6.4.0
     # via
     #   jupyter-server
     #   notebook
@@ -247,6 +249,7 @@ nbformat==5.1.3
     #   notebook
 nest-asyncio==1.5.4
     # via
+    #   ipykernel
     #   jupyter-client
     #   nbclient
     #   notebook
@@ -256,7 +259,7 @@ notebook==6.4.6
     # via
     #   nbclassic
     #   widgetsnbextension
-numpy==1.21.4
+numpy==1.22.0
     # via
     #   -r requirements/main.in
     #   astropy
@@ -298,7 +301,7 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pillow==8.4.0
+pillow==9.0.0
     # via
     #   matplotlib
     #   reportlab
@@ -312,7 +315,7 @@ pip-tools==6.4.0
     # via -r requirements/dev.in
 pkginfo==1.8.2
     # via twine
-platformdirs==2.4.0
+platformdirs==2.4.1
     # via black
 pluggy==1.0.0
     # via pytest
@@ -338,13 +341,13 @@ pybtex-docutils==1.0.1
     # via sphinxcontrib-bibtex
 pycparser==2.21
     # via cffi
-pydantic==1.8.2
+pydantic==1.9.0
     # via conda-lock
 pydata-sphinx-theme==0.7.2
     # via sphinx-book-theme
 pyerfa==2.0.0.1
     # via astropy
-pygments==2.10.0
+pygments==2.11.1
     # via
     #   ipython
     #   jupyterlab-pygments
@@ -398,11 +401,11 @@ pyzmq==22.3.0
     #   jupyter-client
     #   jupyter-server
     #   notebook
-readme-renderer==31.0
+readme-renderer==32.0
     # via twine
-reportlab==3.6.3
+reportlab==3.6.5
     # via rst2pdf
-requests==2.26.0
+requests==2.27.0
     # via
     #   conda-lock
     #   ensureconda
@@ -414,11 +417,11 @@ requests-toolbelt==0.9.1
     # via twine
 rfc3986==1.5.0
     # via twine
-rich==10.16.0
+rich==10.16.2
     # via -r requirements/main.in
 rst2pdf==0.98
     # via -r requirements/tests.in
-ruamel.yaml==0.17.17
+ruamel.yaml==0.17.20
     # via -r requirements/main.in
 ruamel.yaml.clib==0.2.6
     # via ruamel.yaml
@@ -437,6 +440,7 @@ six==1.16.0
     # via
     #   bleach
     #   latexcodec
+    #   livereload
     #   pybtex
     #   python-dateutil
 smartypants==2.0.1
@@ -453,18 +457,21 @@ sphinx==4.2.0
     #   -r requirements/tests.in
     #   autodocsumm
     #   pydata-sphinx-theme
+    #   sphinx-autobuild
     #   sphinx-book-theme
     #   sphinx-copybutton
+    #   sphinx-design
     #   sphinx-gallery
-    #   sphinx-panels
     #   sphinxcontrib-bibtex
-sphinx-book-theme==0.1.7
+sphinx-autobuild==2021.3.14
+    # via -r requirements/docs.in
+sphinx-book-theme==0.1.8
     # via -r requirements/docs.in
 sphinx-copybutton==0.4.0
     # via -r requirements/docs.in
-sphinx-gallery==0.10.1
+sphinx-design==0.0.13
     # via -r requirements/docs.in
-sphinx-panels==0.6.0
+sphinx-gallery==0.10.1
     # via -r requirements/docs.in
 sphinxcontrib-applehelp==1.0.2
     # via sphinx
@@ -494,7 +501,7 @@ toml==0.10.2
     # via
     #   conda-lock
     #   pytest
-tomli==1.2.2
+tomli==1.2.3
     # via
     #   black
     #   pep517
@@ -508,6 +515,7 @@ tornado==6.1
     #   jupyter-client
     #   jupyter-server
     #   jupyterlab
+    #   livereload
     #   notebook
     #   terminado
 tqdm==4.62.3
@@ -541,13 +549,13 @@ webencodings==0.5.1
     # via bleach
 websocket-client==1.2.3
     # via jupyter-server
-wheel==0.37.0
+wheel==0.37.1
     # via pip-tools
 widgetsnbextension==3.5.2
     # via ipywidgets
 xarray==0.19.0
     # via -r requirements/main.in
-zipp==3.6.0
+zipp==3.7.0
     # via
     #   importlib-metadata
     #   importlib-resources
@@ -557,7 +565,7 @@ pip==21.3.1
     # via
     #   -r requirements/dev.in
     #   pip-tools
-setuptools==59.6.0
+setuptools==60.2.0
     # via
     #   -r requirements/dev.in
     #   cerberus
