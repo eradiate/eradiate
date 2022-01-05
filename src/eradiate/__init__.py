@@ -4,7 +4,6 @@
 __version__ = "0.21.1"
 
 # -- Workaround: pre-import modules clashing with Mitsuba's import code --------
-import pint
 
 __import__("astropy.coordinates")
 __import__("xarray")
