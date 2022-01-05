@@ -25,25 +25,56 @@ Prerequisites
 Before cloning the Git repository and compiling the code, ensure that your
 machine meets the requirements listed below.
 
-.. tabbed:: Linux
+.. csv-table::
+   :header: Requirement, Tested version
+   :widths: 10, 10
 
-   .. dropdown:: *Tested configuration*
+   git,       2.18+
+   cmake,     3.19+
+   ninja,     1.10+
+   clang,     9+
 
-      Operating system: Ubuntu Linux 20.04.1.
+.. dropdown:: Tested configuration
+   :color: light
+   :icon: info
 
-      .. csv-table::
-         :header: Requirement, Tested version
-         :widths: 10, 10
-         :stub-columns: 1
+   .. tab-set::
+      .. tab-item:: Linux
+         :sync: linux
 
-         git,       2.25.1
-         cmake,     3.16.3
-         ninja,     1.10.0
-         clang,     9.0.1-12
-         libc++,    9
-         libc++abi, 9
+         Operating system: Ubuntu Linux 20.04.1.
 
-   .. admonition:: Installing packages
+         .. csv-table::
+            :header: Requirement, Tested version
+            :widths: 10, 10
+
+            git,       2.25.1
+            cmake,     3.22.1
+            ninja,     1.10.0
+            clang,     9.0.1-12
+            libc++,    9
+            libc++abi, 9
+
+      .. tab-item:: macOS
+         :sync: macos
+
+         Operating system: macOS Monterey 12.0.1.
+
+         .. csv-table::
+            :header: Requirement, Tested version
+            :widths: 10, 20
+            :stub-columns: 1
+
+            git,    2.32.0 (Apple Git-132)
+            cmake,  3.22.1
+            ninja,  1.10.2
+            clang,  Apple clang version 13.0.0 (clang-1300.0.29.30)
+            python, 3.8.12 (miniconda3)
+
+.. tab-set::
+
+   .. tab-item:: Linux
+      :sync: linux
 
       All prerequisites except for conda can be installed through the usual
       Linux package managers. For example, using the APT package manager, which
@@ -60,30 +91,18 @@ machine meets the requirements listed below.
       If your Linux distribution does not include APT, please consult your
       package manager's repositories for the respective packages.
 
-   .. note:: We currently recommend compiling the C++ code with Clang based on
-      `upstream advice from the Mitsuba development team <https://eradiate-kernel.readthedocs.io/en/latest/src/getting_started/compiling.html#linux>`_.
-      We also recommend using Clang 9 — not another version — because we also
-      encountered issues building with other versions. We hope to improve
-      compiler support in the future.
+      If your CMake copy is not recent enough, there are `many ways <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`_
+      to install an updated version, notably through pipx and Conda. Pick your
+      favourite!
 
-.. tabbed:: macOS
+      .. note:: We currently recommend compiling the C++ code with Clang based on
+         `upstream advice from the Mitsuba development team <https://eradiate-kernel.readthedocs.io/en/latest/src/getting_started/compiling.html#linux>`_.
+         We also recommend using Clang 9 — not another version — because we also
+         encountered issues building with other versions. We hope to improve
+         compiler support in the future.
 
-   .. dropdown:: *Tested configuration*
-
-      Operating system: macOS Catalina 10.15.2.
-
-      .. csv-table::
-         :header: Requirement, Tested version
-         :widths: 10, 20
-         :stub-columns: 1
-
-         git,    2.24.2 (Apple Git-127)
-         cmake,  3.18.4
-         ninja,  1.10.1
-         clang,  Apple clang version 11.0.3 (clang-1103.0.32.59)
-         python, 3.7.9 (miniconda3)
-
-   .. admonition:: Installing packages
+   .. tab-item:: macOS
+      :sync: macos
 
       On macOS, you will need to install XCode, CMake, and
       `Ninja <https://ninja-build.org/>`_. XCode can be installed from the App
@@ -101,7 +120,7 @@ machine meets the requirements listed below.
 
          xcode-select --install
 
-Finally, Eradiate requires a fairly recent version of Python (at least 3.7)
+Finally, Eradiate requires a fairly recent version of Python (at least 3.8)
 and **we highly recommend using the Conda environment and package  manager** to
 set up your Python environment. Conda can be installed notably as part of the
 Anaconda distribution, or using its lightweight counterpart Miniconda.
@@ -193,18 +212,11 @@ Once your Conda environment is configured, you should reactivate it:
 Compiling the kernel
 --------------------
 
-Create a build directory in Eradiate's root directory:
-
-.. code:: bash
-
-   mkdir build
-   cd build
-
 Configure CMake for compilation:
 
 .. code:: bash
 
-   cmake -GNinja -DPYTHON_EXECUTABLE=$(python3 -c "import sys; print(sys.executable)") ..
+   cmake --preset default
 
 Inspect CMake's output to check if Clang is used as the C++ compiler. Search for
 lines starting with
@@ -214,44 +226,77 @@ lines starting with
    -- Check for working C compiler: ...
    -- Check for working CXX compiler: ...
 
-.. dropdown:: *If Clang is not used by CMake ...*
+.. dropdown:: If Clang is not used by CMake ...
+   :color: light
+   :icon: info
 
    If Clang is not used by CMake (this is very common on Linux systems), you
    have to explicitly define Clang as your C++ compiler. This can be achieved
    by modifying environment variables:
 
-   .. code:: bash
+   .. tab-set::
 
-      export CC=clang-9
-      export CXX=clang++-9
+      .. tab-item:: Linux
+         :sync: linux
+
+         .. code:: bash
+
+            export CC=clang-9
+            export CXX=clang++-9
+
+      .. tab-item:: macOS
+         :sync: macos
+
+         .. code:: bash
+
+            export CC=clang
+            export CXX=clang++
 
    You might want to add these commands to your environment profile loading
    script. If you don't want to modify your environment variables, you can
    alternatively specify compilers during CMake configuration using CMake
    variables:
 
-   .. code:: bash
+   .. tab-set::
 
-      cmake -GNinja -DCMAKE_C_COMPILER=clang-9 -DCMAKE_CXX_COMPILER=clang++-9 -DPYTHON_EXECUTABLE=$(python3 -c "import sys; print(sys.executable)") ..
+      .. tab-item:: Linux
+         :sync: linux
+
+          .. code:: bash
+
+             cmake --preset default -DCMAKE_C_COMPILER=clang-9 -DCMAKE_CXX_COMPILER=clang++-9
+
+      .. tab-item:: macOS
+         :sync: macos
+
+          .. code:: bash
+
+             cmake --preset default -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
 Inspect CMake's output to check if your Conda environment Python is used by
 CMake. Search for lines starting with:
 
-.. tabbed:: Linux
+.. tab-set::
 
-      .. code::
+      .. tab-item:: Linux
+         :sync: linux
 
-         -- Found PythonInterp: /home/<username>/miniconda3/envs/eradiate/...
-         -- Found PythonLibs: /home/<username>/miniconda3/envs/eradiate/...
+         .. code::
 
-.. tabbed:: macOS
+            -- Found PythonInterp: /home/<username>/miniconda3/envs/eradiate/...
+            -- Found PythonLibs: /home/<username>/miniconda3/envs/eradiate/...
 
-   .. code::
+      .. tab-item:: macOS
+         :sync: macos
 
-      -- Found PythonInterp: /Users/<username>/miniconda3/envs/eradiate/...
-      -- Found PythonLibs: /Users/<username>/miniconda3/envs/eradiate/...
+         .. code::
 
-.. dropdown:: *If the wrong Python binary is used by CMake ...*
+            -- Found PythonInterp: /Users/<username>/miniconda3/envs/eradiate/...
+            -- Found PythonLibs: /Users/<username>/miniconda3/envs/eradiate/...
+
+.. dropdown:: If the wrong Python binary is used by CMake ...
+   :color: light
+   :icon: info
 
    It probably means you have not activated your Conda environment:
 

@@ -26,7 +26,9 @@ the following command in the cloned source directory:
 
    git submodule update --init --recursive
 
-.. dropdown:: *Aliasing the update command for convenience*
+.. dropdown:: Aliasing the update command for convenience
+   :color: light
+   :icon: info
 
    The following command installs a git alias named ``pullall`` that automates
    these two steps.

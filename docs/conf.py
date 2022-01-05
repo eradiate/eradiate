@@ -133,9 +133,8 @@ sphinx_gallery_conf = {
     "remove_config_comments": True,
 }
 
-# Sphinx-panels extension: don't load Bootstrap CSS again
-extensions.append("sphinx_panels")
-panels_add_bootstrap_css = False
+# Sphinx-design extension
+extensions.append("sphinx_design")
 
 # Intersphinx configuration for cross-project referencing
 extensions.append("sphinx.ext.intersphinx")
