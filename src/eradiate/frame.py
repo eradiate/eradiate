@@ -2,19 +2,20 @@
 
 import numpy as np
 import pint
-from numpy.typing import ArrayLike
 
 from .units import unit_registry as ureg
 
 
 @ureg.wraps(ret=None, args=("dimensionless", "rad"), strict=False)
-def cos_angle_to_direction(cos_theta: ArrayLike, phi: ArrayLike) -> np.ndarray:
+def cos_angle_to_direction(
+    cos_theta: np.typing.ArrayLike, phi: np.typing.ArrayLike
+) -> np.ndarray:
     r"""
     Convert a zenith cosine and azimuth angle pair to a direction.
 
     Parameters
     ----------
-    theta : array-like
+    cos_theta : array-like
         Zenith angle cosine [dimensionless].
         Convention: 1 corresponds to zenith, -1 corresponds to nadir.
 
@@ -36,23 +37,15 @@ def cos_angle_to_direction(cos_theta: ArrayLike, phi: ArrayLike) -> np.ndarray:
 
 
 @ureg.wraps(ret=None, args=("rad",), strict=False)
-def angles_to_direction(angles: ArrayLike) -> np.ndarray:
+def angles_to_direction(angles: np.typing.ArrayLike) -> np.ndarray:
     r"""
     Convert a zenith and azimuth angle pair to a direction unit vector.
 
     Parameters
     ----------
-    theta : array-like
-        Zenith angle [radian].
-        0 corresponds to zenith, :math:`\pi/2` corresponds to the XY plane,
-        :math:`\pi` corresponds to nadir.
-        Negative values are allowed; :math:`(\theta, \varphi)`
-        then maps to :math:`(| \theta |, \varphi + \pi)`.
-
-    phi : array-like
-        Azimuth angle [radian].
-        0 corresponds to the X axis, :math:`\pi / 2` corresponds to the Y axis
-        (*i.e.* rotation is counter-clockwise).
+    angles : array-like
+        A sequence of (zenith, azimuth) pairs, where zenith = 0 corresponds to
+        +z direction [rad].
 
     Returns
     -------
@@ -73,7 +66,7 @@ def angles_to_direction(angles: ArrayLike) -> np.ndarray:
 
 
 @ureg.wraps(ret="rad", args=None, strict=False)
-def direction_to_angles(v: ArrayLike) -> np.ndarray:
+def direction_to_angles(v: np.typing.ArrayLike) -> np.ndarray:
     """
     Convert a cartesian unit vector to a zenith-azimuth pair.
 
