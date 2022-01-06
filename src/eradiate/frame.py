@@ -28,7 +28,7 @@ def cos_angle_to_direction(
     ndarray
         Direction corresponding to the angular parameters [unitless].
     """
-    cos_theta = np.atleast_1d(cos_theta)
+    cos_theta = np.atleast_1d(cos_theta).astype(float)
     phi = np.atleast_1d(phi)
 
     sin_theta = np.sqrt(1.0 - np.multiply(cos_theta, cos_theta))
@@ -52,7 +52,7 @@ def angles_to_direction(angles: np.typing.ArrayLike) -> np.ndarray:
     ndarray
         Direction corresponding to the angular parameters [unitless].
     """
-    angles = np.atleast_1d(angles)
+    angles = np.atleast_1d(angles).astype(float)
     if angles.ndim < 2:
         angles = angles.reshape((angles.size // 2, 2))
     if angles.ndim > 2 or angles.shape[1] != 2:
@@ -81,7 +81,7 @@ def direction_to_angles(v: np.typing.ArrayLike) -> np.ndarray:
         A sequence of 2-vectors containing zenith and azimuth angles, where
         zenith = 0 corresponds to +z direction (shape (N, 2)) [rad].
     """
-    v = np.atleast_1d(v)
+    v = np.atleast_1d(v).astype(float)
     if v.ndim < 2:
         v = v.reshape((v.size // 3, 3))
     if v.ndim > 2 or v.shape[1] != 3:
