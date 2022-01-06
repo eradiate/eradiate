@@ -4,6 +4,7 @@ __all__ = [
     "make_ticks",
     "remove_xyticks",
     "remove_xylabels",
+    "set_style",
 ]
 
 import typing as t
