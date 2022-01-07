@@ -119,7 +119,7 @@ public:
                   expected_size, m_film->size());
 
         // Check reconstruction filter radius
-        if (m_film->reconstruction_filter()->radius() >
+        if (m_film->rfilter()->radius() >
             0.5f + math::RayEpsilon<Float>) {
             Log(Warn, "This sensor should be used with a reconstruction filter "
                       "with a radius of 0.5 or lower (e.g. default box)");
