@@ -28,10 +28,25 @@ Grid-based volume data source in spherical coordinates(:monosp:`sphericalgridvol
    - Nested gridvolume object that holds the actual data organized in spherical coordinates
      Method calls are pre processed if necessary and then forwarded to this object.
 
- * - inner_bsphere_radius
+ * - rmin
    - |float|
-   - Specifies the relative radius of the inner bounding sphere of the spherical shell
-     that delimits this volume. This must be within [0, 1.0]. 
+   - Radius for the inner limit of the spherical shell. Note that this radius
+     is given in relative units to the [0,1] unit sphere.
+
+ * - rmax
+   - |float|
+   - Radius for the outer limit of the spherical shell. Note that this radius
+     is given in relative units to the [0,1] unit sphere.
+
+ * - fillmin
+   - |float|
+   - Fill value to return for points which lie inside the bounding sphere of
+     the volume but have a radial component smaller than `rmin`.
+
+ * - fillmax
+   - |float|
+   - Fill value to return for points which lie inside the bounding sphere of
+     the volume but have a radial component greater than `rmax`.
 
 This class implements a gridvolume in spherical coordinates. To achieve that, it holds a nested
 gridvolume object and preprocesses method calls accordingly before forwarding them to the nested
