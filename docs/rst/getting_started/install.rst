@@ -308,7 +308,7 @@ When CMake is successfully configured, you can compile the code:
 
 .. code:: bash
 
-   ninja
+   cmake --build build
 
 The compilation process can last for up to around half an hour on old machines.
 
