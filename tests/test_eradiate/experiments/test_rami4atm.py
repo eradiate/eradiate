@@ -122,7 +122,7 @@ def test_ramiatm_experiment_kernel_dict(mode_mono, padding):
     kernel_dict = s.kernel_dict(ctx)
     assert np.allclose(
         kernel_dict["surface"]["to_world"].matrix,
-        ScalarTransform4f.scale([21000, 21000, 1]).matrix,
+        ScalarTransform4f.scale(21000).matrix,
     )
 
 

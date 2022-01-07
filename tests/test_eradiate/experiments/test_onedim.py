@@ -97,7 +97,7 @@ def test_onedim_experiment_kernel_dict(modes_all):
     kernel_dict = exp.kernel_dict(ctx)
     assert np.allclose(
         kernel_dict["surface"]["to_world"].matrix,
-        ScalarTransform4f.scale([21000, 21000, 1]).matrix,
+        ScalarTransform4f.scale(21000).matrix,
     )
 
     # Setting atmosphere to None
@@ -113,7 +113,7 @@ def test_onedim_experiment_kernel_dict(modes_all):
     kernel_dict = exp.kernel_dict(ctx)
     assert np.allclose(
         kernel_dict["surface"]["to_world"].matrix,
-        ScalarTransform4f.scale([50, 50, 1]).matrix,
+        ScalarTransform4f.scale(50).matrix,
     )
     # -- Atmosphere is not in kernel dictionary
     assert "atmosphere" not in kernel_dict

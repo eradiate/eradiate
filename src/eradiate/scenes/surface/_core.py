@@ -116,9 +116,10 @@ class Surface(SceneElement, ABC):
 
         w = self.kernel_width(ctx).m_as(uck.get("length"))
         z = self.altitude.m_as(uck.get("length"))
-        translate_trafo = ScalarTransform4f.translate(ScalarVector3f(0.0, 0.0, z))
-        scale_trafo = ScalarTransform4f.scale(ScalarVector3f(w / 2.0, w / 2.0, 1.0))
-        trafo = translate_trafo * scale_trafo
+        # fmt: off
+        trafo = ScalarTransform4f.translate(ScalarVector3f(0.0, 0.0, z)) * \
+                ScalarTransform4f.scale(ScalarVector3f(0.5 * w))
+        # fmt: on
 
         return KernelDict(
             {
