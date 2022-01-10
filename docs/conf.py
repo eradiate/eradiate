@@ -19,7 +19,6 @@ import sys
 
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath("./_ext"))
-sys.path.append(os.path.abspath("../src"))
 
 
 # -- Project information -----------------------------------------------------
@@ -70,6 +69,7 @@ exclude_patterns = ["_build"]
 
 # Add custom extensions
 extensions.append("exec")
+extensions.append("pluginparameters")
 
 rst_prolog = r"""
 .. role:: bolditalic
@@ -80,6 +80,27 @@ rst_prolog = r"""
 
 .. role:: monobold
    :class: text-monospace font-weight-bold
+   
+.. role:: monosp
+   :class: text-monospace
+   
+.. role:: paramtype
+   :class: text-monospace
+   
+.. |spectrum| replace:: :paramtype:`spectrum`
+.. |texture| replace:: :paramtype:`texture`
+.. |float| replace:: :paramtype:`float`
+.. |bool| replace:: :paramtype:`boolean`
+.. |int| replace:: :paramtype:`integer`
+.. |false| replace:: :monosp:`false`
+.. |true| replace:: :monosp:`true`
+.. |string| replace:: :paramtype:`string`
+.. |bsdf| replace:: :paramtype:`bsdf`
+.. |phase| replace:: :paramtype:`phase`
+.. |point| replace:: :paramtype:`point`
+.. |vector| replace:: :paramtype:`vector`
+.. |transform| replace:: :paramtype:`transform`
+.. |volume| replace:: :paramtype:`volume`
 """
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -389,3 +410,19 @@ latex_logo = "fig/eradiate-logo-dark-no_bg.png"
 
 # If false, no module index is generated.
 # latex_domain_indices = True
+
+
+# ------------------------ Add custom generation steps -------------------------
+
+
+def custom_step(app):
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    import generate_rst_api
+    import generate_rst_plugins
+
+    generate_rst_plugins.generate()
+    generate_rst_api.generate_factory_docs()
+
+
+def setup(app):
+    app.connect("builder-inited", custom_step)

@@ -49,11 +49,10 @@ surface illuminated by three ``directional`` emitter, each emitting in
 a single RGB channel. A ``hdistant`` plugin with default orientation is
 defined.
 
-.. subfigstart::
-.. subfigure:: ../../resources/data/docs/images/sensor/sensor_hdistant_illumination_optimized.svg
-   :caption: Example scene illumination setup
-.. subfigend::
-   :label: fig-hdistant-illumination
+.. figure:: /fig/data/plugins/sensors/hdistant/sensor_hdistant_illumination_optimized.svg
+   :width: 320px
+
+   Example scene illumination setup
 
 .. code:: xml
 
@@ -100,17 +99,25 @@ The orange arrow represents the ``up`` direction on the film.
 Note that on the plots, the origin of pixel coordinates is taken at the bottom
 left.
 
-.. subfigstart::
-.. subfigure:: ../../resources/data/docs/images/sensor/sensor_hdistant_film_default_optimized.svg
-   :caption: Default film orientation
-.. subfigure:: ../../resources/data/docs/images/sensor/sensor_hdistant_film_rotated_optimized.svg
-   :caption: Rotated film
-.. subfigure:: ../../resources/data/docs/images/sensor/sensor_hdistant_default.svg
-   :caption: Exitant radiance
-.. subfigure:: ../../resources/data/docs/images/sensor/sensor_hdistant_rotated.svg
-   :caption: Exitant radiance
-.. subfigend::
-   :label: fig-hdistant-film
+.. figure:: /fig/data/plugins/sensors/hdistant/sensor_hdistant_film_default_optimized.svg
+   :width: 320px
+
+   Default film orientation.
+
+.. figure:: /fig/data/plugins/sensors/hdistant/sensor_hdistant_default.svg
+   :width: 512px
+
+   Exitant radiance with default film orientation.
+
+.. figure:: /fig/data/plugins/sensors/hdistant/sensor_hdistant_film_rotated_optimized.svg
+   :width: 320px
+
+   Rotated film.
+
+.. figure:: /fig/data/plugins/sensors/hdistant/sensor_hdistant_rotated.svg
+   :width: 512px
+
+   Exitant radiance with a rotated film.
 
 By default, ray target points are sampled from the cross section of the scene's
 bounding sphere. The ``target`` parameter can be set to restrict ray target

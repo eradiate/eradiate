@@ -1,7 +1,13 @@
-.. _sec-reference:
+.. _sec-reference_api:
 
 API reference
 =============
+
+.. button-ref:: sec-reference_plugins
+   :color: primary
+   :expand:
+
+   Looking for the plugin reference? Click here!
 
 Eradiate's API reference documentation is generated automatically using Sphinx's
 ``autodoc`` and ``autosummary`` extensions.

@@ -68,22 +68,25 @@ def factory_data_docs(modname, varname, uline="="):
 """.lstrip()
 
 
-def generate_factory_docs():
+def generate_factory_docs(cli=False):
     """
     Generate rst documents to display factory documentation.
     """
-    outdir = Path(__file__).parent.absolute() / "rst/reference/generated/factory"
-    console.log(f"Generating factory docs in {outdir}")
+    outdir = Path(__file__).parent.absolute() / "rst/reference_api/generated/factory"
+    if cli:
+        console.log(f"Generating factory docs in {outdir}")
     os.makedirs(outdir, exist_ok=True)
 
-    console.log(f"Cleaning up directory")
+    if cli:
+        console.log(f"Cleaning up directory")
     files = glob.glob(str(outdir) + "/*.rst")
     for f in files:
         os.remove(f)
 
     for modname, varname in FACTORIES:
         outfname = outdir / f"{modname}.{varname}.rst"
-        console.log(f"Writing {outfname.relative_to(outdir)}")
+        if cli:
+            console.log(f"Writing {outfname.relative_to(outdir)}")
 
         with open(outfname, "w") as outfile:
             generated = factory_data_docs(modname, varname)

@@ -18,7 +18,8 @@ __pycache__
 build/
 docs/_build/
 docs/examples/generated/
-docs/rst/reference/generated/autosummary/
+docs/rst/reference_api/generated/
+docs/rst/reference_plugins/generated/
 
 # Coverage
 .coverage

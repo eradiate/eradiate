@@ -40,7 +40,7 @@ eradiate.set_mode("mono_double")
 #
 # The first element of our scene which we will configure is the plane surface
 # representing the ground. Surface classes are available from the
-# :ref:`eradiate.scenes.surface <sec-reference-scenes-surface>` module and we
+# :ref:`eradiate.scenes.surface <sec-reference_api-scenes-surface>` module and we
 # can use any of our choosing. We will use a RPV surface [:class:`.RPVSurface`]
 # with default parameters for this example:
 
@@ -54,7 +54,7 @@ surface
 # The next scene element we need to include is an atmosphere. For this example,
 # we will configure a basic heterogeneous atmosphere. Eradiate's atmosphere
 # models are available from the
-# :ref:`eradiate.scenes.atmosphere <sec-reference-scenes-atmosphere>` module.
+# :ref:`eradiate.scenes.atmosphere <sec-reference_api-scenes-atmosphere>` module.
 # For simplicity, we will use a homogeneous atmosphere
 # [:class:`.HomogeneousAtmosphere`]. Although of limited utility, this example
 # allows us to focus on our workflow.

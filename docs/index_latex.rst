@@ -10,5 +10,6 @@ Eradiate documentation
    rst/user_guide/index
    examples/generated/tutorials/index
    rst/developer_guide/index
-   rst/reference/index
+   rst/reference_api/index
+   rst/reference_plugins/index
    rst/miscellaneous/bibliography

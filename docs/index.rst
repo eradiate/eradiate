@@ -38,7 +38,7 @@ Where Should I Go?
       Learn how to work with Eradiate's source code and modify it.
 
    .. grid-item-card:: :octicon:`file-code` Reference
-      :link: sec-reference
+      :link: sec-reference_api
       :link-type: ref
 
       The complete API reference.
@@ -75,7 +75,8 @@ work.
    :caption: For developers/contributors
 
    rst/developer_guide/index
-   rst/reference/index
+   rst/reference_api/index
+   rst/reference_plugins/index
 
 .. toctree::
    :maxdepth: 3
