@@ -68,7 +68,7 @@ def make_toc(section, title, out_filename):
 
 
 def generate():
-    root_dir = Path(__file__).parent.parent.absolute()
+    root_dir = Path(__file__).absolute().parent.parent
     plugin_dir = root_dir / "src/plugins/src"
     out_dir = root_dir / "docs/rst/reference_plugins/generated"
 

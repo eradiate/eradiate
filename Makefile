@@ -96,8 +96,9 @@ docs-html-plot:
 	make -C docs html-plot
 	@echo "Documentation index at docs/_build/html/index.html"
 
-docs-rst-api:
+docs-rst:
 	make -C docs rst-api
+	make -C docs rst-plugins
 
 docs-clean:
 	make -C docs clean
