@@ -26,7 +26,7 @@ class Quad:
     A data class storing information about a quadrature rule. Nodes and weights
     are defined in the [-1, 1] interval. The reference interval can be changed
     using the ``interval`` argument of the :meth:`.eval_nodes` and
-    :meth`.integrate` functions.
+    :meth:`.integrate` functions.
 
     .. important::
        Node and weight computation is performed using Mitsuba's quadrature rule
@@ -157,7 +157,7 @@ class Quad:
 
         Returns
         -------
-        nparray
+        ndarray
             Scaled node values.
         """
         if interval is None:

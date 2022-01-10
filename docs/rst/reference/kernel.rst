@@ -3,10 +3,11 @@
 
 .. automodule:: eradiate.kernel
 
-.. link-button:: https://eradiate-kernel.readthedocs.io
-   :type: url
-   :text: Go to Eradiate Kernel docs
-   :classes: btn-outline-primary btn-block
+.. button-link:: https://eradiate-kernel.readthedocs.io
+   :color: primary
+   :expand:
+
+   Go to Eradiate Kernel docs
 
 ``eradiate.kernel.gridvolume``
 ------------------------------
