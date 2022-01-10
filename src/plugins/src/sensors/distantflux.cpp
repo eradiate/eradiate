@@ -32,17 +32,6 @@ Distant fluxmeter sensor (:monosp:`distantflux`)
      If a |point| is passed, rays will target it.
      If a shape plugin is passed, ray target points will be sampled from its
      surface.
- * - origin
-   - nested :paramtype:`shape` plugin
-   - *Optional.* Specify the ray origin computation strategy.
-     If this parameter is unset, ray origins will be positioned using the
-     bounding sphere of the scene so as to ensure that they lie outside of any
-     geometry.
-     If a shape plugin is passed, ray origin points will be positioned by
-     projecting the sampled target point onto the shape following the sampled
-     ray direction. If the projection is impossible, an invalid ray is returned
-     with zero weights. *Note*: ray invalidation occurs per-lane in packet
-     modes.
 
 This sensor plugin implements a distant sensor which records the radiative flux
 density leaving the scene (in W/m², scaled by scene unit length). It covers a
