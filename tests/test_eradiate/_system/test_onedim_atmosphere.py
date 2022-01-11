@@ -10,7 +10,9 @@ from eradiate import unit_registry as ureg
 
 @pytest.mark.parametrize("bottom", [0.0, 1.0, 10.0])
 @pytest.mark.parametrize("tau_550", [0.1, 1.0, 10.0])
-def test_heterogeneous_atmosphere_contains_particle_layer(mode_mono, bottom, tau_550):
+def test_heterogeneous_atmosphere_contains_particle_layer(
+    mode_mono, bottom, tau_550, ert_seed_state
+):
     """
     HeterogeneousAtmosphere is a good container for a ParticleLayer
     ===============================================================
@@ -40,20 +42,24 @@ def test_heterogeneous_atmosphere_contains_particle_layer(mode_mono, bottom, tau
         bottom=bottom, top=top, tau_550=tau_550
     )
     exp1 = eradiate.experiments.OneDimExperiment(atmosphere=layer)
-    exp1.run()
+    ert_seed_state.reset()
+    exp1.run(seed_state=ert_seed_state)
     results1 = exp1.results["measure"]["radiance"].values
 
     # heterogeneous atmosphere with a particle layer
     exp2 = eradiate.experiments.OneDimExperiment(
         atmosphere={"type": "heterogeneous", "particle_layers": [layer]}
     )
-    exp2.run()
+    ert_seed_state.reset()
+    exp2.run(seed_state=ert_seed_state)
     results2 = exp2.results["measure"]["radiance"].values
 
     assert np.all(results1 == results2)
 
 
-def test_heterogeneous_atmosphere_contains_molecular_atmosphere(mode_mono):
+def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
+    mode_mono, ert_seed_state
+):
     """
     HeterogeneousAtmosphere is a good container for a MolecularAtmosphere
     =====================================================================
@@ -82,7 +88,8 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(mode_mono):
     exp1 = eradiate.experiments.OneDimExperiment(
         atmosphere={"type": "molecular", "has_absorption": False}
     )
-    exp1.run()
+    ert_seed_state.reset()
+    exp1.run(seed_state=ert_seed_state)
     results1 = exp1.results["measure"]["radiance"].values
 
     # heterogeneous atmopshere with a non-absorbing molecular atmosphere
@@ -92,7 +99,8 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(mode_mono):
             "molecular_atmosphere": {"type": "molecular", "has_absorption": False},
         }
     )
-    exp2.run()
+    ert_seed_state.reset()
+    exp2.run(seed_state=ert_seed_state)
     results2 = exp2.results["measure"]["radiance"].values
 
     assert np.all(results1 == results2)

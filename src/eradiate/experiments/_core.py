@@ -20,6 +20,7 @@ from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
 from ..kernel import bitmap_to_dataset
 from ..pipelines import Pipeline
+from ..rng import SeedState, root_state
 from ..scenes.core import KernelDict
 from ..scenes.illumination import (
     ConstantIllumination,
@@ -32,7 +33,6 @@ from ..scenes.measure import (
     HemisphericalDistantMeasure,
     Measure,
     MultiDistantMeasure,
-    PerspectiveCameraMeasure,
     measure_factory,
 )
 
@@ -53,7 +53,9 @@ def _check_variant():
 
 
 def mitsuba_run(
-    kernel_dict: KernelDict, sensor_ids: t.Optional[t.List[str]] = None
+    kernel_dict: KernelDict,
+    sensor_ids: t.Optional[t.List[str]] = None,
+    seed_state: t.Optional[SeedState] = None,
 ) -> t.Dict:
     """
     Run Mitsuba on a kernel dictionary.
@@ -70,6 +72,10 @@ def mitsuba_run(
     sensor_ids : list of str, optional
         Identifiers of the sensors for which the integrator is run. If set to
         ``None``, all sensors are selected.
+
+    seed_state : .SeedState, optional
+        A RNG seed state used generate the seeds used by Mitsuba's RNG
+        generator. By default, Eradiate's :data:`.root_state` is used.
 
     Returns
     -------
@@ -99,9 +105,11 @@ def mitsuba_run(
     for sample-count-based aggregation.
     """
     _check_variant()
+    if seed_state is None:
+        seed_state = root_state
 
     # Result storage
-    results = dict()
+    results = {}
 
     # Run computation
     kernel_scene = kernel_dict.load()
@@ -119,7 +127,8 @@ def mitsuba_run(
     # Run kernel for selected sensors
     for i_sensor, sensor in enumerate(sensors):
         # Run Mitsuba
-        kernel_scene.integrator().render(kernel_scene, sensor)
+        seed = seed_state.next()
+        kernel_scene.integrator().render(kernel_scene, sensor, seed=seed)
 
         # Collect results
         film = sensor.film()
@@ -247,7 +256,11 @@ class Experiment(ABC):
     #                              Processing
     # --------------------------------------------------------------------------
 
-    def run(self, *measures: t.Union[Measure, int]) -> None:
+    def run(
+        self,
+        *measures: t.Union[Measure, int],
+        seed_state: t.Optional[SeedState] = None,
+    ) -> None:
         """
         Perform radiative transfer simulation and post-process results.
         Essentially chains :meth:`.process` and :meth:`.postprocess`.
@@ -259,15 +272,22 @@ class Experiment(ABC):
             Alternatively, indexes in the measure array can be passed.
             If no value is passed, all measures are processed.
 
+        seed_state : .SeedState, optional
+            A RNG seed state used generate the seeds used by Mitsuba's RNG
+            generator. By default, Eradiate's :data:`.root_state` is used.
+
         See Also
         --------
         :meth:`.process`, :meth:`.postprocess`
-
         """
-        self.process(*measures)
+        self.process(*measures, seed_state=seed_state)
         self.postprocess(*measures)
 
-    def process(self, *measures: t.Union[Measure, int]) -> None:
+    def process(
+        self,
+        *measures: t.Union[Measure, int],
+        seed_state: t.Optional[SeedState] = None,
+    ) -> None:
         """
         Run simulation on the configured scene. Raw results yielded by the
         runner function are stored in ``measure.results``.
@@ -278,6 +298,10 @@ class Experiment(ABC):
             One or several measures for which to compute radiative transfer.
             Alternatively, indexes in the measure array can be passed.
             If no value is passed, all measures are processed.
+
+        seed_state : .SeedState, optional
+            A RNG seed state used generate the seeds used by Mitsuba's RNG
+            generator. By default, Eradiate's :data:`.root_state` is used.
 
         See Also
         --------
@@ -322,7 +346,7 @@ class Experiment(ABC):
                     )
 
                     # Run simulation
-                    run_results = mitsuba_run(kernel_dict, sensor_ids)
+                    run_results = mitsuba_run(kernel_dict, sensor_ids, seed_state)
 
                     # Store results
                     measure.results[spectral_ctx.spectral_index] = run_results

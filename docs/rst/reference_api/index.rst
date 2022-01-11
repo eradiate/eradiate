@@ -40,6 +40,7 @@ Alphabetical list of modules
    plot
    quad
    radprops
+   rng
    scenes
    test_tools
    thermoprops

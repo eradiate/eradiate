@@ -97,7 +97,7 @@ def init_experiment_homogeneous_atmosphere(
     [280, 400, 550, 650, 1000, 1500, 2400],
 )
 @pytest.mark.slow
-def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir):
+def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
     r"""
     Equivalency of homogeneous atmosphere and corresponding particle layer
     ======================================================================
@@ -195,8 +195,11 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir):
         spp=spp,
     )
 
-    experiment_1.run()
-    experiment_2.run()
+    ert_seed_state.reset()
+    experiment_1.run(seed_state=ert_seed_state)
+
+    ert_seed_state.reset()
+    experiment_2.run(seed_state=ert_seed_state)
 
     brf_1 = experiment_1.results["measure"]["brf"]
     brf_2 = experiment_2.results["measure"]["brf"]

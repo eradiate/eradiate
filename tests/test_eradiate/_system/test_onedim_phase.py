@@ -59,7 +59,7 @@ def make_figure(fname_plot, brf_1, brf_2):
     [280, 400, 550, 650, 1000, 1500, 2400],
 )
 @pytest.mark.slow
-def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir):
+def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
     r"""
     Equivalency of plugin and tabulated versions of Rayleigh phase function
     =======================================================================
@@ -152,8 +152,11 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir):
         spp=spp,
     )
 
-    experiment_1.run()
-    experiment_2.run()
+    ert_seed_state.reset()
+    experiment_1.run(seed_state=ert_seed_state)
+
+    ert_seed_state.reset()
+    experiment_2.run(seed_state=ert_seed_state)
 
     brf_1 = experiment_1.results["measure"]["brf"]
     brf_2 = experiment_2.results["measure"]["brf"]

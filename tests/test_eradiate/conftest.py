@@ -47,3 +47,15 @@ variant_groups = {
 for name, variants in variant_groups.items():
     generate_fixture_group(name, variants)
 del generate_fixture_group
+
+
+# ------------------------------------------------------------------------------
+#                              Other configuration
+# ------------------------------------------------------------------------------
+
+
+@pytest.fixture
+def ert_seed_state():
+    from eradiate.rng import SeedState
+
+    return SeedState(0)

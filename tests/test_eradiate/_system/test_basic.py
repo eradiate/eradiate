@@ -15,11 +15,11 @@ from eradiate.scenes.core import KernelDict
 
 
 @pytest.mark.parametrize(
-    "illumination, spp", [("directional", 1), ("constant", 256000)]
+    "illumination, spp", [("directional", 1), ("constant", 300000)]
 )
 @pytest.mark.parametrize("li", [0.1, 1.0, 10.0])
 @pytest.mark.slow
-def test_radiometric_accuracy(modes_all_mono, illumination, spp, li):
+def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_state):
     r"""
     Radiometric check (``path``)
     ============================
@@ -87,5 +87,7 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li):
 
     ctx = KernelDictContext()
     kernel_dict = KernelDict.from_elements(*elements, ctx=ctx)
-    result = mitsuba_run(kernel_dict)["values"]["measure"].img
+    result = mitsuba_run(kernel_dict, seed_state=ert_seed_state)["values"][
+        "measure"
+    ].img
     assert np.allclose(result, theoretical_solution, rtol=1e-3)

@@ -4,15 +4,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import eradiate
-from eradiate.scenes.biosphere import DiscreteCanopy
+import eradiate.experiments as ertxp
+import eradiate.scenes as ertsc
+from eradiate.units import symbol
 from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.slow
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
 @pytest.mark.parametrize("sza", [0.0, 30.0, 60.0])
-def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza, artefact_dir):
+def test_compare_rami4atm_onedim(
+    mode_mono_double, reflectance, sza, artefact_dir, ert_seed_state
+):
     r"""
     Compare Rami4ATMExperiment with OneDimExperiment
     ================================================
@@ -66,13 +69,13 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza, artefact_di
        :width: 30%
     """
 
-    surface = eradiate.scenes.surface.surface_factory.convert(
+    surface = ertsc.surface.surface_factory.convert(
         {"type": "lambertian", "reflectance": reflectance}
     )
-    illumination = eradiate.scenes.illumination.illumination_factory.convert(
+    illumination = ertsc.illumination.illumination_factory.convert(
         {"type": "directional", "zenith": sza, "azimuth": 0.0}
     )
-    atmosphere = eradiate.scenes.atmosphere.atmosphere_factory.convert(
+    atmosphere = ertsc.atmosphere.atmosphere_factory.convert(
         {
             "type": "heterogeneous",
             "molecular_atmosphere": {
@@ -82,7 +85,7 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza, artefact_di
             },
         }
     )
-    measures = eradiate.scenes.measure.measure_factory.convert(
+    measures = ertsc.measure.measure_factory.convert(
         {
             "type": "distant",
             "id": "measure",
@@ -93,14 +96,14 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza, artefact_di
         }
     )
 
-    onedim = eradiate.experiments.OneDimExperiment(
+    onedim = ertxp.OneDimExperiment(
         surface=surface,
         illumination=illumination,
         atmosphere=atmosphere,
         measures=measures,
     )
 
-    r4a = eradiate.experiments.Rami4ATMExperiment(
+    r4a = ertxp.Rami4ATMExperiment(
         surface=surface,
         illumination=illumination,
         atmosphere=atmosphere,
@@ -108,28 +111,27 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza, artefact_di
         canopy=None,
     )
 
-    onedim.run()
-    r4a.run()
+    ert_seed_state.reset()
+    onedim.run(seed_state=ert_seed_state)
+
+    ert_seed_state.reset()
+    r4a.run(seed_state=ert_seed_state)
 
     fig = plt.figure(figsize=(6, 3))
     ax = plt.gca()
-    ax.plot(
-        np.squeeze(onedim.results["measure"].vza.values),
-        np.squeeze(onedim.results["measure"]["radiance"].values),
-        label="onedim",
-        marker=".",
-        ls="--",
-    )
-    ax.plot(
-        np.squeeze(r4a.results["measure"].vza.values),
-        np.squeeze(r4a.results["measure"]["radiance"].values),
-        label="r4a",
-        marker=".",
-        ls="--",
-    )
+
+    onedim_vza = np.squeeze(onedim.results["measure"].vza.values)
+    onedim_radiance = np.squeeze(onedim.results["measure"]["radiance"].values)
+    ax.plot(onedim_vza, onedim_radiance, label="onedim", marker=".", ls="--")
+
+    r4a_vza = np.squeeze(r4a.results["measure"].vza.values)
+    r4a_radiance = np.squeeze(r4a.results["measure"]["radiance"].values)
+    ax.plot(r4a_vza, r4a_radiance, label="r4a", marker=".", ls="--")
+
+    radiance_units = symbol(r4a.results["measure"]["radiance"].attrs["units"])
     plt.xlabel("Signed viewing zenith angle [°]")
     plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
-    plt.ylabel("BRF [dimensionless]")
+    plt.ylabel(f"Radiance [{radiance_units}]")
     plt.title(fr"SZA = {sza} — $\rho$ = {reflectance}")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
@@ -150,7 +152,9 @@ def test_compare_rami4atm_onedim(mode_mono_double, reflectance, sza, artefact_di
 @pytest.mark.slow
 @pytest.mark.parametrize("sza", [0.0, 30.0, 60.0])
 @pytest.mark.parametrize("lai", [1.0, 2.0, 3.0])
-def test_compare_rami4atm_rami(mode_mono_double, sza, lai, artefact_dir):
+def test_compare_rami4atm_rami(
+    mode_mono_double, sza, lai, artefact_dir, ert_seed_state
+):
     r"""
     Compare Rami4ATMExperiment with RamiExperiment
     ==============================================
@@ -204,20 +208,20 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai, artefact_dir):
        :width: 30%
     """
 
-    surface = eradiate.scenes.surface.surface_factory.convert(
+    surface = ertsc.surface.surface_factory.convert(
         {"type": "lambertian", "reflectance": 0.25}
     )
-    illumination = eradiate.scenes.illumination.illumination_factory.convert(
+    illumination = ertsc.illumination.illumination_factory.convert(
         {"type": "directional", "zenith": sza, "azimuth": 0.0}
     )
-    canopy = DiscreteCanopy.homogeneous(
+    canopy = ertsc.biosphere.DiscreteCanopy.homogeneous(
         lai=lai,
         leaf_radius=0.1 * ureg.m,
         l_horizontal=10.0 * ureg.m,
         l_vertical=2.0 * ureg.m,
         padding=5,
     )
-    measures = eradiate.scenes.measure.measure_factory.convert(
+    measures = ertsc.measure.measure_factory.convert(
         {
             "type": "distant",
             "id": "measure",
@@ -228,14 +232,14 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai, artefact_dir):
         }
     )
 
-    rami = eradiate.experiments.RamiExperiment(
+    rami = ertxp.RamiExperiment(
         surface=surface,
         illumination=illumination,
         canopy=canopy,
         measures=measures,
     )
 
-    r4a = eradiate.experiments.Rami4ATMExperiment(
+    r4a = ertxp.Rami4ATMExperiment(
         surface=surface,
         illumination=illumination,
         atmosphere=None,
@@ -243,28 +247,27 @@ def test_compare_rami4atm_rami(mode_mono_double, sza, lai, artefact_dir):
         measures=measures,
     )
 
-    rami.run()
-    r4a.run()
+    ert_seed_state.reset()
+    rami.run(seed_state=ert_seed_state)
+
+    ert_seed_state.reset()
+    r4a.run(seed_state=ert_seed_state)
 
     fig = plt.figure(figsize=(6, 3))
     ax = plt.gca()
-    ax.plot(
-        np.squeeze(rami.results["measure"].vza.values),
-        np.squeeze(rami.results["measure"]["radiance"].values),
-        label="rami",
-        marker=".",
-        ls="--",
-    )
-    ax.plot(
-        np.squeeze(r4a.results["measure"].vza.values),
-        np.squeeze(r4a.results["measure"]["radiance"].values),
-        label="r4a",
-        marker=".",
-        ls="--",
-    )
+
+    rami_vza = np.squeeze(rami.results["measure"].vza.values)
+    rami_radiance = np.squeeze(rami.results["measure"]["radiance"].values)
+    ax.plot(rami_vza, rami_radiance, label="rami", marker=".", ls="--")
+
+    r4a_vza = np.squeeze(r4a.results["measure"].vza.values)
+    r4a_radiance = np.squeeze(r4a.results["measure"]["radiance"].values)
+    ax.plot(r4a_vza, r4a_radiance, label="r4a", marker=".", ls="--")
+
+    radiance_units = symbol(r4a.results["measure"]["radiance"].attrs["units"])
     plt.xlabel("Signed viewing zenith angle [°]")
     plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
-    plt.ylabel("BRF [dimensionless]")
+    plt.ylabel(f"Radiance [{radiance_units}]")
     plt.title(f"SZA = {sza} — LAI = {lai}")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
