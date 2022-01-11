@@ -67,6 +67,10 @@ public:
 
         m_rmin = props.get<ScalarFloat>("rmin", 0.f);
         m_rmax = props.get<ScalarFloat>("rmax", 1.f);
+        if (m_rmin > m_rmax) {
+            Throw("rmin must be smaller than rmax!");
+        }
+
         m_rmin_rel = m_rmin / m_rmax;
 
         m_fillmin = props.get<ScalarFloat>("fillmin", 0.f);
@@ -83,9 +87,8 @@ public:
         Point3f p_spherical = Point3f(
             (p_magnitude - m_rmin) / (m_rmax - m_rmin),
             ek::acos(p.z() / p_magnitude) * ek::InvPi<ScalarFloat>,
-            ek::atan2(p.y(), p.x()) * ek::InvPi<ScalarFloat> + 1.f
+            ek::atan2(p.y(), p.x()) * ek::InvTwoPi<ScalarFloat> + 0.5
         );
-
         Interaction3f it_spherical = it;
         it_spherical.p = p_spherical;
 
