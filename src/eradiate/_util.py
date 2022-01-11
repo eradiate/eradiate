@@ -20,7 +20,7 @@ class Singleton(type):
     Examples
     --------
     >>> class MySingleton(metaclass=Singleton):
-    ... pass
+    ...     pass
 
     >>> my_singleton1 = MySingleton()
     >>> my_singleton2 = MySingleton()
