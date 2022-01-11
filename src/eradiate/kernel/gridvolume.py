@@ -3,7 +3,6 @@ Volume data file I/O helpers.
 """
 
 import os
-import struct
 import typing as t
 
 import numpy as np
@@ -22,13 +21,13 @@ def write_binary_grid3d(
     filename : path-like
         File name.
 
-    Parameters
-    ----------
     values : ndarray or DataArray
-        Data array to output to the volume data file. This array must 3 or 4
-        dimensions (x, y, z, spectrum). If the array is 3-dimensional, it will
+        Data array to output to the volume data file. This array must have 3 or
+        4 dimensions (x, y, z, spectrum). If the array is 3-dimensional, it will
         automatically be assumed to have only one spectral channel.
     """
+    from mitsuba.render import VolumeGrid
+
     if isinstance(values, xr.DataArray):
         values = values.values
 
@@ -43,38 +42,16 @@ def write_binary_grid3d(
             f"'values' must have 3 or 4 dimensions " f"(got shape {values.shape})"
         )
 
-    # Note: this is an exact copy of the function write_binary_grid3d from
-    # https://github.com/mitsuba-renderer/mitsuba-data/blob/master/tests/scenes/participating_media/create_volume_data.py
-
-    with open(filename, "wb") as f:
-        f.write(b"V")
-        f.write(b"O")
-        f.write(b"L")
-        f.write(np.uint8(3).tobytes())  # Version
-        f.write(np.int32(1).tobytes())  # type
-        f.write(np.int32(values.shape[0]).tobytes())  # size
-        f.write(np.int32(values.shape[1]).tobytes())
-        f.write(np.int32(values.shape[2]).tobytes())
-        if values.ndim == 3:
-            f.write(np.int32(1).tobytes())  # channels
-        else:
-            f.write(np.int32(values.shape[3]).tobytes())  # channels
-        f.write(np.float32(0.0).tobytes())  # bbox
-        f.write(np.float32(0.0).tobytes())
-        f.write(np.float32(0.0).tobytes())
-        f.write(np.float32(1.0).tobytes())
-        f.write(np.float32(1.0).tobytes())
-        f.write(np.float32(1.0).tobytes())
-        f.write(values.ravel().astype(np.float32).tobytes())
+    VolumeGrid(values.astype(np.float32)).write(str(filename))
 
 
-def read_binary_grid3d(filename: str) -> np.ndarray:
+def read_binary_grid3d(filename: os.PathLike) -> np.ndarray:
     """
     Reads a volume data binary file.
 
     Parameters
     ----------
-    filename : str
+    filename : path-like
         File name.
 
     Returns
@@ -82,16 +59,6 @@ def read_binary_grid3d(filename: str) -> np.ndarray:
     ndarray
         Values.
     """
+    from mitsuba.render import VolumeGrid
 
-    with open(filename, "rb") as f:
-        file_content = f.read()
-        _shape = struct.unpack("iii", file_content[8:20])  # shape of the values array
-        _num = np.prod(np.array(_shape))  # number of values
-        values = np.array(struct.unpack("f" * _num, file_content[48:]))
-        # file_type = struct.unpack("ccc", file_content[:3]),
-        # version = struct.unpack("B", file_content[3:4]),
-        # type = struct.unpack("i", file_content[4:8]),
-        # channels = struct.unpack("i", file_content[20:24]),
-        # bbox = struct.unpack("ffffff", file_content[24:48]),
-
-    return values
+    return np.array(VolumeGrid(str(filename)))
