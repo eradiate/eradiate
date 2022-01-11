@@ -52,7 +52,7 @@ defined.
 .. figure:: /fig/data/plugins/sensors/hdistant/sensor_hdistant_illumination_optimized.svg
    :width: 320px
 
-   Example scene illumination setup
+   Example scene illumination setup.
 
 .. code:: xml
 
