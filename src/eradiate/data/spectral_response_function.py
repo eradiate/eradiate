@@ -14,6 +14,7 @@ class Platform(enum.Enum):
     Platform enumeration.
     """
 
+    Proba_V = "proba_v"
     Sentinel_2A = "sentinel_2a"
     Sentinel_2B = "sentinel_2b"
     Sentinel_3A = "sentinel_3a"
@@ -30,12 +31,16 @@ class Instrument(enum.Enum):
     MSI = "msi"
     OLCI = "olci"
     SLSTR = "slstr"
+    VEGETATION_CENTER = "vegetation_center"
+    VEGETATION_LEFT = "vegetation_left"
+    VEGETATION_RIGHT = "vegetation_right"
 
 
 _MODIS_BANDS = [x for x in range(1, 37)]
 _MSI_BANDS = [1, 2, 3, 4, 5, 6, 7, 8, "8a", 9, 10, 11, 12]
 _OLCI_BANDS = [x for x in range(1, 22)]
 _SLSTR_BANDS = [x for x in range(1, 10)]
+_VEGETATION_BANDS = ["blue", "red", "swir", "nir"]
 
 _BANDS = {
     (Platform.Sentinel_2A, Instrument.MSI): _MSI_BANDS,
@@ -45,6 +50,9 @@ _BANDS = {
     (Platform.Sentinel_3B, Instrument.OLCI): _OLCI_BANDS,
     (Platform.Sentinel_3B, Instrument.SLSTR): _SLSTR_BANDS,
     (Platform.Terra, Instrument.MODIS): _MODIS_BANDS,
+    (Platform.Proba_V, Instrument.VEGETATION_CENTER): _VEGETATION_BANDS,
+    (Platform.Proba_V, Instrument.VEGETATION_LEFT): _VEGETATION_BANDS,
+    (Platform.Proba_V, Instrument.VEGETATION_RIGHT): _VEGETATION_BANDS,
 }
 
 
