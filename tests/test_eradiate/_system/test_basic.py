@@ -87,7 +87,7 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
 
     ctx = KernelDictContext()
     kernel_dict = KernelDict.from_elements(*elements, ctx=ctx)
-    result = mitsuba_run(kernel_dict, seed_state=ert_seed_state)["values"][
-        "measure"
-    ].img
+    result = np.array(
+        mitsuba_run(kernel_dict, seed_state=ert_seed_state)["values"]["measure"]
+    )
     assert np.allclose(result, theoretical_solution, rtol=1e-3)

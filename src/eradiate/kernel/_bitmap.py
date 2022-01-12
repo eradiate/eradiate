@@ -29,20 +29,19 @@ def bitmap_to_dataset(bmp: "mitsuba.core.Bitmap", dtype=float) -> xr.Dataset:
     """
     from mitsuba.core import Bitmap
 
-    pixel_formats = {
-        Bitmap.PixelFormat.Y: ["Y"],
-        Bitmap.PixelFormat.YA: ["Y", "A"],
-        Bitmap.PixelFormat.RGB: ["R", "G", "B"],
-        Bitmap.PixelFormat.RGBA: ["R", "G", "B", "A"],
-        Bitmap.PixelFormat.XYZ: ["X", "Y", "Z"],
-        Bitmap.PixelFormat.XYZA: ["X", "Y", "Z", "A"],
-    }
-
     img = np.array(bmp, dtype=dtype)
 
     if isinstance(bmp, Bitmap):
         try:
-            channels = [bmp.pixel_format()]
+            pixel_formats = {
+                Bitmap.PixelFormat.Y: ["Y"],
+                Bitmap.PixelFormat.YA: ["Y", "A"],
+                Bitmap.PixelFormat.RGB: ["R", "G", "B"],
+                Bitmap.PixelFormat.RGBA: ["R", "G", "B", "A"],
+                Bitmap.PixelFormat.XYZ: ["X", "Y", "Z"],
+                Bitmap.PixelFormat.XYZA: ["X", "Y", "Z", "A"],
+            }
+            channels = pixel_formats[bmp.pixel_format()]
         except KeyError:
             raise ValueError(f"unsupported bitmap pixel format {bmp.pixel_format()}")
 

@@ -18,7 +18,6 @@ from .._mode import ModeFlags, supported_mode
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
-from ..kernel import bitmap_to_dataset
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
 from ..scenes.core import KernelDict
@@ -90,9 +89,9 @@ def mitsuba_run(
 
        {
            "values": {
-               "sensor_0": data_0, # xarray.Dataset with 'img' variable of shape
-               "sensor_1": data_1, # (width, height, n_channels)
-               ...                 # (n_channels == 1 for mono variants, 3 for RGB)
+               "sensor_0": data_0, # mitsuba.core.Bitmap object
+               "sensor_1": data_1, # mitsuba.core.Bitmap object
+               ...
            },
            "spp": {
                "sensor_0": sample_count_0,
@@ -104,6 +103,8 @@ def mitsuba_run(
     The sample count is stored in a dedicated sub-dictionary in order to allow
     for sample-count-based aggregation.
     """
+    from mitsuba.core import Bitmap
+
     _check_variant()
     if seed_state is None:
         seed_state = root_seed_state
@@ -130,9 +131,9 @@ def mitsuba_run(
         seed = seed_state.next()
         kernel_scene.integrator().render(kernel_scene, sensor, seed=seed)
 
-        # Collect results
+        # Collect results (store a copy of the sensor's bitmap)
         film = sensor.film()
-        result = bitmap_to_dataset(film.bitmap(), dtype=float)
+        result = Bitmap(film.bitmap())
 
         sensor_id = str(sensor.id())
         # Raise if sensor doesn't have an ID (shouldn't happen since Mitsuba

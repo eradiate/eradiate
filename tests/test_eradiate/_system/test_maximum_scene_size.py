@@ -88,7 +88,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
             }
         )
 
-        result = mitsuba_run(kernel_dict)["values"]["measure"].img
+        result = np.array(mitsuba_run(kernel_dict)["values"]["measure"])
         passed[i] = np.allclose(result, expected)
 
     # Report test metrics

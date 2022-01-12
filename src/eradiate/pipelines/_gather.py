@@ -13,6 +13,7 @@ from .. import unit_context_config as ucc
 from .._mode import ModeFlags
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
+from ..kernel import bitmap_to_dataset
 
 
 def _spectral_dims():
@@ -123,9 +124,9 @@ class Gather(PipelineStep):
         # Loop on spectral indexes
         for spectral_index in x.keys():
             # Loop on sensors
-            for sensor_id, sensor_data in x[spectral_index]["values"].items():
+            for sensor_id, sensor_bitmap in x[spectral_index]["values"].items():
                 # Collect data
-                ds = sensor_data.copy(deep=False)
+                ds = bitmap_to_dataset(sensor_bitmap)
                 spp = x[spectral_index]["spp"][sensor_id]
 
                 # Set spectral coordinates
