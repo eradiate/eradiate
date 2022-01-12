@@ -20,7 +20,7 @@ from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
 from ..kernel import bitmap_to_dataset
 from ..pipelines import Pipeline
-from ..rng import SeedState, root_state
+from ..rng import SeedState, root_seed_state
 from ..scenes.core import KernelDict
 from ..scenes.illumination import (
     ConstantIllumination,
@@ -75,7 +75,7 @@ def mitsuba_run(
 
     seed_state : .SeedState, optional
         A RNG seed state used generate the seeds used by Mitsuba's RNG
-        generator. By default, Eradiate's :data:`.root_state` is used.
+        generator. By default, Eradiate's :data:`.root_seed_state` is used.
 
     Returns
     -------
@@ -106,7 +106,7 @@ def mitsuba_run(
     """
     _check_variant()
     if seed_state is None:
-        seed_state = root_state
+        seed_state = root_seed_state
 
     # Result storage
     results = {}
@@ -274,7 +274,7 @@ class Experiment(ABC):
 
         seed_state : .SeedState, optional
             A RNG seed state used generate the seeds used by Mitsuba's RNG
-            generator. By default, Eradiate's :data:`.root_state` is used.
+            generator. By default, Eradiate's :data:`.root_seed_state` is used.
 
         See Also
         --------
@@ -301,7 +301,7 @@ class Experiment(ABC):
 
         seed_state : .SeedState, optional
             A RNG seed state used generate the seeds used by Mitsuba's RNG
-            generator. By default, Eradiate's :data:`.root_state` is used.
+            generator. By default, Eradiate's :data:`.root_seed_state` is used.
 
         See Also
         --------

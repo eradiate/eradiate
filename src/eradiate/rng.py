@@ -1,5 +1,7 @@
 """
 Components related with pseudo-random number generation.
+
+Inspired by `SeedBank <https://github.com/lenskit/seedbank>`_.
 """
 
 import typing as t
@@ -72,5 +74,5 @@ class SeedState:
         return np.random.default_rng(seed=seed)
 
 
-#: Root seed state.
-root_state = SeedState(0)
+#: Deterministic root seed state (see :class:`.SeedState`).
+root_seed_state = SeedState(0)
