@@ -25,6 +25,7 @@
 .. autosummary::
    :toctree: generated/autosummary/
 
+   dataarray_to_rgb
    film_to_angular
 
 ``eradiate.xarray.metadata``

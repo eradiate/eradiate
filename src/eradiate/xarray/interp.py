@@ -1,4 +1,6 @@
-__all__ = ["film_to_angular"]
+__all__ = ["dataarray_to_rgb", "film_to_angular"]
+
+import typing as t
 
 import numpy as np
 import xarray as xr
@@ -74,3 +76,70 @@ def film_to_angular(
         ),
         dims=(phi_label, theta_label),
     )
+
+
+def dataarray_to_rgb(
+    da: xr.DataArray,
+    channels: t.Sequence[t.Tuple[str, t.Any]],
+    normalize: bool = True,
+    gamma_correction: bool = True,
+) -> np.ndarray:
+    """
+    Compose an RGB image from radiance data.
+
+    Parameters
+    ----------
+    da : DataArray
+        The data array from which radiance data will be taken. It has to be such
+        that data, when selected on a spectral axis, is 2-dimensional.
+
+    channels : sequence of tuples
+        Three (coordinate label, coordinate value) pairs used to select the data
+        used to compose the image. Channels are ordered as follows: (R, G, B).
+        For instance, to select wavelengths (dimension ``"w'``) at 440 (blue),
+        550 (green) and 660 (red) nm, use
+        ``channels=[("w", 660), ("w", 550), ("w", 440)]``.
+
+    normalize : bool, optional
+        If ``True``, the data will be normalized by its maximum value.
+
+    gamma_correction : bool, optional
+        If ``True``, apply a gamma operator to the data.
+
+    Returns
+    -------
+    ndarray
+        An RGB image which can be displayed using
+        :func:`matplotlib.pyplot.imshow`.
+
+    Warnings
+    --------
+    The image processing pipeline implemented by this function is rudimentary.
+    It only applies, if instructed, a gamma operator. For more advanced tone
+    mapping operations, use this function with ``normalize=False`` and
+    ``gamma_correction=False``, then apply your own post-processing to the
+    resulting (N, M, 3)-shaped array.
+    """
+    if len(channels) != 3:
+        raise ValueError("channel list must have 3 elements (R, G, B)")
+
+    # Collect data
+    result = []
+
+    for coord, value in channels:
+        x = da.sel(**{coord: value}).squeeze().values
+        if x.ndim != 2:
+            raise ValueError("only 2D arrays can be assembled into an RGB image")
+        result.append(np.expand_dims(x, axis=-1))
+
+    result = np.concatenate(result, axis=2)
+
+    # Normalize to [0, 1] interval
+    if normalize:
+        result /= np.max(result)
+
+    # Apply gamma correction
+    if gamma_correction:
+        result **= 1.0 / 2.2
+
+    return result

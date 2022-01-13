@@ -1,7 +1,7 @@
+import numpy as np
 import xarray as xr
-from numpy.typing import ArrayLike
 
-from .interp import film_to_angular
+from .interp import dataarray_to_rgb, film_to_angular
 from .metadata import validate_metadata
 
 
@@ -64,8 +64,8 @@ class EradiateDataArrayAccessor:
 
     def to_angular(
         self,
-        theta: ArrayLike,
-        phi: ArrayLike,
+        theta: np.typing.ArrayLike,
+        phi: np.typing.ArrayLike,
         x_label: str = "x",
         y_label: str = "y",
         theta_label: str = "theta",
@@ -83,6 +83,23 @@ class EradiateDataArrayAccessor:
             y_label=y_label,
             theta_label=theta_label,
             phi_label=phi_label,
+        )
+
+    def to_rgb(
+        self,
+        channels,
+        normalize: bool = True,
+        gamma_correction: bool = True,
+    ) -> np.ndarray:
+        """
+        Generate a basic RGB image as a Numpy array from self using
+        :func:`~eradiate.xarray.interp.dataarray_to_rgb`.
+        """
+        return dataarray_to_rgb(
+            self._obj,
+            channels,
+            normalize=normalize,
+            gamma_correction=gamma_correction,
         )
 
 
