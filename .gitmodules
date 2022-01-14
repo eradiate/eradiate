@@ -5,3 +5,6 @@
 [submodule "ext/cmake-defaults"]
 	path = ext/cmake-defaults
 	url = https://github.com/mitsuba-renderer/cmake-defaults.git
+[submodule "ext/mitsuba2"]
+	path = ext/mitsuba2
+	url = git@github.com:leroyvn/mitsuba2-next.git
