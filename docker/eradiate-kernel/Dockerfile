@@ -9,18 +9,14 @@ FROM ${BASE_IMAGE}:${BASE_IMAGE_VERSION}
 
 ARG ERADIATE_KERNEL_VERSION
 
-COPY --from=build /build/eradiate-kernel/eradiate-kernel-dist_${ERADIATE_KERNEL_VERSION}.tar /build/mitsuba/
+COPY --from=build /build/eradiate-kernel /mitsuba
 
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y ninja-build cmake libc++-9-dev libz-dev libpng-dev libjpeg-dev libxrandr-dev libxinerama-dev libxcursor-dev
-
-RUN mkdir -p /build/mistuba /mitsuba && cd /build/mitsuba && tar -xf eradiate-kernel-dist_${ERADIATE_KERNEL_VERSION}.tar  \
-    && mv dist /mitsuba/dist \
-    && cd / && rm -rf /build
 
 ENV MITSUBA_DIR=/mitsuba
 WORKDIR /app
 
-ENV PYTHONPATH="$MITSUBA_DIR/dist/python"
-ENV PATH="$MITSUBA_DIR/dist:$PATH"
+ENV PYTHONPATH="$MITSUBA_DIR/python"
+ENV PATH="$MITSUBA_DIR:$PATH"
 
 CMD mitsuba --help
