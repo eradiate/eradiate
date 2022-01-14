@@ -52,11 +52,10 @@ charset-normalizer==2.0.10
     # via
     #   -c requirements/dev.txt
     #   requests
-click==7.1.2
+click==8.0.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-    #   sphinx-book-theme
 cloudpickle==2.0.0
     # via
     #   -c requirements/dev.txt
@@ -98,7 +97,7 @@ fonttools==4.28.5
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-fsspec==2021.11.1
+fsspec==2022.1.0
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -211,7 +210,7 @@ pyerfa==2.0.0.1
     # via
     #   -c requirements/dev.txt
     #   astropy
-pygments==2.11.1
+pygments==2.11.2
     # via
     #   -c requirements/dev.txt
     #   rich
@@ -239,11 +238,11 @@ pyyaml==6.0
     #   dask
     #   pybtex
     #   sphinx-book-theme
-requests==2.27.0
+requests==2.27.1
     # via
     #   -c requirements/dev.txt
     #   sphinx
-rich==10.16.2
+rich==11.0.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -280,7 +279,7 @@ soupsieve==2.3.1
     # via
     #   -c requirements/dev.txt
     #   beautifulsoup4
-sphinx==4.2.0
+sphinx==4.3.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -296,7 +295,7 @@ sphinx-autobuild==2021.3.14
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx-book-theme==0.1.8
+sphinx-book-theme==0.1.10
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -357,7 +356,7 @@ tqdm==4.62.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-urllib3==1.26.7
+urllib3==1.26.8
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -367,7 +366,7 @@ xarray==0.19.0
     #   -r requirements/main.in
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==60.2.0
+setuptools==60.5.0
     # via
     #   -c requirements/dev.txt
     #   cerberus

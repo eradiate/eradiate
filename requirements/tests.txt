@@ -44,7 +44,7 @@ charset-normalizer==2.0.10
     # via
     #   -c requirements/dev.txt
     #   requests
-click==7.1.2
+click==8.0.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -89,7 +89,7 @@ fonttools==4.28.5
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-fsspec==2021.11.1
+fsspec==2022.1.0
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -198,7 +198,7 @@ pyerfa==2.0.0.1
     # via
     #   -c requirements/dev.txt
     #   astropy
-pygments==2.11.1
+pygments==2.11.2
     # via
     #   -c requirements/dev.txt
     #   rich
@@ -250,19 +250,20 @@ pyyaml==6.0
     #   -c requirements/dev.txt
     #   astropy
     #   dask
+    #   rst2pdf
 reportlab==3.6.5
     # via
     #   -c requirements/dev.txt
     #   rst2pdf
-requests==2.27.0
+requests==2.27.1
     # via
     #   -c requirements/dev.txt
     #   sphinx
-rich==10.16.2
+rich==11.0.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-rst2pdf==0.98
+rst2pdf==0.99
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
@@ -296,7 +297,7 @@ snowballstemmer==2.2.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-sphinx==4.2.0
+sphinx==4.3.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/tests.in
@@ -341,7 +342,7 @@ tqdm==4.62.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-urllib3==1.26.7
+urllib3==1.26.8
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -355,7 +356,7 @@ zipp==3.7.0
     #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==60.2.0
+setuptools==60.5.0
     # via
     #   -c requirements/dev.txt
     #   cerberus
