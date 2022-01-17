@@ -4,6 +4,7 @@ ARG BASE_IMAGE_VERSION
 FROM ${BASE_IMAGE}:${BASE_IMAGE_VERSION}
 
 ARG ERADIATE_KERNEL_VERSION
+ARG NUM_CORES=8
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y   \
     cmake                                           \
@@ -24,6 +25,6 @@ WORKDIR /sources/eradiate
 RUN make conda-init
 
 WORKDIR /build/eradiate-kernel
-RUN cmake -GNinja -DPYTHON_EXECUTABLE=$(python3 -c "import sys; print(sys.executable)") /sources/eradiate/ext/mitsuba2
-RUN ninja
+RUN cmake --preset default /sources/eradiate/ext/mitsuba2 -GNinja
+RUN cmake --build . -j${NUM_CORES}
 

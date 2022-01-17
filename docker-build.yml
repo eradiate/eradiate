@@ -24,6 +24,7 @@ services:
         BASE_IMAGE: ${REGISTRY:-rayference}/eradiate-base
         BASE_IMAGE_VERSION: ${VERSION:-dirty}
         ERADIATE_KERNEL_VERSION: ${VERSION:-dirty}
+        NUM_CORES: ${NUM_CORES:-8}
   
   # Contains a properly configured Eradiate kernel
   eradiate-kernel:
