@@ -18,7 +18,7 @@ enum class WrapMode { Repeat, Mirror, Clamp };
 /**!
 .. _volume-sphericalgridvolume:
 
-Grid-based volume data source in spherical coordinates(:monosp:`sphericalgridvolume`)
+Grid-based volume data source in spherical coordinates (:monosp:`sphericalgridvolume`)
 ----------------------------------------------------------
 
 .. pluginparameters::
@@ -82,19 +82,19 @@ public:
 
     UnpolarizedSpectrum eval(const Interaction3f &it, Mask active) const override {
         Point3f p = m_to_local * it.p;
-        Float p_magnitude = ek::norm(p);
+        Float r = ek::norm(p);
 
         Point3f p_spherical = Point3f(
-            (p_magnitude - m_rmin) / (m_rmax - m_rmin),
-            ek::acos(p.z() / p_magnitude) * ek::InvPi<ScalarFloat>,
-            ek::atan2(p.y(), p.x()) * ek::InvTwoPi<ScalarFloat> + 0.5
+            (r - m_rmin) / (m_rmax - m_rmin),
+            ek::acos(p.z() / r) * ek::InvPi<ScalarFloat>,
+            ek::atan2(p.y(), p.x()) * ek::InvTwoPi<ScalarFloat> + .5f
         );
         Interaction3f it_spherical = it;
         it_spherical.p = p_spherical;
 
-        return ek::select(p_magnitude < m_rmin,
+        return ek::select(r < m_rmin,
             m_fillmin,
-            ek::select(p_magnitude > m_rmax,
+            ek::select(r > m_rmax,
                 m_fillmax,
                 m_gridvol->eval(it_spherical, active)
             )
