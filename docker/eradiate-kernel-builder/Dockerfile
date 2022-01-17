@@ -4,7 +4,7 @@ ARG BASE_IMAGE_VERSION
 FROM ${BASE_IMAGE}:${BASE_IMAGE_VERSION}
 
 ARG ERADIATE_KERNEL_VERSION
-ARG NUM_CORES=8
+ARG NUM_CORES=4
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y   \
     cmake                                           \
