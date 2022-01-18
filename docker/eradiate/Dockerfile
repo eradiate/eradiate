@@ -13,13 +13,13 @@ COPY --from=build /sources/eradiate /sources/eradiate
 
 WORKDIR /sources/eradiate
 
-RUN wget https://eradiate.eu/data/solid_2017.zip \
-    && wget https://eradiate.eu/data/us76_u86_4-spectra.zip \
-    && cd resources/data && (unzip ../../solid_2017.zip || true) \
-    && (unzip ../../spectra-us76_u86_4.zip || true)
+SHELL ["conda", "run", "-n", "docker", "/bin/bash", "-c"]
 
+ENV LD_LIBRARY_PATH=/mitsuba/ext/mitsuba2
 ENV ERADIATE_DIR=/sources/eradiate
 
 RUN make conda-init
+
+RUN ertdownload
 
 WORKDIR /app

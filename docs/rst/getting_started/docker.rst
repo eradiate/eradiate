@@ -207,5 +207,5 @@ A ``docker-compose`` config file named ``docker-build.yml`` is provided at the r
 
 .. code:: bash
 
-    # Build all docker images specifying a custom version
-    VERSION=myLocalVersion docker-compose -f docker-build.yml build
+    # Build all docker images specifying a custom version, using 16 cores
+    VERSION=myLocalVersion NUM_CORES=16 docker-compose -f docker-build.yml build
