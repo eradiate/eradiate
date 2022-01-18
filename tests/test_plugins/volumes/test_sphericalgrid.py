@@ -15,18 +15,18 @@ def test_construct(variant_scalar_rgb, tmp_path):
     from mitsuba.core import ScalarTransform4f, load_dict
 
     # Construct without parameters
-    volume = load_dict({"type": "grid_spherical"})
+    volume = load_dict({"type": "sphericalgridvolume"})
     assert volume is not None
 
     # Construct with rmin > rmax:
     with pytest.raises(Exception):
-        load_dict({"type": "grid_spherical", "rmin": 0.8, "rmax": 0.2})
+        load_dict({"type": "sphericalgridvolume", "rmin": 0.8, "rmax": 0.2})
 
     # Construct with all parameters set to typical values
     gridvol_filename = gridvol_constant(tmp_path)
     volume = load_dict(
         {
-            "type": "grid_spherical",
+            "type": "sphericalgridvolume",
             "rmin": 0.0,
             "rmax": 1.0,
             "fillmin": 0.0,
@@ -52,7 +52,7 @@ def test_eval_basic(variant_scalar_rgb, tmp_path, point, result):
     gridvol_filename = gridvol_constant(tmp_path, data=[[[2.0]]])
     volume = load_dict(
         {
-            "type": "grid_spherical",
+            "type": "sphericalgridvolume",
             "rmin": 0.2,
             "rmax": 0.8,
             "fillmin": 3.0,
@@ -80,7 +80,7 @@ def test_eval_advanced(variant_scalar_mono, tmp_path):
     gridvol_filename = gridvol_constant(tmp_path, data=sigma_t)
     volume = load_dict(
         {
-            "type": "grid_spherical",
+            "type": "sphericalgridvolume",
             "rmin": 0.0,
             "rmax": 1.0,
             "fillmin": 3.0,
