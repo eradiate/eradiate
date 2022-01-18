@@ -19,14 +19,15 @@ enum class WrapMode { Repeat, Mirror, Clamp };
 .. _volume-sphericalgridvolume:
 
 Grid-based volume data source in spherical coordinates (:monosp:`sphericalgridvolume`)
-----------------------------------------------------------
+--------------------------------------------------------------------------------------
 
 .. pluginparameters::
 
  * - gridvolume
-   - |gridvolume|
-   - Nested gridvolume object that holds the actual data organized in spherical coordinates
-     Method calls are pre processed if necessary and then forwarded to this object.
+   - |volume|
+   - Nested ``gridvolume`` plugin that holds the actual data organized in
+     spherical coordinates. Method calls are pre-processed if necessary and then
+     forwarded to this object.
 
  * - rmin
    - |float|
@@ -48,12 +49,12 @@ Grid-based volume data source in spherical coordinates (:monosp:`sphericalgridvo
    - Fill value to return for points which lie inside the bounding sphere of
      the volume but have a radial component greater than `rmax`.
 
-This class implements a gridvolume in spherical coordinates. To achieve that, it holds a nested
-gridvolume object and preprocesses method calls accordingly before forwarding them to the nested
-object. In the :monosp:`eval()` method, the sampled point is converted to spherical coordinates,
-relative to the center of the sphere and converted such that :math:`r`, :math:`\theta` and :math:`\phi`
-cover the [0,1] range.
-
+This class implements a gridvolume in spherical coordinates. To achieve that,
+it holds a nested ``gridvolume`` plugin and pre-processes method calls
+accordingly before forwarding them to the nested object. In the :monosp:`eval()`
+method, the sampled point is converted to spherical coordinates,
+relative to the center of the sphere and converted such that :math:`r`,
+:math:`\theta` and :math:`\phi` cover the [0,1] range.
 */
 
 template <typename Float, typename Spectrum>

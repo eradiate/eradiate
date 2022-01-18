@@ -12,7 +12,7 @@ def gridvol_constant(basepath, data=[[[1.0]]]):
 
 
 def test_construct(variant_scalar_rgb, tmp_path):
-    from mitsuba.core import ScalarTransform4f, load_dict
+    from mitsuba.core import load_dict
 
     # Construct without parameters
     volume = load_dict({"type": "sphericalgridvolume"})
