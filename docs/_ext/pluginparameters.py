@@ -141,3 +141,7 @@ class PluginParameters(Table):
 
 def setup(app):
     app.add_directive("pluginparameters", PluginParameters)
+    return {
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }
