@@ -11,6 +11,9 @@ def cli():
     """
     Eradiate - Display information useful for debugging.
     """
+    console.rule("Version")
+    console.print(f"• eradiate {eradiate.__version__}")
+
     console.rule("Configuration")
     for var in [x.name for x in eradiate.config.__attrs_attrs__]:
         console.print(f"• ERADIATE_{var.upper()}: {getattr(eradiate.config, var)}")

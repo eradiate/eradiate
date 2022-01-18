@@ -7,8 +7,8 @@
 import codecs
 import datetime
 import os
-import re
 import sys
+from importlib.metadata import version
 
 # -- Path setup --------------------------------------------------------------
 
@@ -34,22 +34,10 @@ def read(*parts):
         return f.read()
 
 
-def find_version(*file_paths):
-    """
-    Build a path from *file_paths* and search for a ``__version__``
-    string inside.
-    """
-    version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
-
-
 project = "Eradiate"
 copyright = f"2020-{datetime.datetime.now().year}, The Eradiate Team"
 author = "The Eradiate Team"
-release = find_version("../src/eradiate/__init__.py")
+release = version("eradiate")
 version = release.rsplit(".", 1)[0]
 
 # -- General configuration ---------------------------------------------------
