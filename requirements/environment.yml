@@ -45,7 +45,8 @@ dependencies:
   - jupyterlab
   - pip
   - pip-tools
-  - setuptools
+  - setuptools>=45
+  - setuptools-scm>=6.2
   - twine
   # docs
   - autodocsumm
@@ -57,4 +58,3 @@ dependencies:
   - sphinx-copybutton
   - sphinx-design
   - sphinx-gallery
-  - tinydb

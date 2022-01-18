@@ -10,5 +10,6 @@ isort
 jupyterlab
 pip
 pip-tools
-setuptools
+setuptools>=45
+setuptools-scm>=6.2
 twine
