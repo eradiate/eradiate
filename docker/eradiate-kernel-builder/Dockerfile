@@ -7,7 +7,6 @@ ARG ERADIATE_KERNEL_VERSION
 ARG NUM_CORES=4
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y   \
-    cmake                                           \
     git                                             \
     ninja-build                                     \
     clang-9                                         \
@@ -15,7 +14,10 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y   \
     libc++abi-9-dev                                 \
     libpng-dev                                      \
     zlib1g-dev                                      \
+    build-essential                                 \
     libjpeg-dev
+
+RUN conda install -y cmake
 
 ENV CC=clang-9
 ENV CXX=clang++-9
@@ -25,6 +27,6 @@ WORKDIR /sources/eradiate
 RUN make conda-init
 
 WORKDIR /build/eradiate-kernel
-RUN cmake --preset default /sources/eradiate/ext/mitsuba2 -GNinja
+RUN cmake --preset default -S /sources/eradiate -B .
 RUN cmake --build . -j${NUM_CORES}
 

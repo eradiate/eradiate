@@ -15,7 +15,7 @@ WORKDIR /sources/eradiate
 
 SHELL ["conda", "run", "-n", "docker", "/bin/bash", "-c"]
 
-ENV LD_LIBRARY_PATH=/mitsuba
+ENV LD_LIBRARY_PATH=/mitsuba/ext/mitsuba2
 ENV ERADIATE_DIR=/sources/eradiate
 
 RUN make conda-init
