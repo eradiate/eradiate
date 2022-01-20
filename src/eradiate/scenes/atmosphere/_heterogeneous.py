@@ -397,6 +397,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             # Construct a blended phase function based on those weighting values
             phase = BlendPhaseFunction(
+                cache_dir=self.cache_dir,
                 components=[component.phase for component in components],
                 weights=sigma_ss,
             )
