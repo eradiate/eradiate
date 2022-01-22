@@ -68,13 +68,13 @@ rst_prolog = r"""
 
 .. role:: monobold
    :class: text-monospace font-weight-bold
-   
+
 .. role:: monosp
    :class: text-monospace
-   
+
 .. role:: paramtype
    :class: text-monospace
-   
+
 .. |spectrum| replace:: :paramtype:`spectrum`
 .. |texture| replace:: :paramtype:`texture`
 .. |float| replace:: :paramtype:`float`
@@ -161,7 +161,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "rich": ("https://rich.readthedocs.io/en/latest/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "xarray": ("http://xarray.pydata.org/en/stable/", None),
+    "xarray": ("https://xarray.pydata.org/en/stable/", None),
 }
 
 # Activate todo notes
