@@ -100,12 +100,6 @@ def generate_factory_docs(cli=False):
         print(f"Generating factory docs in {outdir}")
     os.makedirs(outdir, exist_ok=True)
 
-    if cli:
-        print(f"Cleaning up directory")
-    files = glob.glob(str(outdir) + "/*.rst")
-    for f in files:
-        os.remove(f)
-
     for modname, varname in FACTORIES:
         outfname = outdir / f"{modname}.{varname}.rst"
         if cli:
