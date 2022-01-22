@@ -89,8 +89,7 @@ docs:
 
 
 docs-serve:
-	make -C docs html
-	@echo "Documentation index at docs/_build/html/index.html"
+	make -C docs serve
 
 docs-html-plot:
 	make -C docs html-plot
