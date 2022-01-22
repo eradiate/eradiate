@@ -7,6 +7,18 @@
 
 .. py:currentmodule:: eradiate._config
 
+
+.. toctree::
+   :hidden:
+
+   generated/env_vars/env_vars.rst
+
+.. button-ref:: generated/env_vars/env_vars
+   :color: primary
+   :expand:
+
+   Environment variable list
+
 Classes
 -------
 
@@ -18,12 +30,3 @@ Attributes
 
 .. autodata:: config
    :annotation:
-
-.. _sec-config-env_vars:
-
-Environment variables
----------------------
-
-.. exec::
-   from eradiate._config import EradiateConfig, format_help_dicts_rst
-   print(EradiateConfig.generate_help(formatter=format_help_dicts_rst, display_defaults=True))

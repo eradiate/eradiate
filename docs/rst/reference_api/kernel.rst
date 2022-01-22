@@ -7,7 +7,7 @@
    :color: primary
    :expand:
 
-   Go to Eradiate Kernel docs
+   :octicon:`link-external` Go to Eradiate Kernel docs
 
 ``eradiate.kernel.gridvolume``
 ------------------------------

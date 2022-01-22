@@ -4,10 +4,8 @@ from importlib import import_module
 from pathlib import Path
 from textwrap import dedent, indent
 
-import click
-from rich.console import Console
+from eradiate._config import EradiateConfig, format_help_dicts_rst
 
-console = Console()
 
 # Auto-generation disclaimer text
 HEADER = dedent(
@@ -20,6 +18,31 @@ HEADER = dedent(
       target automates this process.
     """
 ).strip()
+
+
+def generate_env_vars_docs():
+    outdir = Path(__file__).parent.absolute() / "rst/reference_api/generated/env_vars"
+    os.makedirs(outdir, exist_ok=True)
+    outfile = outdir / "env_vars.rst"
+    print(f"Generating {outfile}")
+    with open(outfile, "w") as f:
+        f.write(
+            dedent(
+                """
+                .. _sec-config-env_vars:
+
+                Environment variables
+                ---------------------
+                """
+            )
+            + "\n"
+        )
+        f.write(
+            EradiateConfig.generate_help(
+                formatter=format_help_dicts_rst, display_defaults=True
+            )
+        )
+
 
 # List of (module, variable) pairs
 FACTORIES = [
@@ -74,11 +97,11 @@ def generate_factory_docs(cli=False):
     """
     outdir = Path(__file__).parent.absolute() / "rst/reference_api/generated/factory"
     if cli:
-        console.log(f"Generating factory docs in {outdir}")
+        print(f"Generating factory docs in {outdir}")
     os.makedirs(outdir, exist_ok=True)
 
     if cli:
-        console.log(f"Cleaning up directory")
+        print(f"Cleaning up directory")
     files = glob.glob(str(outdir) + "/*.rst")
     for f in files:
         os.remove(f)
@@ -86,21 +109,13 @@ def generate_factory_docs(cli=False):
     for modname, varname in FACTORIES:
         outfname = outdir / f"{modname}.{varname}.rst"
         if cli:
-            console.log(f"Writing {outfname.relative_to(outdir)}")
+            print(f"Writing {outfname.relative_to(outdir)}")
 
         with open(outfname, "w") as outfile:
             generated = factory_data_docs(modname, varname)
-            # console.log(generated)
             outfile.write("\n".join([HEADER, "", generated]))
 
 
-@click.command()
-def main():
-    """
-    Generate dynamic documentation parts.
-    """
-    generate_factory_docs()
-
-
 if __name__ == "__main__":
-    main()
+    generate_factory_docs(cli=True)
+    generate_env_vars_docs()

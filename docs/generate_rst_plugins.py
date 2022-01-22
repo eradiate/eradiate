@@ -75,7 +75,7 @@ def make_toc(section, title, out_filename):
 .. toctree::
    :maxdepth: 1
    :glob:
-   
+
    ../plugins/{section}/*
 """
         )
