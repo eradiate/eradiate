@@ -24,3 +24,6 @@ docs/rst/reference_plugins/generated/
 # Coverage
 .coverage
 htmlcov/
+
+# Default data storage
+resources/downloads/

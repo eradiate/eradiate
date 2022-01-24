@@ -98,9 +98,16 @@ class EradiateConfig:
                 )
             )
 
+    #: URL where large data files are located.
+    data_store_url = environ.var(
+        default="http://eradiate.eu/data/store/",
+        converter=str,
+        help="URL where large data files are located.",
+    )
+
     #: Path to the Eradiate download directory.
     download_dir = environ.var(
-        default="$ERADIATE_DIR/resources/data/downloads",
+        default="$ERADIATE_DIR/resources/downloads",
         converter=lambda x: pathlib.Path(os.path.expandvars(x)).absolute(),
         help="Path to the Eradiate download directory.",
     )

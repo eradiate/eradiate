@@ -212,8 +212,7 @@ def test_550(reflectance, artefact_dir):
         "H2O-spectra-18300_18400",
     ]:
         test_tools.skipif_data_not_found(
-            "absorption_spectrum",
-            dataset_id,
+            f"spectra/absorption/{dataset_id}.nc",
             action=lambda: test_tools.missing_artefact(fname_plot),
         )
 
@@ -362,8 +361,7 @@ def test_1050(reflectance, artefact_dir):
         "O2-spectra-9500_9600",
     ]:
         test_tools.skipif_data_not_found(
-            "absorption_spectrum",
-            dataset_id,
+            f"spectra/absorption/{dataset_id}.nc",
             action=lambda: test_tools.missing_artefact(fname_plot),
         )
 

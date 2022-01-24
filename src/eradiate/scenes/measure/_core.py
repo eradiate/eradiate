@@ -36,7 +36,7 @@ measure_factory = Factory()
 
 def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
     if isinstance(value, str):
-        with data.open("spectral_response_function", value) as ds:
+        with data.open_dataset(f"spectra/srf/{value}.nc") as ds:
             w = ureg.Quantity(ds.w.values, ds.w.attrs["units"])
             srf = ds.data_vars["srf"].values
 

@@ -42,9 +42,13 @@ class UnsupportedModeError(ModeError):
 
 
 class KernelVariantError(Exception):
-    """
-    Raised when encountering issues with Eradiate kernel variants.
-    """
+    """Raised when encountering issues with Eradiate kernel variants."""
+
+    pass
+
+
+class DataError(Exception):
+    """Raised when encountering issues with data."""
 
     pass
 

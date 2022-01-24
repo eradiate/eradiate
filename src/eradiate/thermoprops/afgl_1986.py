@@ -11,8 +11,8 @@ import xarray as xr
 import eradiate
 
 from .util import compute_scaling_factors, interpolate, rescale_concentration
+from .. import data
 from .._mode import ModeFlags
-from ..data import open
 
 
 def make_profile(
@@ -110,7 +110,7 @@ def make_profile(
                 f"species '{unhandled}' cannot be rescaled in ckd mode"
             )
 
-    thermoprops = open(category="thermoprops", id="afgl_1986-" + model_id)
+    thermoprops = data.load_dataset(f"thermoprops/afgl_1986-{model_id}.nc")
 
     if levels is not None:
         thermoprops = interpolate(ds=thermoprops, z_level=levels, conserve_columns=True)

@@ -9,39 +9,34 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 
-import eradiate
+from eradiate.data import data_store
+from eradiate.exceptions import DataError
+from eradiate.typing import PathLike
 
 
 def skipif_data_not_found(
-    dataset_category: str, dataset_id: str, action: t.Optional[t.Callable] = None
+    path: PathLike, action: t.Optional[t.Callable] = None
 ) -> None:
     """
     During a Pytest session, skip the current test if the referenced dataset
-    cannot be found.
+    cannot be fetched from the data store.
 
     Parameters
     ----------
-    dataset_category : str
-        Required dataset category.
-
-    dataset_id : str
-        Required dataset ID.
+    path : path-like
+        Path to the required data file (in the data store).
 
     action : callable, optional
         An optional callable with no arguments which performs an action prior to
         skipping the test (*e.g.* output an artefact placeholder).
     """
-    dataset_path = eradiate.data.getter(dataset_category).PATHS[dataset_id]
-
-    if not eradiate.data.find(dataset_category)[dataset_id]:
+    try:
+        data_store.fetch(path)
+    except DataError:
         if action is not None:
             action()
 
-        pytest.skip(
-            f"Could not find dataset '{dataset_category}.{dataset_id}'; "
-            f"please download dataset files and place them in "
-            f"'data/{dataset_path}' directory."
-        )
+        pytest.skip(f"Could not find dataset '{path}' in the data store.")
 
 
 def missing_artefact(filename: os.PathLike) -> None:
