@@ -3,9 +3,12 @@
 import glob
 import os
 import re
+import typing as t
 from pathlib import Path
 
 # Section titles (order matters)
+from textwrap import dedent
+
 SECTIONS = {
     "shapes": "Shapes",
     "bsdfs": "BSDFs",
@@ -37,19 +40,39 @@ PLUGIN_ORDERS = {
 }
 
 
+def write_if_modified(filename, content):
+    filename.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        with open(filename, "r") as f:
+            existing = f.read()
+    except OSError:
+        existing = None
+
+    if existing == content:
+        print(f"Skipping unchanged '{filename.name}'")
+
+    else:
+        print(f"Generating '{filename.name}'")
+        with open(filename, "w") as f:
+            f.write(content)
+
+
 def underline(s: str, c: str = "-"):
     return c * len(s)
 
 
-def extract(in_filename: Path, out_filename: Path):
-    with open(in_filename) as in_file, open(out_filename, "w") as out_file:
+def extract_plugin_docs(filename: Path) -> t.List[str]:
+    result = []
+
+    with open(filename) as in_file:
         inheader = False
 
         for line in in_file.readlines():
             match = re.match(r"^/\*\*! ?(.*)$", line)
             if match is not None:
                 line = match.group(1).replace("%", "\%")
-                out_file.write(line + "\n")
+                result.append(line.rstrip())
                 inheader = True
                 continue
 
@@ -60,31 +83,33 @@ def extract(in_filename: Path, out_filename: Path):
                 inheader = False
                 continue
 
-            out_file.write(line)
+            result.append(line.rstrip())
+
+    return ("\n".join(result)).lstrip()
 
 
-def make_toc(section, title, out_filename):
-    with open(out_filename, "w") as out_file:
-        out_file.write(
-            rf"""
-.. _sec-reference_plugins-{section}:
-
-{title}
-{underline(title)}
-
-.. toctree::
-   :maxdepth: 1
-   :glob:
-
-   ../plugins/{section}/*
-"""
-        )
+def make_toc(section, title) -> str:
+    return dedent(
+        rf"""
+        .. _sec-reference_plugins-{section}:
+        
+        {title}
+        {underline(title)}
+        
+        .. toctree::
+           :maxdepth: 1
+           :glob:
+        
+           ../plugins/{section}/*
+        """
+    )
 
 
 def generate():
     root_dir = Path(__file__).absolute().parent.parent
     plugin_dir = root_dir / "src/plugins/src"
     out_dir = root_dir / "docs/rst/reference_plugins/generated"
+    print(f"Generating plugin docs in '{out_dir}'")
 
     for section, section_title in SECTIONS.items():
         try:
@@ -104,8 +129,7 @@ def generate():
 
         # Create TOC page
         section_rst = out_dir / f"toctrees/{section}.rst"
-        os.makedirs(section_rst.parent, exist_ok=True)
-        make_toc(section, section_title, section_rst)
+        write_if_modified(section_rst, make_toc(section, section_title))
 
         # Sort plugin list according to the ordering dict
         def index(x):
@@ -117,12 +141,13 @@ def generate():
         plugin_list.sort(key=index)
 
         # Extract plugin docs
+        print(f"Extracting plugin docs from '{plugin_dir}' to '{out_dir}'")
         for plugin_name in plugin_list:
             plugin_cpp = plugin_dir / section / f"{plugin_name}.cpp"
             plugin_rst = out_dir / "plugins" / section / f"{plugin_name}.rst"
-            os.makedirs(plugin_rst.parent, exist_ok=True)
-            print(f"Processing {Path(plugin_cpp).relative_to(root_dir)}")
-            extract(plugin_cpp, plugin_rst)
+
+            print(f"Processing '{Path(plugin_cpp).relative_to(root_dir)}'")
+            write_if_modified(plugin_rst, extract_plugin_docs(plugin_cpp))
 
 
 if __name__ == "__main__":

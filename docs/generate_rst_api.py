@@ -1,11 +1,8 @@
-import glob
-import os
 from importlib import import_module
 from pathlib import Path
 from textwrap import dedent, indent
 
 from eradiate._config import EradiateConfig, format_help_dicts_rst
-
 
 # Auto-generation disclaimer text
 HEADER = dedent(
@@ -20,28 +17,48 @@ HEADER = dedent(
 ).strip()
 
 
+def write_if_modified(filename, content):
+    filename.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        with open(filename, "r") as f:
+            existing = f.read()
+    except OSError:
+        existing = None
+
+    if existing == content:
+        print(f"Skipping unchanged '{filename.name}'")
+
+    else:
+        print(f"Generating '{filename.name}'")
+        with open(filename, "w") as f:
+            f.write(content)
+
+
 def generate_env_vars_docs():
     outdir = Path(__file__).parent.absolute() / "rst/reference_api/generated/env_vars"
-    os.makedirs(outdir, exist_ok=True)
-    outfile = outdir / "env_vars.rst"
-    print(f"Generating {outfile}")
-    with open(outfile, "w") as f:
-        f.write(
+    print(f"Generating environment variable docs in '{outdir}'")
+
+    content = "\n".join(
+        [
+            HEADER,
+            "",
             dedent(
                 """
                 .. _sec-config-env_vars:
-
+    
                 Environment variables
                 ---------------------
                 """
-            )
-            + "\n"
-        )
-        f.write(
+            ),
             EradiateConfig.generate_help(
                 formatter=format_help_dicts_rst, display_defaults=True
-            )
-        )
+            ),
+            "",
+        ]
+    )
+
+    write_if_modified(outdir / "env_vars.rst", content)
 
 
 # List of (module, variable) pairs
@@ -91,25 +108,19 @@ def factory_data_docs(modname, varname, uline="="):
 """.lstrip()
 
 
-def generate_factory_docs(cli=False):
+def generate_factory_docs():
     """
     Generate rst documents to display factory documentation.
     """
     outdir = Path(__file__).parent.absolute() / "rst/reference_api/generated/factory"
-    if cli:
-        print(f"Generating factory docs in {outdir}")
-    os.makedirs(outdir, exist_ok=True)
+    print(f"Generating factory docs in '{outdir}'")
 
     for modname, varname in FACTORIES:
-        outfname = outdir / f"{modname}.{varname}.rst"
-        if cli:
-            print(f"Writing {outfname.relative_to(outdir)}")
-
-        with open(outfname, "w") as outfile:
-            generated = factory_data_docs(modname, varname)
-            outfile.write("\n".join([HEADER, "", generated]))
+        generated = factory_data_docs(modname, varname)
+        content = "\n".join([HEADER, "", generated, ""])
+        write_if_modified(outdir / f"{modname}.{varname}.rst", content)
 
 
 if __name__ == "__main__":
-    generate_factory_docs(cli=True)
+    generate_factory_docs()
     generate_env_vars_docs()
