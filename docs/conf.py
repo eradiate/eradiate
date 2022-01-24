@@ -56,7 +56,6 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
 # Add custom extensions
-extensions.append("exec")
 extensions.append("pluginparameters")
 
 rst_prolog = r"""
