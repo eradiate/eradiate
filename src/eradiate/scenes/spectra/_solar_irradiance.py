@@ -23,6 +23,26 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
+# This table maps known spectra to their relative paths in the data store
+_KNOWN_SPECTRA = {
+    "blackbody_sun": "spectra/solar_irradiance/blackbody_sun.nc",
+    "meftah_2017": "spectra/solar_irradiance/meftah_2017.nc",
+    "solid_2017_mean": "spectra/solar_irradiance/solid_2017_mean.nc",
+    "thuillier_2003": "spectra/solar_irradiance/thuillier_2003.nc",
+    "whi_2008": "spectra/solar_irradiance/whi_2008_time_period_1.nc",
+    "whi_2008_time_period_1": "spectra/solar_irradiance/whi_2008_time_period_1.nc",
+    "whi_2008_time_period_2": "spectra/solar_irradiance/whi_2008_time_period_2.nc",
+    "whi_2008_time_period_3": "spectra/solar_irradiance/whi_2008_time_period_3.nc",
+}
+
+
+def _dataset_converter(x: t.Any):
+    if isinstance(x, str):
+        if x in _KNOWN_SPECTRA:
+            return data.open_dataset(_KNOWN_SPECTRA[x])
+
+    return x
+
 
 @spectrum_factory.register(type_id="solar_irradiance")
 @parse_docs
@@ -76,25 +96,20 @@ class SolarIrradianceSpectrum(Spectrum):
         default=PhysicalQuantity.IRRADIANCE, init=False, repr=False
     )
 
-    dataset: str = documented(
+    dataset: xr.Dataset = documented(
         attr.ib(
             default="thuillier_2003",
-            validator=attr.validators.instance_of(str),
+            converter=_dataset_converter,
+            validator=attr.validators.instance_of(xr.Dataset),
         ),
-        doc="Dataset identifier. Allowed values: see "
-        ":ref:`sec-user_guide-data-solar_irradiance_spectrum_data_sets`.",
-        type="str",
-        default='"thuiller_2003"',
+        doc="Solar spectrum dataset. Optionally, a keyword can be passed to "
+        "fetch a registered spectrum from the data store. See "
+        ":ref:`sec-user_guide-data-solar_irradiance_spectrum_data_sets` for "
+        "the list of spectra shipped with Eradiate.",
+        type="Dataset",
+        init_type="Dataset or str, optional",
+        default='"thuillier_2003"',
     )
-
-    @dataset.validator
-    def _dataset_validator(self, attribute, value):
-        if value not in data.registered("solar_irradiance_spectrum"):
-            raise ValueError(
-                f"while setting {attribute.name}: '{value}' not in "
-                "list of supported solar irradiance spectra "
-                f"{data.registered('solar_irradiance_spectrum')}"
-            )
 
     scale: float = documented(
         attr.ib(default=1.0, converter=float, validator=validators.is_positive),
@@ -115,18 +130,6 @@ class SolarIrradianceSpectrum(Spectrum):
         "string can be passed and will be interpreted by "
         ":meth:`dateutil.parser.parse`.",
     )
-
-    data: xr.Dataset = attr.ib(init=False, repr=False)
-
-    @data.default
-    def _data_factory(self):
-        # Load dataset
-        try:
-            with data.open("solar_irradiance_spectrum", self.dataset) as ds:
-                result = ds
-            return result
-        except KeyError as e:
-            raise ValueError(f"unknown dataset {self.dataset}") from e
 
     def _scale_earth_sun_distance(self) -> float:
         """
@@ -149,21 +152,12 @@ class SolarIrradianceSpectrum(Spectrum):
                 ** 2
             )
 
-    def eval(self, spectral_ctx: SpectralContext) -> pint.Quantity:
-        if self.dataset == "solid_2017":
-            raise NotImplementedError(
-                "Solar irradiance spectrum datasets with a non-empty time "
-                "coordinate are not supported yet."
-            )
-        # TODO: add support to solar irradiance spectrum datasets with a
-        #  non-empty time coordinate
-
-        return super(SolarIrradianceSpectrum, self).eval(spectral_ctx)
-
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
-        w_units = ureg(self.data.ssi.w.attrs["units"])
+        # Inherit docstring
+
+        w_units = ureg(self.dataset.ssi.w.attrs["units"])
         irradiance = to_quantity(
-            self.data.ssi.interp(w=w.m_as(w_units), method="linear")
+            self.dataset.ssi.interp(w=w.m_as(w_units), method="linear")
         )
 
         # Raise if out of bounds or ill-formed dataset
@@ -173,7 +167,8 @@ class SolarIrradianceSpectrum(Spectrum):
         return irradiance * self.scale * self._scale_earth_sun_distance()
 
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        # Spectrum is averaged over spectral bin
+        # Inherit docstring
+        # Note: Spectrum is averaged over the spectral bin
 
         result = np.zeros((len(bindexes),))
         wavelength_units = ucc.get("wavelength")
@@ -187,7 +182,9 @@ class SolarIrradianceSpectrum(Spectrum):
 
             # -- Collect relevant spectral coordinate values
             w_m = ureg.convert(
-                self.data.ssi.w.values, self.data.ssi.w.attrs["units"], wavelength_units
+                self.dataset.ssi.w.values,
+                self.dataset.ssi.w.attrs["units"],
+                wavelength_units,
             )
             w = (
                 np.hstack(

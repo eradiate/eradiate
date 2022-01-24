@@ -486,7 +486,7 @@ class BinSet:
         :class:`.BinSet`
             Bin set definition.
         """
-        with data.open("ckd_bin_set", id) as ds:
+        with data.open_dataset(f"ckd/bin_sets/{id}.nc") as ds:
             result = BinSet.from_dataset(id=id, ds=ds)
         return result
 

@@ -19,7 +19,7 @@ def test_solar_irradiance(mode_mono):
     s = SolarIrradianceSpectrum()
 
     # Unsupported solar spectrum keywords raise
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         SolarIrradianceSpectrum(dataset="doesnt_exist")
 
     # Produced kernel dict is valid

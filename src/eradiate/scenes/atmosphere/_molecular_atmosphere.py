@@ -16,7 +16,7 @@ from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ...attrs import AUTO, documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...radprops.rad_profile import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
+from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
 from ...thermoprops import afgl_1986, us76
 from ...thermoprops.util import (
     compute_scaling_factors,
