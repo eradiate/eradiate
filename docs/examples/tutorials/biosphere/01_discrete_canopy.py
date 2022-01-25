@@ -162,7 +162,7 @@ eradiate.scenes.biosphere.biosphere_factory.convert(
 # frame origin:
 
 # We use the path resolver to get the absolute path to the data file
-# located in the $ERADIATE_DIR/resources/data/tests/canopies directory
+# located in the $ERADIATE_SOURCE_DIR/resources/data/tests/canopies directory
 leaf_cloud_filename = eradiate.path_resolver.resolve(
     "tests/canopies/HET01_UNI_scene.def"
 )
@@ -178,7 +178,7 @@ leaf_cloud
 # directory:
 
 # We use the path resolver to get the absolute path to the data file
-# located in the $ERADIATE_DIR/resources/data/tests/canopies directory
+# located in the $ERADIATE_SOURCE_DIR/resources/data/tests/canopies directory
 instance_filename = eradiate.path_resolver.resolve(
     "tests/canopies/HET01_UNI_instances.def"
 )

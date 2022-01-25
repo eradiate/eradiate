@@ -51,7 +51,7 @@ class PathResolver(metaclass=Singleton):
     def reset(self):
         """
         Reset path list to default value:
-        ``[$PWD, $ERADIATE_DATA_PATH, $ERADIATE_DIR/resources/data]``.
+        ``[$PWD, $ERADIATE_DATA_PATH, $ERADIATE_SOURCE_DIR/resources/data]``.
 
         See Also
         --------
@@ -64,7 +64,7 @@ class PathResolver(metaclass=Singleton):
         if config.data_path:
             self.append(*config.data_path)  # Path list
 
-        self.append(config.dir / "resources" / "data")  # Eradiate data directory
+        self.append(config.source_dir / "resources" / "data")  # Eradiate data directory
 
     def clear(self):
         """Clear the list of search paths."""

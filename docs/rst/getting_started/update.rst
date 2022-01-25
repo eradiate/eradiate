@@ -14,7 +14,7 @@ In the cloned source directory, pull the latest update from GitHub:
 
 .. code:: bash
 
-   cd $ERADIATE_DIR
+   cd $ERADIATE_SOURCE_DIR
    git pull
 
 Unfortunately, pulling from the main repository won't automatically keep the
@@ -55,7 +55,7 @@ After updating, it's always better to rebuild the kernel:
 
 .. code:: bash
 
-   cd $ERADIATE_DIR
+   cd $ERADIATE_SOURCE_DIR
    cmake --build build
 
 Updating your Conda environment
@@ -66,7 +66,7 @@ necessary. In that case, the ``conda-init`` target can be used:
 
 .. code:: bash
 
-   cd $ERADIATE_DIR
+   cd $ERADIATE_SOURCE_DIR
    make conda-init
 
 If something goes wrong during that process, an environment reset should solve
