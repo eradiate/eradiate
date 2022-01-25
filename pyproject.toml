@@ -28,6 +28,7 @@ omit = [
 [tool.pytest.ini_options]
 filterwarnings = [
     "error",
-    # Ignore this warning issued by outdated dependencies
+    # Ignore these warnings issued by outdated dependencies
     "ignore:distutils Version classes are deprecated:DeprecationWarning",
+    "ignore:Passing method to:FutureWarning",  # Check again when upgrading to xarray 0.21+
 ]

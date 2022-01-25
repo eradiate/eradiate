@@ -12,6 +12,10 @@ alabaster==0.7.12
     # via
     #   -c requirements/dev.txt
     #   sphinx
+appdirs==1.4.4
+    # via
+    #   -c requirements/dev.txt
+    #   pooch
 astropy==5.0
     # via
     #   -c requirements/dev.txt
@@ -44,7 +48,7 @@ certifi==2021.10.8
     # via
     #   -c requirements/dev.txt
     #   requests
-cftime==1.5.1.1
+cftime==1.5.2
     # via
     #   -c requirements/dev.txt
     #   netcdf4
@@ -93,7 +97,7 @@ environ-config==21.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-fonttools==4.28.5
+fonttools==4.29.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -174,8 +178,9 @@ packaging==21.3
     #   dask
     #   matplotlib
     #   pint
+    #   pooch
     #   sphinx
-pandas==1.3.5
+pandas==1.4.0
     # via
     #   -c requirements/dev.txt
     #   seaborn
@@ -194,6 +199,10 @@ pint==0.18
     #   -r requirements/main.in
     #   pinttrs
 pinttrs==21.3.1
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/main.in
+pooch==1.6.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -219,7 +228,7 @@ pygments==2.11.2
     #   -c requirements/dev.txt
     #   rich
     #   sphinx
-pyparsing==3.0.6
+pyparsing==3.0.7
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -245,6 +254,7 @@ pyyaml==6.0
 requests==2.27.1
     # via
     #   -c requirements/dev.txt
+    #   pooch
     #   sphinx
 rich==11.0.0
     # via
