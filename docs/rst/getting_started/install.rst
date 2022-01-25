@@ -198,7 +198,7 @@ execute a GNU Make target which will initialise our empty environment properly:
      activation, following
      `the approach recommended by the Conda user guide <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#saving-environment-variables>`_.
    * Once the Conda environment is active, the Eradiate root directory can
-     be reached from everywhere through the ``$ERADIATE_DIR`` environment
+     be reached from everywhere through the ``$ERADIATE_SOURCE_DIR`` environment
      variable.
 
 Once your Conda environment is configured, you should reactivate it:

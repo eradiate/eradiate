@@ -7,11 +7,11 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 fi
 
 if [ "$BASH_VERSION" ]; then
-    ERADIATE_DIR=$(dirname "$BASH_SOURCE")
-    export ERADIATE_DIR=$(builtin cd "$ERADIATE_DIR"; builtin pwd)
+    ERADIATE_SOURCE_DIR=$(dirname "$BASH_SOURCE")
+    export ERADIATE_SOURCE_DIR=$(builtin cd "$ERADIATE_SOURCE_DIR"; builtin pwd)
 elif [ "$ZSH_VERSION" ]; then
-    export ERADIATE_DIR=$(dirname "$0:A")
+    export ERADIATE_SOURCE_DIR=$(dirname "$0:A")
 fi
 
-export PYTHONPATH="${ERADIATE_DIR}/${BUILD_DIR}/ext/mitsuba2/python:${PYTHONPATH}"
-export PATH="${ERADIATE_DIR}/${BUILD_DIR}/ext/mitsuba2:${PATH}"
+export PYTHONPATH="${ERADIATE_SOURCE_DIR}/${BUILD_DIR}/ext/mitsuba2/python:${PYTHONPATH}"
+export PATH="${ERADIATE_SOURCE_DIR}/${BUILD_DIR}/ext/mitsuba2:${PATH}"

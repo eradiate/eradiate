@@ -52,19 +52,19 @@ class EradiateConfig:
     """
 
     #: Path to the Eradiate source directory.
-    dir = environ.var(
+    source_dir = environ.var(
         converter=lambda x: pathlib.Path(x).absolute(),
         help="Path to the Eradiate source directory.",
     )
 
-    @dir.validator
+    @source_dir.validator
     def _dir_validator(self, var, dir):
         eradiate_init = dir / "src" / "eradiate" / "__init__.py"
 
         if not eradiate_init.is_file():
             raise ConfigError(
                 f"While configuring Eradiate: could not find {eradiate_init} file. "
-                "Please make sure the 'ERADIATE_DIR' environment variable is "
+                "Please make sure the 'ERADIATE_SOURCE_DIR' environment variable is "
                 "correctly set to the Eradiate installation directory. If you are "
                 "using Eradiate directly from the sources, you can alternatively "
                 "source the provided setpath.sh script."
@@ -106,7 +106,7 @@ class EradiateConfig:
 
     #: Path to the Eradiate download directory.
     download_dir = environ.var(
-        default="$ERADIATE_DIR/resources/downloads",
+        default="$ERADIATE_SOURCE_DIR/resources/downloads",
         converter=lambda x: pathlib.Path(os.path.expandvars(x)).absolute(),
         help="Path to the Eradiate download directory.",
     )
@@ -129,7 +129,7 @@ try:
     config = EradiateConfig.from_environ()
 
 except environ.exceptions.MissingEnvValueError as e:
-    if "ERADIATE_DIR" in e.args:
+    if "ERADIATE_SOURCE_DIR" in e.args:
         raise ConfigError(
             f"While configuring Eradiate: environment variable '{e}' is missing. "
             "Please set this variable to the absolute path to the Eradiate "

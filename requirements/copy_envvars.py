@@ -36,12 +36,12 @@ def main():
     # fmt: on
 
 
-def activate_script(eradiate_dir):
+def activate_script(eradiate_source_dir):
     # fmt: off
     return dedent(f"""
         #!/bin/sh
-        ERADIATE_DIR="{eradiate_dir}"
-        source ${{ERADIATE_DIR}}/setpath.sh
+        ERADIATE_SOURCE_DIR="{eradiate_source_dir}"
+        source ${{ERADIATE_SOURCE_DIR}}/setpath.sh
     """).lstrip()
     # fmt: on
 
@@ -51,13 +51,13 @@ def deactivate_script():
     return dedent(f"""
         #!/bin/sh
         # Clean up PATH
-        match="${{ERADIATE_DIR}}/build/ext/mitsuba2:"
+        match="${{ERADIATE_SOURCE_DIR}}/build/ext/mitsuba2:"
         export PATH=${{PATH//$match/}}
         # Clean up PYTHONPATH
-        match="${{ERADIATE_DIR}}/build/ext/mitsuba2/python:"
+        match="${{ERADIATE_SOURCE_DIR}}/build/ext/mitsuba2/python:"
         export PYTHONPATH="${{PYTHONPATH//$match/}}"
         # Remove other environment variables
-        unset ERADIATE_DIR
+        unset ERADIATE_SOURCE_DIR
     """).lstrip()
     # fmt: on
 

@@ -19,11 +19,11 @@ commands:
 
 .. code-block:: bash
 
-    cd $ERADIATE_DIR
+    cd $ERADIATE_SOURCE_DIR
     make docs
 
 After the build is completed, the html document is located in
-:code:`$ERADIATE_DIR/docs/_build/html`.
+:code:`$ERADIATE_SOURCE_DIR/docs/_build/html`.
 
 .. admonition:: Notes
    :class: note
@@ -46,10 +46,10 @@ Run the follwing commands:
 
 .. code-block:: bash
 
-    cd $ERADIATE_DIR/build
+    cd $ERADIATE_SOURCE_DIR/build
     ninja mkdoc
 
-The compiled html documentation will then be located in :code:`$ERADIATE_DIR/build/html`.
+The compiled html documentation will then be located in :code:`$ERADIATE_SOURCE_DIR/build/html`.
 
 Editing the API documentation
 -----------------------------
@@ -213,7 +213,7 @@ is recommended. They can be generated using the ``rst-api`` make target:
 
 .. code-block:: bash
 
-    cd $ERADIATE_DIR
+    cd $ERADIATE_SOURCE_DIR
     make docs-rst-api
     make docs
 
@@ -222,7 +222,7 @@ Editing tutorials
 
 Eradiates uses the `sphinx-gallery <https://sphinx-gallery.github.io/>`_
 extension to provide runnable and commented tutorials. Tutorials are located
-in the ``$ERADIATE_DIR/docs/examples/tutorials`` directory.
+in the ``$ERADIATE_SOURCE_DIR/docs/examples/tutorials`` directory.
 
 .. warning:: It is strongly recommended to read carefully the sphinx-gallery
    user guide before proceeding.
@@ -268,8 +268,8 @@ Referencing examples
 You can reference an example using its label, defined following
 `sphinx-gallery's naming convention <https://sphinx-gallery.github.io/stable/advanced.html#know-your-gallery-files>`_.
 For instance, an example located at
-``$ERADIATE_DIR/docs/examples/tutorials/my_example.py`` will have the label
-``sphx_glr_examples_generated_tutorials_my_example.py``.
+``$ERADIATE_SOURCE_DIR/docs/examples/tutorials/my_example.py`` will have the
+label ``sphx_glr_examples_generated_tutorials_my_example.py``.
 
 .. warning:: Changing filenames will break references! Do not forget to
    rebuild the docs and fix references if you move or rename an example.

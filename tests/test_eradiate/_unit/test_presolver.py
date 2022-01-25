@@ -64,7 +64,7 @@ def test_resolve(presolver):
     presolver.clear()
 
     # We add a path
-    base = os.getenv("ERADIATE_DIR")
+    base = os.getenv("ERADIATE_SOURCE_DIR")
     presolver.append(base)
 
     # We expect the test script to find its own location

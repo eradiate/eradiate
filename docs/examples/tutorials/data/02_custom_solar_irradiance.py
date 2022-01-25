@@ -45,8 +45,10 @@ df = pd.read_csv("02_custom_solar_irradiance_data.csv", header=1, names=["w", "s
 # for the meaning of these attributes.
 
 import datetime
+
 import numpy as np
 import xarray as xr
+
 from eradiate.units import symbol
 
 ds = xr.Dataset(
@@ -186,13 +188,13 @@ ds
 # To register your dataset in the list of available datasets of Eradiate, you
 # must first save the dataset to a NetCDF file.
 # It is recommended to save the dataset in
-# ``$ERADIATE_DIR/resources/data/spectra/solar_irradiance``:
+# ``$ERADIATE_SOURCE_DIR/resources/data/spectra/solar_irradiance``:
 
 import os
 
 ds.to_netcdf(
     os.path.join(
-        os.environ["ERADIATE_DIR"],
+        os.environ["ERADIATE_SOURCE_DIR"],
         "resources/data/spectra/solar_irradiance",
         "my_awesome_dataset.nc",
     )
@@ -203,7 +205,9 @@ ds.to_netcdf(
 # file next to the Eradiate's predefined solar irradiance spectrum datasets:
 
 os.listdir(
-    os.path.join(os.environ["ERADIATE_DIR"], "resources/data/spectra/solar_irradiance")
+    os.path.join(
+        os.environ["ERADIATE_SOURCE_DIR"], "resources/data/spectra/solar_irradiance"
+    )
 )
 
 # %%

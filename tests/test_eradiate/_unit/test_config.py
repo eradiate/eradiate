@@ -13,17 +13,19 @@ def test_config(tmpdir):
     (tmpdir_path / "eradiate/src/eradiate").mkdir(parents=True)
     (tmpdir_path / "eradiate/src/eradiate/__init__.py").touch()
 
-    # Raises if ERADIATE_DIR is missing
+    # Raises if ERADIATE_SOURCE_DIR is missing
     with pytest.raises(MissingEnvValueError):
         EradiateConfig.from_environ({})
 
-    # When ERADIATE_DIR points to a correct path (i.e. contains eradiate.__init__.py),
-    # config init succeeds
-    assert EradiateConfig.from_environ({"ERADIATE_DIR": tmpdir_path / "eradiate"})
+    # When ERADIATE_SOURCE_DIR points to a correct path
+    # (i.e. contains eradiate.__init__.py), config init succeeds
+    assert EradiateConfig.from_environ(
+        {"ERADIATE_SOURCE_DIR": tmpdir_path / "eradiate"}
+    )
 
     # Otherwise it raises
     with pytest.raises(ConfigError):
-        EradiateConfig.from_environ({"ERADIATE_DIR": tmpdir_path})
+        EradiateConfig.from_environ({"ERADIATE_SOURCE_DIR": tmpdir_path})
 
     # Warns if nonexisting paths are passed
     with pytest.warns(ConfigWarning):
@@ -35,7 +37,7 @@ def test_config(tmpdir):
         # Colon-separated paths are processed correctly
         cfg = EradiateConfig.from_environ(
             {
-                "ERADIATE_DIR": tmpdir_path / "eradiate",
+                "ERADIATE_SOURCE_DIR": tmpdir_path / "eradiate",
                 "ERADIATE_DATA_PATH": ":".join(paths),
             }
         )
@@ -45,7 +47,7 @@ def test_config(tmpdir):
         # Empty paths are omitted
         cfg = EradiateConfig.from_environ(
             {
-                "ERADIATE_DIR": tmpdir_path / "eradiate",
+                "ERADIATE_SOURCE_DIR": tmpdir_path / "eradiate",
                 "ERADIATE_DATA_PATH": ":::" + "::".join(paths) + ":",
             }
         )

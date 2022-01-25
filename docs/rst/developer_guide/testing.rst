@@ -29,7 +29,8 @@ Eradiate can generate an HTML based test report, collecting information about th
 
    python test_report/generate_report.py
 
-The resulting report will be located in ``$ERADIATE_DIR/build/html_test-report``.
+The resulting report will be located in
+``$ERADIATE_SOURCE_DIR/build/html_test-report``.
 
 Testing guidelines
 ------------------
