@@ -13,7 +13,7 @@ def test_albedo(mode_mono, artefact_dir):
     Albedo
     ======
 
-    This system test verifies the behaviour of the apps capable of albedo
+    This system test verifies the behaviour of experiments capable of albedo
     computation.
 
     Rationale
@@ -64,7 +64,7 @@ def test_albedo(mode_mono, artefact_dir):
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
                     "film_resolution": (64, 64),
-                    "spp": 100,
+                    "spp": 256,
                 }
             ],
             atmosphere=None,
@@ -86,7 +86,7 @@ def test_albedo(mode_mono, artefact_dir):
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
                     "film_resolution": (64, 64),
-                    "spp": 100,
+                    "spp": 256,
                 }
             ],
             atmosphere=None,
@@ -108,7 +108,7 @@ def test_albedo(mode_mono, artefact_dir):
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
                     "film_resolution": (64, 64),
-                    "spp": 100,
+                    "spp": 256,
                 }
             ],
             canopy=None,
@@ -130,7 +130,7 @@ def test_albedo(mode_mono, artefact_dir):
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
                     },
                     "film_resolution": (64, 64),
-                    "spp": 100,
+                    "spp": 256,
                 }
             ],
             canopy=None,
