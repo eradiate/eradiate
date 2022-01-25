@@ -19,6 +19,7 @@ dependencies:
   - numpy
   - pint
   - pinttrs>=21.3.0
+  - pooch
   - python-dateutil
   - rich
   - ruamel.yaml
