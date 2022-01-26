@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 
 import click
@@ -84,6 +85,28 @@ def make_registry(input_directory, output_file, rules, hash_algorithm):
 
 
 @cli.command()
+def update_registries():
+    """
+    Update local registries for online sources.
+    """
+    # Update data store registries
+    for data_store_id, data_store in eradiate.data.data_store.stores.items():
+        if isinstance(data_store, eradiate.data.OnlineDataStore):
+            console.print(
+                f"[bold cyan]{data_store_id}[/] [{data_store.__class__.__name__}]"
+            )
+            console.print(f"    Refreshing registry \[{data_store.registry_path}]")
+            data_store.registry_delete()
+            console.print(
+                "    Downloading from "
+                f"\[{os.path.join(data_store.base_url, data_store.registry_fname)}]"
+            )
+            data_store.registry_fetch()
+            console.print("  [green]✓ Done[/]")
+            continue
+
+
+@cli.command()
 @click.argument("files", nargs=-1)
 @click.option(
     "--from-file",
@@ -99,13 +122,14 @@ def fetch(files, from_file):
         if from_file is None:
             # TODO: fetch this list from online
             from_file = eradiate.config.dir / "resources/downloads.yml"
+        console.print(f"Reading file list from '{from_file}'")
         yaml = YAML()
         files = yaml.load(from_file)
 
     for filename in files:
         try:
             console.print(f"[blue]Fetching '{filename}'[/]")
-            path = eradiate.data.data_store.fetch(filename)
+            path = eradiate.data._store.data_store.fetch(filename)
         except DataError:
             console.print(f"[red]✗[/] not found")
         else:
@@ -113,20 +137,26 @@ def fetch(files, from_file):
 
 
 @cli.command()
-@click.option(
-    "--keep-registered", "-k", is_flag=True, help="Do not delete registered files."
-)
-def purge_cache(keep_registered):
+@click.option("--keep", "-k", is_flag=True, help="Keep registered files.")
+def purge_cache(keep):
     """
     Purge the cache of online data stores.
     """
-    for i, data_store in enumerate(eradiate.data.data_store.stores, start=1):
+    for i, data_store in enumerate(eradiate.data._store.data_store.stores, start=1):
         if isinstance(data_store, eradiate.data.DirectoryDataStore):
             continue
 
         if isinstance(data_store, eradiate.data.OnlineDataStore):
             console.print(f"Purging '{data_store.path}'")
-            data_store.purge(keep_registered=keep_registered)
+            if keep:
+                data_store.purge(keep="registered")
+            else:
+                data_store.purge()
+            continue
+
+        if isinstance(data_store, eradiate.data.BlindDataStore):
+            console.print(f"Purging '{data_store.path}'")
+            data_store.purge()
             continue
 
 
@@ -136,18 +166,25 @@ def info():
     Display information about data store configuration.
     """
     # Print data store information to terminal
-    for i, data_store in enumerate(eradiate.data.data_store.stores, start=1):
+    for data_store_id, data_store in eradiate.data._store.data_store.stores.items():
+        console.print(
+            f"[bold cyan]{data_store_id}[/] [{data_store.__class__.__name__}]"
+        )
+
         if isinstance(data_store, eradiate.data.DirectoryDataStore):
-            console.print(f"{i} DirectoryDataStore")
             console.print(f"    path='{data_store.path}'")
             console.print(f"    registry_path='{data_store.registry_path}'")
             continue
 
         if isinstance(data_store, eradiate.data.OnlineDataStore):
-            console.print(f"{i} OnlineDataStore")
             console.print(f"    base_url='{data_store.base_url}'")
             console.print(f"    path='{data_store.path}'")
             console.print(f"    registry_path='{data_store.registry_path}'")
+            continue
+
+        if isinstance(data_store, eradiate.data.BlindDataStore):
+            console.print(f"    base_url='{data_store.base_url}'")
+            console.print(f"    path='{data_store.path}'")
             continue
 
 

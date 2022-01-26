@@ -6,9 +6,8 @@ from pathlib import Path
 
 import attr
 import pooch
-from requests import RequestException
 
-from ._core import DataStore, registry_from_file
+from ._core import DataStore, expand_rules, registry_from_file
 from .._util import LoggingContext
 from ..exceptions import DataError
 from ..typing import PathLike
@@ -131,6 +130,12 @@ class OnlineDataStore(DataStore):
     def registry_reload(self, delete: bool = False) -> None:
         """
         Reload the registry file.
+
+        Parameters
+        ----------
+        delete : bool, optional
+            If ``True``, the existing registry file will be deleted and
+            downloaded again.
         """
         if delete:
             self.registry_delete()
@@ -218,84 +223,73 @@ class OnlineDataStore(DataStore):
         try:
             fname = str(self.is_registered(filename))
 
-        # If file is unregistered, serve it blindly
-        except ValueError:
-            with LoggingContext(
-                pooch.get_logger(), level="WARNING"
-            ):  # Silence pooch messages temporarily
-                # Try first to get a compressed file
-                try:
-                    return Path(
-                        pooch.retrieve(
-                            os.path.join(self.base_url, fname + ".gz"),
-                            known_hash=None,
-                            fname=fname + ".gz",
-                            path=self.path,
-                            processor=pooch.processors.Decompress(
-                                name=os.path.basename(fname)
-                            ),
-                        )
-                    )
-                except RequestException:
-                    pass
+        except ValueError as e:
+            raise DataError(
+                f"file '{fname}' could not be retrieved from {self.base_url}"
+            ) from e
 
-                    # If no gzip-compressed file is available, try the actual file
-                    try:
-                        print(os.path.join(self.base_url, fname))
-                        return Path(
-                            pooch.retrieve(
-                                os.path.join(self.base_url, fname),
-                                known_hash=None,
-                                fname=fname,
-                                path=self.path,
-                            ),
-                        )
-                    except RequestException as e:
-                        raise DataError(
-                            f"file '{fname}' could not be retrieved from {self.base_url}"
-                        ) from e
+        # If the matched registered resource is a compressed file, serve it
+        root, ext = os.path.splitext(fname)
+        if ext == ".gz":
+            processor = pooch.processors.Decompress(name=os.path.basename(root))
 
-        # If file is registered, serve it with integrity check
-        else:
-            # If the matched registered resource is a compressed file, serve it
-            root, ext = os.path.splitext(fname)
-            if ext == ".gz":
-                processor = pooch.processors.Decompress(name=os.path.basename(root))
+        return Path(
+            self.manager.fetch(fname, processor=processor, downloader=downloader)
+        )
 
-            return Path(
-                self.manager.fetch(fname, processor=processor, downloader=downloader)
-            )
-
-        # This is not supposed to happen
-        raise DataError(f"file '{fname}' could not be retrieved from {self.base_url}")
-
-    def purge(self, keep_registered: bool = False) -> None:
+    def purge(self, keep: t.Union[None, str, t.List[str]] = None) -> None:
         """
-        Purge local storage location.
+        Purge local storage location. The default behaviour is very aggressive
+        and will wipe out the entire directory contents.
+
+        Parameter
+        ---------
+        keep : "registered" or list of str, optional
+            If set to ``"registered"``, files in the registry, as well as the
+            registry file itself, will not be deleted. Finer control is possible
+            by passing a list of exclusion rules (paths relative to the store's
+            local storage root, shell wildcards allowed).
+
+        Notes
+        -----
+        Passing ``keep="registered"`` keeps registered files to minimise the
+        amount of data to be downloaded upon future queries the the data store.
+        This means, for instance, that if data is registered and downloaded as
+        a compressed file, then served decompressed, the compressed file will be
+        kept, while the decompressed file will be deleted.
 
         Warnings
         --------
         This is a destructive operation, make sure you know what you're doing!
         """
         # Fast track for simple case
-        if not keep_registered:
+        if keep is None:
             for filename in os.scandir(self.path):
                 file_path = os.path.join(self.path, filename)
 
                 if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
+                    os.remove(file_path)
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
 
             return
 
-        # More complicated: examine all files one by one
-        for x in self.path.rglob("**/*"):
-            if x.is_file():
-                try:
-                    self.is_registered(x.relative_to(self.path))
-                except ValueError:
-                    os.remove(x)
+        # List files to keep and delete
+        if keep == "registered":
+            excluded = expand_rules(
+                rules=self.registry_files() + [str(self.registry_fname)],
+                prefix=self.path,
+            )
+        else:
+            excluded = expand_rules(rules=keep, prefix=self.path)
+        print(excluded)
+        included = expand_rules(rules=["**/*"], prefix=self.path)
+        print(included)
+        remove = sorted(included - excluded)
+        print(remove)
+
+        for file in remove:
+            os.remove(file)
 
         # Clean up empty directories
         for x in self.path.iterdir():

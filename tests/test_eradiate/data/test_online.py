@@ -8,7 +8,7 @@ import xarray as xr
 from eradiate.data._online import OnlineDataStore
 from eradiate.exceptions import DataError
 
-TEST_STORE = "http://eradiate.eu/data/store"
+TEST_STORE = "http://eradiate.eu/data/store/stable"
 TEST_FILE = Path("tests/data/online/registered_dataset.nc")
 
 
@@ -35,7 +35,7 @@ def test_online_data_store_registry(tmpdir):
     assert datetime.fromtimestamp(registry_filename.stat().st_mtime) > last_modified
 
 
-def test_data_store_is_registered(tmpdir):
+def test_oneline_data_store_is_registered(tmpdir):
     store = OnlineDataStore(base_url=TEST_STORE, path=tmpdir)
 
     # Default behaviour allows matching compressed files
@@ -79,12 +79,19 @@ def test_online_data_store_purge(tmpdir):
     store = OnlineDataStore(base_url=TEST_STORE, path=tmpdir)
     store.fetch(TEST_FILE)
     assert len(list(os.scandir(tmpdir))) == 2
+    assert store.registry_path.is_file()
+    assert (store.path / TEST_FILE).is_file()
 
     # We purge the directory but keep registered files
     os.makedirs(store.path / "foo")  # This empty directory should also be cleaned up
-    store.purge(keep_registered=True)
-    assert len(list(os.scandir(tmpdir))) == 1
+    store.purge(keep="registered")
+    assert len(list(os.scandir(tmpdir))) == 2  # We still have registry.txt and a subdir
+    assert store.registry_path.is_file()
+    assert not (store.path / TEST_FILE).is_file()  # The decompressed file is gone
+    assert (
+        store.path / (str(TEST_FILE) + ".gz")
+    ).is_file()  # The compressed file is still here
 
-    # We purge everything: all files are removed
+    # Purge everything: all files are removed
     store.purge()
     assert len(list(os.scandir(tmpdir))) == 0
