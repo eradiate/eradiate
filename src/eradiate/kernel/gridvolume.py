@@ -8,9 +8,11 @@ import typing as t
 import numpy as np
 import xarray as xr
 
+from ..typing import PathLike
+
 
 def write_binary_grid3d(
-    filename: os.PathLike, values: t.Union[np.ndarray, xr.DataArray]
+    filename: PathLike, values: t.Union[np.ndarray, xr.DataArray]
 ) -> None:
     """
     Write volume data to a binary file so that a ``gridvolume`` kernel plugin
@@ -45,7 +47,7 @@ def write_binary_grid3d(
     VolumeGrid(values.astype(np.float32)).write(str(filename))
 
 
-def read_binary_grid3d(filename: os.PathLike) -> np.ndarray:
+def read_binary_grid3d(filename: PathLike) -> np.ndarray:
     """
     Reads a volume data binary file.
 

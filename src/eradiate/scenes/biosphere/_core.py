@@ -16,6 +16,7 @@ from ... import validators
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
+from ...typing import PathLike
 from ...units import unit_context_config as ucc
 
 biosphere_factory = Factory()
@@ -209,7 +210,7 @@ class InstancedCanopyElement(SceneElement):
     @classmethod
     def from_file(
         cls,
-        filename: os.PathLike,
+        filename: PathLike,
         canopy_element: t.Optional[CanopyElement] = None,
     ):
         """

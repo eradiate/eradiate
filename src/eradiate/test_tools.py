@@ -9,9 +9,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 
-from eradiate.data import data_store
-from eradiate.exceptions import DataError
-from eradiate.typing import PathLike
+from .data import data_store
+from .exceptions import DataError
+from .typing import PathLike
 
 
 def skipif_data_not_found(
@@ -39,7 +39,7 @@ def skipif_data_not_found(
         pytest.skip(f"Could not find dataset '{path}' in the data store.")
 
 
-def missing_artefact(filename: os.PathLike) -> None:
+def missing_artefact(filename: PathLike) -> None:
     """
     Create a placeholder file for a missing artefact.
 
