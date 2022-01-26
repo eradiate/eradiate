@@ -12,5 +12,17 @@
    :toctree: generated/autosummary/
 
    absorption
-   rad_profile
    rayleigh
+
+.. rubric:: Classes
+
+**Factory**: :data:`rad_profile_factory`
+
+.. autosummary::
+   :recursive:
+   :toctree: generated/autosummary/
+
+   RadProfile
+   AFGL1986RadProfile
+   US76ApproxRadProfile
+   ArrayRadProfile
