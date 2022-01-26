@@ -19,8 +19,18 @@ from ._core import DataStore
 from ._directory import DirectoryDataStore
 from ._multi import MultiDataStore
 from ._online import OnlineDataStore
-from ._store import data_store
 from ..typing import PathLike
+
+# -- Data store ----------------------------------------------------------------
+
+from . import _store  # isort: skip
+
+#: Global data store.
+#: Alias to :data:`eradiate.data._store.data_store`.
+#: See also: :class:`eradiate.data.MultiDataStore`.
+data_store = _store.data_store
+
+# -- Access functions ----------------------------------------------------------
 
 
 def open_dataset(filename: PathLike, **kwargs) -> xr.Dataset:

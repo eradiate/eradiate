@@ -155,6 +155,7 @@ intersphinx_mapping = {
     "mitsuba": ("https://eradiate-kernel.readthedocs.io/en/latest/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
+    "pooch": ("https://www.fatiando.org/pooch/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/latest/", None),
     "pinttrs": ("https://pinttrs.readthedocs.io/en/latest/", None),
     "python": ("https://docs.python.org/3/", None),

@@ -14,7 +14,7 @@ from ..typing import PathLike
 @attr.s
 class MultiDataStore(DataStore):
     """
-    A lightweight container chaining requests on multiple data stores.
+    Chain requests on multiple data stores.
 
     Calls to the :meth:`.fetch` method are successively redirected to each
     referenced data store. The first successful request is served.
@@ -22,7 +22,7 @@ class MultiDataStore(DataStore):
 
     stores: OrderedDict = documented(
         attr.ib(factory=OrderedDict, converter=OrderedDict),
-        type="OrderedDict",
+        type="collections.OrderedDict",
         init_type="mapping",
         default="{}",
         doc="Data stores which will be queried successively.",
@@ -33,18 +33,29 @@ class MultiDataStore(DataStore):
 
     @property
     def base_url(self) -> str:
+        """
+        Raises :class:`NotImplementedError` (this data store has not target
+        location).
+        """
         raise NotImplementedError
 
     @property
     def registry(self) -> t.Dict:
+        """
+        Raises :class:`NotImplementedError` (this data store has no registry).
+        """
         raise NotImplementedError
 
     def registry_files(
         self, filter: t.Optional[t.Callable[[t.Any], bool]] = None
     ) -> t.List[str]:
-        raise NotImplementedError
+        """
+        Returns an empty list (this data store has no registry).
+        """
+        return []
 
     def fetch(self, filename: PathLike, **kwargs) -> Path:
+        # Inherit docstring
         # No kwargs are actually accepted
         if kwargs:
             keyword = next(iter(kwargs.keys()))

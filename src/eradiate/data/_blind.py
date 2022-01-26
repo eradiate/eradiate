@@ -9,33 +9,86 @@ from requests import RequestException
 
 from ._core import DataStore, expand_rules
 from .._util import LoggingContext
+from ..attrs import documented, parse_docs
 from ..exceptions import DataError
 from ..typing import PathLike
 
 
+@parse_docs
 @attr.s
 class BlindDataStore(DataStore):
-    _base_url: str = attr.ib(converter=lambda x: x + "/" if not x.endswith("/") else x)
-    path: Path = attr.ib(converter=lambda x: Path(x).absolute())
+    """
+    Serve data downloaded from a remote source without integrity check.
+    """
+
+    _base_url: str = documented(
+        attr.ib(converter=lambda x: x + "/" if not x.endswith("/") else x),
+        type="str",
+        doc="URL to the online storage location.",
+    )
+
+    path: Path = documented(
+        attr.ib(converter=lambda x: Path(x).absolute()),
+        type="Path",
+        init_type="path-like",
+        doc="Path to the local cache location.",
+    )
 
     @property
     def base_url(self) -> str:
+        # Inherit docstring
         return self._base_url
 
     @property
     def registry(self) -> t.Dict:
+        """
+        Raises :class:`NotImplementedError` (this data store has no registry).
+        """
         raise NotImplementedError
 
     def registry_files(
         self, filter: t.Optional[t.Callable[[t.Any], bool]] = None
     ) -> t.List[str]:
-        raise NotImplementedError
+        """
+        Returns an empty list (this data store has no registry).
+        """
+        return []
 
     def fetch(
         self,
         filename: PathLike,
         downloader: t.Optional[t.Callable] = None,
     ) -> Path:
+        """
+        Fetch a file from the data store. This method wraps
+        :func:`pooch.retrieve` and automatically selects compressed files
+        when they are available.
+
+        Parameters
+        ----------
+        filename : path-like
+            File name to fetch from the local storage, relative to the storage
+            root.
+
+        downloader : callable, optional
+            A callable that will be called to download a given URL to a provided
+            local file name. This is mostly useful to
+            `display progress bars <https://www.fatiando.org/pooch/latest/progressbars.html>`_
+            during download.
+
+        Returns
+        -------
+        path : Path
+            Absolute path where the retrieved resource is located.
+
+        Notes
+        -----
+        If a compressed resource exists, it will be served automatically.
+        For instance, if ``"foo.nc"`` is requested and ``"foo.nc.gz"`` is
+        registered, the latter will be downloaded, decompressed and served as
+        ``"foo.nc"``.
+        """
+
         fname = str(filename)
 
         with LoggingContext(
@@ -78,8 +131,8 @@ class BlindDataStore(DataStore):
         Purge local storage location. The default behaviour is very aggressive
         and will wipe out the entire directory contents.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         keep : str or list of str, optional
             A list of exclusion rules (paths relative to the store's local
             storage root, shell wildcards allowed) defining files which should

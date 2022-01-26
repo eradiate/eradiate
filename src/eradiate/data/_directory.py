@@ -8,18 +8,33 @@ from pathlib import Path
 import attr
 
 from ._core import DataStore, load_rules, make_registry, registry_from_file
+from ..attrs import documented, parse_docs
 from ..exceptions import DataError
 from ..typing import PathLike
 
 
+@parse_docs
 @attr.s
 class DirectoryDataStore(DataStore):
     """
-    This class serves files stored in a directory.
+    Serve files stored in a directory. This data store will only serve files
+    listed in its registry.
     """
 
-    path: Path = attr.ib(converter=lambda x: Path(x).absolute())
-    registry_fname: Path = attr.ib(default="registry.txt", converter=Path)
+    path: Path = documented(
+        attr.ib(converter=lambda x: Path(x).absolute()),
+        type="Path",
+        init_type="path-like",
+        doc="Path to the root of the directory referenced by this data store.",
+    )
+
+    registry_fname: Path = documented(
+        attr.ib(default="registry.txt", converter=Path),
+        type="Path",
+        init_type="path-like",
+        default='"registry.txt"',
+        doc="Path to the registry file, relative to `path`.",
+    )
 
     @registry_fname.validator
     def _registry_fname_validator(self, attribute, value: Path):
@@ -34,10 +49,12 @@ class DirectoryDataStore(DataStore):
     def __attrs_post_init__(self):
         self.registry_reload()
 
+    @property
     def base_url(self) -> str:
         # Inherit docstring
         return str(self.path)
 
+    @property
     def registry(self) -> t.Dict:
         # Inherit docstring
         return self._registry
@@ -56,6 +73,12 @@ class DirectoryDataStore(DataStore):
         return self.path / self.registry_fname
 
     def registry_make(self) -> None:
+        """
+        Generate a registry file from the contents of the ``self.path``
+        directory, according to inclusion and exclusion rules defined in the
+        ``self.path / "registry_rules.yml"`` file. The generated registry is
+        written to ``self.path / self.registry_fname``.
+        """
         # Load include and exclude rules
         rules = load_rules(self.path / "registry_rules.yml")
 
@@ -86,18 +109,15 @@ class DirectoryDataStore(DataStore):
         """
         os.remove(self.path / self.registry_fname)
 
-    def registry_reload(self, delete: bool = False) -> None:
+    def registry_reload(self) -> None:
         """
-        Reload the registry file.
+        Reload the registry file from the hard drive.
         """
-        self.registry = registry_from_file(self.registry_fetch())
-
-    def is_registered(self, filename: PathLike, allow_compressed: bool = True) -> Path:
-        raise NotImplementedError
+        self._registry = registry_from_file(self.registry_fetch())
 
     def fetch(
         self,
-        filename: os.PathLike,
+        filename: PathLike,
         **kwargs,
     ) -> Path:
         # No kwargs are actually accepted

@@ -18,7 +18,30 @@ logger = logging.getLogger(__name__)
 @attr.s(repr=False, init=False)
 class OnlineDataStore(DataStore):
     """
-    A wrapper around :class:`pooch.Pooch`.
+    Serve files located online, with integrity check.
+
+    Parameters
+    ----------
+    base_url : str
+        URL to the online storage location.
+
+    path : path-like
+        Path to the local cache location.
+
+    registry_fname : path-like, optional
+        Path to the registry file, relative to `path`.
+
+    Fields
+    ------
+    manager : pooch.Pooch
+        The Pooch instance used to manage downloaded content.
+
+    registry_fname : Path
+        Path to the registry file, relative to `path`.
+
+    Notes
+    -----
+    This class basically wraps a :class:`pooch.Pooch` instance.
     """
 
     manager: pooch.Pooch = attr.ib()
@@ -68,9 +91,7 @@ class OnlineDataStore(DataStore):
 
     @property
     def registry(self) -> t.Dict[str, str]:
-        """
-        dict : Registry contents.
-        """
+        # Inherit docstring
         return self.manager.registry
 
     def registry_files(
@@ -99,13 +120,14 @@ class OnlineDataStore(DataStore):
     @property
     def registry_path(self) -> Path:
         """
-        Path: Path to the registry file.
+        Path: Absolute path to the registry file.
         """
         return self.path / self.registry_fname
 
     def registry_fetch(self) -> Path:
         """
-        Get the absolute path to the registry file.
+        Get the absolute path to the registry file and make sure that it is
+        written to the local cache.
         """
         filename = self.registry_path
 
@@ -129,7 +151,7 @@ class OnlineDataStore(DataStore):
 
     def registry_reload(self, delete: bool = False) -> None:
         """
-        Reload the registry file.
+        Reload the registry file from the local cache.
 
         Parameters
         ----------
@@ -161,7 +183,7 @@ class OnlineDataStore(DataStore):
 
         Returns
         -------
-        path
+        path : Path
             The file name which matched `filename`.
 
         Raises
@@ -200,19 +222,21 @@ class OnlineDataStore(DataStore):
 
         downloader : callable, optional
             A callable that will be called to download a given URL to a provided
-            local file name.
+            local file name. This is mostly useful to
+            `display progress bars <https://www.fatiando.org/pooch/latest/progressbars.html>`_
+            during download.
 
         Returns
         -------
-        str
+        path : Path
             Absolute path where the retrieved resource is located.
 
         Notes
         -----
         If a compressed resource exists, it will be served automatically.
-        For instance, if ``foo.nc`` is requested and ``foo.nc.gz`` is
+        For instance, if ``"foo.nc"`` is requested and ``foo.nc.gz`` is
         registered, the latter will be downloaded, decompressed and served as
-        ``foo.nc``.
+        ``"foo.nc"``.
         """
         # By default, just forward arguments
         fname: str = str(filename)
@@ -242,8 +266,8 @@ class OnlineDataStore(DataStore):
         Purge local storage location. The default behaviour is very aggressive
         and will wipe out the entire directory contents.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         keep : "registered" or list of str, optional
             If set to ``"registered"``, files in the registry, as well as the
             registry file itself, will not be deleted. Finer control is possible
@@ -282,11 +306,8 @@ class OnlineDataStore(DataStore):
             )
         else:
             excluded = expand_rules(rules=keep, prefix=self.path)
-        print(excluded)
         included = expand_rules(rules=["**/*"], prefix=self.path)
-        print(included)
         remove = sorted(included - excluded)
-        print(remove)
 
         for file in remove:
             os.remove(file)
