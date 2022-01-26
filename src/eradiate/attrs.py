@@ -202,11 +202,8 @@ def _numpy_formatter(cls_doc, field_docs):
                 if not field_doc_brief.endswith("."):
                     field_doc_brief += "."
                 attr_docstrings.append(
-                    f".. attribute:: {field_name}\n"
-                    "\n"
-                    f"{indent(field_doc_brief, '   ')}\n"
-                    "\n"
-                    f"   :type: {type_doc}\n"
+                    f"{field_name} : {type_doc}\n"
+                    f"{indent(field_doc_brief, '    ')}\n"
                 )
 
     # Assemble entries
