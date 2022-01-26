@@ -186,7 +186,9 @@ autosummary_members = True
 
 # Autosummary tables in autodoc
 extensions.append("autodocsumm")
-autodoc_default_options = {"autosummary": True}
+autodoc_default_options = {
+    # "autosummary": False,
+}
 
 # Docstrings
 extensions.append("sphinx.ext.napoleon")
