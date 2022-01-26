@@ -72,11 +72,12 @@ necessary. In that case, the ``conda-init`` target can be used:
 If something goes wrong during that process, an environment reset should solve
 most issues (see :ref:`sec-getting_started-install-setup_conda`).
 
-Update large data sets
-----------------------
+Update data files
+-----------------
 
-Fetch updated large data sets by running the ``ertdownload`` script again:
+Optionally, you may want to make sure that the data files you'll use are
+up-to-date. For that purpose, you can purge Eradiate's data cache:
 
 .. code:: bash
 
-   ertdownload
+   ertdata purge-cache
