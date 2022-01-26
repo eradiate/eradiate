@@ -312,21 +312,6 @@ When CMake is successfully configured, you can compile the code:
 
 The compilation process can last for up to around half an hour on old machines.
 
-.. _sec-getting_started-install-data_files:
-
-Download large data sets
-------------------------
-
-Eradiate does not automatically ship all available data sets due to their size.
-Larger data sets are uploaded to the `Eradiate data store <https://eradiate.eu/data>`_.
-Download these data sets by running the following script:
-
-.. code:: bash
-
-   ertdownload
-
-Total download file size is less than 180 MB.
-
 .. _sec-getting_started-install-verify_installation:
 
 Verifying the installation
