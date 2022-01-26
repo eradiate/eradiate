@@ -19,6 +19,8 @@ class Factory(dessinemoi.Factory):
     * class method constructor selection using the ``"construct"`` key
       (overrides the default dict constructor if any; reserves the
       ``"construct"`` parameter).
+
+    The interface is unchanged.
     """
 
     def _convert_impl(

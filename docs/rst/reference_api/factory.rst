@@ -26,9 +26,11 @@ List of ``Factory`` instances
 * :data:`scenes.spectra.spectrum_factory`
 * :data:`scenes.surface.surface_factory`
 
+Classes
+-------
+
 .. py:currentmodule:: eradiate._factory
 
 .. autoclass:: Factory
    :members:
-   :inherited-members:
    :no-autosummary:
