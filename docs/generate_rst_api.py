@@ -63,7 +63,7 @@ def generate_env_vars_docs():
 
 # List of (module, variable) pairs
 FACTORIES = [
-    ("eradiate.radprops.rad_profile", "rad_profile_factory"),
+    ("eradiate.radprops", "rad_profile_factory"),
     ("eradiate.scenes.atmosphere", "atmosphere_factory"),
     ("eradiate.scenes.atmosphere", "particle_distribution_factory"),
     ("eradiate.scenes.biosphere", "biosphere_factory"),

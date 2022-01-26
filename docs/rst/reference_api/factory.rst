@@ -15,7 +15,7 @@ List of ``Factory`` instances
 
    generated/factory/*
 
-* :data:`radprops.rad_profile.rad_profile_factory`
+* :data:`radprops.rad_profile_factory`
 * :data:`scenes.atmosphere.atmosphere_factory`
 * :data:`scenes.atmosphere.particle_distribution_factory`
 * :data:`scenes.biosphere.biosphere_factory`
