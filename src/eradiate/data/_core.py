@@ -1,5 +1,4 @@
 import os
-import time
 import typing as t
 import warnings
 from abc import ABC, abstractmethod
@@ -72,7 +71,7 @@ class DataStore(ABC):
 
         Returns
         -------
-        path
+        Path
             Absolute path where the retrieved resource is located.
 
         Raises
@@ -168,7 +167,7 @@ def registry_to_file(registry: t.Dict, filename: PathLike) -> None:
         f.write(content)
 
 
-def load_rules(filename: PathLike):
+def load_rules(filename: PathLike) -> t.Dict:
     """
     Load include and exclude rules from a YAML file.
 

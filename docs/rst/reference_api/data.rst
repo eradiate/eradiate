@@ -5,27 +5,29 @@
 
 .. py:currentmodule:: eradiate.data
 
-Access
-------
-
-.. autosummary::
-   :toctree: generated/autosummary/
-
-   open
-   registered
-   find
-   getter
-
-Data sets
+Functions
 ---------
 
 .. autosummary::
-   :recursive:
    :toctree: generated/autosummary/
 
-   absorption_spectra
-   thermoprops
-   solar_irradiance_spectra
-   spectral_response_function
-   ckd_bin_sets
-   ckd_absorption
+   open_dataset
+   load_dataset
+
+Classes
+-------
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   DataStore
+   DirectoryDataStore
+   OnlineDataStore
+   BlindDataStore
+   MultiDataStore
+
+Attributes
+----------
+
+.. autodata:: data_store
+   :annotation:
