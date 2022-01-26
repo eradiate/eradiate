@@ -12,6 +12,8 @@ __all__ = [
     "MultiDataStore",
 ]
 
+from collections import OrderedDict
+
 import xarray as xr
 
 from ._core import DataStore
@@ -23,13 +25,21 @@ from ..typing import PathLike
 
 #: Global data store.
 data_store = MultiDataStore(
-    stores=[
-        DirectoryDataStore(path=_config.dir / "resources/data"),
-        OnlineDataStore(
-            base_url="http://eradiate.eu/data/store",
-            path=_config.download_dir,
-        ),
-    ]
+    stores=OrderedDict(
+        [
+            (
+                "small_files",
+                DirectoryDataStore(path=_config.dir / "resources/data"),
+            ),
+            (
+                "large_files",
+                OnlineDataStore(
+                    base_url="http://eradiate.eu/data/store",
+                    path=_config.download_dir,
+                ),
+            ),
+        ]
+    )
 )
 
 

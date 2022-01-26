@@ -1,4 +1,5 @@
 import typing as t
+from collections import OrderedDict
 from pathlib import Path
 
 import attr
@@ -19,11 +20,16 @@ class MultiDataStore(DataStore):
     referenced data store. The first successful request is served.
     """
 
-    stores: t.List[DataStore] = documented(
-        attr.ib(factory=list, converter=list),
-        type="list of DataStore",
+    stores: OrderedDict = documented(
+        attr.ib(factory=OrderedDict, converter=OrderedDict),
+        type="OrderedDict",
+        init_type="mapping",
+        default="{}",
         doc="Data stores which will be queried successively.",
     )
+
+    def __getitem__(self, item):
+        return self.stores[item]
 
     @property
     def base_url(self) -> str:
@@ -45,7 +51,7 @@ class MultiDataStore(DataStore):
             raise TypeError(f"fetch() got an unexpected keyword argument '{keyword}'")
 
         # Try and serve data
-        for store in self.stores:
+        for _, store in self.stores.items():
             try:
                 return store.fetch(filename)
             except DataError:

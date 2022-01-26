@@ -15,8 +15,8 @@ def test_multi_data_store(tmpdir):
     # Initialise test data store
     data_store = MultiDataStore(
         [
-            DirectoryDataStore(path=eradiate.config.dir / "resources/data"),
-            OnlineDataStore(base_url=TEST_STORE, path=tmpdir),
+            ("1", DirectoryDataStore(path=eradiate.config.dir / "resources/data")),
+            ("2", OnlineDataStore(base_url=TEST_STORE, path=tmpdir)),
         ]
     )
 
