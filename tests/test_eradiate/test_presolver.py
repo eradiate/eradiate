@@ -27,11 +27,11 @@ def test_contains(presolver):
 def test_remove(presolver):
     # Remove from item
     presolver.remove(os.getcwd())
-    assert len(presolver) == 2
+    assert len(presolver) == 1
 
     # Remove from index
     presolver.remove(0)
-    assert len(presolver) == 1
+    assert len(presolver) == 0
 
     # We expect a removal attempt with a nonexisting item to raise
     with pytest.raises(ValueError):

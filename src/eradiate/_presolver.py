@@ -65,7 +65,6 @@ class PathResolver(metaclass=Singleton):
             self.append(*config.data_path)  # Path list
 
         self.append(config.dir / "resources" / "data")  # Eradiate data directory
-        self.append(config.download_dir)  # Eradiate download directory
 
     def clear(self):
         """Clear the list of search paths."""
