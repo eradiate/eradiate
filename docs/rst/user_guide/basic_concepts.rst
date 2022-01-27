@@ -88,6 +88,10 @@ Glossary
 
 .. glossary::
 
+   Data store
+     A location from where Eradiate fetches its shipped data. Data stores can
+     be offline (directories) or online.
+
    Experiment
      A high-level description of a complete simulation including the scene,
      simulation parameters and post-processing routines.

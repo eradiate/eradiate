@@ -10,6 +10,7 @@ Developer guide
    dependencies
    testing
    documentation
+   data_guide
    scene_element_guide
    factory_guide
    design_atmosphere
