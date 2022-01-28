@@ -16,7 +16,7 @@ appdirs==1.4.4
     # via
     #   -c requirements/dev.txt
     #   pooch
-astropy==5.0
+astropy==5.0.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -60,6 +60,7 @@ click==8.0.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+    #   sphinx-click
 cloudpickle==2.0.0
     # via
     #   -c requirements/dev.txt
@@ -92,6 +93,7 @@ docutils==0.16
     #   pydata-sphinx-theme
     #   sphinx
     #   sphinx-book-theme
+    #   sphinx-click
     #   sphinxcontrib-bibtex
 environ-config==21.2.0
     # via
@@ -256,7 +258,7 @@ requests==2.27.1
     #   -c requirements/dev.txt
     #   pooch
     #   sphinx
-rich==11.0.0
+rich==11.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -301,6 +303,7 @@ sphinx==4.4.0
     #   pydata-sphinx-theme
     #   sphinx-autobuild
     #   sphinx-book-theme
+    #   sphinx-click
     #   sphinx-copybutton
     #   sphinx-design
     #   sphinx-gallery
@@ -310,6 +313,10 @@ sphinx-autobuild==2021.3.14
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
 sphinx-book-theme==0.2.0
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/docs.in
+sphinx-click==3.0.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in

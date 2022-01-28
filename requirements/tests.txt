@@ -16,7 +16,7 @@ appdirs==1.4.4
     # via
     #   -c requirements/dev.txt
     #   pooch
-astropy==5.0
+astropy==5.0.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -270,7 +270,7 @@ requests==2.27.1
     #   -c requirements/dev.txt
     #   pooch
     #   sphinx
-rich==11.0.0
+rich==11.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
