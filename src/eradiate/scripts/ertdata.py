@@ -142,12 +142,17 @@ def purge_cache(keep):
     """
     Purge the cache of online data stores.
     """
-    for i, data_store in enumerate(eradiate.data._store.data_store.stores, start=1):
+    for data_store_id, data_store in eradiate.data.data_store.stores.items():
+        console.print(
+            f"[bold cyan]{data_store_id}[/] [{data_store.__class__.__name__}]"
+        )
+
         if isinstance(data_store, eradiate.data.DirectoryDataStore):
+            console.print(f"  Skipping")
             continue
 
         if isinstance(data_store, eradiate.data.OnlineDataStore):
-            console.print(f"Purging '{data_store.path}'")
+            console.print(f"  Purging '{data_store.path}'")
             if keep:
                 data_store.purge(keep="registered")
             else:
@@ -155,7 +160,7 @@ def purge_cache(keep):
             continue
 
         if isinstance(data_store, eradiate.data.BlindDataStore):
-            console.print(f"Purging '{data_store.path}'")
+            console.print(f"  Purging '{data_store.path}'")
             data_store.purge()
             continue
 
