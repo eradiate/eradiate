@@ -72,11 +72,18 @@ work.
    :maxdepth: 3
    :hidden:
    :titlesonly:
+   :caption: Reference
+
+   rst/reference_api/index
+   rst/reference_plugins/index
+
+.. toctree::
+   :maxdepth: 3
+   :hidden:
+   :titlesonly:
    :caption: For developers/contributors
 
    rst/developer_guide/index
-   rst/reference_api/index
-   rst/reference_plugins/index
 
 .. toctree::
    :maxdepth: 3
