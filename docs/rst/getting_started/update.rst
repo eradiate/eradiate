@@ -55,8 +55,8 @@ After updating, it's always better to rebuild the kernel:
 
 .. code:: bash
 
-   cd $ERADIATE_DIR/build
-   ninja
+   cd $ERADIATE_DIR
+   cmake --build build
 
 Updating your Conda environment
 -------------------------------
@@ -76,8 +76,17 @@ Update data files
 -----------------
 
 Optionally, you may want to make sure that the data files you'll use are
-up-to-date. For that purpose, you can purge Eradiate's data cache:
+up-to-date. For that purpose, you can refresh remote file registries and purge
+Eradiate's data cache:
 
 .. code:: bash
 
-   ertdata purge-cache
+   ertdata update-registries
+   ertdata purge-cache --keep
+
+.. note::
+   For a more aggressive cleanup, just run
+
+   .. code:: bash
+
+      ertdata purge-cache
