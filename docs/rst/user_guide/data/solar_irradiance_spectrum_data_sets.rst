@@ -5,14 +5,15 @@ Solar irradiance spectrum
 
 A solar irradiance spectrum data set provide the Sun's spectral irradiance
 spectrum at a Sun-Earth distance of 1 astronomical unit.
-Solar irradiance spectrum data may come from observations -- e.g. using a
-spectrometer onboard a satellite -- or models such as the blackbody model.
+Solar irradiance spectrum data may come from observations ---
+*e.g.* using a spectrometer onboard a satellite --- or models such as the
+blackbody model.
 
 Data sets access
 ----------------
 
-All solar irradiance spectrum data sets required by Eradiate are available
-within Eradiate using :meth:`eradiate.data.open`.
+All required solar irradiance spectrum data sets are available Eradiate using
+the :mod:`eradiate.data` module.
 
 Identifiers format
 ^^^^^^^^^^^^^^^^^^
@@ -77,10 +78,10 @@ converting from spectral radiance to spectral irradiance, using the equation:
   \phi_{\lambda}(T) = \frac{\pi R^2}{D^2} L_{\lambda} (T)
 
 the radius of the blackbody (:math:`R`) is set to the solar radius constant
-(695.7e6 km) and the distance of the blackbody to the Earth (:math:`D`) is set
-to 1 astronomical unit (149.5978707e6 km) which is the Sun-Earth average
-distance. The wavelength range extends from 280 nm to 2400 nm to cover
-Eradiate's wavelength range. Reference:
+(:math:`695.7 \cdot 10^6` km) and the distance of the blackbody to the Earth
+(:math:`D`) is set to 1 astronomical unit (:math:`149.5978707 \cdot 10^6` km)
+which is the average Sun-Earth distance. The wavelength range extends from
+280 nm to 2400 nm to cover Eradiate's wavelength range. Reference:
 :cite:`Liou2002IntroductionAtmosphericRadiation`.
 
 ``meftah_2017``
@@ -89,13 +90,13 @@ Eradiate's wavelength range. Reference:
 A reference solar irradiance spectrum based on observations
 from the SOLSPEC instrument of the SOLAR payload onboard the internationial
 space station. The spectrum was built using observation data from 2008 for
-the [165, 656] nm wavelength range and from 2010-2016 for the [656, 3000] nm
+the [165, 656] nm wavelength range and from 2010--2016 for the [656, 3000] nm
 wavelength range. The spectrum is said to be representative of the 2008 solar
 minimum which corresponds to the end of the solar cycle 23 and the beginning
 of the solar cycle 24. Wavelength range: [165.0, 3000.1] nm. Resolution:
 better than 1 nm below 1000 nm, and 1 nm in the [1000, 3000] nm wavelength
 range. Absolute uncertainty: 1.26 % (1 standard deviation). Total solar
-irradiance: 1372.3 +/- 16.9 W/m^2 (1 standard deviation). Reference:
+irradiance: 1372.3 ± 16.9 W/m² (1 standard deviation). Reference:
 :cite:`Meftah2017SOLARISSReference`.
 
 ``solid_2017``
@@ -124,7 +125,7 @@ from the SOLSPEC instrument during the ATLAS-1 mission (from 1992-03-24 to
 (from 1992-8-7 to 1993-7-1), and on the Kurucz and Bell (1995) synthetic
 spectrum. Wavelength range: [200, 2397] nm. Resolution: 1 nm. The mean
 absolute uncertainty is of 2 to 3 %. The spectrum is representative of
-moderately high solar activity. Total solar irradiance: 1367.7 W/m^2.
+moderately high solar activity. Total solar irradiance: 1367.7 W/m².
 Reference: :cite:`Thuillier2003SolarSpectralIrradiance`.
 
 ``whi_2008_*``
@@ -133,19 +134,19 @@ Reference: :cite:`Thuillier2003SolarSpectralIrradiance`.
 A combination of simultaneous satellite observations from the
 SEE and SORCE instruments (from 2008-03-25 to 2008-04-16) onboard the TIMED
 satellite and a prototype EVE instrument onboard a sounding rocket launched
-on 14 April 2008. Wavelength range: [116.5, 2399.95] nm (the wavelengthes
-[0.5, 116.5]nm was cutoff). Resolution: 0.1 nm. Representative of solar cycle
+on 14 April 2008. Wavelength range: [116.5, 2399.95] nm (the wavelengths
+[0.5, 116.5] nm are cut off). Resolution: 0.1 nm. Representative of solar cycle
 minimum conditions. The WHI campaign produced three spectra, corresponding to
 three time periods (numbered 1, 2, 3 here):
 
 - ``whi_2008_1``: from 2008-03-25 to 2008-03-29, "sunspot active" spectrum.
-  Total solar irradiance: 1360.70 W/m^2.
+  Total solar irradiance: 1360.70 W/m².
 
 - ``whi_2008_2``: from 2008-03-29 to 2008-04-4, "faculae active" spectrum.
-  Total solar irradiance: 1360.94 W/m^2.
+  Total solar irradiance: 1360.94 W/m².
 
 - ``whi_2008_3``: from 2008-04-10 to 2008-04-16, "quiet sun" spectrum.
-  Total solar irradiance: 1360.84 W/m^2.
+  Total solar irradiance: 1360.84 W/m².
 
 ``whi_2008`` is an alias to the quiet sun spectrum ``whi_2008_3``.
 Reference: :cite:`Woods2008SolarIrradianceReference`.
