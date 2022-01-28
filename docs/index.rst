@@ -76,6 +76,7 @@ work.
 
    rst/reference_api/index
    rst/reference_plugins/index
+   rst/reference_cli/index
 
 .. toctree::
    :maxdepth: 3

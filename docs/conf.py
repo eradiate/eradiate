@@ -106,6 +106,7 @@ html_static_path = ["_static"]
 extensions.append("sphinx.ext.mathjax")
 extensions.append("sphinx.ext.viewcode")
 extensions.append("sphinx_copybutton")
+extensions.append("sphinx_click")
 
 # Bibliography
 extensions.append("sphinxcontrib.bibtex")
