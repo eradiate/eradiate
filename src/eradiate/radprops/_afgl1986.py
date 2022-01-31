@@ -4,6 +4,7 @@ AFGL (1986) radiative profile definition.
 
 from __future__ import annotations
 
+import functools
 import typing as t
 
 import attr
@@ -259,30 +260,36 @@ class AFGL1986RadProfile(RadProfile):
             raise ValueError("argument 'bin_set_id' is required")
 
         with _util_ckd.open_dataset(f"afgl_1986-us_standard-{bin_set_id}") as ds:
-            # evaluate H2O and O3 concentrations
-            h2o_concentration = compute_column_mass_density(
-                ds=self.thermoprops, species="H2O"
-            )
-            o3_concentration = compute_column_number_density(
-                ds=self.thermoprops, species="O3"
-            )
+            # This table maps species to the function used to compute
+            # corresponding physical quantities used for concentration rescaling
+            compute = {
+                "H2O": functools.partial(compute_column_mass_density, species="H2O"),
+                "O3": functools.partial(compute_column_number_density, species="O3"),
+            }
 
+            # Evaluate species concentrations
+            # Note: This includes a conversion to units appropriate for interpolation
+            rescaled_species = list(compute.keys())
+            concentrations = {
+                species: compute[species](ds=self.thermoprops).m_as(ds[species].units)
+                for species in rescaled_species
+            }
+
+            # Convert altitude to units appropriate for interpolation
             z = to_quantity(self.thermoprops.z_layer).m_as(ds.z.units)
 
-            return ureg.Quantity(
+            # Interpolate absorption coefficient on concentration coordinates
+            result = ureg.Quantity(
                 [
                     ds.k.sel(bd=(bindex.bin.id, bindex.index))
-                    .interp(
-                        z=z,
-                        H2O=h2o_concentration.m_as(ds["H2O"].units),
-                        O3=o3_concentration.m_as(ds["O3"].units),
-                        kwargs=dict(fill_value=0.0),
-                    )
+                    .interp(z=z, **concentrations, kwargs=dict(fill_value=0.0))
                     .values
                     for bindex in bindexes
                 ],
                 ds.k.units,
             )
+
+            return result
 
     def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
         thermoprops = self.thermoprops
