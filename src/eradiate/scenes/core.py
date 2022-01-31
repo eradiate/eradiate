@@ -90,7 +90,8 @@ class KernelDict(collections_abc.MutableMapping):
         try:
             self.data.__getitem__(k)
             warnings.warn(
-                f"Duplicate key '{k}' will be overwritten. Are you trying to add scene elements with duplicate IDs to this KernelDict?"
+                f"Duplicate key '{k}' will be overwritten. Are you trying to "
+                "add scene elements with duplicate IDs to this KernelDict?"
             )
         except KeyError:
             pass

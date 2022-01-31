@@ -24,7 +24,7 @@ from ...attrs import AUTO, documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
-from ...units import to_quantity
+from ...units import symbol, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...validators import is_positive
@@ -439,7 +439,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="extinction_coefficient",
                             long_name="extinction coefficient",
-                            units=f"{sigma_t.units:~P}",
+                            units=symbol(sigma_t.units),
                         ),
                     ),
                     "albedo": (
@@ -448,7 +448,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="albedo",
                             long_name="albedo",
-                            units=f"{albedo.units:~P}",
+                            units=symbol(albedo.units),
                         ),
                     ),
                 },
@@ -459,7 +459,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="layer_altitude",
                             long_name="layer altitude",
-                            units=f"{self.z_layer.units:~P}",
+                            units=symbol(self.z_layer.units),
                         ),
                     ),
                     "z_level": (
@@ -468,7 +468,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="level_altitude",
                             long_name="level altitude",
-                            units=f"{self.z_level.units:~P}",
+                            units=symbol(self.z_level.units),
                         ),
                     ),
                     "w": (
@@ -477,7 +477,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                         dict(
                             standard_name="wavelength",
                             long_name="wavelength",
-                            units=f"{wavelength.units:~P}",
+                            units=symbol(wavelength.units),
                         ),
                     ),
                 },
