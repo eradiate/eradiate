@@ -75,7 +75,7 @@ def compute_column_mass_density(ds, species):
     Parameters
     ----------
     ds : Dataset
-        Atmosphere thermophysical properties data set.
+        Atmosphere thermophysical property data set.
 
     species : str
         Species.
@@ -85,7 +85,7 @@ def compute_column_mass_density(ds, species):
     quantity
         Column mass density.
     """
-    with data.open_dataset(f"chemistry/molecular_masses.nc") as molecular_mass:
+    with data.open_dataset("chemistry/molecular_masses.nc") as molecular_mass:
         m = molecular_mass.m.sel(s=species).values * ATOMIC_MASS_CONSTANT
 
     return m * compute_column_number_density(ds=ds, species=species)
