@@ -29,6 +29,5 @@ omit = [
 filterwarnings = [
     "error",
     # Ignore these warnings issued by outdated dependencies
-    "ignore:distutils Version classes are deprecated:DeprecationWarning",
-    "ignore:Passing method to:FutureWarning",  # Check again when upgrading to xarray 0.21+
+    #"ignore:distutils Version classes are deprecated:DeprecationWarning",
 ]
