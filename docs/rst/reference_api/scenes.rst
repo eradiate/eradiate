@@ -132,11 +132,63 @@
 .. autosummary::
    :toctree: generated/autosummary/
 
-   BlackSurface
+   BasicSurface
    CentralPatchSurface
-   CheckerboardSurface
-   LambertianSurface
-   RPVSurface
+
+``eradiate.scenes.bsdfs``
+-------------------------
+
+.. automodule:: eradiate.scenes.bsdfs
+
+.. py:currentmodule:: eradiate.scenes.bsdfs
+
+**Interfaces**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   BSDF
+
+**Factories**
+
+* :data:`bsdf_factory`
+
+**Scene elements**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   LambertianBSDF
+   BlackBSDF
+   RPVBSDF
+   CheckerboardBSDF
+
+``eradiate.scenes.shapes``
+--------------------------
+
+.. automodule:: eradiate.scenes.shapes
+
+.. py:currentmodule:: eradiate.scenes.shapes
+
+**Interfaces**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   Shape
+
+**Factories**
+
+* :data:`shape_factory`
+
+**Scene elements**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   CuboidShape
+   RectangleShape
+   SphereShape
 
 ``eradiate.scenes.illumination``
 --------------------------------

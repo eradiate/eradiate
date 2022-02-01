@@ -57,7 +57,7 @@ class Canopy(SceneElement, ABC):
     )
 
     @abstractmethod
-    def bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
+    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return BSDF plugin specifications only.
 
@@ -77,7 +77,7 @@ class Canopy(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def shapes(self, ctx: KernelDictContext) -> t.MutableMapping:
+    def kernel_shapes(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return shape plugin specifications only.
 
@@ -106,7 +106,7 @@ class CanopyElement(SceneElement, ABC):
     """
 
     @abstractmethod
-    def bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
+    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return BSDF plugin specifications only.
 
@@ -126,7 +126,7 @@ class CanopyElement(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def shapes(self, ctx: KernelDictContext) -> t.MutableMapping:
+    def kernel_shapes(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return shape plugin specifications only.
 
@@ -146,10 +146,7 @@ class CanopyElement(SceneElement, ABC):
         pass
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        if not ctx.ref:
-            return KernelDict(self.shapes(ctx=ctx))
-        else:
-            return KernelDict({**self.bsdfs(ctx=ctx), **self.shapes(ctx=ctx)})
+        return KernelDict({**self.kernel_bsdfs(ctx=ctx), **self.kernel_shapes(ctx=ctx)})
 
 
 @biosphere_factory.register(type_id="instanced")
@@ -232,7 +229,7 @@ class InstancedCanopyElement(SceneElement):
             Path to the text file specifying the leaves in the canopy.
             Can be absolute or relative.
 
-        canopy_element : :class:`.CanopyElement` or dict, optional
+        canopy_element : .CanopyElement or dict, optional
             :class:`.CanopyElement` to be instanced. If a dictionary is passed,
             if is interpreted by :data:`.biosphere_factory`. If set to
             ``None``, an empty leaf cloud will be created.
@@ -285,7 +282,7 @@ class InstancedCanopyElement(SceneElement):
     #                        Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
+    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
         """
         Return BSDF plugin specifications.
 
@@ -301,9 +298,9 @@ class InstancedCanopyElement(SceneElement):
             Return a dictionary suitable for merge with a :class:`.KernelDict`
             containing all the BSDFs attached to the shapes in the leaf cloud.
         """
-        return self.canopy_element.bsdfs(ctx=ctx)
+        return self.canopy_element.kernel_bsdfs(ctx=ctx)
 
-    def shapes(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return shape plugin specifications.
 
@@ -323,11 +320,11 @@ class InstancedCanopyElement(SceneElement):
         return {
             self.canopy_element.id: {
                 "type": "shapegroup",
-                **self.canopy_element.shapes(ctx=ctx),
+                **self.canopy_element.kernel_shapes(ctx=ctx),
             }
         }
 
-    def instances(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_instances(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return instance plugin specifications.
 
@@ -359,8 +356,8 @@ class InstancedCanopyElement(SceneElement):
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         return KernelDict(
             {
-                **self.bsdfs(ctx=ctx),
-                **self.shapes(ctx=ctx),
-                **self.instances(ctx=ctx),
+                **self.kernel_bsdfs(ctx=ctx),
+                **self.kernel_shapes(ctx=ctx),
+                **self.kernel_instances(ctx=ctx),
             }
         )

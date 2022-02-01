@@ -41,9 +41,9 @@ def map_unit_cube(
     """
     from mitsuba.core import ScalarTransform4f
 
-    scale_trafo = ScalarTransform4f.scale([xmax - xmin, ymax - ymin, zmax - zmin])
-    translate_trafo = ScalarTransform4f.translate([xmin, ymin, zmin])
-    return translate_trafo * scale_trafo
+    return ScalarTransform4f.translate([xmin, ymin, zmin]) * ScalarTransform4f.scale(
+        [xmax - xmin, ymax - ymin, zmax - zmin]
+    )
 
 
 def map_cube(
@@ -84,11 +84,10 @@ def map_cube(
     """
     from mitsuba.core import ScalarTransform4f
 
-    half_dx = (xmax - xmin) * 0.5
-    half_dy = (ymax - ymin) * 0.5
-    half_dz = (zmax - zmin) * 0.5
-    scale_trafo = ScalarTransform4f.scale([half_dx, half_dy, half_dz])
-    translate_trafo = ScalarTransform4f.translate(
-        [xmin + half_dx, ymin + half_dy, half_dz + zmin]
-    )
-    return translate_trafo * scale_trafo
+    half_edge_x = 0.5 * (xmax - xmin)
+    half_edge_y = 0.5 * (ymax - ymin)
+    half_edge_z = 0.5 * (zmax - zmin)
+
+    return ScalarTransform4f.translate(
+        [half_edge_x + xmin, half_edge_y + ymin, half_edge_z + zmin]
+    ) * ScalarTransform4f.scale([half_edge_x, half_edge_y, half_edge_z])

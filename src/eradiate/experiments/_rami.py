@@ -1,19 +1,39 @@
 import typing as t
-import warnings
 
 import attr
 
 from ._core import EarthObservationExperiment, Experiment
-from .. import supported_mode, validators
-from .._mode import ModeFlags
-from ..attrs import AUTO, documented, get_doc, parse_docs
+from .. import validators
+from ..attrs import documented, get_doc, parse_docs
 from ..contexts import KernelDictContext
-from ..exceptions import OverriddenValueWarning
 from ..scenes.biosphere import Canopy, biosphere_factory
+from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import Measure
-from ..scenes.surface import LambertianSurface, Surface, surface_factory
+from ..scenes.shapes import RectangleShape
+from ..scenes.surface import BasicSurface, surface_factory
+from ..units import unit_registry as ureg
+
+
+def _surface_converter(value):
+    if isinstance(value, dict):
+        try:
+            # First, attempt conversion to BSDF
+            value = bsdf_factory.convert(value)
+        except TypeError:
+            # If this doesn't work, attempt conversion to Surface
+            return surface_factory.convert(value)
+
+    # If we make it to this point, it means that dict conversion has been
+    # performed with success
+    if isinstance(value, BSDF):
+        return BasicSurface(
+            shape=RectangleShape(),
+            bsdf=value,
+        )
+
+    return value
 
 
 @parse_docs
@@ -61,31 +81,23 @@ class RamiExperiment(EarthObservationExperiment):
         default="0",
     )
 
-    surface: Surface = documented(
+    surface: t.Union[None, BasicSurface] = documented(
         attr.ib(
-            factory=LambertianSurface,
-            converter=surface_factory.convert,
-            validator=attr.validators.instance_of(Surface),
+            factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
+            converter=attr.converters.optional(_surface_converter),
+            validator=attr.validators.optional(
+                attr.validators.instance_of(BasicSurface)
+            ),
         ),
-        doc="Surface specification. "
-        "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.surface_factory`.\n"
-        "\n"
-        ".. note::\n"
-        "   Surface size will be overridden using canopy parameters.",
-        type=":class:`.Surface`",
-        init_type=":class:`.Surface` or dict",
-        default=":class:`LambertianSurface() <.LambertianSurface>`",
+        doc="Surface specification. If set to ``None``, no surface will be "
+        "added. This parameter can be specified as a dictionary which will be "
+        "interpreted by :data:`.surface_factory` and :data:`.bsdf_factory`. "
+        "**If relevant, the surface size will be adjusted automatically upon "
+        "kernel. dictionary generation.**",
+        type=".BasicSurface or None",
+        init_type=".BasicSurface or .BSDF or dict, optional",
+        default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
-
-    @surface.validator
-    def _surface_validator(self, attribute, value):
-        if self.canopy and value.width is not AUTO:
-            warnings.warn(
-                OverriddenValueWarning(
-                    "user-defined surface width will be overridden by canopy size"
-                )
-            )
 
     _integrator: Integrator = documented(
         attr.ib(
@@ -99,37 +111,47 @@ class RamiExperiment(EarthObservationExperiment):
         default=":class:`PathIntegrator() <.PathIntegrator>`",
     )
 
-    def __attrs_pre_init__(self):
-        # Only tested with monochromatic modes
-        supported_mode(ModeFlags.ANY_MONO)
-
     def __attrs_post_init__(self):
         self._normalize_measures()
+
+    @property
+    def _default_surface_width(self):
+        return 1.0 * ureg.km
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = KernelDict()
 
-        # Note: Surface width is always adapted to the canopy extent
+        # Process canopy
         if self.canopy is not None:
+            scene_width = max(self.canopy.size[:2])
+
             if self.padding > 0:  # We must add extra instances if padding is requested
+                scene_width *= 2.0 * self.padding + 1.0
                 canopy = self.canopy.padded_copy(self.padding)
-                ctx = ctx.evolve(
-                    override_scene_width=max(self.canopy.size[:2])
-                    * (2.0 * self.padding + 1.0)
-                )
             else:
                 canopy = self.canopy
-                ctx = ctx.evolve(override_scene_width=max(self.canopy.size[:2]))
 
             result.add(canopy, ctx=ctx)
 
-        result.add(
-            self.surface,
-            self.illumination,
-            *self.measures,
-            self.integrator,
-            ctx=ctx,
-        )
+        else:
+            scene_width = self._default_surface_width
+
+        # Process surface
+        if self.surface is not None:  # Surface size always matches canopy size
+            surface = attr.evolve(
+                self.surface,
+                shape=RectangleShape(center=[0, 0, 0], edges=scene_width),
+            )
+            result.add(surface, ctx=ctx)
+
+        # Process measures
+        result.add(*self.measures, ctx=ctx)
+
+        # Process illumination
+        result.add(self.illumination, ctx=ctx)
+
+        # Process integrator
+        result.add(self.integrator, ctx=ctx)
 
         return result
 
@@ -141,26 +163,26 @@ class RamiExperiment(EarthObservationExperiment):
         """
         for measure in self.measures:
             # Override ray target location if relevant
-            if measure.is_distant():
-                if measure.target is None:
-                    if self.canopy is not None:
-                        measure.target = dict(
-                            type="rectangle",
-                            xmin=-0.5 * self.canopy.size[0],
-                            xmax=0.5 * self.canopy.size[0],
-                            ymin=-0.5 * self.canopy.size[1],
-                            ymax=0.5 * self.canopy.size[1],
-                            z=self.canopy.size[2],
-                        )
-                    else:
-                        ctx = KernelDictContext()
-                        measure.target = dict(
-                            type="rectangle",
-                            xmin=-0.5 * self.surface.kernel_width(ctx),
-                            xmax=0.5 * self.surface.kernel_width(ctx),
-                            ymin=-0.5 * self.surface.kernel_width(ctx),
-                            ymax=0.5 * self.surface.kernel_width(ctx),
-                        )
+            if (
+                measure.is_distant() and measure.target is None
+            ):  # No target specified: add one
+                if self.canopy is None:  # No canopy: target single point
+                    measure.target = dict(
+                        type="rectangle",
+                        xmin=-0.5 * self._default_surface_width,
+                        xmax=0.5 * self._default_surface_width,
+                        ymin=-0.5 * self._default_surface_width,
+                        ymax=0.5 * self._default_surface_width,
+                    )
+                else:  # Canopy: target top of canopy
+                    measure.target = dict(
+                        type="rectangle",
+                        xmin=-0.5 * self.canopy.size[0],
+                        xmax=0.5 * self.canopy.size[0],
+                        ymin=-0.5 * self.canopy.size[1],
+                        ymax=0.5 * self.canopy.size[1],
+                        z=self.canopy.size[2],
+                    )
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(RamiExperiment, self)._dataset_metadata(measure)

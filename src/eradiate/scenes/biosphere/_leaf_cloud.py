@@ -1123,7 +1123,7 @@ class LeafCloud(CanopyElement):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return BSDF plugin specifications.
 
@@ -1149,7 +1149,7 @@ class LeafCloud(CanopyElement):
             }
         }
 
-    def shapes(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return shape plugin specifications.
 
@@ -1173,7 +1173,7 @@ class LeafCloud(CanopyElement):
         if ctx.ref:
             bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
         else:
-            bsdf = self.bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
+            bsdf = self.kernel_bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
 
         for i_leaf, (position, normal, radius) in enumerate(
             zip(

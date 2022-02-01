@@ -1,32 +1,46 @@
+from __future__ import annotations
+
 import typing as t
-import warnings
 
 import attr
 
 from ._core import EarthObservationExperiment, Experiment
 from ..attrs import AUTO, documented, get_doc, parse_docs
 from ..contexts import KernelDictContext
-from ..exceptions import OverriddenValueWarning
-from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
+from ..scenes.atmosphere import (
+    Atmosphere,
+    AtmosphereGeometry,
+    HomogeneousAtmosphere,
+    PlaneParallelGeometry,
+    SphericalShellGeometry,
+    atmosphere_factory,
+)
+from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import Measure, MultiRadiancemeterMeasure, TargetPoint
 from ..scenes.measure._core import MeasureFlags
-from ..scenes.surface import LambertianSurface, Surface, surface_factory
+from ..scenes.shapes import RectangleShape, SphereShape
+from ..scenes.surface import BasicSurface, surface_factory
 from ..units import unit_context_config as ucc
+from ..units import unit_registry as ureg
 
 
 def measure_inside_atmosphere(atmosphere, measure, ctx):
     """
     Evaluate whether a sensor is placed within an atmosphere.
 
-    Raises a ValueError if called with a :class:`MultiRadiancemeterMeasure` with
-    origins both inside and outside of the atmosphere.
+    Raises a ValueError if called with a :class:`.MultiRadiancemeterMeasure`
+    with origins both inside and outside of the atmosphere.
     """
-    bbox = atmosphere.eval_bbox(ctx)
+    if atmosphere is None:
+        return False
+
+    shape = atmosphere.eval_shape(ctx)
 
     if isinstance(measure, MultiRadiancemeterMeasure):
-        inside = bbox.contains(measure.origins)
+        inside = shape.contains(measure.origins)
+
         if all(inside):
             return True
         elif not any(inside):
@@ -39,8 +53,29 @@ def measure_inside_atmosphere(atmosphere, measure, ctx):
             )
     elif measure.flags & MeasureFlags.DISTANT:
         return False
+
     else:
-        return bbox.contains(measure.origin)
+        return shape.contains(measure.origin)
+
+
+def _surface_converter(value):
+    if isinstance(value, dict):
+        try:
+            # First, attempt conversion to BSDF
+            value = bsdf_factory.convert(value)
+        except TypeError:
+            # If this doesn't work, attempt conversion to Surface
+            return surface_factory.convert(value)
+
+    # If we make it to this point, it means that dict conversion has been
+    # performed with success
+    if isinstance(value, BSDF):
+        return BasicSurface(
+            shape=RectangleShape(),
+            bsdf=value,
+        )
+
+    return value
 
 
 @parse_docs
@@ -48,8 +83,9 @@ def measure_inside_atmosphere(atmosphere, measure, ctx):
 class OneDimExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a one-dimensional scene. This experiment approximates
-    a one-dimensional setup using a 3D geometry set up so as to reproduce the
-    effect of translational invariance.
+    a one-dimensional setup using a 3D geometry set up to reproduce the
+    effect of invariances typical of 1D geometries. It supports the so-called
+    plane parallel and spherical shell geometries.
 
     Notes
     -----
@@ -66,6 +102,20 @@ class OneDimExperiment(EarthObservationExperiment):
       during initialisation.
     """
 
+    geometry: t.Union[PlaneParallelGeometry, SphericalShellGeometry] = documented(
+        attr.ib(
+            default="plane_parallel",
+            converter=AtmosphereGeometry.convert,
+            validator=attr.validators.instance_of(
+                (PlaneParallelGeometry, SphericalShellGeometry)
+            ),
+        ),
+        doc="Problem geometry.",
+        type=".PlaneParallelGeometry or .SphericalShellGeometry",
+        init_type="str or dict or .AtmosphereGeometry",
+        default="plane_parallel",
+    )
+
     atmosphere: t.Optional[Atmosphere] = documented(
         attr.ib(
             factory=HomogeneousAtmosphere,
@@ -81,27 +131,21 @@ class OneDimExperiment(EarthObservationExperiment):
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )
 
-    surface: Surface = documented(
+    surface: t.Optional[BasicSurface] = documented(
         attr.ib(
-            factory=LambertianSurface,
-            converter=surface_factory.convert,
-            validator=attr.validators.instance_of(Surface),
+            factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
+            converter=attr.converters.optional(_surface_converter),
+            validator=attr.validators.optional(
+                attr.validators.instance_of(BasicSurface)
+            ),
         ),
-        doc="Surface specification. "
-        "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.surface_factory`.",
-        type=":class:`.Surface`",
-        init_type=":class:`.Surface` or dict",
-        default=":class:`LambertianSurface() <.LambertianSurface>`",
+        doc="Surface specification. If set to ``None``, no surface will be "
+        "added. This parameter can be specified as a dictionary which will be "
+        "interpreted by :data:`.surface_factory` and :data:`.bsdf_factory`.",
+        type=".BasicSurface or None",
+        init_type=".BasicSurface or .BSDF or dict, optional",
+        default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
-
-    @surface.validator
-    def _surface_validator(self, attribute, value):
-        if self.atmosphere and value.width is not AUTO:
-            warnings.warn(
-                "user-defined surface width will be overridden by atmosphere width",
-                OverriddenValueWarning,
-            )
 
     _integrator: Integrator = documented(
         attr.ib(
@@ -118,41 +162,79 @@ class OneDimExperiment(EarthObservationExperiment):
     def __attrs_post_init__(self):
         self._normalize_measures()
 
+    @property
+    def _default_surface_width(self):
+        return 1.0 * ureg.km
+
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = KernelDict({"type": "scene"})
 
-        # Note: Surface width is always set equal to atmosphere width
+        # Process atmosphere
         if self.atmosphere is not None:
-            result.add(self.atmosphere, ctx=ctx)
-            ctx = ctx.evolve(
-                override_scene_width=self.atmosphere.kernel_width(ctx),
-            )
-
-            for measure in self.measures:
-                if measure_inside_atmosphere(self.atmosphere, measure, ctx):
-                    result.add(
-                        measure,
-                        ctx=ctx.evolve(atmosphere_medium_id=self.atmosphere.id_medium),
-                    )
-                else:
-                    result.add(measure, ctx=ctx)
-
-            result.add(self.surface, self.illumination, self.integrator, ctx=ctx)
+            atmosphere = attr.evolve(self.atmosphere, geometry=self.geometry)
+            result.add(atmosphere, ctx=ctx)
         else:
-            result.add(
-                self.surface,
-                self.illumination,
-                *self.measures,
-                self.integrator,
-                ctx=ctx
-            )
+            atmosphere = None
+
+        # Process surface
+        if self.surface is not None:
+            if isinstance(self.geometry, PlaneParallelGeometry):
+                if atmosphere is not None:
+                    width = atmosphere.kernel_width_plane_parallel(ctx)
+                    altitude = atmosphere.bottom
+                else:
+                    width = (
+                        self.geometry.width
+                        if self.geometry.width is not AUTO
+                        else self._default_surface_width
+                    )
+                    altitude = 0.0 * ureg.km
+
+                surface = attr.evolve(
+                    self.surface,
+                    shape=RectangleShape.surface(altitude=altitude, width=width),
+                )
+
+            elif isinstance(self.geometry, SphericalShellGeometry):
+                if atmosphere is not None:
+                    altitude = self.atmosphere.bottom
+                else:
+                    altitude = 0.0 * ureg.km
+
+                surface = attr.evolve(
+                    self.surface,
+                    shape=SphereShape.surface(
+                        altitude=altitude, planet_radius=self.geometry.planet_radius
+                    ),
+                )
+
+            else:  # Shouldn't happen, prevented by validator
+                raise RuntimeError
+
+            result.add(surface, ctx=ctx)
+
+        # Process measures
+        for measure in self.measures:
+            if measure_inside_atmosphere(atmosphere, measure, ctx):
+                result.add(
+                    measure,
+                    ctx=ctx.evolve(atmosphere_medium_id=self.atmosphere.id_medium),
+                )
+            else:
+                result.add(measure, ctx=ctx)
+
+        # Process illumination
+        result.add(self.illumination, ctx=ctx)
+
+        # Process integrator
+        result.add(self.integrator, ctx=ctx)
 
         return result
 
     def _normalize_measures(self) -> None:
         """
         Ensure that distant measure target and origin are set to appropriate
-        values. Processed measures will have its ray target and origin parameters
+        values. Processed measures will have their ray target parameter
         overridden if relevant.
         """
         for measure in self.measures:

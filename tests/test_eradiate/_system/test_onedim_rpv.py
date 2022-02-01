@@ -107,8 +107,7 @@ def test_film_to_angular_coord_conversion_multi_distant(
             azimuth=illumination_azimuth,
         )
 
-        surface = eradiate.scenes.surface.RPVSurface(
-            width=1.0,
+        surface = eradiate.scenes.bsdfs.RPVBSDF(
             g=g,
             rho_0=reflectance,
             k=0.9,
@@ -551,12 +550,7 @@ def test_film_to_angular_coord_conversion_distant_flux(
             azimuth=illumination_azimuth,
         )
 
-        surface = eradiate.scenes.surface.RPVSurface(
-            width=1.0,
-            g=g,
-            rho_0=reflectance,
-            k=0.9,
-        )
+        surface = eradiate.scenes.bsdfs.RPVBSDF(g=g, rho_0=reflectance, k=0.9)
 
         integrator = eradiate.scenes.integrators.PathIntegrator()
 
@@ -722,8 +716,7 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
             azimuth=illumination_azimuth,
         )
 
-        surface = eradiate.scenes.surface.RPVSurface(
-            width=1.0,
+        surface = eradiate.scenes.bsdfs.RPVBSDF(
             g=g,
             rho_0=reflectance,
             k=0.9,

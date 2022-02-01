@@ -2,10 +2,10 @@ import numpy as np
 import pytest
 
 from eradiate.experiments import OneDimExperiment, RamiExperiment
+from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
-from eradiate.scenes.surface import LambertianSurface
 
 
 @pytest.mark.parametrize("cls", ["onedim", "rami"])
@@ -60,7 +60,7 @@ def test_spectral_loop(mode_mono, cls, wavelengths, irradiance):
         illumination = DirectionalIllumination(irradiance=SolarIrradianceSpectrum())
 
     exp = cls_exp(
-        surface=LambertianSurface(reflectance=1.0),
+        surface=LambertianBSDF(reflectance=1.0),
         illumination=illumination,
         measures=[
             MultiDistantMeasure(

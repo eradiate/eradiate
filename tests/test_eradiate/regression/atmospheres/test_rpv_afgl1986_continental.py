@@ -46,11 +46,11 @@ def test_rpv_afgl1986_continental_brfpp(mode_ckd_double, metadata, session_times
         top=2 * ureg.km,
         n_layers=16,
         tau_550=0.5,
-        dataset="resources/data/spectra/particles/govaerts_2021-continental.nc",
+        dataset=data_store.fetch("spectra/particles/govaerts_2021-continental.nc"),
     )
 
     exp = OneDimExperiment(
-        surface=esc.surface.RPVSurface(k=0.95, g=-0.1, rho_0=0.027685),
+        surface=esc.bsdfs.RPVBSDF(k=0.95, g=-0.1, rho_0=0.027685),
         illumination=esc.illumination.DirectionalIllumination(
             zenith=20 * ureg.deg, irradiance=20.0
         ),

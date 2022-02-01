@@ -69,45 +69,37 @@ def test_compare_rami4atm_onedim(
        :width: 30%
     """
 
-    surface = ertsc.surface.surface_factory.convert(
-        {"type": "lambertian", "reflectance": reflectance}
-    )
-    illumination = ertsc.illumination.illumination_factory.convert(
-        {"type": "directional", "zenith": sza, "azimuth": 0.0}
-    )
-    atmosphere = ertsc.atmosphere.atmosphere_factory.convert(
-        {
-            "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "type": "molecular",
-                "has_absorption": False,
-                "has_scattering": True,
-            },
-        }
-    )
-    measures = ertsc.measure.measure_factory.convert(
-        {
-            "type": "distant",
-            "id": "measure",
-            "construct": "from_viewing_angles",
-            "zeniths": np.linspace(-90, 90, 19),
-            "azimuths": 0.0,
-            "spp": 1e4,
-        }
-    )
+    surface = {"type": "lambertian", "reflectance": reflectance}
+    illumination = {"type": "directional", "zenith": sza, "azimuth": 0.0}
+    atmosphere = {
+        "type": "heterogeneous",
+        "molecular_atmosphere": {
+            "type": "molecular",
+            "has_absorption": False,
+            "has_scattering": True,
+        },
+    }
+    measure = {
+        "type": "distant",
+        "id": "measure",
+        "construct": "from_viewing_angles",
+        "zeniths": np.linspace(-90, 90, 19),
+        "azimuths": 0.0,
+        "spp": 1e4,
+    }
 
     onedim = ertxp.OneDimExperiment(
         surface=surface,
         illumination=illumination,
         atmosphere=atmosphere,
-        measures=measures,
+        measures=measure,
     )
 
     r4a = ertxp.Rami4ATMExperiment(
         surface=surface,
         illumination=illumination,
         atmosphere=atmosphere,
-        measures=measures,
+        measures=measure,
         canopy=None,
     )
 
@@ -208,12 +200,8 @@ def test_compare_rami4atm_rami(
        :width: 30%
     """
 
-    surface = ertsc.surface.surface_factory.convert(
-        {"type": "lambertian", "reflectance": 0.25}
-    )
-    illumination = ertsc.illumination.illumination_factory.convert(
-        {"type": "directional", "zenith": sza, "azimuth": 0.0}
-    )
+    surface = {"type": "lambertian", "reflectance": 0.25}
+    illumination = {"type": "directional", "zenith": sza, "azimuth": 0.0}
     canopy = ertsc.biosphere.DiscreteCanopy.homogeneous(
         lai=lai,
         leaf_radius=0.1 * ureg.m,
@@ -221,22 +209,20 @@ def test_compare_rami4atm_rami(
         l_vertical=2.0 * ureg.m,
         padding=5,
     )
-    measures = ertsc.measure.measure_factory.convert(
-        {
-            "type": "distant",
-            "id": "measure",
-            "construct": "from_viewing_angles",
-            "zeniths": np.linspace(-90, 90, 19),
-            "azimuths": 0.0,
-            "spp": 1e4,
-        }
-    )
+    measure = {
+        "type": "distant",
+        "id": "measure",
+        "construct": "from_viewing_angles",
+        "zeniths": np.linspace(-90, 90, 19),
+        "azimuths": 0.0,
+        "spp": 1e4,
+    }
 
     rami = ertxp.RamiExperiment(
         surface=surface,
         illumination=illumination,
         canopy=canopy,
-        measures=measures,
+        measures=measure,
     )
 
     r4a = ertxp.Rami4ATMExperiment(
@@ -244,7 +230,7 @@ def test_compare_rami4atm_rami(
         illumination=illumination,
         atmosphere=None,
         canopy=canopy,
-        measures=measures,
+        measures=measure,
     )
 
     ert_seed_state.reset()

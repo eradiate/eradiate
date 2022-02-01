@@ -49,9 +49,7 @@ def test_spp_splitting(mode_mono, artefact_dir):
     # Basic scene setup
     exp = eradiate.experiments.OneDimExperiment(
         atmosphere=None,
-        surface=eradiate.scenes.surface.LambertianSurface(
-            width=1.0 * ureg.m, reflectance=1.0
-        ),
+        surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=1.0),
         illumination=eradiate.scenes.illumination.DirectionalIllumination(
             irradiance=1.0
         ),

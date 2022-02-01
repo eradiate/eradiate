@@ -5,8 +5,7 @@ import xarray as xr
 from eradiate import path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext, MonoSpectralContext, SpectralContext
-from eradiate.scenes.atmosphere._particle_dist import UniformParticleDistribution
-from eradiate.scenes.atmosphere._particle_layer import ParticleLayer
+from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
 from eradiate.scenes.measure._core import CKDMeasureSpectralConfig
 from eradiate.units import symbol, to_quantity
 
@@ -107,7 +106,7 @@ def test_particle_layer_eval_mono_absorbing_only(
     assert np.all(layer.eval_albedo(spectral_ctx).magnitude == 0.0)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    assert layer.eval_width(ctx).magnitude > 0.0
+    assert layer.eval_mfp(ctx).magnitude > 0.0
 
 
 @pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
@@ -122,7 +121,7 @@ def test_particle_layer_eval_mono_scattering_only(
     assert np.all(layer.eval_albedo(spectral_ctx).magnitude == 1.0)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    assert layer.eval_width(ctx).magnitude > 0.0
+    assert layer.eval_mfp(ctx).magnitude > 0.0
 
 
 @pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
@@ -144,7 +143,7 @@ def test_particle_layer_eval_mono(
     assert np.isclose(layer.eval_albedo(spectral_ctx).magnitude, 0.8)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    assert layer.eval_width(ctx) == 12.5 * ureg.km
+    assert layer.eval_mfp(ctx) == 1.25 * ureg.km
 
 
 @pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
@@ -158,7 +157,7 @@ def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, tmpdir, absorbing_only
     assert np.all(layer.eval_albedo(spectral_ctx).magnitude == 0.0)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    assert layer.eval_width(ctx).magnitude > 0.0
+    assert layer.eval_mfp(ctx).magnitude > 0.0
 
 
 @pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
@@ -174,7 +173,7 @@ def test_particle_layer_eval_ckd_scattering_only(
     assert np.all(layer.eval_albedo(spectral_ctx).magnitude == 1.0)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    assert layer.eval_width(ctx).magnitude > 0.0
+    assert layer.eval_mfp(ctx).magnitude > 0.0
 
 
 @pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
@@ -195,7 +194,7 @@ def test_particle_layer_eval_ckd(mode_ckd, tmpdir, test_particles_dataset, bins)
     assert np.isclose(layer.eval_albedo(spectral_ctx).magnitude, 0.8)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    assert layer.eval_width(ctx) == 12.5 * ureg.km
+    assert layer.eval_mfp(ctx) == 1.25 * ureg.km
 
 
 def test_particle_layer_construct_basic():
@@ -206,7 +205,7 @@ def test_particle_layer_construct_basic():
 def test_particle_layer_scale(modes_all_single):
     """Scale parameter propagates to kernel dict and latter can be loaded."""
     ctx = KernelDictContext()
-    d = ParticleLayer(scale=2.0).kernel_dict(ctx)
+    d = ParticleLayer(geometry="plane_parallel", scale=2.0).kernel_dict(ctx)
     assert d["medium_atmosphere"]["scale"] == 2.0
     assert d.load()
 
@@ -265,7 +264,7 @@ def test_particle_layer_kernel_phase(modes_all_single):
 
 def test_particle_layer_kernel_dict(modes_all_single):
     """Kernel dictionary can be loaded"""
-    particle_layer = ParticleLayer(n_layers=9)
+    particle_layer = ParticleLayer(geometry="plane_parallel", n_layers=9)
     ctx = KernelDictContext()
     assert particle_layer.kernel_dict(ctx).load()
 

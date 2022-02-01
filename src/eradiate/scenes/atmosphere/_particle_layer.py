@@ -187,19 +187,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def bottom(self) -> pint.Quantity:
         return self._bottom
 
-    @KernelDictContext.DYNAMIC_FIELDS.register("override_scene_width")
-    def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
-        try:
-            return ctx.override_scene_width
-
-        except AttributeError:
-            if self.width is AUTO:
-                min_sigma_s = self.eval_sigma_s(spectral_ctx=ctx.spectral_ctx).min()
-                width = 10.0 / min_sigma_s if min_sigma_s != 0.0 else np.inf * ureg.m
-                return min(width, 1000 * ureg.km)
-            else:
-                return self.width
-
     @property
     def z_level(self) -> pint.Quantity:
         """
@@ -246,6 +233,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         fractions = self.distribution(x.magnitude)
         fractions /= np.sum(fractions)
         return fractions
+
+    def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+        min_sigma_s = self.eval_sigma_s(spectral_ctx=ctx.spectral_ctx).min()
+        return 1.0 / min_sigma_s if min_sigma_s != 0.0 else np.inf * ureg.m
 
     # --------------------------------------------------------------------------
     #                       Radiative properties

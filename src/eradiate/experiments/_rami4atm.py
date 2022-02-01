@@ -9,8 +9,16 @@ from .. import converters, validators
 from ..attrs import AUTO, documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import OverriddenValueWarning
-from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
+from ..scenes.atmosphere import (
+    Atmosphere,
+    AtmosphereGeometry,
+    HomogeneousAtmosphere,
+    PlaneParallelGeometry,
+    SphericalShellGeometry,
+    atmosphere_factory,
+)
 from ..scenes.biosphere import Canopy, biosphere_factory
+from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..scenes.core import KernelDict
 from ..scenes.integrators import (
     Integrator,
@@ -20,9 +28,30 @@ from ..scenes.integrators import (
 )
 from ..scenes.measure import Measure, MultiRadiancemeterMeasure, TargetPoint
 from ..scenes.measure._core import MeasureFlags
-from ..scenes.surface import LambertianSurface, Surface, surface_factory
+from ..scenes.shapes import RectangleShape, SphereShape
+from ..scenes.surface import BasicSurface, CentralPatchSurface, surface_factory
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
+
+
+def _surface_converter(value):
+    if isinstance(value, dict):
+        try:
+            # First, attempt conversion to BSDF
+            value = bsdf_factory.convert(value)
+        except TypeError:
+            # If this doesn't work, attempt conversion to Surface
+            return surface_factory.convert(value)
+
+    # If we make it to this point, it means that dict conversion has been
+    # performed with success
+    if isinstance(value, BSDF):
+        return BasicSurface(
+            shape=RectangleShape(),
+            bsdf=value,
+        )
+
+    return value
 
 
 @parse_docs
@@ -33,15 +62,20 @@ class Rami4ATMExperiment(EarthObservationExperiment):
     This experiment assumes that the surface is plane and accounts for ground
     unit cell padding.
 
+    Warnings
+    --------
+    * Canopy padding is controlled using the `padding` parameter: do *not* pad
+      the canopy itself manually.
+
     Notes
     -----
     * A post-initialisation step will constrain the measure setup if a
       distant measure is used and no target is defined:
 
-      * if a canopy is defined, the target will be set to the top of the canopy unit cell
-        (*i.e.* without its padding);
-      * if no canopy is defined, the target will be set according to the atmosphere
-        (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere altitude);
+      * if a canopy is defined, the target will be set to the top of the canopy
+        unit cell (*i.e.* without its padding);
+      * if no canopy is defined, the target will be set according to the
+        atmosphere (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere altitude);
       * if neither atmosphere nor canopy are defined, the target is set to
         [0, 0, 0].
 
@@ -51,6 +85,20 @@ class Rami4ATMExperiment(EarthObservationExperiment):
       unsuitable configuration is detected, a :class:`ValueError` will be raised
       during initialisation.
     """
+
+    geometry: t.Union[PlaneParallelGeometry, SphericalShellGeometry] = documented(
+        attr.ib(
+            default="plane_parallel",
+            converter=AtmosphereGeometry.convert,
+            validator=attr.validators.instance_of(
+                (PlaneParallelGeometry, SphericalShellGeometry)
+            ),
+        ),
+        doc="Atmosphere geometry.",
+        type=".PlaneParallelGeometry or .SphericalShellGeometry",
+        init_type="str or dict or .AtmosphereGeometry",
+        default="plane_parallel",
+    )
 
     atmosphere: t.Optional[Atmosphere] = documented(
         attr.ib(
@@ -62,8 +110,8 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         "be added. "
         "This parameter can be specified as a dictionary which will be "
         "interpreted by :data:`.atmosphere_factory`.",
-        type=":class:`.Atmosphere` or None",
-        init_type=":class:`.Atmosphere` or dict or None, optional",
+        type=".Atmosphere or None",
+        init_type=".Atmosphere or dict or None, optional",
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )
 
@@ -76,8 +124,8 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         doc="Canopy specification. "
         "This parameter can be specified as a dictionary which will be "
         "interpreted by :data:`.biosphere_factory`.",
-        type=":class:`.Canopy` or None",
-        init_type=":class:`.Canopy` or dict or None, optional",
+        type=".Canopy or None",
+        init_type=".Canopy or dict or None, optional",
         default="None",
     )
 
@@ -95,33 +143,26 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         default="0",
     )
 
-    surface: Surface = documented(
+    surface: t.Union[BasicSurface, CentralPatchSurface, None] = documented(
         attr.ib(
-            factory=LambertianSurface,
-            converter=surface_factory.convert,
-            validator=attr.validators.instance_of(Surface),
+            factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
+            converter=attr.converters.optional(_surface_converter),
+            validator=attr.validators.optional(
+                attr.validators.instance_of((BasicSurface, CentralPatchSurface))
+            ),
         ),
-        doc="Surface specification. "
-        "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.surface_factory`.\n"
-        "\n"
-        ".. note::\n"
-        "   Surface size will be overridden using canopy and atmosphere "
-        "   parameters, if they are defined.",
-        type=":class:`.Surface`",
-        init_type=":class:`.Surface` or dict",
-        default=":class:`LambertianSurface() <.LambertianSurface>`",
+        doc="Surface specification. A :class:`.Surface` object may be passed: "
+        "its shape specifications will be bypassed and the surface size will "
+        "be computed automatically upon kernel dictionary generation. "
+        "A :class:`.BSDF` may also be passed: it will be wrapped automatically "
+        "in a :class:`.BasicSurface` instance. If a dictionary is passed, it "
+        "will be first interpreted as a :class:`.BSDF`; if this fails, it will "
+        "then be interpreted as a :class:`.Surface`. Finally, this field can "
+        "be set to ``None``: in that case, no surface will be added.",
+        type=".Surface or None",
+        init_type=".Surface or .BSDF or dict or None, optional",
+        default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
-
-    @surface.validator
-    def _surface_validator(self, attribute, value):
-        if (self.canopy or self.atmosphere) and value.width is not AUTO:
-            warnings.warn(
-                OverriddenValueWarning(
-                    "user-defined surface width will be overridden by canopy "
-                    "or atmosphere size"
-                )
-            )
 
     _integrator: Integrator = documented(
         attr.ib(
@@ -155,61 +196,92 @@ class Rami4ATMExperiment(EarthObservationExperiment):
     def __attrs_post_init__(self):
         self._normalize_measures()
 
+    @property
+    def _default_surface_width(self):
+        return 10.0 * ucc.get("length")
+
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        # Inherit docstring
+
         result = KernelDict()
 
-        # Note: Surface width is always set equal to the largest between the
-        # atmosphere and canopy sizes
-        if self.atmosphere is not None:
-            atm_width = self.atmosphere.kernel_width(ctx)
-        else:
-            atm_width = 0.0 * ureg.m
+        # Note: Object size computation logic
+        # - The atmosphere, if set, must be the largest object in the
+        #   scene. If the geometry setup defines the atmosphere width, it is
+        #   used. Otherwise, a size is computed automatically.
+        # - The canopy size must be lower that the atmosphere size if it is
+        #   defined.
+        # - The surface must be larger than the largest object in the scene.
+        #   If the atmosphere is set, the surface matches its size.
+        #   Otherwise, if the canopy is set, the surface matches its size.
+        #   Otherwise, the surface defaults to a size possibly specified by the
+        #   geometry setup.
 
+        # Pre-process atmosphere
+        if self.atmosphere is not None:
+            atmosphere = attr.evolve(self.atmosphere, geometry=self.geometry)
+            atmosphere_width = atmosphere.kernel_width_plane_parallel(ctx)
+        else:
+            atmosphere = None
+            atmosphere_width = 0.0 * ureg.m
+
+        # Pre-process canopy
         if self.canopy is not None:
+            canopy_width = max(self.canopy.size[:2])
+
             if self.padding > 0:  # We must add extra instances if padding is requested
+                canopy_width *= 2.0 * self.padding + 1.0
                 canopy = self.canopy.padded_copy(self.padding)
-                canopy_width = max(self.canopy.size[:2]) * (2.0 * self.padding + 1.0)
             else:
                 canopy = self.canopy
-                canopy_width = max(canopy.size[:2])
         else:
-            canopy_width = 0.0 * ureg.m
             canopy = None
+            canopy_width = 0.0 * ureg.m
 
-        scene_width = max(atm_width, canopy_width)
-        scene_width = None if scene_width == 0.0 else scene_width
-        canopy_width = None if canopy_width == 0.0 else canopy_width
-        ctx = ctx.evolve(
-            override_scene_width=scene_width, override_canopy_width=canopy_width
-        )
+        # Check sizes, compute surface size
+        if atmosphere is not None:
+            assert atmosphere_width > canopy_width
+        surface_width = self._default_surface_width
+        if canopy_width > surface_width:
+            surface_width = canopy_width
+        if atmosphere_width > surface_width:
+            surface_width = atmosphere_width
 
-        if canopy:
+        # Pre-process surface
+        if self.surface is not None:
+            altitude = atmosphere.bottom if atmosphere is not None else 0.0 * ureg.km
+            surface = attr.evolve(
+                self.surface,
+                shape=RectangleShape.surface(altitude=altitude, width=surface_width),
+            )
+        else:
+            surface = None
+
+        # Add all configured elements
+        if atmosphere is not None:
+            result.add(atmosphere, ctx=ctx)
+
+        if canopy is not None:
             result.add(canopy, ctx=ctx)
 
-        if self.atmosphere is not None:
-            result.add(self.atmosphere, ctx=ctx)
-            ctx = ctx.evolve(
-                override_scene_width=self.atmosphere.kernel_width(ctx),
-            )
+        if surface is not None:
+            result.add(surface, ctx=ctx)
 
-            for measure in self.measures:
-                if measure_inside_atmosphere(self.atmosphere, measure, ctx):
-                    result.add(
-                        measure,
-                        ctx=ctx.evolve(atmosphere_medium_id=self.atmosphere.id_medium),
-                    )
-                else:
-                    result.add(measure, ctx=ctx)
+        # Process measures
+        for measure in self.measures:
+            if measure_inside_atmosphere(atmosphere, measure, ctx):
+                result.add(
+                    measure,
+                    ctx=ctx.evolve(atmosphere_medium_id=self.atmosphere.id_medium),
+                )
+            else:
+                result.add(measure, ctx=ctx)
 
-            result.add(self.surface, self.illumination, self.integrator, ctx=ctx)
-        else:
-            result.add(
-                self.surface,
-                self.illumination,
-                *self.measures,
-                self.integrator,
-                ctx=ctx
-            )
+        # Process illumination
+        result.add(self.illumination, ctx=ctx)
+
+        # Process integrator
+        result.add(self.integrator, ctx=ctx)
 
         return result
 
@@ -221,25 +293,27 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         """
         for measure in self.measures:
             # Override ray target location if relevant
-            if measure.is_distant():
-                if measure.target is None:
-                    if self.canopy is not None:
-                        measure.target = dict(
-                            type="rectangle",
-                            xmin=-0.5 * self.canopy.size[0],
-                            xmax=0.5 * self.canopy.size[0],
-                            ymin=-0.5 * self.canopy.size[1],
-                            ymax=0.5 * self.canopy.size[1],
-                            z=self.canopy.size[2],
-                        )
-                    else:
-                        if self.atmosphere is not None:
-                            toa = self.atmosphere.top
-                            target_point = [0.0, 0.0, toa.m] * toa.units
-                        else:
-                            target_point = [0.0, 0.0, 0.0] * ucc.get("length")
-
-                        measure.target = TargetPoint(target_point)
+            if (
+                measure.is_distant() and measure.target is None
+            ):  # No target specified: add one
+                if self.canopy is None:  # No canopy: target single point
+                    if (
+                        self.atmosphere is None
+                    ):  # No atmosphere: target point at surface
+                        target_point = [0.0, 0.0, 0.0] * ucc.get("length")
+                    else:  # Atmosphere: target point at top of atmosphere
+                        toa = self.atmosphere.top
+                        target_point = [0.0, 0.0, toa.m] * toa.units
+                    measure.target = TargetPoint(target_point)
+                else:  # Canopy: target top of canopy
+                    measure.target = dict(
+                        type="rectangle",
+                        xmin=-0.5 * self.canopy.size[0],
+                        xmax=0.5 * self.canopy.size[0],
+                        ymin=-0.5 * self.canopy.size[1],
+                        ymax=0.5 * self.canopy.size[1],
+                        z=self.canopy.size[2],
+                    )
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(Rami4ATMExperiment, self)._dataset_metadata(measure)

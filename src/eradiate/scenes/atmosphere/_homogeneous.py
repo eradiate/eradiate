@@ -6,10 +6,8 @@ from ._core import Atmosphere, atmosphere_factory
 from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
-from ..._util import onedict_value
-from ...attrs import AUTO, documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...kernel.transform import map_cube
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -18,7 +16,7 @@ from ...validators import has_quantity
 
 @atmosphere_factory.register(type_id="homogeneous")
 @parse_docs
-@attr.s()
+@attr.s
 class HomogeneousAtmosphere(Atmosphere):
     """
     Homogeneous atmosphere scene element [``homogeneous``].
@@ -121,12 +119,8 @@ class HomogeneousAtmosphere(Atmosphere):
     #                           Evaluation methods
     # --------------------------------------------------------------------------
 
-    def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
-        if self.width is AUTO:
-            spectral_ctx = ctx.spectral_ctx
-            return 10.0 / self.eval_sigma_s(spectral_ctx)
-        else:
-            return self.width
+    def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+        return 1.0 / self.eval_sigma_s(ctx.spectral_ctx)
 
     def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
@@ -206,53 +200,18 @@ class HomogeneousAtmosphere(Atmosphere):
         return self.phase.kernel_dict(ctx=ctx)
 
     def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
-        if ctx.ref:
-            phase = {"type": "ref", "id": self.phase.id}
-        else:
-            phase = onedict_value(self.kernel_phase(ctx=ctx))
-
+        # Note: The "medium" param is set at a higher level: it is set as a
+        # reference in the kernel_dict() method.
         return KernelDict(
             {
                 self.id_medium: {
                     "type": "homogeneous",
-                    "phase": phase,
                     "sigma_t": self.eval_sigma_t(ctx.spectral_ctx).m_as(
                         uck.get("collision_coefficient")
                     ),
                     "albedo": self.eval_albedo(ctx.spectral_ctx).m_as(
                         uck.get("albedo")
                     ),
-                }
-            }
-        )
-
-    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
-        if ctx.ref:
-            medium = {"type": "ref", "id": self.id_medium}
-        else:
-            medium = self.kernel_media(ctx=ctx)[self.id_medium]
-
-        length_units = uck.get("length")
-        width = self.kernel_width(ctx=ctx).m_as(length_units)
-        top = self.top.m_as(length_units)
-        bottom = self.bottom.m_as(length_units)
-        offset = self.kernel_offset(ctx=ctx).m_as(length_units)
-        trafo = map_cube(
-            xmin=-width / 2.0,
-            xmax=width / 2.0,
-            ymin=-width / 2.0,
-            ymax=width / 2.0,
-            zmin=bottom - offset,
-            zmax=top,
-        )
-
-        return KernelDict(
-            {
-                f"shape_{self.id}": {
-                    "type": "cube",
-                    "to_world": trafo,
-                    "bsdf": {"type": "null"},
-                    "interior": medium,
                 }
             }
         )

@@ -18,25 +18,17 @@ def path_to_ussa76_approx_data():
     )
 
 
-def test_heterogeneous_empty(modes_all_single):
-    """
-    Unit tests for a HeterogeneousAtmosphere with no components.
-    """
-    # Constructing without argument succeeds
-    atmosphere = HeterogeneousAtmosphere()
-
-    # Produced kernel dicts are all empty
-    ctx = KernelDictContext()
-    assert atmosphere.kernel_shapes(ctx).data == {}
-    assert atmosphere.kernel_media(ctx).data == {}
-    assert atmosphere.kernel_phase(ctx).data == {}
-    assert atmosphere.kernel_dict(ctx).data == {}
+def test_heterogeneous_empty(modes_all_double):
+    # Passing no component is not allowed
+    with pytest.raises(ValueError):
+        HeterogeneousAtmosphere()
 
 
-@pytest.mark.parametrize("components", ("molecular", "particle"))
+@pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
+@pytest.mark.parametrize("components", ["molecular", "particle"])
 @pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
 def test_heterogeneous_single(
-    modes_all_single, components, bin_set, path_to_ussa76_approx_data
+    modes_all_double, geometry, components, bin_set, path_to_ussa76_approx_data
 ):
     """
     Unit tests for a HeterogeneousAtmosphere with a single component.
@@ -44,7 +36,7 @@ def test_heterogeneous_single(
     # Construct succeeds
     if components == "molecular":
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-            component = MolecularAtmosphere.ussa1976(
+            component = MolecularAtmosphere.ussa_1976(
                 absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
             )
         elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
@@ -52,24 +44,31 @@ def test_heterogeneous_single(
         else:
             pytest.skip(f"unsupported mode '{eradiate.mode().id}'")
 
-        atmosphere = HeterogeneousAtmosphere(molecular_atmosphere=component)
+        atmosphere = HeterogeneousAtmosphere(
+            geometry=geometry, molecular_atmosphere=component
+        )
     else:
         component = ParticleLayer()
-        atmosphere = HeterogeneousAtmosphere(particle_layers=[component])
+        atmosphere = HeterogeneousAtmosphere(
+            geometry=geometry, particle_layers=[component]
+        )
 
     # Produced kernel dict can be loaded
     ctx = KernelDictContext(spectral_ctx=CKDSpectralContext(bin_set=bin_set))
     assert atmosphere.kernel_dict(ctx).load()
 
 
+@pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 @pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
-def test_heterogeneous_multi(modes_all_single, bin_set, path_to_ussa76_approx_data):
+def test_heterogeneous_multi(
+    modes_all_double, geometry, bin_set, path_to_ussa76_approx_data
+):
     """
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """
     # Construct succeeds
     if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
-        molecular_atmosphere = MolecularAtmosphere.ussa1976(
+        molecular_atmosphere = MolecularAtmosphere.ussa_1976(
             absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
         )
     elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
@@ -78,6 +77,7 @@ def test_heterogeneous_multi(modes_all_single, bin_set, path_to_ussa76_approx_da
         pytest.skip(f"unsupported mode '{eradiate.mode().id}'")
 
     atmosphere = HeterogeneousAtmosphere(
+        geometry=geometry,
         molecular_atmosphere=molecular_atmosphere,
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
@@ -98,7 +98,8 @@ def test_heterogeneous_multi(modes_all_single, bin_set, path_to_ussa76_approx_da
 def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
     ctx = KernelDictContext()
     d = HeterogeneousAtmosphere(
-        molecular_atmosphere=MolecularAtmosphere.ussa1976(
+        geometry="plane_parallel",
+        molecular_atmosphere=MolecularAtmosphere.ussa_1976(
             absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
         ),
         particle_layers=[ParticleLayer() for _ in range(2)],
@@ -111,7 +112,7 @@ def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
 def test_heterogeneous_blend_switches(mode_mono):
     # Rayleigh-only atmosphere + particle layer combination works
     assert HeterogeneousAtmosphere(
-        molecular_atmosphere=MolecularAtmosphere.ussa1976(
+        molecular_atmosphere=MolecularAtmosphere.ussa_1976(
             has_absorption=False, has_scattering=True
         ),
         particle_layers=[ParticleLayer()],
@@ -120,7 +121,7 @@ def test_heterogeneous_blend_switches(mode_mono):
     # Purely absorbing atmosphere + particle layer combination is not allowed
     with pytest.raises(ValueError):
         HeterogeneousAtmosphere(
-            molecular_atmosphere=MolecularAtmosphere.ussa1976(
+            molecular_atmosphere=MolecularAtmosphere.ussa_1976(
                 has_absorption=True, has_scattering=False
             ),
             particle_layers=[ParticleLayer()],

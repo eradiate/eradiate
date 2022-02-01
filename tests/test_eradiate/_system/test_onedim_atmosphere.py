@@ -1,6 +1,3 @@
-"""
-Test cases for the one-dimensional solver with a heterogeneous atmosphere.
-"""
 import numpy as np
 import pytest
 
@@ -14,26 +11,23 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
     mode_mono, bottom, tau_550, ert_seed_state
 ):
     """
-    HeterogeneousAtmosphere is a good container for a ParticleLayer
-    ===============================================================
-
-    This testcase asserts that the HeterogeneousAtmosphere class can act as a container for
-    other atmosphere objects.
-
+    Perfect single-component HeterogeneousAtmosphere expansion (particle layer)
+    ===========================================================================
+    This test case checks if a single-component HeterogeneousAtmosphere
+    container expands perfectly as its component. This is assessed by checking
+    if the results provided by two scenes presumably identical are indeed the
+    same.
 
     Rationale
     ---------
+    Run a OneDimExperiment with two different atmosphere definitions:
 
-    Run a OneDimExperiment with two different atmosphere definitions.
-    First define an atmosphere that is directly made up from a single particle layer.
-    Second define a heterogeneous atmosphere that contains *only* one particle layer.
+    1. A single particle layer.
+    2. Heterogeneous atmosphere that contains a single particle layer.
 
     Expected behaviour
     ------------------
-
-    Same results are produced for a scene consisting of
-    * a particle layer
-    * a heterogeneous atmosphere that (only) contains that particle layer.
+    The two experiments produce *exactly* the same results.
     """
     # particle layer
     bottom = bottom * ureg.km
@@ -58,31 +52,26 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
 
 
 def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
-    mode_mono, ert_seed_state
+    mode_mono_double, ert_seed_state
 ):
     """
-    HeterogeneousAtmosphere is a good container for a MolecularAtmosphere
-    =====================================================================
-
-    This testcase asserts that the HeterogeneousAtmosphere class can act as a
-    container for other atmosphere objects.
+    Perfect single-component HeterogeneousAtmosphere expansion (molecular atmosphere)
+    =================================================================================
+    This test case checks if a single-component HeterogeneousAtmosphere
+    container expands perfectly as its component. This is assessed by checking
+    if the results provided by two scenes presumably identical are indeed the
+    same.
 
     Rationale
     ---------
+    Run a OneDimExperiment with two different atmosphere definitions:
 
-    Run a OneDimExperiment with two different atmosphere definitions.
-    First define an atmosphere that is directly made up from a non-absorbing
-    molecular atmosphere.
-    Second define a heterogeneous atmosphere that contains *only* a
-    non-absorbing molecular atmosphere.
+    1. A molecular atmosphere.
+    2. Heterogeneous atmosphere that contains a molecular atmosphere only.
 
     Expected behaviour
     ------------------
-
-    Same results are produced for a scene consisting of:
-       * a non-absorbing molecular atmosphere
-       * a heterogeneous atmosphere that (only) contains that non-absorbing
-         molecular atmosphere
+    The two experiments produce *exactly* the same results.
     """
     # non absorbing molecular atmosphere
     exp1 = eradiate.experiments.OneDimExperiment(

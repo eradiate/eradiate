@@ -67,7 +67,10 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
         )
 
     elements = [
-        ertsc.surface.LambertianSurface(reflectance=rho, width=2.0 * ureg.m),
+        ertsc.surface.BasicSurface(
+            bsdf=ertsc.bsdfs.LambertianBSDF(reflectance=rho),
+            shape=ertsc.shapes.RectangleShape(edges=2.0 * ureg.m),
+        ),
         measure,
         ertsc.integrators.PathIntegrator(),
     ]
