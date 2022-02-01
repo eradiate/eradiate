@@ -54,7 +54,7 @@ def init_experiment_particle_layer(bottom, top, dataset_path, tau_550, r, w, spp
                 )
             ],
         ),
-        surface=eradiate.scenes.surface.LambertianSurface(reflectance=r),
+        surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=r),
     )
 
 
@@ -88,7 +88,7 @@ def init_experiment_homogeneous_atmosphere(
             sigma_s=sigma_s,
             phase=phase,
         ),
-        surface=eradiate.scenes.surface.LambertianSurface(reflectance=r),
+        surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=r),
     )
 
 

@@ -33,7 +33,7 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, metadata, session_timestamp):
     This test uses the Chi-squared criterion with a threshold of 0.05.
     """
     exp = OneDimExperiment(
-        surface=esc.surface.RPVSurface(k=0.95, g=-0.1, rho_0=0.027685),
+        surface=esc.bsdfs.RPVBSDF(k=0.95, g=-0.1, rho_0=0.027685),
         illumination=esc.illumination.DirectionalIllumination(
             zenith=20 * ureg.deg, irradiance=20.0
         ),

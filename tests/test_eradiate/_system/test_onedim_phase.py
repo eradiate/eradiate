@@ -38,7 +38,7 @@ def init_experiment(bottom, top, sigma_a, sigma_s, phase, r, w, spp):
             sigma_s=sigma_s,
             phase=phase,
         ),
-        surface=eradiate.scenes.surface.LambertianSurface(reflectance=r),
+        surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=r),
     )
 
 

@@ -1,8 +1,6 @@
-import typing as t
-
 import attr
 
-from ._core import Surface, surface_factory
+from ._core import BSDF, bsdf_factory
 from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
@@ -10,15 +8,14 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
 
-@surface_factory.register(type_id="checkerboard")
+@bsdf_factory.register(type_id="checkerboard")
 @parse_docs
 @attr.s
-class CheckerboardSurface(Surface):
+class CheckerboardBSDF(BSDF):
     """
-    Checkerboard surface scene element [``checkerboard``].
+    Checkerboard BSDF [``checkerboard``].
 
-    This class creates a square surface to which a Lambertian BRDF is attached.
-    The BRDF is textured with a checkerboard pattern.
+    This class defines a Lambertian BSDF textured with a checkerboard pattern.
     """
 
     reflectance_a: Spectrum = documented(
@@ -32,8 +29,8 @@ class CheckerboardSurface(Surface):
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
         "processed by :data:`.spectrum_factory`.",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict or float",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float",
         default="0.2",
     )
 
@@ -48,7 +45,7 @@ class CheckerboardSurface(Surface):
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
         "processed by :data:`.spectrum_factory`.",
-        type=":class:`.Spectrum`",
+        type=".Spectrum",
         init_type=":class:`.Spectrum` or dict or float",
         default="0.8",
     )
@@ -57,17 +54,20 @@ class CheckerboardSurface(Surface):
         attr.ib(
             default=2.0, converter=float, validator=attr.validators.instance_of(float)
         ),
-        doc="Scaling factor for the checkerboard pattern.",
+        doc="Scaling factor for the checkerboard pattern. The higher the value, "
+        "the more checkboard patterns will fit on the surface to which this "
+        "reflection model is attached.",
         type="float",
         default=2.0,
     )
 
-    def bsdfs(self, ctx: KernelDictContext) -> KernelDict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        # Inherit docstring
         from mitsuba.core import ScalarTransform4f
 
         return KernelDict(
             {
-                f"bsdf_{self.id}": {
+                self.id: {
                     "type": "diffuse",
                     "reflectance": {
                         "type": "checkerboard",

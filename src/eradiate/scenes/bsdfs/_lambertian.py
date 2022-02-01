@@ -1,23 +1,28 @@
-import typing as t
-
 import attr
 
-from ._core import Surface, surface_factory
+from ._core import BSDF, bsdf_factory
 from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
+from ..._util import onedict_value
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
 
-@surface_factory.register(type_id="lambertian")
+@bsdf_factory.register(type_id="lambertian")
 @parse_docs
 @attr.s
-class LambertianSurface(Surface):
+class LambertianBSDF(BSDF):
     """
-    Lambertian surface scene element [``lambertian``].
+    Lambertian BSDF [``lambertian``].
 
-    This class creates a square surface to which a Lambertian BRDF is attached.
+    This class implements the Lambertian (a.k.a. diffuse) reflectance model.
+    A surface with this scattering model attached scatters radiation equally in
+    every direction.
+
+    Notes
+    -----
+    This is a thin wrapper around the ``diffuse`` kernel plugin.
     """
 
     reflectance: Spectrum = documented(
@@ -31,17 +36,18 @@ class LambertianSurface(Surface):
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
         "processed by :data:`.spectrum_factory`.",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict or float",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float",
         default="0.5",
     )
 
-    def bsdfs(self, ctx: KernelDictContext) -> KernelDict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        # Inherit docstring
         return KernelDict(
             {
-                f"bsdf_{self.id}": {
+                self.id: {
                     "type": "diffuse",
-                    "reflectance": self.reflectance.kernel_dict(ctx=ctx)["spectrum"],
+                    "reflectance": onedict_value(self.reflectance.kernel_dict(ctx=ctx)),
                 }
             }
         )

@@ -126,10 +126,10 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         if value is None:
             return
 
-        if value.width is not AUTO:
+        if value.geometry is not None:
             raise ValueError(
                 f"while validating {attribute.name}: all components must have "
-                "their 'width' field set to AUTO"
+                "their 'geometry' field set to None"
             )
 
         if value.scale is not None:
@@ -164,10 +164,10 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @particle_layers.validator
     def _particle_layers_validator(self, attribute, value):
-        if not all([component.width is AUTO for component in value]):
+        if not all([component.geometry is None for component in value]):
             raise ValueError(
                 f"while validating {attribute.name}: all components must have "
-                f"their 'width' field set to AUTO"
+                f"their 'geometry' field set to None"
             )
 
         if not all(component.scale is None for component in value):
@@ -183,6 +183,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return result
 
     def update(self):
+        if not self.components:
+            raise ValueError("HeterogeneousAtmosphere must have at least one component")
+
         super().update()
 
         # Force IDs and cache directories
@@ -197,30 +200,16 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def bottom(self) -> pint.Quantity:
         bottoms = [component.bottom for component in self.components]
-        if bottoms:
-            return min(bottoms)
-        else:
-            return 0.0 * ureg.km
+        return min(bottoms)
 
     @property
     def top(self) -> pint.Quantity:
         tops = [component.top for component in self.components]
-        if tops:
-            return max(tops)
-        else:
-            return 10.0 * ureg.km
+        return max(tops)
 
-    def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
-        if self.width is not AUTO:
-            return self.width
-
-        else:
-            widths = [component.eval_width(ctx=ctx) for component in self.components]
-
-            if widths:
-                return max(widths)
-            else:
-                return 1000.0 * ureg.km
+    def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+        mfp = [component.eval_mfp(ctx=ctx) for component in self.components]
+        return max(mfp)
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
@@ -262,12 +251,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         """
         components = self.components
 
-        # Nothing: return zeros
-        if len(components) == 0:
-            return _zero_radprops(spectral_ctx)
-
         # Single component: just forward encapsulated component
-        elif len(components) == 1:
+        if len(components) == 1:
             return components[0].eval_radprops(spectral_ctx)
 
         # Two components or more: interpolate all components on a fine grid and
@@ -340,20 +325,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
-        if len(self.components) == 0:
-            return KernelDict()
-
-        else:
-            return super().kernel_shapes(ctx)
-
-    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
-        if len(self.components) == 0:
-            return KernelDict()
-
-        else:
-            return super().kernel_media(ctx)
-
     def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
         """
         Return phase function plugin specifications only.
@@ -372,12 +343,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         """
         components = self.components
 
-        # Nothing: return empty dict
-        if len(components) == 0:
-            return KernelDict()
-
         # Single component: just forward encapsulated component
-        elif len(components) == 1:
+        if len(components) == 1:
             return KernelDict(
                 {self.id_phase: onedict_value(components[0].kernel_phase(ctx).data)}
             )
@@ -403,15 +370,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             )
 
             return phase.kernel_dict(ctx)
-
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Shortcut: an empty HeterogeneousAtmosphere returns no kernel object
-        components = self.components
-        if len(components) == 0:
-            return KernelDict()
-
-        else:
-            return super().kernel_dict(ctx)
 
 
 def interpolate_radprops(

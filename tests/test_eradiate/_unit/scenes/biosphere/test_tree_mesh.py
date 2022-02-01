@@ -167,7 +167,7 @@ def test_mesh_tree_element_load(mode_mono, tmp_file, request):
         reflectance=0.5,
         transmittance=0.5,
     )
-    d = {**tree_element.bsdfs(ctx), **tree_element.shapes(ctx)}
+    d = {**tree_element.kernel_bsdfs(ctx), **tree_element.kernel_shapes(ctx)}
 
     assert KernelDict(d).load()
 

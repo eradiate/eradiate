@@ -14,7 +14,7 @@ import xarray as xr
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
-from ...attrs import AUTO, documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
 from ...thermoprops import afgl_1986, us76
@@ -39,7 +39,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
        .. autosummary::
 
           afgl_1986
-          ussa1976
+          ussa_1976
     """
 
     _thermoprops: xr.Dataset = documented(
@@ -130,23 +130,14 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     def thermoprops(self) -> xr.Dataset:
         return self._thermoprops
 
-    @KernelDictContext.DYNAMIC_FIELDS.register("override_scene_width")
-    def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
-        try:
-            return ctx.override_scene_width
-        except AttributeError:
-            if self.width is AUTO:
-                min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
-                width = np.divide(
-                    10.0,
-                    min_sigma_s,
-                    where=min_sigma_s != 0.0,
-                    out=np.array([np.inf]),
-                )
-
-                return min(width, ureg.Quantity(1e3, "km"))
-            else:
-                return self.width
+    def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+        min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
+        return np.divide(
+            1.0,
+            min_sigma_s,
+            where=min_sigma_s != 0.0,
+            out=np.array([np.inf]),
+        )
 
     # --------------------------------------------------------------------------
     #                             Radiative properties
@@ -286,10 +277,10 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             factors = compute_scaling_factors(ds=ds, concentration=concentrations)
             ds = rescale_concentration(ds=ds, factors=factors)
 
-        return MolecularAtmosphere(thermoprops=ds, **kwargs)
+        return cls(thermoprops=ds, **kwargs)
 
     @classmethod
-    def ussa1976(
+    def ussa_1976(
         cls,
         levels: t.Optional[pint.Quantity] = None,
         concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
@@ -325,4 +316,4 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             factors = compute_scaling_factors(ds=ds, concentration=concentrations)
             ds = rescale_concentration(ds=ds, factors=factors)
 
-        return MolecularAtmosphere(thermoprops=ds, **kwargs)
+        return cls(thermoprops=ds, **kwargs)

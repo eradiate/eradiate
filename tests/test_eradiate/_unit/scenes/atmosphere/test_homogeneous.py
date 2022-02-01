@@ -4,11 +4,9 @@ import pinttr
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate._util import onedict_value
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
-from eradiate.scenes.core import KernelDict
 from eradiate.scenes.phase import RayleighPhaseFunction, phase_function_factory
 
 
@@ -47,14 +45,6 @@ def test_homogeneous_top_invalid_units(mode_mono):
         HomogeneousAtmosphere(top=10 * ureg.s)
 
 
-def test_homogeneous_width_invalid_units(mode_mono):
-    """
-    Raises when invalid units are passed to 'width'.
-    """
-    with pytest.raises(pinttr.exceptions.UnitsError):
-        HomogeneousAtmosphere(width=5 * ureg.m ** 2)
-
-
 def test_homogeneous_sigma_s_invalid_units(mode_mono):
     """
     Raises when invalid units are passed to 'sigma_s'.
@@ -71,14 +61,6 @@ def test_homogeneous_top_invalid_value(mode_mono):
         HomogeneousAtmosphere(top=-100.0)
 
 
-def test_homogeneous_top_invalid_value(mode_mono):
-    """
-    Raises when invalid value is passed to 'width'.
-    """
-    with pytest.raises(ValueError):
-        HomogeneousAtmosphere(width=-50.0)
-
-
 @pytest.mark.parametrize(
     "phase_id",
     set(phase_function_factory.registry.keys())
@@ -87,49 +69,37 @@ def test_homogeneous_top_invalid_value(mode_mono):
         "tab_phase",
     },  # Exclude phase functions with no default parametrisation
 )
-@pytest.mark.parametrize("ref", (False, True))
-def test_homogeneous_phase_function(mode_mono, phase_id, ref):
+def test_homogeneous_phase_function(mode_mono, phase_id):
     """Supports all available phase function types."""
-    r = HomogeneousAtmosphere(phase={"type": phase_id})
+    r = HomogeneousAtmosphere(geometry="plane_parallel", phase={"type": phase_id})
 
     # The resulting object produces a valid kernel dictionary
-    ctx = KernelDictContext(ref=ref)
-    kernel_dict = KernelDict.from_elements(r, ctx=ctx)
-    assert kernel_dict.load() is not None
+    ctx = KernelDictContext()
+    assert r.kernel_dict(ctx).load()
 
 
-def test_homogeneous_width(mode_mono):
+def test_homogeneous_mfp(mode_mono):
     """
     Automatically sets width to ten times the scattering mean free path.
     """
-    r = HomogeneousAtmosphere()
     ctx = KernelDictContext()
-    wavelength = ctx.spectral_ctx.wavelength
-    assert np.isclose(
-        r.kernel_width(ctx), 10.0 / compute_sigma_s_air(wavelength=wavelength)
-    )
+    r = HomogeneousAtmosphere(geometry="plane_parallel")
+    sigma_s = compute_sigma_s_air(wavelength=ctx.spectral_ctx.wavelength)
+
+    assert np.isclose(r.eval_mfp(ctx), 1.0 / sigma_s)
+    assert np.isclose(r.kernel_width_plane_parallel(ctx), 10.0 / sigma_s)
 
 
-@pytest.mark.parametrize("ref", (False, True))
-def test_homogeneous_kernel_dict(mode_mono, ref):
+@pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
+def test_homogeneous_kernel_dict(modes_all_double, geometry):
     """
     Produces kernel dictionaries that can be loaded by the kernel.
     """
-    from mitsuba.core import load_dict
 
-    r = HomogeneousAtmosphere()
+    r = HomogeneousAtmosphere(geometry=geometry)
+    ctx = KernelDictContext()
 
-    ctx = KernelDictContext(ref=False)
-
-    dict_phase = onedict_value(r.kernel_phase(ctx))
-    assert load_dict(dict_phase) is not None
-
-    dict_medium = onedict_value(r.kernel_media(ctx))
-    assert load_dict(dict_medium) is not None
-
-    dict_shape = onedict_value(r.kernel_shapes(ctx))
-    assert load_dict(dict_shape) is not None
-
-    ctx = KernelDictContext(ref=ref)
-    kernel_dict = KernelDict.from_elements(r, ctx=ctx)
-    assert kernel_dict.load() is not None
+    assert r.kernel_phase(ctx).load()
+    assert r.kernel_media(ctx).load()
+    assert r.kernel_shapes(ctx).load()
+    assert r.kernel_dict(ctx).load()

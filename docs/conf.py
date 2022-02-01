@@ -165,7 +165,7 @@ intersphinx_mapping = {
     "xarray": ("https://xarray.pydata.org/en/stable/", None),
 }
 
-# Activate todo notes
+# Activate todonotes
 extensions.append("sphinx.ext.todo")
 todo_include_todos = True
 

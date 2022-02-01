@@ -83,7 +83,7 @@ class DiscreteCanopy(Canopy):
     #                          Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return BSDF plugin specifications.
 
@@ -102,10 +102,10 @@ class DiscreteCanopy(Canopy):
         """
         result = {}
         for instanced_canopy_element in self.instanced_canopy_elements:
-            result = {**result, **instanced_canopy_element.bsdfs(ctx=ctx)}
+            result = {**result, **instanced_canopy_element.kernel_bsdfs(ctx=ctx)}
         return result
 
-    def shapes(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return shape plugin specifications.
 
@@ -124,10 +124,10 @@ class DiscreteCanopy(Canopy):
         """
         result = {}
         for instanced_canopy_element in self.instanced_canopy_elements:
-            result = {**result, **instanced_canopy_element.shapes(ctx=ctx)}
+            result = {**result, **instanced_canopy_element.kernel_shapes(ctx=ctx)}
         return result
 
-    def instances(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_instances(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return instance plugin specifications.
 
@@ -139,7 +139,7 @@ class DiscreteCanopy(Canopy):
         """
         result = {}
         for instanced_canopy_element in self.instanced_canopy_elements:
-            result = {**result, **instanced_canopy_element.instances(ctx)}
+            result = {**result, **instanced_canopy_element.kernel_instances(ctx)}
         return result
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
@@ -150,9 +150,9 @@ class DiscreteCanopy(Canopy):
         for instanced_canopy_element in self.instanced_canopy_elements:
             result.update(
                 {
-                    **instanced_canopy_element.bsdfs(ctx=ctx),
-                    **instanced_canopy_element.shapes(ctx=ctx),
-                    **instanced_canopy_element.instances(ctx=ctx),
+                    **instanced_canopy_element.kernel_bsdfs(ctx=ctx),
+                    **instanced_canopy_element.kernel_shapes(ctx=ctx),
+                    **instanced_canopy_element.kernel_instances(ctx=ctx),
                 }
             )
 

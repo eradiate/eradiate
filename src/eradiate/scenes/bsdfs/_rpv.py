@@ -2,7 +2,7 @@ import typing as t
 
 import attr
 
-from ._core import Surface, surface_factory
+from ._core import BSDF, bsdf_factory
 from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
@@ -11,24 +11,30 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
 
-@surface_factory.register(type_id="rpv")
+@bsdf_factory.register(type_id="rpv")
 @parse_docs
 @attr.s
-class RPVSurface(Surface):
+class RPVBSDF(BSDF):
     """
-    RPV surface scene element [``rpv``].
+    RPV BSDF [``rpv``].
 
-    This class creates a square surface to which a RPV BRDF
-    :cite:`Rahman1993CoupledSurfaceatmosphereReflectance,Pinty2000SurfaceAlbedoRetrieval`
-    is attached.
+    This BSDF implements the Rahman-Pinty-Verstraete (RPV) reflection model
+    :cite:`Rahman1993CoupledSurfaceatmosphereReflectance,Pinty2000SurfaceAlbedoRetrieval`.
+    It notably features a controllable back-scattering lobe (`hot spot`)
+    characteristic of many natural land surfaces and is frequently used in Earth
+    observation because of its simple parametrisation.
 
-    The default configuration corresponds to grassland (visible light)
-    (:cite:`Rahman1993CoupledSurfaceatmosphereReflectance`, Table 1).
+    See Also
+    --------
+    :ref:`plugin-bsdf-rpv`
 
     Notes
     -----
-    Parameter names are defined as per the symbols used in the Eradiate
-    Scientific Handbook :cite:`EradiateScientificHandbook2020`.
+    * The default configuration is typical of grassland in the visible domain
+      (:cite:`Rahman1993CoupledSurfaceatmosphereReflectance`, Table 1).
+    * Parameter names are defined as per the symbols used in the Eradiate
+      Scientific Handbook :cite:`EradiateScientificHandbook2020`.
+
     """
 
     rho_0: Spectrum = documented(
@@ -42,8 +48,8 @@ class RPVSurface(Surface):
         ),
         doc="Amplitude parameter. Must be dimensionless. "
         "Should be in :math:`[0, 1]`.",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict or float, optional",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float, optional",
         default="0.183",
     )
 
@@ -63,8 +69,8 @@ class RPVSurface(Surface):
         doc="Hot spot parameter. Must be dimensionless. "
         r"Should be in :math:`[0, 1]`. If unset, :math:`\rho_\mathrm{c}` "
         r"defaults to the kernel plugin default (equal to :math:`\rho_0`).",
-        type=":class:`.Spectrum` or None",
-        init_type=":class:`.Spectrum` or dict or float or None, optional",
+        type=".Spectrum or None",
+        init_type=".Spectrum or dict or float or None, optional",
         default="None",
     )
 
@@ -79,8 +85,8 @@ class RPVSurface(Surface):
         ),
         doc="Bowl-shape parameter. Must be dimensionless. "
         "Should be in :math:`[0, 2]`.",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict or float, optional",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float, optional",
         default="0.780",
     )
 
@@ -95,15 +101,16 @@ class RPVSurface(Surface):
         ),
         doc="Asymmetry parameter. Must be dimensionless. "
         "Should be in :math:`[-1, 1]`.",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict or float, optional",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float, optional",
         default="-0.1",
     )
 
-    def bsdfs(self, ctx: KernelDictContext) -> KernelDict:
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        # Inherit docstring
         result = KernelDict(
             {
-                f"bsdf_{self.id}": {
+                self.id: {
                     "type": "rpv",
                     "rho_0": onedict_value(self.rho_0.kernel_dict(ctx)),
                     "k": onedict_value(self.k.kernel_dict(ctx)),

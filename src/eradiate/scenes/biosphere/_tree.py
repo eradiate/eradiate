@@ -82,13 +82,13 @@ class AbstractTree(Tree):
         "be interpreted by :data:`.biosphere_factory`. If the latter case, the "
         '``"type"`` parameter, if omitted, will implicitly be set to '
         '``"leaf_cloud"``.',
-        type=":class:`.LeafCloud`, optional",
-        init_type=":class:`.LeafCloud` or dict, optional",
+        type=".LeafCloud or None",
+        init_type=".LeafCloud or dict, optional",
     )
 
     trunk_height: pint.Quantity = documented(
         pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
-        doc="Trunk height.\n\nUnit-enabled field (default: ucc['length']).",
+        doc='Trunk height. Unit-enabled field (default: ucc["length"]).',
         type="quantity",
         init_type="quantity or float",
         default="1.0 m",
@@ -96,9 +96,9 @@ class AbstractTree(Tree):
 
     trunk_radius: pint.Quantity = documented(
         pinttr.ib(default=0.1 * ureg.m, units=ucc.deferred("length")),
-        doc="Trunk radius.\n\nUnit-enabled field (default: ucc['length']).",
+        doc='Trunk radius. Unit-enabled field (default: ucc["length"]).',
         type="quantity",
-        init_type="quantity or float",
+        init_type="quantity or float, optional",
         default="0.1 m",
     )
 
@@ -113,18 +113,17 @@ class AbstractTree(Tree):
         ),
         doc="Reflectance spectrum of the trunk. "
         "Must be a reflectance spectrum (dimensionless).",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict",
+        type=".Spectrum",
+        init_type=".Spectrum or dict, optional",
         default="0.5",
     )
 
     leaf_cloud_extra_offset: pint.Quantity = documented(
         pinttr.ib(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
-        doc="Additional offset for the leaf cloud. 3-vector.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length'])",
+        doc="Additional offset for the leaf cloud. 3-vector. "
+        'Unit-enabled field (default: ucc["length"])',
         type="quantity",
-        init_type="array-like",
+        init_type="quantity or array-like, optional",
         default="[0, 0, 0]",
     )
 
@@ -132,7 +131,7 @@ class AbstractTree(Tree):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return BSDF plugin specifications.
 
@@ -150,7 +149,7 @@ class AbstractTree(Tree):
             in the abstract tree.
         """
 
-        bsdfs_dict = self.leaf_cloud.bsdfs(ctx=ctx)
+        bsdfs_dict = self.leaf_cloud.kernel_bsdfs(ctx=ctx)
 
         bsdfs_dict[f"bsdf_{self.id}"] = {
             "type": "diffuse",
@@ -159,7 +158,7 @@ class AbstractTree(Tree):
 
         return bsdfs_dict
 
-    def shapes(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
         """
         Return shape plugin specifications.
 
@@ -191,9 +190,9 @@ class AbstractTree(Tree):
         if ctx.ref:
             bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
         else:
-            bsdf = self.bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
+            bsdf = self.kernel_bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
 
-        shapes_dict = leaf_cloud.shapes(ctx=ctx)
+        shapes_dict = leaf_cloud.kernel_shapes(ctx=ctx)
 
         shapes_dict[f"trunk_cyl_{self.id}"] = {
             "type": "cylinder",
@@ -251,8 +250,8 @@ class MeshTree(Tree):
         "initialised with a :class:`.InstancedCanopyElement`, which will be "
         "automatically wrapped into a list. Dictionary-based specifications are "
         "allowed as well.",
-        type="list of :class:`.InstancedCanopyElement`",
-        init_type="list of (InstancedCanopyElement | dict)",
+        type="list of .InstancedCanopyElement",
+        init_type="list of (.InstancedCanopyElement | dict)",
         default="[]",
     )
 
@@ -260,16 +259,16 @@ class MeshTree(Tree):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         result = {}
         for mesh_tree_element in self.mesh_tree_elements:
-            result = {**result, **mesh_tree_element.bsdfs(ctx=ctx)}
+            result = {**result, **mesh_tree_element.kernel_bsdfs(ctx=ctx)}
         return result
 
-    def shapes(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
         result = {}
         for mesh_tree_element in self.mesh_tree_elements:
-            result = {**result, **mesh_tree_element.shapes(ctx=ctx)}
+            result = {**result, **mesh_tree_element.kernel_shapes(ctx=ctx)}
         return result
 
 
@@ -428,7 +427,7 @@ class MeshTreeElement:
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def bsdfs(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
         return {
             f"bsdf_{self.id}": {
                 "type": "bilambertian",
@@ -437,13 +436,10 @@ class MeshTreeElement:
             }
         }
 
-    def shapes(self, ctx: KernelDictContext) -> t.Dict:
+    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
         from mitsuba.core import ScalarTransform4f
 
-        if ctx.ref:
-            bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
-        else:
-            bsdf = self.bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
+        bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
 
         if self.mesh_units is None:
             scaling_factor = 1.0

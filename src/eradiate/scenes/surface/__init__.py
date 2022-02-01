@@ -1,16 +1,10 @@
-from ._black import BlackSurface
-from ._centralpatch import CentralPatchSurface
-from ._checkerboard import CheckerboardSurface
+from ._basic import BasicSurface
+from ._central_patch import CentralPatchSurface
 from ._core import Surface, surface_factory
-from ._lambertian import LambertianSurface
-from ._rpv import RPVSurface
 
 __all__ = [
-    "Surface",
     "surface_factory",
-    "BlackSurface",
+    "Surface",
+    "BasicSurface",
     "CentralPatchSurface",
-    "CheckerboardSurface",
-    "RPVSurface",
-    "LambertianSurface",
 ]

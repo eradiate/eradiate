@@ -6,9 +6,9 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.test_tools import util as tu
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
+from eradiate.test_tools import util as tu
 
 
 def init_mono_experiment(wavelengths, spp, reflectance, zeniths):
@@ -37,9 +37,7 @@ def init_mono_experiment(wavelengths, spp, reflectance, zeniths):
             has_scattering=True,
             absorption_data_sets={},
         ),
-        surface=eradiate.scenes.surface.LambertianSurface(
-            reflectance=reflectance,
-        ),
+        surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=reflectance),
     )
 
 

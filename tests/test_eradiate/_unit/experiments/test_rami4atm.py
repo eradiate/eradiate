@@ -1,14 +1,15 @@
+import enoki as ek
 import numpy as np
 import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.experiments._rami4atm import Rami4ATMExperiment
+from eradiate.experiments import Rami4ATMExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
-from eradiate.scenes.surface import CentralPatchSurface, LambertianSurface
+from eradiate.scenes.surface import CentralPatchSurface
 
 
 def test_rami4atm_experiment_construct_default(mode_mono):
@@ -58,7 +59,8 @@ def test_rami4atm_experiment_construct_normalize_measures(mode_mono, padding):
 
     # The measure target does not depend on the atmosphere
     exp = Rami4ATMExperiment(
-        atmosphere=HomogeneousAtmosphere(width=ureg.Quantity(42.0, "km")),
+        geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
+        atmosphere=HomogeneousAtmosphere(),
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
             leaf_radius=0.1 * ureg.m,
@@ -78,7 +80,7 @@ def test_rami4atm_experiment_construct_normalize_measures(mode_mono, padding):
 
 
 @pytest.mark.parametrize("padding", (0, 1))
-def test_ramiatm_experiment_kernel_dict(mode_mono, padding):
+def test_rami4atm_experiment_kernel_dict(mode_mono, padding):
     from mitsuba.core import Point3f, ScalarTransform4f
 
     ctx = KernelDictContext()
@@ -100,7 +102,7 @@ def test_ramiatm_experiment_kernel_dict(mode_mono, padding):
     )
     kernel_scene = s.kernel_dict(ctx)
     assert np.allclose(
-        kernel_scene["surface"]["to_world"].transform_affine(Point3f(1, -1, 0)),
+        kernel_scene["shape_surface"]["to_world"].transform_affine(Point3f(1, -1, 0)),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
 
@@ -110,7 +112,8 @@ def test_ramiatm_experiment_kernel_dict(mode_mono, padding):
 
     # Surface width is appropriately inherited from atmosphere
     s = Rami4ATMExperiment(
-        atmosphere=HomogeneousAtmosphere(width=ureg.Quantity(42.0, "km")),
+        geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
+        atmosphere=HomogeneousAtmosphere(),
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
             leaf_radius=0.1 * ureg.m,
@@ -121,46 +124,48 @@ def test_ramiatm_experiment_kernel_dict(mode_mono, padding):
     )
     kernel_dict = s.kernel_dict(ctx)
     assert np.allclose(
-        kernel_dict["surface"]["to_world"].matrix,
-        ScalarTransform4f.scale(21000).matrix,
+        kernel_dict["shape_surface"]["to_world"].matrix,
+        ScalarTransform4f.scale([21000, 21000, 1]).matrix,
     )
 
 
 @pytest.mark.slow
-def test_ramiatm_experiment_surface_adjustment(mode_mono):
+def test_rami4atm_experiment_surface_adjustment(mode_mono):
     """Create a Rami4ATM experiment and assert the central patch surface is created with the
     correct parameters, according to the canopy and atmosphere."""
     from mitsuba.core import ScalarTransform4f
 
     ctx = KernelDictContext()
 
-    s = Rami4ATMExperiment(
-        atmosphere=HomogeneousAtmosphere(width=ureg.Quantity(42.0, "km")),
+    exp = Rami4ATMExperiment(
+        geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
+        atmosphere=HomogeneousAtmosphere(),
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
             leaf_radius=0.1 * ureg.m,
             l_horizontal=10.0 * ureg.m,
             l_vertical=2.0 * ureg.m,
-            padding=0,
         ),
         surface=CentralPatchSurface(
-            central_patch=LambertianSurface(), background_surface=LambertianSurface()
+            bsdf={"type": "lambertian"},
+            patch_bsdf={"type": "rpv"},
+            patch_edges=10.0 * ureg.m,
         ),
     )
 
-    expected_trafo = ScalarTransform4f.scale(1400) * ScalarTransform4f.translate(
-        (-0.499642857, -0.499642857, 0.0)
-    )
+    expected = (
+        ScalarTransform4f.scale([1400, 1400, 1])
+        * ScalarTransform4f.translate([-0.499642857, -0.499642857, 0.0])
+    ).matrix
 
-    kernel_dict = s.kernel_dict(ctx=ctx)
+    kernel_dict = exp.kernel_dict(ctx=ctx)
+    result = kernel_dict["bsdf_surface"]["weight"]["to_uv"].matrix
 
-    assert np.allclose(
-        kernel_dict["bsdf_surface"]["weight"]["to_uv"].matrix, expected_trafo.matrix
-    )
+    assert ek.allclose(expected, result)
 
 
 @pytest.mark.slow
-def test_ramiatm_experiment_real_life(mode_mono):
+def test_rami4atm_experiment_real_life(mode_mono):
     ctx = KernelDictContext()
 
     # Construct with typical parameters
@@ -174,7 +179,7 @@ def test_ramiatm_experiment_real_life(mode_mono):
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {
-                "construct": "ussa1976",
+                "construct": "ussa_1976",
                 "absorption_data_sets": dict(us76_u86_4=test_absorption_data_set),
             },
         },
@@ -211,7 +216,7 @@ def test_ramiatm_experiment_real_life(mode_mono):
 
 
 @pytest.mark.slow
-def test_ramiatm_experiment_run_detailed(mode_mono):
+def test_rami4atm_experiment_run_detailed(mode_mono):
     """
     Test for correctness of the result dataset generated by Rami4ATMExperiment.
     Note: This test is outdated, most of its content should be transferred to
@@ -256,9 +261,9 @@ def test_ramiatm_experiment_run_detailed(mode_mono):
     assert np.all(results["radiance"].data > 0.0)
 
 
-def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
-    # A MultiRadiancemeter measure must have all origins inside the atmosphere or none.
-    # A mix of both will raise an error.
+def test_rami4atm_experiment_inconsistent_multiradiancemeter(mode_mono):
+    # A MultiRadiancemeter measure must have all origins inside the atmosphere
+    # or none. A mix of both will raise an error.
 
     ctx = KernelDictContext()
 
@@ -271,7 +276,7 @@ def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {
-                "construct": "ussa1976",
+                "construct": "ussa_1976",
                 "absorption_data_sets": dict(us76_u86_4=test_absorption_data_set),
             },
         },
@@ -287,7 +292,7 @@ def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
         measures=[
             {
                 "type": "multi_radiancemeter",
-                "origins": [[1, 0, 0], [1000000, 0, 0]],
+                "origins": [[0, 0, 1], [0, 0, 1000000]],
                 "directions": [[0, 0, -1], [0, 0, -1]],
                 "id": "multi_radiancemeter",
             },

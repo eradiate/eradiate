@@ -68,10 +68,12 @@ FACTORIES = [
     ("eradiate.scenes.atmosphere", "atmosphere_factory"),
     ("eradiate.scenes.atmosphere", "particle_distribution_factory"),
     ("eradiate.scenes.biosphere", "biosphere_factory"),
+    ("eradiate.scenes.bsdfs", "bsdf_factory"),
     ("eradiate.scenes.illumination", "illumination_factory"),
     ("eradiate.scenes.integrators", "integrator_factory"),
     ("eradiate.scenes.measure", "measure_factory"),
     ("eradiate.scenes.phase", "phase_function_factory"),
+    ("eradiate.scenes.shapes", "shape_factory"),
     ("eradiate.scenes.spectra", "spectrum_factory"),
     ("eradiate.scenes.surface", "surface_factory"),
 ]

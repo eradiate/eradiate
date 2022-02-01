@@ -107,7 +107,6 @@ class KernelDict(collections_abc.MutableMapping):
 
         Raises
         ------
-
         ValueError
             If the ``"type"`` parameter is missing.
 

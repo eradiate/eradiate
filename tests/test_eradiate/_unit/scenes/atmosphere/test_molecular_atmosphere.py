@@ -12,19 +12,18 @@ from eradiate.scenes.core import KernelDict
 def test_molecular_atmosphere_default(
     mode_mono, tmpdir, ussa76_approx_test_absorption_data_set
 ):
-    """Default MolecularAtmosphere constructor produces a valid kernel
-    dictionary."""
-    spectral_ctx = SpectralContext.new(wavelength=550.0)
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
+    """Default  constructor produces a valid kernel dictionary."""
+    ctx = KernelDictContext(spectral_ctx={"wavelength": 550.0})
     atmosphere = MolecularAtmosphere(
-        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set)
+        geometry="plane_parallel",
+        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set),
     )
-    assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
+    assert atmosphere.kernel_dict(ctx).load()
 
 
 def test_molecular_atmosphere_scale(mode_mono):
     ctx = KernelDictContext()
-    d = MolecularAtmosphere(scale=2.0).kernel_dict(ctx)
+    d = MolecularAtmosphere(geometry="plane_parallel", scale=2.0).kernel_dict(ctx)
     assert d["medium_atmosphere"]["scale"] == 2.0
     assert d.load()
 
@@ -61,12 +60,12 @@ def test_molecular_atmosphere_afgl_1986(
 ):
     """MolecularAtmosphere 'afgl_1986' constructor produces a valid kernel
     dictionary."""
-    spectral_ctx = SpectralContext.new(wavelength=550.0)
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
+    ctx = KernelDictContext(spectral_ctx={"wavelength": 550.0})
     atmosphere = MolecularAtmosphere.afgl_1986(
-        absorption_data_sets=afgl_1986_test_absorption_data_sets
+        geometry="plane_parallel",
+        absorption_data_sets=afgl_1986_test_absorption_data_sets,
     )
-    assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
+    assert atmosphere.kernel_dict(ctx).load()
 
 
 @pytest.fixture
@@ -76,19 +75,19 @@ def ussa76_approx_test_absorption_data_set():
     )
 
 
-def test_molecular_atmosphere_ussa1976(
+def test_molecular_atmosphere_ussa_1976(
     mode_mono,
     tmpdir,
     ussa76_approx_test_absorption_data_set,
 ):
-    """MolecularAtmosphere 'ussa1976' constructor produces a valid kernel
+    """MolecularAtmosphere 'ussa_1976' constructor produces a valid kernel
     dictionary."""
-    spectral_ctx = SpectralContext.new(wavelength=550.0)
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    atmosphere = MolecularAtmosphere.ussa1976(
-        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set)
+    ctx = KernelDictContext(spectral_ctx={"wavelength": 550.0})
+    atmosphere = MolecularAtmosphere.ussa_1976(
+        geometry="plane_parallel",
+        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set),
     )
-    assert KernelDict.from_elements(atmosphere, ctx=ctx).load() is not None
+    assert atmosphere.kernel_dict(ctx).load()
 
 
 def test_molecular_atmosphere_switches(mode_mono):
