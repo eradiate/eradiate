@@ -48,7 +48,7 @@ beautifulsoup4==4.10.0
     # via
     #   pydata-sphinx-theme
     #   sphinx-book-theme
-black==21.12b0
+black==22.1.0
     # via
     #   -r requirements/dev.in
     #   ipython
@@ -66,7 +66,7 @@ cffi==1.15.0
     # via argon2-cffi-bindings
 cftime==1.5.2
     # via netcdf4
-charset-normalizer==2.0.10
+charset-normalizer==2.0.11
     # via requests
 click==8.0.3
     # via
@@ -94,7 +94,7 @@ coverage==6.3
     # via -r requirements/dev.in
 cycler==0.11.0
     # via matplotlib
-dask==2022.1.0
+dask==2022.1.1
     # via -r requirements/main.in
 debugpy==1.5.1
     # via ipykernel
@@ -129,7 +129,7 @@ executing==0.8.2
     # via stack-data
 filelock==3.4.2
     # via ensureconda
-fonttools==4.29.0
+fonttools==4.29.1
     # via matplotlib
 fsspec==2022.1.0
     # via dask
@@ -296,6 +296,7 @@ packaging==21.3
     #   rst2pdf
     #   setuptools-scm
     #   sphinx
+    #   xarray
 pandas==1.4.0
     # via
     #   seaborn
@@ -334,7 +335,7 @@ pluggy==1.0.0
     # via pytest
 pooch==1.6.0
     # via -r requirements/main.in
-prometheus-client==0.13.0
+prometheus-client==0.13.1
     # via
     #   jupyter-server
     #   notebook
@@ -526,7 +527,7 @@ toml==0.10.2
     # via
     #   conda-lock
     #   pytest
-tomli==1.2.3
+tomli==2.0.0
     # via
     #   black
     #   pep517
@@ -579,7 +580,7 @@ wheel==0.37.1
     # via pip-tools
 widgetsnbextension==3.5.2
     # via ipywidgets
-xarray==0.19.0
+xarray==0.21.1
     # via -r requirements/main.in
 zipp==3.7.0
     # via
@@ -587,15 +588,14 @@ zipp==3.7.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==21.3.1
+pip==22.0.2
     # via
     #   -r requirements/dev.in
     #   pip-tools
-setuptools==60.5.0
+setuptools==60.6.0
     # via
     #   -r requirements/dev.in
     #   cerberus
     #   ipython
     #   pip-tools
     #   setuptools-scm
-    #   xarray
