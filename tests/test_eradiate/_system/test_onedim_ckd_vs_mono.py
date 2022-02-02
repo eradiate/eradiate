@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate import test_tools
+from eradiate.test_tools import util as tu
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 
@@ -211,9 +211,9 @@ def test_550(reflectance, artefact_dir):
         "H2O-spectra-18200_18300",
         "H2O-spectra-18300_18400",
     ]:
-        test_tools.skipif_data_not_found(
+        tu.skipif_data_not_found(
             f"spectra/absorption/{dataset_id}.nc",
-            action=lambda: test_tools.missing_artefact(fname_plot),
+            action=lambda: tu.missing_artefact(fname_plot),
         )
 
     # Monochromatic experiment
@@ -360,9 +360,9 @@ def test_1050(reflectance, artefact_dir):
         "O2-spectra-9400_9500",
         "O2-spectra-9500_9600",
     ]:
-        test_tools.skipif_data_not_found(
+        tu.skipif_data_not_found(
             f"spectra/absorption/{dataset_id}.nc",
-            action=lambda: test_tools.missing_artefact(fname_plot),
+            action=lambda: tu.missing_artefact(fname_plot),
         )
 
     # Monochromatic experiment
