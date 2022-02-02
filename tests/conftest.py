@@ -46,3 +46,14 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with -m 'not slow')"
     )
+
+    config.addinivalue_line(
+        "markers", "regression: marks tests as potentially very slow regression tests"
+    )
+
+
+@pytest.fixture(scope="session")
+def session_timestamp():
+    from datetime import datetime
+
+    return datetime.now()

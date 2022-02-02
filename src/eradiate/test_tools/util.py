@@ -9,9 +9,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 
-from .data import data_store
-from .exceptions import DataError
-from .typing import PathLike
+from ..data import data_store
+from ..exceptions import DataError
+from ..typing import PathLike
 
 
 def skipif_data_not_found(
