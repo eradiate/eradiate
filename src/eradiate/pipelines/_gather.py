@@ -14,6 +14,7 @@ from .._mode import ModeFlags
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..kernel import bitmap_to_dataset
+from ..units import symbol
 
 
 def _spectral_dims():
@@ -24,7 +25,7 @@ def _spectral_dims():
                 {
                     "standard_name": "wavelength",
                     "long_name": "wavelength",
-                    "units": ucc.get("wavelength"),
+                    "units": symbol(ucc.get("wavelength")),
                 },
             ),
         )
