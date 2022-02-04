@@ -83,7 +83,7 @@ class Spectrum(SceneElement, ABC):
         attr.ib(
             default="dimensionless",
             converter=PhysicalQuantity,
-            repr=lambda x: str(x),
+            repr=lambda x: f"{x.value.upper()}",
         ),
         doc="Physical quantity which the spectrum represents. The specified "
         "quantity must be one which varies with wavelength. "
