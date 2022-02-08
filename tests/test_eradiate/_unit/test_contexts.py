@@ -2,7 +2,12 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
 from eradiate.ckd import Bin
-from eradiate.contexts import CKDSpectralContext, MonoSpectralContext, SpectralContext
+from eradiate.contexts import (
+    CKDSpectralContext,
+    KernelDictContext,
+    MonoSpectralContext,
+    SpectralContext,
+)
 from eradiate.quad import Quad
 
 
@@ -55,3 +60,18 @@ def test_ckd_spectral_context(mode_ckd):
 
     # Index string repr is a compact "{bin_id}:{quad_point_index}" string
     assert ctx.spectral_index_formatted == "510:8"
+
+
+def test_kernel_dict_context_construct(modes_all_double):
+    # A default context can be instantiated without argument
+    ctx_1 = KernelDictContext()
+    print(ctx_1)
+
+
+def test_kernel_dict_context_evolve(mode_mono_double):
+    ctx_1 = KernelDictContext()
+
+    # Evolving the context adds additional data to its dynamic component
+    ctx_2 = ctx_1.evolve(foo="bar")
+    assert ctx_2.foo == "bar"
+    assert ctx_1 is not ctx_2

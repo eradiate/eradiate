@@ -182,15 +182,17 @@ class PerspectiveCameraMeasure(Measure):
         result = KernelDict()
 
         for spp, sensor_id in zip(sensor_spps, sensor_ids):
-            if ctx.atmosphere_medium_id is not None:
-                result_dict = self._kernel_dict(sensor_id, spp)
+            result_dict = self._kernel_dict(sensor_id, spp)
+
+            try:
                 result_dict["medium"] = {
                     "type": "ref",
                     "id": ctx.atmosphere_medium_id,
                 }
-                result.data[sensor_id] = result_dict
-            else:
-                result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
+            except AttributeError:
+                pass
+
+            result.data[sensor_id] = result_dict
 
         return result
 
