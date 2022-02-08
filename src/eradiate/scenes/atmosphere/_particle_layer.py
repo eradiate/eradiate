@@ -188,10 +188,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return self._bottom
 
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
-        if ctx.override_scene_width is not None:
+        try:
             return ctx.override_scene_width
 
-        else:
+        except AttributeError:
             if self.width is AUTO:
                 min_sigma_s = self.eval_sigma_s(spectral_ctx=ctx.spectral_ctx).min()
                 width = 10.0 / min_sigma_s if min_sigma_s != 0.0 else np.inf * ureg.m

@@ -131,9 +131,9 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._thermoprops
 
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
-        if ctx is not None and ctx.override_scene_width is not None:
+        try:
             return ctx.override_scene_width
-        else:
+        except AttributeError:
             if self.width is AUTO:
                 min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
                 width = np.divide(

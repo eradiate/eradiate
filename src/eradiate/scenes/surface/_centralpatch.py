@@ -76,13 +76,16 @@ class CentralPatchSurface(Surface):
         """
         Compute the scaling parameter for the bitmap texture in the blendbsdf.
         """
-        if self.central_patch.width is AUTO and not ctx.override_canopy_width:
+        override_scene_width = getattr(ctx, "override_scene_width", None)
+        override_canopy_width = getattr(ctx, "override_canopy_width", None)
+
+        if self.central_patch.width is AUTO and not override_canopy_width:
             return 1.0
         else:
-            width = ctx.override_scene_width if ctx.override_scene_width else self.width
+            width = override_scene_width if override_scene_width else self.width
             patch_width = (
-                ctx.override_canopy_width
-                if ctx.override_canopy_width
+                override_canopy_width
+                if override_canopy_width
                 else self.central_patch.width
             )
             # the size of the central patch is one third of the overall size of the texture

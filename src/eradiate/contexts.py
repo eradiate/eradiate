@@ -275,13 +275,46 @@ class CKDSpectralContext(SpectralContext):
 
 
 @parse_docs
-@attr.s(frozen=True)
+@attr.s(frozen=True, init=False)
 class KernelDictContext(Context):
     """
     Kernel dictionary evaluation context data structure. This class is used
     *e.g.* to store information about the spectral configuration to apply
     when generating kernel dictionaries associated with a :class:`.SceneElement`
     instance.
+
+    A number of static fields are defined and automatically initialised upon
+    instantiation. In addition, the `dynamic` field stores a dictionary in
+    which arbitrary data can be stored.
+
+    Both the static and dynamic data can be accessed as attributes. However,
+    since instances are frozen, the recommended way to update a
+    :class:`KernelDictContext` is to use its :meth:`evolve` method and create
+    a copy.
+
+    Examples
+    --------
+    In addition to the regular initialisation pattern (*i.e.* passing field
+    values as arguments to the constructor), the `dynamic` dictionary can also be
+    populated by passing additional keyword arguments. For instance, the two
+    following init patterns are equivalent:
+
+    .. code:: python
+
+       >>> ctx = KernelDictContext(dynamic={"foo": "bar"})
+       KernelDictContext(spectral_ctx=..., dynamic={'foo': 'bar'}
+       >>> ctx = KernelDictContext(foo="bar")
+       KernelDictContext(spectral_ctx=..., dynamic={'foo': 'bar'}
+
+    Access to dynamic data can go through direct query of the dictionary, or
+    using attributes:
+
+    .. code:: python
+
+       >>> ctx.dynamic["foo"]
+       'bar'
+       >>> ctx.foo
+       'bar'
     """
 
     spectral_ctx: SpectralContext = documented(
@@ -305,39 +338,61 @@ class KernelDictContext(Context):
         default="True",
     )
 
-    atmosphere_medium_id: t.Optional[str] = documented(
-        attr.ib(default=None, converter=attr.converters.optional(str)),
-        doc="If relevant, a kernel medium ID to reference by other kernel components.",
-        type="str or None",
-        init_type="str, optional",
-        default="None",
+    dynamic: dict = documented(
+        attr.ib(factory=dict),
+        doc="A dynamic table containing specific context data.",
+        type="dict",
+        default="{}",
     )
 
-    override_scene_width: t.Optional[pint.Quantity] = documented(
-        pinttr.ib(
-            default=None,
-            units=ucc.deferred("length"),
-            on_setattr=None,  # frozen classes can't use on_setattr
-        ),
-        doc="If relevant, value which must be used as the scene width "
-        "(*e.g.* when surface size must match atmosphere or canopy size).\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="quantity, optional",
-        init_type="quantity or float, optional",
-    )
+    def __init__(self, **kwargs):
+        fields = {
+            field.name: field.default.factory()
+            if isinstance(field.default, attr.Factory)
+            else field.default
+            for field in self.__attrs_attrs__
+        }
 
-    override_canopy_width: t.Optional[pint.Quantity] = documented(
-        pinttr.ib(
-            default=None,
-            units=ucc.deferred("length"),
-            on_setattr=None,  # frozen classes can't use on_setattr
-        ),
-        doc="If relevant, value which must be used as the canopy width "
-        "(*e.g.* when the size of the central patch in a :class:`.CentralPatchSurface` "
-        "has to match a padded canopy).\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="quantity or None",
-        init_type="quantity or float, optional",
-    )
+        for key, value in kwargs.items():
+            if key in fields:
+                if key != "dynamic":
+                    fields[key] = value
+                else:
+                    fields[key].update(value)
+            else:
+                fields["dynamic"][key] = value
+
+        self.__attrs_init__(**fields)
+
+    def __getattr__(self, k):
+        """
+        Gets key if it exists, otherwise throws AttributeError.
+        nb. __getattr__ is only called if key is not found in normal places.
+        """
+        try:
+            # Throws exception if not in prototype chain
+            return object.__getattribute__(self, k)
+        except AttributeError:
+            try:
+                return self.dynamic[k]
+            except KeyError:
+                raise AttributeError(k)
+
+    def evolve(self, **changes):
+        """
+        Create a copy of self with changes applied. As for the constructor,
+        updates to the dynamic table can be passed as keyword arguments. This is
+        the recommended way.
+        """
+        # Discriminate static and dynamic items
+        static = {}
+        dynamic = {}
+
+        for key, value in changes.items():
+            try:
+                self.__getattribute__(key)
+                static[key] = value
+            except AttributeError:
+                dynamic[key] = value
+
+        return attr.evolve(self, **static, dynamic={**self.dynamic, **dynamic})

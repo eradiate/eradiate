@@ -112,7 +112,6 @@ class BlindDataStore(DataStore):
 
                 # If no gzip-compressed file is available, try the actual file
                 try:
-                    print(os.path.join(self.base_url, fname))
                     return Path(
                         pooch.retrieve(
                             os.path.join(self.base_url, fname),
