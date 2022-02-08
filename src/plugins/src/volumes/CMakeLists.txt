@@ -1,3 +1,3 @@
 set(MTS_PLUGIN_PREFIX "volumes")
 
-add_plugin(sphericalgridvolume sphericalgrid.cpp)
+add_plugin(sphericalcoordsvolume sphericalcoords.cpp)
