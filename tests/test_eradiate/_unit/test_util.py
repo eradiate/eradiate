@@ -1,8 +1,20 @@
+import os
+from pathlib import Path
+
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate import unit_registry as ureg
-from eradiate._util import Singleton, camel_to_snake, deduplicate, is_vector3, natsorted
+from eradiate._util import (
+    Singleton,
+    camel_to_snake,
+    deduplicate,
+    fullname,
+    get_class_that_defined_method,
+    is_vector3,
+    natsorted,
+)
 
 
 def test_singleton():
@@ -48,3 +60,39 @@ def test_deduplicate():
 
 def test_camel_to_snake():
     assert camel_to_snake("SomeKindOfThing") == "some_kind_of_thing"
+
+
+def test_fullname(mode_mono):
+    # Functions
+    assert fullname(os.path.join) == "posixpath.join"
+    assert (
+        fullname(eradiate.kernel.gridvolume.write_binary_grid3d)
+        == "eradiate.kernel.gridvolume.write_binary_grid3d"
+    )
+    assert (
+        fullname(eradiate.kernel.bitmap_to_dataset)
+        == "eradiate.kernel._bitmap.bitmap_to_dataset"
+    )
+
+    # Methods
+    # -- Instance method from class definition
+    assert fullname(Path.is_file) == "pathlib.Path.is_file"
+    # -- Instance method from instance
+    path = Path()
+    assert fullname(path.is_file) == "pathlib.Path.is_file"
+    # -- Class method from class definition
+    assert (
+        fullname(eradiate.contexts.SpectralContext.new)
+        == "eradiate.contexts.SpectralContext.new"
+    )
+    assert (
+        fullname(eradiate.contexts.SpectralContext.new().new)
+        == "eradiate.contexts.SpectralContext.new"
+    )
+
+    # Classes
+    assert fullname(Path) == "pathlib.Path"
+    assert (
+        fullname(eradiate.scenes.spectra.Spectrum)
+        == "eradiate.scenes.spectra._core.Spectrum"
+    )
