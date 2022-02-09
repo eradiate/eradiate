@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import functools
 import typing as t
+import warnings
 from abc import ABC, abstractmethod
 
 import attr
@@ -11,6 +13,7 @@ import eradiate
 
 from . import validators
 from ._mode import ModeFlags
+from ._util import fullname
 from .attrs import documented, parse_docs
 from .ckd import Bin, Bindex, BinSet
 from .exceptions import UnsupportedModeError
@@ -292,6 +295,16 @@ class KernelDictContext(Context):
     :class:`KernelDictContext` is to use its :meth:`evolve` method and create
     a copy.
 
+    Although adding just any dynamic field to a :class:`KernelDictContext`
+    instance is possible, this class also holds a registry of known dynamic
+    fields (see :ref:`sec-contexts-context_fields`).
+
+    Notes
+    -----
+    In the unlikely (pointless but technically possible) event of a dynamic data
+    field having the same name as a static field, the former takes precedence
+    when using attribute access.
+
     Examples
     --------
     In addition to the regular initialisation pattern (*i.e.* passing field
@@ -316,6 +329,48 @@ class KernelDictContext(Context):
        >>> ctx.foo
        'bar'
     """
+
+    @parse_docs
+    @attr.s
+    class DynamicFieldRegistry:
+        """
+        Record a list of dynamic fields.
+        """
+
+        data: t.Dict[str, t.List[str]] = documented(
+            attr.ib(factory=dict),
+            doc="Registry data. Each entry associates a dynamic field name to "
+            "the fully qualified name of the function which registered it.",
+            type="dict",
+            default="{}",
+        )
+
+        def register(self, *field_names):
+            """
+            This decorator can be used to annotate a function and register one
+            or several dynamic fields.
+            """
+
+            def decorator(func):
+                for field_name in field_names:
+                    if field_name in self.data:
+                        self.data[field_name].append(fullname(func))
+                    else:
+                        self.data[field_name] = [fullname(func)]
+
+                return func
+
+            return decorator
+
+        def registered(self, field_name):
+            try:
+                return self.data[field_name]
+            except KeyError:
+                return None
+
+    #: Class instance of :class:`DynamicFieldRegistry` which keeps track of
+    #: dynamic context fields declared by functions in Eradiate.
+    DYNAMIC_FIELDS = DynamicFieldRegistry()
 
     spectral_ctx: SpectralContext = documented(
         attr.ib(
@@ -344,6 +399,12 @@ class KernelDictContext(Context):
         type="dict",
         default="{}",
     )
+
+    @dynamic.validator
+    def _dynamic_validator(self, attribute, value):
+        for field in value:
+            if field not in self.DYNAMIC_FIELDS.data:
+                warnings.warn(f"Dynamic field '{field}' is not used by Eradiate")
 
     def __init__(self, **kwargs):
         fields = {

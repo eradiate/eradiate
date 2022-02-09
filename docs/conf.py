@@ -414,6 +414,7 @@ def custom_step(app):
     generate_rst_plugins.generate()
     generate_rst_api.generate_env_vars_docs()
     generate_rst_api.generate_factory_docs()
+    generate_rst_api.generate_context_docs()
 
 
 def setup(app):

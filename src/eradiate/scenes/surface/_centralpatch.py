@@ -72,6 +72,9 @@ class CentralPatchSurface(Surface):
                 f"got: {value.width}"
             )
 
+    @KernelDictContext.DYNAMIC_FIELDS.register(
+        "override_scene_width", "override_canopy_width"
+    )
     def _compute_scale_parameter(self, ctx: KernelDictContext) -> float:
         """
         Compute the scaling parameter for the bitmap texture in the blendbsdf.

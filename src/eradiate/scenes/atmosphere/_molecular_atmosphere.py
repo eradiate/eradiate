@@ -130,6 +130,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     def thermoprops(self) -> xr.Dataset:
         return self._thermoprops
 
+    @KernelDictContext.DYNAMIC_FIELDS.register("override_scene_width")
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         try:
             return ctx.override_scene_width

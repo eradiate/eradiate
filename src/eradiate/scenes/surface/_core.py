@@ -131,6 +131,7 @@ class Surface(SceneElement, ABC):
             }
         )
 
+    @KernelDictContext.DYNAMIC_FIELDS.register("override_scene_width")
     def kernel_width(self, ctx: KernelDictContext) -> pint.Quantity:
         """
         Return width of kernel object, possibly overridden by

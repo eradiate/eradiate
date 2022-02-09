@@ -106,6 +106,7 @@ class RadiancemeterMeasure(Measure):
 
         return result
 
+    @KernelDictContext.DYNAMIC_FIELDS.register("atmosphere_medium_id")
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         sensor_ids = self._sensor_ids()
         sensor_spps = self._sensor_spps()
