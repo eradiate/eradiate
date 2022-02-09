@@ -187,6 +187,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def bottom(self) -> pint.Quantity:
         return self._bottom
 
+    @KernelDictContext.DYNAMIC_FIELDS.register("override_scene_width")
     def eval_width(self, ctx: KernelDictContext) -> pint.Quantity:
         try:
             return ctx.override_scene_width
