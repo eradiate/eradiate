@@ -46,5 +46,5 @@ def test_deduplicate():
     # Note: this latter test may not be reproducible, we might have to change it
 
 
-def test_pipeline_camel_to_snake():
+def test_camel_to_snake():
     assert camel_to_snake("SomeKindOfThing") == "some_kind_of_thing"
