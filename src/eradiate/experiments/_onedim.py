@@ -99,10 +99,8 @@ class OneDimExperiment(EarthObservationExperiment):
     def _surface_validator(self, attribute, value):
         if self.atmosphere and value.width is not AUTO:
             warnings.warn(
-                OverriddenValueWarning(
-                    "user-defined surface width will be overridden by "
-                    "atmosphere width"
-                )
+                "user-defined surface width will be overridden by atmosphere width",
+                OverriddenValueWarning,
             )
 
     _integrator: Integrator = documented(

@@ -92,10 +92,9 @@ class EradiateConfig:
 
         if do_not_exist:
             warnings.warn(
-                ConfigWarning(
-                    "While configuring Eradiate: 'ERADIATE_DATA_PATH' contains "
-                    f"paths to nonexisting directories {[str(x) for x in do_not_exist]}"
-                )
+                "While configuring Eradiate: 'ERADIATE_DATA_PATH' contains "
+                f"paths to nonexisting directories {[str(x) for x in do_not_exist]}",
+                ConfigWarning,
             )
 
     #: URL where large data files are located.

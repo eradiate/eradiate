@@ -182,7 +182,7 @@ class Surface(SceneElement, ABC):
         """
         if self.width is AUTO:
             warnings.warn(
-                ConfigWarning("Surface width set to 'auto', cannot be scaled")
+                "Surface width set to 'auto', cannot be scaled", ConfigWarning
             )
             new_width = self.width
         else:
