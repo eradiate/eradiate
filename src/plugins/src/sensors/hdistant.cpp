@@ -14,7 +14,7 @@ enum class RayTargetType { Shape, Point, None };
 
 /**!
 
-.. _sensor-hdistant:
+.. _plugin-sensor-hdistant:
 
 Hemispherical distant radiancemeter sensor (:monosp:`hdistant`)
 ---------------------------------------------------------------

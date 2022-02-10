@@ -8,7 +8,7 @@ NAMESPACE_BEGIN(mitsuba)
 
 /**!
 
-.. _bsdf-bilambertian:
+.. _plugin-bsdf-bilambertian:
 
 Bi-Lambertian material (:monosp:`bilambertian`)
 -----------------------------------------------

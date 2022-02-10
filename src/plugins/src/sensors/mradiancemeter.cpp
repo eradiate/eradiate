@@ -12,7 +12,7 @@ NAMESPACE_BEGIN(mitsuba)
 
 /**!
 
-.. _sensor-mradiancemeter:
+.. _plugin-sensor-mradiancemeter:
 
 Multi-radiance meter (:monosp:`mradiancemeter`)
 -----------------------------------------------

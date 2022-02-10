@@ -11,7 +11,7 @@ NAMESPACE_BEGIN(mitsuba)
 
 /**!
 
-.. _bsdf-rpv:
+.. _plugin-bsdf-rpv:
 
 Rahman Pinty Verstraete reflection model (:monosp:`rpv`)
 --------------------------------------------------------

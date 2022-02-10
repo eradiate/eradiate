@@ -8,7 +8,7 @@ enum class FilterType { Nearest, Trilinear };
 enum class WrapMode { Repeat, Mirror, Clamp };
 
 /**!
-.. _volume-sphericalcoordsvolume:
+.. _plugin-volume-sphericalcoordsvolume:
 
 Mapping to spherical coordinates (:monosp:`sphericalcoordsvolume`)
 ------------------------------------------------------------------

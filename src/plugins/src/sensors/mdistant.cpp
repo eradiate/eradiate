@@ -15,7 +15,7 @@ enum class RayTargetType { Shape, Point, None };
 
 /**!
 
-.. _sensor-mdistant:
+.. _plugin-sensor-mdistant:
 
 Multi distant radiance meter (:monosp:`mdistant`)
 -------------------------------------------------
