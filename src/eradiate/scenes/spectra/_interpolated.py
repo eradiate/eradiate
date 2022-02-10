@@ -24,9 +24,11 @@ from ...units import unit_context_kernel as uck
 @attr.s
 class InterpolatedSpectrum(Spectrum):
     """
-    Linearly interpolated spectrum. Interpolation uses :func:`numpy.interp`.
+    Linearly interpolated spectrum [``interpolated``].
 
-    Evaluation is as follows:
+    Notes
+    -----
+    Interpolation uses :func:`numpy.interp`. Evaluation is as follows:
 
     * in ``mono_*`` modes, the spectrum is evaluated at the spectral context
       wavelength;

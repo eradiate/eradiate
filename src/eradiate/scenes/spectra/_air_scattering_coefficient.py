@@ -34,7 +34,7 @@ def _eval_impl_ckd(w: pint.Quantity) -> pint.Quantity:
 @attr.s
 class AirScatteringCoefficientSpectrum(Spectrum):
     """
-    Air scattering coefficient spectrum.
+    Air scattering coefficient spectrum [``air_scattering_coefficient``].
 
     See Also
     --------

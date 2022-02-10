@@ -19,7 +19,7 @@ from ...units import unit_context_kernel as uck
 @attr.s
 class UniformSpectrum(Spectrum):
     """
-    Uniform spectrum (*i.e.* constant vs wavelength).
+    Uniform spectrum [``uniform``] (*i.e.* constant vs wavelength).
     """
 
     value: pint.Quantity = documented(

@@ -49,7 +49,7 @@ def _dataset_converter(x: t.Any):
 @attr.s(frozen=True)
 class SolarIrradianceSpectrum(Spectrum):
     """
-    Solar irradiance spectrum scene element [``solar_irradiance``].
+    Solar irradiance spectrum [``solar_irradiance``].
 
     This scene element produces the scene dictionary required to
     instantiate a kernel plugin using the Sun irradiance spectrum. The data set
