@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 
 import pytest
@@ -22,6 +23,7 @@ def test_blind_data_store_fetch(tmpdir):
     # Downloaded files are reused if they exist
     last_modified = os.path.getmtime(fpath)
     os.remove(fpath)
+    time.sleep(0.1)
     assert last_modified != os.path.getmtime(store.fetch(test_file))
     last_modified = os.path.getmtime(fpath)
     assert last_modified == os.path.getmtime(store.fetch(test_file))
