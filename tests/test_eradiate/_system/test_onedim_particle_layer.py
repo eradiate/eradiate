@@ -31,7 +31,7 @@ def init_experiment_particle_layer(bottom, top, dataset_path, tau_550, r, w, spp
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
                     wavelengths=w,
                 ),
-                zeniths=np.linspace(-75, 75, 51) * ureg.deg,
+                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
                 spp=spp,
             )
@@ -69,7 +69,7 @@ def init_experiment_homogeneous_atmosphere(
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
                     wavelengths=w,
                 ),
-                zeniths=np.linspace(-75, 75, 51) * ureg.deg,
+                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
                 spp=spp,
             )
@@ -129,8 +129,8 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
     Expected behaviour
     ------------------
 
-    Distant bi-directional reflectance factors measured by both experiments must
-    agree within 1%, outliers excluded.
+    Distant bidirectional reflectance factors measured by both experiments must
+    agree within 0.01%.
 
     Results
     -------
@@ -211,8 +211,7 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
     fname_plot = os.path.join(outdir, filename)
     make_figure(fname_plot=fname_plot, brf_1=brf_1, brf_2=brf_2)
 
-    # exclude outliers that are due to the batman issue
-    outcome = np.allclose(brf_1.values, brf_2.values, atol=reflectance * 1e-3)
+    outcome = np.allclose(brf_1.values, brf_2.values, rtol=1e-4)
 
     if outcome is False:
         print(f"Test failed, see artefact {fname_plot}")

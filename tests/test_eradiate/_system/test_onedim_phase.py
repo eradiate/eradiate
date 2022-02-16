@@ -19,7 +19,7 @@ def init_experiment(bottom, top, sigma_a, sigma_s, phase, r, w, spp):
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
                     wavelengths=w,
                 ),
-                zeniths=np.linspace(-75, 75, 51) * ureg.deg,
+                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
                 spp=spp,
             )
@@ -72,7 +72,7 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_s
     ---------
 
     * Sensor: Distant measure covering a plane (11 angular points,
-      1000 sample per pixel) and targeting (0, 0, 0).
+      10^6 sample per pixel) and targeting (0, 0, 0).
     * Illumination: Directional illumination with a zenith angle
       :math:`\theta = 30.0°` with black body irradiance spectrum.
     * Surface: a square surface with a Lambertian BRDF with 35 % reflectance.
@@ -88,8 +88,8 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_s
     Expected behaviour
     ------------------
 
-    Distant bi-directional reflectance factors measured by both experiments must
-    agree within 0.01%, outliers excluded.
+    Distant bidirectional reflectance factors measured by both experiments must
+    agree within 0.5%.
 
     Results
     -------
@@ -112,7 +112,7 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_s
        :width: 95%
     """
     w = w * ureg.nm
-    spp = 1e3
+    spp = 1e6
     reflectance = 0.35
     bottom = 0.0 * ureg.km
     top = 10.0 * ureg.km
@@ -168,7 +168,7 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_s
     fname_plot = os.path.join(outdir, filename)
     make_figure(fname_plot=fname_plot, brf_1=brf_1, brf_2=brf_2)
 
-    outcome = np.allclose(brf_1.values, brf_2.values, rtol=1e-4)
+    outcome = np.allclose(brf_1.values, brf_2.values, rtol=5e-3)
 
     if outcome is False:
         print(f"Test failed, see artefact {fname_plot}")
