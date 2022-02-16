@@ -161,7 +161,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 thermoprops=self.thermoprops,
                 has_scattering=self.has_scattering,
                 has_absorption=self.has_absorption,
-                absorption_data_sets=self.absorption_data_sets,
             )
         else:
             raise NotImplementedError("Unsupported thermophysical properties data set.")
