@@ -259,6 +259,9 @@ class AFGL1986RadProfile(RadProfile):
         if bin_set_id is None:
             raise ValueError("argument 'bin_set_id' is required")
 
+        if not self.has_absorption:
+            return ureg.Quantity(np.zeros(self.thermoprops.z_layer.size), "km^-1")
+
         with _util_ckd.open_dataset(f"afgl_1986-us_standard-{bin_set_id}") as ds:
             # This table maps species to the function used to compute
             # corresponding physical quantities used for concentration rescaling
