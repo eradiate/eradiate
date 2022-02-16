@@ -14,7 +14,7 @@ from eradiate.units import unit_registry as ureg
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
 @pytest.mark.parametrize("sza", [0.0, 30.0, 60.0])
 def test_compare_rami4atm_onedim(
-    mode_mono_double, reflectance, sza, artefact_dir, ert_seed_state
+    mode_ckd_double, reflectance, sza, artefact_dir, ert_seed_state
 ):
     r"""
     Compare Rami4ATMExperiment with OneDimExperiment
@@ -83,9 +83,12 @@ def test_compare_rami4atm_onedim(
         "type": "distant",
         "id": "measure",
         "construct": "from_viewing_angles",
-        "zeniths": np.linspace(-90, 90, 19),
+        "zeniths": np.arange(-90, 91, 15),
         "azimuths": 0.0,
         "spp": 1e4,
+        "spectral_cfg": ertsc.measure.MeasureSpectralConfig.new(
+            bin_set="10nm", bins="550"
+        ),
     }
 
     onedim = ertxp.OneDimExperiment(
@@ -124,7 +127,7 @@ def test_compare_rami4atm_onedim(
     plt.xlabel("Signed viewing zenith angle [°]")
     plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
     plt.ylabel(f"Radiance [{radiance_units}]")
-    plt.title(fr"SZA = {sza} — $\rho$ = {reflectance}")
+    plt.title(rf"SZA = {sza} — $\rho$ = {reflectance}")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
     filename = f"test_compare_rami4atm_onedim_{sza}_{reflectance}.png"
@@ -152,7 +155,8 @@ def test_compare_rami4atm_rami(
     ==============================================
 
     This test compares the results of a RamiExperiment with a corresponding
-    Rami4ATMExperiment run. To achieve that, the Rami4ATMExperiment is set up without an atmosphere.
+    Rami4ATMExperiment run. To achieve that, the Rami4ATMExperiment is set up
+    without an atmosphere.
 
     Rationale
     ---------
@@ -213,9 +217,10 @@ def test_compare_rami4atm_rami(
         "type": "distant",
         "id": "measure",
         "construct": "from_viewing_angles",
-        "zeniths": np.linspace(-90, 90, 19),
+        "zeniths": np.arange(-90, 91, 15),
         "azimuths": 0.0,
         "spp": 1e4,
+        "spectral_cfg": ertsc.measure.MeasureSpectralConfig.new(wavelengths=[550]),
     }
 
     rami = ertxp.RamiExperiment(

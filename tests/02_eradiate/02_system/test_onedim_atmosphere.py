@@ -8,7 +8,7 @@ from eradiate import unit_registry as ureg
 @pytest.mark.parametrize("bottom", [0.0, 1.0, 10.0])
 @pytest.mark.parametrize("tau_550", [0.1, 1.0, 10.0])
 def test_heterogeneous_atmosphere_contains_particle_layer(
-    mode_mono, bottom, tau_550, ert_seed_state
+    mode_ckd_double, bottom, tau_550, ert_seed_state
 ):
     """
     Perfect single-component HeterogeneousAtmosphere expansion (particle layer)
@@ -29,20 +29,37 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
     ------------------
     The two experiments produce *exactly* the same results.
     """
+    # measure
+    measure = {
+        "type": "distant",
+        "id": "measure",
+        "construct": "from_viewing_angles",
+        "zeniths": np.arange(-90, 91, 15),
+        "azimuths": 0.0,
+        "spp": 1e4,
+        "spectral_cfg": eradiate.scenes.measure.MeasureSpectralConfig.new(
+            bin_set="10nm", bins="550"
+        ),
+    }
+
     # particle layer
     bottom = bottom * ureg.km
     top = bottom + 1.0 * ureg.km
     layer = eradiate.scenes.atmosphere.ParticleLayer(
         bottom=bottom, top=top, tau_550=tau_550
     )
-    exp1 = eradiate.experiments.OneDimExperiment(atmosphere=layer)
+    exp1 = eradiate.experiments.OneDimExperiment(
+        atmosphere=layer,
+        measures=[measure],
+    )
     ert_seed_state.reset()
     exp1.run(seed_state=ert_seed_state)
     results1 = exp1.results["measure"]["radiance"].values
 
     # heterogeneous atmosphere with a particle layer
     exp2 = eradiate.experiments.OneDimExperiment(
-        atmosphere={"type": "heterogeneous", "particle_layers": [layer]}
+        atmosphere={"type": "heterogeneous", "particle_layers": [layer]},
+        measures=[measure],
     )
     ert_seed_state.reset()
     exp2.run(seed_state=ert_seed_state)
@@ -52,7 +69,7 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
 
 
 def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
-    mode_mono_double, ert_seed_state
+    mode_ckd_double, ert_seed_state
 ):
     """
     Perfect single-component HeterogeneousAtmosphere expansion (molecular atmosphere)
@@ -73,9 +90,23 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
     ------------------
     The two experiments produce *exactly* the same results.
     """
+    # measure
+    measure = {
+        "type": "distant",
+        "id": "measure",
+        "construct": "from_viewing_angles",
+        "zeniths": np.arange(-90, 90, 15),
+        "azimuths": 0.0,
+        "spp": 1e4,
+        "spectral_cfg": eradiate.scenes.measure.MeasureSpectralConfig.new(
+            bin_set="10nm", bins="550"
+        ),
+    }
+
     # non absorbing molecular atmosphere
     exp1 = eradiate.experiments.OneDimExperiment(
-        atmosphere={"type": "molecular", "has_absorption": False}
+        atmosphere={"type": "molecular", "has_absorption": False},
+        measures=[measure],
     )
     ert_seed_state.reset()
     exp1.run(seed_state=ert_seed_state)
@@ -86,7 +117,8 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {"type": "molecular", "has_absorption": False},
-        }
+        },
+        measures=[measure],
     )
     ert_seed_state.reset()
     exp2.run(seed_state=ert_seed_state)
