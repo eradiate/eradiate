@@ -67,12 +67,12 @@ class AtmosphereGeometry:
             value = value.copy()
             geometry_type = value.pop("type")
 
-            try:
-                geometry_cls = {
-                    "plane_parallel": PlaneParallelGeometry,
-                    "spherical_shell": SphericalShellGeometry,
-                }[geometry_type]
-            except KeyError:
+            # Note: if this conditional becomes large, use a dictionary
+            if geometry_type == "plane_parallel":
+                geometry_cls = PlaneParallelGeometry
+            elif geometry_type == "spherical_shell":
+                geometry_cls = SphericalShellGeometry
+            else:
                 raise ValueError(f"unknown geometry type '{geometry_type}'")
 
             return geometry_cls(**pinttr.interpret_units(value, ureg=ureg))
