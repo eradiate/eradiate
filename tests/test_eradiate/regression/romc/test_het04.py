@@ -1,13 +1,14 @@
-import pytest
-import numpy as np
 import os
+
+import numpy as np
+import pytest
 import xarray as xr
 
-from eradiate.test_tools.regression import Chi2Test
+from eradiate.contexts import KernelDictContext
 from eradiate.data import data_store
 from eradiate.experiments import RamiExperiment
+from eradiate.test_tools.regression import Chi2Test
 from eradiate.units import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
 
 
 @pytest.mark.regression
@@ -15,9 +16,9 @@ def test_het04a1_brfpp(mode_mono_double, metadata, session_timestamp):
     """
     Real zoom in (HET04a1)
 
-    This testcase uses the real zoom in scene from RAMI-3.
+    This test case uses the real zoom in scene from RAMI-3.
     It uses the definition files as provided on the RAMI-3 website for
-    placement of leaves and leafclouds.
+    placement of leaves and leaf clouds.
 
     The remaining parameters are:
 

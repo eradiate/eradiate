@@ -1,11 +1,12 @@
-import pytest
-import numpy as np
 import os
+
+import numpy as np
+import pytest
 import xarray as xr
 
-from eradiate.test_tools.regression import Chi2Test
 from eradiate.data import data_store
 from eradiate.experiments import RamiExperiment
+from eradiate.test_tools.regression import Chi2Test
 from eradiate.units import unit_registry as ureg
 
 
@@ -14,10 +15,10 @@ def test_het06_brfpp(mode_mono_double, metadata, session_timestamp):
     """
     Coniferous forest no topography (HET06)
 
-    This testcase uses the coniferous forest scene with no topography
+    This test case uses the coniferous forest scene with no topography
     from RAMI-3.
     It uses the definition files as provided on the RAMI-3 website for
-    placement of leaves and leafclouds.
+    placement of leaves and leaf clouds.
 
     The remaining parameters are:
 
