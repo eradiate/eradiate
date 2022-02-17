@@ -1,9 +1,9 @@
 import os.path
-
 from abc import ABC, abstractmethod
+
 import attr
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import xarray as xr
 
 from ..typing import PathLike
@@ -11,7 +11,7 @@ from ..typing import PathLike
 
 def regression_test_plots(data: xr.Dataset, filename: PathLike, metric: tuple) -> None:
     """
-    ...
+    Create regression test report plots.
 
     Parameters
     ----------
@@ -24,7 +24,7 @@ def regression_test_plots(data: xr.Dataset, filename: PathLike, metric: tuple) -
     metric : tuple
         A tuple of the form (metric name, value) to be added to the plots.
     """
-    fig, axes = plt.subplots(2, 2, figsize=(8, 6), dpi=120)
+    fig, axes = plt.subplots(2, 2, figsize=(8, 6))
 
     ref = np.squeeze(data.reference)
     result = np.squeeze(data.brf)
@@ -70,11 +70,11 @@ class RenderTest(ABC):
         """
         Execute the testing criterion and potentially create archive files.
 
-        Depending on the specialized implementation, a metric will be computed
-        from value and reference and compared to threshold.
+        Depending on the specialised implementation, a metric will be computed
+        from `value` and `reference` and compared to `threshold`.
 
-        If archive_filename is set, a xarray.Dataset and a summary plot will be
-        created. Otherwise, file creation will be omitted.
+        If `archive_filename` is set, a :class:`xarray.Dataset` and a summary
+        plot will be created. Otherwise, file creation will be omitted.
 
         Returns
         -------
@@ -92,6 +92,8 @@ class RMSETest(RenderTest):
     """
 
     def run(self) -> bool:
+        # Inherit docstring
+
         value_np = self.value.brf.values
         ref_np = self.reference.brf.values
         if np.shape(value_np) != np.shape(self.reference):
@@ -112,11 +114,9 @@ class RMSETest(RenderTest):
             os.makedirs(archive_dirname, exist_ok=True)
             archive_dataset.to_netcdf(self.archive_filename)
 
-            regression_test_plots(
-                archive_dataset,
-                "".join([self.archive_filename.splitext()[0], ".png"]),
-                ("rmse", rmse),
-            )
+            filename = "".join([self.archive_filename.splitext()[0], ".png"])
+            print(f"Saving plots to {filename}")
+            regression_test_plots(archive_dataset, filename, ("rmse", rmse))
 
         return rmse <= self.threshold
 
@@ -130,12 +130,13 @@ class Chi2Test(RenderTest):
 
     It determines the probability for the reference and the test result
     following the same distribution.
-
     """
 
-    # The algorithm is adapted from mitsuba2's testing framework.
+    # The algorithm is adapted from Mitsuba's testing framework.
 
     def run(self) -> bool:
+        # Inherit docstring
+
         from mitsuba.core.math import chi2
         from mitsuba.python.math import rlgamma
 
@@ -165,11 +166,9 @@ class Chi2Test(RenderTest):
             os.makedirs(archive_dirname, exist_ok=True)
             archive_dataset.to_netcdf(self.archive_filename)
 
-            regression_test_plots(
-                archive_dataset,
-                "".join([os.path.splitext(self.archive_filename)[0], ".png"]),
-                ("p-value", p_value),
-            )
+            filename = "".join([os.path.splitext(self.archive_filename)[0], ".png"])
+            print(f"Saving plots to {filename}")
+            regression_test_plots(archive_dataset, filename, ("p-value", p_value))
 
         if p_value < self.threshold:
             print(f"Failed the chi-squared test with p-value: {p_value}.")

@@ -1,30 +1,27 @@
-import pytest
-import numpy as np
 import os
+
+import numpy as np
+import pytest
 import xarray as xr
 
-import eradiate
-
-eradiate.set_mode("ckd_double")
-
 import eradiate.scenes as esc
-
-from eradiate.test_tools.regression import Chi2Test
 from eradiate.data import data_store
 from eradiate.experiments import OneDimExperiment
+from eradiate.test_tools.regression import Chi2Test
 from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.regression
-def test_rpv_afgl1986_brfpp(mode_ckd_double, metadata, session_timestamp):
+def test_rpv_afgl1986_continental_brfpp(mode_ckd_double, metadata, session_timestamp):
     """
-    This testcase implements a scene basic atmospheric scene:
+    This test case uses a basic atmospheric scene:
 
     - RPV surface emulating a canopy
     - Molecular atmosphere following the AFGL 1986 model
     - Aerosol layer at 1km elevation
 
     Aerosol layer parameters are:
+
     - bottom height: 1km
     - top height: 2km
     - n_layers: 16
@@ -42,7 +39,7 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, metadata, session_timestamp):
     - Sun zenith angle: 20°
     - Sun azimuth angle: 0°
 
-    This test uses the Chi-squared criterion with a threshold of 0.05
+    This test uses the Chi-squared criterion with a threshold of 0.05.
     """
     particle_layer = esc.atmosphere.ParticleLayer(
         bottom=1 * ureg.km,
