@@ -1,4 +1,5 @@
-import enoki as ek
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 
 from eradiate import unit_context_config as ucc
@@ -8,8 +9,6 @@ from eradiate.scenes.shapes import CuboidShape
 
 
 def test_cube_construct(modes_all_double):
-    from mitsuba.render import Shape
-
     ctx = KernelDictContext()
 
     # Construct without parameter
@@ -18,7 +17,7 @@ def test_cube_construct(modes_all_double):
     # No BSDF is specified
     assert "bsdf" not in kernel_dict[cube.id]
     # But despite that, Mitsuba can create a Shape with a default BSDF
-    assert isinstance(kernel_dict.load(), Shape)
+    assert isinstance(kernel_dict.load(), mi.Shape)
 
     # Set BSDF
     cube = CuboidShape(bsdf={"type": "black"})
@@ -28,27 +27,25 @@ def test_cube_construct(modes_all_double):
         "type": "diffuse",
         "reflectance": {"type": "uniform", "value": 0.0},
     }
-    assert isinstance(kernel_dict.load(), Shape)
+    assert isinstance(kernel_dict.load(), mi.Shape)
 
 
 def test_cuboid_params(mode_mono_double):
-    from mitsuba.core import Point3f
-
     ctx = KernelDictContext()
 
     # Set edges
     cuboid = CuboidShape(edges=[2, 4, 8])
     kernel_dict = cuboid.kernel_dict(ctx)
     to_world = kernel_dict[cuboid.id]["to_world"]
-    assert ek.allclose(to_world.transform_affine(Point3f(-1, -1, -1)), [-1, -2, -4])
-    assert ek.allclose(to_world.transform_affine(Point3f(1, 1, 1)), [1, 2, 4])
+    assert dr.allclose(to_world.transform_affine(mi.Point3f(-1, -1, -1)), [-1, -2, -4])
+    assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 1)), [1, 2, 4])
 
     # Set centre
     cuboid = CuboidShape(edges=[2, 2, 2], center=[1, 1, 1])
     kernel_dict = cuboid.kernel_dict(ctx)
     to_world = kernel_dict[cuboid.id]["to_world"]
-    assert ek.allclose(to_world.transform_affine(Point3f(-1, -1, -1)), [0, 0, 0])
-    assert ek.allclose(to_world.transform_affine(Point3f(1, 1, 1)), [2, 2, 2])
+    assert dr.allclose(to_world.transform_affine(mi.Point3f(-1, -1, -1)), [0, 0, 0])
+    assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 1)), [2, 2, 2])
 
 
 def test_cuboid_atmosphere():

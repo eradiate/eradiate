@@ -1,4 +1,5 @@
-import enoki as ek
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -81,8 +82,6 @@ def test_rami4atm_experiment_construct_normalize_measures(mode_mono, padding):
 
 @pytest.mark.parametrize("padding", (0, 1))
 def test_rami4atm_experiment_kernel_dict(mode_mono, padding):
-    from mitsuba.core import Point3f, ScalarTransform4f
-
     ctx = KernelDictContext()
 
     # Surface width is appropriately inherited from canopy, when no atmosphere is present
@@ -102,7 +101,9 @@ def test_rami4atm_experiment_kernel_dict(mode_mono, padding):
     )
     kernel_scene = s.kernel_dict(ctx)
     assert np.allclose(
-        kernel_scene["shape_surface"]["to_world"].transform_affine(Point3f(1, -1, 0)),
+        kernel_scene["shape_surface"]["to_world"].transform_affine(
+            mi.Point3f(1, -1, 0)
+        ),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
 
@@ -125,16 +126,16 @@ def test_rami4atm_experiment_kernel_dict(mode_mono, padding):
     kernel_dict = s.kernel_dict(ctx)
     assert np.allclose(
         kernel_dict["shape_surface"]["to_world"].matrix,
-        ScalarTransform4f.scale([21000, 21000, 1]).matrix,
+        mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
     )
 
 
 @pytest.mark.slow
 def test_rami4atm_experiment_surface_adjustment(mode_mono):
-    """Create a Rami4ATM experiment and assert the central patch surface is created with the
-    correct parameters, according to the canopy and atmosphere."""
-    from mitsuba.core import ScalarTransform4f
-
+    """
+    Create a Rami4ATM experiment and assert the central patch surface is created
+    with the correct parameters, according to the canopy and atmosphere.
+    """
     ctx = KernelDictContext()
 
     exp = Rami4ATMExperiment(
@@ -154,14 +155,14 @@ def test_rami4atm_experiment_surface_adjustment(mode_mono):
     )
 
     expected = (
-        ScalarTransform4f.scale([1400, 1400, 1])
-        * ScalarTransform4f.translate([-0.499642857, -0.499642857, 0.0])
+        mi.ScalarTransform4f.scale([1400, 1400, 1])
+        * mi.ScalarTransform4f.translate([-0.499642857, -0.499642857, 0.0])
     ).matrix
 
     kernel_dict = exp.kernel_dict(ctx=ctx)
     result = kernel_dict["bsdf_surface"]["weight"]["to_uv"].matrix
 
-    assert ek.allclose(expected, result)
+    assert dr.allclose(expected, result)
 
 
 @pytest.mark.slow

@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 
 import eradiate
@@ -32,8 +33,6 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
     Tolerance is set according to the defaults for :func:`numpy.allclose`.
     Metrics are reported only for the double precision version of this test.
     """
-    from mitsuba.core import ScalarTransform4f, ScalarVector3f
-
     expected_min_size = 1e8 if eradiate.mode().has_flags(ModeFlags.MTS_MONO) else 1e12
     spp = 1
     rho = 0.5
@@ -60,8 +59,8 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
                 },
                 "surface": {
                     "type": "rectangle",
-                    "to_world": ScalarTransform4f.scale(
-                        ScalarVector3f(scene_size, scene_size, 1)
+                    "to_world": mi.ScalarTransform4f.scale(
+                        mi.ScalarVector3f(scene_size, scene_size, 1)
                     ),
                     "bsdf": {"type": "ref", "id": "bsdf_surface"},
                 },

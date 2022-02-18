@@ -1,4 +1,5 @@
-import enoki as ek
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -52,8 +53,6 @@ def test_central_patch_texture_scale(mode_mono):
 
 
 def test_central_patch_scale_kernel_dict(mode_mono):
-    from mitsuba.core import ScalarTransform4f
-
     ctx = KernelDictContext()
 
     surface = CentralPatchSurface(
@@ -65,8 +64,8 @@ def test_central_patch_scale_kernel_dict(mode_mono):
     kernel_dict = surface.kernel_bsdfs(ctx=ctx)
     result = kernel_dict["bsdf_surface"]["weight"]["to_uv"].matrix
     expected = (
-        ScalarTransform4f.scale([10, 10, 1])
-        * ScalarTransform4f.translate((-0.45, -0.45, 0))
+        mi.ScalarTransform4f.scale([10, 10, 1])
+        * mi.ScalarTransform4f.translate((-0.45, -0.45, 0))
     ).matrix
 
-    assert ek.allclose(expected, result)
+    assert dr.allclose(expected, result)

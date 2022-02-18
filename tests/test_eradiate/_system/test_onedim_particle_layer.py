@@ -23,8 +23,6 @@ def make_figure(fname_plot, brf_1, brf_2):
 
 
 def init_experiment_particle_layer(bottom, top, dataset_path, tau_550, r, w, spp):
-    eradiate.set_mode("mono_double")
-
     return eradiate.experiments.OneDimExperiment(
         measures=[
             eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
@@ -61,8 +59,6 @@ def init_experiment_particle_layer(bottom, top, dataset_path, tau_550, r, w, spp
 def init_experiment_homogeneous_atmosphere(
     bottom, top, sigma_a, sigma_s, phase, r, w, spp
 ):
-    eradiate.set_mode("mono_double")
-
     return eradiate.experiments.OneDimExperiment(
         measures=[
             eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
@@ -97,7 +93,9 @@ def init_experiment_homogeneous_atmosphere(
     [280, 400, 550, 650, 1000, 1500, 2400],
 )
 @pytest.mark.slow
-def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
+def test(
+    mode_mono_double, tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state
+):
     r"""
     Equivalency of homogeneous atmosphere and corresponding particle layer
     ======================================================================
@@ -110,7 +108,7 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
     ---------
 
     * Sensor: Distant measure covering a plane (11 angular points,
-      1000 sample per pixel) and targeting (0, 0, 0).
+      10^6 sample per pixel) and targeting (0, 0, 0).
     * Illumination: Directional illumination with a zenith angle
       :math:`\theta = 30.0°` with black body irradiance spectrum.
     * Surface: a square surface with a Lambertian BRDF with 35 % reflectance.
@@ -130,7 +128,7 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
     ------------------
 
     Distant bidirectional reflectance factors measured by both experiments must
-    agree within 0.01%.
+    agree within 0.5%.
 
     Results
     -------
@@ -151,7 +149,7 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
        :width: 95%
     """
     w = w * ureg.nm
-    spp = 1e3
+    spp = 1e6
     reflectance = 0.35
     bottom = 0.0 * ureg.km
     top = 5.0 * ureg.km
@@ -211,7 +209,7 @@ def test(tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
     fname_plot = os.path.join(outdir, filename)
     make_figure(fname_plot=fname_plot, brf_1=brf_1, brf_2=brf_2)
 
-    outcome = np.allclose(brf_1.values, brf_2.values, rtol=1e-4)
+    outcome = np.allclose(brf_1.values, brf_2.values, rtol=5e-3)
 
     if outcome is False:
         print(f"Test failed, see artefact {fname_plot}")

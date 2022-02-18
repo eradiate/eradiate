@@ -66,8 +66,7 @@ def test_ckd_spectral_context(mode_ckd):
 
 def test_kernel_dict_context_construct(modes_all_double):
     # A default context can be instantiated without argument
-    ctx_1 = KernelDictContext()
-    print(ctx_1)
+    assert KernelDictContext()
 
 
 def test_kernel_dict_context_evolve(mode_mono_double):

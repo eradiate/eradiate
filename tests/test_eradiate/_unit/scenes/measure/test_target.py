@@ -1,4 +1,5 @@
-import enoki as ek
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -9,8 +10,6 @@ from eradiate.scenes.measure._target import Target, TargetPoint, TargetRectangle
 
 
 def test_target_origin(modes_all):
-    from mitsuba.core import Point3f
-
     # TargetPoint: basic constructor
     with ucc.override({"length": "km"}):
         t = TargetPoint([0, 0, 0])
@@ -22,7 +21,7 @@ def test_target_origin(modes_all):
     # TargetPoint: check kernel item
     with ucc.override({"length": "km"}), uck.override({"length": "m"}):
         t = TargetPoint([1, 2, 0])
-        assert ek.allclose(t.kernel_item(), [1000, 2000, 0])
+        assert dr.allclose(t.kernel_item(), [1000, 2000, 0])
 
     # TargetRectangle: basic constructor
     with ucc.override({"length": "km"}):
@@ -50,14 +49,14 @@ def test_target_origin(modes_all):
 
     with uck.override({"length": "mm"}):  # Tricky: we can't compare transforms directly
         kernel_item = t.kernel_item()["to_world"]
-        assert ek.allclose(
-            kernel_item.transform_affine(Point3f(-1, -1, 0)), [-1000, -1000, 0]
+        assert dr.allclose(
+            kernel_item.transform_affine(mi.Point3f(-1, -1, 0)), [-1000, -1000, 0]
         )
-        assert ek.allclose(
-            kernel_item.transform_affine(Point3f(1, 1, 0)), [1000, 1000, 0]
+        assert dr.allclose(
+            kernel_item.transform_affine(mi.Point3f(1, 1, 0)), [1000, 1000, 0]
         )
-        assert ek.allclose(
-            kernel_item.transform_affine(Point3f(1, 1, 42)), [1000, 1000, 42]
+        assert dr.allclose(
+            kernel_item.transform_affine(mi.Point3f(1, 1, 42)), [1000, 1000, 42]
         )
 
     # Factory: basic test

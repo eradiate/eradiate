@@ -79,7 +79,7 @@ def test_eval_pdf(variant_scalar_rgb, r, t):
     ],
 )
 def test_chi2(variant_llvm_rgb, r, t):
-    from mitsuba.chi2 import BSDFAdapter, ChiSquareTest, SphericalDomain
+    from mitsuba.python.chi2 import BSDFAdapter, ChiSquareTest, SphericalDomain
 
     xml = f"""
         <spectrum name="reflectance" value="{r}"/>

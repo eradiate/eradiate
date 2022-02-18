@@ -1,4 +1,5 @@
-import enoki as ek
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -41,16 +42,14 @@ def test_distant_flux_construct(modes_all):
     ],
 )
 def test_distant_flux_direction(modes_all, direction, frame):
-    from mitsuba.core import Vector3f
-
     d = DistantFluxMeasure(direction=direction)
     ctx = KernelDictContext()
     to_world = onedict_value(d.kernel_dict(ctx))["to_world"]
 
     # The reference frame is rotated as expected
-    assert ek.allclose(to_world.transform_affine(Vector3f(1, 0, 0)), frame[0])
-    assert ek.allclose(to_world.transform_affine(Vector3f(0, 1, 0)), frame[1])
-    assert ek.allclose(to_world.transform_affine(Vector3f(0, 0, 1)), frame[2])
+    assert dr.allclose(to_world.transform_affine(mi.Vector3f(1, 0, 0)), frame[0])
+    assert dr.allclose(to_world.transform_affine(mi.Vector3f(0, 1, 0)), frame[1])
+    assert dr.allclose(to_world.transform_affine(mi.Vector3f(0, 0, 1)), frame[2])
 
 
 def test_distant_flux_viewing_angles(mode_mono):

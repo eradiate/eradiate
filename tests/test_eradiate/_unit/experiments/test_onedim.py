@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -90,7 +91,6 @@ def test_onedim_experiment_kernel_dict(modes_all_double):
     """
     Test non-trivial kernel dict generation behaviour.
     """
-    from mitsuba.core import ScalarTransform4f
 
     ctx = KernelDictContext()
 
@@ -102,7 +102,7 @@ def test_onedim_experiment_kernel_dict(modes_all_double):
     kernel_dict = exp.kernel_dict(ctx)
     assert np.allclose(
         kernel_dict["shape_surface"]["to_world"].matrix,
-        ScalarTransform4f.scale([21000, 21000, 1]).matrix,
+        mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
     )
     assert "shape_atmosphere" in kernel_dict
 
@@ -120,7 +120,7 @@ def test_onedim_experiment_kernel_dict(modes_all_double):
     kernel_dict = exp.kernel_dict(ctx)
     assert np.allclose(
         kernel_dict["shape_surface"]["to_world"].matrix,
-        ScalarTransform4f.scale([500, 500, 1]).matrix,
+        mi.ScalarTransform4f.scale([500, 500, 1]).matrix,
     )
     # -- Atmosphere is not in kernel dictionary
     assert "shape_atmosphere" not in kernel_dict

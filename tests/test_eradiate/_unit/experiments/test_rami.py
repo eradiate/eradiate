@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -58,8 +59,6 @@ def test_rami_experiment_construct_normalize_measures(mode_mono_double, padding)
 
 @pytest.mark.parametrize("padding", (0, 1))
 def test_rami_experiment_kernel_dict(modes_all_double, padding):
-    from mitsuba.core import Point3f
-
     ctx = KernelDictContext()
 
     # Surface width is appropriately inherited from canopy
@@ -75,7 +74,9 @@ def test_rami_experiment_kernel_dict(modes_all_double, padding):
 
     kernel_scene = s.kernel_dict(ctx)
     assert np.allclose(
-        kernel_scene["shape_surface"]["to_world"].transform_affine(Point3f(1, -1, 0)),
+        kernel_scene["shape_surface"]["to_world"].transform_affine(
+            mi.Point3f(1, -1, 0)
+        ),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
 

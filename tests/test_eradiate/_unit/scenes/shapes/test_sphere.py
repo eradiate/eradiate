@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 
 from eradiate import unit_context_config as ucc
@@ -7,8 +8,6 @@ from eradiate.scenes.shapes import SphereShape
 
 
 def test_sphere_construct(mode_mono_double):
-    from mitsuba.render import Shape
-
     ctx = KernelDictContext()
 
     # Construct without parameter
@@ -17,7 +16,7 @@ def test_sphere_construct(mode_mono_double):
     # No BSDF is specified
     assert "bsdf" not in kernel_dict[sphere.id]
     # But despite that, Mitsuba can create a Shape with a default BSDF
-    assert isinstance(kernel_dict.load(), Shape)
+    assert isinstance(kernel_dict.load(), mi.Shape)
 
     # Set BSDF
     sphere = SphereShape(bsdf={"type": "black"})
@@ -27,7 +26,7 @@ def test_sphere_construct(mode_mono_double):
         "type": "diffuse",
         "reflectance": {"type": "uniform", "value": 0.0},
     }
-    assert isinstance(kernel_dict.load(), Shape)
+    assert isinstance(kernel_dict.load(), mi.Shape)
 
 
 def test_sphere_surface():
