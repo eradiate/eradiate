@@ -19,6 +19,6 @@ include(ext/cmake-defaults/CMakeLists.txt)
 
 # Build plugins
 # Note: Not a very nice CMake setup, likely this could be done better
-get_filename_component(ERT_MITSUBA_DIR "ext/mitsuba2" ABSOLUTE)
-get_filename_component(ERT_MITSUBA_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/ext/mitsuba2" ABSOLUTE)
+get_filename_component(ERT_MI_DIR "ext/mitsuba2" ABSOLUTE)
+get_filename_component(ERT_MI_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/ext/mitsuba2" ABSOLUTE)
 add_subdirectory(src/plugins)

@@ -13,8 +13,8 @@
         "binaryDir": "${sourceDir}/build",
         "cacheVariables": {
             "CMAKE_BUILD_TYPE": "Release",
-            "MTS_ENABLE_EMBREE": "OFF",
-            "MTS_DEFAULT_VARIANTS": "scalar_mono;scalar_mono_double;scalar_rgb;scalar_spectral;llvm_rgb"
+            "MI_ENABLE_EMBREE": "OFF",
+            "MI_DEFAULT_VARIANTS": "scalar_mono;scalar_mono_double;scalar_rgb;scalar_spectral;llvm_rgb"
         }
     }],
     "buildPresets": [{
