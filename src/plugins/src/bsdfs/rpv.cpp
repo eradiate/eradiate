@@ -63,11 +63,11 @@ parameters:
 
 */
 
-MTS_VARIANT
+MI_VARIANT
 class RPV final : public BSDF<Float, Spectrum> {
 public:
-    MTS_IMPORT_BASE(BSDF, m_flags, m_components)
-    MTS_IMPORT_TYPES(Texture)
+    MI_IMPORT_BASE(BSDF, m_flags, m_components)
+    MI_IMPORT_TYPES(Texture)
 
     RPV(const Properties &props) : Base(props) {
         m_rho_0 = props.texture<Texture>("rho_0", 0.1f);
@@ -87,10 +87,10 @@ public:
                                              Float /* position_sample */,
                                              const Point2f &direction_sample,
                                              Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::BSDFSample, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::BSDFSample, active);
 
         Float cos_theta_i = Frame3f::cos_theta(si.wi);
-        BSDFSample3f bs   = ek::zero<BSDFSample3f>();
+        BSDFSample3f bs   = dr::zero<BSDFSample3f>();
 
         active &= cos_theta_i > 0.f;
 
@@ -100,7 +100,7 @@ public:
         bs.sampled_type = +BSDFFlags::GlossyReflection;
 
         Spectrum value = eval_rpv(si, bs.wo, active);
-        return { bs, ek::select(active && bs.pdf > 0.f,
+        return { bs, dr::select(active && bs.pdf > 0.f,
                             depolarizer<Spectrum>(value), 0.f) };
     }
 
@@ -122,25 +122,25 @@ public:
         Float tan_theta2          = Frame3f::tan_theta(wo);
 
         Float G =
-            ek::safe_sqrt(ek::sqr(tan_theta1) + ek::sqr(tan_theta2) -
+            dr::safe_sqrt(dr::sqr(tan_theta1) + dr::sqr(tan_theta2) -
                       2.f * tan_theta1 * tan_theta2 * cos_phi1_minus_phi2);
         Float cos_g = cos_theta1 * cos_theta2 +
                       sin_theta1 * sin_theta2 * cos_phi1_minus_phi2;
         // The following uses cos(pi-x) = -cos(x)
         Spectrum F =
-            (1.f - ek::sqr(g)) / ek::pow((1.f + ek::sqr(g) + 2.f * g * cos_g), 1.5f);
+            (1.f - dr::sqr(g)) / dr::pow((1.f + dr::sqr(g) + 2.f * g * cos_g), 1.5f);
 
         Spectrum value =
             rho_0 *
-            (ek::pow(cos_theta1 * cos_theta2 * (cos_theta1 + cos_theta2), k - 1.f) *
-             F * (1.f + (1.f - rho_c) / (1 + G))) * ek::InvPi<Float>;
+            (dr::pow(cos_theta1 * cos_theta2 * (cos_theta1 + cos_theta2), k - 1.f) *
+             F * (1.f + (1.f - rho_c) / (1 + G))) * dr::InvPi<Float>;
 
         return value;
     }
 
     Spectrum eval(const BSDFContext & /*ctx*/, const SurfaceInteraction3f &si,
                   const Vector3f &wo, Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::BSDFEvaluate, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::BSDFEvaluate, active);
         Spectrum value = eval_rpv(si, wo, active);
 
         Float cos_theta_i = Frame3f::cos_theta(si.wi),
@@ -148,20 +148,20 @@ public:
 
         active &= cos_theta_i > 0.f && cos_theta_o > 0.f;
 
-        return ek::select(active, depolarizer<Spectrum>(value) * ek::abs(cos_theta_o),
+        return dr::select(active, depolarizer<Spectrum>(value) * dr::abs(cos_theta_o),
                       0.f);
     }
 
     Float pdf(const BSDFContext & /* ctx */, const SurfaceInteraction3f &si,
               const Vector3f &wo, Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::BSDFEvaluate, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::BSDFEvaluate, active);
 
         Float cos_theta_i = Frame3f::cos_theta(si.wi),
               cos_theta_o = Frame3f::cos_theta(wo);
 
         Float pdf = warp::square_to_cosine_hemisphere_pdf(wo);
 
-        return ek::select(cos_theta_i > 0.f && cos_theta_o > 0.f, pdf, 0.f);
+        return dr::select(cos_theta_i > 0.f && cos_theta_o > 0.f, pdf, 0.f);
     }
 
     void traverse(TraversalCallback *callback) override {
@@ -182,7 +182,7 @@ public:
         return oss.str();
     }
 
-    MTS_DECLARE_CLASS()
+    MI_DECLARE_CLASS()
 private:
     ref<Texture> m_rho_0;
     ref<Texture> m_g;
@@ -190,6 +190,6 @@ private:
     ref<Texture> m_rho_c;
 };
 
-MTS_IMPLEMENT_CLASS_VARIANT(RPV, BSDF)
-MTS_EXPORT_PLUGIN(RPV, "Rahman-Pinty-Verstraete BSDF")
+MI_IMPLEMENT_CLASS_VARIANT(RPV, BSDF)
+MI_EXPORT_PLUGIN(RPV, "Rahman-Pinty-Verstraete BSDF")
 NAMESPACE_END(mitsuba)

@@ -1,7 +1,7 @@
-#include <enoki/array_router.h>
-#include <enoki/array_traits.h>
-#include <enoki/fwd.h>
-#include <enoki/tensor.h>
+#include <drjit/array_router.h>
+#include <drjit/array_traits.h>
+#include <drjit/fwd.h>
+#include <drjit/tensor.h>
 #include <mitsuba/core/fwd.h>
 #include <mitsuba/core/properties.h>
 #include <mitsuba/core/transform.h>
@@ -66,14 +66,14 @@ the other located at (0, 1, 0) and pointing in the direction (0, -1, 0).
 
 */
 
-MTS_VARIANT class MultiRadianceMeter final : public Sensor<Float, Spectrum> {
+MI_VARIANT class MultiRadianceMeter final : public Sensor<Float, Spectrum> {
 public:
-    MTS_IMPORT_BASE(Sensor, m_film, m_to_world, m_needs_sample_2,
+    MI_IMPORT_BASE(Sensor, m_film, m_to_world, m_needs_sample_2,
                     m_needs_sample_3)
-    MTS_IMPORT_TYPES()
+    MI_IMPORT_TYPES()
 
-    using Matrix = ek::Matrix<Float, Transform4f::Size>;
-    using Index  = ek::uint32_array_t<Float>;
+    using Matrix = dr::Matrix<Float, Transform4f::Size>;
+    using Index  = dr::uint32_array_t<Float>;
 
     MultiRadianceMeter(const Properties &props) : Base(props) {
         // Collect directions and set transforms accordingly
@@ -145,7 +145,7 @@ public:
                                           const Point2f &position_sample,
                                           const Point2f & /*aperture_sample*/,
                                           Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
         Ray3f ray;
         ray.time = time;
 
@@ -159,7 +159,7 @@ public:
         Index index(sensor_index);
 
         Matrix coefficients =
-            ek::gather<Matrix>(m_transforms.array(), index, active);
+            dr::gather<Matrix>(m_transforms.array(), index, active);
         Transform4f trafo(coefficients);
         ray.o = trafo.transform_affine(Point3f{ 0.f, 0.f, 0.f });
         ray.d = trafo.transform_affine(Vector3f{ 0.f, 0.f, 1.f });
@@ -170,7 +170,7 @@ public:
     // std::pair<RayDifferential3f, Spectrum> sample_ray_differential(
     //     Float time, Float wavelength_sample, const Point2f &position_sample,
     //     const Point2f & /*aperture_sample*/, Mask active) const override {
-    //     MTS_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
+    //     MI_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
     //     RayDifferential3f ray;
     //     ray.time = time;
 
@@ -183,7 +183,7 @@ public:
     //     Int32 sensor_index(position_sample.x() * m_sensor_count);
     //     Index index(sensor_index);
 
-    //     Matrix coefficients = ek::gather<Matrix>(m_transforms, index);
+    //     Matrix coefficients = dr::gather<Matrix>(m_transforms, index);
     //     Transform4f trafo(coefficients);
     //     ray.o = trafo.transform_affine(Point3f{ 0.f, 0.f, 0.f });
     //     ray.d = trafo.transform_affine(Vector3f{ 0.f, 0.f, 1.f });
@@ -209,13 +209,13 @@ public:
         return oss.str();
     }
 
-    MTS_DECLARE_CLASS()
+    MI_DECLARE_CLASS()
 private:
     TensorXf m_transforms;
     size_t m_sensor_count;
 };
 
-MTS_IMPLEMENT_CLASS_VARIANT(MultiRadianceMeter, Sensor)
-MTS_EXPORT_PLUGIN(MultiRadianceMeter, "MultiRadianceMeter");
+MI_IMPLEMENT_CLASS_VARIANT(MultiRadianceMeter, Sensor)
+MI_EXPORT_PLUGIN(MultiRadianceMeter, "MultiRadianceMeter");
 
 NAMESPACE_END(mitsuba)

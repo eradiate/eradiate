@@ -157,8 +157,8 @@ radiance is averaged over the targeted geometry.
 template <typename Float, typename Spectrum>
 class HemisphericalDistantSensor final : public Sensor<Float, Spectrum> {
 public:
-    MTS_IMPORT_BASE(Sensor, m_to_world, m_film)
-    MTS_IMPORT_TYPES(Scene, Shape)
+    MI_IMPORT_BASE(Sensor, m_to_world, m_film)
+    MI_IMPORT_TYPES(Scene, Shape)
 
     HemisphericalDistantSensor(const Properties &props) : Base(props) {
         // Check reconstruction filter radius
@@ -198,7 +198,7 @@ public:
     void set_scene(const Scene *scene) override {
         m_bsphere = scene->bbox().bounding_sphere();
         m_bsphere.radius =
-            ek::max(math::RayEpsilon<Float>,
+            dr::max(math::RayEpsilon<Float>,
                     m_bsphere.radius * (1.f + math::RayEpsilon<Float>) );
     }
 
@@ -206,7 +206,7 @@ public:
                                           const Point2f &film_sample,
                                           const Point2f &aperture_sample,
                                           Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
 
         Ray3f ray;
         ray.time = time;
@@ -250,7 +250,7 @@ public:
     std::pair<RayDifferential3f, Spectrum> sample_ray_differential(
         Float time, Float wavelength_sample, const Point2f &film_sample,
         const Point2f &aperture_sample, Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
 
         RayDifferential3f ray;
         ray.has_differentials = true;
@@ -328,7 +328,7 @@ public:
         return oss.str();
     }
 
-    MTS_DECLARE_CLASS()
+    MI_DECLARE_CLASS()
 
 protected:
     // Scene bounding sphere
@@ -343,6 +343,6 @@ protected:
     ScalarPoint2f m_d;
 };
 
-MTS_IMPLEMENT_CLASS_VARIANT(HemisphericalDistantSensor, Sensor)
-MTS_EXPORT_PLUGIN(HemisphericalDistantSensor, "HemisphericalDistantSensor")
+MI_IMPLEMENT_CLASS_VARIANT(HemisphericalDistantSensor, Sensor)
+MI_EXPORT_PLUGIN(HemisphericalDistantSensor, "HemisphericalDistantSensor")
 NAMESPACE_END(mitsuba)

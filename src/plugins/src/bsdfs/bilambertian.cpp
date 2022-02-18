@@ -38,8 +38,8 @@ into the outgoing hemisphere. This material is two-sided.
 template <typename Float, typename Spectrum>
 class BiLambertian final : public BSDF<Float, Spectrum> {
 public:
-    MTS_IMPORT_BASE(BSDF, m_flags, m_components)
-    MTS_IMPORT_TYPES(Texture)
+    MI_IMPORT_BASE(BSDF, m_flags, m_components)
+    MI_IMPORT_TYPES(Texture)
 
     BiLambertian(const Properties &props) : Base(props) {
         m_reflectance   = props.texture<Texture>("reflectance", .5f);
@@ -56,19 +56,19 @@ public:
     std::pair<BSDFSample3f, Spectrum>
     sample(const BSDFContext &ctx, const SurfaceInteraction3f &si,
            Float sample1, const Point2f &sample2, Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::BSDFSample, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::BSDFSample, active);
 
         bool has_reflect  = ctx.is_enabled(BSDFFlags::DiffuseReflection, 0),
              has_transmit = ctx.is_enabled(BSDFFlags::DiffuseTransmission, 1);
 
-        if (unlikely(ek::none_or<false>(active) ||
+        if (unlikely(dr::none_or<false>(active) ||
                      (!has_reflect && !has_transmit)))
-            return { ek::zero<BSDFSample3f>(), UnpolarizedSpectrum(0.f) };
+            return { dr::zero<BSDFSample3f>(), UnpolarizedSpectrum(0.f) };
 
         Float cos_theta_i = Frame3f::cos_theta(si.wi);
         Vector3f wo       = warp::square_to_cosine_hemisphere(sample2);
 
-        BSDFSample3f bs = ek::zero<BSDFSample3f>();
+        BSDFSample3f bs = dr::zero<BSDFSample3f>();
         UnpolarizedSpectrum value(0.f);
 
         // Select the lobe to be sampled
@@ -78,53 +78,53 @@ public:
               transmission_sampling_weight = 1.f - reflection_sampling_weight;
 
         // Handle case where r = t = 0
-        ek::masked(reflection_sampling_weight,
-                   ek::isnan(reflection_sampling_weight))   = 0.f;
-        ek::masked(transmission_sampling_weight,
-                   ek::isnan(transmission_sampling_weight)) = 0.f;
+        dr::masked(reflection_sampling_weight,
+                   dr::isnan(reflection_sampling_weight))   = 0.f;
+        dr::masked(transmission_sampling_weight,
+                   dr::isnan(transmission_sampling_weight)) = 0.f;
 
         Mask selected_r = (sample1 < reflection_sampling_weight) && active,
              selected_t = (sample1 >= reflection_sampling_weight) && active;
 
         // Evaluate
-        value = ek::select(active, Float(1.f), 0.f);
+        value = dr::select(active, Float(1.f), 0.f);
         value[selected_r] *= r / reflection_sampling_weight;
         value[selected_t] *= t / transmission_sampling_weight;
 
         // Compute PDF
         bs.pdf =
-            ek::select(active, warp::square_to_cosine_hemisphere_pdf(wo), 0.f);
+            dr::select(active, warp::square_to_cosine_hemisphere_pdf(wo), 0.f);
         bs.pdf =
-            ek::select(selected_r, bs.pdf * reflection_sampling_weight, bs.pdf);
-        bs.pdf = ek::select(selected_t, bs.pdf * transmission_sampling_weight,
+            dr::select(selected_r, bs.pdf * reflection_sampling_weight, bs.pdf);
+        bs.pdf = dr::select(selected_t, bs.pdf * transmission_sampling_weight,
                             bs.pdf);
 
         // Set other interaction fields
         bs.eta               = 1.f;
-        bs.sampled_component = ek::select(selected_r, UInt32(0), UInt32(1));
+        bs.sampled_component = dr::select(selected_r, UInt32(0), UInt32(1));
         bs.sampled_type =
-            ek::select(selected_r, UInt32(+BSDFFlags::DiffuseReflection),
+            dr::select(selected_r, UInt32(+BSDFFlags::DiffuseReflection),
                        UInt32(+BSDFFlags::DiffuseTransmission));
 
         // Flip the outgoing direction if the incoming comes from "behind"
-        wo = ek::select(cos_theta_i > 0, wo, Vector3f(wo.x(), wo.y(), -wo.z()));
+        wo = dr::select(cos_theta_i > 0, wo, Vector3f(wo.x(), wo.y(), -wo.z()));
 
         // Flip the outgoing direction if transmission was selected
-        bs.wo = ek::select(selected_r, wo, Vector3f(wo.x(), wo.y(), -wo.z()));
+        bs.wo = dr::select(selected_r, wo, Vector3f(wo.x(), wo.y(), -wo.z()));
 
-        return { bs, ek::select(active && bs.pdf > 0.f,
+        return { bs, dr::select(active && bs.pdf > 0.f,
                                 depolarizer<Spectrum>(value), 0.f) };
     }
 
     Spectrum eval(const BSDFContext &ctx, const SurfaceInteraction3f &si,
                   const Vector3f &wo, Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::BSDFEvaluate, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::BSDFEvaluate, active);
 
         bool has_reflect  = ctx.is_enabled(BSDFFlags::DiffuseReflection, 0),
              has_transmit = ctx.is_enabled(BSDFFlags::DiffuseTransmission, 1);
 
         if (unlikely((!has_reflect && !has_transmit) ||
-                     ek::none_or<false>(active)))
+                     dr::none_or<false>(active)))
             return 0.f;
 
         Float cos_theta_i = Frame3f::cos_theta(si.wi),
@@ -136,7 +136,7 @@ public:
             // If reflection is activated, compute reflection for relevant
             // directions
             auto is_reflect =
-                Mask(ek::eq(ek::sign(cos_theta_i), ek::sign(cos_theta_o))) && active;
+                Mask(dr::eq(dr::sign(cos_theta_i), dr::sign(cos_theta_o))) && active;
             result[is_reflect] = m_reflectance->eval(si, is_reflect);
         }
 
@@ -144,23 +144,23 @@ public:
             // If transmission is activated, compute transmission for relevant
             // directions
             auto is_transmit =
-                Mask(ek::neq(ek::sign(cos_theta_i), ek::sign(cos_theta_o))) && active;
+                Mask(dr::neq(dr::sign(cos_theta_i), dr::sign(cos_theta_o))) && active;
             result[is_transmit] = m_transmittance->eval(si, is_transmit);
         }
 
-        result[active] *= (ek::InvPi<Float> * abs(cos_theta_o));
+        result[active] *= (dr::InvPi<Float> * abs(cos_theta_o));
 
-        return ek::select(active, result, 0.f);
+        return dr::select(active, result, 0.f);
     }
 
     Float pdf(const BSDFContext &ctx, const SurfaceInteraction3f &si,
               const Vector3f &wo, Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::BSDFEvaluate, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::BSDFEvaluate, active);
 
         bool has_reflect  = ctx.is_enabled(BSDFFlags::DiffuseReflection, 0),
              has_transmit = ctx.is_enabled(BSDFFlags::DiffuseTransmission, 1);
 
-        if (unlikely(ek::none_or<false>(active) ||
+        if (unlikely(dr::none_or<false>(active) ||
                      (!has_reflect && !has_transmit)))
             return 0.f;
 
@@ -170,7 +170,7 @@ public:
         // Ensure that uncoming direction is in upper hemisphere
         Vector3f wo_flip{ wo.x(), wo.y(), abs(cos_theta_o) };
 
-        Float result = ek::select(
+        Float result = dr::select(
             active, warp::square_to_cosine_hemisphere_pdf(wo_flip), 0.f);
 
         UnpolarizedSpectrum r              = m_reflectance->eval(si, active),
@@ -179,21 +179,21 @@ public:
               transmission_sampling_weight = 1.f - reflection_sampling_weight;
 
         // Handle case where r = t = 0
-        ek::masked(reflection_sampling_weight,
-                   ek::isnan(reflection_sampling_weight))   = 0.f;
-        ek::masked(transmission_sampling_weight,
-                   ek::isnan(transmission_sampling_weight)) = 0.f;
+        dr::masked(reflection_sampling_weight,
+                   dr::isnan(reflection_sampling_weight))   = 0.f;
+        dr::masked(transmission_sampling_weight,
+                   dr::isnan(transmission_sampling_weight)) = 0.f;
 
         if (has_reflect) {
             auto is_reflect =
-                Mask(ek::eq(ek::sign(cos_theta_i), ek::sign(cos_theta_o))) && active;
-            ek::masked(result, is_reflect) *= reflection_sampling_weight;
+                Mask(dr::eq(dr::sign(cos_theta_i), dr::sign(cos_theta_o))) && active;
+            dr::masked(result, is_reflect) *= reflection_sampling_weight;
         }
 
         if (has_transmit) {
             auto is_transmit =
-                Mask(ek::neq(ek::sign(cos_theta_i), ek::sign(cos_theta_o))) && active;
-            ek::masked(result, is_transmit) *= transmission_sampling_weight;
+                Mask(dr::neq(dr::sign(cos_theta_i), dr::sign(cos_theta_o))) && active;
+            dr::masked(result, is_transmit) *= transmission_sampling_weight;
         }
 
         return result;
@@ -214,12 +214,12 @@ public:
         return oss.str();
     }
 
-    MTS_DECLARE_CLASS()
+    MI_DECLARE_CLASS()
 private:
     ref<Texture> m_reflectance;
     ref<Texture> m_transmittance;
 };
 
-MTS_IMPLEMENT_CLASS_VARIANT(BiLambertian, BSDF)
-MTS_EXPORT_PLUGIN(BiLambertian, "Bi-Lambertian material")
+MI_IMPLEMENT_CLASS_VARIANT(BiLambertian, BSDF)
+MI_EXPORT_PLUGIN(BiLambertian, "Bi-Lambertian material")
 NAMESPACE_END(mitsuba)

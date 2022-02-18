@@ -1,4 +1,4 @@
-#include <enoki/tensor.h>
+#include <drjit/tensor.h>
 #include <mitsuba/core/bbox.h>
 #include <mitsuba/core/bsphere.h>
 #include <mitsuba/core/math.h>
@@ -65,12 +65,12 @@ Ray origins are positioned outside of the scene's geometry.
 template <typename Float, typename Spectrum>
 class MultiDistantSensor final : public Sensor<Float, Spectrum> {
 public:
-    MTS_IMPORT_BASE(Sensor, m_to_world, m_film, m_needs_sample_2,
+    MI_IMPORT_BASE(Sensor, m_to_world, m_film, m_needs_sample_2,
                     m_needs_sample_3)
-    MTS_IMPORT_TYPES(Scene, Shape)
+    MI_IMPORT_TYPES(Scene, Shape)
 
-    using Matrix = ek::Matrix<Float, Transform4f::Size>;
-    using Index  = ek::int32_array_t<Float>;
+    using Matrix = dr::Matrix<Float, Transform4f::Size>;
+    using Index  = dr::int32_array_t<Float>;
 
     MultiDistantSensor(const Properties &props) : Base(props) {
         // Collect directions and set transforms accordingly
@@ -154,7 +154,7 @@ public:
     void set_scene(const Scene *scene) override {
         m_bsphere = scene->bbox().bounding_sphere();
         m_bsphere.radius =
-            ek::max(math::RayEpsilon<Float>,
+            dr::max(math::RayEpsilon<Float>,
                     m_bsphere.radius * (1.f + math::RayEpsilon<Float>) );
     }
 
@@ -162,7 +162,7 @@ public:
                                           const Point2f &film_sample,
                                           const Point2f &aperture_sample,
                                           Mask active) const override {
-        MTS_MASK_ARGUMENT(active);
+        MI_MASK_ARGUMENT(active);
 
         Ray3f ray;
         ray.time = time;
@@ -176,7 +176,7 @@ public:
         Int32 sensor_index(film_sample.x() * m_sensor_count);
         Index index(sensor_index);
 
-        Matrix coefficients = ek::gather<Matrix>(m_transforms, index);
+        Matrix coefficients = dr::gather<Matrix>(m_transforms, index);
         Transform4f trafo(coefficients);
 
         // Set ray direction
@@ -211,7 +211,7 @@ public:
     std::pair<RayDifferential3f, Spectrum> sample_ray_differential(
         Float time, Float wavelength_sample, const Point2f &film_sample,
         const Point2f &aperture_sample, Mask active) const override {
-        MTS_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
+        MI_MASKED_FUNCTION(ProfilerPhase::EndpointSampleRay, active);
 
         RayDifferential3f ray;
         Spectrum ray_weight;
@@ -248,7 +248,7 @@ public:
         return oss.str();
     }
 
-    MTS_DECLARE_CLASS()
+    MI_DECLARE_CLASS()
 
 protected:
     // Scene bounding sphere
@@ -265,6 +265,6 @@ protected:
     size_t m_sensor_count;
 };
 
-MTS_IMPLEMENT_CLASS_VARIANT(MultiDistantSensor, Sensor)
-MTS_EXPORT_PLUGIN(MultiDistantSensor, "MultiDistantSensor")
+MI_IMPLEMENT_CLASS_VARIANT(MultiDistantSensor, Sensor)
+MI_EXPORT_PLUGIN(MultiDistantSensor, "MultiDistantSensor")
 NAMESPACE_END(mitsuba)

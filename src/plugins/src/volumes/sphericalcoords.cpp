@@ -73,8 +73,8 @@ plane.
 template <typename Float, typename Spectrum>
 class SphericalCoordsVolume final : public Volume<Float, Spectrum> {
 public:
-    MTS_IMPORT_BASE(Volume, m_to_local, m_bbox)
-    MTS_IMPORT_TYPES(Volume, VolumeGrid)
+    MI_IMPORT_BASE(Volume, m_to_local, m_bbox)
+    MI_IMPORT_TYPES(Volume, VolumeGrid)
 
     SphericalCoordsVolume(const Properties &props) : Base(props) {
         m_volume = props.volume<Volume>("volume", 1.f);
@@ -93,19 +93,19 @@ public:
 
     UnpolarizedSpectrum eval(const Interaction3f &it, Mask active) const override {
         Point3f p = m_to_local * it.p;
-        Float r = ek::norm(p);
+        Float r = dr::norm(p);
 
         Point3f p_spherical = Point3f(
             (r - m_rmin) / (m_rmax - m_rmin),
-            ek::acos(p.z() / r) * ek::InvPi<ScalarFloat>,
-            ek::atan2(p.y(), p.x()) * ek::InvTwoPi<ScalarFloat> + .5f
+            dr::acos(p.z() / r) * dr::InvPi<ScalarFloat>,
+            dr::atan2(p.y(), p.x()) * dr::InvTwoPi<ScalarFloat> + .5f
         );
         Interaction3f it_spherical = it;
         it_spherical.p = p_spherical;
 
-        return ek::select(r < m_rmin,
+        return dr::select(r < m_rmin,
             m_fillmin,
-            ek::select(r > m_rmax,
+            dr::select(r > m_rmax,
                 m_fillmax,
                 m_volume->eval(it_spherical, active)
             )
@@ -126,7 +126,7 @@ public:
         return oss.str();
     }
 
-    MTS_DECLARE_CLASS()
+    MI_DECLARE_CLASS()
 
 protected:
     ScalarFloat m_rmin, m_rmax, m_fillmin, m_fillmax;
@@ -140,7 +140,7 @@ protected:
     }
 };
 
-MTS_IMPLEMENT_CLASS_VARIANT(SphericalCoordsVolume, Volume)
-MTS_EXPORT_PLUGIN(SphericalCoordsVolume, "SphericalCoordsVolume texture")
+MI_IMPLEMENT_CLASS_VARIANT(SphericalCoordsVolume, Volume)
+MI_EXPORT_PLUGIN(SphericalCoordsVolume, "SphericalCoordsVolume texture")
 
 NAMESPACE_END(mitsuba)
