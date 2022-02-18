@@ -1,4 +1,5 @@
-import enoki as ek
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -46,17 +47,15 @@ def sensor_dict(target=None, film="1x1", to_world=None):
 
 
 def test_construct(variant_scalar_rgb):
-    from mitsuba.core import ScalarTransform4f, load_dict
-
     # Construct without parameters
-    sensor = load_dict({"type": "distantflux"})
+    sensor = mi.load_dict({"type": "distantflux"})
     assert sensor is not None
     assert not sensor.bbox().valid()  # Degenerate bounding box
 
     # Construct with transform
-    sensor = load_dict(
+    sensor = mi.load_dict(
         sensor_dict(
-            to_world=ScalarTransform4f.look_at(
+            to_world=mi.ScalarTransform4f.look_at(
                 origin=[0, 0, 0], target=[0, 0, 1], up=[1, 0, 0]
             )
         )
@@ -64,31 +63,29 @@ def test_construct(variant_scalar_rgb):
 
     # Test different target values
     # -- No target,
-    sensor = load_dict(sensor_dict())
+    sensor = mi.load_dict(sensor_dict())
     assert sensor is not None
 
     # -- Point target
-    sensor = load_dict(sensor_dict(target="point"))
+    sensor = mi.load_dict(sensor_dict(target="point"))
     assert sensor is not None
 
     # -- Shape target
-    sensor = load_dict(sensor_dict(target="shape"))
+    sensor = mi.load_dict(sensor_dict(target="shape"))
     assert sensor is not None
 
     # -- Random object target (we expect to raise)
     with pytest.raises(RuntimeError):
-        load_dict(sensor_dict(target={"type": "constant"}))
+        mi.load_dict(sensor_dict(target={"type": "constant"}))
 
 
 def bsphere(bbox):
     c = bbox.center()
-    return c, ek.norm(c - bbox.max)
+    return c, dr.norm(c - bbox.max)
 
 
 def test_sample_ray_direction(variant_scalar_rgb):
-    from mitsuba.core import load_dict
-
-    sensor = load_dict(sensor_dict())
+    sensor = mi.load_dict(sensor_dict())
 
     # Check that directions are appropriately set
     for (sample1, sample2, expected) in [
@@ -101,7 +98,7 @@ def test_sample_ray_direction(variant_scalar_rgb):
         ray, _ = sensor.sample_ray(1.0, 1.0, sample1, sample2, True)
 
         # Check that ray direction is what is expected
-        assert ek.allclose(ray.d, expected, atol=1e-7)
+        assert dr.allclose(ray.d, expected, atol=1e-7)
 
 
 @pytest.mark.slow
@@ -118,8 +115,6 @@ def test_sample_ray_direction(variant_scalar_rgb):
 )
 def test_sample_ray_target(variant_scalar_rgb, sensor_setup):
     # This test checks if targeting works as intended by rendering a basic scene
-    from mitsuba.core import Bitmap, ScalarTransform4f, Struct, load_dict
-
     w_e = [0, 0, -1]
     normal = [0, 0, 1]
 
@@ -151,7 +146,7 @@ def test_sample_ray_target(variant_scalar_rgb, sensor_setup):
             "type": "distantflux",
             "target": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(surface_scale),
+                "to_world": mi.ScalarTransform4f.scale(surface_scale),
             },
             "sampler": {
                 "type": "independent",
@@ -168,7 +163,7 @@ def test_sample_ray_target(variant_scalar_rgb, sensor_setup):
             "type": "distantflux",
             "target": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(0.5 * surface_scale),
+                "to_world": mi.ScalarTransform4f.scale(0.5 * surface_scale),
             },
             "sampler": {
                 "type": "independent",
@@ -185,7 +180,7 @@ def test_sample_ray_target(variant_scalar_rgb, sensor_setup):
             "type": "distantflux",
             "target": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(2.0 * surface_scale),
+                "to_world": mi.ScalarTransform4f.scale(2.0 * surface_scale),
             },
             "sampler": {
                 "type": "independent",
@@ -216,7 +211,7 @@ def test_sample_ray_target(variant_scalar_rgb, sensor_setup):
             "type": "distantflux",
             "target": {
                 "type": "disk",
-                "to_world": ScalarTransform4f.scale(surface_scale),
+                "to_world": mi.ScalarTransform4f.scale(surface_scale),
             },
             "sampler": {
                 "type": "independent",
@@ -236,7 +231,7 @@ def test_sample_ray_target(variant_scalar_rgb, sensor_setup):
         "type": "scene",
         "shape": {
             "type": "rectangle",
-            "to_world": ScalarTransform4f.scale(surface_scale),
+            "to_world": mi.ScalarTransform4f.scale(surface_scale),
             "bsdf": {
                 "type": "diffuse",
                 "reflectance": rho,
@@ -246,7 +241,7 @@ def test_sample_ray_target(variant_scalar_rgb, sensor_setup):
         "integrator": {"type": "path"},
     }
 
-    scene = load_dict({**scene_dict, "sensor": sensors[sensor_setup]})
+    scene = mi.load_dict({**scene_dict, "sensor": sensors[sensor_setup]})
 
     # Run simulation
     sensor = scene.sensors()[0]
@@ -257,7 +252,7 @@ def test_sample_ray_target(variant_scalar_rgb, sensor_setup):
         np.array(
             sensor.film()
             .bitmap()
-            .convert(Bitmap.PixelFormat.Y, Struct.Type.Float32, False)
+            .convert(mi.Bitmap.PixelFormat.Y, mi.Struct.Type.Float32, False)
         )
         .squeeze()
         .sum()
@@ -286,8 +281,6 @@ def test_checkerboard(variant_scalar_rgb):
     """
     Very basic render test with checkboard texture and square target.
     """
-    from mitsuba.core import ScalarTransform4f, load_dict
-
     irradiance = 1.0
     rho0 = 0.5
     rho1 = 1.0
@@ -303,7 +296,7 @@ def test_checkerboard(variant_scalar_rgb):
                     "type": "checkerboard",
                     "color0": rho0,
                     "color1": rho1,
-                    "to_uv": ScalarTransform4f.scale(2),
+                    "to_uv": mi.ScalarTransform4f.scale(2),
                 },
             },
         },
@@ -347,7 +340,7 @@ def test_checkerboard(variant_scalar_rgb):
         "integrator": {"type": "path"},
     }
 
-    scene = load_dict(scene_dict)
+    scene = mi.load_dict(scene_dict)
 
     sensor = scene.sensors()[0]
     scene.integrator().render(scene, sensor)
@@ -372,8 +365,6 @@ def test_checkerboard(variant_scalar_rgb):
 )
 def test_lobe(variant_scalar_rgb, bsdf, w_e):
     # Check if surfaces with a reflecting lobe are also handled correctly
-    from mitsuba.core import Bitmap, ScalarTransform4f, Struct, load_dict
-
     normal = [0, 0, 1]
 
     # Basic illumination parameters
@@ -394,7 +385,7 @@ def test_lobe(variant_scalar_rgb, bsdf, w_e):
         "type": "distantflux",
         "target": {
             "type": "rectangle",
-            "to_world": ScalarTransform4f.scale(surface_scale),
+            "to_world": mi.ScalarTransform4f.scale(surface_scale),
         },
         "sampler": {
             "type": "independent",
@@ -413,14 +404,14 @@ def test_lobe(variant_scalar_rgb, bsdf, w_e):
         "type": "scene",
         "shape": {
             "type": "rectangle",
-            "to_world": ScalarTransform4f.scale(surface_scale),
+            "to_world": mi.ScalarTransform4f.scale(surface_scale),
             "bsdf": bsdf_dict,
         },
         "emitter": {"type": "directional", "direction": w_e, "irradiance": l_e},
         "integrator": {"type": "path"},
     }
 
-    scene = load_dict({**scene_dict, "sensor": sensor_dict})
+    scene = mi.load_dict({**scene_dict, "sensor": sensor_dict})
 
     # Run simulation
     sensor = scene.sensors()[0]
@@ -431,7 +422,7 @@ def test_lobe(variant_scalar_rgb, bsdf, w_e):
         np.array(
             sensor.film()
             .bitmap()
-            .convert(Bitmap.PixelFormat.Y, Struct.Type.Float32, False)
+            .convert(mi.Bitmap.PixelFormat.Y, mi.Struct.Type.Float32, False)
         )
         .squeeze()
         .sum()

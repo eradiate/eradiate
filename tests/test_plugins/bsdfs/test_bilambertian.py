@@ -1,19 +1,19 @@
+import drjit as dr
+import mitsuba as mi
 import pytest
-import enoki as ek
 
 
 def test_instantiation(variant_scalar_rgb):
-    from mitsuba.render import BSDFFlags
-    from mitsuba.core import load_dict
-
-    b = load_dict({"type": "bilambertian"})
+    b = mi.load_dict({"type": "bilambertian"})
     assert b is not None
     assert b.component_count() == 2
     expected_flags_reflection = (
-        BSDFFlags.DiffuseReflection | BSDFFlags.FrontSide | BSDFFlags.BackSide
+        mi.BSDFFlags.DiffuseReflection | mi.BSDFFlags.FrontSide | mi.BSDFFlags.BackSide
     )
     expected_flags_transmission = (
-        BSDFFlags.DiffuseTransmission | BSDFFlags.FrontSide | BSDFFlags.BackSide
+        mi.BSDFFlags.DiffuseTransmission
+        | mi.BSDFFlags.FrontSide
+        | mi.BSDFFlags.BackSide
     )
     assert expected_flags_reflection == b.flags(0)
     assert expected_flags_transmission == b.flags(1)
@@ -31,45 +31,37 @@ def test_instantiation(variant_scalar_rgb):
     ],
 )
 def test_eval_pdf(variant_scalar_rgb, r, t):
-    from mitsuba.render import BSDFContext, SurfaceInteraction3f
-    from mitsuba.core import load_dict, Frame3f, ScalarVector3f
-
     albedo = r + t
 
-    bsdf = load_dict({"type": "bilambertian", "reflectance": r, "transmittance": t})
+    bsdf = mi.load_dict({"type": "bilambertian", "reflectance": r, "transmittance": t})
 
-    ctx = BSDFContext()
+    ctx = mi.BSDFContext()
 
-    si = SurfaceInteraction3f()
+    si = mi.SurfaceInteraction3f()
     si.p = [0, 0, 0]
     si.n = [0, 0, 1]
 
     for wi in [
-        ScalarVector3f(x) for x in ([0, 0, 1], [0, 0, -1])
+        mi.ScalarVector3f(x) for x in ([0, 0, 1], [0, 0, -1])
     ]:  # We try from both the front and back sides
         si.wi = wi
-        si.sh_frame = Frame3f(si.n)
-        print(f"wi = {wi}")
+        si.sh_frame = mi.Frame3f(si.n)
 
         for i in range(20):
-            theta = i / 19.0 * ek.Pi  # We cover the entire circle
+            theta = i / 19.0 * dr.Pi  # We cover the entire circle
 
-            wo = [ek.sin(theta), 0, ek.cos(theta)]
-            print(f"wo = {wo}")
+            wo = [dr.sin(theta), 0, dr.cos(theta)]
             v_pdf = bsdf.pdf(ctx, si, wo=wo)
             v_eval = bsdf.eval(ctx, si, wo=wo)
-            print(f"v_eval = {v_eval}")
 
-            if ek.dot(wi, wo) > 0:
+            if dr.dot(wi, wo) > 0:
                 # reflection
-                print(r * ek.abs(wo[2]) / ek.Pi)
-                print(v_eval)
-                assert ek.allclose(r * ek.abs(wo[2]) / ek.Pi, v_eval)
-                assert ek.allclose(r / albedo * ek.abs(wo[2]) / ek.Pi, v_pdf)
+                assert dr.allclose(r * dr.abs(wo[2]) / dr.Pi, v_eval)
+                assert dr.allclose(r / albedo * dr.abs(wo[2]) / dr.Pi, v_pdf)
             else:
                 # transmission
-                assert ek.allclose(t * ek.abs(wo[2]) / ek.Pi, v_eval)
-                assert ek.allclose(t / albedo * ek.abs(wo[2]) / ek.Pi, v_pdf)
+                assert dr.allclose(t * dr.abs(wo[2]) / dr.Pi, v_eval)
+                assert dr.allclose(t / albedo * dr.abs(wo[2]) / dr.Pi, v_pdf)
 
 
 @pytest.mark.parametrize(
@@ -87,7 +79,7 @@ def test_eval_pdf(variant_scalar_rgb, r, t):
     ],
 )
 def test_chi2(variant_llvm_rgb, r, t):
-    from mitsuba.python.chi2 import BSDFAdapter, ChiSquareTest, SphericalDomain
+    from mitsuba.chi2 import BSDFAdapter, ChiSquareTest, SphericalDomain
 
     xml = f"""
         <spectrum name="reflectance" value="{r}"/>

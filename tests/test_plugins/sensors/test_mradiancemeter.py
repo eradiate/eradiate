@@ -1,7 +1,7 @@
 import random
-import time
 
-import enoki as ek
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -50,15 +50,13 @@ def dict_scene(origins, directions, width, spp, radiance):
 
 
 def test_construct(variant_scalar_rgb):
-    from mitsuba.core import load_dict
-
     # Instantiate with 1 or 2 direction
     for origins, directions in [
         [["0, 0, 0"], ["1, 0, 0"]],
         [["0, 0, 0"] * 2, ["1, 0, 0", "-1, 0, 0"]],
     ]:
 
-        sensor = load_dict(
+        sensor = mi.load_dict(
             dict_sensor(
                 ", ".join(origins),
                 ", ".join(directions),
@@ -70,11 +68,11 @@ def test_construct(variant_scalar_rgb):
 
     # Instantiation is impossible with ill-formed specification
     with pytest.raises(RuntimeError):  # Wrong film size
-        load_dict(dict_sensor("0, 0, 0", "1, 0, 0", 2))
+        mi.load_dict(dict_sensor("0, 0, 0", "1, 0, 0", 2))
     with pytest.raises(RuntimeError):  # Wrong vector size
-        load_dict(dict_sensor("0, 0", "1, 0", 1))
+        mi.load_dict(dict_sensor("0, 0", "1, 0", 1))
     with pytest.raises(RuntimeError):  # Vector size mismatch
-        load_dict(dict_sensor("0, 0, 0", "1, 0", 1))
+        mi.load_dict(dict_sensor("0, 0, 0", "1, 0", 1))
 
 
 def test_sample_ray_compare(variant_scalar_rgb):
@@ -82,15 +80,12 @@ def test_sample_ray_compare(variant_scalar_rgb):
     Verify that the single-sensor setup yields results identical with those
     produced by the radiancemeter plugin.
     """
-
-    from mitsuba.core import load_dict
-
     for origin, direction in [
         ([-1, 0, 0], [-2, 1, -10]),
         ([0, 0, 0], [0, 1, 0]),
         ([0, 1, 1], [1, 3, 2]),
     ]:
-        mradiancemeter = load_dict(
+        mradiancemeter = mi.load_dict(
             {
                 "type": "mradiancemeter",
                 "origins": ",".join([str(x) for x in origin]),
@@ -103,7 +98,7 @@ def test_sample_ray_compare(variant_scalar_rgb):
                 },
             }
         )
-        radiancemeter = load_dict(
+        radiancemeter = mi.load_dict(
             {
                 "type": "radiancemeter",
                 "origin": origin,
@@ -134,8 +129,8 @@ def test_sample_ray_compare(variant_scalar_rgb):
                 time, wavelength_sample, film_sample, aperture_sample
             )
 
-            assert ek.allclose(ray_rad.o, ray_mrad.o, atol=1e-4)
-            assert ek.allclose(ray_rad.d, ray_mrad.d)
+            assert dr.allclose(ray_rad.o, ray_mrad.o, atol=1e-4)
+            assert dr.allclose(ray_rad.d, ray_mrad.d)
 
 
 def test_sample_ray_multi(variant_scalar_rgb):
@@ -144,10 +139,7 @@ def test_sample_ray_multi(variant_scalar_rgb):
     rays with different values for the position sample and assert, that the
     correct component is picked.
     """
-
-    from mitsuba.core import load_dict, ScalarVector3f
-
-    sensor = load_dict(dict_sensor("0, 0, 0, 1, 0, 1", "1, 0, 0, 1, 1, 1", 2))
+    sensor = mi.load_dict(dict_sensor("0, 0, 0, 1, 0, 1", "1, 0, 0, 1, 1, 1", 2))
     print(sensor)
 
     random.seed(42)
@@ -159,11 +151,11 @@ def test_sample_ray_multi(variant_scalar_rgb):
         )[0]
 
         if position_sample[0] < 0.5:
-            assert ek.allclose([0, 0, 0], ray.o)
-            assert ek.allclose([1, 0, 0], ray.d)
+            assert dr.allclose([0, 0, 0], ray.o)
+            assert dr.allclose([1, 0, 0], ray.d)
         else:
-            assert ek.allclose([1, 0, 1], ray.o)
-            assert ek.allclose(ek.normalize(ScalarVector3f(1, 1, 1)), ray.d)
+            assert dr.allclose([1, 0, 1], ray.o)
+            assert dr.allclose(dr.normalize(mi.ScalarVector3f(1, 1, 1)), ray.d)
 
 
 @pytest.mark.parametrize("radiance", [10 ** x for x in range(-3, 4)])
@@ -171,14 +163,11 @@ def test_render(variant_scalar_rgb, radiance):
     """
     Test render results with a simple scene.
     """
-
-    from mitsuba.core import load_dict
-
     scene_dict = dict_scene(
         "1, 0, 0, 0, 1, 0, 0, 0, 1", "1, 0, 0, 0, -1, 0, 0, 0, -1", 3, 1, radiance
     )
 
-    scene = load_dict(scene_dict)
+    scene = mi.load_dict(scene_dict)
     img = scene.render()
     assert np.allclose(np.array(img), radiance)
 
@@ -189,9 +178,6 @@ def test_render_complex(variant_scalar_rgb):
     The mradiancemeter has three components, pointing at three
     surfaces with different reflectances.
     """
-
-    from mitsuba.core import load_dict, ScalarTransform4f
-
     scene_dict = {
         "type": "scene",
         "integrator": {"type": "path"},
@@ -218,7 +204,7 @@ def test_render_complex(variant_scalar_rgb):
         },
         "light_rectangle": {
             "type": "rectangle",
-            "to_world": ScalarTransform4f.translate((-2, 0, 0)),
+            "to_world": mi.ScalarTransform4f.translate((-2, 0, 0)),
             "bsdf": {
                 "type": "diffuse",
                 "reflectance": {"type": "uniform", "value": 1.0},
@@ -226,7 +212,7 @@ def test_render_complex(variant_scalar_rgb):
         },
         "medium_rectangle": {
             "type": "rectangle",
-            "to_world": ScalarTransform4f.translate((0, 0, 0)),
+            "to_world": mi.ScalarTransform4f.translate((0, 0, 0)),
             "bsdf": {
                 "type": "diffuse",
                 "reflectance": {"type": "uniform", "value": 0.5},
@@ -234,7 +220,7 @@ def test_render_complex(variant_scalar_rgb):
         },
         "dark_rectangle": {
             "type": "rectangle",
-            "to_world": ScalarTransform4f.translate((2, 0, 0)),
+            "to_world": mi.ScalarTransform4f.translate((2, 0, 0)),
             "bsdf": {
                 "type": "diffuse",
                 "reflectance": {"type": "uniform", "value": 0.0},
@@ -242,7 +228,7 @@ def test_render_complex(variant_scalar_rgb):
         },
     }
 
-    scene = load_dict(scene_dict)
+    scene = mi.load_dict(scene_dict)
     img = scene.render()
     data = np.squeeze(np.array(img))
 

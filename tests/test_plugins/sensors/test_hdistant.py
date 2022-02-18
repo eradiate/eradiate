@@ -1,4 +1,5 @@
-import enoki as ek
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -22,23 +23,19 @@ def sensor_dict(target=None, to_world=None):
 
 
 def make_sensor(d):
-    from mitsuba.core import load_dict
-
-    return load_dict(d)
+    return mi.load_dict(d)
 
 
 def test_construct(variant_scalar_rgb):
-    from mitsuba.core import ScalarTransform4f
-
     # Construct without parameters
     sensor = make_sensor({"type": "hdistant"})
     assert sensor is not None
     assert not sensor.bbox().valid()  # Degenerate bounding box
 
     # Construct with transform
-    sensor = make_sensor(
+    assert make_sensor(
         sensor_dict(
-            to_world=ScalarTransform4f.look_at(
+            to_world=mi.ScalarTransform4f.look_at(
                 origin=[0, 0, 0], target=[0, 0, 1], up=[1, 0, 0]
             )
         )
@@ -76,7 +73,7 @@ def test_sample_ray_direction(variant_scalar_rgb):
         ray, _ = sensor.sample_ray(1.0, 1.0, sample1, sample2, True)
 
         # Check that ray direction is what is expected
-        assert ek.allclose(ray.d, expected, atol=1e-7)
+        assert dr.allclose(ray.d, expected, atol=1e-7)
 
 
 @pytest.mark.parametrize(
@@ -92,8 +89,9 @@ def test_sample_ray_direction(variant_scalar_rgb):
 )
 @pytest.mark.parametrize("w_e", [[0, 0, -1], [0, 1, -1]])
 def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
-    # Check if targeting works as intended by rendering a basic scene
-    from mitsuba.core import Bitmap, ScalarTransform4f, Struct, load_dict
+    """
+    Check if targeting works as intended by rendering a basic scene
+    """
 
     # Basic illumination and sensing parameters
     l_e = 1.0  # Emitted radiance
@@ -123,7 +121,7 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
             "type": "hdistant",
             "target": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(surface_scale),
+                "to_world": mi.ScalarTransform4f.scale(surface_scale),
             },
             "sampler": {
                 "type": "independent",
@@ -140,7 +138,7 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
             "type": "hdistant",
             "target": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(0.5 * surface_scale),
+                "to_world": mi.ScalarTransform4f.scale(0.5 * surface_scale),
             },
             "sampler": {
                 "type": "independent",
@@ -157,7 +155,7 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
             "type": "hdistant",
             "target": {
                 "type": "rectangle",
-                "to_world": ScalarTransform4f.scale(2.0 * surface_scale),
+                "to_world": mi.ScalarTransform4f.scale(2.0 * surface_scale),
             },
             "sampler": {
                 "type": "independent",
@@ -188,7 +186,7 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
             "type": "hdistant",
             "target": {
                 "type": "disk",
-                "to_world": ScalarTransform4f.scale(surface_scale),
+                "to_world": mi.ScalarTransform4f.scale(surface_scale),
             },
             "sampler": {
                 "type": "independent",
@@ -208,7 +206,7 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
         "type": "scene",
         "shape": {
             "type": "rectangle",
-            "to_world": ScalarTransform4f.scale(surface_scale),
+            "to_world": mi.ScalarTransform4f.scale(surface_scale),
             "bsdf": {
                 "type": "diffuse",
                 "reflectance": rho,
@@ -218,7 +216,7 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
         "integrator": {"type": "path"},
     }
 
-    scene = load_dict({**scene_dict, "sensor": sensors[sensor_setup]})
+    scene = mi.load_dict({**scene_dict, "sensor": sensors[sensor_setup]})
 
     # Run simulation
     scene.render()
@@ -226,12 +224,12 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
         scene.sensors()[0]
         .film()
         .bitmap()
-        .convert(Bitmap.PixelFormat.RGB, Struct.Type.Float32, False)
+        .convert(mi.Bitmap.PixelFormat.RGB, mi.Struct.Type.Float32, False)
     ).squeeze()
 
     l_o = l_e * cos_theta_e * rho / np.pi  # Outgoing radiance
     expected = {  # Special expected values for some cases
-        "default": l_o * 2.0 / ek.Pi,
+        "default": l_o * 2.0 / dr.Pi,
         "target_square_large": l_o * 0.25,
     }
     expected_value = expected.get(sensor_setup, l_o)
@@ -247,8 +245,6 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
 
 @pytest.mark.parametrize("target", ("point", "shape"))
 def test_sample_ray_differential(variant_scalar_rgb, target):
-    from mitsuba.core.warp import uniform_hemisphere_to_square
-
     # We set odd and even values on purpose
     n_x = 5
     n_y = 6
@@ -274,23 +270,21 @@ def test_sample_ray_differential(variant_scalar_rgb, target):
     # coordinates shifted by one pixel
     sample_dx = [0.5 + 1.0 / n_x, 0.5]
     expected_ray_dx, _ = sensor.sample_ray(1.0, 1.0, sample_dx, sample2, True)
-    assert ek.allclose(sample_dx, uniform_hemisphere_to_square(-ray.d_x))
-    assert ek.allclose(ray.d_x, expected_ray_dx.d)
-    assert ek.allclose(ray.o_x, expected_ray_dx.o)
+    assert dr.allclose(sample_dx, mi.warp.uniform_hemisphere_to_square(-ray.d_x))
+    assert dr.allclose(ray.d_x, expected_ray_dx.d)
+    assert dr.allclose(ray.o_x, expected_ray_dx.o)
 
     sample_dy = [0.5, 0.5 + 1.0 / n_y]
     expected_ray_dy, _ = sensor.sample_ray(1.0, 1.0, sample_dy, sample2, True)
-    assert ek.allclose(sample_dy, uniform_hemisphere_to_square(-ray.d_y))
-    assert ek.allclose(ray.d_y, expected_ray_dy.d)
-    assert ek.allclose(ray.o_y, expected_ray_dy.o)
+    assert dr.allclose(sample_dy, mi.warp.uniform_hemisphere_to_square(-ray.d_y))
+    assert dr.allclose(ray.d_y, expected_ray_dy.d)
+    assert dr.allclose(ray.o_y, expected_ray_dy.o)
 
 
 def test_checkerboard(variants_all_rgb):
     """
     Very basic render test with checkerboard texture and square target.
     """
-    from mitsuba.core import Bitmap, ScalarTransform4f, Struct, load_dict
-
     l_e = 1.0  # Emitted radiance
     rho0 = 0.5
     rho1 = 1.0
@@ -306,7 +300,7 @@ def test_checkerboard(variants_all_rgb):
                     "type": "checkerboard",
                     "color0": rho0,
                     "color1": rho1,
-                    "to_uv": ScalarTransform4f.scale(2),
+                    "to_uv": mi.ScalarTransform4f.scale(2),
                 },
             },
         },
@@ -346,14 +340,14 @@ def test_checkerboard(variants_all_rgb):
         "integrator": {"type": "path"},
     }
 
-    scene = load_dict(scene_dict)
+    scene = mi.load_dict(scene_dict)
     scene.render()
     result = np.array(
         scene.sensors()[0]
         .film()
         .bitmap()
-        .convert(Bitmap.PixelFormat.RGB, Struct.Type.Float32, False)
+        .convert(mi.Bitmap.PixelFormat.RGB, mi.Struct.Type.Float32, False)
     ).squeeze()
 
-    expected = l_e * 0.5 * (rho0 + rho1) / ek.Pi
+    expected = l_e * 0.5 * (rho0 + rho1) / dr.Pi
     assert np.allclose(expected, result, atol=1e-3)

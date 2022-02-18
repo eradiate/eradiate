@@ -1,8 +1,8 @@
 import gc
 import re
 
-import enoki as ek
-import mitsuba
+import drjit as dr
+import mitsuba as mi
 import pytest
 
 # ------------------------------------------------------------------------------
@@ -52,10 +52,16 @@ def clean_up():
     """
     gc.collect()
     gc.collect()
-    if hasattr(ek, "sync_thread"):
-        ek.sync_thread()
-        ek.registry_trim()
-        ek.set_flags(ek.JitFlag.Default)
+
+    dr.kernel_history_clear()
+    dr.flush_malloc_cache()
+    dr.malloc_clear_statistics()
+    dr.flush_kernel_cache()
+
+    if hasattr(dr, "sync_thread"):
+        dr.sync_thread()
+        dr.registry_trim()
+        dr.set_flags(dr.JitFlag.Default)
 
 
 def generate_fixture(variant):
@@ -63,9 +69,7 @@ def generate_fixture(variant):
     def fixture():
         try:
             clean_up()
-            import mitsuba
-
-            mitsuba.set_variant(variant)
+            mi.set_variant(variant)
         except Exception:
             pytest.skip('Mitsuba variant "%s" is not enabled!' % variant)
 
@@ -85,7 +89,6 @@ other_variants = [
 
 for variant in scalar_variants + other_variants:
     generate_fixture(variant)
-
 del generate_fixture
 
 
@@ -95,9 +98,7 @@ def generate_fixture_group(name, variants):
         variant = request.param
         try:
             clean_up()
-            import mitsuba
-
-            mitsuba.set_variant(variant)
+            mi.set_variant(variant)
         except Exception:
             pytest.skip('Mitsuba variant "%s" is not enabled!' % variant)
         return variant
@@ -105,45 +106,43 @@ def generate_fixture_group(name, variants):
     globals()["variants_" + name] = fixture
 
 
-any_scalar = next(
-    (x for x in mitsuba.variants() if x.startswith("scalar")), "scalar_rgb"
-)
-any_llvm = next((x for x in mitsuba.variants() if x.startswith("llvm")), "llvm_rgb")
-any_cuda = next((x for x in mitsuba.variants() if x.startswith("cuda")), "cuda_rgb")
-any_llvm_rgb = "llvm_rgb" if "llvm_rgb" in mitsuba.variants() else "llvm_ad_rgb"
-any_cuda_rgb = "cuda_rgb" if "cuda_rgb" in mitsuba.variants() else "cuda_ad_rgb"
+variants = mi.variants()
+
+any_scalar = next((x for x in variants if x.startswith("scalar")), "scalar_rgb")
+any_llvm = next((x for x in variants if x.startswith("llvm")), "llvm_rgb")
+any_cuda = next((x for x in variants if x.startswith("cuda")), "cuda_rgb")
+any_llvm_rgb = "llvm_rgb" if "llvm_rgb" in variants else "llvm_ad_rgb"
+any_cuda_rgb = "cuda_rgb" if "cuda_rgb" in variants else "cuda_ad_rgb"
 any_llvm_spectral = (
-    "llvm_spectral" if "llvm_spectral" in mitsuba.variants() else "llvm_ad_spectral"
+    "llvm_spectral" if "llvm_spectral" in variants else "llvm_ad_spectral"
 )
 any_cuda_spectral = (
-    "cuda_spectral" if "cuda_spectral" in mitsuba.variants() else "cuda_ad_spectral"
+    "cuda_spectral" if "cuda_spectral" in variants else "cuda_ad_spectral"
 )
 
 variant_groups = {
     "any_scalar": [any_scalar],
     "any_llvm": [any_llvm],
     "any_cuda": [any_cuda],
-    "all": mitsuba.variants(),
-    "all_scalar": [x for x in mitsuba.variants() if x.startswith("scalar")],
-    "all_rgb": [x for x in mitsuba.variants() if x.endswith("rgb")],
-    "all_spectral": [x for x in mitsuba.variants() if x.endswith("spectral")],
+    "all": variants,
+    "all_scalar": [x for x in variants if x.startswith("scalar")],
+    "all_rgb": [x for x in variants if x.endswith("rgb")],
+    "all_spectral": [x for x in variants if x.endswith("spectral")],
     "all_backends_once": [any_scalar, any_llvm, any_cuda],
     "vec_backends_once": [any_llvm, any_cuda],
     "vec_backends_once_rgb": [any_llvm_rgb, any_cuda_rgb],
     "vec_backends_once_spectral": [any_llvm_spectral, any_cuda_spectral],
     "vec_rgb": [
-        x
-        for x in mitsuba.variants()
-        if x.endswith("rgb") and not x.startswith("scalar")
+        x for x in variants if x.endswith("rgb") and not x.startswith("scalar")
     ],
     "vec_spectral": [
-        x
-        for x in mitsuba.variants()
-        if x.endswith("spectral") and not x.startswith("scalar")
+        x for x in variants if x.endswith("spectral") and not x.startswith("scalar")
     ],
-    "all_ad_rgb": [x for x in mitsuba.variants() if x.endswith("ad_rgb")],
-    "all_ad_spectral": [x for x in mitsuba.variants() if x.endswith("ad_spectral")],
+    "all_ad_rgb": [x for x in variants if x.endswith("ad_rgb")],
+    "all_ad_spectral": [x for x in variants if x.endswith("ad_spectral")],
 }
+
+del variants
 
 for name, variants in variant_groups.items():
     generate_fixture_group(name, variants)

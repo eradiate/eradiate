@@ -1,12 +1,13 @@
 from pathlib import Path
 
+import mitsuba as mi
 import numpy as np
 import pytest
 
 from eradiate.kernel.gridvolume import write_binary_grid3d
 
 
-def gridvol_constant(basepath: Path, data: np.typing.ArrayLike = [[[1.0]]]):
+def gridvol_constant(basepath: Path, data: np.typing.ArrayLike):
     filename = basepath / "gridvol_const.vol"
     data = np.array(data)
     write_binary_grid3d(filename, data)
@@ -14,19 +15,17 @@ def gridvol_constant(basepath: Path, data: np.typing.ArrayLike = [[[1.0]]]):
 
 
 def test_construct(variant_scalar_rgb, tmp_path):
-    from mitsuba.core import load_dict
-
     # Construct without parameters
-    volume = load_dict({"type": "sphericalcoordsvolume"})
+    volume = mi.load_dict({"type": "sphericalcoordsvolume"})
     assert volume is not None
 
     # Construct with rmin > rmax:
     with pytest.raises(Exception):
-        load_dict({"type": "sphericalcoordsvolume", "rmin": 0.8, "rmax": 0.2})
+        mi.load_dict({"type": "sphericalcoordsvolume", "rmin": 0.8, "rmax": 0.2})
 
     # Construct with all parameters set to typical values
-    gridvol_filename = gridvol_constant(tmp_path)
-    volume = load_dict(
+    gridvol_filename = gridvol_constant(tmp_path, data=[[[1.0]]])
+    volume = mi.load_dict(
         {
             "type": "sphericalcoordsvolume",
             "rmin": 0.0,
@@ -48,11 +47,8 @@ def test_construct(variant_scalar_rgb, tmp_path):
     ],
 )
 def test_eval_basic(variant_scalar_rgb, tmp_path, point, result):
-    from mitsuba.core import load_dict
-    from mitsuba.render import Interaction3f
-
     gridvol_filename = gridvol_constant(tmp_path, data=[[[2.0]]])
-    volume = load_dict(
+    volume = mi.load_dict(
         {
             "type": "sphericalcoordsvolume",
             "rmin": 0.2,
@@ -63,21 +59,18 @@ def test_eval_basic(variant_scalar_rgb, tmp_path, point, result):
         }
     )
 
-    it = Interaction3f()
+    it = mi.Interaction3f()
     it.p = point
 
     assert volume.eval(it) == result
 
 
 def test_eval_advanced(variant_scalar_rgb, tmp_path):
-    from mitsuba.core import load_dict
-    from mitsuba.render import Interaction3f
-
     data = np.broadcast_to(
         np.arange(1, 7, 1, dtype=float).reshape((-1, 1, 1, 1)), (6, 2, 2, 3)
     )
     gridvol_filename = gridvol_constant(tmp_path, data=data)
-    volume = load_dict(
+    volume = mi.load_dict(
         {
             "type": "sphericalcoordsvolume",
             "rmin": 0.0,
@@ -100,7 +93,7 @@ def test_eval_advanced(variant_scalar_rgb, tmp_path):
 
     for i, phi in enumerate(phis):
         p = [0.5 * np.cos(np.deg2rad(phi)), 0.5 * np.sin(np.deg2rad(phi)), 0.0]
-        it = Interaction3f()
+        it = mi.Interaction3f()
         it.p = p
         results[i, :] = volume.eval(it)
 
