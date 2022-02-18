@@ -145,9 +145,9 @@ class GaussianParticleDistribution(ParticleDistribution):
         type="float",
         init_type="float, optional",
         default="1/6",
-        doc=r"Standard deviation of the Gaussian PDF. The default value is "
+        doc="Standard deviation of the Gaussian PDF. The default value is "
         "such that the integral of the Gaussian PDF over the "
-        ":math:`[\mu - 0.5, \mu + 0.5]` interval is about 99.7% (3σ).",
+        r":math:`[\mu - 0.5, \mu + 0.5]` interval is about 99.7% (3σ).",
     )
 
     def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
@@ -248,7 +248,7 @@ class ArrayParticleDistribution(ParticleDistribution):
         init_type='{ "zero", "nearest", "method", "nan" }',
         default='"zero"',
         doc="Extrapolation method used when evaluation is requested outside of "
-        ":math:`[\mathtt{coords[0]}, \mathtt{coords[-1]}]`. "
+        r":math:`[\mathtt{coords[0]}, \mathtt{coords[-1]}]`. "
         "See :class:`scipy.interpolate.interp1d` (*fill_value*) for more "
         "information. Settings map as follows:\n"
         "\n"
