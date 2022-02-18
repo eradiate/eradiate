@@ -6,6 +6,7 @@ from collections.abc import MutableMapping
 from pathlib import Path
 
 import attr
+import mitsuba as mi
 import pint
 import pinttr
 
@@ -175,8 +176,6 @@ class AbstractTree(Tree):
             :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
             in the abstract tree.
         """
-        from mitsuba.core import ScalarTransform4f
-
         kernel_length = uck.get("length")
 
         kernel_height = self.trunk_height.m_as(kernel_length)
@@ -205,8 +204,8 @@ class AbstractTree(Tree):
         shapes_dict[f"trunk_cap_{self.id}"] = {
             "type": "disk",
             "bsdf": bsdf,
-            "to_world": ScalarTransform4f.scale(kernel_radius)
-            * ScalarTransform4f.translate(((0, 0, kernel_height))),
+            "to_world": mi.ScalarTransform4f.scale(kernel_radius)
+            * mi.ScalarTransform4f.translate([0, 0, kernel_height]),
         }
 
         return shapes_dict
@@ -437,7 +436,7 @@ class MeshTreeElement:
         }
 
     def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
-        from mitsuba.core import ScalarTransform4f
+        # Inherit docstring
 
         bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
 
@@ -450,7 +449,7 @@ class MeshTreeElement:
         base_dict = {
             "filename": str(self.mesh_filename),
             "bsdf": bsdf,
-            "to_world": ScalarTransform4f.scale(scaling_factor),
+            "to_world": mi.ScalarTransform4f.scale(scaling_factor),
         }
 
         if self.mesh_filename.suffix == ".obj":

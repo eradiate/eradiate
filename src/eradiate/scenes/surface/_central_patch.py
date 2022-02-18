@@ -2,6 +2,7 @@ import typing as t
 import warnings
 
 import attr
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -160,12 +161,10 @@ class CentralPatchSurface(Surface):
     def kernel_bsdfs(self, ctx: KernelDictContext) -> KernelDict:
         # Inherit docstring
 
-        from mitsuba.core import ScalarTransform4f
-
         scale = self._texture_scale()
-        to_uv = ScalarTransform4f.scale(
+        to_uv = mi.ScalarTransform4f.scale(
             [scale[0], scale[1], 1]
-        ) * ScalarTransform4f.translate(
+        ) * mi.ScalarTransform4f.translate(
             [-0.5 + (0.5 / scale[0]), -0.5 + (0.5 / scale[1]), 0.0]
         )
 

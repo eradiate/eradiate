@@ -5,6 +5,7 @@ import typing as t
 from abc import ABC, abstractmethod
 
 import attr
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -340,15 +341,15 @@ class InstancedCanopyElement(SceneElement):
             A dictionary suitable for merge with a
             :class:`~eradiate.scenes.core.KernelDict` containing instances.
         """
-        from mitsuba.core import ScalarTransform4f
-
         kernel_length = uck.get("length")
 
         return {
             f"{self.canopy_element.id}_instance_{i}": {
                 "type": "instance",
                 "group": {"type": "ref", "id": self.canopy_element.id},
-                "to_world": ScalarTransform4f.translate(position.m_as(kernel_length)),
+                "to_world": mi.ScalarTransform4f.translate(
+                    position.m_as(kernel_length)
+                ),
             }
             for i, position in enumerate(self.instance_positions)
         }

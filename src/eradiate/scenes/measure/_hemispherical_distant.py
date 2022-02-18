@@ -3,6 +3,8 @@ from __future__ import annotations
 import typing as t
 
 import attr
+import drjit as dr
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -164,13 +166,12 @@ class HemisphericalDistantMeasure(Measure):
     # --------------------------------------------------------------------------
 
     def _kernel_dict(self, sensor_id, spp):
-        import enoki as ek
-        from mitsuba.core import ScalarTransform4f, ScalarVector3f
+        # Inherit docstring
 
-        up = ek.normalize(
-            ek.cross(
-                ScalarVector3f(self.direction),
-                ScalarVector3f(
+        up = dr.normalize(
+            dr.cross(
+                mi.ScalarVector3f(self.direction),
+                mi.ScalarVector3f(
                     np.cos(self.orientation.m_as(ureg.rad)),
                     np.sin(self.orientation.m_as(ureg.rad)),
                     0.0,
@@ -181,7 +182,7 @@ class HemisphericalDistantMeasure(Measure):
         result = {
             "type": "hdistant",
             "id": sensor_id,
-            "to_world": ScalarTransform4f.look_at(
+            "to_world": mi.ScalarTransform4f.look_at(
                 origin=[0.0, 0.0, 0.0], target=self.direction, up=up
             ),
             "sampler": {

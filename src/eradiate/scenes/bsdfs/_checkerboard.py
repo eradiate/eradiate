@@ -1,4 +1,5 @@
 import attr
+import mitsuba as mi
 
 from ._core import BSDF, bsdf_factory
 from ..core import KernelDict
@@ -63,7 +64,6 @@ class CheckerboardBSDF(BSDF):
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         # Inherit docstring
-        from mitsuba.core import ScalarTransform4f
 
         return KernelDict(
             {
@@ -73,7 +73,7 @@ class CheckerboardBSDF(BSDF):
                         "type": "checkerboard",
                         "color0": self.reflectance_a.kernel_dict(ctx=ctx)["spectrum"],
                         "color1": self.reflectance_b.kernel_dict(ctx=ctx)["spectrum"],
-                        "to_uv": ScalarTransform4f.scale(self.scale_pattern),
+                        "to_uv": mi.ScalarTransform4f.scale(self.scale_pattern),
                     },
                 }
             }

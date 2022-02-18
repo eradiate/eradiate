@@ -1,10 +1,11 @@
 import warnings
 
+import mitsuba as mi
 import numpy as np
 import xarray as xr
 
 
-def bitmap_to_dataset(bmp: "mitsuba.core.Bitmap", dtype=float) -> xr.Dataset:
+def bitmap_to_dataset(bmp: "mitsuba.Bitmap", dtype=float) -> xr.Dataset:
     """
     Format Mitsuba bitmap data as an xarray dataset.
 
@@ -27,19 +28,17 @@ def bitmap_to_dataset(bmp: "mitsuba.core.Bitmap", dtype=float) -> xr.Dataset:
     ValueError
         If `bmp` has an unsupported pixel format.
     """
-    from mitsuba.core import Bitmap
-
     img = np.array(bmp, dtype=dtype)
 
-    if isinstance(bmp, Bitmap):
+    if isinstance(bmp, mi.Bitmap):
         try:
             pixel_formats = {
-                Bitmap.PixelFormat.Y: ["Y"],
-                Bitmap.PixelFormat.YA: ["Y", "A"],
-                Bitmap.PixelFormat.RGB: ["R", "G", "B"],
-                Bitmap.PixelFormat.RGBA: ["R", "G", "B", "A"],
-                Bitmap.PixelFormat.XYZ: ["X", "Y", "Z"],
-                Bitmap.PixelFormat.XYZA: ["X", "Y", "Z", "A"],
+                mi.Bitmap.PixelFormat.Y: ["Y"],
+                mi.Bitmap.PixelFormat.YA: ["Y", "A"],
+                mi.Bitmap.PixelFormat.RGB: ["R", "G", "B"],
+                mi.Bitmap.PixelFormat.RGBA: ["R", "G", "B", "A"],
+                mi.Bitmap.PixelFormat.XYZ: ["X", "Y", "Z"],
+                mi.Bitmap.PixelFormat.XYZA: ["X", "Y", "Z", "A"],
             }
             channels = pixel_formats[bmp.pixel_format()]
         except KeyError:

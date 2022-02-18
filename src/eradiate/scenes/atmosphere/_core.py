@@ -6,6 +6,7 @@ import typing as t
 from abc import ABC, abstractmethod
 
 import attr
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -538,7 +539,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     # --------------------------------------------------------------------------
 
     def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
-        from mitsuba.core import ScalarTransform4f
+        # Inherit docstring
 
         # Collect extinction properties
         radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
@@ -595,9 +596,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
             planet_radius = self.geometry.planet_radius.m_as(length_units)
             rmax = planet_radius + top
-            to_world = ScalarTransform4f.translate(
+            to_world = mi.ScalarTransform4f.translate(
                 [0, 0, -planet_radius + bottom]
-            ) * ScalarTransform4f.scale(rmax)
+            ) * mi.ScalarTransform4f.scale(rmax)
 
             volumes = {
                 "albedo": {

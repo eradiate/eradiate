@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as t
 
 import attr
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -105,7 +106,6 @@ class RectangleShape(Shape):
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         # Inherit docstring
-        from mitsuba.core import ScalarTransform4f
 
         length_units = uck.get("length")
         scale = self.edges.m_as(length_units) * 0.5
@@ -113,9 +113,9 @@ class RectangleShape(Shape):
         normal = self.normal
         up = self.up
 
-        trafo = ScalarTransform4f.look_at(
+        trafo = mi.ScalarTransform4f.look_at(
             origin=center, target=center + normal, up=up
-        ) * ScalarTransform4f.scale([scale[0], scale[1], 1.0])
+        ) * mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0])
 
         result = KernelDict({self.id: {"type": "rectangle", "to_world": trafo}})
 

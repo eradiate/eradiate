@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as t
 
 import attr
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -105,12 +106,10 @@ class CuboidShape(Shape):
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         # Inherit docstring
 
-        from mitsuba.core import ScalarTransform4f
-
         length_units = uck.get("length")
-        to_world = ScalarTransform4f.translate(
+        to_world = mi.ScalarTransform4f.translate(
             self.center.m_as(length_units)
-        ) * ScalarTransform4f.scale(0.5 * self.edges.m_as(length_units))
+        ) * mi.ScalarTransform4f.scale(0.5 * self.edges.m_as(length_units))
 
         result = KernelDict({self.id: {"type": "cube", "to_world": to_world}})
 

@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 import attr
 import matplotlib.pyplot as plt
+import mitsuba as mi
 import numpy as np
 import xarray as xr
 
@@ -137,7 +138,6 @@ class Chi2Test(RenderTest):
     def run(self) -> bool:
         # Inherit docstring
 
-        from mitsuba.core.math import chi2
         from mitsuba.python.math import rlgamma
 
         ref_np = self.reference.brf.values
@@ -153,7 +153,7 @@ class Chi2Test(RenderTest):
             *sorted(zip(histo_ref, histo_res), key=lambda x: x[0])
         )
 
-        chi2val, dof, pooled_in, pooled_out = chi2(
+        chi2val, dof, pooled_in, pooled_out = mi.math.chi2(
             histo_res_sorted, histo_ref_sorted, 5
         )
 

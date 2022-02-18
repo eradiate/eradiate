@@ -6,7 +6,7 @@ import typing as t
 from abc import ABC, abstractmethod
 
 import attr
-import mitsuba
+import mitsuba as mi
 import pinttr
 import xarray as xr
 from tqdm.auto import tqdm
@@ -46,7 +46,7 @@ _SUPPORTED_VARIANTS = {"scalar_mono", "scalar_mono_double"}
 
 
 def _check_variant():
-    variant = mitsuba.variant()
+    variant = mi.variant()
     if variant not in _SUPPORTED_VARIANTS:
         raise KernelVariantError(f"unsupported kernel variant '{variant}'")
 
@@ -103,8 +103,6 @@ def mitsuba_run(
     The sample count is stored in a dedicated sub-dictionary in order to allow
     for sample-count-based aggregation.
     """
-    from mitsuba.core import Bitmap
-
     _check_variant()
     if seed_state is None:
         seed_state = root_seed_state
@@ -133,7 +131,7 @@ def mitsuba_run(
 
         # Collect results (store a copy of the sensor's bitmap)
         film = sensor.film()
-        result = Bitmap(film.bitmap())
+        result = mi.Bitmap(film.bitmap())
 
         sensor_id = str(sensor.id())
         # Raise if sensor doesn't have an ID (shouldn't happen since Mitsuba

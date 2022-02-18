@@ -6,6 +6,7 @@ import typing as t
 from enum import Enum
 
 import attr
+import mitsuba as mi
 import numpy as np
 
 from ._util import str_summary_numpy
@@ -79,7 +80,7 @@ class Quad:
         :class:`.Quad`
             Gauss-Legendre quadrature definition.
         """
-        from mitsuba.core.quad import gauss_legendre
+        from mitsuba.scalar_rgb.quad import gauss_legendre
 
         nodes, weights = gauss_legendre(n)
         return cls(
@@ -104,7 +105,7 @@ class Quad:
         :class:`.Quad`
             Gauss-Lobatto quadrature definition.
         """
-        from mitsuba.core.quad import gauss_lobatto
+        from mitsuba.scalar_rgb.quad import gauss_lobatto
 
         nodes, weights = gauss_lobatto(n)
         return cls(

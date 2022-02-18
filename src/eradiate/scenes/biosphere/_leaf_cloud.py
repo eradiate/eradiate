@@ -5,6 +5,7 @@ import typing as t
 
 import aabbtree
 import attr
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -1165,8 +1166,6 @@ class LeafCloud(CanopyElement):
             A dictionary suitable for merge with a :class:`.KernelDict`
             containing all the shapes in the leaf cloud.
         """
-        from mitsuba.core import ScalarTransform4f, coordinate_system
-
         kernel_length = uck.get("length")
         shapes_dict = {}
 
@@ -1182,10 +1181,10 @@ class LeafCloud(CanopyElement):
                 self.leaf_radii.m_as(kernel_length),
             )
         ):
-            _, up = coordinate_system(normal)
-            to_world = ScalarTransform4f.look_at(
+            _, up = mi.coordinate_system(normal)
+            to_world = mi.ScalarTransform4f.look_at(
                 origin=position, target=position + normal, up=up
-            ) * ScalarTransform4f.scale(radius)
+            ) * mi.ScalarTransform4f.scale(radius)
 
             shapes_dict[f"{self.id}_leaf_{i_leaf}"] = {
                 "type": "disk",

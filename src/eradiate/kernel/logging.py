@@ -5,6 +5,7 @@ Logging facilities.
 import logging
 import re
 
+import mitsuba as mi
 from tqdm.auto import tqdm
 
 from .._config import config
@@ -81,9 +82,7 @@ def _get_logger():
     """
     Get Mitsuba Logger instance
     """
-    from mitsuba.core import Thread
-
-    return Thread.thread().logger()
+    return mi.Thread.thread().logger()
 
 
 def install_logging(force: bool = False) -> None:
@@ -100,22 +99,20 @@ def install_logging(force: bool = False) -> None:
     if mts_logger is not None and not force:
         return
 
-    from mitsuba.core import Appender, LogLevel
-
     try:
         _add_logging_level("TRACE", logging.DEBUG - 5, "trace")
     except AttributeError:
         pass
 
     LOGLEVEL_DISPATCH = {
-        LogLevel.Trace: "trace",
-        LogLevel.Debug: "debug",
-        LogLevel.Info: "info",
-        LogLevel.Warn: "warning",
-        LogLevel.Error: "error",
+        mi.LogLevel.Trace: "trace",
+        mi.LogLevel.Debug: "debug",
+        mi.LogLevel.Info: "info",
+        mi.LogLevel.Warn: "warning",
+        mi.LogLevel.Error: "error",
     }
 
-    class EradiateAppender(Appender):
+    class EradiateAppender(mi.Appender):
         def __init__(self):
             super().__init__()
             self.reset()
@@ -157,4 +154,4 @@ def install_logging(force: bool = False) -> None:
         mts_logger = _get_logger()
         mts_logger.clear_appenders()
         mts_logger.add_appender(EradiateAppender())
-        mts_logger.set_log_level(LogLevel.Info)
+        mts_logger.set_log_level(mi.LogLevel.Info)

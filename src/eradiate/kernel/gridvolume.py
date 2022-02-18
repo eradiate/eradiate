@@ -2,9 +2,9 @@
 Volume data file I/O helpers.
 """
 
-import os
 import typing as t
 
+import mitsuba as mi
 import numpy as np
 import xarray as xr
 
@@ -28,8 +28,6 @@ def write_binary_grid3d(
         4 dimensions (x, y, z, spectrum). If the array is 3-dimensional, it will
         automatically be assumed to have only one spectral channel.
     """
-    from mitsuba.render import VolumeGrid
-
     if isinstance(values, xr.DataArray):
         values = values.values
 
@@ -44,7 +42,7 @@ def write_binary_grid3d(
             f"'values' must have 3 or 4 dimensions " f"(got shape {values.shape})"
         )
 
-    VolumeGrid(values.astype(np.float32)).write(str(filename))
+    mi.VolumeGrid(values.astype(np.float32)).write(str(filename))
 
 
 def read_binary_grid3d(filename: PathLike) -> np.ndarray:
@@ -61,6 +59,4 @@ def read_binary_grid3d(filename: PathLike) -> np.ndarray:
     ndarray
         Values.
     """
-    from mitsuba.render import VolumeGrid
-
-    return np.array(VolumeGrid(str(filename)))
+    return np.array(mi.VolumeGrid(str(filename)))

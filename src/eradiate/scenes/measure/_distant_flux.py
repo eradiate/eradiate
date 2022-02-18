@@ -3,7 +3,9 @@ from __future__ import annotations
 import typing as t
 
 import attr
+import mitsuba as mi
 import numpy as np
+import pint
 
 from ._core import Measure, MeasureFlags, measure_factory
 from ._target import Target, TargetPoint, TargetRectangle
@@ -145,16 +147,14 @@ class DistantFluxMeasure(Measure):
     # --------------------------------------------------------------------------
 
     def _kernel_dict(self, sensor_id, spp):
-        from mitsuba.core import ScalarTransform4f, ScalarVector3f, coordinate_system
-
-        _, up = coordinate_system(self.direction)
+        _, up = mi.coordinate_system(self.direction)
 
         result = {
             "type": "distantflux",
             "id": sensor_id,
-            "to_world": ScalarTransform4f.look_at(
+            "to_world": mi.ScalarTransform4f.look_at(
                 origin=[0, 0, 0],
-                target=ScalarVector3f(self.direction),
+                target=mi.ScalarVector3f(self.direction),
                 up=up,
             ),
             "sampler": {

@@ -7,7 +7,7 @@ from collections import abc as collections_abc
 from typing import Mapping, Sequence
 
 import attr
-import mitsuba
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -21,10 +21,10 @@ from ..exceptions import KernelVariantError
 from ..units import unit_registry as ureg
 
 
-def _kernel_dict_get_mts_variant():
-    variant = mitsuba.variant()
+def _kernel_dict_get_mitsuba_variant() -> str:
+    variant = mi.variant()
 
-    if variant is not None:
+    if variant:
         return variant
     else:
         raise KernelVariantError(
@@ -65,7 +65,7 @@ class KernelDict(collections_abc.MutableMapping):
 
     variant: str = documented(
         attr.ib(
-            factory=_kernel_dict_get_mts_variant,
+            factory=_kernel_dict_get_mitsuba_variant,
             validator=attr.validators.instance_of(str),
         ),
         doc="Kernel variant for which the dictionary is created. Defaults to "
@@ -114,7 +114,7 @@ class KernelDict(collections_abc.MutableMapping):
             If the variant for which the kernel dictionary was created is
             not the same as the current one
         """
-        variant = mitsuba.variant()
+        variant = mi.variant()
         if self.variant != variant:
             raise KernelVariantError(
                 f"scene dictionary created for kernel variant '{self.variant}', "
@@ -130,7 +130,7 @@ class KernelDict(collections_abc.MutableMapping):
 
     def load(
         self, strip: bool = True, post_load_update: bool = True
-    ) -> mitsuba.core.Object:
+    ) -> "mitsuba.Object":
         """
         Call :func:`~mitsuba.core.load_dict` on self. In addition, a
         post-load update can be applied.
@@ -185,9 +185,6 @@ class KernelDict(collections_abc.MutableMapping):
         :class:`mitsuba.core.Object`
             Loaded Mitsuba object.
         """
-        from mitsuba.core import load_dict
-        from mitsuba.python.util import traverse
-
         d = self.data
         d_extra = {}
 
@@ -199,10 +196,10 @@ class KernelDict(collections_abc.MutableMapping):
                 # Promote to scene dictionary
                 d_extra = {"type": "scene"}
 
-        obj = load_dict({**d, **d_extra})
+        obj = mi.load_dict({**d, **d_extra})
 
         if self.post_load and post_load_update:
-            params = traverse(obj)
+            params = mi.traverse(obj)
             params.keep(list(self.post_load.keys()))
             for k, v in self.post_load.items():
                 params[k] = v

@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as t
 
 import attr
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -147,7 +148,6 @@ class PerspectiveCameraMeasure(Measure):
     # --------------------------------------------------------------------------
 
     def _kernel_dict(self, sensor_id, spp):
-        from mitsuba.core import ScalarTransform4f
 
         target = self.target.m_as(uck.get("length"))
         origin = self.origin.m_as(uck.get("length"))
@@ -157,7 +157,7 @@ class PerspectiveCameraMeasure(Measure):
             "id": sensor_id,
             "far_clip": self.far_clip.m_as(uck.get("length")),
             "fov": self.fov.m_as(ureg.deg),
-            "to_world": ScalarTransform4f.look_at(
+            "to_world": mi.ScalarTransform4f.look_at(
                 origin=origin, target=target, up=self.up
             ),
             "sampler": {
