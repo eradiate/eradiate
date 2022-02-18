@@ -1,3 +1,5 @@
+import pytest
+
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate._mode import ModeFlags
@@ -72,6 +74,7 @@ def test_kernel_dict_context_evolve(mode_mono_double):
     ctx_1 = KernelDictContext()
 
     # Evolving the context adds additional data to its dynamic component
-    ctx_2 = ctx_1.evolve(foo="bar")
+    with pytest.warns(UserWarning):
+        ctx_2 = ctx_1.evolve(foo="bar")
     assert ctx_2.foo == "bar"
     assert ctx_1 is not ctx_2
