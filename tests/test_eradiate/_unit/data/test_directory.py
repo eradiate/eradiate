@@ -12,7 +12,7 @@ TEST_FILE_UNREGISTERED = Path("tests/data/git/unregistered_dataset.nc")
 
 def test_directory_data_store_fetch():
     # The data submodule can be instantiated
-    data_store = DirectoryDataStore(path=eradiate.config.dir / "resources/data")
+    data_store = DirectoryDataStore(path=eradiate.config.source_dir / "resources/data")
 
     # We can fetch the test file
     assert data_store.fetch(TEST_FILE_REGISTERED)

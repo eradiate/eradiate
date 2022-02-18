@@ -12,7 +12,7 @@ data_store = MultiDataStore(
         [
             (
                 "small_files",
-                DirectoryDataStore(path=config.dir / "resources/data/"),
+                DirectoryDataStore(path=config.source_dir / "resources/data/"),
             ),
             (
                 "large_files_stable",

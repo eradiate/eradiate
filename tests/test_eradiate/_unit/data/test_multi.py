@@ -17,7 +17,7 @@ def test_multi_data_store(tmpdir):
         [
             (
                 "1",
-                DirectoryDataStore(path=eradiate.config.dir / "resources/data"),
+                DirectoryDataStore(path=eradiate.config.source_dir / "resources/data"),
             ),
             (
                 "2",

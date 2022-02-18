@@ -121,7 +121,7 @@ def fetch(files, from_file):
     if not files:
         if from_file is None:
             # TODO: fetch this list from online
-            from_file = eradiate.config.dir / "resources/downloads.yml"
+            from_file = eradiate.config.source_dir / "resources/downloads.yml"
         console.print(f"Reading file list from '{from_file}'")
         yaml = YAML()
         files = yaml.load(from_file)
