@@ -249,14 +249,8 @@ napoleon_type_aliases = {
 # Mitsuba modules must be mocked in order to allow compiling docs even if they're not here;
 # this mocking is also done in the ertdocs extension
 autodoc_mock_imports = [
+    "drjit",
     "mitsuba",
-    "mitsuba.core",
-    "mitsuba.core.math",
-    "mitsuba.core.spline",
-    "mitsuba.core.warp",
-    "mitsuba.core.xml",
-    "mitsuba.render",
-    "mitsuba.render.mueller",
 ]
 
 # ------------------------- HTML output customisation -------------------------
