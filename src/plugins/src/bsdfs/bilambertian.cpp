@@ -17,10 +17,13 @@ Bi-Lambertian material (:monosp:`bilambertian`)
 
  * - reflectance
    - |spectrum| or |texture|
-   - Specifies the diffuse reflectance of the material (Default: 0.5)
+   - Specifies the diffuse reflectance of the material. Default: 0.5
+   - |exposed|
+
  * - transmittance
    - |spectrum| or |texture|
-   - Specifies the diffuse transmittance of the material (Default: 0.5)
+   - Specifies the diffuse transmittance of the material. Default: 0.5
+   - |exposed|
 
 The bi-Lambertian material scatters light diffusely into the entire sphere.
 The reflectance specifies the amount of light scattered into the incoming

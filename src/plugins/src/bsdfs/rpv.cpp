@@ -21,15 +21,22 @@ Rahman Pinty Verstraete reflection model (:monosp:`rpv`)
  * - rho_0
    - |spectrum| or |texture|
    - :math:`\rho_0 \ge 0`. Default: 0.1
+   - |exposed|
+
  * - k
    - |spectrum| or |texture|
    - :math:`k \in \mathbb{R}`. Default: 0.1
+   - |exposed|
+
  * - g
    - |spectrum| or |texture|
    - :math:`-1 \le g \le 1`. Default: 0.0
+   - |exposed|
+
  * - rho_c
    - |spectrum| or |texture|
    - Default: Equal to rho_0
+   - |exposed|
 
 This plugin implements the reflection model proposed by
 :cite:`Rahman1993CoupledSurfaceatmosphereReflectance`.

@@ -26,6 +26,7 @@ Multi distant radiance meter (:monosp:`mdistant`)
    - |string|
    - Comma-separated list of directions in which the sensors are pointing in
      world coordinates.
+   - —
 
  * - target
    - |point| or nested :paramtype:`shape` plugin
@@ -35,6 +36,7 @@ Multi distant radiance meter (:monosp:`mdistant`)
      If a |point| is passed, rays will target it.
      If a shape plugin is passed, ray target points will be sampled from its
      surface.
+   - —
 
 This sensor plugin aggregates an arbitrary number of distant directional sensors
 which records the spectral radiance leaving the scene in specified directions.

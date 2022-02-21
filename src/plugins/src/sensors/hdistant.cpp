@@ -24,6 +24,8 @@ Hemispherical distant radiancemeter sensor (:monosp:`hdistant`)
  * - to_world
    - |transform|
    - Sensor-to-world transformation matrix.
+   - —
+
  * - target
    - |point| or nested :paramtype:`shape` plugin
    - *Optional.* Define the ray target sampling strategy.
@@ -32,6 +34,7 @@ Hemispherical distant radiancemeter sensor (:monosp:`hdistant`)
      If a |point| is passed, rays will target it.
      If a shape plugin is passed, ray target points will be sampled from its
      surface.
+   - —
 
 This sensor plugin implements a distant directional sensor which records
 radiation leaving the scene. It records the spectral radiance leaving the scene

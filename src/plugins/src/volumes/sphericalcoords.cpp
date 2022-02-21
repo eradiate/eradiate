@@ -18,32 +18,38 @@ Mapping to spherical coordinates (:monosp:`sphericalcoordsvolume`)
  * - volume
    - |volume|
    - Nested volume plugin whose data is to be mapped to spherical coordinates.
+   - —
 
  * - rmin
    - |float|
    - Radius for the inner limit of the spherical shell, relative to the unit
      sphere. Default: 0
+   - —
 
  * - rmax
    - |float|
    - Radius for the outer limit of the spherical shell, relative to the unit
      sphere. Default: 1
+   - —
 
  * - fillmin
    - |float|
    - Constant value to return for points such that :math:`r < r_\mathrm{min}`.
      Default: 0
+   - —
 
  * - fillmax
    - |float|
    - Constant value to return for points such that :math:`r_\mathrm{max} < r`.
      Default: 0
+   - —
 
  * - to_world
    - |transform|
    - Specifies an optional 4x4 transformation matrix that will remap local
      spherical coordinates from the unit sphere (which covers the [-1, 1]³ cube)
      to world coordinates.
+   - —
 
 This plugin addresses volume data in spherical coordinates. In practice, it
 maps the texture coordinates of a nested volume plugin to the unit sphere using

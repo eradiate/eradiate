@@ -24,6 +24,8 @@ Distant fluxmeter sensor (:monosp:`distantflux`)
  * - to_world
    - |transform|
    - Sensor-to-world transformation matrix.
+   - —
+
  * - target
    - |point| or nested :paramtype:`shape` plugin
    - *Optional.* Define the ray target sampling strategy.
@@ -32,6 +34,7 @@ Distant fluxmeter sensor (:monosp:`distantflux`)
      If a |point| is passed, rays will target it.
      If a shape plugin is passed, ray target points will be sampled from its
      surface.
+   - —
 
 This sensor plugin implements a distant sensor which records the radiative flux
 density leaving the scene (in W/m², scaled by scene unit length). It covers a

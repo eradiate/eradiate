@@ -23,11 +23,13 @@ Multi-radiance meter (:monosp:`mradiancemeter`)
    - |string|
    - Comma separated list of locations from which the sensors will be recording
      in world coordinates.
+   - —
 
  * - directions
    - |string|
    - Comma separated list of directions in which the sensors are pointing in
      world coordinates.
+   - —
 
 This sensor plugin implements multiple radiance meters, as implemented in the
 :monosp:`radiancemeter` plugin.
