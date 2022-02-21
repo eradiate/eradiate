@@ -88,6 +88,11 @@ rst_prolog = r"""
 .. |vector| replace:: :paramtype:`vector`
 .. |transform| replace:: :paramtype:`transform`
 .. |volume| replace:: :paramtype:`volume`
+.. |tensor| replace:: :paramtype:`tensor`
+
+.. |exposed| replace:: :abbr:`P (This parameters will be exposed as a scene parameter)`
+.. |differentiable| replace:: :abbr:`∂ (This parameter is differentiable)`
+.. |discontinuous| replace:: :abbr:`D (This parameter might introduce discontinuities. Therefore it requires special handling during differentiation to prevent bias (e.g. prb-reparam)))`
 """
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
