@@ -1,0 +1,86 @@
+# This is a basic CI pipeline, which will build eradiate and
+# run the test suite on it.
+name: Eradiate build and test
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 0 * * *
+  push:
+    branches:
+      - github-actions_update-and-tests
+
+jobs:
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+          token: ${{ secrets.ERADIATECI_PAT }}
+          ref: main
+      - name: Build and run tests
+        shell: bash -l {0}
+        run: |          
+          sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y   \
+          git              \
+          ninja-build      \
+          clang-11          \
+          libc++-11-dev     \
+          libc++abi-11-dev  \
+          libpng-dev       \
+          zlib1g-dev       \
+          build-essential  \
+          libjpeg-dev      \
+          ninja-build      \
+          cmake
+          
+          export CC=clang-11
+          export CXX=clang++-11
+          
+          source setpath.sh
+          
+          cmake --preset default
+          cmake --build build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: mitsuba
+          path: build
+          retention-days: 5
+  test:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+          token: ${{ secrets.ERADIATECI_PAT }}
+          ref: main
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: eradiate
+      - uses: actions/download-artifact@master
+        with:
+          name: mitsuba
+          path: build
+      - name: run tests
+        shell: bash -l {0}
+        run: |
+          export CUDA_VISIBLE_DEVICES=""
+          sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y cmake
+          make conda-init
+          pip install --editable . --no-deps
+          source setpath.sh
+          pytest ./tests
+      - name: archive test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test_results
+          path: build/test_artefacts
+          retention-days: 5

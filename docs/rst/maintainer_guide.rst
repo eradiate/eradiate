@@ -302,6 +302,19 @@ need to update the lock file.
 
 .. _sec-maintainer_guide-release:
 
+Continuous integration
+----------------------
+
+Eradiate has a continuous integration scheme built in `Github Actions <https://docs.github.com/en/actions>`_ .
+The action is configured in the ``.github/workflows/ci.yml`` file.
+
+As per the documented installation process, Conda environment setup is handled using
+the appropriate Makefile and Mitsuba build configuration is done using the CMake preset.
+No CI-specific build setup operations are required.
+
+Since the entire pipeline takes more than one hour to complete, we do not trigger it on every commit but instead
+run it once per day during the night.
+
 Preparing a  release
 --------------------
 
