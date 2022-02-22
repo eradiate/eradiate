@@ -300,6 +300,23 @@ need to update the lock file.
    This command skips the Setuptools and pip-compile update which could disrupt
    your Conda environment.
 
+Continuous integration
+----------------------
+
+Eradiate has a continuous integration scheme built in `Github Actions <https://docs.github.com/en/actions>`_ .
+The action is configured in the ``.github/workflows/ci.yml`` file.
+
+As per the documented installation process, Conda environment setup is handled using
+the appropriate Makefile and Mitsuba build configuration is done using the CMake preset.
+No CI-specific build setup operations are required.
+
+The CI workflow uses caching for the compiled Mitsuba binaries. The cache is identified by the commit hash of the 
+``mitsuba`` submodule and the file hashes of all .cpp and .h files in ``src/plugins/src``.
+
+Since the entire pipeline takes more than one hour to complete, it is not triggered automatically.
+Instead, issuing a PR comment containing only ``run Eradiate CI`` will trigger the pipeline on the source
+branch of the PR.
+
 .. _sec-maintainer_guide-release:
 
 Preparing a  release
