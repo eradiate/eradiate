@@ -21,22 +21,22 @@ Rahman Pinty Verstraete reflection model (:monosp:`rpv`)
  * - rho_0
    - |spectrum| or |texture|
    - :math:`\rho_0 \ge 0`. Default: 0.1
-   - |exposed|
+   - |exposed| |differentiable|
 
  * - k
    - |spectrum| or |texture|
    - :math:`k \in \mathbb{R}`. Default: 0.1
-   - |exposed|
+   - |exposed| |differentiable|
 
  * - g
    - |spectrum| or |texture|
    - :math:`-1 \le g \le 1`. Default: 0.0
-   - |exposed|
+   - |exposed| |differentiable|
 
  * - rho_c
    - |spectrum| or |texture|
    - Default: Equal to rho_0
-   - |exposed|
+   - |exposed| |differentiable|
 
 This plugin implements the reflection model proposed by
 :cite:`Rahman1993CoupledSurfaceatmosphereReflectance`.
@@ -172,10 +172,10 @@ public:
     }
 
     void traverse(TraversalCallback *callback) override {
-        callback->put_object("rho_0", m_rho_0.get());
-        callback->put_object("g", m_g.get());
-        callback->put_object("k", m_k.get());
-        callback->put_object("rho_c", m_rho_c.get());
+        callback->put_object("rho_0", m_rho_0.get(), +ParamFlags::Differentiable);
+        callback->put_object("g", m_g.get(), +ParamFlags::Differentiable);
+        callback->put_object("k", m_k.get(), +ParamFlags::Differentiable);
+        callback->put_object("rho_c", m_rho_c.get(), +ParamFlags::Differentiable);
     }
 
     std::string to_string() const override {

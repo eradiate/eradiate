@@ -127,7 +127,7 @@ def mitsuba_run(
     for i_sensor, sensor in enumerate(sensors):
         # Run Mitsuba
         seed = seed_state.next()
-        kernel_scene.integrator().render(kernel_scene, sensor, seed=seed)
+        mi.render(kernel_scene, sensor=sensor, seed=seed)
 
         # Collect results (store a copy of the sensor's bitmap)
         film = sensor.film()

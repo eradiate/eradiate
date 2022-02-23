@@ -18,12 +18,12 @@ Bi-Lambertian material (:monosp:`bilambertian`)
  * - reflectance
    - |spectrum| or |texture|
    - Specifies the diffuse reflectance of the material. Default: 0.5
-   - |exposed|
+   - |exposed| |differentiable|
 
  * - transmittance
    - |spectrum| or |texture|
    - Specifies the diffuse transmittance of the material. Default: 0.5
-   - |exposed|
+   - |exposed| |differentiable|
 
 The bi-Lambertian material scatters light diffusely into the entire sphere.
 The reflectance specifies the amount of light scattered into the incoming
@@ -203,8 +203,8 @@ public:
     }
 
     void traverse(TraversalCallback *callback) override {
-        callback->put_object("reflectance", m_reflectance.get());
-        callback->put_object("transmittance", m_transmittance.get());
+        callback->put_object("reflectance", m_reflectance.get(), +ParamFlags::Differentiable);
+        callback->put_object("transmittance", m_transmittance.get(), +ParamFlags::Differentiable);
     }
 
     std::string to_string() const override {
