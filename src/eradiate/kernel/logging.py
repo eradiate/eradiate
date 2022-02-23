@@ -63,7 +63,7 @@ def _add_logging_level(level_name, level_num, method_name=None):
 
 
 # Regex for log parsing
-mts_log_parser = re.compile(
+mi_log_parser = re.compile(
     r"^(?P<datetime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s*"
     r"(?P<level>\S*)\s*"
     r"(?P<thread>\S*)\s*"
@@ -72,7 +72,7 @@ mts_log_parser = re.compile(
 )
 
 # Mitsuba Logger instance
-mts_logger = None
+mi_logger = None
 
 # Module-local logger
 logger = logging.getLogger(__name__)
@@ -94,9 +94,9 @@ def install_logging(force: bool = False) -> None:
     force : bool, optional
         If ``True``, force-reactivate logging.
     """
-    global mts_logger
+    global mi_logger
 
-    if mts_logger is not None and not force:
+    if mi_logger is not None and not force:
         return
 
     try:
@@ -122,7 +122,7 @@ def install_logging(force: bool = False) -> None:
             self.progress = None
 
         def append(self, level, text):
-            m = mts_log_parser.match(text)
+            m = mi_log_parser.match(text)
             msg = (
                 f"{m.group('thread')} [{m.group('class')}] {m.group('message')}"
                 if m is not None
@@ -150,8 +150,8 @@ def install_logging(force: bool = False) -> None:
                 self.bar.close()
                 self.reset()
 
-    if mts_logger is None:
-        mts_logger = _get_logger()
-        mts_logger.clear_appenders()
-        mts_logger.add_appender(EradiateAppender())
-        mts_logger.set_log_level(mi.LogLevel.Info)
+    if mi_logger is None:
+        mi_logger = _get_logger()
+        mi_logger.clear_appenders()
+        mi_logger.add_appender(EradiateAppender())
+        mi_logger.set_log_level(mi.LogLevel.Info)

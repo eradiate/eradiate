@@ -8,7 +8,7 @@ import eradiate
 
 def test_logging_setup(mode_mono):
     eradiate.kernel.logging.install_logging()
-    assert eradiate.kernel.logging.mts_logger is eradiate.kernel.logging._get_logger()
+    assert eradiate.kernel.logging.mi_logger is eradiate.kernel.logging._get_logger()
 
 
 def test_logging_mitsuba(mode_mono, caplog):
@@ -27,7 +27,7 @@ def test_logging_mitsuba(mode_mono, caplog):
     assert not caplog.records
 
     # We can raise log level
-    eradiate.kernel.logging.mts_logger.set_log_level(mi.LogLevel.Trace)
+    eradiate.kernel.logging.mi_logger.set_log_level(mi.LogLevel.Trace)
     mi.Log(mi.LogLevel.Trace, "trace message")
     record = caplog.records.pop()
     assert record.levelname == "TRACE"
