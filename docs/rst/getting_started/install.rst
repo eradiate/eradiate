@@ -327,3 +327,14 @@ The command should succeed and not return anything. You can now run Eradiate.
 |smile|
 
 .. |smile| unicode:: U+1F642
+
+.. dropdown:: If you get a ``jit_cuda_compile()`` error ...
+   :color: light
+   :icon: info
+
+   Eradiate does not use any CUDA variant of Mitsuba. You can therefore
+   hide your graphics card by setting
+
+   .. code:: bash
+
+      export CUDA_VISIBLE_DEVICES=""
