@@ -219,7 +219,7 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
     scene = mi.load_dict({**scene_dict, "sensor": sensors[sensor_setup]})
 
     # Run simulation
-    scene.render()
+    mi.render(scene)
     result = np.array(
         scene.sensors()[0]
         .film()
@@ -341,7 +341,7 @@ def test_checkerboard(variants_all_rgb):
     }
 
     scene = mi.load_dict(scene_dict)
-    scene.render()
+    mi.render(scene)
     result = np.array(
         scene.sensors()[0]
         .film()

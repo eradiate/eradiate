@@ -168,7 +168,7 @@ def test_render(variant_scalar_rgb, radiance):
     )
 
     scene = mi.load_dict(scene_dict)
-    img = scene.render()
+    img = mi.render(scene)
     assert np.allclose(np.array(img), radiance)
 
 
@@ -229,7 +229,7 @@ def test_render_complex(variant_scalar_rgb):
     }
 
     scene = mi.load_dict(scene_dict)
-    img = scene.render()
+    img = mi.render(scene)
     data = np.squeeze(np.array(img))
 
     assert np.isclose(data[0] / data[1], 2, atol=1e-3)
