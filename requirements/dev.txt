@@ -14,10 +14,6 @@ appdirs==1.4.4
     # via
     #   ensureconda
     #   pooch
-appnope==0.1.2
-    # via
-    #   ipykernel
-    #   ipython
 argon2-cffi==21.3.0
     # via
     #   jupyter-server
@@ -49,9 +45,7 @@ beautifulsoup4==4.10.0
     #   pydata-sphinx-theme
     #   sphinx-book-theme
 black==22.1.0
-    # via
-    #   -r requirements/dev.in
-    #   ipython
+    # via -r requirements/dev.in
 bleach==4.1.0
     # via
     #   nbconvert
@@ -63,12 +57,14 @@ cerberus==1.3.4
 certifi==2021.10.8
     # via requests
 cffi==1.15.0
-    # via argon2-cffi-bindings
+    # via
+    #   argon2-cffi-bindings
+    #   cryptography
 cftime==1.5.2
     # via netcdf4
-charset-normalizer==2.0.11
+charset-normalizer==2.0.12
     # via requests
-click==8.0.3
+click==8.0.4
     # via
     #   -r requirements/main.in
     #   black
@@ -90,11 +86,13 @@ commonmark==0.9.1
     # via rich
 conda-lock==0.13.2
     # via -r requirements/dev.in
-coverage==6.3
+coverage==6.3.2
     # via -r requirements/dev.in
+cryptography==36.0.1
+    # via secretstorage
 cycler==0.11.0
     # via matplotlib
-dask==2022.1.1
+dask==2022.2.1
     # via -r requirements/main.in
 debugpy==1.5.1
     # via ipykernel
@@ -116,7 +114,7 @@ docutils==0.16
     #   sphinxcontrib-bibtex
 ensureconda==1.4.1
     # via conda-lock
-entrypoints==0.3
+entrypoints==0.4
     # via
     #   jupyter-client
     #   jupyterlab-server
@@ -125,13 +123,13 @@ environ-config==21.2.0
     # via -r requirements/main.in
 execnet==1.9.0
     # via pytest-xdist
-executing==0.8.2
+executing==0.8.3
     # via stack-data
-filelock==3.4.2
+filelock==3.6.0
     # via ensureconda
 fonttools==4.29.1
     # via matplotlib
-fsspec==2022.1.0
+fsspec==2022.2.0
     # via dask
 iapws==1.5.2
     # via -r requirements/main.in
@@ -141,7 +139,7 @@ idna==3.3
     #   requests
 imagesize==1.3.0
     # via sphinx
-importlib-metadata==4.10.1
+importlib-metadata==4.11.2
     # via
     #   keyring
     #   rst2pdf
@@ -151,11 +149,11 @@ importlib-resources==5.4.0
     # via jsonschema
 iniconfig==1.1.1
     # via pytest
-ipykernel==6.7.0
+ipykernel==6.9.1
     # via
     #   ipywidgets
     #   notebook
-ipython==8.0.1
+ipython==8.1.0
     # via
     #   -r requirements/dev.in
     #   ipykernel
@@ -173,6 +171,10 @@ isort==5.10.1
     # via -r requirements/dev.in
 jedi==0.18.1
     # via ipython
+jeepney==0.7.1
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.0.3
     # via
     #   conda-lock
@@ -195,7 +197,7 @@ jupyter-client==7.1.2
     #   jupyter-server
     #   nbclient
     #   notebook
-jupyter-core==4.9.1
+jupyter-core==4.9.2
     # via
     #   jupyter-client
     #   jupyter-server
@@ -203,12 +205,12 @@ jupyter-core==4.9.1
     #   nbconvert
     #   nbformat
     #   notebook
-jupyter-server==1.13.4
+jupyter-server==1.13.5
     # via
     #   jupyterlab
     #   jupyterlab-server
     #   nbclassic
-jupyterlab==3.2.8
+jupyterlab==3.2.9
     # via -r requirements/dev.in
 jupyterlab-pygments==0.1.2
     # via nbconvert
@@ -226,7 +228,7 @@ livereload==2.6.3
     # via sphinx-autobuild
 locket==0.2.1
     # via partd
-markupsafe==2.0.1
+markupsafe==2.1.0
     # via jinja2
 matplotlib==3.5.1
     # via
@@ -244,9 +246,9 @@ mypy-extensions==0.4.3
     # via black
 nbclassic==0.3.5
     # via jupyterlab
-nbclient==0.5.10
+nbclient==0.5.11
     # via nbconvert
-nbconvert==6.4.1
+nbconvert==6.4.2
     # via
     #   jupyter-server
     #   notebook
@@ -269,7 +271,7 @@ notebook==6.4.8
     # via
     #   nbclassic
     #   widgetsnbextension
-numpy==1.22.1
+numpy==1.22.2
     # via
     #   -r requirements/main.in
     #   astropy
@@ -297,7 +299,7 @@ packaging==21.3
     #   setuptools-scm
     #   sphinx
     #   xarray
-pandas==1.4.0
+pandas==1.4.1
     # via
     #   seaborn
     #   xarray
@@ -315,7 +317,7 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pillow==9.0.0
+pillow==9.0.1
     # via
     #   matplotlib
     #   reportlab
@@ -325,11 +327,11 @@ pint==0.18
     #   pinttrs
 pinttrs==21.3.1
     # via -r requirements/main.in
-pip-tools==6.4.0
+pip-tools==6.5.1
     # via -r requirements/dev.in
 pkginfo==1.8.2
     # via twine
-platformdirs==2.4.1
+platformdirs==2.5.1
     # via black
 pluggy==1.0.0
     # via pytest
@@ -339,7 +341,7 @@ prometheus-client==0.13.1
     # via
     #   jupyter-server
     #   notebook
-prompt-toolkit==3.0.26
+prompt-toolkit==3.0.28
     # via ipython
 ptyprocess==0.7.0
     # via
@@ -380,7 +382,7 @@ pyparsing==3.0.7
     #   packaging
 pyrsistent==0.18.1
     # via jsonschema
-pytest==6.2.5
+pytest==7.0.1
     # via
     #   -r requirements/tests.in
     #   pytest-forked
@@ -422,7 +424,7 @@ pyzmq==22.3.0
     #   notebook
 readme-renderer==32.0
     # via twine
-reportlab==3.6.6
+reportlab==3.6.7
     # via rst2pdf
 requests==2.27.1
     # via
@@ -437,21 +439,23 @@ requests-toolbelt==0.9.1
     # via twine
 rfc3986==2.0.0
     # via twine
-rich==11.1.0
+rich==11.2.0
     # via -r requirements/main.in
 rst2pdf==0.99
     # via -r requirements/tests.in
-ruamel.yaml==0.17.20
+ruamel-yaml==0.17.21
     # via -r requirements/main.in
-ruamel.yaml.clib==0.2.6
-    # via ruamel.yaml
-scipy==1.7.3
+ruamel-yaml-clib==0.2.6
+    # via ruamel-yaml
+scipy==1.8.0
     # via
     #   -r requirements/main.in
     #   iapws
     #   seaborn
 seaborn==0.11.2
     # via -r requirements/main.in
+secretstorage==3.3.1
+    # via keyring
 send2trash==1.8.0
     # via
     #   jupyter-server
@@ -491,9 +495,9 @@ sphinx-autobuild==2021.3.14
     # via -r requirements/docs.in
 sphinx-book-theme==0.2.0
     # via -r requirements/docs.in
-sphinx-click==3.0.3
+sphinx-click==3.1.0
     # via -r requirements/docs.in
-sphinx-copybutton==0.4.0
+sphinx-copybutton==0.5.0
     # via -r requirements/docs.in
 sphinx-design==0.0.13
     # via -r requirements/docs.in
@@ -513,7 +517,7 @@ sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
-stack-data==0.1.4
+stack-data==0.2.0
     # via ipython
 tabulate==0.8.9
     # via -r requirements/tests.in
@@ -521,16 +525,15 @@ terminado==0.13.1
     # via
     #   jupyter-server
     #   notebook
-testpath==0.5.0
+testpath==0.6.0
     # via nbconvert
 toml==0.10.2
-    # via
-    #   conda-lock
-    #   pytest
-tomli==2.0.0
+    # via conda-lock
+tomli==2.0.1
     # via
     #   black
     #   pep517
+    #   pytest
     #   setuptools-scm
 toolz==0.11.2
     # via
@@ -545,7 +548,7 @@ tornado==6.1
     #   livereload
     #   notebook
     #   terminado
-tqdm==4.62.3
+tqdm==4.63.0
     # via
     #   -r requirements/main.in
     #   twine
@@ -562,19 +565,21 @@ traitlets==5.1.1
     #   nbconvert
     #   nbformat
     #   notebook
-twine==3.7.1
+twine==3.8.0
     # via -r requirements/dev.in
-typing-extensions==4.0.1
+typing-extensions==4.1.1
     # via
     #   black
     #   pydantic
 urllib3==1.26.8
-    # via requests
+    # via
+    #   requests
+    #   twine
 wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-websocket-client==1.2.3
+websocket-client==1.3.1
     # via jupyter-server
 wheel==0.37.1
     # via pip-tools
@@ -588,11 +593,11 @@ zipp==3.7.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==22.0.2
+pip==22.0.3
     # via
     #   -r requirements/dev.in
     #   pip-tools
-setuptools==60.6.0
+setuptools==60.9.3
     # via
     #   -r requirements/dev.in
     #   cerberus

@@ -9,7 +9,7 @@ ipywidgets
 isort
 jupyterlab
 pip
-pip-tools
+pip-tools>=6.5
 setuptools>=45
 setuptools-scm>=6.2
 twine
