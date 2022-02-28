@@ -69,8 +69,8 @@ def test_resolve(presolver):
 
     # We expect the test script to find its own location
     assert os.path.join(base, "tests") == str(presolver.resolve("tests/"))
-    assert os.path.join(base, "tests/test_eradiate/_unit/test_presolver.py") == str(
-        presolver.resolve("tests/test_eradiate/_unit/test_presolver.py")
+    assert os.path.join(base, "tests/02_eradiate/01_unit/test_presolver.py") == str(
+        presolver.resolve("tests/02_eradiate/01_unit/test_presolver.py")
     )
 
     # We expect to get the original path if the file is not found
