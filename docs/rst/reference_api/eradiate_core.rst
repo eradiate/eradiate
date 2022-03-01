@@ -32,6 +32,12 @@ Mode management
 .. autodata:: unsupported_mode
    :annotation:
 
+.. autodata:: Mode
+   :annotation:
+
+.. autodata:: ModeFlags
+   :annotation:
+
 Unit management
 ---------------
 

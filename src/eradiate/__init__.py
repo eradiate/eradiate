@@ -66,13 +66,20 @@ modes = _mode.modes
 #: Alias to :func:`eradiate._mode.set_mode`.
 set_mode = _mode.set_mode
 
-#: Raise if the current mode doesn't has specific flags.
+#: Raise if the current mode doesn't have specific flags.
 #: Alias to :func:`eradiate._mode.supported_mode`.
 supported_mode = _mode.supported_mode
 
 #: Raise if the current mode has specific flags.
 #: Alias to :func:`eradiate._mode.unsupported_mode`.
 unsupported_mode = _mode.unsupported_mode
+
+#: Alias to :class:`eradiate._mode.Mode`.
+Mode = _mode.Mode
+
+#: Alias to :class:`eradiate._mode.ModeFlags`.
+ModeFlags = _mode.ModeFlags
+
 
 # ------------------------------------------------------------------------------
 
@@ -93,6 +100,8 @@ from . import (
 )
 
 __all__ = [
+    "Mode",
+    "ModeFlags",
     "__version__",
     "ckd",
     "contexts",
@@ -108,10 +117,12 @@ __all__ = [
     "rng",
     "scenes",
     "set_mode",
+    "supported_mode",
     "unit_context_config",
     "unit_context_kernel",
     "unit_registry",
     "units",
+    "unsupported_mode",
     "validators",
     "xarray",
 ]
