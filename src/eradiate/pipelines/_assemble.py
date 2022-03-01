@@ -11,7 +11,6 @@ import eradiate
 
 from ._core import PipelineStep
 from .. import unit_registry as ureg
-from .._mode import ModeFlags
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..frame import angles_in_hplane
@@ -81,13 +80,13 @@ class AddIllumination(PipelineStep):
 
             spectrum: Spectrum = getattr(illumination, field_name)
 
-            if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+            if eradiate.mode().is_mono:
                 # Very important: sort spectral coordinate
                 wavelengths = np.sort(measure.spectral_cfg.wavelengths)
                 assert np.allclose(wavelengths, wavelengths_dataset)
                 return spectrum.eval_mono(wavelengths).m_as(k_units)
 
-            elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+            elif eradiate.mode().is_ckd:
                 # Collect bins and wavelengths, evaluate spectrum
                 bins = measure.spectral_cfg.bins
                 wavelengths = [bin.wcenter.m_as(ureg.nm) for bin in bins] * ureg.nm

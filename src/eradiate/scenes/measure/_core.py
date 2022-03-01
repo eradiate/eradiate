@@ -17,7 +17,6 @@ from ..core import SceneElement
 from ..spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum, spectrum_factory
 from ... import ckd, converters, data, validators
 from ..._factory import Factory
-from ..._mode import ModeFlags
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
 from ...contexts import CKDSpectralContext, MonoSpectralContext, SpectralContext
@@ -141,10 +140,10 @@ class MeasureSpectralConfig(ABC):
                 "instantiating MeasureSpectralConfig requires a mode to be selected"
             )
 
-        if mode.has_flags(ModeFlags.ANY_MONO):
+        if mode.is_mono:
             return MonoMeasureSpectralConfig(**kwargs)
 
-        elif mode.has_flags(ModeFlags.ANY_CKD):
+        elif mode.is_ckd:
             return CKDMeasureSpectralConfig(**kwargs)
 
         else:
@@ -535,7 +534,7 @@ class Measure(SceneElement, ABC):
     @split_spp.validator
     def _split_spp_validator(self, attribute, value):
         if (
-            eradiate.mode().has_flags(ModeFlags.ANY_SINGLE)
+            eradiate.mode().is_single_precision
             and self.spp > 1e5
             and self.split_spp is None
         ):

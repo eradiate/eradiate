@@ -2,7 +2,6 @@ import pytest
 
 import eradiate
 from eradiate import path_resolver
-from eradiate._mode import ModeFlags
 from eradiate.contexts import CKDSpectralContext, KernelDictContext
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
@@ -35,11 +34,11 @@ def test_heterogeneous_single(
     """
     # Construct succeeds
     if components == "molecular":
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             component = MolecularAtmosphere.ussa_1976(
                 absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
             )
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             component = MolecularAtmosphere.afgl_1986()
         else:
             pytest.skip(f"unsupported mode '{eradiate.mode().id}'")
@@ -67,11 +66,11 @@ def test_heterogeneous_multi(
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """
     # Construct succeeds
-    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+    if eradiate.mode().is_mono:
         molecular_atmosphere = MolecularAtmosphere.ussa_1976(
             absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
         )
-    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+    elif eradiate.mode().is_ckd:
         molecular_atmosphere = MolecularAtmosphere.afgl_1986()
     else:
         pytest.skip(f"unsupported mode '{eradiate.mode().id}'")

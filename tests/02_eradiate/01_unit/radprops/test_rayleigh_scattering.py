@@ -1,4 +1,3 @@
-from eradiate.units import to_quantity
 import numpy as np
 
 from eradiate import unit_registry as ureg
@@ -7,6 +6,7 @@ from eradiate.radprops.rayleigh import (
     air_refractive_index,
     compute_sigma_s_air,
 )
+from eradiate.units import to_quantity
 
 
 def test_sigma_s_air():

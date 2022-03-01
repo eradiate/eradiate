@@ -12,7 +12,6 @@ import xarray as xr
 import eradiate
 
 from .._factory import Factory
-from .._mode import ModeFlags
 from ..ckd import Bindex
 from ..contexts import SpectralContext
 from ..exceptions import UnsupportedModeError
@@ -198,10 +197,10 @@ class RadProfile(ABC):
             layers.
         """
 
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_albedo_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_albedo_ckd(spectral_ctx.bindex).squeeze()
 
         else:
@@ -259,10 +258,10 @@ class RadProfile(ABC):
             layers.
         """
 
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_sigma_t_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_sigma_t_ckd(spectral_ctx.bindex).squeeze()
 
         else:
@@ -322,10 +321,10 @@ class RadProfile(ABC):
             layers.
         """
 
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_sigma_a_ckd(
                 spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
             ).squeeze()
@@ -390,10 +389,10 @@ class RadProfile(ABC):
             layers.
         """
 
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_sigma_s_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_sigma_s_ckd(spectral_ctx.bindex).squeeze()
 
         else:
@@ -450,10 +449,10 @@ class RadProfile(ABC):
         Dataset
             Radiative properties dataset.
         """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_dataset_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_dataset_ckd(
                 spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
             ).squeeze()

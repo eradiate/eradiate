@@ -7,7 +7,6 @@ import pandas as pd
 import pytest
 
 import eradiate
-from eradiate import unit_registry as ureg
 
 
 @pytest.mark.slow
@@ -59,11 +58,11 @@ def test_spp_splitting(mode_mono_single, artefact_dir):
     # Generate test matrix
     modes = ["mono_single", "mono_double"]
     pivot_threshold = 5
-    spp_splits = [None, 10 ** pivot_threshold]
+    spp_splits = [None, 10**pivot_threshold]
     spp_split_labels = ["none", "1e5"]
     spps = [
         10 ** (pivot_threshold - 1),
-        10 ** pivot_threshold,
+        10**pivot_threshold,
         10 ** (pivot_threshold + 1),
     ]
     for spp in copy(spps[:-1]):

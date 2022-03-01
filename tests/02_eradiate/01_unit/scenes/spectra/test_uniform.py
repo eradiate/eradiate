@@ -6,7 +6,6 @@ import pytest
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate._util import onedict_value
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
 from eradiate.units import PhysicalQuantity
@@ -20,10 +19,10 @@ def test_uniform(modes_all):
 
     # Instantiate with value and quantity
     s = UniformSpectrum(value=1.0, quantity=PhysicalQuantity.COLLISION_COEFFICIENT)
-    assert s.value == 1.0 * ureg.m ** -1
+    assert s.value == 1.0 * ureg.m**-1
     UniformSpectrum(value=1.0, quantity="collision_coefficient")
     assert s.quantity == PhysicalQuantity.COLLISION_COEFFICIENT
-    assert s.value == 1.0 * ureg.m ** -1
+    assert s.value == 1.0 * ureg.m**-1
 
     # Instantiate with unsupported quantity
     with pytest.raises(ValueError):
@@ -65,8 +64,8 @@ def test_uniform(modes_all):
     [
         ("dimensionless", 1.0, 550.0, 1.0),
         ("dimensionless", 1.0, [500.0, 600.0] * ureg.nm, 1.0),
-        ("collision_coefficient", 1.0, 550.0, 1.0 * ureg.m ** -1),
-        ("collision_coefficient", 1.0, [500.0, 600.0] * ureg.nm, 1.0 * ureg.m ** -1),
+        ("collision_coefficient", 1.0, 550.0, 1.0 * ureg.m**-1),
+        ("collision_coefficient", 1.0, [500.0, 600.0] * ureg.nm, 1.0 * ureg.m**-1),
     ],
 )
 def test_uniform_eval_mono(mode_mono, quantity, value, w, expected):

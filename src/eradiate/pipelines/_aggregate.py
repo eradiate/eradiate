@@ -9,7 +9,6 @@ import xarray as xr
 import eradiate
 
 from ._core import PipelineStep
-from .._mode import ModeFlags
 from ..attrs import documented, parse_docs
 from ..scenes.measure import Measure
 from ..units import symbol
@@ -84,7 +83,7 @@ class AggregateCKDQuad(PipelineStep):
 
     def transform(self, x: t.Any) -> t.Any:
         # If not in CKD mode, this step is a no-op
-        if not eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        if not eradiate.mode().is_ckd:
             return x
 
         # Otherwise, compute quadrature spectrum-indexed variables and turn spp

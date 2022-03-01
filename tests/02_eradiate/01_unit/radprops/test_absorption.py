@@ -1,10 +1,10 @@
-from eradiate.units import to_quantity
 import numpy as np
 import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
 from eradiate.radprops.absorption import compute_sigma_a
+from eradiate.units import to_quantity
 
 
 def test_compute_sigma_a_no_t_coord():

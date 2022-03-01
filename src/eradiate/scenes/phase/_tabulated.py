@@ -7,7 +7,6 @@ import eradiate
 
 from ._core import PhaseFunction, phase_function_factory
 from ..core import KernelDict
-from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
@@ -64,10 +63,10 @@ class TabulatedPhaseFunction(PhaseFunction):
         regularly spaced scattering angle cosine values
         (:math:`\mu \in [-1, 1]`).
         """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_ckd(spectral_ctx.bindex).squeeze()
 
         else:

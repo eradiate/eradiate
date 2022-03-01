@@ -595,7 +595,7 @@ class EarthObservationExperiment(Experiment, ABC):
                     ),
                 )
 
-                if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+                if eradiate.mode().is_ckd:
                     pipeline.add(
                         "apply_srf",
                         pipelines.ApplySpectralResponseFunction(
@@ -624,7 +624,7 @@ class EarthObservationExperiment(Experiment, ABC):
                     ),
                 )
 
-                if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+                if eradiate.mode().is_ckd:
                     pipeline.add(
                         "apply_srf",
                         pipelines.ApplySpectralResponseFunction(

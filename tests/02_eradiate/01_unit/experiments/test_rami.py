@@ -4,7 +4,6 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate._mode import ModeFlags
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import UnsupportedModeError
 from eradiate.experiments import RamiExperiment
@@ -114,7 +113,7 @@ def test_rami_experiment_run_detailed(modes_all_double):
     Note: This test is outdated, most of its content should be transferred to
     tests for measure post-processing pipelines.
     """
-    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+    if eradiate.mode().is_mono:
         spectral_cfg = {"wavelengths": [550.0]}
         expected_vars = {
             "irradiance",
@@ -137,7 +136,7 @@ def test_rami_experiment_run_detailed(modes_all_double):
         }
         expected_coords_irradiance = {"sza", "saa", "w"}
 
-    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+    elif eradiate.mode().is_ckd:
         spectral_cfg = {"bins": ["550"]}
         expected_vars = {
             "irradiance",

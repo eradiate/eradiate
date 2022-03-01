@@ -153,7 +153,7 @@ class Mode:
 
         Parameters
         ----------
-        flags : :class:`.ModeFlags` or str
+        flags : .ModeFlags or str
             Flags to check for. If a string is passed, conversion to a
             :class:`.ModeFlags` instance will be attempted.
 
@@ -166,15 +166,33 @@ class Mode:
             flags = ModeFlags[flags.upper()]
         return bool(self.flags & flags)
 
+    @property
+    def is_mono(self):
+        return bool(self.flags & ModeFlags.ANY_MONO)
+
+    @property
+    def is_ckd(self):
+        return bool(self.flags & ModeFlags.ANY_CKD)
+
+    @property
+    def is_single_precision(self):
+        return bool(self.flags & ModeFlags.ANY_SINGLE)
+
+    @property
+    def is_double_precision(self):
+        return bool(self.flags & ModeFlags.ANY_DOUBLE)
+
     @staticmethod
     def new(mode_id: str) -> Mode:
         """
         Create a :class:`Mode` instance given its identifier. Available modes are:
 
-        * ``mono``: Monochromatic, single-precision
+        * ``mono_single``: Monochromatic, single-precision
         * ``mono_double``: Monochromatic, double-precision
-        * ``ckd``: CKD, single-precision
+        * ``mono``: Alias to ``mono_double``
+        * ``ckd_single``: CKD, single-precision
         * ``ckd_double``: CKD, double-precision
+        * ``ckd``: Alias to ``ckd_double``
 
         Parameters
         ----------

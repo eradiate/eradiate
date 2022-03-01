@@ -1,10 +1,9 @@
-import eradiate
-
 import mitsuba as mi
 import numpy as np
 import pint
 import pytest
 
+import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import KernelVariantError
 from eradiate.scenes.core import BoundingBox, KernelDict
