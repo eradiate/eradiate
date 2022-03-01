@@ -154,7 +154,7 @@ class Mode:
         """
         if isinstance(flags, str):
             flags = ModeFlags[flags.upper()]
-        return self.flags & flags
+        return bool(self.flags & flags)
 
     @staticmethod
     def new(mode_id: str) -> Mode:
@@ -184,7 +184,7 @@ class Mode:
 
 
 # Eradiate's operational mode configuration
-_current_mode: t.Optional[Mode] = None
+_active_mode: t.Optional[Mode] = None
 
 
 # ------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ def mode() -> t.Optional[Mode]:
     .Mode or None
         Current operational mode.
     """
-    return _current_mode
+    return _active_mode
 
 
 def modes() -> t.Dict:
@@ -243,7 +243,7 @@ def set_mode(mode_id: str):
     ValueError
         ``mode_id`` does not match any of the known mode identifiers.
     """
-    global _current_mode
+    global _active_mode
 
     if mode_id in _mode_registry:
         mode = Mode.new(mode_id)
@@ -253,7 +253,7 @@ def set_mode(mode_id: str):
     else:
         raise ValueError(f"unknown mode '{mode_id}'")
 
-    _current_mode = mode
+    _active_mode = mode
 
 
 def supported_mode(flags):
