@@ -6,7 +6,6 @@ import typing as t
 from enum import Enum
 
 import attr
-import mitsuba as mi
 import numpy as np
 
 from ._util import str_summary_numpy

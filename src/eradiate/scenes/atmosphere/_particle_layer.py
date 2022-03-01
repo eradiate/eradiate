@@ -20,7 +20,7 @@ from ..core import KernelDict
 from ..phase import TabulatedPhaseFunction
 from ... import path_resolver, validators
 from ..._mode import ModeFlags
-from ...attrs import AUTO, documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError

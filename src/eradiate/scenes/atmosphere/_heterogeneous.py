@@ -17,7 +17,7 @@ from ._particle_layer import ParticleLayer
 from ..core import KernelDict
 from ..phase import BlendPhaseFunction
 from ..._util import onedict_value
-from ...attrs import AUTO, documented, parse_docs
+from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...units import to_quantity
 from ...units import unit_context_config as ucc

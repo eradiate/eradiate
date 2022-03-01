@@ -17,7 +17,7 @@ from ..core import KernelDict
 from ... import data, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import KernelDictContext
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
