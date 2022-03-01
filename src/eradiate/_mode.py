@@ -27,37 +27,39 @@ class ModeFlags(enum.Flag):
     # ERT_RGB = enum.auto()  #: Mode performs renders RGB images
 
     # Mitsuba
-    MTS_SCALAR = enum.auto()  #: Mode maps to a scalar Mitsuba variant
-    # MTS_LLVM = enum.auto()  #: Mode maps to a LLVM Mitsuba variant
-    # MTS_AD = enum.auto()  #: Mode maps to an autodiff Mitsuba variant
-    MTS_MONO = enum.auto()  #: Mode maps to a monochromatic Mitsuba variant
-    # MTS_RGB = enum.auto()  #: Mode maps to an RGB Mitsuba variant
-    # MTS_SPECTRAL = enum.auto()  #: Mode maps to a spectral Mitsuba variant
-    # MTS_UNPOLARIZED = enum.auto() #: Mode maps to an unpolarised Mitsuba variant
-    # MTS_POLARIZED = enum.auto() #: Mode maps to a polarised Mitsuba variant
-    MTS_SINGLE = enum.auto()  #: Mode maps to a single-precision Mitsuba variant
-    MTS_DOUBLE = enum.auto()  #: Mode maps to a double-precision Mitsuba variant
+    MI_SCALAR = enum.auto()  #: Mode maps to a scalar Mitsuba variant
+    # MI_LLVM = enum.auto()  #: Mode maps to a LLVM Mitsuba variant
+    # MI_AD = enum.auto()  #: Mode maps to an autodiff Mitsuba variant
+    MI_MONO = enum.auto()  #: Mode maps to a monochromatic Mitsuba variant
+    # MI_RGB = enum.auto()  #: Mode maps to an RGB Mitsuba variant
+    # MI_SPECTRAL = enum.auto()  #: Mode maps to a spectral Mitsuba variant
+    # MI_UNPOLARIZED = enum.auto() #: Mode maps to an unpolarised Mitsuba variant
+    # MI_POLARIZED = enum.auto() #: Mode maps to a polarised Mitsuba variant
+    MI_SINGLE = enum.auto()  #: Mode maps to a single-precision Mitsuba variant
+    MI_DOUBLE = enum.auto()  #: Mode maps to a double-precision Mitsuba variant
 
     # -- Mode definition flags -------------------------------------------------
 
-    MONO = (
-        ERT_MONO | MTS_SCALAR | MTS_MONO | MTS_SINGLE
+    MONO_SINGLE = (
+        ERT_MONO | MI_SCALAR | MI_MONO | MI_SINGLE
     )  #: Monochromatic mode, single precision
     MONO_DOUBLE = (
-        ERT_MONO | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
+        ERT_MONO | MI_SCALAR | MI_MONO | MI_DOUBLE
     )  #: Monochromatic mode, double precision
-    CKD = ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_SINGLE  #: CKD mode, single precision
+    CKD_SINGLE = (
+        ERT_CKD | MI_SCALAR | MI_MONO | MI_SINGLE
+    )  #: CKD mode, single precision
     CKD_DOUBLE = (
-        ERT_CKD | MTS_SCALAR | MTS_MONO | MTS_DOUBLE
+        ERT_CKD | MI_SCALAR | MI_MONO | MI_DOUBLE
     )  #: CKD mode, double precision
 
     # -- Other convenience aliases ---------------------------------------------
 
     ANY_MONO = ERT_MONO  #: Any monochromatic mode
     ANY_CKD = ERT_CKD  #: Any CKD mode
-    ANY_SCALAR = MTS_SCALAR  #: Any scalar mode
-    ANY_SINGLE = MTS_SINGLE  #: Any single-precision mode
-    ANY_DOUBLE = MTS_DOUBLE  #: Any double-precision mode
+    ANY_SCALAR = MI_SCALAR  #: Any scalar mode
+    ANY_SINGLE = MI_SINGLE  #: Any single-precision mode
+    ANY_DOUBLE = MI_DOUBLE  #: Any double-precision mode
 
 
 # ------------------------------------------------------------------------------
@@ -68,7 +70,7 @@ class ModeFlags(enum.Flag):
 # (aliased in public API section)
 _mode_registry = {
     "mono": {
-        "flags": ModeFlags.MONO,
+        "flags": ModeFlags.MONO_SINGLE,
         "spectral_coord_label": "w",
     },
     "mono_double": {
@@ -76,7 +78,7 @@ _mode_registry = {
         "spectral_coord_label": "w",
     },
     "ckd": {
-        "flags": ModeFlags.CKD,
+        "flags": ModeFlags.CKD_SINGLE,
         "spectral_coord_label": "bd",
     },
     "ckd_double": {
@@ -120,19 +122,19 @@ class Mode:
         components = []
 
         # Backend selection
-        if self.flags & ModeFlags.MTS_SCALAR:
+        if self.flags & ModeFlags.MI_SCALAR:
             components.append("scalar")
 
         # Todo: Autodiff mode selection
 
         # Spectral mode selection
-        if self.flags & ModeFlags.MTS_MONO:
+        if self.flags & ModeFlags.MI_MONO:
             components.append("mono")
 
         # Todo: Polarisation mode selection
 
         # Precision mode selection
-        if self.flags & ModeFlags.MTS_DOUBLE:
+        if self.flags & ModeFlags.MI_DOUBLE:
             components.append("double")
 
         return "_".join(components)
