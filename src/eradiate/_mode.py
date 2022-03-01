@@ -69,7 +69,7 @@ class ModeFlags(enum.Flag):
 # Map associating a mode ID string to the corresponding class
 # (aliased in public API section)
 _mode_registry = {
-    "mono": {
+    "mono_single": {
         "flags": ModeFlags.MONO_SINGLE,
         "spectral_coord_label": "w",
     },
@@ -77,11 +77,19 @@ _mode_registry = {
         "flags": ModeFlags.MONO_DOUBLE,
         "spectral_coord_label": "w",
     },
-    "ckd": {
+    "mono": {  # Alias to mono_double
+        "flags": ModeFlags.MONO_DOUBLE,
+        "spectral_coord_label": "w",
+    },
+    "ckd_single": {
         "flags": ModeFlags.CKD_SINGLE,
         "spectral_coord_label": "bd",
     },
     "ckd_double": {
+        "flags": ModeFlags.CKD_DOUBLE,
+        "spectral_coord_label": "bd",
+    },
+    "ckd": {  # Alias to ckd_double
         "flags": ModeFlags.CKD_DOUBLE,
         "spectral_coord_label": "bd",
     },
