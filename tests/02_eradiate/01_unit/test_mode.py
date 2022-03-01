@@ -8,6 +8,11 @@ from eradiate.exceptions import UnsupportedModeError
 
 def test_mode_mono(mode_mono):
     mode = eradiate.mode()
+    assert mode.kernel_variant == "scalar_mono_double"
+
+
+def test_mode_mono_single(mode_mono_single):
+    mode = eradiate.mode()
     assert mode.kernel_variant == "scalar_mono"
 
 
@@ -25,16 +30,16 @@ def test_modes():
     assert mitsuba.variant() == "scalar_mono_double"
 
     # Check that switching to mono mode works
-    eradiate.set_mode("mono")
+    eradiate.set_mode("mono_single")
     # We expect that the kernel variant is appropriately selected
     assert mitsuba.variant() == "scalar_mono"
 
 
 def test_mode_flags():
-    # Check flags for mono mode
-    eradiate.set_mode("mono")
+    # Check flags for mono single mode
+    eradiate.set_mode("mono_single")
     assert eradiate.mode().has_flags(ModeFlags.ERT_MONO)
-    assert not eradiate.mode().has_flags(ModeFlags.MTS_DOUBLE)
+    assert eradiate.mode().has_flags(ModeFlags.MTS_SINGLE)
 
     # Check flags for mono_double mode
     eradiate.set_mode("mono_double")
@@ -47,7 +52,7 @@ def test_mode_flags():
 
 
 def test_supported_mode():
-    for mode in ["mono", "mono_double"]:
+    for mode in ["mono_single", "mono_double", "mono"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
@@ -55,7 +60,7 @@ def test_supported_mode():
 
         supported_mode("ANY_MONO")
 
-    for mode in ["ckd", "ckd_double"]:
+    for mode in ["ckd_single", "ckd_double", "ckd"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
@@ -67,9 +72,9 @@ def test_supported_mode():
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
-            supported_mode("ANY_DOUBLE")
+            supported_mode("ANY_SINGLE")
 
-        supported_mode("ANY_SINGLE")
+        supported_mode("ANY_DOUBLE")
 
     for mode in ["mono_double", "ckd_double"]:
         eradiate.set_mode(mode)
@@ -81,7 +86,7 @@ def test_supported_mode():
 
 
 def test_unsupported_mode():
-    for mode in ["mono", "mono_double"]:
+    for mode in ["mono_single", "mono_double", "mono"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
@@ -89,7 +94,7 @@ def test_unsupported_mode():
 
         unsupported_mode("ANY_CKD")
 
-    for mode in ["ckd", "ckd_double"]:
+    for mode in ["ckd_single", "ckd_double", "ckd"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
@@ -97,18 +102,18 @@ def test_unsupported_mode():
 
         unsupported_mode("ANY_MONO")
 
-    for mode in ["mono", "ckd"]:
-        eradiate.set_mode(mode)
-
-        with pytest.raises(UnsupportedModeError):
-            unsupported_mode("ANY_SINGLE")
-
-        unsupported_mode("ANY_DOUBLE")
-
-    for mode in ["mono_double", "ckd_double"]:
+    for mode in ["mono_double", "ckd_double", "mono", "ckd"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
             unsupported_mode("ANY_DOUBLE")
 
         unsupported_mode("ANY_SINGLE")
+
+    for mode in ["mono_single", "ckd_single"]:
+        eradiate.set_mode(mode)
+
+        with pytest.raises(UnsupportedModeError):
+            unsupported_mode("ANY_SINGLE")
+
+        unsupported_mode("ANY_DOUBLE")

@@ -11,7 +11,7 @@ from eradiate import unit_registry as ureg
 
 
 @pytest.mark.slow
-def test_spp_splitting(mode_mono, artefact_dir):
+def test_spp_splitting(mode_mono_single, artefact_dir):
     """
     SPP splitting test
     ==================
@@ -57,7 +57,7 @@ def test_spp_splitting(mode_mono, artefact_dir):
     )
 
     # Generate test matrix
-    modes = ["mono", "mono_double"]
+    modes = ["mono_single", "mono_double"]
     pivot_threshold = 5
     spp_splits = [None, 10 ** pivot_threshold]
     spp_split_labels = ["none", "1e5"]
@@ -109,18 +109,20 @@ def test_spp_splitting(mode_mono, artefact_dir):
     assert np.allclose(results.loc[:, idx[:, "mono_double"]].to_numpy(dtype=float), 1.0)
     # Single-precision configurations yield correct results for SPP <= 1e5
     assert np.allclose(
-        results.loc[: 1e5 + 1, idx[:, "mono"]].to_numpy(dtype=float), 1.0, rtol=1e-3
+        results.loc[: 1e5 + 1, idx[:, "mono_single"]].to_numpy(dtype=float),
+        1.0,
+        rtol=1e-3,
     )
     # Single-precision configurations yield wrong results without SPP splitting for SPP > 1e5
     assert not np.allclose(
-        results.loc[1e5 + 1 :, idx["none", "mono"]].to_numpy(dtype=float),
+        results.loc[1e5 + 1 :, idx["none", "mono_single"]].to_numpy(dtype=float),
         1.0,
         rtol=1e-3,
     )
     # Single-precision configurations to yield correct results with SPP splitting for SPP > 1e5
     print(results)
     assert np.allclose(
-        results.loc[1e5 + 1 :, idx["1e5", "mono"]].to_numpy(dtype=float),
+        results.loc[1e5 + 1 :, idx["1e5", "mono_single"]].to_numpy(dtype=float),
         1.0,
         rtol=1e-3,
     )

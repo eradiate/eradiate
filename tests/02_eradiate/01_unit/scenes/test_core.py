@@ -18,7 +18,7 @@ def test_kernel_dict_construct():
         assert kernel_dict.variant == eradiate.mode().kernel_variant
 
 
-def test_kernel_dict_check(mode_mono):
+def test_kernel_dict_check(mode_mono_single):
     # Check method raises upon missing scene type
     kernel_dict = KernelDict({})
     with pytest.raises(ValueError):

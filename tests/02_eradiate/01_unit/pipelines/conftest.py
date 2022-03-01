@@ -6,7 +6,7 @@ import eradiate
 @pytest.fixture(scope="module")
 def results_mono():
     # Single-sensor setup, no sample count-split
-    eradiate.set_mode("mono")
+    eradiate.set_mode("mono_double")
     exp = eradiate.experiments.OneDimExperiment(
         atmosphere=None,
         surface={"type": "lambertian", "reflectance": 1.0},
@@ -27,7 +27,7 @@ def results_mono():
 @pytest.fixture(scope="module")
 def results_mono_spp():
     # Single-sensor, sample count-split setup
-    eradiate.set_mode("mono")
+    eradiate.set_mode("mono_double")
     exp = eradiate.experiments.OneDimExperiment(
         atmosphere=None,
         surface={"type": "lambertian", "reflectance": 1.0},
@@ -49,7 +49,7 @@ def results_mono_spp():
 @pytest.fixture(scope="module")
 def results_ckd():
     # Single-sensor setup, no sample count-split, CKD mode
-    eradiate.set_mode("ckd")
+    eradiate.set_mode("ckd_double")
     exp = eradiate.experiments.OneDimExperiment(
         atmosphere=None,
         surface={"type": "lambertian", "reflectance": 1.0},
@@ -70,7 +70,7 @@ def results_ckd():
 @pytest.fixture(scope="module")
 def results_ckd_spp():
     # Single-sensor, sample count-split setup
-    eradiate.set_mode("ckd")
+    eradiate.set_mode("ckd_double")
     exp = eradiate.experiments.OneDimExperiment(
         atmosphere=None,
         surface={"type": "lambertian", "reflectance": 1.0},
@@ -95,7 +95,7 @@ def results_ckd_spp():
 # @pytest.fixture(scope="module")
 # def results_mono_ms_spp():
 #     # Multi-sensor, sample count-split setup
-#     eradiate.set_mode("mono")
+#     eradiate.set_mode("mono_double")
 #     exp = eradiate.experiments.OneDimExperiment(
 #         atmosphere=None,
 #         surface={"type": "lambertian", "reflectance": 1.0},
@@ -117,7 +117,7 @@ def results_ckd_spp():
 # @pytest.fixture(scope="module")
 # def results_ckd_ms_spp():
 #     # Multi-sensor, sample count-split setup
-#     eradiate.set_mode("ckd")
+#     eradiate.set_mode("ckd_double")
 #     exp = eradiate.experiments.OneDimExperiment(
 #         atmosphere=None,
 #         surface={"type": "lambertian", "reflectance": 1.0},
