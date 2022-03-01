@@ -10,7 +10,7 @@ from ._core import Spectrum, spectrum_factory
 from ..core import KernelDict
 from ..._mode import ModeFlags
 from ...attrs import parse_docs
-from ...ckd import Bin, Bindex
+from ...ckd import Bindex
 from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
 from ...radprops.rayleigh import compute_sigma_s_air

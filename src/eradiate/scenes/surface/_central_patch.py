@@ -12,7 +12,7 @@ import eradiate
 from ._core import Surface, surface_factory
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
 from ..core import KernelDict
-from ..shapes import RectangleShape, Shape, shape_factory
+from ..shapes import RectangleShape, shape_factory
 from ..._util import onedict_value
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext

@@ -1,5 +1,4 @@
 import typing as t
-import warnings
 
 import attr
 
@@ -8,7 +7,6 @@ from ._onedim import measure_inside_atmosphere
 from .. import converters, validators
 from ..attrs import AUTO, documented, parse_docs
 from ..contexts import KernelDictContext
-from ..exceptions import OverriddenValueWarning
 from ..scenes.atmosphere import (
     Atmosphere,
     AtmosphereGeometry,
@@ -26,9 +24,8 @@ from ..scenes.integrators import (
     VolPathIntegrator,
     integrator_factory,
 )
-from ..scenes.measure import Measure, MultiRadiancemeterMeasure, TargetPoint
-from ..scenes.measure._core import MeasureFlags
-from ..scenes.shapes import RectangleShape, SphereShape
+from ..scenes.measure import Measure, TargetPoint
+from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface, surface_factory
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg

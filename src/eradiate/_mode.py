@@ -7,11 +7,11 @@ import attr
 import mitsuba
 
 from .attrs import documented, parse_docs
+from .exceptions import UnsupportedModeError
 
 # ------------------------------------------------------------------------------
 #                                 Mode flags
 # ------------------------------------------------------------------------------
-from .exceptions import UnsupportedModeError
 
 
 class ModeFlags(enum.Flag):
