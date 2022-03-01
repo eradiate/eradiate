@@ -11,7 +11,6 @@ import pinttr
 import eradiate
 
 from . import validators
-from ._mode import ModeFlags
 from ._util import fullname
 from .attrs import documented, parse_docs
 from .ckd import Bin, Bindex, BinSet
@@ -111,10 +110,10 @@ class SpectralContext(ABC, Context):
         :func:`eradiate.mode`, :func:`eradiate.set_mode`
         """
 
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return MonoSpectralContext(**kwargs)
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return CKDSpectralContext(**kwargs)
 
         else:

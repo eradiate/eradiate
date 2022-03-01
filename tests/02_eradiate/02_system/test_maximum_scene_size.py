@@ -2,7 +2,7 @@ import mitsuba as mi
 import numpy as np
 
 import eradiate
-from eradiate._mode import ModeFlags
+from eradiate import ModeFlags
 from eradiate.experiments import mitsuba_run
 from eradiate.scenes.core import KernelDict
 
@@ -33,7 +33,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
     Tolerance is set according to the defaults for :func:`numpy.allclose`.
     Metrics are reported only for the double precision version of this test.
     """
-    expected_min_size = 1e8 if eradiate.mode().has_flags(ModeFlags.MTS_MONO) else 1e12
+    expected_min_size = 1e8 if eradiate.mode().has_flags(ModeFlags.MI_MONO) else 1e12
     spp = 1
     rho = 0.5
     li = 1.0
@@ -41,10 +41,10 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
     max_i = 12
     scene_sizes = np.array(
         sorted(
-            [10.0 ** i for i in range(1, max_i)]
-            + [2.0 * 10 ** i for i in range(1, max_i)]
-            + [5.0 * 10 ** i for i in range(1, max_i)]
-            + [10.0 ** max_i]
+            [10.0**i for i in range(1, max_i)]
+            + [2.0 * 10**i for i in range(1, max_i)]
+            + [5.0 * 10**i for i in range(1, max_i)]
+            + [10.0**max_i]
         )
     )
     passed = np.full_like(scene_sizes, False, dtype=bool)
@@ -93,7 +93,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
     # Report test metrics
     max_size = float(np.max(scene_sizes[passed])) if np.any(passed) else 0.0
 
-    if eradiate.mode().has_flags(ModeFlags.MTS_DOUBLE):
+    if eradiate.mode().has_flags(ModeFlags.MI_DOUBLE):
         json_metadata["metrics"] = {
             "test_maximum_scene_size": {
                 "name": "Maximum scene size",

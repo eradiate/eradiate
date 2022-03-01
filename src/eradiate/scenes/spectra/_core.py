@@ -9,7 +9,6 @@ import pint
 import eradiate
 
 from ..._factory import Factory
-from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import SpectralContext
@@ -120,10 +119,10 @@ class Spectrum(SceneElement, ABC):
         value : quantity
             Evaluated spectrum as a scalar.
         """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_ckd(spectral_ctx.bindex).squeeze()
 
         else:

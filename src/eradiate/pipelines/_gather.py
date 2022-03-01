@@ -18,7 +18,7 @@ from ..units import symbol
 
 
 def _spectral_dims():
-    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+    if eradiate.mode().is_mono:
         return (
             (
                 "w",
@@ -29,7 +29,7 @@ def _spectral_dims():
                 },
             ),
         )
-    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+    elif eradiate.mode().is_ckd:
         return (
             ("bin", {"standard_name": "ckd_bin", "long_name": "CKD bin"}),
             ("index", {"standard_name": "ckd_index", "long_name": "CKD index"}),
@@ -174,7 +174,7 @@ class Gather(PipelineStep):
             result = xr.merge(sensor_datasets)
 
         # Drop "channel" dimension when using a mono variant
-        if eradiate.mode().has_flags(ModeFlags.MTS_MONO):
+        if eradiate.mode().has_flags(ModeFlags.MI_MONO):
             result = result.squeeze("channel", drop=True)
 
         # Apply metadata to new dimensions

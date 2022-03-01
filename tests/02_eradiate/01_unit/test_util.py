@@ -11,7 +11,6 @@ from eradiate._util import (
     camel_to_snake,
     deduplicate,
     fullname,
-    get_class_that_defined_method,
     is_vector3,
     natsorted,
 )

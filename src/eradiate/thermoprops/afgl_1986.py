@@ -12,7 +12,6 @@ import eradiate
 
 from .util import compute_scaling_factors, interpolate, rescale_concentration
 from .. import data
-from .._mode import ModeFlags
 
 
 def make_profile(
@@ -97,7 +96,7 @@ def make_profile(
     All six models include the following six absorbing molecular species:
     H2O, CO2, O3, N2O, CO, CH4 and O2.
     """
-    if eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+    if eradiate.mode().is_ckd:
         if model_id != "us_standard":
             raise NotImplementedError(
                 "In CKD mode, only the 'us_standard' model is supported."

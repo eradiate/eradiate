@@ -3,7 +3,6 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate._mode import ModeFlags
 from eradiate.ckd import BinSet
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.core import KernelDict
@@ -46,12 +45,12 @@ def test_solar_irradiance_eval(modes_all):
     # Irradiance is correctly interpolated in mono mode
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
 
-    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+    if eradiate.mode().is_mono:
         spectral_ctx = SpectralContext.new(wavelength=550.0)
         # Reference value computed manually
         assert np.allclose(s.eval(spectral_ctx), ureg.Quantity(1.87938, "W/m^2/nm"))
 
-    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+    elif eradiate.mode().is_ckd:
         bin_set = BinSet.from_db("10nm")
         bin = bin_set.select_bins("550")[0]
         bindex = bin.bindexes[0]
@@ -82,5 +81,5 @@ def test_solar_irradiance_datetime(mode_mono):
     )
     assert np.isclose(
         s_scaled_datetime.eval_mono(550.0 * ureg.nm),
-        s.eval_mono(550.0 * ureg.nm) * 0.98854537 ** 2,
+        s.eval_mono(550.0 * ureg.nm) * 0.98854537**2,
     )

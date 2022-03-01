@@ -1,6 +1,5 @@
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.bsdfs import BlackBSDF, LambertianBSDF
-from eradiate.scenes.core import KernelDict
 
 
 def test_black(modes_all_double):

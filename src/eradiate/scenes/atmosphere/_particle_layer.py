@@ -261,10 +261,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_albedo_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_albedo_ckd(spectral_ctx.bindex).squeeze()
 
         else:
@@ -300,10 +300,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         quantity
             Particle layer extinction coefficient.
         """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_sigma_t_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_sigma_t_ckd(spectral_ctx.bindex).squeeze()
 
         else:
@@ -355,10 +355,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         quantity
             Particle layer extinction coefficient.
         """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_sigma_a_ckd(spectral_ctx.bindex).squeeze()
 
         else:
@@ -386,10 +386,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         quantity
             Particle layer scattering coefficient.
         """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if eradiate.mode().is_mono:
             return self.eval_sigma_s_mono(spectral_ctx.wavelength).squeeze()
 
-        elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+        elif eradiate.mode().is_ckd:
             return self.eval_sigma_s_ckd(spectral_ctx.bindex).squeeze()
 
         else:

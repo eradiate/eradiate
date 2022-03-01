@@ -3,7 +3,6 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate._mode import ModeFlags
 from eradiate.experiments import OneDimExperiment
 from eradiate.pipelines import (
     AddIllumination,
@@ -27,9 +26,9 @@ from eradiate.scenes.measure import HemisphericalDistantMeasure, MultiDistantMea
 )
 def test_add_illumination(modes_all_single, illumination_type, expected_dims):
     # Initialise test data
-    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+    if eradiate.mode().is_mono:
         spectral_cfg = {"wavelengths": [540.0, 550.0, 560.0]}
-    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+    elif eradiate.mode().is_ckd:
         spectral_cfg = {"bins": ["540", "550", "560"]}
     else:
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
@@ -157,9 +156,9 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
 
 
 def test_add_srf(modes_all_single):
-    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+    if eradiate.mode().is_mono:
         spectral_cfg = {"wavelengths": [550.0]}
-    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+    elif eradiate.mode().is_ckd:
         spectral_cfg = {"bins": ["550"]}
     else:
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")

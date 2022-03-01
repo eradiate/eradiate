@@ -4,9 +4,8 @@ import numpy as np
 import pytest
 
 from eradiate import path_resolver
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.atmosphere import MolecularAtmosphere
-from eradiate.scenes.core import KernelDict
 
 
 def test_molecular_atmosphere_default(

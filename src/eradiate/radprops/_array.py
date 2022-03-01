@@ -12,7 +12,6 @@ import eradiate
 
 from ._core import RadProfile, make_dataset, rad_profile_factory
 from .. import validators
-from .._mode import ModeFlags
 from .._presolver import path_resolver
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
@@ -79,7 +78,7 @@ class ArrayRadProfile(RadProfile):
             )
 
     def __attrs_pre_init__(self):
-        if not eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+        if not eradiate.mode().is_mono:
             raise UnsupportedModeError(supported="monochromatic")
 
     def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:

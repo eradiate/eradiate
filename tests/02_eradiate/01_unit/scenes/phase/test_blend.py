@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from rich.pretty import pprint
 
 from eradiate import unit_registry as ureg
 from eradiate._util import onedict_value

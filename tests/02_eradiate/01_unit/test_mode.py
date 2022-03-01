@@ -2,7 +2,7 @@
 import pytest
 
 import eradiate
-from eradiate._mode import ModeFlags, supported_mode, unsupported_mode
+from eradiate import ModeFlags, supported_mode, unsupported_mode
 from eradiate.exceptions import UnsupportedModeError
 
 
@@ -39,12 +39,12 @@ def test_mode_flags():
     # Check flags for mono single mode
     eradiate.set_mode("mono_single")
     assert eradiate.mode().has_flags(ModeFlags.ERT_MONO)
-    assert eradiate.mode().has_flags(ModeFlags.MTS_SINGLE)
+    assert eradiate.mode().has_flags(ModeFlags.MI_SINGLE)
 
     # Check flags for mono_double mode
     eradiate.set_mode("mono_double")
     assert eradiate.mode().has_flags(ModeFlags.ERT_MONO)
-    assert eradiate.mode().has_flags(ModeFlags.MTS_DOUBLE)
+    assert eradiate.mode().has_flags(ModeFlags.MI_DOUBLE)
 
     # Check if conversion of string to flags works as intended
     eradiate.set_mode("mono_double")

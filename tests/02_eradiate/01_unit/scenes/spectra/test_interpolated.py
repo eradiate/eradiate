@@ -7,11 +7,9 @@ import eradiate
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate._mode import ModeFlags
 from eradiate.ckd import BinSet
 from eradiate.contexts import KernelDictContext, SpectralContext
-from eradiate.scenes.spectra import spectrum_factory
-from eradiate.scenes.spectra._interpolated import InterpolatedSpectrum
+from eradiate.scenes.spectra import InterpolatedSpectrum, spectrum_factory
 from eradiate.units import PhysicalQuantity
 
 
@@ -130,7 +128,7 @@ def test_interpolated_integral(mode_mono):
             "collision_coefficient",
             [0.0, 1.0],
             [450.0, 500.0, 550.0, 600.0, 650.0] * ureg.nm,
-            [0.0, 0.0, 0.5, 1.0, 0.0] * ureg.m ** -1,
+            [0.0, 0.0, 0.5, 1.0, 0.0] * ureg.m**-1,
         ),
     ],
 )
@@ -144,11 +142,11 @@ def test_interpolated_eval_mono(mode_mono, quantity, values, w, expected):
 
 
 def test_interpolated_eval(modes_all):
-    if eradiate.mode().has_flags(ModeFlags.ANY_MONO):
+    if eradiate.mode().is_mono:
         spectral_ctx = SpectralContext.new(wavelength=550.0)
         expected = 0.5
 
-    elif eradiate.mode().has_flags(ModeFlags.ANY_CKD):
+    elif eradiate.mode().is_ckd:
         bin = BinSet.from_db("10nm").select_bins("550")[0]
         spectral_ctx = SpectralContext.new(bindex=bin.bindexes[0])
         expected = 0.5
