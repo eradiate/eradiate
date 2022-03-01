@@ -33,15 +33,16 @@ def generate_fixture_group(name, modes):
     globals()["modes_" + name] = fixture
 
 
+variants = [x for x in eradiate.modes() if x not in {"mono", "ckd"}]  # Remove aliases
 variant_groups = {
-    "all_mono": [x for x in eradiate.modes() if x.startswith("mono")],
-    "all_ckd": [x for x in eradiate.modes() if x.startswith("ckd")],
+    "all_mono": [x for x in variants if x.startswith("mono")],
+    "all_ckd": [x for x in variants if x.startswith("ckd")],
     "all_mono_ckd": [
-        x for x in eradiate.modes() if (x.startswith("mono") or x.startswith("ckd"))
+        x for x in variants if (x.startswith("mono") or x.startswith("ckd"))
     ],
-    "all_single": [x for x in eradiate.modes() if not x.endswith("double")],
-    "all_double": [x for x in eradiate.modes() if x.endswith("double")],
-    "all": list(eradiate.modes()),
+    "all_single": [x for x in variants if x.endswith("single")],
+    "all_double": [x for x in variants if x.endswith("double")],
+    "all": variants,
 }
 
 for name, variants in variant_groups.items():
