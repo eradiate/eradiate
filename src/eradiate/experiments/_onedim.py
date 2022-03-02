@@ -241,8 +241,25 @@ class OneDimExperiment(EarthObservationExperiment):
             if measure.is_distant():
                 if measure.target is None:
                     if self.atmosphere is not None:
-                        toa = self.atmosphere.top
-                        target_point = [0.0, 0.0, toa.m] * toa.units
+                        if isinstance(self.geometry, PlaneParallelGeometry):
+                            # Plane parallel geometry: target TOA
+                            target_point = [
+                                0.0,
+                                0.0,
+                                self.atmosphere.top.m,
+                            ] * self.atmosphere.top.units
+
+                        elif isinstance(self.geometry, SphericalShellGeometry):
+                            # Spherical shell geometry: target ground level
+                            target_point = [
+                                0.0,
+                                0.0,
+                                self.geometry.planet_radius.m,
+                            ] * self.geometry.planet_radius.units
+
+                        else:  # Shouldn't happen, prevented by validator
+                            raise RuntimeError
+
                     else:
                         target_point = [0.0, 0.0, 0.0] * ucc.get("length")
 

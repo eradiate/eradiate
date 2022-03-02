@@ -139,7 +139,7 @@ class SphereShape(Shape):
         )
 
         return cls(
-            center=[0.0, 0.0, -planet_radius.m] * planet_radius.units,
+            center=[0.0, 0.0, 0.0] * planet_radius.units,
             radius=planet_radius + altitude,
             bsdf=bsdf,
         )
@@ -185,7 +185,7 @@ class SphereShape(Shape):
         )
 
         return cls(
-            center=[0.0, 0.0, -planet_radius.m] * planet_radius.units,
+            center=[0.0, 0.0, 0.0] * planet_radius.units,
             radius=planet_radius + top,
             bsdf=bsdf,
         )

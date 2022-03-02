@@ -33,16 +33,16 @@ def test_sphere_surface():
     # Check that parameters are correctly specified
     with ucc.override(length="km"):
         surface = SphereShape.surface(altitude=1.0, planet_radius=1.0)
-        assert np.allclose(surface.center, [0, 0, -1] * ureg.km)
+        assert np.allclose(surface.center, [0, 0, 0] * ureg.km)
         assert np.allclose(surface.radius, 2.0 * ureg.km)
 
 
 def test_sphere_atmosphere():
     # Check that parameters are correctly specified
     with ucc.override(length="km"):
-        sphere = SphereShape.atmosphere(top=1.0, planet_radius=1.0)
-        assert np.allclose(sphere.center, [0, 0, -1] * ureg.km)
-        assert np.allclose(sphere.radius, 2.0 * ureg.km)
+        sphere = SphereShape.atmosphere(top=1.1, planet_radius=1.0)
+        assert np.allclose(sphere.center, [0, 0, 0] * ureg.km)
+        assert np.allclose(sphere.radius, 2.1 * ureg.km)
 
 
 def test_sphere_contains():
