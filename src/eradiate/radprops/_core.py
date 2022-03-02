@@ -144,7 +144,11 @@ def make_dataset(
             "w": (
                 "w",
                 [wavelength],
-                dict(standard_name="wavelength", units="nm", long_name="wavelength"),
+                dict(
+                    standard_name="radiation_wavelength",
+                    long_name="wavelength",
+                    units="nm",
+                ),
             ),
         },
         attrs={
