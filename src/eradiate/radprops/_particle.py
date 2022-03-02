@@ -6,16 +6,15 @@ import xarray as xr
 
 from eradiate.units import to_quantity
 
-from ..data import load_dataset
 from ._core import RadProfile, make_dataset
-from ..attrs import documented
+from ..attrs import documented, parse_docs
 from ..ckd import Bindex
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..validators import is_positive
-from eradiate import validators
 
 
+@parse_docs
 @attr.s
 class ParticleRadProfile(RadProfile):
     """
@@ -23,8 +22,8 @@ class ParticleRadProfile(RadProfile):
     """
     fractions: np.ndarray = documented(
         attr.ib(
-            converter=np.ndarray,
-            validators=attr.validators.instance_of(np.ndarray)
+            converter=np.array,
+            validator=attr.validators.instance_of(np.ndarray)
         ),
         doc="Particle number fractions at cell centers [dimensionless].",
         type="array",
@@ -38,8 +37,10 @@ class ParticleRadProfile(RadProfile):
         doc="dataset",
     )
 
-    z_level: pint.Quantity = pinttr.ib(
-        units=ucc.deferred("length"),
+    z_level: pint.Quantity = documented(
+        pinttr.ib(
+            units=ucc.deferred("length")
+        ),
         doc="Level altitudes. **Required, no default**.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
