@@ -20,6 +20,7 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
 
     Rationale
     ---------
+
     Run a OneDimExperiment with two different atmosphere definitions:
 
     1. A single particle layer.
@@ -27,6 +28,7 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
 
     Expected behaviour
     ------------------
+
     The two experiments produce *exactly* the same results.
     """
     # measure
@@ -81,6 +83,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
 
     Rationale
     ---------
+
     Run a OneDimExperiment with two different atmosphere definitions:
 
     1. A molecular atmosphere.
@@ -88,6 +91,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
 
     Expected behaviour
     ------------------
+
     The two experiments produce *exactly* the same results.
     """
     # measure

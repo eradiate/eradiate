@@ -21,12 +21,19 @@ def test_ckd_basic(modes_all_ckd):
     ---------
 
     Create a ``OneDimExperiment`` instance with no atmosphere, a Lambertian
-    surface with reflectance equal to 1 and a ``MultiDistantMeasure``.
+    surface with reflectance equal to 1 and a ``MultiDistantMeasure``:
+
+    * Sensor: Distant measure covering a plane (25 angular points,
+      10^6 sample per pixel) and targeting (0, 0, 0).
+    * Illumination: Directional illumination with a zenith angle
+      :math:`\theta = 0.0°` with black body irradiance spectrum.
+    * Surface: a square surface with a Lambertian BRDF with 100 % reflectance.
+    * Integrator: path tracer.
 
     Expected behaviour
     ------------------
 
-    The computed reflectance is equal to 1.
+    Recorded BRF must be exactly equal to one for all defined spectral bins.
     """
 
     # Configure experiment, run and postprocess results

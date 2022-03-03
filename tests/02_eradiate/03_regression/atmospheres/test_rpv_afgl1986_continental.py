@@ -12,34 +12,41 @@ from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.regression
-def test_rpv_afgl1986_continental_brfpp(mode_ckd_double, metadata, session_timestamp):
+def test_rpv_afgl1986_continental_brfpp(
+    mode_ckd_double, artefact_dir, session_timestamp
+):
     """
+    RPV AFGL1986 Aerosol regression test
+    ====================================
+
+    This is a regression test, which compares the simulation results of the
+    current branch to an older reference version.
+
+    Rationale
+    ---------
+
     This test case uses a basic atmospheric scene:
 
-    - RPV surface emulating a canopy
-    - Molecular atmosphere following the AFGL 1986 model
-    - Aerosol layer at 1km elevation
+    * RPV surface emulating a canopy
+    * Molecular atmosphere following the AFGL 1986 model
+    * Aerosol layer at 1km elevation
 
-    Aerosol layer parameters are:
+    Parameters
 
-    - bottom height: 1km
-    - top height: 2km
-    - n_layers: 16
-    - tau_550: 0.5
-    - radiative properties dataset: Govaerts 2021 Continental
+    * Atmosphere: Molecular atmosphere using the agfl1986 profile
+    * Aerosol layer: 16 layers from 1km to 2km height, :math:`\\tau_{500} = 0.5`
+      Radiative properties from the Govaerts 2021 Continental dataset
+    * Surface: Square surface with RPV BSDF with :math:`k = 0.95`, :math:`g = -0.1`
+      and :math:`\\rho_0 = 0.027685`
+    * Illumination: Directional illumination with a zenith angle :math:`\\theta = 20°`
+    * Sensor: Distant reflectance measure, covering a plane, (76 angular points,
+      10000 samples per pixel)
 
-    Simulation is run at 550nm with the RPV parameters chosen to match:
-
-    - k: 0.95
-    - g: -0.1
-    - rho_0: 0.027685
-
-    The remaining parameters are:
-
-    - Sun zenith angle: 20°
-    - Sun azimuth angle: 0°
+    Expected behaviour
+    ------------------
 
     This test uses the Chi-squared criterion with a threshold of 0.05.
+
     """
     particle_layer = esc.atmosphere.ParticleLayer(
         bottom=1 * ureg.km,
@@ -77,14 +84,13 @@ def test_rpv_afgl1986_continental_brfpp(mode_ckd_double, metadata, session_times
         "tests/regression_test_references/rpv_afgl1986_continental_brfpp_ref.nc"
     )
     reference = xr.load_dataset(reference_path)
-    archive_path = metadata.get("archive_path", None)
 
     archive_filename = (
         os.path.join(
-            archive_path,
+            artefact_dir,
             f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986_continental.nc",
         )
-        if archive_path
+        if artefact_dir
         else None
     )
 

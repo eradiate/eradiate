@@ -11,7 +11,44 @@ from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.regression
-def test_het06_brfpp(mode_mono_double, metadata, session_timestamp):
+def test_het06_brfpp(mode_mono_double, artefact_dir, session_timestamp):
+    """
+    Coniferous forest (HET06) regression test
+    =========================================
+
+    This is a regression test, which compares the simulation results of the
+    current branch to an older reference version.
+
+    Rationale
+    ---------
+
+    This test case implements a basic canopy scene:
+
+    * Surface with lambertian reflectance
+    * No atmosphere
+    * Three dimensional canopy
+
+    Parameters
+
+    * Surface: Square surface with labmertian BSDF with :math:`r = 0.86`
+    * Canopy: Coniferous trees made up of a conical leaf cloud and a cylindrical
+      trunk.
+
+      * Leaf reflectance: 0.08
+      * Leaf transmittance: 0.03
+      * Trunk reflectance: 0.14
+
+      Disk and tree positioning follow the HET06 scenario of the RAMI-3 benchmark
+    * Illumination: Directional illumination with a zenith angle :math:`\\theta = 20°`
+    * Sensor: Distant reflectance measure, covering a plane, (76 angular points,
+      10000 samples per pixel)
+
+    Expected behaviour
+    ------------------
+
+    This test uses the Chi-squared criterion with a threshold of 0.05.
+
+    """
     """
     Coniferous forest no topography (HET06)
 
@@ -99,11 +136,10 @@ def test_het06_brfpp(mode_mono_double, metadata, session_timestamp):
         "tests/regression_test_references/het06_brfpp_ref.nc"
     )
     reference = xr.load_dataset(reference_path)
-    archive_path = metadata.get("archive_path", None)
 
     archive_filename = (
-        os.path.join(archive_path, f"{session_timestamp:%Y%m%d-%H%M%S}-het06.nc")
-        if archive_path
+        os.path.join(artefact_dir, f"{session_timestamp:%Y%m%d-%H%M%S}-het06.nc")
+        if artefact_dir
         else None
     )
 
