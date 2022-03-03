@@ -120,7 +120,11 @@ class HomogeneousAtmosphere(Atmosphere):
     # --------------------------------------------------------------------------
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
-        return 1.0 / self.eval_sigma_s(ctx.spectral_ctx)
+        return (
+            1.0 / self.eval_sigma_s(ctx.spectral_ctx)
+            if self.eval_sigma_s(ctx.spectral_ctx).m != 0.0
+            else 1.0 / self.eval_sigma_a(ctx.spectral_ctx)
+        )
 
     def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
