@@ -3,6 +3,7 @@ import mitsuba as mi
 import numpy as np
 
 from eradiate import unit_context_config as ucc
+from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.shapes import CuboidShape
@@ -48,15 +49,22 @@ def test_cuboid_params(mode_mono_double):
     assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 1)), [2, 2, 2])
 
 
-def test_cuboid_atmosphere():
+def test_cuboid_atmosphere(mode_mono_double):
     with ucc.override(length="km"):
         cuboid = CuboidShape.atmosphere(
             top=1.0,
             bottom=0.0,
-            bottom_offset=-1.0,
+            bottom_offset=-0.5,
             width=1.0,
         )
-        assert np.allclose(cuboid.edges, [1, 1, 2] * ureg.km)
+        assert np.allclose(cuboid.edges, [1, 1, 1.5] * ureg.km)
+        assert np.allclose(cuboid.center, [0, 0, 0.25] * ureg.km)
+
+    with uck.override(length="m"):
+        ctx = KernelDictContext()
+        bbox = cuboid.kernel_dict(ctx).load().bbox()
+        assert dr.allclose(bbox.min, [-500, -500, -500])
+        assert dr.allclose(bbox.max, [500, 500, 1000])
 
 
 def test_cuboid_contains():

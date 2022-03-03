@@ -145,15 +145,14 @@ class CuboidShape(Shape):
         bottom_offset : quantity, optional
             Additional offset by which the cuboid with be extended to avoid an
             exact match of its bottom face and the shape representing the
-            surface. If left unset, defaults to a negative offset of  0.1 % of
+            surface. If left unset, defaults to a negative offset of  1 % of
             the atmosphere's height, *i.e.*
-            :math:`- 0.001 \\times (\\mathtt{top} - \\mathtt{bottom})`.
-            If a unitless value is passed, it is interpreted as
-            ``ucc["length"]``.
+            :math:`- 0.01 \\times (\\mathtt{top} - \\mathtt{bottom})`.
+            If a unitless value is passed, it is interpreted as ``ucc["length"]``.
 
         width : quantity, optional, default: 100 km
-            Length of the horizontal edges of the cuboid. If a unitless value is
-            passed, it is interpreted as ``ucc["length"]``.
+            Length of the horizontal edges of the cuboid.
+            If a unitless value is passed, it is interpreted as ``ucc["length"]``.
 
         bsdf : BSDF or dict, optional, default: None
             A BSDF specification, forwarded to the main constructor.
@@ -169,17 +168,17 @@ class CuboidShape(Shape):
         width = pinttr.util.ensure_units(width, default_units=ucc.get("length"))
 
         if bottom_offset is None:
-            bottom_offset = -0.001 * (top - bottom)
+            bottom_offset = -0.01 * (top - bottom)
         else:
             bottom_offset = pinttr.util.ensure_units(
                 bottom_offset, default_units=ucc.get("length")
             )
 
         length_units = top.units
-        center_z = (bottom + bottom_offset).m_as(length_units)
+        center_z = 0.5 * (top + bottom + bottom_offset).m_as(length_units)
         edge_x = np.squeeze(width.m_as(length_units))
         edge_y = np.squeeze(width.m_as(length_units))
-        edge_z = np.squeeze(top.m_as(length_units) - center_z)
+        edge_z = np.squeeze((top - bottom - bottom_offset).m_as(length_units))
 
         return cls(
             center=[0.0, 0.0, center_z] * length_units,
