@@ -12,25 +12,45 @@ from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.regression
-def test_het04a1_brfpp(mode_mono_double, metadata, session_timestamp):
+def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
     """
-    Real zoom in (HET04a1)
+    Real zoom in (HET04a1) regression test
+    ======================================
 
-    This test case uses the real zoom in scene from RAMI-3.
-    It uses the definition files as provided on the RAMI-3 website for
-    placement of leaves and leaf clouds.
+    This is a regression test, which compares the simulation results of the
+    current branch to an older reference version.
 
-    The remaining parameters are:
+    Rationale
+    ---------
 
-    - Leaf reflectance spheres: 0.49
-    - Leaf transmittance spheres: 0.41
-    - Leaf reflectance cylinders: 0.45
-    - Leaf transmittance cylinders: 0.3
-    - Soil reflectance: 0.15
-    - Sun zenith angle: 20°
-    - Sun azimuth angle: 0°
+    This test case implements a basic canopy scene:
 
-    This test uses the Chi-squared criterion with a threshold of 0.05
+    * Surface with lambertian reflectance
+    * No atmosphere
+    * Three dimensional canopy
+
+    Parameters
+
+    * Surface: Square surface with labmertian BSDF with :math:`r = 0.15`
+    * Canopy:
+
+      * Floating spheres made up of disks with bilambertian bsdf model.
+        Leaf reflectance is 0.49, transmittance is 0.41.
+      * Floating cylinders made up of disks with bilambertian bsdf model.
+        Leaf reflectance is 0.45, transmittance is 0.43.
+
+      Disk, sphere and cylinder positioning follow the HET04 scenario of the
+      RAMI-3 benchmark.
+    * Illumination: Directional illumination with a zenith angle :math:`\\theta = 20°`
+    * Sensor: Distant reflectance measure, covering a plane, (76 angular points,
+      10000 samples per pixel). This test implements the variant a1 of the HET04
+      scenario, in which the entire scene is targeted by the sensor.
+
+    Expected behaviour
+    ------------------
+
+    This test uses the Chi-squared criterion with a threshold of 0.05.
+
     """
 
     leaf_spec_path_sph = data_store.fetch(
@@ -115,11 +135,10 @@ def test_het04a1_brfpp(mode_mono_double, metadata, session_timestamp):
         "tests/regression_test_references/het04_brfpp_ref.nc"
     )
     reference = xr.load_dataset(reference_path)
-    archive_path = metadata.get("archive_path", None)
 
     archive_filename = (
-        os.path.join(archive_path, f"{session_timestamp:%Y%m%d-%H%M%S}-het04.nc")
-        if archive_path
+        os.path.join(artefact_dir, f"{session_timestamp:%Y%m%d-%H%M%S}-het04.nc")
+        if artefact_dir
         else None
     )
 

@@ -12,25 +12,36 @@ from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.regression
-def test_rpv_afgl1986_brfpp(mode_ckd_double, metadata, session_timestamp):
+def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
     """
+    RPV AFGL1986 regression test
+    ====================================
+
+    This is a regression test, which compares the simulation results of the
+    current branch to an older reference version.
+
+    Rationale
+    ---------
+
     This test case uses a basic atmospheric scene:
 
-    - RPV surface emulating a canopy
-    - Molecular atmosphere following the AFGL 1986 model
+    * RPV surface emulating a canopy
+    * Molecular atmosphere following the AFGL 1986 model
 
-    Simulation is run at 550nm with the RPV parameters chosen to match:
+    Parameters
 
-    - k: 0.95
-    - g: -0.1
-    - rho_0: 0.027685
+    * Atmosphere: Molecular atmosphere using the agfl1986 profile
+    * Surface: Square surface with RPV BSDF with :math:`k = 0.95`, :math:`g = -0.1`
+      and :math:`\\rho_0 = 0.027685`
+    * Illumination: Directional illumination with a zenith angle :math:`\\theta = 20°`
+    * Sensor: Distant reflectance measure, covering a plane, (76 angular points,
+      10000 samples per pixel)
 
-    The remaining parameters are:
-
-    - Sun zenith angle: 20°
-    - Sun azimuth angle: 0°
+    Expected behaviour
+    ------------------
 
     This test uses the Chi-squared criterion with a threshold of 0.05.
+
     """
     exp = OneDimExperiment(
         surface=esc.bsdfs.RPVBSDF(k=0.95, g=-0.1, rho_0=0.027685),
@@ -57,11 +68,10 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, metadata, session_timestamp):
         "tests/regression_test_references/rpv_afgl1986_brfpp_ref.nc"
     )
     reference = xr.load_dataset(reference_path)
-    archive_path = metadata.get("archive_path", None)
 
     archive_filename = (
-        os.path.join(archive_path, f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986.nc")
-        if archive_path
+        os.path.join(artefact_dir, f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986.nc")
+        if artefact_dir
         else None
     )
 

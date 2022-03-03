@@ -11,23 +11,38 @@ from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.regression
-def test_het01_brfpp(mode_mono_double, metadata, session_timestamp):
+def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp):
     """
-    Floating disks (HET01)
+    Floating spheres (HET01) regression test
+    ========================================
 
-    This test case uses the floating disks scene from RAMI-3.
-    It uses the definition files as provided on the RAMI-3 website for
-    placement of leaves and leaf clouds.
+    This is a regression test, which compares the simulation results of the
+    current branch to an older reference version.
 
-    The remaining parameters are:
+    Rationale
+    ---------
 
-    - Leaf reflectance: 0.4957
-    - Leaf transmittance: 0.4409
-    - Soil reflectance: 0.159
-    - Sun zenith angle: 20°
-    - Sun azimuth angle: 0°
+    This test case implements a basic canopy scene:
 
-    This test uses the Chi-squared criterion with a threshold of 0.05
+    * Surface with lambertian reflectance
+    * No atmosphere
+    * Three dimensional canopy
+
+    Parameters
+
+    * Surface: Square surface with labmertian BSDF with :math:`r = 0.159`
+    * Canopy: Floating spheres made up of disks with bilambertian bsdf model
+      Leaf reflectance is 0.4957, transmittance is 0.4409.
+      Disk and sphere positioning follow the HET01 scenario of the RAMI-3 benchmark
+    * Illumination: Directional illumination with a zenith angle :math:`\\theta = 20°`
+    * Sensor: Distant reflectance measure, covering a plane, (76 angular points,
+      10000 samples per pixel)
+
+    Expected behaviour
+    ------------------
+
+    This test uses the Chi-squared criterion with a threshold of 0.05.
+
     """
 
     leaf_spec_path = data_store.fetch(
@@ -91,11 +106,10 @@ def test_het01_brfpp(mode_mono_double, metadata, session_timestamp):
         "tests/regression_test_references/het01_brfpp_ref.nc"
     )
     reference = xr.load_dataset(reference_path)
-    archive_path = metadata.get("archive_path", None)
 
     archive_filename = (
-        os.path.join(archive_path, f"{session_timestamp:%Y%m%d-%H%M%S}-het01.nc")
-        if archive_path
+        os.path.join(artefact_dir, f"{session_timestamp:%Y%m%d-%H%M%S}-het01.nc")
+        if artefact_dir
         else None
     )
 

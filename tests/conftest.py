@@ -14,7 +14,7 @@ eradiate.plot.set_style()
 def pytest_addoption(parser):
     eradiate_source_dir = os.environ.get("ERADIATE_SOURCE_DIR", ".")
     parser.addoption(
-        "--artefact-dir",
+        "--artefact_dir",
         action="store",
         default=os.path.join(eradiate_source_dir, "build/test_artefacts/"),
     )
