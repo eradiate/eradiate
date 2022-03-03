@@ -41,11 +41,9 @@ def test_onedim_experiment_construct_normalize_measures(mode_mono):
     exp = OneDimExperiment(atmosphere=None)
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
-    # When atmosphere is set, measure target is at TOA
+    # When atmosphere is set, measure target is at ground level
     exp = OneDimExperiment(atmosphere=HomogeneousAtmosphere(top=100.0 * ureg.km))
-    assert np.allclose(
-        exp.measures[0].target.xyz, [0, 0, exp.atmosphere.top.m_as(ureg.m)] * ureg.m
-    )
+    assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
 
 @pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
