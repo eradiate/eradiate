@@ -45,25 +45,25 @@ class US76ApproxRadProfile(RadProfile):
     Notes
     -----
     * The :mod:`~eradiate.thermoprops.us76` module implements the original *U.S.
-    Standard Atmosphere 1976* atmosphere model, as defined by the
-    :cite:`NASA1976USStandardAtmosphere` technical report.
-    In the original atmosphere model, the gases are assumed well-mixed below
-    the altitude of 86 kilometers.
-    In the present radiative properties profile, the absorption coefficient is
-    computed using the ``spectra-us76_u86_4`` absorption dataset.
-    This dataset provides the absorption cross section of a specific mixture
-    of N2, O2, CO2 and CH4, the mixing ratio of which are those defined by the
-    *U.S. Standard Atmosphere 1976* model for the region of altitudes under
-    86 kilometers, where these four gas species are well-mixed.
-    As a result, the dataset is representative of the *U.S. Standard Atmosphere
-    1976* model only below 86 kilometers.
-    Since the atmosphere is typically a hundred kilometers high or more in
-    radiative transfer applications, and in order to make the radiative
-    properties profile reach these altitudes, the absorption coefficient
-    is nevertheless computed using the ``spectra-us76_u86_4`` dataset.
-    This approximation assumes that the absorption coefficient does not vary
-    much whether the mixing ratios of the absorbing gas mixture are those
-    below or above 86 km.
+      Standard Atmosphere 1976* atmosphere model, as defined by the
+      :cite:`NASA1976USStandardAtmosphere` technical report.
+      In the original atmosphere model, the gases are assumed well-mixed below
+      the altitude of 86 kilometers.
+      In the present radiative properties profile, the absorption coefficient is
+      computed using the ``spectra-us76_u86_4`` absorption dataset.
+      This dataset provides the absorption cross section of a specific mixture
+      of N2, O2, CO2 and CH4, the mixing ratio of which are those defined by the
+      *U.S. Standard Atmosphere 1976* model for the region of altitudes under
+      86 kilometers, where these four gas species are well-mixed.
+      As a result, the dataset is representative of the *U.S. Standard Atmosphere
+      1976* model only below 86 kilometers.
+      Since the atmosphere is typically a hundred kilometers high or more in
+      radiative transfer applications, and in order to make the radiative
+      properties profile reach these altitudes, the absorption coefficient
+      is nevertheless computed using the ``spectra-us76_u86_4`` dataset.
+      This approximation assumes that the absorption coefficient does not vary
+      much whether the mixing ratios of the absorbing gas mixture are those
+      below or above 86 km.
 
     * Furthermore, the *U.S. Standard Atmosphere 1976* model includes other gas
       species than N2, O2, CO2 and CH4.
@@ -74,7 +74,7 @@ class US76ApproxRadProfile(RadProfile):
       could not be included in ``spectra-us76_u86_4``.
       H2 was mistakenly forgotten and should be added to the dataset in a future
       revision.
-    
+
     * We refer to the *U.S. Standard Atmosphere 1976* atmosphere model as the
       model defined by the set of assumptions and equations in part 1 of the
       report, and "numerically" illustrated by the extensive tables in part
@@ -86,7 +86,7 @@ class US76ApproxRadProfile(RadProfile):
       atmosphere model because it does not clearly defines the concentration
       values of all trace constituents at all altitudes, neither does it
       provide a way to compute them.
-    
+
     * It seems that the identifier "US76" is commonly used to refer to a
       standard atmospheric profile used in radiative transfer applications.
       However, there appears to be some confusion around the definition of
