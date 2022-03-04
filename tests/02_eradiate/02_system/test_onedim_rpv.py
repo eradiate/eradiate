@@ -494,12 +494,12 @@ def test_film_to_angular_coord_conversion_distant_flux(
     If :math:`\varphi_i` is the illumination azimuth and :math:`\varphi_v` is the
     viewing azimuth, we define the forward region of the hemisphere by:
 
-    .. math:: \varphi_i + 90° \lt \varphi_v \lt \varphi_i + 270°
+    .. math:: \phi_i + 90° < \phi_v < \phi_i + 270°
        :label: distant_flux_forward
 
     and correspondingly, the backward region, by:
 
-    .. math:: \varphi_i + 270° \lt \varphi_v \lt \varphi_i + 90°
+    .. math:: \phi_i + 270° < \phi_v < \phi_i + 90°
        :label: distant_flux_backward
 
     We then compute their mean value within the azimuth angle range where they
@@ -660,12 +660,12 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
     If :math:`\varphi_i` is the illumination azimuth and :math:`\varphi_v` is the
     viewing azimuth, we define the forward region of the hemisphere by:
 
-    .. math:: \varphi_i + 90° \lt \varphi_v \lt \varphi_i + 270°
+    .. math:: \phi_i + 90° < \phi_v < \phi_i + 270°
        :label: hemispherical_distant_forward
 
     and correspondingly, the backward region, by:
 
-    .. math:: \varphi_i + 270° \lt \varphi_v \lt \varphi_i + 90°
+    .. math:: \phi_i + 270° < \phi_v < \phi_i + 90°
        :label: hemispherical_distant_backward
 
     We then compute their mean value within the azimuth angle range where they
