@@ -15,7 +15,7 @@ from eradiate.units import unit_registry as ureg
 def test_rpv_afgl1986_continental_brfpp(
     mode_ckd_double, artefact_dir, session_timestamp
 ):
-    """
+    r"""
     RPV AFGL1986 Aerosol regression test
     ====================================
 
@@ -34,11 +34,11 @@ def test_rpv_afgl1986_continental_brfpp(
     Parameters
 
     * Atmosphere: Molecular atmosphere using the agfl1986 profile
-    * Aerosol layer: 16 layers from 1km to 2km height, :math:`\\tau_{500} = 0.5`
+    * Aerosol layer: 16 layers from 1km to 2km height, :math:`\tau_{500} = 0.5`
       Radiative properties from the Govaerts 2021 Continental dataset
     * Surface: Square surface with RPV BSDF with :math:`k = 0.95`, :math:`g = -0.1`
-      and :math:`\\rho_0 = 0.027685`
-    * Illumination: Directional illumination with a zenith angle :math:`\\theta = 20°`
+      and :math:`\rho_0 = 0.027685`
+    * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
     * Sensor: Distant reflectance measure, covering a plane, (76 angular points,
       10000 samples per pixel)
 
