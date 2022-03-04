@@ -12,7 +12,7 @@ from eradiate.units import unit_registry as ureg
 
 @pytest.mark.regression
 def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp):
-    """
+    r"""
     Floating spheres (HET01) regression test
     ========================================
 
@@ -34,7 +34,7 @@ def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp):
     * Canopy: Floating spheres made up of disks with bilambertian bsdf model
       Leaf reflectance is 0.4957, transmittance is 0.4409.
       Disk and sphere positioning follow the HET01 scenario of the RAMI-3 benchmark
-    * Illumination: Directional illumination with a zenith angle :math:`\\theta = 20°`
+    * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
     * Sensor: Distant reflectance measure, covering a plane, (76 angular points,
       10000 samples per pixel)
 

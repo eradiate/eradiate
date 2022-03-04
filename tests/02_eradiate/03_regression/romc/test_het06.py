@@ -12,7 +12,7 @@ from eradiate.units import unit_registry as ureg
 
 @pytest.mark.regression
 def test_het06_brfpp(mode_mono_double, artefact_dir, session_timestamp):
-    """
+    r"""
     Coniferous forest (HET06) regression test
     =========================================
 
@@ -39,7 +39,7 @@ def test_het06_brfpp(mode_mono_double, artefact_dir, session_timestamp):
       * Trunk reflectance: 0.14
 
       Disk and tree positioning follow the HET06 scenario of the RAMI-3 benchmark
-    * Illumination: Directional illumination with a zenith angle :math:`\\theta = 20°`
+    * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
     * Sensor: Distant reflectance measure, covering a plane, (76 angular points,
       10000 samples per pixel)
 
@@ -48,24 +48,6 @@ def test_het06_brfpp(mode_mono_double, artefact_dir, session_timestamp):
 
     This test uses the Chi-squared criterion with a threshold of 0.05.
 
-    """
-    """
-    Coniferous forest no topography (HET06)
-
-    This test case uses the coniferous forest scene with no topography
-    from RAMI-3.
-    It uses the definition files as provided on the RAMI-3 website for
-    placement of leaves and leaf clouds.
-
-    The remaining parameters are:
-
-    - Leaf reflectance: 0.08
-    - Leaf transmittance: 0.03
-    - Soil reflectance: 0.86
-    - Sun zenith angle: 20°
-    - Sun azimuth angle: 0°
-
-    This test uses the Chi-squared criterion with a threshold of 0.05
     """
 
     tree_pos_path = data_store.fetch(

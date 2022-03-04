@@ -13,7 +13,7 @@ from eradiate.units import unit_registry as ureg
 
 @pytest.mark.regression
 def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
-    """
+    r"""
     Real zoom in (HET04a1) regression test
     ======================================
 
@@ -41,7 +41,7 @@ def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
 
       Disk, sphere and cylinder positioning follow the HET04 scenario of the
       RAMI-3 benchmark.
-    * Illumination: Directional illumination with a zenith angle :math:`\\theta = 20°`
+    * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
     * Sensor: Distant reflectance measure, covering a plane, (76 angular points,
       10000 samples per pixel). This test implements the variant a1 of the HET04
       scenario, in which the entire scene is targeted by the sensor.
