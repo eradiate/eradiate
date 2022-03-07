@@ -7,8 +7,7 @@ __version__ = _version  #: Eradiate version string.
 
 # -- Workaround: pre-import modules clashing with Mitsuba's import code --------
 
-__import__("astropy.coordinates")
-__import__("xarray")
+__import__("eradiate._preimport")
 
 # -- Global configuration ------------------------------------------------------
 

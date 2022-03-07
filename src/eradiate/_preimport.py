@@ -1,10 +1,13 @@
+"""
+Pre-import problematic modules.
+"""
+
 import os
 import sys
 import threading
 import time
 
 
-# Check if Dr.Jit can be imported successfully (+workaround to silence no-CUDA device warnings)
 # See
 # https://stackoverflow.com/questions/24277488/in-python-how-to-capture-the-stdout-from-a-c-shared-library-to-a-variable
 class _OutputGrabber(object):
@@ -82,9 +85,26 @@ class _OutputGrabber(object):
             self.capturedtext += char
 
 
+# Check if Dr.Jit and Mitsuba can be imported successfully
 with _OutputGrabber(sys.stderr) as out:
-    import drjit
+    try:
+        __import__("drjit")
+    except (ImportError, ModuleNotFoundError) as e:
+        raise ImportError(
+            "Could not import module 'drjit'; did you build the kernel and add "
+            "it to your $PYTHONPATH?"
+        ) from e
 
+    try:
+        __import__("mitsuba")
+    except (ImportError, ModuleNotFoundError) as e:
+        raise ImportError(
+            "Could not import module 'mitsuba'; did you build the kernel and add "
+            "it to your $PYTHONPATH?"
+        ) from e
+
+
+# Silence a no-CUDA warning message (if any)
 _warn_str = """
 jit_cuda_init(): cuInit failed, disabling CUDA backend.
 There are two common explanations for this type of failure:
@@ -96,18 +116,8 @@ There are two common explanations for this type of failure:
     issue. Otherwise reinstall your graphics driver.
 
  The specific error message produced by cuInit was
-   "no CUDA-capable device is detectedz"
-""".lstrip()
-if out.capturedtext != _warn_str:
+   "no CUDA-capable device is detected"
+"""
+if _warn_str.strip() != out.capturedtext.strip():
     print(out.capturedtext)
 del out
-
-
-# Check if Mitsuba can be imported successfully
-try:
-    import mitsuba
-except (ImportError, ModuleNotFoundError) as e:
-    raise ImportError(
-        "Could not import module 'mitsuba'; did you build the kernel and add "
-        "it to your $PYTHONPATH?"
-    ) from e
