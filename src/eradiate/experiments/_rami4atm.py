@@ -24,7 +24,7 @@ from ..scenes.integrators import (
     VolPathIntegrator,
     integrator_factory,
 )
-from ..scenes.measure import Measure, TargetPoint
+from ..scenes.measure import Measure, TargetPoint, TargetRectangle
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface, surface_factory
 from ..units import unit_context_config as ucc
@@ -289,28 +289,22 @@ class Rami4ATMExperiment(EarthObservationExperiment):
         overridden if relevant.
         """
         for measure in self.measures:
-            # Override ray target location if relevant
-            if (
-                measure.is_distant() and measure.target is None
-            ):  # No target specified: add one
-                if self.canopy is None:  # No canopy: target single point
+            if measure.is_distant():
+                if measure.target is None:
                     if (
-                        self.atmosphere is None
-                    ):  # No atmosphere: target point at surface
-                        target_point = [0.0, 0.0, 0.0] * ucc.get("length")
-                    else:  # Atmosphere: target point at top of atmosphere
-                        toa = self.atmosphere.top
-                        target_point = [0.0, 0.0, toa.m] * toa.units
-                    measure.target = TargetPoint(target_point)
-                else:  # Canopy: target top of canopy
-                    measure.target = dict(
-                        type="rectangle",
-                        xmin=-0.5 * self.canopy.size[0],
-                        xmax=0.5 * self.canopy.size[0],
-                        ymin=-0.5 * self.canopy.size[1],
-                        ymax=0.5 * self.canopy.size[1],
-                        z=self.canopy.size[2],
-                    )
+                        self.canopy is None
+                    ):  # No canopy: target single point at ground level
+                        measure.target = TargetPoint(
+                            [0.0, 0.0, 0.0] * ucc.get("length")
+                        )
+                    else:  # Canopy: target top of canopy
+                        measure.target = TargetRectangle(
+                            xmin=-0.5 * self.canopy.size[0],
+                            xmax=0.5 * self.canopy.size[0],
+                            ymin=-0.5 * self.canopy.size[1],
+                            ymax=0.5 * self.canopy.size[1],
+                            z=self.canopy.size[2],
+                        )
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(Rami4ATMExperiment, self)._dataset_metadata(measure)
