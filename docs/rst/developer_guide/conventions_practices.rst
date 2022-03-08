@@ -18,7 +18,9 @@ Style
   `for Black <https://black.readthedocs.io/en/stable/integrations/editors.html>`_
   and `for isort <https://github.com/pycqa/isort/wiki/isort-Plugins>`_.
 
-* We use the ``"""``-on-separate-lines style for docstrings:
+* We write our docstrings following the
+  `Numpydoc format <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
+  We use the ``"""``-on-separate-lines style:
 
   .. code:: python
 
@@ -82,3 +84,24 @@ Initialisation from dictionaries
     * interpret units using :func:`pinttr.interpret_units`;
     * [optional] if relevant, allow for class method constructor selection using
       the ``"construct"`` parameter.
+
+Shallow submodule caveats
+-------------------------
+
+Eradiate uses Git submodules to ship some of its data. Over time, these can grow
+and become large enough so that using a *shallow submodule*. Shallow clones
+do not contain the entire history of the repository and are therefore more
+lightweight, saving bandwidth upon cloning.
+
+However, shallow clones can be difficult to work with, especially when one
+starts branching. If a shallow submodule is missing a remote branch you'd expect
+it to track,
+`this post <https://stackoverflow.com/questions/23708231/git-shallow-clone-clone-depth-misses-remote-branches>`_
+contains probably what you need to do:
+
+.. code:: bash
+
+   cd my-shallow-submodule
+   git remote set-branches origin '*'
+   git fetch -v
+   git checkout the-branch-i-ve-been-looking-for
