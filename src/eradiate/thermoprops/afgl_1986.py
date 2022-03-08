@@ -93,16 +93,18 @@ def make_profile(
        interpolated on the regular altitude mesh with an altitude step of 1 km
        from 0 to 120 km.
 
-    All six models include the following six absorbing molecular species:
+    All six models include the following 7 absorbing molecular species:
     H2O, CO2, O3, N2O, CO, CH4 and O2.
     """
     if eradiate.mode().is_ckd:
-        if model_id != "us_standard":
+        supported_models = ["us_standard", "midlatitude_summer"]
+        if model_id not in supported_models:
             raise NotImplementedError(
-                "In CKD mode, only the 'us_standard' model is supported."
+                f"In ckd mode, only {' and '.join(supported_models)} models "
+                f"are supported."
             )
         species = set(concentrations.keys()) if concentrations else set()
-        unhandled = species - {"H2O", "O3"}
+        unhandled = species - {"H2O", "CO2", "O3"}
 
         if unhandled:
             raise NotImplementedError(

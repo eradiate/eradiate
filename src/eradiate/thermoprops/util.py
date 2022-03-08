@@ -137,6 +137,26 @@ def compute_mass_density_at_surface(ds, species):
     return m * compute_number_density_at_surface(ds=ds, species=species)
 
 
+def compute_volume_mixing_ratio_at_surface(ds, species):
+    """Compute the volume mixing ratio at the surface of a given species in an
+    atmospheric profile.
+
+    Parameters
+    ----------
+    ds : Dataset
+        Atmosphere thermophysical properties data set.
+
+    species : str
+        Species.
+
+    Returns
+    -------
+    quantity
+        Volume mixing ratio at the surface.
+    """
+    return to_quantity(ds.mr.sel(species=species))[0]
+
+
 def compute_scaling_factors(ds, concentration):
     r"""
     Compute the scaling factors to be applied to the mixing ratio values

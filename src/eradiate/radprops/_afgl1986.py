@@ -22,6 +22,7 @@ from ..thermoprops import afgl_1986
 from ..thermoprops.util import (
     compute_column_mass_density,
     compute_column_number_density,
+    compute_volume_mixing_ratio_at_surface,
 )
 from ..units import to_quantity
 from ..units import unit_registry as ureg
@@ -102,11 +103,13 @@ class AFGL1986RadProfile(RadProfile):
         if not self.has_absorption:
             return ureg.Quantity(np.zeros(self.thermoprops.z_layer.size), "km^-1")
 
-        with _util_ckd.open_dataset(f"afgl_1986-us_standard-{bin_set_id}") as ds:
+        ds_id = f"{self.thermoprops.attrs['identifier']}-{bin_set_id}-v3"
+        with _util_ckd.open_dataset(ds_id) as ds:
             # This table maps species to the function used to compute
             # corresponding physical quantities used for concentration rescaling
             compute = {
                 "H2O": functools.partial(compute_column_mass_density, species="H2O"),
+                "CO2": functools.partial(compute_volume_mixing_ratio_at_surface, species="CO2"),
                 "O3": functools.partial(compute_column_number_density, species="O3"),
             }
 
