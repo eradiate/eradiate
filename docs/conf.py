@@ -53,7 +53,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build"]
+exclude_patterns = ["_build", "tutorials/README.md"]
 
 # Add custom extensions
 extensions.append("pluginparameters")
@@ -120,7 +120,22 @@ bibtex_bibfiles = ["references.bib"]
 # Tutorials
 if not os.path.exists("tutorials"):
     os.symlink("../tutorials", "tutorials", target_is_directory=True)
-extensions.append("myst_nb")
+extensions.append("nbsphinx")
+nbsphinx_execute = "never"
+nbsphinx_prolog = """
+*Due to how our documentation is currently deployed online, we can
+only render the output of these examples offline. Consequently, we strongly
+advise users to run our examples themselves, either by copying code blocks
+found in the tutorials, or by downloading them as Jupyter notebooks.*
+
+.. button-link:: https://github.com/eradiate/eradiate-tutorials/blob/main/{{ env.doc2path(env.docname, base=False)|replace("/tutorials/", "/") }}
+   :color: primary
+   :expand:
+   
+   :octicon:`link-external` Go to notebook file
+
+----
+"""
 
 # Sphinx-design extension
 extensions.append("sphinx_design")

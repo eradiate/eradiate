@@ -66,7 +66,7 @@ work.
 
    rst/getting_started/index
    rst/user_guide/index
-   examples/generated/tutorials/index
+   tutorials/index
 
 .. toctree::
    :maxdepth: 3
