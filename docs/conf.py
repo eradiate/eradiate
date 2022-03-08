@@ -117,35 +117,10 @@ extensions.append("sphinx_click")
 extensions.append("sphinxcontrib.bibtex")
 bibtex_bibfiles = ["references.bib"]
 
-# Example gallery support
-from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
-
-extensions.append("sphinx_gallery.gen_gallery")
-sphinx_gallery_conf = {
-    "examples_dirs": [  # paths to example scripts
-        "examples/tutorials",
-    ],
-    "gallery_dirs": [  # path to where to save gallery generated output
-        "examples/generated/tutorials/",
-    ],
-    "subsection_order": ExplicitOrder(
-        [
-            "examples/tutorials/solver_onedim",
-            "examples/tutorials/solver_rami",
-            "examples/tutorials/atmosphere",
-            "examples/tutorials/biosphere",
-            "examples/tutorials/data",
-        ]
-    ),
-    "within_subsection_order": FileNameSortKey,
-    "filename_pattern": "/",
-    "reference_url": {
-        "eradiate": None,  # The module you locally document uses None
-    },
-    "plot_gallery": False,  # Disabled until we move away from RTD or package the kernel
-    "default_thumb_file": "fig/icon_eradiate.png",
-    "remove_config_comments": True,
-}
+# Tutorials
+if not os.path.exists("tutorials"):
+    os.symlink("../tutorials", "tutorials", target_is_directory=True)
+extensions.append("myst_nb")
 
 # Sphinx-design extension
 extensions.append("sphinx_design")
