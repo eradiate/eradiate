@@ -8,3 +8,7 @@
 [submodule "ext/mitsuba2"]
 	path = ext/mitsuba2
 	url = git@github.com:leroyvn/mitsuba2-next.git
+[submodule "tutorials"]
+	path = tutorials
+	url = https://github.com/eradiate/eradiate-tutorials.git
+	shallow = true
