@@ -5,6 +5,10 @@ from .. import data
 PATHS = {
     "afgl_1986-us_standard-10nm": "ckd/absorption/10nm/afgl_1986-us_standard-10nm.nc",
     "afgl_1986-us_standard-1nm": "ckd/absorption/1nm/afgl_1986-us_standard-1nm.nc",
+    "afgl_1986-us_standard-10nm-v3": "ckd/absorption/10nm/afgl_1986-us_standard-10nm-v3.nc",
+    "afgl_1986-us_standard-1nm-v3": "ckd/absorption/1nm/afgl_1986-us_standard-1nm-v3.nc",
+    "afgl_1986-midlatitude_summer-10nm-v3": "ckd/absorption/10nm/afgl_1986-midlatitude_summer-10nm-v3.nc",
+    "afgl_1986-midlatitude_summer-1nm-v3": "ckd/absorption/1nm/afgl_1986-midlatitude_summer-1nm-v3.nc",
 }
 
 
