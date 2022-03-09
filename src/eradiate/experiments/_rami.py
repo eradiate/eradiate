@@ -83,7 +83,7 @@ class RamiExperiment(EarthObservationExperiment):
 
     surface: t.Union[None, BasicSurface] = documented(
         attr.ib(
-            factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
+            factory=lambda: LambertianBSDF(),
             converter=attr.converters.optional(_surface_converter),
             validator=attr.validators.optional(
                 attr.validators.instance_of(BasicSurface)
@@ -114,10 +114,6 @@ class RamiExperiment(EarthObservationExperiment):
     def __attrs_post_init__(self):
         self._normalize_measures()
 
-    @property
-    def _default_surface_width(self):
-        return 1.0 * ureg.km
-
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = KernelDict()
 
@@ -133,15 +129,21 @@ class RamiExperiment(EarthObservationExperiment):
 
             result.add(canopy, ctx=ctx)
 
+            # Surface size always matches canopy size
+            if self.surface is not None:
+                surface = attr.evolve(
+                    self.surface,
+                    shape=RectangleShape(center=[0, 0, 0], edges=scene_width),
+                )
+
+            else:
+                surface = None
+
         else:
-            scene_width = self._default_surface_width
+            surface = attr.evolve(self.surface)
 
         # Process surface
-        if self.surface is not None:  # Surface size always matches canopy size
-            surface = attr.evolve(
-                self.surface,
-                shape=RectangleShape(center=[0, 0, 0], edges=scene_width),
-            )
+        if surface is not None:
             result.add(surface, ctx=ctx)
 
         # Process measures
@@ -166,23 +168,17 @@ class RamiExperiment(EarthObservationExperiment):
             if (
                 measure.is_distant() and measure.target is None
             ):  # No target specified: add one
-                if self.canopy is None:  # No canopy: target single point
-                    measure.target = dict(
-                        type="rectangle",
-                        xmin=-0.5 * self._default_surface_width,
-                        xmax=0.5 * self._default_surface_width,
-                        ymin=-0.5 * self._default_surface_width,
-                        ymax=0.5 * self._default_surface_width,
-                    )
+                if self.canopy is None:  # No canopy: target origin point
+                    measure.target = {"type": "point", "xyz": [0, 0, 0]}
                 else:  # Canopy: target top of canopy
-                    measure.target = dict(
-                        type="rectangle",
-                        xmin=-0.5 * self.canopy.size[0],
-                        xmax=0.5 * self.canopy.size[0],
-                        ymin=-0.5 * self.canopy.size[1],
-                        ymax=0.5 * self.canopy.size[1],
-                        z=self.canopy.size[2],
-                    )
+                    measure.target = {
+                        "type": "rectangle",
+                        "xmin": -0.5 * self.canopy.size[0],
+                        "xmax": 0.5 * self.canopy.size[0],
+                        "ymin": -0.5 * self.canopy.size[1],
+                        "ymax": 0.5 * self.canopy.size[1],
+                        "z": self.canopy.size[2],
+                    }
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         result = super(RamiExperiment, self)._dataset_metadata(measure)
