@@ -128,7 +128,7 @@ only render the output of these examples offline. Consequently, we strongly
 advise users to run our examples themselves, either by copying code blocks
 found in the tutorials, or by downloading them as Jupyter notebooks.*
 
-.. button-link:: https://github.com/eradiate/eradiate-tutorials/blob/main/{{ env.doc2path(env.docname, base=False)|replace("/tutorials/", "/") }}
+.. button-link:: https://github.com/eradiate/eradiate-tutorials/blob/main/{{ env.doc2path(env.docname, base=False)|replace("tutorials/", "") }}
    :color: primary
    :expand:
    
