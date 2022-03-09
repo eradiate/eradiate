@@ -16,6 +16,17 @@ def test_ckd_basic(modes_all_ckd):
     We check for correctness when using CKD modes with atmosphere-free scenes.
     This test is designed to check that the CKD infrastructure
     (preprocessing, spectral loop, postprocessing) works.
+
+    Rationale
+    ---------
+
+    Create a ``OneDimExperiment`` instance with no atmosphere, a Lambertian
+    surface with reflectance equal to 1 and a ``MultiDistantMeasure``.
+
+    Expected behaviour
+    ------------------
+
+    The computed reflectance is equal to 1.
     """
 
     # Configure experiment, run and postprocess results

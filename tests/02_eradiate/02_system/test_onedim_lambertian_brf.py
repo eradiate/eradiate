@@ -1,4 +1,4 @@
-"""Test cases with OneDimSolverApp and a lambertian surface."""
+"""Test cases with OneDimSolverApp and a Lambertian surface."""
 
 import os
 
@@ -32,8 +32,7 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
     Expected behaviour
     ------------------
 
-    The BRF results must agree with the reflectance input values within a
-    relative tolerance of 0.1%.
+    The BRF results must be equal to reflectance input values.
 
     Results
     -------
@@ -48,7 +47,7 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
        :width: 75%
     """
     spp = 1
-    n_vza = 1001
+    n_vza = 51
     illumination_zenith_values = [0.0, 30.0, 60.0]
     reflectance_values = [1.0, 0.7, 0.5, 0.3, 0.0]
 
@@ -85,16 +84,15 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
     for illumination_zenith in illumination_zenith_values:
         fig = plt.figure(figsize=(6, 3))
         ax1 = plt.gca()
-        for reflectance in reflectance_values:
-            results[illumination_zenith][reflectance].brf.plot(ax=ax1, x="vza")
-        filename = f"test_onedim_lambertian_brf_{illumination_zenith}.png"
-        outdir = os.path.join(artefact_dir, "plots")
-        os.makedirs(outdir, exist_ok=True)
-        fname_plot = os.path.join(outdir, filename)
+
+        with plt.rc_context({"lines.linestyle": ":", "lines.marker": "."}):
+            for reflectance in reflectance_values:
+                results[illumination_zenith][reflectance].brf.plot(ax=ax1, x="vza")
+
         plt.xlabel("Signed viewing zenith angle [°]")
         plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
         plt.ylabel("BRF [dimensionless]")
-        plt.title(fr"$\theta$ = {illumination_zenith}°")
+        plt.title(rf"$\theta$ = {illumination_zenith}°")
         plt.legend(
             [f"{reflectance}" for reflectance in reflectance_values],
             title=r"$\rho$",
@@ -102,7 +100,13 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
             bbox_to_anchor=(1, 0.5),
         )
         plt.tight_layout()
+
+        outdir = os.path.join(artefact_dir, "plots")
+        os.makedirs(outdir, exist_ok=True)
+        filename = f"test_onedim_lambertian_brf_{illumination_zenith}.png"
+        fname_plot = os.path.join(outdir, filename)
         fig.savefig(fname_plot, dpi=200)
+
         plt.close()
 
     for illumination_zenith in illumination_zenith_values:
