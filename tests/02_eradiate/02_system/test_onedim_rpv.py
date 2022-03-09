@@ -38,7 +38,7 @@ def test_film_to_angular_coord_conversion_multi_distant(
       reflectance :math:`\rho_0 = 0.1`.
     * Illumination: Directional illumination with a zenith angle
       :math:`\theta = 30.0°` and an azimuth angle
-      :math:`\phi \in [0.0, 30.0, 120.0, 210.0, 300.0]°`.
+      :math:`\varphi \in [0.0, 30.0, 120.0, 210.0, 300.0]°`.
     * Sensor: Distant reflectance measure covering a plane (20 angular points,
       1 sample per pixel).
 
@@ -49,17 +49,17 @@ def test_film_to_angular_coord_conversion_multi_distant(
     Within the scope of this test, we define the forward region of the
     principal plane by:
 
-    .. math:: \phi_v = \phi_i + 180°
+    .. math:: \varphi_v = \varphi_i + 180°
        :label: multi_distant_forward
 
     where:
 
-    * :math:`\phi_v` is the viewing azimuth angle [deg]
-    * :math:`\phi_i` is the illumination azimuth angle [deg]
+    * :math:`\varphi_v` is the viewing azimuth angle [deg]
+    * :math:`\varphi_i` is the illumination azimuth angle [deg]
 
     Correspondingly, the backward region of the principal plane is defined by:
 
-    .. math:: \phi_v = \phi_i
+    .. math:: \varphi_v = \varphi_i
        :label: multi_distant_backward
 
     We expect that the mean BRF value will be larger/smaller in the forward
@@ -299,12 +299,12 @@ def select_forward(
     r"""
     Select hemispherical data in forward direction.
 
-    If :math:`\phi_i` is the illumination azimuth and :math:`\phi_v` is the
+    If :math:`\varphi_i` is the illumination azimuth and :math:`\varphi_v` is the
     viewing azimuth, the forward region is defined by:
 
     .. math::
 
-        \phi_i + 90° \ll \phi_v \ll \phi_i + 270°
+        \varphi_i + 90° \ll \varphi_v \ll \varphi_i + 270°
 
     Parameters
     ----------
@@ -336,12 +336,12 @@ def select_backward(
     r"""
     Select hemispherical data in backward direction.
 
-    If :math:`\phi_i` is the illumination azimuth and :math:`\phi_v` is the
+    If :math:`\varphi_i` is the illumination azimuth and :math:`\varphi_v` is the
     viewing azimuth, the backward region is defined by:
 
     .. math::
 
-        \phi_i + 270° \ll \phi_v \ll \phi_i + 90°
+        \varphi_i + 270° \ll \varphi_v \ll \varphi_i + 90°
 
     Parameters
     ----------
@@ -483,7 +483,7 @@ def test_film_to_angular_coord_conversion_distant_flux(
       respectively.
     * Illumination: Directional illumination with a zenith angle
       :math:`\theta_i = 30.0°` and an azimuth angle
-      :math:`\phi_i \in [0.0, 30.0, 120.0, 210.0, 300.0]°`.
+      :math:`\varphi_i \in [0.0, 30.0, 120.0, 210.0, 300.0]°`.
     * Sensor: Distant flux measure covering a hemisphere (32 * 32 angular
       points, 1 sample per pixel).
 
@@ -491,15 +491,15 @@ def test_film_to_angular_coord_conversion_distant_flux(
     Expected behaviour
     ------------------
 
-    If :math:`\phi_i` is the illumination azimuth and :math:`\phi_v` is the
+    If :math:`\varphi_i` is the illumination azimuth and :math:`\varphi_v` is the
     viewing azimuth, we define the forward region of the hemisphere by:
 
-    .. math:: \phi_i + 90° \lt \phi_v \lt \phi_i + 270°
+    .. math:: \varphi_i + 90° \lt \varphi_v \lt \varphi_i + 270°
        :label: distant_flux_forward
 
     and correspondingly, the backward region, by:
 
-    .. math:: \phi_i + 270° \lt \phi_v \lt \phi_i + 90°
+    .. math:: \varphi_i + 270° \lt \varphi_v \lt \varphi_i + 90°
        :label: distant_flux_backward
 
     We then compute their mean value within the azimuth angle range where they
@@ -649,7 +649,7 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
       respectively.
     * Illumination: Directional illumination with a zenith angle
       :math:`\theta_i = 30.0°` and an azimuth angle
-      :math:`\phi_i \in [0.0, 30.0, 120.0, 210.0, 300.0]°`.
+      :math:`\varphi_i \in [0.0, 30.0, 120.0, 210.0, 300.0]°`.
     * Sensor: Distant hemispherical measure covering the hemisphere (32 * 32
       angular points, 1 sample per pixel).
 
@@ -657,15 +657,15 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
     Expected behaviour
     ------------------
 
-    If :math:`\phi_i` is the illumination azimuth and :math:`\phi_v` is the
+    If :math:`\varphi_i` is the illumination azimuth and :math:`\varphi_v` is the
     viewing azimuth, we define the forward region of the hemisphere by:
 
-    .. math:: \phi_i + 90° \lt \phi_v \lt \phi_i + 270°
+    .. math:: \varphi_i + 90° \lt \varphi_v \lt \varphi_i + 270°
        :label: hemispherical_distant_forward
 
     and correspondingly, the backward region, by:
 
-    .. math:: \phi_i + 270° \lt \phi_v \lt \phi_i + 90°
+    .. math:: \varphi_i + 270° \lt \varphi_v \lt \varphi_i + 90°
        :label: hemispherical_distant_backward
 
     We then compute their mean value within the azimuth angle range where they
