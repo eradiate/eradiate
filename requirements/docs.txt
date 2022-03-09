@@ -48,7 +48,7 @@ certifi==2021.10.8
     # via
     #   -c requirements/dev.txt
     #   requests
-cftime==1.5.2
+cftime==1.6.0
     # via
     #   -c requirements/dev.txt
     #   netcdf4
@@ -160,7 +160,7 @@ netcdf4==1.5.8
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-numpy==1.22.2
+numpy==1.22.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -173,7 +173,7 @@ numpy==1.22.2
     #   scipy
     #   seaborn
     #   xarray
-packaging==21.3
+packaging==20.9
     # via
     #   -c requirements/dev.txt
     #   astropy
@@ -378,7 +378,7 @@ urllib3==1.26.8
     # via
     #   -c requirements/dev.txt
     #   requests
-xarray==0.21.1
+xarray==2022.3.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
