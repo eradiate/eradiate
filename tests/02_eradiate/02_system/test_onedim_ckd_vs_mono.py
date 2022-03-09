@@ -119,8 +119,8 @@ def make_figure(
 @pytest.mark.slow
 def test_550(reflectance, artefact_dir):
     r"""
-    Results consistency between `mono_double` and `ckd_double` modes
-    ================================================================
+    Result consistency between ``mono_double`` and ``ckd_double`` modes
+    ===================================================================
 
     This test checks the results consistency between mono_double and ckd_double
     modes in the [549.5, 550.5] nm wavelength bin.
@@ -135,17 +135,17 @@ def test_550(reflectance, artefact_dir):
     * Surface: a square surface with a Lambertian BRDF with reflectance
       parameter in :math:`\rho \in [0.0, 0.5, 1.0]`.
     * Atmosphere: a molecular atmosphere derived from the AFGL (1986)
-      thermophysical properties `us_standard` model, with both scattering and
+      thermophysical properties ``us_standard`` model, with both scattering and
       absorption enabled.
     * Integrator: volumetric path tracer.
 
     Expected behaviour
     ------------------
 
-    The [545, 555] nm - integrated BRF results obtained with the `mono_double`
-    and `ckd_double` modes should agree within 5 %.
+    The [545, 555] nm - integrated BRF results obtained with the ``mono_double``
+    and ``ckd_double`` modes should agree within 5 %.
 
-    The `mono_double` BRF results are spectrally averaged according to the
+    The ``mono_double`` BRF results are spectrally averaged according to the
     following formula:
 
     .. math::
@@ -260,8 +260,8 @@ def test_550(reflectance, artefact_dir):
 @pytest.mark.slow
 def test_1050(reflectance, artefact_dir):
     r"""
-    Results consistency between `mono_double` and `ckd_double` modes
-    ================================================================
+    Result consistency between ``mono_double`` and ``ckd_double`` modes
+    ===================================================================
 
     This test checks the results consistency between mono_double and ckd_double
     modes in the [1049.5, 1050.5] nm wavelength bin.
@@ -276,7 +276,7 @@ def test_1050(reflectance, artefact_dir):
     * Surface: a square surface with a Lambertian BRDF with reflectance
       parameter in :math:`\rho \in [0.0, 0.5, 1.0]`.
     * Atmosphere: a molecular atmosphere derived from the AFGL (1986)
-      thermophysical properties `us_standard` model, with both scattering and
+      thermophysical properties ``us_standard`` model, with both scattering and
       absorption enabled.
     * Integrator: volumetric path tracer.
 
@@ -284,9 +284,9 @@ def test_1050(reflectance, artefact_dir):
     ------------------
 
     The [1049.5, 1050.5] nm - integrated BRF results obtained with the
-    `mono_double` and `ckd_double` modes should agree within 5 %.
+    ``mono_double`` and ``ckd_double`` modes should agree within 5 %.
 
-    The `mono_double` BRF results are spectrally averaged according to the
+    The ``mono_double`` BRF results are spectrally averaged according to the
     following formula:
 
     .. math::

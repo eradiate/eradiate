@@ -50,8 +50,8 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
 
     Theoretical solutions:
 
-    * `directional`: :math:`L_\mathrm{o} = \frac{\rho L_\mathrm{i}}{\pi}`
-    * `constant`: :math:`L_\mathrm{o} = \rho L_\mathrm{i}`
+    * ``directional``: :math:`L_\mathrm{o} = \frac{\rho L_\mathrm{i}}{\pi}`
+    * ``constant``: :math:`L_\mathrm{o} = \rho L_\mathrm{i}`
     """
 
     # Basic configuration

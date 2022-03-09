@@ -20,8 +20,8 @@ def test_film_to_angular_coord_conversion_multi_distant(
     mode_mono_double, illumination_azimuth, artefact_dir
 ):
     r"""
-    Film to angular coordinates conversion (`multi_distant`)
-    ========================================================
+    Film to angular coordinates conversion (``multi_distant``)
+    ==========================================================
 
     This test case asserts the correct conversion from film coordinates (x, y)
     to angular coordinates (theta, phi).
@@ -455,11 +455,11 @@ def test_film_to_angular_coord_conversion_distant_flux(
     mode_mono_double, illumination_azimuth, artefact_dir
 ):
     r"""
-    Film to angular coordinates conversion (`distant_flux`)
-    =======================================================
+    Film to angular coordinates conversion (``distant_flux``)
+    =========================================================
 
     This test case asserts the correct conversion from film coordinates (x, y)
-    to angular coordinates (theta, phi) with the `distant_flux` measure.
+    to angular coordinates (theta, phi) with the ``distant_flux`` measure.
 
     Since the mapping is only visible in post-processed results, this test
     requires the Experiment framework.
@@ -467,11 +467,11 @@ def test_film_to_angular_coord_conversion_distant_flux(
     We setup two experiments such that the first one includes a forward
     scattering scene and the second one a backward scattering scene.
 
-    This is achieved using a surface reflectance model (`RPV`) that provides a
-    parameter (`g`) to control the forward/backward scattering behaviour of the
+    This is achieved using a surface reflectance model (``RPV``) that provides a
+    parameter (``g``) to control the forward/backward scattering behaviour of the
     surface.
 
-    We set a `distant_flux` measure to compute the sector radiosity at infinite
+    We set a ``distant_flux`` measure to compute the sector radiosity at infinite
     distance in the hemisphere whose direction is the upward direction.
 
     Rationale
@@ -621,11 +621,11 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
     mode_mono_double, illumination_azimuth, artefact_dir
 ):
     r"""
-    Film to angular coordinates conversion (`hdistant`)
-    ===================================================
+    Film to angular coordinates conversion (``hdistant``)
+    =====================================================
 
     This test case asserts the correct conversion from film coordinates (x, y)
-    to angular coordinates (theta, phi) with the `hdistant` measure.
+    to angular coordinates (theta, phi) with the ``hdistant`` measure.
 
     Since the mapping is only visible in post-processed results, this test
     requires the Experiment framework.
@@ -633,11 +633,11 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
     We setup two experiments such that the first one includes a forward
     scattering scene and the second one a backward scattering scene.
 
-    This is achieved using a surface reflectance model (`RPV`) that provides a
-    parameter (`g`) to control the forward/backward scattering behaviour of the
+    This is achieved using a surface reflectance model (``RPV``) that provides a
+    parameter (``g``) to control the forward/backward scattering behaviour of the
     surface.
 
-    We set a `hemispherical_distant` measure to compute the BRF at infinite
+    We set a ``hemispherical_distant`` measure to compute the BRF at infinite
     distance in the hemisphere whose direction is the upward direction.
 
     Rationale
