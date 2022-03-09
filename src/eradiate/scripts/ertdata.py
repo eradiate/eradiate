@@ -59,7 +59,7 @@ def cli(log_level):
 )
 def make_registry(input_directory, output_file, rules, hash_algorithm):
     """
-    Recursively construct a file registry from a directory.
+    Recursively construct a file registry from the current working directory.
     """
     input_directory = Path(input_directory)
     console.print(f"Creating registry file from '{input_directory}'")

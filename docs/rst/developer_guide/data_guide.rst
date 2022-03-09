@@ -88,7 +88,7 @@ Each store requires a different protocol.
     the registry file are defined in the ``"registry_rules.yml"`` file. If, for
     some reason, you cannot use pre-commit, then you must be very careful and
     update the registry manually using the ``ertdata make-registry``
-    command-line tool.
+    command-line tool (it should be run in the data submodule).
 
 ``large_files_stable``
     The most complicated: avoid updating the files, just add new ones. When
