@@ -35,15 +35,11 @@ class DiscreteCanopy(Canopy):
     """
     Discrete canopy scene element [``discrete_canopy``].
 
-    An discrete canopy defined by one or several :class:`.CanopyElement`
+    A discrete canopy composed of one or several :class:`.CanopyElement`
     instances. The underlying implementation holds a list of
     :class:`.InstancedCanopyElement`, allowing for arbitrary cloning of each
     :class:`.CanopyElement`. The produced canopy can be padded with clones of
     itself using the :meth:`~.DiscreteCanopy.padded_copy` method.
-
-    .. admonition:: Tutorials
-
-       * Practical usage ⇒ :ref:`sphx_glr_examples_generated_tutorials_biosphere_01_discrete_canopy.py`
 
     .. admonition:: Class method constructors
 
@@ -52,6 +48,11 @@ class DiscreteCanopy(Canopy):
           homogeneous
           leaf_cloud_from_files
           padded
+
+    See Also
+    --------
+
+    * Tutorial: :doc:`/tutorials/02-canopy`
     """
 
     # --------------------------------------------------------------------------
