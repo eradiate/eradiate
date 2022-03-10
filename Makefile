@@ -57,13 +57,13 @@ pip-update: pip-lock pip-init
 # Lock conda dependencies
 conda-lock:
 	python3 requirements/make_conda_env.py -o requirements/environment.yml --quiet
-	conda-lock --mamba --file requirements/environment.yml \
+	conda-lock --kind explicit --mamba --file requirements/environment.yml \
 	    --filename-template "requirements/environment-{platform}.lock" \
 	    -p $(PLATFORM)
 
 conda-lock-all:
 	python3 requirements/make_conda_env.py -o requirements/environment.yml --quiet
-	conda-lock --mamba --file requirements/environment.yml \
+	conda-lock --kind explicit --mamba --file requirements/environment.yml \
 	    --filename-template "requirements/environment-{platform}.lock" \
 	    -p osx-64 -p linux-64
 
