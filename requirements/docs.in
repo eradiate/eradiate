@@ -2,6 +2,7 @@
 -c dev.txt
 autodocsumm
 mock
+nbsphinx
 sphinx-book-theme>=0.1.10
 sphinx>=3.1
 sphinxcontrib-bibtex>=2.0
@@ -9,4 +10,3 @@ sphinx-autobuild
 sphinx-click>=3.0.2
 sphinx-copybutton
 sphinx-design
-sphinx-gallery
