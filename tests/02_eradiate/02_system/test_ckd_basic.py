@@ -26,7 +26,7 @@ def test_ckd_basic(modes_all_ckd):
     * Sensor: Distant measure covering a plane (25 angular points,
       10^6 sample per pixel) and targeting (0, 0, 0).
     * Illumination: Directional illumination with a zenith angle
-      :math:`\theta = 0.0°` with black body irradiance spectrum.
+      :math:`\\theta = 0.0°` with black body irradiance spectrum.
     * Surface: a square surface with a Lambertian BRDF with 100 % reflectance.
     * Integrator: path tracer.
 
