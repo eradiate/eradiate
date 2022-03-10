@@ -6,7 +6,7 @@ Testing and test report
 Eradiate is shipped with a series of tests written with `pytest <https://docs.pytest.org/en/latest/>`_.
 Tests are grouped by their scope and folders are named to enforce a fixed order of execution for the tests.
 
-At the highest level, there is a separation of tests for mitsuba plugins which are maintained in the Eradiate codebase and tests for Eradiate code itself.
+At the highest level, there is a separation of tests for Mitsuba plugins which are maintained in the Eradiate codebase and tests for Eradiate code itself.
 The tests for Eradiate are then grouped by their complexity. First unit tests are executed, followed by system tests and finally regression tests.
 
 Running the tests
@@ -97,4 +97,4 @@ The ``artefact_dir`` parameter defines the output directory in which the results
 Test report
 -----------
 
-The Eradiate test report facilities have been moved to a separate repository, which can be found on `github <https://github.com/eradiate/eradiate-test-report>`_ .
+The Eradiate test report facilities have been moved to a separate repository, which can be found on `Github <https://github.com/eradiate/eradiate-test-report>`_ .
