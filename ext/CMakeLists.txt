@@ -1,1 +1,1 @@
-add_subdirectory(mitsuba2)
+add_subdirectory(mitsuba)
