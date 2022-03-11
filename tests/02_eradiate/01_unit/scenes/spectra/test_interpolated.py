@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -181,7 +182,7 @@ def test_interpolated_kernel_dict(modes_all_mono):
     )
 
     # Produced kernel dict is valid
-    assert spectrum.kernel_dict(ctx).load() is not None
+    assert isinstance(spectrum.kernel_dict(ctx=ctx).load(), mi.Texture)
 
     # Unit scaling is properly applied
     with ucc.override({"radiance": "W/m^2/sr/nm"}):

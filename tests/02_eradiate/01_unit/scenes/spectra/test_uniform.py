@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -48,7 +49,7 @@ def test_uniform(modes_all):
 
     # Produced kernel dict is valid
     ctx = KernelDictContext()
-    assert s.kernel_dict(ctx).load() is not None
+    assert isinstance(s.kernel_dict(ctx).load(), mi.Texture)
 
     # Unit scaling is properly applied
     with ucc.override({"radiance": "W/m^2/sr/nm"}):

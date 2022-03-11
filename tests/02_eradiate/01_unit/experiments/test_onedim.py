@@ -150,7 +150,7 @@ def test_onedim_experiment_real_life(mode_mono):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    assert exp.kernel_dict(ctx=ctx).load() is not None
+    assert isinstance(exp.kernel_dict(ctx=ctx).load(), mi.Scene)
 
     # -- Distant measures get no external medium
     assert "medium" not in exp.kernel_dict(ctx=ctx)["distant_measure"]

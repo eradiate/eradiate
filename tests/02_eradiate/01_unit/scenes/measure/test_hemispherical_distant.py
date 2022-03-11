@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 
 from eradiate import unit_registry as ureg
@@ -10,18 +11,18 @@ def test_hemispherical_distant(modes_all):
     # Test default constructor
     d = HemisphericalDistantMeasure()
     ctx = KernelDictContext()
-    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
+    assert isinstance(KernelDict.from_elements(d, ctx=ctx).load(), mi.Sensor)
 
     # Test target support
     # -- Target a point
     d = HemisphericalDistantMeasure(target=[0, 0, 0])
-    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
+    assert isinstance(KernelDict.from_elements(d, ctx=ctx).load(), mi.Sensor)
 
     # -- Target an axis-aligned rectangular patch
     d = HemisphericalDistantMeasure(
         target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
     )
-    assert KernelDict.from_elements(d, ctx=ctx).load() is not None
+    assert isinstance(KernelDict.from_elements(d, ctx=ctx).load(), mi.Sensor)
 
 
 def test_hemispherical_distant_viewing_angles(mode_mono):

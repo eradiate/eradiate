@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 
 import eradiate
@@ -26,4 +27,4 @@ def test_air_scattering_coefficient(modes_all_mono_ckd):
     assert np.allclose(value, expected)
 
     # The associated kernel dict is correctly formed and can be loaded
-    assert s.kernel_dict(ctx=ctx).load() is not None
+    assert isinstance(s.kernel_dict(ctx=ctx).load(), mi.Texture)
