@@ -4,8 +4,8 @@ import xarray as xr
 
 from eradiate.thermoprops.afgl_1986 import make_profile
 from eradiate.thermoprops.util import (
-    compute_column_number_density,
-    compute_number_density_at_surface,
+    column_number_density,
+    number_density_at_surface,
 )
 from eradiate.units import unit_registry as ureg
 
@@ -83,20 +83,17 @@ def test_make_profile_concentrations(mode_mono, model_id, levels):
     concentrations = {
         "H2O": ureg.Quantity(5e23, "m^-2"),
         "O3": ureg.Quantity(0.5, "dobson_unit"),
-        "CH4": ureg.Quantity(4e19, "m^-3"),
         "CO2": ureg.Quantity(400e-6, ""),
     }
     ds = make_profile(model_id=model_id, levels=levels, concentrations=concentrations)
 
-    column_amount_H2O = compute_column_number_density(ds=ds, species="H2O")
-    column_amount_O3 = compute_column_number_density(ds=ds, species="O3")
-    surface_amount_CH4 = compute_number_density_at_surface(ds=ds, species="CH4")
+    column_amount_H2O = column_number_density(ds=ds, species="H2O")
+    column_amount_O3 = column_number_density(ds=ds, species="O3")
     surface_amount_CO2 = ds.mr.sel(species="CO2").values[0]
 
     assert np.isclose(column_amount_H2O, concentrations["H2O"], rtol=1e-9)
     assert np.isclose(column_amount_O3, concentrations["O3"], rtol=1e-9)
     assert np.isclose(surface_amount_CO2, concentrations["CO2"], rtol=1e-9)
-    assert np.isclose(surface_amount_CH4, concentrations["CH4"], rtol=1e-9)
 
 
 @pytest.mark.parametrize(

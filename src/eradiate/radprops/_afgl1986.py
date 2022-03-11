@@ -20,9 +20,9 @@ from ..attrs import documented, parse_docs
 from ..ckd import Bindex
 from ..thermoprops import afgl_1986
 from ..thermoprops.util import (
-    compute_column_mass_density,
-    compute_column_number_density,
-    compute_volume_mixing_ratio_at_surface,
+    column_mass_density,
+    column_number_density,
+    volume_mixing_ratio_at_surface,
 )
 from ..units import to_quantity
 from ..units import unit_registry as ureg
@@ -108,11 +108,9 @@ class AFGL1986RadProfile(RadProfile):
             # This table maps species to the function used to compute
             # corresponding physical quantities used for concentration rescaling
             compute = {
-                "H2O": functools.partial(compute_column_mass_density, species="H2O"),
-                "CO2": functools.partial(
-                    compute_volume_mixing_ratio_at_surface, species="CO2"
-                ),
-                "O3": functools.partial(compute_column_number_density, species="O3"),
+                "H2O": functools.partial(column_mass_density, species="H2O"),
+                "CO2": functools.partial(volume_mixing_ratio_at_surface, species="CO2"),
+                "O3": functools.partial(column_number_density, species="O3"),
             }
 
             # Evaluate species concentrations

@@ -42,6 +42,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 ### Improvements and fixes
 
+* Add support for all missing AFGL 1986 reference atmospheres in CKD mode ({ghpr}`185`).
 * Fix incorrect phase function blending in multi-component atmospheres ({ghpr}`197`).
 * Fix incorrect volume data transform for spherical heterogeneous atmospheres ({ghpr}`199`).
 
