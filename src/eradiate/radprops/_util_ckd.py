@@ -9,6 +9,14 @@ PATHS = {
     "afgl_1986-us_standard-1nm-v3": "ckd/absorption/1nm/afgl_1986-us_standard-1nm-v3.nc",
     "afgl_1986-midlatitude_summer-10nm-v3": "ckd/absorption/10nm/afgl_1986-midlatitude_summer-10nm-v3.nc",
     "afgl_1986-midlatitude_summer-1nm-v3": "ckd/absorption/1nm/afgl_1986-midlatitude_summer-1nm-v3.nc",
+    "afgl_1986-midlatitude_winter-10nm-v3": "ckd/absorption/10nm/afgl_1986-midlatitude_winter-10nm-v3.nc",
+    "afgl_1986-midlatitude_winter-1nm-v3": "ckd/absorption/1nm/afgl_1986-midlatitude_winter-1nm-v3.nc",
+    "afgl_1986-subarctic_summer-10nm-v3": "ckd/absorption/10nm/afgl_1986-subarctic_summer-10nm-v3.nc",
+    "afgl_1986-subarctic_summer-1nm-v3": "ckd/absorption/1nm/afgl_1986-subarctic_summer-1nm-v3.nc",
+    "afgl_1986-subarctic_winter-10nm-v3": "ckd/absorption/10nm/afgl_1986-subarctic_winter-10nm-v3.nc",
+    "afgl_1986-subarctic_winter-1nm-v3": "ckd/absorption/1nm/afgl_1986-subarctic_winter-1nm-v3.nc",
+    "afgl_1986-tropical-10nm-v3": "ckd/absorption/10nm/afgl_1986-tropical-10nm-v3.nc",
+    "afgl_1986-tropical-1nm-v3": "ckd/absorption/1nm/afgl_1986-tropical-1nm-v3.nc",
 }
 
 

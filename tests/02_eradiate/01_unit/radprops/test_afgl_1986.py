@@ -121,19 +121,19 @@ def test_afgl_1986_rad_profile_has_scattering_false(
 @pytest.mark.parametrize(
     "model_id",
     [
+        "tropical",
+        "midlatitude_summer",
         "midlatitude_winter",
         "subarctic_summer",
         "subarctic_winter",
-        "tropical",
+        "us_standard",
     ],
 )
-def test_afgl_1986_rad_profile_model_id_ckd_not_implemented(mode_ckd, model_id):
+def test_afgl_1986_rad_profile_model_id(mode_ckd, model_id):
     """
-    Models other than 'us_standard' or 'midlatitude_summer' are not implemented
-    in ckd mode.
+    All models are supported in ckd mode.
     """
-    with pytest.raises(NotImplementedError):
-        AFGL1986RadProfile(thermoprops=dict(model_id=model_id))
+    AFGL1986RadProfile(thermoprops=dict(model_id=model_id))
 
 
 @pytest.mark.parametrize(
@@ -147,7 +147,7 @@ def test_afgl_1986_rad_profile_concentrations_ckd_not_implemented(mode_ckd, mole
     """
     with pytest.raises(NotImplementedError):
         AFGL1986RadProfile(
-            thermoprops=dict(concentrations={molecule: 1.0 * ureg.kg / ureg.m**2})
+            thermoprops=dict(concentrations={molecule: 0.0 * ureg.dimensionless})
         )
 
 

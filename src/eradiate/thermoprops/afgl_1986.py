@@ -8,10 +8,19 @@ import typing as t
 import pint
 import xarray as xr
 
-import eradiate
-
 from .util import compute_scaling_factors, interpolate, rescale_concentration
 from .. import data
+from .._mode import mode
+
+
+VALID_MODEL_IDS = [
+    "tropical",
+    "midlatitude_summer",
+    "midlatitude_winter",
+    "subarctic_summer",
+    "subarctic_winter",
+    "us_standard",
+]
 
 
 def make_profile(
@@ -93,31 +102,36 @@ def make_profile(
        interpolated on the regular altitude mesh with an altitude step of 1 km
        from 0 to 120 km.
 
-    All six models include the following 7 absorbing molecular species:
-    H2O, CO2, O3, N2O, CO, CH4 and O2.
+    All six models include the following 10 molecular species:
+    H2O, CO2, O3, N2O, CO, CH4, O2, NO, SO2 and NO2.
     """
-    if eradiate.mode().is_ckd:
-        supported_models = ["us_standard", "midlatitude_summer"]
-        if model_id not in supported_models:
-            raise NotImplementedError(
-                f"In ckd mode, only {' and '.join(supported_models)} models "
-                f"are supported."
+    if model_id not in VALID_MODEL_IDS:
+        raise ValueError(
+                f"model_id should be in {VALID_MODEL_IDS} (got '{value}')"
             )
-        species = set(concentrations.keys()) if concentrations else set()
-        unhandled = species - {"H2O", "CO2", "O3"}
+    species = set(concentrations.keys()) if concentrations else set()
+    unhandled = species - {"H2O", "CO2", "O3"}
 
-        if unhandled:
+    if unhandled:
+        if mode().is_ckd:
             raise NotImplementedError(
-                f"species '{unhandled}' cannot be rescaled in ckd mode"
+                f"molecules '{unhandled}' cannot be rescaled in ckd mode"
             )
 
     thermoprops = data.load_dataset(f"thermoprops/afgl_1986-{model_id}.nc")
 
     if levels is not None:
-        thermoprops = interpolate(ds=thermoprops, z_level=levels, conserve_columns=True)
+        thermoprops = interpolate(
+            ds=thermoprops,
+            z_level=levels,
+            conserve_columns=True,
+        )
 
     if concentrations is not None:
-        factors = compute_scaling_factors(ds=thermoprops, concentration=concentrations)
+        factors = compute_scaling_factors(
+            ds=thermoprops,
+            concentration=concentrations,
+        )
         thermoprops = rescale_concentration(ds=thermoprops, factors=factors)
 
     return thermoprops
