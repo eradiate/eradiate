@@ -1,3 +1,5 @@
+import os.path
+
 import click
 from rich.console import Console
 
@@ -20,7 +22,11 @@ def cli():
 
     console.rule("Path resolver")
     for path in eradiate.path_resolver:
-        console.print(f"• {path}")
+        cwd = os.path.abspath(os.path.curdir)
+        if str(path) == cwd:
+            console.print(f"• {path} \[current]")
+        else:
+            console.print(f"• {path}")
 
 
 if __name__ == "__main__":
