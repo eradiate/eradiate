@@ -73,6 +73,18 @@ def test_blend_bbox(mode_mono):
         np.array(phase._gridvolume_transform().matrix),
     )
 
+    # Nested BlendPhaseFunction objects must have the same bbox
+    for comp in phase.components:
+        if isinstance(comp, BlendPhaseFunction):
+            assert np.allclose(
+                [
+                    [1, 0, 0, -0.5],
+                    [0, 1, 0, -0.5],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1],
+                ],
+                np.array(comp._gridvolume_transform().matrix),
+            )
 
 def test_blend_kernel_dict(mode_mono):
     ctx = KernelDictContext()
