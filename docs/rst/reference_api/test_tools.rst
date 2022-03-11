@@ -11,6 +11,6 @@ Regression testing
 .. autosummary::
    :toctree: generated/autosummary/
 
-   RenderTest
+   RegressionTest
    RMSETest
    Chi2Test

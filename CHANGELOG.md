@@ -38,7 +38,8 @@
 
 ### Improvements and fixes
 
-* Account for spectral dependency of the King correction factor ({ghpr}`187`).  
+* Account for spectral dependency of the King correction factor ({ghpr}`187`). 
+* Improved robustness of regression testing framework ({ghpr}`188`).
 
 ### Documentation
 
