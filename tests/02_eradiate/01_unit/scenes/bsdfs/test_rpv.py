@@ -1,3 +1,5 @@
+import mitsuba as mi
+
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.bsdfs import RPVBSDF
 
@@ -22,5 +24,6 @@ def test_rpv(modes_all_double):
             "wavelengths": [300.0, 800.0],
             "values": [-0.23, 0.23],
         },
+        rho_c=0.2,
     )
-    assert rpv_bsdf.kernel_dict(ctx).load()
+    assert isinstance(rpv_bsdf.kernel_dict(ctx).load(), mi.BSDF)

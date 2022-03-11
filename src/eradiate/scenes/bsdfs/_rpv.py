@@ -108,18 +108,16 @@ class RPVBSDF(BSDF):
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         # Inherit docstring
-        result = KernelDict(
-            {
-                self.id: {
-                    "type": "rpv",
-                    "rho_0": onedict_value(self.rho_0.kernel_dict(ctx)),
-                    "k": onedict_value(self.k.kernel_dict(ctx)),
-                    "g": onedict_value(self.g.kernel_dict(ctx)),
-                }
+        result = {
+            self.id: {
+                "type": "rpv",
+                "rho_0": onedict_value(self.rho_0.kernel_dict(ctx)),
+                "k": onedict_value(self.k.kernel_dict(ctx)),
+                "g": onedict_value(self.g.kernel_dict(ctx)),
             }
-        )
+        }
 
         if self.rho_c is not None:
-            result.data["rho_c"] = onedict_value(self.rho_c.kernel_dict(ctx))
+            result[self.id]["rho_c"] = onedict_value(self.rho_c.kernel_dict(ctx))
 
-        return result
+        return KernelDict(result)
