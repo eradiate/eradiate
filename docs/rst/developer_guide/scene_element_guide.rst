@@ -1,11 +1,11 @@
-.. _sec-developer_guide-scene_element_guide:
+.. _sec-developer_guides-scene_element_guide:
 
 Writing a new scene element class
 =================================
 
 .. warning:: Please first read carefully the
-   :ref:`sec-developer_guide-conventions_practices` section. Writing scene
-   elements requires general knowledge of the attrs, Pint and Pinttrs libraries.
+   :ref:`sec-contributing` section. Writing scene elements requires general
+   knowledge of the attrs, Pint and Pinttrs libraries.
 
 Scene elements, deriving from the :class:`~eradiate.scenes.core.SceneElement`
 class, are the core of Eradiate's scene generation system. They provide an
@@ -43,7 +43,7 @@ Factory registration
 --------------------
 
 All interfaces derived from :class:`~eradiate.scenes.core.SceneElement` are
-associated a specialised factory (see :ref:`sec-developer_guide-factory_guide`).
+associated a specialised factory (see :ref:`sec-developer_guides-factory_guide`).
 New :class:`~eradiate.scenes.core.SceneElement` subclasses should be registered
 to the relevant factory so that Eradiate's dictionary-based object and
 initialisation system works properly.
@@ -63,14 +63,14 @@ initialisation system works properly.
 
    obj = spectrum_factory.convert({"type": "my_spectrum", "field": 1.0})
 
-As mentioned in the :ref:`sec-developer_guide-factory_guide`, factory
+As mentioned in the :ref:`sec-developer_guides-factory_guide`, factory
 registration occurs only upon class definition: a module defining a scene
 element *must* be imported for the defined class to be registered to a factory.
 
 Using factory converters
 ------------------------
 
-As mentioned in the :ref:`sec-developer_guide-factory_guide`, Eradiate's
+As mentioned in the :ref:`sec-developer_guides-factory_guide`, Eradiate's
 factories implement a :meth:`~.Factory.convert` class
 method which can turn a dictionary into a registered object—and if the method
 receives something else than a dictionary, it simply does nothing.

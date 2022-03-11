@@ -1,31 +1,13 @@
-.. _sec-developer_guide:
+.. _sec-developer_guides:
 
-Developer guide
-===============
+Developer guides
+================
+
+Hereafter is a collection of detailed guides for developers.
 
 .. toctree::
    :maxdepth: 1
 
-   conventions_practices
-   dependencies
-   testing
-   documentation
-   data_guide
    scene_element_guide
    factory_guide
    design_atmosphere
-   tips
-
-Eradiate's high-level components are written in Python 3. They rely on a kernel
-component which is a fork of the Mitsuba 2 rendering system, written in the
-C++17 programming language.
-
-Archived content
-----------------
-
-The following content is kept for archival purposes but is not maintained anymore.
-
-.. toctree::
-   :maxdepth: 1
-
-   archive/plugin_development
