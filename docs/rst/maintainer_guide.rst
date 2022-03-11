@@ -159,7 +159,7 @@ Each store requires a different protocol.
     not be registered and therefore it will not be accessible by the data store.
 
     If, for some reason, you cannot use pre-commit, then you must be very careful and
-    update the registry manually using the ``ertdata make-registry``
+    update the registry manually using the ``eradiate data make-registry``
     command-line tool (it should be run in the data submodule).
 
 ``large_files_stable``
@@ -168,7 +168,7 @@ Each store requires a different protocol.
     new file (*e.g.* ``sha256sum`` command-line tool) and update the registry
     file with this new entry. If you happen to have the full contents of the
     data store on your hard drive, you may also use the
-    ``ertdata make-registry`` command-line tool to update the registry
+    ``eradiate data make-registry`` command-line tool to update the registry
     automatically.
 
 ``large_files_unstable``

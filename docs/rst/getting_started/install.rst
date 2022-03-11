@@ -317,14 +317,14 @@ The compilation process can last for up to around half an hour on old machines.
 Verifying the installation
 --------------------------
 
-In a terminal, try and import Eradiate:
+In a terminal, try and invoke the :program:`eradiate` command-line interface:
 
 .. code:: bash
 
-   python -c "import eradiate"
+   eradiate show
 
-The command should succeed and not return anything. You can now run Eradiate.
-|smile|
+The command should print some information to the terminal. You are now ready to
+use Eradiate |smile|
 
 .. |smile| unicode:: U+1F642
 

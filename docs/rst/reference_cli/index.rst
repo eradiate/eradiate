@@ -1,11 +1,11 @@
 Command-line interface reference
 ================================
 
-.. click:: eradiate.scripts.ertdata:cli
-   :prog: ertdata
-   :nested: full
+This is the reference for Eradiate's command-line tools. It consists of a main
+entry point :program:`eradiate`, and its multiple subcommands documented
+hereafter. The implementation is located in the `eradiate.cli` module (not
+documented here).
 
-.. click:: eradiate.scripts.ertshow:cli
-   :prog: ertshow
+.. click:: eradiate.cli:main
+   :prog: eradiate
    :nested: full
-

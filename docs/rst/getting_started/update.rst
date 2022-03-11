@@ -81,12 +81,12 @@ Eradiate's data cache:
 
 .. code:: bash
 
-   ertdata update-registries
-   ertdata purge-cache --keep
+   eradiate data update-registries
+   eradiate data purge-cache --keep
 
 .. note::
    For a more aggressive cleanup, just run
 
    .. code:: bash
 
-      ertdata purge-cache
+      eradiate data purge-cache

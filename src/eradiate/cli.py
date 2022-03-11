@@ -1,5 +1,9 @@
+"""
+The Eradiate command-line interface, built with Click and Rich.
+"""
+
 import logging
-import os
+import os.path
 from pathlib import Path
 
 import click
@@ -8,10 +12,8 @@ from rich.logging import RichHandler
 from ruamel.yaml import YAML
 
 import eradiate
-import eradiate.data
 from eradiate.exceptions import DataError
 
-logger = logging.getLogger(__name__)
 console = Console()
 
 
@@ -23,7 +25,10 @@ console = Console()
     default="WARNING",
     help="Set log level (default: 'WARNING').",
 )
-def cli(log_level):
+def main(log_level):
+    """
+    Eradiate — A modern radiative transfer model for Earth observation.
+    """
     logging.basicConfig(
         level=log_level.upper(),
         format="%(message)s",
@@ -32,7 +37,36 @@ def cli(log_level):
     )
 
 
-@cli.command()
+@main.command()
+def show():
+    """
+    Display information useful for debugging.
+    """
+    console.rule("Version")
+    console.print(f"• eradiate {eradiate.__version__}")
+
+    console.rule("Configuration")
+    for var in [x.name for x in eradiate.config.__attrs_attrs__]:
+        console.print(f"• ERADIATE_{var.upper()}: {getattr(eradiate.config, var)}")
+
+    console.rule("Path resolver")
+    for path in eradiate.path_resolver:
+        cwd = os.path.abspath(os.path.curdir)
+        if str(path) == cwd:
+            console.print(f"• {path} \[current]")
+        else:
+            console.print(f"• {path}")
+
+
+@main.group()
+def data():
+    """
+    Manage data.
+    """
+    pass
+
+
+@data.command()
 @click.option(
     "--input-directory",
     "-i",
@@ -84,7 +118,7 @@ def make_registry(input_directory, output_file, rules, hash_algorithm):
     )
 
 
-@cli.command()
+@data.command()
 def update_registries():
     """
     Update local registries for online sources.
@@ -106,17 +140,20 @@ def update_registries():
             continue
 
 
-@cli.command()
+@data.command()
 @click.argument("files", nargs=-1)
 @click.option(
     "--from-file",
     "-f",
     default=None,
-    help="Optional path to a file list (YAML format).",
+    help="Optional path to a file list (YAML format). This option will "
+    "override the FILES argument.",
 )
 def fetch(files, from_file):
     """
-    Fetch files from the Eradiate data stores.
+    Fetch files from the Eradiate data store. FILES is an arbitrary number of
+    relative paths to files to be retrieved from the data store. If FILES is
+    unset,
     """
     if not files:
         if from_file is None:
@@ -136,7 +173,7 @@ def fetch(files, from_file):
             console.print(f"[green]✓[/] found \[{path}]")
 
 
-@cli.command()
+@data.command()
 @click.option("--keep", "-k", is_flag=True, help="Keep registered files.")
 def purge_cache(keep):
     """
@@ -165,7 +202,7 @@ def purge_cache(keep):
             continue
 
 
-@cli.command()
+@data.command()
 def info():
     """
     Display information about data store configuration.
@@ -194,4 +231,4 @@ def info():
 
 
 if __name__ == "__main__":
-    cli()
+    main()
