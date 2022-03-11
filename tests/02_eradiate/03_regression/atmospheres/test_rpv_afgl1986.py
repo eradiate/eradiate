@@ -67,7 +67,6 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
     reference_path = data_store.fetch(
         "tests/regression_test_references/rpv_afgl1986_brfpp_ref.nc"
     )
-    reference = xr.load_dataset(reference_path)
 
     archive_filename = (
         os.path.join(artefact_dir, f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986.nc")
@@ -77,7 +76,7 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
 
     test = Chi2Test(
         value=result,
-        reference=reference,
+        reference=reference_path,
         threshold=0.05,
         archive_filename=archive_filename,
     )

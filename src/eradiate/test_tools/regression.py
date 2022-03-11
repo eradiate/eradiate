@@ -1,5 +1,6 @@
-import os.path
+import os
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 import attr
 import matplotlib.pyplot as plt
@@ -7,17 +8,30 @@ import mitsuba as mi
 import numpy as np
 import xarray as xr
 
+from ..attrs import documented, parse_docs
 from ..typing import PathLike
 
 
-def regression_test_plots(data: xr.Dataset, filename: PathLike, metric: tuple) -> None:
+def regression_test_plots(
+    ref: np.typing.ArrayLike,
+    result: np.typing.ArrayLike,
+    vza: np.typing.ArrayLike,
+    filename: PathLike,
+    metric: tuple,
+) -> None:
     """
     Create regression test report plots.
 
     Parameters
     ----------
-    data : xarray.Dataset
-        Dataset containing the reference and test result
+    ref : array-like
+        BRF values for the reference data
+
+    result : array-like
+        BRF values for the simulation result
+
+    vza : array-like
+        VZA values for plotting
 
     filename : path-like
         Path to the output file for the plot
@@ -27,17 +41,14 @@ def regression_test_plots(data: xr.Dataset, filename: PathLike, metric: tuple) -
     """
     fig, axes = plt.subplots(2, 2, figsize=(8, 6))
 
-    ref = np.squeeze(data.reference)
-    result = np.squeeze(data.brf)
-    vza = data.vza
     axes[0][0].plot(vza, ref, label="reference")
     axes[0][0].plot(vza, result, label="result")
     axes[0][0].set_title("Reference and test result")
     handles, labels = axes[0][0].get_legend_handles_labels()
 
     axes[1][0].plot(vza, result - ref)
-    axes[1][0].set_xlabel("VZA in degrees")
-    axes[1][0].set_ylabel("BRFpp")
+    axes[1][0].set_xlabel("VZA [deg]")
+    axes[1][0].set_ylabel("BRF in principal plane [-]")
     axes[1][0].set_title("Absolute difference")
 
     axes[1][1].plot(vza, (result - ref) / ref)
@@ -54,50 +65,191 @@ def regression_test_plots(data: xr.Dataset, filename: PathLike, metric: tuple) -
     plt.close()
 
 
+def reference_converter(value):
+    """
+    A converter for handling the reference data attribute.
+
+    * if ``value`` is a string or path like object, it attempts to load
+      a dataset from that location and returns ``None`` if that fails.
+    * if ``value`` is a xarray dataset, it is returned directly.
+
+    """
+
+    if isinstance(value, (str, os.PathLike)):
+        if not os.path.isfile(value):
+            return None
+        return xr.load_dataset(value)
+    elif isinstance(value, xr.Dataset):
+        return value
+    else:
+        raise ValueError(
+            f"Reference must be provided as a Dataset or a file path. Got {type(value).__name__}"
+        )
+
+
+@parse_docs
 @attr.s
-class RenderTest(ABC):
+class RegressionTest(ABC):
     """
     Common interface for tests based on the comparison of a result array against
     reference values.
     """
 
-    value: xr.DataArray = attr.ib()
-    reference: xr.DataArray = attr.ib()
-    threshold: float = attr.ib(default=0.05)
-    archive_filename: PathLike = attr.ib(default=None)
+    METRIC_NAME = None
+    value: xr.Dataset = documented(
+        attr.ib(validator=attr.validators.instance_of(xr.Dataset)),
+        doc="Simluation result. Must be specified as a dataset.",
+        type=":class:`xarray.Dataset`",
+        init_type=":class:`xarray.Dataset`",
+    )
+    reference: xr.Dataset = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(reference_converter),
+            validator=attr.validators.optional(attr.validators.instance_of(xr.Dataset)),
+        ),
+        doc="Reference result. Can be specified as a dataset or a path to a file which can be loaded into a dataset.",
+        type=":class:`xarray.Dataset`",
+        init_type=":class:`xarray.Dataset` or path-like, optional",
+        default="None",
+    )
+    threshold: float = documented(
+        attr.ib(kw_only=True),
+        doc="Threshold for test evaluation",
+        type="float",
+        init_type="float",
+    )
+    archive_filename: PathLike = documented(
+        attr.ib(kw_only=True, converter=Path),
+        doc="File path and name for output artifact storage. Relative paths will be interpreted with respect to the"
+        "current working directory.",
+        type=":class:`pathlib.Path`",
+        init_type="path-like",
+    )
 
-    @abstractmethod
     def run(self) -> bool:
         """
-        Execute the testing criterion and potentially create archive files.
+        This method controls the execution steps of the regression test:
 
-        Depending on the specialised implementation, a metric will be computed
-        from `value` and `reference` and compared to `threshold`.
-
-        If `archive_filename` is set, a :class:`xarray.Dataset` and a summary
-        plot will be created. Otherwise, file creation will be omitted.
+        - handle missing reference data
+        - catch errors during text evaluation
+        - create the appropriate plots and data archives
 
         Returns
         -------
         bool
             Result of the test criterion comparison.
         """
+        fname, ext = os.path.splitext(self.archive_filename)
+
+        # if no valid reference is found, store the results as new ref
+        # and return a failed test
+        if not self.reference:
+            print("No reference data was found! Storing test results as new reference.")
+            self._archive(self.value, os.path.abspath(fname + "-ref" + ext))
+            self._plot(reference_only=True, metric_value=None)
+            return False
+        else:
+            try:
+                passed, value = self._evaluate()
+            except Exception as e:
+                print("An exception occurred during test execution!")
+                self._plot(reference_only=False, metric_value=0.0)
+                raise e
+
+            # handle regular test execution
+            fname_result = os.path.abspath(fname + "-result" + ext)
+            self._archive(self.value, fname_result)
+
+            fname_reference = os.path.abspath(fname + "-ref" + ext)
+            self._archive(self.reference, fname_reference)
+
+            # create plot
+            self._plot(reference_only=False, metric_value=value)
+
+            return passed
+
+    @abstractmethod
+    def _evaluate(self) -> float:
+        """
+        Evaluate the test results and perform a comparison to the reference
+        based on the criterion defined in the specialized class.
+
+        Returns
+        -------
+
+        float
+            The value of the test metric
+        """
         pass
 
+    def _archive(self, dataset, fname_output):
+        """
+        Create an archive file for test result and reference storage
+        """
+        os.makedirs(os.path.dirname(fname_output), exist_ok=True)
+        print(f"Storing dataset in {fname_output}")
+        dataset.to_netcdf(fname_output)
 
+    def _plot(self, metric_value, reference_only):
+        """
+        Create a plot to visualize the results of the test.
+        If the ``reference only`` parameter is set, create only a simple plot
+        visualizing the new reference data. Otherwise, create the more complex
+        comparsion plots for the regression test.
+
+        Parameters
+        ----------
+
+        metric_value : float
+            The numerical value of the test metric
+
+        reference_only : bool
+            Create only a simple visualisation of the computation data
+        """
+        filename = "".join([os.path.splitext(self.archive_filename)[0], ".png"])
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        print(f"Saving plot in {filename}")
+        if reference_only:
+            plt.figure(figsize=(8, 6))
+            plt.plot(np.squeeze(self.value.vza), np.squeeze(self.value.brf))
+            plt.xlabel("VZA [deg]")
+            plt.ylabel("BRF in principal plane [-]")
+            plt.title("Simulation result, can be used as new reference")
+            plt.tight_layout()
+            plt.savefig(filename)
+            plt.close()
+
+        else:
+            print(f"Saving plot in {filename}.")
+            if self.METRIC_NAME is None:
+                raise TypeError(f"Unsupported test type {type(self).__name__}")
+            regression_test_plots(
+                np.squeeze(self.reference.brf.values),
+                np.squeeze(self.value.brf.values),
+                np.squeeze(self.value.vza.values),
+                filename,
+                (self.METRIC_NAME, metric_value),
+            )
+
+
+@parse_docs
 @attr.s
-class RMSETest(RenderTest):
+class RMSETest(RegressionTest):
     """
     This class implements a simple test based on the root mean squared
     error (RMSE) of a result array with respect to the reference data.
+
+    The test will pass if the computed root mean squared deviation between
+    the result and reference is smaller or equal to the given threshold.
     """
 
-    def run(self) -> bool:
-        # Inherit docstring
+    METRIC_NAME = "rmse"
 
+    def _evaluate(self) -> tuple:
         value_np = self.value.brf.values
         ref_np = self.reference.brf.values
-        if np.shape(value_np) != np.shape(self.reference):
+        if np.shape(value_np) != np.shape(ref_np):
             raise ValueError(
                 f"Result and reference do not have the same shape!\n"
                 f"Got: {np.shape(value_np)}, {np.shape(ref_np)}"
@@ -107,23 +259,12 @@ class RMSETest(RenderTest):
         ref_flat = np.array(ref_np).flatten()
 
         rmse = np.linalg.norm(result_flat - ref_flat) / np.sqrt(len(ref_flat))
-
-        if self.archive_filename is not None:
-            archive_dataset = self.reference.rename({"brf": "reference"})
-            archive_dataset = archive_dataset.merge(self.value)
-            archive_dirname = os.path.dirname(self.archive_filename)
-            os.makedirs(archive_dirname, exist_ok=True)
-            archive_dataset.to_netcdf(self.archive_filename)
-
-            filename = "".join([self.archive_filename.splitext()[0], ".png"])
-            print(f"Saving plots to {filename}")
-            regression_test_plots(archive_dataset, filename, ("rmse", rmse))
-
-        return rmse <= self.threshold
+        return rmse <= self.threshold, rmse
 
 
+@parse_docs
 @attr.s
-class Chi2Test(RenderTest):
+class Chi2Test(RegressionTest):
     """
     This class implements a statistical test for the regression testing
     campaign, based on Pearson's Chi-squared test.
@@ -131,16 +272,17 @@ class Chi2Test(RenderTest):
 
     It determines the probability for the reference and the test result
     following the same distribution.
+
+    This test will pass if the computed p-value is strictly larger than the given threshold.
     """
 
     # The algorithm is adapted from Mitsuba's testing framework.
 
-    def run(self) -> bool:
-        # Inherit docstring
+    METRIC_NAME = "p-value"
 
-        from mitsuba.python.math import rlgamma
-
+    def _evaluate(self) -> tuple:
         ref_np = self.reference.brf.values
+
         result_np = self.value.brf.values
         histo_bins = np.linspace(ref_np.min(), ref_np.max(), 20)
         histo_ref = np.histogram(ref_np, histo_bins)[0]
@@ -153,25 +295,11 @@ class Chi2Test(RenderTest):
             *sorted(zip(histo_ref, histo_res), key=lambda x: x[0])
         )
 
+        from mitsuba.python.math import rlgamma
+
         chi2val, dof, pooled_in, pooled_out = mi.math.chi2(
             histo_res_sorted, histo_ref_sorted, 5
         )
-
         p_value = 1.0 - rlgamma(dof / 2.0, chi2val / 2.0)
 
-        if self.archive_filename is not None:
-            archive_dataset = self.reference.rename({"brf": "reference"})
-            archive_dataset = archive_dataset.merge(self.value, compat="override")
-            archive_dirname = os.path.dirname(self.archive_filename)
-            os.makedirs(archive_dirname, exist_ok=True)
-            archive_dataset.to_netcdf(self.archive_filename)
-
-            filename = "".join([os.path.splitext(self.archive_filename)[0], ".png"])
-            print(f"Saving plots to {filename}")
-            regression_test_plots(archive_dataset, filename, ("p-value", p_value))
-
-        if p_value < self.threshold:
-            print(f"Failed the chi-squared test with p-value: {p_value}.")
-            return False
-
-        return True
+        return p_value > self.threshold, p_value
