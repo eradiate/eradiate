@@ -28,7 +28,7 @@ stores is referenced with an identifier:
     goes by default, *i.e.* when it is small enough to fit there. The
     ``small_files`` data store is accessed offline in a development setup,
     *i.e.* when the Eradiate repository and its submodules are cloned locally,
-    or remotely when Eradiate is installed is user mode. This data store holds
+    or remotely when Eradiate is installed in user mode. This data store holds
     a *registry* of files which it uses for integrity checks when it is accessed
     online. Only files in the registry can be served by this data store,
     regardless if it is accessed online or offline: files of the eradiate-data
@@ -83,10 +83,60 @@ Modifying the data
 Each store requires a different protocol.
 
 ``small_files``
-    Install `pre-commit <https://pre-commit.com/>`_ and activate the hooks, this
-    will update the registry automatically upon commit. The rules used to create
-    the registry file are defined in the ``"registry_rules.yml"`` file. If, for
-    some reason, you cannot use pre-commit, then you must be very careful and
+    Install `pre-commit <https://pre-commit.com/>`_ and install the git hook
+    scripts:
+    
+    .. code:: bash
+
+       cd $ERADIATE_SOURCE_DIR/resources/data
+       pre-commit install
+    
+    Now add some data and commit your changes:
+    
+    .. code:: bash
+       
+       git checkout -b my_branch
+       git add some_data.nc
+       git commit -m "Added some data"
+    
+    The output should look something like:
+
+    .. code:: bash
+
+       Update registry..........................................................Failed
+       - hook id: update-registry
+       - files were modified by this hook
+
+       Creating registry file from '.'
+       Using rules in 'registry_rules.yml'
+       Writing registry file to 'registry.txt'
+       100% 181/181 [00:00<00:00, 100859.44it/s]
+
+    The hook script failed because we changed the data and the changes were not commited.
+    This is the expected behaviour.
+    The hook script updated the registry file with the sha256 sum of the data file we added.
+    Now add the changes to the registry file and commit again:
+
+    .. code:: bash
+       
+       git add registry.txt
+       git commit -m "Added some data"
+
+    This time, the output should look something like:
+
+    .. code::
+
+       Update registry..........................................................Passed
+       [master 0b9c760] Added some data
+       2 files changed, 2 insertions(+)
+       create mode 100644 spectra/some_data.nc
+
+    The rules used to create the registry file are defined in the
+    ``"registry_rules.yml"`` file.
+    Be aware that if you add a data file that is not included by these rules, it will
+    not be registered and therefore it will not be accessible by the data store.
+
+    If, for some reason, you cannot use pre-commit, then you must be very careful and
     update the registry manually using the ``ertdata make-registry``
     command-line tool (it should be run in the data submodule).
 
