@@ -14,8 +14,9 @@ import xarray as xr
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular_atmosphere import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
-from ..core import KernelDict
+from ..core import BoundingBox, KernelDict
 from ..phase import BlendPhaseFunction
+from ..shapes import CuboidShape, SphereShape
 from ..._util import onedict_value
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
@@ -363,10 +364,25 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 sigma_ss.append(radprops.sigma_t * radprops.albedo)
 
             # Construct a blended phase function based on those weighting values
+            shape = self.eval_shape(ctx)
+            if isinstance(shape, CuboidShape):
+                shape_min = shape.center - shape.edges * 0.5
+                shape_min[2] = self.bottom
+                shape_max = shape.center + shape.edges * 0.5
+            elif isinstance(shape, SphereShape):
+                length_units = ucc.get("length")
+                shape_min = [0, 0, 0] * length_units
+                shape_max = [1, 1, shape.radius.m_as(length_units)] * length_units
+            else:
+                raise RuntimeError(
+                    f"Unsupported atmosphere geometry shape '{type(shape).__name__}'"
+                )
+
             phase = BlendPhaseFunction(
                 cache_dir=self.cache_dir,
                 components=[component.phase for component in components],
                 weights=sigma_ss,
+                bbox=BoundingBox(min=shape_min, max=shape_max),
             )
 
             return phase.kernel_dict(ctx)

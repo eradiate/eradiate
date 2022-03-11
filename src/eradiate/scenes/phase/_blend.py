@@ -189,6 +189,7 @@ class BlendPhaseFunction(PhaseFunction):
                     components=self.components[1:],
                     weights=marginal_weights,
                     cache_dir=self.cache_dir,
+                    bbox=self.bbox
                 )
                 .kernel_dict(ctx)
                 .data
