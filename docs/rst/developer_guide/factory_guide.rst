@@ -1,4 +1,4 @@
-.. _sec-developer_guide-factory_guide:
+.. _sec-developer_guides-factory_guide:
 
 Factory guide
 =============
@@ -88,6 +88,6 @@ factory, please make sure you:
 * add your new factory instance to the ``docs/generate_rst_api.py`` script
   (``FACTORIES`` variables);
 * update the special API RST files (see also
-  :ref:`sec-developer_guide-documentation-api-build`);
+  :ref:`sec-contributing-documentation-api-build`);
 * add your new factory to the list of instances in the
   :mod:`eradiate._factory` documentation (``docs/rst/reference/factory.rst``).

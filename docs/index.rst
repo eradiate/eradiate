@@ -31,8 +31,8 @@ Where Should I Go?
 
       Learn how to use Eradiate's applications and API.
 
-   .. grid-item-card:: :octicon:`terminal` Developer guide
-      :link: sec-developer_guide
+   .. grid-item-card:: :octicon:`terminal` Contributor's guide
+      :link: sec-contributing
       :link-type: ref
 
       Learn how to work with Eradiate's source code and modify it.
@@ -62,7 +62,7 @@ work.
    :maxdepth: 3
    :hidden:
    :titlesonly:
-   :caption: For users
+   :caption: Users
 
    rst/getting_started/index
    rst/user_guide/index
@@ -77,13 +77,16 @@ work.
    rst/reference_api/index
    rst/reference_plugins/index
    rst/reference_cli/index
+   rst/changelog
 
 .. toctree::
    :maxdepth: 3
    :hidden:
    :titlesonly:
-   :caption: For developers/contributors
+   :caption: Developers/contributors
 
+   rst/contributing
+   rst/maintainer_guide
    rst/developer_guide/index
 
 .. toctree::
