@@ -10,6 +10,7 @@ import attr
 import numpy as np
 import pint
 import xarray as xr
+import pinttr
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ..core import KernelDict
@@ -184,7 +185,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         cls,
         model: str = "us_standard",
         levels: t.Optional[pint.Quantity] = None,
-        concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
+        concentrations: t.Optional[t.Dict[str, t.Union[str, pint.Quantity]]] = None,
         **kwargs: t.MutableMapping[str],
     ) -> MolecularAtmosphere:
         """
@@ -202,6 +203,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
         concentrations : dict
             Molecules concentrations as a ``{str: quantity}`` mapping.
+            This dictionary is interpreted by :func:`pinttrs.util.ensure_units`,
+            which allows for passing units as strings.
 
         **kwargs
             Keyword arguments passed to the :class:`.MolecularAtmosphere`
@@ -273,7 +276,10 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             ds = interpolate(ds=ds, z_level=levels, conserve_columns=True)
 
         if concentrations is not None:
-            factors = compute_scaling_factors(ds=ds, concentration=concentrations)
+            factors = compute_scaling_factors(
+                ds=ds,
+                concentration=pinttr.interpret_units(concentrations, ureg=ureg),
+            )
             ds = rescale_concentration(ds=ds, factors=factors)
 
         return cls(thermoprops=ds, **kwargs)
