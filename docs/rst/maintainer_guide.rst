@@ -3,23 +3,6 @@
 Maintainer guide
 ================
 
-.. _sec-maintainer_guide-release:
-
-Tagging a commit for release
-----------------------------
-
-Eradiate picks up its version number using the `setuptools-scm <https://github.com/pypa/setuptools_scm>`_
-package. Under the hood, it uses Git tags and the ``git describe`` command,
-which only picks up annotated tags. To make sure that the tags will be
-correctly picked up,
-`make sure that they are annotated <https://stackoverflow.com/questions/4154485/git-describe-ignores-a-tag>`_
-using
-
-.. code:: bash
-
-   git tag -a <your_tag_name>
-
-
 .. _sec-maintainer_guide-data:
 
 Managing data
@@ -314,3 +297,24 @@ to update the lock file.
 
    This command skips the Setuptools and pip-compile update which could disrupt
    your Conda environment.
+
+.. _sec-maintainer_guide-release:
+
+Preparing a  release
+--------------------
+
+Tagging a commit for release
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Eradiate picks up its version number using the `setuptools-scm <https://github.com/pypa/setuptools_scm>`_
+package. Under the hood, it uses Git tags and the ``git describe`` command,
+which only picks up annotated tags. To make sure that the tags will be
+correctly picked up,
+`make sure that they are annotated <https://stackoverflow.com/questions/4154485/git-describe-ignores-a-tag>`_
+using
+
+.. code:: bash
+
+   git tag -a <your_tag_name> -m "<your_message>"
+
+Note that the message may be an empty string.

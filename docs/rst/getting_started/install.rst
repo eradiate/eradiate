@@ -3,10 +3,28 @@
 Installation guide
 ==================
 
+.. admonition:: Important
+   :class: warning
+
+   The Mitsuba renderer, developed by the
+   `Realistic Graphics Lab <https://rgl.epfl.ch>`_ and used by Eradiate as its
+   radiometric kernel, is undergoing heavy refactoring. This upcoming version
+   contains updates which solve critical issues we've had in the past.
+
+   This new version of the Mitsuba 3 component is currently under submission for
+   publication and we can currently not release it.
+   **This situation is temporary.**
+
+   Consequently, we are currently restricting kernel code access to users who
+   join our Preview team on GitHub. To be added to the team, please send an
+   email to news@eradiate.eu with your GitHub username.
+
 This guide covers all steps necessary to get Eradiate running on your machine.
 
-.. warning:: Eradiate currently requires a development setup, even for end-
-   users. This has a few consequences which we hope to overcome in the future:
+.. warning::
+
+   Eradiate currently requires a development setup, even for end-users. This has
+   a few consequences which we hope to overcome in the future:
 
    * installing and running Eradiate requires to use the Conda package and
      environment manager;
@@ -16,6 +34,7 @@ This guide covers all steps necessary to get Eradiate running on your machine.
      specific requirements on package versions.
 
 .. note::
+
    If you are interested in running Eradiate with Docker, see the
    :ref:`dedicated page <sec-getting_started-docker>`.
 
@@ -32,7 +51,7 @@ machine meets the requirements listed below.
    git,       2.18+
    cmake,     3.19+
    ninja,     1.10+
-   clang,     9+
+   clang,     11+
 
 .. dropdown:: Tested configuration
    :color: light
@@ -141,16 +160,46 @@ Cloning the repository
    referred to using
    `Git submodules <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_.
 
-To get the code, clone the repository including its submodules with the
-following command:
+.. tab-set::
 
-.. code:: bash
+   .. tab-item:: Lightweight (users)
 
-   git clone --recursive https://github.com/eradiate/eradiate
+      This method saves time and bandwidth and is recommended for users.
+      First, clone the Eradiate repository:
 
-This will clone the Eradiate repository, as well as all its dependencies. This
-recursive cloning procedure can take up to a few minutes depending on your
-Internet connection.
+      .. code:: bash
+
+         git clone --recursive https://github.com/eradiate/eradiate
+
+      Then, enter the clone and list available release tags:
+
+      .. code:: bash
+
+         cd eradiate
+         git tag -l "v*"
+
+      Tags with a ``-preview`` suffix use the preview Mitsuba code, while others
+      use the Mitsuba repository directly. Checkout the tag you are interested
+      in (*e.g.* ``v0.22.1-preview``), then update and initialise all
+      submodules:
+
+      .. code:: bash
+
+         git checkout v0.22.1-preview
+         git submodule update --init --recursive
+
+   .. tab-item:: Recursive (developers)
+
+      To get the code, clone the repository including its submodules with the
+      following command:
+
+      .. code:: bash
+
+         git clone --recursive https://github.com/eradiate/eradiate
+
+      This will clone the Eradiate repository, as well as all its dependencies.
+      This recursive cloning procedure can take up to a few minutes depending on
+      your Internet connection.
 
 .. _sec-getting_started-install-setup_conda:
 
