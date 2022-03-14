@@ -34,7 +34,6 @@ dependencies:
   - pytest-xdist
   # dev
   - black
-  - bump2version
   - conda-lock>=0.12
   - coverage
   - ipython
@@ -49,6 +48,7 @@ dependencies:
   # docs
   - autodocsumm
   - mock
+  - myst-parser
   - nbsphinx
   - sphinx-book-theme>=0.1.10
   - sphinx>=3.1
