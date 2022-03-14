@@ -1,20 +1,17 @@
 Eradiate Documentation
 ======================
 
-*A New-generation Radiative Transfer Model for the Earth Observation Community*
-
-Eradiate is a radiative transfer simulation software package written in Python
-and C++17. It relies on a computational kernel based on the
+Eradiate is a modern radiative transfer simulation software package written in
+Python and C++17. It relies on a computational kernel based on the
 `Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_ rendering system
 :cite:`Nimier-David2019MitsubaRetargetableForward`.
 
-Eradiate uses Monte Carlo ray tracing integration methods to compute radiative
-transfer in scenes consisting of an arbitrary 3D geometry illuminated by an
-arbitrary number of light sources, possibly accounting for polarisation.
+**Date**: |today| **Version**: |version|
 
-
-Where Should I Go?
-------------------
+**Useful links**:
+`Source repository <https://github.com/eradiate/eradiate>`_ |
+`Issues & ideas <https://github.com/eradiate/eradiate/issues>`_ |
+`Q&A support <https://github.com/eradiate/eradiate/discussions>`_
 
 .. grid:: 1 2 auto auto
    :gutter: 3
@@ -25,38 +22,23 @@ Where Should I Go?
 
       Learn about Eradiate, how to get it and how to compile it.
 
+   .. grid-item-card:: :octicon:`terminal` Tutorials
+      :link: sec-tutorials
+      :link-type: ref
+
+      A practical introduction to Eradiate.
+
    .. grid-item-card:: :octicon:`mortar-board` User guide
       :link: sec-user_guide
       :link-type: ref
 
-      Learn how to use Eradiate's applications and API.
-
-   .. grid-item-card:: :octicon:`terminal` Contributor's guide
-      :link: sec-contributing
-      :link-type: ref
-
-      Learn how to work with Eradiate's source code and modify it.
+      Learn how to use Eradiate.
 
    .. grid-item-card:: :octicon:`file-code` Reference
       :link: sec-reference_api
       :link-type: ref
 
-      The complete API reference.
-
-About
------
-
-Eradiate's development is funded by a European Space Agency project funded by
-the European Commission's Copernicus programme. The design phase was funded by
-the MetEOC-3 project.
-
-Eradiate's core development team consists of Yves Govaerts, Vincent Leroy,
-Yvan Nollet, Sebastian Schunke and Nicolas Misk.
-
-Eradiate uses as its computational kernel a modified copy of the
-`Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_ renderer.
-The Eradiate team acknowledges all Mitsuba 2 contributors for their exceptional
-work.
+      The complete reference.
 
 .. toctree::
    :maxdepth: 3

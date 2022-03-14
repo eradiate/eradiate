@@ -5,6 +5,7 @@ Getting started
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    install
    update
@@ -13,7 +14,7 @@ Getting started
 What is Eradiate?
 -----------------
 
-Eradiate is a new-generation radiative transfer model for Earth observation
+Eradiate is a modern radiative transfer model for Earth observation
 applications. It primarily targets calibration/validation applications and
 focuses on delivering highly accurate results.
 
@@ -21,8 +22,8 @@ Eradiate is built around a radiometric kernel based on the Mitsuba 2 rendering
 system. It provides abstractions to conveniently build scenes, manage kernel
 runs and collect results.
 
-What can I do with Eradiate
----------------------------
+Features: What can I do with Eradiate?
+--------------------------------------
 
 Perform monochromatic and band simulations.
     Eradiate can simulate radiative transfer for a single wavelength or a
@@ -30,11 +31,17 @@ Perform monochromatic and band simulations.
     and 2400 nm.
 
 Perform simulations on one-dimensional scenes.
-    Eradiate supports simulations on 3D scenes carefully designed to produce
-    results similar to what we would get with 1D geometries. These scenes
-    consist of a flat surface underneath an atmosphere including gases and an
-    arbitrary number of aerosol layers.
+    Eradiate can simulate top-of-atmosphere radiance and reflectance on 1D
+    scenes with plane parallel geometry.
+    These scenes consist of a smooth surface underneath an atmosphere including
+    gases and an arbitrary number of aerosol layers. Under the hood, Eradiate
+    performs these simulations using 3D scenes carefully designed to produce
+    results similar to what one would get with 1D geometries.
+
+    Eradiate has experimental support for spherical shell geometries (validation
+    is in progress).
 
 Perform simulations on three-dimensional scenes.
-    Eradiate supports simulations on 3D scenes consisting of a vegetated ground
-    patch with or without atmosphere above it.
+    Eradiate can simulation top-of-canopy/atmosphere radiance on 3D scenes
+    consisting of a vegetated ground patch with or without atmosphere above it
+    (plane parallel geometry only).

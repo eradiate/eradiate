@@ -49,11 +49,12 @@ machine meets the requirements listed below.
             :widths: 10, 10
 
             git,       2.25.1
-            cmake,     3.22.1
+            cmake,     3.22.2
             ninja,     1.10.0
-            clang,     9.0.1-12
-            libc++,    9
-            libc++abi, 9
+            clang,     11.0.0-2
+            libc++,    11
+            libc++abi, 11
+            python,    3.8.12 (miniconda3)
 
       .. tab-item:: macOS
          :sync: macos
@@ -83,7 +84,7 @@ machine meets the requirements listed below.
       .. code:: bash
 
          # Install build tools, compiler and libc++
-         sudo apt install -y git cmake ninja-build clang-9 libc++-9-dev libc++abi-9-dev
+         sudo apt install -y git cmake ninja-build clang-11 libc++-11-dev libc++abi-11-dev
 
          # Install libraries for image I/O
          sudo apt install -y libpng-dev zlib1g-dev libjpeg-dev
@@ -97,7 +98,7 @@ machine meets the requirements listed below.
 
       .. note:: We currently recommend compiling the C++ code with Clang based on
          `upstream advice from the Mitsuba development team <https://eradiate-kernel.readthedocs.io/en/latest/src/getting_started/compiling.html#linux>`_.
-         We also recommend using Clang 9 — not another version — because we also
+         We also recommend using Clang 11 — not another version — because we also
          encountered issues building with other versions. We hope to improve
          compiler support in the future.
 
