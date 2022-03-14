@@ -111,7 +111,8 @@ html_static_path = ["_static"]
 extensions.append("sphinx.ext.mathjax")
 extensions.append("sphinx.ext.viewcode")
 extensions.append("sphinx_copybutton")
-extensions.append("sphinx_click")
+extensions.append("sphinx_click")  # Automatically document CLI
+extensions.append("myst_parser")  # Markdown support
 
 # Bibliography
 extensions.append("sphinxcontrib.bibtex")
@@ -131,7 +132,7 @@ found in the tutorials, or by downloading them as Jupyter notebooks.*
 .. button-link:: https://github.com/eradiate/eradiate-tutorials/blob/main/{{ env.doc2path(env.docname, base=False)|replace("tutorials/", "") }}
    :color: primary
    :expand:
-   
+
    :octicon:`link-external` Go to notebook file
 
 ----

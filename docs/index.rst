@@ -77,7 +77,7 @@ work.
    rst/reference_api/index
    rst/reference_plugins/index
    rst/reference_cli/index
-   rst/changelog
+   src/CHANGELOG.md
 
 .. toctree::
    :maxdepth: 3
