@@ -35,7 +35,7 @@ def test_sigma_s_air_wavelength_dependence():
     wavelength = ureg.Quantity(np.linspace(240.0, 2400.0), "nm")
     sigma_s = compute_sigma_s_air(wavelength)
     prod = sigma_s.magnitude * np.power(wavelength, 4)
-    assert np.allclose(prod, prod[0], rtol=0.2)
+    assert np.allclose(prod, prod[0], rtol=0.25)
 
 
 def test_sigma_s_air_optical_thickness():
@@ -50,7 +50,7 @@ def test_sigma_s_air_optical_thickness():
     n = to_quantity(profile.n)
     z = profile.z_level.values
     dz = z[1:] - z[:-1]
-    sigma_s = compute_sigma_s_air(number_density=n, depolarisation_ratio=0.031)
+    sigma_s = compute_sigma_s_air(number_density=n)
     optical_thickness = np.sum(sigma_s.to("m^-1").magnitude * dz)
 
     assert np.isclose(optical_thickness, 0.0973, rtol=1e-2)

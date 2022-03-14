@@ -1,9 +1,12 @@
 """Functions to compute Rayleigh scattering in air."""
+import typing as t
 
 import numpy as np
 import pint
 from scipy.constants import physical_constants
 
+from .. import data
+from .._util import Singleton
 from ..units import unit_registry as ureg
 
 # Physical constants
@@ -15,32 +18,22 @@ _LOSCHMIDT = ureg.Quantity(
 # Air number density at 101325 Pa and 288.15 K
 _STANDARD_AIR_NUMBER_DENSITY = _LOSCHMIDT * (273.15 / 288.15)
 
+# Bates (1984) King correction factor data
+class _BATES_1984_DATA(metaclass=Singleton):
+    # Lazy loader for Bates (1984) King correction data
+    def __init__(self):
+        self._data = None
 
-def kf(ratio: float = 0.0279) -> float:
-    """
-    Compute the King correction factor.
-
-    Parameters
-    ----------
-    ratio : float
-        Depolarisation ratio [dimensionless].
-        The default value is the mean depolarisation ratio for dry air given by
-        :cite:`Young1980RevisedDepolarizationCorrections`.
-
-    Returns
-    -------
-    float
-        King correction factor [dimensionless].
-    """
-
-    return (6.0 + 3.0 * ratio) / (6.0 - 7.0 * ratio)
+    @property
+    def data(self):
+        if self._data is None:
+            self._data = data.load_dataset("spectra/optics/bates_1984.nc")
+        return self._data
 
 
 def compute_sigma_s_air(
     wavelength: pint.Quantity = ureg.Quantity(550.0, "nm"),
     number_density: pint.Quantity = _STANDARD_AIR_NUMBER_DENSITY,
-    king_factor=1.049,
-    depolarisation_ratio=None,
 ) -> pint.Quantity:
     r"""
     Compute the Rayleigh scattering coefficient of air.
@@ -65,6 +58,9 @@ def compute_sigma_s_air(
     :math:`\eta` is the air refractive index and
     :math:`F` is the air King factor.
 
+    The King correction factor is computed by linearly interpolating the data
+    from :cite:`Bates1984RayleighScatteringAir`.
+
     Parameters
     ----------
     wavelength : quantity
@@ -73,32 +69,26 @@ def compute_sigma_s_air(
     number_density : quantity
         Number density of the scattering particles [km^-3].
 
-    king_factor : float
-        King correction factor of the scattering particles [dimensionless].
-        Default value is the air effective King factor at 550 nm as given by
-        :cite:`Bates1984RayleighScatteringAir`. Overridden by a call to
-        :func:`kf` if ``depolarisation_ratio`` is set.
-
-    depolarisation_ratio : (float or None):
-        Depolarisation ratio [dimensionless].
-        If this parameter is set, then its value is used to compute the value of
-        the corresponding King factor and supersedes ``king_factor``.
-
     Returns
     -------
     quantity
         Scattering coefficient.
     """
-    if depolarisation_ratio is not None:
-        king_factor = kf(depolarisation_ratio)
+    BATES_1984_DATA = _BATES_1984_DATA().data
+    f_left = BATES_1984_DATA.f.values[0]
+    f_right = BATES_1984_DATA.f.values[-1]
+    king_factor = BATES_1984_DATA.f.interp(
+        w=wavelength.m_as("micrometer"),
+        kwargs=dict(fill_value=(f_left, f_right)),
+    ).values
 
     refractive_index = air_refractive_index(
         wavelength=wavelength, number_density=number_density
     )
-
     if isinstance(wavelength.magnitude, np.ndarray) and isinstance(
         number_density.magnitude, np.ndarray
     ):
+        king_factor = king_factor[:, np.newaxis]
         wavelength = wavelength[:, np.newaxis]
         number_density = number_density[np.newaxis, :]
 
