@@ -22,13 +22,13 @@ Python and C++17. It relies on a computational kernel based on the
 
       Learn about Eradiate, how to get it and how to compile it.
 
-   .. grid-item-card:: :octicon:`terminal` Tutorials
+   .. grid-item-card:: :octicon:`mortar-board` Tutorials
       :link: sec-tutorials
       :link-type: ref
 
       A practical introduction to Eradiate.
 
-   .. grid-item-card:: :octicon:`mortar-board` User guide
+   .. grid-item-card:: :octicon:`book` User guide
       :link: sec-user_guide
       :link-type: ref
 
