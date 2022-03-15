@@ -117,7 +117,7 @@ Glossary
 
    Scene
      All kernel-level components required to perform a single radiative transfer
-     simulation. The includes geometric shapes defining surfaces and volumes,
+     simulation. This includes geometric shapes defining surfaces and volumes,
      radiative properties attached to them, emitters, sensors and an integrator.
 
    Sensor

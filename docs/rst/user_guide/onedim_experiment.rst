@@ -46,12 +46,12 @@ Operational modes
 
 The operational mode is selected using the :func:`eradiate.set_mode` function.
 :class:`.OneDimExperiment` currently supports the monochromatic (``mono``) and
-correlated-`k` distribution (``ckd``) modes.`
+correlated-`k` distribution (``ckd``) modes.
 
 Illumination [``illumination``]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The one-dimensional solver application currently supports only one illumination
+The one-dimensional experiment currently supports only one illumination
 type.
 
 Directional illumination [:class:`.DirectionalIllumination`, ``directional``]
@@ -61,13 +61,13 @@ Directional illumination [:class:`.DirectionalIllumination`, ``directional``]
 
 In addition, this angular distribution can be associated a spectrum.
 A variety of pre-defined Solar irradiance spectra are defined (see
-:mod:`~eradiate.data.solar_irradiance_spectra` for a complete list of shipped
-irradiance spectrum datasets).
+:ref:`sec-user_guide-data-solar_irradiance_spectrum_data_sets` for a complete
+list of shipped irradiance spectrum datasets).
 
 Measure [``measure``]
 ^^^^^^^^^^^^^^^^^^^^^
 
-This application currently supports the computation of radiative quantities at
+This experiment currently supports the computation of radiative quantities at
 the top of the atmosphere.
 
 Distant radiancemeter [:class:`.MultiDistantMeasure`, ``distant``]
@@ -95,7 +95,7 @@ Distant radiancemeter [:class:`.MultiDistantMeasure`, ``distant``]
         The TOA BRDF normalised by the BRDF of a non-absorbing
         diffuse (Lambertian) surface.
 
-Distant fluxmeter [:class:`.DistantFlux`, ``distant_flux``]
+Distant fluxmeter [:class:`.DistantFluxMeasure`, ``distant_flux``]
     This measure records the flux leaving the scene (in W/m²/nm) over the entire
     hemisphere. It is mostly used to compute the scene albedo. The following
     quantities are available from the results dataset:
@@ -117,26 +117,25 @@ Homogeneous atmosphere [:class:`.HomogeneousAtmosphere`, ``homogeneous``]
 
 Heterogeneous atmosphere [:class:`.HeterogeneousAtmosphere`, ``heterogeneous``]
     The atmosphere has spatially varying radiative properties along the
-    altitude coordinate. Absorption and Rayleigh scattering are currently
-    supported.
+    altitude coordinate.
 
 Surface [``surface``]
 ^^^^^^^^^^^^^^^^^^^^^
 
-In this application, surfaces are plane and their geometry cannot be adjusted.
+In this experiment, surfaces are plane and their geometry cannot be adjusted.
 Only the surface's radiative properties can be selected.
 
-Diffuse surface [:class:`.LambertianSurface`, ``lambertian``]
+Diffuse surface [:class:`.LambertianBSDF`, ``lambertian``]
     A diffuse or Lambertian surface reflects incoming radiation isotropically,
     regardless the incoming direction. This behaviour is modelled by the Lambert
     BRDF, parametrised by a reflectance parameter.
 
-Rahman-Pinty-Verstraete (RPV) surface [:class:`.RPVSurface`, ``rpv``]
+Rahman-Pinty-Verstraete (RPV) surface [:class:`.RPVBSDF`, ``rpv``]
     This reflection model features an anisotropic behaviour and is commonly
     used for land surface reflection modelling. Eradiate implements several
     variants of it with 3 or 4 parameters.
 
-Black surface [:class:`.BlackSurface`, ``black``]
+Black surface [:class:`.BlackBSDF`, ``black``]
     The black surface absorbs all incoming radiation, irrespective of
     incident angle or wavelength.
 
