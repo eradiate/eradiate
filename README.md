@@ -2,13 +2,19 @@
 
 # Eradiate Radiative Transfer Model
 
-[![docs][1]][2]
-[![build][3]][4]
+[![docs][rtd-badge]][rtd-url]
+[![build][docker-badge]][docker-url]
+[![black][black-badge]][black-url]
+[![isort][isort-badge]][isort-url]
 
-[1]: https://img.shields.io/readthedocs/eradiate?logo=readthedocs&logoColor=white&style=flat-square
-[2]: https://eradiate.readthedocs.io/en/latest/
-[3]: https://img.shields.io/github/workflow/status/eradiate/eradiate/Docker%20build?label=docker&logo=docker&logoColor=white&style=flat-square
-[4]: https://github.com/eradiate/eradiate/actions/workflows/docker.yml
+[rtd-badge]: https://img.shields.io/readthedocs/eradiate?logo=readthedocs&logoColor=white&style=flat-square
+[rtd-url]: https://eradiate.readthedocs.io/en/latest/
+[docker-badge]: https://img.shields.io/github/workflow/status/eradiate/eradiate/Docker%20build?label=docker&logo=docker&logoColor=white&style=flat-square
+[docker-url]: https://github.com/eradiate/eradiate/actions/workflows/docker.yml
+[black-badge]: https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square
+[black-url]: https://github.com/psf/black/
+[isort-badge]: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat-square&labelColor=ef8336
+[isort-url]: https://pycqa.github.io/isort/
 
 Eradiate is a modern radiative transfer simulation software package for Earth 
 observation applications. Its main focus is accuracy, and for that purpose, it
@@ -22,26 +28,32 @@ For build and usage instructions, refer to the
 
 ## Support
 
-Got a question? Please visit our [discussion forum](https://github.com/eradiate/eradiate/discussions).
+Got a question? Please visit our 
+[discussion forum](https://github.com/eradiate/eradiate/discussions).
 
 ## Authors and acknowledgements
 
 Eradiate is developed by a core team consisting of Vincent Leroy, 
 Yvan Nollet, Sebastian Schunke, Nicolas Misk and Yves Govaerts.
 
-Eradiate uses the [Mitsuba 2 renderer](https://github.com/mitsuba-renderer/mitsuba2)
-as its radiometric kernel, taking advantage of its Python interface and proven 
-architecture, and extends it with components implementing numerical methods and 
-models used in radiative transfer for Earth observation. The Eradiate team 
-acknowledges Mitsuba creators and contributors for their exceptional work.
+Eradiate uses the 
+[Mitsuba 2 renderer](https://github.com/mitsuba-renderer/mitsuba2), developed by
+the [Realistic Graphics Lab](https://rgl.epfl.ch/),
+taking advantage of its Python interface and proven architecture, and extends it 
+with components implementing numerical methods and models used in radiative 
+transfer for Earth observation. The Eradiate team acknowledges Mitsuba creators 
+and contributors for their work.
 
-The development of Eradiate is funded by a European Space Agency project 
-supported by the European Commission's Copernicus programme. The design phase 
-was funded by the MetEOC-3 project.
+The development of Eradiate is funded by the 
+[Copernicus programme](https://www.copernicus.eu/) through a project managed by 
+the [European Space Agency](http://www.esa.int/).
+The design phase was funded by the [MetEOC-3 project](http://www.meteoc.org/) 
+(EMPIR grant 16ENV03).
 
 ## License
 
-Eradiate is free software licensed under the [GNU Public License (v3)](./LICENSE).
+Eradiate is free software licensed under the 
+[GNU Public License (v3)](./LICENSE).
 
 ## Project status
 
