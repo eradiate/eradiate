@@ -45,7 +45,7 @@ Data handling [:mod:`eradiate.data`]
     This package serves data used by Eradiate. This data can be shipped by
     Eradiate, but also extended by users.
 
-Post-processing pipeline definitions [:mod:`eradiate.pipelines <sec-reference-pipelines>`]
+Post-processing pipeline definitions [:mod:`eradiate.pipelines`]
     This package provides a post-processing pipeline framework used to convert
     raw sensor results yielded by kernel sensors to quantities of interest for
     Earh observation applications (*e.g.* reflectance). The data is stored as

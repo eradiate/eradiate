@@ -18,7 +18,7 @@ quantity conversion, making it possible:
    part of the standalone `Pinttrs <https://pinttrs.readthedocs.io/>`_ library.
 
 This guide presents how unit handling is documented in the API reference and how
-to handle units in Eradiate it as a user. For a technical view on unit handling,
+to handle units in Eradiate as a user. For a technical view on unit handling,
 see the Pinttrs documentation and source code.
 
 .. note::  It is strongly advised to—at least—get familiar with
@@ -58,7 +58,7 @@ metre. For this reason, Eradiate keeps track of default units used to configure
 its objects using a Pinttrs :class:`~pinttr.UnitContext` instance. This
 *configuration unit context* (:data:`eradiate.unit_context_config`, abbreviated
 as ``ucc``) is used to attach units to dimensional quantities when the user does
-not specify them. By default, default configuration units are the SI units; but
+not specify them. Default configuration units are the SI units; but
 a user can override them if it seems more convenient in their context.
 
 .. admonition:: Example
@@ -119,7 +119,7 @@ following structure: ``<unit_context>[<quantity>]`` where
 * ``<unit_context>`` is either ``ucc`` for configuration unit context or ``uck``
   for kernel unit context;
 * ``<quantity>`` is the physical quantity ID used to query the default unit set
-  (see :class:`~eradiate._units.PhysicalQuantity` for a list of available
+  (see :class:`~eradiate.units.PhysicalQuantity` for a list of available
   quantity IDs).
 
 Units fetching their defaults at runtime from unit contexts can be
