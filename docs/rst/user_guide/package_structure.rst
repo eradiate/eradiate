@@ -3,7 +3,7 @@
 Package structure overview
 ==========================
 
-This section documents the general principles underlying the organisation of
+This section documents the general principles underpinning the organisation of
 the Eradiate Python package.
 
 .. only:: latex
@@ -36,23 +36,22 @@ Radiometric kernel
 
 Kernel [:mod:`eradiate.kernel`]
     This module provides functionality related with Eradiate's radiometric
-    kernel (a modified version of the Mitsuba 2 rendering system).
+    kernel Mitsuba.
 
 Data handling and visualisation
 -------------------------------
 
 Data handling [:mod:`eradiate.data`]
-    This package serves data used by Eradiate. This data can be shipped by
-    Eradiate, but also extended by users.
+    This package serves data shipped with Eradiate.
 
 Post-processing pipeline definitions [:mod:`eradiate.pipelines`]
     This package provides a post-processing pipeline framework used to convert
     raw sensor results yielded by kernel sensors to quantities of interest for
-    Earh observation applications (*e.g.* reflectance). The data is stored as
+    Earth observation applications (*e.g.* reflectance). The data is stored as
     xarray labelled arrays (:term:`Dataset`).
 
 Plotting [:mod:`eradiate.plot`]
-    This module defines utility functions to create
+    This module defines optional utility functions to create
     `Matplotlib <https://matplotlib.org>`_-based visualisations of Eradiate's
     input and output data.
 
