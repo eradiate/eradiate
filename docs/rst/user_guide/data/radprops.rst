@@ -3,8 +3,6 @@
 Atmosphere radiative properties
 ===============================
 
-.. warning:: This content is outdated.
-
 An atmosphere radiative properties data set provide the collision (absorption,
 extinction, scattering) coefficient and albedo values within the atmosphere.
 
@@ -12,8 +10,7 @@ Data sets access
 ----------------
 
 Atmosphere radiative properties data sets are created by
-:class:`~eradiate.radprops.rad_profile.RadProfile` objects'
-:meth:`~eradiate.radprops.rad_profile.RadProfile.to_dataset` method.
+:meth:`.RadProfile.eval_dataset` method.
 
 Structure
 ---------
@@ -37,9 +34,3 @@ and one
 * the level altitude (``z_level``).
 
 All data variables are tabulated with respect to ``w`` and ``z_layer``.
-
-Visualise the data
-------------------
-Refer to
-:ref:`this tutorial <sphx_glr_examples_generated_tutorials_atmosphere_02_heterogeneous.py>`
-for an example of use.

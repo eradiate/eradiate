@@ -3,8 +3,6 @@
 Correlated-k distribution (CKD)
 ===============================
 
-.. warning:: This content is outdated.
-
 Eradiate supports simulation using the correlated-k distribution method. To that
 end, various data are used and shipped as part of the software package.
 

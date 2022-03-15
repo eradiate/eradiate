@@ -1,7 +1,7 @@
 .. _sec-user_guide-data-solar_irradiance_spectrum_data_sets:
 
-Solar irradiance spectrum
-=========================
+Solar irradiance spectra
+========================
 
 A solar irradiance spectrum data set provide the Sun's spectral irradiance
 spectrum at a Sun-Earth distance of 1 astronomical unit.
@@ -12,8 +12,9 @@ blackbody model.
 Data sets access
 ----------------
 
-All required solar irradiance spectrum data sets are available Eradiate using
-the :mod:`eradiate.data` module.
+All required solar irradiance spectrum data sets are are managed by
+Eradiate's global data store.
+Refer to the :ref:`sec-user_guide-data-intro` page for further details.
 
 Identifiers format
 ^^^^^^^^^^^^^^^^^^
@@ -108,7 +109,7 @@ irradiance spectra from 1978-11-7 to 2014-12-31. Wavelength range: [0.5,
 1991.5] nm. Resolution: variable, between 1 and 16 nm. Reference:
 :cite:`Haberreiter2017ObservationalSolarIrradiance`. See also
 `the Cal/Val Portal of the Committee on Earth Observation Satellites
-<http://calvalportal.ceos.org/solar-irradiance-spectrum>`_
+<http://calvalportal.ceos.org/solar-irradiance-spectrum>`_.
 
 ``solid_2017_mean``
 ^^^^^^^^^^^^^^^^^^^
@@ -150,8 +151,3 @@ three time periods (numbered 1, 2, 3 here):
 
 ``whi_2008`` is an alias to the quiet sun spectrum ``whi_2008_3``.
 Reference: :cite:`Woods2008SolarIrradianceReference`.
-
-Visualise the data
-------------------
-Refer to the
-:ref:`dedicated tutorial <sphx_glr_examples_generated_tutorials_data_05_solar_irradiance_spectrum_data_set.py>`.
