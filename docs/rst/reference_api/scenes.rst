@@ -31,12 +31,21 @@
 
    Atmosphere
    AbstractHeterogeneousAtmosphere
+   AtmosphereGeometry
    ParticleDistribution
 
 **Factories**
 
 * :data:`atmosphere_factory`
 * :data:`particle_distribution_factory`
+
+**1D atmosphre geometries**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   PlaneParallelGeometry
+   SphericalShellGeometry
 
 **Scene elements**
 

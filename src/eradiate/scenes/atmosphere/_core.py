@@ -53,8 +53,10 @@ class AtmosphereGeometry:
 
         Returns
         -------
-        If `value` is a dictionary, the constructed :class:`AtmosphereGeometry`
-        instance is returned. Otherwise, `value` is returned.
+        result
+            If `value` is a dictionary, the constructed
+            :class:`.AtmosphereGeometry` instance is returned. Otherwise,
+            `value` is returned.
 
         Raises
         ------

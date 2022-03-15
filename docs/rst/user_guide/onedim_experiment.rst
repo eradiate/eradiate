@@ -7,23 +7,24 @@ Eradiate ships with an :term:`experiment` dedicated to the simulation of
 radiative transfer on one-dimensional geometries. While the computation is not
 actually one-dimensional (Eradiate's kernel is a 3D Monte Carlo ray tracer),
 scene setup ensures that the computed quantities are equivalent to what would
-be obtained with a proper 1D code.
+be obtained with a proper 1D code. This guide introduces the features,
+configuration format and usage of this component.
 
-This guide introduces the features, configuration format and usage of Eradiate's
-one-dimensional experiment.
+.. button-ref:: /tutorials/01-onedim.ipynb
+   :ref-type: ref
+   :color: primary
+   :expand:
 
-.. .. admonition:: Tutorials
-
-..    * Basic usage ⇒ :ref:`sphx_glr_examples_generated_tutorials_experiment_onedim_01_experiment_onedim.py`
-..    * Simulations on heterogeneous atmospheres ⇒ :ref:`sphx_glr_examples_generated_tutorials_experiment_onedim_02_onedim_sim_hetero_atm.py`
+   Click here to access the hands-on tutorial
 
 Available features
 ------------------
 
 Eradiate's one-dimensional experiment is implemented by the
 :class:`.OneDimExperiment` class.
-Instances are configured by using the class's constructor. As usual,
-the operational mode must be selected prior to instantiating the class.
+Instances are configured using the class's constructor. The
+:term:`operational mode`, which defines how the spectral dimension of the
+computation is handled, must be selected prior to instantiating the class.
 
 The constructor only accepts keyword arguments, each of which can be passed an
 object of an expected type or, alternatively and for relevant entries,
@@ -46,29 +47,44 @@ Operational modes
 
 The operational mode is selected using the :func:`eradiate.set_mode` function.
 :class:`.OneDimExperiment` currently supports the monochromatic (``mono``) and
-correlated-`k` distribution (``ckd``) modes.
+correlated-*k* distribution (``ckd``) modes.
+
+Geometry [``geometry``]
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Plane parallel [:class:`.PlaneParallelGeometry`, ``plane_parallel``]
+    By default, the surface and atmosphere are assumed translationally invariant
+    in the X and Y directions. This approximation provides satisfactory accuracy
+    in many situations.
+
+Spherical shell [:class:`.SphericalShellGeometry`, ``spherical_shell``]
+    When this geometry configuration is used, the scene is built with a
+    rotationally invariant symmetry. This configuration accounts for the
+    roundedness of the planet. **This feature is experimental and is being
+    validated.**
 
 Illumination [``illumination``]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The one-dimensional experiment currently supports only one illumination
-type.
+The one-dimensional experiment currently supports only one illumination type.
 
 Directional illumination [:class:`.DirectionalIllumination`, ``directional``]
-    An infinitely distant emitter emits light in a single direction (angular
-    Dirac delta distribution of incoming radiance). This type of illumination is
-    used to simulate incoming Solar radiation.
+    An infinitely distant emitter which emits light in a single direction
+    (angular Dirac delta distribution of incoming radiance). This type of
+    illumination is used to simulate incoming Solar radiation. By default, a
+    Solar spectrum is automatically selected.
 
 In addition, this angular distribution can be associated a spectrum.
 A variety of pre-defined Solar irradiance spectra are defined (see
 :ref:`sec-user_guide-data-solar_irradiance_spectrum_data_sets` for a complete
 list of shipped irradiance spectrum datasets).
 
-Measure [``measure``]
-^^^^^^^^^^^^^^^^^^^^^
+Measures [``measures``]
+^^^^^^^^^^^^^^^^^^^^^^^
 
 This experiment currently supports the computation of radiative quantities at
-the top of the atmosphere.
+the top of the atmosphere. This parameter can be specified as a single measure,
+or as a list of measures.
 
 Distant radiancemeter [:class:`.MultiDistantMeasure`, ``distant``]
     This flexible measure records radiance exiting the scene. In practice, it
@@ -92,8 +108,8 @@ Distant radiancemeter [:class:`.MultiDistantMeasure`, ``distant``]
         illumination parameters to compute the TOA BRDF.
 
     TOA bidirectional reflectance factor (TOA BRF) [``brf``]
-        The TOA BRDF normalised by the BRDF of a non-absorbing
-        diffuse (Lambertian) surface.
+        The TOA BRDF normalised by the BRDF of a non-absorbing diffuse
+        (Lambertian) surface.
 
 Distant fluxmeter [:class:`.DistantFluxMeasure`, ``distant_flux``]
     This measure records the flux leaving the scene (in W/m²/nm) over the entire
@@ -117,13 +133,20 @@ Homogeneous atmosphere [:class:`.HomogeneousAtmosphere`, ``homogeneous``]
 
 Heterogeneous atmosphere [:class:`.HeterogeneousAtmosphere`, ``heterogeneous``]
     The atmosphere has spatially varying radiative properties along the
-    altitude coordinate.
+    altitude coordinate. The :class:`.HeterogeneousAtmosphere` class is
+    configured by specifying a molecular component
+    (:class:`.MolecularAtmosphere`), describing absorption and  scattering by
+    atmospheric gases, and an arbitrary number of aerosol layers
+    (:class:`.ParticleLayer`).
 
 Surface [``surface``]
 ^^^^^^^^^^^^^^^^^^^^^
 
-In this experiment, surfaces are plane and their geometry cannot be adjusted.
-Only the surface's radiative properties can be selected.
+In this experiment, surfaces are smooth and their geometry is controlled by the
+``geometry`` parameter. Only the surface's radiative properties can be selected.
+The bidirectional scattering distribution function (BSDF) can be directly passed
+as the ``surface`` parameter: Eradiate's internals will wrap them in an
+appropriate shape.
 
 Diffuse surface [:class:`.LambertianBSDF`, ``lambertian``]
     A diffuse or Lambertian surface reflects incoming radiation isotropically,
@@ -148,4 +171,4 @@ The :meth:`.OneDimExperiment.run` method stores the computed results in the
 computed physical quantity (*e.g.* spectral irradiance, leaving radiance, BRDF
 and BRF for the ``distant`` measure). Results can then be easily exported to
 files (*e.g.* NetCDF) and visualised using xarray's integrated plotting
-features or external plotting libraries.
+features or external plotting components.

@@ -3,7 +3,8 @@
 API reference
 =============
 
-.. button-ref:: sec-reference_plugins
+.. button-ref:: /rst/reference_plugins/index
+   :ref-type: doc
    :color: primary
    :expand:
 

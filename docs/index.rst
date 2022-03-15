@@ -60,6 +60,7 @@ Python and C++17. It relies on a computational kernel based on the
    rst/reference_plugins/index
    rst/reference_cli/index
    src/CHANGELOG.md
+   rst/bibliography
 
 .. toctree::
    :maxdepth: 3
@@ -70,11 +71,3 @@ Python and C++17. It relies on a computational kernel based on the
    rst/contributing
    rst/maintainer_guide
    rst/developer_guide/index
-
-.. toctree::
-   :maxdepth: 3
-   :hidden:
-   :titlesonly:
-   :caption: Other topics
-
-   rst/miscellaneous/index

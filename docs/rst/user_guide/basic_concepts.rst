@@ -117,6 +117,11 @@ Glossary
      are associated to specific post-processing tasks managed by
      :class:`.Experiment` instances.
 
+   Operational mode
+     A global configuration item for Eradiate defining how the spectral
+     dimension of the radiometric computation is handled. Currently, Eradiate
+     supports the line-by-line and correlated-*k* modes.
+
    Scene
      All kernel-level components required to perform a single radiative transfer
      simulation. This includes geometric shapes defining surfaces and volumes,

@@ -9,8 +9,8 @@ import typing as t
 import attr
 import numpy as np
 import pint
-import xarray as xr
 import pinttr
+import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ..core import KernelDict
@@ -191,7 +191,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         """
         Molecular atmosphere based on the AFGL (1986) atmospheric
         thermophysical properties profiles
-        :cite:`Anderson1986AtmosphericConstituentProfiles`.
+        :cite:`Anderson1986AtmosphericConstituentProfiles` (CKD mode only).
 
         Parameters
         ----------
@@ -293,7 +293,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     ) -> MolecularAtmosphere:
         """
         Molecular atmosphere based on the US Standard Atmosphere (1976) model
-        :cite:`NASA1976USStandardAtmosphere`.
+        :cite:`NASA1976USStandardAtmosphere` (monochromatic mode only).
 
         Parameters
         ----------

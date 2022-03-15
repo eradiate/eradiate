@@ -113,7 +113,7 @@ class OneDimExperiment(EarthObservationExperiment):
         doc="Problem geometry.",
         type=".PlaneParallelGeometry or .SphericalShellGeometry",
         init_type="str or dict or .AtmosphereGeometry",
-        default="plane_parallel",
+        default='"plane_parallel"',
     )
 
     atmosphere: t.Optional[Atmosphere] = documented(
