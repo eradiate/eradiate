@@ -12,6 +12,44 @@
    newer version, we recommend that you to go through the list of changes.
 ```
 
-## v0.22.1 (unreleased)
+% HEREAFTER IS A TEMPLATE FOR THE NEXT RELEASE
+%
+% vXX.YY.ZZ (unreleased)
+%
+% ### New Features
+%
+% ### Breaking changes
+%
+% ### Deprecations
+%
+% ### Improvements and fixes
+%
+% ### Documentation
+% 
+% ### Internal changes
+
+### Internal changes
+
+## v0.22.2 (unreleased)
+
+### New Features
+
+### Breaking changes
+
+### Deprecations
+
+### Improvements and fixes
+
+* Account for spectral dependency of the King correction factor ({ghpr}`187`).  
+
+### Documentation
+
+* Major update of all documentation contents.
+* Add Sphinx roles for GitHub links ({ghcommit}`2789499b3ba66f2b00c1a0987fdaa9cdc1f5f705`).
+
+### Internal changes
+
+## v0.22.1 (14 March 2022)
 
 This is the first official release of Eradiate.
+ 
