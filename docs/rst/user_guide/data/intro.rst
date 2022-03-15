@@ -3,8 +3,6 @@
 Introduction
 ============
 
-.. warning:: This content is outdated.
-
 Eradiate ships, processes and produces data. This guide presents:
 
 * the rationale underlying data models used in Eradiate;
@@ -23,37 +21,42 @@ data.
 Accessing shipped data
 ----------------------
 
-Eradiate ships with a series of data sets located in its ``resources/data``
-directory. Some of the larger data sets consist of aggregates of many NetCDF
-files, while others are stand-alone NetCDF files. In order to provide a simple
-and unified interface, Eradiate references data sets in a registry which can be
-queried using the :mod:`~eradiate.data` module.
+Eradiate ships with a series of data sets managed its global data store.
 
-Data sets are grouped by category, *e.g.* solar irradiance spectrum, absorption
-spectrum, etc. The complete list of registered categories can be found in the
-reference documentation for the :mod:`~eradiate.data` module. Each data set is
-then referenced by an identifier unique in its category. The pair
-(category, identifier) therefore identifies a data set completely.
+.. code-block:: python
 
-To open a specific data set, the :func:`eradiate.data.open` function should be
-used:
+   from eradiate.data import data_store
+
+This global data store aggregates multiple subordinated data stores based on
+the size and maturity level of data files they manage.
+List a data store' registered data sets by reading its ``registry`` property,
+*i.e.*:
+
+.. code-block:: python
+
+   list(data_store.stores["small_files"].registry)
+
+for small data files and:
+
+.. code-block:: python
+
+   list(data_store.stores["large_files_stable"].registry)
+
+for large data files.
+
+To open a specific data set, use :func:`eradiate.data.open_dataset`:
 
 .. code-block:: python
 
    import eradiate
-   ds = eradiate.data.open("solar_irradiance_spectrum", "thuillier_2003")
+   ds = eradiate.data.open_dataset("spectra/solar_irradiance/thuillier_2003.nc")
 
-The :func:`~eradiate.data.open` function can also be used to load user-defined
-data at a known location:
+To load a data set into memory, use :func:`eradiate.data.load_dataset`:
 
 .. code-block:: python
 
-   ds = eradiate.data.open("path/to/my/data.nc")
+   ds = eradiate.data.load_dataset("spectra/solar_irradiance/thuillier_2003.nc")
 
-.. note::
-
-   :func:`~eradiate.data.open` resolves paths using Eradiate's
-   :class:`.PathResolver`.
 
 .. _sec-user_guide-data_guide-working_angular_data:
 
@@ -135,7 +138,4 @@ computer graphics technology and measure results are usually mapped against
 *film coordinates* :math:`(x, y) \in [0, 1]^2`. When those data represent
 hemispherical quantities, a mapping transformation associate angles to film
 coordinates. For convenience, Eradiate ships helpers to convert data from film
-coordinates to angular coordinates. See
-:ref:`sphx_glr_examples_generated_tutorials_data_01_polar_plot.py` for a
-concrete introduction to those features, as well as angular data visualisation
-in polar coordinates.
+coordinates to angular coordinates.

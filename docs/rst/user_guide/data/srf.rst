@@ -3,16 +3,15 @@
 Spectral response function
 ==========================
 
-.. warning:: This content is outdated.
-
 A spectral response function data set provide the spectral response of a
 given instrument on a specific platform and in a specific spectral band.
 
 Data sets access
 ----------------
 
-All spectral response function data sets required by Eradiate are available
-within Eradiate using :meth:`eradiate.data.open`.
+All spectral response function data sets required by Eradiate are 
+managed by Eradiate's global data store.
+Refer to the :ref:`sec-user_guide-data-intro` page for further details.
 
 .. _sec-user_guide-data-srf-naming_convention:
 
@@ -52,9 +51,3 @@ The following additional data set attributes are provided:
 * ``platform``: platform identifier (e.g. ``sentinel_3b``)
 * ``instrument``: instrument identifier (e.g. ``slstr``)
 * ``band``: spectral band number (e.g. ``5``)
-
-Visualise the data
-------------------
-
-Refer to the
-:ref:`dedicated tutorial <sphx_glr_examples_generated_tutorials_data_03_visualise_srf_data_set.py>`.

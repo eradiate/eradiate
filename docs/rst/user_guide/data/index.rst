@@ -11,7 +11,7 @@ Data guide
    intro
    absorption
    radprops
-   solar_irradiance_spectrum_data_sets
+   solar_irradiance_spectra
    spectra-us76_u86_4
    srf
    thermoprops
