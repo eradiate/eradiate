@@ -28,8 +28,6 @@
 % 
 % ### Internal changes
 
-### Internal changes
-
 ## v0.22.2 (unreleased)
 
 ### New Features

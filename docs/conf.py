@@ -115,13 +115,14 @@ extensions.append("sphinx_click")  # Automatically document CLI
 extensions.append("myst_parser")  # Markdown support
 
 # GitHub quicklinks
-ghroot = "https://github.com/eradiate/eradiate"
 extensions.append("sphinx.ext.extlinks")
+ghbase = "https://github.com"
+ghroot = f"{ghbase}/eradiate/eradiate"
 extlinks = {
     "ghissue": (f"{ghroot}/issues/%s", "GH%s"),
     "ghpr": (f"{ghroot}/pull/%s", "PR%s"),
     "ghcommit": (f"{ghroot}/commit/%s", "%.7s"),
-    "ghuser": ("https://github.com/%s", "@%s"),
+    "ghuser": (f"{ghbase}/%s", "@%s"),
 }
 
 # Bibliography
