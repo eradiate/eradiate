@@ -90,6 +90,9 @@ docs:
 docs-serve:
 	make -C docs serve
 
+docs-linkcheck:
+	make -C docs linkcheck
+
 docs-rst:
 	make -C docs rst-api
 	make -C docs rst-plugins

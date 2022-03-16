@@ -35,7 +35,7 @@ Solar irradiance spectrum data sets include one data variable:
 * the solar spectral irradiance (``ssi``)
 
 and two
-`dimension coordinates <http://xarray.pydata.org/en/stable/data-structures.html#coordinates>`_:
+`dimension coordinates <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
 
 * the wavelength (``w``)
 * the time (``t``)

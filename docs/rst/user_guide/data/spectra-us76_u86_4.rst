@@ -58,7 +58,7 @@ The ``us76_u86_4-spectra`` data set includes two data variables:
 * mixing ratios (``mr``)
 
 and three
-`dimension coordinates <http://xarray.pydata.org/en/stable/data-structures.html#coordinates>`_:
+`dimension coordinates <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
 
 * wavenumber (``w``)
 * pressure (``p``) and

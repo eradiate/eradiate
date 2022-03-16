@@ -35,13 +35,13 @@ Atmosphere thermophysical properties data sets include four data variables:
 * individual species volume mixing ratios (``mr``)
 
 two
-`dimension coordinates <http://xarray.pydata.org/en/stable/data-structures.html#coordinates>`_:
+`dimension coordinates <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
 
 * layer altitude (``z_layer``)
 * individual species (``species``)
 
 and one
-`non-dimension coordinates <http://xarray.pydata.org/en/stable/data-structures.html#coordinates>`_:
+`non-dimension coordinates <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
 
 * level altitude (``z_level``)
 

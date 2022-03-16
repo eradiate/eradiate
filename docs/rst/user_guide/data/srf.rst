@@ -39,7 +39,7 @@ Spectral response function data sets include two data variables:
 * the uncertainties on the ``srf`` data (``srf_u``)
 
 and one
-`dimension coordinate <http://xarray.pydata.org/en/stable/data-structures.html#coordinates>`_:
+`dimension coordinate <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
 
 * the wavelength (``w``)
 

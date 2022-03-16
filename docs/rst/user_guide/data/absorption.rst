@@ -37,17 +37,17 @@ one optional data variable:
 * mixing ratios (``mr``)
 
 three
-`dimension coordinates <http://xarray.pydata.org/en/stable/data-structures.html#coordinates>`_:
+`dimension coordinates <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
 
 * wavenumber (``w``)
 * pressure (``p``)
 * temperature (``t``)
 
 (temperature may be a
-`non-dimension coordinates <http://xarray.pydata.org/en/stable/data-structures.html#coordinates>`_)
+`non-dimension coordinates <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_)
 
 and one
-`optional dimension coordinate <http://xarray.pydata.org/en/stable/data-structures.html#coordinates>`_:
+`optional dimension coordinate <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
 
 * molecules (``m``)
 
