@@ -2,5 +2,15 @@
 =======================
 
 .. automodule:: eradiate.test_tools
-   :no-autosummary:
-   :members:
+
+.. currentmodule:: eradiate.test_tools.regression
+
+Regression testing
+------------------
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   RenderTest
+   RMSETest
+   Chi2Test
