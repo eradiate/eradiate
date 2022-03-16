@@ -496,3 +496,64 @@ class RadProfile(ABC):
             Radiative properties dataset.
         """
         raise NotImplementedError
+
+    def eval_transmittance(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+        """
+        Evaluate transmittance.
+
+        Parameters
+        ----------
+        spectral_ctx : :class:`.SpectralContext`
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode).
+
+        Returns
+        -------
+        Quantity
+            Transmittance [dimensionless].
+        """
+        if eradiate.mode().is_mono:
+            return self.eval_transmittance_mono(spectral_ctx.wavelength).squeeze()
+
+        elif eradiate.mode().is_ckd:
+            return self.eval_transmittance_ckd(
+                spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
+            ).squeeze()
+
+        else:
+            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+
+    def eval_transmittance_mono(self, w: pint.Quantity) -> xr.Dataset:
+        """
+        Evaluate transmittance in mono modes.
+
+        Parameters
+        ----------
+        w : quantity
+            Wavelength values at which spectra are to be evaluated.
+
+        Returns
+        -------
+        Quantity
+            Transmittance [dimensionless].
+        """
+        raise NotImplementedError
+
+    def eval_transmittance_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
+        """
+        Evaluate transmittance in CKD modes.
+
+        Parameters
+        ----------
+        *bindexes : :class:`.Bindex`
+            One or several CKD bindexes for which to evaluate spectra.
+
+        bin_set_id : str
+            CKD bin set identifier.
+
+        Returns
+        -------
+        Quantity
+            Transmittance [dimensionless].
+        """
+        raise NotImplementedError
