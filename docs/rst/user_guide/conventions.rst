@@ -34,8 +34,8 @@ Spherical coordinates
 ---------------------
 
 Internally, Eradiate also uses the spherical coordinate system with the
-`ISO 80000-2:2019 convention <https://www.iso.org/standard/64973.html>`_
-(commonly used in physics) where:
+ISO 80000-2:2019 convention :cite:`ISO201980000QuantitiesUnits` (commonly used in
+physics) where:
 
 * :math:`r`, denotes the radial distance whose magnitude is a positive number,
 * :math:`\theta \in [0, \pi]` rad, equivalently :math:`[0, 180]°`, denotes the
