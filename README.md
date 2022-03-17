@@ -1,4 +1,4 @@
-![Eradiate logo](docs/fig/eradiate-logo-dark-no_bg.png "Eradiate — A new-generation radiative transfer simulation package")
+![Eradiate logo](docs/fig/eradiate-logo.svg "Eradiate — A new-generation radiative transfer simulation package")
 
 # Eradiate Radiative Transfer Model
 
@@ -16,43 +16,43 @@
 [isort-badge]: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat-square&labelColor=ef8336
 [isort-url]: https://pycqa.github.io/isort/
 
-Eradiate is a modern radiative transfer simulation software package for Earth 
+Eradiate is a modern radiative transfer simulation software package for Earth
 observation applications. Its main focus is accuracy, and for that purpose, it
-uses the Monte Carlo ray tracing method to solve the radiative transfer 
+uses the Monte Carlo ray tracing method to solve the radiative transfer
 equation.
 
 ## Installation and usage
 
-For build and usage instructions, refer to the 
+For build and usage instructions, refer to the
 [documentation](https://eradiate.readthedocs.org).
 
 ## Support
 
-Got a question? Please visit our 
+Got a question? Please visit our
 [discussion forum](https://github.com/eradiate/eradiate/discussions).
 
 ## Authors and acknowledgements
 
-Eradiate is developed by a core team consisting of Vincent Leroy, 
+Eradiate is developed by a core team consisting of Vincent Leroy,
 Yvan Nollet, Sebastian Schunke, Nicolas Misk and Yves Govaerts.
 
-Eradiate uses the 
+Eradiate uses the
 [Mitsuba 2 renderer](https://github.com/mitsuba-renderer/mitsuba2), developed by
 the [Realistic Graphics Lab](https://rgl.epfl.ch/),
-taking advantage of its Python interface and proven architecture, and extends it 
-with components implementing numerical methods and models used in radiative 
-transfer for Earth observation. The Eradiate team acknowledges Mitsuba creators 
+taking advantage of its Python interface and proven architecture, and extends it
+with components implementing numerical methods and models used in radiative
+transfer for Earth observation. The Eradiate team acknowledges Mitsuba creators
 and contributors for their work.
 
-The development of Eradiate is funded by the 
-[Copernicus programme](https://www.copernicus.eu/) through a project managed by 
+The development of Eradiate is funded by the
+[Copernicus programme](https://www.copernicus.eu/) through a project managed by
 the [European Space Agency](http://www.esa.int/).
-The design phase was funded by the [MetEOC-3 project](http://www.meteoc.org/) 
+The design phase was funded by the [MetEOC-3 project](http://www.meteoc.org/)
 (EMPIR grant 16ENV03).
 
 ## License
 
-Eradiate is free software licensed under the 
+Eradiate is free software licensed under the
 [GNU Public License (v3)](./LICENSE).
 
 ## Project status

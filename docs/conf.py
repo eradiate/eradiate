@@ -99,7 +99,7 @@ rst_prolog = r"""
 # a list of builtin themes.
 #
 html_theme = "sphinx_book_theme"
-html_logo = "fig/eradiate-logo-dark-no_bg.png"
+html_logo = "fig/eradiate-logo-typo.svg"
 html_title = ""
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -385,7 +385,7 @@ latex_documents = [
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = "fig/eradiate-logo-dark-no_bg.png"
+latex_logo = "fig/eradiate-logo-typo.png"
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
