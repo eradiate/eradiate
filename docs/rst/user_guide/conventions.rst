@@ -16,15 +16,48 @@ Local coordinate definition
 Internally, Eradiate and its radiometric kernel Mitsuba use Cartesian
 coordinates to locate scene objects. Scene construction, when relevant, map the
 X, Y and Z axes to the local East, North and up directions at the origin
-location. Note that this does not mean that Eradiate always uses an East, North,
+location.
+
+.. only:: latex
+
+   .. image:: ../../fig/cartesian-coordinate-system.png
+
+.. only:: not latex
+
+   .. image:: ../../fig/cartesian-coordinate-system.svg
+
+Note that this does not mean that Eradiate always uses an East, North,
 up (ENU) coordinate system: this is only relevant when planetary curvature can
 be neglected.
+
+Spherical coordinates
+---------------------
+
+Internally, Eradiate also uses the spherical coordinate system with the
+`ISO 80000-2:2019 convention <https://www.iso.org/standard/64973.html>`_
+(commonly used in physics) where:
+
+* :math:`r`, denotes the radial distance whose magnitude is a positive number,
+* :math:`\theta \in [0, \pi]` rad, equivalently :math:`[0, 180]°`, denotes the
+  zenith angle, a.k.a. the colatitude, polar angle, normal angle or
+  inclination angle, which measures the angular distance to the local zenith,
+* :math:`\varphi \in [0, 2\pi[` rad, equivalently :math:`[0, 360[°`, denotes
+  the azimuth angle.
+
+.. only:: latex
+
+   .. image:: ../../fig/spherical-coordinate-system.png
+
+.. only:: not latex
+
+   .. image:: ../../fig/spherical-coordinate-system.svg
 
 Local illumination and viewing angle definition
 -----------------------------------------------
 
-Internally, Eradiate defines the zenith angle :math:`\theta` as the angular
-distance (in degree or radian) to the local zenith. From this, it follows that:
+The directions to the Sun and to the sensor are specified in the
+:math:`(\theta, \varphi)` space.
+In our convention, it follows that:
 
 * the Sun is considered to be at the zenith when :math:`\theta_\mathrm{s} = 0°`;
 * the sensor is considered to point towards the nadir when
@@ -32,12 +65,15 @@ distance (in degree or radian) to the local zenith. From this, it follows that:
 
 The azimuth angle :math:`\varphi` is defined following the right-hand rule using
 the local vertical, with its origin aligned with the local X axis (pointing
-towards East). This, in practice, means that:
+towards East), as illustrated below.
 
-* :math:`\varphi = 0°` points towards East;
-* :math:`\varphi = 90°` points towards North;
-* :math:`\varphi = 180°` points towards West;
-* :math:`\varphi = 270°` points towards South.
+.. only:: latex
+
+   .. image:: ../../fig/azimuth-angle-convention.png
+
+.. only:: not latex
+
+   .. image:: ../../fig/azimuth-angle-convention.svg
 
 Principal plane orientation
 ---------------------------

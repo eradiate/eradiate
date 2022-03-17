@@ -42,7 +42,7 @@
 
 ### Documentation
 
-* Major update of all documentation contents.
+* Major update of all documentation contents ({ghpr}`192` and many commits).
 * Add Sphinx roles for GitHub links ({ghcommit}`2789499b3ba66f2b00c1a0987fdaa9cdc1f5f705`).
 
 ### Internal changes
