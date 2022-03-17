@@ -1,15 +1,13 @@
-.. _sec-atmosphere-molecular-scattering:
+.. _sec-atmosphere-rayleigh-scattering:
 
-Molecular scattering
-====================
+Rayleigh scattering
+===================
 
-.. warning:: This content is outdated.
+Scattering of light by molecules is well modeled using the Rayleigh
+approximation (see :cite:`Liou2002IntroductionAtmosphericRadiation`,
+section 3.3.1 for example).
 
-Scattering of light by molecules is computed using the Rayleigh approximation
-(see :cite:`Liou2002IntroductionAtmosphericRadiation`, section 3.3.1 for
-example).
-
-.. _sec-atmosphere-molecular-scattering-phase:
+.. _sec-atmosphere-rayleigh-scattering-phase:
 
 Phase function
 --------------
@@ -68,7 +66,7 @@ where
   dependence),
 * :math:`n` is the air number density :math:`[L^{-3}]`,
 * :math:`\eta` is the air refractive index :math:`[/]` and
-* :math:`F` is the air King correction factor :math:`[/]`.
+* :math:`F_{\lambda}` is the air King correction factor :math:`[/]`.
 
 .. note::
 
@@ -93,3 +91,8 @@ where
   and temperature (101325 Pa, 288.15 K) and
 * :math:`\eta_0` is the air refractive index under standard conditions of
   pressure and temperature.
+
+The King correction factor is computed using the data from
+:cite:`Bates1984RayleighScatteringAir` (table 1).
+The data is interpolated within the [200, 1000] nm range and extrapolated
+using the 1000 nm value for wavelength larger than 1000 nm.

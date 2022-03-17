@@ -8,11 +8,11 @@
 Atmosphere guide
 ================
 
-.. warning:: This content is outdated.
-
 .. toctree::
    intro
-   absorption
-   scattering
    homogeneous
    heterogeneous
+   molecular
+   particle_layer
+   absorption
+   rayleigh_scattering
