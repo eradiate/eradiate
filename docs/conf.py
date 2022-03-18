@@ -159,7 +159,7 @@ intersphinx_mapping = {
     "attr": ("https://www.attrs.org/en/stable/", None),
     "dateutil": ("https://dateutil.readthedocs.io/en/stable/", None),
     "dessinemoi": ("https://dessinemoi.readthedocs.io/en/latest/", None),
-    "matplotlib": ("https://matplotlib.org/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
     "mitsuba": ("https://eradiate-kernel.readthedocs.io/en/latest/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),

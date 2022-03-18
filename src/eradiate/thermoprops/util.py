@@ -1,5 +1,5 @@
 """
-Utility functions to manipulate atmosphere thermophysical properties data 
+Utility functions to manipulate atmosphere thermophysical properties data
 sets.
 """
 
@@ -182,18 +182,18 @@ def compute_scaling_factors(ds, concentration):
         :math:`N_{\mathrm{initial}}`:
 
         .. math::
-           f = \\frac{N_{\mathrm{target}}}{N_{\mathrm{initial}}}
+           f = \frac{N_{\mathrm{target}}}{N_{\mathrm{initial}}}
 
         If the target concentration has dimensions of mass times inverse square
         length (:math:`[ML^{-2}]`), the value is interpreted as a column (mass)
         density for that species and the scaling factor is obtained by dividing
         that column mass density,
-        :math:`\\sigma_{\mathrm{target}}`,
+        :math:`\sigma_{\mathrm{target}}`,
         by the initial column mass density,
-        :math:`\\sigma_{\mathrm{initial}}`:
+        :math:`\sigma_{\mathrm{initial}}`:
 
         .. math::
-           f = \\frac{\\sigma_{\mathrm{target}}}{\\sigma_{\mathrm{initial}}}
+           f = \frac{\sigma_{\mathrm{target}}}{\sigma_{\mathrm{initial}}}
 
         If the target concentration has dimensions of inverse cubic length
         (:math:`[L^{-3}]`), the value is interpreted as a number density at the
@@ -204,18 +204,18 @@ def compute_scaling_factors(ds, concentration):
         :math:`n_{\mathrm{surface, initial}}`:
 
         .. math::
-           f = \\frac{n_{\mathrm{surface, target}}}{n_{\mathrm{surface, initial}}}
+           f = \frac{n_{\mathrm{surface, target}}}{n_{\mathrm{surface, initial}}}
 
         If the target concentration has dimensions of inverse cubic length
         (:math:`[ML^{-3}]`), the value is interpreted as a mass density at the
         surface for that given species and the scaling factor is computed by
         dividing that mass density at the surface,
-        :math:`\\sigma_{\mathrm{surface, target}}`,
+        :math:`\sigma_{\mathrm{surface, target}}`,
         by the initial mass density at the surface,
-        :math:`\\sigma_{\mathrm{surface, initial}}`:
+        :math:`\sigma_{\mathrm{surface, initial}}`:
 
         .. math::
-           f = \\frac{\\sigma_{\mathrm{surface, target}}}{\\sigma_{\mathrm{surface, initial}}}
+           f = \frac{\sigma_{\mathrm{surface, target}}}{\sigma_{\mathrm{surface, initial}}}
 
         If the target concentration is dimensionless, the value is
         interpreted as a mixing ratio at the surface for that given species
@@ -226,7 +226,7 @@ def compute_scaling_factors(ds, concentration):
         :math:`x_{\mathrm{surface, initial}}`:
 
         .. math::
-           f = \\frac{x_{\mathrm{target}}}{x_{\mathrm{initial}}}
+           f = \frac{x_{\mathrm{target}}}{x_{\mathrm{initial}}}
 
     Returns
     -------
