@@ -9,6 +9,8 @@ Eradiate documentation
    rst/getting_started/index
    rst/user_guide/index
    tutorials/index
+   rst/contributing
+   rst/maintainer_guide
    rst/developer_guide/index
    rst/reference_api/index
    rst/reference_plugins/index
