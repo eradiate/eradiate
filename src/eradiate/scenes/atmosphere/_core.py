@@ -42,8 +42,8 @@ class AtmosphereGeometry:
         """
         Attempt conversion of a value to a :class:`AtmosphereGeometry` subtype.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         value
             Value to attempt conversion of. If a dictionary is passed, its
             ``"type"`` key is used to route its other entries as keyword
