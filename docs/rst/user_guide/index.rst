@@ -12,4 +12,3 @@ User guide
    onedim_experiment
    unit_guide_user
    data/index
-   atmosphere/index
