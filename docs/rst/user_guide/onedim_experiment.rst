@@ -76,8 +76,8 @@ Directional illumination [:class:`.DirectionalIllumination`, ``directional``]
 
 In addition, this angular distribution can be associated a spectrum.
 A variety of pre-defined Solar irradiance spectra are defined (see
-:ref:`sec-user_guide-data-solar_irradiance_spectrum_data_sets` for a complete
-list of shipped irradiance spectrum datasets).
+:ref:`sec-user_guide-data-solar_irradiance` for a complete list of shipped
+irradiance spectrum datasets).
 
 Measures [``measures``]
 ^^^^^^^^^^^^^^^^^^^^^^^

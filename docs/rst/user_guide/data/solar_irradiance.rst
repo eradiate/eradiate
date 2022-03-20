@@ -1,31 +1,29 @@
-.. _sec-user_guide-data-solar_irradiance_spectrum_data_sets:
+.. _sec-user_guide-data-solar_irradiance:
 
-Solar irradiance spectra
-========================
+Solar irradiance
+================
 
-A solar irradiance spectrum data set provide the Sun's spectral irradiance
+A Solar irradiance spectrum data set provides the Sun's spectral irradiance
 spectrum at a Sun-Earth distance of 1 astronomical unit.
-Solar irradiance spectrum data may come from observations ---
-*e.g.* using a spectrometer onboard a satellite --- or models such as the
-blackbody model.
+Solar irradiance spectrum data may come from observations—*e.g.* using a
+spectrometer onboard a satellite—or models such as the blackbody model.
 
 Data sets access
 ----------------
 
-All required solar irradiance spectrum data sets are are managed by
-Eradiate's global data store.
-Refer to the :ref:`sec-user_guide-data-intro` page for further details.
+All Solar irradiance spectrum data sets required by Eradiate are
+managed the data store (see :ref:`sec-user_guide-data-intro` for details).
 
-Identifiers format
-^^^^^^^^^^^^^^^^^^
+Identifier format
+^^^^^^^^^^^^^^^^^
 
-Identifiers for solar irradiance spectrum data sets (except ``blackbody_sun``)
-are constructed based on the format ``author_year[_extra]`` where:
+Identifiers for Solar irradiance spectrum data sets (except ``blackbody_sun``)
+are constructed based on the format ``{author}_{year}[_{extra}]`` where:
 
 * ``author`` denotes the author of the data set,
 * ``year`` stands for the year in which the data set was published,
-* ``extra`` (optional) includes additional information, such as a data set post-processing
-  operation.
+* ``extra`` (optional) includes additional information, such as a data set
+  post-processing operation.
 
 Structure
 ---------
@@ -34,22 +32,20 @@ Solar irradiance spectrum data sets include one data variable:
 
 * the solar spectral irradiance (``ssi``)
 
-and two
-`dimension coordinates <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
+and two :term:`dimension coordinates <dimension coordinate>`:
 
-* the wavelength (``w``)
-* the time (``t``)
+* the wavelength (``w``),
+* the time (``t``).
 
-Solar spectral irradiance data is tabulated with respect to both wavelength and
-time.
+Solar spectral irradiance data is tabulated against both wavelength and time.
 
 Some of the following additional data set attributes are provided for data
 sets to which they apply:
 
-* ``obs_start``: observation start time.
-* ``obs_end``: observation end time.
-* ``url``: original data URL.
-* ``comment``: a comment that indicates how the original data was processed.
+* ``obs_start``: observation start time,
+* ``obs_end``: observation end time,
+* ``url``: original data URL,
+* ``comment``: a comment indicating how the original data was processed.
 
 Description of available data sets
 ----------------------------------
@@ -65,18 +61,18 @@ for the blackbody spectral radiance:
 
 .. math::
 
-  L_{\lambda}(T) = \frac{2hc^2}{\lambda^5 (e^{hc/k\lambda T} - 1)}
+   L_{\lambda}(T) = \frac{2hc^2}{\lambda^5 (e^{hc/k\lambda T} - 1)}
 
 where :math:`h` and :math:`k` are the Planck and Boltzmann constants
 respectively, :math:`c` is the speed of light in a vacuum, :math:`\lambda` is
-the wavelength, with a blackbody temperature :math:`T` of 5800 K ---
-which is roughly the temperature of the Sun's photosphere. The envelope of the
-Sun's irradiance spectrum approximates that of a blackbody radiator. While
-converting from spectral radiance to spectral irradiance, using the equation:
+the wavelength, with a blackbody temperature :math:`T` of 5800 K—which is
+roughly the temperature of the Sun's photosphere. The envelope of the Sun's
+irradiance spectrum approximates that of a blackbody radiator. While converting
+from spectral radiance to spectral irradiance, using the equation:
 
 .. math::
 
-  \phi_{\lambda}(T) = \frac{\pi R^2}{D^2} L_{\lambda} (T)
+   \phi_{\lambda}(T) = \frac{\pi R^2}{D^2} L_{\lambda} (T)
 
 the radius of the blackbody (:math:`R`) is set to the solar radius constant
 (:math:`695.7 \cdot 10^6` km) and the distance of the blackbody to the Earth
