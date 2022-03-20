@@ -7,21 +7,29 @@ Absorption cross section data sets provide the monochromatic absorption cross
 section spectrum of a given absorbing species at specific pressure and
 temperature conditions.
 
-Data sets access
-----------------
-Due to their extremely large size (almost 1TB), most data sets are not
-distributed.
-Distributed data sets are managed by Eradiate's global data store.
-Refer to the :ref:`sec-user_guide-data-intro` page for further details.
+Data access
+-----------
 
-Identifiers format
-^^^^^^^^^^^^^^^^^^
+.. admonition:: Important
+   :class: warning
+
+   Most absorption cross section data used internally by the Eradiate team
+   cannot be distributed easily due to their large size (around 1TB). This, in
+   particular, means that the support for monochromatic simulation is currently
+   limited to selected atmospheric profiles. We plan to improve the delivery of
+   those spectra in the future.
+
+Distributed data sets are managed the data store (see
+:ref:`sec-user_guide-data-intro` for details).
+
+Identifier format
+^^^^^^^^^^^^^^^^^
 
 Identifiers for absorption cross section data sets
-are constructed based on the format ``absorber-engine-wmin_wmax`` where:
+are constructed based on the format ``{absorber}-{engine}-{wmin}_{wmax}`` where:
 
-* ``absorber`` is the name of the absorber (e.g. ``CH4``),
-* ``engine`` indicates the absorption cross section engine used (e.g. ``spectra``),
+* ``absorber`` is the name of the absorber (*e.g.* ``CH4``),
+* ``engine`` indicates the absorption cross section engine used (*e.g.* ``spectra``),
 * ``wmin`` is the minimum wavenumber value in ``cm^-1``,
 * ``wmax`` is the maximum wavenumber value in ``cm^-1``.
 
@@ -34,22 +42,18 @@ Absorption cross section data sets include one data variable:
 
 one optional data variable:
 
-* mixing ratios (``mr``)
+* mixing ratios (``mr``),
 
-three
-`dimension coordinates <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
+three :term:`dimension coordinates <dimension coordinate>`:
 
-* wavenumber (``w``)
-* pressure (``p``)
-* temperature (``t``)
+* wavenumber (``w``),
+* pressure (``p``),
+* temperature (``t``),
 
-(temperature may be a
-`non-dimension coordinates <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_)
+(temperature may be a :term:`non-dimension coordinate`) and one optional
+dimension coordinate:
 
-and one
-`optional dimension coordinate <https://xarray.pydata.org/en/stable/user-guide/data-structures.html#coordinates>`_:
-
-* molecules (``m``)
+* molecules (``m``).
 
 Data variable ``xs`` is tabulated with respect to ``w``, ``p`` and ``t``
 (optional).
@@ -57,3 +61,8 @@ Data variable ``xs`` is tabulated with respect to ``w``, ``p`` and ``t``
 Data variable ``mr``, when present, is tabulated with respect to ``m``.
 Data variable ``mr`` should be included in data sets where the absorber is a
 mixture of different absorbing molecules.
+
+.. toctree::
+   :hidden:
+
+   spectra-us76_u86_4

@@ -58,7 +58,7 @@ class SolarIrradianceSpectrum(Spectrum):
     See Also
     --------
 
-    :ref:`Solar irradiance spectrum data guide <sec-user_guide-data-solar_irradiance_spectrum_data_sets>`
+    :ref:`Solar irradiance spectrum data guide <sec-user_guide-data-solar_irradiance>`
 
     Notes
     ------
@@ -104,8 +104,8 @@ class SolarIrradianceSpectrum(Spectrum):
         ),
         doc="Solar spectrum dataset. Optionally, a keyword can be passed to "
         "fetch a registered spectrum from the data store. See "
-        ":ref:`sec-user_guide-data-solar_irradiance_spectrum_data_sets` for "
-        "the list of spectra shipped with Eradiate.",
+        ":ref:`sec-user_guide-data-solar_irradiance` for the list of spectra "
+        "shipped with Eradiate.",
         type="Dataset",
         init_type="Dataset or str, optional",
         default='"thuillier_2003"',

@@ -3,8 +3,8 @@
 Correlated-k distribution (CKD)
 ===============================
 
-Eradiate supports simulation using the correlated-k distribution method. To that
-end, various data are used and shipped as part of the software package.
+Eradiate supports simulation using the correlated-*k* distribution method. To
+that end, various data are used and shipped as part of the software package.
 
 Bin set definitions
 -------------------
