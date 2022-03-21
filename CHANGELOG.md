@@ -44,7 +44,7 @@
 
 ### Documentation
 
-* Major update of all documentation contents ({ghpr}`192` and many commits).
+* Major update of all documentation contents ({ghpr}`192`, {ghpr}`193` and many commits).
 * Add Sphinx roles for GitHub links ({ghcommit}`2789499b3ba66f2b00c1a0987fdaa9cdc1f5f705`).
 * Add SVG to PNG export script ({ghcommit}`9e942a48ae69b076c3f70d589dd6cd8c6580b563`).
 * Update logos with a more modern style ({ghcommit}`a3dfe36fd9b2f7e5842c60a7d5204f9d2138072e`).
@@ -54,4 +54,3 @@
 ## v0.22.1 (14 March 2022)
 
 This is the first official release of Eradiate.
- 
