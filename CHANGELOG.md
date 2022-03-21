@@ -16,7 +16,7 @@
 %
 % vXX.YY.ZZ (unreleased)
 %
-% ### New Features
+% ### New features
 %
 % ### Breaking changes
 %
@@ -30,7 +30,7 @@
 
 ## v0.22.2 (unreleased)
 
-### New Features
+### New features
 
 ### Breaking changes
 
@@ -39,8 +39,6 @@
 ### Improvements and fixes
 
 * Account for spectral dependency of the King correction factor ({ghpr}`187`). 
-* Refactor regression testing framework to handle more use cases and make it 
-  more robust ({ghpr}`188`).
 
 ### Documentation
 
@@ -50,6 +48,10 @@
 * Update logos with a more modern style ({ghcommit}`a3dfe36fd9b2f7e5842c60a7d5204f9d2138072e`).
 
 ### Internal changes
+
+* Refactor regression testing framework to handle more use cases and make it 
+  more robust ({ghpr}`188`).
+
 
 ## v0.22.1 (14 March 2022)
 
