@@ -3,10 +3,12 @@
 
 .. automodule:: eradiate.test_tools
 
-.. currentmodule:: eradiate.test_tools.regression
+``eradiate.test_tools.regression``
+----------------------------------
 
-Regression testing
-------------------
+.. automodule:: eradiate.test_tools.regression
+
+.. currentmodule:: eradiate.test_tools.regression
 
 .. autosummary::
    :toctree: generated/autosummary/

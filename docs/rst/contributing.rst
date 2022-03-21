@@ -405,17 +405,20 @@ relative to the current working directory.
 Adding new regression tests
 ***************************
 
-Regression tests use a comparison framework providing interfaces for statistical and other metric-based tests.
-Relevant components are listed in the API reference [:mod:`eradiate.test_tools`].
+Regression tests use a comparison framework providing interfaces for statistical
+and other metric-based tests. Relevant components are listed in the API
+reference [:mod:`eradiate.test_tools`].
 
-These tests are based on comparing the results of a computation to a reference, computed on a previous version of the code
-which was deemed correct by other means.
+These tests are based on comparing the results of a computation to a reference,
+computed on a previous version of the code which was deemed correct by other
+means.
 
-To implement tests based on this framework, we provide helper classes which can be imported from the ``regression`` module:
+To implement tests based on this framework, we provide helper classes which can
+be imported from the :mod:`eradiate.test_tools.regression` module:
 
 .. code-block:: python
 
-    import eradiate.test_tools.regession as ttr
+    import eradiate.test_tools.regression as ttr
 
 Within your test case, you then instantiate one of the subclasses:
 
@@ -469,13 +472,14 @@ Test report
 ^^^^^^^^^^^
 
 Optionally, test results may be visualised using a report generated with a tool
-located on a `dedicate repository <https://github.com/eradiate/eradiate-test-report>`_ .
+located on a
+`dedicated repository <https://github.com/eradiate/eradiate-test-report>`_.
 
 The report summarises test outcomes and generates detailed entries for tests
 specified with the docstring format specified above.
 
 The test specification of unit tests is not parsed for the test report and does
-not have to comply with these guidelines. For those a short explanation is
+not have to comply with these guidelines. For those, a short explanation is
 sufficient, but the three general parts mentioned above should still serve as a
 guideline for relevant and helpful test specification.
 
