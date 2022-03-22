@@ -13,18 +13,18 @@ from .._config import config
 
 def _add_logging_level(level_name, level_num, method_name=None):
     """
-    Comprehensively adds a new logging level to the `logging` module and the
+    Comprehensively adds a new logging level to the ``logging`` module and the
     currently configured logging class.
 
-    `levelName` becomes an attribute of the `logging` module with the value
-    `levelNum`. `methodName` becomes a convenience method for both `logging`
-    itself and the class returned by `logging.getLoggerClass()` (usually just
-    `logging.Logger`). If `methodName` is not specified, `levelName.lower()` is
-    used.
+    ``level_name`` becomes an attribute of the ``logging`` module with the value
+    ``level_num``. ``method_name`` becomes a convenience method for both
+    ``logging`` itself and the class returned by ``logging.getLoggerClass()``
+    (usually just ``logging.Logger``). If ``method_name`` is not specified,
+    ``level_name.lower()`` is used.
 
     To avoid accidental clobberings of existing attributes, this method will
-    raise an `AttributeError` if the level name is already an attribute of the
-    `logging` module or if the method name is already present
+    raise an ``AttributeError`` if the level name is already an attribute of the
+    ``logging`` module or if the method name is already present
 
     Example
     -------
