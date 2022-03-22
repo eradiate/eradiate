@@ -80,7 +80,7 @@ Mode = _mode.Mode
 ModeFlags = _mode.ModeFlags
 
 
-# ------------------------------------------------------------------------------
+# -- Import submodules ---------------------------------------------------------
 
 from . import (
     ckd,
@@ -125,3 +125,8 @@ __all__ = [
     "validators",
     "xarray",
 ]
+
+
+# -- IPython extension ---------------------------------------------------------
+
+from .notebook._extension import load_ipython_extension

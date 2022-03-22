@@ -16,27 +16,22 @@ def install(*extensions):
         * :monobold:`kernel_logging`: Route kernel logs through standard logging
           facilities. Progress display uses `tqdm <https://tqdm.github.io/>`_.
         * :monobold:`rich_pretty`: Install :func:`rich.pretty <rich.pretty.install>`
-          with default configuration to the current Python REPL.
-        * :monobold:`rich_traceback`:
-          Install :func:`rich.traceback <rich.traceback.install>`
-          with default configuration to the current Python REPL.
+          with default configuration to the current Python REPL
+          (includes iPython and Jupyter sessions).
 
     Warnings
     --------
     Requires an active mode. You can change modes afterwards.
     """
-    from rich.pretty import install as install_rich_pretty
-    from rich.traceback import install as install_rich_traceback
-    from eradiate.kernel.logging import install_logging as install_kernel_logging
+    from rich.pretty import install as install_rich
+
+    from eradiate.kernel.logging import install_logging
 
     if not extensions:
-        extensions = {"kernel_logging", "rich_pretty", "rich_traceback"}
+        extensions = ("kernel_logging", "rich_pretty")
 
     if "kernel_logging" in extensions:
-        install_kernel_logging()
+        install_logging()
 
     if "rich_pretty" in extensions:
-        install_rich_pretty()
-
-    if "rich_traceback" in extensions:
-        install_rich_traceback()
+        install_rich()
