@@ -129,4 +129,4 @@ __all__ = [
 
 # -- IPython extension ---------------------------------------------------------
 
-from .notebook._extension import load_ipython_extension
+from .notebook import load_ipython_extension
