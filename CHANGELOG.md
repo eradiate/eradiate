@@ -32,6 +32,8 @@
 
 ### New features
 
+* Added IPython extension ({ghcommit}`759c7e7f8a446f00a737f095f0cf5261c350b8d5`).
+
 ### Breaking changes
 
 ### Deprecations
