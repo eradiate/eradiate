@@ -20,10 +20,6 @@ def install(*extensions):
         * :monobold:`rich_traceback`:
           Install :func:`rich.traceback <rich.traceback.install>`
           with default configuration to the current Python REPL.
-
-    Warnings
-    --------
-    Requires an active mode. You can change modes afterwards.
     """
     from rich.pretty import install as install_rich_pretty
     from rich.traceback import install as install_rich_traceback
