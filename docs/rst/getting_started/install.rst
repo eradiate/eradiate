@@ -179,13 +179,13 @@ Cloning the repository
          git tag -l "v*"
 
       Tags with a ``-preview`` suffix use the preview Mitsuba code, while others
-      use the Mitsuba repository directly. Checkout the tag you are interested
-      in (*e.g.* ``v0.22.1-preview``), then update and initialise all
+      use the Mitsuba repository directly. Checkout the tag or branch you are
+      interested in (*e.g.* ``v0.22.2-preview``), then update and initialise all
       submodules:
 
       .. code:: bash
 
-         git checkout v0.22.1-preview
+         git checkout v0.22.2-preview
          git submodule sync --recursive
          git submodule update --init --recursive
 
