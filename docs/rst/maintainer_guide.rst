@@ -303,6 +303,9 @@ to update the lock file.
 Preparing a  release
 --------------------
 
+1. Update the change log.
+2. Tag the target commit for release.
+
 Tagging a commit for release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
