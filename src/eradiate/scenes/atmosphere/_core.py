@@ -315,11 +315,14 @@ class Atmosphere(SceneElement, ABC):
                 f"(currently using a '{type(self.geometry).__name__}')"
             )
 
-        return (
-            10.0 * self.eval_mfp(ctx)
-            if self.geometry.width is AUTO
-            else self.geometry.width
-        )
+        if self.geometry.width is AUTO:
+            mfp = self.eval_mfp(ctx)
+            if mfp.magnitude == np.inf:
+                return 1e7 * ureg.m  # default atmosphere width value
+            else:
+                return 10.0 * mfp
+        else:
+            return self.geometry.width
 
     @abstractmethod
     def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
