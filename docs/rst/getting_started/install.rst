@@ -169,7 +169,7 @@ Cloning the repository
 
       .. code:: bash
 
-         git clone --recursive https://github.com/eradiate/eradiate
+         git clone https://github.com/eradiate/eradiate
 
       Then, enter the clone and list available release tags:
 
@@ -186,6 +186,7 @@ Cloning the repository
       .. code:: bash
 
          git checkout v0.22.1-preview
+         git submodule sync --recursive
          git submodule update --init --recursive
 
    .. tab-item:: Recursive (developers)
@@ -291,8 +292,8 @@ lines starting with
 
          .. code:: bash
 
-            export CC=clang-9
-            export CXX=clang++-9
+            export CC=clang-11
+            export CXX=clang++-11
 
       .. tab-item:: macOS
          :sync: macos
@@ -314,7 +315,7 @@ lines starting with
 
           .. code:: bash
 
-             cmake --preset default -DCMAKE_C_COMPILER=clang-9 -DCMAKE_CXX_COMPILER=clang++-9
+             cmake --preset default -DCMAKE_C_COMPILER=clang-11 -DCMAKE_CXX_COMPILER=clang++-11
 
       .. tab-item:: macOS
          :sync: macos

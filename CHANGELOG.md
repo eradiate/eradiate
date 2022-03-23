@@ -41,6 +41,7 @@
 ### Improvements and fixes
 
 * Account for spectral dependency of the King correction factor ({ghpr}`187`).
+* Fix wrong atmosphere shape size in plane parallel geometry with no scattering ({ghpr}`195`).
 
 ### Documentation
 
