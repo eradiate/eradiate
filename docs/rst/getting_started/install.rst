@@ -13,11 +13,14 @@ Installation guide
 
    This new version of the Mitsuba 3 component is currently under submission for
    publication and we can currently not release it.
-   **This situation is temporary.**
 
    Consequently, we are currently restricting kernel code access to users who
-   join our Preview team on GitHub. To be added to the team, please send an
-   email to news@eradiate.eu with your GitHub username.
+   join our Preview team on GitHub. Please note that you will need to join the
+   Preview team in order to get a functioning clone of the Eradiate codebase. To
+   be added to the team, please send an email to news@eradiate.eu with your
+   GitHub username.
+
+   **This situation is temporary.**
 
 This guide covers all steps necessary to get Eradiate running on your machine.
 

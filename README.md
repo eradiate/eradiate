@@ -23,8 +23,15 @@ equation.
 
 ## Installation and usage
 
-For build and usage instructions, refer to the
+For build and usage instructions, please refer to the
 [documentation](https://eradiate.readthedocs.org).
+
+**Important**: Eradiate uses the Mitsuba rendering system, developed by the 
+Realistic Graphics Lab, as its radiometric kerenl. The version of Mitsuba used 
+by Eradiate is currently under submission for publication and we can not release
+it yet. **This situation is temporary.** See the
+[documentation](https://eradiate.readthedocs.io/en/latest/rst/getting_started/install.html) 
+for details.
 
 ## Support
 
@@ -33,8 +40,8 @@ Got a question? Please visit our
 
 ## Authors and acknowledgements
 
-Eradiate is developed by a core team consisting of Vincent Leroy,
-Yvan Nollet, Sebastian Schunke, Nicolas Misk and Yves Govaerts.
+Eradiate is developed by a core team consisting of Vincent Leroy, Yvan Nollet, 
+Sebastian Schunke, Nicolas Misk and Yves Govaerts.
 
 Eradiate uses the
 [Mitsuba 2 renderer](https://github.com/mitsuba-renderer/mitsuba2), developed by
