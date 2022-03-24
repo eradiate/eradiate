@@ -57,7 +57,7 @@ machine meets the requirements listed below.
    clang,     11+
 
 .. dropdown:: Tested configuration
-   :color: light
+   :color: info
    :icon: info
 
    .. tab-set::
@@ -281,7 +281,7 @@ lines starting with
    -- Check for working CXX compiler: ...
 
 .. dropdown:: If Clang is not used by CMake ...
-   :color: light
+   :color: info
    :icon: info
 
    If Clang is not used by CMake (this is very common on Linux systems), you
@@ -349,7 +349,7 @@ CMake. Search for lines starting with:
             -- Found PythonLibs: /Users/<username>/miniconda3/envs/eradiate/...
 
 .. dropdown:: If the wrong Python binary is used by CMake ...
-   :color: light
+   :color: info
    :icon: info
 
    It probably means you have not activated your Conda environment:
@@ -383,7 +383,7 @@ use Eradiate |smile|
 .. |smile| unicode:: U+1F642
 
 .. dropdown:: If you get a ``jit_cuda_compile()`` error ...
-   :color: light
+   :color: info
    :icon: info
 
    Eradiate does not use any CUDA variant of Mitsuba. You can therefore
