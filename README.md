@@ -27,7 +27,7 @@ For build and usage instructions, please refer to the
 [documentation](https://eradiate.readthedocs.org).
 
 **Important**: Eradiate uses the Mitsuba rendering system, developed by the 
-Realistic Graphics Lab, as its radiometric kerenl. The version of Mitsuba used 
+Realistic Graphics Lab, as its radiometric kernel. The version of Mitsuba used 
 by Eradiate is currently under submission for publication and we can not release
 it yet. **This situation is temporary.** See the
 [documentation](https://eradiate.readthedocs.io/en/latest/rst/getting_started/install.html) 
