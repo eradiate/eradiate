@@ -205,6 +205,19 @@ Cloning the repository
       This recursive cloning procedure can take up to a few minutes depending on
       your Internet connection.
 
+      Then, enter the project directory:
+
+      .. code:: bash
+
+         cd eradiate
+
+.. note::
+
+   If GitHub requests credentials to access submodules through HTTPS, we highly
+   recommend to `generate a personal access token <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token>`_
+   with **repo** permissions and to use it instead of your password. You might
+   also have to make sure that `Git will remember your token <https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage>`_.
+
 .. _sec-getting_started-install-setup_conda:
 
 Setting up the Conda environment
@@ -237,7 +250,6 @@ execute a GNU Make target which will initialise our empty environment properly:
 
 .. code:: bash
 
-   cd eradiate
    make conda-init
 
 .. admonition:: Notes
@@ -280,13 +292,16 @@ lines starting with
    -- Check for working C compiler: ...
    -- Check for working CXX compiler: ...
 
+If you see ``gcc`` on this line, it very likely means that CMake is not using
+Clang.
+
 .. dropdown:: If Clang is not used by CMake ...
    :color: info
    :icon: info
 
-   If Clang is not used by CMake (this is very common on Linux systems), you
-   have to explicitly define Clang as your C++ compiler. This can be achieved
-   by modifying environment variables:
+   If Clang is not used by CMake (this is very common on Linux systems, less
+   likely on macOS), you have to explicitly define Clang as your C++ compiler.
+   This can be achieved by modifying environment variables:
 
    .. tab-set::
 
@@ -348,6 +363,10 @@ CMake. Search for lines starting with:
             -- Found PythonInterp: /Users/<username>/miniconda3/envs/eradiate/...
             -- Found PythonLibs: /Users/<username>/miniconda3/envs/eradiate/...
 
+The content of these lines may vary depending on how you installed Conda. If
+those paths point to a Python binary not associated with a Conda virtual
+environment, do not proceed before fixing them.
+
 .. dropdown:: If the wrong Python binary is used by CMake ...
    :color: info
    :icon: info
@@ -358,6 +377,16 @@ CMake. Search for lines starting with:
 
       conda activate eradiate
 
+.. note::
+
+   You will probably see a warning saying
+
+       *Created a default 'mitsuba.conf' configuration file.  You will
+       probably want to edit this file to specify the desired configurations
+       before starting to compile.*
+
+   This is expected: do not worry about it.
+
 When CMake is successfully configured, you can compile the code:
 
 .. code:: bash
@@ -365,6 +394,7 @@ When CMake is successfully configured, you can compile the code:
    cmake --build build
 
 The compilation process can last for up to around half an hour on old machines.
+It completes within a few minutes on modern workstations.
 
 .. _sec-getting_started-install-verify_installation:
 
