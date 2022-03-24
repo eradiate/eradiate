@@ -1,9 +1,10 @@
 ---
-name: Feature request 🦾
+name: "Feature request \U0001F9BE"
 about: Tell us about features that are missing
 title: ''
-labels: ['enhancement 🦾']
+labels: ''
 assignees: ''
+
 ---
 
 # Feature request
