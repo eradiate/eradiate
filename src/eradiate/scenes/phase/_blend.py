@@ -15,6 +15,21 @@ from ...kernel.transform import map_unit_cube
 from ...units import unit_context_kernel as uck
 
 
+def _weights_converter(value: np.typing.ArrayLike) -> np.ndarray:
+    """
+    Normalise weights so that their sum is 1.
+    If all weights are zeros, leave their values at 0.
+    """
+    weights = np.array(value, dtype=np.float64)  # Ensure conversion of int to float
+    weights_sum = weights.sum(axis=0)
+    return np.divide(
+        weights,
+        weights_sum,
+        where=weights_sum != 0.0,
+        out=np.zeros_like(weights),
+    )
+
+
 @phase_function_factory.register(type_id="blend_phase")
 @parse_docs
 @attr.s
@@ -50,7 +65,7 @@ class BlendPhaseFunction(PhaseFunction):
 
     weights: np.ndarray = documented(
         attr.ib(
-            converter=lambda x: np.array(x) / np.sum(x, axis=0),
+            converter=_weights_converter,
             kw_only=True,
         ),
         type="ndarray",
@@ -163,33 +178,25 @@ class BlendPhaseFunction(PhaseFunction):
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         # Build kernel dict recursively
-        weights = self.weights[0, ...]
+
+        # Summed weights of all components except the first, used to
+        # set up the kernel dictionary of the phase function
+        weight = self.weights[1:, ...].sum(axis=0)
         phase_dict_1 = onedict_value(self.components[0].kernel_dict(ctx))
 
         if len(self.components) == 2:
             phase_dict_2 = onedict_value(self.components[1].kernel_dict(ctx))
 
         else:
-            sub_weights = self.weights[1:, ...]
-            sum_sub_weights = np.sum(self.weights[1:, ...], axis=0)
-
-            # Zero divisions might occur when the last component has zero
-            # scattering coefficient. In order to prevent those to happen, we
-            # detect them and assign 1 to the last probability.
-            marginal_weights = np.divide(
-                sub_weights,
-                sum_sub_weights,
-                where=sum_sub_weights != 0.0,
-                out=np.ones_like(sub_weights),
-            )
-
+            # The phase function corresponding to remaining components
+            # is built recursively
             phase_dict_2 = onedict_value(
                 BlendPhaseFunction(
                     id=f"{self.id}_phase2",
                     components=self.components[1:],
-                    weights=marginal_weights,
+                    weights=self.weights[1:, ...],
                     cache_dir=self.cache_dir,
-                    bbox=self.bbox
+                    bbox=self.bbox,
                 )
                 .kernel_dict(ctx)
                 .data
@@ -199,7 +206,7 @@ class BlendPhaseFunction(PhaseFunction):
         if self.weights.ndim == 2 and self.weights.shape[1] > 1:
             write_binary_grid3d(
                 filename=self.weight_file,
-                values=weights[np.newaxis, np.newaxis, ...],
+                values=np.reshape(weight, (1, 1, -1)),
             )
 
             weight = {
@@ -211,7 +218,7 @@ class BlendPhaseFunction(PhaseFunction):
                 weight["to_world"] = self._gridvolume_transform()
 
         else:
-            weight = float(weights)
+            weight = float(weight)
 
         return KernelDict(
             {
