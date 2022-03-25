@@ -1,7 +1,9 @@
+import mitsuba as mi
 import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
+from eradiate.kernel.gridvolume import read_binary_grid3d
 from eradiate._util import onedict_value
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.phase._blend import BlendPhaseFunction
@@ -86,41 +88,82 @@ def test_blend_bbox(mode_mono):
                 np.array(comp._gridvolume_transform().matrix),
             )
 
-def test_blend_kernel_dict(mode_mono):
-    ctx = KernelDictContext()
 
-    # With 2 components
+@pytest.mark.parametrize(
+    "weights",
+    [
+        (0.0, 0.0),
+        (1.0, 0.0),
+        (0.0, 1.0),
+        (0.5, 0.5),
+        (0.3, 0.7),
+    ],
+)
+def test_blend_kernel_dict_2_components(mode_mono, weights):
+    """
+    Blendphase with 2 components produces correct kernel dict and can be loaded.
+    """
+    ctx = KernelDictContext()
+    weight1, weight2 = weights
     phase = BlendPhaseFunction(
         components=[{"type": "isotropic"}, {"type": "rayleigh"}],
-        weights=[0.3, 0.7],
+        weights=[weight1, weight2],
     )
     kernel_dict = phase.kernel_dict(ctx)
     phase_dict = onedict_value(kernel_dict.data)
     assert phase_dict["type"] == "blendphase"
     assert phase_dict["phase1"] == {"type": "isotropic"}
     assert phase_dict["phase2"] == {"type": "rayleigh"}
-    assert phase_dict["weight"] == 0.3
-    assert kernel_dict.load()
+    assert phase_dict["weight"] == weight2
+    assert isinstance(kernel_dict.load(), mi.PhaseFunction)
 
-    # With 3 components
+
+@pytest.mark.parametrize(
+    "weights",
+    [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (0.0, 1.0, 0.0),
+        (0.0, 0.0, 1.0),
+        (0.5, 0.5, 0.0),
+        (0.0, 0.5, 0.5),
+        (0.5, 0.0, 0.5),
+        (1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0),
+        (0.3, 0.3, 0.4),
+    ],
+)
+def test_blend_kernel_dict_3_components(mode_mono, weights):
+    """
+    Blendphase with 3 components produces correct kernel dict and can be loaded.
+    """
+    ctx = KernelDictContext()
+    weight1, weight2, weight3 = weights
     phase = BlendPhaseFunction(
         components=[
             {"type": "isotropic"},
             {"type": "rayleigh"},
             {"type": "hg", "g": 0.1},
         ],
-        weights=[0.3, 0.3, 0.4],
+        weights=[weight1, weight2, weight3],
     )
     kernel_dict = phase.kernel_dict(ctx)
     phase_dict = onedict_value(kernel_dict.data)
     assert phase_dict["type"] == "blendphase"
-    assert phase_dict["weight"] == 0.3
+    assert phase_dict["weight"] == weight2 + weight3
     assert phase_dict["phase1"] == {"type": "isotropic"}
     assert phase_dict["phase2"]["type"] == "blendphase"
-    assert phase_dict["phase2"]["weight"] == 0.3 / 0.7
+    nested_weight = float(
+        np.divide(
+            weight3,
+            weight2 + weight3,
+            where=weight2 + weight3 != 0.0,
+            out=np.zeros_like(weight3),
+        )
+    )
+    assert phase_dict["phase2"]["weight"] == nested_weight
     assert phase_dict["phase2"]["phase1"] == {"type": "rayleigh"}
     assert phase_dict["phase2"]["phase2"] == {"type": "hg", "g": 0.1}
-    assert kernel_dict.load()
+    assert isinstance(kernel_dict.load(), mi.PhaseFunction)
 
 
 def test_blend_array(modes_all):
@@ -143,4 +186,66 @@ def test_blend_array(modes_all):
 
     # Kernel dict generation succeeds
     ctx = KernelDictContext()
-    assert phase.kernel_dict(ctx).load()
+    assert isinstance(phase.kernel_dict(ctx).load(), mi.PhaseFunction)
+
+
+def test_blend_array_2_components(modes_all):
+    """
+    Test instantiation and kernel dict generation with an array of weights.
+    """
+    # Constructing using 1D arrays for weights succeeds
+    weight1 = np.array([1.0, 0.7, 0.5, 0.3, 0.0])
+    weight2 = np.array([0.0, 0.3, 0.5, 0.7, 1.0])
+    phase = BlendPhaseFunction(
+        components=[
+            {"type": "isotropic"},
+            {"type": "rayleigh"},
+        ],
+        weights=[weight1, weight2],
+        bbox=[[0, 0, 0], [1, 1, 1]],
+    )
+
+    # Kernel dict generation succeeds
+    ctx = KernelDictContext()
+    phase_dict = phase.kernel_dict(ctx)
+    assert isinstance(phase.kernel_dict(ctx).load(), mi.PhaseFunction)
+
+    # weight file is correct
+    weight_values = read_binary_grid3d(phase.weight_file)
+    assert np.allclose(weight_values, weight2)
+
+
+def test_blend_array_3_components(modes_all):
+    """
+    Test instantiation and kernel dict generation with an array of weights.
+    """
+    # Constructing using 1D arrays for weights succeeds
+    weight1 = np.array([1.0, 0.6, 0.2, 0.2, 0.0])
+    weight2 = np.array([0.0, 0.2, 0.6, 0.2, 0.5])
+    weight3 = np.array([0.0, 0.2, 0.2, 0.6, 0.5])
+    phase = BlendPhaseFunction(
+        components=[
+            {"type": "rayleigh"},
+            {"type": "isotropic"},
+            {"type": "isotropic"},
+        ],
+        weights=[weight1, weight2, weight3],
+        bbox=[[0, 0, 0], [1, 1, 1]],
+    )
+
+    # Kernel dict generation succeeds
+    ctx = KernelDictContext()
+    phase_dict = phase.kernel_dict(ctx)
+    assert isinstance(phase.kernel_dict(ctx).load(), mi.PhaseFunction)
+
+    # weight file is correct
+    weight_values = read_binary_grid3d(phase.weight_file)
+    assert np.allclose(weight_values, weight2 + weight3)
+
+    # nested weight file is correct
+    nested_weight_filename = phase_dict.data["phase"]["phase2"]["weight"]["filename"]
+    nested_weight_values = read_binary_grid3d(nested_weight_filename)
+    nested_weight = np.divide(
+        weight3, weight2 + weight3, where=weight2 + weight3 != 0.0, out=weight3
+    )
+    assert np.allclose(nested_weight_values, nested_weight)
