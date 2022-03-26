@@ -395,7 +395,7 @@ pytest like this:
 
 .. code-block:: bash
 
-    pytest tests -m "regression" --artefact_dir <a directory of your choice>
+    pytest tests -m "regression" --artefact-dir <a directory of your choice>
 
 The ``artefact_dir`` parameter defines the output directory in which the results
 and plots will be placed. If the directory does not exist, it will be created.
