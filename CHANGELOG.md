@@ -27,6 +27,26 @@
 % ### Documentation
 %
 % ### Internal changes
+%
+% ---
+
+## v0.22.3 (unreleased)
+
+### New features
+
+### Breaking changes
+
+### Deprecations
+
+### Improvements and fixes
+
+* Fix incorrect phase function blending in multi-component atmospheres ({ghpr}`197`).
+
+### Documentation
+
+### Internal changes
+
+---
 
 ## v0.22.2 (23 March 2022)
 
@@ -42,7 +62,6 @@
 
 * Account for spectral dependency of the King correction factor ({ghpr}`187`).
 * Fix wrong atmosphere shape size in plane parallel geometry with no scattering ({ghpr}`195`).
-* Fix incorrect phase function blending in multi-component atmospheres ({ghpr}`197`)
 
 ### Documentation
 
@@ -56,6 +75,7 @@
 * Refactor regression testing framework to handle more use cases and make it
   more robust ({ghpr}`188`).
 
+---
 
 ## v0.22.1 (14 March 2022)
 
