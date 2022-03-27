@@ -13,6 +13,13 @@ coordinates), this page should settle things.
 Local coordinate definition
 ---------------------------
 
+.. only:: not latex
+
+   .. margin::
+
+      .. figure:: ../../fig/cartesian-coordinate-system.svg
+         :width: 100%
+
 Internally, Eradiate and its radiometric kernel Mitsuba use Cartesian
 coordinates to locate scene objects. Scene construction, when relevant, map the
 X, Y and Z axes to the local East, North and up directions at the origin
@@ -22,16 +29,19 @@ location.
 
    .. image:: ../../fig/cartesian-coordinate-system.png
 
-.. only:: not latex
-
-   .. image:: ../../fig/cartesian-coordinate-system.svg
-
 Note that this does not mean that Eradiate always uses an East, North,
 up (ENU) coordinate system: this is only relevant when planetary curvature can
 be neglected.
 
 Spherical coordinates
 ---------------------
+
+.. only:: not latex
+
+   .. margin::
+
+      .. figure:: ../../fig/spherical-coordinate-system.svg
+         :width: 100%
 
 Internally, Eradiate also uses the spherical coordinate system with the
 ISO 80000-2:2019 convention :cite:`ISO201980000QuantitiesUnits` (commonly used in
@@ -48,12 +58,15 @@ physics) where:
 
    .. image:: ../../fig/spherical-coordinate-system.png
 
-.. only:: not latex
-
-   .. image:: ../../fig/spherical-coordinate-system.svg
-
 Local illumination and viewing angle definition
 -----------------------------------------------
+
+.. only:: not latex
+
+   .. margin::
+
+      .. figure:: ../../fig/azimuth-angle-convention.svg
+         :width: 100%
 
 The directions to the Sun and to the sensor are specified in the
 :math:`(\theta, \varphi)` space.
@@ -71,9 +84,6 @@ towards East), as illustrated below.
 
    .. image:: ../../fig/azimuth-angle-convention.png
 
-.. only:: not latex
-
-   .. image:: ../../fig/azimuth-angle-convention.svg
 
 Principal plane orientation
 ---------------------------
