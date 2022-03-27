@@ -30,19 +30,19 @@ newer version, we recommend that you to go through the list of changes.
 
 ## v0.22.3 (unreleased)
 
-### New features
+% ### New features
 
-### Breaking changes
+% ### Breaking changes
 
-### Deprecations
+% ### Deprecations
 
 ### Improvements and fixes
 
 * Fix incorrect phase function blending in multi-component atmospheres ({ghpr}`197`).
 
-### Documentation
+% ### Documentation
 
-### Internal changes
+% ### Internal changes
 
 ---
 
@@ -50,11 +50,8 @@ newer version, we recommend that you to go through the list of changes.
 
 ### New features
 
-* Added IPython extension ({ghcommit}`759c7e7f8a446f00a737f095f0cf5261c350b8d5`).
-
-### Breaking changes
-
-### Deprecations
+* Added IPython extension ({ghcommit}`759c7e7f8a446f00a737f095f0cf5261c350b8d5`,
+  {ghcommit}`c3b30c9f38298712ab5697fc0a7a37fa39b8cdbf`).
 
 ### Improvements and fixes
 
