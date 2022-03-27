@@ -163,53 +163,26 @@ Cloning the repository
    referred to using
    `Git submodules <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_.
 
+To get the code, clone the repository including its submodules with the
+following command:
+
 .. tab-set::
 
-   .. tab-item:: Lightweight (users)
-
-      This method saves time and bandwidth and is recommended for users.
-      First, clone the Eradiate repository:
+   .. tab-item:: Public branch (users)
 
       .. code:: bash
 
-         git clone https://github.com/eradiate/eradiate
+         git clone --recursive --branch public https://github.com/eradiate/eradiate
 
-      Then, enter the clone and list available release tags:
-
-      .. code:: bash
-
-         cd eradiate
-         git tag -l "v*"
-
-      Tags with a ``-preview`` suffix use the preview Mitsuba code, while others
-      use the Mitsuba repository directly. Checkout the tag or branch you are
-      interested in (*e.g.* ``v0.22.2-preview``), then update and initialise all
-      submodules:
-
-      .. code:: bash
-
-         git checkout v0.22.2-preview
-         git submodule sync --recursive
-         git submodule update --init --recursive
-
-   .. tab-item:: Recursive (developers)
-
-      To get the code, clone the repository including its submodules with the
-      following command:
+   .. tab-item:: Main branch (developers)
 
       .. code:: bash
 
          git clone --recursive https://github.com/eradiate/eradiate
 
-      This will clone the Eradiate repository, as well as all its dependencies.
-      This recursive cloning procedure can take up to a few minutes depending on
-      your Internet connection.
-
-      Then, enter the project directory:
-
-      .. code:: bash
-
-         cd eradiate
+This will clone the Eradiate repository, as well as all its dependencies.
+This recursive cloning procedure can take up to a few minutes depending on
+your Internet connection.
 
 .. note::
 
@@ -250,6 +223,7 @@ execute a GNU Make target which will initialise our empty environment properly:
 
 .. code:: bash
 
+   cd eradiate
    make conda-init
 
 .. admonition:: Notes

@@ -8,8 +8,8 @@ spectrum at a Sun-Earth distance of 1 astronomical unit.
 Solar irradiance spectrum data may come from observations—*e.g.* using a
 spectrometer onboard a satellite—or models such as the blackbody model.
 
-Data sets access
-----------------
+Data access
+-----------
 
 All Solar irradiance spectrum data sets required by Eradiate are
 managed the data store (see :ref:`sec-user_guide-data-intro` for details).
