@@ -601,9 +601,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
             planet_radius = self.geometry.planet_radius.m_as(length_units)
             rmax = planet_radius + top
-            to_world = mi.ScalarTransform4f.translate(
-                [0, 0, -planet_radius + bottom]
-            ) * mi.ScalarTransform4f.scale(rmax)
+            to_world = mi.ScalarTransform4f.scale(rmax)
 
             volumes = {
                 "albedo": {
