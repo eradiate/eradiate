@@ -39,6 +39,7 @@ newer version, we recommend that you to go through the list of changes.
 ### Improvements and fixes
 
 * Fix incorrect phase function blending in multi-component atmospheres ({ghpr}`197`).
+* Fix incorrect volume data transform for spherical heterogeneous atmospheres ({ghpr}`199`).
 
 % ### Documentation
 
