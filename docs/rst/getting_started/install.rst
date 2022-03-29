@@ -52,7 +52,7 @@ machine meets the requirements listed below.
    :widths: 10, 10
 
    git,       2.18+
-   cmake,     3.19+
+   cmake,     3.22+
    ninja,     1.10+
    clang,     11+
 
@@ -114,7 +114,8 @@ machine meets the requirements listed below.
       If your Linux distribution does not include APT, please consult your
       package manager's repositories for the respective packages.
 
-      If your CMake copy is not recent enough, there are `many ways <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`_
+      If your CMake copy is not recent enough, there are
+      `many ways <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`_
       to install an updated version, notably through pipx and Conda. Pick your
       favourite!
 
@@ -258,6 +259,18 @@ Configure CMake for compilation:
 
    cmake --preset default
 
+.. dropdown:: CMake Error: The source directory "..." does not exist
+   :color: info
+   :icon: info
+
+   This most probably means that your CMake version is too old
+   (see `Prerequisites`_). At this stage, you might also install CMake in your
+   Conda environment:
+
+   .. code:: bash
+
+      conda install "cmake>=3.22"
+
 Inspect CMake's output to check if Clang is used as the C++ compiler. Search for
 lines starting with
 
@@ -386,7 +399,7 @@ use Eradiate |smile|
 
 .. |smile| unicode:: U+1F642
 
-.. dropdown:: If you get a ``jit_cuda_compile()`` error ...
+.. dropdown:: If you get a jit_cuda_compile() error ...
    :color: info
    :icon: info
 
@@ -396,3 +409,6 @@ use Eradiate |smile|
    .. code:: bash
 
       export CUDA_VISIBLE_DEVICES=""
+
+   Even doing so, you might still see a CUDA-related warning upon importing
+   Eradiate. This is not a concern and it should be fixed in the future.

@@ -195,7 +195,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
         Parameters
         ----------
-        model : {"us_standard", "tropical", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter"}, default: "us_standard"
+        model : {"us_standard", "tropical", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter"}, optional, default: "us_standard"
             AFGL (1986) model identifier.
 
         levels : quantity
@@ -203,7 +203,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
         concentrations : dict
             Molecules concentrations as a ``{str: quantity}`` mapping.
-            This dictionary is interpreted by :func:`pinttrs.util.ensure_units`,
+            This dictionary is interpreted by :func:`pinttr.util.ensure_units`,
             which allows for passing units as strings.
 
         **kwargs
