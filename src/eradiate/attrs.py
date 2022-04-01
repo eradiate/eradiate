@@ -1,4 +1,4 @@
-"""``attrs``-based utility classes and functions"""
+"""``attrs``-based utility classes and functions."""
 
 import enum
 import re
@@ -7,22 +7,7 @@ from textwrap import dedent, indent
 
 import attr
 
-_NUMPYDOC_SECTION_TITLES = [
-    "Parameters",
-    "Fields",
-    "Attributes",
-    "Returns",
-    "Yields",
-    "Receives",
-    "Other Parameters",
-    "Raises",
-    "Warns",
-    "Warnings",
-    "See Also",
-    "Notes",
-    "References",
-    "Examples",
-]
+from .util import numpydoc
 
 
 class _Auto:
@@ -213,28 +198,8 @@ def _numpy_formatter(cls_doc, field_docs):
 
         cls_doc = dedent(cls_doc.lstrip("\n")).rstrip()
 
-        # We process only sections mentioned in the Numpy doc style
-        # Detect existing sections
-        section_pattern = {}
-
-        for section_title in _NUMPYDOC_SECTION_TITLES:
-            full_section_title = f"{section_title}\n{'-' * len(section_title)}\n"
-            if re.findall(full_section_title, cls_doc):
-                section_pattern[section_title] = full_section_title
-
-        # Collect section content
-        section_contents = (
-            re.split("|".join(section_pattern.values()), cls_doc)
-            if section_pattern
-            else [cls_doc]
-        )
-
-        sections = {}
-        if len(section_contents) == len(section_pattern) + 1:
-            sections["_description"] = section_contents.pop(0).strip()
-
-        for title, content in zip(section_pattern.keys(), section_contents):
-            sections[title] = content.strip()
+        # Parse docstrings
+        sections = numpydoc.parse_doc(cls_doc)
 
         # Append generated docstrings to the relevant section
         sections["Parameters"] = "\n".join(param_docstrings) + sections.get(
@@ -243,21 +208,7 @@ def _numpy_formatter(cls_doc, field_docs):
         sections["Fields"] = "\n".join(attr_docstrings) + sections.get("Fields", "")
 
         # Generate section full text
-        section_fulltexts = (
-            [sections.pop("_description") + "\n"] if "_description" in sections else []
-        )
-        for section_title in _NUMPYDOC_SECTION_TITLES:
-            try:
-                section_content = sections.pop(section_title)
-            except KeyError:
-                continue
-
-            section_fulltexts.append(
-                f"{section_title}\n{'-' * len(section_title)}\n{section_content}\n"
-            )
-
-        # Assemble the final docstring
-        doc = "\n".join(section_fulltexts) + "\n"
+        doc = numpydoc.format_doc(sections)
         return doc
 
     else:
