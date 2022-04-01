@@ -12,12 +12,12 @@ from ._core import Shape, shape_factory
 from ..bsdfs import BSDF
 from ..core import KernelDict
 from ... import validators
-from ..._util import onedict_value
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+from ...util.misc import onedict_value
 
 
 def _normalize(v: np.typing.ArrayLike) -> np.ndarray:

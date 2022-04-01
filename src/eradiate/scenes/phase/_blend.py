@@ -7,12 +7,12 @@ import numpy as np
 
 from ._core import PhaseFunction, phase_function_factory
 from ..core import BoundingBox, KernelDict
-from ..._util import onedict_value
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...kernel.gridvolume import write_binary_grid3d
 from ...kernel.transform import map_unit_cube
 from ...units import unit_context_kernel as uck
+from ...util.misc import onedict_value
 
 
 def _weights_converter(value: np.typing.ArrayLike) -> np.ndarray:

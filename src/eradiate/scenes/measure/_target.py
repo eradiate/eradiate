@@ -9,10 +9,10 @@ import pint
 import pinttr
 
 from ... import converters, validators
-from ..._util import is_vector3
 from ...attrs import documented, parse_docs
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
+from ...util.misc import is_vector3
 
 
 @attr.s

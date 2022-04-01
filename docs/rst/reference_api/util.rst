@@ -1,6 +1,8 @@
-``eradiate._util``
-==================
+``eradiate.util``
+=================
 
-.. automodule:: eradiate._util
+``eradiate.util.misc``
+----------------------
+
+.. automodule:: eradiate.util.misc
    :members:
-

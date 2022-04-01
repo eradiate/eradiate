@@ -8,10 +8,10 @@ from ._core import PhaseFunction, phase_function_factory
 from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
-from ..._util import onedict_value
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
+from ...util.misc import onedict_value
 
 
 @phase_function_factory.register(type_id="hg")

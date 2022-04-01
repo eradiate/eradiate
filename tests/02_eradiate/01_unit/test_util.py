@@ -6,7 +6,7 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate._util import (
+from eradiate.util.misc import (
     Singleton,
     camel_to_snake,
     deduplicate,

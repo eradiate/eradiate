@@ -11,12 +11,12 @@ import pinttr
 import eradiate
 
 from . import validators
-from ._util import fullname
 from .attrs import documented, parse_docs
 from .ckd import Bin, Bindex, BinSet
 from .exceptions import UnsupportedModeError
 from .units import unit_context_config as ucc
 from .units import unit_registry as ureg
+from .util.misc import fullname
 
 # ------------------------------------------------------------------------------
 #                                      ABC

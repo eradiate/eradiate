@@ -8,9 +8,9 @@ import attr
 import pooch
 
 from ._core import DataStore, expand_rules, registry_from_file
-from .._util import LoggingContext
 from ..exceptions import DataError
 from ..typing import PathLike
+from ..util.misc import LoggingContext
 
 logger = logging.getLogger(__name__)
 

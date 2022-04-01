@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from ._config import config
-from ._util import Singleton
+from .util.misc import Singleton
 
 
 class PathResolver(metaclass=Singleton):

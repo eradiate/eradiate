@@ -13,11 +13,11 @@ from ._core import Surface, surface_factory
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
 from ..core import KernelDict
 from ..shapes import RectangleShape, shape_factory
-from ..._util import onedict_value
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
 from ...units import unit_context_config as ucc
+from ...util.misc import onedict_value
 
 
 def _edges_converter(value):

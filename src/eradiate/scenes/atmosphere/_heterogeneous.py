@@ -17,12 +17,12 @@ from ._particle_layer import ParticleLayer
 from ..core import BoundingBox, KernelDict
 from ..phase import BlendPhaseFunction
 from ..shapes import CuboidShape, SphereShape
-from ..._util import onedict_value
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
+from ...util.misc import onedict_value
 
 
 def _zero_radprops(spectral_ctx: SpectralContext) -> xr.Dataset:

@@ -6,8 +6,8 @@ import pint
 from scipy.constants import physical_constants
 
 from .. import data
-from .._util import Singleton
 from ..units import unit_registry as ureg
+from ..util.misc import Singleton
 
 # Physical constants
 #: Loschmidt constant [km^-3].

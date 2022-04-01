@@ -18,7 +18,6 @@ from ... import converters
 from ... import unit_context_kernel as uck
 from ... import validators
 from ..._factory import Factory
-from ..._util import onedict_value
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel.gridvolume import write_binary_grid3d
@@ -26,6 +25,7 @@ from ...kernel.transform import map_unit_cube
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
+from ...util.misc import onedict_value
 
 atmosphere_factory = Factory()
 

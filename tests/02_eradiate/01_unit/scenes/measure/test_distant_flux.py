@@ -4,10 +4,10 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate._util import onedict_value
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.measure._distant_flux import DistantFluxMeasure
+from eradiate.util.misc import onedict_value
 
 
 def test_distant_flux_construct(modes_all):

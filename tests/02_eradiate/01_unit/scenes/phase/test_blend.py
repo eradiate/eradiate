@@ -3,10 +3,10 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.kernel.gridvolume import read_binary_grid3d
-from eradiate._util import onedict_value
 from eradiate.contexts import KernelDictContext
+from eradiate.kernel.gridvolume import read_binary_grid3d
 from eradiate.scenes.phase._blend import BlendPhaseFunction
+from eradiate.util.misc import onedict_value
 
 
 def test_blend_construct_basic():

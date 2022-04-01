@@ -8,10 +8,10 @@ import pooch
 from requests import RequestException
 
 from ._core import DataStore, expand_rules
-from .._util import LoggingContext
 from ..attrs import documented, parse_docs
 from ..exceptions import DataError
 from ..typing import PathLike
+from ..util.misc import LoggingContext
 
 
 @parse_docs
