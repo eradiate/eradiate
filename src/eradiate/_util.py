@@ -1,14 +1,16 @@
+"""
+A collection of tools which don't fit somewhere else.
+"""
+
 import functools
 import inspect
 import re
 import typing as t
-import warnings
 from collections import OrderedDict
 from numbers import Number
 
 import numpy as np
 import pint
-import pinttr
 
 
 class Singleton(type):
@@ -61,37 +63,6 @@ def deduplicate(value: t.Sequence, preserve_order: bool = True) -> t.List:
 
     else:
         return list(set(value))
-
-
-def ensure_array(value: t.Any, dtype: t.Optional[t.Any] = None) -> np.ndarray:
-    """
-    Convert or wrap a value in a Numpy array.
-
-    .. deprecated:: 0.21.1
-       This function is redundant with :func:`numpy.atleast_1d`, which should
-       be used instead.
-
-    Parameters
-    ----------
-    value
-        Value to convert to a Numpy array
-
-    dtype : data-type, optional
-        The desired data-type for the array.
-
-    Returns
-    -------
-    ndarray
-        A new array with the passed value.
-    """
-    warnings.warn(
-        "ensure_array() is deprecated, please use numpy.atleast_1d() instead",
-        DeprecationWarning,
-    )
-
-    kwargs = dict(dtype=dtype) if dtype is not None else {}
-
-    return np.array(list(pinttr.util.always_iterable(value)), **kwargs)
 
 
 def is_vector3(value: t.Any):
