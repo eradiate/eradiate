@@ -10,6 +10,8 @@ scheme more similar to SemVer in the future.
 
 Updates are tracked in this change log. Every time you decide to update to a
 newer version, we recommend that you to go through the list of changes.
+We try hard to remain backward-compatible and warn in advance for deprecation
+when necessary—we also advise to not ignore `DeprecationWarning`s.
 ```
 
 % HEREAFTER IS A TEMPLATE FOR THE NEXT RELEASE
@@ -20,7 +22,7 @@ newer version, we recommend that you to go through the list of changes.
 %
 % ### Breaking changes
 %
-% ### Deprecations
+% ### Deprecations and removals
 %
 % ### Improvements and fixes
 %
@@ -32,11 +34,9 @@ newer version, we recommend that you to go through the list of changes.
 
 % ### New features
 
-### Breaking changes
+% ### Breaking changes
 
-* Internal `_util` library is now `util.misc` ({ghcommit}`5a593d37b72a1070b5a8fa909359fd8ae6498d96`).
-
-### Deprecations
+### Deprecations and removals
 
 * Deprecated function `ensure_array()` is removed ({ghcommit}`622821439cc4b66483518288e78dad0e9aa0da77`).
 
@@ -51,6 +51,9 @@ newer version, we recommend that you to go through the list of changes.
 
 * The `progress` configuration variable is now an `IntEnum`, allowing for
   string-based setting while retaining comparison capabilities ({ghpr}`202`).
+* Internal `_util` library is now `util.misc` ({ghcommit}`5a593d37b72a1070b5a8fa909359fd8ae6498d96`).
+* Add a Numpydoc docstring parsing module ({ghpr}`200`).
+* Add a `deprecated()` decorator to mark a component for deprecation ({ghpr}`200`).
 
 ---
 
