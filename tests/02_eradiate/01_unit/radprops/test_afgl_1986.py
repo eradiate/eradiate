@@ -40,7 +40,9 @@ def test_afgl_1986_rad_profile_default_ckd(mode_ckd, model_id):
 
 
 @pytest.mark.parametrize("model_id", ["midlatitude_summer", "us_standard"])
-def test_afgl_1986_rad_profile_has_absorption_default(mode_ckd, test_ckd_spectral_ctx_1650, model_id):
+def test_afgl_1986_rad_profile_has_absorption_default(
+    mode_ckd, test_ckd_spectral_ctx_1650, model_id
+):
     """
     Default value for 'has_absorption' is True, hence the absorption
     coefficient is computed and is not zero everywhere at 1650 nm.
@@ -52,7 +54,9 @@ def test_afgl_1986_rad_profile_has_absorption_default(mode_ckd, test_ckd_spectra
 
 
 @pytest.mark.parametrize("model_id", ["midlatitude_summer", "us_standard"])
-def test_afgl_1986_rad_profile_has_absorption_true(mode_ckd, test_ckd_spectral_ctx_1650, model_id):
+def test_afgl_1986_rad_profile_has_absorption_true(
+    mode_ckd, test_ckd_spectral_ctx_1650, model_id
+):
     """
     When 'has_absorption' is True, the absorption coefficient is computed
     and is not zero everywhere at 1650 nm.
@@ -62,8 +66,11 @@ def test_afgl_1986_rad_profile_has_absorption_true(mode_ckd, test_ckd_spectral_c
     ds = p.eval_dataset(test_ckd_spectral_ctx_1650)
     assert (ds.sigma_a.values != 0.0).any()
 
+
 @pytest.mark.parametrize("model_id", ["midlatitude_summer", "us_standard"])
-def test_afgl_1986_rad_profile_has_absorption_false(mode_ckd, test_ckd_spectral_ctx_1650, model_id):
+def test_afgl_1986_rad_profile_has_absorption_false(
+    mode_ckd, test_ckd_spectral_ctx_1650, model_id
+):
     """
     When 'has_absorption' is False, the absorption coefficient is not
     computed and is zero everywhere.
@@ -74,7 +81,9 @@ def test_afgl_1986_rad_profile_has_absorption_false(mode_ckd, test_ckd_spectral_
     assert (ds.sigma_a.values == 0.0).all()
 
 
-def test_afgl_1986_rad_profile_has_scattering_default(mode_ckd, test_ckd_spectral_ctx_550):
+def test_afgl_1986_rad_profile_has_scattering_default(
+    mode_ckd, test_ckd_spectral_ctx_550
+):
     """
     Default value for 'has_scattering' is True, hence the absorption
     coefficient is computed and is not zero everywhere at 550 nm.
@@ -96,7 +105,9 @@ def test_afgl_1986_rad_profile_has_scattering_true(mode_ckd, test_ckd_spectral_c
     assert (ds.sigma_s.values != 0.0).any()
 
 
-def test_afgl_1986_rad_profile_has_scattering_false(mode_ckd, test_ckd_spectral_ctx_550):
+def test_afgl_1986_rad_profile_has_scattering_false(
+    mode_ckd, test_ckd_spectral_ctx_550
+):
     """
     When 'has_scattering' is False, the scattering coefficient is not
     computed and is zero everywhere.
@@ -136,7 +147,7 @@ def test_afgl_1986_rad_profile_concentrations_ckd_not_implemented(mode_ckd, mole
     """
     with pytest.raises(NotImplementedError):
         AFGL1986RadProfile(
-            thermoprops=dict(concentrations={molecule: 1.0 * ureg.kg / ureg.m ** 2})
+            thermoprops=dict(concentrations={molecule: 1.0 * ureg.kg / ureg.m**2})
         )
 
 

@@ -53,9 +53,7 @@ def afgl_1986_test_absorption_data_sets():
     }
 
 
-@pytest.mark.parametrize(
-    "bin", ["280", "550", "1040", "2120", "2400"]
-)
+@pytest.mark.parametrize("bin", ["280", "550", "1040", "2120", "2400"])
 def test_molecular_atmosphere_afgl_1986(mode_ckd, bin):
     """MolecularAtmosphere 'afgl_1986' constructor produces a valid kernel
     dictionary."""

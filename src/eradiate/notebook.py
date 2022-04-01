@@ -23,6 +23,7 @@ def install(*extensions):
     """
     from rich.pretty import install as install_rich_pretty
     from rich.traceback import install as install_rich_traceback
+
     from eradiate.kernel.logging import install_logging as install_kernel_logging
 
     if not extensions:

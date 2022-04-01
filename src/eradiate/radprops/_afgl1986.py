@@ -109,7 +109,9 @@ class AFGL1986RadProfile(RadProfile):
             # corresponding physical quantities used for concentration rescaling
             compute = {
                 "H2O": functools.partial(compute_column_mass_density, species="H2O"),
-                "CO2": functools.partial(compute_volume_mixing_ratio_at_surface, species="CO2"),
+                "CO2": functools.partial(
+                    compute_volume_mixing_ratio_at_surface, species="CO2"
+                ),
                 "O3": functools.partial(compute_column_number_density, species="O3"),
             }
 

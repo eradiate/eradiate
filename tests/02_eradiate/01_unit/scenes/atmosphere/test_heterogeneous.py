@@ -9,6 +9,7 @@ from eradiate.scenes.atmosphere import (
     ParticleLayer,
 )
 
+
 @pytest.fixture
 def path_to_ussa76_approx_data():
     return path_resolver.resolve(

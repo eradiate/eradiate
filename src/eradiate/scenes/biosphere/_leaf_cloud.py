@@ -131,7 +131,7 @@ def _leaf_cloud_positions_ellipsoid(n_leaves: int, rng, a: float, b: float, c: f
         y = (rand[1] - 0.5) * 2 * b
         z = (rand[2] - 0.5) * 2 * c
 
-        if (x ** 2 / a ** 2) + (y ** 2 / b ** 2) + (z ** 2 / c ** 2) <= 1.0:
+        if (x**2 / a**2) + (y**2 / b**2) + (z**2 / c**2) <= 1.0:
             positions.append([x, y, z])
 
     return positions
@@ -393,7 +393,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     def l_horizontal(self):
         if self._l_horizontal is None:
             self._l_horizontal = (
-                np.pi * self.leaf_radius ** 2 * self.n_leaves / self.lai
+                np.pi * self.leaf_radius**2 * self.n_leaves / self.lai
             )
         return self._l_horizontal
 
@@ -401,7 +401,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     def l_vertical(self):
         if self._l_vertical is None:
             self._l_vertical = (
-                self.lai * self.hdo ** 3 / (np.pi * self.leaf_radius ** 2 * self.hvr)
+                self.lai * self.hdo**3 / (np.pi * self.leaf_radius**2 * self.hvr)
             )
         return self._l_vertical
 

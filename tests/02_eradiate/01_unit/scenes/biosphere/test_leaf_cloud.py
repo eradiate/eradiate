@@ -9,13 +9,13 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere._leaf_cloud import (
     LeafCloud,
-    _sample_lad,
     _leaf_cloud_orientations,
     _leaf_cloud_positions_cuboid,
     _leaf_cloud_positions_cuboid_avoid_overlap,
     _leaf_cloud_positions_cylinder,
     _leaf_cloud_positions_ellipsoid,
     _leaf_cloud_radii,
+    _sample_lad,
 )
 from eradiate.scenes.core import KernelDict
 
@@ -308,4 +308,4 @@ def test_surface_area(mode_mono):
         leaf_radii=[0.1, 0.1],
     )
 
-    assert cloud.surface_area() == (2.0 * np.pi * 0.1 ** 2) * (ureg.m ** 2)
+    assert cloud.surface_area() == (2.0 * np.pi * 0.1**2) * (ureg.m**2)

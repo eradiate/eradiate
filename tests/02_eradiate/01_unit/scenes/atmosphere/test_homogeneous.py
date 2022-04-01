@@ -26,7 +26,7 @@ def test_homogeneous_sigma_s(mode_mono):
     """
     spectral_ctx = SpectralContext.new()
     r = HomogeneousAtmosphere(sigma_s=1e-5)
-    assert r.eval_sigma_s(spectral_ctx) == ureg.Quantity(1e-5, ureg.m ** -1)
+    assert r.eval_sigma_s(spectral_ctx) == ureg.Quantity(1e-5, ureg.m**-1)
 
 
 def test_homogeneous_top(mode_mono):
