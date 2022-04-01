@@ -32,9 +32,13 @@ newer version, we recommend that you to go through the list of changes.
 
 % ### New features
 
-% ### Breaking changes
+### Breaking changes
 
-% ### Deprecations
+* Internal `_util` library is now `util.misc` ({ghcommit}`5a593d37b72a1070b5a8fa909359fd8ae6498d96`).
+
+### Deprecations
+
+* Deprecated function `ensure_array()` is removed ({ghcommit}`622821439cc4b66483518288e78dad0e9aa0da77`).
 
 ### Improvements and fixes
 
