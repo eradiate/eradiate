@@ -231,7 +231,7 @@ def onedict_value(d: t.Mapping) -> t.Any:
     Examples
     --------
     >>> onedict_value({"foo": "bar"})
-    "bar"
+    'bar'
     """
 
     if len(d) != 1:
