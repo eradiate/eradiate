@@ -9,10 +9,69 @@ import os.path
 import pathlib
 import warnings
 
+import attr
 import environ
+from environ._environ_config import CNF_KEY, RAISE, _ConfigEntry
 from environ.exceptions import ConfigError
 
 from .exceptions import ConfigWarning
+
+
+def var(
+    default=RAISE,
+    converter=None,
+    name=None,
+    validator=None,
+    help=None,
+    on_setattr=True,
+):
+    """
+    Reimplementation of `environ-config`'s :func:`var` with `on_setattr` support.
+
+    Declare a configuration attribute on the body of `config`-decorated class.
+
+    It will be attempted to be filled from an environment variable based on the
+    prefix and *name*.
+
+    Parameters
+    ----------
+
+    default
+        Setting this to a value makes the config attribute optional.
+
+    name : str
+        Overwrite name detection with a string.  If not set, the name of the
+        attribute is used.
+
+    converter
+        A callable that is run with the found value and its return value is
+        used.  Please not that it is also run for default values.
+
+    validator
+        A callable that is run with the final value. See ``attrs``'s
+        `chapter on validation <https://www.attrs.org/en/stable/init.html#validators>`_
+        for details.
+        You can also use any validator that is
+        `shipped with attrs <https://www.attrs.org/en/stable/api.html#validators>`_.
+
+    help : str
+        A help string that is used by `generate_help`.
+
+    on_setattr : callable or list of callables or None or attr.setters.NO_OP, optional
+        This argument is directly forwarded to :func:`attr.ib`, with the notable
+        difference that the default behaviour executes converters and
+        validators.
+    """
+    if on_setattr is None:
+        on_setattr = attr.setters.pipe(attr.setters.convert, attr.setters.validate)
+
+    return attr.ib(
+        default=default,
+        metadata={CNF_KEY: _ConfigEntry(name, default, None, None, help)},
+        converter=converter,
+        validator=validator,
+        on_setattr=on_setattr,
+    )
 
 
 def format_help_dicts_rst(help_dicts, display_defaults=False):
@@ -52,7 +111,7 @@ class EradiateConfig:
     """
 
     #: Path to the Eradiate source directory.
-    source_dir = environ.var(
+    source_dir = var(
         converter=lambda x: pathlib.Path(x).absolute(),
         help="Path to the Eradiate source directory.",
     )
@@ -71,7 +130,7 @@ class EradiateConfig:
             ) from FileNotFoundError(eradiate_init)
 
     #: A colon-separated list of paths where to search for data files.
-    data_path = environ.var(
+    data_path = var(
         default=None,
         converter=lambda x: [pathlib.Path(y) for y in x.split(":") if y]
         if isinstance(x, str)
@@ -98,14 +157,14 @@ class EradiateConfig:
             )
 
     #: URL where large data files are located.
-    data_store_url = environ.var(
+    data_store_url = var(
         default="http://eradiate.eu/data/store/",
         converter=str,
         help="URL where large data files are located.",
     )
 
     #: Path to the Eradiate download directory.
-    download_dir = environ.var(
+    download_dir = var(
         default="$ERADIATE_SOURCE_DIR/resources/downloads",
         converter=lambda x: pathlib.Path(os.path.expandvars(x)).absolute(),
         help="Path to the Eradiate download directory.",
@@ -114,7 +173,7 @@ class EradiateConfig:
     #: An integer flag setting the level of progress display
     #: [0: None; 1: Spectral loop; 2: Kernel]. Only affects tqdm-based
     #: progress bars.
-    progress = environ.var(
+    progress = var(
         default=2,
         converter=int,
         help="An integer flag setting the level of progress display "
