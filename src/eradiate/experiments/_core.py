@@ -14,6 +14,7 @@ from tqdm.auto import tqdm
 import eradiate
 
 from .. import config, pipelines
+from .._config import ProgressLevel
 from .._mode import ModeFlags, supported_mode
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
@@ -334,7 +335,8 @@ class Experiment(ABC):
                 unit_scale=1.0,
                 leave=True,
                 bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
-                disable=config.progress < 1 or len(spectral_ctxs) <= 1,
+                disable=config.progress < ProgressLevel.SPECTRAL_LOOP
+                or len(spectral_ctxs) <= 1,
             ) as pbar:
                 for kernel_dict, ctx in self.kernel_dicts(measure):
                     spectral_ctx = ctx.spectral_ctx

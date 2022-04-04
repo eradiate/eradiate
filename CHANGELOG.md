@@ -47,7 +47,10 @@ newer version, we recommend that you to go through the list of changes.
 
 % ### Documentation
 
-% ### Internal changes
+### Internal changes
+
+* The `progress` configuration variable is now an `IntEnum`, allowing for
+  string-based setting while retaining comparison capabilities ({ghpr}`202`).
 
 ---
 

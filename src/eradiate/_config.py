@@ -5,6 +5,7 @@ variables. A single instance :data:`.config` is aliased in the top-level module
 for convenience.
 """
 
+import enum
 import os.path
 import pathlib
 import warnings
@@ -23,7 +24,7 @@ def var(
     name=None,
     validator=None,
     help=None,
-    on_setattr=True,
+    on_setattr=None,
 ):
     """
     Reimplementation of `environ-config`'s :func:`var` with `on_setattr` support.
@@ -35,7 +36,6 @@ def var(
 
     Parameters
     ----------
-
     default
         Setting this to a value makes the config attribute optional.
 
@@ -72,6 +72,18 @@ def var(
         validator=validator,
         on_setattr=on_setattr,
     )
+
+
+class ProgressLevel(enum.IntEnum):
+    """
+    An enumeration defining valid progress levels.
+
+    This is an integer enumeration, meaning that levels can be compared.
+    """
+
+    NONE = 0  #: No progress
+    SPECTRAL_LOOP = enum.auto()  #: Up to spectral loop level progress
+    KERNEL = enum.auto()  #: Up to kernel level progress
 
 
 def format_help_dicts_rst(help_dicts, display_defaults=False):
@@ -170,14 +182,18 @@ class EradiateConfig:
         help="Path to the Eradiate download directory.",
     )
 
-    #: An integer flag setting the level of progress display
-    #: [0: None; 1: Spectral loop; 2: Kernel]. Only affects tqdm-based
-    #: progress bars.
+    #: An integer flag setting the level of progress display (see
+    #: :class:`ProgressLevel`). Values are preferrably using strings
+    #: (``["NONE", "SPECTRAL_LOOP", "KERNEL"]``). Only affects tqdm-based progress
+    #: bars.
     progress = var(
-        default=2,
-        converter=int,
-        help="An integer flag setting the level of progress display "
-        "[0: None; 1: Spectral loop; 2: Kernel]. Only affects tqdm-based "
+        default="KERNEL",
+        converter=lambda x: ProgressLevel[x.upper()]
+        if isinstance(x, str)
+        else ProgressLevel(x),
+        help="An integer flag setting the level of progress display (see"
+        ":class:`.ProgressLevel`). Values are preferrably using strings "
+        '(``["NONE", "SPECTRAL_LOOP", "KERNEL"]``). Only affects tqdm-based '
         "progress bars.",
     )
 
