@@ -25,6 +25,10 @@ Classes
 .. autoclass:: EradiateConfig
    :members:
 
+.. autoclass:: ProgressLevel
+   :members:
+   :member-order: bysource
+
 Attributes
 ----------
 
