@@ -1,4 +1,4 @@
-# What's new
+# What's new?
 
 ```{note}
 For now, Eradiate uses a
