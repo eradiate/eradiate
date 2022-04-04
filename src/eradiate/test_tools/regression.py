@@ -207,7 +207,9 @@ class RegressionTest(ABC):
         reference_only : bool
             Create only a simple visualisation of the computation data
         """
-        filename = "".join([os.path.splitext(self.archive_filename)[0], ".png"])
+        filename = "".join(
+            [os.path.splitext(os.path.abspath(self.archive_filename))[0], ".png"]
+        )
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         print(f"Saving plot in {filename}")
         if reference_only:
