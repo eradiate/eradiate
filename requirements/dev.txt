@@ -393,7 +393,7 @@ prometheus-client==0.13.1
     # via
     #   jupyter-server
     #   notebook
-prompt-toolkit==3.0.28
+prompt-toolkit==3.0.29
     # via ipython
 psutil==5.9.0
     # via ipykernel
@@ -496,7 +496,7 @@ requests-toolbelt==0.9.1
     #   twine
 rfc3986==2.0.0
     # via twine
-rich==12.1.0
+rich==12.2.0
     # via
     #   -r requirements/main.in
     #   twine

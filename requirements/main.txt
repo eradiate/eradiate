@@ -179,7 +179,7 @@ requests==2.27.1
     # via
     #   -c requirements/dev.txt
     #   pooch
-rich==12.1.0
+rich==12.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
