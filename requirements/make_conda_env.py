@@ -5,7 +5,7 @@ from copy import deepcopy
 import click
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedSeq as CS
-from setuptools.config.setupcfg import read_configuration
+from setuptools.config.pyprojecttoml import read_configuration
 
 
 @click.command()
@@ -17,7 +17,7 @@ from setuptools.config.setupcfg import read_configuration
     "Default: 'main,tests,dev,docs'",
 )
 @click.option(
-    "-i", "--input", default="setup.cfg", help="Path to setup.cfg file."
+    "-i", "--input", default="pyproject.toml", help="Path to pyproject.toml file."
 )
 @click.option("-o", "--output", default=None, help="Path to output file.")
 @click.option("-q", "--quiet", is_flag=True, help="Suppress terminal output.")
@@ -48,9 +48,9 @@ def cli(sections, input, output, quiet):
 
         try:
             packages = (
-                setup_config["options"]["install_requires"]
+                setup_config["project"]["dependencies"]
                 if section == "main"
-                else setup_config["options"]["extras_require"][section]
+                else setup_config["project"]["optional-dependencies"][section]
             )
         except KeyError:
             raise RuntimeError(f"Cannot fetch dependencies from {input}")

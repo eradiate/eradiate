@@ -1,6 +1,98 @@
 [build-system]
-requires = ["setuptools>=60", "setuptools_scm>=6.2"]
+requires = ["setuptools>=61", "setuptools_scm>=6.2"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "eradiate"
+description = "A radiative transfer model for the Earth observation community"
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "GPLv3"}
+authors = [
+    {name = "The Eradiate Team"},
+]
+maintainers = [
+    {name = "The Eradiate Team"},
+]
+dynamic = ["version"]
+
+dependencies = [
+    "aabbtree",
+    "astropy",
+    "attrs",
+    "click",
+    "cerberus",
+    "dask",
+    "dessinemoi",
+    "environ-config",
+    "iapws",
+    "matplotlib",
+    "netcdf4",
+    "numpy",
+    "pint",
+    "pinttrs>=21.3.0",
+    "pooch",
+    "python-dateutil",
+    "rich",
+    "ruamel.yaml",
+    "scipy",
+    "seaborn",
+    "tqdm",
+    "xarray>=0.19,!=0.20.*",
+]
+
+[project.optional-dependencies]
+tests = [
+    "pytest",
+    "pytest-json-report",
+    "pytest-metadata",
+    "pytest-xdist",
+]
+
+dev = [
+    "black",
+    "conda-lock>=0.12",
+    "coverage",
+    "ipython",
+    "ipywidgets",
+    "isort",
+    "jupyterlab",
+    "pip",
+    "pip-tools>=6.5",
+    "setuptools>=61",
+    "setuptools-scm>=6.2",
+    "twine",
+]
+
+docs = [
+    "autodocsumm",
+    "mock",
+    "myst-parser",
+    "nbsphinx",
+    "sphinx-book-theme>=0.1.10",
+    "sphinx>=3.1",
+    "sphinxcontrib-bibtex>=2.0",
+    "sphinx-autobuild",
+    "sphinx-click>=3.0.2",
+    "sphinx-copybutton",
+    "sphinx-design",
+]
+
+[project.urls]
+repository = "https://github.com/eradiate/eradiate"
+documentation = "https://eradiate.readthedocs.io"
+changelog = "https://github.com/eradiate/eradiate/CHANGELOG.md"
+
+[project.scripts]
+eradiate = "eradiate.cli:main"
+ertshow = "eradiate.cli:show"
+ertdata = "eradiate.cli:data"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["eradiate*"]
+exclude = ["plugins"]
+namespaces = false
 
 [tool.setuptools_scm]
 version_scheme = "post-release"  # Count commits since last tag, don't anticipate new version

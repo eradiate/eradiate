@@ -208,17 +208,17 @@ We categorise our dependencies in four sets:
 
    .. figure:: ../fig/requirement_layers.svg
 
-The sets are defined in ``setup.cfg``, where direct dependencies are specified
-with minimal constraint.
+The sets are defined in ``pyproject.toml``, where direct dependencies are
+specified with minimal constraint.
 
 .. warning:: This is the location from which all dependencies are sourced.
-   Dependencies shoud all be specified only in ``setup.cfg``.
+   Dependencies shoud all be specified only in ``pyproject.toml``.
 
 We then have processes which will compile these dependencies into transitively
 pinned dependencies and write them as requirement (lock) files. The Conda and
 Pip pinning processes are different.
 
-The generate lock files are versioned and come along the source code they were
+The generated lock files are versioned and come along the source code they were
 used to write. Thus, a developer cloning the codebase will also get the
 information they need to reproduce the same environment as the other developers.
 
@@ -273,8 +273,8 @@ Updating lock files
 ^^^^^^^^^^^^^^^^^^^
 
 When you want to update pinned dependencies (*e.g.* because you added or changed
-a dependency in ``setup.cfg`` or because a dependency must be updated), you need
-to update the lock file.
+a dependency in ``pyproject.toml`` or because a dependency must be updated), you
+need to update the lock file.
 
 **With Conda**, use the following command in your active virtual environment:
 
