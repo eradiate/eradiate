@@ -32,7 +32,10 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 ## v0.22.3 (unreleased)
 
-% ### New features
+### New features
+
+* Add entry point `eradiate.run()`, which executes a full experiment pipeline 
+  and returns results as an xarray dataset ({ghpr}`210`).
 
 ### Breaking changes
 
@@ -44,6 +47,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 ### Deprecations and removals
 
 * Deprecated function `ensure_array()` is removed ({ghcommit}`622821439cc4b66483518288e78dad0e9aa0da77`).
+* Deprecating instance method `Experiment.run()` ({ghpr}`210`).
 
 ### Improvements and fixes
 

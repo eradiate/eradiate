@@ -79,6 +79,13 @@ Mode = _mode.Mode
 #: Alias to :class:`eradiate._mode.ModeFlags`.
 ModeFlags = _mode.ModeFlags
 
+# -- Convenience entry points --------------------------------------------------
+
+from . import experiments  # isort: skip
+
+#: Alias to :class:`eradiate.experiments.run`.
+run = experiments.run
+
 
 # -- Import submodules ---------------------------------------------------------
 
@@ -87,7 +94,6 @@ from . import (
     contexts,
     converters,
     data,
-    experiments,
     kernel,
     notebook,
     pipelines,
@@ -114,6 +120,7 @@ __all__ = [
     "pipelines",
     "plot",
     "rng",
+    "run",
     "scenes",
     "set_mode",
     "supported_mode",

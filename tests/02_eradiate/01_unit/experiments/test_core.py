@@ -1,7 +1,9 @@
 import pytest
+import xarray as xr
 
+import eradiate
 from eradiate.exceptions import KernelVariantError
-from eradiate.experiments import mitsuba_run
+from eradiate.experiments import OneDimExperiment, mitsuba_run
 from eradiate.scenes.core import KernelDict
 
 
@@ -62,3 +64,9 @@ def test_mitsuba_run_fail():
     mitsuba.set_variant("scalar_rgb")
     with pytest.raises(KernelVariantError):
         mitsuba_run(kernel_dict)
+
+
+def test_run_function(modes_all_double):
+    exp = OneDimExperiment(atmosphere=None)
+    result = eradiate.run(exp)
+    assert isinstance(result, xr.Dataset)

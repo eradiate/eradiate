@@ -31,3 +31,4 @@ Functions
    :toctree: generated/autosummary/
 
    mitsuba_run
+   run
