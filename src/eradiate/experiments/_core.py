@@ -35,6 +35,7 @@ from ..scenes.measure import (
     MultiDistantMeasure,
     measure_factory,
 )
+from ..util.deprecation import deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +153,47 @@ def mitsuba_run(
 
 
 # ------------------------------------------------------------------------------
+#                              Experiment runner
+# ------------------------------------------------------------------------------
+
+
+def run(
+    exp: Experiment,
+    measure: t.Union[Measure, int] = 0,
+    seed_state: t.Optional[SeedState] = None,
+) -> xr.Dataset:
+    """
+    Run an Eradiate experiment, including the Monte Carlo simulation and data
+    post-processing.
+
+    Parameters
+    ----------
+    exp : .Experiment
+        The experiment to be run.
+
+    measure : .Measure or int, optional
+        The measure to be simulated.
+
+    seed_state : .SeedState, optional
+        A RNG seed state used to generate the seeds used by Mitsuba's random
+        number generator. By default, Eradiate's :data:`.root_seed_state` is
+        used.
+
+    Returns
+    -------
+    result : Dataset
+        Experiment result data.
+    """
+
+    if isinstance(measure, int):
+        measure = exp.measures[measure]
+
+    exp.process(measure, seed_state=seed_state)
+    exp.postprocess(measure)
+    return exp.results[measure.id]
+
+
+# ------------------------------------------------------------------------------
 #                                 Base classes
 # ------------------------------------------------------------------------------
 
@@ -256,6 +298,7 @@ class Experiment(ABC):
     #                              Processing
     # --------------------------------------------------------------------------
 
+    @deprecated(deprecated_in="0.22.3", removed_in="0.22.5")
     def run(
         self,
         *measures: t.Union[Measure, int],
@@ -273,8 +316,9 @@ class Experiment(ABC):
             If no value is passed, all measures are processed.
 
         seed_state : .SeedState, optional
-            A RNG seed state used generate the seeds used by Mitsuba's RNG
-            generator. By default, Eradiate's :data:`.root_seed_state` is used.
+            A RNG seed state used to generate the seeds used by Mitsuba's random
+            number generator. By default, Eradiate's :data:`.root_seed_state` is
+            used.
 
         See Also
         --------
@@ -300,8 +344,9 @@ class Experiment(ABC):
             If no value is passed, all measures are processed.
 
         seed_state : .SeedState, optional
-            A RNG seed state used generate the seeds used by Mitsuba's RNG
-            generator. By default, Eradiate's :data:`.root_seed_state` is used.
+            A RNG seed state used to generate the seeds used by Mitsuba's random
+            number generator. By default, Eradiate's :data:`.root_seed_state` is
+            used.
 
         See Also
         --------

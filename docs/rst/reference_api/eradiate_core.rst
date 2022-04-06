@@ -55,3 +55,9 @@ Metadata
 
 .. autodata:: __version__
    :annotation:
+
+Convenience aliases
+-------------------
+
+.. autodata:: run
+   :annotation:
