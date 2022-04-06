@@ -19,7 +19,7 @@ from ..phase import BlendPhaseFunction
 from ..shapes import CuboidShape, SphereShape
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...units import to_quantity
+from ...units import symbol, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import onedict_value
@@ -278,6 +278,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             sigma_t = sum(sigma_ts)
             sigma_s = sum(sigma_ss)
+            sigma_a = sigma_t - sigma_s
 
             albedo = np.divide(
                 sigma_s,
@@ -288,11 +289,29 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             result = xr.Dataset(
                 data_vars={
+                    "sigma_a": (
+                        "z_layer",
+                        sigma_a,
+                        {
+                            "units": f"{symbol(sigma_units)}",
+                            "standard_name": "absorption_coefficient",
+                            "long_name": "absorption coefficient",
+                        },
+                    ),
+                    "sigma_s": (
+                        "z_layer",
+                        sigma_s,
+                        {
+                            "units": f"{symbol(sigma_units)}",
+                            "standard_name": "scattering_coefficient",
+                            "long_name": "scattering coefficient",
+                        },
+                    ),
                     "sigma_t": (
                         "z_layer",
                         sigma_t,
                         {
-                            "units": f"{sigma_units:~P}",
+                            "units": f"{symbol(sigma_units)}",
                             "standard_name": "extinction_coefficient",
                             "long_name": "extinction coefficient",
                         },
@@ -312,7 +331,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                         "z_layer",
                         hrz.magnitude,
                         {
-                            "units": f"{hrz.units:~P}",
+                            "units": f"{symbol(hrz.units)}",
                             "standard_name": "layer_altitude",
                             "long_name": "layer altitude",
                         },
@@ -365,14 +384,17 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             # Construct a blended phase function based on those weighting values
             shape = self.eval_shape(ctx)
+
             if isinstance(shape, CuboidShape):
                 shape_min = shape.center - shape.edges * 0.5
                 shape_min[2] = self.bottom
                 shape_max = shape.center + shape.edges * 0.5
+
             elif isinstance(shape, SphereShape):
                 length_units = ucc.get("length")
                 shape_min = [0, 0, 0] * length_units
                 shape_max = [1, 1, shape.radius.m_as(length_units)] * length_units
+
             else:
                 raise RuntimeError(
                     f"Unsupported atmosphere geometry shape '{type(shape).__name__}'"

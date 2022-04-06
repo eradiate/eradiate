@@ -421,10 +421,30 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
             sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx)
             albedo = self.eval_albedo(spectral_ctx=spectral_ctx)
+            sigma_a = self.eval_sigma_a(spectral_ctx=spectral_ctx)
+            sigma_s = self.eval_sigma_s(spectral_ctx=spectral_ctx)
             wavelength = spectral_ctx.wavelength
 
             return xr.Dataset(
                 data_vars={
+                    "sigma_a": (
+                        "z_layer",
+                        np.atleast_1d(sigma_a.magnitude),
+                        dict(
+                            standard_name="absorption_coefficient",
+                            long_name="absorption coefficient",
+                            units=symbol(sigma_a.units),
+                        ),
+                    ),
+                    "sigma_s": (
+                        "z_layer",
+                        np.atleast_1d(sigma_s.magnitude),
+                        dict(
+                            standard_name="scattering_coefficient",
+                            long_name="scattering coefficient",
+                            units=symbol(sigma_s.units),
+                        ),
+                    ),
                     "sigma_t": (
                         "z_layer",
                         np.atleast_1d(sigma_t.magnitude),
