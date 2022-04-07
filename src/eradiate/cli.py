@@ -146,14 +146,16 @@ def update_registries():
     "--from-file",
     "-f",
     default=None,
-    help="Optional path to a file list (YAML format). This option will "
-    "override the FILES argument.",
+    help="Optional path to a file list (YAML format). If this option is set, "
+    "the FILES argument(s) will be ignored.",
 )
 def fetch(files, from_file):
     """
     Fetch files from the Eradiate data store. FILES is an arbitrary number of
     relative paths to files to be retrieved from the data store. If FILES is
-    unset,
+    unset, the list of files is read from a YAML file which can be specified by
+    using the ``--from-file`` option and defaults to
+    ``$ERADIATE_SOURCE_DIR/resources/downloads.yml``.
     """
     if not files:
         if from_file is None:
