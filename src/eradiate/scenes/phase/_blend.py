@@ -156,7 +156,7 @@ class BlendPhaseFunction(PhaseFunction):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _gridvolume_transform(self) -> "mitsuba.core.ScalarTransform4f":
+    def _gridvolume_transform(self) -> "mitsuba.ScalarTransform4f":
         if self.bbox is None:
             raise ValueError(
                 "computing the gridvolume transform requires a bounding box"

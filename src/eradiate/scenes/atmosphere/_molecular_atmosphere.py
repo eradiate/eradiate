@@ -58,7 +58,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             factory=lambda: RayleighPhaseFunction(),
             converter=phase_function_factory.convert,
             validator=attr.validators.instance_of(PhaseFunction),
-        )
+        ),
+        doc="Phase function.",
+        type=":class:`.PhaseFunction`",
+        init_type=":class:`.PhaseFunction` or dict",
+        default=":class:`RayleighPhaseFunction() <.RayleighPhaseFunction>`",
     )
 
     has_absorption: bool = documented(
