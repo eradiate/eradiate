@@ -206,7 +206,9 @@ class BlendPhaseFunction(PhaseFunction):
         if self.weights.ndim == 2 and self.weights.shape[1] > 1:
             write_binary_grid3d(
                 filename=self.weight_file,
-                values=np.reshape(weight, (1, 1, -1)),
+                values=np.reshape(
+                    weight, (-1, 1, 1)
+                ),  # Mind dim ordering! (C-style, i.e. zyx)
             )
 
             weight = {

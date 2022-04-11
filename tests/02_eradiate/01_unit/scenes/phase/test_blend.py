@@ -207,12 +207,11 @@ def test_blend_array_2_components(modes_all):
 
     # Kernel dict generation succeeds
     ctx = KernelDictContext()
-    phase_dict = phase.kernel_dict(ctx)
     assert isinstance(phase.kernel_dict(ctx).load(), mi.PhaseFunction)
 
     # weight file is correct
     weight_values = read_binary_grid3d(phase.weight_file)
-    assert np.allclose(weight_values, weight2)
+    assert np.allclose(weight_values, weight2.reshape((-1, 1, 1)))
 
 
 def test_blend_array_3_components(modes_all):
@@ -240,7 +239,7 @@ def test_blend_array_3_components(modes_all):
 
     # weight file is correct
     weight_values = read_binary_grid3d(phase.weight_file)
-    assert np.allclose(weight_values, weight2 + weight3)
+    assert np.allclose(weight_values, (weight2 + weight3).reshape((-1, 1, 1)))
 
     # nested weight file is correct
     nested_weight_filename = phase_dict.data["phase"]["phase2"]["weight"]["filename"]
@@ -248,4 +247,4 @@ def test_blend_array_3_components(modes_all):
     nested_weight = np.divide(
         weight3, weight2 + weight3, where=weight2 + weight3 != 0.0, out=weight3
     )
-    assert np.allclose(nested_weight_values, nested_weight)
+    assert np.allclose(nested_weight_values, nested_weight.reshape((-1, 1, 1)))
