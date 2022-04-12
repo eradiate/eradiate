@@ -82,6 +82,18 @@ def deprecated(
     used between v0.21.1 (included) and v0.22.1 (excluded), a
     :class:`.DeprecatedWarning` is emitted. If they are used from v0.22.1 on,
     an :class:`.UnsupportedWarning` is emitted.
+
+    When used with static or class methods, their respective decorators must be
+    applied *after* this one:
+
+    >>> class SomeClass:
+    ...     @staticmethod
+    ...     @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
+    ...     def staticmethod(): ...
+    ...
+    ...     @classmethod
+    ...     @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
+    ...     def classmethod(cls): ...
     """
     # You can't just jump to removal. It's weird, unfair, and also makes
     # building up the docstring weird.
@@ -166,8 +178,8 @@ def deprecated(
                 if old_new is object.__new__:
                     return old_new(cls)
 
-                # actually, we don't know the real signature of *old_new*
-                return old_new(cls, *args, **kwargs)
+                else:  # actually, we don't know the real signature of *old_new*
+                    return old_new(cls, *args, **kwargs)
 
             wrapped.__new__ = staticmethod(wrapped_cls)
 
