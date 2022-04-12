@@ -47,7 +47,14 @@ def show():
 
     console.rule("Configuration")
     for var in [x.name for x in eradiate.config.__attrs_attrs__]:
-        console.print(f"• ERADIATE_{var.upper()}: {getattr(eradiate.config, var)}")
+        value = getattr(eradiate.config, var)
+
+        if var == "progress":
+            var_repr = f"{value!r}"
+        else:
+            var_repr = str(value)
+
+        console.print(f"• ERADIATE_{var.upper()}: {var_repr}")
 
     console.rule("Path resolver")
     for path in eradiate.path_resolver:
@@ -83,7 +90,8 @@ def data():
     "--rules",
     "-r",
     default=None,
-    help="Path to the registry rule file (default: '<input_directory>/registry_rules.yml').",
+    help="Path to the registry rule file "
+    "(default: '<input_directory>/registry_rules.yml').",
 )
 @click.option(
     "--hash-algorithm",
