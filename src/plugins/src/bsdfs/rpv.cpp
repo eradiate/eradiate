@@ -75,6 +75,7 @@ class RPV final : public BSDF<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(BSDF, m_flags, m_components)
     MI_IMPORT_TYPES(Texture)
+    using FloatStorage = DynamicBuffer<Float>;
 
     RPV(const Properties &props) : Base(props) {
         m_rho_0 = props.texture<Texture>("rho_0", 0.1f);
@@ -87,6 +88,85 @@ public:
         }
         m_flags = BSDFFlags::GlossyReflection | BSDFFlags::FrontSide;
         m_components.push_back(m_flags);
+
+        /*
+         * Data order:
+         * theta_i
+         * theta_o
+         * phi_rel
+        **/
+        int32_t size = 32768; // 32^3
+
+        m_data = std::unique_ptr<Spectrum[]>(new Spectrum[size]);
+
+        Spectrum accum = 0.f;
+        size_t l = 0;
+        for (size_t i = 0; i < 32; ++i) {
+            for (size_t j = 0; j < 32; ++j){
+                for (size_t k = 0; k > 32; ++k){
+                    Float theta_i = dr::Pi<Float> / 32.f * i;
+                    Float theta_o = dr::Pi<Float> / 32.f * j;
+                    Float phi = dr::TwoPi<Float> / 32.f * k;
+
+                    Vector3f wi = Vector3f(dr::sin(theta_i), 0.f, dr::cos(theta_i));
+                    Vector3f wo = Vector3f(
+                        dr::sin(theta_i)*dr::cos(phi),
+                        dr::sin(theta_i)*dr::sin(phi),
+                        dr::cos(theta_i)
+                    );
+                    SurfaceInteraction3f si = SurfaceInteraction3f();
+                    si.wi = wi;
+
+                    Spectrum value = eval_rpv(si, wo, Mask true);
+                    accum += value;
+                    m_data[l] = value;
+                    ++l;
+                }
+            }
+        }
+
+        std::unique_ptr<ScalarFloat[]> cond_cdf(new ScalarFloat[32768]);
+        std::unique_ptr<ScalarFloat[]> marg_theta_i_cdf(new ScalarFloat[32]);
+        std::unique_ptr<ScalarFloat[]> marg_theta_o_cdf(new ScalarFloat[32]);
+
+        uint step_theta_i = 32*32;
+        uint step_theta_o = 32;
+
+        // marginal theta_i and conditional CDF
+        Spectrum accum_marg_theta_i = 0.f;
+        for (uint32_t x = 0; x < 32; ++x) {
+            uint offset_theta_i = x * step_theta_i;
+            for (uint32_t y = 0; y < 32; ++y) {
+                uint offset_theta_o = y * step_theta_o;
+                Spectrum accum_cond = 0.f;
+                for (uint32_t z = 0; z <32; ++z) {
+                    accum_cond += m_data[offset_theta_i + offset_theta_o + z];
+                    cond_cdf[offset_theta_i + offset_theta_o + z] = accum_cond;
+                    accum_marg_theta_i += accum_cond;
+                }
+            }
+            marg_theta_i_cdf[x] = accum_marg_theta_i;
+        }
+
+        // marginal theta_o CDF
+        Float accum_marg_theta_o = 0.f;
+            for (uint32_t y = 0; y < 32; ++y) {
+                uint offset_theta_o = y * step_theta_o;
+                for (uint32_t x = 0; x < 32; ++x) {
+                    uint offset_theta_i = x * step_theta_i;
+                    for (uint32_t z = 0; z <32; ++z) {
+                        accum_marg_theta_i += m_data[offset_theta_i + offset_theta_o + z];
+                    }
+                }
+                marg_theta_o_cdf[y] = accum_marg_theta_o;
+            }
+
+        m_inv_normalization = accum_marg_theta_o;
+        m_normalization = 1.0 / accum_marg_theta_o;
+
+        m_marg_theta_i_cdf = dr::load<FloatStorage>(marg_theta_i_cdf.get(), 32);
+        m_marg_theta_o_cdf = dr::load<FloatStorage>(marg_theta_o_cdf.get(), 32);
+        m_cond_cdf         = dr::load<FloatStorage>(cond_cdf.get(), 32768);
     }
 
     std::pair<BSDFSample3f, Spectrum> sample(const BSDFContext & /* ctx */,
@@ -97,12 +177,62 @@ public:
         MI_MASKED_FUNCTION(ProfilerPhase::BSDFSample, active);
 
         Float cos_theta_i = Frame3f::cos_theta(si.wi);
+        Float cos_phi_i = Frame3f::cos_phi(si.wi);
+        Float theta_i = dr::acos(cos_theta_i);
+        Float phi_i = dr::acos(cos_phi_i);
+
+        UInt32 idx_theta_i = dr::floor2int(theta_i / dr::Pi<Float> * 32.f);
+
+        UInt32 offset_theta_i = idx_theta_i * 32 * 32;
+
+        Point2f sample(direction_sample);
+
+        // Avoid degeneracies on the domain boundary
+        sample = dr::clamp(sample, dr::Smallest<Float>, dr::OneMinusEpsilon<Float>);
+
+        // Scale sample theta_o range
+        sample.x() += (Float) m_inv_normalization;
+
+        // Sample theta_o
+        UInt32 idx_theta_o = dr::binary_search<UInt32>(
+            0u, 31, [&](UInt32 idx) {
+            return dr::gather<Float>(m_marg_theta_o_cdf, idx, active) < sample.x();
+            }
+        );
+
+        UInt32 offset_theta_o = idx_theta_o * 32;
+        Float theta_o = idx_theta_o / 32.f * dr::Pi<Float>;
+
+        // Scale phi sample range
+        sample.y() *= dr::gather(m_cond_cdf, offset_theta_o + offset_theta_i + 31, active);
+
+        // Sample phi
+        UInt32 idx_phi = dr::binary_search<UInt32>(
+            0u, 31, [&](UInt32 idx) {
+                return dr::gather<Float>(
+                    m_cond_cdf,
+                    idx + offset_theta_i + offset_theta_o,
+                    active
+                ) < sample.y();
+            }
+        );
+
+        // PDF value preparations
+        Float cond_cdf_0 = dr::gather<Float>(m_cond_cdf, offset_theta_i + offset_theta_o + idx_phi - 1, active && idx_phi > 0);
+        Float cond_cdf_1 = dr::gather<Float>(m_cond_cdf, offset_theta_i + offset_theta_o + idx_phi, active);
+
+        Float phi_o = idx_phi / 32 * dr::TwoPi<Float> + phi_i;
+
         BSDFSample3f bs   = dr::zero<BSDFSample3f>();
 
         active &= cos_theta_i > 0.f;
 
-        bs.wo           = warp::square_to_cosine_hemisphere(direction_sample);
-        bs.pdf          = warp::square_to_cosine_hemisphere_pdf(bs.wo);
+        bs.wo = Point3f(
+                    dr::sin(theta_o)*dr::cos(phi_o),
+                    dr::sin(theta_o)*dr::sin(phi_o),
+                    dr::cos(theta_o)
+        );
+        bs.pdf          = (cond_cdf_1 - cond_cdf_0) * (Float) m_normalization;
         bs.eta          = 1.f;
         bs.sampled_type = +BSDFFlags::GlossyReflection;
 
@@ -195,6 +325,13 @@ private:
     ref<Texture> m_g;
     ref<Texture> m_k;
     ref<Texture> m_rho_c;
+    std::unique_ptr<Spectrum[]> m_data;
+    Spectrum m_normalization, m_inv_normalization;
+
+    /// Marginal and conditional PDFs
+    FloatStorage m_marg_theta_i_cdf;
+    FloatStorage m_marg_theta_o_cdf;
+    FloatStorage m_cond_cdf;
 };
 
 MI_IMPLEMENT_CLASS_VARIANT(RPV, BSDF)
