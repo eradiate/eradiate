@@ -51,7 +51,7 @@ def test_onedim_experiment_ckd(mode_ckd, bin_set):
     """
     OneDimExperiment with heterogeneous atmosphere in CKD mode can be created.
     """
-    ctx = KernelDictContext(spectral_ctx=CKDSpectralContext(bin_set=bin_set))
+    ctx = KernelDictContext(spectral_ctx={"bin_set": bin_set})
     exp = OneDimExperiment(
         atmosphere=HeterogeneousAtmosphere(
             molecular_atmosphere=MolecularAtmosphere.afgl_1986()
