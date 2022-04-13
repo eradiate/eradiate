@@ -9,43 +9,57 @@ def test_instantiate():
 
     # instantiate the test with reasonable defaults
     assert tt.RMSETest(
-        archive_filename="tests/archive.nc",
+        name="rmse",
+        archive_dir="tests/",
         value=xr.Dataset(),
         reference=xr.Dataset(),
         threshold=0.05,
     )
 
     assert tt.Chi2Test(
-        archive_filename="tests/archive.nc",
+        name="chi2",
+        archive_dir="tests/",
         value=xr.Dataset(),
         reference=xr.Dataset(),
         threshold=0.05,
     )
 
     # assert all arguments except reference are needed
-    with pytest.raises(TypeError) as e:
-        tt.Chi2Test(
+    with pytest.raises(TypeError):
+        assert tt.Chi2Test(
+            archive_dir="tests/",
             value=xr.Dataset(),
             reference=xr.Dataset(),
             threshold=0.05,
         )
 
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(TypeError):
         tt.Chi2Test(
-            archive_filename="tests/archive.nc",
+            name="chi2",
+            value=xr.Dataset(),
             reference=xr.Dataset(),
             threshold=0.05,
         )
 
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(TypeError):
         tt.Chi2Test(
-            archive_filename="tests/archive.nc",
+            name="chi2",
+            archive_dir="tests/",
+            reference=xr.Dataset(),
+            threshold=0.05,
+        )
+
+    with pytest.raises(TypeError):
+        tt.Chi2Test(
+            name="chi2",
+            archive_dir="tests/",
             value=xr.Dataset(),
             reference=xr.Dataset(),
         )
 
     assert tt.Chi2Test(
-        archive_filename="tests/archive.nc",
+        name="chi2",
+        archive_dir="tests/",
         value=xr.Dataset(),
         threshold=0.05,
     )
@@ -56,7 +70,8 @@ def test_reference_converter(tmp_path):
 
     # file does not exist
     test = tt.Chi2Test(
-        archive_filename="tests/archive.nc",
+        name="chi2",
+        archive_dir="tests/",
         value=xr.Dataset(),
         threshold=0.05,
         reference="./this/file/doesnot.exist",
@@ -69,8 +84,9 @@ def test_reference_converter(tmp_path):
     tempfile.write_text("test")
 
     with pytest.raises(ValueError):
-        test2 = tt.Chi2Test(
-            archive_filename="tests/archive.nc",
+        tt.Chi2Test(
+            name="chi2",
+            archive_dir="tests/",
             value=xr.Dataset(),
             threshold=0.05,
             reference=tempfile,
@@ -78,8 +94,9 @@ def test_reference_converter(tmp_path):
 
     # wrong data type
     with pytest.raises(ValueError):
-        test2 = tt.Chi2Test(
-            archive_filename="tests/archive.nc",
+        tt.Chi2Test(
+            name="chi2",
+            archive_dir="tests/",
             value=xr.Dataset(),
             threshold=0.05,
             reference=np.zeros(25),
@@ -111,9 +128,10 @@ def test_rmse_evaluate():
     rmse_ref = np.linalg.norm(result - ref) / np.sqrt(len(ref))
 
     test = tt.RMSETest(
+        name="rmse",
         value=result_ds,
         reference=ref_ds,
-        archive_filename="tests/archive.nc",
+        archive_dir="tests/",
         threshold=0.05,
     )
 
@@ -165,9 +183,10 @@ def test_chi2_evaluate(mode_mono):
     )
 
     test = tt.Chi2Test(
+        name="chi2",
         value=result_ds,
         reference=ref_ds,
-        archive_filename="tests/archive.nc",
+        archive_dir="tests/",
         threshold=0.05,
     )
 
