@@ -11,14 +11,14 @@ from eradiate.radprops import AFGL1986RadProfile
 def test_ckd_spectral_ctx_1650():
     spectral_cfg = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins="1650")
     bindex = eradiate.ckd.Bindex(bin=spectral_cfg.bins[0], index=3)
-    return eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
+    return SpectralContext.new(bindex=bindex, bin_set="10nm")
 
 
 @pytest.fixture
 def test_ckd_spectral_ctx_550():
     spectral_cfg = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins="550")
     bindex = eradiate.ckd.Bindex(bin=spectral_cfg.bins[0], index=3)
-    return eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
+    return SpectralContext.new(bindex=bindex, bin_set="10nm")
 
 
 @pytest.mark.parametrize("model_id", ["midlatitude_summer", "us_standard"])
@@ -162,5 +162,5 @@ def test_afgl_1986_rad_profile_ckd_10nm(mode_ckd, bin, model_id):
     p = AFGL1986RadProfile(thermoprops=dict(model_id=model_id))
     bin = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins=bin).bins[0]
     bindex = eradiate.ckd.Bindex(bin=bin, index=3)
-    spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
+    spectral_ctx = SpectralContext.new(bindex=bindex, bin_set="10nm")
     assert isinstance(p.eval_sigma_a(spectral_ctx), pint.Quantity)

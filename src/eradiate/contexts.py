@@ -98,12 +98,16 @@ class SpectralContext(ABC, Context):
             for a list of actual keyword arguments).
 
         wavelength : quantity or float, default: 550 nm
-            **Monochromatic modes** [:class:`.MonoSpectralContext`].
+            (*Monochromatic modes* [:class:`.MonoSpectralContext`])
             Wavelength. Unit-enabled field (default: ucc[wavelength]).
 
-        bindex : :class:`.Bindex`, default: test value (1st quadrature point for the "550" bin of the "10nm" bin set)
-            **CKD modes** [:class:`.CKDSpectralContext`].
+        bindex : .Bindex, optional, default: 1st quadrature point for the "550" bin of the "10nm" bin set (test value)
+            (*CKD modes* [:class:`.CKDSpectralContext`])
             CKD bindex.
+
+        bin_set : .BinSet or str or None, optional, default: "10nm" (test value)
+            (*CKD modes* [:class:`.CKDSpectralContext`])
+            Bin set from which the bindex originates.
 
         See Also
         --------
@@ -230,14 +234,14 @@ class CKDSpectralContext(SpectralContext):
 
     bin_set: t.Optional[BinSet] = documented(
         attr.ib(
-            default=None,
+            default="10nm",
             converter=attr.converters.optional(BinSet.convert),
             validator=attr.validators.optional(attr.validators.instance_of(BinSet)),
         ),
         doc="If relevant, the bin set from which ``bindex`` originates.",
         type=":class:`.BinSet` or None",
         init_type=":class:`.BinSet` or str, optional",
-        default="None",
+        default='"10nm"',
     )
 
     @property
