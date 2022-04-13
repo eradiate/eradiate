@@ -2,8 +2,11 @@ import mitsuba as mi
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate import path_resolver
-from eradiate.contexts import KernelDictContext
+from eradiate import unit_context_config as ucc
+from eradiate import unit_registry as ureg
+from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     MolecularAtmosphere,
@@ -184,6 +187,101 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         total = collision_coefficient[z]["mixed"]
         expected = sum(collision_coefficient[z][component] for component in components)
         assert np.allclose(expected, total), f"{z = }"
+
+
+def test_heterogeneous_mix_weight(modes_all_double):
+    """
+    Check that component weights are correctly computed.
+    """
+    ctx = KernelDictContext()
+
+    # Fist basic check: a uniform layer and a molecular atmosphere
+    molecular = (
+        MolecularAtmosphere.afgl_1986(levels=np.linspace(0, 100, 101) * ureg.km)
+        if eradiate.mode().is_ckd
+        else MolecularAtmosphere.ussa_1976(levels=np.linspace(0, 100, 101) * ureg.km)
+    )
+
+    mixed = HeterogeneousAtmosphere(
+        geometry="plane_parallel",
+        molecular_atmosphere=molecular,
+        particle_layers=ParticleLayer(
+            bottom=0.0 * ureg.km,
+            top=50.0 * ureg.km,
+            distribution={"type": "uniform"},
+        ),
+    )
+    phase_mixed = mixed.kernel_phase(ctx).load()
+
+    # Weights should be non zero over the first 50 km, and 0 above
+    # (all to the molecular component)
+    params = mi.traverse(phase_mixed)
+    weight = np.squeeze(params["weight.data"])
+    middle = len(weight) // 2
+
+    assert np.all((weight[:middle] > 0.0) & (weight[:middle] < 1.0))
+    assert np.all(weight[middle:] == 0.0)
+
+    # Second check: simple disjoint components, more than 1
+    mixed = HeterogeneousAtmosphere(
+        geometry="plane_parallel",
+        particle_layers=[
+            ParticleLayer(
+                bottom=0.0 * ureg.km,
+                top=50.0 * ureg.km,
+                distribution={"type": "uniform"},
+            ),
+            ParticleLayer(
+                bottom=50.0 * ureg.km,
+                top=75.0 * ureg.km,
+                distribution={"type": "uniform"},
+            ),
+            ParticleLayer(
+                bottom=75.0 * ureg.km,
+                top=100.0 * ureg.km,
+                distribution={"type": "uniform"},
+            ),
+        ],
+    )
+    phase_mixed = mixed.kernel_phase(ctx).load()
+    params = mi.traverse(phase_mixed)
+    weight_1 = np.squeeze(params["weight.data"])
+    weight_2 = np.squeeze(params["phase_1.weight.data"])
+    middle = len(weight_1) // 2
+    threeq = len(weight_1) * 3 // 4
+
+    assert np.all(weight_1[:middle] == 0.0)
+    assert np.all(weight_1[middle:] == 1.0)
+    assert np.all(weight_2[:threeq] == 0.0)
+    assert np.all(weight_2[threeq:] == 1.0)
+
+    # Third check: overlapping components
+    # Component 1 has twice the optical thickness and extent of component 2,
+    # therefore they have the same extinction coefficient
+    mixed = HeterogeneousAtmosphere(
+        geometry="plane_parallel",
+        particle_layers=[
+            ParticleLayer(
+                bottom=0.0 * ureg.km,
+                top=100.0 * ureg.km,
+                tau_550=1.0,
+                distribution={"type": "uniform"},
+            ),
+            ParticleLayer(
+                bottom=50.0 * ureg.km,
+                top=100.0 * ureg.km,
+                tau_550=0.5,
+                distribution={"type": "uniform"},
+            ),
+        ],
+    )
+    phase_mixed = mixed.kernel_phase(ctx).load()
+    params = mi.traverse(phase_mixed)
+    weight = np.squeeze(params["weight.data"])
+    middle = len(weight) // 2
+
+    assert np.all(weight[:middle] == 0.0)
+    assert np.all(weight[middle:] == 0.5)
 
 
 def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
