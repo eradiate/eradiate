@@ -56,6 +56,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Internal `_util` library is now `util.misc` ({ghcommit}`5a593d37b72a1070b5a8fa909359fd8ae6498d96`).
 * Add a Numpydoc docstring parsing module ({ghpr}`200`).
 * Add a `deprecated()` decorator to mark a component for deprecation ({ghpr}`200`).
+* Update regression testing interface for improved robustness and ease of use 
+  ({ghpr}`207`).
 
 ---
 

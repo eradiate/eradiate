@@ -1,11 +1,7 @@
-import os
-
 import numpy as np
 import pytest
-import xarray as xr
 
 import eradiate.scenes as esc
-from eradiate.data import data_store
 from eradiate.experiments import OneDimExperiment
 from eradiate.test_tools.regression import Chi2Test
 from eradiate.units import unit_registry as ureg
@@ -64,21 +60,12 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
     exp.run()
     result = exp.results["measure"]
 
-    reference_path = data_store.fetch(
-        "tests/regression_test_references/rpv_afgl1986_brfpp_ref.nc"
-    )
-
-    archive_filename = (
-        os.path.join(artefact_dir, f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986.nc")
-        if artefact_dir
-        else None
-    )
-
     test = Chi2Test(
+        name=f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986.nc",
         value=result,
-        reference=reference_path,
+        reference="tests/regression_test_references/rpv_afgl1986_brfpp_ref.nc",
         threshold=0.05,
-        archive_filename=archive_filename,
+        archive_dir=artefact_dir,
     )
 
     assert test.run()

@@ -1,4 +1,5 @@
 import os
+import typing as t
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -8,7 +9,9 @@ import mitsuba as mi
 import numpy as np
 import xarray as xr
 
+from .. import data
 from ..attrs import documented, parse_docs
+from ..exceptions import DataError
 from ..typing import PathLike
 
 
@@ -17,7 +20,7 @@ def regression_test_plots(
     result: np.typing.ArrayLike,
     vza: np.typing.ArrayLike,
     filename: PathLike,
-    metric: tuple,
+    metric: t.Tuple[str, float],
 ) -> None:
     """
     Create regression test report plots.
@@ -69,21 +72,30 @@ def reference_converter(value):
     """
     A converter for handling the reference data attribute.
 
-    * if ``value`` is a string or path like object, it attempts to load
-      a dataset from that location and returns ``None`` if that fails.
-    * if ``value`` is a xarray dataset, it is returned directly.
-
+    * if ``value`` is a string or path-like object, it attempts to load
+      a dataset from that location or to serve it from the data store; if that
+      fails, it returns ``None``;
+    * if ``value`` is an xarray dataset or ``None``, it is returned directly;
+    * otherwise, a ValueError is raised.
     """
+    if isinstance(value, (str, os.PathLike, bytes)):
+        # Try to open a file if it is directly referenced
+        if os.path.isfile(value):
+            return xr.load_dataset(value)
 
-    if isinstance(value, (str, os.PathLike)):
-        if not os.path.isfile(value):
+        # Try to serve the file from the data store
+        try:
+            return data.load_dataset(value)
+        except DataError:
             return None
-        return xr.load_dataset(value)
-    elif isinstance(value, xr.Dataset):
+
+    elif isinstance(value, xr.Dataset) or value is None:
         return value
+
     else:
         raise ValueError(
-            f"Reference must be provided as a Dataset or a file path. Got {type(value).__name__}"
+            "Reference must be provided as a Dataset or a file path. "
+            f"Got {type(value).__name__}"
         )
 
 
@@ -95,103 +107,125 @@ class RegressionTest(ABC):
     reference values.
     """
 
-    METRIC_NAME = None
+    # Name used for the reference metric. Must be set be subclasses.
+    METRIC_NAME: t.Optional[str] = None
+
+    name: str = documented(
+        attr.ib(validator=attr.validators.instance_of(str)),
+        doc="Test case name.",
+        type="str",
+        init_type="str",
+    )
+
     value: xr.Dataset = documented(
         attr.ib(validator=attr.validators.instance_of(xr.Dataset)),
-        doc="Simluation result. Must be specified as a dataset.",
+        doc="Simulation result. Must be specified as a dataset.",
         type=":class:`xarray.Dataset`",
         init_type=":class:`xarray.Dataset`",
     )
-    reference: xr.Dataset = documented(
+
+    reference: t.Optional[xr.Dataset] = documented(
         attr.ib(
             default=None,
-            converter=attr.converters.optional(reference_converter),
+            converter=reference_converter,
             validator=attr.validators.optional(attr.validators.instance_of(xr.Dataset)),
         ),
-        doc="Reference result. Can be specified as a dataset or a path to a file which can be loaded into a dataset.",
-        type=":class:`xarray.Dataset`",
+        doc="Reference data. Can be specified as an xarray dataset, a path to a "
+        "NetCDF file or a path to a resource served by the data store.",
+        type=":class:`xarray.Dataset` or None",
         init_type=":class:`xarray.Dataset` or path-like, optional",
         default="None",
     )
+
     threshold: float = documented(
         attr.ib(kw_only=True),
         doc="Threshold for test evaluation",
         type="float",
         init_type="float",
     )
-    archive_filename: PathLike = documented(
+
+    archive_dir: Path = documented(
         attr.ib(kw_only=True, converter=Path),
-        doc="File path and name for output artifact storage. Relative paths will be interpreted with respect to the"
-        "current working directory.",
+        doc="Path to output artefact storage directory. Relative paths are "
+        "interpreted with respect to the current working directory.",
         type=":class:`pathlib.Path`",
         init_type="path-like",
     )
+
+    def __attrs_pre_init(self):
+        if self.METRIC_NAME is None:
+            raise TypeError(f"Unsupported test type {type(self).__name__}")
 
     def run(self) -> bool:
         """
         This method controls the execution steps of the regression test:
 
-        - handle missing reference data
-        - catch errors during text evaluation
-        - create the appropriate plots and data archives
+        * handle missing reference data
+        * catch errors during text evaluation
+        * create the appropriate plots and data archives
 
         Returns
         -------
         bool
             Result of the test criterion comparison.
         """
-        fname, ext = os.path.splitext(self.archive_filename)
+        fname = self.name
+        ext = ".nc"
+        archive_dir = os.path.abspath(self.archive_dir)
 
-        # if no valid reference is found, store the results as new ref
-        # and return a failed test
+        # Absolute path where the reference will be stored
+        fname_reference = os.path.join(archive_dir, fname + "-ref" + ext)
+        # Absolute path where test output will be stored
+        fname_result = os.path.join(archive_dir, fname + "-result" + ext)
+
+        # if no valid reference is found, store the results as new ref and fail
+        # the test
         if not self.reference:
-            print("No reference data was found! Storing test results as new reference.")
-            self._archive(self.value, os.path.abspath(fname + "-ref" + ext))
+            print("No reference data was found! Storing test results as reference.")
+            self._archive(self.value, fname_reference)
             self._plot(reference_only=True, metric_value=None)
             return False
-        else:
-            try:
-                passed, value = self._evaluate()
-            except Exception as e:
-                print("An exception occurred during test execution!")
-                self._plot(reference_only=False, metric_value=0.0)
-                raise e
 
-            # handle regular test execution
-            fname_result = os.path.abspath(fname + "-result" + ext)
-            self._archive(self.value, fname_result)
+        # else (we have a reference value), evaluate the test metric
+        try:
+            passed, metric_value = self._evaluate()
+        except Exception as e:
+            print("An exception occurred during test execution!")
+            self._plot(reference_only=False, metric_value=None)
+            raise e
 
-            fname_reference = os.path.abspath(fname + "-ref" + ext)
-            self._archive(self.reference, fname_reference)
+        # we got a metric: report the results in the archive directory
+        self._archive(self.value, fname_result)
+        self._archive(self.reference, fname_reference)
+        self._plot(reference_only=False, metric_value=metric_value)
 
-            # create plot
-            self._plot(reference_only=False, metric_value=value)
-
-            return passed
+        return passed
 
     @abstractmethod
-    def _evaluate(self) -> float:
+    def _evaluate(self) -> t.Tuple[bool, float]:
         """
         Evaluate the test results and perform a comparison to the reference
-        based on the criterion defined in the specialized class.
+        based on the criterion defined in the specialised class.
 
         Returns
         -------
+        passed : bool
+            ``True`` iff the test passed.
 
-        float
-            The value of the test metric
+        metric_value : float
+            The value of the test metric.
         """
         pass
 
-    def _archive(self, dataset, fname_output):
+    def _archive(self, dataset: xr.Dataset, fname_output: PathLike) -> None:
         """
         Create an archive file for test result and reference storage
         """
         os.makedirs(os.path.dirname(fname_output), exist_ok=True)
-        print(f"Storing dataset in {fname_output}")
+        print(f"Saving dataset to {fname_output}")
         dataset.to_netcdf(fname_output)
 
-    def _plot(self, metric_value, reference_only):
+    def _plot(self, metric_value: t.Optional[float], reference_only: bool) -> None:
         """
         Create a plot to visualize the results of the test.
         If the ``reference only`` parameter is set, create only a simple plot
@@ -200,38 +234,45 @@ class RegressionTest(ABC):
 
         Parameters
         ----------
-
-        metric_value : float
-            The numerical value of the test metric
+        metric_value : float or None
+            The numerical value of the test metric.
 
         reference_only : bool
-            Create only a simple visualisation of the computation data
+            If ``True``, create only a simple visualisation of the computed
+            data.
         """
-        filename = "".join(
-            [os.path.splitext(os.path.abspath(self.archive_filename))[0], ".png"]
-        )
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        print(f"Saving plot in {filename}")
+        vza = np.squeeze(self.value.vza.values)
+
+        if "brf_srf" in self.value.data_vars:  # Handle spectral results
+            brf = np.squeeze(self.value.brf_srf.values)
+        else:  # Handle monochromatic results
+            brf = np.squeeze(self.value.brf.values)
+
+        fname = self.name
+        ext = ".png"
+        archive_dir = os.path.abspath(self.archive_dir)
+        fname_plot = os.path.join(archive_dir, fname + ext)
+        os.makedirs(os.path.dirname(fname_plot), exist_ok=True)
+        print(f"Saving plot to {fname_plot}")
+
         if reference_only:
             plt.figure(figsize=(8, 6))
-            plt.plot(np.squeeze(self.value.vza), np.squeeze(self.value.brf))
+            plt.plot(vza, brf)
             plt.xlabel("VZA [deg]")
             plt.ylabel("BRF in principal plane [-]")
             plt.title("Simulation result, can be used as new reference")
             plt.tight_layout()
-            plt.savefig(filename)
+            plt.savefig(fname_plot)
             plt.close()
 
         else:
-            print(f"Saving plot in {filename}.")
-            if self.METRIC_NAME is None:
-                raise TypeError(f"Unsupported test type {type(self).__name__}")
+            if "brf_srf" in self.value.data_vars:  # Handle spectral results
+                brf_ref = np.squeeze(self.reference.brf_srf.values)
+            else:  # Handle monochromatic results
+                brf_ref = np.squeeze(self.reference.brf.values)
+
             regression_test_plots(
-                np.squeeze(self.reference.brf.values),
-                np.squeeze(self.value.brf.values),
-                np.squeeze(self.value.vza.values),
-                filename,
-                (self.METRIC_NAME, metric_value),
+                brf_ref, brf, vza, fname_plot, (self.METRIC_NAME, metric_value)
             )
 
 
@@ -248,12 +289,12 @@ class RMSETest(RegressionTest):
 
     METRIC_NAME = "rmse"
 
-    def _evaluate(self) -> tuple:
+    def _evaluate(self) -> t.Tuple[bool, float]:
         value_np = self.value.brf.values
         ref_np = self.reference.brf.values
         if np.shape(value_np) != np.shape(ref_np):
             raise ValueError(
-                f"Result and reference do not have the same shape!\n"
+                f"Result and reference do not have the same shape! "
                 f"Got: {np.shape(value_np)}, {np.shape(ref_np)}"
             )
 
@@ -275,14 +316,15 @@ class Chi2Test(RegressionTest):
     It determines the probability for the reference and the test result
     following the same distribution.
 
-    This test will pass if the computed p-value is strictly larger than the given threshold.
+    This test will pass if the computed p-value is strictly larger than the
+    given threshold.
     """
 
     # The algorithm is adapted from Mitsuba's testing framework.
 
     METRIC_NAME = "p-value"
 
-    def _evaluate(self) -> tuple:
+    def _evaluate(self) -> t.Tuple[bool, float]:
         ref_np = self.reference.brf.values
 
         result_np = self.value.brf.values
