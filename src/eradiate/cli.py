@@ -4,11 +4,13 @@ The Eradiate command-line interface, built with Click and Rich.
 
 import logging
 import os.path
+import textwrap
 from pathlib import Path
 
 import click
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.pretty import Pretty
 from ruamel.yaml import YAML
 
 import eradiate
@@ -213,31 +215,67 @@ def purge_cache(keep):
 
 
 @data.command()
-def info():
+@click.argument("data_stores", nargs=-1)
+@click.option(
+    "-l", "--list-registry", is_flag=True, help="Show registry content if relevant."
+)
+def info(data_stores, list_registry):
     """
     Display information about data store configuration.
+
+    The optional DATA_STORES argument specifies the list of data stores for
+    which information is requested. If no data store ID is passed, information
+    is displayed for all data stores.
     """
-    # Print data store information to terminal
-    for data_store_id, data_store in eradiate.data._store.data_store.stores.items():
+
+    # Build section list
+    sections = [
+        ("[purple]Base URL[/] \[base_url]", "base_url"),
+        ("[purple]Local path[/] \[path]", "path"),
+        ("[purple]Registry path[/] \[registry_path]", "registry_path"),
+    ]
+
+    if list_registry:
+        sections.append(("Registered files", "registry_keys"))
+
+    first = True
+
+    for data_store_id, data_store in eradiate.data.data_store.stores.items():
+        if data_stores and (data_store_id not in data_stores):
+            continue
+
+        # Collect section contents
+        reprs = {}
+
+        for attr in ["base_url", "path", "registry_path"]:
+            try:
+                reprs[attr] = f"'{getattr(data_store, attr)}'"
+            except (NotImplementedError, AttributeError):
+                reprs[attr] = None
+
+        try:
+            reprs["registry_keys"] = "\n".join(
+                f"'{x}'" for x in sorted(data_store.registry.keys())
+            )
+        except (NotImplementedError, AttributeError):
+            reprs["registry_keys"] = None
+
+        # Display the content for current data store
+        if not first:
+            console.print()
+        else:
+            first = False
+
         console.print(
-            f"[bold cyan]{data_store_id}[/] [{data_store.__class__.__name__}]"
+            f"[bold cyan]{data_store_id}[/] \[{data_store.__class__.__name__}]"
         )
 
-        if isinstance(data_store, eradiate.data.DirectoryDataStore):
-            console.print(f"    path='{data_store.path}'")
-            console.print(f"    registry_path='{data_store.registry_path}'")
-            continue
+        for section_title, repr_key in sections:
+            the_repr = reprs[repr_key]
 
-        if isinstance(data_store, eradiate.data.OnlineDataStore):
-            console.print(f"    base_url='{data_store.base_url}'")
-            console.print(f"    path='{data_store.path}'")
-            console.print(f"    registry_path='{data_store.registry_path}'")
-            continue
-
-        if isinstance(data_store, eradiate.data.BlindDataStore):
-            console.print(f"    base_url='{data_store.base_url}'")
-            console.print(f"    path='{data_store.path}'")
-            continue
+            if the_repr is not None:
+                console.print(f"  {section_title}")
+                console.print(textwrap.indent(reprs[repr_key], " " * 4))
 
 
 if __name__ == "__main__":
