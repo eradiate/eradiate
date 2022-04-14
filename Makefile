@@ -102,16 +102,10 @@ docs-clean:
 
 # -- Testing -------------------------------------------------------------------
 
-.PHONY: pytest pytest-slow pytest-notslow pytest-formatters
+.PHONY: test test-quick test-formatters
 
-pytest:
-	pytest tests
+test:
+	pytest
 
-pytest-slow:
-	pytest -m "slow" tests
-
-pytest-notslow:
-	pytest -m "not slow" tests
-
-pytest-formatters:
-	pytest --black --isort src/eradiate
+test-quick:
+	pytest -m "not slow and not regression"

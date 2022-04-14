@@ -32,3 +32,4 @@ filterwarnings = [
     # Ignore these warnings issued by outdated dependencies
     "ignore:distutils Version classes are deprecated:DeprecationWarning",
 ]
+testpaths = "tests"
