@@ -46,11 +46,6 @@ class DiscreteCanopy(Canopy):
           homogeneous
           leaf_cloud_from_files
           padded
-
-    See Also
-    --------
-
-    * Tutorial: :doc:`/tutorials/02-canopy`
     """
 
     # --------------------------------------------------------------------------

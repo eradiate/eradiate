@@ -10,13 +10,6 @@ scene setup ensures that the computed quantities are equivalent to what would
 be obtained with a proper 1D code. This guide introduces the features,
 configuration format and usage of this component.
 
-.. button-ref:: /tutorials/01-onedim.ipynb
-   :ref-type: ref
-   :color: primary
-   :expand:
-
-   Click here to access the hands-on tutorial
-
 Available features
 ------------------
 
