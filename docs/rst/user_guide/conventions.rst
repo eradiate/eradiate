@@ -75,6 +75,8 @@ towards East). We name this convention "East right". Other conventions are
 frequently used in Earth observation applications, and Eradiate therefore
 provides utility components to handle the conversion automatically.
 
+.. _sec-user_guide-conventions-azimuth:
+
 Azimuth definition conventions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

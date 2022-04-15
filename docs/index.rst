@@ -22,25 +22,25 @@ Python and C++17. It relies on a computational kernel based on the
 .. grid:: 1 2 auto auto
    :gutter: 3
 
-   .. grid-item-card:: :octicon:`download` Getting started
+   .. grid-item-card:: :fas:`download` Getting started
       :link: sec-getting_started
       :link-type: ref
 
       Learn about Eradiate, how to get it and how to compile it.
 
-   .. grid-item-card:: :octicon:`mortar-board` Tutorials
+   .. grid-item-card:: :fas:`graduation-cap` Tutorials
       :link: sec-tutorials
       :link-type: ref
 
       A practical introduction to Eradiate.
 
-   .. grid-item-card:: :octicon:`book` User guide
+   .. grid-item-card:: :fas:`book` User guide
       :link: sec-user_guide
       :link-type: ref
 
       Learn how to use Eradiate.
 
-   .. grid-item-card:: :octicon:`file-code` Reference
+   .. grid-item-card:: :fas:`file-code` Reference
       :link: sec-reference_api
       :link-type: ref
 
