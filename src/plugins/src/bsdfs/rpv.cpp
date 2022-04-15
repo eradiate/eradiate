@@ -126,8 +126,6 @@ public:
             }
         }
 
-        std::unique_ptr<Float[]> marg_theta_i_cdf(new Float[m_size.x()]);
-        std::unique_ptr<Float[]> marg_theta_o_cdf(new Float[m_size.x() * m_size.y()]);
         std::unique_ptr<Float[]> marg_phi_cdf(new Float[m_size.x() * m_size.z()]);
         std::unique_ptr<Float[]> cond_cdf(new Float[m_size.x()*m_size.y()*m_size.z()]);
 
@@ -135,8 +133,7 @@ public:
         uint step_theta_o = m_size.z();
         uint step_phi = m_size.y();
 
-        // marginal theta_i and conditional CDF
-        Float accum_marg_theta_i = 0.f;
+        // marginal  and conditional CDFs
         for (uint32_t x = 0; x < m_size.x(); ++x) {
             uint offset_theta_i = x * step_theta_i;
             for (uint32_t z = 0; z < m_size.z(); ++z) {
@@ -146,26 +143,11 @@ public:
                     uint offset_theta_o = y * step_theta_o;
                     accum_cond += m_data[offset_theta_i + offset_theta_o + z];
                     cond_cdf[offset_theta_i + offset_phi + y] = accum_cond;
-                    accum_marg_theta_i += accum_cond;
                 }
             }
-            marg_theta_i_cdf[x] = accum_marg_theta_i;
         }
         m_inv_normalization = accum_marg_theta_i;
         m_normalization = 1.0 / accum_marg_theta_i;
-
-//        for (uint32_t x = 0; x < m_size.x(); ++x){
-//            Float accum_marg_theta_o = 0.f;
-//            uint offset_x = m_size.y() * x;
-//            uint offset_theta_i = x * step_theta_i;
-//            for (uint32_t y = 0; y < m_size.y(); ++y){
-//                uint offset_theta_o = y * step_theta_o;
-//                for (uint32_t z = 0; z < m_size.z(); ++z){
-//                    accum_marg_theta_o += m_data[offset_theta_i + offset_theta_o + z];
-//                }
-//                marg_theta_o_cdf[offset_x + y] = accum_marg_theta_o;
-//            }
-//        }
 
         for (uint32_t x = 0; x < m_size.x(); ++x) {
             Float accum_marg_phi = 0.f;
@@ -180,13 +162,7 @@ public:
             }
         }
 
-        for (uint32_t i = 0; i < m_size.y(); ++i) {
-            Log(Info, "%s", marg_phi_cdf[i+m_size.x()*31]);
-        }
-
         m_marg_phi_cdf = dr::load<FloatStorage>(marg_phi_cdf.get(), m_size.x() * m_size.z());
-        m_marg_theta_i_cdf = dr::load<FloatStorage>(marg_theta_i_cdf.get(), m_size.x());
-        m_marg_theta_o_cdf = dr::load<FloatStorage>(marg_theta_o_cdf.get(), m_size.x()*m_size.y());
         m_cond_cdf         = dr::load<FloatStorage>(cond_cdf.get(), dr::hprod(m_size));
     }
 
@@ -233,7 +209,6 @@ public:
         Float phi_o = (Float) idx_phi / Float(m_size.z()) * dr::TwoPi<Float> + phi_i;
 
         // Scale theta_o sample range
-//        sample.y() *= dr::gather<Float>(m_cond_cdf, offset_theta_o + offset_theta_i_cond + m_size.z() - 1, active);
         sample.y() *= dr::gather<Float>(m_cond_cdf, offset_theta_i_cond + offset_phi + m_size.y() - 1, active);
 
         // Sample theta_o
@@ -383,11 +358,8 @@ private:
     std::unique_ptr<Float[]> m_data;
     Float m_normalization, m_inv_normalization;
     ScalarPoint3u m_size;
-    Spectrum m_value_debug;
 
     /// Marginal and conditional PDFs
-    FloatStorage m_marg_theta_i_cdf;
-    FloatStorage m_marg_theta_o_cdf;
     FloatStorage m_marg_phi_cdf;
     FloatStorage m_cond_cdf;
 };
