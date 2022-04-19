@@ -9,7 +9,7 @@ import mitsuba as mi
 import numpy as np
 import xarray as xr
 
-from .. import data
+from .. import converters, data
 from ..attrs import documented, parse_docs
 from ..exceptions import DataError
 from ..typing import PathLike
@@ -78,25 +78,14 @@ def reference_converter(value):
     * if ``value`` is an xarray dataset or ``None``, it is returned directly;
     * otherwise, a ValueError is raised.
     """
-    if isinstance(value, (str, os.PathLike, bytes)):
-        # Try to open a file if it is directly referenced
-        if os.path.isfile(value):
-            return xr.load_dataset(value)
-
-        # Try to serve the file from the data store
-        try:
-            return data.load_dataset(value)
-        except DataError:
-            return None
-
-    elif isinstance(value, xr.Dataset) or value is None:
+    if value is None:
         return value
 
-    else:
-        raise ValueError(
-            "Reference must be provided as a Dataset or a file path. "
-            f"Got {type(value).__name__}"
-        )
+    try:
+        return converters.load_dataset(value)
+
+    except DataError:
+        return None
 
 
 @parse_docs
