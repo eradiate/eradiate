@@ -151,7 +151,7 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
     ctx = KernelDictContext()
 
     radprofiles = {
-        component: atmosphere.eval_radprops(ctx.spectral_ctx)
+        component: atmosphere.eval_radprops(ctx.spectral_ctx, optional_fields=True)
         for component, atmosphere in [
             ("component_1", component_1),
             ("component_2", component_2),

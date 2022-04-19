@@ -520,7 +520,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     # --------------------------------------------------------------------------
 
     @abstractmethod
-    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def eval_radprops(
+        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+    ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties profile of this
         atmospheric model.
@@ -531,6 +533,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        optional_fields : bool, optional, default: False
+            If ``True``, export optional fields, not required for scene
+            construction but useful for analysis and debugging.
 
         Returns
         -------

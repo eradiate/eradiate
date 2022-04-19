@@ -59,6 +59,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   evaluation; instead, its dataset field now holds an xarray dataset (instead 
   of a path), which does not change over the instance lifetime. 
   This reduces the amount of time spent on I/O ({ghpr}`212`).
+* Optionally, export extra fields useful for analysis and debugging upon calling
+  `AbstractHeterogeneousAtmosphere.eval_radprops()` ({ghpr}`206`, {ghpr}`212`).  
 
 ### Documentation
 
