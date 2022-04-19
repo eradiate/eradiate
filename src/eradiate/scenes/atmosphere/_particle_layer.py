@@ -3,7 +3,6 @@ Particle layers.
 """
 from __future__ import annotations
 
-import pathlib
 import typing as t
 
 import attr
@@ -18,7 +17,7 @@ from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import KernelDict
 from ..phase import TabulatedPhaseFunction
-from ... import path_resolver, validators
+from ... import converters
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -154,17 +153,18 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="16",
     )
 
-    # TODO: replace with actual data set and load through data interface
-    # TODO: change defaults to production data
-    dataset: pathlib.Path = documented(
+    dataset: xr.Dataset = documented(
         attr.ib(
-            default=path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc"),
-            converter=path_resolver.resolve,
-            validator=[attr.validators.instance_of(pathlib.Path), validators.is_file],
+            default="tests/radprops/rtmom_aeronet_desert.nc",
+            converter=converters.load_dataset,
+            validator=attr.validators.instance_of(xr.Dataset),
         ),
-        doc="Path to particle radiative property data set. Defaults to testing data.",
-        type="Path",
-        init_type="path-like",
+        doc="Particle radiative property data set. If a path is passed, the "
+        "converter tries to open the corresponding file on the hard drive; if "
+        "this fails, it tries to load a resource from the data store.",
+        type="Dataset",
+        init_type="Dataset or path-like, optional",
+        default="tests/radprops/rtmom_aeronet_desert.nc",
     )
 
     _phase: t.Optional[TabulatedPhaseFunction] = attr.ib(default=None, init=False)
@@ -172,8 +172,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def update(self) -> None:
         super().update()
 
-        with xr.open_dataset(self.dataset) as ds:
-            self._phase = TabulatedPhaseFunction(id=self.id_phase, data=ds.phase)
+        ds = self.dataset
+        self._phase = TabulatedPhaseFunction(id=self.id_phase, data=ds.phase)
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -271,9 +271,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
-        with xr.open_dataset(self.dataset) as ds:
-            wavelengths = w.m_as(ds.w.attrs["units"])
-            interpolated_albedo = ds.albedo.interp(w=wavelengths)
+        ds = self.dataset
+        wavelengths = w.m_as(ds.w.attrs["units"])
+        interpolated_albedo = ds.albedo.interp(w=wavelengths)
 
         albedo = to_quantity(interpolated_albedo)
         albedo_array = albedo * np.ones(self.n_layers)
@@ -310,14 +310,14 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
-        with xr.open_dataset(self.dataset) as ds:
-            ds_w_units = ureg(ds.w.attrs["units"])
+        ds = self.dataset
+        ds_w_units = ureg(ds.w.attrs["units"])
 
-            # find the extinction data variable
-            for dv in ds.data_vars:
-                standard_name = ds[dv].standard_name
-                if "extinction" in standard_name:
-                    extinction = ds[dv]
+        # find the extinction data variable
+        for dv in ds.data_vars:
+            standard_name = ds[dv].standard_name
+            if "extinction" in standard_name:
+                extinction = ds[dv]
 
         wavelength = w.m_as(ds_w_units)
         xs_t = to_quantity(extinction.interp(w=wavelength))

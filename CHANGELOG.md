@@ -53,10 +53,17 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Add an optional `DATA_STORES` argument to the `eradiate data info` 
   command-line utility which may be used to select the data stores for which 
   information is requested ({ghpr}`208`).
+* Add a new `load_dataset()` converter. It allows to set fields expecting an x
+  array dataset using a path to a file or a data store resource ({ghpr}`212`).
+* The `ParticleLayer` class no longer opens a dataset upon collision coefficient 
+  evaluation; instead, its dataset field now holds an xarray dataset (instead 
+  of a path), which does not change over the instance lifetime. 
+  This reduces the amount of time spent on I/O ({ghpr}`212`).
 
 ### Documentation
 
 * Add tutorials on homogeneous and molecular atmospheres ({ghpr}`194`).
+
 ### Internal changes
 
 * The `progress` configuration variable is now an `IntEnum`, allowing for

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate import path_resolver
+from eradiate import converters, path_resolver
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext, MonoSpectralContext, SpectralContext
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
@@ -228,9 +228,7 @@ def test_particle_layer_construct_attrs():
     assert isinstance(layer.distribution, UniformParticleDistribution)
     assert layer.tau_550 == tau_550
     assert layer.n_layers == 9
-    assert layer.dataset == path_resolver.resolve(
-        "tests/radprops/rtmom_aeronet_desert.nc"
-    )
+    assert isinstance(layer.dataset, xr.Dataset)
 
 
 def test_particle_layer_altitude_units():
@@ -272,7 +270,7 @@ def test_particle_layer_kernel_dict(modes_all_single):
 @pytest.fixture
 def test_dataset():
     """Test dataset path fixture."""
-    return path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc")
+    return "tests/radprops/rtmom_aeronet_desert.nc"
 
 
 def test_particle_layer_eval_radprops(modes_all_single, test_dataset):
@@ -322,10 +320,10 @@ def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_550, test_dataset):
     tau = layer.eval_sigma_t_mono(wavelengths) * layer.height
 
     # data set extinction @ running wavelength and 550 nm
-    with xr.open_dataset(test_dataset) as ds:
-        w_units = ureg(ds.w.attrs["units"])
-        sigma_t = to_quantity(ds.sigma_t.interp(w=wavelengths.m_as(w_units)))
-        sigma_t_550 = to_quantity(ds.sigma_t.interp(w=(550.0 * ureg.nm).m_as(w_units)))
+    ds = converters.load_dataset(test_dataset)
+    w_units = ureg(ds.w.attrs["units"])
+    sigma_t = to_quantity(ds.sigma_t.interp(w=wavelengths.m_as(w_units)))
+    sigma_t_550 = to_quantity(ds.sigma_t.interp(w=(550.0 * ureg.nm).m_as(w_units)))
 
     # the spectral dependence of the optical thickness and extinction coefficient
     # match, so the below ratios must match
