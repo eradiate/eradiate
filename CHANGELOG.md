@@ -47,7 +47,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   ({ghpr}`197`, {ghpr}`206`).
 * Fix incorrect volume data transform for spherical heterogeneous atmospheres ({ghpr}`199`).
 * Add default value for `CKDSpectralContext.bin_set` ({ghpr}`205`).
-* Add a `-l` option to the `eradiate data info` command-line utility now has. If 
+* Add a `-l` option to the `eradiate data info` command-line utility. If 
   this flag is set, the tool displays the list of files registered to each data 
   store ({ghpr}`208`).
 * Add an optional `DATA_STORES` argument to the `eradiate data info` 
