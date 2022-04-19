@@ -226,7 +226,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         z_layer = 0.5 * (z_level[1:] + z_level[:-1])
         return z_layer
 
-    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def eval_radprops(
+        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+    ) -> xr.Dataset:
         """
         Evaluate the extinction coefficients and albedo profiles.
 
@@ -236,6 +238,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        optional_fields : bool, optional, default: False
+            If ``True``, extra the optional ``sigma_a`` and ``sigma_s`` fields,
+            not required for scene construction but useful for analysis and
+            debugging.
 
         Returns
         -------
@@ -278,7 +285,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             sigma_t = sum(sigma_ts)
             sigma_s = sum(sigma_ss)
-            sigma_a = sigma_t - sigma_s
 
             albedo = np.divide(
                 sigma_s,
@@ -287,45 +293,54 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 out=np.ones_like(sigma_t),
             )
 
+            data_vars = {
+                "sigma_t": (
+                    "z_layer",
+                    sigma_t,
+                    {
+                        "units": f"{symbol(sigma_units)}",
+                        "standard_name": "extinction_coefficient",
+                        "long_name": "extinction coefficient",
+                    },
+                ),
+                "albedo": (
+                    "z_layer",
+                    albedo,
+                    {
+                        "standard_name": "albedo",
+                        "long_name": "albedo",
+                        "units": "",
+                    },
+                ),
+            }
+
+            if optional_fields:
+                sigma_a = sigma_t - sigma_s
+                data_vars.update(
+                    {
+                        "sigma_a": (
+                            "z_layer",
+                            sigma_a,
+                            {
+                                "units": f"{symbol(sigma_units)}",
+                                "standard_name": "absorption_coefficient",
+                                "long_name": "absorption coefficient",
+                            },
+                        ),
+                        "sigma_s": (
+                            "z_layer",
+                            sigma_s,
+                            {
+                                "units": f"{symbol(sigma_units)}",
+                                "standard_name": "scattering_coefficient",
+                                "long_name": "scattering coefficient",
+                            },
+                        ),
+                    }
+                )
+
             result = xr.Dataset(
-                data_vars={
-                    "sigma_a": (
-                        "z_layer",
-                        sigma_a,
-                        {
-                            "units": f"{symbol(sigma_units)}",
-                            "standard_name": "absorption_coefficient",
-                            "long_name": "absorption coefficient",
-                        },
-                    ),
-                    "sigma_s": (
-                        "z_layer",
-                        sigma_s,
-                        {
-                            "units": f"{symbol(sigma_units)}",
-                            "standard_name": "scattering_coefficient",
-                            "long_name": "scattering coefficient",
-                        },
-                    ),
-                    "sigma_t": (
-                        "z_layer",
-                        sigma_t,
-                        {
-                            "units": f"{symbol(sigma_units)}",
-                            "standard_name": "extinction_coefficient",
-                            "long_name": "extinction coefficient",
-                        },
-                    ),
-                    "albedo": (
-                        "z_layer",
-                        albedo,
-                        {
-                            "standard_name": "albedo",
-                            "long_name": "albedo",
-                            "units": "",
-                        },
-                    ),
-                },
+                data_vars=data_vars,
                 coords={
                     "z_layer": (
                         "z_layer",

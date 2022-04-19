@@ -170,7 +170,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         else:
             raise NotImplementedError("Unsupported thermophysical properties data set.")
 
-    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def eval_radprops(
+        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+    ) -> xr.Dataset:
+        # Inherit docstrings
+        # All fields are already exported: `optional_fields` has no effect
         return self.radprops_profile.eval_dataset(spectral_ctx=spectral_ctx)
 
     # --------------------------------------------------------------------------

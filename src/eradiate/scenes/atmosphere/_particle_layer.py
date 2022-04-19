@@ -401,7 +401,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def eval_sigma_s_ckd(self, *bindexes: Bindex):
         return self.eval_sigma_t_ckd(*bindexes) * self.eval_albedo_ckd(*bindexes)
 
-    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def eval_radprops(
+        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+    ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties profile of the
         particle layer.
@@ -413,6 +415,11 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
+        optional_fields : bool, optional, default: False
+            If ``True``, extra the optional ``sigma_a`` and ``sigma_s`` fields,
+            not required for scene construction but useful for analysis and
+            debugging.
+
         Returns
         -------
         Dataset
@@ -421,49 +428,57 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
             sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx)
             albedo = self.eval_albedo(spectral_ctx=spectral_ctx)
-            sigma_a = self.eval_sigma_a(spectral_ctx=spectral_ctx)
-            sigma_s = self.eval_sigma_s(spectral_ctx=spectral_ctx)
             wavelength = spectral_ctx.wavelength
+            data_vars = {
+                "sigma_t": (
+                    "z_layer",
+                    np.atleast_1d(sigma_t.magnitude),
+                    dict(
+                        standard_name="extinction_coefficient",
+                        long_name="extinction coefficient",
+                        units=symbol(sigma_t.units),
+                    ),
+                ),
+                "albedo": (
+                    "z_layer",
+                    np.atleast_1d(albedo.magnitude),
+                    dict(
+                        standard_name="albedo",
+                        long_name="albedo",
+                        units=symbol(albedo.units),
+                    ),
+                ),
+            }
+
+            if optional_fields:
+                sigma_a = self.eval_sigma_a(spectral_ctx=spectral_ctx)
+                sigma_s = self.eval_sigma_s(spectral_ctx=spectral_ctx)
+
+                data_vars.update(
+                    {
+                        "sigma_a": (
+                            "z_layer",
+                            np.atleast_1d(sigma_a.magnitude),
+                            dict(
+                                standard_name="absorption_coefficient",
+                                long_name="absorption coefficient",
+                                units=symbol(sigma_a.units),
+                            ),
+                        ),
+                        "sigma_s": (
+                            "z_layer",
+                            np.atleast_1d(sigma_s.magnitude),
+                            dict(
+                                standard_name="scattering_coefficient",
+                                long_name="scattering coefficient",
+                                units=symbol(sigma_s.units),
+                            ),
+                        ),
+                    }
+                )
 
             return xr.Dataset(
-                data_vars={
-                    "sigma_a": (
-                        "z_layer",
-                        np.atleast_1d(sigma_a.magnitude),
-                        dict(
-                            standard_name="absorption_coefficient",
-                            long_name="absorption coefficient",
-                            units=symbol(sigma_a.units),
-                        ),
-                    ),
-                    "sigma_s": (
-                        "z_layer",
-                        np.atleast_1d(sigma_s.magnitude),
-                        dict(
-                            standard_name="scattering_coefficient",
-                            long_name="scattering coefficient",
-                            units=symbol(sigma_s.units),
-                        ),
-                    ),
-                    "sigma_t": (
-                        "z_layer",
-                        np.atleast_1d(sigma_t.magnitude),
-                        dict(
-                            standard_name="extinction_coefficient",
-                            long_name="extinction coefficient",
-                            units=symbol(sigma_t.units),
-                        ),
-                    ),
-                    "albedo": (
-                        "z_layer",
-                        np.atleast_1d(albedo.magnitude),
-                        dict(
-                            standard_name="albedo",
-                            long_name="albedo",
-                            units=symbol(albedo.units),
-                        ),
-                    ),
-                },
+                data_vars=data_vars,
                 coords={
                     "z_layer": (
                         "z_layer",
