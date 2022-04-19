@@ -54,8 +54,9 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   command-line utility which may be used to select the data stores for which 
   information is requested ({ghpr}`208`).
 
-% ### Documentation
+### Documentation
 
+* Add tutorials on homogeneous and molecular atmospheres ({ghpr}`194`).
 ### Internal changes
 
 * The `progress` configuration variable is now an `IntEnum`, allowing for
