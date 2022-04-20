@@ -210,7 +210,7 @@ def test_onedim_experiment_run_basic(modes_all):
     exp = OneDimExperiment()
     exp.measures[0].spectral_cfg = spectral_cfg
 
-    exp.run()
+    eradiate.run(exp)
     assert isinstance(exp.results, dict)
 
 
@@ -240,7 +240,7 @@ def test_onedim_experiment_run_detailed(modes_all):
     )
 
     # Run RT simulation
-    exp.run()
+    eradiate.run(exp)
 
     # Check result dataset structure
     results = exp.results["toa_hsphere"]

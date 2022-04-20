@@ -260,6 +260,23 @@ def bin_filter(type: str, filter_kwargs: t.Dict[str, t.Any]):
         raise ValueError(f"unknown bin filter type {type}")
 
 
+def bin_filter_converter(filter_spec):
+    if isinstance(filter_spec, str):
+        return bin_filter_ids(ids=(filter_spec,))
+
+    elif isinstance(filter_spec, t.Sequence):
+        return bin_filter(*filter_spec)
+
+    elif isinstance(filter_spec, abc.Mapping):
+        return bin_filter(**filter_spec)
+
+    elif callable(filter_spec):
+        return filter_spec
+
+    else:
+        raise ValueError(f"unhandled CKD bin selector {filter_spec}")
+
+
 # ------------------------------------------------------------------------------
 #                              Bin set definitions
 # ------------------------------------------------------------------------------
@@ -397,20 +414,7 @@ class BinSet:
         filters = []
 
         for filter_spec in filter_specs:
-            if isinstance(filter_spec, str):
-                filters.append(bin_filter_ids(ids=(filter_spec,)))
-
-            elif isinstance(filter_spec, t.Sequence):
-                filters.append(bin_filter(*filter_spec))
-
-            elif isinstance(filter_spec, abc.Mapping):
-                filters.append(bin_filter(**filter_spec))
-
-            elif callable(filter_spec):
-                filters.append(filter_spec)
-
-            else:
-                raise ValueError(f"unhandled CKD bin selector {filter_spec}")
+            filters.append(bin_filter_converter(filter_spec))
 
         return self.filter_bins(*filters)
 

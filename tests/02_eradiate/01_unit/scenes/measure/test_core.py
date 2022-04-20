@@ -90,9 +90,9 @@ def test_mono_spectral_config(modes_all_mono):
     assert len(cfg.spectral_ctxs()) == 2  # The 640 nm point is filtered out
 
 
-def test_ckd_spectral_config(modes_all_ckd):
+def test_ckd_spectral_config(mode_ckd):
     """
-    Unit tests for :class:`.MeasureSpectralConfig` and child classes.
+    Unit tests for :class:`.CKDMeasureSpectralConfig`.
     """
     # The new() class method constructor selects an appropriate config class
     # depending on the active mode
@@ -100,7 +100,9 @@ def test_ckd_spectral_config(modes_all_ckd):
     assert isinstance(cfg, CKDMeasureSpectralConfig)
 
     # Generated spectral contexts are of the appropriate type and in correct numbers
+    assert False, "FIX THIS"
     ctxs = cfg.spectral_ctxs()
+    print("Hello")
     assert len(ctxs) == 32
     assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
 
@@ -121,6 +123,20 @@ def test_ckd_spectral_config(modes_all_ckd):
     # Using the S2A-MSI-B4 SRF results in 4 * 16 = 64 contexts being generated
     cfg = MeasureSpectralConfig.new(bin_set="10nm", srf="sentinel_2a-msi-4")
     assert len(cfg.spectral_ctxs()) == 64
+
+
+def test_ckd_spectral_config_advanced(mode_ckd):
+    """
+    Selecting bins disjoint from the SRF leads to no bin being selected.
+    """
+    cfg = MeasureSpectralConfig.new(
+        bin_set="10nm", bins=["550"], srf="sentinel_2a-msi-6"
+    )
+
+    with pytest.warns(UserWarning):
+        bins = cfg.bins
+
+    assert len(bins) == 0
 
 
 def test_measure_flags(mode_mono):

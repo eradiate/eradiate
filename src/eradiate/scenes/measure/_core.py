@@ -33,16 +33,6 @@ measure_factory = Factory()
 # ------------------------------------------------------------------------------
 
 
-def _measure_spectral_config_srf_factory():
-    from eradiate import mode
-
-    if mode().is_mono:
-        return UniformSpectrum(value=1.0)
-
-    else:
-        return "sentinel_2a-msi-2"
-
-
 def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
     if isinstance(value, str):
         with data.open_dataset(f"spectra/srf/{value}.nc") as ds:
@@ -53,6 +43,10 @@ def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
 
     converter = spectrum_factory.converter(quantity="dimensionless")
     return converter(value)
+
+
+_DEFAULT_SRF_UNIFORM = _measure_spectral_config_srf_converter(1.0)
+_DEFAULT_SRF_SENTINEL = _measure_spectral_config_srf_converter("sentinel_2a-msi-3")
 
 
 @parse_docs
@@ -70,11 +64,13 @@ class MeasureSpectralConfig(ABC):
     #                           Fields and properties
     # --------------------------------------------------------------------------
 
-    srf: Spectrum = documented(
+    _srf: t.Union[Spectrum, AutoType] = documented(
         attr.ib(
-            factory=_measure_spectral_config_srf_factory,
-            converter=_measure_spectral_config_srf_converter,
-            validator=validators.has_quantity(PhysicalQuantity.DIMENSIONLESS),
+            default=AUTO,
+            converter=converters.auto_or(_measure_spectral_config_srf_converter),
+            validator=validators.auto_or(
+                validators.has_quantity(PhysicalQuantity.DIMENSIONLESS)
+            ),
         ),
         doc="Spectral response function. If a string is passed, the "
         "corresponding shipped SRF data will be loaded from the Eradiate "
@@ -84,6 +80,13 @@ class MeasureSpectralConfig(ABC):
         default=":class:`UniformSpectrum(value=1.0) <.UniformSpectrum>` in mono "
         'mode, "sentinel_2a-msi-2" otherwise',
     )
+
+    @property
+    def srf(self) -> Spectrum:
+        if self._srf is AUTO:
+            return _DEFAULT_SRF_UNIFORM
+        else:
+            return self._srf
 
     # --------------------------------------------------------------------------
     #                         Spectral context generation
@@ -336,6 +339,9 @@ def _active(bin: Bin, srf: Spectrum) -> bool:
     It can be compact (*i.e.* in a single piece) or not (*i.e.* have "holes" or
     be infinite).
     """
+    result = bool(srf.integral(bin.wmin, bin.wmax) > 0.0)
+    if result:
+        print(f"bin {bin} is selected")
     return bool(srf.integral(bin.wmin, bin.wmax) > 0.0)
 
 
@@ -403,12 +409,40 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
         """
         if self._bins is AUTO:
             # Use the SRF
-            bin_selectors = [lambda x: _active(x, self.srf)]
+            def bin_selector(x):
+                return _active(x, self.srf)
+
         else:
             # Select bins manually using the selector syntax
-            bin_selectors = self._bins
+            # -- Base filter: the SRF
+            bin_filters = [lambda x: _active(x, self.srf)]
+            # -- In addition, apply the bin selection syntax
+            for filter_spec in self._bins:
+                bin_filters.append(ckd.bin_filter_converter(filter_spec))
 
-        return self.bin_set.select_bins(*bin_selectors)
+            def bin_selector(x):
+                return all(bin_filter(x) for bin_filter in bin_filters)
+
+        result = self.bin_set.select_bins(bin_selector)
+        print(result)
+        if not result:
+            warnings.warn(
+                "no active bin found, please check if the SRF and CKD bins "
+                "you selected in the measure configuration are consistent"
+            )
+
+        return result
+
+    @property
+    def srf(self) -> Spectrum:
+        if self._srf is AUTO:
+            if self._bins is not AUTO:
+                return _DEFAULT_SRF_UNIFORM
+            else:
+                return _DEFAULT_SRF_SENTINEL
+
+        else:
+            return self._srf
 
     # --------------------------------------------------------------------------
     #                         Spectral context generation
