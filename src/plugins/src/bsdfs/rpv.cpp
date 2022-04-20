@@ -119,7 +119,6 @@ public:
                     si.n = Point3f(0.f, 0.f, 1.f);
 
                     Spectrum value = eval_rpv(si, wo, true);
-                    m_value_debug = theta_i;
                     m_data[l] = (Float) value.x();
                     ++l;
                 }
@@ -129,12 +128,15 @@ public:
         std::unique_ptr<Float[]> marg_phi_cdf(new Float[m_size.x() * m_size.z()]);
         std::unique_ptr<Float[]> cond_cdf(new Float[m_size.x()*m_size.y()*m_size.z()]);
 
+        std::unique_ptr<Float[]> normalization = std::unique_ptr<Float[]>(new Float[m_size.x()]);
+
         uint step_theta_i = m_size.y() * m_size.z();
         uint step_theta_o = m_size.z();
         uint step_phi = m_size.y();
 
         // marginal  and conditional CDFs
         for (uint32_t x = 0; x < m_size.x(); ++x) {
+            Float accum_total = 0.f;
             uint offset_theta_i = x * step_theta_i;
             for (uint32_t z = 0; z < m_size.z(); ++z) {
                 uint offset_phi = z * step_phi;
@@ -143,11 +145,11 @@ public:
                     uint offset_theta_o = y * step_theta_o;
                     accum_cond += m_data[offset_theta_i + offset_theta_o + z];
                     cond_cdf[offset_theta_i + offset_phi + y] = accum_cond;
+                    accum_total += m_data[offset_theta_i + offset_theta_o + z];
                 }
             }
+            normalization[x] = 1.0 / accum_total;
         }
-        m_inv_normalization = accum_marg_theta_i;
-        m_normalization = 1.0 / accum_marg_theta_i;
 
         for (uint32_t x = 0; x < m_size.x(); ++x) {
             Float accum_marg_phi = 0.f;
@@ -163,7 +165,8 @@ public:
         }
 
         m_marg_phi_cdf = dr::load<FloatStorage>(marg_phi_cdf.get(), m_size.x() * m_size.z());
-        m_cond_cdf         = dr::load<FloatStorage>(cond_cdf.get(), dr::hprod(m_size));
+        m_cond_cdf = dr::load<FloatStorage>(cond_cdf.get(), dr::hprod(m_size));
+        m_normalization = dr::load<FloatStorage>(normalization.get(), m_size.x());
     }
 
     std::pair<BSDFSample3f, Spectrum> sample(const BSDFContext & /* ctx */,
@@ -225,6 +228,7 @@ public:
         // PDF value preparations
         Float cond_cdf_0 = dr::gather<Float>(m_cond_cdf, offset_theta_i_cond + offset_phi + idx_theta_o - 1, active && idx_phi > 0);
         Float cond_cdf_1 = dr::gather<Float>(m_cond_cdf, offset_theta_i_cond + offset_phi + idx_theta_o, active);
+        Float normalization = dr::gather<Float>(m_normalization, idx_theta_i, active);
 
         Float theta_o = (Float) idx_theta_o / (Float) m_size.y() * (dr::Pi<Float> / 2.f);
 
@@ -237,7 +241,7 @@ public:
                     dr::sin(theta_o)*dr::sin(phi_o),
                     dr::cos(theta_o)
         );
-        bs.pdf          = dr::select(cos_theta_i > 0.f, (cond_cdf_1 - cond_cdf_0) * m_normalization, 0.f);
+        bs.pdf          = dr::select(cos_theta_i > 0.f, (cond_cdf_1 - cond_cdf_0) * normalization, 0.f);
         bs.eta          = 1.f;
         bs.sampled_type = +BSDFFlags::GlossyReflection;
         Spectrum value = eval_rpv(si, bs.wo, active);
@@ -319,15 +323,16 @@ public:
 
         // Avoid out of range indices for backside directions
         idx_theta_i = dr::clamp(idx_theta_i, 0u, m_size.x() -1);
-        idx_theta_o = dr::clamp(idx_theta_o, 0u, m_size.y() -1);
+        idx_theta_o = dr::clamp(idx_theta_o, 0u, m_size.z() -1);
 
         UInt32 offset_theta_i = idx_theta_i * m_size.y() * m_size.z();
         UInt32 offset_phi = idx_phi * m_size.y();
 
         Float cond_cdf_0 = dr::gather<Float>(m_cond_cdf, offset_theta_i + offset_phi + idx_theta_o - 1, active && idx_phi > 0);
         Float cond_cdf_1 = dr::gather<Float>(m_cond_cdf, offset_theta_i + offset_phi + idx_theta_o, active);
+        Float normalization = dr::gather<Float>(m_normalization, idx_theta_i, active);
 
-        Float pdf = (cond_cdf_1 - cond_cdf_0) * m_normalization;
+        Float pdf = (cond_cdf_1 - cond_cdf_0) * normalization;
         return dr::select(cos_theta_i > 0.f && cos_theta_o > 0.f, pdf, 0.f);
     }
 
@@ -356,7 +361,7 @@ private:
     ref<Texture> m_k;
     ref<Texture> m_rho_c;
     std::unique_ptr<Float[]> m_data;
-    Float m_normalization, m_inv_normalization;
+    FloatStorage m_normalization;
     ScalarPoint3u m_size;
 
     /// Marginal and conditional PDFs
