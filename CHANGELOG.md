@@ -41,8 +41,6 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 * Change the default value for the `ParticleLayer.dataset` field to:
   `spectra/particles/govaerts_2021-continental.nc` ({ghpr}`212`).
-* Change the default value for the `SpectralMeasureConfig.srf` field to
-  `"sentinel_2a-msi-2"`, in CKD mode ({ghpr}`214`).
 
 ### Deprecations and removals
 

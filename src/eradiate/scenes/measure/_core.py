@@ -33,16 +33,6 @@ measure_factory = Factory()
 # ------------------------------------------------------------------------------
 
 
-def _measure_spectral_config_srf_factory():
-    from eradiate import mode
-
-    if mode().is_mono:
-        return UniformSpectrum(value=1.0)
-
-    else:
-        return "sentinel_2a-msi-2"
-
-
 def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
     if isinstance(value, str):
         with data.open_dataset(f"spectra/srf/{value}.nc") as ds:
@@ -72,7 +62,7 @@ class MeasureSpectralConfig(ABC):
 
     srf: Spectrum = documented(
         attr.ib(
-            factory=_measure_spectral_config_srf_factory,
+            factory=lambda: UniformSpectrum(value=1.0),
             converter=_measure_spectral_config_srf_converter,
             validator=validators.has_quantity(PhysicalQuantity.DIMENSIONLESS),
         ),
@@ -81,8 +71,7 @@ class MeasureSpectralConfig(ABC):
         "database. Other types will be converted by :data:`.spectrum_factory`.",
         type=".Spectrum",
         init_type="str or .Spectrum or dict or float",
-        default=":class:`UniformSpectrum(value=1.0) <.UniformSpectrum>` in mono "
-        'mode, "sentinel_2a-msi-2" otherwise',
+        default=":class:`UniformSpectrum(value=1.0) <.UniformSpectrum>`",
     )
 
     # --------------------------------------------------------------------------
