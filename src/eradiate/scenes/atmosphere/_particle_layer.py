@@ -155,7 +155,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     dataset: xr.Dataset = documented(
         attr.ib(
-            default="tests/radprops/rtmom_aeronet_desert.nc",
+            default="spectra/particles/govaerts_2021-continental.nc",
             converter=converters.load_dataset,
             validator=attr.validators.instance_of(xr.Dataset),
         ),
@@ -164,7 +164,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         "this fails, it tries to load a resource from the data store.",
         type="Dataset",
         init_type="Dataset or path-like, optional",
-        default="tests/radprops/rtmom_aeronet_desert.nc",
+        default="spectra/particles/govaerts_2021-continental.nc",
     )
 
     _phase: t.Optional[TabulatedPhaseFunction] = attr.ib(default=None, init=False)

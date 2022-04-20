@@ -34,7 +34,10 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 % ### New features
 
-% ### Breaking changes
+### Breaking changes
+
+* Change the default value for the `ParticleLayer.dataset` field to:
+  `spectra/particles/govaerts_2021-continental.nc` ({ghpr}`212`).
 
 ### Deprecations and removals
 
