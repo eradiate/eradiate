@@ -69,14 +69,23 @@ def deprecated(
     component is deprecated, and when it will be retired (this latter argument
     is optional):
 
-    >>> @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
-    ... def foo(): ...
-    >>> foo()
+    .. testsetup:: deprecated
 
+       from eradiate.util.deprecation import deprecated
+
+    .. doctest:: deprecated
+
+       >>> @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
+       ... def foo(): ...
+       >>> foo()
+
+    This will emit a :class:`.UnsupportedWarning`, which you can then handle.
     We can also deprecate classes:
 
-    >>> @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
-    ... class SomeClass: ...
+    .. doctest:: deprecated
+
+       >>> @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
+       ... class SomeClass: ...
 
     If those components are used before v0.21.1, nothing happens. If they are
     used between v0.21.1 (included) and v0.22.1 (excluded), a
@@ -86,14 +95,20 @@ def deprecated(
     When used with static or class methods, their respective decorators must be
     applied *after* this one:
 
-    >>> class SomeClass:
-    ...     @staticmethod
-    ...     @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
-    ...     def staticmethod(): ...
-    ...
-    ...     @classmethod
-    ...     @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
-    ...     def classmethod(cls): ...
+    .. doctest:: deprecated
+
+       >>> class SomeClass:
+       ...     @staticmethod
+       ...     @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
+       ...     def staticmethod(): ...
+       ...
+       ...     @classmethod
+       ...     @deprecated(deprecated_in="0.21.1", removed_in="0.22.1")
+       ...     def classmethod(cls): ...
+
+    .. testcleanup:: deprecated
+
+       del deprecated
     """
     # You can't just jump to removal. It's weird, unfair, and also makes
     # building up the docstring weird.

@@ -30,6 +30,7 @@ extensions = [
     # Core extensions
     "sphinx.ext.autodoc",  # Automatic API documentation
     "sphinx.ext.autosummary",  # Summary tables in API docs
+    "sphinx.ext.doctest",  # Doctest blocks
     "sphinx.ext.extlinks",  # External links with dedicated roles
     "sphinx.ext.mathjax",  # Equation support
     "sphinx.ext.napoleon",  # Better docstrings

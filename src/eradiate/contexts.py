@@ -314,22 +314,34 @@ class KernelDictContext(Context):
     populated by passing additional keyword arguments. For instance, the two
     following init patterns are equivalent:
 
-    .. code:: python
+    .. testsetup:: contexts
 
-       >>> ctx = KernelDictContext(dynamic={"foo": "bar"})
-       KernelDictContext(spectral_ctx=..., dynamic={'foo': 'bar'}
-       >>> ctx = KernelDictContext(foo="bar")
-       KernelDictContext(spectral_ctx=..., dynamic={'foo': 'bar'}
+       import eradiate
+       from eradiate.contexts import KernelDictContext
+       eradiate.set_mode("mono")
+
+    .. doctest:: contexts
+       :options: +ELLIPSIS
+
+       >>> KernelDictContext(dynamic={"foo": "bar"})
+       KernelDictContext(..., dynamic={'foo': 'bar'})
+       >>> KernelDictContext(foo="bar")
+       KernelDictContext(..., dynamic={'foo': 'bar'})
 
     Access to dynamic data can go through direct query of the dictionary, or
     using attributes:
 
-    .. code:: python
+    .. doctest:: contexts
 
+       >>> ctx = KernelDictContext(foo="bar")
        >>> ctx.dynamic["foo"]
        'bar'
        >>> ctx.foo
        'bar'
+
+    .. testcleanup:: contexts
+
+       del KernelDictContext
     """
 
     @parse_docs

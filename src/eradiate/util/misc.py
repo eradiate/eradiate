@@ -52,12 +52,22 @@ class Singleton(type):
 
     Examples
     --------
-    >>> class MySingleton(metaclass=Singleton):
-    ...     pass
 
-    >>> my_singleton1 = MySingleton()
-    >>> my_singleton2 = MySingleton()
-    >>> assert my_singleton1 is my_singleton2  # Should not fail
+    .. testsetup:: singleton
+
+       from eradiate.util.misc import Singleton
+
+    .. doctest:: singleton
+
+       >>> class MySingleton(metaclass=Singleton): ...
+       >>> my_singleton1 = MySingleton()
+       >>> my_singleton2 = MySingleton()
+       >>> my_singleton1 is my_singleton2
+       True
+
+    .. testcleanup:: singleton
+
+       del Singleton
     """
 
     _instances = {}
@@ -230,8 +240,19 @@ def onedict_value(d: t.Mapping) -> t.Any:
 
     Examples
     --------
-    >>> onedict_value({"foo": "bar"})
-    'bar'
+
+    .. testsetup:: onedict_value
+
+       from eradiate.util.misc import onedict_value
+
+    .. doctest:: onedict_value
+
+       >>> onedict_value({"foo": "bar"})
+       'bar'
+
+    .. testcleanup:: onedict_value
+
+       del onedict_value
     """
 
     if len(d) != 1:

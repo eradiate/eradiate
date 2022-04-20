@@ -102,10 +102,13 @@ docs-clean:
 
 # -- Testing -------------------------------------------------------------------
 
-.PHONY: test test-quick test-formatters
+.PHONY: test test-doctest test-quick
 
 test:
 	pytest
+
+test-doctest:
+	make -C docs doctest
 
 test-quick:
 	pytest -m "not slow and not regression"
