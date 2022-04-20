@@ -63,7 +63,9 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   of a path), which does not change over the instance lifetime. 
   This reduces the amount of time spent on I/O ({ghpr}`212`).
 * Optionally, export extra fields useful for analysis and debugging upon calling
-  `AbstractHeterogeneousAtmosphere.eval_radprops()` ({ghpr}`206`, {ghpr}`212`).  
+  `AbstractHeterogeneousAtmosphere.eval_radprops()` ({ghpr}`206`, {ghpr}`212`).
+* Re-formated `spectra/particles/govaerts_2021-*-extrapolated.nc` data sets
+  ({ghpr}`213`).  
 
 ### Documentation
 
