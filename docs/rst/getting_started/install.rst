@@ -412,3 +412,22 @@ use Eradiate |smile|
 
    Even doing so, you might still see a CUDA-related warning upon importing
    Eradiate. This is not a concern and it should be fixed in the future.
+
+Uninstall
+---------
+
+To uninstall Eradiate from your system, you have to remove the Conda environment environment you used to set it up and delete the directory where you cloned the code. If you followed exactly the installation instructions, here is a possible workflow:
+
+1. Activate the Conda environment and delete the Eradiate source directory:
+
+   .. code:: bash
+   
+      conda activate eradiate
+      rm -rf $ERADIATE_SOURCE_DIR
+
+2. Deactivate the Conda environment and delete it:
+
+   .. code:: bash
+   
+      conda deactivate
+      conda env remove --name eradiate
