@@ -74,6 +74,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 ### Documentation
 
 * Add tutorials on homogeneous and molecular atmospheres ({ghpr}`194`).
+* Added uninstall instructions ({ghpr}`217`).
 
 ### Internal changes
 
