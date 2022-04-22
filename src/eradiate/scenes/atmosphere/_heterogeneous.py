@@ -261,7 +261,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
         # Single component: just forward encapsulated component
         if len(components) == 1:
-            return components[0].eval_radprops(spectral_ctx)
+            return components[0].eval_radprops(
+                spectral_ctx, optional_fields=optional_fields
+            )
 
         # Two components or more: interpolate all components on a fine grid and
         # aggregate collision coefficients
@@ -273,7 +275,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             for component in components:
                 radprops = interpolate_radprops(
-                    component.eval_radprops(spectral_ctx), new_z_layer=hrz
+                    component.eval_radprops(spectral_ctx),
+                    new_z_layer=hrz,
                 )
                 # We store only the magnitude
                 sigma_ts.append(to_quantity(radprops.sigma_t).m_as(sigma_units))
