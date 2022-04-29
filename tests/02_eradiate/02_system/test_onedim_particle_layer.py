@@ -92,9 +92,19 @@ def init_experiment_homogeneous_atmosphere(
     "w",
     [280, 400, 550, 650, 1000, 1500, 2400],
 )
+@pytest.mark.parametrize(
+    "albedo",
+    [0.2, 0.5, 0.8],
+)
 @pytest.mark.slow
 def test(
-    mode_mono_double, tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state
+    mode_mono_double,
+    tmpdir,
+    onedim_rayleigh_radprops,
+    albedo,
+    w,
+    artefact_dir,
+    ert_seed_state,
 ):
     r"""
     Equivalency of homogeneous atmosphere and corresponding particle layer
@@ -113,11 +123,11 @@ def test(
       :math:`\theta = 30.0°` with black body irradiance spectrum.
     * Surface: a square surface with a Lambertian BRDF with 35 % reflectance.
     * Atmosphere:
-      * in experiment 1: a non-absorbing 5 km high homogeneous atmosphere with
+      * in experiment 1: a 5 km high homogeneous atmosphere with
         a tabulated phase function corresponding to the Rayleigh phase function.
         The scattering coefficient is given by
         :meth:`eradiate.radprops.rayleigh.compute_sigma_s_air`.
-      * in experiment 2: a non-absorbing uniform 5 km thick particle layer with
+      * in experiment 2: a uniform 5 km thick particle layer with
         a tabulated phase function corresponding to the Rayleigh phase function.
         The optical thickness at 550 nm of the particle layer is set to a value
         that match the optical thickness at 550 nm of the homogeneous
@@ -133,44 +143,71 @@ def test(
     Results
     -------
 
-    .. image:: generated/plots/test_onedim_particle_layer_280.0.png
+    .. image:: generated/plots/test_onedim_particle_layer_280.0_0.2.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_particle_layer_400.0.png
+    .. image:: generated/plots/test_onedim_particle_layer_280.0_0.5.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_particle_layer_550.0.png
+    .. image:: generated/plots/test_onedim_particle_layer_280.0_0.8.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_particle_layer_650.0.png
+    .. image:: generated/plots/test_onedim_particle_layer_400.0_0.2.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_particle_layer_1000.0.png
+    .. image:: generated/plots/test_onedim_particle_layer_400.0_0.5.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_particle_layer_1500.0.png
+    .. image:: generated/plots/test_onedim_particle_layer_400.0_0.8.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_particle_layer_2400.0.png
+    .. image:: generated/plots/test_onedim_particle_layer_550.0_0.2.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_550.0_0.5.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_550.0_0.8.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_650.0_0.2.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_650.0_0.5.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_650.0_0.8.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_1000.0_0.2.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_1000.0_0.5.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_1000.0_0.8.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_1500.0_0.2.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_1500.0_0.5.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_1500.0_0.8.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_2400.0_0.2.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_2400.0_0.5.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_particle_layer_2400.0_0.8.png
        :width: 95%
     """
     w = w * ureg.nm
     spp = 1e6
-    reflectance = 0.35
+    reflectance = 1.0
     bottom = 0.0 * ureg.km
     top = 5.0 * ureg.km
 
-    w_units = onedim_rayleigh_radprops.w.attrs["units"]
-    sigma_t = to_quantity(onedim_rayleigh_radprops.sigma_t.interp(w=w.m_as(w_units)))
-    albedo = to_quantity(onedim_rayleigh_radprops.albedo.interp(w=w.m_as(w_units)))
+    radprops = onedim_rayleigh_radprops(albedo=albedo)
+    w_units = radprops.w.attrs["units"]
+    sigma_t = to_quantity(radprops.sigma_t.interp(w=w.m_as(w_units)))
+    albedo = to_quantity(radprops.albedo.interp(w=w.m_as(w_units)))
     sigma_s = sigma_t * albedo
-    sigma_a = sigma_t * (1.0 - albedo)
-    phase = eradiate.scenes.phase.TabulatedPhaseFunction(
-        data=onedim_rayleigh_radprops.phase
-    )
-
-    sigma_s_550 = eradiate.radprops.rayleigh.compute_sigma_s_air(
-        wavelength=550.0 * ureg.nm
+    sigma_a = sigma_t - sigma_s
+    phase = eradiate.scenes.phase.TabulatedPhaseFunction(data=radprops.phase)
+    sigma_t_550 = to_quantity(
+        radprops.sigma_t.interp(
+            w=(550 * ureg.nm).m_as(w_units),
+        )
     )
     height = top - bottom
-    tau_550 = sigma_s_550 * height
-
+    tau_550 = sigma_t_550 * height  # the layer is uniform
     dataset_path = tmpdir / "radprops.nc"
-    onedim_rayleigh_radprops.to_netcdf(dataset_path)
+    radprops.to_netcdf(dataset_path)
 
     experiment_1 = init_experiment_particle_layer(
         bottom=bottom,
@@ -203,7 +240,7 @@ def test(
     brf_2 = experiment_2.results["measure"]["brf"]
 
     # Make figure
-    filename = f"test_onedim_particle_layer_{w.magnitude}.png"
+    filename = f"test_onedim_particle_layer_{w.magnitude}_{albedo.m}.png"
     outdir = os.path.join(artefact_dir, "plots")
     os.makedirs(outdir, exist_ok=True)
     fname_plot = os.path.join(outdir, filename)

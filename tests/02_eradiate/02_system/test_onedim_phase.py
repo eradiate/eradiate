@@ -121,14 +121,13 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_s
     sigma_s_1 = eradiate.scenes.spectra.AirScatteringCoefficientSpectrum()
     phase_1 = eradiate.scenes.phase.RayleighPhaseFunction()
 
-    w_units = onedim_rayleigh_radprops.w.attrs["units"]
-    sigma_t = to_quantity(onedim_rayleigh_radprops.sigma_t.interp(w=w.m_as(w_units)))
-    albedo = to_quantity(onedim_rayleigh_radprops.albedo.interp(w=w.m_as(w_units)))
+    radprops = onedim_rayleigh_radprops(albedo=1.0)
+    w_units = radprops.w.attrs["units"]
+    sigma_t = to_quantity(radprops.sigma_t.interp(w=w.m_as(w_units)))
+    albedo = to_quantity(radprops.albedo.interp(w=w.m_as(w_units)))
     sigma_s_2 = sigma_t * albedo
     sigma_a_2 = sigma_t * (1.0 - albedo)
-    phase_2 = eradiate.scenes.phase.TabulatedPhaseFunction(
-        data=onedim_rayleigh_radprops.phase
-    )
+    phase_2 = eradiate.scenes.phase.TabulatedPhaseFunction(data=radprops.phase)
 
     experiment_1 = init_experiment(
         bottom=bottom,
