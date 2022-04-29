@@ -251,3 +251,106 @@ def test(
     if outcome is False:
         print(f"Test failed, see artefact {fname_plot}")
         assert False
+
+
+@pytest.mark.parametrize(
+    "w",
+    [280, 400, 550, 650, 1000, 1500, 2400],
+)
+@pytest.mark.slow
+def test_particle_layer_energy_conservation(
+    mode_mono_double, tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state
+):
+    r"""
+    Energy  conservation in a non-absorbing particle layer
+    ======================================================
+
+    We assert that the reflected energy is equivalent to the irradiated energy in
+    a scene with non-absorbing atmosphere and surface reflectivity of 1.
+
+    Rationale
+    ---------
+
+    * Sensor: Distant flux measure covering the hemisphere (normal is (0, 0, 1),
+      1e3 samples per pixel).
+    * Illumination: Directional illumination with a zenith angle
+      :math:`\theta = 30.0°` with black body irradiance spectrum.
+    * Surface: a square surface with a Lambertian BRDF with 100 % reflectance.
+    * Atmosphere:
+      a non-absorbing uniform 5 km thick particle layer with
+      a tabulated phase function corresponding to the Rayleigh phase function.
+    * Integrator: volumetric path tracer.
+
+    Expected behaviour
+    ------------------
+
+    The retrieved albedo must equal to 1.
+    """
+    w = w * ureg.nm
+    spp = 1e3
+    reflectance = 1.0
+    bottom = 0.0 * ureg.km
+    top = 5.0 * ureg.km
+
+    radprops = onedim_rayleigh_radprops(albedo=1.0)
+
+    w_units = radprops.w.attrs["units"]
+    sigma_t_550 = to_quantity(
+        radprops.sigma_t.interp(
+            w=(550 * ureg.nm).m_as(w_units),
+        )
+    )
+    height = top - bottom
+    tau_550 = sigma_t_550 * height  # the layer is uniform
+    dataset_path = tmpdir / "radprops.nc"
+    radprops.to_netcdf(dataset_path)
+
+    experiment = eradiate.experiments.OneDimExperiment(
+        measures=[
+            eradiate.scenes.measure.DistantFluxMeasure(
+                film_resolution=(32, 32),
+                target=eradiate.scenes.measure.TargetRectangle(
+                    xmin=-20.0 * ureg.km,
+                    xmax=20.0 * ureg.km,
+                    ymin=-20.0 * ureg.km,
+                    ymax=20.0 * ureg.km,
+                    z=5.0 * ureg.km,
+                ),
+                spp=spp,
+            )
+        ],
+        illumination=eradiate.scenes.illumination.DirectionalIllumination(
+            zenith=30 * ureg.deg,
+            azimuth=0.0 * ureg.deg,
+            irradiance=eradiate.scenes.spectra.SolarIrradianceSpectrum(
+                dataset="blackbody_sun"
+            ),
+        ),
+        atmosphere=eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
+            molecular_atmosphere=None,
+            particle_layers=[
+                eradiate.scenes.atmosphere.ParticleLayer(
+                    bottom=bottom,
+                    top=top,
+                    dataset=dataset_path,
+                    tau_550=tau_550,
+                )
+            ],
+        ),
+        surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=reflectance),
+    )
+
+    ert_seed_state.reset()
+    experiment.run(seed_state=ert_seed_state)
+
+    albedo = experiment.results["measure"]["albedo"]
+
+    # Make figure
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+
+    outcome = np.allclose(albedo.values, 1.0, rtol=5e-3)
+
+    if outcome is False:
+        print(f"Test failed, expected brf sum = 1.0, got {albedo.values}")
+        assert False
