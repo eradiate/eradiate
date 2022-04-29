@@ -280,15 +280,15 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         """
         ds = afgl_1986.make_profile(model_id=model)
 
-        if levels is not None:
-            ds = interpolate(ds=ds, z_level=levels, conserve_columns=True)
-
         if concentrations is not None:
             factors = compute_scaling_factors(
                 ds=ds,
                 concentration=pinttr.interpret_units(concentrations, ureg=ureg),
             )
             ds = rescale_concentration(ds=ds, factors=factors)
+
+        if levels is not None:
+            ds = interpolate(ds=ds, z_level=levels, conserve_columns=True)
 
         return cls(thermoprops=ds, **kwargs)
 
