@@ -345,10 +345,6 @@ def test_particle_layer_energy_conservation(
 
     albedo = experiment.results["measure"]["albedo"]
 
-    # Make figure
-    outdir = os.path.join(artefact_dir, "plots")
-    os.makedirs(outdir, exist_ok=True)
-
     outcome = np.allclose(albedo.values, 1.0, rtol=5e-3)
 
     if outcome is False:
