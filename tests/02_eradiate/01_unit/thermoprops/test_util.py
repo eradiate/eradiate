@@ -9,6 +9,7 @@ from eradiate.thermoprops.util import (
     _to_regular,
     column_number_density,
     number_density_at_surface,
+    _scaling_factor,
     compute_scaling_factors,
     equilibrium_water_vapor_fraction,
     human_readable,
@@ -80,6 +81,35 @@ def test_compute_number_density_at_surface():
     )
     value = number_density_at_surface(ds, "H2O")
     assert value == ureg.Quantity(0.6, "m^-3")
+
+
+def test_scaling_factor():
+    """Returns correct value."""
+
+    assert np.isclose(
+        _scaling_factor(
+            initial_amount=1.0 / ureg.m**3,
+            target_amount=10.0 / ureg.m**3,
+        ),
+        10.0,
+    )
+
+    assert np.isclose(
+        _scaling_factor(
+            initial_amount=1.0 / ureg.m**3,
+            target_amount=0.0 / ureg.m**3,
+        ),
+        0.0,
+    )
+
+
+def test_scaling_factor_invalid():
+    """Raises when both initial and target amounts are zero."""
+    with pytest.raises(ValueError):
+        _scaling_factor(
+            initial_amount=0.0 / ureg.m**3,
+            target_amount=1.0 / ureg.m**3,
+        )
 
 
 def test_compute_scaling_factors():
@@ -170,15 +200,12 @@ def test_interpolate():
             history="",
         ),
     )
-    initial_amounts = {
-        s: column_number_density(ds, s) for s in ds.species.values
-    }
+    initial_amounts = {s: column_number_density(ds, s) for s in ds.species.values}
     interpolated = interpolate(
         ds=ds, method="linear", z_level=np.linspace(0, 8, 9), conserve_columns=True
     )
     amounts = {
-        s: column_number_density(interpolated, s)
-        for s in interpolated.species.values
+        s: column_number_density(interpolated, s) for s in interpolated.species.values
     }
     for s in ds.species.values:
         assert np.isclose(amounts[s], initial_amounts[s], rtol=1e-9)

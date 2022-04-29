@@ -159,6 +159,45 @@ def volume_mixing_ratio_at_surface(ds: xr.Dataset, species: str) -> pint.Quantit
     return to_quantity(ds.mr.sel(species=species))[0]
 
 
+def _scaling_factor(
+    initial_amount: pint.Quantity,
+    target_amount: pint.Quantity,
+) -> float:
+    """
+    Compute the scaling factor to reach target amount from initial amount.
+
+    Initial and target amount should be scalar and  have compatible dimensions.
+
+    Parameters
+    ----------
+    initial_amount: quantity
+        Initial amount.
+
+    target_amount: quantity
+        Target quantity.
+
+    Raises
+    ------
+    ValueError
+        When both initial and target amounts are zero.
+
+    Returns
+    -------
+    float
+        Scaling factor.
+    """
+    if initial_amount.m == 0.0:
+        if target_amount.m == 0.0:
+            return 0.0
+        else:
+            raise ValueError(
+                f"Cannot compute scaling factor when initial amount is 0.0 and "
+                f"target amount is non-zero (got {target_amount})"
+            )
+    else:
+        return (target_amount / initial_amount).m_as(ureg.dimensionless)
+
+
 def compute_scaling_factors(
     ds: xr.Dataset, concentration: t.Dict[str, pint.Quantity]
 ) -> t.Dict[str, float]:
@@ -237,30 +276,32 @@ def compute_scaling_factors(
     dict
         Mapping of species (str) and scaling factors (float).
     """
+    compute_initial_amount = {
+        "[length]^-2": column_number_density,
+        "[mass] * [length]^-2": column_mass_density,
+        "[length]^-3": number_density_at_surface,
+        "[mass] * [length]^-2": mass_density_at_surface,
+        "": volume_mixing_ratio_at_surface,
+    }
     factors = {}
     for species in concentration:
-        amount = concentration[species]
-        if amount.check("[length]^-2"):  # column number density
-            initial_amount = column_number_density(ds=ds, species=species)
-            factor = amount.to("m^-2") / initial_amount.to("m^-2")
-        elif amount.check("[mass] * [length]^-2"):
-            initial_amount = column_mass_density(ds=ds, species=species)
-            factor = amount.to("kg/m^2") / initial_amount.to("kg/m^2")
-        elif amount.check("[length]^-3"):  # number density at the surface
-            initial_amount = number_density_at_surface(ds=ds, species=species)
-            factor = amount.to("m^-3") / initial_amount.to("m^-3")
-        elif amount.check("[mass] * [length]^-2"):
-            initial_amount = mass_density_at_surface(ds=ds, species=species)
-            factor = amount.to("km/m^3") / initial_amount.to("kg/m^3")
-        elif amount.check(""):  # mixing ratio at the surface
-            surface_mr_species = amount
-            initial_surface_mr_species = to_quantity(ds.mr.sel(species=species))[0]
-            factor = surface_mr_species / initial_surface_mr_species
-        else:
+        target_amount = concentration[species]
+        initial_amount = None
+        for dimensions in list(compute_initial_amount.keys()):
+            if target_amount.check(dimensions):
+                initial_amount = compute_initial_amount[dimensions](
+                    ds=ds, species=species
+                )
+        if initial_amount is None:
             raise ValueError(
-                f"Invalid dimension for {species} concentration:" f" {amount.units}."
+                f"Invalid dimension for {species} concentration: {target_amount.units}."
+                f"Expected dimension: [length]^-2, [mass] * [length]^-2, "
+                f"[length]^-3, [mass] * [length]^-2 or no dimension."
             )
-        factors[species] = factor.magnitude
+        factors[species] = _scaling_factor(
+            initial_amount=initial_amount,
+            target_amount=target_amount,
+        )
 
     return factors
 
