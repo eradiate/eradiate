@@ -352,5 +352,5 @@ def test_particle_layer_energy_conservation(
     outcome = np.allclose(albedo.values, 1.0, rtol=5e-3)
 
     if outcome is False:
-        print(f"Test failed, expected brf sum = 1.0, got {albedo.values}")
+        print(f"Test failed, expected albedo = 1.0, got {albedo.values}")
         assert False
