@@ -70,6 +70,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   `AbstractHeterogeneousAtmosphere.eval_radprops()` ({ghpr}`206`, {ghpr}`212`).
 * Re-formated `spectra/particles/govaerts_2021-*-extrapolated.nc` data sets
   ({ghpr}`213`).  
+* `TabulatedPhaseFunction` interpolates input data on hundred times finer scattering angle cosine grid ({ghcommit}`2eb3408f1e249da353600e315af7ce09ca2f893f`).
 
 ### Documentation
 
