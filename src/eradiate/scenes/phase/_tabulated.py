@@ -23,6 +23,14 @@ class TabulatedPhaseFunction(PhaseFunction):
 
     A lookup table-based phase function. The `data` field is a
     :class:`~xarray.DataArray` with wavelength and angular dimensions.
+
+    .. warning::
+       The phase function is evaluated on a regular grid of scattering angle
+       cosine values from -1 to 1 with a number of grid points set to 20001.
+       If the input `data` contains variations that cannot be resolved by
+       this regular grid, information about these variations will get lost
+       and the accuracy of simulations using the resulting
+       `TabulatedPhaseFunction` object might be impacted.
     """
 
     data: xr.DataArray = documented(
@@ -37,7 +45,7 @@ class TabulatedPhaseFunction(PhaseFunction):
     )
 
     # Number of points used to represent the phase function on the angular coordinate
-    _n_mu: int = attr.ib(default=201, init=False, repr=False)
+    _n_mu: int = attr.ib(default=20001, init=False, repr=False)
 
     def eval(self, spectral_ctx: SpectralContext) -> np.ndarray:
         r"""
