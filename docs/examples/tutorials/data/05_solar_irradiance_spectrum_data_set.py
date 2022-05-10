@@ -40,7 +40,7 @@ eradiate.data.registered(category="solar_irradiance_spectrum")
 # Solar irradiance spectra data sets belong to the category
 # ``solar_irradiance_spectrum``.
 
-ds = eradiate.data.open(category="solar_irradiance_spectrum", id="thuillier_2003")
+ds = eradiate.data.open_dataset("spectra/solar_irradiance/thuillier_2003.nc")
 
 # %%
 # You can visualise the solar irradiance spectrum corresponding to this dataset
@@ -57,8 +57,7 @@ plt.show()
 # coordinate, you must **select** the date for which you want to visualise the
 # spectrum:
 
-path = eradiate.path_resolver.resolve("tests/spectra/solar_irradiance/solid_2017.nc")
-ds = eradiate.data.open(path=path)
+ds = eradiate.data.open_dataset("spectra/solar_irradiance/solid_2017.nc")
 ds.ssi.sel(t="2014-12-31").plot(linewidth=0.3)
 plt.show()
 

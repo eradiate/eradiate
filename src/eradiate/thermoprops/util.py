@@ -133,7 +133,7 @@ def mass_density_at_surface(ds: xr.Dataset, species: str) -> pint.Quantity:
     quantity
         Mass density at the surface.
     """
-    with data.open(category="chemistry", id="molecular_masses") as molecular_mass:
+    with data.open_dataset("chemistry/molecular_masses.nc") as molecular_mass:
         m = to_quantity(molecular_mass.m.sel(s=species)) * ATOMIC_MASS_CONSTANT
 
     return m * number_density_at_surface(ds=ds, species=species)
