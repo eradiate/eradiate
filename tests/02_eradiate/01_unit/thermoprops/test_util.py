@@ -8,7 +8,9 @@ from eradiate.thermoprops.util import (
     _find_regular_params_gcd,
     _to_regular,
     column_number_density,
+    column_mass_density,
     number_density_at_surface,
+    mass_density_at_surface,
     _scaling_factor,
     compute_scaling_factors,
     equilibrium_water_vapor_fraction,
@@ -66,6 +68,22 @@ def test_compute_column_number_density():
     assert column_number_density(ds, "O3") == ureg.Quantity(13, "m^-2")
 
 
+def test_column_mass_density():
+    # returns a quantity.
+    ds = xr.Dataset(
+        data_vars={
+            "mr": (("species", "z_layer"), np.ones((1, 3)), {"units": ""}),
+            "n": ("z_layer", np.arange(1, 4), {"units": "m^-3"}),
+        },
+        coords={
+            "z_layer": ("z_layer", np.arange(0, 3) + 0.5, {"units": "m"}),
+            "z_level": ("z_level", np.arange(0, 4), {"units": "m"}),
+            "species": ("species", ["H2O"], {}),
+        },
+    )
+    assert isinstance(column_mass_density(ds, "H2O"), ureg.Quantity)
+
+
 def test_compute_number_density_at_surface():
     # compute correctly
     ds = xr.Dataset(
@@ -81,6 +99,22 @@ def test_compute_number_density_at_surface():
     )
     value = number_density_at_surface(ds, "H2O")
     assert value == ureg.Quantity(0.6, "m^-3")
+
+
+def test_mass_density_at_surface():
+    # returns a quantity
+    ds = xr.Dataset(
+        data_vars={
+            "mr": (("species", "z_layer"), np.ones((1, 3)), {"units": ""}),
+            "n": ("z_layer", np.arange(1, 4), {"units": "m^-3"}),
+        },
+        coords={
+            "z_layer": ("z_layer", np.arange(0, 3) + 0.5, {"units": "m"}),
+            "z_level": ("z_level", np.arange(0, 4), {"units": "m"}),
+            "species": ("species", ["H2O"], {}),
+        },
+    )
+    assert isinstance(mass_density_at_surface(ds, "H2O"), ureg.Quantity)
 
 
 def test_scaling_factor():
