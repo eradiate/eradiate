@@ -100,7 +100,7 @@ def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
             {
                 "type": "mdistant",
                 "construct": "from_viewing_angles",
-                "spp": 10000,
+                "spp": 20000,
                 "azimuths": [180] * ureg.deg,
                 "zeniths": np.arange(-75, 75.01, 2) * ureg.deg,
                 "target": {
@@ -121,9 +121,6 @@ def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
         },
         integrator={"type": "path", "max_depth": -1},
     )
-
-    kd = exp.kernel_dict(ctx=KernelDictContext())
-    tran = kd.data["spherical_leaf_cloud"]["spherical_leaf_cloud_leaf_1"]["to_world"]
 
     exp.run()
     result = exp.results["measure"]
