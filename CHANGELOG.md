@@ -71,6 +71,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Re-formated `spectra/particles/govaerts_2021-*-extrapolated.nc` data sets
   ({ghpr}`213`).  
 * `TabulatedPhaseFunction` interpolates input data on hundred times finer scattering angle cosine grid ({ghcommit}`2eb3408f1e249da353600e315af7ce09ca2f893f`).
+* Fixed remaining calls to deprecated `eradiate.data.open` and replaced them with `eradiate.data.open_dataset` ({ghpr}`220`).
 
 ### Documentation
 
