@@ -223,7 +223,9 @@ def test_homogeneous_vs_particle_layer(
        :width: 95%
     """
 
-    def init_experiment_particle_layer(bottom, top, dataset_path, tau_550, r, w, spp):
+    def init_experiment_particle_layer(
+        bottom, top, dataset_path, w_ref, tau_ref, r, w, spp
+    ):
         return eradiate.experiments.OneDimExperiment(
             measures=[
                 eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
@@ -249,7 +251,8 @@ def test_homogeneous_vs_particle_layer(
                         bottom=bottom,
                         top=top,
                         dataset=dataset_path,
-                        tau_550=tau_550,
+                        w_ref=w_ref,
+                        tau_ref=tau_ref,
                     )
                 ],
             ),
@@ -300,13 +303,14 @@ def test_homogeneous_vs_particle_layer(
     sigma_s = sigma_t * albedo
     sigma_a = sigma_t - sigma_s
     phase = eradiate.scenes.phase.TabulatedPhaseFunction(data=radprops.phase)
-    sigma_t_550 = to_quantity(
+    w_ref = 550 * ureg.nm
+    sigma_t_ref = to_quantity(
         radprops.sigma_t.interp(
-            w=(550 * ureg.nm).m_as(w_units),
+            w=w_ref.m_as(w_units),
         )
     )
     height = top - bottom
-    tau_550 = sigma_t_550 * height  # the layer is uniform
+    tau_ref = sigma_t_ref * height  # the layer is uniform
     dataset_path = tmpdir / "radprops.nc"
     radprops.to_netcdf(dataset_path)
 
@@ -314,7 +318,8 @@ def test_homogeneous_vs_particle_layer(
         bottom=bottom,
         top=top,
         dataset_path=dataset_path,
-        tau_550=tau_550,
+        w_ref=w_ref,
+        tau_ref=tau_ref,
         r=reflectance,
         w=w,
         spp=spp,
@@ -396,13 +401,14 @@ def test_particle_layer_energy_conservation(
     radprops = onedim_rayleigh_radprops(albedo=1.0)
 
     w_units = radprops.w.attrs["units"]
-    sigma_t_550 = to_quantity(
+    w_ref = 550 * ureg.nm
+    sigma_t_ref = to_quantity(
         radprops.sigma_t.interp(
-            w=(550 * ureg.nm).m_as(w_units),
+            w=w_ref.m_as(w_units),
         )
     )
     height = top - bottom
-    tau_550 = sigma_t_550 * height  # the layer is uniform
+    tau_ref = sigma_t_ref * height  # the layer is uniform
     dataset_path = tmpdir / "radprops.nc"
     radprops.to_netcdf(dataset_path)
 
@@ -434,7 +440,8 @@ def test_particle_layer_energy_conservation(
                     bottom=bottom,
                     top=top,
                     dataset=dataset_path,
-                    tau_550=tau_550,
+                    w_ref=w_ref,
+                    tau_ref=tau_ref,
                 )
             ],
         ),
@@ -579,7 +586,8 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
         return ParticleLayer(
             bottom=mol_atm.bottom,
             top=mol_atm.top,
-            tau_550=mol_atm_tau,
+            w_ref=550.0 * ureg.nm,
+            tau_ref=mol_atm_tau,
             dataset=particle_radprops,
             n_layers=1,
         )

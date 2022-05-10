@@ -49,7 +49,7 @@ def test_rpv_afgl1986_continental_brfpp(
         bottom=1 * ureg.km,
         top=2 * ureg.km,
         n_layers=16,
-        tau_550=0.5,
+        tau_ref=0.5,
         dataset=data_store.fetch("spectra/particles/govaerts_2021-continental.nc"),
     )
 

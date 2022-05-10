@@ -132,7 +132,7 @@ def test_particle_layer_eval_mono(
     layer = ParticleLayer(
         dataset=test_particles_dataset,
         n_layers=1,
-        tau_550=1.0,
+        tau_ref=1.0,
         bottom=0.0 * ureg.km,
         top=1.0 * ureg.km,
     )
@@ -182,7 +182,7 @@ def test_particle_layer_eval_ckd(mode_ckd, tmpdir, test_particles_dataset, bins)
     layer = ParticleLayer(
         dataset=test_particles_dataset,
         n_layers=1,
-        tau_550=1.0,
+        tau_ref=1.0,
         bottom=0.0 * ureg.km,
         top=1.0 * ureg.km,
     )
@@ -214,19 +214,19 @@ def test_particle_layer_construct_attrs():
     """Assigns parameters to expected values."""
     bottom = ureg.Quantity(1.2, "km")
     top = ureg.Quantity(1.8, "km")
-    tau_550 = ureg.Quantity(0.3, "dimensionless")
+    tau_ref = ureg.Quantity(0.3, "dimensionless")
     layer = ParticleLayer(
         bottom=bottom,
         top=top,
         distribution=UniformParticleDistribution(),
-        tau_550=tau_550,
+        tau_ref=tau_ref,
         n_layers=9,
         dataset="tests/radprops/rtmom_aeronet_desert.nc",
     )
     assert layer.bottom == bottom
     assert layer.top == top
     assert isinstance(layer.distribution, UniformParticleDistribution)
-    assert layer.tau_550 == tau_550
+    assert layer.tau_ref == tau_ref
     assert layer.n_layers == 9
     assert isinstance(layer.dataset, xr.Dataset)
 
@@ -242,13 +242,13 @@ def test_particle_layer_invalid_bottom_top():
         ParticleLayer(top=1.2 * ureg.km, bottom=1.8 * ureg.km)
 
 
-def test_particle_layer_invalid_tau_550():
-    """Raises when 'tau_550' is invalid."""
+def test_particle_layer_invalid_tau_ref():
+    """Raises when 'tau_ref' is invalid."""
     with pytest.raises(ValueError):
         ParticleLayer(
             bottom=1.2 * ureg.km,
             top=1.8 * ureg.km,
-            tau_550=-0.1 * ureg.dimensionless,
+            tau_ref=-0.1 * ureg.dimensionless,
         )
 
 
@@ -286,36 +286,36 @@ def test_particle_layer_eval_radprops_format(modes_all_single, test_dataset):
 
 
 @pytest.mark.parametrize(
-    "tau_550",
+    "tau_ref",
     np.array([0.6, 1.0, 2.5]) * ureg.dimensionless,
 )
-def test_particle_layer_eval_radprops(mode_mono, test_dataset, tau_550):
+def test_particle_layer_eval_radprops(mode_mono, test_dataset, tau_ref):
     layer = ParticleLayer(
         dataset=test_dataset,
         bottom=0.5 * ureg.km,  # arbitrary
         top=3.0 * ureg.km,  # arbitrary
         distribution={"type": "uniform"},
         n_layers=1,
-        tau_550=tau_550,
+        tau_ref=tau_ref,
     )
 
-    # compute optical thickness at 550 nm from layer's radprops and check it
-    # matches the input tau_550
-    spectral_ctx = MonoSpectralContext(wavelength=550.0)
+    # compute optical thickness at reference wavelength from layer's radprops
+    # and check it matches the input tau_ref
+    spectral_ctx = MonoSpectralContext(wavelength=layer.w_ref)
     radprops = layer.eval_radprops(spectral_ctx)
     delta_z = layer.height / layer.n_layers
 
     with xr.set_options(keep_attrs=True):
         tau = to_quantity(radprops.sigma_t.sum()) * delta_z
 
-    assert np.isclose(tau, tau_550)
+    assert np.isclose(tau, tau_ref)
 
 
 @pytest.mark.parametrize(
-    "tau_550",
+    "tau_ref",
     np.array([0.1, 0.5, 1.0, 2.0, 5.0]) * ureg.dimensionless,
 )
-def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_550, test_dataset):
+def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_ref, test_dataset):
     r"""
     Spectral dependency of extinction is accounted for.
 
@@ -327,30 +327,32 @@ def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_550, test_dataset):
 
     .. math::
 
-       \frac{\tau(\lambda)}{\tau(550\, \mathrm{nm})} =
-       \frac{\sigma(\lambda)}{\sigma(550\, \mathrm{nm})}
+       \frac{\tau(\lambda)}{\tau(\lambda_{\mathrm{ref}})} =
+       \frac{\sigma(\lambda)}{\sigma(\lambda_{\mathrm{ref}})}
 
     which is what we assert in this test.
     """
+    w_ref = 550 * ureg.nm
     layer = ParticleLayer(
         dataset=test_dataset,
         bottom=0.5 * ureg.km,  # arbitrary
         top=3.0 * ureg.km,  # arbitrary
         distribution={"type": "uniform"},
         n_layers=1,
-        tau_550=tau_550,
+        w_ref=w_ref,
+        tau_ref=tau_ref,
     )
 
     # layer optical thickness @ current wavelength
     wavelengths = np.linspace(500.0, 1500.0, 101) * ureg.nm
     tau = layer.eval_sigma_t_mono(wavelengths) * layer.height
 
-    # data set extinction @ running wavelength and 550 nm
+    # data set extinction @ running and reference wavelength
     ds = converters.load_dataset(test_dataset)
     w_units = ureg(ds.w.attrs["units"])
     sigma_t = to_quantity(ds.sigma_t.interp(w=wavelengths.m_as(w_units)))
-    sigma_t_550 = to_quantity(ds.sigma_t.interp(w=(550.0 * ureg.nm).m_as(w_units)))
+    sigma_t_ref = to_quantity(ds.sigma_t.interp(w=w_ref.m_as(w_units)))
 
     # the spectral dependence of the optical thickness and extinction coefficient
     # match, so the below ratios must match
-    assert np.allclose(tau / tau_550, sigma_t / sigma_t_550)
+    assert np.allclose(tau / tau_ref, sigma_t / sigma_t_ref)

@@ -57,9 +57,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     The particle layer is itself divided into a number of (sub-)layers
     (`n_layers`) to allow to describe the variations of the particles number
     with altitude.
-    The total number of particles in the layer is adjusted so that the
-    particle layer's optical thickness at 550 nm meet a specified value
-    (`tau_550`).
+    The particle density in the layer is adjusted so that the particle layer's
+    optical thickness at a specified reference wavelength (`w_ref`) meets a
+    specified value (`tau_ref`).
     The particles radiative properties are specified by a data set
     (`dataset`).
     """
@@ -125,7 +125,25 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default='"uniform"',
     )
 
-    tau_550: pint.Quantity = documented(
+    w_ref: pint.Quantity = documented(
+        pinttr.ib(
+            units=ucc.deferred("length"),
+            default=550 * ureg.nm,
+            validator=[
+                is_positive,
+                pinttr.validators.has_compatible_units,
+            ],
+        ),
+        doc="Reference wavelength at which the extinction optical thickness is "
+        "specified.\n"
+        "\n"
+        "Unit-enabled field (default: ucc[length]).",
+        type="quantity",
+        init_type="quantity or float",
+        default="550.0",
+    )
+
+    tau_ref: pint.Quantity = documented(
         pinttr.ib(
             units=ucc.deferred("dimensionless"),
             default=ureg.Quantity(0.2, ureg.dimensionless),
@@ -134,7 +152,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                 pinttr.validators.has_compatible_units,
             ],
         ),
-        doc="Extinction optical thickness at the wavelength of 550 nm.\n"
+        doc="Extinction optical thickness at the reference wavelength.\n"
         "\n"
         "Unit-enabled field (default: ucc[dimensionless]).",
         type="quantity",
@@ -314,18 +332,16 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         ds_w_units = ureg(ds.w.attrs["units"])
         wavelength = w.m_as(ds_w_units)
         xs_t = to_quantity(ds.sigma_t.interp(w=wavelength))
-        xs_t_550 = to_quantity(
-            ds.sigma_t.interp(w=ureg.convert(550.0, ureg.nm, ds_w_units))
-        )
+        xs_t_ref = to_quantity(ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units)))
         fractions = self.eval_fractions()
-        sigma_t_array = xs_t_550 * fractions
+        sigma_t_array = xs_t_ref * fractions
         dz = (self.top - self.bottom) / self.n_layers
         normalized_sigma_t_array = self._normalize_to_tau(
             ki=sigma_t_array.magnitude,
             dz=dz,
-            tau=self.tau_550,
+            tau=self.tau_ref,
         )
-        return normalized_sigma_t_array * xs_t / xs_t_550
+        return normalized_sigma_t_array * xs_t / xs_t_ref
 
     def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         w_units = ureg.nm
@@ -513,7 +529,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         Normalise extinction coefficient values :math:`k_i` so that:
 
         .. math::
-           \sum_i k_i \Delta z = \tau_{550}
+           \sum_i k_i \Delta z = \tau
 
         where :math:`\tau` is the particle layer optical thickness.
 
