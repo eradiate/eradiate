@@ -312,17 +312,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
         ds = self.dataset
         ds_w_units = ureg(ds.w.attrs["units"])
-
-        # find the extinction data variable
-        for dv in ds.data_vars:
-            standard_name = ds[dv].standard_name
-            if "extinction" in standard_name:
-                extinction = ds[dv]
-
         wavelength = w.m_as(ds_w_units)
-        xs_t = to_quantity(extinction.interp(w=wavelength))
+        xs_t = to_quantity(ds.sigma_t.interp(w=wavelength))
         xs_t_550 = to_quantity(
-            extinction.interp(w=ureg.convert(550.0, ureg.nm, ds_w_units))
+            ds.sigma_t.interp(w=ureg.convert(550.0, ureg.nm, ds_w_units))
         )
         fractions = self.eval_fractions()
         sigma_t_array = xs_t_550 * fractions
