@@ -88,7 +88,6 @@ found in the tutorials, or by downloading them as Jupyter notebooks.*
 # -- Intersphinx configuration for cross-project referencing -------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#configuration
 
-extensions.append("sphinx.ext.intersphinx")
 intersphinx_mapping = {
     "astropy": ("https://docs.astropy.org/en/stable/", None),
     "attr": ("https://www.attrs.org/en/stable/", None),
@@ -144,7 +143,6 @@ autosummary_members = True
 # -- Docstrings ----------------------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
 
-extensions.append("sphinx.ext.napoleon")
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_use_param = False
