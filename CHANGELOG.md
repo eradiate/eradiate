@@ -41,7 +41,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 * Change the default value for the `ParticleLayer.dataset` field to:
   `spectra/particles/govaerts_2021-continental.nc` ({ghpr}`212`).
-* Change the interface of `ParticleLayer`; `tau_550` is replaced by `tau_ref`
+* Change the interface of `ParticleLayer`: `tau_550` is replaced by `tau_ref`
   which sets the extinction optical thickness of the particle layer at the 
   wavelength set by the newly added `w_ref` attribute whose default value is
   550 nanometer ({ghpr}`221`).
@@ -72,10 +72,12 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   This reduces the amount of time spent on I/O ({ghpr}`212`).
 * Optionally, export extra fields useful for analysis and debugging upon calling
   `AbstractHeterogeneousAtmosphere.eval_radprops()` ({ghpr}`206`, {ghpr}`212`).
-* Re-formated `spectra/particles/govaerts_2021-*-extrapolated.nc` data sets
+* Re-formatted `spectra/particles/govaerts_2021-*-extrapolated.nc` data sets
   ({ghpr}`213`).  
-* `TabulatedPhaseFunction` interpolates input data on hundred times finer scattering angle cosine grid ({ghcommit}`2eb3408f1e249da353600e315af7ce09ca2f893f`).
-* Fixed remaining calls to deprecated `eradiate.data.open` and replaced them with `eradiate.data.open_dataset` ({ghpr}`220`).
+* Increased default `TabulatedPhaseFunction` angular interpolation resolution  
+  from 201 to 20001 ({ghcommit}`2eb3408f1e249da353600e315af7ce09ca2f893f`).
+* Replaced leftover calls to deprecated `eradiate.data.open` with 
+  `eradiate.data.open_dataset` ({ghpr}`220`).
 
 ### Documentation
 
@@ -92,7 +94,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Update regression testing interface for improved robustness and ease of use 
   ({ghpr}`207`).
 * Rewrite `eradiate data info` CLI for improved maintainability ({ghpr}`208`).
-* Refactored `ParticleLayer` unit tests and added system tests ({ghpr}`219` and {ghpr}`222`).
+* Refactored `ParticleLayer` unit tests and added system tests 
+  ({ghpr}`219`, {ghpr}`222`, {ghpr}`224`).
 
 ---
 
