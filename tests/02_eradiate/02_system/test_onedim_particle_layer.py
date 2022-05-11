@@ -1,34 +1,36 @@
-"""Test cases targetting the particle layer component of a 1D experiment."""
+"""Test cases targeting the particle layer component of a 1D experiment."""
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pint
 import pytest
 import xarray as xr
 
 import eradiate
+import eradiate.scenes as esc
 from eradiate import unit_registry as ureg
 from eradiate.scenes.atmosphere import ParticleLayer
 from eradiate.scenes.phase import TabulatedPhaseFunction
 from eradiate.units import symbol, to_quantity
 
 
-def rayleigh_phase_function(w: np.ndarray, mu: np.ndarray) -> pint.Quantity:
-    """Evaluate Rayleigh phase function."""
+@pytest.fixture
+def tabulated_rayleigh():
+    """Returns a tabulated version of the Rayleigh phase function."""
+    w = np.arange(279.0, 2402, 1) * ureg.nm
+    mu = np.linspace(-1.0, 1.0, 201) * ureg.dimensionless
+
+    # Evaluate Rayleigh phase function
     magnitude = lambda mu: 3.0 * (1 + np.square(mu)) / (16 * np.pi)
-    return (
+    eval_rayleigh = (
         np.stack([magnitude(mu) for _ in w], axis=0).reshape(w.size, mu.size, 1, 1)
         / ureg.steradian
     )
 
-
-def phase_as_data_array(
-    phase: pint.Quantity, w: pint.Quantity, mu: pint.Quantity
-) -> xr.DataArray:
-    """Format phase function data into xr.DataArray object"""
-    return xr.DataArray(
-        phase.magnitude,
+    # Format it as an xarray data structure compatible with TabulatedPhaseFunction
+    # constructor
+    rayleigh_data_array = xr.DataArray(
+        eval_rayleigh.magnitude,
         dims=["w", "mu", "i", "j"],
         coords={
             "w": ("w", w.magnitude, {"units": symbol(w.units)}),
@@ -36,80 +38,10 @@ def phase_as_data_array(
             "i": [0],
             "j": [0],
         },
-        attrs={"units": symbol(phase.units)},
+        attrs={"units": symbol(eval_rayleigh.units)},
     )
 
-
-def tabulated_rayleigh() -> TabulatedPhaseFunction:
-    """Returns a tabulated version of the Rayleigh phase function."""
-    w = np.arange(279.0, 2402, 1) * ureg.nm
-    mu = np.linspace(-1.0, 1.0, 201) * ureg.dimensionless
-    return TabulatedPhaseFunction(
-        data=phase_as_data_array(phase=rayleigh_phase_function(w=w, mu=mu), w=w, mu=mu)
-    )
-
-
-def to_dataset(
-    w: pint.Quantity,
-    mu: np.ndarray,
-    sigma_t: pint.quantity,
-    albedo: pint.Quantity,
-    phase: pint.Quantity,
-) -> xr.Dataset:
-    """Gather radiative properties data into well-formated xarray.Dataset"""
-    return xr.Dataset(
-        data_vars={
-            "sigma_t": (
-                "w",
-                sigma_t.m,
-                {
-                    "standard_name": "air_volume_extinction_coefficient",
-                    "long_name": "extinction coefficient",
-                    "units": symbol(sigma_t.units),
-                },
-            ),
-            "albedo": (
-                "w",
-                albedo.m,
-                {
-                    "standard_name": "single_scattering_albedo",
-                    "long_name": "albedo",
-                    "units": symbol(albedo.units),
-                },
-            ),
-            "phase": (
-                ("w", "mu", "i", "j"),
-                phase.m,
-                {
-                    "standard_name": "scattering_phase_matrix",
-                    "long_name": "phase matrix",
-                    "units": symbol(phase.units),
-                },
-            ),
-        },
-        coords={
-            "w": (
-                "w",
-                w.magnitude,
-                {
-                    "standard_name": "radiation_wavelength",
-                    "long_name": "wavelength",
-                    "units": symbol(w.units),
-                },
-            ),
-            "mu": (
-                "mu",
-                mu,
-                {
-                    "standard_name": "scattering_angle_cosine",
-                    "long_name": "scattering angle cosine",
-                    "units": "dimensionless",
-                },
-            ),
-            "i": ("i", [0]),
-            "j": ("j", [0]),
-        },
-    )
+    yield TabulatedPhaseFunction(data=rayleigh_data_array)
 
 
 def make_figure(fname_plot, brf_1, brf_2):
@@ -124,14 +56,8 @@ def make_figure(fname_plot, brf_1, brf_2):
     plt.close()
 
 
-@pytest.mark.parametrize(
-    "w",
-    [280, 400, 550, 650, 1000, 1500, 2400],
-)
-@pytest.mark.parametrize(
-    "albedo",
-    [0.2, 0.5, 0.8],
-)
+@pytest.mark.parametrize("w", [280, 400, 550, 650, 1000, 1500, 2400])
+@pytest.mark.parametrize("albedo", [0.2, 0.5, 0.8])
 @pytest.mark.slow
 def test_homogeneous_vs_particle_layer(
     mode_mono_double,
@@ -227,67 +153,57 @@ def test_homogeneous_vs_particle_layer(
         bottom, top, dataset_path, w_ref, tau_ref, r, w, spp
     ):
         return eradiate.experiments.OneDimExperiment(
-            measures=[
-                eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
-                    spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
-                        wavelengths=w,
-                    ),
-                    zeniths=np.linspace(-75, 75, 11) * ureg.deg,
-                    azimuths=0.0 * ureg.deg,
-                    spp=spp,
-                )
-            ],
-            illumination=eradiate.scenes.illumination.DirectionalIllumination(
+            measures=esc.measure.MultiDistantMeasure.from_viewing_angles(
+                spectral_cfg=esc.measure.MeasureSpectralConfig.new(
+                    wavelengths=w,
+                ),
+                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
+                azimuths=0.0 * ureg.deg,
+                spp=spp,
+            ),
+            illumination=esc.illumination.DirectionalIllumination(
                 zenith=30 * ureg.deg,
                 azimuth=0.0 * ureg.deg,
-                irradiance=eradiate.scenes.spectra.SolarIrradianceSpectrum(
-                    dataset="blackbody_sun"
+                irradiance=esc.spectra.SolarIrradianceSpectrum(dataset="blackbody_sun"),
+            ),
+            atmosphere=esc.atmosphere.HeterogeneousAtmosphere(
+                molecular_atmosphere=None,
+                particle_layers=esc.atmosphere.ParticleLayer(
+                    bottom=bottom,
+                    top=top,
+                    dataset=dataset_path,
+                    w_ref=w_ref,
+                    tau_ref=tau_ref,
                 ),
             ),
-            atmosphere=eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
-                molecular_atmosphere=None,
-                particle_layers=[
-                    eradiate.scenes.atmosphere.ParticleLayer(
-                        bottom=bottom,
-                        top=top,
-                        dataset=dataset_path,
-                        w_ref=w_ref,
-                        tau_ref=tau_ref,
-                    )
-                ],
-            ),
-            surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=r),
+            surface=esc.bsdfs.LambertianBSDF(reflectance=r),
         )
 
     def init_experiment_homogeneous_atmosphere(
         bottom, top, sigma_a, sigma_s, phase, r, w, spp
     ):
         return eradiate.experiments.OneDimExperiment(
-            measures=[
-                eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
-                    spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
-                        wavelengths=w,
-                    ),
-                    zeniths=np.linspace(-75, 75, 11) * ureg.deg,
-                    azimuths=0.0 * ureg.deg,
-                    spp=spp,
-                )
-            ],
-            illumination=eradiate.scenes.illumination.DirectionalIllumination(
+            measures=esc.measure.MultiDistantMeasure.from_viewing_angles(
+                spectral_cfg=esc.measure.MeasureSpectralConfig.new(
+                    wavelengths=w,
+                ),
+                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
+                azimuths=0.0 * ureg.deg,
+                spp=spp,
+            ),
+            illumination=esc.illumination.DirectionalIllumination(
                 zenith=30 * ureg.deg,
                 azimuth=0.0 * ureg.deg,
-                irradiance=eradiate.scenes.spectra.SolarIrradianceSpectrum(
-                    dataset="blackbody_sun"
-                ),
+                irradiance=esc.spectra.SolarIrradianceSpectrum(dataset="blackbody_sun"),
             ),
-            atmosphere=eradiate.scenes.atmosphere.HomogeneousAtmosphere(
+            atmosphere=esc.atmosphere.HomogeneousAtmosphere(
                 bottom=bottom,
                 top=top,
                 sigma_a=sigma_a,
                 sigma_s=sigma_s,
                 phase=phase,
             ),
-            surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=r),
+            surface=esc.bsdfs.LambertianBSDF(reflectance=r),
         )
 
     w = w * ureg.nm
@@ -302,8 +218,8 @@ def test_homogeneous_vs_particle_layer(
     albedo = to_quantity(radprops.albedo.interp(w=w.m_as(w_units)))
     sigma_s = sigma_t * albedo
     sigma_a = sigma_t - sigma_s
-    phase = eradiate.scenes.phase.TabulatedPhaseFunction(data=radprops.phase)
-    w_ref = 550 * ureg.nm
+    phase = esc.phase.TabulatedPhaseFunction(data=radprops.phase)
+    w_ref = 550.0 * ureg.nm
     sigma_t_ref = to_quantity(
         radprops.sigma_t.interp(
             w=w_ref.m_as(w_units),
@@ -337,13 +253,10 @@ def test_homogeneous_vs_particle_layer(
     )
 
     ert_seed_state.reset()
-    experiment_1.run(seed_state=ert_seed_state)
+    brf_1 = eradiate.run(experiment_1, seed_state=ert_seed_state)["brf"]
 
     ert_seed_state.reset()
-    experiment_2.run(seed_state=ert_seed_state)
-
-    brf_1 = experiment_1.results["measure"]["brf"]
-    brf_2 = experiment_2.results["measure"]["brf"]
+    brf_2 = eradiate.run(experiment_2, seed_state=ert_seed_state)["brf"]
 
     # Make figure
     filename = f"test_homogeneous_vs_particle_layer_{w.magnitude}_{albedo.m}.png"
@@ -359,13 +272,9 @@ def test_homogeneous_vs_particle_layer(
         assert False
 
 
-@pytest.mark.parametrize(
-    "w",
-    [280, 400, 550, 650, 1000, 1500, 2400],
-)
 @pytest.mark.slow
 def test_particle_layer_energy_conservation(
-    mode_mono_double, tmpdir, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state
+    mode_mono_double, tmpdir, onedim_rayleigh_radprops, artefact_dir, ert_seed_state
 ):
     r"""
     Energy  conservation in a non-absorbing particle layer
@@ -392,7 +301,6 @@ def test_particle_layer_energy_conservation(
 
     The retrieved albedo must equal to 1.
     """
-    w = w * ureg.nm
     spp = 1e3
     reflectance = 1.0
     bottom = 0.0 * ureg.km
@@ -401,76 +309,52 @@ def test_particle_layer_energy_conservation(
     radprops = onedim_rayleigh_radprops(albedo=1.0)
 
     w_units = radprops.w.attrs["units"]
-    w_ref = 550 * ureg.nm
-    sigma_t_ref = to_quantity(
-        radprops.sigma_t.interp(
-            w=w_ref.m_as(w_units),
-        )
-    )
+    w_ref = 550.0 * ureg.nm
+    sigma_t_ref = to_quantity(radprops.sigma_t.interp(w=w_ref.m_as(w_units)))
     height = top - bottom
     tau_ref = sigma_t_ref * height  # the layer is uniform
     dataset_path = tmpdir / "radprops.nc"
     radprops.to_netcdf(dataset_path)
 
     experiment = eradiate.experiments.OneDimExperiment(
-        measures=[
-            eradiate.scenes.measure.DistantFluxMeasure(
-                film_resolution=(32, 32),
-                target=eradiate.scenes.measure.TargetRectangle(
-                    xmin=-20.0 * ureg.km,
-                    xmax=20.0 * ureg.km,
-                    ymin=-20.0 * ureg.km,
-                    ymax=20.0 * ureg.km,
-                    z=5.0 * ureg.km,
-                ),
-                spp=spp,
-            )
-        ],
-        illumination=eradiate.scenes.illumination.DirectionalIllumination(
+        measures=esc.measure.DistantFluxMeasure(
+            film_resolution=(32, 32),
+            target=esc.measure.TargetRectangle(
+                xmin=-20.0 * ureg.km,
+                xmax=20.0 * ureg.km,
+                ymin=-20.0 * ureg.km,
+                ymax=20.0 * ureg.km,
+                z=5.0 * ureg.km,
+            ),
+            spp=spp,
+        ),
+        illumination=esc.illumination.DirectionalIllumination(
             zenith=30 * ureg.deg,
             azimuth=0.0 * ureg.deg,
-            irradiance=eradiate.scenes.spectra.SolarIrradianceSpectrum(
-                dataset="blackbody_sun"
+            irradiance=esc.spectra.SolarIrradianceSpectrum(dataset="blackbody_sun"),
+        ),
+        atmosphere=esc.atmosphere.HeterogeneousAtmosphere(
+            molecular_atmosphere=None,
+            particle_layers=esc.atmosphere.ParticleLayer(
+                bottom=bottom,
+                top=top,
+                dataset=dataset_path,
+                w_ref=w_ref,
+                tau_ref=tau_ref,
             ),
         ),
-        atmosphere=eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
-            molecular_atmosphere=None,
-            particle_layers=[
-                eradiate.scenes.atmosphere.ParticleLayer(
-                    bottom=bottom,
-                    top=top,
-                    dataset=dataset_path,
-                    w_ref=w_ref,
-                    tau_ref=tau_ref,
-                )
-            ],
-        ),
-        surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=reflectance),
+        surface=esc.bsdfs.LambertianBSDF(reflectance=reflectance),
     )
 
     ert_seed_state.reset()
-    experiment.run(seed_state=ert_seed_state)
-
-    albedo = experiment.results["measure"]["albedo"]
-
-    outcome = np.allclose(albedo.values, 1.0, rtol=5e-3)
-
-    if outcome is False:
-        print(f"Test failed, expected albedo = 1.0, got {albedo.values}")
-        assert False
+    albedo = eradiate.run(experiment, seed_state=ert_seed_state)["albedo"]
+    assert np.allclose(albedo.values, 1.0, rtol=5e-3)
 
 
-@pytest.mark.parametrize(
-    "w",
-    np.array([400, 550, 1000]) * ureg.nm,
-)
+@pytest.mark.parametrize("w", [400, 550, 1000] * ureg.nm)
 @pytest.mark.slow
 def test_one_layer_molecular_atmosphere_vs_particle_layer(
-    mode_mono_double,
-    tmpdir,
-    artefact_dir,
-    ert_seed_state,
-    w,
+    mode_mono_double, tabulated_rayleigh, artefact_dir, ert_seed_state, w
 ):
     r"""
     Equivalency of one-layer molecular atmosphere and corresponding particle layer
@@ -517,40 +401,15 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
        :width: 95%
     """
 
-    def init_experiment_one_layer_molecular_atmosphere(spp, r, w, phase):
-        return eradiate.experiments.OneDimExperiment(
-            measures=[
-                eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
-                    spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
-                        wavelengths=w,
-                    ),
-                    zeniths=np.linspace(-75, 75, 11) * ureg.deg,
-                    azimuths=0.0 * ureg.deg,
-                    spp=spp,
-                )
-            ],
-            illumination=eradiate.scenes.illumination.DirectionalIllumination(
-                zenith=30 * ureg.deg,
-                azimuth=0.0 * ureg.deg,
-                irradiance=eradiate.scenes.spectra.SolarIrradianceSpectrum(
-                    dataset="blackbody_sun"
-                ),
-            ),
-            atmosphere=eradiate.scenes.atmosphere.MolecularAtmosphere.ussa_1976(
-                levels=np.array([0.0, 2.0]) * ureg.km,
-                phase=phase,
-            ),
-            surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=r),
-        )
-
-    def from_one_layer_molecular_atmosphere(exp_mol_atm) -> ParticleLayer:
+    def molecular_particle_layer(
+        exp_mol_atm: eradiate.experiments.OneDimExperiment,
+    ) -> ParticleLayer:
         """Creates a particle layer with radiative properties identical to
         a one-layer molecular atmosphere in a 1D experiment, assuming the
         phase function of the latter is a tabulated phase function."""
-        # extract molecular atmosphere radiative properties
-        spectral_ctx = exp_mol_atm.measures[0].spectral_cfg.spectral_ctxs()[0]
 
         # extract molecular atmosphere radiative properties
+        spectral_ctx = exp_mol_atm.measures[0].spectral_cfg.spectral_ctxs()[0]
         mol_atm = exp_mol_atm.atmosphere
         mol_atm_radprops = mol_atm.eval_radprops(spectral_ctx)
         mol_atm_albedo = to_quantity(mol_atm_radprops.albedo)
@@ -575,6 +434,7 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
         particle_sigma_t = mol_atm_sigma_t * np.ones_like(w)
         particle_albedo = mol_atm_albedo * np.ones_like(w)
 
+        phase = to_quantity(particle_phase)
         particle_radprops = xr.Dataset(
             data_vars={
                 "sigma_t": (
@@ -597,11 +457,11 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
                 ),
                 "phase": (
                     ("w", "mu", "i", "j"),
-                    to_quantity(particle_phase).m,
+                    phase.m,
                     {
                         "standard_name": "scattering_phase_matrix",
                         "long_name": "phase matrix",
-                        "units": symbol(to_quantity(particle_phase).units),
+                        "units": symbol(phase.units),
                     },
                 ),
             },
@@ -638,62 +498,52 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
             n_layers=1,
         )
 
-    def init_experiment_particle_layer(spp, w, r, particle_layer):
+    def init_experiment(spp, r, w, atmosphere):
         return eradiate.experiments.OneDimExperiment(
-            measures=[
-                eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
-                    spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
-                        wavelengths=w,
-                    ),
-                    zeniths=np.linspace(-75, 75, 11) * ureg.deg,
-                    azimuths=0.0 * ureg.deg,
-                    spp=spp,
-                )
-            ],
-            illumination=eradiate.scenes.illumination.DirectionalIllumination(
+            measures=esc.measure.MultiDistantMeasure.from_viewing_angles(
+                spectral_cfg=esc.measure.MeasureSpectralConfig.new(
+                    wavelengths=w,
+                ),
+                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
+                azimuths=0.0 * ureg.deg,
+                spp=spp,
+            ),
+            illumination=esc.illumination.DirectionalIllumination(
                 zenith=30 * ureg.deg,
                 azimuth=0.0 * ureg.deg,
-                irradiance=eradiate.scenes.spectra.SolarIrradianceSpectrum(
-                    dataset="blackbody_sun"
-                ),
+                irradiance=esc.spectra.SolarIrradianceSpectrum(dataset="blackbody_sun"),
             ),
-            atmosphere=eradiate.scenes.atmosphere.HeterogeneousAtmosphere(
-                molecular_atmosphere=None,
-                particle_layers=[particle_layer],
-            ),
-            surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=r),
+            atmosphere=atmosphere,
+            surface=esc.bsdfs.LambertianBSDF(reflectance=r),
         )
 
-    phase = tabulated_rayleigh()
     reflectance = 1.0
     spp = 1e5
 
     # create the 1D experiment with a one-layer molecular atmosphere
-    experiment_1 = init_experiment_one_layer_molecular_atmosphere(
+    experiment_1 = init_experiment(
         spp=spp,
-        w=w,
         r=reflectance,
-        phase=phase,
+        w=w,
+        atmosphere=esc.atmosphere.MolecularAtmosphere.ussa_1976(
+            levels=[0.0, 2.0] * ureg.km, phase=tabulated_rayleigh
+        ),
     )
 
     # create a particle layer "equivalent" to the molecular atmosphere
-    particle_layer = from_one_layer_molecular_atmosphere(experiment_1)
+    particle_layer = molecular_particle_layer(experiment_1)
 
     # create the 1D experiemtn with the equivalent particle layer
-    experiment_2 = init_experiment_particle_layer(
-        r=reflectance, w=w, spp=spp, particle_layer=particle_layer
+    experiment_2 = init_experiment(
+        spp=spp, r=reflectance, w=w, atmosphere=particle_layer
     )
 
     # run the experiments
     ert_seed_state.reset()
-    eradiate.run(experiment_1, seed_state=ert_seed_state)
+    brf_1 = eradiate.run(experiment_1, seed_state=ert_seed_state)["brf"]
 
     ert_seed_state.reset()
-    eradiate.run(experiment_2, seed_state=ert_seed_state)
-
-    # retrieve results
-    brf_1 = experiment_1.results["measure"]["brf"]
-    brf_2 = experiment_2.results["measure"]["brf"]
+    brf_2 = eradiate.run(experiment_2, seed_state=ert_seed_state)["brf"]
 
     # make figure
     filename = f"test_one_layer_molecular_atmosphere_vs_particle_layer_{w.m}.png"
