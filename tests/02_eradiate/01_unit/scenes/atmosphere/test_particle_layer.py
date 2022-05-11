@@ -168,9 +168,9 @@ def test_particle_layer_eval_ckd_scattering_only(
     layer = ParticleLayer(dataset=scattering_only)
     spectral_config = CKDMeasureSpectralConfig(bin_set="10nm", bins=bins)
     spectral_ctx = spectral_config.spectral_ctxs()[0]
-    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.2 / ureg.km)
-    assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.0 / ureg.km)
-    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 1.0)
+    assert np.all(layer.eval_sigma_s(spectral_ctx) == 0.2 / ureg.km)
+    assert np.all(layer.eval_sigma_a(spectral_ctx).m == 0.0)
+    assert np.all(layer.eval_albedo(spectral_ctx).m == 1.0)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
     assert layer.eval_mfp(ctx).magnitude > 0.0
@@ -188,10 +188,10 @@ def test_particle_layer_eval_ckd(mode_ckd, tmpdir, test_particles_dataset, bins)
     )
     spectral_config = CKDMeasureSpectralConfig(bin_set="10nm", bins=bins)
     spectral_ctx = spectral_config.spectral_ctxs()[0]
-    assert np.allclose(layer.eval_sigma_t(spectral_ctx), 1.0 / ureg.km)
-    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.8 / ureg.km)
-    assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
-    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 0.8)
+    assert np.isclose(layer.eval_sigma_t(spectral_ctx), 1.0 / ureg.km)
+    assert np.isclose(layer.eval_sigma_s(spectral_ctx), 0.8 / ureg.km)
+    assert np.isclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
+    assert np.isclose(layer.eval_albedo(spectral_ctx).m, 0.8)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
     assert layer.eval_mfp(ctx) == 1.25 * ureg.km
