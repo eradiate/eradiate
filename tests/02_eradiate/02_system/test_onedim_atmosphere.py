@@ -6,9 +6,9 @@ from eradiate import unit_registry as ureg
 
 
 @pytest.mark.parametrize("bottom", [0.0, 1.0, 10.0])
-@pytest.mark.parametrize("tau_550", [0.1, 1.0, 10.0])
+@pytest.mark.parametrize("tau_ref", [0.1, 1.0, 10.0])
 def test_heterogeneous_atmosphere_contains_particle_layer(
-    mode_ckd_double, bottom, tau_550, ert_seed_state
+    mode_ckd_double, bottom, tau_ref, ert_seed_state
 ):
     """
     Perfect single-component HeterogeneousAtmosphere expansion (particle layer)
@@ -48,7 +48,7 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
     bottom = bottom * ureg.km
     top = bottom + 1.0 * ureg.km
     layer = eradiate.scenes.atmosphere.ParticleLayer(
-        bottom=bottom, top=top, tau_550=tau_550
+        bottom=bottom, top=top, tau_ref=tau_ref
     )
     exp1 = eradiate.experiments.OneDimExperiment(
         atmosphere=layer,

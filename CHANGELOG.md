@@ -41,6 +41,10 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 * Change the default value for the `ParticleLayer.dataset` field to:
   `spectra/particles/govaerts_2021-continental.nc` ({ghpr}`212`).
+* Change the interface of `ParticleLayer`; `tau_550` is replaced by `tau_ref`
+  which sets the extinction optical thickness of the particle layer at the 
+  wavelength set by the newly added `w_ref` attribute whose default value is
+  550 nanometer ({ghpr}`221`).
 
 ### Deprecations and removals
 

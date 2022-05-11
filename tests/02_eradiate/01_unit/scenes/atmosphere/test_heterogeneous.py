@@ -264,13 +264,13 @@ def test_heterogeneous_mix_weight(modes_all_double):
             ParticleLayer(
                 bottom=0.0 * ureg.km,
                 top=100.0 * ureg.km,
-                tau_550=1.0,
+                tau_ref=1.0,
                 distribution={"type": "uniform"},
             ),
             ParticleLayer(
                 bottom=50.0 * ureg.km,
                 top=100.0 * ureg.km,
-                tau_550=0.5,
+                tau_ref=0.5,
                 distribution={"type": "uniform"},
             ),
         ],
