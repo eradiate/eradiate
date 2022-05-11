@@ -575,12 +575,58 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
         particle_sigma_t = mol_atm_sigma_t * np.ones_like(w)
         particle_albedo = mol_atm_albedo * np.ones_like(w)
 
-        particle_radprops = to_dataset(
-            w=w,
-            mu=mu,
-            sigma_t=particle_sigma_t,
-            albedo=particle_albedo,
-            phase=to_quantity(particle_phase),
+        particle_radprops = xr.Dataset(
+            data_vars={
+                "sigma_t": (
+                    "w",
+                    particle_sigma_t.m,
+                    {
+                        "standard_name": "air_volume_extinction_coefficient",
+                        "long_name": "extinction coefficient",
+                        "units": symbol(particle_sigma_t.units),
+                    },
+                ),
+                "albedo": (
+                    "w",
+                    particle_albedo.m,
+                    {
+                        "standard_name": "single_scattering_albedo",
+                        "long_name": "albedo",
+                        "units": symbol(particle_albedo.units),
+                    },
+                ),
+                "phase": (
+                    ("w", "mu", "i", "j"),
+                    to_quantity(particle_phase).m,
+                    {
+                        "standard_name": "scattering_phase_matrix",
+                        "long_name": "phase matrix",
+                        "units": symbol(to_quantity(particle_phase).units),
+                    },
+                ),
+            },
+            coords={
+                "w": (
+                    "w",
+                    w.magnitude,
+                    {
+                        "standard_name": "radiation_wavelength",
+                        "long_name": "wavelength",
+                        "units": symbol(w.units),
+                    },
+                ),
+                "mu": (
+                    "mu",
+                    mu,
+                    {
+                        "standard_name": "scattering_angle_cosine",
+                        "long_name": "scattering angle cosine",
+                        "units": "dimensionless",
+                    },
+                ),
+                "i": ("i", [0]),
+                "j": ("j", [0]),
+            },
         )
 
         return ParticleLayer(

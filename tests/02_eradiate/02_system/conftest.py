@@ -8,75 +8,6 @@ from eradiate import unit_registry as ureg
 from eradiate.units import symbol
 
 
-def rayleigh_phase_function(mu: np.ndarray) -> pint.Quantity:
-    """Evaluate Rayleigh phase function."""
-    magnitude = 3.0 * (1 + np.square(mu)) / (16 * np.pi)
-    return magnitude / ureg.steradian
-
-
-def to_dataset(
-    w: pint.Quantity,
-    mu: np.ndarray,
-    sigma_t: pint.quantity,
-    albedo: pint.Quantity,
-    phase: pint.Quantity,
-) -> xr.Dataset:
-    """Gather radiative properties data into well-formated xarray.Dataset"""
-    return xr.Dataset(
-        data_vars={
-            "sigma_t": (
-                "w",
-                sigma_t.m,
-                {
-                    "standard_name": "air_volume_extinction_coefficient",
-                    "long_name": "extinction coefficient",
-                    "units": symbol(sigma_t.units),
-                },
-            ),
-            "albedo": (
-                "w",
-                albedo.m,
-                {
-                    "standard_name": "single_scattering_albedo",
-                    "long_name": "albedo",
-                    "units": symbol(albedo.units),
-                },
-            ),
-            "phase": (
-                ("w", "mu", "i", "j"),
-                phase.m,
-                {
-                    "standard_name": "scattering_phase_matrix",
-                    "long_name": "phase matrix",
-                    "units": symbol(phase.units),
-                },
-            ),
-        },
-        coords={
-            "w": (
-                "w",
-                w.magnitude,
-                {
-                    "standard_name": "radiation_wavelength",
-                    "long_name": "wavelength",
-                    "units": symbol(w.units),
-                },
-            ),
-            "mu": (
-                "mu",
-                mu,
-                {
-                    "standard_name": "scattering_angle_cosine",
-                    "long_name": "scattering angle cosine",
-                    "units": "dimensionless",
-                },
-            ),
-            "i": ("i", [0]),
-            "j": ("j", [0]),
-        },
-    )
-
-
 @pytest.fixture(scope="module")
 def onedim_rayleigh_radprops():
     """
@@ -120,15 +51,61 @@ def onedim_rayleigh_radprops():
         # Phase function
         # Note: rayleigh phase function does not change with wavelength
         mu = np.linspace(-1.0, 1.0)
-        arrays = [rayleigh_phase_function(mu) for _ in w]
+        arrays = [3.0 * (1 + np.square(mu)) / (16 * np.pi) / ureg.steradian for _ in w]
         phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
 
-        return to_dataset(
-            w=w,
-            mu=mu,
-            sigma_t=sigma_t,
-            albedo=albedo,
-            phase=phase,
+        return xr.Dataset(
+            data_vars={
+                "sigma_t": (
+                    "w",
+                    sigma_t.m,
+                    {
+                        "standard_name": "air_volume_extinction_coefficient",
+                        "long_name": "extinction coefficient",
+                        "units": symbol(sigma_t.units),
+                    },
+                ),
+                "albedo": (
+                    "w",
+                    albedo.m,
+                    {
+                        "standard_name": "single_scattering_albedo",
+                        "long_name": "albedo",
+                        "units": symbol(albedo.units),
+                    },
+                ),
+                "phase": (
+                    ("w", "mu", "i", "j"),
+                    phase.m,
+                    {
+                        "standard_name": "scattering_phase_matrix",
+                        "long_name": "phase matrix",
+                        "units": symbol(phase.units),
+                    },
+                ),
+            },
+            coords={
+                "w": (
+                    "w",
+                    w.magnitude,
+                    {
+                        "standard_name": "radiation_wavelength",
+                        "long_name": "wavelength",
+                        "units": symbol(w.units),
+                    },
+                ),
+                "mu": (
+                    "mu",
+                    mu,
+                    {
+                        "standard_name": "scattering_angle_cosine",
+                        "long_name": "scattering angle cosine",
+                        "units": "dimensionless",
+                    },
+                ),
+                "i": ("i", [0]),
+                "j": ("j", [0]),
+            },
         )
 
     return radprops
