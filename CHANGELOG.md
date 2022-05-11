@@ -92,7 +92,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Update regression testing interface for improved robustness and ease of use 
   ({ghpr}`207`).
 * Rewrite `eradiate data info` CLI for improved maintainability ({ghpr}`208`).
-* Refactored `ParticleLayer` unit tests and added system tests ({ghpr}`219`).
+* Refactored `ParticleLayer` unit tests and added system tests ({ghpr}`219` and {ghpr}`222`).
 
 ---
 
