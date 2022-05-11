@@ -83,6 +83,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 * Add tutorials on homogeneous and molecular atmospheres ({ghpr}`194`).
 * Added uninstall instructions ({ghpr}`217`).
+* `ParticleLayer`: document format of `dataset` attribute ({ghpr}`223`).
 
 ### Internal changes
 
