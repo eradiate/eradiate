@@ -49,19 +49,19 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     Particle layer scene element [``particle_layer``].
 
     The particle layer has a vertical extension specified by a bottom altitude
-    (set by `bottom`) and a top altitude (set by `top`).
+    (set by ``bottom``) and a top altitude (set by ``top``).
     Inside the layer, the particles number is distributed according to a
-    distribution (set by `distribution`).
+    distribution (set by ``distribution``).
     See :mod:`~eradiate.scenes.atmosphere.particle_dist` for the available
     distribution types and corresponding parameters.
     The particle layer is itself divided into a number of (sub-)layers
-    (`n_layers`) to allow to describe the variations of the particles number
+    (``n_layers``) to allow to describe the variations of the particles number
     with altitude.
     The particle density in the layer is adjusted so that the particle layer's
-    optical thickness at a specified reference wavelength (`w_ref`) meets a
-    specified value (`tau_ref`).
+    optical thickness at a specified reference wavelength (``w_ref``) meets a
+    specified value (``tau_ref``).
     The particles radiative properties are specified by a data set
-    (`dataset`).
+    (``dataset``).
     """
 
     _bottom: pint.Quantity = documented(
@@ -178,8 +178,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             validator=attr.validators.instance_of(xr.Dataset),
         ),
         doc="Particle radiative property data set. If a path is passed, the "
-        "converter tries to open the corresponding file on the hard drive; if "
-        "this fails, it tries to load a resource from the data store.",
+        "converter tries to open the corresponding file on the hard drive; "
+        "if this fails, it tries to load a resource from the data store."
+        "Refer to the data guide for the format requirements of this data set.",
         type="Dataset",
         init_type="Dataset or path-like, optional",
         default="spectra/particles/govaerts_2021-continental.nc",
