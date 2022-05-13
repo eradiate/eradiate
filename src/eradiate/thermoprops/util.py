@@ -3,8 +3,8 @@ Utility functions to manipulate atmosphere thermophysical properties data
 sets.
 """
 
-from datetime import datetime
 import typing as t
+from datetime import datetime
 
 import iapws
 import numpy as np
@@ -280,7 +280,7 @@ def compute_scaling_factors(
         "[length]^-2": column_number_density,
         "[mass] * [length]^-2": column_mass_density,
         "[length]^-3": number_density_at_surface,
-        "[mass] * [length]^-2": mass_density_at_surface,
+        "[mass] * [length]^-3": mass_density_at_surface,
         "": volume_mixing_ratio_at_surface,
     }
     factors = {}
