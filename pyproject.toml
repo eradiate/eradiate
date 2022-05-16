@@ -11,7 +11,7 @@ git_describe_command = [
     # "--tags",
     "--long",
     "--match",
-    "*[0-9]*",
+    "v[0-9]*",
 ]  # Redefined to avoid crashing with special build tags
 
 [tool.isort]
