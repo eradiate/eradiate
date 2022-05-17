@@ -57,6 +57,17 @@ To load a data set into memory, use :func:`eradiate.data.load_dataset`:
 
    ds = eradiate.data.load_dataset("spectra/solar_irradiance/thuillier_2003.nc")
 
+.. warning::
+
+   The data module does not support concurrent download requests from multiple
+   processes running Eradiate. This means that in such cases, two processes
+   requesting the same resource using *e.g.* :func:`eradiate.data.load_dataset`
+   may both trigger two downloads overwriting each other, resulting in
+   unpredictable (but surely incorrect) behaviour.
+
+   If your use case requires running Eradiate from multiple processes, we
+   strongly advise that you **download all data in advance** using the
+   ``eradiate data fetch`` command (see :ref:`sec-reference_cli`).
 
 .. _sec-user_guide-data_guide-working_angular_data:
 
