@@ -32,6 +32,7 @@ extensions = [
     "sphinx.ext.autosummary",  # Summary tables in API docs
     "sphinx.ext.doctest",  # Doctest blocks
     "sphinx.ext.extlinks",  # External links with dedicated roles
+    "sphinx.ext.intersphinx",  # Inter-project links
     "sphinx.ext.mathjax",  # Equation support
     "sphinx.ext.napoleon",  # Better docstrings
     "sphinx.ext.viewcode",  # Add links to highlighted source code
