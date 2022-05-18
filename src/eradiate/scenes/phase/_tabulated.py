@@ -14,38 +14,83 @@ from ...exceptions import UnsupportedModeError
 from ...units import unit_registry as ureg
 
 
+def _ensure_magnitude_array(q: pint.Quantity) -> pint.Quantity:
+    """Convert to Quantity whose magnitude is an array"""
+    if np.isscalar(q.magnitude):
+        return ureg.Quantity(np.atleast_1d(q.magnitude), q.units)
+    else:
+        return q
+
+
+def _convert_data(da: xr.DataArray) -> xr.DataArray:
+    """
+    If the coordinate mu is not strictly increasing, return a reindexed
+    copy of the DataArray where it is.
+    Else, return the input DataArray.
+    """
+    if np.all(da["mu"].values[1:] > da["mu"].mu.values[:-1]):
+        return da
+    elif np.all(da["mu"].values[1:] < da["mu"].mu.values[:-1]):
+        return da.reindex(mu=da.mu[::-1])
+    else:
+        return da.reindex(mu=np.sort(da.mu.values))
+
+
+def _validate_data(instance, attribute, value):
+    """
+    Bounds of mu coordinate must be [-1.0, 1.0].
+    """
+    mu_min = value["mu"].values.min()
+    mu_max = value["mu"].values.max()
+
+    if not (mu_min == -1.0 and mu_max == 1.0):
+        raise ValueError(
+            f"Coordinate 'mu' bounds must be -1.0, 1.0 (got {mu_min}, {mu_max})."
+        )
+
+
 @phase_function_factory.register(type_id="tab_phase")
 @parse_docs
 @attr.s
 class TabulatedPhaseFunction(PhaseFunction):
-    """
+    r"""
     Tabulated phase function [``tab_phase``].
 
-    A lookup table-based phase function. The `data` field is a
+    A lookup table-based phase function. The ``data`` field is a
     :class:`~xarray.DataArray` with wavelength and angular dimensions.
 
-    .. warning::
-       The phase function is evaluated on a regular grid of scattering angle
-       cosine values from -1 to 1 with a number of grid points set to 20001.
-       If the input `data` contains variations that cannot be resolved by
-       this regular grid, information about these variations will get lost
-       and the accuracy of simulations using the resulting
-       `TabulatedPhaseFunction` object might be impacted.
+    Notes
+    -----
+    The :math:`\mu` coordinate must cover the :math:`[-1, 1]` interval but
+    there is no constraints on the ordering of values nor on the spacing
+    between two consecutive values, i.e. non-regular :math:`\mu` grid are
+    supported. If the :math:`\mu` grid is non-regular and since the
+    underlying mitsuba ``tabphase`` plugin expects phase function values
+    on a regular :math:`\mu` grid, we compute a regular grid with a
+    :math:`\mu` step equal to the small :math:`\mu` step found in the input
+    `data` and interpolate the latter on that regular grid. This can
+    lead to large arrays (several 100 MB). If you want to control
+    the size of the :math:`\mu` grid yourself, you can simply provide a
+    :class:`~xarray.DataArray` object that already has a regular grid
+    :math:`\mu` coordinate ; in such a case, the :class:`~xarray.DataArray`
+    object is not further interpolated along the :math:`\mu` dimension.
+    For better performance, it is best to provide phase function data on a
+    regular (and sorted) :math:`\mu` grid, since neither conversion nor
+    interpolation is performed in that case.
     """
 
     data: xr.DataArray = documented(
         attr.ib(
-            validator=attr.validators.instance_of(xr.DataArray),
+            converter=_convert_data,
+            validator=[attr.validators.instance_of(xr.DataArray), _validate_data],
             kw_only=True,
         ),
         type="DataArray",
-        doc="Value table as a data array with wavelength (``w``) and "
-        "scattering angle cosine (``mu``) as coordinates. This parameter has "
-        "no default.",
+        doc="Value table as a data array with wavelength (``w``), scattering "
+        "angle cosine (``mu``), and scattering phase matrix row "
+        "(``i``) and column (``j``) indices (integer) as coordinates. "
+        "This parameter has no default.",
     )
-
-    # Number of points used to represent the phase function on the angular coordinate
-    _n_mu: int = attr.ib(default=20001, init=False, repr=False)
 
     def eval(self, spectral_ctx: SpectralContext) -> np.ndarray:
         r"""
@@ -95,15 +140,45 @@ class TabulatedPhaseFunction(PhaseFunction):
             Evaluated phase function as a 1D or 2D array depending on the shape
             of `w` (angle dimension comes last).
         """
-        return (
-            self.data.sel(i=0, j=0)
-            .interp(
-                w=w.m_as(self.data.w.units),
-                mu=np.linspace(-1, 1, self._n_mu),
+        w_units = self.data.w.attrs["units"]
+
+        # data already maps to regular grid of scattering angle cosines
+        dmu = self.data.mu.values[1:] - self.data.mu.values[:-1]
+        if np.allclose(dmu, dmu[0], rtol=1e-8):
+            return (
+                self.data.sel(i=0, j=0)
+                .interp(
+                    w=w.m_as(w_units),
+                    kwargs=dict(bounds_error=True),
+                )
+                .data
+            )
+
+        # data does not map to regular grid of scattering angle cosines
+        else:
+            # compute the regular grid from the smallest mu step found in the
+            # input data
+            dmu_min = np.abs(self.data.mu.diff(dim="mu")).values.min()
+            nmu = int(np.ceil(2.0 / dmu_min)) + 1
+            mu = np.linspace(-1.0, 1.0, nmu)
+
+            # interpolate first on wavelength
+            _w = _ensure_magnitude_array(w)
+            data_w_interpolated = self.data.sel(i=0, j=0).interp(
+                w=_w.m_as(w_units),
                 kwargs=dict(bounds_error=True),
             )
-            .data
-        )
+
+            # for performance, interpolation on mu dimension is performed with
+            # numpy.interp, which is found to be more than twice faster than
+            # xarray.DataArray.interp
+            phase = np.full(shape=(_w.size, nmu), fill_value=np.nan)
+            mup = self.data.mu.values
+            for iw in range(_w.size):
+                fp = data_w_interpolated.isel(w=iw).values
+                phase[iw, :] = np.interp(x=mu, xp=mup, fp=fp)
+
+            return phase.squeeze()
 
     def eval_ckd(self, *bindexes: Bindex) -> np.ndarray:
         """

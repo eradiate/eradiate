@@ -78,6 +78,11 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   from 201 to 20001 ({ghcommit}`2eb3408f1e249da353600e315af7ce09ca2f893f`).
 * Replaced leftover calls to deprecated `eradiate.data.open` with 
   `eradiate.data.open_dataset` ({ghpr}`220`).
+* Improved interpolation of phase function along `mu` dimension in 
+  `TabulatedPhaseFunction`; if input `xarray.DataArray` object `mu` coordinate
+  is not regularly spaced, it is interpolated on a regular `mu` grid based on
+  the smallest `mu` step found in the input phase function data. Otherwise, the
+  input `xarray.DataArray` object is not interpolated ({ghpr}`226`).
 
 ### Documentation
 
