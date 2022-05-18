@@ -31,25 +31,29 @@ def test_chi2_rpv3(variant_llvm_rgb):
 def rpv_reference(rho_0, rho_0_hotspot, g, k, theta_i, phi_i, theta_o, phi_o):
     """Reference for RPV, adapted from a C implementation."""
 
-    sini, ui = np.sin(theta_i), np.cos(theta_i)
-    tan_i = sini / ui
-    sino, uo = np.sin(theta_o), np.cos(theta_o)
-    tan_o = sino / uo
-    cosphi = np.cos(phi_i - phi_o)
+    sin_theta_i, cos_theta_i = np.sin(theta_i), np.cos(theta_i)
+    tan_theta_i = sin_theta_i / cos_theta_i
+    sin_theta_o, cos_theta_o = np.sin(theta_o), np.cos(theta_o)
+    tan_theta_o = sin_theta_o / cos_theta_o
+    cos_delta_phi = np.cos(phi_i - phi_o)
 
-    K1 = np.power(ui * uo * (ui + uo), k - 1.0)
+    K1 = np.power(cos_theta_i * cos_theta_o * (cos_theta_i + cos_theta_o), k - 1.0)
 
-    cos_g = ui * uo + sini * sino * cosphi
+    cos_Theta = cos_theta_i * cos_theta_o + sin_theta_i * sin_theta_o * cos_delta_phi
 
-    FgDenum = 1.0 + g * g + 2.0 * g * cos_g
+    FgDenum = 1.0 + g * g + 2.0 * g * cos_Theta
     Fg = (1.0 - g * g) / np.power(FgDenum, 1.5)
 
-    G = np.sqrt(tan_i * tan_i + tan_o * tan_o - 2.0 * tan_i * tan_o * cosphi)
+    G = np.sqrt(
+        tan_theta_i * tan_theta_i
+        + tan_theta_o * tan_theta_o
+        - 2.0 * tan_theta_i * tan_theta_o * cos_delta_phi
+    )
     K3 = 1.0 + (1.0 - rho_0_hotspot) / (1.0 + G)
 
-    # The 1/pi factor accounts for the fact that the formula in the paper gives
-    # the BRF expression, not the BRDF
-    return K1 * Fg * K3 * rho_0 * np.abs(uo) / np.pi
+    return rho_0 * K1 * Fg * K3 / np.pi * np.abs(cos_theta_o)
+    # 1/π factor because paper gives BRF expression (not BRDF)
+    # Foreshortening factor included
 
 
 def angles_to_directions(theta, phi):
