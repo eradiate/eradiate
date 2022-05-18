@@ -35,7 +35,7 @@ Rahman Pinty Verstraete reflection model (:monosp:`rpv`)
 
  * - rho_c
    - |spectrum| or |texture|
-   - Default: Equal to rho_0
+   - Default: Equal to `rho_0`
    - |exposed| |differentiable|
 
 This plugin implements the reflection model proposed by
@@ -52,9 +52,9 @@ parameters, namely the :math:`\rho_c` extension, as used in
 For the fundamental formulae defining the RPV model, please refer to the
 Eradiate Scientific Handbook.
 
-Note that this material is one-sided, that is, observed from the
+Note that this material is one-sided---that is, observed from the
 back side, it will be completely black. If this is undesirable,
-consider using the :ref:`twosided <bsdf-twosided>` BRDF adapter plugin.
+consider using the ``twosided`` BSDF adapter plugin.
 The following snippet describes an RPV material with monochromatic parameters:
 
 .. tab-set-code::
