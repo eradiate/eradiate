@@ -306,6 +306,7 @@
    RayleighPhaseFunction
    HenyeyGreensteinPhaseFunction
    BlendPhaseFunction
+   TabulatedPhaseFunction
 
 ``eradiate.scenes.integrators``
 -------------------------------
