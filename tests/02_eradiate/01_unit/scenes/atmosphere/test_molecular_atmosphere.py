@@ -53,16 +53,13 @@ def afgl_1986_test_absorption_data_sets():
     }
 
 
-@pytest.mark.parametrize(
-    "bin", ["280", "550", "1040", "2120", "2400"]
-)
+@pytest.mark.parametrize("bin", ["280", "550", "1040", "2120", "2400"])
 def test_molecular_atmosphere_afgl_1986(mode_ckd, bin):
     """MolecularAtmosphere 'afgl_1986' constructor produces a valid kernel
     dictionary."""
     bin = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins=bin).bins[0]
     bindex = eradiate.ckd.Bindex(bin=bin, index=3)
-    spectral_ctx = eradiate.contexts.CKDSpectralContext(bindex=bindex, bin_set="10nm")
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
+    ctx = KernelDictContext(spectral_ctx={"bindex": bindex, "bin_set": "10nm"})
     atmosphere = MolecularAtmosphere.afgl_1986(geometry="plane_parallel")
     assert atmosphere.kernel_dict(ctx).load()
 

@@ -3,10 +3,12 @@ Utility functions to manipulate atmosphere thermophysical properties data
 sets.
 """
 
+import typing as t
 from datetime import datetime
 
 import iapws
 import numpy as np
+import pint
 import scipy.constants
 import xarray as xr
 
@@ -20,7 +22,7 @@ ATOMIC_MASS_CONSTANT = ureg.Quantity(
 )
 
 
-def compute_column_number_density(ds, species):
+def column_number_density(ds: xr.Dataset, species: str) -> pint.Quantity:
     """
     Computes the column number density of a given species in an atmospheric
     profile.
@@ -57,7 +59,7 @@ def compute_column_number_density(ds, species):
     return (n_species * dz).sum()
 
 
-def compute_column_mass_density(ds, species):
+def column_mass_density(ds: xr.Dataset, species: str) -> pint.Quantity:
     """
     Computes the column (mass) density of a given species in an atmospheric
     profile.
@@ -88,10 +90,10 @@ def compute_column_mass_density(ds, species):
     with data.open_dataset("chemistry/molecular_masses.nc") as molecular_mass:
         m = molecular_mass.m.sel(s=species).values * ATOMIC_MASS_CONSTANT
 
-    return m * compute_column_number_density(ds=ds, species=species)
+    return m * column_number_density(ds=ds, species=species)
 
 
-def compute_number_density_at_surface(ds, species):
+def number_density_at_surface(ds: xr.Dataset, species: str) -> pint.Quantity:
     """
     Compute the number density at the surface of a given species in an
     atmospheric profile.
@@ -114,7 +116,7 @@ def compute_number_density_at_surface(ds, species):
     return surface_mr * surface_n
 
 
-def compute_mass_density_at_surface(ds, species):
+def mass_density_at_surface(ds: xr.Dataset, species: str) -> pint.Quantity:
     """Compute the mass density at the surface of a given species in an
     atmospheric profile.
 
@@ -131,13 +133,13 @@ def compute_mass_density_at_surface(ds, species):
     quantity
         Mass density at the surface.
     """
-    with data.open(category="chemistry", id="molecular_masses") as molecular_mass:
+    with data.open_dataset("chemistry/molecular_masses.nc") as molecular_mass:
         m = to_quantity(molecular_mass.m.sel(s=species)) * ATOMIC_MASS_CONSTANT
 
-    return m * compute_number_density_at_surface(ds=ds, species=species)
+    return m * number_density_at_surface(ds=ds, species=species)
 
 
-def compute_volume_mixing_ratio_at_surface(ds, species):
+def volume_mixing_ratio_at_surface(ds: xr.Dataset, species: str) -> pint.Quantity:
     """Compute the volume mixing ratio at the surface of a given species in an
     atmospheric profile.
 
@@ -157,7 +159,48 @@ def compute_volume_mixing_ratio_at_surface(ds, species):
     return to_quantity(ds.mr.sel(species=species))[0]
 
 
-def compute_scaling_factors(ds, concentration):
+def _scaling_factor(
+    initial_amount: pint.Quantity,
+    target_amount: pint.Quantity,
+) -> float:
+    """
+    Compute the scaling factor to reach target amount from initial amount.
+
+    Initial and target amount should be scalar and  have compatible dimensions.
+
+    Parameters
+    ----------
+    initial_amount: quantity
+        Initial amount.
+
+    target_amount: quantity
+        Target quantity.
+
+    Raises
+    ------
+    ValueError
+        When both initial and target amounts are zero.
+
+    Returns
+    -------
+    float
+        Scaling factor.
+    """
+    if initial_amount.m == 0.0:
+        if target_amount.m == 0.0:
+            return 0.0
+        else:
+            raise ValueError(
+                f"Cannot compute scaling factor when initial amount is 0.0 and "
+                f"target amount is non-zero (got {target_amount})"
+            )
+    else:
+        return (target_amount / initial_amount).m_as(ureg.dimensionless)
+
+
+def compute_scaling_factors(
+    ds: xr.Dataset, concentration: t.Dict[str, pint.Quantity]
+) -> t.Dict[str, float]:
     r"""
     Compute the scaling factors to be applied to the mixing ratio values
     of each species in an atmosphere thermophysical properties data set, so
@@ -233,35 +276,37 @@ def compute_scaling_factors(ds, concentration):
     dict
         Mapping of species (str) and scaling factors (float).
     """
+    compute_initial_amount = {
+        "[length]^-2": column_number_density,
+        "[mass] * [length]^-2": column_mass_density,
+        "[length]^-3": number_density_at_surface,
+        "[mass] * [length]^-3": mass_density_at_surface,
+        "": volume_mixing_ratio_at_surface,
+    }
     factors = {}
     for species in concentration:
-        amount = concentration[species]
-        if amount.check("[length]^-2"):  # column number density
-            initial_amount = compute_column_number_density(ds=ds, species=species)
-            factor = amount.to("m^-2") / initial_amount.to("m^-2")
-        elif amount.check("[mass] * [length]^-2"):
-            initial_amount = compute_column_mass_density(ds=ds, species=species)
-            factor = amount.to("kg/m^2") / initial_amount.to("kg/m^2")
-        elif amount.check("[length]^-3"):  # number density at the surface
-            initial_amount = compute_number_density_at_surface(ds=ds, species=species)
-            factor = amount.to("m^-3") / initial_amount.to("m^-3")
-        elif amount.check("[mass] * [length]^-2"):
-            initial_amount = compute_mass_density_at_surface(ds=ds, species=species)
-            factor = amount.to("km/m^3") / initial_amount.to("kg/m^3")
-        elif amount.check(""):  # mixing ratio at the surface
-            surface_mr_species = amount
-            initial_surface_mr_species = to_quantity(ds.mr.sel(species=species))[0]
-            factor = surface_mr_species / initial_surface_mr_species
-        else:
+        target_amount = concentration[species]
+        initial_amount = None
+        for dimensions in list(compute_initial_amount.keys()):
+            if target_amount.check(dimensions):
+                initial_amount = compute_initial_amount[dimensions](
+                    ds=ds, species=species
+                )
+        if initial_amount is None:
             raise ValueError(
-                f"Invalid dimension for {species} concentration:" f" {amount.units}."
+                f"Invalid dimension for {species} concentration: {target_amount.units}."
+                f"Expected dimension: [length]^-2, [mass] * [length]^-2, "
+                f"[length]^-3, [mass] * [length]^-2 or no dimension."
             )
-        factors[species] = factor.magnitude
+        factors[species] = _scaling_factor(
+            initial_amount=initial_amount,
+            target_amount=target_amount,
+        )
 
     return factors
 
 
-def human_readable(items):
+def human_readable(items: t.List[str]) -> str:
     """
     Transforms a list into readable human text.
 
@@ -285,7 +330,9 @@ def human_readable(items):
     return x
 
 
-def rescale_concentration(ds, factors, inplace=False):
+def rescale_concentration(
+    ds: xr.Dataset, factors: t.Dict[str, float], inplace: bool = False
+) -> t.Optional[xr.Dataset]:
     """
     Rescale mixing ratios in an atmosphere thermophysical properties data
     set by given factors for each species.
@@ -337,7 +384,12 @@ def rescale_concentration(ds, factors, inplace=False):
 
 
 @ureg.wraps(ret=None, args=(None, "km", None, None), strict=False)
-def interpolate(ds, z_level, method="linear", conserve_columns=False):
+def interpolate(
+    ds: xr.Dataset,
+    z_level: t.Union[np.ndarray, pint.Quantity],
+    method: str = "linear",
+    conserve_columns: bool = False,
+) -> xr.Dataset:
     """
     Interpolates an atmosphere thermophysical properties data set onto a
     new level altitude mesh.
@@ -386,9 +438,7 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
     )
 
     if conserve_columns:
-        initial_amounts = {
-            s: compute_column_number_density(ds, s) for s in ds.species.values
-        }
+        initial_amounts = {s: column_number_density(ds, s) for s in ds.species.values}
         factors = compute_scaling_factors(
             ds=interpolated, concentration=initial_amounts
         )
@@ -400,7 +450,7 @@ def interpolate(ds, z_level, method="linear", conserve_columns=False):
 
 
 @ureg.wraps(ret="Pa", args="K", strict=False)
-def water_vapor_saturation_pressure(t):
+def water_vapor_saturation_pressure(t: float) -> pint.Quantity:
     """
     Computes the water vapor saturation pressure over liquid water or ice, at
     the given temperature.
@@ -427,7 +477,7 @@ def water_vapor_saturation_pressure(t):
 
 
 @ureg.wraps(ret=ureg.dimensionless, args=("Pa", "K"), strict=False)
-def equilibrium_water_vapor_fraction(p, t):
+def equilibrium_water_vapor_fraction(p: float, t: float) -> pint.Quantity:
     """
     Computes the water vapor volume fraction at equilibrium, i.e., when the
     rate of condensation of water vapor equals the rate of evaporation of
@@ -481,7 +531,7 @@ def equilibrium_water_vapor_fraction(p, t):
         )
 
 
-def make_profile_regular(profile, atol):
+def make_profile_regular(profile: xr.Dataset, atol: float) -> xr.Dataset:
     """
     Converts the atmosphere thermophysical properties data set with an
     irregular altitude mesh to a profile defined over a regular altitude mesh.
@@ -561,7 +611,7 @@ def make_profile_regular(profile, atol):
     return dataset
 
 
-def _to_regular(mesh, atol):
+def _to_regular(mesh: np.ndarray, atol: float) -> np.ndarray:
     """
     Converts an irregular altitude mesh into a regular altitude mesh.
 
@@ -595,7 +645,9 @@ def _to_regular(mesh, atol):
     return np.linspace(start=mesh[0], stop=mesh[-1], num=n)
 
 
-def _find_regular_params_gcd(mesh, unit_number=1.0):
+def _find_regular_params_gcd(
+    mesh: np.ndarray, unit_number: float = 1.0
+) -> t.Tuple[int, float]:
     """
     Finds the parameters (number of cells, constant cell width) of the
     regular mesh that approximates the irregular input mesh.

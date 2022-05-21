@@ -1,7 +1,7 @@
 import os
 
 import click
-from setuptools.config import read_configuration
+from setuptools.config.setupcfg import read_configuration
 from ruamel.yaml import YAML
 
 

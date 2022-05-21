@@ -2,23 +2,28 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate import path_resolver
+from eradiate import data
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.phase._tabulated import TabulatedPhaseFunction
 
 
 @pytest.fixture
-def dataset():
-    result = xr.open_dataset(
-        path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc")
-    ).load()
-    result.close()
-    return result
+def regular_mu() -> xr.DataArray:
+    """Phase function data with a regular mu grid."""
+    result = data.load_dataset("tests/spectra/particles/random-regular_mu.nc")
+    return result.phase
 
 
-def test_tabulated_basic(modes_all, dataset):
+@pytest.fixture
+def irregular_mu() -> xr.DataArray:
+    """Phase function data with an irregular mu grid."""
+    result = data.load_dataset("tests/spectra/particles/random-irregular_mu.nc")
+    return result.phase
+
+
+def test_tabulated_basic(modes_all, regular_mu):
     # The phase function can be constructed
-    phase = TabulatedPhaseFunction(data=dataset.phase)
+    phase = TabulatedPhaseFunction(data=regular_mu)
 
     # Its kernel dict can be generated
     ctx = KernelDictContext()
@@ -63,3 +68,26 @@ def test_tabulated_order(mode_mono, tmpdir):
     phase_mu_decreasing = layer_mu_decreasing.eval(spectral_ctx)
 
     assert np.all(phase_mu_increasing == phase_mu_decreasing)
+
+
+def test_tabulated_eval_regular_mu(modes_all, regular_mu):
+    """
+    Phase function data with regular mu grid is not interpolated along mu.
+    """
+    tabphase = TabulatedPhaseFunction(data=regular_mu)
+    spectral_ctx = SpectralContext.new()
+    phase = tabphase.eval(spectral_ctx)
+    assert phase.size == regular_mu.mu.size
+
+
+def test_tabulated_eval_irregular_mu(modes_all, irregular_mu):
+    """
+    Phase function data with irregular mu grid is interpolated on a regular
+    grid that has enough points to sample the input data.
+    """
+    tabphase = TabulatedPhaseFunction(data=irregular_mu)
+    spectral_ctx = SpectralContext.new()
+    phase = tabphase.eval(spectral_ctx)
+    dmu = irregular_mu.mu.diff(dim="mu").values.min()
+    nmu = int(np.ceil(2.0 / dmu)) + 1
+    assert phase.size == nmu

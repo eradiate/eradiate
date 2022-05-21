@@ -1,26 +1,28 @@
-# What's new
+# What's new?
 
 ```{note}
-   For now, Eradiate uses a
-   "[Zero](https://0ver.org/)[Cal](https://calver.org/)Ver" versioning
-   scheme. The ZeroVer part reflects the relative instability of our API:
-   breaking changes may happen at any time. The CalVer part gives an idea of how
-   fresh the version you are running is. We plan to switch to a versioning
-   scheme more similar to SemVer in the future.
+For now, Eradiate uses a
+"[Zero](https://0ver.org/)[Cal](https://calver.org/)Ver" versioning
+scheme. The ZeroVer part reflects the relative instability of our API:
+breaking changes may happen at any time. The CalVer part gives an idea of how
+fresh the version you are running is. We plan to switch to a versioning
+scheme more similar to SemVer in the future.
 
-   Updates are tracked in this change log. Every time you decide to update to a
-   newer version, we recommend that you to go through the list of changes.
+Updates are tracked in this change log. Every time you decide to update to a
+newer version, we recommend that you to go through the list of changes.
+We try hard to remain backward-compatible and warn in advance for deprecation
+when necessary—we also advise to not ignore `DeprecationWarning`s.
 ```
 
 % HEREAFTER IS A TEMPLATE FOR THE NEXT RELEASE
 %
-% vXX.YY.ZZ (unreleased)
+% ## vXX.YY.ZZ (unreleased)
 %
 % ### New features
 %
 % ### Breaking changes
 %
-% ### Deprecations
+% ### Deprecations and removals
 %
 % ### Improvements and fixes
 %
@@ -28,15 +30,93 @@
 %
 % ### Internal changes
 
+## v0.22.3 (22 May 2022)
+
+### New features
+
+* Added entry point `eradiate.run()`, which executes a full experiment pipeline 
+  and returns results as an xarray dataset ({ghpr}`210`).
+
+### Breaking changes
+
+* Changed the `ParticleLayer.dataset` field's default value to the more useful
+  the continental aerosol dataset  
+  `spectra/particles/govaerts_2021-continental.nc` ({ghpr}`212`).
+* Changed the interface of the `ParticleLayer`: the `tau_550` field is replaced 
+  by a more general `tau_ref` which sets the extinction optical thickness of the 
+  particle layer at a reference wavelength specified by the `w_ref` field. 
+  `w_ref` defaults to 550 nm, thus preserving prior behaviour ({ghpr}`221`).
+
+### Deprecations and removals
+
+* Removed deprecated function `ensure_array()` 
+  ({ghcommit}`622821439cc4b66483518288e78dad0e9aa0da77`).
+* Deprecated instance method `Experiment.run()` ({ghpr}`210`).
+
+### Improvements and fixes
+
+* Added support for all missing AFGL 1986 reference atmospheres in CKD mode 
+  ({ghpr}`185`).
+* Fixed incorrect phase function blending in multi-component atmospheres 
+  ({ghpr}`197`, {ghpr}`206`).
+* Fixed incorrect volume data transform for spherical heterogeneous atmospheres 
+  ({ghpr}`199`).
+* Added default value for `CKDSpectralContext.bin_set` ({ghpr}`205`).
+* Added a `-l` option to the `eradiate data info` command-line utility. If 
+  this flag is set, the tool displays the list of files registered to each data 
+  store ({ghpr}`208`).
+* Added an optional `DATA_STORES` argument to the `eradiate data info` 
+  command-line utility which may be used to select the data stores for which 
+  information is requested ({ghpr}`208`).
+* Added a new `load_dataset()` converter. It allows to set fields expecting an x
+  array dataset using a path to a file or a data store resource ({ghpr}`212`).
+* The `ParticleLayer` class no longer opens a dataset upon collision coefficient 
+  evaluation; instead, its dataset field now holds an xarray dataset (instead 
+  of a path), which does not change over the instance lifetime. 
+  This reduces the amount of time spent on I/O ({ghpr}`212`).
+* Added the possibility to optionally export extra fields useful for analysis 
+  and debugging upon calling `AbstractHeterogeneousAtmosphere.eval_radprops()` 
+  ({ghpr}`206`, {ghpr}`212`).
+* Re-formatted `spectra/particles/govaerts_2021-*-extrapolated.nc` data sets
+  ({ghpr}`213`).  
+* Replaced leftover calls to deprecated `eradiate.data.open` with 
+  `eradiate.data.open_dataset` ({ghpr}`220`).
+* Improved `TabulatedPhaseFunction`'s behaviour. If the phase function lookup 
+  table coordinate `mu` defines a regular grid, the phase function is no longer
+  resampled on a regular grid, which results in improved performance. Otherwise,
+  *i.e.* if `mu` defines an irregular grid, phase function data is resampled on
+  a regular `mu` grid with a step equal to the smallest detected step in the 
+  `mu` coordinate array, which preserves accuracy ({ghpr}`226`).
+
+### Documentation
+
+* Added tutorials on homogeneous and molecular atmospheres ({ghpr}`194`).
+* Added uninstallation instructions ({ghpr}`217`).
+* `ParticleLayer`: document format of `dataset` attribute ({ghpr}`223`).
+
+### Internal changes
+
+* The `progress` configuration variable is now an `IntEnum`, allowing for
+  string-based setting while retaining comparison capabilities ({ghpr}`202`).
+* Internal `_util` library is now `util.misc` 
+  ({ghcommit}`5a593d37b72a1070b5a8fa909359fd8ae6498d96`).
+* Added a Numpydoc docstring parsing module ({ghpr}`200`).
+* Added a `deprecated()` decorator to mark a component for deprecation 
+  ({ghpr}`200`).
+* Updated regression testing interface for improved robustness and ease of use 
+  ({ghpr}`207`).
+* Rewrote `eradiate data info` CLI for improved maintainability ({ghpr}`208`).
+* Refactored `ParticleLayer` unit tests and added system tests 
+  ({ghpr}`219`, {ghpr}`222`, {ghpr}`224`).
+
+---
+
 ## v0.22.2 (23 March 2022)
 
 ### New features
 
-* Added IPython extension ({ghcommit}`759c7e7f8a446f00a737f095f0cf5261c350b8d5`).
-
-### Breaking changes
-
-### Deprecations
+* Added IPython extension ({ghcommit}`759c7e7f8a446f00a737f095f0cf5261c350b8d5`,
+  {ghcommit}`c3b30c9f38298712ab5697fc0a7a37fa39b8cdbf`).
 
 ### Improvements and fixes
 
@@ -55,6 +135,7 @@
 * Refactor regression testing framework to handle more use cases and make it
   more robust ({ghpr}`188`).
 
+---
 
 ## v0.22.1 (14 March 2022)
 

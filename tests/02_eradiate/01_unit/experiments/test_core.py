@@ -1,7 +1,9 @@
 import pytest
+import xarray as xr
 
+import eradiate
 from eradiate.exceptions import KernelVariantError
-from eradiate.experiments import mitsuba_run
+from eradiate.experiments import OneDimExperiment, mitsuba_run
 from eradiate.scenes.core import KernelDict
 
 
@@ -62,3 +64,21 @@ def test_mitsuba_run_fail():
     mitsuba.set_variant("scalar_rgb")
     with pytest.raises(KernelVariantError):
         mitsuba_run(kernel_dict)
+
+
+def test_run_function(modes_all_double):
+    mode = eradiate.mode()
+
+    measure = {"type": "mdistant"}
+    if mode.is_mono:
+        measure["spectral_cfg"] = {"wavelengths": [540.0, 550.0]}
+
+    elif mode.is_ckd:
+        measure["spectral_cfg"] = {"bin_set": "10nm", "bins": ["540", "550"]}
+
+    else:
+        assert False, f"Please add a test for mode '{mode.id}'"
+
+    exp = OneDimExperiment(atmosphere=None, measures=measure)
+    result = eradiate.run(exp)
+    assert isinstance(result, xr.Dataset)

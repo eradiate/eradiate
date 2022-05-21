@@ -8,8 +8,8 @@ from enum import Enum
 import attr
 import numpy as np
 
-from ._util import str_summary_numpy
 from .attrs import documented, parse_docs
+from .util.misc import str_summary_numpy
 
 
 class QuadType(Enum):

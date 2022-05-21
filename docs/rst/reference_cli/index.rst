@@ -1,3 +1,5 @@
+.. _sec-reference_cli:
+
 Command-line interface reference
 ================================
 

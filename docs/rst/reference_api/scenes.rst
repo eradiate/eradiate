@@ -39,7 +39,7 @@
 * :data:`atmosphere_factory`
 * :data:`particle_distribution_factory`
 
-**1D atmosphre geometries**
+**1D atmosphere geometries**
 
 .. autosummary::
    :toctree: generated/autosummary/
@@ -306,6 +306,7 @@
    RayleighPhaseFunction
    HenyeyGreensteinPhaseFunction
    BlendPhaseFunction
+   TabulatedPhaseFunction
 
 ``eradiate.scenes.integrators``
 -------------------------------

@@ -5,7 +5,7 @@ from copy import deepcopy
 import click
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedSeq as CS
-from setuptools.config import read_configuration
+from setuptools.config.setupcfg import read_configuration
 
 
 @click.command()

@@ -7,8 +7,8 @@ from collections import Counter
 
 import attr
 
-from .._util import camel_to_snake
 from ..attrs import documented, parse_docs
+from ..util.misc import camel_to_snake
 
 # ------------------------------------------------------------------------------
 #                                Local utilities

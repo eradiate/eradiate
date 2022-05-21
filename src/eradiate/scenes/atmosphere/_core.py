@@ -18,7 +18,6 @@ from ... import converters
 from ... import unit_context_kernel as uck
 from ... import validators
 from ..._factory import Factory
-from ..._util import onedict_value
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel.gridvolume import write_binary_grid3d
@@ -26,6 +25,7 @@ from ...kernel.transform import map_unit_cube
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
+from ...util.misc import onedict_value
 
 atmosphere_factory = Factory()
 
@@ -520,7 +520,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     # --------------------------------------------------------------------------
 
     @abstractmethod
-    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def eval_radprops(
+        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+    ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties profile of this
         atmospheric model.
@@ -531,6 +533,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        optional_fields : bool, optional, default: False
+            If ``True``, export optional fields, not required for scene
+            construction but useful for analysis and debugging.
 
         Returns
         -------
@@ -601,9 +607,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
             planet_radius = self.geometry.planet_radius.m_as(length_units)
             rmax = planet_radius + top
-            to_world = mi.ScalarTransform4f.translate(
-                [0, 0, -planet_radius + bottom]
-            ) * mi.ScalarTransform4f.scale(rmax)
+            to_world = mi.ScalarTransform4f.scale(rmax)
 
             volumes = {
                 "albedo": {

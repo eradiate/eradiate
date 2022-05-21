@@ -11,12 +11,12 @@ import pinttr
 import eradiate
 
 from . import validators
-from ._util import fullname
 from .attrs import documented, parse_docs
 from .ckd import Bin, Bindex, BinSet
 from .exceptions import UnsupportedModeError
 from .units import unit_context_config as ucc
 from .units import unit_registry as ureg
+from .util.misc import fullname
 
 # ------------------------------------------------------------------------------
 #                                      ABC
@@ -98,12 +98,16 @@ class SpectralContext(ABC, Context):
             for a list of actual keyword arguments).
 
         wavelength : quantity or float, default: 550 nm
-            **Monochromatic modes** [:class:`.MonoSpectralContext`].
+            (*Monochromatic modes* [:class:`.MonoSpectralContext`])
             Wavelength. Unit-enabled field (default: ucc[wavelength]).
 
-        bindex : :class:`.Bindex`, default: test value (1st quadrature point for the "550" bin of the "10nm" bin set)
-            **CKD modes** [:class:`.CKDSpectralContext`].
+        bindex : .Bindex, optional, default: 1st quadrature point for the "550" bin of the "10nm" bin set (test value)
+            (*CKD modes* [:class:`.CKDSpectralContext`])
             CKD bindex.
+
+        bin_set : .BinSet or str or None, optional, default: "10nm" (test value)
+            (*CKD modes* [:class:`.CKDSpectralContext`])
+            Bin set from which the bindex originates.
 
         See Also
         --------
@@ -230,14 +234,14 @@ class CKDSpectralContext(SpectralContext):
 
     bin_set: t.Optional[BinSet] = documented(
         attr.ib(
-            default=None,
+            default="10nm",
             converter=attr.converters.optional(BinSet.convert),
             validator=attr.validators.optional(attr.validators.instance_of(BinSet)),
         ),
         doc="If relevant, the bin set from which ``bindex`` originates.",
         type=":class:`.BinSet` or None",
         init_type=":class:`.BinSet` or str, optional",
-        default="None",
+        default='"10nm"',
     )
 
     @property
@@ -310,22 +314,34 @@ class KernelDictContext(Context):
     populated by passing additional keyword arguments. For instance, the two
     following init patterns are equivalent:
 
-    .. code:: python
+    .. testsetup:: contexts
 
-       >>> ctx = KernelDictContext(dynamic={"foo": "bar"})
-       KernelDictContext(spectral_ctx=..., dynamic={'foo': 'bar'}
-       >>> ctx = KernelDictContext(foo="bar")
-       KernelDictContext(spectral_ctx=..., dynamic={'foo': 'bar'}
+       import eradiate
+       from eradiate.contexts import KernelDictContext
+       eradiate.set_mode("mono")
+
+    .. doctest:: contexts
+       :options: +ELLIPSIS
+
+       >>> KernelDictContext(dynamic={"foo": "bar"})
+       KernelDictContext(..., dynamic={'foo': 'bar'})
+       >>> KernelDictContext(foo="bar")
+       KernelDictContext(..., dynamic={'foo': 'bar'})
 
     Access to dynamic data can go through direct query of the dictionary, or
     using attributes:
 
-    .. code:: python
+    .. doctest:: contexts
 
+       >>> ctx = KernelDictContext(foo="bar")
        >>> ctx.dynamic["foo"]
        'bar'
        >>> ctx.foo
        'bar'
+
+    .. testcleanup:: contexts
+
+       del KernelDictContext
     """
 
     @parse_docs

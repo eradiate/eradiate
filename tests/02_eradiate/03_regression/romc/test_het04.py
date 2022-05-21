@@ -1,8 +1,5 @@
-import os
-
 import numpy as np
 import pytest
-import xarray as xr
 
 from eradiate.contexts import KernelDictContext
 from eradiate.data import data_store
@@ -103,7 +100,7 @@ def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
             {
                 "type": "mdistant",
                 "construct": "from_viewing_angles",
-                "spp": 10000,
+                "spp": 20000,
                 "azimuths": [180] * ureg.deg,
                 "zeniths": np.arange(-75, 75.01, 2) * ureg.deg,
                 "target": {
@@ -125,27 +122,15 @@ def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
         integrator={"type": "path", "max_depth": -1},
     )
 
-    kd = exp.kernel_dict(ctx=KernelDictContext())
-    tran = kd.data["spherical_leaf_cloud"]["spherical_leaf_cloud_leaf_1"]["to_world"]
-
     exp.run()
     result = exp.results["measure"]
 
-    reference_path = data_store.fetch(
-        "tests/regression_test_references/het04_brfpp_ref.nc"
-    )
-
-    archive_filename = (
-        os.path.join(artefact_dir, f"{session_timestamp:%Y%m%d-%H%M%S}-het04.nc")
-        if artefact_dir
-        else None
-    )
-
     test = Chi2Test(
+        name=f"{session_timestamp:%Y%m%d-%H%M%S}-het04.nc",
         value=result,
-        reference=reference_path,
+        reference="tests/regression_test_references/het04_brfpp_ref.nc",
         threshold=0.05,
-        archive_filename=archive_filename,
+        archive_dir=artefact_dir,
     )
 
     assert test.run()

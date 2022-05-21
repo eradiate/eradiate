@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from environ.exceptions import ConfigError, MissingEnvValueError
 
-from eradiate._config import EradiateConfig
+from eradiate._config import EradiateConfig, ProgressLevel
 from eradiate.exceptions import ConfigWarning
 
 
@@ -53,3 +53,23 @@ def test_config(tmpdir):
         )
 
         assert [str(x) for x in cfg.data_path] == paths
+
+
+def test_config_progress():
+    cfg = EradiateConfig.from_environ()
+
+    # We can set progress level using a level
+    cfg.progress = ProgressLevel.NONE
+    assert cfg.progress is ProgressLevel.NONE
+
+    # We can set progress level using an int
+    cfg.progress = 0
+    assert cfg.progress is ProgressLevel.NONE
+
+    # We can set progress using a string
+    cfg.progress = "NONE"
+    assert cfg.progress is ProgressLevel.NONE
+
+    # Progress levels are comparable to int
+    assert cfg.progress < 1
+    assert cfg.progress == 0

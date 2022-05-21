@@ -158,7 +158,7 @@ def test_sample_ray_multi(variant_scalar_rgb):
             assert dr.allclose(dr.normalize(mi.ScalarVector3f(1, 1, 1)), ray.d)
 
 
-@pytest.mark.parametrize("radiance", [10 ** x for x in range(-3, 4)])
+@pytest.mark.parametrize("radiance", [10**x for x in range(-3, 4)])
 def test_render(variant_scalar_rgb, radiance):
     """
     Test render results with a simple scene.

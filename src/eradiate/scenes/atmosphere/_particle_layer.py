@@ -3,7 +3,6 @@ Particle layers.
 """
 from __future__ import annotations
 
-import pathlib
 import typing as t
 
 import attr
@@ -18,7 +17,7 @@ from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import KernelDict
 from ..phase import TabulatedPhaseFunction
-from ... import path_resolver, validators
+from ... import converters
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -50,19 +49,19 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     Particle layer scene element [``particle_layer``].
 
     The particle layer has a vertical extension specified by a bottom altitude
-    (set by `bottom`) and a top altitude (set by `top`).
+    (set by ``bottom``) and a top altitude (set by ``top``).
     Inside the layer, the particles number is distributed according to a
-    distribution (set by `distribution`).
+    distribution (set by ``distribution``).
     See :mod:`~eradiate.scenes.atmosphere.particle_dist` for the available
     distribution types and corresponding parameters.
     The particle layer is itself divided into a number of (sub-)layers
-    (`n_layers`) to allow to describe the variations of the particles number
+    (``n_layers``) to allow to describe the variations of the particles number
     with altitude.
-    The total number of particles in the layer is adjusted so that the
-    particle layer's optical thickness at 550 nm meet a specified value
-    (`tau_550`).
+    The particle density in the layer is adjusted so that the particle layer's
+    optical thickness at a specified reference wavelength (``w_ref``) meets a
+    specified value (``tau_ref``).
     The particles radiative properties are specified by a data set
-    (`dataset`).
+    (``dataset``).
     """
 
     _bottom: pint.Quantity = documented(
@@ -126,7 +125,25 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default='"uniform"',
     )
 
-    tau_550: pint.Quantity = documented(
+    w_ref: pint.Quantity = documented(
+        pinttr.ib(
+            units=ucc.deferred("length"),
+            default=550 * ureg.nm,
+            validator=[
+                is_positive,
+                pinttr.validators.has_compatible_units,
+            ],
+        ),
+        doc="Reference wavelength at which the extinction optical thickness is "
+        "specified.\n"
+        "\n"
+        "Unit-enabled field (default: ucc[length]).",
+        type="quantity",
+        init_type="quantity or float",
+        default="550.0",
+    )
+
+    tau_ref: pint.Quantity = documented(
         pinttr.ib(
             units=ucc.deferred("dimensionless"),
             default=ureg.Quantity(0.2, ureg.dimensionless),
@@ -135,7 +152,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                 pinttr.validators.has_compatible_units,
             ],
         ),
-        doc="Extinction optical thickness at the wavelength of 550 nm.\n"
+        doc="Extinction optical thickness at the reference wavelength.\n"
         "\n"
         "Unit-enabled field (default: ucc[dimensionless]).",
         type="quantity",
@@ -154,17 +171,19 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="16",
     )
 
-    # TODO: replace with actual data set and load through data interface
-    # TODO: change defaults to production data
-    dataset: pathlib.Path = documented(
+    dataset: xr.Dataset = documented(
         attr.ib(
-            default=path_resolver.resolve("tests/radprops/rtmom_aeronet_desert.nc"),
-            converter=path_resolver.resolve,
-            validator=[attr.validators.instance_of(pathlib.Path), validators.is_file],
+            default="spectra/particles/govaerts_2021-continental.nc",
+            converter=converters.load_dataset,
+            validator=attr.validators.instance_of(xr.Dataset),
         ),
-        doc="Path to particle radiative property data set. Defaults to testing data.",
-        type="Path",
-        init_type="path-like",
+        doc="Particle radiative property data set. If a path is passed, the "
+        "converter tries to open the corresponding file on the hard drive; "
+        "if this fails, it tries to load a resource from the data store."
+        "Refer to the data guide for the format requirements of this data set.",
+        type="Dataset",
+        init_type="Dataset or path-like, optional",
+        default="spectra/particles/govaerts_2021-continental.nc",
     )
 
     _phase: t.Optional[TabulatedPhaseFunction] = attr.ib(default=None, init=False)
@@ -172,8 +191,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def update(self) -> None:
         super().update()
 
-        with xr.open_dataset(self.dataset) as ds:
-            self._phase = TabulatedPhaseFunction(id=self.id_phase, data=ds.phase)
+        ds = self.dataset
+        self._phase = TabulatedPhaseFunction(id=self.id_phase, data=ds.phase)
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -271,9 +290,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
-        with xr.open_dataset(self.dataset) as ds:
-            wavelengths = w.m_as(ds.w.attrs["units"])
-            interpolated_albedo = ds.albedo.interp(w=wavelengths)
+        ds = self.dataset
+        wavelengths = w.m_as(ds.w.attrs["units"])
+        interpolated_albedo = ds.albedo.interp(w=wavelengths)
 
         albedo = to_quantity(interpolated_albedo)
         albedo_array = albedo * np.ones(self.n_layers)
@@ -310,29 +329,20 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
-        with xr.open_dataset(self.dataset) as ds:
-            ds_w_units = ureg(ds.w.attrs["units"])
-
-            # find the extinction data variable
-            for dv in ds.data_vars:
-                standard_name = ds[dv].standard_name
-                if "extinction" in standard_name:
-                    extinction = ds[dv]
-
+        ds = self.dataset
+        ds_w_units = ureg(ds.w.attrs["units"])
         wavelength = w.m_as(ds_w_units)
-        xs_t = to_quantity(extinction.interp(w=wavelength))
-        xs_t_550 = to_quantity(
-            extinction.interp(w=ureg.convert(550.0, ureg.nm, ds_w_units))
-        )
+        xs_t = to_quantity(ds.sigma_t.interp(w=wavelength))
+        xs_t_ref = to_quantity(ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units)))
         fractions = self.eval_fractions()
-        sigma_t_array = xs_t_550 * fractions
+        sigma_t_array = xs_t_ref * fractions
         dz = (self.top - self.bottom) / self.n_layers
         normalized_sigma_t_array = self._normalize_to_tau(
             ki=sigma_t_array.magnitude,
             dz=dz,
-            tau=self.tau_550,
+            tau=self.tau_ref,
         )
-        return normalized_sigma_t_array * xs_t / xs_t_550
+        return normalized_sigma_t_array * xs_t / xs_t_ref
 
     def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         w_units = ureg.nm
@@ -401,7 +411,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def eval_sigma_s_ckd(self, *bindexes: Bindex):
         return self.eval_sigma_t_ckd(*bindexes) * self.eval_albedo_ckd(*bindexes)
 
-    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def eval_radprops(
+        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+    ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties profile of the
         particle layer.
@@ -413,6 +425,11 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
+        optional_fields : bool, optional, default: False
+            If ``True``, extra the optional ``sigma_a`` and ``sigma_s`` fields,
+            not required for scene construction but useful for analysis and
+            debugging.
+
         Returns
         -------
         Dataset
@@ -422,28 +439,56 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx)
             albedo = self.eval_albedo(spectral_ctx=spectral_ctx)
             wavelength = spectral_ctx.wavelength
+            data_vars = {
+                "sigma_t": (
+                    "z_layer",
+                    np.atleast_1d(sigma_t.magnitude),
+                    dict(
+                        standard_name="extinction_coefficient",
+                        long_name="extinction coefficient",
+                        units=symbol(sigma_t.units),
+                    ),
+                ),
+                "albedo": (
+                    "z_layer",
+                    np.atleast_1d(albedo.magnitude),
+                    dict(
+                        standard_name="albedo",
+                        long_name="albedo",
+                        units=symbol(albedo.units),
+                    ),
+                ),
+            }
+
+            if optional_fields:
+                sigma_a = self.eval_sigma_a(spectral_ctx=spectral_ctx)
+                sigma_s = self.eval_sigma_s(spectral_ctx=spectral_ctx)
+
+                data_vars.update(
+                    {
+                        "sigma_a": (
+                            "z_layer",
+                            np.atleast_1d(sigma_a.magnitude),
+                            dict(
+                                standard_name="absorption_coefficient",
+                                long_name="absorption coefficient",
+                                units=symbol(sigma_a.units),
+                            ),
+                        ),
+                        "sigma_s": (
+                            "z_layer",
+                            np.atleast_1d(sigma_s.magnitude),
+                            dict(
+                                standard_name="scattering_coefficient",
+                                long_name="scattering coefficient",
+                                units=symbol(sigma_s.units),
+                            ),
+                        ),
+                    }
+                )
 
             return xr.Dataset(
-                data_vars={
-                    "sigma_t": (
-                        "z_layer",
-                        np.atleast_1d(sigma_t.magnitude),
-                        dict(
-                            standard_name="extinction_coefficient",
-                            long_name="extinction coefficient",
-                            units=symbol(sigma_t.units),
-                        ),
-                    ),
-                    "albedo": (
-                        "z_layer",
-                        np.atleast_1d(albedo.magnitude),
-                        dict(
-                            standard_name="albedo",
-                            long_name="albedo",
-                            units=symbol(albedo.units),
-                        ),
-                    ),
-                },
+                data_vars=data_vars,
                 coords={
                     "z_layer": (
                         "z_layer",
@@ -485,7 +530,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         Normalise extinction coefficient values :math:`k_i` so that:
 
         .. math::
-           \sum_i k_i \Delta z = \tau_{550}
+           \sum_i k_i \Delta z = \tau
 
         where :math:`\tau` is the particle layer optical thickness.
 

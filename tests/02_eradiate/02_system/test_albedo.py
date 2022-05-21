@@ -173,7 +173,7 @@ def test_albedo(mode_mono, artefact_dir):
         rdiffs_max = np.max(np.abs(rdiffs[~np.isnan(rdiffs)]))
         exp = np.ceil(np.log10(rdiffs_max))
         ax2.set_xlim(ax1.get_xlim())
-        ax2.set_ylim([-(10 ** exp), 10 ** exp])
+        ax2.set_ylim([-(10**exp), 10**exp])
         ax2.yaxis.set_label_position("right")
         ax2.yaxis.tick_right()
         ax2.ticklabel_format(axis="y", style="sci", scilimits=[-3, 3])

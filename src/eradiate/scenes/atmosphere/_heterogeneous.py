@@ -17,12 +17,12 @@ from ._particle_layer import ParticleLayer
 from ..core import BoundingBox, KernelDict
 from ..phase import BlendPhaseFunction
 from ..shapes import CuboidShape, SphereShape
-from ..._util import onedict_value
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...units import to_quantity
+from ...units import symbol, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
+from ...util.misc import onedict_value
 
 
 def _zero_radprops(spectral_ctx: SpectralContext) -> xr.Dataset:
@@ -226,7 +226,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         z_layer = 0.5 * (z_level[1:] + z_level[:-1])
         return z_layer
 
-    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def eval_radprops(
+        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+    ) -> xr.Dataset:
         """
         Evaluate the extinction coefficients and albedo profiles.
 
@@ -236,6 +238,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        optional_fields : bool, optional, default: False
+            If ``True``, extra the optional ``sigma_a`` and ``sigma_s`` fields,
+            not required for scene construction but useful for analysis and
+            debugging.
 
         Returns
         -------
@@ -254,7 +261,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
         # Single component: just forward encapsulated component
         if len(components) == 1:
-            return components[0].eval_radprops(spectral_ctx)
+            return components[0].eval_radprops(
+                spectral_ctx, optional_fields=optional_fields
+            )
 
         # Two components or more: interpolate all components on a fine grid and
         # aggregate collision coefficients
@@ -266,7 +275,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             for component in components:
                 radprops = interpolate_radprops(
-                    component.eval_radprops(spectral_ctx), new_z_layer=hrz
+                    component.eval_radprops(spectral_ctx),
+                    new_z_layer=hrz,
                 )
                 # We store only the magnitude
                 sigma_ts.append(to_quantity(radprops.sigma_t).m_as(sigma_units))
@@ -286,33 +296,60 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 out=np.ones_like(sigma_t),
             )
 
+            data_vars = {
+                "sigma_t": (
+                    "z_layer",
+                    sigma_t,
+                    {
+                        "units": f"{symbol(sigma_units)}",
+                        "standard_name": "extinction_coefficient",
+                        "long_name": "extinction coefficient",
+                    },
+                ),
+                "albedo": (
+                    "z_layer",
+                    albedo,
+                    {
+                        "standard_name": "albedo",
+                        "long_name": "albedo",
+                        "units": "",
+                    },
+                ),
+            }
+
+            if optional_fields:
+                sigma_a = sigma_t - sigma_s
+                data_vars.update(
+                    {
+                        "sigma_a": (
+                            "z_layer",
+                            sigma_a,
+                            {
+                                "units": f"{symbol(sigma_units)}",
+                                "standard_name": "absorption_coefficient",
+                                "long_name": "absorption coefficient",
+                            },
+                        ),
+                        "sigma_s": (
+                            "z_layer",
+                            sigma_s,
+                            {
+                                "units": f"{symbol(sigma_units)}",
+                                "standard_name": "scattering_coefficient",
+                                "long_name": "scattering coefficient",
+                            },
+                        ),
+                    }
+                )
+
             result = xr.Dataset(
-                data_vars={
-                    "sigma_t": (
-                        "z_layer",
-                        sigma_t,
-                        {
-                            "units": f"{sigma_units:~P}",
-                            "standard_name": "extinction_coefficient",
-                            "long_name": "extinction coefficient",
-                        },
-                    ),
-                    "albedo": (
-                        "z_layer",
-                        albedo,
-                        {
-                            "standard_name": "albedo",
-                            "long_name": "albedo",
-                            "units": "",
-                        },
-                    ),
-                },
+                data_vars=data_vars,
                 coords={
                     "z_layer": (
                         "z_layer",
                         hrz.magnitude,
                         {
-                            "units": f"{hrz.units:~P}",
+                            "units": f"{symbol(hrz.units)}",
                             "standard_name": "layer_altitude",
                             "long_name": "layer altitude",
                         },
@@ -365,14 +402,17 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             # Construct a blended phase function based on those weighting values
             shape = self.eval_shape(ctx)
+
             if isinstance(shape, CuboidShape):
                 shape_min = shape.center - shape.edges * 0.5
                 shape_min[2] = self.bottom
                 shape_max = shape.center + shape.edges * 0.5
+
             elif isinstance(shape, SphereShape):
                 length_units = ucc.get("length")
                 shape_min = [0, 0, 0] * length_units
                 shape_max = [1, 1, shape.radius.m_as(length_units)] * length_units
+
             else:
                 raise RuntimeError(
                     f"Unsupported atmosphere geometry shape '{type(shape).__name__}'"

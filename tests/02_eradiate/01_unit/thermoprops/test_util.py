@@ -7,8 +7,11 @@ from eradiate.thermoprops.us76 import make_profile
 from eradiate.thermoprops.util import (
     _find_regular_params_gcd,
     _to_regular,
-    compute_column_number_density,
-    compute_number_density_at_surface,
+    column_number_density,
+    column_mass_density,
+    number_density_at_surface,
+    mass_density_at_surface,
+    _scaling_factor,
     compute_scaling_factors,
     equilibrium_water_vapor_fraction,
     human_readable,
@@ -33,7 +36,7 @@ def test_compute_column_number_density():
             "species": ("species", ["H2O"], {}),
         },
     )
-    assert compute_column_number_density(ds, "H2O") == ureg.Quantity(6, "m^-2")
+    assert column_number_density(ds, "H2O") == ureg.Quantity(6, "m^-2")
 
     # compute correctly (irregular altitude mesh)
     ds = xr.Dataset(
@@ -47,7 +50,7 @@ def test_compute_column_number_density():
             "species": ("species", ["H2O"], {}),
         },
     )
-    assert compute_column_number_density(ds, "H2O") == ureg.Quantity(26, "m^-2")
+    assert column_number_density(ds, "H2O") == ureg.Quantity(26, "m^-2")
 
     # compute correctly (mutiple species)
     ds = xr.Dataset(
@@ -61,8 +64,24 @@ def test_compute_column_number_density():
             "species": ("species", ["H2O", "O3"], {}),
         },
     )
-    assert compute_column_number_density(ds, "H2O") == ureg.Quantity(13, "m^-2")
-    assert compute_column_number_density(ds, "O3") == ureg.Quantity(13, "m^-2")
+    assert column_number_density(ds, "H2O") == ureg.Quantity(13, "m^-2")
+    assert column_number_density(ds, "O3") == ureg.Quantity(13, "m^-2")
+
+
+def test_column_mass_density():
+    # returns a quantity.
+    ds = xr.Dataset(
+        data_vars={
+            "mr": (("species", "z_layer"), np.ones((1, 3)), {"units": ""}),
+            "n": ("z_layer", np.arange(1, 4), {"units": "m^-3"}),
+        },
+        coords={
+            "z_layer": ("z_layer", np.arange(0, 3) + 0.5, {"units": "m"}),
+            "z_level": ("z_level", np.arange(0, 4), {"units": "m"}),
+            "species": ("species", ["H2O"], {}),
+        },
+    )
+    assert isinstance(column_mass_density(ds, "H2O"), ureg.Quantity)
 
 
 def test_compute_number_density_at_surface():
@@ -78,8 +97,53 @@ def test_compute_number_density_at_surface():
             "species": ("species", ["H2O"], {}),
         },
     )
-    value = compute_number_density_at_surface(ds, "H2O")
+    value = number_density_at_surface(ds, "H2O")
     assert value == ureg.Quantity(0.6, "m^-3")
+
+
+def test_mass_density_at_surface():
+    # returns a quantity
+    ds = xr.Dataset(
+        data_vars={
+            "mr": (("species", "z_layer"), np.ones((1, 3)), {"units": ""}),
+            "n": ("z_layer", np.arange(1, 4), {"units": "m^-3"}),
+        },
+        coords={
+            "z_layer": ("z_layer", np.arange(0, 3) + 0.5, {"units": "m"}),
+            "z_level": ("z_level", np.arange(0, 4), {"units": "m"}),
+            "species": ("species", ["H2O"], {}),
+        },
+    )
+    assert isinstance(mass_density_at_surface(ds, "H2O"), ureg.Quantity)
+
+
+def test_scaling_factor():
+    """Returns correct value."""
+
+    assert np.isclose(
+        _scaling_factor(
+            initial_amount=1.0 / ureg.m**3,
+            target_amount=10.0 / ureg.m**3,
+        ),
+        10.0,
+    )
+
+    assert np.isclose(
+        _scaling_factor(
+            initial_amount=1.0 / ureg.m**3,
+            target_amount=0.0 / ureg.m**3,
+        ),
+        0.0,
+    )
+
+
+def test_scaling_factor_invalid():
+    """Raises when both initial and target amounts are zero."""
+    with pytest.raises(ValueError):
+        _scaling_factor(
+            initial_amount=0.0 / ureg.m**3,
+            target_amount=1.0 / ureg.m**3,
+        )
 
 
 def test_compute_scaling_factors():
@@ -138,12 +202,12 @@ def test_rescale_concentration():
             history="",
         ),
     )
-    initial_ozone_amount = compute_column_number_density(ds=ds, species="O3")
+    initial_ozone_amount = column_number_density(ds=ds, species="O3")
     new_ozone_amount = ureg.Quantity(1, "dobson_units")
     factors = compute_scaling_factors(ds=ds, concentration={"O3": new_ozone_amount})
     rescaled_ds = rescale_concentration(ds=ds, factors=factors, inplace=False)
-    ds_ozone_amount = compute_column_number_density(ds=ds, species="O3")
-    ozone_amount = compute_column_number_density(ds=rescaled_ds, species="O3")
+    ds_ozone_amount = column_number_density(ds=ds, species="O3")
+    ozone_amount = column_number_density(ds=rescaled_ds, species="O3")
     assert ds_ozone_amount == initial_ozone_amount
     assert ozone_amount.to("dobson_unit") == new_ozone_amount
 
@@ -170,15 +234,12 @@ def test_interpolate():
             history="",
         ),
     )
-    initial_amounts = {
-        s: compute_column_number_density(ds, s) for s in ds.species.values
-    }
+    initial_amounts = {s: column_number_density(ds, s) for s in ds.species.values}
     interpolated = interpolate(
         ds=ds, method="linear", z_level=np.linspace(0, 8, 9), conserve_columns=True
     )
     amounts = {
-        s: compute_column_number_density(interpolated, s)
-        for s in interpolated.species.values
+        s: column_number_density(interpolated, s) for s in interpolated.species.values
     }
     for s in ds.species.values:
         assert np.isclose(amounts[s], initial_amounts[s], rtol=1e-9)

@@ -86,7 +86,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
             "none": None,
             "homogeneous": {
                 "type": "homogeneous",
-                "sigma_s": 1.0e-2 * ureg.km ** -1,
+                "sigma_s": 1.0e-2 * ureg.km**-1,
                 "top": 1.0e2 * ureg.km,
             },
         }[atmosphere],

@@ -14,11 +14,11 @@ import pinttr
 from pinttr.util import ensure_units
 
 from .. import unit_context_config as ucc
-from .._util import onedict_value
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
 from ..units import unit_registry as ureg
+from ..util.misc import onedict_value
 
 
 def _kernel_dict_get_mitsuba_variant() -> str:

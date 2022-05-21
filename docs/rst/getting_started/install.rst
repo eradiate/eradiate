@@ -13,11 +13,14 @@ Installation guide
 
    This new version of the Mitsuba 3 component is currently under submission for
    publication and we can currently not release it.
-   **This situation is temporary.**
 
    Consequently, we are currently restricting kernel code access to users who
-   join our Preview team on GitHub. To be added to the team, please send an
-   email to news@eradiate.eu with your GitHub username.
+   join our Preview team on GitHub. Please note that you will need to join the
+   Preview team in order to get a functioning clone of the Eradiate codebase. To
+   be added to the team, please send an email to news@eradiate.eu with your
+   GitHub username.
+
+   **This situation is temporary.**
 
 This guide covers all steps necessary to get Eradiate running on your machine.
 
@@ -49,12 +52,12 @@ machine meets the requirements listed below.
    :widths: 10, 10
 
    git,       2.18+
-   cmake,     3.19+
+   cmake,     3.22+
    ninja,     1.10+
    clang,     11+
 
 .. dropdown:: Tested configuration
-   :color: light
+   :color: info
    :icon: info
 
    .. tab-set::
@@ -111,7 +114,8 @@ machine meets the requirements listed below.
       If your Linux distribution does not include APT, please consult your
       package manager's repositories for the respective packages.
 
-      If your CMake copy is not recent enough, there are `many ways <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`_
+      If your CMake copy is not recent enough, there are
+      `many ways <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`_
       to install an updated version, notably through pipx and Conda. Pick your
       favourite!
 
@@ -160,47 +164,33 @@ Cloning the repository
    referred to using
    `Git submodules <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_.
 
+To get the code, clone the repository including its submodules with the
+following command:
+
 .. tab-set::
 
-   .. tab-item:: Lightweight (users)
-
-      This method saves time and bandwidth and is recommended for users.
-      First, clone the Eradiate repository:
+   .. tab-item:: Public branch (users)
 
       .. code:: bash
 
-         git clone https://github.com/eradiate/eradiate
+         git clone --recursive --branch public https://github.com/eradiate/eradiate
 
-      Then, enter the clone and list available release tags:
-
-      .. code:: bash
-
-         cd eradiate
-         git tag -l "v*"
-
-      Tags with a ``-preview`` suffix use the preview Mitsuba code, while others
-      use the Mitsuba repository directly. Checkout the tag you are interested
-      in (*e.g.* ``v0.22.1-preview``), then update and initialise all
-      submodules:
-
-      .. code:: bash
-
-         git checkout v0.22.1-preview
-         git submodule sync --recursive
-         git submodule update --init --recursive
-
-   .. tab-item:: Recursive (developers)
-
-      To get the code, clone the repository including its submodules with the
-      following command:
+   .. tab-item:: Main branch (developers)
 
       .. code:: bash
 
          git clone --recursive https://github.com/eradiate/eradiate
 
-      This will clone the Eradiate repository, as well as all its dependencies.
-      This recursive cloning procedure can take up to a few minutes depending on
-      your Internet connection.
+This will clone the Eradiate repository, as well as all its dependencies.
+This recursive cloning procedure can take up to a few minutes depending on
+your Internet connection.
+
+.. note::
+
+   If GitHub requests credentials to access submodules through HTTPS, we highly
+   recommend to `generate a personal access token <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token>`_
+   with **repo** permissions and to use it instead of your password. You might
+   also have to make sure that `Git will remember your token <https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage>`_.
 
 .. _sec-getting_started-install-setup_conda:
 
@@ -269,6 +259,18 @@ Configure CMake for compilation:
 
    cmake --preset default
 
+.. dropdown:: CMake Error: The source directory "..." does not exist
+   :color: info
+   :icon: info
+
+   This most probably means that your CMake version is too old
+   (see `Prerequisites`_). At this stage, you might also install CMake in your
+   Conda environment:
+
+   .. code:: bash
+
+      conda install "cmake>=3.22"
+
 Inspect CMake's output to check if Clang is used as the C++ compiler. Search for
 lines starting with
 
@@ -277,13 +279,16 @@ lines starting with
    -- Check for working C compiler: ...
    -- Check for working CXX compiler: ...
 
+If you see ``gcc`` on this line, it very likely means that CMake is not using
+Clang.
+
 .. dropdown:: If Clang is not used by CMake ...
-   :color: light
+   :color: info
    :icon: info
 
-   If Clang is not used by CMake (this is very common on Linux systems), you
-   have to explicitly define Clang as your C++ compiler. This can be achieved
-   by modifying environment variables:
+   If Clang is not used by CMake (this is very common on Linux systems, less
+   likely on macOS), you have to explicitly define Clang as your C++ compiler.
+   This can be achieved by modifying environment variables:
 
    .. tab-set::
 
@@ -345,8 +350,12 @@ CMake. Search for lines starting with:
             -- Found PythonInterp: /Users/<username>/miniconda3/envs/eradiate/...
             -- Found PythonLibs: /Users/<username>/miniconda3/envs/eradiate/...
 
+The content of these lines may vary depending on how you installed Conda. If
+those paths point to a Python binary not associated with a Conda virtual
+environment, do not proceed before fixing them.
+
 .. dropdown:: If the wrong Python binary is used by CMake ...
-   :color: light
+   :color: info
    :icon: info
 
    It probably means you have not activated your Conda environment:
@@ -355,6 +364,16 @@ CMake. Search for lines starting with:
 
       conda activate eradiate
 
+.. note::
+
+   You will probably see a warning saying
+
+       *Created a default 'mitsuba.conf' configuration file.  You will
+       probably want to edit this file to specify the desired configurations
+       before starting to compile.*
+
+   This is expected: do not worry about it.
+
 When CMake is successfully configured, you can compile the code:
 
 .. code:: bash
@@ -362,6 +381,7 @@ When CMake is successfully configured, you can compile the code:
    cmake --build build
 
 The compilation process can last for up to around half an hour on old machines.
+It completes within a few minutes on modern workstations.
 
 .. _sec-getting_started-install-verify_installation:
 
@@ -379,8 +399,8 @@ use Eradiate |smile|
 
 .. |smile| unicode:: U+1F642
 
-.. dropdown:: If you get a ``jit_cuda_compile()`` error ...
-   :color: light
+.. dropdown:: If you get a jit_cuda_compile() error ...
+   :color: info
    :icon: info
 
    Eradiate does not use any CUDA variant of Mitsuba. You can therefore
@@ -389,3 +409,25 @@ use Eradiate |smile|
    .. code:: bash
 
       export CUDA_VISIBLE_DEVICES=""
+
+   Even doing so, you might still see a CUDA-related warning upon importing
+   Eradiate. This is not a concern and it should be fixed in the future.
+
+Uninstall
+---------
+
+To uninstall Eradiate from your system, you have to remove the Conda environment environment you used to set it up and delete the directory where you cloned the code. If you followed exactly the installation instructions, here is a possible workflow:
+
+1. Activate the Conda environment and delete the Eradiate source directory:
+
+   .. code:: bash
+   
+      conda activate eradiate
+      rm -rf $ERADIATE_SOURCE_DIR
+
+2. Deactivate the Conda environment and delete it:
+
+   .. code:: bash
+   
+      conda deactivate
+      conda env remove --name eradiate

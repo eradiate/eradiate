@@ -299,6 +299,22 @@ Initialisation from dictionaries
     * [optional] if relevant, allow for class method constructor selection using
       the ``"construct"`` parameter.
 
+
+.. _sec-contributing-codebase-deprecations_removals:
+
+Deprecations and removals
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Eradiate tries to remain backward-compatible when possible. Sometimes however,
+compatibility must be broken. Following the recommended practice in the Python
+community, removals are, whenever possible, preceded by a deprecation period
+during which a deprecated component is still available, marked as such in the
+documentation, and using it triggers a :class:`DeprecationWarning`.
+
+This workflow is facilitated by components defined in the
+:mod:`util.deprecation <eradiate.util.deprecation>` module, and in particular
+the :func:`.deprecated` decorator. Be sure to use them when relevant.
+
 .. _sec-contributing-codebase-testing:
 
 Testing
@@ -395,7 +411,7 @@ pytest like this:
 
 .. code-block:: bash
 
-    pytest tests -m "regression" --artefact_dir <a directory of your choice>
+    pytest tests -m "regression" --artefact-dir <a directory of your choice>
 
 The ``artefact_dir`` parameter defines the output directory in which the results
 and plots will be placed. If the directory does not exist, it will be created.

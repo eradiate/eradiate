@@ -1,8 +1,5 @@
-import os
-
 import numpy as np
 import pytest
-import xarray as xr
 
 import eradiate.scenes as esc
 from eradiate.data import data_store
@@ -52,7 +49,7 @@ def test_rpv_afgl1986_continental_brfpp(
         bottom=1 * ureg.km,
         top=2 * ureg.km,
         n_layers=16,
-        tau_550=0.5,
+        tau_ref=0.5,
         dataset=data_store.fetch("spectra/particles/govaerts_2021-continental.nc"),
     )
 
@@ -80,24 +77,12 @@ def test_rpv_afgl1986_continental_brfpp(
     exp.run()
     result = exp.results["measure"]
 
-    reference_path = data_store.fetch(
-        "tests/regression_test_references/rpv_afgl1986_continental_brfpp_ref.nc"
-    )
-
-    archive_filename = (
-        os.path.join(
-            artefact_dir,
-            f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986_continental.nc",
-        )
-        if artefact_dir
-        else None
-    )
-
     test = Chi2Test(
+        name=f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986_continental.nc",
         value=result,
-        reference=reference_path,
+        reference="tests/regression_test_references/rpv_afgl1986_continental_brfpp_ref.nc",
         threshold=0.05,
-        archive_filename=archive_filename,
+        archive_dir=artefact_dir,
     )
 
     assert test.run()

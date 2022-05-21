@@ -7,9 +7,9 @@ import attr
 
 from ..core import KernelDict, SceneElement
 from ..._factory import Factory
-from ..._util import onedict_value
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
+from ...util.misc import onedict_value
 
 surface_factory = Factory()
 

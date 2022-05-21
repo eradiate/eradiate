@@ -9,4 +9,5 @@
 - [ ] The code is appropriately documented
 - [ ] The code is tested to prove its function
 - [ ] The feature branch is rebased on the current state of the `main` branch
+- [ ] I updated the change log if relevant
 - [ ] I give permission that the Eradiate project may redistribute my contributions under the terms of its license

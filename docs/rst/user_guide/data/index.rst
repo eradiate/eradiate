@@ -8,6 +8,7 @@ Data guide
 
    intro
    absorption
+   particle_radprops
    radprops
    solar_irradiance
    srf

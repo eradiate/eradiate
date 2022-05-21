@@ -46,6 +46,7 @@ Alphabetical list of modules
    test_tools
    thermoprops
    units
+   util
    validators
    warp
    xarray
@@ -60,4 +61,3 @@ Private modules
    factory
    mode
    presolver
-   util

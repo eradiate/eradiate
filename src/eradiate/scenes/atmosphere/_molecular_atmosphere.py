@@ -58,7 +58,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             factory=lambda: RayleighPhaseFunction(),
             converter=phase_function_factory.convert,
             validator=attr.validators.instance_of(PhaseFunction),
-        )
+        ),
+        doc="Phase function.",
+        type=":class:`.PhaseFunction`",
+        init_type=":class:`.PhaseFunction` or dict",
+        default=":class:`RayleighPhaseFunction() <.RayleighPhaseFunction>`",
     )
 
     has_absorption: bool = documented(
@@ -166,7 +170,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         else:
             raise NotImplementedError("Unsupported thermophysical properties data set.")
 
-    def eval_radprops(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def eval_radprops(
+        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+    ) -> xr.Dataset:
+        # Inherit docstrings
+        # All fields are already exported: `optional_fields` has no effect
         return self.radprops_profile.eval_dataset(spectral_ctx=spectral_ctx)
 
     # --------------------------------------------------------------------------
@@ -195,7 +203,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
         Parameters
         ----------
-        model : {"us_standard", "tropical", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter"}, default: "us_standard"
+        model : {"us_standard", "tropical", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter"}, optional, default: "us_standard"
             AFGL (1986) model identifier.
 
         levels : quantity
@@ -203,7 +211,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
         concentrations : dict
             Molecules concentrations as a ``{str: quantity}`` mapping.
-            This dictionary is interpreted by :func:`pinttrs.util.ensure_units`,
+            This dictionary is interpreted by :func:`pinttr.util.ensure_units`,
             which allows for passing units as strings.
 
         **kwargs
@@ -272,15 +280,15 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         """
         ds = afgl_1986.make_profile(model_id=model)
 
-        if levels is not None:
-            ds = interpolate(ds=ds, z_level=levels, conserve_columns=True)
-
         if concentrations is not None:
             factors = compute_scaling_factors(
                 ds=ds,
                 concentration=pinttr.interpret_units(concentrations, ureg=ureg),
             )
             ds = rescale_concentration(ds=ds, factors=factors)
+
+        if levels is not None:
+            ds = interpolate(ds=ds, z_level=levels, conserve_columns=True)
 
         return cls(thermoprops=ds, **kwargs)
 

@@ -25,8 +25,7 @@ import eradiate
 # In this example, the data set that we want to open has the
 # ``sentinel_3a-olci-5`` identifier:
 
-ds = eradiate.data.open(category="spectral_response_function",
-                        id="sentinel_3a-olci-5")
+ds = eradiate.data.open_dataset("spectra/srf/sentinel_3a-olci-5.nc")
 
 # %%
 # Plot the spectral response function data by calling the ``plot`` method

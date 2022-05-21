@@ -151,7 +151,7 @@ public:
             result[is_transmit] = m_transmittance->eval(si, is_transmit);
         }
 
-        result[active] *= (dr::InvPi<Float> * abs(cos_theta_o));
+        result[active] *= (dr::InvPi<Float> * dr::abs(cos_theta_o));
 
         return dr::select(active, result, 0.f);
     }
@@ -171,7 +171,7 @@ public:
               cos_theta_o = Frame3f::cos_theta(wo);
 
         // Ensure that uncoming direction is in upper hemisphere
-        Vector3f wo_flip{ wo.x(), wo.y(), abs(cos_theta_o) };
+        Vector3f wo_flip{ wo.x(), wo.y(), dr::abs(cos_theta_o) };
 
         Float result = dr::select(
             active, warp::square_to_cosine_hemisphere_pdf(wo_flip), 0.f);
