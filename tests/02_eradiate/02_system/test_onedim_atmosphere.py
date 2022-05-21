@@ -5,6 +5,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("bottom", [0.0, 1.0, 10.0])
 @pytest.mark.parametrize("tau_ref", [0.1, 1.0, 10.0])
 def test_heterogeneous_atmosphere_contains_particle_layer(
@@ -55,7 +56,7 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
         measures=[measure],
     )
     ert_seed_state.reset()
-    exp1.run(seed_state=ert_seed_state)
+    eradiate.run(exp1, seed_state=ert_seed_state)
     results1 = exp1.results["measure"]["radiance"].values
 
     # heterogeneous atmosphere with a particle layer
@@ -64,12 +65,13 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
         measures=[measure],
     )
     ert_seed_state.reset()
-    exp2.run(seed_state=ert_seed_state)
+    eradiate.run(exp2, seed_state=ert_seed_state)
     results2 = exp2.results["measure"]["radiance"].values
 
     assert np.all(results1 == results2)
 
 
+@pytest.mark.slow
 def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
     mode_ckd_double, ert_seed_state
 ):
@@ -113,7 +115,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
         measures=[measure],
     )
     ert_seed_state.reset()
-    exp1.run(seed_state=ert_seed_state)
+    eradiate.run(exp1, seed_state=ert_seed_state)
     results1 = exp1.results["measure"]["radiance"].values
 
     # heterogeneous atmopshere with a non-absorbing molecular atmosphere
@@ -125,7 +127,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
         measures=[measure],
     )
     ert_seed_state.reset()
-    exp2.run(seed_state=ert_seed_state)
+    eradiate.run(exp2, seed_state=ert_seed_state)
     results2 = exp2.results["measure"]["radiance"].values
 
     assert np.all(results1 == results2)

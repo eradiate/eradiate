@@ -85,7 +85,7 @@ def test_spp_splitting(mode_mono_single, artefact_dir):
 
             for spp in spps:
                 exp.measures[0].spp = spp
-                exp.run()
+                eradiate.run(exp)
                 results[spp_split_label, mode][spp] = float(exp.results["measure"].brf)
 
     # Save plot for report

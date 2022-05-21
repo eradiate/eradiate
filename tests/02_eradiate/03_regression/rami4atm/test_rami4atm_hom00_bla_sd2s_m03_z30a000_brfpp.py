@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate.experiments import OneDimExperiment
 from eradiate.test_tools.regression import Chi2Test
 
@@ -93,8 +94,7 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
     }
 
     exp = OneDimExperiment(**config)
-    exp.run()
-    result = exp.results["measure"]
+    result = eradiate.run(exp)
 
     test = Chi2Test(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp",

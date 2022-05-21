@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate.data import data_store
 from eradiate.experiments import RamiExperiment
 from eradiate.test_tools.regression import Chi2Test
@@ -96,8 +97,7 @@ def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp):
         integrator={"type": "path", "max_depth": -1},
     )
 
-    exp.run()
-    result = exp.results["measure"]
+    result = eradiate.run(exp)
 
     test = Chi2Test(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-het01.nc",

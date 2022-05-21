@@ -210,7 +210,7 @@ def test_onedim_experiment_run_basic(modes_all):
     exp = OneDimExperiment()
     exp.measures[0].spectral_cfg = spectral_cfg
 
-    exp.run()
+    eradiate.run(exp)
     assert isinstance(exp.results, dict)
 
 
@@ -240,11 +240,9 @@ def test_onedim_experiment_run_detailed(modes_all):
     )
 
     # Run RT simulation
-    exp.run()
+    results = eradiate.run(exp)
 
     # Check result dataset structure
-    results = exp.results["toa_hsphere"]
-
     # Post-processing creates expected variables ...
     expected = {"irradiance", "brf", "brdf", "radiance", "spp", "srf"}
     if eradiate.mode().is_ckd:

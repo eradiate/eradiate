@@ -221,9 +221,7 @@ def test_550(reflectance, artefact_dir):
         reflectance=reflectance,
         zeniths=zeniths,
     )
-    with uck.override(length="km"):  # this is a temporary workaround the 'batman' issue
-        mono_exp.run()
-    mono_results = mono_exp.results["measure"]
+    mono_results = eradiate.run(mono_exp)
 
     wavelength_bin_width = (wavelengths.max() - wavelengths.min()).m_as(
         mono_results.w.attrs["units"]
@@ -238,8 +236,7 @@ def test_550(reflectance, artefact_dir):
         reflectance=reflectance,
         zeniths=zeniths,
     )
-    ckd_exp.run()
-    ckd_results = ckd_exp.results["measure"]
+    ckd_results = eradiate.run(ckd_exp)
 
     # Make figure
     make_figure(
@@ -370,9 +367,7 @@ def test_1050(reflectance, artefact_dir):
         reflectance=reflectance,
         zeniths=zeniths,
     )
-    with uck.override(length="km"):  # this is a temporary workaround the 'batman' issue
-        mono_exp.run()
-    mono_results = mono_exp.results["measure"]
+    mono_results = eradiate.run(mono_exp)
 
     wavelength_bin_width = (wavelengths.max() - wavelengths.min()).m_as(
         mono_results.w.attrs["units"]
@@ -387,8 +382,7 @@ def test_1050(reflectance, artefact_dir):
         reflectance=reflectance,
         zeniths=zeniths,
     )
-    ckd_exp.run()
-    ckd_results = ckd_exp.results["measure"]
+    ckd_results = eradiate.run(ckd_exp)
 
     # Make figure
     make_figure(

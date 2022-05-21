@@ -188,9 +188,7 @@ def test_rami_experiment_run_detailed(modes_all_double):
         ]
     )
 
-    exp.run()
-
-    results = exp.results["toa_hsphere"]
+    results = eradiate.run(exp)
 
     # Post-processing creates expected variables ...
     assert set(results.data_vars) == expected_vars

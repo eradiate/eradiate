@@ -139,11 +139,8 @@ def test_film_to_angular_coord_conversion_multi_distant(
         illumination_azimuth=illumination_azimuth,
     )
 
-    experiment1.run()
-    experiment2.run()
-
-    results1 = experiment1.results["measure"]
-    results2 = experiment2.results["measure"]
+    results1 = eradiate.run(experiment1)
+    results2 = eradiate.run(experiment2)
 
     def select_forward_brf(brf, illumination_azimuth, measure_azimuth):
         relative_azimuth = map_to_0_360(measure_azimuth - illumination_azimuth)
@@ -577,11 +574,8 @@ def test_film_to_angular_coord_conversion_distant_flux(
         illumination_azimuth=illumination_azimuth,
     )
 
-    experiment1.run()
-    experiment2.run()
-
-    results1 = experiment1.results["measure"]
-    results2 = experiment2.results["measure"]
+    results1 = eradiate.run(experiment1)
+    results2 = eradiate.run(experiment2)
 
     make_figure(
         results=results1,
@@ -747,11 +741,8 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
         illumination_azimuth=illumination_azimuth,
     )
 
-    experiment1.run()
-    experiment2.run()
-
-    results1 = experiment1.results["measure"]
-    results2 = experiment2.results["measure"]
+    results1 = eradiate.run(experiment1)
+    results2 = eradiate.run(experiment2)
 
     make_figure(
         results=results1,
