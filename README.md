@@ -53,7 +53,8 @@ and contributors for their work.
 
 The development of Eradiate is funded by the
 [Copernicus programme](https://www.copernicus.eu/) through a project managed by
-the [European Space Agency](http://www.esa.int/).
+the [European Space Agency](http://www.esa.int/) (contract no 
+40000127201/19/I‑BG).
 The design phase was funded by the [MetEOC-3 project](http://www.meteoc.org/)
 (EMPIR grant 16ENV03).
 
