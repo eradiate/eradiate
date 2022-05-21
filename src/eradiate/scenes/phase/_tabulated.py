@@ -62,21 +62,25 @@ class TabulatedPhaseFunction(PhaseFunction):
     Notes
     -----
     The :math:`\mu` coordinate must cover the :math:`[-1, 1]` interval but
-    there is no constraints on the ordering of values nor on the spacing
-    between two consecutive values, i.e. non-regular :math:`\mu` grid are
-    supported. If the :math:`\mu` grid is non-regular and since the
-    underlying mitsuba ``tabphase`` plugin expects phase function values
-    on a regular :math:`\mu` grid, we compute a regular grid with a
-    :math:`\mu` step equal to the small :math:`\mu` step found in the input
-    `data` and interpolate the latter on that regular grid. This can
-    lead to large arrays (several 100 MB). If you want to control
-    the size of the :math:`\mu` grid yourself, you can simply provide a
-    :class:`~xarray.DataArray` object that already has a regular grid
-    :math:`\mu` coordinate ; in such a case, the :class:`~xarray.DataArray`
-    object is not further interpolated along the :math:`\mu` dimension.
-    For better performance, it is best to provide phase function data on a
-    regular (and sorted) :math:`\mu` grid, since neither conversion nor
-    interpolation is performed in that case.
+    there is no constraint on value ordering or spacing. In particular,
+    irregular :math:`\mu` grids are supported.
+
+    Since the underlying ``tabphase`` plugin expects phase function values on
+    a regular :math:`\mu` grid, this class will resample irregularly gridded
+    phase function data on a regular grid. The step of the resampling grid is
+    equal to the smallest :math:`\mu` step found in the input `data` field.
+
+    The resampling grid step selection policy ensures that the precision of
+    the input data is preserved, but the resampled data may be large (several
+    hundred MB) if no care is taken in the preparation of the input data.
+
+    To control the :math:`\mu` grid, you can simply provide a
+    :class:`~xarray.DataArray` object with a regularly gridded
+    :math:`\mu` coordinate ; in that case, the phase function data is not
+    resampled on the :math:`\mu` dimension.
+
+    For optimal performance, providing phase function data on a regular,
+    sorted :math:`\mu` grid is recommended.
     """
 
     data: xr.DataArray = documented(
@@ -109,12 +113,6 @@ class TabulatedPhaseFunction(PhaseFunction):
         -------
         ndarray
             Evaluated phase function as a 1D array.
-
-        Notes
-        -----
-        The phase function is represented by an array of values mapped to
-        regularly spaced scattering angle cosine values
-        (:math:`\mu \in [-1, 1]`).
         """
         if eradiate.mode().is_mono:
             return self.eval_mono(spectral_ctx.wavelength).squeeze()
