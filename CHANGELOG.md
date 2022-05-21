@@ -30,7 +30,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 % ### Internal changes
 
-## v0.22.3 (unreleased)
+## v0.22.3 (22 May 2022)
 
 ### New features
 
@@ -49,7 +49,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 ### Deprecations and removals
 
-* Removed deprecated function `ensure_array()` ({ghcommit}`622821439cc4b66483518288e78dad0e9aa0da77`).
+* Removed deprecated function `ensure_array()` 
+  ({ghcommit}`622821439cc4b66483518288e78dad0e9aa0da77`).
 * Deprecated instance method `Experiment.run()` ({ghpr}`210`).
 
 ### Improvements and fixes
