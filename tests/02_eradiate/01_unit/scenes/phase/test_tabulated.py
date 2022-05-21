@@ -3,7 +3,6 @@ import pytest
 import xarray as xr
 
 from eradiate import data
-from eradiate import path_resolver
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.phase._tabulated import TabulatedPhaseFunction
 
