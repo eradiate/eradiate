@@ -34,72 +34,77 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 ### New features
 
-* Add entry point `eradiate.run()`, which executes a full experiment pipeline 
+* Added entry point `eradiate.run()`, which executes a full experiment pipeline 
   and returns results as an xarray dataset ({ghpr}`210`).
 
 ### Breaking changes
 
-* Change the default value for the `ParticleLayer.dataset` field to:
+* Changed the `ParticleLayer.dataset` field's default value to the more useful
+  the continental aerosol dataset  
   `spectra/particles/govaerts_2021-continental.nc` ({ghpr}`212`).
-* Change the interface of `ParticleLayer`: `tau_550` is replaced by `tau_ref`
-  which sets the extinction optical thickness of the particle layer at the 
-  wavelength set by the newly added `w_ref` attribute whose default value is
-  550 nanometer ({ghpr}`221`).
+* Changed the interface of the `ParticleLayer`: the `tau_550` field is replaced 
+  by a more general `tau_ref` which sets the extinction optical thickness of the 
+  particle layer at a reference wavelength specified by the `w_ref` field. 
+  `w_ref` defaults to 550 nm, thus preserving prior behaviour ({ghpr}`221`).
 
 ### Deprecations and removals
 
-* Deprecated function `ensure_array()` is removed ({ghcommit}`622821439cc4b66483518288e78dad0e9aa0da77`).
-* Deprecating instance method `Experiment.run()` ({ghpr}`210`).
+* Removed deprecated function `ensure_array()` ({ghcommit}`622821439cc4b66483518288e78dad0e9aa0da77`).
+* Deprecated instance method `Experiment.run()` ({ghpr}`210`).
 
 ### Improvements and fixes
 
-* Add support for all missing AFGL 1986 reference atmospheres in CKD mode ({ghpr}`185`).
-* Fix incorrect phase function blending in multi-component atmospheres 
+* Added support for all missing AFGL 1986 reference atmospheres in CKD mode 
+  ({ghpr}`185`).
+* Fixed incorrect phase function blending in multi-component atmospheres 
   ({ghpr}`197`, {ghpr}`206`).
-* Fix incorrect volume data transform for spherical heterogeneous atmospheres ({ghpr}`199`).
-* Add default value for `CKDSpectralContext.bin_set` ({ghpr}`205`).
-* Add a `-l` option to the `eradiate data info` command-line utility. If 
+* Fixed incorrect volume data transform for spherical heterogeneous atmospheres 
+  ({ghpr}`199`).
+* Added default value for `CKDSpectralContext.bin_set` ({ghpr}`205`).
+* Added a `-l` option to the `eradiate data info` command-line utility. If 
   this flag is set, the tool displays the list of files registered to each data 
   store ({ghpr}`208`).
-* Add an optional `DATA_STORES` argument to the `eradiate data info` 
+* Added an optional `DATA_STORES` argument to the `eradiate data info` 
   command-line utility which may be used to select the data stores for which 
   information is requested ({ghpr}`208`).
-* Add a new `load_dataset()` converter. It allows to set fields expecting an x
+* Added a new `load_dataset()` converter. It allows to set fields expecting an x
   array dataset using a path to a file or a data store resource ({ghpr}`212`).
 * The `ParticleLayer` class no longer opens a dataset upon collision coefficient 
   evaluation; instead, its dataset field now holds an xarray dataset (instead 
   of a path), which does not change over the instance lifetime. 
   This reduces the amount of time spent on I/O ({ghpr}`212`).
-* Optionally, export extra fields useful for analysis and debugging upon calling
-  `AbstractHeterogeneousAtmosphere.eval_radprops()` ({ghpr}`206`, {ghpr}`212`).
+* Added the possibility to optionally export extra fields useful for analysis 
+  and debugging upon calling `AbstractHeterogeneousAtmosphere.eval_radprops()` 
+  ({ghpr}`206`, {ghpr}`212`).
 * Re-formatted `spectra/particles/govaerts_2021-*-extrapolated.nc` data sets
   ({ghpr}`213`).  
-* Increased default `TabulatedPhaseFunction` angular interpolation resolution  
-  from 201 to 20001 ({ghcommit}`2eb3408f1e249da353600e315af7ce09ca2f893f`).
 * Replaced leftover calls to deprecated `eradiate.data.open` with 
   `eradiate.data.open_dataset` ({ghpr}`220`).
-* Improved interpolation of phase function along `mu` dimension in 
-  `TabulatedPhaseFunction`; if input `xarray.DataArray` object `mu` coordinate
-  is not regularly spaced, it is interpolated on a regular `mu` grid based on
-  the smallest `mu` step found in the input phase function data. Otherwise, the
-  input `xarray.DataArray` object is not interpolated ({ghpr}`226`).
+* Improved `TabulatedPhaseFunction`'s behaviour. If the phase function lookup 
+  table coordinate `mu` defines a regular grid, the phase function is no longer
+  resampled on a regular grid, which results in improved performance. Otherwise,
+  *i.e.* if `mu` defines an irregular grid, phase function data is resampled on
+  a regular `mu` grid with a step equal to the smallest detected step in the 
+  `mu` coordinate array, which preserves accuracy ({ghpr}`226`).
 
 ### Documentation
 
-* Add tutorials on homogeneous and molecular atmospheres ({ghpr}`194`).
-* Added uninstall instructions ({ghpr}`217`).
+* Added tutorials on homogeneous and molecular atmospheres ({ghpr}`194`).
+* Added uninstallation instructions ({ghpr}`217`).
 * `ParticleLayer`: document format of `dataset` attribute ({ghpr}`223`).
 
 ### Internal changes
 
 * The `progress` configuration variable is now an `IntEnum`, allowing for
   string-based setting while retaining comparison capabilities ({ghpr}`202`).
-* Internal `_util` library is now `util.misc` ({ghcommit}`5a593d37b72a1070b5a8fa909359fd8ae6498d96`).
-* Add a Numpydoc docstring parsing module ({ghpr}`200`).
-* Add a `deprecated()` decorator to mark a component for deprecation ({ghpr}`200`).
-* Update regression testing interface for improved robustness and ease of use 
+* Internal `_util` library is now `util.misc` 
+  ({ghcommit}`5a593d37b72a1070b5a8fa909359fd8ae6498d96`).
+* Added a Numpydoc docstring parsing module ({ghpr}`200`).
+* Added a `deprecated()` decorator to mark a component for deprecation 
+  ({ghpr}`200`).
+* Updated regression testing interface for improved robustness and ease of use 
   ({ghpr}`207`).
-* Rewrite `eradiate data info` CLI for improved maintainability ({ghpr}`208`).
+* Rewrote `eradiate data info` CLI for improved maintainability ({ghpr}`208`).
 * Refactored `ParticleLayer` unit tests and added system tests 
   ({ghpr}`219`, {ghpr}`222`, {ghpr}`224`).
 
