@@ -203,9 +203,7 @@ class TabulatedPhaseFunction(PhaseFunction):
             {
                 self.id: {
                     "type": "tabphase",
-                    "values": ",".join(
-                        map(str, [value for value in self.eval(ctx.spectral_ctx)])
-                    ),
+                    "values": ",".join(map(str, self.eval(ctx.spectral_ctx))),
                 }
             }
         )
