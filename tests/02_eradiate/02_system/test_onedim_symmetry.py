@@ -91,10 +91,9 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
             },
         }[atmosphere],
     )
-    exp.run()
+    results = eradiate.run(exp)
 
     # Post-process results
-    results = exp.results["toa_pplane"]
     radiance = results["radiance"].squeeze().values
     results["diff"] = (
         results["radiance"].dims,

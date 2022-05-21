@@ -148,8 +148,7 @@ def test_albedo(mode_mono, artefact_dir):
 
     for exp_name, exp in exps.items():
         # Run simulation
-        exp.run()
-        results = exp.results["measure"]
+        results = eradiate.run(exp)
 
         # Plot results
         fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 5))

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+import eradiate
 import eradiate.experiments as ertxp
 import eradiate.scenes as ertsc
 from eradiate.units import symbol
@@ -107,10 +108,10 @@ def test_compare_rami4atm_onedim(
     )
 
     ert_seed_state.reset()
-    onedim.run(seed_state=ert_seed_state)
+    eradiate.run(onedim, seed_state=ert_seed_state)
 
     ert_seed_state.reset()
-    r4a.run(seed_state=ert_seed_state)
+    eradiate.run(r4a, seed_state=ert_seed_state)
 
     fig = plt.figure(figsize=(6, 3))
     ax = plt.gca()
@@ -239,10 +240,10 @@ def test_compare_rami4atm_rami(
     )
 
     ert_seed_state.reset()
-    rami.run(seed_state=ert_seed_state)
+    eradiate.run(rami, seed_state=ert_seed_state)
 
     ert_seed_state.reset()
-    r4a.run(seed_state=ert_seed_state)
+    eradiate.run(r4a, seed_state=ert_seed_state)
 
     fig = plt.figure(figsize=(6, 3))
     ax = plt.gca()

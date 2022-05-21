@@ -36,7 +36,10 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 % ### Breaking changes
 
-% ### Deprecations and removals
+### Deprecations and removals
+
+* Updated all tests to use `eradiate.run()` instead of the deprecated 
+  `Experiment.run()` method ({ghpr}`227`).
 
 % ### Improvements and fixes
 

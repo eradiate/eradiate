@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate.contexts import KernelDictContext
 from eradiate.data import data_store
 from eradiate.experiments import RamiExperiment
@@ -122,8 +123,7 @@ def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
         integrator={"type": "path", "max_depth": -1},
     )
 
-    exp.run()
-    result = exp.results["measure"]
+    result = eradiate.run(exp)
 
     test = Chi2Test(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-het04.nc",

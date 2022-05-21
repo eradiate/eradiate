@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import eradiate
 import eradiate.scenes as esc
 from eradiate.experiments import OneDimExperiment
 from eradiate.test_tools.regression import Chi2Test
@@ -57,8 +58,7 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
         atmosphere=esc.atmosphere.MolecularAtmosphere.afgl_1986(),
     )
 
-    exp.run()
-    result = exp.results["measure"]
+    result = eradiate.run(exp)
 
     test = Chi2Test(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986.nc",

@@ -234,10 +234,7 @@ def test_rami4atm_experiment_run_detailed(mode_mono):
             },
         ]
     )
-
-    exp.run()
-
-    results = exp.results["toa_brf"]
+    results = eradiate.run(exp)
 
     # Post-processing creates expected variables ...
     assert set(results.data_vars) == {
