@@ -534,4 +534,4 @@ documentation for usage instructions, it's basically about installing the
 package then running pytest with the ``--profile`` option).
 
 Profiling stats can then be visualised with
-`SnakeViz <https://jiffyclub.github.io/snakeviz/`_.
+`SnakeViz <https://jiffyclub.github.io/snakeviz/>`_.
