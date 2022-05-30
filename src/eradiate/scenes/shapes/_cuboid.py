@@ -109,7 +109,7 @@ class CuboidShape(Shape):
         length_units = uck.get("length")
         to_world = mi.ScalarTransform4f.translate(
             self.center.m_as(length_units)
-        ) * mi.ScalarTransform4f.scale(0.5 * self.edges.m_as(length_units))
+        ) @ mi.ScalarTransform4f.scale(0.5 * self.edges.m_as(length_units))
 
         result = KernelDict({self.id: {"type": "cube", "to_world": to_world}})
 

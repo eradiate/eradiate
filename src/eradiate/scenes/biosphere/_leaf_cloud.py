@@ -1184,7 +1184,7 @@ class LeafCloud(CanopyElement):
             _, up = mi.coordinate_system(normal)
             to_world = mi.ScalarTransform4f.look_at(
                 origin=position, target=position + normal, up=up
-            ) * mi.ScalarTransform4f.scale(radius)
+            ) @ mi.ScalarTransform4f.scale(radius)
 
             shapes_dict[f"{self.id}_leaf_{i_leaf}"] = {
                 "type": "disk",

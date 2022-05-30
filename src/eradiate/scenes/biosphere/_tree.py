@@ -205,7 +205,7 @@ class AbstractTree(Tree):
             "type": "disk",
             "bsdf": bsdf,
             "to_world": mi.ScalarTransform4f.scale(kernel_radius)
-            * mi.ScalarTransform4f.translate([0, 0, kernel_height]),
+            @ mi.ScalarTransform4f.translate([0, 0, kernel_height]),
         }
 
         return shapes_dict
