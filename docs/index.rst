@@ -15,6 +15,10 @@ Python and C++17. It relies on a computational kernel based on the
 `Issues & ideas <https://github.com/eradiate/eradiate/issues>`_ |
 `Q&A support <https://github.com/eradiate/eradiate/discussions>`_
 
+**Docs versions**:
+`stable <https://eradiate.readthedocs.io/en/stable/>`_ |
+`latest <https://eradiate.readthedocs.io/en/latest/>`_
+
 .. grid:: 1 2 auto auto
    :gutter: 3
 
