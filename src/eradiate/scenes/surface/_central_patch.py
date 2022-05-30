@@ -164,7 +164,7 @@ class CentralPatchSurface(Surface):
         scale = self._texture_scale()
         to_uv = mi.ScalarTransform4f.scale(
             [scale[0], scale[1], 1]
-        ) * mi.ScalarTransform4f.translate(
+        ) @ mi.ScalarTransform4f.translate(
             [-0.5 + (0.5 / scale[0]), -0.5 + (0.5 / scale[1]), 0.0]
         )
 

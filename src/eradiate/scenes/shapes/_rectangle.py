@@ -115,7 +115,7 @@ class RectangleShape(Shape):
 
         trafo = mi.ScalarTransform4f.look_at(
             origin=center, target=center + normal, up=up
-        ) * mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0])
+        ) @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0])
 
         result = KernelDict({self.id: {"type": "rectangle", "to_world": trafo}})
 

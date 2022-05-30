@@ -156,7 +156,7 @@ def test_rami4atm_experiment_surface_adjustment(mode_mono):
 
     expected = (
         mi.ScalarTransform4f.scale([1400, 1400, 1])
-        * mi.ScalarTransform4f.translate([-0.499642857, -0.499642857, 0.0])
+        @ mi.ScalarTransform4f.translate([-0.499642857, -0.499642857, 0.0])
     ).matrix
 
     kernel_dict = exp.kernel_dict(ctx=ctx)

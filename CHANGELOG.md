@@ -49,6 +49,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 * Transitioned dependency management to `pyproject.toml` following
   [PEP 621](https://peps.python.org/pep-0621/) ({ghpr}`203`).
+* Updated Mitsuba submodule ({ghpr}`228`).
 
 ## v0.22.3 (22 May 2022)
 

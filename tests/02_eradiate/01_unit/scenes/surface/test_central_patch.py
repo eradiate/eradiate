@@ -65,7 +65,7 @@ def test_central_patch_scale_kernel_dict(mode_mono):
     result = kernel_dict["bsdf_surface"]["weight"]["to_uv"].matrix
     expected = (
         mi.ScalarTransform4f.scale([10, 10, 1])
-        * mi.ScalarTransform4f.translate((-0.45, -0.45, 0))
+        @ mi.ScalarTransform4f.translate((-0.45, -0.45, 0))
     ).matrix
 
     assert dr.allclose(expected, result)
