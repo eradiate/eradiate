@@ -2,26 +2,29 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate import data
+import eradiate
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.phase._tabulated import TabulatedPhaseFunction
+from eradiate.util.misc import onedict_value
 
 
 @pytest.fixture
 def regular_mu() -> xr.DataArray:
     """Phase function data with a regular mu grid."""
-    result = data.load_dataset("tests/spectra/particles/random-regular_mu.nc")
+    result = eradiate.data.load_dataset("tests/spectra/particles/random-regular_mu.nc")
     return result.phase
 
 
 @pytest.fixture
 def irregular_mu() -> xr.DataArray:
     """Phase function data with an irregular mu grid."""
-    result = data.load_dataset("tests/spectra/particles/random-irregular_mu.nc")
+    result = eradiate.data.load_dataset(
+        "tests/spectra/particles/random-irregular_mu.nc"
+    )
     return result.phase
 
 
-def test_tabulated_basic(modes_all, regular_mu):
+def test_tabulated_basic(modes_all_double, regular_mu):
     # The phase function can be constructed
     phase = TabulatedPhaseFunction(data=regular_mu)
 
@@ -70,24 +73,21 @@ def test_tabulated_order(mode_mono, tmpdir):
     assert np.all(phase_mu_increasing == phase_mu_decreasing)
 
 
-def test_tabulated_eval_regular_mu(modes_all, regular_mu):
+@pytest.mark.parametrize("grid", ["regular", "irregular"])
+def test_tabulated_plugin_selection(modes_all_double, grid, regular_mu, irregular_mu):
     """
     Phase function data with regular mu grid is not interpolated along mu.
     """
-    tabphase = TabulatedPhaseFunction(data=regular_mu)
-    spectral_ctx = SpectralContext.new()
-    phase = tabphase.eval(spectral_ctx)
-    assert phase.size == regular_mu.mu.size
+    ctx = KernelDictContext()
 
+    if grid == "regular":
+        data = regular_mu
+        expected_plugin = "tabphase"
 
-def test_tabulated_eval_irregular_mu(modes_all, irregular_mu):
-    """
-    Phase function data with irregular mu grid is interpolated on a regular
-    grid that has enough points to sample the input data.
-    """
-    tabphase = TabulatedPhaseFunction(data=irregular_mu)
-    spectral_ctx = SpectralContext.new()
-    phase = tabphase.eval(spectral_ctx)
-    dmu = irregular_mu.mu.diff(dim="mu").values.min()
-    nmu = int(np.ceil(2.0 / dmu)) + 1
-    assert phase.size == nmu
+    elif grid == "irregular":
+        data = irregular_mu
+        expected_plugin = "tabphase_irregular"
+
+    tabphase = TabulatedPhaseFunction(data=data)
+    phase_dict = onedict_value(tabphase.kernel_dict(ctx).data)
+    assert phase_dict["type"] == expected_plugin
