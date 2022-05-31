@@ -7,7 +7,7 @@ name = "eradiate"
 description = "A radiative transfer model for the Earth observation community"
 requires-python = ">=3.8"
 readme = "README.md"
-license = {text = "GPLv3"}
+license = {text = "LGPLv3"}
 authors = [
     {name = "The Eradiate Team"},
 ]
