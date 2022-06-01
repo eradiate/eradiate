@@ -189,10 +189,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
         super().update()
 
-        # Force IDs and cache directories
+        # Force IDs
         for i, component in enumerate(self.components):
             component.id = f"{self.id}_component_{i}"
-            component.cache_dir = self.cache_dir
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
@@ -419,7 +418,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 )
 
             phase = BlendPhaseFunction(
-                cache_dir=self.cache_dir,
                 components=[component.phase for component in components],
                 weights=sigma_ss,
                 bbox=BoundingBox(min=shape_min, max=shape_max),
