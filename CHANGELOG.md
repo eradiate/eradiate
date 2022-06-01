@@ -41,7 +41,11 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Updated all tests to use `eradiate.run()` instead of the deprecated 
   `Experiment.run()` method ({ghpr}`227`).
 
-% ### Improvements and fixes
+### Improvements and fixes
+
+* Changed the cache directory policy to a less aggressive behaviour: cache dirs 
+  are now created upon file write, not upon scene element instantiation 
+  ({ghpr}`230`).
 
 % ### Documentation
 

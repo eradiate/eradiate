@@ -4,7 +4,11 @@ A collection of tools which don't really fit anywhere else.
 
 import functools
 import inspect
+import os
+import random
 import re
+import string
+import tempfile
 import typing as t
 from collections import OrderedDict
 from numbers import Number
@@ -275,3 +279,15 @@ def str_summary_numpy(x):
             array_str = ("\n" + " " * len(prefix)).join(split)
 
         return f"{prefix}{array_str})"
+
+
+def tempdir_name() -> str:
+    """
+    Return a temporary directory path. This implementation is unsafe and may
+    race competing processes.
+    """
+    # See https://stackoverflow.com/a/67231057/3645374
+    random_string = "".join(
+        random.choices(string.ascii_uppercase + string.digits, k=10)
+    )
+    return os.path.join(tempfile.gettempdir(), random_string)

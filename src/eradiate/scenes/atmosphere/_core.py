@@ -25,7 +25,7 @@ from ...kernel.transform import map_unit_cube
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
-from ...util.misc import onedict_value
+from ...util.misc import onedict_value, tempdir_name
 
 atmosphere_factory = Factory()
 
@@ -438,12 +438,15 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     cache_dir: pathlib.Path = documented(
         attr.ib(
-            factory=lambda: pathlib.Path(tempfile.mkdtemp()),
+            factory=lambda: tempdir_name(),
             converter=pathlib.Path,
             validator=attr.validators.instance_of(pathlib.Path),
         ),
-        doc="Path to a cache directory where volume data files will be created.",
-        type="path-like",
+        doc="Path to a cache directory where volume data files will be created. "
+        "The default value does not protect from race conditions and should not "
+        "be used in a multi-processing environment.",
+        type="Path",
+        init_type="path-like, optional",
         default="Temporary directory",
     )
 
@@ -467,7 +470,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         """
         Update internal state.
         """
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        # Default implementation is a no-op.
+        pass
 
     # --------------------------------------------------------------------------
     #                        Volume data files
@@ -561,6 +565,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         length_units = uck.get("length")
         top = self.top.m_as(length_units)
         bottom = self.bottom.m_as(length_units)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         if isinstance(self.geometry, PlaneParallelGeometry):
             write_binary_grid3d(

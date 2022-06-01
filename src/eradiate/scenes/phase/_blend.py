@@ -12,7 +12,7 @@ from ...contexts import KernelDictContext
 from ...kernel.gridvolume import write_binary_grid3d
 from ...kernel.transform import map_unit_cube
 from ...units import unit_context_kernel as uck
-from ...util.misc import onedict_value
+from ...util.misc import onedict_value, tempdir_name
 
 
 def _weights_converter(value: np.typing.ArrayLike) -> np.ndarray:
@@ -105,14 +105,16 @@ class BlendPhaseFunction(PhaseFunction):
 
     cache_dir: pathlib.Path = documented(
         attr.ib(
-            factory=lambda: pathlib.Path(tempfile.mkdtemp()),
+            factory=lambda: tempdir_name(),
             converter=pathlib.Path,
             validator=attr.validators.instance_of(pathlib.Path),
         ),
-        doc="Path to a cache directory where volume data files will be created.",
+        doc="Path to a cache directory where volume data files will be created. "
+        "The default value does not protect from race conditions and should not "
+        "be used in a multi-processing environment.",
         type="Path",
         init_type="path-like, optional",
-        default=":func:`tempfile.mkdtemp() <tempfile.mkdtemp>`",
+        default="Temporary directory",
     )
 
     bbox: t.Optional[BoundingBox] = documented(
@@ -204,6 +206,7 @@ class BlendPhaseFunction(PhaseFunction):
 
         # If necessary, write weight values to a volume data file
         if self.weights.ndim == 2 and self.weights.shape[1] > 1:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
             write_binary_grid3d(
                 filename=self.weight_file,
                 values=np.reshape(
