@@ -92,7 +92,6 @@ def test_chi2(variants_vec_backends_once_rgb):
     )
 
     result = chi2.run(0.1)
-    chi2._dump_tables()
     assert result
 
 
