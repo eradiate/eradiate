@@ -1,15 +1,13 @@
-import pathlib
-import tempfile
 import typing as t
 
 import attr
+import mitsuba as mi
 import numpy as np
 
 from ._core import PhaseFunction, phase_function_factory
 from ..core import BoundingBox, KernelDict
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
-from ...kernel.gridvolume import write_binary_grid3d
 from ...kernel.transform import map_unit_cube
 from ...units import unit_context_kernel as uck
 from ...util.misc import onedict_value
@@ -91,30 +89,6 @@ class BlendPhaseFunction(PhaseFunction):
                 f"{value.shape}"
             )
 
-    _weight_filename: t.Optional[str] = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(str),
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
-        ),
-        doc="Name of the weight volume data file. If unset, a file name will "
-        "be generated automatically.",
-        type="str or None",
-        init_type="str, optional",
-    )
-
-    cache_dir: pathlib.Path = documented(
-        attr.ib(
-            factory=lambda: pathlib.Path(tempfile.mkdtemp()),
-            converter=pathlib.Path,
-            validator=attr.validators.instance_of(pathlib.Path),
-        ),
-        doc="Path to a cache directory where volume data files will be created.",
-        type="Path",
-        init_type="path-like, optional",
-        default=":func:`tempfile.mkdtemp() <tempfile.mkdtemp>`",
-    )
-
     bbox: t.Optional[BoundingBox] = documented(
         attr.ib(
             default=None,
@@ -129,28 +103,6 @@ class BlendPhaseFunction(PhaseFunction):
         doc="Optional bounding box describing the extent of the volume "
         "associated with this phase function.",
     )
-
-    # --------------------------------------------------------------------------
-    #                        Volume data files
-    # --------------------------------------------------------------------------
-
-    @property
-    def weight_filename(self) -> str:
-        """
-        str: Name of the weight volume data file.
-        """
-        return (
-            self._weight_filename
-            if self._weight_filename is not None
-            else f"{self.id}_weight.vol"
-        )
-
-    @property
-    def weight_file(self) -> pathlib.Path:
-        """
-        Path: Absolute path to the weight volume data file.
-        """
-        return self.cache_dir / self.weight_filename
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
@@ -195,26 +147,18 @@ class BlendPhaseFunction(PhaseFunction):
                     id=f"{self.id}_phase2",
                     components=self.components[1:],
                     weights=self.weights[1:, ...],
-                    cache_dir=self.cache_dir,
                     bbox=self.bbox,
                 )
                 .kernel_dict(ctx)
                 .data
             )
 
-        # If necessary, write weight values to a volume data file
+        # Pass weight values either as a GridVolume or a scalar
         if self.weights.ndim == 2 and self.weights.shape[1] > 1:
-            write_binary_grid3d(
-                filename=self.weight_file,
-                values=np.reshape(
-                    weight, (-1, 1, 1)
-                ),  # Mind dim ordering! (C-style, i.e. zyx)
-            )
-
-            weight = {
-                "type": "gridvolume",
-                "filename": str(self.weight_file),
-            }
+            # Mind dim ordering! (C-style, i.e. zyx)
+            values = np.reshape(weight, (-1, 1, 1))
+            grid_weight = mi.VolumeGrid(values.astype(np.float32))
+            weight = {"type": "gridvolume", "grid": grid_weight}
 
             if self.bbox is not None:
                 weight["to_world"] = self._gridvolume_transform()

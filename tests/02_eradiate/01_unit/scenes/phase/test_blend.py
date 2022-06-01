@@ -166,7 +166,7 @@ def test_blend_kernel_dict_3_components(mode_mono, weights):
     assert isinstance(kernel_dict.load(), mi.PhaseFunction)
 
 
-def test_blend_array(modes_all):
+def test_blend_array(modes_all_double):
     """
     Test instantiation and kernel dict generation with an array of weights.
     """
@@ -189,7 +189,7 @@ def test_blend_array(modes_all):
     assert isinstance(phase.kernel_dict(ctx).load(), mi.PhaseFunction)
 
 
-def test_blend_array_2_components(modes_all):
+def test_blend_array_2_components(modes_all_double):
     """
     Test instantiation and kernel dict generation with an array of weights.
     """
@@ -207,14 +207,15 @@ def test_blend_array_2_components(modes_all):
 
     # Kernel dict generation succeeds
     ctx = KernelDictContext()
-    assert isinstance(phase.kernel_dict(ctx).load(), mi.PhaseFunction)
+    phase_plugin = phase.kernel_dict(ctx).load()
+    assert isinstance(phase_plugin, mi.PhaseFunction)
 
-    # weight file is correct
-    weight_values = read_binary_grid3d(phase.weight_file)
-    assert np.allclose(weight_values, weight2.reshape((-1, 1, 1)))
+    # Weights are correct
+    weight_plugin = mi.traverse(phase_plugin)["weight.data"]
+    assert np.allclose(weight_plugin, weight2.reshape((-1, 1, 1, 1)))
 
 
-def test_blend_array_3_components(modes_all):
+def test_blend_array_3_components(modes_all_double):
     """
     Test instantiation and kernel dict generation with an array of weights.
     """
@@ -234,17 +235,17 @@ def test_blend_array_3_components(modes_all):
 
     # Kernel dict generation succeeds
     ctx = KernelDictContext()
-    phase_dict = phase.kernel_dict(ctx)
-    assert isinstance(phase.kernel_dict(ctx).load(), mi.PhaseFunction)
+    phase_plugin = phase.kernel_dict(ctx).load()
+    assert isinstance(phase_plugin, mi.PhaseFunction)
 
-    # weight file is correct
-    weight_values = read_binary_grid3d(phase.weight_file)
-    assert np.allclose(weight_values, (weight2 + weight3).reshape((-1, 1, 1)))
+    # Top-level weights are correct
+    params = mi.traverse(phase_plugin)
+    weight_plugin = params["weight.data"]
+    assert np.allclose(weight_plugin, (weight2 + weight3).reshape((-1, 1, 1, 1)))
 
-    # nested weight file is correct
-    nested_weight_filename = phase_dict.data["phase"]["phase2"]["weight"]["filename"]
-    nested_weight_values = read_binary_grid3d(nested_weight_filename)
-    nested_weight = np.divide(
+    # Nested weights are also correct
+    weight_nested_plugin = params["phase_1.weight.data"]
+    expected = np.divide(
         weight3, weight2 + weight3, where=weight2 + weight3 != 0.0, out=weight3
     )
-    assert np.allclose(nested_weight_values, nested_weight.reshape((-1, 1, 1)))
+    assert np.allclose(weight_nested_plugin, expected.reshape((-1, 1, 1, 1)))

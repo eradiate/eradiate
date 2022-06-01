@@ -34,7 +34,12 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 % ### New features
 
-% ### Breaking changes
+### Breaking changes
+
+* Removed temporary volume files used by the `AbstractHeterogeneousAtmosphere`
+  line and the `BlendPhaseFunction` class (replaced by in-memory buffers). 
+  Corresponding file name and cache directory control parameters were removed as 
+  well ({ghpr}`231`).
 
 ### Deprecations and removals
 

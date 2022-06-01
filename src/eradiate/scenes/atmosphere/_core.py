@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pathlib
-import tempfile
 import typing as t
 from abc import ABC, abstractmethod
 
@@ -20,7 +18,6 @@ from ... import validators
 from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...kernel.gridvolume import write_binary_grid3d
 from ...kernel.transform import map_unit_cube
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
@@ -410,43 +407,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     common to all heterogeneous atmosphere models.
     """
 
-    _sigma_t_filename: t.Optional[str] = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(str),
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
-        ),
-        doc="Name of the extinction coefficient volume data file. If unset, a "
-        "file name will be generated automatically.",
-        type="str or None",
-        init_type="str, optional",
-        default="None",
-    )
-
-    _albedo_filename: str = documented(
-        attr.ib(
-            default=None,
-            converter=attr.converters.optional(str),
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
-        ),
-        doc="Name of the albedo volume data file. If unset, a file name will "
-        "be generated automatically.",
-        type="str or None",
-        init_type="str, optional",
-        default="None",
-    )
-
-    cache_dir: pathlib.Path = documented(
-        attr.ib(
-            factory=lambda: pathlib.Path(tempfile.mkdtemp()),
-            converter=pathlib.Path,
-            validator=attr.validators.instance_of(pathlib.Path),
-        ),
-        doc="Path to a cache directory where volume data files will be created.",
-        type="path-like",
-        default="Temporary directory",
-    )
-
     scale: t.Optional[float] = documented(
         attr.ib(
             default=None,
@@ -467,47 +427,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         """
         Update internal state.
         """
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-
-    # --------------------------------------------------------------------------
-    #                        Volume data files
-    # --------------------------------------------------------------------------
-
-    @property
-    def sigma_t_filename(self) -> str:
-        """
-        str: Name of the extinction coefficient volume data file.
-        """
-        return (
-            self._sigma_t_filename
-            if self._sigma_t_filename is not None
-            else f"{self.id}_sigma_t.vol"
-        )
-
-    @property
-    def sigma_t_file(self) -> pathlib.Path:
-        """
-        path: Absolute path to the extinction coefficient volume data file
-        """
-        return self.cache_dir / self.sigma_t_filename
-
-    @property
-    def albedo_filename(self) -> str:
-        """
-        str: Name of the albedo volume data file.
-        """
-        return (
-            self._albedo_filename
-            if self._albedo_filename is not None
-            else f"{self.id}_albedo.vol"
-        )
-
-    @property
-    def albedo_file(self) -> pathlib.Path:
-        """
-        path: Absolute path to the albedo volume data file.
-        """
-        return self.cache_dir / self.albedo_filename
+        pass
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -563,13 +483,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         bottom = self.bottom.m_as(length_units)
 
         if isinstance(self.geometry, PlaneParallelGeometry):
-            write_binary_grid3d(
-                filename=str(self.albedo_file),
-                values=np.reshape(albedo, (-1, 1, 1)),
+            grid_albedo = mi.VolumeGrid(
+                np.reshape(albedo, (-1, 1, 1)).astype(np.float32)
             )
-            write_binary_grid3d(
-                filename=str(self.sigma_t_file),
-                values=np.reshape(sigma_t, (-1, 1, 1)),
+            grid_sigma_t = mi.VolumeGrid(
+                np.reshape(sigma_t, (-1, 1, 1)).astype(np.float32)
             )
 
             width = self.kernel_width_plane_parallel(ctx).m_as(length_units)
@@ -585,24 +503,22 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             volumes = {
                 "albedo": {
                     "type": "gridvolume",
-                    "filename": str(self.albedo_file),
+                    "grid": grid_albedo,
                     "to_world": to_world,
                 },
                 "sigma_t": {
                     "type": "gridvolume",
-                    "filename": str(self.sigma_t_file),
+                    "grid": grid_sigma_t,
                     "to_world": to_world,
                 },
             }
 
         elif isinstance(self.geometry, SphericalShellGeometry):
-            write_binary_grid3d(
-                filename=str(self.albedo_file),
-                values=np.reshape(albedo, (1, 1, -1)),
+            grid_albedo = mi.VolumeGrid(
+                np.reshape(albedo, (1, 1, -1)).astype(np.float32)
             )
-            write_binary_grid3d(
-                filename=str(self.sigma_t_file),
-                values=np.reshape(sigma_t, (1, 1, -1)),
+            grid_sigma_t = mi.VolumeGrid(
+                np.reshape(sigma_t, (1, 1, -1)).astype(np.float32)
             )
 
             planet_radius = self.geometry.planet_radius.m_as(length_units)
@@ -612,19 +528,13 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             volumes = {
                 "albedo": {
                     "type": "sphericalcoordsvolume",
-                    "volume": {
-                        "type": "gridvolume",
-                        "filename": str(self.albedo_file),
-                    },
+                    "volume": {"type": "gridvolume", "grid": grid_albedo},
                     "to_world": to_world,
                     "rmin": planet_radius / rmax,
                 },
                 "sigma_t": {
                     "type": "sphericalcoordsvolume",
-                    "volume": {
-                        "type": "gridvolume",
-                        "filename": str(self.sigma_t_file),
-                    },
+                    "volume": {"type": "gridvolume", "grid": grid_sigma_t},
                     "to_world": to_world,
                     "rmin": planet_radius / rmax,
                 },
