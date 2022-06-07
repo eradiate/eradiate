@@ -115,6 +115,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   *i.e.* if `mu` defines an irregular grid, phase function data is resampled on
   a regular `mu` grid with a step equal to the smallest detected step in the
   `mu` coordinate array, which preserves accuracy ({ghpr}`226`).
+* Added spectral response function data sets for POLDER instrument onboard 
+  PARASOL platform.
 
 ### Documentation
 
