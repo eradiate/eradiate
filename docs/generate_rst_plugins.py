@@ -1,14 +1,12 @@
 # This script walks through plugin files and extracts documentation that should
 # go into the reference manual.
 import glob
-import os
 import re
 import typing as t
 from pathlib import Path
-
-# Section titles (order matters)
 from textwrap import dedent
 
+# Section titles (order matters)
 SECTIONS = {
     "shapes": "Shapes",
     "bsdfs": "BSDFs",
