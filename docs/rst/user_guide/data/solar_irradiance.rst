@@ -122,7 +122,11 @@ from the SOLSPEC instrument during the ATLAS-1 mission (from 1992-03-24 to
 (from 1992-8-7 to 1993-7-1), and on the Kurucz and Bell (1995) synthetic
 spectrum. Wavelength range: [200, 2397] nm. Resolution: 1 nm. The mean
 absolute uncertainty is of 2 to 3 %. The spectrum is representative of
-moderately high solar activity. Total solar irradiance: 1367.7 W/m².
+moderately high solar activity. When contributions from the wavelength region
+:math:`[0, 200[ \, \cup \, ]2397, +\infty[` nm are added, the total solar
+irradiance evaluates to 1367.7 W/m². In [200, 2397] nm, the integrated solar 
+irradiance spectrum evaluates to 1315.7 W/m².
+
 Reference: :cite:`Thuillier2003SolarSpectralIrradiance`.
 
 ``whi_2008_*``
