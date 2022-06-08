@@ -47,10 +47,13 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   `Experiment.run()` method ({ghpr}`227`).
 
 ### Improvements and fixes
+
 * Added spectral response function data sets for POLDER instrument onboard 
   PARASOL platform ({ghpr}`232`).
 * Added an extrapolated version of the ``thuillier_2003`` solar irradiance
   spectrum to cover the full wavelength range of Eradiate ({ghpr}`233`).
+* Fixed a bug where converting an integer to a `Spectrum` would fail 
+  (`ghpr`{236}). 
 
 % ### Documentation
 

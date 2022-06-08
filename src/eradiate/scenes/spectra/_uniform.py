@@ -23,11 +23,16 @@ class UniformSpectrum(Spectrum):
     """
 
     value: pint.Quantity = documented(
-        attr.ib(repr=lambda x: f"{x:~P}", kw_only=True),
-        doc="Uniform spectrum value. If a float is passed, it is automatically converted "
-        "to appropriate configuration default units.",
+        attr.ib(
+            converter=lambda x: float(x) if isinstance(x, int) else x,
+            repr=lambda x: f"{x:~P}",
+            kw_only=True,
+        ),
+        doc="Uniform spectrum value. If a float is passed, it is automatically "
+        "converted to appropriate configuration default units. Integer values "
+        "are also converted to float.",
         type=":class:`~pint.Quantity`",
-        init_type="float or :class:`~pint.Quantity`",
+        init_type="float or :class:`~pint.Quantity` or int",
     )
 
     @value.validator
