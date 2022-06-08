@@ -46,7 +46,11 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Updated all tests to use `eradiate.run()` instead of the deprecated 
   `Experiment.run()` method ({ghpr}`227`).
 
-% ### Improvements and fixes
+### Improvements and fixes
+* Added spectral response function data sets for POLDER instrument onboard 
+  PARASOL platform ({ghpr}`232`).
+* Added an extrapolated version of the ``thuillier_2003`` solar irradiance
+  spectrum to cover the full wavelength range of Eradiate ({ghpr}`233`).
 
 % ### Documentation
 
@@ -115,10 +119,6 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   *i.e.* if `mu` defines an irregular grid, phase function data is resampled on
   a regular `mu` grid with a step equal to the smallest detected step in the
   `mu` coordinate array, which preserves accuracy ({ghpr}`226`).
-* Added spectral response function data sets for POLDER instrument onboard 
-  PARASOL platform ({ghpr}`232`).
-* Added an extrapolated version of the ``thuillier_2003`` solar irradiance
-  spectrum to cover the full wavelength range of Eradiate ({ghpr}`233`).
 
 ### Documentation
 
