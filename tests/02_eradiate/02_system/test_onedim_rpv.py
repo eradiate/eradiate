@@ -1,4 +1,4 @@
-"""Test cases with OneDimSolverApp and an RPV surface."""
+"""Test cases with OneDimExperiment and an RPV surface."""
 
 import os
 
@@ -8,6 +8,10 @@ import pytest
 import xarray as xr
 
 import eradiate
+from eradiate.experiments import OneDimExperiment
+from eradiate.scenes.measure import MultiDistantMeasure
+from eradiate.scenes.illumination import DirectionalIllumination
+from eradiate.scenes.bsdfs import RPVBSDF, LambertianBSDF
 from eradiate import unit_registry as ureg
 
 
@@ -775,3 +779,92 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
         name="brf",
         illumination_azimuth=illumination_azimuth,
     )
+
+
+@pytest.mark.parametrize("reflectance", [0.0, 0.3, 0.8, 1.0])
+def test_rpv_vs_lambertian(mode_mono, reflectance, artefact_dir):
+    r"""
+    RPV(:math:`\rho, g=0, k=1, rho_c=1`) equivalent to lambertian(:math:`\rho`)
+    ===========================================================================
+
+    A surface with a lambertian BSDF behaves like the same surface but with a
+    RPV BSDF with identical reflectance value, :math:`g = 0`, :math:`k = 1`
+    and :math:`\rho_c = 1`.
+
+     Rationale
+    ----------
+
+    * Geometry: a square surface with unit size and
+
+      * experiment 1: a lambertian BSDF with reflectance :math:`\rho_0 = 1.0`.
+      * experiment 2: a RPV BSDF with :math:`\rho_0 = 1.0`, :math:`g = 0`,
+        :math:`k = 1`, :math:`rho_c = 1`.
+
+    * Illumination: Directional illumination with a zenith angle
+      :math:`\theta = 30.0°` and an azimuth angle :math:`\varphi = 0.0.
+
+    * Sensor: Distant reflectance measure covering a plane (11 angular points,
+      1 sample per pixel).
+
+
+    Expected behaviour
+    ------------------
+    The surface shapes being the same and the RPV BSDF
+
+    Results
+    -------
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-0.0.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-0.3.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-0.8.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-1.0.png
+       :width: 95%
+    """
+    # prepare experiments
+    def init_experiment(bsdf):
+        return OneDimExperiment(
+            surface=bsdf,
+            illumination=DirectionalIllumination(zenith=30.0 * ureg.deg),
+            measures=MultiDistantMeasure.from_viewing_angles(
+                zeniths=np.arange(-75, 75, 11), azimuths=0.0 * ureg.deg
+            ),
+            atmosphere=None,
+        )
+
+    experiment_1 = init_experiment(
+        bsdf=LambertianBSDF(reflectance=reflectance),
+    )
+    experiment_2 = init_experiment(
+        bsdf=RPVBSDF(
+            rho_0=reflectance,
+            g=0.0,
+            k=1.0,
+            rho_c=1.0,
+        ),
+    )
+
+    # Run experiments
+    results_1 = eradiate.run(experiment_1)
+    results_2 = eradiate.run(experiment_2)
+
+    # Make figure
+    fig = plt.figure(figsize=(8, 3))
+    plt_params = {
+        "ls": "dashed",
+        "marker": ".",
+    }
+    results_1.brf.plot(x="vza", **plt_params)
+    results_2.brf.plot(x="vza", **plt_params)
+    plt.legend(["lambertian", "rpv"])
+    filename = f"test_onedim_rpv_vs_lambertian-{reflectance}.png"
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
+    plt.tight_layout()
+    fig.savefig(fname_plot, dpi=200)
+    plt.close()
+
+    # assert result BRF values are equal
+    assert (results_2.brf.values == results_1.brf.values).all()
