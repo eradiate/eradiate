@@ -101,7 +101,8 @@ class SpectralContext(ABC, Context):
             (*Monochromatic modes* [:class:`.MonoSpectralContext`])
             Wavelength. Unit-enabled field (default: ucc[wavelength]).
 
-        bindex : .Bindex, optional, default: 1st quadrature point for the "550" bin of the "10nm" bin set (test value)
+        bindex : .Bindex, optional, default: 1st quadrature point for the "550" \
+            bin of the "10nm" bin set (test value)
             (*CKD modes* [:class:`.CKDSpectralContext`])
             CKD bindex.
 
@@ -247,7 +248,7 @@ class CKDSpectralContext(SpectralContext):
     @property
     def wavelength(self) -> pint.Quantity:
         """
-        quantity : Wavelength associated with spectral context. Alias for
+        quantity : Wavelength associated with spectral context. Alias for \
             ``self.bindex.bin.wcenter``.
         """
         return self.bindex.bin.wcenter
@@ -255,7 +256,7 @@ class CKDSpectralContext(SpectralContext):
     @property
     def bin(self) -> Bin:
         """
-        :class:`.Bin` : Bin associated with spectral context. Alias for
+        :class:`.Bin` : Bin associated with spectral context. Alias for \
             ``self.bindex.bin``.
         """
         return self.bindex.bin
@@ -263,8 +264,8 @@ class CKDSpectralContext(SpectralContext):
     @property
     def spectral_index(self) -> t.Tuple[str, int]:
         """
-        tuple[str, int] : Spectral index associated with spectral context, equal to active
-            bindex (bin ID, quadrature point index pair).
+        tuple[str, int] : Spectral index associated with spectral context, \
+            equal to active bindex (bin ID, quadrature point index pair).
         """
         return self.bin.id, self.bindex.index
 

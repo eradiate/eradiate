@@ -203,7 +203,9 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
         Parameters
         ----------
-        model : {"us_standard", "tropical", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter"}, optional, default: "us_standard"
+        model : {"us_standard", "tropical", "midlatitude_summer", \
+            "midlatitude_winter", "subarctic_summer", "subarctic_winter"}, \
+            optional, default: "us_standard"
             AFGL (1986) model identifier.
 
         levels : quantity

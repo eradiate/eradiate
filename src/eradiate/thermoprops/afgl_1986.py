@@ -12,7 +12,6 @@ from .util import compute_scaling_factors, interpolate, rescale_concentration
 from .. import data
 from .._mode import mode
 
-
 VALID_MODEL_IDS = [
     "tropical",
     "midlatitude_summer",
@@ -45,7 +44,9 @@ def make_profile(
 
     Parameters
     ----------
-    model_id : {"us_standard", "midlatitude_summer", "midlatitude_winter", "subarctic_summer", "subarctic_winter", "tropical"}, default: "us_standard"
+    model_id : {"us_standard", "midlatitude_summer", "midlatitude_winter", \
+        "subarctic_summer", "subarctic_winter", "tropical"}, \
+        optional, default: "us_standard"
         Model identifier.
 
     levels : quantity or array, optional
@@ -106,9 +107,7 @@ def make_profile(
     H2O, CO2, O3, N2O, CO, CH4, O2, NO, SO2 and NO2.
     """
     if model_id not in VALID_MODEL_IDS:
-        raise ValueError(
-                f"model_id should be in {VALID_MODEL_IDS} (got '{value}')"
-            )
+        raise ValueError(f"model_id should be in {VALID_MODEL_IDS} (got '{value}')")
     species = set(concentrations.keys()) if concentrations else set()
     unhandled = species - {"H2O", "CO2", "O3"}
 
