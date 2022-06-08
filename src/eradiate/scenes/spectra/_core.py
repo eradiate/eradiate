@@ -26,8 +26,8 @@ class SpectrumFactory(Factory):
         handle defaults for shortened spectrum definitions. The produced
         converter processes a parameter ``value`` as follows:
 
-        * if ``value`` is a float or a :class:`pint.Quantity`, the converter
-          calls itself using a dictionary
+        * if ``value`` is an int, a float or a :class:`pint.Quantity`, the
+          converter calls itself using a dictionary
           ``{"type": "uniform", "quantity": quantity, "value": value}``;
         * if ``value`` is a dictionary, it adds a ``"quantity": quantity`` entry
           for the following values of the ``"type"`` entry:
@@ -50,10 +50,14 @@ class SpectrumFactory(Factory):
         """
 
         def f(value):
-            if isinstance(value, (float, pint.Quantity)):
+            if isinstance(value, (int, float, pint.Quantity)):
+                # Convert quantity-less values with dict wrapping and recursive call
                 return f({"type": "uniform", "quantity": quantity, "value": value})
 
             if isinstance(value, dict):
+                # If generic spectrum is requested without a specified
+                # "quantity" field, add pre-configured quantity and attempt
+                # conversion using regular conversion protocol
                 try:
                     if (
                         value["type"] in {"uniform", "interpolated"}
@@ -61,8 +65,13 @@ class SpectrumFactory(Factory):
                     ):
                         return self.convert({**value, "quantity": quantity})
                 except KeyError:
+                    # Note: A missing "type" field will also run this case, and
+                    # the ill-formed dict will be correctly reported upon
+                    # regular conversion
                     pass
 
+            # Regular conversion (happens if value is neither int, float nor
+            # dict without "quantity" field)
             return self.convert(value)
 
         return f

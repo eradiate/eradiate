@@ -18,10 +18,16 @@ def test_uniform(modes_all):
     assert s.quantity is PhysicalQuantity.DIMENSIONLESS
     assert s.value == 1.0 * ureg.dimensionless
 
+    # Instantiate with integer value
+    s = UniformSpectrum(value=1)
+    assert s.quantity is PhysicalQuantity.DIMENSIONLESS
+    assert s.value == 1.0 * ureg.dimensionless
+    assert isinstance(s.value.magnitude, float)
+
     # Instantiate with value and quantity
     s = UniformSpectrum(value=1.0, quantity=PhysicalQuantity.COLLISION_COEFFICIENT)
     assert s.value == 1.0 * ureg.m**-1
-    UniformSpectrum(value=1.0, quantity="collision_coefficient")
+    s = UniformSpectrum(value=1.0, quantity="collision_coefficient")
     assert s.quantity == PhysicalQuantity.COLLISION_COEFFICIENT
     assert s.value == 1.0 * ureg.m**-1
 
