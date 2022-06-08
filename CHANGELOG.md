@@ -116,7 +116,9 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   a regular `mu` grid with a step equal to the smallest detected step in the
   `mu` coordinate array, which preserves accuracy ({ghpr}`226`).
 * Added spectral response function data sets for POLDER instrument onboard 
-  PARASOL platform.
+  PARASOL platform ({ghpr}`232`).
+* Added an extrapolated version of the ``thuillier_2003`` solar irradiance
+  spectrum to cover the full wavelength range of Eradiate ({ghpr}`233`).
 
 ### Documentation
 
