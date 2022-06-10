@@ -9,6 +9,7 @@ import xarray as xr
 
 import eradiate
 from eradiate.experiments import OneDimExperiment
+from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.bsdfs import RPVBSDF, LambertianBSDF
@@ -781,6 +782,36 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
     )
 
 
+def make_figure_rpv_vs_lambertian(fname_plot, results_1, results_2, title=""):
+
+    fig = plt.figure(figsize=(8, 3))
+    plt_params = {
+        "ls": "dashed",
+    }
+    results_1.brf.plot(x="vza", **plt_params, marker="o")
+    results_2.brf.plot(x="vza", **plt_params, marker="^")
+
+    bias = np.zeros_like(results_1.brf.values)
+    np.divide(
+        results_2.brf.values - results_1.brf.values,
+        results_1.brf.values,
+        where=results_1.brf.values != 0,
+        out=bias,
+    )
+    mean_bias = np.mean(np.abs(bias))
+    plt.annotate(
+        text=f"Mean bias: {round(100 * mean_bias, 2)} %",
+        xy=(0.5, 0.5),
+        horizontalalignment="center",
+        xycoords="axes fraction",
+    )
+    plt.legend(["lambertian", "rpv"])
+    plt.title(title)
+    plt.tight_layout()
+    fig.savefig(fname_plot, dpi=200)
+    plt.close()
+
+
 @pytest.mark.parametrize("reflectance", [0.0, 0.3, 0.8, 1.0])
 def test_rpv_vs_lambertian(mode_mono, reflectance, artefact_dir):
     r"""
@@ -809,7 +840,7 @@ def test_rpv_vs_lambertian(mode_mono, reflectance, artefact_dir):
 
     Expected behaviour
     ------------------
-    The surface shapes being the same and the RPV BSDF
+    Experiment 1 and 2 TOA BRF values are equal.
 
     Results
     -------
@@ -828,7 +859,9 @@ def test_rpv_vs_lambertian(mode_mono, reflectance, artefact_dir):
             surface=bsdf,
             illumination=DirectionalIllumination(zenith=30.0 * ureg.deg),
             measures=MultiDistantMeasure.from_viewing_angles(
-                zeniths=np.arange(-75, 75, 11), azimuths=0.0 * ureg.deg
+                zeniths=np.arange(-75, 75, 11),
+                azimuths=0.0 * ureg.deg,
+                spp=1,
             ),
             atmosphere=None,
         )
@@ -850,21 +883,104 @@ def test_rpv_vs_lambertian(mode_mono, reflectance, artefact_dir):
     results_2 = eradiate.run(experiment_2)
 
     # Make figure
-    fig = plt.figure(figsize=(8, 3))
-    plt_params = {
-        "ls": "dashed",
-        "marker": ".",
-    }
-    results_1.brf.plot(x="vza", **plt_params)
-    results_2.brf.plot(x="vza", **plt_params)
-    plt.legend(["lambertian", "rpv"])
     filename = f"test_onedim_rpv_vs_lambertian-{reflectance}.png"
     outdir = os.path.join(artefact_dir, "plots")
     os.makedirs(outdir, exist_ok=True)
     fname_plot = os.path.join(outdir, filename)
-    plt.tight_layout()
-    fig.savefig(fname_plot, dpi=200)
-    plt.close()
+    make_figure_rpv_vs_lambertian(
+        fname_plot=fname_plot,
+        results_1=results_1,
+        results_2=results_2,
+        title=f"{reflectance=}",
+    )
 
     # assert result BRF values are equal
     assert (results_2.brf.values == results_1.brf.values).all()
+
+
+@pytest.mark.parametrize("reflectance", [0.0, 0.3, 0.8, 1.0])
+def test_rpv_vs_lambertian_homo_atm(mode_mono, reflectance, artefact_dir):
+    r"""
+    RPV(:math:`\rho, g=0, k=1, rho_c=1`) equivalent to lambertian(:math:`\rho`)
+    ===========================================================================
+
+    A surface with a lambertian BSDF behaves like the same surface but with a
+    RPV BSDF with identical reflectance value, :math:`g = 0`, :math:`k = 1`
+    and :math:`\rho_c = 1`.
+
+     Rationale
+    ----------
+
+    * Surface: a square surface with unit size and
+
+      * experiment 1: a lambertian BSDF with reflectance :math:`\rho_0 = 1.0`.
+      * experiment 2: a RPV BSDF with :math:`\rho_0 = 1.0`, :math:`g = 0`,
+        :math:`k = 1`, :math:`rho_c = 1`.
+
+    * Atmosphere: the default homogeneous atmosphere.
+
+    * Illumination: Directional illumination with a zenith angle
+      :math:`\theta = 30.0°` and an azimuth angle :math:`\varphi = 0.0.
+
+    * Sensor: Distant reflectance measure covering a plane (11 angular points,
+      10000 samples per pixel).
+
+
+    Expected behaviour
+    ------------------
+    Experiments 1 and 2 TOA BRF values are close.
+
+    Results
+    -------
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-0.0.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-0.3.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-0.8.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-1.0.png
+       :width: 95%
+    """
+    # prepare experiments
+    def init_experiment(bsdf):
+        return OneDimExperiment(
+            surface=bsdf,
+            illumination=DirectionalIllumination(zenith=30.0 * ureg.deg),
+            measures=MultiDistantMeasure.from_viewing_angles(
+                zeniths=np.arange(-75, 75, 11),
+                azimuths=0.0 * ureg.deg,
+                spp=10000,
+            ),
+            atmosphere=HomogeneousAtmosphere(),
+        )
+
+    experiment_1 = init_experiment(
+        bsdf=LambertianBSDF(reflectance=reflectance),
+    )
+    experiment_2 = init_experiment(
+        bsdf=RPVBSDF(
+            rho_0=reflectance,
+            g=0.0,
+            k=1.0,
+            rho_c=1.0,
+        ),
+    )
+
+    # Run experiments
+    results_1 = eradiate.run(experiment_1)
+    results_2 = eradiate.run(experiment_2)
+
+    # Make figure
+    filename = f"test_onedim_rpv_vs_lambertian_homo_atm-{reflectance}.png"
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
+    make_figure_rpv_vs_lambertian(
+        fname_plot=fname_plot,
+        results_1=results_1,
+        results_2=results_2,
+        title=f"{reflectance=}",
+    )
+
+    # assert result BRF values are equal
+    assert np.allclose(results_2.brf.values, results_1.brf.values)
