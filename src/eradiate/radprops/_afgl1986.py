@@ -128,7 +128,14 @@ class AFGL1986RadProfile(RadProfile):
             result = ureg.Quantity(
                 [
                     ds.k.sel(bd=(bindex.bin.id, bindex.index))
-                    .interp(z=z, **concentrations, kwargs=dict(fill_value=0.0))
+                    .interp(
+                        z=z,
+                        kwargs=dict(fill_value=0.0),
+                    )  # extrapolate to 0.0 for altitude out of bounds
+                    .interp(
+                        **concentrations,
+                        kwargs=dict(bounds_error=True),  # raise when concentration are out of bounds
+                    )
                     .values
                     for bindex in bindexes
                 ],

@@ -56,6 +56,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   (`ghpr`{236}). 
 * Fixed a bug, where the two BSDFs in the `CentralPatchSurface` would be
   assigned in the wrong order (`ghpr`{237}).
+* Raise an exception when molecular concentrations are out of bounds
+  (`ghpr`{237}).
 
 % ### Documentation
 
