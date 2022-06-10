@@ -172,8 +172,8 @@ class CentralPatchSurface(Surface):
             {
                 self.bsdf_id: {
                     "type": "blendbsdf",
-                    "bsdf_background": onedict_value(self.bsdf.kernel_dict(ctx=ctx)),
-                    "bsdf_patch": onedict_value(self.patch_bsdf.kernel_dict(ctx=ctx)),
+                    "bsdf_0": onedict_value(self.patch_bsdf.kernel_dict(ctx=ctx)),
+                    "bsdf_1": onedict_value(self.bsdf.kernel_dict(ctx=ctx)),
                     "weight": {
                         "type": "bitmap",
                         "filename": str(

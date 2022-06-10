@@ -54,6 +54,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   spectrum to cover the full wavelength range of Eradiate ({ghpr}`233`).
 * Fixed a bug where converting an integer to a `Spectrum` would fail 
   (`ghpr`{236}). 
+* Fixed a bug, where the two BSDFs in the `CentralPatchSurface` would be
+  assigned in the wrong order (`ghpr`{237}).
 
 % ### Documentation
 
