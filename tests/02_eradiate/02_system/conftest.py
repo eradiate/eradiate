@@ -38,12 +38,12 @@ def onedim_rayleigh_radprops():
             sigma_t = sigma_t.reshape(w.shape)
         else:
             sigma_s = eradiate.radprops.rayleigh.compute_sigma_s_air(wavelength=w)
+            sigma_t = sigma_s.copy()
             sigma_t = (
                 np.divide(
                     sigma_s.m,
                     albedo.m,
                     where=albedo.m != 0,
-                    out=sigma_s.m,
                 )
                 * sigma_s.units
             )
