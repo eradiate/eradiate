@@ -3,29 +3,20 @@ import mitsuba as mi
 import numpy as np
 import pytest
 
+from eradiate.test_tools.plugin import sample_eval_pdf_bsdf
+
 
 def test_create_rpv3(variant_scalar_rgb):
     # Test constructor of 3-parameter version of RPV
     rpv = mi.load_dict({"type": "rpv"})
-    assert rpv is not None
+    assert isinstance(rpv, mi.BSDF)
     assert rpv.component_count() == 1
     assert rpv.flags(0) == mi.BSDFFlags.GlossyReflection | mi.BSDFFlags.FrontSide
     assert rpv.flags() == rpv.flags(0)
 
-
-def test_chi2_rpv3(variant_llvm_rgb):
-    from mitsuba.chi2 import BSDFAdapter, ChiSquareTest, SphericalDomain
-
-    sample_func, pdf_func = BSDFAdapter("rpv", "")
-
-    chi2 = ChiSquareTest(
-        domain=SphericalDomain(),
-        sample_func=sample_func,
-        pdf_func=pdf_func,
-        sample_dim=3,
-    )
-
-    assert chi2.run()
+    # rho_c is not exposed: it is always equal to rho_0
+    params = mi.traverse(rpv)
+    assert "rho_c.value" not in params
 
 
 def rpv_reference(rho_0, rho_0_hotspot, g, k, theta_i, phi_i, theta_o, phi_o):
@@ -52,7 +43,7 @@ def rpv_reference(rho_0, rho_0_hotspot, g, k, theta_i, phi_i, theta_o, phi_o):
     K3 = 1.0 + (1.0 - rho_0_hotspot) / (1.0 + G)
 
     return rho_0 * K1 * Fg * K3 / np.pi * np.abs(cos_theta_o)
-    # 1/π factor because paper gives BRF expression (not BRDF)
+    # 1/π factor because the paper gives BRF expression (not BRDF)
     # Foreshortening factor included
 
 
@@ -69,8 +60,8 @@ def eval_bsdf(bsdf, wi, wo):
     return bsdf.eval(ctx, si, wo, True)[0]
 
 
-@pytest.mark.parametrize("rho_0", [0.1, 0.497, 0.004])
-@pytest.mark.parametrize("k", [0.543, 0.851, 0.634])
+@pytest.mark.parametrize("rho_0", [0.004, 0.1, 0.497])
+@pytest.mark.parametrize("k", [0.543, 0.634, 0.851])
 @pytest.mark.parametrize("g", [-0.29, 0.086, 0.2])
 def test_eval(variant_llvm_rgb, rho_0, k, g):
     """
@@ -93,7 +84,7 @@ def test_eval(variant_llvm_rgb, rho_0, k, g):
     assert dr.allclose(reference, values, rtol=1e-3, atol=1e-3)
 
 
-@pytest.mark.parametrize("rho_0", [0.0, 0.25, 0.5, 0.75, 1.0])
+@pytest.mark.parametrize("rho_0", [0.0, 0.5, 1.0])
 def test_eval_diffuse(variant_llvm_rgb, rho_0):
     """
     Compare a degenerate RPV case with a diffuse BRDF.
@@ -102,16 +93,7 @@ def test_eval_diffuse(variant_llvm_rgb, rho_0):
     g = 0.0
     rho_c = 1.0
 
-    rpv = mi.load_dict(
-        {
-            "type": "rpv",
-            "rho_0": rho_0,
-            "k": k,
-            "g": g,
-            "rho_c": rho_c,
-        }
-    )
-
+    rpv = mi.load_dict({"type": "rpv", "rho_0": rho_0, "k": k, "g": g, "rho_c": rho_c})
     diffuse = mi.load_dict({"type": "diffuse", "reflectance": rho_0})
 
     num_samples = 100
@@ -127,3 +109,54 @@ def test_eval_diffuse(variant_llvm_rgb, rho_0):
     reference = eval_bsdf(diffuse, wi, wo)
 
     assert np.allclose(reference, values)
+
+
+def test_chi2_rpv3(variant_llvm_rgb):
+    from mitsuba.chi2 import BSDFAdapter, ChiSquareTest, SphericalDomain
+
+    sample_func, pdf_func = BSDFAdapter("rpv", "")
+
+    chi2 = ChiSquareTest(
+        domain=SphericalDomain(),
+        sample_func=sample_func,
+        pdf_func=pdf_func,
+        sample_dim=3,
+    )
+
+    assert chi2.run()
+
+
+def test_chi2_rpv4(variant_llvm_rgb):
+    from mitsuba.chi2 import BSDFAdapter, ChiSquareTest, SphericalDomain
+
+    sample_func, pdf_func = BSDFAdapter(
+        "rpv",
+        """
+            <float name="rho_0" value="0.1"/>
+            <float name="g" value="0.497"/>
+            <float name="k" value="0.004"/>
+            <float name="rho_c" value="1.05"/>
+        """,
+    )
+
+    chi2 = ChiSquareTest(
+        domain=SphericalDomain(),
+        sample_func=sample_func,
+        pdf_func=pdf_func,
+        sample_dim=3,
+    )
+
+    result = chi2.run()
+    assert result
+
+
+@pytest.mark.parametrize("wi", [[0, 0, 1], [0, 1, 1], [1, 1, 1]])
+def test_sampling_weights_rpv(variant_llvm_rgb, wi):
+    """
+    Sampling weights are correctly computed, i.e. equal to eval() / pdf().
+    """
+    rpv = mi.load_dict({"type": "rpv"})
+    (_, weight), eval, pdf = sample_eval_pdf_bsdf(
+        rpv, dr.normalize(mi.ScalarVector3f(wi))
+    )
+    assert dr.allclose(weight, eval / pdf)

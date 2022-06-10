@@ -85,16 +85,22 @@ public:
         m_rho_0 = props.texture<Texture>("rho_0", 0.1f);
         m_g = props.texture<Texture>("g", 0.f);
         m_k = props.texture<Texture>("k", 0.1f);
-        if (props.has_property("rho_c")) {
-            m_rho_c = props.texture<Texture>("rho_c", 0.1f);
-        } else {
-            m_rho_c = m_rho_0;
-        }
+        m_rho_c = props.texture<Texture>("rho_c", m_rho_0);
         m_flags = BSDFFlags::GlossyReflection | BSDFFlags::FrontSide;
+        dr::set_attr(this, "flags", m_flags);
         m_components.push_back(m_flags);
     }
 
-    std::pair<BSDFSample3f, Spectrum> sample(const BSDFContext & /* ctx */,
+    void traverse(TraversalCallback *callback) override {
+        callback->put_object("rho_0", m_rho_0.get(),
+                             +ParamFlags::Differentiable);
+        callback->put_object("g", m_g.get(), +ParamFlags::Differentiable);
+        callback->put_object("k", m_k.get(), +ParamFlags::Differentiable);
+        callback->put_object("rho_c", m_rho_c.get(),
+                             +ParamFlags::Differentiable);
+    }
+
+    std::pair<BSDFSample3f, Spectrum> sample(const BSDFContext &ctx,
                                              const SurfaceInteraction3f &si,
                                              Float /* position_sample */,
                                              const Point2f &direction_sample,
@@ -105,22 +111,26 @@ public:
         BSDFSample3f bs = dr::zero<BSDFSample3f>();
 
         active &= cos_theta_i > 0.f;
+        if (unlikely(dr::none_or<false>(active) ||
+                     !ctx.is_enabled(BSDFFlags::GlossyReflection)))
+            return { bs, 0.f };
 
         bs.wo = warp::square_to_cosine_hemisphere(direction_sample);
         bs.pdf = warp::square_to_cosine_hemisphere_pdf(bs.wo);
         bs.eta = 1.f;
         bs.sampled_type = +BSDFFlags::GlossyReflection;
+        bs.sampled_component = 0;
 
-        Spectrum value =
-            eval_rpv(si, bs.wo, active) * Frame3f::cos_theta(bs.wo);
-        return { bs, dr::select(active && bs.pdf > 0.f,
-                                depolarizer<Spectrum>(value), 0.f) };
+        UnpolarizedSpectrum value =
+            eval_rpv(si, bs.wo, active) * Frame3f::cos_theta(bs.wo) / bs.pdf;
+
+        return { bs, depolarizer<Spectrum>(value) & (active && bs.pdf > 0.f) };
     }
 
     /* Evaluation of the RPV BRDF (without foreshortening factor) as per the
        Eradiate Scientific Handbook. */
-    Spectrum eval_rpv(const SurfaceInteraction3f &si, const Vector3f &wo,
-                      Mask active) const {
+    UnpolarizedSpectrum eval_rpv(const SurfaceInteraction3f &si,
+                                 const Vector3f &wo, Mask active) const {
         Spectrum rho_0 = m_rho_0->eval(si, active);
         Spectrum rho_c = m_rho_c->eval(si, active);
         Spectrum g = m_g->eval(si, active);
@@ -157,7 +167,7 @@ public:
         // Total value
         Spectrum value = rho_0 * M * F * H * dr::InvPi<Float>;
 
-        return value;
+        return depolarizer<Spectrum>(value);
     }
 
     Spectrum eval(const BSDFContext & /*ctx*/, const SurfaceInteraction3f &si,
@@ -170,8 +180,8 @@ public:
         active &= cos_theta_i > 0.f && cos_theta_o > 0.f;
         Spectrum value = eval_rpv(si, wo, active);
 
-        return dr::select(active, depolarizer<Spectrum>(value) * dr::abs(cos_theta_o),
-                      0.f);
+        return dr::select(
+            active, depolarizer<Spectrum>(value) * dr::abs(cos_theta_o), 0.f);
     }
 
     Float pdf(const BSDFContext & /* ctx */, const SurfaceInteraction3f &si,
@@ -186,23 +196,16 @@ public:
         return dr::select(cos_theta_i > 0.f && cos_theta_o > 0.f, pdf, 0.f);
     }
 
-    void traverse(TraversalCallback *callback) override {
-        callback->put_object("rho_0", m_rho_0.get(),
-                             +ParamFlags::Differentiable);
-        callback->put_object("g", m_g.get(), +ParamFlags::Differentiable);
-        callback->put_object("k", m_k.get(), +ParamFlags::Differentiable);
-        callback->put_object("rho_c", m_rho_c.get(),
-                             +ParamFlags::Differentiable);
-    }
-
     std::string to_string() const override {
         std::ostringstream oss;
         oss << "RPVBSDF[" << std::endl
-            << "  rho_0 = " << string::indent(m_rho_0) << std::endl
-            << "  g = " << string::indent(m_g) << std::endl
-            << "  k = " << string::indent(m_k) << std::endl
-            << "  rho_c = " << string::indent(m_rho_c) << std::endl
-            << "]";
+            << "  rho_0 = " << string::indent(m_rho_0) << "," << std::endl
+            << "  g = " << string::indent(m_g) << "," << std::endl
+            << "  k = " << string::indent(m_k);
+        if (m_rho_0 != m_rho_c) {
+            oss << "," << std::endl << "  rho_c = " << string::indent(m_rho_c);
+        }
+        oss << std::endl << "]";
         return oss.str();
     }
 
