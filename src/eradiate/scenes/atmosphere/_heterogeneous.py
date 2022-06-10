@@ -138,13 +138,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
-        if self.particle_layers and (value.has_absorption and not value.has_scattering):
-            raise ValueError(
-                f"while validating {attribute.name}: a purely absorbing "
-                "molecular atmosphere cannot be mixed with particle layers; this "
-                "will be addressed in a future release"
-            )
-
     particle_layers: t.List[ParticleLayer] = documented(
         attrs.field(
             factory=list,

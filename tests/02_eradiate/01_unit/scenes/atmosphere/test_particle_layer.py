@@ -7,96 +7,29 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext, MonoSpectralContext, SpectralContext
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
 from eradiate.scenes.measure._core import CKDMeasureSpectralConfig
-from eradiate.units import symbol, to_quantity
+from eradiate.units import to_quantity
 
-
-def to_dataset(albedo, sigma_t, phase, mu, w):
-    return xr.Dataset(
-        data_vars={
-            "sigma_t": (
-                "w",
-                sigma_t.magnitude,
-                dict(
-                    standard_name="air_volume_extinction_coefficient",
-                    units=symbol(sigma_t.units),
-                ),
-            ),
-            "albedo": (
-                "w",
-                albedo.magnitude,
-                dict(
-                    standard_name="single_scattering_albedo", units=symbol(albedo.units)
-                ),
-            ),
-            "phase": (
-                ("w", "mu", "i", "j"),
-                phase.magnitude,
-                dict(
-                    standard_name="scattering_phase_matrix", units=symbol(phase.units)
-                ),
-            ),
-        },
-        coords={
-            "w": ("w", w.magnitude, dict(units=symbol(w.units))),
-            "mu": (
-                "mu",
-                mu.magnitude,
-                dict(standard_name="scattering_angle_cosine", units=f"{mu.units:~}"),
-            ),
-            "i": ("i", [0]),
-            "j": ("j", [0]),
-        },
-    )
+# ------------------------------------------------------------------------------
+#                              Fixtures
+# ------------------------------------------------------------------------------
 
 
 @pytest.fixture
-def absorbing_only(tmpdir):
-    """Absorbing only particles radiative properties data set path fixture."""
-    mu = np.linspace(-1.0, 1.0) * ureg.dimensionless
-    w = np.linspace(279.0, 2401.0) * ureg.nm
-    arrays = [np.ones_like(mu) / ureg.steradian for _ in w]
-    phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
-    albedo = np.zeros_like(w) * ureg.dimensionless
-    sigma_t = np.ones_like(w) / ureg.km
-    radprops = to_dataset(albedo=albedo, sigma_t=sigma_t, phase=phase, mu=mu, w=w)
-    path = tmpdir / "absorbing_particles.nc"
-    radprops.to_netcdf(path)
-    return path
+def test_dataset_path():
+    """Test dataset path fixture."""
+    return "tests/radprops/rtmom_aeronet_desert.nc"
 
 
-@pytest.fixture
-def scattering_only(tmpdir):
-    """Scattering only particles radiative properties data set path fixture."""
-    mu = np.linspace(-1.0, 1.0) * ureg.dimensionless
-    w = np.linspace(279.0, 2401.0) * ureg.nm
-    arrays = [np.ones_like(mu) / ureg.steradian for _ in w]
-    phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
-    albedo = np.ones_like(w) * ureg.dimensionless
-    sigma_t = np.ones_like(w) / ureg.km
-    radprops = to_dataset(albedo=albedo, sigma_t=sigma_t, phase=phase, mu=mu, w=w)
-    path = tmpdir / "scattering_particles.nc"
-    radprops.to_netcdf(path)
-    return path
-
-
-@pytest.fixture
-def test_particles_dataset(tmpdir):
-    """Particles radiative properties data set path fixture."""
-    mu = np.linspace(-1.0, 1.0) * ureg.dimensionless
-    w = np.linspace(279.0, 2401.0) * ureg.nm
-    arrays = [np.ones_like(mu) / ureg.steradian for _ in w]
-    phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
-    albedo = 0.8 * np.ones_like(w) * ureg.dimensionless
-    sigma_t = np.ones_like(w) / ureg.km
-    radprops = to_dataset(albedo=albedo, sigma_t=sigma_t, phase=phase, mu=mu, w=w)
-    path = tmpdir / "test_particles_dataset.nc"
-    radprops.to_netcdf(path)
-    return path
+# ------------------------------------------------------------------------------
+#                                   Tests
+# ------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
 def test_particle_layer_eval_mono_absorbing_only(
-    mode_mono, tmpdir, absorbing_only, wavelength
+    mode_mono,
+    absorbing_only,
+    wavelength,
 ):
     """eval methods return expected values for an absorbing-only layer."""
     layer = ParticleLayer(dataset=absorbing_only)
@@ -111,7 +44,7 @@ def test_particle_layer_eval_mono_absorbing_only(
 
 @pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
 def test_particle_layer_eval_mono_scattering_only(
-    mode_mono, tmpdir, scattering_only, wavelength
+    mode_mono, scattering_only, wavelength
 ):
     """eval methods return expected values for a scattering-only layer."""
     layer = ParticleLayer(dataset=scattering_only)
@@ -126,9 +59,13 @@ def test_particle_layer_eval_mono_scattering_only(
 
 @pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
 def test_particle_layer_eval_mono(
-    mode_mono, tmpdir, test_particles_dataset, wavelength
+    mode_mono,
+    test_particles_dataset,
+    wavelength,
 ):
-    """eval methods return expected values for a scattering and absorbing layer."""
+    """
+    eval_* methods return expected values for a scattering and absorbing layer.
+    """
     layer = ParticleLayer(
         dataset=test_particles_dataset,
         n_layers=1,
@@ -147,7 +84,11 @@ def test_particle_layer_eval_mono(
 
 
 @pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
-def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, tmpdir, absorbing_only, bins):
+def test_particle_layer_eval_ckd_absorbing_only(
+    mode_ckd,
+    absorbing_only,
+    bins,
+):
     """eval methods return expected values for an absorbing-only layer."""
     layer = ParticleLayer(dataset=absorbing_only)
     spectral_config = CKDMeasureSpectralConfig(bin_set="10nm", bins=bins)
@@ -162,7 +103,9 @@ def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, tmpdir, absorbing_only
 
 @pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
 def test_particle_layer_eval_ckd_scattering_only(
-    mode_ckd, tmpdir, scattering_only, bins
+    mode_ckd,
+    scattering_only,
+    bins,
 ):
     """eval methods return expected values for a scattering-only layer."""
     layer = ParticleLayer(dataset=scattering_only)
@@ -177,7 +120,7 @@ def test_particle_layer_eval_ckd_scattering_only(
 
 
 @pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
-def test_particle_layer_eval_ckd(mode_ckd, tmpdir, test_particles_dataset, bins):
+def test_particle_layer_eval_ckd(mode_ckd, test_particles_dataset, bins):
     """eval methods return expected values for a scattering-only layer."""
     layer = ParticleLayer(
         dataset=test_particles_dataset,
@@ -210,7 +153,7 @@ def test_particle_layer_scale(modes_all_single):
     assert d.load()
 
 
-def test_particle_layer_construct_attrs():
+def test_particle_layer_construct_attrs(test_dataset_path):
     """Assigns parameters to expected values."""
     bottom = ureg.Quantity(1.2, "km")
     top = ureg.Quantity(1.8, "km")
@@ -221,7 +164,7 @@ def test_particle_layer_construct_attrs():
         distribution=UniformParticleDistribution(),
         tau_ref=tau_ref,
         n_layers=9,
-        dataset="tests/radprops/rtmom_aeronet_desert.nc",
+        dataset=test_dataset_path,
     )
     assert layer.bottom == bottom
     assert layer.top == top
@@ -267,15 +210,14 @@ def test_particle_layer_kernel_dict(modes_all_single):
     assert particle_layer.kernel_dict(ctx).load()
 
 
-@pytest.fixture
-def test_dataset():
-    """Test dataset path fixture."""
-    return "tests/radprops/rtmom_aeronet_desert.nc"
-
-
-def test_particle_layer_eval_radprops_format(modes_all_single, test_dataset):
-    """Method 'eval_radprops' returns dataset with expected datavars and coords."""
-    layer = ParticleLayer(dataset=test_dataset)
+def test_particle_layer_eval_radprops_format(
+    modes_all_single,
+    test_dataset_path,
+):
+    """
+    Method 'eval_radprops' returns dataset with expected datavars and coords.
+    """
+    layer = ParticleLayer(dataset=test_dataset_path)
     spectral_ctx = SpectralContext.new()
     ds = layer.eval_radprops(spectral_ctx)
     expected_data_vars = ["sigma_t", "albedo"]
@@ -289,9 +231,9 @@ def test_particle_layer_eval_radprops_format(modes_all_single, test_dataset):
     "tau_ref",
     np.array([0.6, 1.0, 2.5]) * ureg.dimensionless,
 )
-def test_particle_layer_eval_radprops(mode_mono, test_dataset, tau_ref):
+def test_particle_layer_eval_radprops(mode_mono, test_dataset_path, tau_ref):
     layer = ParticleLayer(
-        dataset=test_dataset,
+        dataset=test_dataset_path,
         bottom=0.5 * ureg.km,  # arbitrary
         top=3.0 * ureg.km,  # arbitrary
         distribution={"type": "uniform"},
@@ -315,7 +257,11 @@ def test_particle_layer_eval_radprops(mode_mono, test_dataset, tau_ref):
     "tau_ref",
     np.array([0.1, 0.5, 1.0, 2.0, 5.0]) * ureg.dimensionless,
 )
-def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_ref, test_dataset):
+def test_particle_layer_eval_sigma_t_mono(
+    mode_mono,
+    tau_ref,
+    test_dataset_path,
+):
     r"""
     Spectral dependency of extinction is accounted for.
 
@@ -334,7 +280,7 @@ def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_ref, test_dataset):
     """
     w_ref = 550 * ureg.nm
     layer = ParticleLayer(
-        dataset=test_dataset,
+        dataset=test_dataset_path,
         bottom=0.5 * ureg.km,  # arbitrary
         top=3.0 * ureg.km,  # arbitrary
         distribution={"type": "uniform"},
@@ -348,11 +294,11 @@ def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_ref, test_dataset):
     tau = layer.eval_sigma_t_mono(wavelengths) * layer.height
 
     # data set extinction @ running and reference wavelength
-    ds = converters.load_dataset(test_dataset)
+    ds = converters.load_dataset(test_dataset_path)
     w_units = ureg(ds.w.attrs["units"])
     sigma_t = to_quantity(ds.sigma_t.interp(w=wavelengths.m_as(w_units)))
     sigma_t_ref = to_quantity(ds.sigma_t.interp(w=w_ref.m_as(w_units)))
 
-    # the spectral dependence of the optical thickness and extinction coefficient
-    # match, so the below ratios must match
+    # the spectral dependence of the optical thickness and extinction
+    # coefficient match, so the below ratios must match
     assert np.allclose(tau / tau_ref, sigma_t / sigma_t_ref)
