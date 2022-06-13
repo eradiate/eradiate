@@ -625,3 +625,137 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
         name="brf",
         illumination_azimuth=illumination_azimuth,
     )
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("atmosphere", [None, "homogeneous"])
+@pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
+def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
+    r"""
+    RPV(:math:`\rho, g=0, k=1, rho_c=1`) equivalent to Lambertian(:math:`\rho`)
+    ===========================================================================
+
+    A surface with a lambertian BSDF behaves like the same surface but with a
+    RPV BSDF with identical reflectance value, :math:`g = 0`, :math:`k = 1`
+    and :math:`\rho_c = 1`.
+
+    Rationale
+    ----------
+
+    * Geometry: a square surface with unit size and
+
+      * experiment 1: a lambertian BSDF with reflectance :math:`\rho_0 = 1.0`.
+      * experiment 2: a RPV BSDF with :math:`\rho_0 = 1.0`, :math:`g = 0`,
+        :math:`k = 1`, :math:`rho_c = 1`.
+
+    * Atmosphere: No atmosphere or default homogeneous atmosphere.
+    * Illumination: Directional illumination with a zenith angle
+      :math:`\theta = 30.0°` and an azimuth angle :math:`\varphi = 0.0.
+    * Sensor: Distant reflectance measure covering a plane (11 angular points,
+      1 sample per pixel with no atmosphere, 10000 with atmosphere).
+
+    Expected behaviour
+    ------------------
+
+    Experiment 1 and 2 TOA BRF values are equal.
+
+    Results
+    -------
+
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-0.0.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-0.5.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-1.0.png
+       :width: 95%
+
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-0.0.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-0.5.png
+       :width: 95%
+    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-1.0.png
+       :width: 95%
+    """
+
+    def make_figure_rpv_vs_lambertian(fname_plot, results: dict, title=""):
+        fig = plt.figure(figsize=(8, 3))
+        results_lambertian = results["lambertian"]
+        results_rpv = results["rpv"]
+
+        with plt.rc_context({"lines.linestyle": "dashed"}):
+            results_lambertian.brf.plot(x="vza", marker="o", label="lambertian")
+            results_rpv.brf.plot(x="vza", marker="^", label="rpv")
+
+        bias = np.zeros_like(results_lambertian.brf.values)
+        np.divide(
+            results_rpv.brf.values - results_lambertian.brf.values,
+            results_lambertian.brf.values,
+            where=results_lambertian.brf.values != 0,
+            out=bias,
+        )
+        mean_bias = np.mean(np.abs(bias))
+        plt.annotate(
+            text=f"Mean bias: {round(100 * mean_bias, 2)} %",
+            xy=(0.5, 0.5),
+            horizontalalignment="center",
+            xycoords="axes fraction",
+        )
+        plt.title(title)
+        plt.tight_layout()
+        fig.savefig(fname_plot, dpi=200)
+        plt.close()
+
+    bsdfs = {
+        "lambertian": {"type": "lambertian", "reflectance": reflectance},
+        "rpv": {
+            "type": "rpv",
+            **dict(
+                rho_0=reflectance,
+                g=0.0,
+                k=1.0,
+                rho_c=1.0,
+            ),
+        },
+    }
+    experiments = {
+        bsdf: eradiate.experiments.OneDimExperiment(
+            illumination={"type": "directional", "zenith": 30.0 * ureg.deg},
+            measures={
+                "type": "mdistant",
+                "construct": "from_viewing_angles",
+                **dict(
+                    zeniths=np.arange(-75, 75, 11),
+                    azimuths=0.0 * ureg.deg,
+                    spp=1 if atmosphere is None else 100000,
+                ),
+            },
+            atmosphere=None if atmosphere is None else {"type": atmosphere},
+            surface=bsdfs[bsdf],
+        )
+        for bsdf in bsdfs.keys()
+    }
+
+    # Run experiments
+    results = {bsdf: eradiate.run(exp) for bsdf, exp in experiments.items()}
+
+    # Make figure
+    filename = (
+        f"test_onedim_rpv_vs_lambertian-{reflectance}.png"
+        if atmosphere is None
+        else f"test_onedim_rpv_vs_lambertian_homo_atm-{reflectance}.png"
+    )
+    outdir = os.path.join(artefact_dir, "plots")
+    os.makedirs(outdir, exist_ok=True)
+    fname_plot = os.path.join(outdir, filename)
+    title = (
+        f"{reflectance=}, no atmosphere"
+        if atmosphere is None
+        else f"{reflectance=}, homogeneous atmosphere"
+    )
+    make_figure_rpv_vs_lambertian(fname_plot, results, title=title)
+
+    # assert result BRF values are equal
+    if atmosphere is None:
+        assert np.all(results["rpv"].brf.values == results["lambertian"].brf.values)
+    else:
+        assert np.allclose(results["rpv"].brf, results["rpv"].brf, rtol=1e-2, atol=1e-3)
