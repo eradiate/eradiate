@@ -54,10 +54,12 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   spectrum to cover the full wavelength range of Eradiate ({ghpr}`233`).
 * Fixed a bug where converting an integer to a `Spectrum` would fail 
   (`ghpr`{236}). 
-* Fixed a bug, where the two BSDFs in the `CentralPatchSurface` would be
+* Fixed a bug where the two BSDFs in the `CentralPatchSurface` would be
   assigned in the wrong order (`ghpr`{237}).
 * Raise an exception when molecular concentrations are out of bounds
   (`ghpr`{237}).
+* Various fixes to the `rpv` plugin, among which a missing PDF term in the 
+  `sample()` method (`ghpr`{240}).
 
 % ### Documentation
 
