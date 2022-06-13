@@ -1,4 +1,4 @@
-"""Test cases with OneDimSolverApp and an RPV surface."""
+"""Test cases with OneDimExperiment and an RPV surface."""
 
 import os
 
@@ -17,7 +17,7 @@ def map_to_0_360(x: float) -> float:
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
 def test_film_to_angular_coord_conversion_multi_distant(
-    mode_mono_double, illumination_azimuth, artefact_dir
+    mode_mono, illumination_azimuth, artefact_dir
 ):
     r"""
     Film to angular coordinates conversion (``multi_distant``)
@@ -92,115 +92,75 @@ def test_film_to_angular_coord_conversion_multi_distant(
        :width: 95%
     """
 
-    def configure_experiment(g, illumination_azimuth):
-        measure = {
-            "id": "measure",
-            "type": "distant",
-            "construct": "from_viewing_angles",
-            "azimuths": illumination_azimuth,
-            "zeniths": np.linspace(-89, 89, n_vza) * ureg.deg,
-            "spp": spp,
-        }
-
-        illumination = eradiate.scenes.illumination.DirectionalIllumination(
-            zenith=30.0 * ureg.deg,
-            azimuth=illumination_azimuth,
-        )
-
-        surface = eradiate.scenes.bsdfs.RPVBSDF(
-            g=g,
-            rho_0=reflectance,
-            k=0.9,
-        )
-
-        integrator = eradiate.scenes.integrators.PathIntegrator()
-
-        return eradiate.experiments.OneDimExperiment(
-            measures=[measure],
-            illumination=illumination,
-            atmosphere=None,
-            surface=surface,
-            integrator=integrator,
-        )
-
     spp = 1
     reflectance = 0.1
     n_vza = 20
     measure_azimuth = illumination_azimuth
-    g_abs = 0.1
-    g1 = g_abs
-    g2 = -g_abs
-    experiment1 = configure_experiment(
-        g=g1,
-        illumination_azimuth=illumination_azimuth,
-    )
-    experiment2 = configure_experiment(
-        g=g2,
-        illumination_azimuth=illumination_azimuth,
-    )
+    gs = {"forward": 0.1, "backward": -0.1}
 
-    results1 = eradiate.run(experiment1)
-    results2 = eradiate.run(experiment2)
+    experiments = {
+        orientation: eradiate.experiments.OneDimExperiment(
+            measures={
+                "type": "mdistant",
+                "construct": "from_viewing_angles",
+                "azimuths": illumination_azimuth,
+                "zeniths": np.linspace(-89, 89, n_vza) * ureg.deg,
+                "spp": spp,
+            },
+            illumination={
+                "type": "directional",
+                "zenith": 30.0 * ureg.deg,
+                "azimuth": illumination_azimuth,
+            },
+            atmosphere=None,
+            surface={
+                "type": "rpv",
+                "g": g,
+                "rho_0": reflectance,
+                "k": 0.9,
+            },
+        )
+        for orientation, g in gs.items()
+    }
 
-    def select_forward_brf(brf, illumination_azimuth, measure_azimuth):
+    results = {name: eradiate.run(exp) for name, exp in experiments.items()}
+
+    def select_brf(brf, orientation):
         relative_azimuth = map_to_0_360(measure_azimuth - illumination_azimuth)
+
         if relative_azimuth == 0.0:
-            return brf.where(brf.vza < 0.0)
+            return (
+                brf.where(brf.vza < 0.0)
+                if orientation == "forward"
+                else brf.where(brf.vza > 0.0)
+            )
         elif relative_azimuth == 180.0:
-            return brf.where(brf.vza > 0.0)
+            return (
+                brf.where(brf.vza > 0.0)
+                if orientation == "forward"
+                else brf.where(brf.vza < 0.0)
+            )
         else:
             raise ValueError(
                 "cannot compute forward BRF when the relative azimuth is not "
                 "either 0 or 180."
             )
 
-    def select_backward_brf(brf, illumination_azimuth, measure_azimuth):
-        relative_azimuth = map_to_0_360(measure_azimuth - illumination_azimuth)
-        if relative_azimuth == 0.0:
-            return brf.where(brf.vza > 0.0)
-        elif relative_azimuth == 180.0:
-            return brf.where(brf.vza < 0.0)
-        else:
-            raise ValueError(
-                "cannot compute backward BRF when the relative azimuth is not "
-                "either 0 or 180."
-            )
-
-    def is_forward_scattering(brf, illumination_azimuth, measure_azimuth):
-        forward_brf = select_forward_brf(
-            brf=brf,
-            illumination_azimuth=illumination_azimuth,
-            measure_azimuth=measure_azimuth,
-        )
-        backward_brf = select_backward_brf(
-            brf=brf,
-            illumination_azimuth=illumination_azimuth,
-            measure_azimuth=measure_azimuth,
-        )
+    def is_forward_scattering(brf):
+        forward_brf = select_brf(brf, "forward")
+        backward_brf = select_brf(brf, "backward")
         return forward_brf.mean().values > backward_brf.mean().values
 
-    def make_figure(results, g, artefact_dir, forward=True):
-        brf = results.brf
-        brf_forward = select_forward_brf(
-            brf=brf,
-            illumination_azimuth=illumination_azimuth,
-            measure_azimuth=measure_azimuth,
-        )
-        brf_backward = select_backward_brf(
-            brf=brf,
-            illumination_azimuth=illumination_azimuth,
-            measure_azimuth=measure_azimuth,
-        )
+    def make_figure(brf, g, artefact_dir, orientation: str):
+        brf_forward = select_brf(brf, "forward")
+        brf_backward = select_brf(brf, "backward")
 
         brf_values = np.concatenate([brf_forward.values, brf_backward.values])
         brf_max = np.nanmax(brf_values)
         brf_min = np.nanmin(brf_values)
         ylim = [0.9 * brf_min, 1.1 * brf_max]
 
-        if forward:
-            desc = "Forward"
-        else:
-            desc = "Backward"
+        desc = orientation.title()
 
         fig = plt.figure(figsize=(8, 3))
         plt.suptitle(
@@ -208,48 +168,30 @@ def test_film_to_angular_coord_conversion_multi_distant(
             f"illumination azimuth = {illumination_azimuth}°"
         )
 
-        plt.subplot(1, 2, 1)
-        ax = plt.gca()
-        ax.set_xticks([-90, -60, -30, 0.0])
-        ax.set_xticklabels(["-90", "-60", "-30", "0"])
+        with plt.rc_context({"lines.linestyle": ":", "lines.marker": "."}):
+            for orientation, brf, sub, ticks, xtext in zip(
+                ["forward", "backward"],
+                [brf_forward, brf_backward],
+                [(1, 2, 1), (1, 2, 2)],
+                [[-90, -60, -30, 0], [0, 30, 60, 90]],
+                [-45, 45],
+            ):
 
-        brf_forward.plot(
-            x="vza",
-            ls="dotted",
-            marker=".",
-            ylim=ylim,
-            xlim=[-95, 0],
-        )
-        mean = float(brf_forward.mean().values)
-        plt.text(
-            s=f"mean = {mean:.2e}",
-            x=-45,
-            y=(brf_max + brf_min) / 2.0,
-            ha="center",
-            color="red",
-        )
-        plt.title("forward BRF")
+                plt.subplot(*sub)
+                ax = plt.gca()
+                ax.set_xticks(ticks)
+                ax.set_xticklabels(list(map(str, ticks)))
+                brf.plot(x="vza", xlim=[-95, 0], ylim=ylim)
+                mean = float(brf.mean().values)
+                plt.text(
+                    s=f"mean = {mean:.2e}",
+                    x=xtext,
+                    y=(brf_max + brf_min) / 2.0,
+                    ha="center",
+                    color="red",
+                )
+                plt.title(f"{orientation} BRF")
 
-        plt.subplot(1, 2, 2)
-        ax = plt.gca()
-        ax.set_xticks([0.0, 30.0, 60.0, 90.0])
-        ax.set_xticklabels(["0", "30", "60", "90"])
-        brf_backward.plot(
-            x="vza",
-            ls="dotted",
-            marker=".",
-            ylim=ylim,
-            xlim=[0, 95],
-        )
-        mean = float(brf_backward.mean().values)
-        plt.text(
-            s=f"mean = {mean:.2e}",
-            x=45,
-            y=(brf_max + brf_min) / 2.0,
-            ha="center",
-            color="red",
-        )
-        plt.title("backward BRF")
         filename = f"test_ftacc_multi_distant_{desc.lower()}_{illumination_azimuth}.png"
         outdir = os.path.join(artefact_dir, "plots")
         os.makedirs(outdir, exist_ok=True)
@@ -258,26 +200,18 @@ def test_film_to_angular_coord_conversion_multi_distant(
         fig.savefig(fname_plot, dpi=200)
         plt.close()
 
-    make_figure(results=results1, g=g1, artefact_dir=artefact_dir, forward=True)
-    make_figure(results=results2, g=g2, artefact_dir=artefact_dir, forward=False)
+    for orientation, result in results.items():
+        make_figure(result.brf, gs[orientation], artefact_dir, orientation)
 
-    assert is_forward_scattering(
-        brf=results1.brf,
-        illumination_azimuth=illumination_azimuth,
-        measure_azimuth=measure_azimuth,
-    )
-    assert not is_forward_scattering(
-        brf=results2.brf,
-        illumination_azimuth=illumination_azimuth,
-        measure_azimuth=measure_azimuth,
-    )
+    assert is_forward_scattering(results["forward"].brf)
+    assert not is_forward_scattering(brf=results["backward"].brf)
 
 
 def where_azimuth(
     da: xr.DataArray, name: str, start: float, stop: float
 ) -> xr.DataArray:
     """
-    Select data for viewing azumith in ['start', 'stop']°.
+    Select data for viewing azimuth in ['start', 'stop']°.
     """
     if start < stop:
         return da.where((da.vaa > start) & (da.vaa < stop))
@@ -290,11 +224,14 @@ def where_azimuth(
         )[name]
 
 
-def select_forward(
-    da: xr.DataArray, name: str, illumination_azimuth: float
+def select_orientation(
+    da: xr.DataArray,
+    name: str,
+    illumination_azimuth: float,
+    orientation: str,
 ) -> xr.DataArray:
     r"""
-    Select hemispherical data in forward direction.
+    Select hemispherical data in requested orientation.
 
     If :math:`\varphi_i` is the illumination azimuth and :math:`\varphi_v` is the
     viewing azimuth, the forward region is defined by:
@@ -314,53 +251,28 @@ def select_forward(
     illumination_azimuth: float
         Azimuth [deg].
 
+    orientation : {"forward", "backward"}
+        Selected orientation.
+
     Returns
     -------
     DataArray
         Data in forward direction.
     """
-    return where_azimuth(
-        da=da,
-        name=name,
-        start=map_to_0_360(illumination_azimuth + 90.0),
-        stop=map_to_0_360(illumination_azimuth + 270.0),
-    )
-
-
-def select_backward(
-    da: xr.DataArray, name: str, illumination_azimuth: float
-) -> xr.DataArray:
-    r"""
-    Select hemispherical data in backward direction.
-
-    If :math:`\varphi_i` is the illumination azimuth and :math:`\varphi_v` is the
-    viewing azimuth, the backward region is defined by:
-
-    .. math::
-
-        \varphi_i + 270° \ll \varphi_v \ll \varphi_i + 90°
-
-    Parameters
-    ----------
-    da: DataArray
-        Sector radiosity at an infinite distance in the hemisphere.
-
-    name: str
-        Name of the data variable to select.
-
-    illumination_azimuth: float
-        Azimuth [deg].
-
-    Returns
-    -------
-    DataArray
-        Backward sector radiosity.
-    """
-    return where_azimuth(
-        da=da,
-        name=name,
-        start=map_to_0_360(illumination_azimuth + 270.0),
-        stop=map_to_0_360(illumination_azimuth + 90.0),
+    return (
+        where_azimuth(
+            da=da,
+            name=name,
+            start=map_to_0_360(illumination_azimuth + 90.0),
+            stop=map_to_0_360(illumination_azimuth + 270.0),
+        )
+        if orientation == "forward"
+        else where_azimuth(
+            da=da,
+            name=name,
+            start=map_to_0_360(illumination_azimuth + 270.0),
+            stop=map_to_0_360(illumination_azimuth + 90.0),
+        )
     )
 
 
@@ -381,14 +293,8 @@ def is_forward_scattering(
     illumination_azimuth: float
         Azimuth [deg].
     """
-    da_forward = select_forward(
-        da=da, name=name, illumination_azimuth=illumination_azimuth
-    )
-
-    da_backward = select_backward(
-        da=da, name=name, illumination_azimuth=illumination_azimuth
-    )
-
+    da_forward = select_orientation(da, name, illumination_azimuth, "forward")
+    da_backward = select_orientation(da, name, illumination_azimuth, "backward")
     return da_forward.mean().values > da_backward.mean().values
 
 
@@ -396,48 +302,46 @@ def make_figure(
     results: xr.Dataset,
     name: str,
     g: float,
-    forward: str,
+    forward: bool,
     illumination_azimuth: float,
     measure: str,
     res: int,
     artefact_dir,
 ):
-    if forward:
-        desc = "Forward"
-    else:
-        desc = "Backward"
 
     fig = plt.figure(figsize=(8, 3))
+
+    desc = "Forward" if forward else "Backward"
     plt.suptitle(
         f"{desc} scattering RPV surface (g={g}), "
         f"illumination azimuth = {illumination_azimuth}°"
     )
 
-    plt.subplot(1, 2, 1)
-    ax = plt.gca()
-    ax.set_aspect("equal")
-    da_forward = select_forward(
-        da=results[name],
-        name=name,
-        illumination_azimuth=illumination_azimuth,
-    )
-    da_forward.plot()
-    mean = float(da_forward.mean().values)
-    plt.text(s=f"mean = {mean:.2e}", x=res / 2, y=res / 2, ha="center", color="red")
-    plt.title(f"forward {name}")
+    for orientation, sub in zip(
+        ["forward", "backward"],
+        [(1, 2, 1), (1, 2, 2)],
+    ):
+        plt.subplot(*sub)
+        ax = plt.gca()
+        ax.set_aspect("equal")
+        da = select_orientation(
+            results[name],
+            name,
+            illumination_azimuth,
+            "forward",
+        )
+        da.plot()
 
-    plt.subplot(1, 2, 2)
-    ax = plt.gca()
-    ax.set_aspect("equal")
-    da_backward = select_backward(
-        da=results[name],
-        name=name,
-        illumination_azimuth=illumination_azimuth,
-    )
-    da_backward.plot()
-    mean = float(da_backward.mean().values)
-    plt.text(s=f"mean = {mean:.2e}", x=res / 2, y=res / 2, ha="center", color="red")
-    plt.title(f"backward {name}")
+        mean = float(da.mean().values)
+        plt.text(
+            s=f"mean = {mean:.2e}",
+            x=res / 2,
+            y=res / 2,
+            ha="center",
+            color="red",
+        )
+        plt.title(f"{orientation} {name}")
+
     filename = f"test_ftacc_{measure}_{desc.lower()}_{illumination_azimuth}.png"
     outdir = os.path.join(artefact_dir, "plots")
     os.makedirs(outdir, exist_ok=True)
@@ -449,7 +353,7 @@ def make_figure(
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
 def test_film_to_angular_coord_conversion_distant_flux(
-    mode_mono_double, illumination_azimuth, artefact_dir
+    mode_mono, illumination_azimuth, artefact_dir
 ):
     r"""
     Film to angular coordinates conversion (``distant_flux``)
@@ -533,78 +437,53 @@ def test_film_to_angular_coord_conversion_distant_flux(
        :width: 95%
     """
 
-    def configure_experiment(g, illumination_azimuth):
-        measure = {
-            "id": "measure",
-            "type": "distant_flux",
-            "direction": [0, 0, 1],
-            "film_resolution": (res, res),
-            "spp": spp,
-        }
-
-        illumination = eradiate.scenes.illumination.DirectionalIllumination(
-            zenith=30.0 * ureg.deg,
-            azimuth=illumination_azimuth,
-        )
-
-        surface = eradiate.scenes.bsdfs.RPVBSDF(g=g, rho_0=reflectance, k=0.9)
-
-        integrator = eradiate.scenes.integrators.PathIntegrator()
-
-        return eradiate.experiments.OneDimExperiment(
-            measures=[measure],
-            illumination=illumination,
-            atmosphere=None,
-            surface=surface,
-            integrator=integrator,
-        )
-
     spp = 1
     res = 32
     reflectance = 0.1
-    g_abs = 0.1
-    g1 = g_abs
-    g2 = -g_abs
-    experiment1 = configure_experiment(
-        g=g1,
-        illumination_azimuth=illumination_azimuth,
-    )
-    experiment2 = configure_experiment(
-        g=g2,
-        illumination_azimuth=illumination_azimuth,
-    )
+    gs = {"forward": 0.1, "backward": -0.1}
 
-    results1 = eradiate.run(experiment1)
-    results2 = eradiate.run(experiment2)
+    experiments = {
+        orientation: eradiate.experiments.OneDimExperiment(
+            measures={
+                "type": "distant_flux",
+                "direction": [0, 0, 1],
+                "film_resolution": (res, res),
+                "spp": spp,
+            },
+            illumination={
+                "type": "directional",
+                "zenith": 30.0 * ureg.deg,
+                "azimuth": illumination_azimuth,
+            },
+            atmosphere=None,
+            surface={"type": "rpv", "g": g, "rho_0": reflectance, "k": 0.9},
+        )
+        for orientation, g in gs.items()
+    }
 
-    make_figure(
-        results=results1,
-        name="sector_radiosity",
-        g=g1,
-        forward=True,
-        illumination_azimuth=illumination_azimuth,
-        measure="distant_flux",
-        res=res,
-        artefact_dir=artefact_dir,
-    )
-    make_figure(
-        results=results2,
-        name="sector_radiosity",
-        g=g2,
-        forward=False,
-        illumination_azimuth=illumination_azimuth,
-        measure="distant_flux",
-        res=res,
-        artefact_dir=artefact_dir,
-    )
+    results = {
+        orientation: eradiate.run(exp) for orientation, exp in experiments.items()
+    }
+
+    for orientation, g in gs.items():
+        make_figure(
+            results=results[orientation],
+            name="sector_radiosity",
+            g=g,
+            forward=(orientation == "forward"),
+            illumination_azimuth=illumination_azimuth,
+            measure="distant_flux",
+            res=res,
+            artefact_dir=artefact_dir,
+        )
 
     assert is_forward_scattering(
-        da=results1.sector_radiosity,
+        da=results["forward"].sector_radiosity,
         name="sector_radiosity",
         illumination_azimuth=illumination_azimuth,
     )
     assert not is_forward_scattering(
-        da=results2.sector_radiosity,
+        da=results["backward"].sector_radiosity,
         name="sector_radiosity",
         illumination_azimuth=illumination_azimuth,
     )
@@ -696,82 +575,53 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
        :width: 95%
     """
 
-    def configure_experiment(g, illumination_azimuth):
-        measure = {
-            "id": "measure",
-            "type": "hdistant",
-            "direction": [0, 0, 1],
-            "film_resolution": (res, res),
-            "spp": spp,
-        }
-
-        illumination = eradiate.scenes.illumination.DirectionalIllumination(
-            zenith=30.0 * ureg.deg,
-            azimuth=illumination_azimuth,
-        )
-
-        surface = eradiate.scenes.bsdfs.RPVBSDF(
-            g=g,
-            rho_0=reflectance,
-            k=0.9,
-        )
-
-        integrator = eradiate.scenes.integrators.PathIntegrator()
-
-        return eradiate.experiments.OneDimExperiment(
-            measures=[measure],
-            illumination=illumination,
-            atmosphere=None,
-            surface=surface,
-            integrator=integrator,
-        )
-
     spp = 1
     res = 32
     reflectance = 0.1
-    g_abs = 0.1
-    g1 = g_abs
-    g2 = -g_abs
-    experiment1 = configure_experiment(
-        g=g1,
-        illumination_azimuth=illumination_azimuth,
-    )
-    experiment2 = configure_experiment(
-        g=g2,
-        illumination_azimuth=illumination_azimuth,
-    )
+    gs = {"forward": 0.1, "backward": -0.1}
 
-    results1 = eradiate.run(experiment1)
-    results2 = eradiate.run(experiment2)
+    experiments = {
+        orientation: eradiate.experiments.OneDimExperiment(
+            measures={
+                "type": "hdistant",
+                "direction": [0, 0, 1],
+                "film_resolution": (res, res),
+                "spp": spp,
+            },
+            illumination={
+                "type": "directional",
+                "zenith": 30.0 * ureg.deg,
+                "azimuth": illumination_azimuth,
+            },
+            atmosphere=None,
+            surface={"type": "rpv", "g": g, "rho_0": reflectance, "k": 0.9},
+        )
+        for orientation, g in gs.items()
+    }
 
-    make_figure(
-        results=results1,
-        name="brf",
-        g=g1,
-        forward=True,
-        illumination_azimuth=illumination_azimuth,
-        measure="hdistant",
-        res=res,
-        artefact_dir=artefact_dir,
-    )
-    make_figure(
-        results=results2,
-        name="brf",
-        g=g2,
-        forward=False,
-        illumination_azimuth=illumination_azimuth,
-        measure="hdistant",
-        res=res,
-        artefact_dir=artefact_dir,
-    )
+    results = {
+        orientation: eradiate.run(exp) for orientation, exp in experiments.items()
+    }
+
+    for orientation, g in gs.items():
+        make_figure(
+            results=results[orientation],
+            name="brf",
+            g=g,
+            forward=(orientation == "forward"),
+            illumination_azimuth=illumination_azimuth,
+            measure="hdistant",
+            res=res,
+            artefact_dir=artefact_dir,
+        )
 
     assert is_forward_scattering(
-        da=results1.brf,
+        da=results["forward"].brf,
         name="brf",
         illumination_azimuth=illumination_azimuth,
     )
     assert not is_forward_scattering(
-        da=results2.brf,
+        da=results["backward"].brf,
         name="brf",
         illumination_azimuth=illumination_azimuth,
     )
