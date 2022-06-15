@@ -14,7 +14,7 @@ import xarray as xr
 
 from ._core import Spectrum, spectrum_factory
 from ..core import KernelDict
-from ... import data, validators
+from ... import converters, data, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext
@@ -24,24 +24,28 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 # This table maps known spectra to their relative paths in the data store
-_KNOWN_SPECTRA = {
-    "blackbody_sun": "spectra/solar_irradiance/blackbody_sun.nc",
-    "meftah_2017": "spectra/solar_irradiance/meftah_2017.nc",
-    "solid_2017_mean": "spectra/solar_irradiance/solid_2017_mean.nc",
-    "thuillier_2003": "spectra/solar_irradiance/thuillier_2003.nc",
-    "whi_2008": "spectra/solar_irradiance/whi_2008_time_period_1.nc",
-    "whi_2008_time_period_1": "spectra/solar_irradiance/whi_2008_time_period_1.nc",
-    "whi_2008_time_period_2": "spectra/solar_irradiance/whi_2008_time_period_2.nc",
-    "whi_2008_time_period_3": "spectra/solar_irradiance/whi_2008_time_period_3.nc",
+ALIASES = {
+    name: f"spectra/solar_irradiance/{name}.nc"
+    for name in [
+        "blackbody_sun",
+        "meftah_2017",
+        "solid_2017_mean",
+        "thuillier_2003",
+        "thuillier_2003_extrapolated",
+        "whi_2008",
+        "whi_2008_time_period_1",
+        "whi_2008_time_period_2",
+        "whi_2008_time_period_3",
+    ]
 }
 
 
 def _dataset_converter(x: t.Any):
     if isinstance(x, str):
-        if x in _KNOWN_SPECTRA:
-            return data.open_dataset(_KNOWN_SPECTRA[x])
+        if x in ALIASES:
+            return data.load_dataset(ALIASES[x])
 
-    return x
+    return converters.load_dataset(x)
 
 
 @spectrum_factory.register(type_id="solar_irradiance")
@@ -98,17 +102,20 @@ class SolarIrradianceSpectrum(Spectrum):
 
     dataset: xr.Dataset = documented(
         attr.ib(
-            default="thuillier_2003",
+            default="thuillier_2003_extrapolated",
             converter=_dataset_converter,
             validator=attr.validators.instance_of(xr.Dataset),
         ),
-        doc="Solar spectrum dataset. Optionally, a keyword can be passed to "
-        "fetch a registered spectrum from the data store. See "
-        ":ref:`sec-user_guide-data-solar_irradiance` for the list of spectra "
-        "shipped with Eradiate.",
+        doc="Solar spectrum dataset. If a string is passed, it is first "
+        "interpreted as a Solar irradiance spectrum identifier "
+        "(see :ref:`sec-user_guide-data-solar_irradiance` for the list); "
+        "should that fail, it is interpreted as a path. If a path is passed, "
+        "loading the corresponding file on the hard drive is attempted; should "
+        "that fail, a query to the data store is made "
+        "(see :func:`converters.load_dataset <eradiate.converters.load_dataset>`).",
         type="Dataset",
-        init_type="Dataset or str, optional",
-        default='"thuillier_2003"',
+        init_type="Dataset or str or path-like, optional",
+        default='"thuillier_2003_extrapolated"',
     )
 
     scale: float = documented(
@@ -162,7 +169,7 @@ class SolarIrradianceSpectrum(Spectrum):
 
         # Raise if out of bounds or ill-formed dataset
         if np.any(np.isnan(irradiance.magnitude)):
-            raise ValueError("dataset interpolation returned nan")
+            raise ValueError("interpolation of solar irradiance dataset returned nan")
 
         return irradiance * self.scale * self._scale_earth_sun_distance()
 
@@ -209,14 +216,7 @@ class SolarIrradianceSpectrum(Spectrum):
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         # Apply scaling, build kernel dict
         value = float(self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance")))
-        return KernelDict(
-            {
-                "spectrum": {
-                    "type": "uniform",
-                    "value": value,
-                }
-            }
-        )
+        return KernelDict({"spectrum": {"type": "uniform", "value": value}})
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         raise NotImplementedError
