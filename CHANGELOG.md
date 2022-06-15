@@ -60,6 +60,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   (`ghpr`{237}).
 * Various fixes to the `rpv` plugin, among which a missing PDF term in the 
   `sample()` method (`ghpr`{240}).
+* Fix incorrect spectral indexing of result datasets in CKD mode (`ghpr`{241}).
 
 % ### Documentation
 
