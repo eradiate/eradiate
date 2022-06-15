@@ -5,6 +5,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.ckd import BinSet
 from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.exceptions import DataError
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 
@@ -18,7 +19,7 @@ def test_solar_irradiance(mode_mono):
     s = SolarIrradianceSpectrum()
 
     # Unsupported solar spectrum keywords raise
-    with pytest.raises(TypeError):
+    with pytest.raises(DataError):
         SolarIrradianceSpectrum(dataset="doesnt_exist")
 
     # Produced kernel dict is valid

@@ -61,6 +61,9 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Various fixes to the `rpv` plugin, among which a missing PDF term in the 
   `sample()` method (`ghpr`{240}).
 * Fix incorrect spectral indexing of result datasets in CKD mode (`ghpr`{241}).
+* Improve the Solar irradiance spectrum initialisation sequence (`ghpr`{242}).
+* The `thuillier_2003_extrapolated` dataset is now the default Solar irradiance 
+  spectrum (`ghpr`{242}).
 
 % ### Documentation
 
