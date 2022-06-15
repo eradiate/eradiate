@@ -51,19 +51,19 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Added spectral response function data sets for POLDER instrument onboard 
   PARASOL platform ({ghpr}`232`).
 * Added an extrapolated version of the ``thuillier_2003`` solar irradiance
-  spectrum to cover the full wavelength range of Eradiate (`ghpr`{233}).
+  spectrum to cover the full wavelength range of Eradiate ({ghpr}`233`).
 * Fixed a bug where converting an integer to a `Spectrum` would fail 
-  (`ghpr`{236}). 
+  ({ghpr}`236`). 
 * Fixed a bug where the two BSDFs in the `CentralPatchSurface` would be
-  assigned in the wrong order (`ghpr`{237}).
+  assigned in the wrong order ({ghpr}`237`).
 * Raise an exception when molecular concentrations are out of bounds
-  (`ghpr`{237}).
+  ({ghpr}`237`).
 * Various fixes to the `rpv` plugin, among which a missing PDF term in the 
-  `sample()` method (`ghpr`{240}).
-* Fix incorrect spectral indexing of result datasets in CKD mode (`ghpr`{241}).
-* Improve the Solar irradiance spectrum initialisation sequence (`ghpr`{242}).
+  `sample()` method ({ghpr}`240`).
+* Fix incorrect spectral indexing of result datasets in CKD mode ({ghpr}`241`).
+* Improve the Solar irradiance spectrum initialisation sequence ({ghpr}`242`).
 * The `thuillier_2003_extrapolated` dataset is now the default Solar irradiance 
-  spectrum (`ghpr`{242}).
+  spectrum ({ghpr}`242`).
 
 % ### Documentation
 
