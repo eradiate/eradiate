@@ -179,7 +179,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         ),
         doc="Particle radiative property data set. If a path is passed, the "
         "converter tries to open the corresponding file on the hard drive; "
-        "if this fails, it tries to load a resource from the data store."
+        "if this fails, it tries to load a resource from the data store. "
         "Refer to the data guide for the format requirements of this data set.",
         type="Dataset",
         init_type="Dataset or path-like, optional",
