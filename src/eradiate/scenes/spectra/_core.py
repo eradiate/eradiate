@@ -101,6 +101,7 @@ class Spectrum(SceneElement, ABC):
         "based on ``quantity``.",
         type=":class:`.PhysicalQuantity`",
         init_type=":class:`.PhysicalQuantity` or str",
+        default="dimensionless",
     )
 
     @quantity.validator
@@ -167,7 +168,7 @@ class Spectrum(SceneElement, ABC):
         Returns
         -------
         value : quantity
-            Evaluated spectrum as an array with shape (len(bindexes),).
+            Evaluated spectrum as an array with shape ``(len(bindexes),)``.
         """
         pass
 

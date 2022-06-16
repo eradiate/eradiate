@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import typing as t
+
 import attr
 import numpy as np
 import pint
 import pinttr
+import xarray as xr
 
 import eradiate
 
@@ -15,6 +18,7 @@ from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext
 from ...exceptions import UnsupportedModeError
+from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
@@ -25,6 +29,12 @@ from ...units import unit_context_kernel as uck
 class InterpolatedSpectrum(Spectrum):
     """
     Linearly interpolated spectrum [``interpolated``].
+
+    .. admonition:: Class method constructors
+
+       .. autosummary::
+
+          from_dataarray
 
     Notes
     -----
@@ -106,6 +116,65 @@ class InterpolatedSpectrum(Spectrum):
         self.values = pinttr.converters.ensure_units(
             self.values, ucc.get(self.quantity)
         )
+
+    @classmethod
+    def from_dataarray(
+        cls,
+        id: t.Optional[str] = None,
+        quantity: t.Union[str, PhysicalQuantity, None] = None,
+        *,
+        dataarray: xr.DataArray,
+    ) -> InterpolatedSpectrum:
+        """
+        Construct an interpolated spectrum from an xarray data array.
+
+        Parameters
+        ----------
+        id : str, optional
+            Optional object identifier.
+
+        quantity : str or .PhysicalQuantity, optional
+            If set, quantity represented by the spectrum. This parameter and
+            spectrum units must be consistent. This parameter takes precedence
+            over the ``quantity`` field of the data array.
+
+        dataarray : DataArray
+            An :class:`xarray.DataArray` instance complying to the spectrum data
+            array format (see *Notes*).
+
+        Notes
+        -----
+
+        * Expected data format:
+
+          **Coordinates (\* means also dimension)**
+
+          * ``*w`` (float): wavelength in nm.
+
+          **Metadata**
+
+          * ``quantity`` (str): physical quantity which the data describes (see
+            :meth:`.PhysicalQuantity.spectrum` for allowed values), optional.
+          * ``units`` (str): units of spectrum values (must be consistent with
+            ``quantity``).
+        """
+        kwargs = {}
+
+        if id is not None:
+            kwargs[id] = id
+
+        if quantity is None:
+            try:
+                kwargs["quantity"] = dataarray.attrs["quantity"]
+            except KeyError:
+                pass
+        else:
+            kwargs["quantity"] = quantity
+
+        values = to_quantity(dataarray)
+        wavelengths = to_quantity(dataarray.w)
+
+        return cls(**kwargs, values=values, wavelengths=wavelengths)
 
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.interp(w, self.wavelengths, self.values, left=0.0, right=0.0)
