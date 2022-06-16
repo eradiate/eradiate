@@ -64,6 +64,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Improve the Solar irradiance spectrum initialisation sequence ({ghpr}`242`).
 * The `thuillier_2003_extrapolated` dataset is now the default Solar irradiance 
   spectrum ({ghpr}`242`).
+* Added a `InterpolatedSpectrum.from_dataarray()` class method constructor 
+  ({ghpr}`243`).
 
 % ### Documentation
 
