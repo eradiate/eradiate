@@ -1,11 +1,6 @@
 Eradiate Documentation
 ======================
 
-Eradiate is a modern radiative transfer simulation software package written in
-Python and C++17. It relies on a computational kernel based on the
-`Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_ rendering system
-:cite:`Nimier-David2019MitsubaRetargetableForward`.
-
 **Date**: |today| |
 **Version**: |version| |
 :doc:`src/CHANGELOG`
@@ -18,6 +13,11 @@ Python and C++17. It relies on a computational kernel based on the
 **Docs versions**:
 `stable <https://eradiate.readthedocs.io/en/stable/>`_ |
 `latest <https://eradiate.readthedocs.io/en/latest/>`_
+
+Eradiate is a modern radiative transfer simulation software package written in
+Python and C++17. It relies on a computational kernel based on the
+`Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_ rendering system
+:cite:`Nimier-David2019MitsubaRetargetableForward`.
 
 .. grid:: 1 2 auto auto
    :gutter: 3

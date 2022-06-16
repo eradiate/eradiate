@@ -8,9 +8,9 @@ Data guide
 
    intro
    absorption
+   atmosphere_radprops
+   atmosphere_thermoprops
+   ckd
    particle_radprops
-   radprops
    solar_irradiance
    srf
-   thermoprops
-   ckd

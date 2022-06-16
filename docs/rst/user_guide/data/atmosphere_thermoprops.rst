@@ -1,6 +1,6 @@
 .. _sec-user_guide-data-thermoprops:
 
-Atmospheric thermophysical properties
+Atmosphere: thermophysical properties
 =====================================
 
 An atmospheric thermophysical property data set provides the spatial variation
