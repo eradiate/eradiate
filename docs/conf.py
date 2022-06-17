@@ -14,7 +14,7 @@ project = "Eradiate"
 copyright = f"2020-{datetime.datetime.now().year}, The Eradiate Team"
 author = "The Eradiate Team"
 release = version("eradiate")
-version = release.rsplit(".", 1)[0]
+version = ".".join(release.split(".")[:3])
 
 # -- General configuration -----------------------------------------------------
 
