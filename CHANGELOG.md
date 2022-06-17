@@ -30,9 +30,12 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 % ### Internal changes
 
-## v0.22.4 (unreleased)
+## v0.22.4 (17 June 2022)
 
-% ### New features
+### New features
+
+* Added a `InterpolatedSpectrum.from_dataarray()` class method constructor 
+  ({ghpr}`243`).
 
 ### Breaking changes
 
@@ -64,8 +67,6 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Improve the Solar irradiance spectrum initialisation sequence ({ghpr}`242`).
 * The `thuillier_2003_extrapolated` dataset is now the default Solar irradiance 
   spectrum ({ghpr}`242`).
-* Added a `InterpolatedSpectrum.from_dataarray()` class method constructor 
-  ({ghpr}`243`).
 
 % ### Documentation
 
