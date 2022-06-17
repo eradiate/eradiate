@@ -43,7 +43,7 @@ def onedim_rayleigh_radprops():
                     sigma_s.m,
                     albedo.m,
                     where=albedo.m != 0,
-                    out=sigma_s.m,
+                    out=np.zeros_like(sigma_s),
                 )
                 * sigma_s.units
             )

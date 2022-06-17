@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import eradiate
 import eradiate.scenes as esc
 from eradiate.data import data_store
 from eradiate.experiments import OneDimExperiment
@@ -74,8 +75,7 @@ def test_rpv_afgl1986_continental_brfpp(
         ),
     )
 
-    exp.run()
-    result = exp.results["measure"]
+    result = eradiate.run(exp)
 
     test = Chi2Test(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986_continental.nc",

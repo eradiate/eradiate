@@ -19,3 +19,7 @@ def test_converter(mode_mono):
     assert s == UniformSpectrum(quantity="radiance", value=1.0)
     with pytest.raises(pinttr.exceptions.UnitsError):
         spectrum_factory.converter("irradiance")(ureg.Quantity(1, "W/m^2/sr/nm"))
+
+    # Ints are also accepted
+    s = spectrum_factory.converter("radiance")(1)
+    assert s == UniformSpectrum(quantity="radiance", value=1)

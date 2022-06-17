@@ -2,6 +2,7 @@
 
 import numpy as np
 
+import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.experiments import OneDimExperiment
 from eradiate.scenes.bsdfs import LambertianBSDF
@@ -56,7 +57,7 @@ def test_ckd_basic(modes_all_ckd):
             )
         ],
     )
-    exp.run()
+    results = eradiate.run(exp)
 
     # Reflectance is uniform, equal to 1
-    assert np.allclose(exp.results["measure"].data_vars["brf"], 1.0)
+    assert np.allclose(results.data_vars["brf"], 1.0)

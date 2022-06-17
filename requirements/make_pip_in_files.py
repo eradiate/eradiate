@@ -1,7 +1,7 @@
 import os
 
 import click
-from setuptools.config.setupcfg import read_configuration
+from setuptools.config.pyprojecttoml import read_configuration
 from ruamel.yaml import YAML
 
 
@@ -16,8 +16,8 @@ from ruamel.yaml import YAML
 @click.option(
     "-i",
     "--input",
-    default="setup.cfg",
-    help="Path to setup.cfg file. Default: setup.cfg",
+    default="pyproject.toml",
+    help="Path to pyproject.toml file. Default: pyproject.toml",
 )
 @click.option(
     "-o",
@@ -50,10 +50,14 @@ def cli(sections, input, output_dir, layered_config, quiet):
         if not quiet:
             print(f"Processing section '{section}'")
 
-        if section == "main":
-            packages = setup_config["options"]["install_requires"]
-        else:
-            packages = setup_config["options"]["extras_require"][section]
+        try:
+            packages = (
+                setup_config["project"]["dependencies"]
+                if section == "main"
+                else setup_config["project"]["optional-dependencies"][section]
+            )
+        except KeyError:
+            raise RuntimeError(f"Cannot fetch dependencies from {input}")
 
         if not quiet:
             print(f"Writing to {os.path.join(output_dir, f'{section}.in')}")

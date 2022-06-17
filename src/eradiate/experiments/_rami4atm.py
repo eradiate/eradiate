@@ -72,7 +72,8 @@ class Rami4ATMExperiment(EarthObservationExperiment):
       * if a canopy is defined, the target will be set to the top of the canopy
         unit cell (*i.e.* without its padding);
       * if no canopy is defined, the target will be set according to the
-        atmosphere (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere altitude);
+        atmosphere (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere
+        altitude);
       * if neither atmosphere nor canopy are defined, the target is set to
         [0, 0, 0].
 

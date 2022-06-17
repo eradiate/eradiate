@@ -61,7 +61,7 @@ The design phase was funded by the [MetEOC-3 project](http://www.meteoc.org/)
 ## License
 
 Eradiate is free software licensed under the
-[GNU Public License (v3)](./LICENSE).
+[GNU Lesser General Public License (v3)](./LICENSE).
 
 ## Project status
 

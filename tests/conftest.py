@@ -38,9 +38,23 @@ def artefact_dir(pytestconfig):
 
 def pytest_configure(config):
     markexpr = config.getoption("markexpr", "False")
-    if not "not slow" in markexpr:
+    has_slow = "not slow" not in markexpr
+    has_regression = "not regression" not in markexpr
+
+    if has_slow:
         print(
-            """\033[93mRunning the full test suite. To skip slow tests, please run 'pytest -m "not slow"' \033[0m"""
+            "\033[93m"
+            "Running slow tests. To skip them, please run "
+            "'pytest -m \"not slow\"' "
+            "\033[0m"
+        )
+
+    if has_regression:
+        print(
+            "\033[93m"
+            "Running regression tests. To skip them, please run "
+            "'pytest -m \"not regression\"' "
+            "\033[0m"
         )
 
     config.addinivalue_line(
@@ -48,7 +62,9 @@ def pytest_configure(config):
     )
 
     config.addinivalue_line(
-        "markers", "regression: marks tests as potentially very slow regression tests"
+        "markers",
+        "regression: marks tests as potentially very slow regression tests "
+        "(deselect with -m 'not regression')",
     )
 
 

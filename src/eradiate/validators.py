@@ -117,7 +117,7 @@ def is_file(_, attribute, value):
 def is_dir(_, attribute, value):
     """
     Validate iff initializer is called with a value defining a path to an
-    existing fildirectory.
+    existing directory.
 
     Raises
     ------

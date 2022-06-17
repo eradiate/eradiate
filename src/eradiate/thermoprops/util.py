@@ -404,7 +404,8 @@ def interpolate(
 
     method : str
         The method used to interpolate (same for all data variables).
-        Choose from ``"linear"``, ``"nearest"``, ``"zero"``, ``"slinear"``, ``"quadratic"``, and ``"cubic"``.
+        Choose from ``"linear"``, ``"nearest"``, ``"zero"``, ``"slinear"``, \
+        ``"quadratic"``, and ``"cubic"``.
 
         Default: ``"linear"``.
 

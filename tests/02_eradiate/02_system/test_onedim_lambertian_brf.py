@@ -76,7 +76,7 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
                 },
                 atmosphere=None,
             )
-            exp.run()
+            eradiate.run(exp)
 
             results[illumination_zenith][reflectance] = exp.results["toa_pplane"]
 

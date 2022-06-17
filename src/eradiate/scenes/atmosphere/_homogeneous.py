@@ -68,7 +68,8 @@ class HomogeneousAtmosphere(Atmosphere):
         "Can be initialised with a dictionary processed by "
         ":data:`~eradiate.scenes.spectra.spectrum_factory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum` or float",
-        default=":class:`AirScatteringCoefficient() <.AirScatteringCoefficient>`",
+        default=":class:`AirScatteringCoefficientSpectrum() "
+        "<.AirScatteringCoefficientSpectrum>`",
     )
 
     sigma_a: Spectrum = documented(
@@ -94,7 +95,13 @@ class HomogeneousAtmosphere(Atmosphere):
             factory=lambda: RayleighPhaseFunction(),
             converter=phase_function_factory.convert,
             validator=attr.validators.instance_of(PhaseFunction),
-        )
+        ),
+        doc="Scattering phase function.\n"
+        "\n"
+        "Can be initialised with a dictionary processed by "
+        ":data:`~eradiate.scenes.phase.phase_function_factory`.",
+        type=":class:`~eradiate.scenes.phase.PhaseFunction`",
+        default=":class:`RayleighPhaseFunction() <.RayleighPhaseFunction>`",
     )
 
     def __attrs_post_init__(self) -> None:

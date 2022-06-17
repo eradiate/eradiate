@@ -55,7 +55,8 @@ class AggregateCKDQuad(PipelineStep):
     * a ``w`` coordinate is created and contains the central wavelength of each
       bin;
     * a ``bin_wmin`` (resp. ``bin_wmax``) coordinate is created and contains the
-      lower (resp. upper) spectral bound of each bin.
+      lower (resp. upper) spectral bound of each bin;
+    * the dataset is reordered by ascending ``w`` values.
 
 
     Notes
@@ -90,24 +91,21 @@ class AggregateCKDQuad(PipelineStep):
         # into a per-bin average
 
         # Deduplicate bin list preserving order
-        bins = list(OrderedDict.fromkeys(x.bin.to_index()))
-        n_bins = len(bins)
+        bin_ids = list(OrderedDict.fromkeys(x.bin.to_index()))
+        n_bins = len(bin_ids)
+        bins = sorted(
+            self.measure.spectral_cfg.bin_set.select_bins(("ids", {"ids": bin_ids})),
+            key=lambda x: bin_ids.index(x.id),
+        )
 
         # Collect quadrature data
         quad = self.measure.spectral_cfg.bin_set.quad
 
         # Collect wavelengths associated with each bin
         wavelength_units = ucc.get("wavelength")
-        wavelengths = []
-        bin_wmins = []
-        bin_wmaxs = []
-
-        for bin in self.measure.spectral_cfg.bin_set.select_bins(
-            ("ids", {"ids": bins})
-        ):
-            wavelengths.append(bin.wcenter.m_as(wavelength_units))
-            bin_wmins.append(bin.wmin.m_as(wavelength_units))
-            bin_wmaxs.append(bin.wmax.m_as(wavelength_units))
+        wavelengths = [bin.wcenter.m_as(wavelength_units) for bin in bins]
+        bin_wmins = [bin.wmin.m_as(wavelength_units) for bin in bins]
+        bin_wmaxs = [bin.wmax.m_as(wavelength_units) for bin in bins]
 
         result = x
         var = self.var
@@ -132,7 +130,7 @@ class AggregateCKDQuad(PipelineStep):
         )
 
         # For each bin and each pixel, compute quadrature and store the result
-        for i_bin, bin in enumerate(bins):
+        for i_bin, bin in enumerate(bin_ids):
             values_at_nodes = img.sel(bin=bin).values
 
             # Rationale: Avoid using xarray's indexing in this loop for
@@ -189,6 +187,9 @@ class AggregateCKDQuad(PipelineStep):
 
         # Remove the 'index' dimension
         result = result.drop_dims("index")
+
+        # Reorder by ascending "w"
+        result = result.sortby("w")
 
         return result
 

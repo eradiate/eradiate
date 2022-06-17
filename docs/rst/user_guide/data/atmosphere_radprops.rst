@@ -1,6 +1,6 @@
-.. _sec-user_guide-data-radprops:
+.. _sec-user_guide-data-atmosphere_radprops:
 
-Atmospheric radiative properties
+Atmosphere: radiative properties
 ================================
 
 An atmospheric radiative property data set provides collision (absorption,

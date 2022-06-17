@@ -42,6 +42,6 @@ Perform simulations on one-dimensional scenes.
     is in progress).
 
 Perform simulations on three-dimensional scenes.
-    Eradiate can simulation top-of-canopy/atmosphere radiance on 3D scenes
+    Eradiate can simulate top-of-canopy/atmosphere radiance on 3D scenes
     consisting of a vegetated ground patch with or without atmosphere above it
     (plane parallel geometry only).

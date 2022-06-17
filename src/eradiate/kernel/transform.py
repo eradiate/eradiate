@@ -42,7 +42,7 @@ def map_unit_cube(
     """
     return mi.ScalarTransform4f.translate(
         [xmin, ymin, zmin]
-    ) * mi.ScalarTransform4f.scale([xmax - xmin, ymax - ymin, zmax - zmin])
+    ) @ mi.ScalarTransform4f.scale([xmax - xmin, ymax - ymin, zmax - zmin])
 
 
 def map_cube(
@@ -87,4 +87,4 @@ def map_cube(
 
     return mi.ScalarTransform4f.translate(
         [half_edge_x + xmin, half_edge_y + ymin, half_edge_z + zmin]
-    ) * mi.ScalarTransform4f.scale([half_edge_x, half_edge_y, half_edge_z])
+    ) @ mi.ScalarTransform4f.scale([half_edge_x, half_edge_y, half_edge_z])

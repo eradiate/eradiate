@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import eradiate
 from eradiate.experiments import OneDimExperiment, RamiExperiment
 from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.illumination import DirectionalIllumination
@@ -71,5 +72,5 @@ def test_spectral_loop(mode_mono, cls, wavelengths, irradiance):
         **kwargs,
     )
 
-    exp.run()
-    assert np.allclose(np.squeeze(exp.results["measure"].brf.values), 1.0)
+    results = eradiate.run(exp)
+    assert np.allclose(np.squeeze(results.brf.values), 1.0)

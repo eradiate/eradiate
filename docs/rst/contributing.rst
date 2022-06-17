@@ -524,3 +524,14 @@ contains probably what you need to do:
    git remote set-branches origin '*'
    git fetch -v
    git checkout the-branch-i-ve-been-looking-for
+
+Profiling
+---------
+
+Tests are a very opportunity to profile Eradiate. We recommend running tests
+with `pytest-profiling <https://pypi.org/project/pytest-profiling/>`_ (see
+documentation for usage instructions, it's basically about installing the
+package then running pytest with the ``--profile`` option).
+
+Profiling stats can then be visualised with
+`SnakeViz <https://jiffyclub.github.io/snakeviz/>`_.

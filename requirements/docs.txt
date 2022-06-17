@@ -16,7 +16,7 @@ appdirs==1.4.4
     # via
     #   -c requirements/dev.txt
     #   pooch
-astropy==5.0.4
+astropy==5.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -27,22 +27,21 @@ attrs==21.4.0
     #   dessinemoi
     #   environ-config
     #   jsonschema
-    #   markdown-it-py
     #   pinttrs
-autodocsumm==0.2.7
+autodocsumm==0.2.8
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-babel==2.9.1
+babel==2.10.3
     # via
     #   -c requirements/dev.txt
     #   sphinx
-beautifulsoup4==4.10.0
+beautifulsoup4==4.11.1
     # via
     #   -c requirements/dev.txt
     #   nbconvert
     #   pydata-sphinx-theme
-bleach==4.1.0
+bleach==5.0.0
     # via
     #   -c requirements/dev.txt
     #   nbconvert
@@ -50,7 +49,7 @@ cerberus==1.3.4
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-certifi==2021.10.8
+certifi==2022.6.15
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -62,16 +61,16 @@ charset-normalizer==2.0.12
     # via
     #   -c requirements/dev.txt
     #   requests
-click==8.1.2
+click==8.1.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   sphinx-click
-cloudpickle==2.0.0
+cloudpickle==2.1.0
     # via
     #   -c requirements/dev.txt
     #   dask
-colorama==0.4.4
+colorama==0.4.5
     # via
     #   -c requirements/dev.txt
     #   sphinx-autobuild
@@ -83,7 +82,7 @@ cycler==0.11.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2022.4.0
+dask==2022.6.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -118,11 +117,11 @@ fastjsonschema==2.15.3
     # via
     #   -c requirements/dev.txt
     #   nbformat
-fonttools==4.31.2
+fonttools==4.33.3
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-fsspec==2022.3.0
+fsspec==2022.5.0
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -138,40 +137,40 @@ imagesize==1.3.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==4.11.3
+importlib-metadata==4.11.4
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-resources==5.6.0
+importlib-resources==5.8.0
     # via
     #   -c requirements/dev.txt
     #   jsonschema
-jinja2==3.1.1
+jinja2==3.1.2
     # via
     #   -c requirements/dev.txt
     #   myst-parser
     #   nbconvert
     #   nbsphinx
     #   sphinx
-jsonschema==4.4.0
+jsonschema==4.6.0
     # via
     #   -c requirements/dev.txt
     #   nbformat
-jupyter-client==7.2.1
+jupyter-client==7.3.4
     # via
     #   -c requirements/dev.txt
     #   nbclient
-jupyter-core==4.9.2
+jupyter-core==4.10.0
     # via
     #   -c requirements/dev.txt
     #   jupyter-client
     #   nbconvert
     #   nbformat
-jupyterlab-pygments==0.1.2
+jupyterlab-pygments==0.2.2
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-kiwisolver==1.4.2
+kiwisolver==1.4.3
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -183,11 +182,11 @@ livereload==2.6.3
     # via
     #   -c requirements/dev.txt
     #   sphinx-autobuild
-locket==0.2.1
+locket==1.0.0
     # via
     #   -c requirements/dev.txt
     #   partd
-markdown-it-py==2.0.1
+markdown-it-py==2.1.0
     # via
     #   -c requirements/dev.txt
     #   mdit-py-plugins
@@ -197,7 +196,7 @@ markupsafe==2.1.1
     #   -c requirements/dev.txt
     #   jinja2
     #   nbconvert
-matplotlib==3.5.1
+matplotlib==3.5.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -206,7 +205,7 @@ mdit-py-plugins==0.3.0
     # via
     #   -c requirements/dev.txt
     #   myst-parser
-mdurl==0.1.0
+mdurl==0.1.1
     # via
     #   -c requirements/dev.txt
     #   markdown-it-py
@@ -218,25 +217,25 @@ mock==4.0.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-myst-parser==0.17.0
+myst-parser==0.18.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-nbclient==0.5.13
+nbclient==0.6.4
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-nbconvert==6.4.5
+nbconvert==6.5.0
     # via
     #   -c requirements/dev.txt
     #   nbsphinx
-nbformat==5.3.0
+nbformat==5.4.0
     # via
     #   -c requirements/dev.txt
     #   nbclient
     #   nbconvert
     #   nbsphinx
-nbsphinx==0.8.8
+nbsphinx==0.8.9
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -249,7 +248,7 @@ netcdf4==1.5.8
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-numpy==1.22.3
+numpy==1.22.4
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -266,9 +265,9 @@ packaging==20.9
     # via
     #   -c requirements/dev.txt
     #   astropy
-    #   bleach
     #   dask
     #   matplotlib
+    #   nbconvert
     #   pooch
     #   pydata-sphinx-theme
     #   sphinx
@@ -286,11 +285,11 @@ partd==1.2.0
     # via
     #   -c requirements/dev.txt
     #   dask
-pillow==9.1.0
+pillow==9.1.1
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-pint==0.19
+pint==0.19.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -308,7 +307,7 @@ pybtex==0.24.0
     #   -c requirements/dev.txt
     #   pybtex-docutils
     #   sphinxcontrib-bibtex
-pybtex-docutils==1.0.1
+pybtex-docutils==1.0.2
     # via
     #   -c requirements/dev.txt
     #   sphinxcontrib-bibtex
@@ -320,14 +319,13 @@ pyerfa==2.0.0.1
     # via
     #   -c requirements/dev.txt
     #   astropy
-pygments==2.11.2
+pygments==2.12.0
     # via
     #   -c requirements/dev.txt
-    #   jupyterlab-pygments
     #   nbconvert
     #   rich
     #   sphinx
-pyparsing==3.0.7
+pyparsing==3.0.9
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -356,16 +354,16 @@ pyyaml==6.0
     #   myst-parser
     #   pybtex
     #   sphinx-book-theme
-pyzmq==22.3.0
+pyzmq==23.1.0
     # via
     #   -c requirements/dev.txt
     #   jupyter-client
-requests==2.27.1
+requests==2.28.0
     # via
     #   -c requirements/dev.txt
     #   pooch
     #   sphinx
-rich==12.2.0
+rich==12.4.4
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -377,7 +375,7 @@ ruamel-yaml-clib==0.2.6
     # via
     #   -c requirements/dev.txt
     #   ruamel-yaml
-scipy==1.8.0
+scipy==1.8.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -399,7 +397,7 @@ snowballstemmer==2.2.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-soupsieve==2.3.1
+soupsieve==2.3.2.post1
     # via
     #   -c requirements/dev.txt
     #   beautifulsoup4
@@ -425,7 +423,7 @@ sphinx-book-theme==0.3.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx-click==3.1.0
+sphinx-click==4.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -433,7 +431,7 @@ sphinx-copybutton==0.5.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx-design==0.0.13
+sphinx-design==0.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -441,7 +439,7 @@ sphinxcontrib-applehelp==1.0.2
     # via
     #   -c requirements/dev.txt
     #   sphinx
-sphinxcontrib-bibtex==2.4.1
+sphinxcontrib-bibtex==2.4.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -465,7 +463,7 @@ sphinxcontrib-serializinghtml==1.1.5
     # via
     #   -c requirements/dev.txt
     #   sphinx
-testpath==0.6.0
+tinycss2==1.1.1
     # via
     #   -c requirements/dev.txt
     #   nbconvert
@@ -483,7 +481,7 @@ tqdm==4.64.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-traitlets==5.1.1
+traitlets==5.3.0
     # via
     #   -c requirements/dev.txt
     #   jupyter-client
@@ -492,7 +490,7 @@ traitlets==5.1.1
     #   nbconvert
     #   nbformat
     #   nbsphinx
-typing-extensions==4.1.1
+typing-extensions==4.2.0
     # via
     #   -c requirements/dev.txt
     #   myst-parser
@@ -505,6 +503,7 @@ webencodings==0.5.1
     # via
     #   -c requirements/dev.txt
     #   bleach
+    #   tinycss2
 xarray==2022.3.0
     # via
     #   -c requirements/dev.txt
@@ -516,7 +515,7 @@ zipp==3.8.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==62.0.0
+setuptools==62.4.0
     # via
     #   -c requirements/dev.txt
     #   cerberus

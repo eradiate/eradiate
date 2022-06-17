@@ -152,10 +152,10 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_s
     )
 
     ert_seed_state.reset()
-    experiment_1.run(seed_state=ert_seed_state)
+    eradiate.run(experiment_1, seed_state=ert_seed_state)
 
     ert_seed_state.reset()
-    experiment_2.run(seed_state=ert_seed_state)
+    eradiate.run(experiment_2, seed_state=ert_seed_state)
 
     brf_1 = experiment_1.results["measure"]["brf"]
     brf_2 = experiment_2.results["measure"]["brf"]

@@ -122,8 +122,48 @@ from the SOLSPEC instrument during the ATLAS-1 mission (from 1992-03-24 to
 (from 1992-8-7 to 1993-7-1), and on the Kurucz and Bell (1995) synthetic
 spectrum. Wavelength range: [200, 2397] nm. Resolution: 1 nm. The mean
 absolute uncertainty is of 2 to 3 %. The spectrum is representative of
-moderately high solar activity. Total solar irradiance: 1367.7 W/m².
+moderately high solar activity. When contributions from the wavelength region
+:math:`[0, 200[ \, \cup \, ]2397, +\infty[` nm are added, the total solar
+irradiance evaluates to 1367.7 W/m². In [200, 2397] nm, the integrated solar 
+irradiance spectrum evaluates to 1315.7 W/m².
+
 Reference: :cite:`Thuillier2003SolarSpectralIrradiance`.
+
+``thuillier_2003_extrapolated``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A version of the ``thuillier_2003`` spectrum extrapolated to 2500 nm so that it
+covers Eradiate's wavelength range.
+The figure below illustrates the original and extrapolated versions and 
+highlights the extrapolation region.
+
+.. only:: latex
+
+   .. image:: ../../../fig/data/data/srf/thuillier_2003_extrapolated.png
+
+.. only:: not latex
+
+   .. image:: ../../../fig/data/data/srf/thuillier_2003_extrapolated.svg
+
+.. note::
+  
+   For the reference, we provide below the values of the integrated original 
+   and extrapolated solar irradiance spectra, evaluated by integrating the
+   irradiance spectrum along wavelength using the trapezoidal rule.
+
+   .. math::
+
+     \int_{200 \, \mathrm{nm}}^{2397 \, \mathrm{nm}}
+     I_{\mathrm{original}} (\lambda) \, \mathrm{d} \lambda
+     = 1315.68 \, \mathrm{W / m^2} \\
+
+     \int_{200 \, \mathrm{nm}}^{2500 \, \mathrm{nm}}
+     I_{\mathrm{extrapolated}} (\lambda) \, \mathrm{d} \lambda
+     = 1321.72 \, \mathrm{W / m^2}
+    
+   Since the wavelength range is larger for the extrapolated irradiance
+   spectrum, the corresponding integrated solar irradiance is also larger
+   (by 0.46 %).
 
 ``whi_2008_*``
 ^^^^^^^^^^^^^^
