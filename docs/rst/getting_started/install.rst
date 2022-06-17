@@ -330,7 +330,7 @@ Clang.
              cmake --preset default -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
 Inspect CMake's output to check if your Conda environment Python is used by
-CMake. Search for lines starting with:
+CMake. Search for a line starting with:
 
 .. tab-set::
 
@@ -339,20 +339,18 @@ CMake. Search for lines starting with:
 
          .. code::
 
-            -- Found PythonInterp: /home/<username>/miniconda3/envs/eradiate/...
-            -- Found PythonLibs: /home/<username>/miniconda3/envs/eradiate/...
+            -- Found Python: /home/<username>/miniconda3/envs/eradiate/...
 
       .. tab-item:: macOS
          :sync: macos
 
          .. code::
 
-            -- Found PythonInterp: /Users/<username>/miniconda3/envs/eradiate/...
-            -- Found PythonLibs: /Users/<username>/miniconda3/envs/eradiate/...
+            -- Found Python: /Users/<username>/miniconda3/envs/eradiate/...
 
-The content of these lines may vary depending on how you installed Conda. If
-those paths point to a Python binary not associated with a Conda virtual
-environment, do not proceed before fixing them.
+The content of this line may vary depending on how you installed Conda. If
+this path points to a Python binary not associated with a Conda virtual
+environment, do not proceed before fixing it.
 
 .. dropdown:: If the wrong Python binary is used by CMake ...
    :color: info
@@ -416,7 +414,9 @@ use Eradiate |smile|
 Uninstall
 ---------
 
-To uninstall Eradiate from your system, you have to remove the Conda environment you used to set it up and delete the directory where you cloned the code. If you followed exactly the installation instructions, here is a possible workflow:
+To uninstall Eradiate from your system, simply remove the Conda environment you
+used to set it up and delete the directory where you cloned the code. If you
+followed the installation instructions, here is a possible workflow:
 
 1. Activate the Conda environment and delete the Eradiate source directory:
 
