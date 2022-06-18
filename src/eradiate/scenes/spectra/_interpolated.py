@@ -113,9 +113,7 @@ class InterpolatedSpectrum(Spectrum):
 
     def update(self):
         # Apply appropriate units to values field
-        self.values = pinttr.converters.ensure_units(
-            self.values, ucc.get(self.quantity)
-        )
+        self.values = pinttr.util.ensure_units(self.values, ucc.get(self.quantity))
 
     @classmethod
     def from_dataarray(
@@ -147,7 +145,7 @@ class InterpolatedSpectrum(Spectrum):
 
         * Expected data format:
 
-          **Coordinates (\* means also dimension)**
+          **Coordinates (\\* means also dimension)**
 
           * ``*w`` (float): wavelength in nm.
 

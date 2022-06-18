@@ -183,7 +183,7 @@ class EradiateConfig:
     )
 
     #: An integer flag setting the level of progress display (see
-    #: :class:`ProgressLevel`). Values are preferrably using strings
+    #: :class:`ProgressLevel`). Values are preferably using strings
     #: (``["NONE", "SPECTRAL_LOOP", "KERNEL"]``). Only affects tqdm-based progress
     #: bars.
     progress = var(
@@ -192,7 +192,7 @@ class EradiateConfig:
         if isinstance(x, str)
         else ProgressLevel(x),
         help="An integer flag setting the level of progress display (see"
-        ":class:`.ProgressLevel`). Values are preferrably using strings "
+        ":class:`.ProgressLevel`). Values are preferably set using strings "
         '(``["NONE", "SPECTRAL_LOOP", "KERNEL"]``). Only affects tqdm-based '
         "progress bars.",
     )

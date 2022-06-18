@@ -109,6 +109,7 @@ class PlaneParallelGeometry(AtmosphereGeometry):
     )
 
 
+@parse_docs
 @attr.s
 class SphericalShellGeometry(AtmosphereGeometry):
     """

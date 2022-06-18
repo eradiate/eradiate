@@ -53,7 +53,7 @@ class UniformSpectrum(Spectrum):
         self.update()
 
     def update(self):
-        self.value = pinttr.converters.ensure_units(self.value, ucc.get(self.quantity))
+        self.value = pinttr.util.ensure_units(self.value, ucc.get(self.quantity))
 
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.full_like(w, self.value.m) * self.value.units

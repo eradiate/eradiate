@@ -157,7 +157,7 @@ radiance is averaged over the targeted geometry.
    * If this sensor is used with a targeting strategy leading to rays not
      hitting the scene's geometry (*e.g.* default targeting strategy), it will
      pick up ambient emitter radiance samples (or zero values if no ambient
-     emitter is defined). Therefore, it is almost always preferrable to use a
+     emitter is defined). Therefore, it is almost always preferable to use a
      nondefault targeting strategy.
 */
 

@@ -206,7 +206,7 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
             default=ureg.Quantity([550.0], ureg.nm),
             units=ucc.deferred("wavelength"),
             converter=lambda x: converters.on_quantity(np.atleast_1d)(
-                pinttr.converters.ensure_units(x, ucc.get("wavelength"))
+                pinttr.util.ensure_units(x, ucc.get("wavelength"))
             ),
         ),
         doc="List of wavelengths on which to perform the monochromatic spectral "
