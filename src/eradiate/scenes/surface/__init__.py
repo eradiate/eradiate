@@ -6,6 +6,7 @@ __getattr__, __dir__, __all__ = lazy_loader.attach(
         "_core": ["Surface", "surface_factory"],
         "_basic": ["BasicSurface"],
         "_central_patch": ["CentralPatchSurface"],
+        "_dem": ["DEMSurface"],
     },
 )
 

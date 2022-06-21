@@ -16,6 +16,8 @@ shape_factory.register_lazy_batch(
         ("_cuboid.CuboidShape", "cuboid", {}),
         ("_rectangle.RectangleShape", "rectangle", {}),
         ("_sphere.SphereShape", "sphere", {}),
+        ("_filemesh.FileMeshShape", "file_mesh", {}),
+        ("_buffermesh.BufferMeshShape", "buffer_mesh", {})
     ],
     cls_prefix="eradiate.scenes.shapes",
 )
