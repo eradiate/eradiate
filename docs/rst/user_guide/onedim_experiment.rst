@@ -162,6 +162,39 @@ Black surface [:class:`.BlackBSDF`, ``black``]
     The black surface absorbs all incoming radiation, irrespective of
     incident angle or wavelength.
 
+Digital elevation model [``dem``]
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Eradiate extends the standard functionalities of one-dimensional simulations with
+digital elevation models (DEM). A three-dimensional surface can be defined with the ``dem``
+parameter. The DEM can be defined in several ways and it can be used with any BSDF type
+mentioned in the surface section above. Since a DEM surface model always has a finite
+horizontal extent, Eradiate adds horizontal elements to the edge of the DEM surface
+to prevent rays from escaping under it. The remaining surface area outside of the DEM is
+covered with the surface specified in the ``surface`` section.
+
+Note that Eradiate does not adjust the horizontal level of the flat surface automatically.
+If the DEM contains elevation values below the flat surface level (0m per default), the 3D
+surface will intersect the flat surface and the areas below the flat surface's level will
+be obscured by it.
+
+There are three ways to define a DEM geometry:
+
+An xarray DataArray [:meth:`.DEMSurface.from_dataarray`]
+    A DataArray defining a digital elevation model needs to have two coordinates named
+    `lat` for the latitude and `lon` for the longitude, specified in degrees and the
+    elevation data specified in kernel units of length.
+
+Triangulated meshes [:class:`.FileMesh`, ``file_mesh``]
+    To define the DEM using a triangulated mesh users can supply either a .obj file
+    or a .ply file. The mesh file will be interpreted as kernel units of length.
+    In this case no constructor method is used. Instead the `shape` member of the
+    `dem` class is directly defined with this mesh shape.
+
+Analytical functions [:meth:`.DEMSurface.from_analytical`]
+    Digital elevation models can be defined using functions, which take an x and
+    y position and return the corresponding elevation value.
+
 Result output
 -------------
 

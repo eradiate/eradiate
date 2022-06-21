@@ -16,6 +16,7 @@ surface_factory.register_lazy_batch(
     [
         ("_basic.BasicSurface", "basic", {}),
         ("_central_patch.CentralPatchSurface", "central_patch", {}),
+        ("_dem.DEMSurface", "dem", {})
     ],
     cls_prefix="eradiate.scenes.surface",
 )

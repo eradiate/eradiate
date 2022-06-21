@@ -36,6 +36,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 * Added support for various azimuth definition conventions ({ghpr}`247`).
 * Added an offline mode which disables all data file downloads ({ghpr}`249`).
+* Added support for Digital Elevation Models (DEM) ({ghpr}`246`).
 
 % ### Breaking changes
 

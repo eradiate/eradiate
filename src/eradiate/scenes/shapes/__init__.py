@@ -7,6 +7,9 @@ __getattr__, __dir__, __all__ = lazy_loader.attach(
         "_cuboid": ["CuboidShape"],
         "_rectangle": ["RectangleShape"],
         "_sphere": ["SphereShape"],
+        "_dtm": ["DTMShape"],
+        "_filemesh": ["FileMeshShape"],
+        "_buffermesh": ["BufferMeshShape"],
     },
 )
 

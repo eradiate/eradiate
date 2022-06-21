@@ -12,7 +12,9 @@ from eradiate.scenes.atmosphere import (
     HomogeneousAtmosphere,
     MolecularAtmosphere,
 )
+from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.measure import MeasureSpectralConfig, MultiDistantMeasure
+from eradiate.scenes.surface import DEMSurface
 
 
 def test_onedim_experiment_construct_default(modes_all_double):
@@ -266,3 +268,25 @@ def test_onedim_experiment_run_detailed(modes_all):
 
     # We just check that we record something as expected
     assert np.all(results["radiance"].data > 0.0)
+
+
+def test_atmosphere_experiment_warn_targeting_dem(modes_all):
+    """
+    Test that Eradiate raises a warning, when the measure target is a point and a DEM is defined in the scene.
+    """
+
+    with pytest.warns(UserWarning):
+        exp = AtmosphereExperiment(
+            dem=DEMSurface.from_analytical(
+                elevation_function=lambda x, y: 1,
+                x_length=1 * ureg.m,
+                x_steps=10,
+                y_length=1 * ureg.m,
+                y_steps=10,
+                bsdf=LambertianBSDF(),
+            ),
+            measures=[
+                {"type": "distant", "id": "distant_measure"},
+            ],
+        )
+        kd = exp.kernel_dict(ctx=KernelDictContext())

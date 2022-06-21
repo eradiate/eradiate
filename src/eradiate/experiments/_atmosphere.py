@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+import warnings
 
 import attr
 
@@ -21,7 +22,7 @@ from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_facto
 from ..scenes.measure import Measure, MultiRadiancemeterMeasure, TargetPoint
 from ..scenes.measure._core import MeasureFlags
 from ..scenes.shapes import RectangleShape, SphereShape
-from ..scenes.surface import BasicSurface, surface_factory
+from ..scenes.surface import BasicSurface, DEMSurface, surface_factory
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.deprecation import substitute
@@ -148,6 +149,20 @@ class AtmosphereExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
+    dem: t.Optional[DEMSurface] = documented(
+        attr.ib(
+            default=None,
+            converter=attr.converters.optional(surface_factory.convert),
+            validator=attr.validators.optional(attr.validators.instance_of(DEMSurface)),
+        ),
+        doc="Digital elevation model (DEM) specification. If set to ``None``, no DEM will be "
+        "added. This parameter can be specified as a dictionary which will be "
+        "interpreted by :data:`.surface_factory`",
+        type=".DEMSurface or None",
+        init_type=".DEMSurface or dict, optional",
+        default="None",
+    )
+
     _integrator: Integrator = documented(
         attr.ib(
             factory=VolPathIntegrator,
@@ -213,6 +228,19 @@ class AtmosphereExperiment(EarthObservationExperiment):
                 raise RuntimeError
 
             result.add(surface, ctx=ctx)
+
+        # Process DEM
+        if self.dem is not None:
+            for measure in self.measures:
+                if isinstance(measure.target, TargetPoint):
+                    warnings.warn(
+                        UserWarning(
+                            f"Your measure {measure.id}, uses a point target. "
+                            f"This might be undesirable when simulating a DEM."
+                        )
+                    )
+
+            result.add(self.dem, ctx=ctx)
 
         # Process measures
         for measure in self.measures:
