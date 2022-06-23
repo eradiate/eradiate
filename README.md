@@ -21,6 +21,193 @@ observation applications. Its main focus is accuracy, and for that purpose, it
 uses the Monte Carlo ray tracing method to solve the radiative transfer
 equation.
 
+## Detailed list of features
+
+* **Spectral computation**
+
+  <details>
+  <summary>
+  Covered spectral range: 280 nm to 2400 nm
+  </summary>
+  Eradiate focuses on the visible and near infrared regions and ships spectral
+  data within that range.
+  </details>
+
+  <details>
+  <summary>
+  Line-by-line simulation
+  </summary>
+  These are true monochromatic simulations (as opposed to narrow band
+  simulations).
+  </details>
+
+  <details>
+  <summary>
+  Correlated <em>k</em>-distribution band model (1 nm and 10 nm resolution)
+  </summary>
+  This method achieves compromise between performance and accuracy for the
+  simulation of absorption by gases.
+  </details>
+
+* **Atmosphere**
+
+  <details>
+  <summary>
+  One-dimensional atmospheric profiles (AFGL 1986 standard profiles)
+  </summary>
+  These profiles are available in CKD mode only (the monochromatic mode uses
+  the simpler U.S. Standard Atmosphere (1976) model).
+  </details>
+
+  <details>
+  <summary>
+  Plane-parallel and spherical-shell geometries
+  </summary>
+  This allows for more accurate results at high illumination and viewing
+  angles.
+  </details>
+
+* **Surface**
+
+  <details>
+  <summary>
+  Lambertian and RPV reflection models
+  </summary>
+  Model parameters can be varied against the spectral dimensions.
+  </details>
+
+  <details>
+  <summary>
+  Detailed surface geometry
+  </summary>
+  Add a discrete canopy model (either disk-based abstract models, or more
+  realistic mesh-based models).
+  </details>
+
+  <details>
+  <summary>
+  Combine with atmospheric profiles
+  </summary>
+  Your discrete canopy can be integrated within a scene featuring a 1D
+  atmosphere model in a fully coupled simulation.
+  </details>
+
+* **Illumination**
+
+  <details>
+  <summary>
+  Directional illumination model
+  </summary>
+  An ideal illumination model with a Delta angular distribution.
+  </details>
+
+  <details>
+  <summary>
+  Many irradiance datasets
+  </summary>
+  Pick your favourite—or bring your own.
+  </details>
+
+* **Measure**
+
+  <details>
+  <summary>
+  Top-of-atmosphere radiance and BRF computation
+  </summary>
+  An ideal model suitable for satellite data simulation.
+  </details>
+
+  <details>
+  <summary>
+  Perspective camera sensor
+  </summary>
+  Greatly facilitates scene setup: inspecting the scene is very easy.
+  </details>
+
+  <details>
+  <summary>
+  Many instrument spectral response functions
+  </summary>
+  Our SRF data is very close to the original data, and we provide advice to
+  further clean up the data, trading off accuracy for performance.
+  </details>
+
+* **Monte Carlo ray tracing**
+
+  <details>
+  <summary>
+  Mitsuba renderer as radiometric kernel
+  </summary>
+  We leverage the advanced Python API of this cutting-edge C++ rendering
+  library.
+  </details>
+
+  <details>
+  <summary>
+  State-of-the-art volumetric path tracing algorithm
+  </summary>
+  Mitsuba ships a null-collision-based volumetric path tracer which performs
+  well in the cases Eradiate is used for.
+  </details>
+
+* **Traceability**
+
+  <details>
+  <summary>
+  Documented data and formats
+  </summary>
+  We explain where our data comes from and how users can build their own data
+  in a format with Eradiate's input.
+  </details>
+
+  <details>
+  <summary>
+  Transparent algorithms
+  </summary>
+  Our algorithms are researched and documented, and their implementation is
+  open-source.
+  </details>
+
+  <details>
+  <summary>
+  Thorough testing
+  </summary>
+  Eradiate is shipped with a large unit testing suite and benchmarked
+  periodically against community-established reference simulation software.
+  </details>
+
+* **Interface**
+
+  <details>
+  <summary>
+  Comprehensive Python interface
+  </summary>
+  Abstractions are derived from computer graphics and Earth observation and
+  are designed to feel natural to EO scientists.
+  </details>
+
+  <details>
+  <summary>
+  Designed for interactive usage
+  </summary>
+  Jupyter notebooks are now an essential tool in the digital scientific
+  workflow.
+  </details>
+
+  <details>
+  <summary>
+  Integration with Python scientific ecosystem
+  </summary>
+  The implementation is done using the Scientific Python stack.
+  </details>
+
+  <details>
+  <summary>
+  Standard data formats (mostly NetCDF)
+  </summary>
+  Eradiate uses predominantly xarray data structures for I/O.
+  </details>
+
 ## Installation and usage
 
 For build and usage instructions, please refer to the
@@ -33,7 +220,7 @@ Got a question? Please visit our
 
 ## Authors and acknowledgements
 
-Eradiate is developed by a core team consisting of Vincent Leroy, Yvan Nollet, 
+Eradiate is developed by a core team consisting of Vincent Leroy, Yvan Nollet,
 Sebastian Schunke, Nicolas Misk and Yves Govaerts.
 
 Eradiate uses the
@@ -46,7 +233,7 @@ and contributors for their work.
 
 The development of Eradiate is funded by the
 [Copernicus programme](https://www.copernicus.eu/) through a project managed by
-the [European Space Agency](http://www.esa.int/) (contract no 
+the [European Space Agency](http://www.esa.int/) (contract no
 40000127201/19/I‑BG).
 The design phase was funded by the [MetEOC-3 project](http://www.meteoc.org/)
 (EMPIR grant 16ENV03).
