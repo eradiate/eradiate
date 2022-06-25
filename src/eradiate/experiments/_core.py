@@ -13,8 +13,8 @@ from tqdm.auto import tqdm
 
 import eradiate
 
-from .. import config, pipelines
-from .._config import ProgressLevel
+from .. import pipelines
+from .._config import ProgressLevel, config
 from .._mode import ModeFlags, supported_mode
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext

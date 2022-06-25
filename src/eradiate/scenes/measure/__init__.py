@@ -1,28 +1,17 @@
-from ._core import Measure, MeasureSpectralConfig, measure_factory
-from ._distant_flux import DistantFluxMeasure
-from ._hemispherical_distant import HemisphericalDistantMeasure
-from ._multi_distant import MultiDistantMeasure
-from ._multi_radiancemeter import MultiRadiancemeterMeasure
-from ._perspective import PerspectiveCameraMeasure
-from ._radiancemeter import RadiancemeterMeasure
-from ._target import Target, TargetPoint, TargetRectangle
+from ...util import lazy_loader
 
-__all__ = [
-    # Interfaces
-    "Measure",
-    "Target",
-    # Factories
-    "measure_factory",
-    # Utility data structures
-    "MeasureSpectralConfig",
-    # Distant measure targeting
-    "TargetPoint",
-    "TargetRectangle",
-    # Measure definitions
-    "PerspectiveCameraMeasure",
-    "RadiancemeterMeasure",
-    "MultiRadiancemeterMeasure",
-    "MultiDistantMeasure",
-    "DistantFluxMeasure",
-    "HemisphericalDistantMeasure",
-]
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        "_core": ["Measure", "MeasureSpectralConfig", "measure_factory"],
+        "_target": ["Target", "TargetPoint", "TargetRectangle"],
+        "_distant_flux": ["DistantFluxMeasure"],
+        "_hemispherical_distant": ["HemisphericalDistantMeasure"],
+        "_multi_distant": ["MultiDistantMeasure"],
+        "_multi_radiancemeter": ["MultiRadiancemeterMeasure"],
+        "_perspective": ["PerspectiveCameraMeasure"],
+        "_radiancemeter": ["RadiancemeterMeasure"],
+    },
+)
+
+del lazy_loader

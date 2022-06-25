@@ -1,10 +1,12 @@
-from ._constant import ConstantIllumination
-from ._core import Illumination, illumination_factory
-from ._directional import DirectionalIllumination
+from ...util import lazy_loader
 
-__all__ = [
-    "Illumination",
-    "illumination_factory",
-    "ConstantIllumination",
-    "DirectionalIllumination",
-]
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        "_core": ["Illumination", "illumination_factory"],
+        "_constant": ["ConstantIllumination"],
+        "_directional": ["DirectionalIllumination"],
+    },
+)
+
+del lazy_loader

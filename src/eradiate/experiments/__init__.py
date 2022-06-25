@@ -1,14 +1,13 @@
-from ._core import EarthObservationExperiment, Experiment, mitsuba_run, run
-from ._onedim import OneDimExperiment
-from ._rami import RamiExperiment
-from ._rami4atm import Rami4ATMExperiment
+from ..util import lazy_loader
 
-__all__ = [
-    "mitsuba_run",
-    "run",
-    "EarthObservationExperiment",
-    "Experiment",
-    "OneDimExperiment",
-    "RamiExperiment",
-    "Rami4ATMExperiment",
-]
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        "_core": ["EarthObservationExperiment", "Experiment", "mitsuba_run", "run"],
+        "_onedim": ["OneDimExperiment"],
+        "_rami": ["RamiExperiment"],
+        "_rami4atm": ["Rami4ATMExperiment"],
+    },
+)
+
+del lazy_loader

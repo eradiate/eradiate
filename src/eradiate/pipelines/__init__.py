@@ -1,25 +1,31 @@
-from ._aggregate import AggregateCKDQuad, AggregateRadiosity, AggregateSampleCount
-from ._assemble import AddIllumination, AddSpectralResponseFunction, AddViewingAngles
-from ._compute import ApplySpectralResponseFunction, ComputeAlbedo, ComputeReflectance
-from ._core import Pipeline, PipelineStep
-from ._gather import Gather
+from ..util import lazy_loader
 
-__all__ = [
-    # Basic pipeline infrastructure
-    "Pipeline",
-    "PipelineStep",
-    # Gather step
-    "Gather",
-    # Aggregate steps
-    "AggregateCKDQuad",
-    "AggregateRadiosity",
-    "AggregateSampleCount",
-    # Assemble steps
-    "AddIllumination",
-    "AddSpectralResponseFunction",
-    "AddViewingAngles",
-    # Compute steps
-    "ApplySpectralResponseFunction",
-    "ComputeReflectance",
-    "ComputeAlbedo",
-]
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        # Basic pipeline infrastructure
+        "_core": ["Pipeline", "PipelineStep"],
+        # Gather step
+        "_gather": ["Gather"],
+        # Aggregate steps
+        "_aggregate": [
+            "AggregateCKDQuad",
+            "AggregateRadiosity",
+            "AggregateSampleCount",
+        ],
+        # Assemble steps
+        "_assemble": [
+            "AddIllumination",
+            "AddSpectralResponseFunction",
+            "AddViewingAngles",
+        ],
+        # Compute steps
+        "_compute": [
+            "ApplySpectralResponseFunction",
+            "ComputeAlbedo",
+            "ComputeReflectance",
+        ],
+    },
+)
+
+del lazy_loader
