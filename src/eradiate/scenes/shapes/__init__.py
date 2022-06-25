@@ -1,12 +1,13 @@
-from ._core import Shape, shape_factory
-from ._cuboid import CuboidShape
-from ._rectangle import RectangleShape
-from ._sphere import SphereShape
+from ...util import lazy_loader
 
-__all__ = [
-    "shape_factory",
-    "CuboidShape",
-    "Shape",
-    "SphereShape",
-    "RectangleShape",
-]
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        "_core": ["Shape", "shape_factory"],
+        "_cuboid": ["CuboidShape"],
+        "_rectangle": ["RectangleShape"],
+        "_sphere": ["SphereShape"],
+    },
+)
+
+del lazy_loader

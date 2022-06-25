@@ -5,122 +5,43 @@ from ._version import _version
 
 __version__ = _version  #: Eradiate version string.
 
-# -- Workaround: pre-import modules clashing with Mitsuba's import code --------
+# -- Lazy imports ------------------------------------------------------
 
-__import__("eradiate._preimport")
+from .util import lazy_loader
 
-# -- Global configuration ------------------------------------------------------
-
-from . import _config  # isort: skip
-
-#: Global configuration data structure.
-#: Alias to :data:`eradiate._config.config`.
-#: See also: :class:`eradiate._config.EradiateConfig`.
-config = _config.config
-
-# -- Unit management facilities ------------------------------------------------
-
-from . import units  # isort: skip
-
-#: Global unit registry.
-#: Alias to :data:`eradiate.units.unit_registry`.
-#: See also: :class:`pint.UnitRegistry`.
-unit_registry = units.unit_registry
-
-#: Configuration unit context.
-#: Alias to :data:`eradiate.units.unit_context_config`.
-#: See also: :class:`pinttr.UnitContext`.
-unit_context_config = units.unit_context_config
-
-#: Kernel unit context.
-#: Alias to :data:`eradiate.units.unit_context_kernel`.
-#: See also: :class:`pinttr.UnitContext`.
-unit_context_kernel = units.unit_context_kernel
-
-# -- Operational mode definition -----------------------------------------------
-
-from . import _mode
-
-#: Get the current operational mode.
-#: Alias to :func:`eradiate._mode.mode`.
-mode = _mode.mode
-
-#: Get a list of registered operational modes.
-#: Alias to :func:`eradiate._mode.modes`.
-modes = _mode.modes
-
-#: Set Eradiate's operational mode.
-#: Alias to :func:`eradiate._mode.set_mode`.
-set_mode = _mode.set_mode
-
-#: Raise if the current mode doesn't have specific flags.
-#: Alias to :func:`eradiate._mode.supported_mode`.
-supported_mode = _mode.supported_mode
-
-#: Raise if the current mode has specific flags.
-#: Alias to :func:`eradiate._mode.unsupported_mode`.
-unsupported_mode = _mode.unsupported_mode
-
-#: Alias to :class:`eradiate._mode.Mode`.
-Mode = _mode.Mode
-
-#: Alias to :class:`eradiate._mode.ModeFlags`.
-ModeFlags = _mode.ModeFlags
-
-# -- Convenience entry points --------------------------------------------------
-
-from . import experiments  # isort: skip
-
-#: Alias to :class:`eradiate.experiments.run`.
-run = experiments.run
-
-
-# -- Import submodules ---------------------------------------------------------
-
-from . import (
-    ckd,
-    contexts,
-    converters,
-    data,
-    kernel,
-    notebook,
-    pipelines,
-    plot,
-    rng,
-    scenes,
-    validators,
-    xarray,
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submodules=[
+        "ckd",
+        "contexts",
+        "converters",
+        "data",
+        "experiments",
+        "kernel",
+        "notebook",
+        "pipelines",
+        "plot",
+        "rng",
+        "scenes",
+        "units",
+        "validators",
+        "xarray",
+    ],
+    submod_attrs={
+        "_config": ["config"],
+        "_mode": [
+            "mode",
+            "modes",
+            "set_mode",
+            "supported_mode",
+            "unsupported_mode",
+            "Mode",
+            "ModeFlags",
+        ],
+        "experiments": ["run"],
+        "notebook": ["load_ipython_extension"],
+        "units": ["unit_registry", "unit_context_config", "unit_context_kernel"],
+    },
 )
 
-__all__ = [
-    "Mode",
-    "ModeFlags",
-    "__version__",
-    "ckd",
-    "contexts",
-    "converters",
-    "data",
-    "experiments",
-    "mode",
-    "modes",
-    "notebook",
-    "pipelines",
-    "plot",
-    "rng",
-    "run",
-    "scenes",
-    "set_mode",
-    "supported_mode",
-    "unit_context_config",
-    "unit_context_kernel",
-    "unit_registry",
-    "units",
-    "unsupported_mode",
-    "validators",
-    "xarray",
-]
-
-
-# -- IPython extension ---------------------------------------------------------
-
-from .notebook import load_ipython_extension
+del lazy_loader

@@ -2,48 +2,32 @@
 Manage Eradiate's data files.
 """
 
-__all__ = [
-    "data_store",
-    "init_data_store",
-    "open_dataset",
-    "load_dataset",
-    "DataStore",
-    "BlindDirectoryDataStore",
-    "BlindOnlineDataStore",
-    "MultiDataStore",
-    "SafeDirectoryDataStore",
-    "SafeOnlineDataStore",
-]
-
 import sys
 
-import xarray as xr
-
-from ._blind_directory import BlindDirectoryDataStore
-from ._blind_online import BlindOnlineDataStore
-from ._core import DataStore
-from ._multi import MultiDataStore
-from ._safe_directory import SafeDirectoryDataStore
-from ._safe_online import SafeOnlineDataStore
-from ._store import init_data_store
 from ..typing import PathLike
+from ..util import lazy_loader
 
-# -- Data store ----------------------------------------------------------------
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        "_store": ["data_store", "init_data_store"],
+        "_core": ["DataStore"],
+        "_blind_directory": ["BlindDirectoryDataStore"],
+        "_blind_online": ["BlindOnlineDataStore"],
+        "_safe_directory": ["SafeDirectoryDataStore"],
+        "_safe_online": ["SafeOnlineDataStore"],
+        "_multi": ["MultiDataStore"],
+    },
+)
+xr = lazy_loader.load("xarray")
 
-
-def __getattr__(name):
-    if name == "data_store":
-        from ._store import data_store
-
-        return data_store
-
-    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+del lazy_loader
 
 
 # -- Access functions ----------------------------------------------------------
 
 
-def open_dataset(filename: PathLike, **kwargs) -> xr.Dataset:
+def open_dataset(filename: PathLike, **kwargs) -> "xarray.Dataset":
     """
     Open a dataset from the online data store (requires Internet access).
 
@@ -69,7 +53,7 @@ def open_dataset(filename: PathLike, **kwargs) -> xr.Dataset:
     return xr.open_dataset(filename, **kwargs)
 
 
-def load_dataset(*args, **kwargs) -> xr.Dataset:
+def load_dataset(*args, **kwargs) -> "xarray.Dataset":
     """
     Open, load into memory, and close a dataset from the online data store
     (requires Internet access).
@@ -80,3 +64,6 @@ def load_dataset(*args, **kwargs) -> xr.Dataset:
     """
     with open_dataset(*args, **kwargs) as ds:
         return ds.load()
+
+
+__all__.extend(["open_dataset", "load_dataset"])

@@ -1,16 +1,18 @@
-from ._core import Canopy, CanopyElement, InstancedCanopyElement, biosphere_factory
-from ._discrete import DiscreteCanopy
-from ._leaf_cloud import LeafCloud
-from ._tree import AbstractTree, MeshTree, MeshTreeElement
+from ...util import lazy_loader
 
-__all__ = [
-    "AbstractTree",
-    "biosphere_factory",
-    "Canopy",
-    "CanopyElement",
-    "DiscreteCanopy",
-    "InstancedCanopyElement",
-    "LeafCloud",
-    "MeshTree",
-    "MeshTreeElement",
-]
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        "_core": [
+            "Canopy",
+            "CanopyElement",
+            "InstancedCanopyElement",
+            "biosphere_factory",
+        ],
+        "_discrete": ["DiscreteCanopy"],
+        "_leaf_cloud": ["LeafCloud"],
+        "_tree": ["AbstractTree", "MeshTree", "MeshTreeElement"],
+    },
+)
+
+del lazy_loader

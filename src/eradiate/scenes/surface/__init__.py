@@ -1,10 +1,12 @@
-from ._basic import BasicSurface
-from ._central_patch import CentralPatchSurface
-from ._core import Surface, surface_factory
+from ...util import lazy_loader
 
-__all__ = [
-    "surface_factory",
-    "Surface",
-    "BasicSurface",
-    "CentralPatchSurface",
-]
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        "_core": ["Surface", "surface_factory"],
+        "_basic": ["BasicSurface"],
+        "_central_patch": ["CentralPatchSurface"],
+    },
+)
+
+del lazy_loader

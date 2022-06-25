@@ -1,14 +1,14 @@
-from ._black import BlackBSDF
-from ._checkerboard import CheckerboardBSDF
-from ._core import BSDF, bsdf_factory
-from ._lambertian import LambertianBSDF
-from ._rpv import RPVBSDF
+from ...util import lazy_loader
 
-__all__ = [
-    "bsdf_factory",
-    "BSDF",
-    "BlackBSDF",
-    "CheckerboardBSDF",
-    "LambertianBSDF",
-    "RPVBSDF",
-]
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        "_core": ["BSDF", "bsdf_factory"],
+        "_black": ["BlackBSDF"],
+        "_checkerboard": ["CheckerboardBSDF"],
+        "_lambertian": ["LambertianBSDF"],
+        "_rpv": ["RPVBSDF"],
+    },
+)
+
+del lazy_loader

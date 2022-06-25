@@ -9,7 +9,7 @@ import mitsuba as mi
 import numpy as np
 import xarray as xr
 
-from .. import converters, data
+from .. import converters
 from ..attrs import documented, parse_docs
 from ..exceptions import DataError
 from ..typing import PathLike

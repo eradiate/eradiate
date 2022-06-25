@@ -2,15 +2,17 @@
 Atmospheric radiative properties calculation package.
 """
 
-from ._afgl1986 import AFGL1986RadProfile
-from ._array import ArrayRadProfile
-from ._core import RadProfile, rad_profile_factory
-from ._us76_approx import US76ApproxRadProfile
 
-__all__ = [
-    "rad_profile_factory",
-    "RadProfile",
-    "ArrayRadProfile",
-    "AFGL1986RadProfile",
-    "US76ApproxRadProfile",
-]
+from ..util import lazy_loader
+
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submod_attrs={
+        "_core": ["RadProfile", "rad_profile_factory"],
+        "_us76_approx": ["US76ApproxRadProfile"],
+        "_afgl1986": ["AFGL1986RadProfile"],
+        "_array": ["ArrayRadProfile"],
+    },
+)
+
+del lazy_loader
