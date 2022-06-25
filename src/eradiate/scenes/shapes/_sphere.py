@@ -30,10 +30,6 @@ class SphereShape(Shape):
     Sphere shape [``sphere``].
 
     This shape represents a sphere parametrised by its centre and radius.
-
-    Notes
-    -----
-    This is a wrapper around the ``sphere`` kernel plugin.
     """
 
     center: pint.Quantity = documented(

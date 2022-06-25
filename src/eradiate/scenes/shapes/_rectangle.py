@@ -50,10 +50,6 @@ class RectangleShape(Shape):
     This shape represents a rectangle parametrised by the length of its edges,
     the coordinates of its central point, a normal vector and an orientation
     vector.
-
-    Notes
-    -----
-    This is a wrapper around the ``rectangle`` kernel plugin.
     """
 
     edges: pint.Quantity = documented(
