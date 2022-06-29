@@ -38,8 +38,10 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 % ### Deprecations and removals
 %
-% ### Improvements and fixes
-%
+### Improvements and fixes
+
+* Added the atmo-centimeter, a.k. atm-cm, to the unit registry ({ghpr}`245`).
+
 % ### Documentation
 %
 % ### Internal changes
