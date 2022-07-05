@@ -5,7 +5,8 @@ import typing as t
 import numpy as np
 import xarray as xr
 
-from ..frame import angles_to_direction
+from .. import frame
+from .._config import config
 from ..warp import uniform_hemisphere_to_square
 
 
@@ -17,6 +18,7 @@ def film_to_angular(
     y_label: str = "y",
     theta_label: str = "theta",
     phi_label: str = "phi",
+    azimuth_convention: t.Union[frame.AzimuthConvention, str, None] = None,
 ) -> xr.DataArray:
     """
     Interpolate a hemispherical film data array on an angular grid.
@@ -44,11 +46,25 @@ def film_to_angular(
     phi_label : str, default: "phi"
         Label for the azimuth angle coordinate.
 
+    azimuth_convention : .AzimuthConvention or str, optional
+        Azimuth convention used in the produced data array. If unset the default
+        active convention is used.
+
     Returns
     -------
     DataArray
         Data array interpolated on the specified angular grid.
     """
+    # TODO: Double check where this function is used and if the azimuth
+    # transformation is crrectly applied.
+
+    # Define azimuth convention
+    if azimuth_convention is None:
+        azimuth_convention = config.azimuth_convention
+    elif isinstance(azimuth_convention, str):
+        azimuth_convention = frame.AzimuthConvention[azimuth_convention.upper()]
+    else:
+        pass
 
     # Interpolate values on angular grid
     data = np.empty((len(phi), len(theta)))
@@ -59,7 +75,7 @@ def film_to_angular(
         ys = np.empty_like(theta)
 
         angles = np.array([[th, ph] for th in theta.ravel()])
-        directions = angles_to_direction(angles)
+        directions = frame.angles_to_direction(angles)
         film_coords = uniform_hemisphere_to_square(directions)
         xs.ravel()[:] = film_coords[:, 0]
         ys.ravel()[:] = film_coords[:, 1]
@@ -71,7 +87,10 @@ def film_to_angular(
     return xr.DataArray(
         data,
         coords=(
-            (phi_label, phi),
+            (
+                phi_label,
+                frame.transform_azimuth(phi, to_convention=azimuth_convention),
+            ),
             (theta_label, theta),
         ),
         dims=(phi_label, theta_label),
