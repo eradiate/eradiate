@@ -10,9 +10,10 @@ import pinttr
 from ._core import Measure, MeasureFlags, measure_factory
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
+from ... import frame
+from ..._config import config
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
-from ...frame import angles_in_hplane, angles_to_direction, direction_to_angles
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -26,7 +27,7 @@ from ...units import unit_registry as ureg
 @attr.s
 class MultiDistantMeasure(Measure):
     """
-    Multi-distant radiance measure scene element [``distant``, ``mdistant``,
+    Multi-distant radiance measure scene element [``distant``, ``mdistant``, \
     ``multi_distant``].
 
     This scene element creates a measure consisting of an array of
@@ -56,7 +57,8 @@ class MultiDistantMeasure(Measure):
         pinttr.ib(default=None, units=ucc.deferred("angle")),
         doc="If all directions are expected to be within a hemisphere plane cut, "
         "the azimuth value of that plane. Unitless values are converted to "
-        "``ucc['angle']``.",
+        "``ucc['angle']``. The convention specified as the "
+        "`azimuth_convention` field applies.",
         type="quantity or None",
         init_type="float or quantity, optional",
         default="None",
@@ -70,7 +72,7 @@ class MultiDistantMeasure(Measure):
         # Check that all specified directions are in the requested plane
         angles = self.viewing_angles.m_as(ureg.deg)
         try:
-            angles_in_hplane(
+            frame.angles_in_hplane(
                 value.m_as(ureg.deg),
                 angles[:, :, 0],
                 angles[:, :, 1],
@@ -81,6 +83,21 @@ class MultiDistantMeasure(Measure):
                 f"while validating '{attribute.name}': 'directions' are not all "
                 "part of the same hemisphere plane cut"
             ) from e
+
+    azimuth_convention: frame.AzimuthConvention = documented(
+        attr.ib(
+            default=None,
+            converter=lambda x: config.azimuth_convention
+            if x is None
+            else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x),
+            validator=attr.validators.instance_of(frame.AzimuthConvention),
+        ),
+        doc="Azimuth convention. If ``None``, the global default configuration "
+        "is used (see :class:`.EradiateConfig`).",
+        type=".AzimuthConvention",
+        init_type=".AzimuthConvention or str, optional",
+        default="None",
+    )
 
     directions: np.ndarray = documented(
         attr.ib(
@@ -126,15 +143,21 @@ class MultiDistantMeasure(Measure):
             dimension is ordered as (zenith, azimuth).
         """
         angle_units = ucc.get("angle")
-        angles = direction_to_angles(-self.directions).to(angle_units)
+        angles = frame.direction_to_angles(-self.directions).m_as(ureg.rad)
 
         # Snap zero values to avoid close-to-360° azimuths
         angles[:, 1] = np.where(np.isclose(angles[:, 1], 0.0), 0.0, angles[:, 1])
 
-        # Normalise azimuth to [0, 2π]
-        angles[:, 1] %= 360.0 * ureg.deg
+        # Convert azimuth from East right to target convention and normalise
+        # to [0, 2π]
+        angles[:, 1] = frame.transform_azimuth(
+            angles[:, 1],
+            from_convention=frame.AzimuthConvention.EAST_RIGHT,
+            to_convention=self.azimuth_convention,
+            normalize=True,
+        )
 
-        return angles.reshape((-1, 1, 2))
+        return (angles.reshape((-1, 1, 2)) * ureg.rad).to(angle_units)
 
     @property
     def film_resolution(self) -> t.Tuple[int, int]:
@@ -186,16 +209,15 @@ class MultiDistantMeasure(Measure):
 
         Returns
         -------
-        MultiDistantMeasure
+        .MultiDistantMeasure
         """
         if "directions" in kwargs:
             raise TypeError(
                 "from_viewing_angles() got an unexpected keyword argument 'directions'"
             )
 
-        angle_units = ucc.get("angle")
-
         # Basic unit conversion and array reshaping
+        angle_units = ucc.get("angle")
         zeniths = pinttr.util.ensure_units(
             np.atleast_1d(zeniths).reshape((-1, 1)), default_units=angle_units
         ).m_as(angle_units)
@@ -213,9 +235,18 @@ class MultiDistantMeasure(Measure):
             if auto_hplane and "hplane" not in kwargs:
                 kwargs["hplane"] = azimuths[0] * angle_units
 
+        # Collect azimuth convention and apply default if none is specified
+        azimuth_convention = (
+            kwargs["azimuth_convention"]
+            if "azimuth_convention" in kwargs
+            else config.azimuth_convention
+        )
+
         # Compute directions
         angles = np.hstack((zeniths, azimuths)) * angle_units
-        directions = -angles_to_direction(angles)
+        directions = frame.angles_to_direction(
+            angles, azimuth_convention=azimuth_convention, flip=True
+        )
 
         # Create instance
         return cls(directions=directions, **kwargs)
