@@ -3,6 +3,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
+from eradiate.frame import AzimuthConvention
 from eradiate.scenes.measure._multi_distant import MultiDistantMeasure
 
 
@@ -115,3 +116,72 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
         * ureg.deg
     )
     assert np.allclose(angles, measure.viewing_angles)
+
+
+def test_multi_distant_measure_from_viewing_angles_convention(mode_mono):
+    # Construct from viewing angles within the same plane using a single azimuth value
+    measure = MultiDistantMeasure.from_viewing_angles(
+        zeniths=[-60, -45, -30, -15, 0, 15, 30, 45, 60] * ureg.deg,
+        azimuths=0.0,
+        azimuth_convention="north_left",
+    )
+
+    # The requested azimuth convention is correctly passed to the constructor
+    assert measure.azimuth_convention is AzimuthConvention.NORTH_LEFT
+
+    # Selecting a non-standard convention doesn't modify the hemispherical plane
+    # azimuth and viewing angles are not modified (beyond the hemispherical
+    # plane transform)
+    assert measure.hplane == 0.0 * ureg.deg
+    assert np.allclose(
+        measure.viewing_angles.squeeze(),
+        [
+            [60, 180],
+            [45, 180],
+            [30, 180],
+            [15, 180],
+            [0, 90],
+            [15, 0],
+            [30, 0],
+            [45, 0],
+            [60, 0],
+        ]
+        * ureg.deg,
+    )
+
+    # Another check of the azimuth values: computed viewing angles are expressed
+    # in the specified convention
+    measure = MultiDistantMeasure.from_viewing_angles(
+        zeniths=45.0 * ureg.deg,
+        azimuths=[0, 45, 90, 180, 360] * ureg.deg,
+        azimuth_convention="north_left",
+    )
+    assert np.allclose(
+        measure.viewing_angles.squeeze(),
+        [
+            [45, 0],
+            [45, 45],
+            [45, 90],
+            [45, 180],
+            [45, 0],
+        ]
+        * ureg.deg,
+    )
+
+    # Check that generated directions are correct: the constructor internally
+    # performs a transform to East right
+    measure = MultiDistantMeasure.from_viewing_angles(
+        zeniths=90.0 * ureg.deg,
+        azimuths=[0, 45, 90, 180, 360] * ureg.deg,
+        azimuth_convention="north_left",
+    )
+    assert np.allclose(
+        -measure.directions,  # Directions are inwards, flip them for convenience
+        [
+            [0, 1, 0],
+            [np.sqrt(2) / 2, np.sqrt(2) / 2, 0],
+            [1, 0, 0],
+            [0, -1, 0],
+            [0, 1, 0],
+        ],
+    )
