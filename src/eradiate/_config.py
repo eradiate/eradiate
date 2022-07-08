@@ -16,6 +16,7 @@ from environ._environ_config import CNF_KEY, RAISE, _ConfigEntry
 from environ.exceptions import ConfigError
 
 from .exceptions import ConfigWarning
+from .frame import AzimuthConvention
 
 
 def var(
@@ -183,7 +184,7 @@ class EradiateConfig:
     )
 
     #: An integer flag setting the level of progress display (see
-    #: :class:`ProgressLevel`). Values are preferably using strings
+    #: :class:`ProgressLevel`). Values are preferably set using strings
     #: (``["NONE", "SPECTRAL_LOOP", "KERNEL"]``). Only affects tqdm-based progress
     #: bars.
     progress = var(
@@ -195,6 +196,20 @@ class EradiateConfig:
         ":class:`.ProgressLevel`). Values are preferably set using strings "
         '(``["NONE", "SPECTRAL_LOOP", "KERNEL"]``). Only affects tqdm-based '
         "progress bars.",
+    )
+
+    #: The convention applied when interpreting azimuth values as part
+    #: of the specification of a direction (see :class:`.AzimuthConvention`).
+    #: Values are preferably set using strings (*e.g.* ``"EAST_RIGHT"``,
+    #: ``"NORTH_LEFT"``, etc.).
+    azimuth_convention = var(
+        default="EAST_RIGHT",
+        converter=lambda x: AzimuthConvention[x.upper()] if isinstance(x, str) else x,
+        validator=attr.validators.instance_of(AzimuthConvention),
+        help="The convention applied when interpreting azimuth values as part "
+        "of the specification of a direction (see :class:`.AzimuthConvention`). "
+        'Values are preferably set using strings (*e.g.* ``"EAST_RIGHT"``, '
+        '``"NORTH_LEFT"``, etc.).',
     )
 
 
