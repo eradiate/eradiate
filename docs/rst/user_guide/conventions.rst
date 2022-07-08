@@ -61,13 +61,6 @@ physics) where:
 Local illumination and viewing angle definition
 -----------------------------------------------
 
-.. only:: not latex
-
-   .. margin::
-
-      .. figure:: ../../fig/azimuth-angle-convention.svg
-         :width: 100%
-
 The directions to the Sun and to the sensor are specified in the
 :math:`(\theta, \varphi)` space.
 In our convention, it follows that:
@@ -78,12 +71,93 @@ In our convention, it follows that:
 
 The azimuth angle :math:`\varphi` is defined following the right-hand rule using
 the local vertical, with its origin aligned with the local X axis (pointing
-towards East), as illustrated below.
+towards East). We name this convention "East right". Other conventions are
+frequently used in Earth observation applications, and Eradiate therefore
+provides utility components to handle the conversion automatically.
+
+Azimuth definition conventions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. admonition:: Summary
+
+   Eradiate works internally with the *East right* convention, which aligns the
+   0° azimuth with the X axis and orients azimuth values counter-clockwise. If
+   you work with geophysical data, chances are that you will prefer the
+   *North left* convention, which aligns the 0° with the Y axis and increments
+   azimuth values clockwise.
+
+For convenience, Eradiate defines a set of azimuth definition conventions,
+exposed to the user through a dedicated interface. All azimuth angle conventions
+are defined using the aforementioned East right convention by:
+
+* an `offset` value, which defines the direction with which the azimuth origin
+  is aligned;
+* an `orientation`, which defines azimuth angles are counted positively
+  clockwise or counter-clockwise.
+
+The offset is expressed in angle units (internally, radian) and the most common
+values are aliased by the orientation corresponding to cardinal points on maps
+in the Western tradition.
+
+The two possible orientations are named after the right-hand rule: "right" is
+counter-clockwise and corresponds to the + sign; "left" is clockwise and
+corresponds to the - sign.
+
+.. only:: not latex
+
+   .. list-table:: Eradiate's built-in azimuth conventions.
+      :align: center
+      :header-rows: 1
+      :stub-columns: 1
+      :widths: 1 4 4
+
+      * -
+        - Right
+        - Left
+
+      * - East
+        - .. image:: ../../fig/azimuth-east_right.svg
+        - .. image:: ../../fig/azimuth-east_left.svg
+
+      * - North
+        - .. image:: ../../fig/azimuth-north_right.svg
+        - .. image:: ../../fig/azimuth-north_left.svg
+
+      * - West
+        - .. image:: ../../fig/azimuth-west_right.svg
+        - .. image:: ../../fig/azimuth-west_left.svg
+
+      * - South
+        - .. image:: ../../fig/azimuth-south_right.svg
+        - .. image:: ../../fig/azimuth-south_left.svg
 
 .. only:: latex
 
-   .. image:: ../../fig/azimuth-angle-convention.png
+   .. list-table:: Eradiate's built-in azimuth conventions.
+      :align: center
+      :header-rows: 1
+      :stub-columns: 1
+      :widths: auto
 
+      * -
+        - Right
+        - Left
+
+      * - East
+        - .. image:: ../../fig/azimuth-east_right.png
+        - .. image:: ../../fig/azimuth-east_left.png
+
+      * - North
+        - .. image:: ../../fig/azimuth-north_right.png
+        - .. image:: ../../fig/azimuth-north_left.png
+
+      * - West
+        - .. image:: ../../fig/azimuth-west_right.png
+        - .. image:: ../../fig/azimuth-west_left.png
+
+      * - South
+        - .. image:: ../../fig/azimuth-south_right.png
+        - .. image:: ../../fig/azimuth-south_left.png
 
 Principal plane orientation
 ---------------------------
