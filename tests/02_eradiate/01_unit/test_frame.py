@@ -8,11 +8,12 @@ from eradiate.frame import (
     cos_angle_to_direction,
     direction_to_angles,
     spherical_to_cartesian,
+    transform_azimuth,
 )
 
 
 def test_cos_angle_to_direction():
-    # Old-style call
+    # Scalar call
     assert np.allclose(cos_angle_to_direction(1.0, 0.0), [0, 0, 1])
     assert np.allclose(cos_angle_to_direction(0.0, 0.0), [1, 0, 0])
     assert np.allclose(cos_angle_to_direction(0.5, 0.0), [np.sqrt(3) / 2, 0, 0.5])
@@ -21,14 +22,71 @@ def test_cos_angle_to_direction():
     )
 
     # Vectorised call
+    expected = np.array([[0, 0, 1], [1, 0, 0], [np.sqrt(3) / 2, 0, 0.5], [0, 0, -1]])
     assert np.allclose(
         cos_angle_to_direction([1.0, 0.0, 0.5, -1.0], [0, 0, 0.0, 0.75 * np.pi]),
-        ([0, 0, 1], [1, 0, 0], [np.sqrt(3) / 2, 0, 0.5], [0, 0, -1]),
+        expected,
+    )
+
+    # Reverse parameter returns the opposite vector
+    assert np.allclose(
+        cos_angle_to_direction(
+            [1.0, 0.0, 0.5, -1.0], [0, 0, 0.0, 0.75 * np.pi], flip=True
+        ),
+        -expected,
     )
 
 
+@pytest.mark.parametrize(
+    ["from_convention", "normalize", "expected"],
+    [
+        ("east_right", True, [0.0, 45.0, 135.0]),
+        ("east_left", True, [0.0, 315.0, 225.0]),
+        ("north_right", True, [90.0, 135.0, 225.0]),
+        ("north_left", True, [90.0, 45.0, 315.0]),
+        ("west_right", True, [180.0, 225.0, 315.0]),
+        ("west_left", True, [180.0, 135.0, 45.0]),
+        ("south_right", True, [270.0, 315.0, 45.0]),
+        ("south_left", True, [270.0, 225.0, 135.0]),
+        ("south_right", False, [270.0, 315.0, 405.0]),
+    ],
+)
+def test_transform_azimuth_to_east_right(from_convention, expected, normalize):
+    initial = np.deg2rad([0.0, 45.0, 135.0])
+    result = transform_azimuth(
+        initial,
+        from_convention=from_convention,
+        normalize=normalize,
+    )
+    assert np.allclose(np.rad2deg(result), expected)
+
+
+@pytest.mark.parametrize(
+    ["to_convention", "normalize", "initial"],
+    [
+        ("east_right", True, [0.0, 45.0, 135.0]),
+        ("east_left", True, [0.0, 315.0, 225.0]),
+        ("north_right", True, [90.0, 135.0, 225.0]),
+        ("north_left", True, [90.0, 45.0, 315.0]),
+        ("west_right", True, [180.0, 225.0, 315.0]),
+        ("west_left", True, [180.0, 135.0, 45.0]),
+        ("south_right", True, [270.0, 315.0, 45.0]),
+        ("south_left", True, [270.0, 225.0, 135.0]),
+        ("south_right", False, [270.0, 315.0, 405.0]),
+    ],
+)
+def test_transform_azimuth_from_east_right(to_convention, initial, normalize):
+    expected = np.deg2rad([0.0, 45.0, 135.0])
+    result = transform_azimuth(
+        np.deg2rad(initial),
+        to_convention=to_convention,
+        normalize=normalize,
+    )
+    assert np.allclose(result, expected)
+
+
 def test_angles_to_direction():
-    # Old-style call
+    # Scalar call
     assert np.allclose(angles_to_direction([0.0, 0.0]), [0, 0, 1])
     assert np.allclose(angles_to_direction([np.pi, 0.0]), [0, 0, -1])
     assert np.allclose(angles_to_direction([0.5 * np.pi, 0.0]), [1, 0, 0])
@@ -72,7 +130,7 @@ def test_angles_to_direction():
 
 
 def test_direction_to_angles():
-    # Old-style call
+    # Scalar call
     assert np.allclose(direction_to_angles([0, 0, 1]), (0, 0))
     assert np.allclose(
         direction_to_angles([np.sqrt(2) / 2, np.sqrt(2) / 2, 0]).m_as(ureg.deg),

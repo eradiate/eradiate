@@ -1,14 +1,123 @@
 """Frame and angle manipulation utilities."""
 
+from __future__ import annotations
+
+import enum
+import typing as t
+
+import aenum
 import numpy as np
 import pint
 
 from .units import unit_registry as ureg
 
 
-@ureg.wraps(ret=None, args=("dimensionless", "rad"), strict=False)
+class AzimuthConvention(enum.Enum):
+    """
+    An enumeration of azimuth convention names associated with the corresponding
+    (origin offset, orientation) pair with respect to the *East right*
+    convention. The origin offset is expressed in radian and the orientation is
+    the angle value multiplier (±1).
+    """
+
+    EAST_RIGHT = (0.0, 1)  #: East right
+    EAST_LEFT = (0.0, -1)  #: East left
+    NORTH_RIGHT = (0.5 * np.pi, 1)  #: North right
+    NORTH_LEFT = (0.5 * np.pi, -1)  #: North left
+    WEST_RIGHT = (np.pi, 1)  #: West right
+    WEST_LEFT = (np.pi, -1)  #: West left
+    SOUTH_RIGHT = (1.5 * np.pi, 1)  #: South right
+    SOUTH_LEFT = (1.5 * np.pi, -1)  #: South left
+
+    @classmethod
+    def register(cls, name: str, value: t.Tuple[float, float]) -> None:
+        """
+        Register a new angular convention.
+
+        Parameters
+        ----------
+        name : str
+            Name of the registered convention. Should be uppercase, without
+            whitespace.
+
+        value : tuple
+            An (offset, orientation) 2-tuple. The offset is the angular offset
+            of the registered convention in radian. The offset is an integer
+            equal to 1 (right-hand/counter-clockwise convention) or -1
+            (left-hand/clockwise convention).
+        """
+        aenum.extend_enum(cls, name.upper(), value)
+
+
+def transform_azimuth(
+    angles: np.typing.ArrayLike,
+    from_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
+    to_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
+    normalize: bool = True,
+    inplace: bool = False,
+) -> np.ndarray:
+    """
+    Convert azimuth values expressed with a given convention to another. The
+    East right convention is used as a pivot.
+
+    Parameters
+    ----------
+    angles : array-like
+        A sequence of azimuth values [rad].
+
+    from_convention : .AzimuthConvention or str, optional, default: .AzimuthConvention.EAST_RIGHT
+        Source azimuth angle convention. If a string is passed, it will be
+        converted to a :class:`.AzimuthConvention`.
+
+    to_convention : .AzimuthConvention or str, optional, default: .AzimuthConvention.EAST_RIGHT
+        Target azimuth angle convention. If a string is passed, it will be
+        converted to a :class:`.AzimuthConvention`.
+
+    normalize : bool, optional, default: True
+        If ``True``, normalise returned angle values within the [0, 2π]
+        interval.
+
+    inplace : bool, optional, default: False
+        If ``True``, perform the conversion in-place. This will mutate the
+        `angles` array; otherwise, this function operates on a copy.
+
+    Returns
+    -------
+    ndarray
+        Azimuth angle values converted to the East right convention [rad].
+    """
+    result = angles if inplace else np.copy(angles)
+
+    if isinstance(from_convention, str):
+        from_convention = AzimuthConvention[from_convention.upper()]
+
+    if isinstance(to_convention, str):
+        to_convention = AzimuthConvention[to_convention.upper()]
+
+    if from_convention is not to_convention:
+        from_offset, from_orientation = from_convention.value
+        to_offset, to_orientation = to_convention.value
+
+        # Transform to East right
+        result *= from_orientation
+        result += from_offset
+
+        # Transform to target convention
+        result -= to_offset
+        result *= to_orientation
+
+    if normalize:
+        result %= 2.0 * np.pi
+
+    return result
+
+
+@ureg.wraps(ret=None, args=("dimensionless", "rad", None, None), strict=False)
 def cos_angle_to_direction(
-    cos_theta: np.typing.ArrayLike, phi: np.typing.ArrayLike
+    cos_theta: np.typing.ArrayLike,
+    phi: np.typing.ArrayLike,
+    azimuth_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
+    flip: bool = False,
 ) -> np.ndarray:
     r"""
     Convert a zenith cosine and azimuth angle pair to a direction.
@@ -23,21 +132,41 @@ def cos_angle_to_direction(
         Azimuth angle [radian].
         Convention: :math:`2 \pi` corresponds to the X axis.
 
+    azimuth_convention : .AzimuthConvention or str, optional, default: .AzimuthConvention.EAST_RIGHT
+        Source azimuth angle convention. If a string is passed, it will be
+        converted to a :class:`.AzimuthConvention`.
+
+    flip : bool
+        If ``True``, flip the returned direction (points towards the nadir with
+        `cos_theta` equal to 1).
+
     Returns
     -------
     ndarray
-        Direction corresponding to the angular parameters [unitless].
+        Directions corresponding to the angular parameters [unitless].
     """
     cos_theta = np.atleast_1d(cos_theta).astype(float)
-    phi = np.atleast_1d(phi)
+    phi = np.atleast_1d(
+        transform_azimuth(
+            phi,
+            from_convention=azimuth_convention,
+            to_convention=AzimuthConvention.EAST_RIGHT,
+        )
+    )
 
     sin_theta = np.sqrt(1.0 - np.multiply(cos_theta, cos_theta))
     sin_phi, cos_phi = np.sin(phi), np.cos(phi)
-    return np.vstack((sin_theta * cos_phi, sin_theta * sin_phi, cos_theta)).T
+
+    result = np.vstack((sin_theta * cos_phi, sin_theta * sin_phi, cos_theta)).T
+    return result if not flip else -result
 
 
-@ureg.wraps(ret=None, args=("rad",), strict=False)
-def angles_to_direction(angles: np.typing.ArrayLike) -> np.ndarray:
+@ureg.wraps(ret=None, args=("rad", None, None), strict=False)
+def angles_to_direction(
+    angles: np.typing.ArrayLike,
+    azimuth_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
+    flip: bool = False,
+) -> np.ndarray:
     r"""
     Convert a zenith and azimuth angle pair to a direction unit vector.
 
@@ -47,26 +176,43 @@ def angles_to_direction(angles: np.typing.ArrayLike) -> np.ndarray:
         A sequence of (zenith, azimuth) pairs, where zenith = 0 corresponds to
         +z direction [rad].
 
+    azimuth_convention : .AzimuthConvention or str, optional, default: .AzimuthConvention.EAST_RIGHT
+        Source azimuth angle convention. If a string is passed, it will be
+        converted to a :class:`.AzimuthConvention`.
+
+    flip : bool, optional, default: False
+        If ``True``, flip returned directions (useful in practice to get
+        direction vectors pointing towards the local frame origin).
+
     Returns
     -------
     ndarray
-        Direction corresponding to the angular parameters [unitless].
+        Directions corresponding to the angular parameters [unitless].
     """
+    # Ensure correct shape
     angles = np.atleast_1d(angles).astype(float)
     if angles.ndim < 2:
         angles = angles.reshape((angles.size // 2, 2))
     if angles.ndim > 2 or angles.shape[1] != 2:
         raise ValueError(f"array must be of shape (N, 2), got {angles.shape}")
 
+    # Pre-process zenith
     negative_zenith = angles[:, 0] < 0
     angles[negative_zenith, 0] *= -1
     angles[negative_zenith, 1] += np.pi
 
-    return cos_angle_to_direction(np.cos(angles[:, 0]), angles[:, 1])
+    return cos_angle_to_direction(
+        np.cos(angles[:, 0]),
+        angles[:, 1],
+        flip=flip,
+        azimuth_convention=azimuth_convention,
+    )
 
 
-@ureg.wraps(ret="rad", args=None, strict=False)
-def direction_to_angles(v: np.typing.ArrayLike) -> np.ndarray:
+@ureg.wraps(ret="rad", args=(None, None), strict=False)
+def direction_to_angles(
+    v: np.typing.ArrayLike, azimuth_convention=AzimuthConvention.EAST_RIGHT
+) -> np.ndarray:
     """
     Convert a cartesian unit vector to a zenith-azimuth pair.
 
@@ -75,11 +221,15 @@ def direction_to_angles(v: np.typing.ArrayLike) -> np.ndarray:
     v : array-like
         A sequence of 3-vectors (shape (N, 3)) [unitless].
 
+    azimuth_convention : .AzimuthConvention or str, optional, default: .AzimuthConvention.EAST_RIGHT
+        Target azimuth angle convention. If a string is passed, it will be
+        converted to a :class:`.AzimuthConvention`.
+
     Returns
     -------
-    array-like
+    quantity
         A sequence of 2-vectors containing zenith and azimuth angles, where
-        zenith = 0 corresponds to +z direction (shape (N, 2)) [rad].
+        zenith = 0 corresponds to +z direction (shape (N, 2)).
     """
     v = np.atleast_1d(v).astype(float)
     if v.ndim < 2:
@@ -89,7 +239,11 @@ def direction_to_angles(v: np.typing.ArrayLike) -> np.ndarray:
 
     v = v / np.linalg.norm(v, axis=-1).reshape(len(v), 1)
     theta = np.arccos(v[..., 2])
-    phi = np.arctan2(v[..., 1], v[..., 0])
+    phi = transform_azimuth(
+        np.arctan2(v[..., 1], v[..., 0]),
+        from_convention=AzimuthConvention.EAST_RIGHT,
+        to_convention=azimuth_convention,
+    )
 
     return np.vstack((theta, phi)).T
 
