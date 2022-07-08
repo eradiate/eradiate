@@ -1,127 +1,125 @@
 [build-system]
-requires = ["setuptools>=61", "setuptools_scm>=6.2"]
 build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61", "setuptools_scm>=6.2"]
 
 [project]
-name = "eradiate"
-description = "A radiative transfer model for the Earth observation community"
-requires-python = ">=3.8"
-readme = "README.md"
-license = {text = "LGPLv3"}
 authors = [
-    {name = "The Eradiate Team"},
+  {name = "The Eradiate Team"},
 ]
-maintainers = [
-    {name = "The Eradiate Team"},
-]
+description = "A radiative transfer model for the Earth observation community"
 dynamic = ["version"]
+license = {text = "LGPLv3"}
+maintainers = [
+  {name = "The Eradiate Team"},
+]
+name = "eradiate"
+readme = "README.md"
+requires-python = ">=3.8"
 
 dependencies = [
-    "aabbtree",
-    "astropy",
-    "attrs",
-    "click",
-    "cerberus",
-    "dask",
-    "dessinemoi",
-    "environ-config",
-    "iapws",
-    "matplotlib",
-    "netcdf4",
-    "numpy",
-    "pint",
-    "pinttrs>=21.3.0",
-    "pooch",
-    "python-dateutil",
-    "rich",
-    "ruamel.yaml",
-    "scipy",
-    "seaborn",
-    "tqdm",
-    "xarray>=0.19,!=0.20.*",
+  "aabbtree",
+  "astropy",
+  "attrs",
+  "click",
+  "cerberus",
+  "dask",
+  "dessinemoi",
+  "environ-config",
+  "iapws",
+  "matplotlib",
+  "netcdf4",
+  "numpy",
+  "pint",
+  "pinttrs>=21.3.0",
+  "pooch",
+  "python-dateutil",
+  "rich",
+  "ruamel.yaml",
+  "scipy",
+  "seaborn",
+  "tqdm",
+  "xarray>=0.19,!=0.20.*",
 ]
 
 [project.optional-dependencies]
 tests = [
-    "pytest",
-    "pytest-json-report",
-    "pytest-metadata",
-    "pytest-xdist",
+  "pytest",
+  "pytest-json-report",
+  "pytest-metadata",
+  "pytest-xdist",
 ]
 
 dev = [
-    "black",
-    "conda-lock>=0.12",
-    "coverage",
-    "ipython",
-    "ipywidgets",
-    "isort",
-    "jupyterlab",
-    "pip",
-    "pip-tools>=6.5",
-    "setuptools>=61",
-    "setuptools-scm>=6.2",
-    "twine",
+  "black",
+  "conda-lock>=0.12",
+  "coverage",
+  "ipython",
+  "ipywidgets",
+  "isort",
+  "jupyterlab",
+  "pip",
+  "pip-tools>=6.5",
+  "setuptools>=61",
+  "setuptools-scm>=6.2",
+  "twine",
 ]
 
 docs = [
-    "autodocsumm",
-    "mock",
-    "myst-parser",
-    "nbsphinx",
-    "sphinx-book-theme>=0.1.10",
-    "sphinx>=3.1",
-    "sphinxcontrib-bibtex>=2.0",
-    "sphinx-autobuild",
-    "sphinx-click>=3.0.2",
-    "sphinx-copybutton",
-    "sphinx-design",
+  "autodocsumm",
+  "mock",
+  "myst-parser",
+  "nbsphinx",
+  "sphinx-book-theme>=0.1.10",
+  "sphinx>=3.1",
+  "sphinxcontrib-bibtex>=2.0",
+  "sphinx-autobuild",
+  "sphinx-click>=3.0.2",
+  "sphinx-copybutton",
+  "sphinx-design",
 ]
 
 [project.urls]
-repository = "https://github.com/eradiate/eradiate"
-documentation = "https://eradiate.readthedocs.io"
 changelog = "https://github.com/eradiate/eradiate/CHANGELOG.md"
+documentation = "https://eradiate.readthedocs.io"
+repository = "https://github.com/eradiate/eradiate"
 
 [project.scripts]
 eradiate = "eradiate.cli:main"
-ertshow = "eradiate.cli:show"
 ertdata = "eradiate.cli:data"
+ertshow = "eradiate.cli:show"
 
 [tool.setuptools.packages.find]
-where = ["src"]
-include = ["eradiate*"]
 exclude = ["plugins"]
+include = ["eradiate*"]
 namespaces = false
+where = ["src"]
 
 [tool.setuptools_scm]
-version_scheme = "post-release"  # Count commits since last tag, don't anticipate new version
 git_describe_command = [
-    "git",
-    "describe",
-    "--dirty",
-    # "--tags",
-    "--long",
-    "--match",
-    "v[0-9]*",
-]  # Redefined to avoid crashing with special build tags
+  "git",
+  "describe",
+  "--dirty", # "--tags",
+  "--long",
+  "--match",
+  "v[0-9]*",
+] # Redefined to avoid crashing with special build tags 
+version_scheme = "post-release" # Count commits since last tag, don't anticipate new version
 
 [tool.isort]
 profile = "black"
 reverse_relative = true
 
 [tool.coverage.run]
-source = [
-    "eradiate/",
-]
 omit = [
-    "*/tests/*",
+  "*/tests/*",
+]
+source = [
+  "eradiate/",
 ]
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    "error",
-    # Ignore these warnings issued by outdated dependencies
-    "ignore:distutils Version classes are deprecated:DeprecationWarning",
+  "error", # Ignore these warnings issued by outdated dependencies
+  "ignore:distutils Version classes are deprecated:DeprecationWarning",
 ]
 testpaths = "tests"
