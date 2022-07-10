@@ -8,6 +8,10 @@ aabbtree==2.8.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
+aenum==3.1.11
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/main.in
 alabaster==0.7.12
     # via
     #   -c requirements/dev.txt
@@ -41,7 +45,7 @@ beautifulsoup4==4.11.1
     #   -c requirements/dev.txt
     #   nbconvert
     #   pydata-sphinx-theme
-bleach==5.0.0
+bleach==5.0.1
     # via
     #   -c requirements/dev.txt
     #   nbconvert
@@ -53,11 +57,11 @@ certifi==2022.6.15
     # via
     #   -c requirements/dev.txt
     #   requests
-cftime==1.6.0
+cftime==1.6.1
     # via
     #   -c requirements/dev.txt
     #   netcdf4
-charset-normalizer==2.0.12
+charset-normalizer==2.1.0
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -82,7 +86,7 @@ cycler==0.11.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2022.6.0
+dask==2022.7.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -117,7 +121,7 @@ fastjsonschema==2.15.3
     # via
     #   -c requirements/dev.txt
     #   nbformat
-fonttools==4.33.3
+fonttools==4.34.4
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -133,11 +137,11 @@ idna==3.3
     # via
     #   -c requirements/dev.txt
     #   requests
-imagesize==1.3.0
+imagesize==1.4.1
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==4.11.4
+importlib-metadata==4.12.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
@@ -152,7 +156,7 @@ jinja2==3.1.2
     #   nbconvert
     #   nbsphinx
     #   sphinx
-jsonschema==4.6.0
+jsonschema==4.6.2
     # via
     #   -c requirements/dev.txt
     #   nbformat
@@ -160,7 +164,7 @@ jupyter-client==7.3.4
     # via
     #   -c requirements/dev.txt
     #   nbclient
-jupyter-core==4.10.0
+jupyter-core==4.11.1
     # via
     #   -c requirements/dev.txt
     #   jupyter-client
@@ -221,7 +225,7 @@ myst-parser==0.18.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-nbclient==0.6.4
+nbclient==0.6.6
     # via
     #   -c requirements/dev.txt
     #   nbconvert
@@ -244,11 +248,11 @@ nest-asyncio==1.5.5
     #   -c requirements/dev.txt
     #   jupyter-client
     #   nbclient
-netcdf4==1.5.8
+netcdf4==1.6.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-numpy==1.22.4
+numpy==1.23.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -272,7 +276,7 @@ packaging==20.9
     #   pydata-sphinx-theme
     #   sphinx
     #   xarray
-pandas==1.4.2
+pandas==1.4.3
     # via
     #   -c requirements/dev.txt
     #   seaborn
@@ -285,7 +289,7 @@ partd==1.2.0
     # via
     #   -c requirements/dev.txt
     #   dask
-pillow==9.1.1
+pillow==9.2.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -354,11 +358,11 @@ pyyaml==6.0
     #   myst-parser
     #   pybtex
     #   sphinx-book-theme
-pyzmq==23.1.0
+pyzmq==23.2.0
     # via
     #   -c requirements/dev.txt
     #   jupyter-client
-requests==2.28.0
+requests==2.28.1
     # via
     #   -c requirements/dev.txt
     #   pooch
@@ -423,7 +427,7 @@ sphinx-book-theme==0.3.2
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx-click==4.1.0
+sphinx-click==4.3.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -467,12 +471,12 @@ tinycss2==1.1.1
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-toolz==0.11.2
+toolz==0.12.0
     # via
     #   -c requirements/dev.txt
     #   dask
     #   partd
-tornado==6.1
+tornado==6.2
     # via
     #   -c requirements/dev.txt
     #   jupyter-client
@@ -490,12 +494,12 @@ traitlets==5.3.0
     #   nbconvert
     #   nbformat
     #   nbsphinx
-typing-extensions==4.2.0
+typing-extensions==4.3.0
     # via
     #   -c requirements/dev.txt
     #   myst-parser
     #   rich
-urllib3==1.26.9
+urllib3==1.26.10
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -515,7 +519,7 @@ zipp==3.8.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==62.4.0
+setuptools==63.1.0
     # via
     #   -c requirements/dev.txt
     #   cerberus
