@@ -305,13 +305,13 @@ def angles_in_hplane(
     Parameters
     ----------
     plane : float
-        Plane cut orientation in degrees.
+        Plane cut orientation [rad].
 
     theta : ndarray
-        List of zenith angle values with (N,) shape in degrees.
+        List of zenith angle values with (N,) shape [rad].
 
     phi : ndarray
-        List of azimuth angle values with (N,) shape in degrees.
+        List of azimuth angle values with (N,) shape [rad].
 
     raise_exc : bool, optional
         If ``True``, raise if not all directions are snapped to the specified
@@ -329,12 +329,13 @@ def angles_in_hplane(
         If not all directions are snapped to the specified hemisphere plane cut.
     """
     # Normalise input parameters
-    phi = np.where(theta >= 0.0, phi % 360, (phi + 180) % 360)
+    twopi = 2.0 * np.pi
+    phi = np.where(theta >= 0.0, phi % twopi, (phi + np.pi) % twopi)
     theta = np.where(theta >= 0.0, theta, -theta)
 
     # Assign angle pairs to positive or negative half-plane
     in_plane_positive = np.isclose(plane, phi) | np.isclose(0.0, theta)
-    in_plane_negative = np.isclose((plane + 180) % 360, phi) & ~in_plane_positive
+    in_plane_negative = np.isclose((plane + np.pi) % twopi, phi) & ~in_plane_positive
     in_plane = in_plane_positive | in_plane_negative
 
     if raise_exc and not (np.all(in_plane)):
