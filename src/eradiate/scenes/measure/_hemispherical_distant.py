@@ -9,6 +9,7 @@ import numpy as np
 import pint
 import pinttr
 
+from eradiate import frame
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 
@@ -16,9 +17,9 @@ from ._core import Measure, MeasureFlags, measure_factory
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
 from ... import validators
+from ..._config import config
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
-from ...frame import direction_to_angles
 from ...units import symbol
 from ...units import unit_context_kernel as uck
 from ...warp import square_to_uniform_hemisphere
@@ -53,6 +54,21 @@ class HemisphericalDistantMeasure(Measure):
     # --------------------------------------------------------------------------
     #                           Fields and properties
     # --------------------------------------------------------------------------
+
+    azimuth_convention: frame.AzimuthConvention = documented(
+        attr.ib(
+            default=None,
+            converter=lambda x: config.azimuth_convention
+            if x is None
+            else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x),
+            validator=attr.validators.instance_of(frame.AzimuthConvention),
+        ),
+        doc="Azimuth convention. If ``None``, the global default configuration "
+        "is used (see :class:`.EradiateConfig`).",
+        type=".AzimuthConvention",
+        init_type=".AzimuthConvention or str, optional",
+        default="None",
+    )
 
     _film_resolution: t.Tuple[int, int] = documented(
         attr.ib(
@@ -151,12 +167,12 @@ class HemisphericalDistantMeasure(Measure):
             + 0.5 / self.film_resolution[1]
         )
 
-        # Compute corresponding angles
+        # Compute corresponding angles in specified azimuth convention
         xy = np.array([(x, y) for x in xs for y in ys])
-        angles = direction_to_angles(square_to_uniform_hemisphere(xy)).to(angle_units)
-
-        # Normalise azimuth to [0, 2π]
-        angles[:, 1] %= 360.0 * ureg.deg
+        angles = frame.direction_to_angles(
+            square_to_uniform_hemisphere(xy),
+            azimuth_convention=self.azimuth_convention,
+        ).to(angle_units)
 
         # Reshape array to match film size on first 2 dimensions
         return angles.reshape((len(xs), len(ys), 2))
