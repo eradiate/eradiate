@@ -70,10 +70,10 @@ class MultiDistantMeasure(Measure):
             return
 
         # Check that all specified directions are in the requested plane
-        angles = self.viewing_angles.m_as(ureg.deg)
+        angles = self.viewing_angles.m_as(ureg.rad)
         try:
             frame.angles_in_hplane(
-                value.m_as(ureg.deg),
+                value.m_as(ureg.rad),
                 angles[:, :, 0],
                 angles[:, :, 1],
                 raise_exc=True,

@@ -224,7 +224,7 @@ class AddViewingAngles(PipelineStep):
         return result
 
 
-@ureg.wraps(ret=("deg", "deg"), args=("deg", "deg", "deg"), strict=True)
+@ureg.wraps(ret=("rad", "rad"), args=("rad", "rad", "rad"), strict=True)
 def _remap_viewing_angles_plane(
     plane: np.typing.ArrayLike,
     theta: np.typing.ArrayLike,
@@ -255,12 +255,13 @@ def _remap_viewing_angles_plane(
 
     Warns
     -----
-
+    When zenith angle values are not sorted in ascending order.
     """
     # Normalise all angles
-    plane = plane % 360.0
-    theta = theta % 360.0
-    phi = phi % 360.0
+    twopi = 2.0 * np.pi
+    plane = plane % twopi
+    theta = theta % twopi
+    phi = phi % twopi
 
     # Check that phi values are compatible with requested plane
     in_plane_positive, in_plane_negative = angles_in_hplane(
@@ -279,7 +280,7 @@ def _remap_viewing_angles_plane(
     # Check ordering and warn if it is not strictly increasing
     if not _is_sorted(theta):
         warnings.warn(
-            "Viewing zenith angle values are sorted sorted in ascending order, "
+            "Viewing zenith angle values are not sorted in ascending order, "
             "you might want to consider changing direction definitions."
         )
 

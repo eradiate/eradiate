@@ -221,7 +221,9 @@ def test_spherical_to_cartesian():
     ],
 )
 def test_angles_in_hplane(theta, phi, plane, expected_plane):
-    p, n = angles_in_hplane(plane, theta, phi, raise_exc=False)
+    p, n = angles_in_hplane(
+        np.deg2rad(plane), np.deg2rad(theta), np.deg2rad(phi), raise_exc=False
+    )
 
     if expected_plane == "p":
         assert p and not n
