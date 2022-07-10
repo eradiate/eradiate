@@ -54,15 +54,17 @@ pip-update: pip-lock pip-init
 
 # -- Dependency management with Conda ------------------------------------------
 
-# Lock conda dependencies
-conda-lock:
+# Generate environment file from pyproject.toml
+conda-env:
 	python3 requirements/make_conda_env.py -o requirements/environment.yml --quiet
+
+# Lock conda dependencies
+conda-lock: conda-env
 	conda-lock --kind explicit --mamba --file requirements/environment.yml \
 	    --filename-template "requirements/environment-{platform}.lock" \
 	    -p $(PLATFORM)
 
-conda-lock-all:
-	python3 requirements/make_conda_env.py -o requirements/environment.yml --quiet
+conda-lock-all: conda-env
 	conda-lock --kind explicit --mamba --file requirements/environment.yml \
 	    --filename-template "requirements/environment-{platform}.lock" \
 	    -p osx-64 -p linux-64
@@ -77,7 +79,7 @@ conda-init:
 
 conda-update: conda-lock-all conda-init
 
-.PHONY: conda-lock conda-lock-all conda-init conda-update
+.PHONY: conda-env conda-lock conda-lock-all conda-init conda-update
 
 # -- Documentation -------------------------------------------------------------
 
