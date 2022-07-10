@@ -1,5 +1,6 @@
 -c dev.txt
 aabbtree
+aenum
 astropy
 attrs
 click
