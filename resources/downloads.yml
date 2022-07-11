@@ -1,7 +1,7 @@
 # This file contains a list of frequently used files which you might want to
 # download.
-- ckd/absorption/1nm/afgl_1986-us_standard-1nm.nc
-- ckd/absorption/10nm/afgl_1986-us_standard-10nm.nc
+- ckd/absorption/1nm/afgl_1986-us_standard-1nm-v3.nc
+- ckd/absorption/10nm/afgl_1986-us_standard-10nm-v3.nc
 - spectra/absorption/us76_u86_4/us76_u86_4-spectra-4000_5000.nc
 - spectra/absorption/us76_u86_4/us76_u86_4-spectra-5000_6000.nc
 - spectra/absorption/us76_u86_4/us76_u86_4-spectra-6000_7000.nc
