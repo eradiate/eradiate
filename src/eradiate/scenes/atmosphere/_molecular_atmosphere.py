@@ -212,7 +212,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             Altitude levels.
 
         concentrations : dict
-            Molecules concentrations as a ``{str: quantity}`` mapping.
+            Molecular concentrations as a ``{str: quantity}`` mapping.
             This dictionary is interpreted by :func:`pinttr.util.ensure_units`,
             which allows for passing units as strings.
 

@@ -56,7 +56,7 @@ def film_to_angular(
         Data array interpolated on the specified angular grid.
     """
     # TODO: Double check where this function is used and if the azimuth
-    # transformation is crrectly applied.
+    #       transformation is correctly applied.
 
     # Define azimuth convention
     if azimuth_convention is None:
