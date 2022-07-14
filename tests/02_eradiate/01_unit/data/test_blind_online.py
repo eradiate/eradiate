@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from eradiate.data import BlindDataStore
+from eradiate.data import BlindOnlineDataStore
 from eradiate.exceptions import DataError
 
 TEST_STORE = "http://eradiate.eu/data/store/stable"
@@ -13,8 +13,8 @@ TEST_STORE = "http://eradiate.eu/data/store/stable"
 def test_blind_data_store_fetch(tmpdir):
     test_file = Path("tests/data/online/unregistered_dataset.nc")
 
-    # Using an empty storage directory, a BlindDataStore instance can be created
-    store = BlindDataStore(base_url=TEST_STORE, path=tmpdir)
+    # Using an empty storage directory, a BlindOnlineDataStore instance can be created
+    store = BlindOnlineDataStore(base_url=TEST_STORE, path=tmpdir)
 
     # We can download a resource if it is available online
     fpath = store.fetch(test_file)
@@ -35,7 +35,7 @@ def test_blind_data_store_fetch(tmpdir):
 
 @pytest.mark.parametrize("keep", [False, True])
 def test_blind_data_store_purge(tmpdir, keep):
-    store = BlindDataStore(base_url=TEST_STORE, path=tmpdir)
+    store = BlindOnlineDataStore(base_url=TEST_STORE, path=tmpdir)
 
     files = [
         "tests/data/online/unregistered_dataset.nc.gz",

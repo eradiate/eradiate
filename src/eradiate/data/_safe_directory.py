@@ -15,7 +15,7 @@ from ..typing import PathLike
 
 @parse_docs
 @attr.s
-class DirectoryDataStore(DataStore):
+class SafeDirectoryDataStore(DataStore):
     """
     Serve files stored in a directory. This data store will only serve files
     listed in its registry.

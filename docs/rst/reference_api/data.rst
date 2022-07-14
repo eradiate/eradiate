@@ -22,9 +22,9 @@ Classes
    :toctree: generated/autosummary/
 
    DataStore
-   DirectoryDataStore
-   OnlineDataStore
-   BlindDataStore
+   BlindOnlineDataStore
+   SafeDirectoryDataStore
+   SafeOnlineDataStore
    MultiDataStore
 
 Attributes

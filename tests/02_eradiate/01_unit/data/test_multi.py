@@ -1,7 +1,7 @@
 import pytest
 
 import eradiate
-from eradiate.data import DirectoryDataStore, MultiDataStore, OnlineDataStore
+from eradiate.data import MultiDataStore, SafeDirectoryDataStore, SafeOnlineDataStore
 from eradiate.exceptions import DataError
 
 TEST_STORE = "http://eradiate.eu/data/store/stable"
@@ -17,11 +17,13 @@ def test_multi_data_store(tmpdir):
         [
             (
                 "1",
-                DirectoryDataStore(path=eradiate.config.source_dir / "resources/data"),
+                SafeDirectoryDataStore(
+                    path=eradiate.config.source_dir / "resources/data"
+                ),
             ),
             (
                 "2",
-                OnlineDataStore(base_url=TEST_STORE, path=tmpdir),
+                SafeOnlineDataStore(base_url=TEST_STORE, path=tmpdir),
             ),
         ]
     )

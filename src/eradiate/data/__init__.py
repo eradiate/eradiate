@@ -7,22 +7,22 @@ __all__ = [
     "init_data_store",
     "open_dataset",
     "load_dataset",
-    "BlindDataStore",
     "DataStore",
-    "DirectoryDataStore",
-    "OnlineDataStore",
+    "BlindOnlineDataStore",
     "MultiDataStore",
+    "SafeDirectoryDataStore",
+    "SafeOnlineDataStore",
 ]
 
 import sys
 
 import xarray as xr
 
-from ._blind import BlindDataStore
+from ._blind_online import BlindOnlineDataStore
 from ._core import DataStore
-from ._directory import DirectoryDataStore
 from ._multi import MultiDataStore
-from ._online import OnlineDataStore
+from ._safe_directory import SafeDirectoryDataStore
+from ._safe_online import SafeOnlineDataStore
 from ._store import init_data_store
 from ..typing import PathLike
 

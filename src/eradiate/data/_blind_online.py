@@ -16,7 +16,7 @@ from ..util.misc import LoggingContext
 
 @parse_docs
 @attr.s
-class BlindDataStore(DataStore):
+class BlindOnlineDataStore(DataStore):
     """
     Serve data downloaded from a remote source without integrity check.
     """
