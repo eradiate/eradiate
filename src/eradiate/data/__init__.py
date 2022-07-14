@@ -8,6 +8,7 @@ __all__ = [
     "open_dataset",
     "load_dataset",
     "DataStore",
+    "BlindDirectoryDataStore",
     "BlindOnlineDataStore",
     "MultiDataStore",
     "SafeDirectoryDataStore",
@@ -18,6 +19,7 @@ import sys
 
 import xarray as xr
 
+from ._blind_directory import BlindDirectoryDataStore
 from ._blind_online import BlindOnlineDataStore
 from ._core import DataStore
 from ._multi import MultiDataStore
