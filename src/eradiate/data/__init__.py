@@ -4,13 +4,17 @@ Manage Eradiate's data files.
 
 __all__ = [
     "data_store",
+    "init_data_store",
     "open_dataset",
     "load_dataset",
+    "BlindDataStore",
     "DataStore",
     "DirectoryDataStore",
     "OnlineDataStore",
     "MultiDataStore",
 ]
+
+import sys
 
 import xarray as xr
 
@@ -19,16 +23,20 @@ from ._core import DataStore
 from ._directory import DirectoryDataStore
 from ._multi import MultiDataStore
 from ._online import OnlineDataStore
+from ._store import init_data_store
 from ..typing import PathLike
 
 # -- Data store ----------------------------------------------------------------
 
-from . import _store  # isort: skip
 
-#: Global data store.
-#: Alias to :data:`eradiate.data._store.data_store`.
-#: See also: :class:`eradiate.data.MultiDataStore`.
-data_store = _store.data_store
+def __getattr__(name):
+    if name == "data_store":
+        from ._store import data_store
+
+        return data_store
+
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 
 # -- Access functions ----------------------------------------------------------
 
@@ -54,6 +62,7 @@ def open_dataset(filename: PathLike, **kwargs) -> xr.Dataset:
     --------
     xarray.open_dataset
     """
+    data_store = getattr(sys.modules[__name__], "data_store")
     filename = data_store.fetch(filename)
     return xr.open_dataset(filename, **kwargs)
 

@@ -16,7 +16,7 @@ class MultiDataStore(DataStore):
     """
     Chain requests on multiple data stores.
 
-    Calls to the :meth:`.fetch` method are successively redirected to each
+    Calls to the :meth:`~.MultiDataStore.fetch` method are successively redirected to each
     referenced data store. The first successful request is served.
     """
 
