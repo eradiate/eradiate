@@ -183,6 +183,14 @@ class EradiateConfig:
         help="Path to the Eradiate download directory.",
     )
 
+    #: If ``True``, activate the offline mode. All online data stores
+    #: will be disconnected.
+    offline = environ.bool_var(
+        default=False,
+        help="If ``True``, activate the offline mode. All online data stores "
+        "will be disconnected.",
+    )
+
     #: An integer flag setting the level of progress display (see
     #: :class:`ProgressLevel`). Values are preferably set using strings
     #: (``["NONE", "SPECTRAL_LOOP", "KERNEL"]``). Only affects tqdm-based progress
