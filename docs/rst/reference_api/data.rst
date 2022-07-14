@@ -22,6 +22,7 @@ Classes
    :toctree: generated/autosummary/
 
    DataStore
+   BlindDirectoryDataStore
    BlindOnlineDataStore
    SafeDirectoryDataStore
    SafeOnlineDataStore
