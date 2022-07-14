@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @attr.s(repr=False, init=False)
-class OnlineDataStore(DataStore):
+class SafeOnlineDataStore(DataStore):
     """
     Serve files located online, with integrity check.
 
@@ -75,7 +75,7 @@ class OnlineDataStore(DataStore):
             ]
         ]
 
-        return f"OnlineDataStore({', '.join(attr_reprs)})"
+        return f"SafeOnlineDataStore({', '.join(attr_reprs)})"
 
     @property
     def base_url(self) -> str:

@@ -135,7 +135,7 @@ def update_registries():
     """
     # Update data store registries
     for data_store_id, data_store in eradiate.data.data_store.stores.items():
-        if isinstance(data_store, eradiate.data.OnlineDataStore):
+        if isinstance(data_store, eradiate.data.SafeOnlineDataStore):
             console.print(
                 f"[bold cyan]{data_store_id}[/] [{data_store.__class__.__name__}]"
             )
@@ -196,11 +196,11 @@ def purge_cache(keep):
             f"[bold cyan]{data_store_id}[/] [{data_store.__class__.__name__}]"
         )
 
-        if isinstance(data_store, eradiate.data.DirectoryDataStore):
+        if isinstance(data_store, eradiate.data.SafeDirectoryDataStore):
             console.print(f"  Skipping")
             continue
 
-        if isinstance(data_store, eradiate.data.OnlineDataStore):
+        if isinstance(data_store, eradiate.data.SafeOnlineDataStore):
             console.print(f"  Purging '{data_store.path}'")
             if keep:
                 data_store.purge(keep="registered")
@@ -208,7 +208,7 @@ def purge_cache(keep):
                 data_store.purge()
             continue
 
-        if isinstance(data_store, eradiate.data.BlindDataStore):
+        if isinstance(data_store, eradiate.data.BlindOnlineDataStore):
             console.print(f"  Purging '{data_store.path}'")
             data_store.purge()
             continue

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import xarray as xr
 
-from eradiate.data._online import OnlineDataStore
+from eradiate.data import SafeOnlineDataStore
 from eradiate.exceptions import DataError
 
 TEST_STORE = "http://eradiate.eu/data/store/stable"
@@ -13,8 +13,8 @@ TEST_FILE = Path("tests/data/online/registered_dataset.nc")
 
 
 def test_online_data_store_registry(tmpdir):
-    # Using an empty storage directory, an OnlineDataStore instance can be created
-    store = OnlineDataStore(base_url=TEST_STORE, path=tmpdir)
+    # Using an empty storage directory, a SafeOnlineDataStore instance can be created
+    store = SafeOnlineDataStore(base_url=TEST_STORE, path=tmpdir)
 
     # The registry file is downloaded
     registry_filename = store.registry_fetch()
@@ -36,7 +36,7 @@ def test_online_data_store_registry(tmpdir):
 
 
 def test_oneline_data_store_is_registered(tmpdir):
-    store = OnlineDataStore(base_url=TEST_STORE, path=tmpdir)
+    store = SafeOnlineDataStore(base_url=TEST_STORE, path=tmpdir)
 
     # Default behaviour allows matching compressed files
     filename = store.is_registered(TEST_FILE)
@@ -49,7 +49,7 @@ def test_oneline_data_store_is_registered(tmpdir):
 
 
 def test_online_data_store_fetch(tmpdir):
-    store = OnlineDataStore(base_url=TEST_STORE, path=tmpdir)
+    store = SafeOnlineDataStore(base_url=TEST_STORE, path=tmpdir)
     filename = os.path.join(tmpdir, TEST_FILE)
 
     # Upon calling fetch(), gzip detection is successful: the gz file is downloaded
@@ -76,7 +76,7 @@ def test_online_data_store_purge(tmpdir):
     # We create a data store and fetch a file:
     # we expect the directory to contain exactly 2 elements (the registry file
     # and the directory containing the fetched file)
-    store = OnlineDataStore(base_url=TEST_STORE, path=tmpdir)
+    store = SafeOnlineDataStore(base_url=TEST_STORE, path=tmpdir)
     store.fetch(TEST_FILE)
     assert len(list(os.scandir(tmpdir))) == 2
     assert store.registry_path.is_file()

@@ -1,9 +1,9 @@
 from collections import OrderedDict
 
-from ._blind import BlindDataStore
-from ._directory import DirectoryDataStore
+from ._blind_online import BlindOnlineDataStore
 from ._multi import MultiDataStore
-from ._online import OnlineDataStore
+from ._safe_directory import SafeDirectoryDataStore
+from ._safe_online import SafeOnlineDataStore
 from .._config import config
 
 #: Global data store.
@@ -21,18 +21,18 @@ def init_data_store():
             [
                 (
                     "small_files",
-                    DirectoryDataStore(path=config.source_dir / "resources/data/"),
+                    SafeDirectoryDataStore(path=config.source_dir / "resources/data/"),
                 ),
                 (
                     "large_files_stable",
-                    OnlineDataStore(
+                    SafeOnlineDataStore(
                         base_url="http://eradiate.eu/data/store/stable/",
                         path=config.download_dir / "stable",
                     ),
                 ),
                 (
                     "large_files_unstable",
-                    BlindDataStore(
+                    BlindOnlineDataStore(
                         base_url="http://eradiate.eu/data/store/unstable/",
                         path=config.download_dir / "unstable",
                     ),
