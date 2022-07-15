@@ -43,11 +43,13 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 ### Improvements and fixes
 
-* Added the atmo-centimeter, a.k. atm-cm, to the unit registry ({ghpr}`245`).
+* Added the atmo-centimeter, a.k.a. atm-cm, to the unit registry ({ghpr}`245`).
 
 % ### Documentation
 %
-% ### Internal changes
+### Internal changes
+
+* Updated Mitsuba submodule ({ghpr}`250`).
 
 ## v0.22.4 (17 June 2022)
 

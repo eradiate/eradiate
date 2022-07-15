@@ -229,7 +229,7 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
 
     l_o = l_e * cos_theta_e * rho / np.pi  # Outgoing radiance
     expected = {  # Special expected values for some cases
-        "default": l_o * 2.0 / dr.Pi,
+        "default": l_o * 2.0 / dr.pi,
         "target_square_large": l_o * 0.25,
     }
     expected_value = expected.get(sensor_setup, l_o)
@@ -349,5 +349,5 @@ def test_checkerboard(variants_all_rgb):
         .convert(mi.Bitmap.PixelFormat.RGB, mi.Struct.Type.Float32, False)
     ).squeeze()
 
-    expected = l_e * 0.5 * (rho0 + rho1) / dr.Pi
+    expected = l_e * 0.5 * (rho0 + rho1) / dr.pi
     assert np.allclose(expected, result, atol=1e-3)

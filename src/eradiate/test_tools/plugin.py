@@ -56,7 +56,7 @@ def sample_eval_pdf_bsdf(
     # Invoke sampling strategy
     n = dr.width(sample)
     ctx = mi.BSDFContext()
-    si = dr.zero(mi.SurfaceInteraction3f, n)
+    si = dr.zeros(mi.SurfaceInteraction3f, n)
     si.wi = wi
     bs, weight = plugin.sample(ctx, si, sample[0], [sample[1], sample[2]])
 
