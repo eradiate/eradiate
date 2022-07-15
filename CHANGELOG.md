@@ -18,10 +18,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 % ## vXX.YY.ZZ (unreleased)
 %
-### New features
-
-* Added support for various azimuth definition conventions ({ghpr}`247`).
-
+% ### New features
+%
 % ### Breaking changes
 %
 % ### Deprecations and removals
@@ -34,8 +32,11 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 ## v0.22.5 (unreleased)
 
-% ### New features
-%
+### New features
+
+* Added support for various azimuth definition conventions ({ghpr}`247`).
+* Added an offline mode which disables all data file downloads ({ghpr}`249`).
+
 % ### Breaking changes
 %
 % ### Deprecations and removals
