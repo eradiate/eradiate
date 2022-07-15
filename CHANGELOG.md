@@ -18,8 +18,10 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 % ## vXX.YY.ZZ (unreleased)
 %
-% ### New features
-%
+### New features
+
+* Added support for various azimuth definition conventions ({ghpr}`247`).
+
 % ### Breaking changes
 %
 % ### Deprecations and removals
@@ -50,38 +52,38 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 ### New features
 
-* Added a `InterpolatedSpectrum.from_dataarray()` class method constructor 
+* Added a `InterpolatedSpectrum.from_dataarray()` class method constructor
   ({ghpr}`243`).
 
 ### Breaking changes
 
 * Removed temporary volume files used by the `AbstractHeterogeneousAtmosphere`
-  line and the `BlendPhaseFunction` class (replaced by in-memory buffers). 
-  Corresponding file name and cache directory control parameters were removed as 
+  line and the `BlendPhaseFunction` class (replaced by in-memory buffers).
+  Corresponding file name and cache directory control parameters were removed as
   well ({ghpr}`231`).
 
 ### Deprecations and removals
 
-* Updated all tests to use `eradiate.run()` instead of the deprecated 
+* Updated all tests to use `eradiate.run()` instead of the deprecated
   `Experiment.run()` method ({ghpr}`227`).
 
 ### Improvements and fixes
 
-* Added spectral response function data sets for POLDER instrument onboard 
+* Added spectral response function data sets for POLDER instrument onboard
   PARASOL platform ({ghpr}`232`).
 * Added an extrapolated version of the ``thuillier_2003`` solar irradiance
   spectrum to cover the full wavelength range of Eradiate ({ghpr}`233`).
-* Fixed a bug where converting an integer to a `Spectrum` would fail 
-  ({ghpr}`236`). 
+* Fixed a bug where converting an integer to a `Spectrum` would fail
+  ({ghpr}`236`).
 * Fixed a bug where the two BSDFs in the `CentralPatchSurface` would be
   assigned in the wrong order ({ghpr}`237`).
 * Raise an exception when molecular concentrations are out of bounds
   ({ghpr}`237`).
-* Various fixes to the `rpv` plugin, among which a missing PDF term in the 
+* Various fixes to the `rpv` plugin, among which a missing PDF term in the
   `sample()` method ({ghpr}`240`).
 * Fix incorrect spectral indexing of result datasets in CKD mode ({ghpr}`241`).
 * Improve the Solar irradiance spectrum initialisation sequence ({ghpr}`242`).
-* The `thuillier_2003_extrapolated` dataset is now the default Solar irradiance 
+* The `thuillier_2003_extrapolated` dataset is now the default Solar irradiance
   spectrum ({ghpr}`242`).
 
 % ### Documentation
@@ -91,7 +93,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Transitioned dependency management to `pyproject.toml` following
   [PEP 621](https://peps.python.org/pep-0621/) ({ghpr}`203`).
 * Updated Mitsuba submodule ({ghpr}`228`).
-* Removed the angular regridding feature in `TabulatedPhaseFunction` and 
+* Removed the angular regridding feature in `TabulatedPhaseFunction` and
   replaced with plugin selection ({ghpr}`229`).
 
 ## v0.22.3 (22 May 2022)
