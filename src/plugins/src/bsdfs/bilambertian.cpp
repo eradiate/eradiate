@@ -66,18 +66,18 @@ public:
 
         if (unlikely(dr::none_or<false>(active) ||
                      (!has_reflect && !has_transmit)))
-            return { dr::zero<BSDFSample3f>(), UnpolarizedSpectrum(0.f) };
+            return { dr::zeros<BSDFSample3f>(), UnpolarizedSpectrum(0.f) };
 
         Float cos_theta_i = Frame3f::cos_theta(si.wi);
         Vector3f wo       = warp::square_to_cosine_hemisphere(sample2);
 
-        BSDFSample3f bs = dr::zero<BSDFSample3f>();
+        BSDFSample3f bs = dr::zeros<BSDFSample3f>();
         UnpolarizedSpectrum value(0.f);
 
         // Select the lobe to be sampled
         UnpolarizedSpectrum r              = m_reflectance->eval(si, active),
                             t              = m_transmittance->eval(si, active);
-        Float reflection_sampling_weight   = hmean(r / (r + t)),
+        Float reflection_sampling_weight   = dr::mean(r / (r + t)),
               transmission_sampling_weight = 1.f - reflection_sampling_weight;
 
         // Handle case where r = t = 0
@@ -178,7 +178,7 @@ public:
 
         UnpolarizedSpectrum r              = m_reflectance->eval(si, active),
                             t              = m_transmittance->eval(si, active);
-        Float reflection_sampling_weight   = hmean(r / (r + t)),
+        Float reflection_sampling_weight   = dr::mean(r / (r + t)),
               transmission_sampling_weight = 1.f - reflection_sampling_weight;
 
         // Handle case where r = t = 0

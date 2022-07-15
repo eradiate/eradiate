@@ -205,8 +205,8 @@ public:
     void set_scene(const Scene *scene) override {
         m_bsphere = scene->bbox().bounding_sphere();
         m_bsphere.radius =
-            dr::max(math::RayEpsilon<Float>,
-                    m_bsphere.radius * (1.f + math::RayEpsilon<Float>) );
+            dr::maximum(math::RayEpsilon<Float>,
+                        m_bsphere.radius * (1.f + math::RayEpsilon<Float>) );
     }
 
     std::pair<Ray3f, Spectrum> sample_ray(Float time, Float wavelength_sample,

@@ -48,7 +48,7 @@ def test_eval_pdf(variant_scalar_rgb, r, t):
         si.sh_frame = mi.Frame3f(si.n)
 
         for i in range(20):
-            theta = i / 19.0 * dr.Pi  # We cover the entire circle
+            theta = i / 19.0 * dr.pi  # We cover the entire circle
 
             wo = [dr.sin(theta), 0, dr.cos(theta)]
             v_pdf = bsdf.pdf(ctx, si, wo=wo)
@@ -56,12 +56,12 @@ def test_eval_pdf(variant_scalar_rgb, r, t):
 
             if dr.dot(wi, wo) > 0:
                 # reflection
-                assert dr.allclose(r * dr.abs(wo[2]) / dr.Pi, v_eval)
-                assert dr.allclose(r / albedo * dr.abs(wo[2]) / dr.Pi, v_pdf)
+                assert dr.allclose(r * dr.abs(wo[2]) / dr.pi, v_eval)
+                assert dr.allclose(r / albedo * dr.abs(wo[2]) / dr.pi, v_pdf)
             else:
                 # transmission
-                assert dr.allclose(t * dr.abs(wo[2]) / dr.Pi, v_eval)
-                assert dr.allclose(t / albedo * dr.abs(wo[2]) / dr.Pi, v_pdf)
+                assert dr.allclose(t * dr.abs(wo[2]) / dr.pi, v_eval)
+                assert dr.allclose(t / albedo * dr.abs(wo[2]) / dr.pi, v_pdf)
 
 
 @pytest.mark.parametrize(

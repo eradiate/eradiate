@@ -73,8 +73,7 @@ public:
 
     DistantFluxSensor(const Properties &props) : Base(props) {
         // Check reconstruction filter radius
-        if (m_film->rfilter()->radius() >
-            0.5f + math::RayEpsilon<Float>) {
+        if (m_film->rfilter()->radius() > 0.5f + math::RayEpsilon<Float>) {
             Log(Warn, "This sensor is best used with a reconstruction filter "
                       "with a radius of 0.5 or lower (e.g. default box)");
         }
@@ -84,12 +83,12 @@ public:
         // Get target
         if (props.has_property("target")) {
             if (props.type("target") == Properties::Type::Array3f) {
-                m_target_type  = RayTargetType::Point;
+                m_target_type = RayTargetType::Point;
                 m_target_point = props.get<ScalarPoint3f>("target");
             } else if (props.type("target") == Properties::Type::Object) {
                 // We assume it's a shape
-                m_target_type  = RayTargetType::Shape;
-                auto obj       = props.object("target");
+                m_target_type = RayTargetType::Shape;
+                auto obj = props.object("target");
                 m_target_shape = dynamic_cast<Shape *>(obj.get());
 
                 if (!m_target_shape)
@@ -113,8 +112,8 @@ public:
     void set_scene(const Scene *scene) override {
         m_bsphere = scene->bbox().bounding_sphere();
         m_bsphere.radius =
-            dr::max(math::RayEpsilon<Float>,
-                    m_bsphere.radius * (1.f + math::RayEpsilon<Float>) );
+            dr::maximum(math::RayEpsilon<Float>,
+                        m_bsphere.radius * (1.f + math::RayEpsilon<Float>));
     }
 
     std::pair<Ray3f, Spectrum> sample_ray_impl(Float time,

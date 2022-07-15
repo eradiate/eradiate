@@ -60,7 +60,7 @@ def clean_up():
 
     if hasattr(dr, "sync_thread"):
         dr.sync_thread()
-        dr.registry_trim()
+        dr.registry_clear()
         dr.set_flags(dr.JitFlag.Default)
 
 
@@ -147,7 +147,6 @@ del variants
 for name, variants in variant_groups.items():
     generate_fixture_group(name, variants)
 del generate_fixture_group
-
 
 # ------------------------------------------------------------------------------
 #                              Other configuration

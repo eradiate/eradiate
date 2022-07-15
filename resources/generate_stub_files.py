@@ -1,0 +1,1 @@
+../ext/mitsuba/resources/generate_stub_files.py

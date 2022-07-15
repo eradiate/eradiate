@@ -58,7 +58,12 @@ def bitmap_to_dataset(bmp: "mitsuba.Bitmap", dtype=float) -> xr.Dataset:
     width = img.shape[1]
 
     result = xr.Dataset(
-        data_vars={"img": (["y_index", "x_index", "channel"], img)},
+        data_vars={
+            "img": (
+                ["y_index", "x_index", "channel"],
+                np.reshape(img, (height, width, -1)),
+            )
+        },
         coords={
             "y_index": (
                 "y_index",
