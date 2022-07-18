@@ -13,7 +13,7 @@ Concrete classes
 
    AtmosphereExperiment
    CanopyExperiment
-   Rami4ATMExperiment
+   CanopyAtmosphereExperiment
 
 Interfaces
 ----------

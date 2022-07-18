@@ -6,7 +6,7 @@ __getattr__, __dir__, __all__ = lazy_loader.attach(
         "_core": ["EarthObservationExperiment", "Experiment", "mitsuba_run", "run"],
         "_atmosphere": ["AtmosphereExperiment", "OneDimExperiment"],
         "_canopy": ["CanopyExperiment", "RamiExperiment"],
-        "_rami4atm": ["Rami4ATMExperiment"],
+        "_canopy_atmosphere": ["CanopyAtmosphereExperiment", "Rami4ATMExperiment"],
     },
 )
 
