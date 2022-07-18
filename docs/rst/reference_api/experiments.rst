@@ -12,7 +12,7 @@ Concrete classes
    :toctree: generated/autosummary/
 
    AtmosphereExperiment
-   RamiExperiment
+   CanopyExperiment
    Rami4ATMExperiment
 
 Interfaces

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.experiments import AtmosphereExperiment, RamiExperiment
+from eradiate.experiments import AtmosphereExperiment, CanopyExperiment
 from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.measure import MultiDistantMeasure
@@ -50,7 +50,7 @@ def test_spectral_loop(mode_mono, cls, wavelengths, irradiance):
         cls_exp = AtmosphereExperiment
         kwargs = {"atmosphere": None}
     elif cls == "rami":
-        cls_exp = RamiExperiment
+        cls_exp = CanopyExperiment
         kwargs = {"canopy": None}
     else:
         raise ValueError

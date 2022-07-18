@@ -3,7 +3,7 @@ import pytest
 
 import eradiate
 from eradiate.data import data_store
-from eradiate.experiments import RamiExperiment
+from eradiate.experiments import CanopyExperiment
 from eradiate.test_tools.regression import Chi2Test
 from eradiate.units import unit_registry as ureg
 
@@ -50,7 +50,7 @@ def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp):
         "tests/regression_test_specifications/het01/het01_UNI_instances.def"
     )
 
-    exp = RamiExperiment(
+    exp = CanopyExperiment(
         canopy={
             "type": "discrete_canopy",
             "instanced_canopy_elements": [

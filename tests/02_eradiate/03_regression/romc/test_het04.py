@@ -4,7 +4,7 @@ import pytest
 import eradiate
 from eradiate.contexts import KernelDictContext
 from eradiate.data import data_store
-from eradiate.experiments import RamiExperiment
+from eradiate.experiments import CanopyExperiment
 from eradiate.test_tools.regression import Chi2Test
 from eradiate.units import unit_registry as ureg
 
@@ -64,7 +64,7 @@ def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
         "tests/regression_test_specifications/het04/het04_cyl_positions.def"
     )
 
-    exp = RamiExperiment(
+    exp = CanopyExperiment(
         canopy={
             "type": "discrete_canopy",
             "instanced_canopy_elements": [
