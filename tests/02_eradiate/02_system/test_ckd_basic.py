@@ -4,7 +4,7 @@ import numpy as np
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.experiments import OneDimExperiment
+from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.measure import MultiDistantMeasure
 
@@ -21,7 +21,7 @@ def test_ckd_basic(modes_all_ckd):
     Rationale
     ---------
 
-    Create a ``OneDimExperiment`` instance with no atmosphere, a Lambertian
+    Create an ``AtmosphereExperiment`` instance with no atmosphere, a Lambertian
     surface with reflectance equal to 1 and a ``MultiDistantMeasure``:
 
     * Sensor: Distant measure covering a plane (25 angular points,
@@ -38,7 +38,7 @@ def test_ckd_basic(modes_all_ckd):
     """
 
     # Configure experiment, run and postprocess results
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         atmosphere=None,
         surface=LambertianBSDF(reflectance=1.0),
         measures=[

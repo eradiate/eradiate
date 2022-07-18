@@ -22,7 +22,7 @@ import eradiate
 
 eradiate.set_mode("mono_double")
 
-exp = eradiate.experiments.OneDimExperiment(
+exp = eradiate.experiments.AtmosphereExperiment(
     atmosphere={"type": "heterogeneous_legacy"},
     illumination={
         "type": "directional",

@@ -17,7 +17,7 @@ def init_mono_experiment(wavelengths, spp, reflectance, zeniths):
     """
     eradiate.set_mode("mono_double")
 
-    return eradiate.experiments.OneDimExperiment(
+    return eradiate.experiments.AtmosphereExperiment(
         measures=[
             eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
@@ -47,7 +47,7 @@ def init_ckd_experiment(bin_set, bins, spp, reflectance, zeniths):
     """
     eradiate.set_mode("ckd_double")
 
-    return eradiate.experiments.OneDimExperiment(
+    return eradiate.experiments.AtmosphereExperiment(
         measures=[
             eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(

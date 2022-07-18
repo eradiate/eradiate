@@ -80,7 +80,7 @@ def _surface_converter(value):
 
 @parse_docs
 @attr.s
-class OneDimExperiment(EarthObservationExperiment):
+class AtmosphereExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a one-dimensional scene. This experiment approximates
     a one-dimensional setup using a 3D geometry set up to reproduce the
@@ -258,7 +258,7 @@ class OneDimExperiment(EarthObservationExperiment):
                     measure.target = TargetPoint(target_point)
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
-        result = super(OneDimExperiment, self)._dataset_metadata(measure)
+        result = super(AtmosphereExperiment, self)._dataset_metadata(measure)
 
         if measure.is_distant():
             result["title"] = "Top-of-atmosphere simulation results"

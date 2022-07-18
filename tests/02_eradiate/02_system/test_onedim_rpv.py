@@ -1,4 +1,4 @@
-"""Test cases with OneDimExperiment and an RPV surface."""
+"""Test cases with AtmosphereExperiment and an RPV surface."""
 
 import os
 
@@ -99,7 +99,7 @@ def test_film_to_angular_coord_conversion_multi_distant(
     gs = {"forward": 0.1, "backward": -0.1}
 
     experiments = {
-        orientation: eradiate.experiments.OneDimExperiment(
+        orientation: eradiate.experiments.AtmosphereExperiment(
             measures={
                 "type": "mdistant",
                 "construct": "from_viewing_angles",
@@ -443,7 +443,7 @@ def test_film_to_angular_coord_conversion_distant_flux(
     gs = {"forward": 0.1, "backward": -0.1}
 
     experiments = {
-        orientation: eradiate.experiments.OneDimExperiment(
+        orientation: eradiate.experiments.AtmosphereExperiment(
             measures={
                 "type": "distant_flux",
                 "direction": [0, 0, 1],
@@ -581,7 +581,7 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
     gs = {"forward": 0.1, "backward": -0.1}
 
     experiments = {
-        orientation: eradiate.experiments.OneDimExperiment(
+        orientation: eradiate.experiments.AtmosphereExperiment(
             measures={
                 "type": "hdistant",
                 "direction": [0, 0, 1],
@@ -718,7 +718,7 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
         },
     }
     experiments = {
-        bsdf: eradiate.experiments.OneDimExperiment(
+        bsdf: eradiate.experiments.AtmosphereExperiment(
             illumination={"type": "directional", "zenith": 30.0 * ureg.deg},
             measures={
                 "type": "mdistant",

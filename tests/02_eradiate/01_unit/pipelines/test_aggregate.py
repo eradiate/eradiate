@@ -1,6 +1,6 @@
 import numpy as np
 
-from eradiate.experiments import OneDimExperiment
+from eradiate.experiments import AtmosphereExperiment
 from eradiate.pipelines._aggregate import (
     AggregateCKDQuad,
     AggregateRadiosity,
@@ -69,7 +69,7 @@ def test_aggregate_radiosity(mode_mono):
     # Initialise test data
     irradiance = 2.0
 
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         atmosphere=None,
         surface={"type": "lambertian", "reflectance": 1.0},
         illumination={"type": "directional", "irradiance": irradiance},

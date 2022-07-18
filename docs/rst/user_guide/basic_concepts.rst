@@ -65,7 +65,7 @@ also be seen as an experiment.
 .. admonition:: Example
 
    The one-dimensional experiment
-   (:class:`~eradiate.experiments.OneDimExperiment`)
+   (:class:`~eradiate.experiments.AtmosphereExperiment`)
    simulates radiative transfer in pseudo-one-dimensional geometries.
    Its configuration uses concepts with which Earth observation scientists
    should be familiar. The underlying machinery then breaks down this
@@ -76,7 +76,7 @@ also be seen as an experiment.
    and post-processes them.
 
    A top-of-atmosphere radiance-based measure (*e.g.* BRF) is specified to the
-   :class:`~eradiate.experiments.OneDimExperiment` as a
+   :class:`~eradiate.experiments.AtmosphereExperiment` as a
    :class:`~eradiate.scenes.measure.MultiDistantMeasure`. This measure object is
    then translated into a :ref:`mdistant <plugin-sensor-mdistant>` kernel sensor
    plugin specification. The experiment object then runs the Monte Carlo ray

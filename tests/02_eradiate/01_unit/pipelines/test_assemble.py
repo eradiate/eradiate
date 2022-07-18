@@ -3,7 +3,7 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.experiments import OneDimExperiment
+from eradiate.experiments import AtmosphereExperiment
 from eradiate.pipelines import (
     AddIllumination,
     AddSpectralResponseFunction,
@@ -33,7 +33,7 @@ def test_add_illumination(modes_all_single, illumination_type, expected_dims):
     else:
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
 
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         atmosphere=None,
         illumination={"type": illumination_type},
         measures=MultiDistantMeasure(spectral_cfg=spectral_cfg),
@@ -136,7 +136,7 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
     else:
         assert False
 
-    exp = OneDimExperiment(atmosphere=None, measures=measure)
+    exp = AtmosphereExperiment(atmosphere=None, measures=measure)
     exp.process()
     measure = exp.measures[0]
 
@@ -163,7 +163,7 @@ def test_add_srf(modes_all_single):
     else:
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
 
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         atmosphere=None,
         measures=MultiDistantMeasure.from_viewing_angles(
             zeniths=[-60, -45, 0, 45, 60],

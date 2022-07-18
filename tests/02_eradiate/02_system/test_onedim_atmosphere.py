@@ -22,7 +22,7 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
     Rationale
     ---------
 
-    Run a OneDimExperiment with two different atmosphere definitions:
+    Run an AtmosphereExperiment with two different atmosphere definitions:
 
     1. A single particle layer.
     2. Heterogeneous atmosphere that contains a single particle layer.
@@ -51,7 +51,7 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
     layer = eradiate.scenes.atmosphere.ParticleLayer(
         bottom=bottom, top=top, tau_ref=tau_ref
     )
-    exp1 = eradiate.experiments.OneDimExperiment(
+    exp1 = eradiate.experiments.AtmosphereExperiment(
         atmosphere=layer,
         measures=[measure],
     )
@@ -60,7 +60,7 @@ def test_heterogeneous_atmosphere_contains_particle_layer(
     results1 = exp1.results["measure"]["radiance"].values
 
     # heterogeneous atmosphere with a particle layer
-    exp2 = eradiate.experiments.OneDimExperiment(
+    exp2 = eradiate.experiments.AtmosphereExperiment(
         atmosphere={"type": "heterogeneous", "particle_layers": [layer]},
         measures=[measure],
     )
@@ -86,7 +86,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
     Rationale
     ---------
 
-    Run a OneDimExperiment with two different atmosphere definitions:
+    Run an AtmosphereExperiment with two different atmosphere definitions:
 
     1. A molecular atmosphere.
     2. Heterogeneous atmosphere that contains a molecular atmosphere only.
@@ -110,7 +110,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
     }
 
     # non absorbing molecular atmosphere
-    exp1 = eradiate.experiments.OneDimExperiment(
+    exp1 = eradiate.experiments.AtmosphereExperiment(
         atmosphere={"type": "molecular", "has_absorption": False},
         measures=[measure],
     )
@@ -119,7 +119,7 @@ def test_heterogeneous_atmosphere_contains_molecular_atmosphere(
     results1 = exp1.results["measure"]["radiance"].values
 
     # heterogeneous atmopshere with a non-absorbing molecular atmosphere
-    exp2 = eradiate.experiments.OneDimExperiment(
+    exp2 = eradiate.experiments.AtmosphereExperiment(
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {"type": "molecular", "has_absorption": False},

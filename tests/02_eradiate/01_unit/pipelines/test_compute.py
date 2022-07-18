@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.experiments import OneDimExperiment
+from eradiate.experiments import AtmosphereExperiment
 from eradiate.pipelines import ApplySpectralResponseFunction
 from eradiate.scenes.measure import MultiDistantMeasure
 
@@ -23,7 +23,7 @@ def test_apply_spectral_response_function_transform(mode_id, spectral_cfg):
     # Prepare basic data
     eradiate.set_mode(mode_id)
 
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         atmosphere=None,
         measures=MultiDistantMeasure.from_viewing_angles(
             id="measure",

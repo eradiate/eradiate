@@ -152,7 +152,7 @@ def test_homogeneous_vs_particle_layer(
     def init_experiment_particle_layer(
         bottom, top, dataset_path, w_ref, tau_ref, r, w, spp
     ):
-        return eradiate.experiments.OneDimExperiment(
+        return eradiate.experiments.AtmosphereExperiment(
             measures=esc.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=esc.measure.MeasureSpectralConfig.new(
                     wavelengths=w,
@@ -182,7 +182,7 @@ def test_homogeneous_vs_particle_layer(
     def init_experiment_homogeneous_atmosphere(
         bottom, top, sigma_a, sigma_s, phase, r, w, spp
     ):
-        return eradiate.experiments.OneDimExperiment(
+        return eradiate.experiments.AtmosphereExperiment(
             measures=esc.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=esc.measure.MeasureSpectralConfig.new(
                     wavelengths=w,
@@ -316,7 +316,7 @@ def test_particle_layer_energy_conservation(
     dataset_path = tmpdir / "radprops.nc"
     radprops.to_netcdf(dataset_path)
 
-    experiment = eradiate.experiments.OneDimExperiment(
+    experiment = eradiate.experiments.AtmosphereExperiment(
         measures=esc.measure.DistantFluxMeasure(
             film_resolution=(32, 32),
             target=esc.measure.TargetRectangle(
@@ -402,7 +402,7 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
     """
 
     def molecular_particle_layer(
-        exp_mol_atm: eradiate.experiments.OneDimExperiment,
+        exp_mol_atm: eradiate.experiments.AtmosphereExperiment,
     ) -> ParticleLayer:
         """Creates a particle layer with radiative properties identical to
         a one-layer molecular atmosphere in a 1D experiment, assuming the
@@ -499,7 +499,7 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
         )
 
     def init_experiment(spp, r, w, atmosphere):
-        return eradiate.experiments.OneDimExperiment(
+        return eradiate.experiments.AtmosphereExperiment(
             measures=esc.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=esc.measure.MeasureSpectralConfig.new(
                     wavelengths=w,
