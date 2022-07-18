@@ -29,6 +29,7 @@ from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface, surface_factory
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
+from ..util.deprecation import substitute
 
 
 def _surface_converter(value):
@@ -314,3 +315,13 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
             result["title"] = "Top-of-atmosphere simulation results"
 
         return result
+
+
+__getattr__ = substitute(
+    {
+        "Rami4ATMExperiment": (
+            CanopyAtmosphereExperiment,
+            {"deprecated_in": "0.22.5", "removed_in": "0.22.7"},
+        )
+    }
+)

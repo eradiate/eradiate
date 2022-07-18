@@ -13,6 +13,7 @@ from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import Measure
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, surface_factory
+from ..util.deprecation import substitute
 
 
 def _surface_converter(value):
@@ -186,3 +187,13 @@ class CanopyExperiment(EarthObservationExperiment):
             result["title"] = "Top-of-canopy simulation results"
 
         return result
+
+
+__getattr__ = substitute(
+    {
+        "RamiExperiment": (
+            CanopyExperiment,
+            {"deprecated_in": "0.22.5", "removed_in": "0.22.7"},
+        )
+    }
+)
