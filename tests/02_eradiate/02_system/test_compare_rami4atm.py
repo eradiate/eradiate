@@ -153,10 +153,10 @@ def test_compare_rami4atm_rami(
     mode_mono_double, sza, lai, artefact_dir, ert_seed_state
 ):
     r"""
-    Compare Rami4ATMExperiment with RamiExperiment
-    ==============================================
+    Compare Rami4ATMExperiment with CanopyExperiment
+    ================================================
 
-    This test compares the results of a RamiExperiment with a corresponding
+    This test compares the results of a CanopyExperiment with a corresponding
     Rami4ATMExperiment run. To achieve that, the Rami4ATMExperiment is set up
     without an atmosphere.
 
@@ -225,7 +225,7 @@ def test_compare_rami4atm_rami(
         "spectral_cfg": ertsc.measure.MeasureSpectralConfig.new(wavelengths=[550]),
     }
 
-    rami = ertxp.RamiExperiment(
+    rami = ertxp.CanopyExperiment(
         surface=surface,
         illumination=illumination,
         canopy=canopy,

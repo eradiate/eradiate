@@ -32,7 +32,8 @@ def test_albedo(mode_mono, artefact_dir):
       quick converge to the expected value, thus allowing for a low sample
       count.
 
-    The test is run for the ``OneDimSolverApp`` and ``RamiSolverApp`` classes.
+    The test is run for the ``AtmosphereExperiment`` and ``CanopyExperiment``
+    classes.
 
     Expected behaviour
     ------------------
@@ -42,21 +43,21 @@ def test_albedo(mode_mono, artefact_dir):
     Results
     -------
 
-    .. image:: generated/plots/test_albedo_onedim_directional.png
+    .. image:: generated/plots/test_albedo_atmosphere_directional.png
        :width: 100%
 
-    .. image:: generated/plots/test_albedo_rami_directional.png
+    .. image:: generated/plots/test_albedo_canopy_directional.png
        :width: 100%
 
-    .. image:: generated/plots/test_albedo_onedim_constant.png
+    .. image:: generated/plots/test_albedo_atmosphere_constant.png
        :width: 100%
 
-    .. image:: generated/plots/test_albedo_rami_constant.png
+    .. image:: generated/plots/test_albedo_canopy_constant.png
        :width: 100%
 
     """
     exps = {
-        "onedim_directional": eradiate.experiments.AtmosphereExperiment(
+        "atmosphere_directional": eradiate.experiments.AtmosphereExperiment(
             measures=[
                 {
                     "type": "distant_flux",
@@ -78,7 +79,7 @@ def test_albedo(mode_mono, artefact_dir):
             },
             illumination={"type": "directional", "zenith": 0.0},
         ),
-        "onedim_constant": eradiate.experiments.AtmosphereExperiment(
+        "atmosphere_constant": eradiate.experiments.AtmosphereExperiment(
             measures=[
                 {
                     "type": "distant_flux",
@@ -100,7 +101,7 @@ def test_albedo(mode_mono, artefact_dir):
             },
             illumination={"type": "constant"},
         ),
-        "rami_directional": eradiate.experiments.RamiExperiment(
+        "canopy_directional": eradiate.experiments.CanopyExperiment(
             measures=[
                 {
                     "type": "distant_flux",
@@ -122,7 +123,7 @@ def test_albedo(mode_mono, artefact_dir):
             },
             illumination={"type": "directional", "zenith": 0.0},
         ),
-        "rami_constant": eradiate.experiments.RamiExperiment(
+        "canopy_constant": eradiate.experiments.CanopyExperiment(
             measures=[
                 {
                     "type": "distant_flux",

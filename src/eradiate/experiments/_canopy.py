@@ -37,7 +37,7 @@ def _surface_converter(value):
 
 @parse_docs
 @attr.s
-class RamiExperiment(EarthObservationExperiment):
+class CanopyExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a scene with an explicit canopy and no atmosphere.
     This experiment assumes that the surface is plane and accounts for ground
@@ -180,7 +180,7 @@ class RamiExperiment(EarthObservationExperiment):
                     }
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
-        result = super(RamiExperiment, self)._dataset_metadata(measure)
+        result = super(CanopyExperiment, self)._dataset_metadata(measure)
 
         if measure.is_distant():
             result["title"] = "Top-of-canopy simulation results"

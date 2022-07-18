@@ -5,7 +5,7 @@ __getattr__, __dir__, __all__ = lazy_loader.attach(
     submod_attrs={
         "_core": ["EarthObservationExperiment", "Experiment", "mitsuba_run", "run"],
         "_atmosphere": ["AtmosphereExperiment", "OneDimExperiment"],
-        "_rami": ["RamiExperiment"],
+        "_canopy": ["CanopyExperiment", "RamiExperiment"],
         "_rami4atm": ["Rami4ATMExperiment"],
     },
 )
