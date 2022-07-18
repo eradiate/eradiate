@@ -3,7 +3,7 @@ import pytest
 
 import eradiate
 import eradiate.scenes as esc
-from eradiate.experiments import OneDimExperiment
+from eradiate.experiments import AtmosphereExperiment
 from eradiate.test_tools.regression import Chi2Test
 from eradiate.units import unit_registry as ureg
 
@@ -40,7 +40,7 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
     This test uses the Chi-squared criterion with a threshold of 0.05.
 
     """
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         surface=esc.bsdfs.RPVBSDF(k=0.95, g=-0.1, rho_0=0.027685),
         illumination=esc.illumination.DirectionalIllumination(
             zenith=20 * ureg.deg, irradiance=20.0

@@ -2,8 +2,8 @@ import typing as t
 
 import attr
 
+from ._atmosphere import measure_inside_atmosphere
 from ._core import EarthObservationExperiment
-from ._onedim import measure_inside_atmosphere
 from .. import converters, validators
 from ..attrs import AUTO, documented, parse_docs
 from ..contexts import KernelDictContext

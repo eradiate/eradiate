@@ -56,7 +56,7 @@ def test_albedo(mode_mono, artefact_dir):
 
     """
     exps = {
-        "onedim_directional": eradiate.experiments.OneDimExperiment(
+        "onedim_directional": eradiate.experiments.AtmosphereExperiment(
             measures=[
                 {
                     "type": "distant_flux",
@@ -78,7 +78,7 @@ def test_albedo(mode_mono, artefact_dir):
             },
             illumination={"type": "directional", "zenith": 0.0},
         ),
-        "onedim_constant": eradiate.experiments.OneDimExperiment(
+        "onedim_constant": eradiate.experiments.AtmosphereExperiment(
             measures=[
                 {
                     "type": "distant_flux",

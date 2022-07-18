@@ -46,7 +46,7 @@ def test_spp_splitting(mode_mono_single, artefact_dir):
        :width: 66%
     """
     # Basic scene setup
-    exp = eradiate.experiments.OneDimExperiment(
+    exp = eradiate.experiments.AtmosphereExperiment(
         atmosphere=None,
         surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=1.0),
         illumination=eradiate.scenes.illumination.DirectionalIllumination(

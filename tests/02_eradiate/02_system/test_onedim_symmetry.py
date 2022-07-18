@@ -68,7 +68,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
     n_vza = 17
 
     # Run simulation
-    exp = eradiate.experiments.OneDimExperiment(
+    exp = eradiate.experiments.AtmosphereExperiment(
         illumination={"type": "directional", "zenith": 0.0, "azimuth": 0.0},
         measures={
             "type": "distant",

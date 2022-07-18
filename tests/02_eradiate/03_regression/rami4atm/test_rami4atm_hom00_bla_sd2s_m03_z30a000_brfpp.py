@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.experiments import OneDimExperiment
+from eradiate.experiments import AtmosphereExperiment
 from eradiate.test_tools.regression import Chi2Test
 
 
@@ -93,7 +93,7 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
         ],
     }
 
-    exp = OneDimExperiment(**config)
+    exp = AtmosphereExperiment(**config)
     result = eradiate.run(exp)
 
     test = Chi2Test(

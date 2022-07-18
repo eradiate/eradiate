@@ -3,7 +3,7 @@ import xarray as xr
 
 import eradiate
 from eradiate.exceptions import KernelVariantError
-from eradiate.experiments import OneDimExperiment, mitsuba_run
+from eradiate.experiments import AtmosphereExperiment, mitsuba_run
 from eradiate.scenes.core import KernelDict
 
 
@@ -79,6 +79,6 @@ def test_run_function(modes_all_double):
     else:
         assert False, f"Please add a test for mode '{mode.id}'"
 
-    exp = OneDimExperiment(atmosphere=None, measures=measure)
+    exp = AtmosphereExperiment(atmosphere=None, measures=measure)
     result = eradiate.run(exp)
     assert isinstance(result, xr.Dataset)

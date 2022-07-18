@@ -21,7 +21,7 @@ Available features
 ------------------
 
 Eradiate's one-dimensional experiment is implemented by the
-:class:`.OneDimExperiment` class.
+:class:`.AtmosphereExperiment` class.
 Instances are configured using the class's constructor. The
 :term:`operational mode`, which defines how the spectral dimension of the
 computation is handled, must be selected prior to instantiating the class.
@@ -40,13 +40,13 @@ allowed values.
 
 Parameters can usually be omitted; in that case, they will be assigned
 default values. Default values are documented in the reference documentation of
-the :class:`.OneDimExperiment` class and other Eradiate classes.
+the :class:`.AtmosphereExperiment` class and other Eradiate classes.
 
 Operational modes
 ^^^^^^^^^^^^^^^^^
 
 The operational mode is selected using the :func:`eradiate.set_mode` function.
-:class:`.OneDimExperiment` currently supports the monochromatic (``mono``) and
+:class:`.AtmosphereExperiment` currently supports the monochromatic (``mono``) and
 correlated-*k* distribution (``ckd``) modes.
 
 Geometry [``geometry``]
@@ -165,7 +165,7 @@ Black surface [:class:`.BlackBSDF`, ``black``]
 Result output
 -------------
 
-The :meth:`.OneDimExperiment.run` method stores the computed results in the
+The :meth:`.AtmosphereExperiment.run` method stores the computed results in the
 ``results`` attribute as a dictionary mapping measure identifiers to a
 :class:`~xarray.Dataset` object. Each data set has one variable for each
 computed physical quantity (*e.g.* spectral irradiance, leaving radiance, BRDF

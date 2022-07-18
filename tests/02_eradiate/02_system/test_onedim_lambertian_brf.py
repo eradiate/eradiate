@@ -56,7 +56,7 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
         results[illumination_zenith] = {}
         for reflectance in reflectance_values:
             # Run simulation
-            exp = eradiate.experiments.OneDimExperiment(
+            exp = eradiate.experiments.AtmosphereExperiment(
                 illumination={
                     "type": "directional",
                     "zenith": illumination_zenith,

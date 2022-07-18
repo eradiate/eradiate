@@ -11,7 +11,7 @@ Concrete classes
 .. autosummary::
    :toctree: generated/autosummary/
 
-   OneDimExperiment
+   AtmosphereExperiment
    RamiExperiment
    Rami4ATMExperiment
 

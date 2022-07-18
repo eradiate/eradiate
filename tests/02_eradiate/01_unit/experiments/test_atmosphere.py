@@ -5,8 +5,8 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.experiments import OneDimExperiment
-from eradiate.experiments._onedim import measure_inside_atmosphere
+from eradiate.experiments import AtmosphereExperiment
+from eradiate.experiments._atmosphere import measure_inside_atmosphere
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     HomogeneousAtmosphere,
@@ -17,9 +17,9 @@ from eradiate.scenes.measure import MeasureSpectralConfig, MultiDistantMeasure
 
 def test_onedim_experiment_construct_default(modes_all_double):
     """
-    OneDimExperiment initialises with default params in all modes
+    AtmosphereExperiment initialises with default params in all modes
     """
-    assert OneDimExperiment()
+    assert AtmosphereExperiment()
 
 
 def test_onedim_experiment_construct_measures(modes_all):
@@ -27,32 +27,32 @@ def test_onedim_experiment_construct_measures(modes_all):
     A variety of measure specifications are acceptable
     """
     # Init with a single measure (not wrapped in a sequence)
-    assert OneDimExperiment(measures=MultiDistantMeasure())
+    assert AtmosphereExperiment(measures=MultiDistantMeasure())
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert OneDimExperiment(measures=[{"type": "distant"}])
+    assert AtmosphereExperiment(measures=[{"type": "distant"}])
     # -- Not wrapped in a sequence
-    assert OneDimExperiment(measures={"type": "distant"})
+    assert AtmosphereExperiment(measures={"type": "distant"})
 
 
 def test_onedim_experiment_construct_normalize_measures(mode_mono):
     # When setting atmosphere to None, measure target is at ground level
-    exp = OneDimExperiment(atmosphere=None)
+    exp = AtmosphereExperiment(atmosphere=None)
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
     # When atmosphere is set, measure target is at ground level
-    exp = OneDimExperiment(atmosphere=HomogeneousAtmosphere(top=100.0 * ureg.km))
+    exp = AtmosphereExperiment(atmosphere=HomogeneousAtmosphere(top=100.0 * ureg.km))
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
 
 @pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
 def test_onedim_experiment_ckd(mode_ckd, bin_set):
     """
-    OneDimExperiment with heterogeneous atmosphere in CKD mode can be created.
+    AtmosphereExperiment with heterogeneous atmosphere in CKD mode can be created.
     """
     ctx = KernelDictContext(spectral_ctx={"bin_set": bin_set})
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         atmosphere=HeterogeneousAtmosphere(
             molecular_atmosphere=MolecularAtmosphere.afgl_1986()
         ),
@@ -92,7 +92,7 @@ def test_onedim_experiment_kernel_dict(modes_all_double):
     ctx = KernelDictContext()
 
     # Surface width is appropriately inherited from geometry
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0, "width_units": "km"},
         atmosphere=HomogeneousAtmosphere(),
     )
@@ -104,7 +104,7 @@ def test_onedim_experiment_kernel_dict(modes_all_double):
     assert "shape_atmosphere" in kernel_dict
 
     # Setting atmosphere to None
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         geometry="plane_parallel",
         atmosphere=None,
         surface={"type": "lambertian"},
@@ -135,7 +135,7 @@ def test_onedim_experiment_real_life(mode_mono):
     test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
@@ -172,7 +172,7 @@ def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
     test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         geometry={"type": "plane_parallel"},
         surface={"type": "rpv"},
         atmosphere={
@@ -198,7 +198,7 @@ def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
 
 def test_onedim_experiment_run_basic(modes_all):
     """
-    OneDimExperiment runs successfully in all modes.
+    AtmosphereExperiment runs successfully in all modes.
     """
     if eradiate.mode().is_mono:
         spectral_cfg = MeasureSpectralConfig.new(wavelengths=550.0 * ureg.nm)
@@ -207,7 +207,7 @@ def test_onedim_experiment_run_basic(modes_all):
     else:
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
 
-    exp = OneDimExperiment()
+    exp = AtmosphereExperiment()
     exp.measures[0].spectral_cfg = spectral_cfg
 
     eradiate.run(exp)
@@ -217,7 +217,7 @@ def test_onedim_experiment_run_basic(modes_all):
 @pytest.mark.slow
 def test_onedim_experiment_run_detailed(modes_all):
     """
-    Test for correctness of the result dataset generated by OneDimExperiment.
+    Test for correctness of the result dataset generated by AtmosphereExperiment.
     """
     if eradiate.mode().is_mono:
         spectral_cfg = {"wavelengths": 550.0 * ureg.nm}
@@ -227,7 +227,7 @@ def test_onedim_experiment_run_detailed(modes_all):
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
 
     # Create simple scene
-    exp = OneDimExperiment(
+    exp = AtmosphereExperiment(
         measures=[
             {
                 "type": "hemispherical_distant",

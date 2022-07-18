@@ -13,7 +13,7 @@ from eradiate.units import to_quantity
 def init_experiment(bottom, top, sigma_a, sigma_s, phase, r, w, spp):
     assert eradiate.mode().id == "mono_double"
 
-    return eradiate.experiments.OneDimExperiment(
+    return eradiate.experiments.AtmosphereExperiment(
         measures=[
             eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(

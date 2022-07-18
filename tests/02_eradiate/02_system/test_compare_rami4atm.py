@@ -18,12 +18,13 @@ def test_compare_rami4atm_onedim(
     mode_ckd_double, reflectance, sza, artefact_dir, ert_seed_state
 ):
     r"""
-    Compare Rami4ATMExperiment with OneDimExperiment
-    ================================================
+    Compare Rami4ATMExperiment with AtmosphereExperiment
+    ====================================================
 
-    This test compares the results of a OneDimExperiment with a corresponding
-    Rami4ATMExperiment run. To achieve that, the Rami4ATMExperiment is set up without an explicit
-    canopy and a basic atmosphere.
+    This test compares the results of an AtmosphereExperiment with a
+    corresponding
+    Rami4ATMExperiment run. To achieve that, the Rami4ATMExperiment is set up
+    without an explicit canopy and a basic atmosphere.
 
     Rationale
     ---------
@@ -92,7 +93,7 @@ def test_compare_rami4atm_onedim(
         ),
     }
 
-    onedim = ertxp.OneDimExperiment(
+    onedim = ertxp.AtmosphereExperiment(
         surface=surface,
         illumination=illumination,
         atmosphere=atmosphere,
