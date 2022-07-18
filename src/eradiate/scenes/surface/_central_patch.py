@@ -178,7 +178,7 @@ class CentralPatchSurface(Surface):
                         "type": "bitmap",
                         "filename": str(
                             eradiate.path_resolver.resolve(
-                                "textures/rami4atm_experiment_surface_mask.bmp"
+                                "textures/central_patch_surface_mask.bmp"
                             )
                         ),
                         "filter_type": "nearest",
