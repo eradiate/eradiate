@@ -6,40 +6,40 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.experiments import Rami4ATMExperiment
+from eradiate.experiments import CanopyAtmosphereExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import CentralPatchSurface
 
 
-def test_rami4atm_experiment_construct_default(mode_mono):
+def test_canopy_atmosphere_experiment_construct_default(mode_mono):
     """
-    Rami4ATMExperiment initialises with default params in all modes
+    CanopyAtmosphereExperiment initialises with default params in all modes
     """
-    assert Rami4ATMExperiment()
+    assert CanopyAtmosphereExperiment()
 
 
-def test_rami4atm_experiment_construct_measures(mode_mono):
+def test_canopy_atmosphere_experiment_construct_measures(mode_mono):
     """
     A variety of measure specifications are acceptable
     """
 
     # Init with a single measure (not wrapped in a sequence)
-    assert Rami4ATMExperiment(measures=MultiDistantMeasure())
+    assert CanopyAtmosphereExperiment(measures=MultiDistantMeasure())
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert Rami4ATMExperiment(measures=[{"type": "distant"}])
+    assert CanopyAtmosphereExperiment(measures=[{"type": "distant"}])
     # -- Not wrapped in a sequence
-    assert Rami4ATMExperiment(measures={"type": "distant"})
+    assert CanopyAtmosphereExperiment(measures={"type": "distant"})
 
 
 @pytest.mark.parametrize("padding", (0, 1))
-def test_rami4atm_experiment_construct_normalize_measures(mode_mono, padding):
+def test_canopy_atmosphere_experiment_construct_normalize_measures(mode_mono, padding):
 
     # When canopy is not None, measure target matches canopy unit cell
-    exp = Rami4ATMExperiment(
+    exp = CanopyAtmosphereExperiment(
         atmosphere=None,
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
@@ -59,7 +59,7 @@ def test_rami4atm_experiment_construct_normalize_measures(mode_mono, padding):
     assert np.isclose(target.z, canopy.size[2])
 
     # The measure target does not depend on the atmosphere
-    exp = Rami4ATMExperiment(
+    exp = CanopyAtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
         atmosphere=HomogeneousAtmosphere(),
         canopy=DiscreteCanopy.homogeneous(
@@ -81,11 +81,11 @@ def test_rami4atm_experiment_construct_normalize_measures(mode_mono, padding):
 
 
 @pytest.mark.parametrize("padding", (0, 1))
-def test_rami4atm_experiment_kernel_dict(mode_mono, padding):
+def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
     ctx = KernelDictContext()
 
     # Surface width is appropriately inherited from canopy, when no atmosphere is present
-    s = Rami4ATMExperiment(
+    s = CanopyAtmosphereExperiment(
         atmosphere=None,
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
@@ -112,7 +112,7 @@ def test_rami4atm_experiment_kernel_dict(mode_mono, padding):
     assert "medium" not in kernel_scene["radiancemeter"]
 
     # Surface width is appropriately inherited from atmosphere
-    s = Rami4ATMExperiment(
+    s = CanopyAtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
         atmosphere=HomogeneousAtmosphere(),
         canopy=DiscreteCanopy.homogeneous(
@@ -131,14 +131,14 @@ def test_rami4atm_experiment_kernel_dict(mode_mono, padding):
 
 
 @pytest.mark.slow
-def test_rami4atm_experiment_surface_adjustment(mode_mono):
+def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
     """
-    Create a Rami4ATM experiment and assert the central patch surface is created
+    Create a CanopyAtmosphereExperiment and assert the central patch surface is created
     with the correct parameters, according to the canopy and atmosphere.
     """
     ctx = KernelDictContext()
 
-    exp = Rami4ATMExperiment(
+    exp = CanopyAtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
         atmosphere=HomogeneousAtmosphere(),
         canopy=DiscreteCanopy.homogeneous(
@@ -166,7 +166,7 @@ def test_rami4atm_experiment_surface_adjustment(mode_mono):
 
 
 @pytest.mark.slow
-def test_rami4atm_experiment_real_life(mode_mono):
+def test_canopy_atmosphere_experiment_real_life(mode_mono):
     ctx = KernelDictContext()
 
     # Construct with typical parameters
@@ -175,7 +175,7 @@ def test_rami4atm_experiment_real_life(mode_mono):
     )
 
     # Construct with typical parameters
-    exp = Rami4ATMExperiment(
+    exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
@@ -217,13 +217,13 @@ def test_rami4atm_experiment_real_life(mode_mono):
 
 
 @pytest.mark.slow
-def test_rami4atm_experiment_run_detailed(mode_mono):
+def test_canopy_atmosphere_experiment_run_detailed(mode_mono):
     """
-    Test for correctness of the result dataset generated by Rami4ATMExperiment.
+    Test for correctness of the result dataset generated by CanopyAtmosphereExperiment.
     Note: This test is outdated, most of its content should be transferred to
     tests for measure post-processing pipelines.
     """
-    exp = Rami4ATMExperiment(
+    exp = CanopyAtmosphereExperiment(
         measures=[
             {
                 "id": "toa_brf",
@@ -259,7 +259,7 @@ def test_rami4atm_experiment_run_detailed(mode_mono):
     assert np.all(results["radiance"].data > 0.0)
 
 
-def test_rami4atm_experiment_inconsistent_multiradiancemeter(mode_mono):
+def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(mode_mono):
     # A MultiRadiancemeter measure must have all origins inside the atmosphere
     # or none. A mix of both will raise an error.
 
@@ -269,7 +269,7 @@ def test_rami4atm_experiment_inconsistent_multiradiancemeter(mode_mono):
     test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
-    exp = Rami4ATMExperiment(
+    exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",

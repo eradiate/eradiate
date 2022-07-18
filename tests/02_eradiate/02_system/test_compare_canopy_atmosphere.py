@@ -14,16 +14,16 @@ from eradiate.units import unit_registry as ureg
 @pytest.mark.slow
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
 @pytest.mark.parametrize("sza", [0.0, 30.0, 60.0])
-def test_compare_rami4atm_onedim(
+def test_compare_canopy_atmosphere_vs_atmosphere(
     mode_ckd_double, reflectance, sza, artefact_dir, ert_seed_state
 ):
     r"""
-    Compare Rami4ATMExperiment with AtmosphereExperiment
+    Compare CanopyAtmosphereExperiment with AtmosphereExperiment
     ====================================================
 
     This test compares the results of an AtmosphereExperiment with a
     corresponding
-    Rami4ATMExperiment run. To achieve that, the Rami4ATMExperiment is set up
+    CanopyAtmosphereExperiment run. To achieve that, the CanopyAtmosphereExperiment is set up
     without an explicit canopy and a basic atmosphere.
 
     Rationale
@@ -49,25 +49,25 @@ def test_compare_rami4atm_onedim(
     Results
     -------
 
-    .. image:: generated/plots/test_compare_rami4atm_onedim_0.0_0.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_atmosphere_0.0_0.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_onedim_0.0_0.5.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_atmosphere_0.0_0.5.png
        :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_onedim_0.0_1.0.png
-       :width: 30%
-
-    .. image:: generated/plots/test_compare_rami4atm_onedim_30.0_0.0.png
-       :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_onedim_30.0_0.5.png
-       :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_onedim_30.0_1.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_atmosphere_0.0_1.0.png
        :width: 30%
 
-    .. image:: generated/plots/test_compare_rami4atm_onedim_60.0_0.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_atmosphere_30.0_0.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_onedim_60.0_0.5.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_atmosphere_30.0_0.5.png
        :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_onedim_60.0_1.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_atmosphere_30.0_1.0.png
+       :width: 30%
+
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_atmosphere_60.0_0.0.png
+       :width: 30%
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_atmosphere_60.0_0.5.png
+       :width: 30%
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_atmosphere_60.0_1.0.png
        :width: 30%
     """
 
@@ -100,7 +100,7 @@ def test_compare_rami4atm_onedim(
         measures=measure,
     )
 
-    r4a = ertxp.Rami4ATMExperiment(
+    r4a = ertxp.CanopyAtmosphereExperiment(
         surface=surface,
         illumination=illumination,
         atmosphere=atmosphere,
@@ -132,7 +132,7 @@ def test_compare_rami4atm_onedim(
     plt.title(rf"SZA = {sza} — $\rho$ = {reflectance}")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
-    filename = f"test_compare_rami4atm_onedim_{sza}_{reflectance}.png"
+    filename = f"test_compare_canopy_atmosphere_vs_atmosphere_{sza}_{reflectance}.png"
     outdir = os.path.join(artefact_dir, "plots")
     os.makedirs(outdir, exist_ok=True)
     fname_plot = os.path.join(outdir, filename)
@@ -149,16 +149,16 @@ def test_compare_rami4atm_onedim(
 @pytest.mark.slow
 @pytest.mark.parametrize("sza", [0.0, 30.0, 60.0])
 @pytest.mark.parametrize("lai", [1.0, 2.0, 3.0])
-def test_compare_rami4atm_rami(
+def test_compare_canopy_atmosphere_vs_canopy(
     mode_mono_double, sza, lai, artefact_dir, ert_seed_state
 ):
     r"""
-    Compare Rami4ATMExperiment with CanopyExperiment
-    ================================================
+    Compare CanopyAtmosphereExperiment with CanopyExperiment
+    ========================================================
 
     This test compares the results of a CanopyExperiment with a corresponding
-    Rami4ATMExperiment run. To achieve that, the Rami4ATMExperiment is set up
-    without an atmosphere.
+    CanopyAtmosphereExperiment run. To achieve that, the
+    CanopyAtmosphereExperiment is set up without an atmosphere.
 
     Rationale
     ---------
@@ -184,25 +184,25 @@ def test_compare_rami4atm_rami(
     Results
     -------
 
-    .. image:: generated/plots/test_compare_rami4atm_rami_0.0_1.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_canopy_0.0_1.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_rami_0.0_2.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_canopy_0.0_2.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_rami_0.0_3.0.png
-       :width: 30%
-
-    .. image:: generated/plots/test_compare_rami4atm_rami_30.0_1.0.png
-       :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_rami_30.0_2.0.png
-       :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_rami_30.0_3.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_canopy_0.0_3.0.png
        :width: 30%
 
-    .. image:: generated/plots/test_compare_rami4atm_rami_60.0_1.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_canopy_30.0_1.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_rami_60.0_2.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_canopy_30.0_2.0.png
        :width: 30%
-    .. image:: generated/plots/test_compare_rami4atm_rami_60.0_3.0.png
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_canopy_30.0_3.0.png
+       :width: 30%
+
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_canopy_60.0_1.0.png
+       :width: 30%
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_canopy_60.0_2.0.png
+       :width: 30%
+    .. image:: generated/plots/test_compare_canopy_atmosphere_vs_canopy_60.0_3.0.png
        :width: 30%
     """
 
@@ -232,7 +232,7 @@ def test_compare_rami4atm_rami(
         measures=measure,
     )
 
-    r4a = ertxp.Rami4ATMExperiment(
+    r4a = ertxp.CanopyAtmosphereExperiment(
         surface=surface,
         illumination=illumination,
         atmosphere=None,
@@ -264,7 +264,7 @@ def test_compare_rami4atm_rami(
     plt.title(f"SZA = {sza} — LAI = {lai}")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
-    filename = f"test_compare_rami4atm_rami_{sza}_{lai}.png"
+    filename = f"test_compare_canopy_atmosphere_vs_canopy_{sza}_{lai}.png"
     outdir = os.path.join(artefact_dir, "plots")
     os.makedirs(outdir, exist_ok=True)
     fname_plot = os.path.join(outdir, filename)
