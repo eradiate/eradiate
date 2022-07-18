@@ -58,14 +58,6 @@ def show():
 
         console.print(f"• ERADIATE_{var.upper()}: {var_repr}")
 
-    console.rule("Path resolver")
-    for path in eradiate.path_resolver:
-        cwd = os.path.abspath(os.path.curdir)
-        if str(path) == cwd:
-            console.print(f"• {path} \[current]")
-        else:
-            console.print(f"• {path}")
-
 
 @main.group()
 def data():

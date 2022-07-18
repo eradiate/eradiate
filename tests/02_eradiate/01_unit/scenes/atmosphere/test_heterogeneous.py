@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate import path_resolver
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext, SpectralContext
@@ -16,7 +15,7 @@ from eradiate.scenes.atmosphere import (
 
 @pytest.fixture
 def path_to_ussa76_approx_data():
-    return path_resolver.resolve(
+    return eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
 

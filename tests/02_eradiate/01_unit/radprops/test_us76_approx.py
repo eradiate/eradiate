@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from eradiate import path_resolver
+import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import SpectralContext
 from eradiate.radprops import US76ApproxRadProfile
@@ -12,7 +12,7 @@ def us76_approx_test_absorption_data_set():
     """
     Fixture to return the path to a test absorption data set for 'us76_approx'.
     """
-    return path_resolver.resolve(
+    return eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
 

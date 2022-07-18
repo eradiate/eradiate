@@ -170,7 +170,7 @@ def test_rami4atm_experiment_real_life(mode_mono):
     ctx = KernelDictContext()
 
     # Construct with typical parameters
-    test_absorption_data_set = eradiate.path_resolver.resolve(
+    test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
 
@@ -266,7 +266,7 @@ def test_rami4atm_experiment_inconsistent_multiradiancemeter(mode_mono):
     ctx = KernelDictContext()
 
     # Construct with typical parameters
-    test_absorption_data_set = eradiate.path_resolver.resolve(
+    test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
     exp = Rami4ATMExperiment(

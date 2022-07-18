@@ -12,7 +12,6 @@ import eradiate
 
 from ._core import RadProfile, make_dataset, rad_profile_factory
 from .. import validators
-from .._presolver import path_resolver
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..units import to_quantity
@@ -103,8 +102,13 @@ class ArrayRadProfile(RadProfile):
 
     @classmethod
     def from_dataset(cls, path: t.Union[str, pathlib.Path]) -> ArrayRadProfile:
-        with xr.open_dataset(path_resolver.resolve(path)) as ds:
-            z_level = to_quantity(ds.z_level)
-            albedo = to_quantity(ds.albedo)
-            sigma_t = to_quantity(ds.sigma_t)
+        try:
+            ds = xr.open_dataset(path)
+        except FileNotFoundError:
+            ds = eradiate.data.data_store.open_dataset(path)
+
+        z_level = to_quantity(ds.z_level)
+        albedo = to_quantity(ds.albedo)
+        sigma_t = to_quantity(ds.sigma_t)
+        ds.close()
         return cls(albedo_values=albedo, sigma_t_values=sigma_t, levels=z_level)

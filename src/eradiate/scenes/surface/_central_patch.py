@@ -177,7 +177,7 @@ class CentralPatchSurface(Surface):
                     "weight": {
                         "type": "bitmap",
                         "filename": str(
-                            eradiate.path_resolver.resolve(
+                            eradiate.data.data_store.fetch(
                                 "textures/central_patch_surface_mask.bmp"
                             )
                         ),
