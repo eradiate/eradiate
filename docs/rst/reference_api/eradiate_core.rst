@@ -11,9 +11,6 @@ Configuration
 .. autodata:: config
    :annotation:
 
-.. autodata:: path_resolver
-   :annotation:
-
 Mode management
 ---------------
 

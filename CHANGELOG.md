@@ -37,10 +37,12 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Added support for various azimuth definition conventions ({ghpr}`247`).
 * Added an offline mode which disables all data file downloads ({ghpr}`249`).
 
-% ### Breaking changes
-%
+### Breaking changes
+
+* Removed the path resolver component ({ghpr}`251`).
+
 % ### Deprecations and removals
-%
+
 ### Improvements and fixes
 
 * Added the atmo-centimeter, a.k.a. atm-cm, to the unit registry ({ghpr}`245`).

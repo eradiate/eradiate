@@ -18,18 +18,6 @@ from . import _config  # isort: skip
 #: See also: :class:`eradiate._config.EradiateConfig`.
 config = _config.config
 
-# -- Path resolver -------------------------------------------------------------
-
-# fmt: off
-from ._presolver import PathResolver  # isort: skip
-
-#: Global path resolver.
-#: See also: :class:`.PathResolver`.
-path_resolver = PathResolver()
-
-del PathResolver
-# fmt: on
-
 # -- Unit management facilities ------------------------------------------------
 
 from . import units  # isort: skip
@@ -116,7 +104,6 @@ __all__ = [
     "mode",
     "modes",
     "notebook",
-    "path_resolver",
     "pipelines",
     "plot",
     "rng",

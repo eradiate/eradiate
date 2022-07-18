@@ -60,4 +60,3 @@ Private modules
    config
    factory
    mode
-   presolver
