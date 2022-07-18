@@ -24,6 +24,7 @@ from ..scenes.shapes import RectangleShape, SphereShape
 from ..scenes.surface import BasicSurface, surface_factory
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
+from ..util.deprecation import substitute
 
 
 def measure_inside_atmosphere(atmosphere, measure, ctx):
@@ -264,3 +265,13 @@ class AtmosphereExperiment(EarthObservationExperiment):
             result["title"] = "Top-of-atmosphere simulation results"
 
         return result
+
+
+__getattr__ = substitute(
+    {
+        "OneDimExperiment": (
+            AtmosphereExperiment,
+            {"deprecated_in": "0.22.5", "removed_in": "0.22.7"},
+        )
+    }
+)
