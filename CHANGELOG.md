@@ -46,6 +46,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 ### Improvements and fixes
 
 * Added the atmo-centimeter, a.k.a. atm-cm, to the unit registry ({ghpr}`245`).
+* Added spectral response functions for the VIIRS instrument onboard JPSS1 and NPP platforms ({ghpr}`253`)
 
 % ### Documentation
 %
