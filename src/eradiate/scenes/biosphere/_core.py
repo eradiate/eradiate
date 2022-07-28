@@ -11,16 +11,46 @@ import pint
 import pinttr
 
 from ..core import KernelDict, SceneElement
-from ... import unit_context_kernel as uck
-from ... import unit_registry as ureg
 from ... import validators
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...typing import PathLike
 from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 biosphere_factory = Factory()
+biosphere_factory.register_lazy_batch(
+    [
+        (
+            "_core.InstancedCanopyElement",
+            "instanced",
+            {},
+        ),
+        (
+            "_discrete.DiscreteCanopy",
+            "discrete_canopy",
+            {"dict_constructor": "padded"},
+        ),
+        (
+            "_leaf_cloud.LeafCloud",
+            "leaf_cloud",
+            {},
+        ),
+        (
+            "_tree.AbstractTree",
+            "abstract_tree",
+            {},
+        ),
+        (
+            "_tree.MeshTree",
+            "mesh_tree",
+            {},
+        ),
+    ],
+    cls_prefix="eradiate.scenes.biosphere",
+)
 
 
 @parse_docs
@@ -150,7 +180,6 @@ class CanopyElement(SceneElement, ABC):
         return KernelDict({**self.kernel_bsdfs(ctx=ctx), **self.kernel_shapes(ctx=ctx)})
 
 
-@biosphere_factory.register(type_id="instanced")
 @parse_docs
 @attr.s
 class InstancedCanopyElement(SceneElement):

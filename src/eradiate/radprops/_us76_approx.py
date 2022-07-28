@@ -29,7 +29,6 @@ def _convert_thermoprops_us76_approx(
         return value
 
 
-@rad_profile_factory.register(type_id="us76_approx")
 @parse_docs
 @attr.s
 class US76ApproxRadProfile(RadProfile):

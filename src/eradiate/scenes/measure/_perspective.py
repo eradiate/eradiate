@@ -8,7 +8,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Measure, measure_factory
+from ._core import Measure
 from ..core import KernelDict
 from ... import validators
 from ...attrs import documented, parse_docs
@@ -19,7 +19,6 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
-@measure_factory.register(type_id="perspective")
 @parse_docs
 @attr.s
 class PerspectiveCameraMeasure(Measure):

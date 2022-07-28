@@ -11,6 +11,14 @@ from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
 shape_factory = Factory()
+shape_factory.register_lazy_batch(
+    [
+        ("_cuboid.CuboidShape", "cuboid", {}),
+        ("_rectangle.RectangleShape", "rectangle", {}),
+        ("_sphere.SphereShape", "sphere", {}),
+    ],
+    cls_prefix="eradiate.scenes.shapes",
+)
 
 
 @parse_docs

@@ -12,19 +12,43 @@ import xarray as xr
 
 from ..core import KernelDict, SceneElement
 from ..shapes import CuboidShape, SphereShape
-from ... import converters
-from ... import unit_context_kernel as uck
-from ... import validators
+from ... import converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel.transform import map_unit_cube
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...util.misc import onedict_value
 
 atmosphere_factory = Factory()
+atmosphere_factory.register_lazy_batch(
+    [
+        (
+            "_heterogeneous.HeterogeneousAtmosphere",
+            "heterogeneous",
+            {},
+        ),
+        (
+            "_homogeneous.HomogeneousAtmosphere",
+            "homogeneous",
+            {},
+        ),
+        (
+            "_molecular_atmosphere.MolecularAtmosphere",
+            "molecular",
+            {"dict_constructor": "afgl_1986"},
+        ),
+        (
+            "_particle_layer.ParticleLayer",
+            "particle_layer",
+            {},
+        ),
+    ],
+    cls_prefix="eradiate.scenes.atmosphere",
+)
 
 
 @parse_docs

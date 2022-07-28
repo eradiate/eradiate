@@ -41,7 +41,6 @@ def _leaf_cloud_converter(value):
     return biosphere_factory.convert(value)
 
 
-@biosphere_factory.register(type_id="abstract_tree")
 @parse_docs
 @attr.s
 class AbstractTree(Tree):
@@ -211,7 +210,6 @@ class AbstractTree(Tree):
         return shapes_dict
 
 
-@biosphere_factory.register(type_id="mesh_tree")
 @parse_docs
 @attr.s
 class MeshTree(Tree):

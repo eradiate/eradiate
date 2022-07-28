@@ -7,7 +7,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Measure, MeasureFlags, measure_factory
+from ._core import Measure, MeasureFlags
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
 from ... import frame
@@ -20,9 +20,6 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
-@measure_factory.register(type_id="distant", allow_aliases=True)
-@measure_factory.register(type_id="mdistant", allow_aliases=True)
-@measure_factory.register(type_id="multi_distant", allow_aliases=True)
 @parse_docs
 @attr.s
 class MultiDistantMeasure(Measure):

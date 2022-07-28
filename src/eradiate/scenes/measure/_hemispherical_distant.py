@@ -13,7 +13,7 @@ from eradiate import frame
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 
-from ._core import Measure, MeasureFlags, measure_factory
+from ._core import Measure, MeasureFlags
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
 from ... import validators
@@ -25,8 +25,6 @@ from ...units import unit_context_kernel as uck
 from ...warp import square_to_uniform_hemisphere
 
 
-@measure_factory.register(type_id="hdistant", allow_aliases=True)
-@measure_factory.register(type_id="hemispherical_distant", allow_aliases=True)
 @parse_docs
 @attr.s
 class HemisphericalDistantMeasure(Measure):

@@ -13,7 +13,7 @@ import pint
 import xarray as xr
 
 from . import _util_ckd
-from ._core import RadProfile, make_dataset, rad_profile_factory
+from ._core import RadProfile, make_dataset
 from .rayleigh import compute_sigma_s_air
 from .._mode import UnsupportedModeError
 from ..attrs import documented, parse_docs
@@ -37,7 +37,6 @@ def _convert_thermoprops_afgl_1986(
         return value
 
 
-@rad_profile_factory.register(type_id="afgl_1986")
 @parse_docs
 @attr.s
 class AFGL1986RadProfile(RadProfile):
@@ -134,7 +133,9 @@ class AFGL1986RadProfile(RadProfile):
                     )  # extrapolate to 0.0 for altitude out of bounds
                     .interp(
                         **concentrations,
-                        kwargs=dict(bounds_error=True),  # raise when concentration are out of bounds
+                        kwargs=dict(
+                            bounds_error=True
+                        ),  # raise when concentration are out of bounds
                     )
                     .values
                     for bindex in bindexes

@@ -9,7 +9,7 @@ import pint
 import pinttr
 from pinttr.util import ensure_units
 
-from ._core import Shape, shape_factory
+from ._core import Shape
 from ..bsdfs import BSDF
 from ..core import KernelDict
 from ...attrs import documented, parse_docs
@@ -35,7 +35,6 @@ def _edges_converter(x):
     return x * length_units
 
 
-@shape_factory.register(type_id="cuboid")
 @parse_docs
 @attr.s
 class CuboidShape(Shape):
@@ -44,10 +43,6 @@ class CuboidShape(Shape):
 
     This shape represents an axis-aligned cuboid parametrised by the length of
     its edges and the coordinates of its central point.
-
-    Notes
-    -----
-    This is a wrapper around the ``cube`` kernel plugin.
     """
 
     center: pint.Quantity = documented(

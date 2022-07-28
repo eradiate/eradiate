@@ -13,7 +13,7 @@ import xarray as xr
 
 import eradiate
 
-from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
+from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import KernelDict
 from ..phase import TabulatedPhaseFunction
@@ -41,7 +41,6 @@ def _particle_layer_distribution_converter(value):
     return particle_distribution_factory.convert(value)
 
 
-@atmosphere_factory.register(type_id="particle_layer")
 @parse_docs
 @attr.s
 class ParticleLayer(AbstractHeterogeneousAtmosphere):

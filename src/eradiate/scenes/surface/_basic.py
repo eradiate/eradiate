@@ -5,7 +5,7 @@ import warnings
 
 import attr
 
-from ._core import Surface, surface_factory
+from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..core import KernelDict
 from ..shapes import RectangleShape, Shape, SphereShape, shape_factory
@@ -14,7 +14,6 @@ from ...contexts import KernelDictContext
 from ...exceptions import OverriddenValueWarning
 
 
-@surface_factory.register(type_id="basic")
 @parse_docs
 @attr.s
 class BasicSurface(Surface):

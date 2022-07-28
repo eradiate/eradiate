@@ -5,7 +5,7 @@ import xarray as xr
 
 import eradiate
 
-from ._core import PhaseFunction, phase_function_factory
+from ._core import PhaseFunction
 from ..core import KernelDict
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -49,7 +49,6 @@ def _validate_data(instance, attribute, value):
         )
 
 
-@phase_function_factory.register(type_id="tab_phase")
 @parse_docs
 @attr.s
 class TabulatedPhaseFunction(PhaseFunction):

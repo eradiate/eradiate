@@ -8,6 +8,13 @@ from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
 illumination_factory = Factory()
+illumination_factory.register_lazy_batch(
+    [
+        ("_constant.ConstantIllumination", "constant", {}),
+        ("_directional.DirectionalIllumination", "directional", {}),
+    ],
+    cls_prefix="eradiate.scenes.illumination",
+)
 
 
 @parse_docs
