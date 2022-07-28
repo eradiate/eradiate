@@ -3,7 +3,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Illumination, illumination_factory
+from ._core import Illumination
 from ..core import KernelDict
 from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
 from ..._config import config
@@ -15,7 +15,6 @@ from ...units import unit_registry as ureg
 from ...validators import has_quantity, is_positive
 
 
-@illumination_factory.register(type_id="directional")
 @parse_docs
 @attr.s
 class DirectionalIllumination(Illumination):

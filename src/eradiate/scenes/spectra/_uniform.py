@@ -5,7 +5,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Spectrum, spectrum_factory
+from ._core import Spectrum
 from ..core import KernelDict
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -14,7 +14,6 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
 
-@spectrum_factory.register(type_id="uniform")
 @parse_docs
 @attr.s
 class UniformSpectrum(Spectrum):

@@ -7,6 +7,14 @@ from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
 integrator_factory = Factory()
+integrator_factory.register_lazy_batch(
+    [
+        ("_path_tracers.PathIntegrator", "path", {}),
+        ("_path_tracers.VolPathIntegrator", "volpath", {}),
+        ("_path_tracers.VolPathMISIntegrator", "volpathmis", {}),
+    ],
+    cls_prefix="eradiate.scenes.integrators",
+)
 
 
 @parse_docs

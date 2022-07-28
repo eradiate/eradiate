@@ -10,7 +10,7 @@ import xarray as xr
 
 import eradiate
 
-from ._core import Spectrum, spectrum_factory
+from ._core import Spectrum
 from ..core import KernelDict
 from ... import converters, validators
 from ..._mode import ModeFlags
@@ -23,7 +23,6 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
 
-@spectrum_factory.register(type_id="interpolated")
 @parse_docs
 @attr.s
 class InterpolatedSpectrum(Spectrum):

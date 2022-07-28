@@ -10,7 +10,7 @@ import xarray as xr
 
 import eradiate
 
-from ._core import RadProfile, make_dataset, rad_profile_factory
+from ._core import RadProfile, make_dataset
 from .. import validators
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
@@ -19,7 +19,6 @@ from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
 
-@rad_profile_factory.register(type_id="array")
 @parse_docs
 @attr.s
 class ArrayRadProfile(RadProfile):

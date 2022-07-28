@@ -10,8 +10,7 @@ import numpy as np
 import pint
 import pinttr
 
-from . import InstancedCanopyElement
-from ._core import Canopy, biosphere_factory
+from ._core import Canopy, InstancedCanopyElement, biosphere_factory
 from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
 from ..core import KernelDict
 from ...attrs import documented, parse_docs
@@ -28,7 +27,6 @@ def _instanced_canopy_elements_converter(value):
     return biosphere_factory.convert(value)
 
 
-@biosphere_factory.register(type_id="discrete_canopy", dict_constructor="padded")
 @parse_docs
 @attr.s
 class DiscreteCanopy(Canopy):

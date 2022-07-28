@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import attr
 
-from ._core import PhaseFunction, phase_function_factory
+from ._core import PhaseFunction
 from ..core import KernelDict
 from ...attrs import parse_docs
 from ...contexts import KernelDictContext
 
 
-@phase_function_factory.register(type_id="rayleigh")
 @parse_docs
 @attr.s
 class RayleighPhaseFunction(PhaseFunction):

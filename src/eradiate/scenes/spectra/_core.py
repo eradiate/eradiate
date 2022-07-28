@@ -78,6 +78,31 @@ class SpectrumFactory(Factory):
 
 
 spectrum_factory = SpectrumFactory()
+spectrum_factory.register_lazy_batch(
+    [
+        (
+            "_air_scattering_coefficient.AirScatteringCoefficientSpectrum",
+            "air_scattering_coefficient",
+            {},
+        ),
+        (
+            "_interpolated.InterpolatedSpectrum",
+            "interpolated",
+            {},
+        ),
+        (
+            "_solar_irradiance.SolarIrradianceSpectrum",
+            "solar_irradiance",
+            {},
+        ),
+        (
+            "_uniform.UniformSpectrum",
+            "uniform",
+            {},
+        ),
+    ],
+    cls_prefix="eradiate.scenes.spectra",
+)
 
 
 @parse_docs

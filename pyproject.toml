@@ -24,7 +24,7 @@ dependencies = [
   "click",
   "cerberus",
   "dask",
-  "dessinemoi",
+  "dessinemoi>=22.2.0",
   "environ-config",
   "iapws",
   "matplotlib",

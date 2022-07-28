@@ -28,7 +28,6 @@ def _weights_converter(value: np.typing.ArrayLike) -> np.ndarray:
     )
 
 
-@phase_function_factory.register(type_id="blend_phase")
 @parse_docs
 @attr.s
 class BlendPhaseFunction(PhaseFunction):

@@ -2,7 +2,7 @@ import typing as t
 
 import attr
 
-from ._core import BSDF, bsdf_factory
+from ._core import BSDF
 from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
@@ -11,7 +11,6 @@ from ...contexts import KernelDictContext
 from ...util.misc import onedict_value
 
 
-@bsdf_factory.register(type_id="rpv")
 @parse_docs
 @attr.s
 class RPVBSDF(BSDF):

@@ -7,7 +7,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Measure, measure_factory
+from ._core import Measure
 from ..core import KernelDict
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
@@ -17,8 +17,6 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
-@measure_factory.register(type_id="mradiancemeter", allow_aliases=True)
-@measure_factory.register(type_id="multi_radiancemeter")
 @parse_docs
 @attr.s
 class MultiRadiancemeterMeasure(Measure):

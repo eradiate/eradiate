@@ -12,7 +12,7 @@ import pint
 import pinttr
 import xarray as xr
 
-from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
+from ._core import AbstractHeterogeneousAtmosphere
 from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ...attrs import documented, parse_docs
@@ -28,7 +28,6 @@ from ...units import to_quantity
 from ...units import unit_registry as ureg
 
 
-@atmosphere_factory.register(type_id="molecular", dict_constructor="afgl_1986")
 @parse_docs
 @attr.s
 class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):

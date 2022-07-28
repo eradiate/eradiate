@@ -8,7 +8,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Shape, shape_factory
+from ._core import Shape
 from ..bsdfs import BSDF
 from ..core import KernelDict
 from ... import validators
@@ -40,7 +40,6 @@ def _edges_converter(value):
     return value * length_units
 
 
-@shape_factory.register(type_id="rectangle")
 @parse_docs
 @attr.s
 class RectangleShape(Shape):

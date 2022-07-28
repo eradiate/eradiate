@@ -4,7 +4,7 @@ import attr
 
 import eradiate
 
-from ._core import PhaseFunction, phase_function_factory
+from ._core import PhaseFunction
 from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
@@ -14,7 +14,6 @@ from ...exceptions import UnsupportedModeError
 from ...util.misc import onedict_value
 
 
-@phase_function_factory.register(type_id="hg")
 @parse_docs
 @attr.s
 class HenyeyGreensteinPhaseFunction(PhaseFunction):

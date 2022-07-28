@@ -22,6 +22,16 @@ from ..._factory import Factory
 from ...attrs import documented, parse_docs
 
 particle_distribution_factory = Factory()
+particle_distribution_factory.register_lazy_batch(
+    [
+        ("UniformParticleDistribution", "uniform", {}),
+        ("ExponentationParticleDistribution", "exponential", {}),
+        ("GaussianParticleDistribution", "gaussian", {}),
+        ("ArrayParticleDistribution", "array", {}),
+        ("InterpolatorParticleDistribution", "interpolator", {}),
+    ],
+    cls_prefix="eradiate.scenes.atmosphere._particle_dist",
+)
 
 
 @parse_docs
@@ -41,7 +51,6 @@ class ParticleDistribution(ABC):
         pass
 
 
-@particle_distribution_factory.register(type_id="uniform")
 @parse_docs
 @attr.s
 class UniformParticleDistribution(ParticleDistribution):
@@ -89,7 +98,6 @@ class UniformParticleDistribution(ParticleDistribution):
         )
 
 
-@particle_distribution_factory.register(type_id="exponential")
 @parse_docs
 @attr.s
 class ExponentialParticleDistribution(ParticleDistribution):
@@ -113,7 +121,6 @@ class ExponentialParticleDistribution(ParticleDistribution):
         return np.exp(-x / self.scale) / self.scale
 
 
-@particle_distribution_factory.register(type_id="gaussian")
 @parse_docs
 @attr.s
 class GaussianParticleDistribution(ParticleDistribution):
@@ -156,7 +163,6 @@ class GaussianParticleDistribution(ParticleDistribution):
         )
 
 
-@particle_distribution_factory.register(type_id="array")
 @parse_docs
 @attr.s
 class ArrayParticleDistribution(ParticleDistribution):
@@ -285,7 +291,6 @@ class ArrayParticleDistribution(ParticleDistribution):
         return f(x)
 
 
-@particle_distribution_factory.register(type_id="interpolator")
 @parse_docs
 @attr.s
 class InterpolatorParticleDistribution(ParticleDistribution):

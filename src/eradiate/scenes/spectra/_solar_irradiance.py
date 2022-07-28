@@ -12,7 +12,7 @@ import numpy as np
 import pint
 import xarray as xr
 
-from ._core import Spectrum, spectrum_factory
+from ._core import Spectrum
 from ..core import KernelDict
 from ... import converters, data, validators
 from ...attrs import documented, parse_docs
@@ -48,7 +48,6 @@ def _dataset_converter(x: t.Any):
     return converters.load_dataset(x)
 
 
-@spectrum_factory.register(type_id="solar_irradiance")
 @parse_docs
 @attr.s(frozen=True)
 class SolarIrradianceSpectrum(Spectrum):

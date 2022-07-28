@@ -34,12 +34,23 @@ class Factory(dessinemoi.Factory):
 
             # Query registry
             type_id = value_copy.pop("type")
-            entry = self.registry[type_id]
+
+            try:
+                entry = self.registry[type_id]
+            except KeyError as e:
+                raise ValueError(f"no type registered as '{type_id}'") from e
+
+            # Resolve lazy type if necessary
+            cls = (
+                entry.cls.load()
+                if isinstance(entry.cls, dessinemoi.LazyType)
+                else entry.cls
+            )
 
             # Check if class is allowed
-            if allowed_cls is not None and not issubclass(entry.cls, allowed_cls):
+            if allowed_cls is not None and not issubclass(cls, allowed_cls):
                 raise TypeError(
-                    f"conversion to object type '{type_id}' ({entry.cls}) is not allowed"
+                    f"conversion to object type '{type_id}' ({cls}) is not allowed"
                 )
 
             # Get constructor from dict, if any
@@ -55,3 +66,28 @@ class Factory(dessinemoi.Factory):
                     raise TypeError("value type is not allowed")
 
             return value
+
+    def register_lazy_batch(
+        self,
+        specs: t.List[t.Tuple[str, str, t.Dict]],
+        cls_prefix: str = "",
+    ):
+        """
+        Register multiple lazy types at once.
+
+        Parameters
+        ----------
+        specs : list of tuple[str, str, dict]
+            A list of ``(cls, type_id, kwargs)`` tuples where ``cls`` is  the
+            name of the target type (relative to `cls_prefix`), ``type_id`` is
+            the ID for the registered type and ``kwargs`` is a dictionary
+            containing keyword arguments for the :meth:`.Factory.register`
+            method.
+
+        cls_prefix : str
+            A prefix relative to which lazy type names are expressed.
+        """
+        for cls, type_id, kwargs in specs:
+            if cls_prefix:
+                cls = f"{cls_prefix}.{cls}"
+            self.register(cls, type_id=type_id, **kwargs)

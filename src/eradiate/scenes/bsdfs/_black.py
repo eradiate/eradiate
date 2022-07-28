@@ -1,11 +1,10 @@
 import attr
 
-from ._core import BSDF, bsdf_factory
+from ._core import BSDF
 from ..core import KernelDict
 from ...contexts import KernelDictContext
 
 
-@bsdf_factory.register(type_id="black")
 @attr.s
 class BlackBSDF(BSDF):
     """

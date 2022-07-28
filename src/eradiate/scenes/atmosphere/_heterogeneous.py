@@ -96,7 +96,6 @@ def _heterogeneous_atmosphere_particle_converter(value):
         return result
 
 
-@atmosphere_factory.register(type_id="heterogeneous")
 @parse_docs
 @attr.s
 class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):

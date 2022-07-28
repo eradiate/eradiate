@@ -12,7 +12,7 @@ import pinttr
 import scipy as sp
 import scipy.special
 
-from ._core import CanopyElement, biosphere_factory
+from ._core import CanopyElement
 from ..core import SceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
@@ -591,7 +591,6 @@ class ConeLeafCloudParams(LeafCloudParams):
         return self._l_vertical
 
 
-@biosphere_factory.register(type_id="leaf_cloud")
 @parse_docs
 @attr.s
 class LeafCloud(CanopyElement):

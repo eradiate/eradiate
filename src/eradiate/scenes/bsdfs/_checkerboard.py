@@ -1,7 +1,7 @@
 import attr
 import mitsuba as mi
 
-from ._core import BSDF, bsdf_factory
+from ._core import BSDF
 from ..core import KernelDict
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
@@ -9,7 +9,6 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 
 
-@bsdf_factory.register(type_id="checkerboard")
 @parse_docs
 @attr.s
 class CheckerboardBSDF(BSDF):

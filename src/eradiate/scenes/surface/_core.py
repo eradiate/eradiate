@@ -12,6 +12,13 @@ from ...contexts import KernelDictContext
 from ...util.misc import onedict_value
 
 surface_factory = Factory()
+surface_factory.register_lazy_batch(
+    [
+        ("_basic.BasicSurface", "basic", {}),
+        ("_central_patch.CentralPatchSurface", "central_patch", {}),
+    ],
+    cls_prefix="eradiate.scenes.surface",
+)
 
 
 @parse_docs

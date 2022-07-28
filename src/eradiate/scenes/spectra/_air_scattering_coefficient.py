@@ -6,7 +6,7 @@ import pint
 
 import eradiate
 
-from ._core import Spectrum, spectrum_factory
+from ._core import Spectrum
 from ..core import KernelDict
 from ..._mode import ModeFlags
 from ...attrs import parse_docs
@@ -29,7 +29,6 @@ def _eval_impl_ckd(w: pint.Quantity) -> pint.Quantity:
     return np.trapz(values, w) / (w.max() - w.min())
 
 
-@spectrum_factory.register(type_id="air_scattering_coefficient")
 @parse_docs
 @attr.s
 class AirScatteringCoefficientSpectrum(Spectrum):

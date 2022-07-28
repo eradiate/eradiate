@@ -9,7 +9,7 @@ import pinttr
 
 import eradiate
 
-from ._core import Surface, surface_factory
+from ._core import Surface
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
 from ..core import KernelDict
 from ..shapes import RectangleShape, shape_factory
@@ -35,7 +35,6 @@ def _edges_converter(value):
     return value * length_units
 
 
-@surface_factory.register(type_id="central_patch")
 @parse_docs
 @attr.s
 class CentralPatchSurface(Surface):

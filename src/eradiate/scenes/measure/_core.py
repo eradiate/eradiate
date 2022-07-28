@@ -26,6 +26,41 @@ from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
 measure_factory = Factory()
+measure_factory.register_lazy_batch(
+    [
+        (
+            "_distant_flux.DistantFluxMeasure",
+            "distant_flux",
+            {},
+        ),
+        (
+            "_hemispherical_distant.HemisphericalDistantMeasure",
+            "hemispherical_distant",
+            {"aliases": ["hdistant"]},
+        ),
+        (
+            "_multi_distant.MultiDistantMeasure",
+            "multi_distant",
+            {"aliases": ["mdistant", "distant"]},
+        ),
+        (
+            "_multi_radiancemeter.MultiRadiancemeterMeasure",
+            "multi_radiancemeter",
+            {"aliases": ["mradiancemeter"]},
+        ),
+        (
+            "_perspective.PerspectiveCameraMeasure",
+            "perspective",
+            {},
+        ),
+        (
+            "_radiancemeter.RadiancemeterMeasure",
+            "radiancemeter",
+            {},
+        ),
+    ],
+    cls_prefix="eradiate.scenes.measure",
+)
 
 
 # ------------------------------------------------------------------------------

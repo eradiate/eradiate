@@ -8,6 +8,36 @@ from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
 phase_function_factory = Factory()
+phase_function_factory.register_lazy_batch(
+    [
+        (
+            "_blend_phase.BlendPhaseFunction",
+            "blend_phase",
+            {},
+        ),
+        (
+            "_hg.HenyeyGreensteinPhaseFunction",
+            "hg",
+            {},
+        ),
+        (
+            "_isotropic.IsotropicPhaseFunction",
+            "isotropic",
+            {},
+        ),
+        (
+            "_rayleigh.RayleighPhaseFunction",
+            "rayleigh",
+            {},
+        ),
+        (
+            "_tabulated.TabulatedPhaseFunction",
+            "tab_phase",
+            {},
+        ),
+    ],
+    cls_prefix="eradiate.scenes.phase",
+)
 
 
 @parse_docs
