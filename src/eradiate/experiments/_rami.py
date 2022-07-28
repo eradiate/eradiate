@@ -13,7 +13,6 @@ from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import Measure
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, surface_factory
-from ..units import unit_registry as ureg
 
 
 def _surface_converter(value):

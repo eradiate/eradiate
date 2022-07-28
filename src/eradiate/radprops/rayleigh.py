@@ -1,5 +1,4 @@
 """Functions to compute Rayleigh scattering in air."""
-import typing as t
 
 import numpy as np
 import pint

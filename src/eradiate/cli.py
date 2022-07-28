@@ -10,7 +10,6 @@ from pathlib import Path
 import click
 from rich.console import Console
 from rich.logging import RichHandler
-from rich.pretty import Pretty
 from ruamel.yaml import YAML
 
 import eradiate

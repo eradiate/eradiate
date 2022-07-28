@@ -4,7 +4,7 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.contexts import CKDSpectralContext, KernelDictContext
+from eradiate.contexts import KernelDictContext
 from eradiate.experiments import OneDimExperiment
 from eradiate.experiments._onedim import measure_inside_atmosphere
 from eradiate.scenes.atmosphere import (
