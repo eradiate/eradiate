@@ -8,6 +8,7 @@ import textwrap
 from pathlib import Path
 
 import click
+import mitsuba as mi
 from rich.console import Console
 from rich.logging import RichHandler
 from ruamel.yaml import YAML
@@ -43,8 +44,13 @@ def show():
     """
     Display information useful for debugging.
     """
-    console.rule("Version")
+    mi.set_variant("scalar_rgb")
+    console.rule("Versions")
     console.print(f"• eradiate {eradiate.__version__}")
+    console.print(f"• mitsuba {mi.MI_VERSION}")
+
+    console.rule("Available Mitsuba variants")
+    console.print("\n".join([f"• {variant}" for variant in mi.variants()]))
 
     console.rule("Configuration")
     for var in [x.name for x in eradiate.config.__attrs_attrs__]:
