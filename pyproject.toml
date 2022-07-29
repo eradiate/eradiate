@@ -120,7 +120,8 @@ source = [
 
 [tool.pytest.ini_options]
 filterwarnings = [
-  "error", # Ignore these warnings issued by outdated dependencies
   "ignore:distutils Version classes are deprecated:DeprecationWarning",
+  # Remove the following when environment issues are solved
+  "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning",
 ]
 testpaths = "tests"
