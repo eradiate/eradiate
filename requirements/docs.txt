@@ -24,7 +24,7 @@ astropy==5.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-attrs==21.4.0
+attrs==22.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -86,7 +86,7 @@ cycler==0.11.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-dask==2022.7.0
+dask==2022.7.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -94,7 +94,7 @@ defusedxml==0.7.1
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-dessinemoi==21.3.0
+dessinemoi==22.2.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -117,7 +117,7 @@ environ-config==22.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-fastjsonschema==2.15.3
+fastjsonschema==2.16.1
     # via
     #   -c requirements/dev.txt
     #   nbformat
@@ -125,7 +125,7 @@ fonttools==4.34.4
     # via
     #   -c requirements/dev.txt
     #   matplotlib
-fsspec==2022.5.0
+fsspec==2022.7.1
     # via
     #   -c requirements/dev.txt
     #   dask
@@ -145,7 +145,7 @@ importlib-metadata==4.12.0
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-resources==5.8.0
+importlib-resources==5.9.0
     # via
     #   -c requirements/dev.txt
     #   jsonschema
@@ -156,7 +156,7 @@ jinja2==3.1.2
     #   nbconvert
     #   nbsphinx
     #   sphinx
-jsonschema==4.6.2
+jsonschema==4.8.0
     # via
     #   -c requirements/dev.txt
     #   nbformat
@@ -174,7 +174,7 @@ jupyterlab-pygments==0.2.2
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-kiwisolver==1.4.3
+kiwisolver==1.4.4
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -298,7 +298,7 @@ pint==0.19.2
     #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   pinttrs
-pinttrs==21.3.1
+pinttrs==22.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -367,7 +367,7 @@ requests==2.28.1
     #   -c requirements/dev.txt
     #   pooch
     #   sphinx
-rich==12.4.4
+rich==12.5.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -379,7 +379,7 @@ ruamel-yaml-clib==0.2.6
     # via
     #   -c requirements/dev.txt
     #   ruamel-yaml
-scipy==1.8.1
+scipy==1.9.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -423,7 +423,7 @@ sphinx-autobuild==2021.3.14
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-sphinx-book-theme==0.3.2
+sphinx-book-theme==0.3.3
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -499,7 +499,7 @@ typing-extensions==4.3.0
     #   -c requirements/dev.txt
     #   myst-parser
     #   rich
-urllib3==1.26.10
+urllib3==1.26.11
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -508,18 +508,18 @@ webencodings==0.5.1
     #   -c requirements/dev.txt
     #   bleach
     #   tinycss2
-xarray==2022.3.0
+xarray==2022.6.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-zipp==3.8.0
+zipp==3.8.1
     # via
     #   -c requirements/dev.txt
     #   importlib-metadata
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==63.1.0
+setuptools==63.2.0
     # via
     #   -c requirements/dev.txt
     #   cerberus
