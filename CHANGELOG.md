@@ -37,16 +37,19 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Added support for various azimuth definition conventions ({ghpr}`247`).
 * Added an offline mode which disables all data file downloads ({ghpr}`249`).
 
-### Breaking changes
+% ### Breaking changes
+
+### Deprecations and removals
 
 * Removed the path resolver component ({ghpr}`251`).
-
-% ### Deprecations and removals
 
 ### Improvements and fixes
 
 * Added the atmo-centimeter, a.k.a. atm-cm, to the unit registry ({ghpr}`245`).
-* Added spectral response functions for the VIIRS instrument onboard JPSS1 and NPP platforms ({ghpr}`253`)
+* Added spectral response functions for the VIIRS instrument onboard JPSS1 and 
+  NPP platforms ({ghpr}`253`).
+* Submodules and packages are now imported lazily ({ghpr}`254`). This 
+  significantly decreases import time for most use cases.
 
 % ### Documentation
 %
