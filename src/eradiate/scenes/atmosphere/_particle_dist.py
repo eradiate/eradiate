@@ -25,7 +25,7 @@ particle_distribution_factory = Factory()
 particle_distribution_factory.register_lazy_batch(
     [
         ("UniformParticleDistribution", "uniform", {}),
-        ("ExponentationParticleDistribution", "exponential", {}),
+        ("ExponentialParticleDistribution", "exponential", {}),
         ("GaussianParticleDistribution", "gaussian", {}),
         ("ArrayParticleDistribution", "array", {}),
         ("InterpolatorParticleDistribution", "interpolator", {}),
