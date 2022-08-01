@@ -90,8 +90,8 @@ def factory_data_docs(modname, varname, uline="="):
     table_header = ".. list-table::\n   :widths: 25 75"
     table_rows = "\n".join(
         [
-            f"   * - ``{key}``\n     - :class:`{entry.cls.__name__}`"
-            for key, entry in sorted(factory.registry.items())
+            f"   * - ``{key}``\n     - :class:`{factory.get_type(key).__name__}`"
+            for key in sorted(factory.registry.keys())
         ]
     )
     table = "\n".join([table_header, "", table_rows])
