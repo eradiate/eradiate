@@ -216,6 +216,53 @@ def deprecated(
     return _wrapper
 
 
+def substitute(subs: t.Dict[str, t.Tuple[t.Type, t.Dict[str, str]]]) -> t.Callable:
+    """
+    Generate a simple module :func:`__getattr__` which redirects outdated
+    attribute lookups to current values with a deprecation warning.
+
+    Parameters
+    ----------
+    subs: dict
+        A dictionary with outdated names as keys. Values are 2-tuples consisting
+        of the current substitute and a dictionary of keyword arguments passed
+        to the :class:`DeprecatedWarning` constructor.
+
+    Returns
+    -------
+    callable
+        The generated module :func:`__getattr__` function.
+
+    Example
+    -------
+    >>> __getattr__ = substitute(
+    ...     {
+    ...         "OneDimExperiment": (  # Old name
+    ...             AtmosphereExperiment,  # New type
+    ...             {"deprecated_in": "0.22.5", "removed_in": "0.22.7"},  # Keyword args
+    ...         )
+    ...     }
+    ... )
+
+    """
+
+    def __getattr__(name):
+        if name in subs:
+            new_type, kwargs = subs[name]
+            warnings.warn(
+                DeprecatedWarning(
+                    component=f"'{name}'",
+                    details=f"Use '{new_type.__name__}' instead.",
+                    **kwargs,
+                ),
+            )
+            return new_type
+
+        raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+    return __getattr__
+
+
 class DeprecatedWarning(DeprecationWarning):
     """
     A warning class for deprecated methods
