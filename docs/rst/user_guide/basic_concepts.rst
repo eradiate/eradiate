@@ -17,7 +17,7 @@ Kernel
 ------
 
 Eradiate's low-level abstractions are handled by its *radiometric kernel*. This
-component consists of the Mitsuba 2 rendering system with custom extensions and
+component consists of the Mitsuba 3 rendering system with custom extensions and
 it implements the Monte Carlo integration framework Eradiate uses to compute
 radiative transfer. The kernel takes as its input a
 :term:`kernel scene description <kernel dictionary>` specified as a Python

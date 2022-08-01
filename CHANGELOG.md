@@ -57,10 +57,13 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   significantly decreases import time for most use cases.
 
 % ### Documentation
-%
+
 ### Internal changes
 
-* Updated Mitsuba submodule ({ghpr}`250`).
+* Updated Mitsuba submodule twice up to v3.0.1 ({ghpr}`250`, {ghpr}`255`). This
+  notably fixes the sampling method of the `tabphase` plugin.
+* Aligned the `tabphase_irregular` plugin with the fix `tabphase` code 
+  ({ghpr}`255`).
 
 ## v0.22.4 (17 June 2022)
 

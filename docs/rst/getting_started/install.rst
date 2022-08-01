@@ -3,25 +3,6 @@
 Installation guide
 ==================
 
-.. admonition:: Important
-   :class: warning
-
-   The Mitsuba renderer, developed by the
-   `Realistic Graphics Lab <https://rgl.epfl.ch>`_ and used by Eradiate as its
-   radiometric kernel, is undergoing heavy refactoring. This upcoming version
-   contains updates which solve critical issues we've had in the past.
-
-   This new version of the Mitsuba 3 component is currently under submission for
-   publication and we can currently not release it.
-
-   Consequently, we are currently restricting kernel code access to users who
-   join our Preview team on GitHub. Please note that you will need to join the
-   Preview team in order to get a functioning clone of the Eradiate codebase. To
-   be added to the team, please send an email to news@eradiate.eu with your
-   GitHub username.
-
-   **This situation is temporary.**
-
 This guide covers all steps necessary to get Eradiate running on your machine.
 
 .. warning::
@@ -120,7 +101,7 @@ machine meets the requirements listed below.
       favourite!
 
       .. note:: We currently recommend compiling the C++ code with Clang based on
-         `upstream advice from the Mitsuba development team <https://eradiate-kernel.readthedocs.io/en/latest/src/getting_started/compiling.html#linux>`_.
+         `upstream advice from the Mitsuba development team <https://mitsuba.readthedocs.io/en/latest/src/developer_guide/compiling.html#linux>`_.
          We also recommend using Clang 11 — not another version — because we also
          encountered issues building with other versions. We hope to improve
          compiler support in the future.
@@ -160,7 +141,7 @@ Cloning the repository
    Eradiate relies on the `Git source code management tool <https://git-scm.com/>`_.
    It also depends on multiple external dependencies, some of which (*e.g.* its
    radiometric kernel based on
-   `Mitsuba 2 <https://github.com/mitsuba-renderer/mitsuba2>`_) are directly
+   `Mitsuba 3 <https://github.com/mitsuba-renderer/mitsuba3>`_) are directly
    referred to using
    `Git submodules <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_.
 
@@ -250,8 +231,8 @@ Once your Conda environment is configured, you should reactivate it:
 
 .. _sec-getting_started-install-compiling:
 
-Compiling the kernel
---------------------
+Compiling the radiometric kernel
+--------------------------------
 
 Configure CMake for compilation:
 

@@ -18,7 +18,7 @@ Eradiate is a modern radiative transfer model for Earth observation
 applications. It primarily targets calibration/validation applications and
 focuses on delivering highly accurate results.
 
-Eradiate is built around a radiometric kernel based on the Mitsuba 2 rendering
+Eradiate is built around a radiometric kernel based on the Mitsuba 3 rendering
 system. It provides abstractions to conveniently build scenes, manage kernel
 runs and collect results.
 
