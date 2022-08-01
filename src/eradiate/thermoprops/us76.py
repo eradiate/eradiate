@@ -74,7 +74,7 @@ def make_profile(levels=ureg.Quantity(np.linspace(0.0, 1e5, 51), "m")):
             }
         )
         .rename_dims({"z": "z_layer"})
-        .reset_coords("z", drop=True)
+        .drop_vars("z")
     )
     thermoprops_ds.data_vars["mr"].attrs.update(
         dict(standard_name="mixing_ratio", long_name="mixing ratio", units="")
