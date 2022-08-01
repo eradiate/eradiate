@@ -26,13 +26,6 @@ equation.
 For build and usage instructions, please refer to the
 [documentation](https://eradiate.readthedocs.org).
 
-**Important**: Eradiate uses the Mitsuba rendering system, developed by the 
-Realistic Graphics Lab, as its radiometric kernel. The version of Mitsuba used 
-by Eradiate is currently under submission for publication and we can not release
-it yet. **This situation is temporary.** See the
-[documentation](https://eradiate.readthedocs.io/en/latest/rst/getting_started/install.html) 
-for details.
-
 ## Support
 
 Got a question? Please visit our
@@ -44,7 +37,7 @@ Eradiate is developed by a core team consisting of Vincent Leroy, Yvan Nollet,
 Sebastian Schunke, Nicolas Misk and Yves Govaerts.
 
 Eradiate uses the
-[Mitsuba 2 renderer](https://github.com/mitsuba-renderer/mitsuba2), developed by
+[Mitsuba 3 renderer](https://github.com/mitsuba-renderer/mitsuba3), developed by
 the [Realistic Graphics Lab](https://rgl.epfl.ch/),
 taking advantage of its Python interface and proven architecture, and extends it
 with components implementing numerical methods and models used in radiative
