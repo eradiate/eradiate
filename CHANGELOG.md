@@ -42,6 +42,11 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 ### Deprecations and removals
 
 * Removed the path resolver component ({ghpr}`251`).
+* Renamed `Experiment` classes: 
+  `OneDimExperiment` ⇒ `AtmosphereExperiment`,
+  `RamiExperiment` ⇒ `CanopyExperiment`, 
+  `Rami4ATMExperiment` ⇒ `CanopyAtmosphereExperiment`
+  ({ghpr}`252`).
 
 ### Improvements and fixes
 
