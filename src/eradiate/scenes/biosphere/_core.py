@@ -376,11 +376,9 @@ class InstancedCanopyElement(SceneElement):
             f"{self.canopy_element.id}_instance_{i}": {
                 "type": "instance",
                 "group": {"type": "ref", "id": self.canopy_element.id},
-                "to_world": mi.ScalarTransform4f.translate(
-                    position.m_as(kernel_length)
-                ),
+                "to_world": mi.ScalarTransform4f.translate(position),
             }
-            for i, position in enumerate(self.instance_positions)
+            for i, position in enumerate(self.instance_positions.m_as(kernel_length))
         }
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
