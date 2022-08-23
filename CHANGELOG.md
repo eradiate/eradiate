@@ -42,19 +42,21 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 ### Deprecations and removals
 
 * Removed the path resolver component ({ghpr}`251`).
-* Renamed `Experiment` classes: 
+* Renamed `Experiment` classes:
   `OneDimExperiment` ⇒ `AtmosphereExperiment`,
-  `RamiExperiment` ⇒ `CanopyExperiment`, 
+  `RamiExperiment` ⇒ `CanopyExperiment`,
   `Rami4ATMExperiment` ⇒ `CanopyAtmosphereExperiment`
   ({ghpr}`252`).
 
 ### Improvements and fixes
 
 * Added the atmo-centimeter, a.k.a. atm-cm, to the unit registry ({ghpr}`245`).
-* Added spectral response functions for the VIIRS instrument onboard JPSS1 and 
+* Added spectral response functions for the VIIRS instrument onboard JPSS1 and
   NPP platforms ({ghpr}`253`).
-* Submodules and packages are now imported lazily ({ghpr}`254`). This 
+* Submodules and packages are now imported lazily ({ghpr}`254`). This
   significantly decreases import time for most use cases.
+* Optimised calls to `Quantity.m_as()` in
+  `InstancedCanopyElement.kernel_instances()` ({ghpr}`256`).
 
 % ### Documentation
 
@@ -62,7 +64,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 * Updated Mitsuba submodule twice up to v3.0.1 ({ghpr}`250`, {ghpr}`255`). This
   notably fixes the sampling method of the `tabphase` plugin.
-* Aligned the `tabphase_irregular` plugin with the fix `tabphase` code 
+* Aligned the `tabphase_irregular` plugin with the fix `tabphase` code
   ({ghpr}`255`).
 
 ## v0.22.4 (17 June 2022)
