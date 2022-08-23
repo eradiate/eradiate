@@ -85,6 +85,11 @@ def transform_azimuth(
     -------
     ndarray
         Azimuth angle values converted to the East right convention [rad].
+
+    Warnings
+    --------
+    This function does *not* apply unit conversion automatically: angle values
+    must be supplied in radians and are returned as plain Numpy arrays.
     """
     result = angles if inplace else np.copy(angles)
 
