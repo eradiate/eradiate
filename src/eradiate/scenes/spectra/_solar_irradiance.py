@@ -67,17 +67,18 @@ class SolarIrradianceSpectrum(Spectrum):
     ------
 
     * The spectral range of the data sets shipped can vary and an attempt for
-      use outside of the supported spectral range will raise a
+      use outside the supported spectral range will raise a
       :class:`ValueError` upon calling :meth:`kernel_dict`.
 
-    * The spectrum is automatically adjusted when the ``datetime`` field is set.
-      Datasets without a time dimension are assumed to be normalised to a given
-      Earth-Sun distance and the data is scaled based on the actual Earth-Sun
-      distance for the specified date, computed using the ephemeris of
-      :func:`astropy.coordinates.get_sun`.
+    * When the ``datetime`` field is set, the spectrum is automatically scaled
+      to account for the seasonal variations of the Earth-Sun distance using the
+      ephemeris of :func:`astropy.coordinates.get_sun`.
+      The dataset is assumed to be normalised to an Earth-Sun distance of 1 AU.
 
     * The ``scale`` field can be used to apply additional arbitrary scaling.
-      It is mostly used for debugging purposes.
+      It is mostly used for debugging purposes. It can also be used to rescale
+      user-defined spectra normalised at an Earth-Sun distance different from
+      1 AU.
 
     * The evaluation method depends on the active mode:
 
@@ -119,7 +120,9 @@ class SolarIrradianceSpectrum(Spectrum):
 
     scale: float = documented(
         attr.ib(default=1.0, converter=float, validator=validators.is_positive),
-        doc="Arbitrary scaling factor.",
+        doc="Arbitrary scaling factor. This scaling factor is applied in "
+        "addition to the datetime-based scaling controlled by the *datetime* "
+        "parameter.",
         type="float or datetime",
         init_type="float or datetime or str",
         default="1.0",
@@ -134,7 +137,10 @@ class SolarIrradianceSpectrum(Spectrum):
         init_type="datetime or str, optional",
         doc="Date for which the spectrum is to be evaluated. An ISO "
         "string can be passed and will be interpreted by "
-        ":meth:`dateutil.parser.parse`.",
+        ":meth:`dateutil.parser.parse`. This parameter scales the irradiance "
+        "spectrum to account for the seasonal variation of the Earth-Sun "
+        "distance. This scaling is applied in addition to the arbitrary "
+        "scaling controlled by the *scale* parameter.",
     )
 
     def _scale_earth_sun_distance(self) -> float:
@@ -148,12 +154,15 @@ class SolarIrradianceSpectrum(Spectrum):
             return 1.0
 
         else:
+            # The irradiance scales as the inverse of d**2, where d is the
+            # Earth-Sun distance divided by the AU (reference distance for all
+            # Solar irradiance spectra in Eradiate).
             return (
                 float(
-                    astropy.coordinates.get_sun(
+                    astropy.units.au
+                    / astropy.coordinates.get_sun(
                         astropy.time.Time(self.datetime)
                     ).distance
-                    / astropy.units.au
                 )
                 ** 2
             )

@@ -82,5 +82,5 @@ def test_solar_irradiance_datetime(mode_mono):
     )
     assert np.isclose(
         s_scaled_datetime.eval_mono(550.0 * ureg.nm),
-        s.eval_mono(550.0 * ureg.nm) * 0.98854537**2,
+        s.eval_mono(550.0 * ureg.nm) / 0.98854537**2,
     )

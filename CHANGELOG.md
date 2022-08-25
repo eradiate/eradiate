@@ -57,6 +57,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   significantly decreases import time for most use cases.
 * Optimised calls to `Quantity.m_as()` in
   `InstancedCanopyElement.kernel_instances()` ({ghpr}`256`).
+* Fixed incorrect scaling formula for datetime-based scaling of Solar irradiance
+  spectra ({ghpr}`258`).
 
 % ### Documentation
 
