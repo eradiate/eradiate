@@ -175,7 +175,7 @@ def fetch(files, from_file):
     for filename in files:
         try:
             console.print(f"[blue]Fetching '{filename}'[/]")
-            path = eradiate.data._store.data_store.fetch(filename)
+            path = eradiate.data.data_store.fetch(filename)
         except DataError:
             console.print(f"[red]✗[/] not found")
         else:
