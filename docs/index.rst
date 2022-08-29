@@ -17,7 +17,7 @@ Eradiate Documentation
 Eradiate is a modern radiative transfer simulation software package written in
 Python and C++17. It relies on a computational kernel based on the
 `Mitsuba 3 <https://github.com/mitsuba-renderer/mitsuba3>`_ rendering system
-:cite:`Jakob2022DrJitJustInTime`.
+:cite:`Jakob2022DrJit,Jakob2022Mitsuba3`.
 
 .. grid:: 1 2 auto auto
    :gutter: 3
