@@ -66,10 +66,10 @@ def test_radiance_scaling(modes_all_double, measure, scale, datetime):
     scale_datetime = (
         (
             float(
-                astropy.coordinates.get_sun(
+                astropy.units.au
+                / astropy.coordinates.get_sun(
                     astropy.time.Time(dateutil.parser.parse(datetime))
                 ).distance
-                / astropy.units.au
             )
             ** 2
         )
