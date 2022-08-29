@@ -1,18 +1,6 @@
 from ...util import lazy_loader
 
-__getattr__, __dir__, __all__ = lazy_loader.attach(
-    __name__,
-    submod_attrs={
-        "_core": [
-            "Canopy",
-            "CanopyElement",
-            "InstancedCanopyElement",
-            "biosphere_factory",
-        ],
-        "_discrete": ["DiscreteCanopy"],
-        "_leaf_cloud": ["LeafCloud"],
-        "_tree": ["AbstractTree", "MeshTree", "MeshTreeElement"],
-    },
-)
+__getattr__, __dir__, __all__ = lazy_loader.attach_stub(__name__, __file__)
+
 
 del lazy_loader

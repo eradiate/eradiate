@@ -42,7 +42,8 @@ Using ``lazy_loader``
 
 Usage is documented in the
 `SPEC <https://scientific-python.org/specs/spec-0001/>`_. Docstrings also
-provide useful usage information.
+provide useful usage information. Be sure to read the **TYPE CHECKERS** section
+carefully as it describes how we use stub files.
 
 In addition, checking that all lazy imports can be resolved is recommended. The
 way to do so is to use the ``EAGER_IMPORT`` environment variable, *e.g.*

@@ -57,8 +57,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Added the atmo-centimeter, a.k.a. atm-cm, to the unit registry ({ghpr}`245`).
 * Added spectral response functions for the VIIRS instrument onboard JPSS1 and
   NPP platforms ({ghpr}`253`).
-* Submodules and packages are now imported lazily ({ghpr}`254`). This
-  significantly decreases import time for most use cases.
+* Submodules and packages are now imported lazily ({ghpr}`254`, {ghpr}`261`).
+  This significantly decreases import time for most use cases.
 * Optimised calls to `Quantity.m_as()` in
   `InstancedCanopyElement.kernel_instances()` ({ghpr}`256`).
 * Fixed incorrect scaling formula for datetime-based scaling of Solar irradiance
