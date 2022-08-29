@@ -7,18 +7,7 @@ import sys
 from ..typing import PathLike
 from ..util import lazy_loader
 
-__getattr__, __dir__, __all__ = lazy_loader.attach(
-    __name__,
-    submod_attrs={
-        "_store": ["data_store", "init_data_store"],
-        "_core": ["DataStore"],
-        "_blind_directory": ["BlindDirectoryDataStore"],
-        "_blind_online": ["BlindOnlineDataStore"],
-        "_safe_directory": ["SafeDirectoryDataStore"],
-        "_safe_online": ["SafeOnlineDataStore"],
-        "_multi": ["MultiDataStore"],
-    },
-)
+__getattr__, __dir__, __all__ = lazy_loader.attach_stub(__name__, __file__)
 xr = lazy_loader.load("xarray")
 
 del lazy_loader

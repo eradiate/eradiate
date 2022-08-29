@@ -18,10 +18,6 @@ except (ImportError, ModuleNotFoundError) as e:
 
 from ..util import lazy_loader
 
-__getattr__, __dir__, __all__ = lazy_loader.attach(
-    __name__,
-    ["gridvolume", "logging", "transform"],
-    {"_bitmap": ["bitmap_to_dataset"]},
-)
+__getattr__, __dir__, __all__ = lazy_loader.attach_stub(__name__, __file__)
 
 del lazy_loader
