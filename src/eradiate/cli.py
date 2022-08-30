@@ -45,23 +45,28 @@ def show():
     Display information useful for debugging.
     """
     mi.set_variant("scalar_rgb")
-    console.rule("Versions")
-    console.print(f"• eradiate {eradiate.__version__}")
-    console.print(f"• mitsuba {mi.MI_VERSION}")
 
-    console.rule("Available Mitsuba variants")
-    console.print("\n".join([f"• {variant}" for variant in mi.variants()]))
+    def section(title, newline=True):
+        if newline:
+            console.print()
+        console.rule(title)
+        console.print()
 
-    console.rule("Configuration")
+    def message(text):
+        console.print(text)
+
+    section("Versions", newline=False)
+    message(f"• eradiate {eradiate.__version__}")
+    message(f"• mitsuba {mi.MI_VERSION}")
+
+    section("Available Mitsuba variants")
+    message("\n".join([f"• {variant}" for variant in mi.variants()]))
+
+    section("Configuration")
     for var in [x.name for x in eradiate.config.__attrs_attrs__]:
         value = getattr(eradiate.config, var)
-
-        if var == "progress":
-            var_repr = f"{value!r}"
-        else:
-            var_repr = str(value)
-
-        console.print(f"• ERADIATE_{var.upper()}: {var_repr}")
+        var_repr = f"{value!r}" if var == "progress" else str(value)
+        message(f"• ERADIATE_{var.upper()}: {var_repr}")
 
 
 @main.group()
