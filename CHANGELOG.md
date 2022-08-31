@@ -67,8 +67,9 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 ### Internal changes
 
-* Updated Mitsuba submodule twice up to v3.0.1 ({ghpr}`250`, {ghpr}`255`). This
-  notably fixes the sampling method of the `tabphase` plugin.
+* Updated Mitsuba submodule to v3.0.2 ({ghpr}`250`, {ghpr}`255`, {ghpr}`267`).
+  This notably fixes the sampling method of the `tabphase` plugin and a Dr.Jit
+  warning on some Linux machines.
 * Aligned the `tabphase_irregular` plugin with the fix `tabphase` code
   ({ghpr}`255`).
 
