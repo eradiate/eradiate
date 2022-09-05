@@ -59,6 +59,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   `InstancedCanopyElement.kernel_instances()` ({ghpr}`256`).
 * Fixed incorrect scaling formula for datetime-based scaling of Solar irradiance
   spectra ({ghpr}`258`).
+* Added system information report to the `eradiate show` command-line utility
+  ({ghpr}`264`).
 
 % ### Documentation
 
