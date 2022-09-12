@@ -53,7 +53,8 @@ equation.
 
   <details>
   <summary>
-  One-dimensional atmospheric profiles (AFGL 1986 standard profiles)
+  One-dimensional atmospheric profiles (AFGL atmospheric constituent 
+  profiles)
   </summary>
   These profiles are available in CKD mode only (the monochromatic mode uses
   the simpler U.S. Standard Atmosphere (1976) model).
@@ -157,7 +158,7 @@ equation.
   Documented data and formats
   </summary>
   We explain where our data comes from and how users can build their own data
-  in a format with Eradiate's input.
+  in a format compatible with Eradiate's input.
   </details>
 
   <details>
