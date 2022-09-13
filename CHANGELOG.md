@@ -16,7 +16,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 % HEREAFTER IS A TEMPLATE FOR THE NEXT RELEASE
 %
-% ## vXX.YY.ZZ (unreleased)
+% ## vXX.YY.ZZ (next release)
 %
 % ### New features
 %
@@ -30,7 +30,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 % ### Internal changes
 
-## v0.22.5 (unreleased)
+## v0.22.5 (next release)
 
 ### New features
 

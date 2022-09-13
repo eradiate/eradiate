@@ -1,12 +1,3 @@
-__all__ = [
-    "detect_axes",
-    "get_axes_from_facet_grid",
-    "make_ticks",
-    "remove_xyticks",
-    "remove_xylabels",
-    "set_style",
-]
-
 import typing as t
 
 import matplotlib.pyplot as _plt
@@ -16,8 +7,6 @@ import xarray.plot
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from xarray.plot import FacetGrid
-
-# -- Utility functions ---------------------------------------------------------
 
 
 def set_style(rc=None):

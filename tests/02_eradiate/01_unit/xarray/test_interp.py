@@ -6,7 +6,7 @@ from eradiate.xarray.interp import dataarray_to_rgb, film_to_angular
 
 def test_film_to_angular():
     # This does not test the output very well, but it will fail if any
-    # sub-component is broken.
+    # subcomponent is broken.
     # Actual behaviour is better tested manually by comparing film-space and
     # polar plots.
 
