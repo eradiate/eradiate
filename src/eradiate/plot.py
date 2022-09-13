@@ -1,8 +1,8 @@
 import typing as t
+import warnings
 
 import matplotlib.pyplot as _plt
 import numpy as np
-import seaborn as sns
 import xarray.plot
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -20,10 +20,19 @@ def set_style(rc=None):
         A Matplotlib rc parameter dictionary to be applied in addition to the
         Eradiate style.
     """
+    try:
+        import seaborn
+    except ModuleNotFoundError:
+        warnings.warn(
+            "To use Eradiate's Matplotlib style, you must install Seaborn.\n"
+            "See instructions on https://seaborn.pydata.org/installing.html."
+        )
+        raise
+
     if rc is None:
         rc = {}
 
-    sns.set_theme(style="ticks", rc={"image.cmap": "viridis", **rc})
+    seaborn.set_theme(style="ticks", rc={"image.cmap": "viridis", **rc})
 
 
 def detect_axes(from_=None):

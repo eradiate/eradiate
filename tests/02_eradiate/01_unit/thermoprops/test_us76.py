@@ -1,37 +1,35 @@
+import numpy as np
 import pytest
 
-from eradiate.thermoprops.us76 import *
+from eradiate import unit_registry as ureg
+from eradiate.thermoprops import us76
 
 _Q = ureg.Quantity
 
 
 def test_make_profile():
     # default constructor
-    profile = make_profile()
-    profile.ert.validate_metadata(profile_dataset_spec)
+    profile = us76.make_profile()
     assert profile["z_level"].values[0] == 0.0
     assert profile["z_level"].values[-1] == 100000.0
     assert profile.dims["z_layer"] == 50
     assert profile.dims["species"] == 12
 
     # custom levels altitudes
-    profile = make_profile(levels=_Q(np.linspace(2.0, 15.0, 51), "km"))
-    profile.ert.validate_metadata(profile_dataset_spec)
+    profile = us76.make_profile(levels=_Q(np.linspace(2.0, 15.0, 51), "km"))
     assert profile.dims["z_layer"] == 50
     assert profile["z_level"].values[0] == 2000.0
     assert profile["z_level"].values[-1] == 15000.0
     assert profile.dims["species"] == 12
 
     # custom number of layers
-    profile = make_profile(levels=_Q(np.linspace(0.0, 150.0, 37), "kilometers"))
-    profile.ert.validate_metadata(profile_dataset_spec)
+    profile = us76.make_profile(levels=_Q(np.linspace(0.0, 150.0, 37), "kilometers"))
     assert profile.dims["z_layer"] == 36
     assert profile["z_level"].values[0] == 0.0
     assert profile["z_level"].values[-1] == 150000.0
     assert profile.dims["species"] == 12
 
-    profile = make_profile(levels=_Q(np.linspace(0.0, 80.0, 2), "kilometers"))
-    profile.ert.validate_metadata(profile_dataset_spec)
+    profile = us76.make_profile(levels=_Q(np.linspace(0.0, 80.0, 2), "kilometers"))
     assert profile.dims["z_layer"] == 1
     assert profile["z_level"].values[0] == 0.0
     assert profile["z_level"].values[-1] == 80000.0
@@ -39,16 +37,16 @@ def test_make_profile():
 
     # invalid levels
     with pytest.raises(ValueError):
-        make_profile(levels=np.linspace(-4000, 50000))
+        us76.make_profile(levels=np.linspace(-4000, 50000))
 
     with pytest.raises(ValueError):
-        make_profile(levels=np.linspace(500.0, 5000000.0))
+        us76.make_profile(levels=np.linspace(500.0, 5000000.0))
 
 
 def test_create():
     z = _Q(np.linspace(0.0, 100000.0, 101), "meter")
     variables = ["p", "t", "n", "n_tot"]
-    ds = create(z, variables=variables)
+    ds = us76.create(z, variables=variables)
 
     dims = ds.dims
     assert len(dims) == 2
@@ -58,7 +56,7 @@ def test_create():
     coords = ds.coords
     assert len(coords) == 2
     assert (coords["z"] == z.magnitude).all()
-    assert [s for s in coords["species"]] == [s for s in SPECIES]
+    assert [s for s in coords["species"]] == [s for s in us76.SPECIES]
 
     for var in variables:
         assert var in ds
@@ -79,8 +77,8 @@ def test_create_below_86_km_layers_boundary_altitudes():
     values from the table 1 of the U.S. Standard Atmosphere 1976 document.
     """
 
-    z = to_altitude(np.array(H))
-    ds = create(z, variables=["p", "t", "rho"])
+    z = us76.to_altitude(np.array(us76.H))
+    ds = us76.create(z, variables=["p", "t", "rho"])
 
     level_temperature = np.array(
         [288.15, 216.65, 216.65, 228.65, 270.65, 270.65, 214.65, 186.87]
@@ -190,8 +188,8 @@ def test_create_below_86_km_arbitrary_altitudes():
         ]
     )
 
-    z = to_altitude(h)
-    ds = create(z, variables=["t", "p", "rho"])
+    z = us76.to_altitude(h)
+    ds = us76.create(z, variables=["t", "p", "rho"])
 
     assert np.allclose(temperatures, ds["t"].values, rtol=1e-4)
     assert np.allclose(pressures, ds["p"].values, rtol=1e-4)
@@ -200,7 +198,7 @@ def test_create_below_86_km_arbitrary_altitudes():
 
 def test_init_data_set():
     def check_data_set(ds):
-        for var in VARIABLES:
+        for var in us76.VARIABLES:
             assert var in ds
             assert np.isnan(ds[var].values).all()
 
@@ -211,20 +209,20 @@ def test_init_data_set():
         )
 
     z1 = _Q(np.linspace(0.0, 50000.0), "meter")
-    ds1 = init_data_set(z1)
+    ds1 = us76.init_data_set(z1)
     check_data_set(ds1)
 
     z2 = _Q(np.linspace(120000.0, 650000.0), "meter")
-    ds2 = init_data_set(z2)
+    ds2 = us76.init_data_set(z2)
     check_data_set(ds2)
 
     z3 = _Q(np.linspace(70000.0, 100000.0), "meter")
-    ds3 = init_data_set(z3)
+    ds3 = us76.init_data_set(z3)
     check_data_set(ds3)
 
 
 def test_compute_levels_temperature_and_pressure_low_altitude():
-    tb, pb = compute_levels_temperature_and_pressure_low_altitude()
+    tb, pb = us76.compute_levels_temperature_and_pressure_low_altitude()
 
     level_temperature = np.array(
         [288.15, 216.65, 216.65, 228.65, 270.65, 270.65, 214.65, 186.87]
@@ -293,7 +291,7 @@ def test_compute_number_density():
         ),
         "O": np.array(
             [
-                O_7,
+                us76.O_7,
                 2.443e17,
                 4.365e17,
                 4.298e17,
@@ -313,7 +311,7 @@ def test_compute_number_density():
         ),
         "O2": np.array(
             [
-                O2_7,
+                us76.O2_7,
                 1.479e19,
                 5.83e18,
                 2.151e18,
@@ -333,7 +331,7 @@ def test_compute_number_density():
         ),
         "Ar": np.array(
             [
-                AR_7,
+                us76.AR_7,
                 6.574e17,
                 2.583e17,
                 9.501e16,
@@ -393,7 +391,7 @@ def test_compute_number_density():
         ),
     }
 
-    n = compute_number_densities_high_altitude(altitudes)
+    n = us76.compute_number_densities_high_altitude(altitudes)
 
     # print('N2:', rtol(n[0], values['N2']))
     assert np.allclose(n["N2"], values["N2"], rtol=0.01)
@@ -411,28 +409,29 @@ def test_compute_number_density():
 
 def test_compute_mean_molar_mass():
     # test call with scalar altitude
-    assert compute_mean_molar_mass_high_altitude(90.0) == M0
-    assert compute_mean_molar_mass_high_altitude(200.0) == M["N2"]
+    assert us76.compute_mean_molar_mass_high_altitude(90.0) == us76.M0
+    assert us76.compute_mean_molar_mass_high_altitude(200.0) == us76.M["N2"]
 
     # test call with array of altitudes
     z = np.linspace(86, 1000, 915)
     assert np.allclose(
-        compute_mean_molar_mass_high_altitude(z), np.where(z <= 100.0, M0, M["N2"])
+        us76.compute_mean_molar_mass_high_altitude(z),
+        np.where(z <= 100.0, us76.M0, us76.M["N2"]),
     )
 
 
 def test_compute_temperature_above_86_km():
     # test altitudes out of range raises value error
     with pytest.raises(ValueError):
-        compute_temperature_high_altitude(10.0)
+        us76.compute_temperature_high_altitude(10.0)
 
     # test call with scalar altitude
-    assert np.isclose(compute_temperature_high_altitude(90.0), 186.87, rtol=1e-3)
+    assert np.isclose(us76.compute_temperature_high_altitude(90.0), 186.87, rtol=1e-3)
 
     # test call with array of altitudes
     z = [100, 110, 120, 130, 200, 500]  # km
     assert np.allclose(
-        compute_temperature_high_altitude(z),
+        us76.compute_temperature_high_altitude(z),
         np.array([195.08, 240.00, 360.0, 469.27, 854.56, 999.24]),
         rtol=1e-3,
     )

@@ -1,17 +1,17 @@
 import os
 
 import click
-from setuptools.config.pyprojecttoml import read_configuration
 from ruamel.yaml import YAML
+from setuptools.config.pyprojecttoml import read_configuration
 
 
 @click.command()
 @click.option(
     "-s",
     "--sections",
-    default="main,tests,dev,docs",
+    default="main,recommended,tests,dev,docs",
     help="Dependency sections to include in the produced environment.yml file. "
-    "Default: 'main,tests,dev,docs'",
+    "Default: 'main,recommended,tests,dev,docs'",
 )
 @click.option(
     "-i",

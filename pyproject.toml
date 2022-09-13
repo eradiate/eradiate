@@ -17,57 +17,50 @@ readme = "README.md"
 requires-python = ">=3.8"
 
 dependencies = [
-  "aabbtree",
   "aenum",
-  "astropy",
   "attrs",
   "click",
-  "cerberus",
-  "dask",
   "dessinemoi>=22.2.0",
   "environ-config",
-  "iapws",
   "matplotlib",
   "netcdf4",
   "numpy",
   "pint",
   "pinttrs>=21.3.0",
   "pooch",
-  "python-dateutil",
   "rich",
   "ruamel.yaml",
   "scipy",
-  "seaborn",
   "tqdm",
   "xarray>=0.19,!=0.20.*",
 ]
 
 [project.optional-dependencies]
+recommended = [
+  "aabbtree",  # Used by the leaf collision detection feature
+  "astropy",  # Used by the Solar irradiance spectrum date-based scaling feature
+  "iapws",  # Used by thermophysical property utilities
+  "ipython",
+  "ipywidgets",
+  "jupyterlab",
+  "python-dateutil",  # Used by the Solar irradiance spectrum date-based scaling feature
+  "seaborn",  # Used to define the Eradiate plotting style
+]
+
 tests = [
   "pytest",
   "pytest-json-report",
-  "pytest-metadata",
-  "pytest-xdist",
 ]
 
 dev = [
-  "black",
-  "conda-lock>=0.12",
-  "coverage",
-  "ipython",
-  "ipywidgets",
-  "isort",
-  "jupyterlab",
-  "pip",
-  "pip-tools>=6.5",
-  "setuptools>=61",
-  "setuptools-scm>=6.2",
-  "twine",
+  "conda-lock>=0.12",  # Required by dependency management scripts
+  "pip>=22",  # Required by dependency management scripts
+  "pip-tools>=6.5",  # Required by dependency management scripts
+  "setuptools>=61",  # Required by dependency management scripts
 ]
 
 docs = [
   "autodocsumm",
-  "mock",
   "myst-parser",
   "nbsphinx",
   "sphinx-book-theme>=0.1.10",

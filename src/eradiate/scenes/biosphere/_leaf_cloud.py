@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import os
 import typing as t
+import warnings
 
-import aabbtree
 import attr
 import mitsuba as mi
 import numpy as np
@@ -76,6 +76,15 @@ def _leaf_cloud_positions_cuboid_avoid_overlap(
     specify a very dense leaf cloud. Consider using
     :func:`_leaf_cloud_positions_cuboid`.
     """
+    try:
+        import aabbtree
+    except ModuleNotFoundError:
+        warnings.warn(
+            "To use the collision detection feature, you must install AABBTree.\n"
+            "See instructions on https://aabbtree.readthedocs.io/#installation."
+        )
+        raise
+
     n_attempts = int(n_attempts)  # For safety, ensure conversion to int
 
     # try placing the leaves such that they do not overlap by creating
