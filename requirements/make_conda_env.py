@@ -12,9 +12,9 @@ from setuptools.config.pyprojecttoml import read_configuration
 @click.option(
     "-s",
     "--sections",
-    default="main,tests,dev,docs",
+    default="main,recommended,tests,dev,docs",
     help="Dependency sections to include in the produced environment.yml file. "
-    "Default: 'main,tests,dev,docs'",
+    "Default: 'main,recommended,tests,dev,docs'",
 )
 @click.option(
     "-i", "--input", default="pyproject.toml", help="Path to pyproject.toml file."
@@ -22,6 +22,10 @@ from setuptools.config.pyprojecttoml import read_configuration
 @click.option("-o", "--output", default=None, help="Path to output file.")
 @click.option("-q", "--quiet", is_flag=True, help="Suppress terminal output.")
 def cli(sections, input, output, quiet):
+    """
+    Create a Conda environment file from a pyproject.toml.
+    """
+
     # Set YAML parameters
     yaml = YAML(typ="rt")  # Round-trip mode allows for comment insertion
     indent_offset = 2
@@ -38,9 +42,7 @@ def cli(sections, input, output, quiet):
     setup_config = read_configuration(input)
     sections = [x.strip() for x in sections.split(",")]
     section_indices = dict()
-    dep_list = (
-        deepcopy(env_yml["dependencies"]) if "dependencies" in env_yml else []
-    )
+    dep_list = deepcopy(env_yml["dependencies"]) if "dependencies" in env_yml else []
     i = len(dep_list)
 
     for section in sections:

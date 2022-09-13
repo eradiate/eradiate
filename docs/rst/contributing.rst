@@ -231,6 +231,8 @@ Style
   Editor integration instructions are available
   `for Black <https://black.readthedocs.io/en/stable/integrations/editors.html>`_
   and `for isort <https://github.com/pycqa/isort/wiki/isort-Plugins>`_.
+  Both formatters are part of our `pre-commit <https://pre-commit.com/>`_ hook
+  set, which we strong recommend to install.
 
 * We write our docstrings following the
   `Numpydoc format <https://numpydoc.readthedocs.io/en/latest/format.html>`_.

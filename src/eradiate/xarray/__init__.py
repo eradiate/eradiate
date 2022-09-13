@@ -3,11 +3,14 @@ from . import _accessors  # isort: skip
 
 del _accessors
 
-# Other imports
-from . import interp, make, metadata
 
-__all__ = [
-    "interp",
-    "make",
-    "metadata",
-]
+# -- Lazy imports ------------------------------------------------------
+
+from ..util import lazy_loader
+
+__getattr__, __dir__, __all__ = lazy_loader.attach(
+    __name__,
+    submodules=["interp"],
+)
+
+del lazy_loader

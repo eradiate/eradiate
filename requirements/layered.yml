@@ -2,17 +2,27 @@
 main:
   constraints:
     - dev
+
+recommended:
+  constraints:
+    - dev
+  includes:
+    - main
+
 docs:
   constraints:
     - dev
   includes:
     - main
+
 tests:
   constraints:
     - dev
   includes:
     - main
-dev:
+
+dev:  # All dependencies
   includes:
+    - recommended
     - docs
     - tests

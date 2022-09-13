@@ -2,12 +2,9 @@ from __future__ import annotations
 
 import datetime
 import typing as t
+import warnings
 
-import astropy.coordinates
-import astropy.time
-import astropy.units
 import attr
-import dateutil
 import numpy as np
 import pint
 import xarray as xr
@@ -46,6 +43,31 @@ def _dataset_converter(x: t.Any):
             return data.load_dataset(ALIASES[x])
 
     return converters.load_dataset(x)
+
+
+def _datetime_converter(x: t.Any):
+    if x is not None:
+        try:
+            import dateutil
+        except ModuleNotFoundError:
+            warnings.warn(
+                "To use the date-based Solar irradiance scaling feature, you "
+                "must install dateutil.\n"
+                "See instructions on https://dateutil.readthedocs.io/#installation."
+            )
+            raise
+
+        try:
+            import astropy
+        except ModuleNotFoundError:
+            warnings.warn(
+                "To use the date-based Solar irradiance scaling feature, you "
+                "must install astropy.\n"
+                "See instructions on https://www.astropy.org/."
+            )
+            raise
+
+        return dateutil.parser.parse(x)
 
 
 @parse_docs
@@ -131,7 +153,7 @@ class SolarIrradianceSpectrum(Spectrum):
     datetime: t.Optional[datetime.datetime] = documented(
         attr.ib(
             default=None,
-            converter=attr.converters.optional(dateutil.parser.parse),
+            converter=_datetime_converter,
         ),
         type="datetime or None",
         init_type="datetime or str, optional",
@@ -148,6 +170,10 @@ class SolarIrradianceSpectrum(Spectrum):
         Compute scaling factor applied to the irradiance spectrum based on the
         Earth-Sun distance.
         """
+        import astropy.coordinates
+        import astropy.time
+        import astropy.units
+
         # Note: We assume that the loaded dataset is for a reference
         # Earth-Sun distance of 1 AU
         if self.datetime is None:

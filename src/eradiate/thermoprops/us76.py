@@ -13,7 +13,6 @@ from scipy.interpolate import interp1d
 
 from eradiate import __version__
 
-from .util import profile_dataset_spec
 from ..units import unit_registry as ureg
 
 # ------------------------------------------------------------------------------
@@ -106,8 +105,6 @@ def make_profile(levels=ureg.Quantity(np.linspace(0.0, 1e5, 51), "m")):
         references="U.S. Standard Atmosphere, 1976, NASA-TM-X-74335, "
         "NOAA-S/T-76-1562",
     )
-
-    thermoprops_ds.ert.normalize_metadata(profile_dataset_spec)
 
     return thermoprops_ds
 

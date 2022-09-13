@@ -4,15 +4,14 @@ sets.
 """
 
 import typing as t
+import warnings
 from datetime import datetime
 
-import iapws
 import numpy as np
 import pint
 import scipy.constants
 import xarray as xr
 
-from . import profile_dataset_spec
 from .. import data
 from ..units import to_quantity
 from ..units import unit_registry as ureg
@@ -470,6 +469,15 @@ def water_vapor_saturation_pressure(t: float) -> pint.Quantity:
     -----
     Valid for pressures larger than the triple point pressure (~611 Pa).
     """
+    try:
+        import iapws
+    except ModuleNotFoundError:
+        warnings.warn(
+            "To use the collision detection feature, you must install IAPWS.\n"
+            "See instructions on https://iapws.readthedocs.io/en/latest/modules.html#installation."
+        )
+        raise
+
     if t >= 273.15:  # water is liquid
         p = ureg.Quantity(iapws.iapws97._PSat_T(t), "MPa")
     else:  # water is solid
@@ -553,7 +561,6 @@ def make_profile_regular(profile: xr.Dataset, atol: float) -> xr.Dataset:
         Converted atmosphere thermophysical properties data set, defined over
         a regular altitude mesh.
     """
-    profile.ert.validate_metadata(profile_dataset_spec)
 
     # compute the regular altitude nodes mesh
     regular_z_level = _to_regular(mesh=profile.z_level.values, atol=atol)
@@ -607,7 +614,6 @@ def make_profile_regular(profile: xr.Dataset, atol: float) -> xr.Dataset:
         },
         attrs=attrs,
     )
-    dataset.ert.normalize_metadata(profile_dataset_spec)
 
     return dataset
 

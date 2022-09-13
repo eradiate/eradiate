@@ -179,7 +179,7 @@ Our dependency management system is designed with the following requirements:
 2. Support for Pip: The system should be usable with Pip.
 3. Simplicity: The system must be usable by users with little knowledge of it.
 
-Our system uses two tools:
+Our system uses two tools (included in the development virtual environment):
 
 * `conda-lock <https://github.com/conda-incubator/conda-lock>`_
 * `pip-tools <https://github.com/jazzband/pip-tools>`_
@@ -187,18 +187,20 @@ Our system uses two tools:
 Basic principles
 ^^^^^^^^^^^^^^^^
 
-We categorise our dependencies in four sets:
+We categorise our dependencies in five sets:
 
-* ``main``: dependencies required to run Eradiate as a user;
+* ``main``: dependencies strictly required to run Eradiate as a user;
+* ``recommended``: dependencies recommended to run Eradiate as a user;
 * ``docs``: dependencies required to compile the documentation;
 * ``tests``: dependencies required to run tests;
 * ``dev``: dependencies specific to a development setup.
 
-``main``, ``docs`` and ``tests`` are subsets of ``dev``:
+``main``, ``recommended`` and ``docs`` and ``tests`` are subsets of ``dev``:
 
+- ``recommended`` includes ``main``;
 - ``docs`` includes ``main``;
 - ``tests`` includes ``main``;
-- ``dev`` includes ``docs`` and ``tests``.
+- ``dev`` includes ``recommended``, ``docs`` and ``tests``.
 
 .. only:: latex
 
@@ -229,17 +231,17 @@ Lock files are stored in the ``requirements`` directory, alongside a series of
 utility scripts.
 
 * **Conda** dependencies are pinned using conda-lock. It uses a regular
-  ``environment.yml`` file as input. It can compile requirements for multiple
+  environment YAML file as input. It can compile requirements for multiple
   platforms, but cannot be used to extract subsets of an existing requirement
-  specification. The ``environment.yml`` file is created by the
+  specification. The ``environment-dev.yml`` file is created by the
   ``make_conda_env.py`` script, from a header ``environment.in`` and the data
-  found in ``setup.cfg``. Our Conda lock files use the extension ``.lock``.
+  found in ``pyproject.toml``. Our Conda lock files use the extension ``.lock``.
 * **Pip** dependencies are pinned using pip-tools. It uses a series of ``*.in``
   files as input (one per requirement set) which can be configured to define
   subsets of each other, but cannot compile requirements for multiple platforms,
   which basically means that we cannot use hashes to pin requirements with it.
   The ``*.in`` input files are created by the ``make_pip_in_files.py`` script
-  from the data found in ``setup.cfg`` and the requirement layer relations
+  from the data found in ``pyproject.toml`` and the requirement layer relations
   defined in the ``layered.yml`` file. Our Pip lock files use the extension
   ``.txt``.
 
