@@ -9,12 +9,12 @@ from pinttr.util import always_iterable
 import eradiate
 
 from ._core import PipelineStep
-from .. import unit_context_config as ucc
 from .._mode import ModeFlags
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..kernel import bitmap_to_dataset
 from ..units import symbol
+from ..units import unit_context_config as ucc
 
 
 def _spectral_dims():

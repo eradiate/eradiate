@@ -10,7 +10,6 @@ import xarray as xr
 import eradiate
 
 from ._core import PipelineStep
-from .. import unit_registry as ureg
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..frame import angles_in_hplane
@@ -19,6 +18,7 @@ from ..scenes.measure import Measure, MultiDistantMeasure
 from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum
 from ..units import symbol, to_quantity
 from ..units import unit_context_kernel as uck
+from ..units import unit_registry as ureg
 
 
 @parse_docs

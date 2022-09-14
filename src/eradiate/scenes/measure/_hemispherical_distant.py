@@ -9,19 +9,17 @@ import numpy as np
 import pint
 import pinttr
 
-from eradiate import frame
-from eradiate import unit_context_config as ucc
-from eradiate import unit_registry as ureg
-
 from ._core import Measure, MeasureFlags
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
-from ... import validators
+from ... import frame, validators
 from ..._config import config
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
 from ...units import symbol
+from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 from ...warp import square_to_uniform_hemisphere
 
 
