@@ -1,0 +1,23 @@
+channels:
+  - eradiate
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  # main
+  - aenum
+  - attrs
+  - click
+  - dessinemoi>=22.2.0
+  - environ-config
+  - matplotlib
+  - netcdf4
+  - numpy
+  - pint
+  - pinttrs>=21.3.0
+  - pooch
+  - rich
+  - ruamel.yaml
+  - scipy
+  - tqdm
+  - xarray>=0.19,!=0.20.*

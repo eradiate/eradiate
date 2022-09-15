@@ -1,14 +1,7 @@
+-r recommended.in
 -r docs.in
 -r tests.in
-black
 conda-lock>=0.12
-coverage
-ipython
-ipywidgets
-isort
-jupyterlab
-pip
+pip>=22
 pip-tools>=6.5
 setuptools>=61
-setuptools-scm>=6.2
-twine

@@ -1,0 +1,10 @@
+-r main.in
+-c dev.txt
+aabbtree
+astropy
+iapws
+ipython
+ipywidgets
+jupyterlab
+python-dateutil
+seaborn
