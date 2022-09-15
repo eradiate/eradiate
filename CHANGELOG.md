@@ -16,7 +16,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 % HEREAFTER IS A TEMPLATE FOR THE NEXT RELEASE
 %
-% ## vXX.YY.ZZ (next release)
+% ## vXX.YY.ZZ (upcoming release)
 %
 % ### New features
 %
@@ -30,7 +30,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 % ### Internal changes
 
-## v0.22.5 (next release)
+## v0.22.5 (upcoming release)
 
 ### New features
 
@@ -38,16 +38,19 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Added an offline mode which disables all data file downloads ({ghpr}`249`).
 * Added support for Digital Elevation Models (DEM) ({ghpr}`246`).
 
-% ### Breaking changes
+### Breaking changes
+
+* Dropped the xarray metadata validation system ({ghpr}`266`).
 
 ### Deprecations and removals
 
 * Removed the path resolver component ({ghpr}`251`).
-* Renamed `Experiment` classes:
-  `OneDimExperiment` ⇒ `AtmosphereExperiment`,
-  `RamiExperiment` ⇒ `CanopyExperiment`,
-  `Rami4ATMExperiment` ⇒ `CanopyAtmosphereExperiment`
-  ({ghpr}`252`).
+* Renamed `Experiment` classes ({ghpr}`252`).
+
+  * `OneDimExperiment` ⇒ `AtmosphereExperiment`
+  * `RamiExperiment` ⇒ `CanopyExperiment`
+  * `Rami4ATMExperiment` ⇒ `CanopyAtmosphereExperiment`
+
 
 ### Improvements and fixes
 
@@ -62,8 +65,11 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   spectra ({ghpr}`258`).
 * Added system information report to the `eradiate show` command-line utility
   ({ghpr}`264`).
+* Some dependencies are now optional, although recommended ({ghpr}`266`).
 
-% ### Documentation
+### Documentation
+
+* Dependencies are now listed explicitly ({ghpr}`266`).
 
 ### Internal changes
 
@@ -110,8 +116,6 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Improve the Solar irradiance spectrum initialisation sequence ({ghpr}`242`).
 * The `thuillier_2003_extrapolated` dataset is now the default Solar irradiance
   spectrum ({ghpr}`242`).
-
-% ### Documentation
 
 ### Internal changes
 
