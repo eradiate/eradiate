@@ -83,11 +83,17 @@ eradiate = "eradiate.cli:main"
 ertdata = "eradiate.cli:data"
 ertshow = "eradiate.cli:show"
 
+[tool.setuptools]
+zip-safe = false  # Required because of package data
+
 [tool.setuptools.packages.find]
 exclude = ["plugins"]
 include = ["eradiate*"]
 namespaces = false
 where = ["src"]
+
+[tool.setuptools.package-data]
+eradiate = ["py.typed", "*.pyi"]  # Required by PEP 561 https://mypy.readthedocs.io/en/stable/installed_packages.html#creating-pep-561-compatible-packages
 
 [tool.setuptools_scm]
 git_describe_command = [
