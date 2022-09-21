@@ -10,4 +10,5 @@ Hereafter is a collection of detailed guides for developers.
 
    scene_element_guide
    factory_guide
+   lazy_loading
    design_atmosphere

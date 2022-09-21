@@ -10,6 +10,14 @@
    :members:
    :member-order: bysource
 
+``eradiate.util.lazy_loader``
+-----------------------------
+
+.. automodule:: eradiate.util.lazy_loader
+   :members:
+   :member-order: bysource
+
+
 ``eradiate.util.misc``
 ----------------------
 

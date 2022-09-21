@@ -1,13 +1,12 @@
 """
-lazy_loader
-===========
+**lazy_loader:** Makes it easy to load subpackages and functions on demand.
 
-Makes it easy to load subpackages and functions on demand.
+.. note::
 
-Copied from https://github.com/scientific-python/lazy_loader
+   Copied from https://github.com/scientific-python/lazy_loader.
 
-Date: 2022-06-25
-Version: v1.0rc2
+   * **Date:** 2022-06-25
+   * **Version:** v1.0rc2
 """
 
 import importlib
