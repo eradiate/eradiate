@@ -27,11 +27,11 @@ registered types. Each registry entry consists of the type registered under the
 associated identifier, as well as an optional field specifying which class
 method constructor should be used when converting dictionaries.
 
-The :meth:`.Factory.convert` method is the main entry point to factories in
-Eradiate. If this method is passed a dictionary, it pre-processes it, then tries
-to instantiate one of the registered types based of the information contained in
-the dictionary; otherwise, it does nothing and just returns the object it is
-passed.
+The :meth:`Factory.convert() <dessinemoi.Factory.convert>` method is the main
+entry point to factories in Eradiate. If this method is passed a dictionary, it
+pre-processes it, then tries to instantiate one of the registered types based on
+the information contained in the dictionary; otherwise, it does nothing and just
+returns the object it is passed.
 
 .. admonition:: Example
 
@@ -62,21 +62,39 @@ passed.
           azimuth=180.0,
       )
 
-.. note::
-   :meth:`.Factory.create` is powered by the low-level :meth:`.Factory.create`
-   method.
+.. admonition:: Notes
+   :class: note
+
+   * :meth:`Factory.convert() <dessinemoi.Factory.convert>` is powered by the
+     low-level :meth:`Factory.create() <dessinemoi.Factory.create>` method.
+   * :class:`.Factory` is sometimes subclassed to allow for different conversion
+     protocols.
 
 Enabling a class for factory usage
 ----------------------------------
 
-As previously mentioned, classes can be registered to a factory using the
-factory's :meth:`.Factory.register` class decorator (which should
-be applied *after* the :func:`attr.s` decorator). Our convention is to use the
-``type_id`` keyword argument to declare the factory identifier—not a
-``_TYPE_ID`` class attribute.
+Outside of Eradiate
+    As previously mentioned, classes can be registered to a factory using the
+    factory's :meth:`Factory.register <dessinemoi.Factory.register>` class
+    decorator (which should be applied *after* the :func:`attr.s` decorator).
+    Our convention is to use the ``type_id`` keyword argument to declare the
+    factory identifier—not a ``_TYPE_ID`` class attribute.
 
-.. note::
-   All the arguments of the :meth:`.Factory.register` decorator are keyword-only.
+    .. note::
+       All the arguments of the
+       :meth:`Factory.register <dessinemoi.Factory.register>` decorator are
+       keyword-only.
+
+Within Eradiate
+    Eradiate's :ref:`lazy module import system <sec-developer_guides-lazy_loading>`
+    makes it impossible to populate factories upon calling ``import eradiate``
+    using the :meth:`Factory.register <dessinemoi.Factory.register>` decorator:
+    even though the factory instance is created, the registered types are not
+    imported and therefore do not hook into the factory if not imported
+    individually, which defeats the purpose of using the
+    :meth:`Factory.register <dessinemoi.Factory.register>` method.
+    Therefore, factory registration must be done alongside factory creation,
+    using the :meth:`.Factory.register_lazy_batch` method.
 
 Documenting factories
 ---------------------
