@@ -60,10 +60,10 @@ class InterpolatedSpectrum(Spectrum):
             converter=converters.on_quantity(np.atleast_1d),
             kw_only=True,
         ),
-        doc="Uniform spectrum value. If a float is passed and ``quantity`` is not "
-        "``None``, it is automatically converted to appropriate configuration "
-        "default units. If a :class:`~pint.Quantity` is passed and ``quantity`` "
-        "is not ``None``, units will be checked for consistency.",
+        doc="Uniform spectrum value. If a float is passed, it is automatically "
+        "converted to appropriate default configuration units. "
+        "If a :class:`~pint.Quantity` is passed, units are checked for "
+        "consistency.",
         type="quantity",
         init_type="array-like",
     )

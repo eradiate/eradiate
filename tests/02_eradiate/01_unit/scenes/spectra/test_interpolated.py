@@ -155,15 +155,11 @@ def test_interpolated_eval(modes_all):
     else:
         assert False
 
-    # Spectrum without quantity performs linear interpolation and yields units
-    # consistent with values
+    # Spectrum performs linear interpolation and yields units consistent with
+    # quantity
     spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
-    assert spectrum.eval(spectral_ctx) == expected
-    spectrum.values *= ureg("W/m^2/nm")
-    assert spectrum.eval(spectral_ctx) == expected * ureg("W/m^2/nm")
+    assert spectrum.eval(spectral_ctx) == expected * ureg.dimensionless
 
-    # Spectrum with quantity performs linear interpolation and yields units
-    # consistent with quantity
     spectrum = InterpolatedSpectrum(
         quantity="irradiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
     )
