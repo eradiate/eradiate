@@ -5,7 +5,7 @@ from __future__ import annotations
 import typing as t
 from enum import Enum
 
-import attr
+import attrs
 import numpy as np
 
 from .attrs import documented, parse_docs
@@ -20,7 +20,7 @@ class QuadType(Enum):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Quad:
     """
     A data class storing information about a quadrature rule. Nodes and weights
@@ -35,20 +35,20 @@ class Quad:
     """
 
     type: QuadType = documented(
-        attr.ib(converter=QuadType, repr=lambda x: str(x)),
+        attrs.field(converter=QuadType, repr=lambda x: str(x)),
         doc="Quadrature type. If a string is passed, it is converted to a "
         ":class:`.QuadType`.",
         type=":class:`.QuadType`",
     )
 
     nodes: np.ndarray = documented(
-        attr.ib(converter=np.array, repr=str_summary_numpy),
+        attrs.field(converter=np.array, repr=str_summary_numpy),
         doc="Quadrature rule nodes.",
         type="ndarray",
     )
 
     weights: np.ndarray = documented(
-        attr.ib(converter=np.array, repr=str_summary_numpy),
+        attrs.field(converter=np.array, repr=str_summary_numpy),
         doc="Quadrature rule weights.",
         type="ndarray",
     )

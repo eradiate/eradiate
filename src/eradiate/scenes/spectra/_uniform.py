@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -15,14 +15,14 @@ from ...units import unit_context_kernel as uck
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class UniformSpectrum(Spectrum):
     """
     Uniform spectrum [``uniform``] (*i.e.* constant vs wavelength).
     """
 
     value: pint.Quantity = documented(
-        attr.ib(
+        attrs.field(
             converter=lambda x: float(x) if isinstance(x, int) else x,
             repr=lambda x: f"{x:~P}",
             kw_only=True,

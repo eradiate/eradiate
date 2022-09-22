@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -19,7 +19,7 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class RadiancemeterMeasure(Measure):
     """
     Radiance meter measure scene element [``radiancemeter``].
@@ -34,7 +34,7 @@ class RadiancemeterMeasure(Measure):
     # --------------------------------------------------------------------------
 
     origin: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=ureg.Quantity([0.0, 0.0, 0.0], ureg.m),
             validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),
@@ -48,7 +48,7 @@ class RadiancemeterMeasure(Measure):
     )
 
     target: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=ureg.Quantity([0.0, 0.0, 1.0], ureg.m),
             validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),

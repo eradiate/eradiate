@@ -1,4 +1,4 @@
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -16,7 +16,7 @@ from ...validators import has_quantity, is_positive
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class DirectionalIllumination(Illumination):
     """
     Directional illumination scene element [``directional``].
@@ -26,7 +26,7 @@ class DirectionalIllumination(Illumination):
     """
 
     zenith: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=0.0 * ureg.deg,
             validator=[is_positive, pinttr.validators.has_compatible_units],
             units=ucc.deferred("angle"),
@@ -38,7 +38,7 @@ class DirectionalIllumination(Illumination):
     )
 
     azimuth: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=0.0 * ureg.deg,
             validator=[is_positive, pinttr.validators.has_compatible_units],
             units=ucc.deferred("angle"),
@@ -52,12 +52,12 @@ class DirectionalIllumination(Illumination):
     )
 
     azimuth_convention: AzimuthConvention = documented(
-        attr.ib(
+        attrs.field(
             default=None,
             converter=lambda x: config.azimuth_convention
             if x is None
             else (AzimuthConvention[x.upper()] if isinstance(x, str) else x),
-            validator=attr.validators.instance_of(AzimuthConvention),
+            validator=attrs.validators.instance_of(AzimuthConvention),
         ),
         doc="Azimuth convention. If ``None``, the global default configuration "
         "is used (see :class:`.EradiateConfig`).",
@@ -67,11 +67,11 @@ class DirectionalIllumination(Illumination):
     )
 
     irradiance: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             factory=SolarIrradianceSpectrum,
             converter=spectrum_factory.converter("irradiance"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 has_quantity("irradiance"),
             ],
         ),

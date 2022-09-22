@@ -4,7 +4,7 @@ import os
 import typing as t
 import warnings
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -210,7 +210,7 @@ def _leaf_cloud_radii(n_leaves, leaf_radius):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class LeafCloudParams:
     """
     Base class to implement advanced parameter checking for :class:`.LeafCloud`
@@ -218,22 +218,22 @@ class LeafCloudParams:
     """
 
     _id = documented(
-        attr.ib(default="leaf_cloud"),
+        attrs.field(default="leaf_cloud"),
         doc="Leaf cloud identifier.",
         type="str",
         default='"leaf_cloud"',
     )
 
     _leaf_reflectance = documented(
-        attr.ib(default=0.5), doc="Leaf reflectance.", type="float", default="0.5"
+        attrs.field(default=0.5), doc="Leaf reflectance.", type="float", default="0.5"
     )
 
     _leaf_transmittance = documented(
-        attr.ib(default=0.5), doc="Leaf transmittance.", type="float", default="0.5"
+        attrs.field(default=0.5), doc="Leaf transmittance.", type="float", default="0.5"
     )
 
     _mu = documented(
-        attr.ib(default=1.066),
+        attrs.field(default=1.066),
         doc="First parameter of the inverse beta distribution approximation used "
         "to generate leaf orientations.",
         type="float",
@@ -241,17 +241,19 @@ class LeafCloudParams:
     )
 
     _nu = documented(
-        attr.ib(default=1.853),
+        attrs.field(default=1.853),
         doc="Second parameter of the inverse beta distribution approximation used "
         "to generate leaf orientations.",
         type="float",
         default="1.853",
     )
 
-    _n_leaves = documented(attr.ib(default=None), doc="Number of leaves.", type="int")
+    _n_leaves = documented(
+        attrs.field(default=None), doc="Number of leaves.", type="int"
+    )
 
     _leaf_radius = documented(
-        pinttr.ib(default=None, units=ucc.deferred("length")),
+        pinttr.field(default=None, units=ucc.deferred("length")),
         doc="Leaf radius.\n\nUnit-enabled field (default: ucc['length']).",
         type="float",
     )
@@ -298,7 +300,7 @@ class LeafCloudParams:
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class CuboidLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the cuboid :class:`.LeafCloud`
@@ -335,7 +337,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     """
 
     _l_horizontal = documented(
-        pinttr.ib(default=None, units=ucc.deferred("length")),
+        pinttr.field(default=None, units=ucc.deferred("length")),
         doc="Leaf cloud horizontal extent. *Suggested default: 30 m.*\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -343,7 +345,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     )
 
     _l_vertical = documented(
-        pinttr.ib(default=None, units=ucc.deferred("length")),
+        pinttr.field(default=None, units=ucc.deferred("length")),
         doc="Leaf cloud vertical extent. *Suggested default: 3 m.*\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -351,7 +353,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     )
 
     _lai = documented(
-        pinttr.ib(default=None, units=ureg.dimensionless),
+        pinttr.field(default=None, units=ureg.dimensionless),
         doc="Leaf cloud leaf area index (LAI). *Physical range: [0, 10]; "
         "suggested default: 3.*\n"
         "\n"
@@ -360,7 +362,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     )
 
     _hdo = documented(
-        pinttr.ib(default=None, units=ucc.deferred("length")),
+        pinttr.field(default=None, units=ucc.deferred("length")),
         doc="Mean horizontal distance between leaves.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -368,7 +370,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     )
 
     _hvr = documented(
-        pinttr.ib(default=None),
+        pinttr.field(default=None),
         doc="Ratio of mean horizontal leaf distance and vertical leaf cloud extent. "
         "*Suggested default: 0.1.*",
         type="float",
@@ -442,7 +444,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class SphereLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the sphere :class:`.LeafCloud`
@@ -454,7 +456,7 @@ class SphereLeafCloudParams(LeafCloudParams):
     """
 
     _radius = documented(
-        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
@@ -466,7 +468,7 @@ class SphereLeafCloudParams(LeafCloudParams):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class EllipsoidLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the ellipsoid :class:`.LeafCloud`
@@ -481,21 +483,21 @@ class EllipsoidLeafCloudParams(LeafCloudParams):
     """
 
     _a = documented(
-        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
     )
 
     _b = documented(
-        pinttr.ib(default=None, units=ucc.deferred("length")),
+        pinttr.field(default=None, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
     )
 
     _c = documented(
-        pinttr.ib(default=None, units=ucc.deferred("length")),
+        pinttr.field(default=None, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
@@ -531,7 +533,7 @@ class EllipsoidLeafCloudParams(LeafCloudParams):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class CylinderLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the cylinder :class:`.LeafCloud`
@@ -543,14 +545,14 @@ class CylinderLeafCloudParams(LeafCloudParams):
     """
 
     _radius = documented(
-        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
     )
 
     _l_vertical = documented(
-        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud vertical extent.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
@@ -566,7 +568,7 @@ class CylinderLeafCloudParams(LeafCloudParams):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ConeLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the cone :class:`.LeafCloud`
@@ -578,14 +580,14 @@ class ConeLeafCloudParams(LeafCloudParams):
     """
 
     _radius = documented(
-        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
     )
 
     _l_vertical = documented(
-        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud vertical extent.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
@@ -601,7 +603,7 @@ class ConeLeafCloudParams(LeafCloudParams):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class LeafCloud(CanopyElement):
     """
     A container class for leaf clouds in abstract discrete canopies.
@@ -637,9 +639,9 @@ class LeafCloud(CanopyElement):
     # --------------------------------------------------------------------------
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="leaf_cloud",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),
@@ -648,7 +650,7 @@ class LeafCloud(CanopyElement):
     )
 
     leaf_positions: pint.Quantity = documented(
-        pinttr.ib(factory=list, units=ucc.deferred("length")),
+        pinttr.field(factory=list, units=ucc.deferred("length")),
         doc="Leaf positions in cartesian coordinates as a (n, 3)-array.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -658,7 +660,7 @@ class LeafCloud(CanopyElement):
     )
 
     leaf_orientations: np.ndarray = documented(
-        attr.ib(factory=list, converter=np.array),
+        attrs.field(factory=list, converter=np.array),
         doc="Leaf orientations (normal vectors) in Cartesian coordinates as a "
         "(n, 3)-array.",
         type="ndarray",
@@ -666,11 +668,11 @@ class LeafCloud(CanopyElement):
     )
 
     leaf_radii: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             factory=list,
             validator=[
                 pinttr.validators.has_compatible_units,
-                attr.validators.deep_iterable(member_validator=validators.is_positive),
+                attrs.validators.deep_iterable(member_validator=validators.is_positive),
             ],
             units=ucc.deferred("length"),
         ),
@@ -711,11 +713,11 @@ class LeafCloud(CanopyElement):
             )
 
     leaf_reflectance: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
@@ -727,11 +729,11 @@ class LeafCloud(CanopyElement):
     )
 
     leaf_transmittance: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("transmittance"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("transmittance"),
             ],
         ),
@@ -1235,4 +1237,4 @@ class LeafCloud(CanopyElement):
                 f"{self.leaf_positions.shape} do not match"
             )
 
-        return attr.evolve(self, leaf_positions=self.leaf_positions + xyz)
+        return attrs.evolve(self, leaf_positions=self.leaf_positions + xyz)

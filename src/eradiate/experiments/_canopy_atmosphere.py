@@ -1,6 +1,6 @@
 import typing as t
 
-import attr
+import attrs
 
 from ._atmosphere import measure_inside_atmosphere
 from ._core import EarthObservationExperiment
@@ -53,7 +53,7 @@ def _surface_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class CanopyAtmosphereExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a scene with an explicit canopy and atmosphere.
@@ -86,10 +86,10 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     """
 
     geometry: t.Union[PlaneParallelGeometry, SphericalShellGeometry] = documented(
-        attr.ib(
+        attrs.field(
             default="plane_parallel",
             converter=AtmosphereGeometry.convert,
-            validator=attr.validators.instance_of(
+            validator=attrs.validators.instance_of(
                 (PlaneParallelGeometry, SphericalShellGeometry)
             ),
         ),
@@ -100,10 +100,12 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     )
 
     atmosphere: t.Optional[Atmosphere] = documented(
-        attr.ib(
+        attrs.field(
             factory=HomogeneousAtmosphere,
-            converter=attr.converters.optional(atmosphere_factory.convert),
-            validator=attr.validators.optional(attr.validators.instance_of(Atmosphere)),
+            converter=attrs.converters.optional(atmosphere_factory.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(Atmosphere)
+            ),
         ),
         doc="Atmosphere specification. If set to ``None``, no atmosphere will "
         "be added. "
@@ -115,10 +117,10 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     )
 
     canopy: t.Optional[Canopy] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(biosphere_factory.convert),
-            validator=attr.validators.optional(attr.validators.instance_of(Canopy)),
+            converter=attrs.converters.optional(biosphere_factory.convert),
+            validator=attrs.validators.optional(attrs.validators.instance_of(Canopy)),
         ),
         doc="Canopy specification. "
         "This parameter can be specified as a dictionary which will be "
@@ -129,7 +131,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     )
 
     padding: int = documented(
-        attr.ib(default=0, converter=int, validator=validators.is_positive),
+        attrs.field(default=0, converter=int, validator=validators.is_positive),
         doc="Padding level. The canopy will be padded with copies to account for "
         "adjacency effects. This, in practice, has effects similar to "
         "making the scene periodic."
@@ -143,11 +145,11 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     )
 
     surface: t.Union[BasicSurface, CentralPatchSurface, None] = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
-            converter=attr.converters.optional(_surface_converter),
-            validator=attr.validators.optional(
-                attr.validators.instance_of((BasicSurface, CentralPatchSurface))
+            converter=attrs.converters.optional(_surface_converter),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of((BasicSurface, CentralPatchSurface))
             ),
         ),
         doc="Surface specification. A :class:`.Surface` object may be passed: "
@@ -164,11 +166,11 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     )
 
     _integrator: Integrator = documented(
-        attr.ib(
+        attrs.field(
             default=AUTO,
             converter=converters.auto_or(integrator_factory.convert),
             validator=validators.auto_or(
-                attr.validators.instance_of(Integrator),
+                attrs.validators.instance_of(Integrator),
             ),
         ),
         doc="Monte Carlo integration algorithm specification. "
@@ -218,7 +220,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
 
         # Pre-process atmosphere
         if self.atmosphere is not None:
-            atmosphere = attr.evolve(self.atmosphere, geometry=self.geometry)
+            atmosphere = attrs.evolve(self.atmosphere, geometry=self.geometry)
             atmosphere_width = atmosphere.kernel_width_plane_parallel(ctx)
         else:
             atmosphere = None
@@ -249,7 +251,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         # Pre-process surface
         if self.surface is not None:
             altitude = atmosphere.bottom if atmosphere is not None else 0.0 * ureg.km
-            surface = attr.evolve(
+            surface = attrs.evolve(
                 self.surface,
                 shape=RectangleShape.surface(altitude=altitude, width=surface_width),
             )

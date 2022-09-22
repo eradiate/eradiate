@@ -1,6 +1,6 @@
 import typing as t
 
-import attr
+import attrs
 
 from ..core import SceneElement
 from ..._factory import Factory
@@ -18,16 +18,16 @@ integrator_factory.register_lazy_batch(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Integrator(SceneElement):
     """
     Abstract base class for all integrator elements.
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="integrator",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),

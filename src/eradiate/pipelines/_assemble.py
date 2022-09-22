@@ -1,7 +1,7 @@
 import typing as t
 import warnings
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -22,7 +22,7 @@ from ..units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AddIllumination(PipelineStep):
     """
     Add illumination data.
@@ -37,8 +37,8 @@ class AddIllumination(PipelineStep):
     """
 
     illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
-        attr.ib(
-            validator=attr.validators.instance_of(
+        attrs.field(
+            validator=attrs.validators.instance_of(
                 (DirectionalIllumination, ConstantIllumination)
             ),
             repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)",
@@ -49,8 +49,8 @@ class AddIllumination(PipelineStep):
     )
 
     measure: Measure = documented(
-        attr.ib(
-            validator=attr.validators.instance_of(Measure),
+        attrs.field(
+            validator=attrs.validators.instance_of(Measure),
             repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)",
         ),
         doc="A :class:`.Measure` instance from the data originates.",
@@ -58,7 +58,7 @@ class AddIllumination(PipelineStep):
     )
 
     irradiance_var: str = documented(
-        attr.ib(default="irradiance", validator=attr.validators.instance_of(str)),
+        attrs.field(default="irradiance", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable storing irradiance (incoming flux) values.",
         type="str",
         default='"irradiance"',
@@ -164,7 +164,7 @@ class AddIllumination(PipelineStep):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AddViewingAngles(PipelineStep):
     """
     Create new ``vza`` and ``vaa`` coordinate variables mapping viewing angles
@@ -172,8 +172,8 @@ class AddViewingAngles(PipelineStep):
     """
 
     measure: Measure = documented(
-        attr.ib(
-            validator=attr.validators.instance_of(Measure),
+        attrs.field(
+            validator=attrs.validators.instance_of(Measure),
             repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)",
         ),
         doc="A :class:`.Measure` instance from which the processed data originates.",
@@ -291,7 +291,7 @@ _is_sorted = lambda a: np.all(a[:-1] <= a[1:])
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AddSpectralResponseFunction(PipelineStep):
     """
     Add spectral response function data.
@@ -301,8 +301,8 @@ class AddSpectralResponseFunction(PipelineStep):
     """
 
     measure: Measure = documented(
-        attr.ib(
-            validator=attr.validators.instance_of(Measure),
+        attrs.field(
+            validator=attrs.validators.instance_of(Measure),
             repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)",
         ),
         doc="A :class:`.Measure` instance from which the processed data originates.",

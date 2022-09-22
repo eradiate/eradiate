@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -20,7 +20,7 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class PerspectiveCameraMeasure(Measure):
     """
     Perspective camera scene element [``perspective``].
@@ -35,18 +35,18 @@ class PerspectiveCameraMeasure(Measure):
     # --------------------------------------------------------------------------
 
     spp: int = documented(
-        attr.ib(default=32, converter=int, validator=validators.is_positive),
+        attrs.field(default=32, converter=int, validator=validators.is_positive),
         doc="Number of samples per pixel.",
         type="int",
         default="32",
     )
 
     _film_resolution: t.Tuple[int, int] = documented(
-        attr.ib(
+        attrs.field(
             default=(32, 32),
             converter=tuple,
-            validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(int),
+            validator=attrs.validators.deep_iterable(
+                member_validator=attrs.validators.instance_of(int),
                 iterable_validator=validators.has_len(2),
             ),
         ),
@@ -61,7 +61,7 @@ class PerspectiveCameraMeasure(Measure):
         return self._film_resolution
 
     origin: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             factory=lambda: [1, 1, 1] * ureg.m,
             validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),
@@ -75,7 +75,7 @@ class PerspectiveCameraMeasure(Measure):
     )
 
     target: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             factory=lambda: [0, 0, 0] * ureg.m,
             validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),
@@ -99,7 +99,7 @@ class PerspectiveCameraMeasure(Measure):
             )
 
     up: np.ndarray = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: [0, 0, 1],
             converter=np.array,
             validator=validators.has_len(3),
@@ -122,7 +122,7 @@ class PerspectiveCameraMeasure(Measure):
             )
 
     far_clip: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=1e4 * ureg.km,
             units=ucc.deferred("length"),
         ),
@@ -135,7 +135,7 @@ class PerspectiveCameraMeasure(Measure):
     )
 
     fov: pint.Quantity = documented(
-        pinttr.ib(default=50.0 * ureg.deg, units=ureg.deg),
+        pinttr.field(default=50.0 * ureg.deg, units=ureg.deg),
         doc="Camera field of view.\n\nUnit-enabled field (default: degree).",
         type="quantity",
         init_type="quantity or float",

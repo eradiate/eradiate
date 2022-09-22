@@ -5,7 +5,7 @@ import typing as t
 from abc import ABC, abstractmethod
 from collections import Counter
 
-import attr
+import attrs
 
 from ..attrs import documented, parse_docs
 from ..util.misc import camel_to_snake
@@ -32,14 +32,14 @@ def _pipeline_steps_converter(value):
 # ------------------------------------------------------------------------------
 
 
-@attr.s
+@attrs.define
 class Pipeline:
     """
     A simple data processing pipeline remotely inspired from scikit-learn's
     ``Pipeline`` class.
     """
 
-    steps: t.List[t.Tuple[str, PipelineStep]] = attr.ib(
+    steps: t.List[t.Tuple[str, PipelineStep]] = attrs.field(
         factory=list, converter=_pipeline_steps_converter
     )
 
@@ -60,7 +60,7 @@ class Pipeline:
                     f"step name {name}"
                 )
 
-    _names: t.List[str] = attr.ib(factory=list, init=False, repr=False)
+    _names: t.List[str] = attrs.field(factory=list, init=False, repr=False)
 
     def __attrs_post_init__(self):
         self.update()
@@ -231,7 +231,7 @@ class Pipeline:
             return x
 
 
-@attr.s
+@attrs.define
 class PipelineStep(ABC):
     """
     Interface for pipeline step definitions.
@@ -256,14 +256,14 @@ class PipelineStep(ABC):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ApplyCallable(PipelineStep):
     """
     Turn a callable into a pipeline step.
     """
 
     callable: t.Callable = documented(
-        attr.ib(validator=attr.validators.is_callable()),
+        attrs.field(validator=attrs.validators.is_callable()),
         type="callable",
         doc="Callable with signature ``f(x: Any) -> Any``.",
     )

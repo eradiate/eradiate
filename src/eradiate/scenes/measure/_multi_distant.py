@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -21,7 +21,7 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class MultiDistantMeasure(Measure):
     """
     Multi-distant radiance measure scene element [``distant``, ``mdistant``, \
@@ -51,7 +51,7 @@ class MultiDistantMeasure(Measure):
     # --------------------------------------------------------------------------
 
     hplane: t.Optional[pint.Quantity] = documented(
-        pinttr.ib(default=None, units=ucc.deferred("angle")),
+        pinttr.field(default=None, units=ucc.deferred("angle")),
         doc="If all directions are expected to be within a hemisphere plane cut, "
         "the azimuth value of that plane. Unitless values are converted to "
         "``ucc['angle']``. The convention specified as the "
@@ -82,12 +82,12 @@ class MultiDistantMeasure(Measure):
             ) from e
 
     azimuth_convention: frame.AzimuthConvention = documented(
-        attr.ib(
+        attrs.field(
             default=None,
             converter=lambda x: config.azimuth_convention
             if x is None
             else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x),
-            validator=attr.validators.instance_of(frame.AzimuthConvention),
+            validator=attrs.validators.instance_of(frame.AzimuthConvention),
         ),
         doc="Azimuth convention. If ``None``, the global default configuration "
         "is used (see :class:`.EradiateConfig`).",
@@ -97,7 +97,7 @@ class MultiDistantMeasure(Measure):
     )
 
     directions: np.ndarray = documented(
-        attr.ib(
+        attrs.field(
             default=np.array([[0.0, 0.0, -1.0]]),
             converter=np.array,
         ),
@@ -108,18 +108,20 @@ class MultiDistantMeasure(Measure):
     )
 
     target: t.Optional[Target] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(Target.convert),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(
+            converter=attrs.converters.optional(Target.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(
                     (
                         TargetPoint,
                         TargetRectangle,
                     )
                 )
             ),
-            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
+            on_setattr=attrs.setters.pipe(
+                attrs.setters.convert, attrs.setters.validate
+            ),
         ),
         doc="Target specification. The target can be specified using an "
         "array-like with 3 elements (which will be converted to a "
@@ -161,7 +163,7 @@ class MultiDistantMeasure(Measure):
         return (self.directions.shape[0], 1)
 
     flags: MeasureFlags = documented(
-        attr.ib(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
+        attrs.field(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
         doc=get_doc(Measure, "flags", "doc"),
         type=get_doc(Measure, "flags", "type"),
     )

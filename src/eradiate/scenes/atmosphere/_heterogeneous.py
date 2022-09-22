@@ -6,7 +6,7 @@ from __future__ import annotations
 import typing as t
 from collections import abc as cabc
 
-import attr
+import attrs
 import numpy as np
 import pint
 import xarray as xr
@@ -97,20 +97,20 @@ def _heterogeneous_atmosphere_particle_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     """
     Heterogeneous atmosphere scene element [``heterogeneous``].
     """
 
     molecular_atmosphere: t.Optional[MolecularAtmosphere] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(
+            converter=attrs.converters.optional(
                 _heterogeneous_atmosphere_molecular_converter
             ),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(MolecularAtmosphere)
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(MolecularAtmosphere)
             ),
         ),
         doc="Molecular atmosphere. Can be specified as a dictionary interpreted "
@@ -146,11 +146,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             )
 
     particle_layers: t.List[ParticleLayer] = documented(
-        attr.ib(
+        attrs.field(
             factory=list,
             converter=_heterogeneous_atmosphere_particle_converter,
-            validator=attr.validators.deep_iterable(
-                attr.validators.instance_of(ParticleLayer)
+            validator=attrs.validators.deep_iterable(
+                attrs.validators.instance_of(ParticleLayer)
             ),
         ),
         doc="Particle layers. Can be specified as a dictionary interpreted "

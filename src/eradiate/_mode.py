@@ -3,7 +3,7 @@ from __future__ import annotations
 import enum
 import typing as t
 
-import attr
+import attrs
 import mitsuba
 
 from .attrs import documented, parse_docs
@@ -97,7 +97,7 @@ _mode_registry = {
 
 
 @parse_docs
-@attr.s(frozen=True, slots=True)
+@attrs.frozen
 class Mode:
     """
     Data structure describing Eradiate's operational mode and associated
@@ -107,19 +107,19 @@ class Mode:
     """
 
     id: str = documented(
-        attr.ib(converter=attr.converters.optional(str)),
+        attrs.field(converter=attrs.converters.optional(str)),
         doc="Mode identifier.",
         type="str",
     )
 
     flags: ModeFlags = documented(
-        attr.ib(converter=ModeFlags),
+        attrs.field(converter=ModeFlags),
         doc="Mode flags.",
         type=":class:`.ModeFlags`",
     )
 
     spectral_coord_label: str = documented(
-        attr.ib(converter=attr.converters.optional(str)),
+        attrs.field(converter=attrs.converters.optional(str)),
         doc="Mode spectral coordinate label.",
         type="str",
     )

@@ -2,7 +2,7 @@ import typing as t
 from collections import OrderedDict
 from pathlib import Path
 
-import attr
+import attrs
 
 from ._core import DataStore
 from ..attrs import documented, parse_docs
@@ -11,17 +11,17 @@ from ..typing import PathLike
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class MultiDataStore(DataStore):
     """
     Chain requests on multiple data stores.
 
-    Calls to the :meth:`~.MultiDataStore.fetch` method are successively redirected 
+    Calls to the :meth:`~.MultiDataStore.fetch` method are successively redirected
     to each referenced data store. The first successful request is served.
     """
 
     stores: OrderedDict = documented(
-        attr.ib(factory=OrderedDict, converter=OrderedDict),
+        attrs.field(factory=OrderedDict, converter=OrderedDict),
         type="collections.OrderedDict",
         init_type="mapping",
         default="{}",

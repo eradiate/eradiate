@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -15,7 +15,7 @@ from ...units import unit_context_kernel as uck
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class BufferMeshShape(Shape):
     """
     Buffer mesh shape [``buffer_mesh``].
@@ -25,7 +25,7 @@ class BufferMeshShape(Shape):
     """
 
     vertices: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             validator=pinttr.validators.has_compatible_units,
             units=ucc.deferred("length"),
             kw_only=True,
@@ -37,7 +37,7 @@ class BufferMeshShape(Shape):
     )
 
     faces: np.ndarray = documented(
-        attr.ib(
+        attrs.field(
             kw_only=True,
             converter=np.array,
         ),

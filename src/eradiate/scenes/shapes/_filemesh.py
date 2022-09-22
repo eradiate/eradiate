@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import attr
+import attrs
 
 from ._core import Shape, shape_factory
 from ..core import KernelDict
@@ -12,7 +12,7 @@ from ...util.misc import onedict_value
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class FileMeshShape(Shape):
     """
     File based mesh shape [``file_mesh``].
@@ -23,7 +23,7 @@ class FileMeshShape(Shape):
     """
 
     filename: Path = documented(
-        attr.ib(converter=Path, kw_only=True),
+        attrs.field(converter=Path, kw_only=True),
         type="Path",
         init_type="path-like",
         doc="Path to the mesh file.",

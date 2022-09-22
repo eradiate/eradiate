@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import drjit as dr
 import mitsuba as mi
 import numpy as np
@@ -24,7 +24,7 @@ from ...warp import square_to_uniform_hemisphere
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class HemisphericalDistantMeasure(Measure):
     """
     Hemispherical distant radiance measure scene element
@@ -52,12 +52,12 @@ class HemisphericalDistantMeasure(Measure):
     # --------------------------------------------------------------------------
 
     azimuth_convention: frame.AzimuthConvention = documented(
-        attr.ib(
+        attrs.field(
             default=None,
             converter=lambda x: config.azimuth_convention
             if x is None
             else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x),
-            validator=attr.validators.instance_of(frame.AzimuthConvention),
+            validator=attrs.validators.instance_of(frame.AzimuthConvention),
         ),
         doc="Azimuth convention. If ``None``, the global default configuration "
         "is used (see :class:`.EradiateConfig`).",
@@ -67,10 +67,10 @@ class HemisphericalDistantMeasure(Measure):
     )
 
     _film_resolution: t.Tuple[int, int] = documented(
-        attr.ib(
+        attrs.field(
             default=(32, 32),
-            validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(int),
+            validator=attrs.validators.deep_iterable(
+                member_validator=attrs.validators.instance_of(int),
                 iterable_validator=validators.has_len(2),
             ),
         ),
@@ -82,7 +82,7 @@ class HemisphericalDistantMeasure(Measure):
     )
 
     orientation: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=ureg.Quantity(0.0, ureg.deg),
             validator=[validators.is_positive, pinttr.validators.has_compatible_units],
             units=ucc.deferred("angle"),
@@ -96,7 +96,7 @@ class HemisphericalDistantMeasure(Measure):
     )
 
     direction = documented(
-        attr.ib(
+        attrs.field(
             default=[0, 0, 1],
             converter=np.array,
             validator=validators.is_vector3,
@@ -107,18 +107,20 @@ class HemisphericalDistantMeasure(Measure):
     )
 
     target: t.Optional[Target] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(Target.convert),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(
+            converter=attrs.converters.optional(Target.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(
                     (
                         TargetPoint,
                         TargetRectangle,
                     )
                 )
             ),
-            on_setattr=attr.setters.pipe(attr.setters.convert, attr.setters.validate),
+            on_setattr=attrs.setters.pipe(
+                attrs.setters.convert, attrs.setters.validate
+            ),
         ),
         doc="Target specification. The target can be specified using an "
         "array-like with 3 elements (which will be converted to a "
@@ -136,7 +138,7 @@ class HemisphericalDistantMeasure(Measure):
         return self._film_resolution
 
     flags: MeasureFlags = documented(
-        attr.ib(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
+        attrs.field(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
         doc=get_doc(Measure, "flags", "doc"),
         type=get_doc(Measure, "flags", "type"),
     )

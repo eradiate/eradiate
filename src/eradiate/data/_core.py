@@ -4,7 +4,7 @@ import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-import attr
+import attrs
 import pooch
 import tqdm
 from ruamel.yaml import YAML
@@ -12,7 +12,7 @@ from ruamel.yaml import YAML
 from ..typing import PathLike
 
 
-@attr.s
+@attrs.define
 class DataStore(ABC):
     """
     Interface class for all data stores.

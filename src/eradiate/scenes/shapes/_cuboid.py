@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -36,7 +36,7 @@ def _edges_converter(x):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class CuboidShape(Shape):
     """
     Cuboid shape [``cuboid``].
@@ -46,7 +46,7 @@ class CuboidShape(Shape):
     """
 
     center: pint.Quantity = documented(
-        pinttr.ib(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
+        pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Coordinates of the centre of the cube. "
         'Unit-enabled field (default: ``ucc["length"]``).',
         type="quantity",
@@ -55,7 +55,7 @@ class CuboidShape(Shape):
     )
 
     edges: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             factory=lambda: [1, 1, 1],
             converter=_edges_converter,
             units=ucc.deferred("length"),

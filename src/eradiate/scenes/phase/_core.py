@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC
 
-import attr
+import attrs
 
 from ..core import SceneElement
 from ..._factory import Factory
@@ -41,16 +41,16 @@ phase_function_factory.register_lazy_batch(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class PhaseFunction(SceneElement, ABC):
     """
     An abstract base class defining common facilities for all phase functions.
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="phase",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),

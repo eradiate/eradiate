@@ -3,7 +3,7 @@ from __future__ import annotations
 import pathlib
 import typing as t
 
-import attr
+import attrs
 import pint
 import pinttr
 import xarray as xr
@@ -20,7 +20,7 @@ from ..units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ArrayRadProfile(RadProfile):
     """
     A flexible 1D radiative property profile whose level altitudes, albedo
@@ -28,7 +28,7 @@ class ArrayRadProfile(RadProfile):
     """
 
     levels: pint.Quantity = documented(
-        pinttr.ib(units=ucc.deferred("length")),
+        pinttr.field(units=ucc.deferred("length")),
         doc="Level altitudes. **Required, no default**.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -36,7 +36,7 @@ class ArrayRadProfile(RadProfile):
     )
 
     albedo_values: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             validator=[validators.all_positive, pinttr.validators.has_compatible_units],
             units=ureg.dimensionless,
         ),
@@ -47,7 +47,7 @@ class ArrayRadProfile(RadProfile):
     )
 
     sigma_t_values: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             validator=[validators.all_positive, pinttr.validators.has_compatible_units],
             units=ucc.deferred("collision_coefficient"),
         ),

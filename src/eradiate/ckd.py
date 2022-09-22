@@ -4,7 +4,7 @@ import functools
 import typing as t
 from collections import abc
 
-import attr
+import attrs
 import pint
 import pinttr
 import xarray as xr
@@ -21,20 +21,20 @@ from .units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s(frozen=True)
+@attrs.frozen
 class Bin:
     """
     A data class representing a spectral bin in CKD modes.
     """
 
     id: str = documented(
-        attr.ib(converter=str),
+        attrs.field(converter=str),
         doc="Bin identifier.",
         type="str",
     )
 
     wmin: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             units=ucc.deferred("wavelength"),
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
@@ -44,7 +44,7 @@ class Bin:
     )
 
     wmax: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             units=ucc.deferred("wavelength"),
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
@@ -62,8 +62,8 @@ class Bin:
             )
 
     quad: Quad = documented(
-        attr.ib(
-            repr=lambda x: x.str_summary, validator=attr.validators.instance_of(Quad)
+        attrs.field(
+            repr=lambda x: x.str_summary, validator=attrs.validators.instance_of(Quad)
         ),
         doc="Quadrature rule attached to the CKD bin.",
         type=":class:`.Quad`",
@@ -100,20 +100,20 @@ class Bin:
 
 
 @parse_docs
-@attr.s(frozen=True)
+@attrs.frozen
 class Bindex:
     """
     A data class representing a CKD (bin, index) pair.
     """
 
     bin: Bin = documented(
-        attr.ib(converter=Bin.convert),
+        attrs.field(converter=Bin.convert),
         doc="CKD bin.",
         type=":class:`.Bin`",
     )
 
     index: int = documented(
-        attr.ib(),
+        attrs.field(),
         doc="Quadrature point index.",
         type="int",
     )
@@ -266,33 +266,33 @@ def bin_filter(type: str, filter_kwargs: t.Dict[str, t.Any]):
 
 
 @parse_docs
-@attr.s(frozen=True)
+@attrs.frozen
 class BinSet:
     """
     A data class representing a quadrature definition used in CKD mode.
     """
 
     id: str = documented(
-        attr.ib(converter=str),
+        attrs.field(converter=str),
         doc="Bin set identifier.",
         type="str",
     )
 
     quad: Quad = documented(
-        attr.ib(repr=lambda x: x.str_summary),
+        attrs.field(repr=lambda x: x.str_summary),
         doc="Quadrature rule associated with this spectral bin set.",
         type=":class:`.Quad`",
     )
 
     bins: t.Tuple[Bin, ...] = documented(
-        attr.ib(
+        attrs.field(
             converter=lambda x: tuple(
                 sorted(
                     x, key=lambda y: (y.wmin, y.wmax, y.id)
                 )  # Specify field priority for sorting and exclude quad (which is irrelevant)
             ),
-            validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(Bin)
+            validator=attrs.validators.deep_iterable(
+                member_validator=attrs.validators.instance_of(Bin)
             ),
             repr=lambda x: f"tuple<{len(x)}>("
             f"Bin({repr(x[0].id)}, ... ), "

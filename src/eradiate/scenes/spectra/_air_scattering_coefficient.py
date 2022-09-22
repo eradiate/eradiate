@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import attr
+import attrs
 import numpy as np
 import pint
 
@@ -30,7 +30,7 @@ def _eval_impl_ckd(w: pint.Quantity) -> pint.Quantity:
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AirScatteringCoefficientSpectrum(Spectrum):
     """
     Air scattering coefficient spectrum [``air_scattering_coefficient``].
@@ -50,7 +50,7 @@ class AirScatteringCoefficientSpectrum(Spectrum):
       rule).
     """
 
-    quantity: PhysicalQuantity = attr.ib(
+    quantity: PhysicalQuantity = attrs.field(
         default=PhysicalQuantity.COLLISION_COEFFICIENT,
         init=False,
         repr=False,

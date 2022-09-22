@@ -10,7 +10,7 @@ import os.path
 import pathlib
 import warnings
 
-import attr
+import attrs
 import environ
 from environ._environ_config import CNF_KEY, RAISE, _ConfigEntry
 from environ.exceptions import ConfigError
@@ -58,15 +58,15 @@ def var(
     help : str
         A help string that is used by `generate_help`.
 
-    on_setattr : callable or list of callables or None or attr.setters.NO_OP, optional
-        This argument is directly forwarded to :func:`attr.ib`, with the notable
+    on_setattr : callable or list of callables or None or attrs.setters.NO_OP, optional
+        This argument is directly forwarded to :func:`attrs.field`, with the notable
         difference that the default behaviour executes converters and
         validators.
     """
     if on_setattr is None:
-        on_setattr = attr.setters.pipe(attr.setters.convert, attr.setters.validate)
+        on_setattr = attrs.setters.pipe(attrs.setters.convert, attrs.setters.validate)
 
-    return attr.ib(
+    return attrs.field(
         default=default,
         metadata={CNF_KEY: _ConfigEntry(name, default, None, None, help)},
         converter=converter,
@@ -213,7 +213,7 @@ class EradiateConfig:
     azimuth_convention = var(
         default="EAST_RIGHT",
         converter=lambda x: AzimuthConvention[x.upper()] if isinstance(x, str) else x,
-        validator=attr.validators.instance_of(AzimuthConvention),
+        validator=attrs.validators.instance_of(AzimuthConvention),
         help="The convention applied when interpreting azimuth values as part "
         "of the specification of a direction (see :class:`.AzimuthConvention`). "
         'Values are preferably set using strings (*e.g.* ``"EAST_RIGHT"``, '

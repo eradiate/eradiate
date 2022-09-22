@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 import warnings
 
-import attr
+import attrs
 
 from ._core import EarthObservationExperiment, Experiment
 from ..attrs import AUTO, documented, get_doc, parse_docs
@@ -81,7 +81,7 @@ def _surface_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AtmosphereExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a one-dimensional scene. This experiment approximates
@@ -105,10 +105,10 @@ class AtmosphereExperiment(EarthObservationExperiment):
     """
 
     geometry: t.Union[PlaneParallelGeometry, SphericalShellGeometry] = documented(
-        attr.ib(
+        attrs.field(
             default="plane_parallel",
             converter=AtmosphereGeometry.convert,
-            validator=attr.validators.instance_of(
+            validator=attrs.validators.instance_of(
                 (PlaneParallelGeometry, SphericalShellGeometry)
             ),
         ),
@@ -119,10 +119,12 @@ class AtmosphereExperiment(EarthObservationExperiment):
     )
 
     atmosphere: t.Optional[Atmosphere] = documented(
-        attr.ib(
+        attrs.field(
             factory=HomogeneousAtmosphere,
-            converter=attr.converters.optional(atmosphere_factory.convert),
-            validator=attr.validators.optional(attr.validators.instance_of(Atmosphere)),
+            converter=attrs.converters.optional(atmosphere_factory.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(Atmosphere)
+            ),
         ),
         doc="Atmosphere specification. If set to ``None``, no atmosphere will "
         "be added. "
@@ -134,11 +136,11 @@ class AtmosphereExperiment(EarthObservationExperiment):
     )
 
     surface: t.Optional[BasicSurface] = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
-            converter=attr.converters.optional(_surface_converter),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(BasicSurface)
+            converter=attrs.converters.optional(_surface_converter),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(BasicSurface)
             ),
         ),
         doc="Surface specification. If set to ``None``, no surface will be "
@@ -150,10 +152,12 @@ class AtmosphereExperiment(EarthObservationExperiment):
     )
 
     dem: t.Optional[DEMSurface] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(surface_factory.convert),
-            validator=attr.validators.optional(attr.validators.instance_of(DEMSurface)),
+            converter=attrs.converters.optional(surface_factory.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(DEMSurface)
+            ),
         ),
         doc="Digital elevation model (DEM) specification. If set to ``None``, no DEM will be "
         "added. This parameter can be specified as a dictionary which will be "
@@ -164,10 +168,10 @@ class AtmosphereExperiment(EarthObservationExperiment):
     )
 
     _integrator: Integrator = documented(
-        attr.ib(
+        attrs.field(
             factory=VolPathIntegrator,
             converter=integrator_factory.convert,
-            validator=attr.validators.instance_of(Integrator),
+            validator=attrs.validators.instance_of(Integrator),
         ),
         doc=get_doc(Experiment, attrib="_integrator", field="doc"),
         type=get_doc(Experiment, attrib="_integrator", field="type"),
@@ -187,7 +191,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
         # Process atmosphere
         if self.atmosphere is not None:
-            atmosphere = attr.evolve(self.atmosphere, geometry=self.geometry)
+            atmosphere = attrs.evolve(self.atmosphere, geometry=self.geometry)
             result.add(atmosphere, ctx=ctx)
         else:
             atmosphere = None
@@ -206,7 +210,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
                     )
                     altitude = 0.0 * ureg.km
 
-                surface = attr.evolve(
+                surface = attrs.evolve(
                     self.surface,
                     shape=RectangleShape.surface(altitude=altitude, width=width),
                 )
@@ -217,7 +221,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
                 else:
                     altitude = 0.0 * ureg.km
 
-                surface = attr.evolve(
+                surface = attrs.evolve(
                     self.surface,
                     shape=SphereShape.surface(
                         altitude=altitude, planet_radius=self.geometry.planet_radius

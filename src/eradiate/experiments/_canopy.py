@@ -1,6 +1,6 @@
 import typing as t
 
-import attr
+import attrs
 
 from ._core import EarthObservationExperiment, Experiment
 from .. import validators
@@ -37,7 +37,7 @@ def _surface_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class CanopyExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a scene with an explicit canopy and no atmosphere.
@@ -55,10 +55,10 @@ class CanopyExperiment(EarthObservationExperiment):
     """
 
     canopy: t.Optional[Canopy] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(biosphere_factory.convert),
-            validator=attr.validators.optional(attr.validators.instance_of(Canopy)),
+            converter=attrs.converters.optional(biosphere_factory.convert),
+            validator=attrs.validators.optional(attrs.validators.instance_of(Canopy)),
         ),
         doc="Canopy specification. "
         "This parameter can be specified as a dictionary which will be "
@@ -69,7 +69,7 @@ class CanopyExperiment(EarthObservationExperiment):
     )
 
     padding: int = documented(
-        attr.ib(default=0, converter=int, validator=validators.is_positive),
+        attrs.field(default=0, converter=int, validator=validators.is_positive),
         doc="Padding level. The scene will be padded with copies to account for "
         "adjacency effects. This, in practice, has effects similar to "
         "making the scene periodic."
@@ -82,11 +82,11 @@ class CanopyExperiment(EarthObservationExperiment):
     )
 
     surface: t.Union[None, BasicSurface] = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: LambertianBSDF(),
-            converter=attr.converters.optional(_surface_converter),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(BasicSurface)
+            converter=attrs.converters.optional(_surface_converter),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(BasicSurface)
             ),
         ),
         doc="Surface specification. If set to ``None``, no surface will be "
@@ -100,10 +100,10 @@ class CanopyExperiment(EarthObservationExperiment):
     )
 
     _integrator: Integrator = documented(
-        attr.ib(
+        attrs.field(
             factory=PathIntegrator,
             converter=integrator_factory.convert,
-            validator=attr.validators.instance_of(Integrator),
+            validator=attrs.validators.instance_of(Integrator),
         ),
         doc=get_doc(Experiment, attrib="_integrator", field="doc"),
         type=get_doc(Experiment, attrib="_integrator", field="type"),
@@ -131,7 +131,7 @@ class CanopyExperiment(EarthObservationExperiment):
 
             # Surface size always matches canopy size
             if self.surface is not None:
-                surface = attr.evolve(
+                surface = attrs.evolve(
                     self.surface,
                     shape=RectangleShape(center=[0, 0, 0], edges=scene_width),
                 )
@@ -140,7 +140,7 @@ class CanopyExperiment(EarthObservationExperiment):
                 surface = None
 
         else:
-            surface = attr.evolve(self.surface)
+            surface = attrs.evolve(self.surface)
 
         # Process surface
         if surface is not None:

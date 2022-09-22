@@ -4,7 +4,7 @@ import typing as t
 import warnings
 from abc import ABC, abstractmethod
 
-import attr
+import attrs
 import pint
 import pinttr
 
@@ -23,7 +23,7 @@ from .util.misc import fullname
 # ------------------------------------------------------------------------------
 
 
-@attr.s
+@attrs.define
 class Context:
     """Abstract base class for all context data structures."""
 
@@ -41,7 +41,7 @@ class Context:
         <same type as self>
             A copy of self with ``changes`` incorporated.
         """
-        return attr.evolve(self, **changes)
+        return attrs.evolve(self, **changes)
 
 
 # ------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ class Context:
 # ------------------------------------------------------------------------------
 
 
-@attr.s(frozen=True)
+@attrs.frozen
 class SpectralContext(ABC, Context):
     """
     Context data structure holding state relevant to the evaluation of
@@ -169,14 +169,14 @@ class SpectralContext(ABC, Context):
 
 
 @parse_docs
-@attr.s(frozen=True)
+@attrs.frozen
 class MonoSpectralContext(SpectralContext):
     """
     Monochromatic spectral context data structure.
     """
 
     _wavelength: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=ureg.Quantity(550.0, ureg.nm),
             units=ucc.deferred("wavelength"),
             on_setattr=None,  # frozen classes can't use on_setattr
@@ -212,20 +212,20 @@ class MonoSpectralContext(SpectralContext):
 
 
 @parse_docs
-@attr.s(frozen=True)
+@attrs.frozen
 class CKDSpectralContext(SpectralContext):
     """
     CKD spectral context data structure.
     """
 
     bindex: Bindex = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: Bindex(
                 BinSet.from_db("10nm").select_bins("550")[0],
                 0,
             ),
             converter=Bindex.convert,
-            validator=attr.validators.instance_of(Bindex),
+            validator=attrs.validators.instance_of(Bindex),
         ),
         doc="The bindex value corresponding to this spectral context. "
         "The default value is a simple placeholder used for testing purposes.",
@@ -234,10 +234,10 @@ class CKDSpectralContext(SpectralContext):
     )
 
     bin_set: t.Optional[BinSet] = documented(
-        attr.ib(
+        attrs.field(
             default="10nm",
-            converter=attr.converters.optional(BinSet.convert),
-            validator=attr.validators.optional(attr.validators.instance_of(BinSet)),
+            converter=attrs.converters.optional(BinSet.convert),
+            validator=attrs.validators.optional(attrs.validators.instance_of(BinSet)),
         ),
         doc="If relevant, the bin set from which ``bindex`` originates.",
         type=":class:`.BinSet` or None",
@@ -281,7 +281,7 @@ class CKDSpectralContext(SpectralContext):
 
 
 @parse_docs
-@attr.s(frozen=True, init=False)
+@attrs.frozen(init=False)
 class KernelDictContext(Context):
     """
     Kernel dictionary evaluation context data structure. This class is used
@@ -346,14 +346,14 @@ class KernelDictContext(Context):
     """
 
     @parse_docs
-    @attr.s
+    @attrs.define
     class DynamicFieldRegistry:
         """
         Record a list of dynamic fields.
         """
 
         data: t.Dict[str, t.List[str]] = documented(
-            attr.ib(factory=dict),
+            attrs.field(factory=dict),
             doc="Registry data. Each entry associates a dynamic field name to "
             "the fully qualified name of the function which registered it.",
             type="dict",
@@ -388,10 +388,10 @@ class KernelDictContext(Context):
     DYNAMIC_FIELDS = DynamicFieldRegistry()
 
     spectral_ctx: SpectralContext = documented(
-        attr.ib(
+        attrs.field(
             factory=SpectralContext.new,
             converter=SpectralContext.convert,
-            validator=attr.validators.instance_of(SpectralContext),
+            validator=attrs.validators.instance_of(SpectralContext),
         ),
         doc="Spectral context (used to evaluate quantities with any degree "
         "or kind of dependency vs spectrally varying quantities).",
@@ -401,7 +401,7 @@ class KernelDictContext(Context):
     )
 
     ref: bool = documented(
-        attr.ib(default=True, converter=bool),
+        attrs.field(default=True, converter=bool),
         doc="If ``True``, use references when relevant during kernel dictionary "
         "generation.",
         type="bool",
@@ -409,7 +409,7 @@ class KernelDictContext(Context):
     )
 
     dynamic: dict = documented(
-        attr.ib(factory=dict),
+        attrs.field(factory=dict),
         doc="A dynamic table containing specific context data.",
         type="dict",
         default="{}",
@@ -424,7 +424,7 @@ class KernelDictContext(Context):
     def __init__(self, **kwargs):
         fields = {
             field.name: field.default.factory()
-            if isinstance(field.default, attr.Factory)
+            if isinstance(field.default, attrs.Factory)
             else field.default
             for field in self.__attrs_attrs__
         }
@@ -471,4 +471,4 @@ class KernelDictContext(Context):
             except AttributeError:
                 dynamic[key] = value
 
-        return attr.evolve(self, **static, dynamic={**self.dynamic, **dynamic})
+        return attrs.evolve(self, **static, dynamic={**self.dynamic, **dynamic})

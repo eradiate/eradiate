@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 from abc import ABC
 
-import attr
+import attrs
 
 from ..bsdfs import BSDF, bsdf_factory
 from ..core import SceneElement
@@ -17,23 +17,23 @@ shape_factory.register_lazy_batch(
         ("_rectangle.RectangleShape", "rectangle", {}),
         ("_sphere.SphereShape", "sphere", {}),
         ("_filemesh.FileMeshShape", "file_mesh", {}),
-        ("_buffermesh.BufferMeshShape", "buffer_mesh", {})
+        ("_buffermesh.BufferMeshShape", "buffer_mesh", {}),
     ],
     cls_prefix="eradiate.scenes.shapes",
 )
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Shape(SceneElement, ABC):
     """
     Abstract interface for all shape scene elements.
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="shape",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),
@@ -42,10 +42,10 @@ class Shape(SceneElement, ABC):
     )
 
     bsdf: t.Optional[BSDF] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(bsdf_factory.convert),
-            validator=attr.validators.optional(attr.validators.instance_of(BSDF)),
+            converter=attrs.converters.optional(bsdf_factory.convert),
+            validator=attrs.validators.optional(attrs.validators.instance_of(BSDF)),
         ),
         doc="BSDF attached to the shape. If a dictionary is passed, it is "
         "interpreted by :class:`bsdf_factory.convert() <.Factory>`. "

@@ -5,7 +5,7 @@ import logging
 import typing as t
 from abc import ABC, abstractmethod
 
-import attr
+import attrs
 import mitsuba as mi
 import pinttr
 import xarray as xr
@@ -199,7 +199,7 @@ def run(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Experiment(ABC):
     """
     Base class for experiment simulations.
@@ -210,15 +210,15 @@ class Experiment(ABC):
     # --------------------------------------------------------------------------
 
     measures: t.List[Measure] = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: [MultiDistantMeasure()],
             converter=lambda value: [
                 measure_factory.convert(x) for x in pinttr.util.always_iterable(value)
             ]
             if not isinstance(value, dict)
             else [measure_factory.convert(value)],
-            validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(Measure)
+            validator=attrs.validators.deep_iterable(
+                member_validator=attrs.validators.instance_of(Measure)
             ),
         ),
         doc="List of measure specifications. The passed list may contain "
@@ -233,10 +233,10 @@ class Experiment(ABC):
     )
 
     _integrator: Integrator = documented(
-        attr.ib(
+        attrs.field(
             factory=PathIntegrator,
             converter=integrator_factory.convert,
-            validator=attr.validators.instance_of(Integrator),
+            validator=attrs.validators.instance_of(Integrator),
         ),
         doc="Monte Carlo integration algorithm specification. "
         "This parameter can be specified as a dictionary which will be "
@@ -254,7 +254,7 @@ class Experiment(ABC):
         return self._integrator
 
     _results: t.Dict[str, xr.Dataset] = documented(
-        attr.ib(factory=dict, init=False, repr=False),
+        attrs.field(factory=dict, init=False, repr=False),
         doc="Post-processed simulation results. Each entry uses a measure ID as "
         "its key and holds a value consisting of a :class:`~xarray.Dataset` "
         "holding one variable per physical quantity computed by the measure.",
@@ -551,7 +551,7 @@ class Experiment(ABC):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class EarthObservationExperiment(Experiment, ABC):
     """
     A base class used for Earth observation simulations. These experiments
@@ -559,10 +559,10 @@ class EarthObservationExperiment(Experiment, ABC):
     """
 
     illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
-        attr.ib(
+        attrs.field(
             factory=DirectionalIllumination,
             converter=illumination_factory.convert,
-            validator=attr.validators.instance_of(
+            validator=attrs.validators.instance_of(
                 (DirectionalIllumination, ConstantIllumination)
             ),
         ),

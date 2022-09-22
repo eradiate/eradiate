@@ -3,7 +3,7 @@ import shutil
 import typing as t
 from pathlib import Path
 
-import attr
+import attrs
 import pooch
 from requests import RequestException
 
@@ -15,20 +15,20 @@ from ..util.misc import LoggingContext
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class BlindOnlineDataStore(DataStore):
     """
     Serve data downloaded from a remote source without integrity check.
     """
 
     _base_url: str = documented(
-        attr.ib(converter=lambda x: x + "/" if not x.endswith("/") else x),
+        attrs.field(converter=lambda x: x + "/" if not x.endswith("/") else x),
         type="str",
         doc="URL to the online storage location.",
     )
 
     path: Path = documented(
-        attr.ib(converter=lambda x: Path(x).absolute()),
+        attrs.field(converter=lambda x: Path(x).absolute()),
         type="Path",
         init_type="path-like",
         doc="Path to the local cache location.",

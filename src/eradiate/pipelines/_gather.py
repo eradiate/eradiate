@@ -1,7 +1,7 @@
 import re
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import xarray as xr
 from pinttr.util import always_iterable
@@ -39,7 +39,7 @@ def _spectral_dims():
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Gather(PipelineStep):
     """
     Gather raw kernel results (output as nested dictionaries) into an xarray
@@ -58,7 +58,7 @@ class Gather(PipelineStep):
     """
 
     prefix: str = documented(
-        attr.ib(default=r".*"),
+        attrs.field(default=r".*"),
         default='".*"',
         type="str",
         init_type="str, optional",
@@ -67,9 +67,9 @@ class Gather(PipelineStep):
     )
 
     sensor_dims: t.Sequence = documented(
-        attr.ib(
+        attrs.field(
             factory=list,
-            validator=attr.validators.instance_of((list, tuple)),
+            validator=attrs.validators.instance_of((list, tuple)),
         ),
         default="[]",
         type="list of (str or tuple)",
@@ -79,7 +79,7 @@ class Gather(PipelineStep):
     )
 
     var: t.Union[str, t.Tuple[str, t.Dict]] = documented(
-        attr.ib(default="img"),
+        attrs.field(default="img"),
         default='"img"',
         type="str or tuple[str, dict]",
         init_type="str or tuple[str, dict], optional",

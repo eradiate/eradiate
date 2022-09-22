@@ -5,7 +5,7 @@ import os
 import typing as t
 from pathlib import Path
 
-import attr
+import attrs
 
 from ._core import DataStore, load_rules, make_registry, registry_from_file
 from ..attrs import documented, parse_docs
@@ -14,7 +14,7 @@ from ..typing import PathLike
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class SafeDirectoryDataStore(DataStore):
     """
     Serve files stored in a directory. This data store will only serve files
@@ -22,14 +22,14 @@ class SafeDirectoryDataStore(DataStore):
     """
 
     path: Path = documented(
-        attr.ib(converter=lambda x: Path(x).absolute()),
+        attrs.field(converter=lambda x: Path(x).absolute()),
         type="Path",
         init_type="path-like",
         doc="Path to the root of the directory referenced by this data store.",
     )
 
     registry_fname: Path = documented(
-        attr.ib(default="registry.txt", converter=Path),
+        attrs.field(default="registry.txt", converter=Path),
         type="Path",
         init_type="path-like",
         default='"registry.txt"',
@@ -44,7 +44,9 @@ class SafeDirectoryDataStore(DataStore):
                 "only paths relative to the store root path are allowed"
             )
 
-    _registry: t.Dict = attr.ib(factory=dict, converter=dict, repr=False, init=False)
+    _registry: t.Dict = attrs.field(
+        factory=dict, converter=dict, repr=False, init=False
+    )
 
     def __attrs_post_init__(self):
         self.registry_reload()

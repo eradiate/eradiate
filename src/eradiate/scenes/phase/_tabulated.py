@@ -1,4 +1,4 @@
-import attr
+import attrs
 import numpy as np
 import pint
 import xarray as xr
@@ -50,7 +50,7 @@ def _validate_data(instance, attribute, value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class TabulatedPhaseFunction(PhaseFunction):
     r"""
     Tabulated phase function [``tab_phase``].
@@ -69,9 +69,9 @@ class TabulatedPhaseFunction(PhaseFunction):
     """
 
     data: xr.DataArray = documented(
-        attr.ib(
+        attrs.field(
             converter=_convert_data,
-            validator=[attr.validators.instance_of(xr.DataArray), _validate_data],
+            validator=[attrs.validators.instance_of(xr.DataArray), _validate_data],
             kw_only=True,
         ),
         type="DataArray",
