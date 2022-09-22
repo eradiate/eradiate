@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 from abc import ABC
 
-import attr
+import attrs
 
 from ..core import SceneElement
 from ..._factory import Factory
@@ -21,16 +21,16 @@ bsdf_factory.register_lazy_batch(
 )
 
 
-@attr.s
+@attrs.define
 class BSDF(SceneElement, ABC):
     """
     Abstract interface for all BSDF scene elements.
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="bsdf",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),

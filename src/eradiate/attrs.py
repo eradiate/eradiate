@@ -5,7 +5,7 @@ import re
 import typing as t
 from textwrap import dedent, indent
 
-import attr
+import attrs
 
 from .util import numpydoc
 
@@ -71,14 +71,14 @@ class DocFlags(enum.Flag):
 # ------------------------------------------------------------------------------
 
 
-@attr.s
+@attrs.define
 class _FieldDoc:
     """Internal convenience class to store field documentation information."""
 
-    doc = attr.ib(default=None)
-    type = attr.ib(default=None)
-    init_type = attr.ib(default=None)
-    default = attr.ib(default=None)
+    doc = attrs.field(default=None)
+    type = attrs.field(default=None)
+    init_type = attrs.field(default=None)
+    default = attrs.field(default=None)
 
 
 def _eradiate_formatter(cls_doc, field_docs):
@@ -240,7 +240,8 @@ def parse_docs(cls):
     Notes
     -----
     * Meant to be used as a class decorator.
-    * Must be applied **after** :func:`@attr.s <attr.s>`.
+    * Must be applied **after** :func:`@attr.s <attr.s>` (or any other
+      attrs decorator).
     * Fields must be documented using :func:`documented`.
     """
     formatter = _numpy_formatter
@@ -281,7 +282,7 @@ def documented(attrib, doc=None, type=None, init_type=None, default=None):
 
     Parameters
     ----------
-    attrib : :class:`attr.Attribute`
+    attrib : attrs.Attribute
         ``attrs`` attribute definition to which documentation is to be attached.
 
     doc : str, optional
@@ -299,12 +300,12 @@ def documented(attrib, doc=None, type=None, init_type=None, default=None):
 
     Returns
     -------
-    :class:`attr.Attribute`
+    attrs.Attribute
         ``attrib``, with metadata updated with documentation contents.
 
     See Also
     --------
-    :func:`attr.ib`, :func:`pinttr.ib`, :func:`parse_docs`
+    :func:`attrs.field`, :func:`pinttr.field`, :func:`parse_docs`
     """
     if doc is not None:
         attrib.metadata[MetadataKey.DOC] = doc
@@ -323,8 +324,8 @@ def documented(attrib, doc=None, type=None, init_type=None, default=None):
 
 def get_doc(cls: t.Type, attrib: str, field: str) -> str:
     """
-    Fetch attribute documentation field. Requires fields metadata to be
-    processed with :func:`documented`.
+    Fetch attribute documentation field. Requires field metadata to be processed
+    with :func:`documented`.
 
     Parameters
     ----------
@@ -353,16 +354,16 @@ def get_doc(cls: t.Type, attrib: str, field: str) -> str:
     """
     try:
         if field == "doc":
-            return attr.fields_dict(cls)[attrib].metadata[MetadataKey.DOC]
+            return attrs.fields_dict(cls)[attrib].metadata[MetadataKey.DOC]
 
         if field == "type":
-            return attr.fields_dict(cls)[attrib].metadata[MetadataKey.TYPE]
+            return attrs.fields_dict(cls)[attrib].metadata[MetadataKey.TYPE]
 
         if field == "init_type":
-            return attr.fields_dict(cls)[attrib].metadata[MetadataKey.INIT_TYPE]
+            return attrs.fields_dict(cls)[attrib].metadata[MetadataKey.INIT_TYPE]
 
         if field == "default":
-            return attr.fields_dict(cls)[attrib].metadata[MetadataKey.DEFAULT]
+            return attrs.fields_dict(cls)[attrib].metadata[MetadataKey.DEFAULT]
     except KeyError:
         raise ValueError(
             f"{cls.__name__}.{attrib} has no documented field " f"'{field}'"

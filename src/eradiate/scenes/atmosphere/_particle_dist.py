@@ -14,7 +14,7 @@ for normalising returned values.
 import typing as t
 from abc import ABC, abstractmethod
 
-import attr
+import attrs
 import numpy as np
 import scipy.interpolate
 
@@ -35,7 +35,7 @@ particle_distribution_factory.register_lazy_batch(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ParticleDistribution(ABC):
     """
     Abstract base class for particle distributions used to define particle
@@ -52,7 +52,7 @@ class ParticleDistribution(ABC):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class UniformParticleDistribution(ParticleDistribution):
     r"""
     Uniform particle distribution. Returns values given by the uniform PDF
@@ -69,7 +69,9 @@ class UniformParticleDistribution(ParticleDistribution):
     """
 
     bounds: np.ndarray = documented(
-        attr.ib(default=[0.0, 1.0], converter=lambda x: np.atleast_1d(np.squeeze(x))),
+        attrs.field(
+            default=[0.0, 1.0], converter=lambda x: np.atleast_1d(np.squeeze(x))
+        ),
         type="array",
         init_type="array-like, optional",
         default="[0, 1]",
@@ -99,7 +101,7 @@ class UniformParticleDistribution(ParticleDistribution):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ExponentialParticleDistribution(ParticleDistribution):
     r"""
     Exponential particle distribution. Returns values given by the exponential
@@ -108,7 +110,7 @@ class ExponentialParticleDistribution(ParticleDistribution):
     where :math:`\beta = \mathtt{scale}`.
     """
     scale: float = documented(
-        attr.ib(default=5.0, converter=float),
+        attrs.field(default=5.0, converter=float),
         type="float",
         init_type="float, optional",
         default="5.0",
@@ -122,7 +124,7 @@ class ExponentialParticleDistribution(ParticleDistribution):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class GaussianParticleDistribution(ParticleDistribution):
     r"""
     Gaussian particle distribution. Returns values given by the Gaussian
@@ -139,7 +141,7 @@ class GaussianParticleDistribution(ParticleDistribution):
     """
 
     mean: float = documented(
-        attr.ib(default=0.5, converter=float),
+        attrs.field(default=0.5, converter=float),
         type="float",
         init_type="float, optional",
         default="0.5",
@@ -148,7 +150,7 @@ class GaussianParticleDistribution(ParticleDistribution):
     )
 
     std: float = documented(
-        attr.ib(default=0.5 / 3, converter=float),
+        attrs.field(default=0.5 / 3, converter=float),
         type="float",
         init_type="float, optional",
         default="1/6",
@@ -164,14 +166,14 @@ class GaussianParticleDistribution(ParticleDistribution):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ArrayParticleDistribution(ParticleDistribution):
     """
     Particle distribution specified by an array of values.
     """
 
     values: np.typing.ArrayLike = documented(
-        attr.ib(converter=np.array, kw_only=True),
+        attrs.field(converter=np.array, kw_only=True),
         type="ndarray",
         init_type="array-like",
         doc="An array of particle fraction values.",
@@ -191,8 +193,8 @@ class ArrayParticleDistribution(ParticleDistribution):
             )
 
     coords: np.ndarray = documented(
-        attr.ib(
-            default=attr.Factory(
+        attrs.field(
+            default=attrs.Factory(
                 lambda x: np.arange(
                     0.5 / len(x.values),
                     1,
@@ -219,10 +221,10 @@ class ArrayParticleDistribution(ParticleDistribution):
             )
 
     method: str = documented(
-        attr.ib(
+        attrs.field(
             default="linear",
             converter=str,
-            validator=attr.validators.in_(
+            validator=attrs.validators.in_(
                 {
                     "linear",
                     "nearest",
@@ -245,10 +247,10 @@ class ArrayParticleDistribution(ParticleDistribution):
     )
 
     extrapolate: str = documented(
-        attr.ib(
+        attrs.field(
             default="zero",
             converter=str,
-            validator=attr.validators.in_({"zero", "nearest", "method", "nan"}),
+            validator=attrs.validators.in_({"zero", "nearest", "method", "nan"}),
         ),
         type="str",
         init_type='{ "zero", "nearest", "method", "nan" }',
@@ -292,7 +294,7 @@ class ArrayParticleDistribution(ParticleDistribution):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class InterpolatorParticleDistribution(ParticleDistribution):
     """
     A flexible particle distribution which redirects its calls to an
@@ -300,7 +302,7 @@ class InterpolatorParticleDistribution(ParticleDistribution):
     """
 
     interpolator: t.Callable[[np.typing.ArrayLike], np.ndarray] = documented(
-        attr.ib(validator=attr.validators.is_callable, kw_only=True),
+        attrs.field(validator=attrs.validators.is_callable, kw_only=True),
         type="callable",
         doc="A callable with signature "
         ":code:`f(x: np.typing.ArrayLike) -> np.ndarray`. Typically, "

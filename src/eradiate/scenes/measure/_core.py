@@ -6,7 +6,7 @@ import warnings
 from abc import ABC, abstractmethod
 from collections import abc
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -81,7 +81,7 @@ def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class MeasureSpectralConfig(ABC):
     """
     Data structure specifying the spectral configuration of a :class:`.Measure`.
@@ -96,7 +96,7 @@ class MeasureSpectralConfig(ABC):
     # --------------------------------------------------------------------------
 
     srf: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: UniformSpectrum(value=1.0),
             converter=_measure_spectral_config_srf_converter,
             validator=validators.has_quantity(PhysicalQuantity.DIMENSIONLESS),
@@ -225,7 +225,7 @@ class MeasureSpectralConfig(ABC):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class MonoMeasureSpectralConfig(MeasureSpectralConfig):
     """
     A data structure specifying the spectral configuration of a :class:`.Measure`
@@ -237,7 +237,7 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
     # --------------------------------------------------------------------------
 
     _wavelengths: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=ureg.Quantity([550.0], ureg.nm),
             units=ucc.deferred("wavelength"),
             converter=lambda x: converters.on_quantity(np.atleast_1d)(
@@ -364,7 +364,7 @@ def _active(bin: Bin, srf: Spectrum) -> bool:
 
 
 @parse_docs
-@attr.s(frozen=True)
+@attrs.frozen
 class CKDMeasureSpectralConfig(MeasureSpectralConfig):
     """
     A data structure specifying the spectral configuration of a
@@ -376,10 +376,10 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
     # --------------------------------------------------------------------------
 
     bin_set: ckd.BinSet = documented(
-        attr.ib(
+        attrs.field(
             default="10nm",
             converter=ckd.BinSet.convert,
-            validator=attr.validators.instance_of(ckd.BinSet),
+            validator=attrs.validators.instance_of(ckd.BinSet),
         ),
         doc="CKD bin set definition. If a string is passed, the data "
         "repository is queried for the corresponding identifier using "
@@ -390,7 +390,7 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
     )
 
     _bins: t.Union[t.List[str], AutoType] = documented(
-        attr.ib(
+        attrs.field(
             default=AUTO,
             converter=converters.auto_or(_ckd_measure_spectral_config_bins_converter),
         ),
@@ -477,7 +477,7 @@ def _str_summary_raw(x):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Measure(SceneElement, ABC):
     """
     Abstract base class for all measure scene elements.
@@ -508,15 +508,15 @@ class Measure(SceneElement, ABC):
     # --------------------------------------------------------------------------
 
     flags: MeasureFlags = documented(
-        attr.ib(default=0, converter=MeasureFlags, init=False),
+        attrs.field(default=0, converter=MeasureFlags, init=False),
         doc="Measure flags.",
         type=":class:`.MeasureFlags",
     )
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="measure",
-            validator=attr.validators.optional((attr.validators.instance_of(str))),
+            validator=attrs.validators.optional((attrs.validators.instance_of(str))),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),
@@ -525,14 +525,14 @@ class Measure(SceneElement, ABC):
     )
 
     results: t.Dict = documented(
-        attr.ib(factory=dict, repr=_str_summary_raw, init=False),
+        attrs.field(factory=dict, repr=_str_summary_raw, init=False),
         doc="Storage for raw results yielded by the kernel.",
         type="dict",
         default="{}",
     )
 
     spectral_cfg: MeasureSpectralConfig = documented(
-        attr.ib(
+        attrs.field(
             factory=MeasureSpectralConfig.new,
             converter=MeasureSpectralConfig.convert,
         ),
@@ -545,17 +545,17 @@ class Measure(SceneElement, ABC):
     )
 
     spp: int = documented(
-        attr.ib(default=1000, converter=int, validator=validators.is_positive),
+        attrs.field(default=1000, converter=int, validator=validators.is_positive),
         doc="Number of samples per pixel.",
         type="int",
         default="1000",
     )
 
     split_spp: t.Optional[int] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(int),
-            validator=attr.validators.optional(validators.is_positive),
+            converter=attrs.converters.optional(int),
+            validator=attrs.validators.optional(validators.is_positive),
         ),
         type="int",
         init_type="int, optional",

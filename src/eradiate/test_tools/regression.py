@@ -3,7 +3,7 @@ import typing as t
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-import attr
+import attrs
 import matplotlib.pyplot as plt
 import mitsuba as mi
 import numpy as np
@@ -89,7 +89,7 @@ def reference_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class RegressionTest(ABC):
     """
     Common interface for tests based on the comparison of a result array against
@@ -97,27 +97,29 @@ class RegressionTest(ABC):
     """
 
     # Name used for the reference metric. Must be set be subclasses.
-    METRIC_NAME: t.Optional[str] = None
+    METRIC_NAME: t.ClassVar[t.Optional[str]] = None
 
     name: str = documented(
-        attr.ib(validator=attr.validators.instance_of(str)),
+        attrs.field(validator=attrs.validators.instance_of(str)),
         doc="Test case name.",
         type="str",
         init_type="str",
     )
 
     value: xr.Dataset = documented(
-        attr.ib(validator=attr.validators.instance_of(xr.Dataset)),
+        attrs.field(validator=attrs.validators.instance_of(xr.Dataset)),
         doc="Simulation result. Must be specified as a dataset.",
         type=":class:`xarray.Dataset`",
         init_type=":class:`xarray.Dataset`",
     )
 
     reference: t.Optional[xr.Dataset] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
             converter=reference_converter,
-            validator=attr.validators.optional(attr.validators.instance_of(xr.Dataset)),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(xr.Dataset)
+            ),
         ),
         doc="Reference data. Can be specified as an xarray dataset, a path to a "
         "NetCDF file or a path to a resource served by the data store.",
@@ -127,14 +129,14 @@ class RegressionTest(ABC):
     )
 
     threshold: float = documented(
-        attr.ib(kw_only=True),
+        attrs.field(kw_only=True),
         doc="Threshold for test evaluation",
         type="float",
         init_type="float",
     )
 
     archive_dir: Path = documented(
-        attr.ib(kw_only=True, converter=Path),
+        attrs.field(kw_only=True, converter=Path),
         doc="Path to output artefact storage directory. Relative paths are "
         "interpreted with respect to the current working directory.",
         type=":class:`pathlib.Path`",
@@ -266,7 +268,7 @@ class RegressionTest(ABC):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class RMSETest(RegressionTest):
     """
     This class implements a simple test based on the root mean squared
@@ -295,7 +297,7 @@ class RMSETest(RegressionTest):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Chi2Test(RegressionTest):
     """
     This class implements a statistical test for the regression testing

@@ -5,7 +5,7 @@ from abc import ABC
 from collections.abc import MutableMapping
 from pathlib import Path
 
-import attr
+import attrs
 import mitsuba as mi
 import pint
 import pinttr
@@ -23,7 +23,7 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Tree(CanopyElement, ABC):
     """
     Abstract base class for tree-like canopy elements.
@@ -42,7 +42,7 @@ def _leaf_cloud_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AbstractTree(Tree):
     """
     A container class for abstract trees in discrete canopies.
@@ -62,9 +62,9 @@ class AbstractTree(Tree):
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="abstract_tree",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),
@@ -73,10 +73,12 @@ class AbstractTree(Tree):
     )
 
     leaf_cloud: t.Optional[LeafCloud] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(_leaf_cloud_converter),
-            validator=attr.validators.optional(attr.validators.instance_of(LeafCloud)),
+            converter=attrs.converters.optional(_leaf_cloud_converter),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(LeafCloud)
+            ),
         ),
         doc="Instanced leaf cloud. Can be specified as a dictionary, which will "
         "be interpreted by :data:`.biosphere_factory`. If the latter case, the "
@@ -87,7 +89,7 @@ class AbstractTree(Tree):
     )
 
     trunk_height: pint.Quantity = documented(
-        pinttr.ib(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc='Trunk height. Unit-enabled field (default: ucc["length"]).',
         type="quantity",
         init_type="quantity or float",
@@ -95,7 +97,7 @@ class AbstractTree(Tree):
     )
 
     trunk_radius: pint.Quantity = documented(
-        pinttr.ib(default=0.1 * ureg.m, units=ucc.deferred("length")),
+        pinttr.field(default=0.1 * ureg.m, units=ucc.deferred("length")),
         doc='Trunk radius. Unit-enabled field (default: ucc["length"]).',
         type="quantity",
         init_type="quantity or float, optional",
@@ -103,11 +105,11 @@ class AbstractTree(Tree):
     )
 
     trunk_reflectance: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
@@ -119,7 +121,7 @@ class AbstractTree(Tree):
     )
 
     leaf_cloud_extra_offset: pint.Quantity = documented(
-        pinttr.ib(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
+        pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Additional offset for the leaf cloud. 3-vector. "
         'Unit-enabled field (default: ucc["length"])',
         type="quantity",
@@ -211,7 +213,7 @@ class AbstractTree(Tree):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class MeshTree(Tree):
     """
     A container class for mesh based tree-like objects in canopies.
@@ -224,9 +226,9 @@ class MeshTree(Tree):
     """
 
     id: str = documented(
-        attr.ib(
+        attrs.field(
             default="mesh_tree",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),
@@ -235,7 +237,7 @@ class MeshTree(Tree):
     )
 
     mesh_tree_elements: t.List[MeshTree] = documented(
-        attr.ib(
+        attrs.field(
             factory=list,
             converter=lambda value: [
                 MeshTreeElement.convert(x) for x in pinttr.util.always_iterable(value)
@@ -270,7 +272,7 @@ class MeshTree(Tree):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class MeshTreeElement:
     """
     Container class for mesh based constituents of tree-like objects in a canopy.
@@ -289,16 +291,16 @@ class MeshTreeElement:
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="mesh_tree_element",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc="User-defined object identifier.",
         type="str, optional",
     )
 
     mesh_filename: Path = documented(
-        attr.ib(
+        attrs.field(
             converter=Path,
             kw_only=True,
         ),
@@ -318,9 +320,9 @@ class MeshTreeElement:
             )
 
     mesh_units: t.Optional[pint.Unit] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(ureg.Unit),
+            converter=attrs.converters.optional(ureg.Unit),
         ),
         doc="Units the mesh was defined in. Used to convert to kernel units. "
         "If this value is ``None``, the mesh is interpreted as being defined in"
@@ -338,11 +340,11 @@ class MeshTreeElement:
             )
 
     reflectance: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
@@ -354,11 +356,11 @@ class MeshTreeElement:
     )
 
     transmittance: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.0,
             converter=spectrum_factory.converter("transmittance"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("transmittance"),
             ],
         ),

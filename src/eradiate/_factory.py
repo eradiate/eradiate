@@ -1,13 +1,13 @@
 import typing as t
 
-import attr
+import attrs
 import dessinemoi
 import pinttr
 
 from .units import unit_registry as ureg
 
 
-@attr.s
+@attrs.define
 class Factory(dessinemoi.Factory):
     """
     Object factory.

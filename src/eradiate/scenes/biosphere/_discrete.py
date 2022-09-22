@@ -5,7 +5,7 @@ import typing as t
 from collections.abc import MutableMapping
 from copy import deepcopy
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -28,7 +28,7 @@ def _instanced_canopy_elements_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class DiscreteCanopy(Canopy):
     """
     Discrete canopy scene element [``discrete_canopy``].
@@ -58,7 +58,7 @@ class DiscreteCanopy(Canopy):
     # --------------------------------------------------------------------------
 
     instanced_canopy_elements: t.List[InstancedCanopyElement] = documented(
-        attr.ib(
+        attrs.field(
             factory=list,
             converter=lambda value: [
                 _instanced_canopy_elements_converter(x)
@@ -66,8 +66,8 @@ class DiscreteCanopy(Canopy):
             ]
             if not isinstance(value, t.MutableMapping)
             else [_instanced_canopy_elements_converter(value)],
-            validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(InstancedCanopyElement)
+            validator=attrs.validators.deep_iterable(
+                member_validator=attrs.validators.instance_of(InstancedCanopyElement)
             ),
         ),
         doc="List of :class:`.CanopyElement` defining the canopy. Can be "

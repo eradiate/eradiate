@@ -1,4 +1,4 @@
-import attr
+import attrs
 import pint
 import pinttr
 
@@ -15,7 +15,7 @@ from ...validators import has_quantity
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class HomogeneousAtmosphere(Atmosphere):
     """
     Homogeneous atmosphere scene element [``homogeneous``].
@@ -26,7 +26,7 @@ class HomogeneousAtmosphere(Atmosphere):
     """
 
     _bottom: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=ureg.Quantity(0.0, ureg.km),
             units=ucc.deferred("length"),
         ),
@@ -37,7 +37,7 @@ class HomogeneousAtmosphere(Atmosphere):
     )
 
     _top: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=ureg.Quantity(10.0, ureg.km),
             units=ucc.deferred("length"),
         ),
@@ -54,11 +54,11 @@ class HomogeneousAtmosphere(Atmosphere):
             raise ValueError("bottom altitude must be lower than top altitude")
 
     sigma_s: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             factory=AirScatteringCoefficientSpectrum,
             converter=spectrum_factory.converter("collision_coefficient"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 has_quantity("collision_coefficient"),
             ],
         ),
@@ -72,11 +72,11 @@ class HomogeneousAtmosphere(Atmosphere):
     )
 
     sigma_a: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.0,
             converter=spectrum_factory.converter("collision_coefficient"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 has_quantity("collision_coefficient"),
             ],
         ),
@@ -90,10 +90,10 @@ class HomogeneousAtmosphere(Atmosphere):
     )
 
     phase: PhaseFunction = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: RayleighPhaseFunction(),
             converter=phase_function_factory.convert,
-            validator=attr.validators.instance_of(PhaseFunction),
+            validator=attrs.validators.instance_of(PhaseFunction),
         ),
         doc="Scattering phase function.\n"
         "\n"

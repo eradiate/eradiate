@@ -1,11 +1,11 @@
-import attr
+import attrs
 
 from ._core import BSDF
 from ..core import KernelDict
 from ...contexts import KernelDictContext
 
 
-@attr.s
+@attrs.define
 class BlackBSDF(BSDF):
     """
     Black BSDF [``black``].

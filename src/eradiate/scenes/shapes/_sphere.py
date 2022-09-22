@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -24,7 +24,7 @@ def _normalize(v: np.typing.ArrayLike) -> np.ndarray:
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class SphereShape(Shape):
     """
     Sphere shape [``sphere``].
@@ -33,7 +33,7 @@ class SphereShape(Shape):
     """
 
     center: pint.Quantity = documented(
-        pinttr.ib(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
+        pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Location of the centre of the sphere. Unit-enabled field "
         '(default: ``ucc["length"]``).',
         type="quantity",
@@ -42,7 +42,7 @@ class SphereShape(Shape):
     )
 
     radius: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             factory=lambda: 1.0 * ucc.get("length"), units=ucc.deferred("length")
         ),
         doc='Sphere radius. Unit-enabled field (default: ``ucc["length"]``).',

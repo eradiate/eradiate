@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -24,7 +24,7 @@ from ...units import unit_context_kernel as uck
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class InterpolatedSpectrum(Spectrum):
     """
     Linearly interpolated spectrum [``interpolated``].
@@ -47,7 +47,7 @@ class InterpolatedSpectrum(Spectrum):
     """
 
     wavelengths: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             units=ucc.deferred("wavelength"),
             kw_only=True,
         ),
@@ -56,7 +56,7 @@ class InterpolatedSpectrum(Spectrum):
     )
 
     values: pint.Quantity = documented(
-        attr.ib(
+        attrs.field(
             converter=converters.on_quantity(np.atleast_1d),
             kw_only=True,
         ),
@@ -86,7 +86,7 @@ class InterpolatedSpectrum(Spectrum):
     @wavelengths.validator
     def _values_wavelengths_validator(self, attribute, value):
         # Check that attribute is an array
-        validators.on_quantity(attr.validators.instance_of(np.ndarray))(
+        validators.on_quantity(attrs.validators.instance_of(np.ndarray))(
             self, attribute, value
         )
 

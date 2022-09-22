@@ -1,7 +1,7 @@
 import typing as t
 import warnings
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -36,7 +36,7 @@ def _edges_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class CentralPatchSurface(Surface):
     """
     Central patch surface [``central_patch``].
@@ -63,11 +63,11 @@ class CentralPatchSurface(Surface):
     """
 
     shape: t.Optional[RectangleShape] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(shape_factory.convert),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(RectangleShape)
+            converter=attrs.converters.optional(shape_factory.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(RectangleShape)
             ),
         ),
         doc="Shape describing the surface. This parameter may be left unset "
@@ -92,10 +92,10 @@ class CentralPatchSurface(Surface):
                 )
 
     bsdf: BSDF = documented(
-        attr.ib(
+        attrs.field(
             factory=LambertianBSDF,
             converter=bsdf_factory.convert,
-            validator=attr.validators.instance_of(BSDF),
+            validator=attrs.validators.instance_of(BSDF),
         ),
         doc="The reflection model attached to the surface.",
         type=".BSDF",
@@ -104,9 +104,9 @@ class CentralPatchSurface(Surface):
     )
 
     patch_edges: t.Optional[pint.Quantity] = documented(
-        pinttr.ib(
+        pinttr.field(
             default=None,
-            converter=attr.converters.optional(_edges_converter),
+            converter=attrs.converters.optional(_edges_converter),
             units=ucc.deferred("length"),
         ),
         doc="Length of the central patch's edges. If unset, the central patch "
@@ -117,10 +117,10 @@ class CentralPatchSurface(Surface):
     )
 
     patch_bsdf: BSDF = documented(
-        attr.ib(
+        attrs.field(
             factory=BlackBSDF,
             converter=bsdf_factory.convert,
-            validator=attr.validators.instance_of(BSDF),
+            validator=attrs.validators.instance_of(BSDF),
         ),
         doc="The reflection model attached to the central patch.",
         type=".BSDF",

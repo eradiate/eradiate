@@ -7,7 +7,7 @@ from __future__ import annotations
 import functools
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import xarray as xr
@@ -38,7 +38,7 @@ def _convert_thermoprops_afgl_1986(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AFGL1986RadProfile(RadProfile):
     """
     Radiative properties profile corresponding to the AFGL (1986) atmospheric
@@ -51,10 +51,10 @@ class AFGL1986RadProfile(RadProfile):
     """
 
     _thermoprops: xr.Dataset = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: afgl_1986.make_profile(),
             converter=_convert_thermoprops_afgl_1986,
-            validator=attr.validators.instance_of(xr.Dataset),
+            validator=attrs.validators.instance_of(xr.Dataset),
         ),
         doc="Thermophysical properties.",
         type=":class:`~xarray.Dataset`",
@@ -62,10 +62,10 @@ class AFGL1986RadProfile(RadProfile):
     )
 
     has_absorption: bool = documented(
-        attr.ib(
+        attrs.field(
             default=True,
             converter=bool,
-            validator=attr.validators.instance_of(bool),
+            validator=attrs.validators.instance_of(bool),
         ),
         doc="Absorption switch. If ``True``, the absorption coefficient is "
         "computed. Else, the absorption coefficient is not computed and "
@@ -75,10 +75,10 @@ class AFGL1986RadProfile(RadProfile):
     )
 
     has_scattering: bool = documented(
-        attr.ib(
+        attrs.field(
             default=True,
             converter=bool,
-            validator=attr.validators.instance_of(bool),
+            validator=attrs.validators.instance_of(bool),
         ),
         doc="Scattering switch. If ``True``, the scattering coefficient is "
         "computed. Else, the scattering coefficient is not computed and "

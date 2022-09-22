@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 from abc import ABC, abstractmethod
 
-import attr
+import attrs
 
 from ..core import KernelDict, SceneElement
 from ..._factory import Factory
@@ -16,23 +16,23 @@ surface_factory.register_lazy_batch(
     [
         ("_basic.BasicSurface", "basic", {}),
         ("_central_patch.CentralPatchSurface", "central_patch", {}),
-        ("_dem.DEMSurface", "dem", {})
+        ("_dem.DEMSurface", "dem", {}),
     ],
     cls_prefix="eradiate.scenes.surface",
 )
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Surface(SceneElement, ABC):
     """
     An abstract base class defining common facilities for all surfaces.
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="surface",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),

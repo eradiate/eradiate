@@ -1,4 +1,4 @@
-import attr
+import attrs
 
 from ._core import Illumination
 from ..core import KernelDict
@@ -9,17 +9,20 @@ from ...validators import has_quantity
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ConstantIllumination(Illumination):
     """
     Constant illumination scene element [``constant``].
     """
 
     radiance: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=1.0,
             converter=spectrum_factory.converter("radiance"),
-            validator=[attr.validators.instance_of(Spectrum), has_quantity("radiance")],
+            validator=[
+                attrs.validators.instance_of(Spectrum),
+                has_quantity("radiance"),
+            ],
         ),
         doc="Emitted radiance spectrum. Must be a radiance spectrum "
         "(in W/m²/sr/nm or compatible units).",

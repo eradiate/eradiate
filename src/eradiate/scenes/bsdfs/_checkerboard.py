@@ -1,4 +1,4 @@
-import attr
+import attrs
 import mitsuba as mi
 
 from ._core import BSDF
@@ -10,7 +10,7 @@ from ...contexts import KernelDictContext
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class CheckerboardBSDF(BSDF):
     """
     Checkerboard BSDF [``checkerboard``].
@@ -19,11 +19,11 @@ class CheckerboardBSDF(BSDF):
     """
 
     reflectance_a: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.2,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
@@ -35,11 +35,11 @@ class CheckerboardBSDF(BSDF):
     )
 
     reflectance_b: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.8,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
@@ -51,8 +51,8 @@ class CheckerboardBSDF(BSDF):
     )
 
     scale_pattern: float = documented(
-        attr.ib(
-            default=2.0, converter=float, validator=attr.validators.instance_of(float)
+        attrs.field(
+            default=2.0, converter=float, validator=attrs.validators.instance_of(float)
         ),
         doc="Scaling factor for the checkerboard pattern. The higher the value, "
         "the more checkboard patterns will fit on the surface to which this "

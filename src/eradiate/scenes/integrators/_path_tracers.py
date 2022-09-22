@@ -1,6 +1,6 @@
 import typing as t
 
-import attr
+import attrs
 
 from ._core import Integrator
 from ..core import KernelDict
@@ -9,7 +9,7 @@ from ...contexts import KernelDictContext
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class MonteCarloIntegrator(Integrator):
     """
     Base class for integrator elements wrapping kernel classes
@@ -20,7 +20,7 @@ class MonteCarloIntegrator(Integrator):
     """
 
     max_depth: t.Optional[int] = documented(
-        attr.ib(default=None, converter=attr.converters.optional(int)),
+        attrs.field(default=None, converter=attrs.converters.optional(int)),
         doc="Longest path depth in the generated measure data (where -1 "
         "corresponds to ∞). A value of 1 will display only visible emitters. 2 "
         "computes only direct illumination (no multiple scattering), etc. If "
@@ -29,7 +29,7 @@ class MonteCarloIntegrator(Integrator):
     )
 
     rr_depth: t.Optional[int] = documented(
-        attr.ib(default=None, converter=attr.converters.optional(int)),
+        attrs.field(default=None, converter=attrs.converters.optional(int)),
         doc="Minimum path depth after which the implementation starts applying "
         "the Russian roulette path termination criterion. If unset, the kernel "
         "default value (5) is used.",
@@ -37,7 +37,7 @@ class MonteCarloIntegrator(Integrator):
     )
 
     hide_emitters: t.Optional[bool] = documented(
-        attr.ib(default=None, converter=attr.converters.optional(bool)),
+        attrs.field(default=None, converter=attrs.converters.optional(bool)),
         doc="Hide directly visible emitters. If unset, the kernel default "
         "value (``false``) is used.",
         type="bool, optional",
@@ -57,7 +57,7 @@ class MonteCarloIntegrator(Integrator):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class PathIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the `path tracer kernel plugin <https://eradiate-kernel.readthedocs.io/en/latest/generated/plugins.html#path-tracer-path>`_.
@@ -74,7 +74,7 @@ class PathIntegrator(MonteCarloIntegrator):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class VolPathIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the volumetric path tracer kernel plugin.
@@ -90,7 +90,7 @@ class VolPathIntegrator(MonteCarloIntegrator):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class VolPathMISIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the volumetric path tracer (with spectral multiple
@@ -98,7 +98,9 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
     :cite:`Miller2019NullscatteringPathIntegral`.
     """
 
-    use_spectral_mis = attr.ib(default=None, converter=attr.converters.optional(bool))
+    use_spectral_mis = attrs.field(
+        default=None, converter=attrs.converters.optional(bool)
+    )
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
         result = super(VolPathMISIntegrator, self).kernel_dict(ctx)

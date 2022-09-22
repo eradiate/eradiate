@@ -4,7 +4,7 @@ import datetime
 import typing as t
 from abc import ABC
 
-import attr
+import attrs
 import numpy as np
 import pint
 import xarray as xr
@@ -167,7 +167,7 @@ def make_dataset(
     )
 
 
-@attr.s
+@attrs.define
 class RadProfile(ABC):
     """
     An abstract base class for radiative property profiles. Classes deriving

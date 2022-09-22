@@ -51,7 +51,6 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   * `RamiExperiment` ⇒ `CanopyExperiment`
   * `Rami4ATMExperiment` ⇒ `CanopyAtmosphereExperiment`
 
-
 ### Improvements and fixes
 
 * Added the atmo-centimeter, a.k.a. atm-cm, to the unit registry ({ghpr}`245`).
@@ -78,6 +77,11 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   warning on some Linux machines.
 * Aligned the `tabphase_irregular` plugin with the fix `tabphase` code
   ({ghpr}`255`).
+* Updated codebase to use ``attrs``'
+  [next-generation APIs](https://www.attrs.org/en/stable/names.html#tl-dr)
+  ({ghpr}`268`).
+
+---
 
 ## v0.22.4 (17 June 2022)
 
@@ -124,6 +128,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Updated Mitsuba submodule ({ghpr}`228`).
 * Removed the angular regridding feature in `TabulatedPhaseFunction` and
   replaced with plugin selection ({ghpr}`229`).
+
+---
 
 ## v0.22.3 (22 May 2022)
 

@@ -1,6 +1,6 @@
 import typing as t
 
-import attr
+import attrs
 
 from ._core import BSDF
 from ..core import KernelDict
@@ -12,7 +12,7 @@ from ...util.misc import onedict_value
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class RPVBSDF(BSDF):
     """
     RPV BSDF [``rpv``].
@@ -37,11 +37,11 @@ class RPVBSDF(BSDF):
     """
 
     rho_0: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.183,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
@@ -53,14 +53,14 @@ class RPVBSDF(BSDF):
     )
 
     rho_c: t.Optional[Spectrum] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(
+            converter=attrs.converters.optional(
                 spectrum_factory.converter("dimensionless")
             ),
-            validator=attr.validators.optional(
+            validator=attrs.validators.optional(
                 [
-                    attr.validators.instance_of(Spectrum),
+                    attrs.validators.instance_of(Spectrum),
                     validators.has_quantity("dimensionless"),
                 ]
             ),
@@ -74,11 +74,11 @@ class RPVBSDF(BSDF):
     )
 
     k: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.780,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
@@ -90,11 +90,11 @@ class RPVBSDF(BSDF):
     )
 
     g: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=-0.1,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),

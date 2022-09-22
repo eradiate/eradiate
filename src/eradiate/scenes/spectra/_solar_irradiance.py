@@ -4,7 +4,7 @@ import datetime
 import typing as t
 import warnings
 
-import attr
+import attrs
 import numpy as np
 import pint
 import xarray as xr
@@ -71,7 +71,7 @@ def _datetime_converter(x: t.Any):
 
 
 @parse_docs
-@attr.s(frozen=True)
+@attrs.frozen
 class SolarIrradianceSpectrum(Spectrum):
     """
     Solar irradiance spectrum [``solar_irradiance``].
@@ -118,15 +118,15 @@ class SolarIrradianceSpectrum(Spectrum):
     #                           Fields and properties
     # --------------------------------------------------------------------------
 
-    quantity: PhysicalQuantity = attr.ib(
+    quantity: PhysicalQuantity = attrs.field(
         default=PhysicalQuantity.IRRADIANCE, init=False, repr=False
     )
 
     dataset: xr.Dataset = documented(
-        attr.ib(
+        attrs.field(
             default="thuillier_2003_extrapolated",
             converter=_dataset_converter,
-            validator=attr.validators.instance_of(xr.Dataset),
+            validator=attrs.validators.instance_of(xr.Dataset),
         ),
         doc="Solar spectrum dataset. If a string is passed, it is first "
         "interpreted as a Solar irradiance spectrum identifier "
@@ -141,7 +141,7 @@ class SolarIrradianceSpectrum(Spectrum):
     )
 
     scale: float = documented(
-        attr.ib(default=1.0, converter=float, validator=validators.is_positive),
+        attrs.field(default=1.0, converter=float, validator=validators.is_positive),
         doc="Arbitrary scaling factor. This scaling factor is applied in "
         "addition to the datetime-based scaling controlled by the *datetime* "
         "parameter.",
@@ -151,7 +151,7 @@ class SolarIrradianceSpectrum(Spectrum):
     )
 
     datetime: t.Optional[datetime.datetime] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
             converter=_datetime_converter,
         ),

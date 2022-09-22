@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC
 
-import attr
+import attrs
 
 from ..core import SceneElement
 from ..._factory import Factory
@@ -18,16 +18,16 @@ illumination_factory.register_lazy_batch(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Illumination(SceneElement, ABC):
     """
     Abstract base class for all illumination scene elements.
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="illumination",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),

@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 from copy import deepcopy
 
-import attr
+import attrs
 import mitsuba as mi
 import pint
 import pinttr
@@ -15,7 +15,7 @@ from ...units import unit_context_kernel as uck
 from ...util.misc import is_vector3
 
 
-@attr.s
+@attrs.define
 class Target:
     """
     Interface for target selection objects used by distant measure classes.
@@ -89,7 +89,7 @@ def _target_point_rectangle_xyz_converter(x):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class TargetPoint(Target):
     """
     Point target or origin specification.
@@ -97,7 +97,7 @@ class TargetPoint(Target):
 
     # Target point in config units
     xyz: pint.Quantity = documented(
-        pinttr.ib(units=ucc.deferred("length")),
+        pinttr.field(units=ucc.deferred("length")),
         doc="Point coordinates.\n\nUnit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="array-like",
@@ -117,7 +117,7 @@ class TargetPoint(Target):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class TargetRectangle(Target):
     """
     Rectangle target origin specification.
@@ -127,7 +127,7 @@ class TargetRectangle(Target):
     """
 
     xmin: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),
         ),
@@ -139,7 +139,7 @@ class TargetRectangle(Target):
     )
 
     xmax: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),
         ),
@@ -151,7 +151,7 @@ class TargetRectangle(Target):
     )
 
     ymin: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),
         ),
@@ -163,7 +163,7 @@ class TargetRectangle(Target):
     )
 
     ymax: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),
         ),
@@ -175,7 +175,7 @@ class TargetRectangle(Target):
     )
 
     z: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=0.0,
             converter=_target_point_rectangle_xyz_converter,
             units=ucc.deferred("length"),

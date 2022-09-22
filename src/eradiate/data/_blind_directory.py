@@ -1,7 +1,7 @@
 import typing as t
 from pathlib import Path
 
-import attr
+import attrs
 
 from ._core import DataStore
 from ..attrs import documented, parse_docs
@@ -10,14 +10,14 @@ from ..typing import PathLike
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class BlindDirectoryDataStore(DataStore):
     """
     Serve files stored in a directory.
     """
 
     path: Path = documented(
-        attr.ib(converter=lambda x: Path(x).absolute()),
+        attrs.field(converter=lambda x: Path(x).absolute()),
         type="Path",
         init_type="path-like",
         doc="Path to the root of the directory referenced by this data store.",

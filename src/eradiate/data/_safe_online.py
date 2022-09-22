@@ -4,7 +4,7 @@ import shutil
 import typing as t
 from pathlib import Path
 
-import attr
+import attrs
 import pooch
 
 from ._core import DataStore, expand_rules, registry_from_file
@@ -15,7 +15,7 @@ from ..util.misc import LoggingContext
 logger = logging.getLogger(__name__)
 
 
-@attr.s(repr=False, init=False)
+@attrs.define(repr=False, init=False)
 class SafeOnlineDataStore(DataStore):
     """
     Serve files located online, with integrity check.
@@ -44,8 +44,8 @@ class SafeOnlineDataStore(DataStore):
     This class basically wraps a :class:`pooch.Pooch` instance.
     """
 
-    manager: pooch.Pooch = attr.ib()
-    registry_fname: Path = attr.ib(converter=Path)
+    manager: pooch.Pooch = attrs.field()
+    registry_fname: Path = attrs.field(converter=Path)
 
     def __init__(
         self, base_url: str, path: PathLike, registry_fname: PathLike = "registry.txt"

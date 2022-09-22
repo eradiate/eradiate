@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -41,7 +41,7 @@ def _edges_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class RectangleShape(Shape):
     """
     Rectangle shape [``rectangle``].
@@ -52,7 +52,7 @@ class RectangleShape(Shape):
     """
 
     edges: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             factory=lambda: [1, 1],
             converter=_edges_converter,
             units=ucc.deferred("length"),
@@ -65,7 +65,7 @@ class RectangleShape(Shape):
     )
 
     center: pint.Quantity = documented(
-        pinttr.ib(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
+        pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Cartesian coordinates of the rectangle's central point. "
         'Unit-enabled field (default: ``ucc["length"]``).',
         type="quantity",
@@ -74,7 +74,7 @@ class RectangleShape(Shape):
     )
 
     normal: np.ndarray = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: [0, 0, 1],
             converter=_normalize,
             validator=validators.is_vector3,
@@ -87,7 +87,7 @@ class RectangleShape(Shape):
     )
 
     up: np.ndarray = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: [0, 1, 0],
             converter=_normalize,
             validator=validators.is_vector3,

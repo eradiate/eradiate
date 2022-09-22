@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 from abc import ABC, abstractmethod
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -52,7 +52,7 @@ atmosphere_factory.register_lazy_batch(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AtmosphereGeometry:
     """
     Base class defining the geometry of the atmosphere.
@@ -105,7 +105,7 @@ class AtmosphereGeometry:
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class PlaneParallelGeometry(AtmosphereGeometry):
     """
     Plane parallel geometry.
@@ -118,7 +118,7 @@ class PlaneParallelGeometry(AtmosphereGeometry):
     """
 
     width: t.Union[pint.Quantity, AutoType] = documented(
-        pinttr.ib(
+        pinttr.field(
             default=AUTO,
             converter=converters.auto_or(
                 pinttr.converters.to_units(ucc.deferred("length"))
@@ -134,7 +134,7 @@ class PlaneParallelGeometry(AtmosphereGeometry):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class SphericalShellGeometry(AtmosphereGeometry):
     """
     Spherical shell geometry.
@@ -145,7 +145,7 @@ class SphericalShellGeometry(AtmosphereGeometry):
     """
 
     planet_radius: pint.Quantity = documented(
-        pinttr.ib(default=6378.1 * ureg.km, units=ucc.deferred("length")),
+        pinttr.field(default=6378.1 * ureg.km, units=ucc.deferred("length")),
         doc="Planet radius. Defaults to Earth's radius.",
         type="quantity",
         init_type="quantity or float",
@@ -154,7 +154,7 @@ class SphericalShellGeometry(AtmosphereGeometry):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Atmosphere(SceneElement, ABC):
     """
     An abstract base class defining common facilities for all atmospheres.
@@ -164,9 +164,9 @@ class Atmosphere(SceneElement, ABC):
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="atmosphere",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),
@@ -175,11 +175,11 @@ class Atmosphere(SceneElement, ABC):
     )
 
     geometry: t.Optional[AtmosphereGeometry] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(AtmosphereGeometry.convert),
-            validator=attr.validators.optional(
-                attr.validators.instance_of(AtmosphereGeometry)
+            converter=attrs.converters.optional(AtmosphereGeometry.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(AtmosphereGeometry)
             ),
         ),
         doc="Parameters defining the basic geometry of the atmosphere.",
@@ -425,7 +425,7 @@ class Atmosphere(SceneElement, ABC):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     """
     Heterogeneous atmosphere base class. This class defines the basic interface
@@ -433,10 +433,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     """
 
     scale: t.Optional[float] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(float),
-            validator=attr.validators.optional(attr.validators.instance_of(float)),
+            converter=attrs.converters.optional(float),
+            validator=attrs.validators.optional(attrs.validators.instance_of(float)),
         ),
         doc="If set, the extinction coefficient is scaled by the corresponding "
         "amount during computation.",

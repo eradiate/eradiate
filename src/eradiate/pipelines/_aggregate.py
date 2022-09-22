@@ -2,7 +2,7 @@ import itertools
 import typing as t
 from collections import OrderedDict
 
-import attr
+import attrs
 import numpy as np
 import xarray as xr
 
@@ -17,7 +17,7 @@ from ..units import unit_context_kernel as uck
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AggregateSampleCount(PipelineStep):
     """
     Aggregate sample count.
@@ -40,7 +40,7 @@ class AggregateSampleCount(PipelineStep):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AggregateCKDQuad(PipelineStep):
     """
     Compute CKD quadrature.
@@ -66,8 +66,8 @@ class AggregateCKDQuad(PipelineStep):
     """
 
     measure: Measure = documented(
-        attr.ib(
-            validator=attr.validators.instance_of(Measure),
+        attrs.field(
+            validator=attrs.validators.instance_of(Measure),
             repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)",
         ),
         doc="Measure from which the processed data was obtained.",
@@ -75,7 +75,7 @@ class AggregateCKDQuad(PipelineStep):
     )
 
     var: str = documented(
-        attr.ib(default="img", validator=attr.validators.instance_of(str)),
+        attrs.field(default="img", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable for which CKD quadrature computation "
         "is to be performed.",
         type="str",
@@ -195,14 +195,16 @@ class AggregateCKDQuad(PipelineStep):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class AggregateRadiosity(PipelineStep):
     """
     Aggregate flux density field.
     """
 
     sector_radiosity_var: str = documented(
-        attr.ib(default="sector_radiosity", validator=attr.validators.instance_of(str)),
+        attrs.field(
+            default="sector_radiosity", validator=attrs.validators.instance_of(str)
+        ),
         doc="Name of the variable containing radiosity values for the "
         "hemisphere sector corresponding to each film pixel. This quantity is "
         "expressed in flux units (typically W/m²) and, when summed over the "
@@ -212,7 +214,7 @@ class AggregateRadiosity(PipelineStep):
     )
 
     radiosity_var: str = documented(
-        attr.ib(default="radiosity", validator=attr.validators.instance_of(str)),
+        attrs.field(default="radiosity", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable storing the computed radiosity "
         "(leaving flux) value.",
         type="str",

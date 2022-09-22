@@ -1,6 +1,6 @@
 import typing as t
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 
@@ -29,7 +29,7 @@ def _weights_converter(value: np.typing.ArrayLike) -> np.ndarray:
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class BlendPhaseFunction(PhaseFunction):
     """
     Blended phase function [``blend_phase``].
@@ -40,10 +40,10 @@ class BlendPhaseFunction(PhaseFunction):
     """
 
     components: t.List[PhaseFunction] = documented(
-        attr.ib(
+        attrs.field(
             converter=lambda x: [phase_function_factory.convert(y) for y in x],
-            validator=attr.validators.deep_iterable(
-                attr.validators.instance_of(PhaseFunction)
+            validator=attrs.validators.deep_iterable(
+                attrs.validators.instance_of(PhaseFunction)
             ),
             kw_only=True,
         ),
@@ -61,7 +61,7 @@ class BlendPhaseFunction(PhaseFunction):
             )
 
     weights: np.ndarray = documented(
-        attr.ib(
+        attrs.field(
             converter=_weights_converter,
             kw_only=True,
         ),
@@ -89,11 +89,11 @@ class BlendPhaseFunction(PhaseFunction):
             )
 
     bbox: t.Optional[BoundingBox] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
             converter=BoundingBox.convert,
-            validator=attr.validators.optional(
-                attr.validators.instance_of(BoundingBox)
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(BoundingBox)
             ),
         ),
         default="None",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import xarray as xr
@@ -20,7 +20,7 @@ from ...util.misc import onedict_value
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class DEMSurface(Surface):
     """
     DEM surface [``dem``]
@@ -46,9 +46,9 @@ class DEMSurface(Surface):
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="terrain",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(Surface, "id", "doc"),
         type=get_doc(Surface, "id", "type"),
@@ -57,10 +57,10 @@ class DEMSurface(Surface):
     )
 
     shape: Shape = documented(
-        attr.ib(
-            converter=attr.converters.optional(shape_factory.convert),
-            validator=attr.validators.optional(
-                attr.validators.instance_of((BufferMeshShape, FileMeshShape))
+        attrs.field(
+            converter=attrs.converters.optional(shape_factory.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of((BufferMeshShape, FileMeshShape))
             ),
             kw_only=True,
         ),
@@ -70,10 +70,10 @@ class DEMSurface(Surface):
     )
 
     bsdf: BSDF = documented(
-        attr.ib(
+        attrs.field(
             factory=LambertianBSDF,
             converter=bsdf_factory.convert,
-            validator=attr.validators.instance_of(BSDF),
+            validator=attrs.validators.instance_of(BSDF),
         ),
         doc="The reflection model attached to the surface.",
         type=".BSDF",
@@ -138,8 +138,8 @@ class DEMSurface(Surface):
         mean_lon = lon_rad.mean()
         lon_range = lon_rad.max() - lon_rad.min()
         lat_range = lat_rad.max() - lat_rad.min()
-        lon_length = (lon_range * radius)
-        lat_length = (lat_range * radius * np.cos(mean_lon))
+        lon_length = lon_range * radius
+        lat_length = lat_range * radius * np.cos(mean_lon)
 
         lat_range = list(np.linspace(-lat_length / 2.0, lat_length / 2.0, len_lat))
         # Duplicate the first and last entry for the extra vertices, which form the

@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 from abc import ABC, abstractmethod
 
-import attr
+import attrs
 import pint
 
 import eradiate
@@ -106,14 +106,14 @@ spectrum_factory.register_lazy_batch(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Spectrum(SceneElement, ABC):
     """
     Spectrum abstract base class.
     """
 
     quantity: PhysicalQuantity = documented(
-        attr.ib(
+        attrs.field(
             default="dimensionless",
             converter=PhysicalQuantity,
             repr=lambda x: f"{x.value.upper()}",

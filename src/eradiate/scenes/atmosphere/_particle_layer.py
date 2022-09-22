@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -42,7 +42,7 @@ def _particle_layer_distribution_converter(value):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ParticleLayer(AbstractHeterogeneousAtmosphere):
     """
     Particle layer scene element [``particle_layer``].
@@ -64,7 +64,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     """
 
     _bottom: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=ureg.Quantity(0.0, ureg.km),
             validator=[
                 is_positive,
@@ -81,7 +81,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     )
 
     _top: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             units=ucc.deferred("length"),
             default=ureg.Quantity(1.0, ureg.km),
             validator=[
@@ -108,10 +108,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             )
 
     distribution: ParticleDistribution = documented(
-        attr.ib(
+        attrs.field(
             default="uniform",
             converter=_particle_layer_distribution_converter,
-            validator=attr.validators.instance_of(ParticleDistribution),
+            validator=attrs.validators.instance_of(ParticleDistribution),
         ),
         doc="Particle distribution. Simple defaults can be set using a string: "
         '``"uniform"`` (resp. ``"gaussian"``, ``"exponential"``) is converted to '
@@ -125,7 +125,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     )
 
     w_ref: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             units=ucc.deferred("length"),
             default=550 * ureg.nm,
             validator=[
@@ -143,7 +143,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     )
 
     tau_ref: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             units=ucc.deferred("dimensionless"),
             default=ureg.Quantity(0.2, ureg.dimensionless),
             validator=[
@@ -160,10 +160,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     )
 
     n_layers: int = documented(
-        attr.ib(
+        attrs.field(
             default=16,
             converter=int,
-            validator=attr.validators.instance_of(int),
+            validator=attrs.validators.instance_of(int),
         ),
         doc="Number of layers in which the particle layer is discretised.",
         type="int",
@@ -171,10 +171,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     )
 
     dataset: xr.Dataset = documented(
-        attr.ib(
+        attrs.field(
             default="spectra/particles/govaerts_2021-continental.nc",
             converter=converters.load_dataset,
-            validator=attr.validators.instance_of(xr.Dataset),
+            validator=attrs.validators.instance_of(xr.Dataset),
         ),
         doc="Particle radiative property data set. If a path is passed, the "
         "converter tries to open the corresponding file on the hard drive; "
@@ -185,7 +185,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="spectra/particles/govaerts_2021-continental.nc",
     )
 
-    _phase: t.Optional[TabulatedPhaseFunction] = attr.ib(default=None, init=False)
+    _phase: t.Optional[TabulatedPhaseFunction] = attrs.field(default=None, init=False)
 
     def update(self) -> None:
         super().update()

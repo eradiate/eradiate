@@ -1,4 +1,4 @@
-import attr
+import attrs
 
 from ._core import BSDF
 from ..core import KernelDict
@@ -10,7 +10,7 @@ from ...util.misc import onedict_value
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class LambertianBSDF(BSDF):
     """
     Lambertian BSDF [``lambertian``].
@@ -25,11 +25,11 @@ class LambertianBSDF(BSDF):
     """
 
     reflectance: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),

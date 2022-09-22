@@ -1,7 +1,7 @@
 import typing as t
 from numbers import Number
 
-import attr
+import attrs
 import numpy as np
 
 from .attrs import AUTO
@@ -47,7 +47,7 @@ def is_vector3(instance, attribute, value):
     TypeError
         If value cannot be converted to a (3,) :class:`numpy.ndarray`.
     """
-    return attr.validators.deep_iterable(
+    return attrs.validators.deep_iterable(
         member_validator=is_number, iterable_validator=has_len(3)
     )(instance, attribute, value)
 

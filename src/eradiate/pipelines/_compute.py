@@ -1,6 +1,6 @@
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 from pinttr.util import always_iterable
 
@@ -13,7 +13,7 @@ from ..units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ApplySpectralResponseFunction(PipelineStep):
     """
     Apply spectral response function to specified variables.
@@ -30,8 +30,8 @@ class ApplySpectralResponseFunction(PipelineStep):
     """
 
     measure: Measure = documented(
-        attr.ib(
-            validator=attr.validators.instance_of(Measure),
+        attrs.field(
+            validator=attrs.validators.instance_of(Measure),
             repr=lambda self: f"{self.__class__.__name__}(id='{self.id}', ...)",
         ),
         doc="A :class:`.Measure` instance from which the processed data originates.",
@@ -39,11 +39,11 @@ class ApplySpectralResponseFunction(PipelineStep):
     )
 
     vars: t.List[str] = documented(
-        attr.ib(
+        attrs.field(
             factory=list,
             converter=lambda x: list(always_iterable(x)),
-            validator=attr.validators.deep_iterable(
-                member_validator=attr.validators.instance_of(str)
+            validator=attrs.validators.deep_iterable(
+                member_validator=attrs.validators.instance_of(str)
             ),
         ),
         doc="List of variables to which the spectral response function is to be "
@@ -126,35 +126,35 @@ class ApplySpectralResponseFunction(PipelineStep):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ComputeReflectance(PipelineStep):
     """
     Derive reflectance from radiance and irradiance values.
     """
 
     radiance_var: str = documented(
-        attr.ib(default="radiance", validator=attr.validators.instance_of(str)),
+        attrs.field(default="radiance", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable storing leaving radiance values.",
         type="str",
         default='"radiance"',
     )
 
     irradiance_var: str = documented(
-        attr.ib(default="irradiance", validator=attr.validators.instance_of(str)),
+        attrs.field(default="irradiance", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable storing irradiance (incoming flux) values.",
         type="str",
         default='"irradiance"',
     )
 
     brdf_var: str = documented(
-        attr.ib(default="brdf", validator=attr.validators.instance_of(str)),
+        attrs.field(default="brdf", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable storing BRDF values.",
         type="str",
         default='"brdf"',
     )
 
     brf_var: str = documented(
-        attr.ib(default="brf", validator=attr.validators.instance_of(str)),
+        attrs.field(default="brf", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable storing BRF values.",
         type="str",
         default='"brf"',
@@ -183,28 +183,28 @@ class ComputeReflectance(PipelineStep):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class ComputeAlbedo(PipelineStep):
     """
     Derive the albedo from radiosity and irradiance fields.
     """
 
     radiosity_var: str = documented(
-        attr.ib(default="radiosity", validator=attr.validators.instance_of(str)),
+        attrs.field(default="radiosity", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable storing the radiosity (leaving flux) value.",
         type="str",
         default='"radiosity"',
     )
 
     irradiance_var: str = documented(
-        attr.ib(default="irradiance", validator=attr.validators.instance_of(str)),
+        attrs.field(default="irradiance", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable storing the irradiance (incoming flux) value.",
         type="str",
         default='"irradiance"',
     )
 
     albedo_var: str = documented(
-        attr.ib(default="albedo", validator=attr.validators.instance_of(str)),
+        attrs.field(default="albedo", validator=attrs.validators.instance_of(str)),
         doc="Name of the variable storing the albedo value.",
         type="str",
         default='"albedo"',

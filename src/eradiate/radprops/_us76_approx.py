@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import xarray as xr
@@ -30,7 +30,7 @@ def _convert_thermoprops_us76_approx(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class US76ApproxRadProfile(RadProfile):
     """
     Radiative properties profile approximately corresponding to an
@@ -108,10 +108,10 @@ class US76ApproxRadProfile(RadProfile):
     """
 
     _thermoprops: xr.Dataset = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: us76.make_profile(),
             converter=_convert_thermoprops_us76_approx,
-            validator=attr.validators.instance_of(xr.Dataset),
+            validator=attrs.validators.instance_of(xr.Dataset),
         ),
         doc="Thermophysical properties.",
         type=":class:`~xarray.Dataset`",
@@ -119,10 +119,10 @@ class US76ApproxRadProfile(RadProfile):
     )
 
     has_absorption: bool = documented(
-        attr.ib(
+        attrs.field(
             default=True,
             converter=bool,
-            validator=attr.validators.instance_of(bool),
+            validator=attrs.validators.instance_of(bool),
         ),
         doc="Absorption switch. If ``True``, the absorption coefficient is "
         "computed. Else, the absorption coefficient is not computed and "
@@ -132,10 +132,10 @@ class US76ApproxRadProfile(RadProfile):
     )
 
     has_scattering: bool = documented(
-        attr.ib(
+        attrs.field(
             default=True,
             converter=bool,
-            validator=attr.validators.instance_of(bool),
+            validator=attrs.validators.instance_of(bool),
         ),
         doc="Scattering switch. If ``True``, the scattering coefficient is "
         "computed. Else, the scattering coefficient is not computed and "
@@ -145,10 +145,10 @@ class US76ApproxRadProfile(RadProfile):
     )
 
     absorption_data_set: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(str),
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            converter=attrs.converters.optional(str),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc="Absorption data set file path. If ``None``, the default "
         "absorption data sets will be used to compute the absorption "

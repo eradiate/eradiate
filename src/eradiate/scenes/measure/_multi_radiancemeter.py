@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -18,7 +18,7 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class MultiRadiancemeterMeasure(Measure):
     """
     Radiance meter array measure scene element [``mradiancemeter``,
@@ -35,7 +35,7 @@ class MultiRadiancemeterMeasure(Measure):
     # --------------------------------------------------------------------------
 
     origins: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             default=ureg.Quantity([[0.0, 0.0, 0.0]], ureg.m),
             units=ucc.deferred("length"),
         ),
@@ -48,7 +48,7 @@ class MultiRadiancemeterMeasure(Measure):
     )
 
     directions: np.ndarray = documented(
-        attr.ib(
+        attrs.field(
             default=np.array([[0.0, 0.0, 1.0]]),
             converter=np.array,
         ),

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections import abc as collections_abc
 from typing import Mapping, Sequence
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -33,7 +33,7 @@ def _kernel_dict_get_mitsuba_variant() -> str:
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class KernelDict(collections_abc.MutableMapping):
     """
     A dictionary-like object designed to contain a scene specification
@@ -44,7 +44,7 @@ class KernelDict(collections_abc.MutableMapping):
     """
 
     data: dict = documented(
-        attr.ib(
+        attrs.field(
             factory=dict,
             converter=dict,
         ),
@@ -54,7 +54,7 @@ class KernelDict(collections_abc.MutableMapping):
     )
 
     post_load: dict = documented(
-        attr.ib(
+        attrs.field(
             factory=dict,
             converter=dict,
         ),
@@ -64,9 +64,9 @@ class KernelDict(collections_abc.MutableMapping):
     )
 
     variant: str = documented(
-        attr.ib(
+        attrs.field(
             factory=_kernel_dict_get_mitsuba_variant,
-            validator=attr.validators.instance_of(str),
+            validator=attrs.validators.instance_of(str),
         ),
         doc="Kernel variant for which the dictionary is created. Defaults to "
         "currently active variant (if any; otherwise raises).",
@@ -270,7 +270,7 @@ class KernelDict(collections_abc.MutableMapping):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class SceneElement(ABC):
     """
     Abstract class for all scene elements.
@@ -280,9 +280,9 @@ class SceneElement(ABC):
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc="User-defined object identifier.",
         type="str or None",
@@ -320,7 +320,7 @@ class SceneElement(ABC):
 
 
 @parse_docs
-@attr.s(frozen=True)
+@attrs.frozen
 class BoundingBox:
     """
     A basic data class representing an axis-aligned bounding box with
@@ -332,7 +332,7 @@ class BoundingBox:
     """
 
     min: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             units=ucc.get("length"),
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
@@ -342,7 +342,7 @@ class BoundingBox:
     )
 
     max: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             units=ucc.get("length"),
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),

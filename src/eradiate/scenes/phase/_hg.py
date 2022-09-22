@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import attr
+import attrs
 
 import eradiate
 
@@ -15,7 +15,7 @@ from ...util.misc import onedict_value
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class HenyeyGreensteinPhaseFunction(PhaseFunction):
     """
     Henyey-Greenstein phase function [``hg``].
@@ -29,11 +29,11 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
     """
 
     g: Spectrum = documented(
-        attr.ib(
+        attrs.field(
             default=0.0,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attr.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),

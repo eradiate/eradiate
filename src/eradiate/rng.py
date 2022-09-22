@@ -6,18 +6,18 @@ Inspired by `SeedBank <https://github.com/lenskit/seedbank>`_.
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import numpy.random
 
 
-@attr.s
+@attrs.define
 class SeedState:
     """
     Manage a root seed and facilities to derive seeds.
     """
 
-    _seed: t.Optional[np.random.SeedSequence] = attr.ib(
+    _seed: t.Optional[np.random.SeedSequence] = attrs.field(
         default=None,
         converter=lambda x: x
         if isinstance(x, np.random.SeedSequence)

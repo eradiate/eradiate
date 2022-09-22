@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import attr
+import attrs
 
 from ._core import PhaseFunction
 from ..core import KernelDict
@@ -9,7 +9,7 @@ from ...contexts import KernelDictContext
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class RayleighPhaseFunction(PhaseFunction):
     """
     Rayleigh phase function [``rayleigh``].

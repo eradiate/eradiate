@@ -4,7 +4,7 @@ import os
 import typing as t
 from abc import ABC, abstractmethod
 
-import attr
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -54,16 +54,16 @@ biosphere_factory.register_lazy_batch(
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class Canopy(SceneElement, ABC):
     """
     An abstract base class defining a base type for all canopies.
     """
 
     id: t.Optional[str] = documented(
-        attr.ib(
+        attrs.field(
             default="canopy",
-            validator=attr.validators.optional(attr.validators.instance_of(str)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(SceneElement, "id", "doc"),
         type=get_doc(SceneElement, "id", "type"),
@@ -72,9 +72,9 @@ class Canopy(SceneElement, ABC):
     )
 
     size: t.Optional[pint.Quantity] = documented(
-        pinttr.ib(
+        pinttr.field(
             default=None,
-            validator=attr.validators.optional(
+            validator=attrs.validators.optional(
                 [
                     pinttr.validators.has_compatible_units,
                     validators.on_quantity(validators.is_vector3),
@@ -129,7 +129,7 @@ class Canopy(SceneElement, ABC):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class CanopyElement(SceneElement, ABC):
     """
     An abstract class representing a component of a :class:`.Canopy` object.
@@ -181,7 +181,7 @@ class CanopyElement(SceneElement, ABC):
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class InstancedCanopyElement(SceneElement):
     """
     Instanced canopy element [``instanced``].
@@ -197,10 +197,10 @@ class InstancedCanopyElement(SceneElement):
     """
 
     canopy_element: t.Optional[CanopyElement] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            validator=attr.validators.optional(
-                attr.validators.instance_of(CanopyElement)
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(CanopyElement)
             ),
             converter=biosphere_factory.convert,
         ),
@@ -210,7 +210,7 @@ class InstancedCanopyElement(SceneElement):
     )
 
     instance_positions: pint.Quantity = documented(
-        pinttr.ib(
+        pinttr.field(
             factory=list,
             units=ucc.deferred("length"),
         ),

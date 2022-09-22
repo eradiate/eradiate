@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import typing as t
 
-import attr
+import attrs
 import numpy as np
 import pint
 import pinttr
@@ -29,7 +29,7 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     """
     Molecular atmosphere scene element [``molecular``].
@@ -43,9 +43,9 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     """
 
     _thermoprops: xr.Dataset = documented(
-        attr.ib(
+        attrs.field(
             factory=us76.make_profile,
-            validator=attr.validators.instance_of(xr.Dataset),
+            validator=attrs.validators.instance_of(xr.Dataset),
         ),
         doc="Thermophysical properties.",
         type="Dataset",
@@ -53,10 +53,10 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     phase: PhaseFunction = documented(
-        attr.ib(
+        attrs.field(
             factory=lambda: RayleighPhaseFunction(),
             converter=phase_function_factory.convert,
-            validator=attr.validators.instance_of(PhaseFunction),
+            validator=attrs.validators.instance_of(PhaseFunction),
         ),
         doc="Phase function.",
         type=":class:`.PhaseFunction`",
@@ -65,7 +65,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     has_absorption: bool = documented(
-        attr.ib(
+        attrs.field(
             default=True,
             converter=bool,
         ),
@@ -77,7 +77,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     has_scattering: bool = documented(
-        attr.ib(
+        attrs.field(
             default=True,
             converter=bool,
         ),
@@ -98,10 +98,10 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             )
 
     absorption_data_sets: t.Optional[t.Dict[str, str]] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(dict),
-            validator=attr.validators.optional(attr.validators.instance_of(dict)),
+            converter=attrs.converters.optional(dict),
+            validator=attrs.validators.optional(attrs.validators.instance_of(dict)),
         ),
         doc="Mapping of species and absorption data set files paths. If "
         "``None``, the default absorption data sets are used to compute "

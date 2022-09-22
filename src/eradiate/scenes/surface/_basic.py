@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 import warnings
 
-import attr
+import attrs
 
 from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
@@ -15,7 +15,7 @@ from ...exceptions import OverriddenValueWarning
 
 
 @parse_docs
-@attr.s
+@attrs.define
 class BasicSurface(Surface):
     """
     Basic surface [``basic``].
@@ -24,11 +24,11 @@ class BasicSurface(Surface):
     """
 
     shape: t.Optional[Shape] = documented(
-        attr.ib(
+        attrs.field(
             default=None,
-            converter=attr.converters.optional(shape_factory.convert),
-            validator=attr.validators.optional(
-                attr.validators.instance_of((RectangleShape, SphereShape))
+            converter=attrs.converters.optional(shape_factory.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of((RectangleShape, SphereShape))
             ),
         ),
         doc="Shape describing the surface. This parameter may be left unset "
@@ -53,10 +53,10 @@ class BasicSurface(Surface):
                 )
 
     bsdf: BSDF = documented(
-        attr.ib(
+        attrs.field(
             factory=LambertianBSDF,
             converter=bsdf_factory.convert,
-            validator=attr.validators.instance_of(BSDF),
+            validator=attrs.validators.instance_of(BSDF),
         ),
         doc="The reflection model attached to the surface.",
         type=".BSDF",

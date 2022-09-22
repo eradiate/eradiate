@@ -18,7 +18,7 @@ requires-python = ">=3.8"
 
 dependencies = [
   "aenum",
-  "attrs",
+  "attrs>=21.4",
   "click",
   "dessinemoi>=22.2.0",
   "environ-config",
@@ -96,7 +96,7 @@ git_describe_command = [
   "--long",
   "--match",
   "v[0-9]*",
-] # Redefined to avoid crashing with special build tags 
+] # Redefined to avoid crashing with special build tags
 version_scheme = "post-release" # Count commits since last tag, don't anticipate new version
 
 [tool.isort]
