@@ -23,7 +23,8 @@ equation.
 
 ## Detailed list of features
 
-* **Spectral computation**
+<ul>
+  <li><strong>Spectral computation</strong>
 
   <details>
   <summary>
@@ -48,12 +49,13 @@ equation.
   This method achieves compromise between performance and accuracy for the
   simulation of absorption by gases.
   </details>
+  </li>
 
-* **Atmosphere**
+  <li><strong>Atmosphere</strong>
 
   <details>
   <summary>
-  One-dimensional atmospheric profiles (AFGL atmospheric constituent 
+  One-dimensional atmospheric profiles (AFGL atmospheric constituent
   profiles)
   </summary>
   These profiles are available in CKD mode only (the monochromatic mode uses
@@ -67,8 +69,9 @@ equation.
   This allows for more accurate results at high illumination and viewing
   angles.
   </details>
+  </li>
 
-* **Surface**
+  <li><strong>Surface</strong>
 
   <details>
   <summary>
@@ -92,8 +95,9 @@ equation.
   Your discrete canopy can be integrated within a scene featuring a 1D
   atmosphere model in a fully coupled simulation.
   </details>
+  </li>
 
-* **Illumination**
+  <li><strong>Illumination</strong>
 
   <details>
   <summary>
@@ -108,8 +112,9 @@ equation.
   </summary>
   Pick your favourite—or bring your own.
   </details>
+  </li>
 
-* **Measure**
+  <li><strong>Measure</strong>
 
   <details>
   <summary>
@@ -132,8 +137,9 @@ equation.
   Our SRF data is very close to the original data, and we provide advice to
   further clean up the data, trading off accuracy for performance.
   </details>
+  </li>
 
-* **Monte Carlo ray tracing**
+  <li><strong>Monte Carlo ray tracing</strong>
 
   <details>
   <summary>
@@ -150,8 +156,9 @@ equation.
   Mitsuba ships a null-collision-based volumetric path tracer which performs
   well in the cases Eradiate is used for.
   </details>
+  </li>
 
-* **Traceability**
+  <li><strong>Traceability</strong>
 
   <details>
   <summary>
@@ -176,8 +183,9 @@ equation.
   Eradiate is shipped with a large unit testing suite and benchmarked
   periodically against community-established reference simulation software.
   </details>
+  </li>
 
-* **Interface**
+  <li><strong>Interface</strong>
 
   <details>
   <summary>
@@ -208,6 +216,8 @@ equation.
   </summary>
   Eradiate uses predominantly xarray data structures for I/O.
   </details>
+  </li>
+</ul>
 
 ## Installation and usage
 
