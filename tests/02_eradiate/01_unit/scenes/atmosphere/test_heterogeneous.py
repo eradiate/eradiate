@@ -4,8 +4,9 @@ import pytest
 
 import eradiate
 from eradiate import unit_context_config as ucc
+from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.contexts import CKDSpectralContext, KernelDictContext
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     MolecularAtmosphere,
@@ -306,11 +307,60 @@ def test_heterogeneous_blend_switches(mode_mono):
         particle_layers=[ParticleLayer()],
     )
 
-    # Purely absorbing atmosphere + particle layer combination is not allowed
-    with pytest.raises(ValueError):
-        HeterogeneousAtmosphere(
-            molecular_atmosphere=MolecularAtmosphere.ussa_1976(
-                has_absorption=True, has_scattering=False
-            ),
-            particle_layers=[ParticleLayer()],
+
+@pytest.mark.parametrize(
+    "particle_radprops",
+    ["absorbing_only", "scattering_only"],
+)
+def test_heterogeneous_absorbing_mol_atm(mode_ckd, particle_radprops, request):
+    """
+    Phase function weights are correct when the molecular atmosphere is
+    absorbing-only and the particle layer is either absorbing-only or
+    scattering-only.
+    """
+    # Create the heterogeneous atmosphere
+    pl_bottom = 1.0 * ureg.km  # arbitrary
+    pl_top = 4.0 * ureg.km  # arbitrary
+    particle_layer = ParticleLayer(
+        bottom=pl_bottom,
+        top=pl_top,
+        dataset=request.getfixturevalue(particle_radprops),
+    )
+    atmosphere = HeterogeneousAtmosphere(
+        molecular_atmosphere=MolecularAtmosphere.afgl_1986(
+            has_absorption=True,
+            has_scattering=False,
+        ),
+        particle_layers=particle_layer,
+        geometry={"type": "spherical_shell"},  # arbitrary
+    )
+
+    # Generate kernel dict
+    kernel_dict = atmosphere.kernel_phase(
+        KernelDictContext(
+            spectral_ctx=CKDSpectralContext(bin_set="1nm"),
+        )
+    )
+
+    # Extract phase function weights
+    weight = np.array(kernel_dict.data["phase"]["weight"]["grid"])
+    z_mesh = atmosphere._high_res_z_layer().m_as(uck["length"])
+    inside_particle_layer = (z_mesh >= pl_bottom.m_as(uck["length"])) & (
+        z_mesh <= pl_top.m_as(uck["length"])
+    )
+
+    # Outside the particle layer, the phase function weight should be zero.
+    assert np.all(weight[~inside_particle_layer] == 0.0)
+
+    # Within the particle layer, the phase function weight should be:
+    #   - zero, if the particle layer is not scattering (i.e., absorbing-only)
+    #   - larger than zero, if the particle layer is scattering
+    if particle_radprops == "absorbing_only":
+        assert np.all(weight[inside_particle_layer] == 0.0)
+    elif particle_radprops == "scattering_only":
+        assert np.all(weight[inside_particle_layer] > 0.0)
+    else:
+        raise ValueError(
+            f"Test parametrisation inconsistent. Expected 'absorbing_only' or "
+            f"'scattering_only' (got {particle_radprops})"
         )

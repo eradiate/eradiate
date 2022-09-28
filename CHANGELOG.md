@@ -67,6 +67,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 * Some dependencies are now optional, although recommended ({ghpr}`266`).
 * Added new sahara and continental particle radiative properties including the
   full scattering phase matrix ({ghpr}`259`).
+* Allow mixing a purely absorbing `MolecularAtmosphere` with a `ParticleLayer` 
+  ({ghpr}`239`).
 
 ### Documentation
 
