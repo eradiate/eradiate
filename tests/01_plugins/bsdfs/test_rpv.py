@@ -63,7 +63,7 @@ def eval_bsdf(bsdf, wi, wo):
 @pytest.mark.parametrize("rho_0", [0.004, 0.1, 0.497])
 @pytest.mark.parametrize("k", [0.543, 0.634, 0.851])
 @pytest.mark.parametrize("g", [-0.29, 0.086, 0.2])
-def test_eval(variant_llvm_rgb, rho_0, k, g):
+def test_eval(variant_llvm_ad_rgb, rho_0, k, g):
     """
     Test the eval method of the RPV plugin, comparing to a reference implementation.
     """
@@ -85,7 +85,7 @@ def test_eval(variant_llvm_rgb, rho_0, k, g):
 
 
 @pytest.mark.parametrize("rho_0", [0.0, 0.5, 1.0])
-def test_eval_diffuse(variant_llvm_rgb, rho_0):
+def test_eval_diffuse(variant_llvm_ad_rgb, rho_0):
     """
     Compare a degenerate RPV case with a diffuse BRDF.
     """
@@ -111,7 +111,7 @@ def test_eval_diffuse(variant_llvm_rgb, rho_0):
     assert np.allclose(reference, values)
 
 
-def test_chi2_rpv3(variant_llvm_rgb):
+def test_chi2_rpv3(variant_llvm_ad_rgb):
     from mitsuba.chi2 import BSDFAdapter, ChiSquareTest, SphericalDomain
 
     sample_func, pdf_func = BSDFAdapter("rpv", "")
@@ -126,7 +126,7 @@ def test_chi2_rpv3(variant_llvm_rgb):
     assert chi2.run()
 
 
-def test_chi2_rpv4(variant_llvm_rgb):
+def test_chi2_rpv4(variant_llvm_ad_rgb):
     from mitsuba.chi2 import BSDFAdapter, ChiSquareTest, SphericalDomain
 
     sample_func, pdf_func = BSDFAdapter(
@@ -151,7 +151,7 @@ def test_chi2_rpv4(variant_llvm_rgb):
 
 
 @pytest.mark.parametrize("wi", [[0, 0, 1], [0, 1, 1], [1, 1, 1]])
-def test_sampling_weights_rpv(variant_llvm_rgb, wi):
+def test_sampling_weights_rpv(variant_llvm_ad_rgb, wi):
     """
     Sampling weights are correctly computed, i.e. equal to eval() / pdf().
     """
