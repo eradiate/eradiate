@@ -1,7 +1,9 @@
+from pathlib import Path
+
 import attr
 import pytest
 
-import eradiate
+from eradiate import data
 from eradiate import unit_registry as ureg
 from eradiate.ckd import Bin
 from eradiate.contexts import CKDSpectralContext, MonoSpectralContext
@@ -14,6 +16,19 @@ from eradiate.scenes.measure._core import (
     _active,
 )
 from eradiate.scenes.spectra import InterpolatedSpectrum, UniformSpectrum
+
+
+@pytest.fixture
+def local_file_srf(tmpdir) -> Path:
+    ds = data.load_dataset("spectra/srf/sentinel_2a-msi-4.nc")
+    tmpfile = Path(tmpdir / "srf.nc")
+    ds.to_netcdf(tmpfile)
+    return tmpfile
+
+
+@pytest.fixture
+def data_store_srf() -> str:
+    return "sentinel_2a-msi-4"
 
 
 def test_active(mode_mono):
@@ -82,10 +97,15 @@ def test_mono_spectral_config(modes_all_mono):
     # Off-SRF values are filtered out
     assert len(cfg.spectral_ctxs()) == 1
 
-    # A SRF can be loaded from the hard drive using its ID
+
+@pytest.mark.parametrize("srf", ["data_store_srf", "local_file_srf"])
+def test_mono_spectral_config_srf(modes_all_mono, request, srf):
+    """
+    A SRF is loaded from the data store/a local file.
+    """
     cfg = MeasureSpectralConfig.new(
         wavelengths=[640.0, 650.0, 660.0],
-        srf="sentinel_2a-msi-4",
+        srf=request.getfixturevalue(srf),
     )
     assert len(cfg.spectral_ctxs()) == 2  # The 640 nm point is filtered out
 
@@ -118,8 +138,17 @@ def test_ckd_spectral_config(modes_all_ckd):
     assert len(ctxs) == 96
     assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
 
+
+@pytest.mark.parametrize("srf", ["data_store_srf", "local_file_srf"])
+def test_ckd_spectral_config_srf(modes_all_ckd, request, srf):
+    """
+    A SRF is loaded from the data store/a local file.
+    """
+    cfg = MeasureSpectralConfig.new(
+        bin_set="10nm",
+        srf=request.getfixturevalue(srf),
+    )
     # Using the S2A-MSI-B4 SRF results in 4 * 16 = 64 contexts being generated
-    cfg = MeasureSpectralConfig.new(bin_set="10nm", srf="sentinel_2a-msi-4")
     assert len(cfg.spectral_ctxs()) == 64
 
 

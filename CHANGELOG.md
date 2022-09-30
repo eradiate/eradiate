@@ -39,8 +39,11 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 % ### Deprecations and removals
 %
-% ### Improvements and fixes
-%
+### Improvements and fixes
+
+* Added support for loading spectral response function data sets from custom
+  paths ({ghpr}`270`).
+
 % ### Documentation
 %
 % ### Internal changes

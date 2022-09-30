@@ -21,7 +21,7 @@ Filtering algorithms
 
 .. autofunction:: threshold_filter
 
-.. autofunction:: filter
+.. autofunction:: filter_srf
 
 Plotting
 --------

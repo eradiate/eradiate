@@ -219,8 +219,9 @@ def trim_and_save(
     srf: t.Union[PathLike, xr.Dataset],
     path: PathLike,
     verbose=False,
-    interactive: bool = False,
+    show_plot: bool = False,
     dry_run: bool = False,
+    interactive: bool = False,
 ) -> None:
     """
     Wraps around :meth:`trim` to save the filtered dataset.
@@ -230,20 +231,23 @@ def trim_and_save(
     srf: path-like, Dataset
         Data set to trim.
 
-    verbose: bool
-        If ``True``, display a summary of the trimming operation.
-
     path: path-like
         Path to which to save the filtered dataset.
 
-    interactive: bool
-        If ``True``, display a figure illustrating the filtered region and
-        prompt for confirmation before proceeding to saving the dataset to the
-        disk.
+    verbose : bool
+        If ``True``, display a summary of the trimming operation.
+
+    show_plot: bool
+        If ``True``, display a figure illustrating the filtered region.
 
     dry_run: bool
         If ``True``, displays where the trimmed data set would be saved but
         does not save it.
+
+    interactive: bool
+        If ``True``, prompt the user to proceed to saving the filtered dataset.
+        This is useful in combination with ``verbose=True`` and
+        ``show_plot=True``.
 
     See Also
     --------
@@ -262,7 +266,7 @@ def trim_and_save(
         rich.print(table)
 
     # save trimmed dataset
-    if interactive:
+    if show_plot:
         show(
             ds=ds,
             title=" ".join(
@@ -275,23 +279,16 @@ def trim_and_save(
             percentage=None,
         )
 
-        if Confirm.ask("Save trimmed dataset?"):
-            save(
-                ds=trimmed,
-                path=output_path,
-                verbose=verbose,
-                dry_run=dry_run,
-            )
-        else:
-            if verbose:
-                rich.print("Aborted!")
-    else:
-        save(
-            ds=trimmed,
-            path=output_path,
-            verbose=verbose,
-            dry_run=dry_run,
-        )
+    if interactive:
+        if not Confirm.ask("Save filtered dataset?"):
+            return
+
+    save(
+        ds=trimmed,
+        path=output_path,
+        verbose=verbose,
+        dry_run=dry_run,
+    )
 
 
 def spectral_filter(
@@ -709,12 +706,13 @@ def show(
     plt.show()
 
 
-def filter(
+def filter_srf(
     srf: t.Union[PathLike, xr.Dataset],
     path: PathLike,
     verbose: bool = False,
-    interactive: bool = False,
+    show_plot: bool = False,
     dry_run: bool = False,
+    interactive: bool = False,
     trim_prior: bool = True,
     threshold: t.Optional[float] = None,
     wmin: t.Optional[pint.Quantity] = None,
@@ -733,15 +731,20 @@ def filter(
         Path to which to save the filtered data set.
 
     verbose: bool
-        If ``True``, display afiltering summary table and the path to which
+        If ``True``, display a filtering summary table and the path to which
         filtered data set is saved.
 
-    interactive: bool
+    show_plot: bool
         If ``True``, display a figure emphasizing the filtered region.
 
     dry_run: bool
         If ``True``, display the path to which the filtered data set would be
         saved, but does not write the data set to the disk.
+
+    interactive: bool
+        If ``True``, prompt the user to proceed to saving the filtered dataset.
+        This is useful in combination with ``verbose=True`` and
+        ``show_plot=True``.
 
     trim_prior: bool
         Trim the data set prior to filtering.
@@ -808,7 +811,7 @@ def filter(
         rich.print(table)
 
     # save filtered dataset
-    if interactive:
+    if show_plot:
         show(
             ds=trimmed,
             title=" ".join(
@@ -821,20 +824,13 @@ def filter(
             percentage=percentage,
         )
 
-        if Confirm.ask("Save filtered dataset?"):
-            save(
-                ds=filtered,
-                path=output_path,
-                verbose=verbose,
-                dry_run=dry_run,
-            )
-        else:
-            if verbose:
-                rich.print("Aborted!")
-    else:
-        save(
-            ds=filtered,
-            path=output_path,
-            verbose=verbose,
-            dry_run=dry_run,
-        )
+    if interactive:
+        if not Confirm.ask("Save filtered dataset?"):
+            return
+
+    save(
+        ds=filtered,
+        path=output_path,
+        verbose=verbose,
+        dry_run=dry_run,
+    )
