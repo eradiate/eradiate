@@ -119,6 +119,8 @@ def make_registry(input_directory, output_file, rules, hash_algorithm):
     """
     Recursively construct a file registry from the current working directory.
     """
+    from eradiate.data._core import load_rules, make_registry
+
     input_directory = Path(input_directory)
     console.print(f"Creating registry file from '{input_directory}'")
 
@@ -126,13 +128,13 @@ def make_registry(input_directory, output_file, rules, hash_algorithm):
     if rules is None:
         rules = input_directory / "registry_rules.yml"
     console.print(f"Using rules in '{rules}'")
-    rule_map = eradiate.data._core.load_rules(rules)
+    rule_map = load_rules(rules)
 
     # Write registry
     if output_file is None:
         output_file = input_directory / "registry.txt"
     console.print(f"Writing registry file to '{output_file}'")
-    eradiate.data._core.make_registry(
+    make_registry(
         input_directory,
         output_file,
         includes=rule_map["include"],
