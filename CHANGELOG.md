@@ -74,6 +74,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   scale-based parametrisation for initialisation ({ghpr}`271`).
 * Fixed missing parameters in the `LeafCloud.sphere()` constructor
   ({ghpr}`272`).
+* Add spectral response function filtering utility ({ghpr}`269`).
 
 ### Documentation
 

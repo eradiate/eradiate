@@ -43,6 +43,7 @@ Alphabetical list of modules
    radprops
    rng
    scenes
+   srf_tools
    test_tools
    thermoprops
    units
