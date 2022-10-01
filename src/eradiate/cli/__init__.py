@@ -9,6 +9,7 @@ from rich.logging import RichHandler
 
 from .data import data
 from .show import show
+from .srf import srf
 
 
 @click.group()
@@ -33,6 +34,7 @@ def main(log_level):
 
 main.add_command(show)
 main.add_command(data)
+main.add_command(srf)
 
 
 if __name__ == "__main__":
