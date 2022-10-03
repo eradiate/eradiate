@@ -298,35 +298,6 @@ class Experiment(ABC):
     #                              Processing
     # --------------------------------------------------------------------------
 
-    @deprecated(deprecated_in="0.22.3", removed_in="0.22.5")
-    def run(
-        self,
-        *measures: t.Union[Measure, int],
-        seed_state: t.Optional[SeedState] = None,
-    ) -> None:
-        """
-        Perform radiative transfer simulation and post-process results.
-        Essentially chains :meth:`.process` and :meth:`.postprocess`.
-
-        Parameters
-        ----------
-        *measures : :class:`.Measure` or int
-            One or several measures for which to compute radiative transfer.
-            Alternatively, indexes in the measure array can be passed.
-            If no value is passed, all measures are processed.
-
-        seed_state : .SeedState, optional
-            A RNG seed state used to generate the seeds used by Mitsuba's random
-            number generator. By default, Eradiate's :data:`.root_seed_state` is
-            used.
-
-        See Also
-        --------
-        :meth:`.process`, :meth:`.postprocess`
-        """
-        self.process(*measures, seed_state=seed_state)
-        self.postprocess(*measures)
-
     def process(
         self,
         *measures: t.Union[Measure, int],
@@ -350,7 +321,7 @@ class Experiment(ABC):
 
         See Also
         --------
-        :meth:`.postprocess`, :meth:`.run`
+        :meth:`.postprocess`
         """
 
         # Mode safeguard
@@ -452,7 +423,7 @@ class Experiment(ABC):
 
         See Also
         --------
-        :meth:`.process`, :meth:`.run`
+        :meth:`.process`
         """
         if not measures:
             measures = self.measures
