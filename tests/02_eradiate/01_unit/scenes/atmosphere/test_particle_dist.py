@@ -29,11 +29,25 @@ def test_particle_dist_uniform():
     assert np.allclose(expected, dist(x))
 
 
-def test_particle_dist_exponential():
-    dist = ExponentialParticleDistribution(scale=1.0)
-    x = np.linspace(0, 1, 11)
-    expected = np.exp(-x)
-    assert np.allclose(expected, dist(x))
+@pytest.mark.parametrize(
+    "rate, scale, raises",
+    [
+        (None, None, False),
+        (5.0, None, False),
+        (None, 0.2, False),
+        (1.0, 1.0, True),
+    ],
+)
+def test_particle_dist_exponential(rate, scale, raises):
+    if raises:
+        with pytest.raises(ValueError):
+            ExponentialParticleDistribution(rate=rate, scale=scale)
+    else:
+        dist = ExponentialParticleDistribution(rate=rate, scale=scale)
+        print(dist)
+        x = np.linspace(0, 1, 11)
+        expected = 5.0 * np.exp(-5.0 * x) / (1.0 - np.exp(-5.0))
+        assert np.allclose(expected, dist(x))
 
 
 def test_particle_dist_gaussian():

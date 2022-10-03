@@ -70,6 +70,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   full scattering phase matrix ({ghpr}`259`).
 * Allow mixing a purely absorbing `MolecularAtmosphere` with a `ParticleLayer`
   ({ghpr}`239`).
+* Change the `ExponentialParticleDistribution` formulation to rate-based; allow
+  scale-based parametrisation for initialisation ({ghpr}`271`).
 
 ### Documentation
 
