@@ -33,7 +33,7 @@ def measure_inside_atmosphere(atmosphere, measure, ctx):
     Evaluate whether a sensor is placed within an atmosphere.
 
     Raises a ValueError if called with a :class:`.MultiRadiancemeterMeasure`
-    with origins both inside and outside of the atmosphere.
+    with origins both inside and outside the atmosphere.
     """
     if atmosphere is None:
         return False
