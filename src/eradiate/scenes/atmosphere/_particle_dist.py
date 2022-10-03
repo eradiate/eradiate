@@ -101,26 +101,55 @@ class UniformParticleDistribution(ParticleDistribution):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(init=False)
 class ExponentialParticleDistribution(ParticleDistribution):
     r"""
-    Exponential particle distribution. Returns values given by the exponential
-    PDF
-    :math:`f : x \mapsto \frac{1}{\beta} \exp \left( - x / \beta \right)`
-    where :math:`\beta = \mathtt{scale}`.
+    Exponential particle distribution. Returns values given by the normalised
+    exponential PDF
+
+    .. math::
+       f : x \mapsto \dfrac{\lambda e^{-\lambda x}}{1 - e^{-\lambda}}
+
+    where :math:`\lambda = \mathtt{rate}`.
+
+    Parameters
+    ----------
+    rate : float, optional, default: 5.0
+        Decay rate :math:`\lambda`. The default value ensures a 99.3% decay on
+        the [0, 1] interval. Mutually exclusive with `scale`.
+
+    scale : float, optional
+        Scale :math:`\beta = 1 / \lambda`. Mutually exclusive with `rate`.
+
+    Fields
+    ------
+    rate : float
+        Decay rate :math:`\lambda`.
     """
-    scale: float = documented(
-        attrs.field(default=5.0, converter=float),
-        type="float",
-        init_type="float, optional",
-        default="5.0",
-        doc="Scale parameter of the exponential function. The default value "
-        "ensures that the integral of the exponential PDF over the interval "
-        "[0, 1] is equal to 99.3%.",
-    )
+    rate: float = attrs.field(default=5.0, converter=float)
+
+    @rate.validator
+    def _rate_validator(self, attribute, value):
+        if value <= 0:
+            raise ValueError(
+                f"while validating {attribute.name}: rate must be strictly positive"
+            )
+
+    def __init__(self, rate: float = None, scale: float = None):
+        if rate is None and scale is None:
+            self.__attrs_init__()
+        elif scale is None and rate is not None:
+            self.__attrs_init__(rate)
+        elif scale is not None and rate is None:
+            self.__attrs_init__(1.0 / scale)
+        else:
+            raise ValueError(
+                "while initialising ExponentialParticleDistribution: "
+                "setting both rate and scale is not allowed"
+            )
 
     def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
-        return np.exp(-x / self.scale) / self.scale
+        return np.exp(-x * self.rate) * self.rate / (1.0 - np.exp(-self.rate))
 
 
 @parse_docs
