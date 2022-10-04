@@ -1073,7 +1073,7 @@ class LeafCloud(CanopyElement):
 
         .. important::
 
-           Location coordinates are assumed to be given in meters.
+           All quantities are assumed to be given in metre.
 
         Parameters
         ----------

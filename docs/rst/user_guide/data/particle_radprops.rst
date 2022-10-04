@@ -1,5 +1,5 @@
-Particle radiative properies
-============================
+Particle radiative properties
+=============================
 
 A particle radiative property data set provides collision coefficients and
 scattering phase matrix data for the given particle type.
