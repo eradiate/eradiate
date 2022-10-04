@@ -41,4 +41,22 @@ def install(*extensions):
 
 # IPython extension. Must be imported by top-level module.
 def load_ipython_extension(ipython):
+    """
+    The Eradiate notebook extension.
+
+    This extension simply calls the :func:`eradiate.notebook.install` function.
+
+    See Also
+    --------
+    :func:`eradiate.notebook.install`
+
+    Notes
+    -----
+    This extension should be loaded using the IPython magic:
+
+    .. code::
+
+       %load_ext eradiate
+    """
+
     install()
