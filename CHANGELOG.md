@@ -72,6 +72,8 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
   ({ghpr}`239`).
 * Change the `ExponentialParticleDistribution` formulation to rate-based; allow
   scale-based parametrisation for initialisation ({ghpr}`271`).
+* Fixed missing parameters in the `LeafCloud.sphere()` constructor
+  ({ghpr}`272`).
 
 ### Documentation
 
