@@ -1,2 +1,0 @@
-RAMI solver application
------------------------
