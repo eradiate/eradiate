@@ -876,9 +876,7 @@ class LeafCloud(CanopyElement):
         rng = np.random.default_rng(seed=seed)
         params = SphereLeafCloudParams(**kwargs)
         leaf_positions = _leaf_cloud_positions_ellipsoid(
-            params.n_leaves,
-            rng,
-            params.radius,
+            params.n_leaves, rng, params.radius, params.radius, params.radius
         )
         leaf_orientations = _leaf_cloud_orientations(
             params.n_leaves, params.mu, params.nu, rng
