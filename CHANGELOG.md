@@ -78,6 +78,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 ### Documentation
 
 * Dependencies are now listed explicitly ({ghpr}`266`).
+* Major tutorial overhaul ({ghpr}`209`).
 
 ### Internal changes
 
