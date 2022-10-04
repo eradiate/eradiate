@@ -106,6 +106,9 @@ docs-rst:
 	make -C docs rst-api
 	make -C docs rst-plugins
 
+docs-tutorials-jupyter:
+	jupyter lab --InteractiveShellApp.extensions=eradiate.notebook.tutorials
+
 docs-clean:
 	make -C docs clean
 
