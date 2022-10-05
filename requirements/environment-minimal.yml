@@ -6,7 +6,7 @@ dependencies:
   - python=3.8
   # main
   - aenum
-  - attrs
+  - attrs>=21.4
   - click
   - dessinemoi>=22.2.0
   - environ-config
