@@ -106,8 +106,8 @@ docs-rst:
 	make -C docs rst-api
 	make -C docs rst-plugins
 
-docs-tutorials-jupyter:
-	jupyter lab --InteractiveShellApp.extensions=eradiate.notebook.tutorials
+docs-render-tutorials: conda-init
+	jupyter nbconvert tutorials/**/*.ipynb --execute --to notebook --inplace
 
 docs-clean:
 	make -C docs clean
