@@ -79,6 +79,7 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 * Dependencies are now listed explicitly ({ghpr}`266`).
 * Major tutorial overhaul ({ghpr}`209`).
+* Rendered tutorial notebooks and added thumbnail galleries ({ghpr}`273`).
 
 ### Internal changes
 
