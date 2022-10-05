@@ -27,6 +27,7 @@ exclude_patterns = ["_build", "tutorials/README.md"]
 html_static_path = ["_static"]
 
 extensions = [
+    "sphinx_gallery.load_style",  # Thumbnail galleries
     # Core extensions
     "sphinx.ext.autodoc",  # Automatic API documentation
     "sphinx.ext.autosummary",  # Summary tables in API docs
@@ -72,16 +73,11 @@ if not os.path.exists("tutorials"):
     os.symlink("../tutorials", "tutorials", target_is_directory=True)
 nbsphinx_execute = "never"
 nbsphinx_prolog = """
-*Due to how our documentation is currently deployed online, we can
-only render the output of these examples offline. Consequently, we strongly
-advise users to run our examples themselves, either by copying code blocks
-found in the tutorials, or by downloading them as Jupyter notebooks.*
-
 .. button-link:: https://github.com/eradiate/eradiate-tutorials/blob/main/{{ env.doc2path(env.docname, base=False)|replace("tutorials/", "") }}
    :color: primary
    :expand:
 
-   :octicon:`link-external` Go to notebook file
+   :fas:`external-link-alt` Go to notebook file
 
 ----
 """

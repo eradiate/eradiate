@@ -203,17 +203,46 @@ Eradiate comes with tutorials shipped as Jupyter notebooks, saved to the
 They are integrated in this documentation using the
 `nbsphinx <https://nbsphinx.readthedocs.io/>`_ extension.
 
+The recommended way to edit tutorials is as follows:
+
+1. Open a terminal and start a Jupyter session.
+2. In another terminal, open a Sphinx server using the following command at the
+   root of your local copy of Eradiate:
+
+   .. code:: bash
+
+      make docs-serve
+
+3. Browse to the tutorial you want to edit or create a new one using the
+   tutorial template. You can now edit the content and see how it renders
+   dynamically. **Make sure that the first cell is as follows:**
+
+   .. code:: bash
+
+      %reload_ext eradiate.notebook.tutorials
+
+Nbsphinx renders markdown cells, but also allows to define raw reST cells, which
+then support all usual Sphinx features (references, admonitions, etc.). See
+`the documentation <https://nbsphinx.readthedocs.io/en/latest/raw-cells.html>`_
+for more detail.
+
+Thumbnail galleries are not trivial difficult to fine-tune. The following pages
+are useful when working on them:
+
+* Galleries are created in Markdown/reST files following
+  `these instructions <https://nbsphinx.readthedocs.io/en/latest/a-normal-rst-file.html#thumbnail-galleries>`_.
+* Thumbnail selection is done following the
+  recommendations of the nbsphinx documentation:
+  `cell tag based <https://nbsphinx.readthedocs.io/en/latest/gallery/cell-tag.html>`_,
+  `cell metadata based <https://nbsphinx.readthedocs.io/en/latest/gallery/cell-metadata.html>`_,
+  `Sphinx config based <https://nbsphinx.readthedocs.io/en/latest/gallery/thumbnail-from-conf-py.html>`_.
+
 Tutorials are currently not run as part of the documentation build process. The
 reason for this is that doing so would require a fully functional copy of
 Eradiate, including its radiometric kernel Mitsuba. This is currently
 unachievable on the Read the Docs service we use to deploy automatically the
 documentation upon committing to GitHub: Mitsuba must be compiled and Read the
 Docs does not support its build process.
-
-Consequently, we currently display notebooks with no output. We strongly
-recommend to install the `pre-commit <https://pre-commit.com/>`_ hooks defined
-in the tutorial submodule: this will automatically trim all notebook output upon
-commit.
 
 .. _sec-contributing-codebase:
 
