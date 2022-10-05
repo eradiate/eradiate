@@ -41,11 +41,11 @@ bleach==5.0.1
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-certifi==2022.9.14
+certifi==2022.9.24
     # via
     #   -c requirements/dev.txt
     #   requests
-cftime==1.6.1
+cftime==1.6.2
     # via
     #   -c requirements/dev.txt
     #   netcdf4
@@ -66,6 +66,10 @@ commonmark==0.9.1
     # via
     #   -c requirements/dev.txt
     #   rich
+contourpy==1.0.5
+    # via
+    #   -c requirements/dev.txt
+    #   matplotlib
 cycler==0.11.0
     # via
     #   -c requirements/dev.txt
@@ -96,11 +100,11 @@ environ-config==22.1.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-fastjsonschema==2.16.1
+fastjsonschema==2.16.2
     # via
     #   -c requirements/dev.txt
     #   nbformat
-fonttools==4.37.1
+fonttools==4.37.4
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -112,7 +116,7 @@ imagesize==1.4.1
     # via
     #   -c requirements/dev.txt
     #   sphinx
-importlib-metadata==4.12.0
+importlib-metadata==4.13.0
     # via
     #   -c requirements/dev.txt
     #   nbconvert
@@ -159,10 +163,6 @@ livereload==2.6.3
     # via
     #   -c requirements/dev.txt
     #   sphinx-autobuild
-lxml==4.9.1
-    # via
-    #   -c requirements/dev.txt
-    #   nbconvert
 markdown-it-py==2.1.0
     # via
     #   -c requirements/dev.txt
@@ -173,11 +173,11 @@ markupsafe==2.1.1
     #   -c requirements/dev.txt
     #   jinja2
     #   nbconvert
-matplotlib==3.5.3
+matplotlib==3.6.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-mdit-py-plugins==0.3.0
+mdit-py-plugins==0.3.1
     # via
     #   -c requirements/dev.txt
     #   myst-parser
@@ -189,7 +189,7 @@ mistune==2.0.4
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-myst-parser==0.18.0
+myst-parser==0.18.1
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -197,11 +197,11 @@ nbclient==0.6.8
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-nbconvert==7.0.0
+nbconvert==7.1.0
     # via
     #   -c requirements/dev.txt
     #   nbsphinx
-nbformat==5.5.0
+nbformat==5.6.1
     # via
     #   -c requirements/dev.txt
     #   nbclient
@@ -211,7 +211,7 @@ nbsphinx==0.8.9
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
-nest-asyncio==1.5.5
+nest-asyncio==1.5.6
     # via
     #   -c requirements/dev.txt
     #   jupyter-client
@@ -225,6 +225,7 @@ numpy==1.23.3
     #   -c requirements/dev.txt
     #   -r requirements/main.in
     #   cftime
+    #   contourpy
     #   matplotlib
     #   netcdf4
     #   pandas
@@ -239,7 +240,7 @@ packaging==21.3
     #   pydata-sphinx-theme
     #   sphinx
     #   xarray
-pandas==1.4.4
+pandas==1.5.0
     # via
     #   -c requirements/dev.txt
     #   xarray
@@ -302,7 +303,7 @@ python-dateutil==2.8.2
     #   jupyter-client
     #   matplotlib
     #   pandas
-pytz==2022.2.1
+pytz==2022.4
     # via
     #   -c requirements/dev.txt
     #   babel
@@ -313,7 +314,7 @@ pyyaml==6.0
     #   myst-parser
     #   pybtex
     #   sphinx-book-theme
-pyzmq==23.2.1
+pyzmq==24.0.1
     # via
     #   -c requirements/dev.txt
     #   jupyter-client
@@ -322,7 +323,7 @@ requests==2.28.1
     #   -c requirements/dev.txt
     #   pooch
     #   sphinx
-rich==12.5.1
+rich==12.6.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
@@ -367,6 +368,7 @@ sphinx==4.5.0
     #   sphinx-click
     #   sphinx-copybutton
     #   sphinx-design
+    #   sphinx-gallery
     #   sphinxcontrib-bibtex
 sphinx-autobuild==2021.3.14
     # via
@@ -385,6 +387,10 @@ sphinx-copybutton==0.5.0
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
 sphinx-design==0.3.0
+    # via
+    #   -c requirements/dev.txt
+    #   -r requirements/docs.in
+sphinx-gallery==0.9.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/docs.in
@@ -452,7 +458,7 @@ webencodings==0.5.1
     #   -c requirements/dev.txt
     #   bleach
     #   tinycss2
-xarray==2022.6.0
+xarray==2022.9.0
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
