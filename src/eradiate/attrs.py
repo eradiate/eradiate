@@ -1,5 +1,7 @@
 """``attrs``-based utility classes and functions."""
 
+from __future__ import annotations
+
 import enum
 import re
 import typing as t
@@ -81,7 +83,7 @@ class _FieldDoc:
     default = attrs.field(default=None)
 
 
-def _eradiate_formatter(cls_doc, field_docs):
+def _eradiate_formatter(cls_doc: str, field_docs: t.Dict[str, _FieldDoc]) -> str:
     """
     Appends a section on attributes to a class docstring.
     This docstring formatter is appropriate for Eradiate's current docstring
@@ -135,7 +137,7 @@ def _eradiate_formatter(cls_doc, field_docs):
         return cls_doc
 
 
-def _numpy_formatter(cls_doc, field_docs):
+def _numpy_formatter(cls_doc: str, field_docs: t.Dict[str, _FieldDoc]) -> str:
     """
     Append a section on attributes to a class docstring.
     This docstring formatter is appropriate for the Numpy docstring format.
@@ -215,7 +217,7 @@ def _numpy_formatter(cls_doc, field_docs):
         return cls_doc
 
 
-def parse_docs(cls):
+def parse_docs(cls: t.Type) -> t.Type:
     """
     Extract attribute documentation and update class docstring with it.
 
@@ -276,7 +278,13 @@ def parse_docs(cls):
     return cls
 
 
-def documented(attrib, doc=None, type=None, init_type=None, default=None):
+def documented(
+    attrib: attrs.Attribute,
+    doc: t.Optional[str] = None,
+    type: t.Optional[str] = None,
+    init_type: t.Optional[str] = None,
+    default: t.Optional[str] = None,
+) -> attrs.Attribute:
     """
     Declare an attrs field as documented.
 
