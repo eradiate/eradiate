@@ -7,6 +7,7 @@ from . import kernel as kernel
 from . import notebook as notebook
 from . import pipelines as pipelines
 from . import plot as plot
+from . import radprops as radprops
 from . import rng as rng
 from . import scenes as scenes
 from . import units as units

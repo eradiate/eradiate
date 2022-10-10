@@ -1,3 +1,5 @@
+from . import absorption as absorption
+from . import rayleigh as rayleigh
 from ._afgl1986 import AFGL1986RadProfile as AFGL1986RadProfile
 from ._array import ArrayRadProfile as ArrayRadProfile
 from ._core import RadProfile as RadProfile
