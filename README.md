@@ -28,10 +28,10 @@ equation.
 
   <details>
   <summary>
-  Covered spectral range: 280 nm to 2400 nm
+  Solar reflective spectral region
   </summary>
-  Eradiate focuses on the visible and near infrared regions and ships spectral
-  data within that range.
+  Eradiate ships spectral data within from 280 nm to 2400 nm. This range can be
+  extended with additional data (just ask for it!).
   </details>
 
   <details>
