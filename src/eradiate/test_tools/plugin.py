@@ -39,6 +39,10 @@ def sample_eval_pdf_bsdf(
 
     pdf
         The result of a call to the plugin's ``pdf()`` method.
+
+    Warnings
+    --------
+    This function requires a JIT active variant (*e.g* ``llvm_ad_rgb``).
     """
 
     # Generate a table of uniform variates
