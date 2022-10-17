@@ -1,15 +1,15 @@
 import attr
 import pytest
 
+import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.ckd import Bin
 from eradiate.contexts import CKDSpectralContext, MonoSpectralContext
 from eradiate.quad import Quad
+from eradiate.scenes.measure import Measure, MeasureSpectralConfig
 from eradiate.scenes.measure._core import (
     CKDMeasureSpectralConfig,
-    Measure,
     MeasureFlags,
-    MeasureSpectralConfig,
     MonoMeasureSpectralConfig,
     _active,
 )

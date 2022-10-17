@@ -9,14 +9,14 @@ from eradiate.radprops import AFGL1986RadProfile
 
 @pytest.fixture
 def test_ckd_spectral_ctx_1650():
-    spectral_cfg = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins="1650")
+    spectral_cfg = eradiate.scenes.measure.MeasureSpectralConfig.new(bins="1650")
     bindex = eradiate.ckd.Bindex(bin=spectral_cfg.bins[0], index=3)
     return SpectralContext.new(bindex=bindex, bin_set="10nm")
 
 
 @pytest.fixture
 def test_ckd_spectral_ctx_550():
-    spectral_cfg = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins="550")
+    spectral_cfg = eradiate.scenes.measure.MeasureSpectralConfig.new(bins="550")
     bindex = eradiate.ckd.Bindex(bin=spectral_cfg.bins[0], index=3)
     return SpectralContext.new(bindex=bindex, bin_set="10nm")
 
@@ -160,7 +160,7 @@ def test_afgl_1986_rad_profile_ckd_10nm(mode_ckd, bin, model_id):
     Can evaluate absorption coefficient.
     """
     p = AFGL1986RadProfile(thermoprops=dict(model_id=model_id))
-    bin = eradiate.scenes.measure._core.CKDMeasureSpectralConfig(bins=bin).bins[0]
+    bin = eradiate.scenes.measure.MeasureSpectralConfig.new(bins=bin).bins[0]
     bindex = eradiate.ckd.Bindex(bin=bin, index=3)
     spectral_ctx = SpectralContext.new(bindex=bindex, bin_set="10nm")
     assert isinstance(p.eval_sigma_a(spectral_ctx), pint.Quantity)
