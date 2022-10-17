@@ -42,7 +42,7 @@ def sample_eval_pdf_bsdf(
 
     Warnings
     --------
-    This function requires a JIT active variant (*e.g* ``llvm_ad_rgb``).
+    This function requires a JIT active variant (*e.g.* ``llvm_ad_rgb``).
     """
 
     # Generate a table of uniform variates

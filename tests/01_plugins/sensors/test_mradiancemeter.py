@@ -140,7 +140,6 @@ def test_sample_ray_multi(variant_scalar_rgb):
     correct component is picked.
     """
     sensor = mi.load_dict(dict_sensor("0, 0, 0, 1, 0, 1", "1, 0, 0, 1, 1, 1", 2))
-    print(sensor)
 
     random.seed(42)
     for _ in range(10):
