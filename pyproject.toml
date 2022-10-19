@@ -99,7 +99,8 @@ eradiate = ["py.typed", "*.pyi"]  # Required by PEP 561 https://mypy.readthedocs
 git_describe_command = [
   "git",
   "describe",
-  "--dirty", # "--tags",
+  "--dirty",
+  "--tags",
   "--long",
   "--match",
   "v[0-9]*",
