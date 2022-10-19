@@ -150,17 +150,22 @@ following command:
 
 .. tab-set::
 
-   .. tab-item:: Public branch (users)
-
-      .. code:: bash
-
-         git clone --recursive --branch public https://github.com/eradiate/eradiate
-
-   .. tab-item:: Main branch (developers)
+   .. tab-item:: Latest main branch
 
       .. code:: bash
 
          git clone --recursive https://github.com/eradiate/eradiate
+
+   .. tab-item:: Specific branch or tag
+
+      .. code:: bash
+
+         git clone --recursive --branch <ref> https://github.com/eradiate/eradiate
+
+      where ``<ref>`` is a Git branch or tag. For the latest stable version, use
+      "|version|".
+
+
 
 This will clone the Eradiate repository, as well as all its dependencies.
 This recursive cloning procedure can take up to a few minutes depending on
@@ -402,13 +407,13 @@ followed the installation instructions, here is a possible workflow:
 1. Activate the Conda environment and delete the Eradiate source directory:
 
    .. code:: bash
-   
+
       conda activate eradiate
       rm -rf $ERADIATE_SOURCE_DIR
 
 2. Deactivate the Conda environment and delete it:
 
    .. code:: bash
-   
+
       conda deactivate
       conda env remove --name eradiate
