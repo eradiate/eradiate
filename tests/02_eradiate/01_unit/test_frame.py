@@ -58,7 +58,7 @@ def test_transform_azimuth_to_east_right(from_convention, expected, normalize):
         from_convention=from_convention,
         normalize=normalize,
     )
-    assert np.allclose(np.rad2deg(result), expected)
+    assert np.allclose(expected, np.rad2deg(result))
 
 
 @pytest.mark.parametrize(
@@ -73,6 +73,9 @@ def test_transform_azimuth_to_east_right(from_convention, expected, normalize):
         ("south_right", True, [270.0, 315.0, 45.0]),
         ("south_left", True, [270.0, 225.0, 135.0]),
         ("south_right", False, [270.0, 315.0, 405.0]),
+        # The following configurations test for close-to-zero value snapping
+        ("east_right", True, [360.0 - 1e-4, 45.0, 135.0]),
+        ("north_right", True, [90.0 - 1e-4, 135.0, 225.0]),
     ],
 )
 def test_transform_azimuth_from_east_right(to_convention, initial, normalize):
@@ -82,7 +85,7 @@ def test_transform_azimuth_from_east_right(to_convention, initial, normalize):
         to_convention=to_convention,
         normalize=normalize,
     )
-    assert np.allclose(result, expected)
+    assert np.allclose(expected, result), np.rad2deg(result)
 
 
 def test_angles_to_direction():

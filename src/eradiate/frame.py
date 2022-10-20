@@ -49,6 +49,41 @@ class AzimuthConvention(enum.Enum):
         aenum.extend_enum(cls, name.upper(), value)
 
 
+def normalize_azimuth(angles: np.typing.ArrayLike, inplace: bool = False) -> np.ndarray:
+    """
+    Normalise azimuth values to the [0, 2π[ interval.
+
+    Parameters
+    ----------
+    angles : array-like
+        A sequence of azimuth values [rad].
+
+    inplace : bool, optional, default: False
+        If ``True``, perform the conversion in-place. This will mutate the
+        `angles` array; otherwise, this function operates on a copy.
+
+    Returns
+    -------
+    ndarray
+        Azimuth angle values normalised to the [0, 2π[ interval [rad].
+
+    Warnings
+    --------
+    This function does *not* apply unit conversion automatically: angle values
+    must be supplied in radians and are returned as plain Numpy arrays.
+    """
+    result = angles if inplace else np.copy(angles)
+    result %= 2.0 * np.pi
+
+    # Snap close-to-2π values to 0 to compensate for numerical precision-related
+    # unwanted shifts (may happen with angles computed from directions)
+    result[:] = np.where(
+        np.isclose(result, 2.0 * np.pi, rtol=0.0, atol=1e-6 * np.pi), 0.0, result
+    )
+
+    return result
+
+
 def transform_azimuth(
     angles: np.typing.ArrayLike,
     from_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
@@ -74,7 +109,7 @@ def transform_azimuth(
         converted to a :class:`.AzimuthConvention`.
 
     normalize : bool, optional, default: True
-        If ``True``, normalise returned angle values within the [0, 2π]
+        If ``True``, normalise returned angle values within the [0, 2π[
         interval.
 
     inplace : bool, optional, default: False
@@ -112,7 +147,7 @@ def transform_azimuth(
         result *= to_orientation
 
     if normalize:
-        result %= 2.0 * np.pi
+        result = normalize_azimuth(result, inplace=inplace)
 
     return result
 
@@ -214,9 +249,11 @@ def angles_to_direction(
     )
 
 
-@ureg.wraps(ret="rad", args=(None, None), strict=False)
+@ureg.wraps(ret="rad", args=(None, None, None), strict=False)
 def direction_to_angles(
-    v: np.typing.ArrayLike, azimuth_convention=AzimuthConvention.EAST_RIGHT
+    v: np.typing.ArrayLike,
+    azimuth_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
+    normalize: bool = True,
 ) -> np.ndarray:
     """
     Convert a cartesian unit vector to a zenith-azimuth pair.
@@ -229,6 +266,9 @@ def direction_to_angles(
     azimuth_convention : .AzimuthConvention or str, optional, default: .AzimuthConvention.EAST_RIGHT
         Target azimuth angle convention. If a string is passed, it will be
         converted to a :class:`.AzimuthConvention`.
+
+    normalize : bool, optional, default: True
+        If ``True``, normalise azimuth values within the [0, 2π[ interval.
 
     Returns
     -------
@@ -248,6 +288,7 @@ def direction_to_angles(
         np.arctan2(v[..., 1], v[..., 0]),
         from_convention=AzimuthConvention.EAST_RIGHT,
         to_convention=azimuth_convention,
+        normalize=normalize,
     )
 
     return np.vstack((theta, phi)).T
