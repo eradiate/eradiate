@@ -26,7 +26,7 @@ def test_particle_dist_uniform():
     dist = UniformParticleDistribution(bounds=[0.0, 0.5])
     x = np.linspace(-0.5, 1.0, 7)
     expected = np.array([0, 0, 2, 2, 2, 0, 0])
-    assert np.allclose(expected, dist(x))
+    assert np.allclose(dist(x), expected)
 
 
 @pytest.mark.parametrize(
@@ -47,14 +47,14 @@ def test_particle_dist_exponential(rate, scale, raises):
         print(dist)
         x = np.linspace(0, 1, 11)
         expected = 5.0 * np.exp(-5.0 * x) / (1.0 - np.exp(-5.0))
-        assert np.allclose(expected, dist(x))
+        assert np.allclose(dist(x), expected)
 
 
 def test_particle_dist_gaussian():
     dist = GaussianParticleDistribution(mean=0.0, std=1.0)
     x = np.linspace(0, 1, 11)
     expected = np.exp(-0.5 * np.square(x)) / np.sqrt(2.0 * np.pi)
-    assert np.allclose(expected, dist(x))
+    assert np.allclose(dist(x), expected)
 
 
 def test_particle_dist_array_construct():
@@ -110,7 +110,7 @@ def test_particle_dist_array_call(method, expected):
     )
     x = np.linspace(0, 1, 11)
     result = dist(x)
-    assert np.allclose(expected, result)
+    assert np.allclose(result, expected)
 
 
 @pytest.mark.parametrize(
@@ -132,6 +132,6 @@ def test_particle_dist_array_extrapolate(extrapolate, expected):
     result = dist([0.0, 1.0])
 
     if extrapolate != "nan":
-        assert np.allclose(expected, result)
+        assert np.allclose(result, expected)
     else:
         assert np.isnan(result).all()

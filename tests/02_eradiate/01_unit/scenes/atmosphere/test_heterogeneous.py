@@ -186,7 +186,7 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
     for z in collision_coefficient.keys():
         total = collision_coefficient[z]["mixed"]
         expected = sum(collision_coefficient[z][component] for component in components)
-        assert np.allclose(expected, total), f"{z = }"
+        assert np.allclose(total, expected), f"{z = }"
 
 
 def test_heterogeneous_mix_weight(modes_all_double):

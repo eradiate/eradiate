@@ -72,7 +72,7 @@ def test_eval(variant_scalar_rgb):
         tab_eval[i] = tab.eval(ctx, mei, wo)
 
     # Compare reference and plugin outputs
-    assert np.allclose(ref_eval, tab_eval)
+    assert np.allclose(tab_eval, ref_eval)
 
 
 def test_sample(variant_scalar_rgb):

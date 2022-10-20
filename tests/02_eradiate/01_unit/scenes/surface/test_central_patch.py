@@ -49,7 +49,7 @@ def test_central_patch_texture_scale(mode_mono):
         shape={"type": "rectangle", "edges": 10.0},
         patch_edges=[10.0, 10.0 / 3.0],
     )
-    assert np.allclose([1.0 / 3.0, 1.0], surface._texture_scale())
+    assert np.allclose(surface._texture_scale(), [1.0 / 3.0, 1.0])
 
 
 def test_central_patch_scale_kernel_dict(mode_mono):
@@ -68,4 +68,4 @@ def test_central_patch_scale_kernel_dict(mode_mono):
         @ mi.ScalarTransform4f.translate((-0.45, -0.45, 0))
     ).matrix
 
-    assert dr.allclose(expected, result)
+    assert dr.allclose(result, expected)

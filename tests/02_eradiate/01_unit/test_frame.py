@@ -58,7 +58,7 @@ def test_transform_azimuth_to_east_right(from_convention, expected, normalize):
         from_convention=from_convention,
         normalize=normalize,
     )
-    assert np.allclose(expected, np.rad2deg(result))
+    assert np.allclose(np.rad2deg(result), expected)
 
 
 @pytest.mark.parametrize(
@@ -85,7 +85,7 @@ def test_transform_azimuth_from_east_right(to_convention, initial, normalize):
         to_convention=to_convention,
         normalize=normalize,
     )
-    assert np.allclose(expected, result), np.rad2deg(result)
+    assert np.allclose(result, expected)
 
 
 def test_angles_to_direction():

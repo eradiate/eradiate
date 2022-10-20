@@ -31,7 +31,7 @@ def test_blend_construct_basic():
         components=[{"type": "isotropic"}, {"type": "rayleigh"}, {"type": "hg"}],
         weights=[1, 1, 2],
     )
-    assert np.allclose([0.25, 0.25, 0.5], phase.weights)
+    assert np.allclose(phase.weights, [0.25, 0.25, 0.5])
 
     # Improper weight array shape raises
     with pytest.raises(ValueError):
@@ -66,26 +66,26 @@ def test_blend_bbox(mode_mono):
         bbox=([0, 0, 0] * ureg.m, [1, 1, 1] * ureg.m),
     )
     assert np.allclose(
+        np.array(phase._gridvolume_transform().matrix),
         [
             [1, 0, 0, -0.5],
             [0, 1, 0, -0.5],
             [0, 0, 1, 0],
             [0, 0, 0, 1],
         ],
-        np.array(phase._gridvolume_transform().matrix),
     )
 
     # Nested BlendPhaseFunction objects must have the same bbox
     for comp in phase.components:
         if isinstance(comp, BlendPhaseFunction):
             assert np.allclose(
+                np.array(comp._gridvolume_transform().matrix),
                 [
                     [1, 0, 0, -0.5],
                     [0, 1, 0, -0.5],
                     [0, 0, 1, 0],
                     [0, 0, 0, 1],
                 ],
-                np.array(comp._gridvolume_transform().matrix),
             )
 
 
@@ -182,7 +182,7 @@ def test_blend_array(modes_all_double):
     )
 
     # Weights are normalised
-    assert np.allclose(1 / 3, phase.weights)
+    assert np.allclose(phase.weights, 1 / 3)
 
     # Kernel dict generation succeeds
     ctx = KernelDictContext()

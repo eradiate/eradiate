@@ -38,7 +38,7 @@ def test_pipeline_step_assemble_mono(results_mono):
     )
 
     # Check radiance and sample count values
-    assert np.allclose(2.0 / np.pi, result[var].values)
+    assert np.allclose(result[var].values, 2.0 / np.pi)
     assert np.all([250] == result.spp.values)
 
 
@@ -77,7 +77,7 @@ def test_pipeline_step_assemble_ckd(results_ckd):
     )
 
     # Check radiance and sample count values
-    assert np.allclose(2.0 / np.pi, result[var].values)
+    assert np.allclose(result[var].values, 2.0 / np.pi)
     assert np.all([250] == result.spp.values)
 
 
@@ -115,7 +115,7 @@ def test_pipeline_step_assemble_mono_spp(results_mono_spp):
     )
 
     # Check radiance and sample count values
-    assert np.allclose(2.0 / np.pi, result[var].values)
+    assert np.allclose(result[var].values, 2.0 / np.pi)
     assert np.all([100, 100, 50] == result.spp.values)
 
 
@@ -153,7 +153,7 @@ def test_pipeline_step_assemble_ckd_spp(results_ckd_spp):
     )
 
     # Check radiance and sample count values
-    assert np.allclose(2.0 / np.pi, result[var].values)
+    assert np.allclose(result[var].values, 2.0 / np.pi)
     assert np.all([100, 100, 50] == result.spp.values)
 
 

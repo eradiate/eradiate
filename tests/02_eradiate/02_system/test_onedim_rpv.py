@@ -758,4 +758,6 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
     if atmosphere is None:
         assert np.all(results["rpv"].brf.values == results["lambertian"].brf.values)
     else:
-        assert np.allclose(results["rpv"].brf, results["rpv"].brf, rtol=1e-2, atol=1e-3)
+        assert np.allclose(
+            results["rpv"].brf, results["lambertian"].brf, rtol=1e-2, atol=1e-3
+        )

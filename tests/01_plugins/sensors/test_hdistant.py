@@ -240,7 +240,7 @@ def test_sample_target(variant_scalar_rgb, sensor_setup, w_e):
     }
     rtol_value = rtol.get(sensor_setup, 5e-3)
 
-    assert np.allclose(expected_value, result, rtol=rtol_value)
+    assert np.allclose(result, expected_value, rtol=rtol_value)
 
 
 @pytest.mark.parametrize("target", ("point", "shape"))
@@ -350,4 +350,4 @@ def test_checkerboard(variants_all_rgb):
     ).squeeze()
 
     expected = l_e * 0.5 * (rho0 + rho1) / dr.pi
-    assert np.allclose(expected, result, atol=1e-3)
+    assert np.allclose(result, expected, atol=1e-3)

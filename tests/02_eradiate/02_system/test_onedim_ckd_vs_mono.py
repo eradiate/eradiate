@@ -250,7 +250,7 @@ def test_550(reflectance, artefact_dir):
     # Assert averaged mono results are consistent with ckd results within 5 %
     mono_brf = mono_results_integrated.brf.squeeze().values
     ckd_brf = ckd_results.brf.squeeze().values
-    assert np.allclose(mono_brf, ckd_brf, rtol=0.05)
+    assert np.allclose(ckd_brf, mono_brf, rtol=0.05)
 
 
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
@@ -396,4 +396,4 @@ def test_1050(reflectance, artefact_dir):
     # Assert averaged mono results are consistent with ckd results within 5 %
     mono_brf = mono_results_averaged.brf.squeeze().values
     ckd_brf = ckd_results.brf.squeeze().values
-    assert np.allclose(mono_brf, ckd_brf, rtol=0.05)
+    assert np.allclose(ckd_brf, mono_brf, rtol=0.05)

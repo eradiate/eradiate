@@ -129,8 +129,8 @@ def test_sample_ray_compare(variant_scalar_rgb):
                 time, wavelength_sample, film_sample, aperture_sample
             )
 
-            assert dr.allclose(ray_rad.o, ray_mrad.o, atol=1e-4)
-            assert dr.allclose(ray_rad.d, ray_mrad.d)
+            assert dr.allclose(ray_mrad.o, ray_rad.o, atol=1e-4)
+            assert dr.allclose(ray_mrad.d, ray_rad.d)
 
 
 def test_sample_ray_multi(variant_scalar_rgb):
@@ -150,11 +150,11 @@ def test_sample_ray_multi(variant_scalar_rgb):
         )[0]
 
         if position_sample[0] < 0.5:
-            assert dr.allclose([0, 0, 0], ray.o)
-            assert dr.allclose([1, 0, 0], ray.d)
+            assert dr.allclose(ray.o, [0, 0, 0])
+            assert dr.allclose(ray.d, [1, 0, 0])
         else:
-            assert dr.allclose([1, 0, 1], ray.o)
-            assert dr.allclose(dr.normalize(mi.ScalarVector3f(1, 1, 1)), ray.d)
+            assert dr.allclose(ray.o, [1, 0, 1])
+            assert dr.allclose(ray.d, dr.normalize(mi.ScalarVector3f(1, 1, 1)))
 
 
 @pytest.mark.parametrize("radiance", [10**x for x in range(-3, 4)])

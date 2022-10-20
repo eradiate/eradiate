@@ -30,7 +30,7 @@ def test_aggregate_sample_count(results_mono_spp):
     # Sample counts are summed
     assert result.spp == 250
     # Radiance values are averaged
-    assert np.allclose(2.0 / np.pi, result.img.values)
+    assert np.allclose(result.img.values, 2.0 / np.pi)
 
 
 def test_aggregate_ckd(results_ckd):
@@ -58,7 +58,7 @@ def test_aggregate_ckd(results_ckd):
     assert result.bin_wmax.dims == ("w",)
 
     # In the present case, the quadrature evaluates to 2/π
-    assert np.allclose(2.0 / np.pi, result["radiance"].values)
+    assert np.allclose(result["radiance"].values, 2.0 / np.pi)
     # Metadata of the variable for which aggregation is performed are copied
     assert result["radiance"].attrs == values["radiance"].attrs
     # Sample counts are averaged
