@@ -89,7 +89,11 @@ def test_remap_viewing_angles_plane():
 @pytest.mark.parametrize(
     "measure_type, expected_zenith, expected_azimuth",
     (
-        ("multi_distant-nohplane", [60, 45, 0, 45, 60], [180, 180, 0, 0, 0]),
+        (
+            "multi_distant-aring",
+            [45, 45, 45, 45, 45, 45, 45, 45],
+            [0, 45, 90, 135, 180, 225, 270, 315],
+        ),
         ("multi_distant-hplane", [-60, -45, 0, 45, 60], [0, 0, 0, 0, 0]),
         (
             "hemispherical_distant",
@@ -104,34 +108,29 @@ def test_remap_viewing_angles_plane():
         ),
     ),
     ids=(
-        "multi_distant-nohplane",
+        "multi_distant-aring",
         "multi_distant-hplane",
         "hemispherical_distant",
     ),
 )
 def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_azimuth):
     # Initialise test data
-    if measure_type == "multi_distant-nohplane":
-        measure = MultiDistantMeasure.from_viewing_angles(
-            zeniths=[-60, -45, 0, 45, 60],
-            azimuths=0.0,
-            auto_hplane=False,
+    if measure_type == "multi_distant-aring":
+        measure = MultiDistantMeasure.aring(
+            zenith=45,
+            azimuths=np.linspace(0.0, 360.0, 8, endpoint=False),
             spp=1,
         )
 
     elif measure_type == "multi_distant-hplane":
-        measure = MultiDistantMeasure.from_viewing_angles(
+        measure = MultiDistantMeasure.hplane(
             zeniths=[-60, -45, 0, 45, 60],
-            azimuths=0.0,
-            auto_hplane=True,
+            azimuth=0.0,
             spp=1,
         )
 
     elif measure_type == "hemispherical_distant":
-        measure = HemisphericalDistantMeasure(
-            film_resolution=(2, 2),
-            spp=1,
-        )
+        measure = HemisphericalDistantMeasure(film_resolution=(2, 2), spp=1)
 
     else:
         assert False

@@ -77,9 +77,14 @@ def normalize_azimuth(angles: np.typing.ArrayLike, inplace: bool = False) -> np.
 
     # Snap close-to-2π values to 0 to compensate for numerical precision-related
     # unwanted shifts (may happen with angles computed from directions)
-    result[:] = np.where(
+    snapped = np.where(
         np.isclose(result, 2.0 * np.pi, rtol=0.0, atol=1e-6 * np.pi), 0.0, result
     )
+
+    if inplace:
+        result[:] = snapped
+    else:
+        result = snapped
 
     return result
 

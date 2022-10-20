@@ -279,6 +279,20 @@
   TargetPoint
   TargetRectangle
 
+**Viewing direction layouts**
+
+*Used as input to the* :class:`.MultiDistantMeasure`\ ``.layout`` *field.*
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   Layout
+   AngleLayout
+   AzimuthRingLayout
+   DirectionLayout
+   GridLayout
+   HemispherePlaneLayout
+
 ``eradiate.scenes.phase``
 -------------------------
 
