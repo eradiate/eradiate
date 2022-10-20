@@ -14,7 +14,7 @@ from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..frame import angles_in_hplane
 from ..scenes.illumination import ConstantIllumination, DirectionalIllumination
-from ..scenes.measure import Measure, MultiDistantMeasure
+from ..scenes.measure import Measure
 from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum
 from ..units import symbol, to_quantity
 from ..units import unit_context_kernel as uck
@@ -188,15 +188,7 @@ class AddViewingAngles(PipelineStep):
         theta = viewing_angles[:, :, 0]
         phi = viewing_angles[:, :, 1]
 
-        # Handle special case of hemisphere plane cut
-        if isinstance(measure, MultiDistantMeasure) and measure.hplane is not None:
-            # Note: Flattening angle arrays is required
-            theta_remapped, phi_remapped = _remap_viewing_angles_plane(
-                measure.hplane, theta.ravel(), phi.ravel()
-            )
-            theta = theta_remapped.reshape(theta.shape)
-            phi = phi_remapped.reshape(phi.shape)
-
+        # Attach coordinates
         with xr.set_options(keep_attrs=True):
             result = x.assign_coords(
                 {

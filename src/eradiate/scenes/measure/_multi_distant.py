@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+from abc import ABC, abstractmethod
 
 import attrs
 import numpy as np
@@ -10,7 +11,7 @@ import pinttr
 from ._core import Measure, MeasureFlags
 from ._target import Target, TargetPoint, TargetRectangle
 from ..core import KernelDict
-from ... import frame
+from ... import converters, frame
 from ..._config import config
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext
@@ -18,6 +19,349 @@ from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+from ...util.deprecation import deprecated
+
+# ------------------------------------------------------------------------------
+#                               Layout framework
+# ------------------------------------------------------------------------------
+
+
+@parse_docs
+@attrs.define
+class Layout(ABC):
+    """
+    Abstract base class for all viewing direction layouts.
+    """
+
+    azimuth_convention: frame.AzimuthConvention = documented(
+        attrs.field(
+            default=None,
+            converter=lambda x: config.azimuth_convention
+            if x is None
+            else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x),
+            validator=attrs.validators.instance_of(frame.AzimuthConvention),
+            kw_only=True,
+        ),
+        doc="Azimuth convention. If ``None``, the global default configuration "
+        "is used (see :class:`.EradiateConfig`).",
+        type=".AzimuthConvention",
+        init_type=".AzimuthConvention or str, optional",
+        default="None",
+    )
+
+    @staticmethod
+    def convert(value: t.Any) -> t.Any:
+        """
+        Attempt to instantiate a :class:`Layout` concrete class from an object.
+
+        This conversion protocol accepts:
+
+        * a dictionary of the form ``{"type": type_name, **kwargs}``;
+        * a (N, 2)-array or a (2,)-array;
+        * a (N, 3)-array or a (3,)-array.
+
+        Other values pass through the converter.
+
+        Dictionaries have their parameters forwarded to the type selected by the
+        ``type`` parameter.
+        A (N, 2) or (2,)-array is passed to an :class:`.AngleLayout`.
+        A (N, 3) or (3,)-array is passed to a :class:`.DirectionLayout`.
+
+        .. list-table::
+           :header-rows: 1
+
+           * - Type key
+             - Class
+           * - angles
+             - :class:`.AngleLayout`
+           * - aring
+             - :class:`.AzimuthRingLayout`
+           * - directions
+             - :class:`.DirectionLayout`
+           * - grid
+             - :class:`.GridLayout`
+           * - hplane
+             - :class:`.HemispherePlaneLayout`
+        """
+        if isinstance(value, Layout):
+            return value
+
+        if isinstance(value, dict):
+            d = value.copy()
+            type_key = d.pop("type")
+            cls = {
+                "angles": AngleLayout,
+                "aring": AzimuthRingLayout,
+                "directions": DirectionLayout,
+                "grid": GridLayout,
+                "hplane": HemispherePlaneLayout,
+            }[type_key]
+            return cls(**d)
+
+        if np.ndim(value) == 2:
+            if np.shape(value)[1] == 2:
+                return AngleLayout(angles=value)
+            if np.shape(value)[1] == 3:
+                return DirectionLayout(directions=value)
+
+        if np.ndim(value) == 1:
+            if np.shape(value) == (2,):
+                return AngleLayout(angles=value)
+            if np.shape(value) == (3,):
+                return DirectionLayout(directions=value)
+
+        return value
+
+    @property
+    def n_directions(self) -> int:
+        """
+        int: Number of viewing directions defined by this layout.
+        """
+        return len(self.angles)
+
+    @property
+    @abstractmethod
+    def angles(self) -> pint.Quantity:
+        """
+        quantity: A sequence of viewing angles, corresponding to the direction
+            sequence produced by :attr:`directions`, as a (N, 2) array.
+            The last dimension is ordered as (zenith, azimuth).
+        """
+        pass
+
+    @property
+    def directions(self) -> np.narray:
+        """
+        ndarray: A sequence of viewing directions, pointing *outwards* the
+            observed target, as a (N, 3) array.
+        """
+        # Default implementation computes directions from angles
+        return frame.angles_to_direction(
+            self.angles, azimuth_convention=self.azimuth_convention
+        )
+
+
+@parse_docs
+@attrs.define
+class AngleLayout(Layout):
+    """
+    A viewing direction layout directly defined by explicit (zenith, azimuth)
+    pairs.
+    """
+
+    _angles: pint.Quantity = documented(
+        pinttr.ib(
+            converter=lambda x: np.reshape(
+                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1, 2)
+            )
+            % (360.0 * ureg.deg),
+            units=ucc.deferred("angle"),
+        ),
+        doc="A sequence of viewing angles, corresponding to the direction "
+        "sequence produced by :attr:`directions`, as a (N, 2) array. "
+        "The last dimension is ordered as (zenith, azimuth). "
+        "**Required, no default**.\n"
+        "\n"
+        "Unit-enabled field (default: ucc['angle']).",
+        type="quantity",
+        init_type="array-like",
+    )
+
+    @property
+    def angles(self) -> pint.Quantity:
+        # Inherit docstring
+        return self._angles
+
+
+@parse_docs
+@attrs.define
+class AzimuthRingLayout(Layout):
+    """
+    A viewing direction layout defined by a single zenith and a vector of
+    explicit azimuth values.
+    """
+
+    zenith: pint.Quantity = documented(
+        pinttr.field(
+            converter=lambda x: converters.on_quantity(float)(
+                pinttr.converters.to_units(ucc.deferred("angle"))(x)
+            ),
+            units=ucc.deferred("angle"),
+        ),
+        doc="A single zenith value. **Required, no default**.\n"
+        "\n"
+        "Unit-enabled field (default: ucc['angle']).",
+        type="quantity",
+        init_type="float or quantity",
+    )
+
+    azimuths: pint.Quantity = documented(
+        pinttr.field(
+            converter=lambda x: np.reshape(
+                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1,)
+            )
+            % (360.0 * ureg.deg),
+            units=ucc.deferred("angle"),
+        ),
+        doc="A vector of azimuth values. **Required, no default**.\n"
+        "\n"
+        "Unit-enabled field (default: ucc['angle']).",
+        type="quantity",
+        init_type="array-like",
+    )
+
+    @property
+    def angles(self) -> pint.Quantity:
+        # Inherit docstring
+        # Basic unit conversion and broadcasting
+        angle_units = ucc.get("angle")
+        azimuths = np.reshape(self.azimuths.m_as(angle_units), (-1, 1))
+        zeniths = np.full_like(azimuths, self.zenith.m_as(angle_units))
+
+        # Assemble angles
+        return np.hstack((zeniths, azimuths)) * angle_units
+
+
+@parse_docs
+@attrs.define
+class DirectionLayout(Layout):
+    """
+    A viewing direction layout directly defined by explicit (zenith, azimuth)
+    pairs.
+    """
+
+    _directions: np.ndarray = documented(
+        attrs.field(converter=lambda x: np.reshape(x, (-1, 3))),
+        doc="A sequence of 3-vectors specifying distant sensing directions. "
+        "Note that directions point outward the target. **Required, no default**.",
+        type="ndarray",
+        init_type="array-like",
+    )
+
+    @property
+    def angles(self) -> pint.Quantity:
+        # Inherit docstring
+
+        return frame.direction_to_angles(
+            self.directions,
+            azimuth_convention=self.azimuth_convention,
+            normalize=True,
+        ).to(
+            ucc.get("angle")
+        )  # Convert to default angle units
+
+    @property
+    def n_directions(self) -> int:
+        # Inherit docstring
+        return len(self._directions)
+
+    @property
+    def directions(self) -> np.narray:
+        # Inherit docstring
+        return self._directions
+
+
+@parse_docs
+@attrs.define
+class HemispherePlaneLayout(Layout):
+    """
+    A viewing direction layout defined by a single azimuth and a vector of
+    zenith values. Negative zenith values are mapped to (azimuth + 180°).
+    """
+
+    zeniths: pint.Quantity = documented(
+        pinttr.field(
+            converter=lambda x: np.reshape(
+                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1,)
+            ),
+            units=ucc.deferred("angle"),
+        ),
+        doc="A vector of zenith values. **Required, no default**.\n"
+        "\n"
+        "Unit-enabled field (default: ucc['angle']).",
+        type="quantity",
+        init_type="array-like",
+    )
+
+    azimuth: pint.Quantity = documented(
+        pinttr.field(units=ucc.deferred("angle")),
+        doc="A single zenith value. **Required, no default**.",
+        type="quantity",
+        init_type="float or quantity",
+    )
+
+    @property
+    def angles(self) -> pint.Quantity:
+        # Inherit docstring
+        # Basic unit conversion and broadcasting
+        angle_units = ucc.get("angle")
+        zeniths = np.reshape(self.zeniths.m_as(angle_units), (-1, 1))
+        azimuths = np.full_like(zeniths, self.azimuth.m_as(angle_units))
+
+        # Assemble angles
+        return np.hstack((zeniths, azimuths)) * angle_units
+
+
+@parse_docs
+@attrs.define
+class GridLayout(Layout):
+    """
+    A viewing direction layout defined as the Cartesian product of an azimuth
+    and zenith vectors.
+    """
+
+    zeniths: pint.Quantity = documented(
+        pinttr.field(
+            converter=lambda x: np.reshape(
+                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1,)
+            ),
+            units=ucc.deferred("angle"),
+        ),
+        doc="A vector of zenith values. **Required, no default**.\n"
+        "\n"
+        "Unit-enabled field (default: ucc['angle']).",
+        type="quantity",
+        init_type="array-like",
+    )
+
+    azimuths: pint.Quantity = documented(
+        pinttr.field(
+            converter=lambda x: np.reshape(
+                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1,)
+            ),
+            units=ucc.deferred("angle"),
+        ),
+        doc="A vector of azimuth values. **Required, no default**.\n"
+        "\n"
+        "Unit-enabled field (default: ucc['angle']).",
+        type="quantity",
+        init_type="array-like",
+    )
+
+    @property
+    def angles(self) -> pint.Quantity:
+        # Inherit docstring
+        #  Basic unit conversion and broadcasting
+        angle_units = ucc.get("angle")
+        zeniths = self.zeniths.m_as(angle_units)
+        azimuths = self.azimuths.m_as(angle_units)
+
+        # Assemble angles
+        # This effectively produces the Cartesian product of the zeniths and
+        # azimuths arrays (see https://stackoverflow.com/a/11146645/3645374)
+        return np.dstack(np.meshgrid(zeniths, azimuths)).reshape(-1, 2) * angle_units
+
+
+# ------------------------------------------------------------------------------
+#                       MultiDistantMeasure implementation
+# ------------------------------------------------------------------------------
+
+
+def _collect_layout_kwargs(kwargs: dict) -> dict:
+    # Helper function to collect common layout keyword arguments
+    # (mutates the param dictionary)
+    # Used in MultiDistantMeasure constructors
+    return {key: kwargs.pop(key) for key in ["azimuth_convention"] if key in kwargs}
 
 
 @parse_docs
@@ -38,7 +382,11 @@ class MultiDistantMeasure(Measure):
 
        .. autosummary::
 
-          from_viewing_angles
+          aring
+          grid
+          hplane
+          from_angles
+          from_directions
 
     Notes
     -----
@@ -50,61 +398,20 @@ class MultiDistantMeasure(Measure):
     #                           Fields and properties
     # --------------------------------------------------------------------------
 
-    hplane: t.Optional[pint.Quantity] = documented(
-        pinttr.field(default=None, units=ucc.deferred("angle")),
-        doc="If all directions are expected to be within a hemisphere plane cut, "
-        "the azimuth value of that plane. Unitless values are converted to "
-        "``ucc['angle']``. The convention specified as the "
-        "`azimuth_convention` field applies.",
-        type="quantity or None",
-        init_type="float or quantity, optional",
-        default="None",
-    )
-
-    @hplane.validator
-    def hplane_validator(self, attribute, value):
-        if value is None:
-            return
-
-        # Check that all specified directions are in the requested plane
-        angles = self.viewing_angles.m_as(ureg.rad)
-        try:
-            frame.angles_in_hplane(
-                value.m_as(ureg.rad),
-                angles[:, :, 0],
-                angles[:, :, 1],
-                raise_exc=True,
-            )
-        except ValueError as e:
-            raise ValueError(
-                f"while validating '{attribute.name}': 'directions' are not all "
-                "part of the same hemisphere plane cut"
-            ) from e
-
-    azimuth_convention: frame.AzimuthConvention = documented(
+    direction_layout: Layout = documented(
         attrs.field(
-            default=None,
-            converter=lambda x: config.azimuth_convention
-            if x is None
-            else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x),
-            validator=attrs.validators.instance_of(frame.AzimuthConvention),
+            kw_only=True,
+            factory=lambda: DirectionLayout(directions=[0, 0, 1]),
+            converter=Layout.convert,
+            validator=attrs.validators.instance_of(Layout),
         ),
-        doc="Azimuth convention. If ``None``, the global default configuration "
-        "is used (see :class:`.EradiateConfig`).",
-        type=".AzimuthConvention",
-        init_type=".AzimuthConvention or str, optional",
-        default="None",
-    )
-
-    directions: np.ndarray = documented(
-        attrs.field(
-            default=np.array([[0.0, 0.0, -1.0]]),
-            converter=np.array,
-        ),
-        doc="A sequence of 3-vectors specifying distant sensing directions.",
-        type="ndarray",
-        init_type="array-like",
-        default="[[0, 0, -1]]",
+        doc="A viewing direction layout. Specification through a dictionary or "
+        "arrays, as documented by :meth:`Layout.convert`, is also possible. "
+        "The constructor methods provide a convenient interface to configure "
+        "this parameter automatically.",
+        type=".Layout",
+        init_type="dict or array-like or .Layout, optional",
+        default="DirectionLayout(directions=[0, 0, 1])",
     )
 
     target: t.Optional[Target] = documented(
@@ -141,26 +448,13 @@ class MultiDistantMeasure(Measure):
             (N, 1, 2) array, where N is the number of directions. The last
             dimension is ordered as (zenith, azimuth).
         """
-        angle_units = ucc.get("angle")
-        angles = frame.direction_to_angles(-self.directions).m_as(ureg.rad)
-
-        # Snap zero values to avoid close-to-360° azimuths
-        angles[:, 1] = np.where(np.isclose(angles[:, 1], 0.0), 0.0, angles[:, 1])
-
-        # Convert azimuth from East right to target convention and normalise
-        # to [0, 2π]
-        angles[:, 1] = frame.transform_azimuth(
-            angles[:, 1],
-            from_convention=frame.AzimuthConvention.EAST_RIGHT,
-            to_convention=self.azimuth_convention,
-            normalize=True,
-        )
-
-        return (angles.reshape((-1, 1, 2)) * ureg.rad).to(angle_units)
+        # Note: The middle dimension in (N, 1, 2) is the film height
+        return self.direction_layout.angles.reshape(-1, 1, 2)
 
     @property
     def film_resolution(self) -> t.Tuple[int, int]:
-        return (self.directions.shape[0], 1)
+        # Inherit docstring
+        return (self.direction_layout.n_directions, 1)
 
     flags: MeasureFlags = documented(
         attrs.field(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
@@ -173,6 +467,173 @@ class MultiDistantMeasure(Measure):
     # --------------------------------------------------------------------------
 
     @classmethod
+    def hplane(
+        cls,
+        zeniths: np.typing.ArrayLike,
+        azimuth: t.Union[float, pint.Quantity],
+        **kwargs,
+    ) -> MultiDistantMeasure:
+        """
+        Construct using a hemisphere plane cut viewing direction layout.
+
+        Parameters
+        ----------
+        zeniths : array-like
+            List of zenith values. Negative values are mapped to the
+            `azimuth + 180°` half-plane.
+
+        azimuth : float or quantity
+            Hemisphere plane cut azimuth value.
+
+        azimuth_convention : .AzimuthConvention or str
+            The azimuth convention applying to the viewing direction layout.
+            If unset, the global default convention is used.
+
+        **kwargs
+            Remaining keyword arguments are forwarded to the
+            :class:`.MultiDistantMeasure` constructor.
+
+        Returns
+        -------
+        MultiDistantMeasure
+        """
+        layout_kwargs = _collect_layout_kwargs(kwargs)
+        layout = HemispherePlaneLayout(zeniths, azimuth, **layout_kwargs)
+        return cls(direction_layout=layout, **kwargs)
+
+    @classmethod
+    def aring(
+        cls,
+        zenith: t.Union[float, pint.Quantity],
+        azimuths: np.typing.ArrayLike,
+        **kwargs,
+    ) -> MultiDistantMeasure:
+        """
+        Construct using a azimuth ring viewing direction layout.
+
+        Parameters
+        ----------
+        zenith : float or quantity
+            Azimuth ring zenith value.
+
+        azimuths : array-like
+            List of azimuth values.
+
+        azimuth_convention : .AzimuthConvention or str, optional
+            The azimuth convention applying to the viewing direction layout.
+            If unset, the global default convention is used.
+
+        **kwargs
+            Remaining keyword arguments are forwarded to the
+            :class:`.MultiDistantMeasure` constructor.
+
+        Returns
+        -------
+        MultiDistantMeasure
+        """
+        layout_kwargs = _collect_layout_kwargs(kwargs)
+        layout = AzimuthRingLayout(zenith, azimuths, **layout_kwargs)
+        return cls(direction_layout=layout, **kwargs)
+
+    @classmethod
+    def grid(
+        cls, zeniths: np.typing.ArrayLike, azimuths: np.typing.ArrayLike, **kwargs
+    ) -> MultiDistantMeasure:
+        """
+        Construct using a gridded viewing direction layout, defined as the
+        Cartesian product of zenith and azimuth arrays.
+
+        Parameters
+        ----------
+        azimuths : array-like
+            List of azimuth values.
+
+        zeniths : array-like
+            List of zenith values.
+
+        azimuth_convention : .AzimuthConvention or str, optional
+            The azimuth convention applying to the viewing direction layout.
+            If unset, the global default convention is used.
+
+        **kwargs
+            Remaining keyword arguments are forwarded to the
+            :class:`.MultiDistantMeasure` constructor.
+
+        Returns
+        -------
+        MultiDistantMeasure
+        """
+        layout_kwargs = _collect_layout_kwargs(kwargs)
+        layout = GridLayout(zeniths, azimuths, **layout_kwargs)
+        return cls(direction_layout=layout, **kwargs)
+
+    @classmethod
+    def from_angles(cls, angles: np.typing.ArrayLike, **kwargs) -> MultiDistantMeasure:
+        """
+        Construct using a direction layout defined by explicit (zenith, azimuth)
+        pairs.
+
+        Parameters
+        ----------
+        angles : array-like
+            A sequence of (zenith, azimuth), interpreted as (N, 2)-shaped array.
+
+        azimuth_convention : .AzimuthConvention or str, optional
+            The azimuth convention applying to the viewing direction layout.
+            If unset, the global default convention is used.
+
+        **kwargs
+            Remaining keyword arguments are forwarded to the
+            :class:`.MultiDistantMeasure` constructor.
+
+        Returns
+        -------
+        MultiDistantMeasure
+        """
+        layout_kwargs = _collect_layout_kwargs(kwargs)
+        layout = AngleLayout(angles, **layout_kwargs)
+        return cls(direction_layout=layout, **kwargs)
+
+    @classmethod
+    def from_directions(
+        cls, directions: np.typing.ArrayLike, **kwargs
+    ) -> MultiDistantMeasure:
+        """
+        Construct using a direction layout defined by explicit direction
+        vectors.
+
+        Parameters
+        ----------
+        directions : array-like
+            A sequence of direction vectors, interpreted as (N, 3)-shaped array.
+
+        azimuth_convention : .AzimuthConvention or str, optional
+            The azimuth convention applying to the viewing direction layout.
+            If unset, the global default convention is used.
+
+        **kwargs
+            Remaining keyword arguments are forwarded to the
+            :class:`.MultiDistantMeasure` constructor.
+
+        Returns
+        -------
+        MultiDistantMeasure
+
+        Warnings
+        --------
+        Viewing directions are defined pointing *outwards* the target location.
+        """
+        layout_kwargs = _collect_layout_kwargs(kwargs)
+        layout = DirectionLayout(directions, **layout_kwargs)
+        return cls(direction_layout=layout, **kwargs)
+
+    @classmethod
+    @deprecated(
+        deprecated_in="0.22.6",
+        removed_in="0.23.1",
+        details="Transition to using the direction layout or other class method "
+        "constructors.",
+    )
     def from_viewing_angles(
         cls,
         zeniths: np.typing.ArrayLike,
@@ -215,6 +676,14 @@ class MultiDistantMeasure(Measure):
                 "from_viewing_angles() got an unexpected keyword argument 'directions'"
             )
 
+        if "hplane" in kwargs:
+            raise TypeError(
+                "from_viewing_angles() got an unexpected keyword argument 'hplane'"
+            )
+
+        # Collect common layout kwargs
+        layout_kwargs = _collect_layout_kwargs(kwargs)
+
         # Basic unit conversion and array reshaping
         angle_units = ucc.get("angle")
         zeniths = pinttr.util.ensure_units(
@@ -224,41 +693,32 @@ class MultiDistantMeasure(Measure):
             np.atleast_1d(azimuths).reshape((-1, 1)), default_units=angle_units
         ).m_as(angle_units)
 
-        # Broadcast arrays if relevant
-        if len(zeniths) == 1:
-            zeniths = np.full_like(azimuths, zeniths[0])
-        if len(azimuths) == 1:
-            azimuths = np.full_like(zeniths, azimuths[0])
-
-            # Auto-set 'hplane' if relevant
-            if auto_hplane and "hplane" not in kwargs:
-                kwargs["hplane"] = azimuths[0] * angle_units
-
-        # Collect azimuth convention and apply default if none is specified
-        azimuth_convention = (
-            kwargs["azimuth_convention"]
-            if "azimuth_convention" in kwargs
-            else config.azimuth_convention
-        )
-
-        # Compute directions
-        angles = np.hstack((zeniths, azimuths)) * angle_units
-        directions = frame.angles_to_direction(
-            angles, azimuth_convention=azimuth_convention, flip=True
-        )
+        # Detect layout
+        if len(zeniths) == 1 and len(azimuths) != 1:
+            layout = AzimuthRingLayout(
+                zenith=zeniths[0], azimuths=azimuths, **layout_kwargs
+            )
+        elif len(zeniths) != 1 and len(azimuths) == 1 and auto_hplane:
+            layout = HemispherePlaneLayout(
+                zeniths=zeniths, azimuth=azimuths[0], **layout_kwargs
+            )
+        else:
+            layout = AngleLayout(angles=np.hstack((zeniths, azimuths)))
 
         # Create instance
-        return cls(directions=directions, **kwargs)
+        return cls(direction_layout=layout, **kwargs)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _kernel_dict(self, sensor_id, spp):
+    def _kernel_dict_impl(self, sensor_id, spp):
         result = {
             "type": "mdistant",
             "id": sensor_id,
-            "directions": ",".join(map(str, self.directions.ravel(order="C"))),
+            "directions": ",".join(
+                map(str, -self.direction_layout.directions.ravel(order="C"))
+            ),
             "sampler": {
                 "type": "independent",
                 "sample_count": spp,
@@ -279,12 +739,13 @@ class MultiDistantMeasure(Measure):
         return result
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        # Inherit docstring
         sensor_ids = self._sensor_ids()
         sensor_spps = self._sensor_spps()
         result = KernelDict()
 
         for spp, sensor_id in zip(sensor_spps, sensor_ids):
-            result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
+            result.data[sensor_id] = self._kernel_dict_impl(sensor_id, spp)
 
         return result
 
@@ -294,6 +755,7 @@ class MultiDistantMeasure(Measure):
 
     @property
     def var(self) -> t.Tuple[str, t.Dict]:
+        # Inherit docstring
         return "radiance", {
             "standard_name": "radiance",
             "long_name": "radiance",

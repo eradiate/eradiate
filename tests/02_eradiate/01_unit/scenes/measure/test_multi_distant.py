@@ -4,7 +4,159 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.frame import AzimuthConvention
-from eradiate.scenes.measure._multi_distant import MultiDistantMeasure
+from eradiate.scenes.measure._multi_distant import (
+    AngleLayout,
+    AzimuthRingLayout,
+    DirectionLayout,
+    GridLayout,
+    HemispherePlaneLayout,
+    MultiDistantMeasure,
+)
+
+# ------------------------------------------------------------------------------
+#                               Layout framework
+# ------------------------------------------------------------------------------
+
+
+def test_angle_layout(mode_mono):
+    """
+    Unit tests for the AngleLayout class
+    """
+    # Constructing without argument fails
+    with pytest.raises(TypeError):
+        AngleLayout()
+
+    # (2,) arrays are reshaped as (1, 2)
+    assert AngleLayout([0, 0] * ureg.deg).angles.shape == (1, 2)
+
+    # Regular construction pattern succeeds
+    layout = AngleLayout([[0, 0], [45, 0], [45, 90], [45, 180]] * ureg.deg)
+
+    # Directions are correctly computed and point outwards
+    assert np.allclose(
+        layout.directions,
+        [
+            [0, 0, 1],
+            [np.sqrt(2) / 2, 0, np.sqrt(2) / 2],
+            [0, np.sqrt(2) / 2, np.sqrt(2) / 2],
+            [-np.sqrt(2) / 2, 0, np.sqrt(2) / 2],
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "convention, expected",
+    [
+        ("east_right", [[1, 0, 0], [0, 1, 0]]),
+        ("north_left", [[0, 1, 0], [1, 0, 0]]),
+    ],
+)
+def test_layout_azimuth_convention(mode_mono, convention, expected):
+    # Azimuth conventions are properly applied
+    layout = AngleLayout(
+        angles=[[90, 0], [90, 90]] * ureg.deg, azimuth_convention=convention
+    )
+    assert np.allclose(
+        expected, layout.directions
+    ), f"\nexpected {expected}\ngot      {layout.directions}"
+
+
+def test_direction_layout(mode_mono):
+    """
+    Unit tests for the DirectionLayout class
+    """
+    # Constructing without argument fails
+    with pytest.raises(TypeError):
+        print(DirectionLayout())
+
+    # (3,) arrays are reshaped as (1, 3)
+    assert DirectionLayout([0, 0, 1]).directions.shape == (1, 3)
+
+    # Regular construction pattern succeeds
+    layout = DirectionLayout(
+        [
+            [0, 0, 1],
+            [np.sqrt(2) / 2, 0, np.sqrt(2) / 2],
+            [0, np.sqrt(2) / 2, np.sqrt(2) / 2],
+            [-np.sqrt(2) / 2, 0, np.sqrt(2) / 2],
+        ],
+    )
+
+    # Angles are correctly computed
+    assert np.allclose(
+        layout.angles,
+        [[0, 0], [45, 0], [45, 90], [45, 180]] * ureg.deg,
+    )
+
+
+def test_azimuth_ring_layout(mode_mono):
+    # Constructing without arguments fails
+    with pytest.raises(TypeError):
+        AzimuthRingLayout()
+
+    # Regular construction pattern succeeds
+    layout = AzimuthRingLayout(
+        45 * ureg.deg, np.linspace(0, 2 * np.pi, 8, endpoint=False) * ureg.rad
+    )
+
+    # Angles are correctly computed
+    assert np.allclose(
+        layout.angles,
+        [
+            [45, 0],
+            [45, 45],
+            [45, 90],
+            [45, 135],
+            [45, 180],
+            [45, 225],
+            [45, 270],
+            [45, 315],
+        ]
+        * ureg.deg,
+    )
+
+    # We don't test the direction generation (it's the default implementation)
+
+
+def test_hemisphere_plane_layout(mode_mono):
+    # Constructing without arguments fails
+    with pytest.raises(TypeError):
+        HemispherePlaneLayout()
+
+    # Regular construction pattern succeeds
+    layout = HemispherePlaneLayout(
+        np.linspace(-90, 90, 5, endpoint=True) * ureg.deg, 0 * ureg.deg
+    )
+
+    # Angles are correctly computed
+    assert np.allclose(
+        layout.angles,
+        [[-90, 0], [-45, 0], [0, 0], [45, 0], [90, 0]] * ureg.deg,
+    )
+
+    # We don't test the direction generation (it's the default implementation)
+
+
+def test_grid_layout(mode_mono):
+    # Constructing without arguments fails
+    with pytest.raises(TypeError):
+        GridLayout()
+
+    # Regular construction pattern succeeds
+    layout = GridLayout([0, 45] * ureg.deg, [0, 180] * ureg.deg)
+
+    # Angles are correctly computed
+    assert np.allclose(
+        layout.angles,
+        [[0, 0], [45, 0], [0, 180], [45, 180]] * ureg.deg,
+    )
+
+    # We don't test the direction generation (it's the default implementation)
+
+
+# ------------------------------------------------------------------------------
+#                       MultiDistantMeasure implementation
+# ------------------------------------------------------------------------------
 
 
 def test_multi_distant_measure_construct(mode_mono):
@@ -15,7 +167,7 @@ def test_multi_distant_measure_construct(mode_mono):
     ctx = KernelDictContext()
 
     # Constructing without argument succeeds
-    measure = MultiDistantMeasure()
+    measure = MultiDistantMeasure(direction_layout=[0, 45] * ureg.deg)
 
     # The produced kernel dictionary can be instantiated
     kernel_dict = measure.kernel_dict(ctx)
@@ -28,11 +180,11 @@ def test_multi_distant_measure_viewing_angles(mode_mono):
     """
     # Viewing angle computation is correct
     measure = MultiDistantMeasure(
-        directions=[
-            [0, 0, -1],
-            [-1, 0, -1],
-            [0, -1, -1],
-            [-1, -1, -1],
+        direction_layout=[
+            [0, 0, 1],
+            [1, 0, 1],
+            [0, 1, 1],
+            [1, 1, 1],
         ]
     )
 
@@ -48,12 +200,17 @@ def test_multi_distant_measure_viewing_angles(mode_mono):
         * ureg.deg
     )
 
-    assert np.allclose(expected, measure.viewing_angles)
+    assert np.allclose(
+        expected, measure.viewing_angles
+    ), f"\nexpected {expected},\ngot      {measure.viewing_angles}"
 
     # Directions which would normally map to the [-π, 0] domain are normalised
     # to [0, 2π]
-    measure = MultiDistantMeasure(directions=[[0, 1, -1]])
-    assert np.allclose([45, 270] * ureg.deg, measure.viewing_angles)
+    measure = MultiDistantMeasure(direction_layout=[[0, -1, 1]])
+    expected = [45, 270] * ureg.deg
+    assert np.allclose(
+        expected, measure.viewing_angles
+    ), f"\nexpected {expected},\ngot      {measure.viewing_angles}"
 
 
 def test_multi_distant_measure_from_viewing_angles(mode_mono):
@@ -66,47 +223,57 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
     angles = np.reshape(np.stack((zeniths, azimuths), axis=-1), (-1, 1, 2)) * ureg.deg
 
     measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
-    assert np.allclose(angles, measure.viewing_angles)
+    print(measure.direction_layout)
+    assert np.allclose(
+        angles, measure.viewing_angles
+    ), f"\n{angles} vs\n{measure.viewing_angles}"
 
     # Specifying the hplane param will have the validation step raise
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         MultiDistantMeasure.from_viewing_angles(zeniths, azimuths, hplane=0.0)
 
     # Construct from viewing angles within the same plane using a single azimuth value
     zeniths = np.array([-60, -45, -30, -15, 0, 15, 30, 45, 60])
     azimuths = 0
     measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
-    assert measure.hplane == 0.0 * ureg.deg
+    assert isinstance(measure.direction_layout, HemispherePlaneLayout)
+    assert measure.direction_layout.azimuth == 0.0 * ureg.deg
 
     angles = (
         np.reshape(
-            np.stack((np.abs(zeniths), [180, 180, 180, 180, 0, 0, 0, 0, 0]), axis=-1),
+            np.stack((zeniths, np.zeros_like(zeniths)), axis=-1),
             (-1, 1, 2),
         )
         * ureg.deg
     )
-    assert np.allclose(angles, measure.viewing_angles)
+    assert np.allclose(
+        angles, measure.viewing_angles
+    ), f"\n{angles} vs\n{measure.viewing_angles}"
 
     # Construct from viewing angles within the same plane using a single azimuth value
     zeniths = np.array([-60, -45, -30, -15, 0, 15, 30, 45, 60])
     azimuths = 180
     measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
-    assert measure.hplane == 180.0 * ureg.deg
+    assert isinstance(measure.direction_layout, HemispherePlaneLayout)
+    assert measure.direction_layout.azimuth == 180.0 * ureg.deg
 
     angles = (
         np.reshape(
-            np.stack((np.abs(zeniths), [0, 0, 0, 0, 180, 180, 180, 180, 180]), axis=-1),
+            np.stack((zeniths, np.full_like(zeniths, 180)), axis=-1),
             (-1, 1, 2),
         )
         * ureg.deg
     )
-    assert np.allclose(angles, measure.viewing_angles)
+    assert np.allclose(
+        angles, measure.viewing_angles
+    ), f"\n{angles} vs\n{measure.viewing_angles}"
 
     # Construct an azimuthal ring
     zeniths = 45
     azimuths = np.arange(0, 360, 45)
     measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
-    assert measure.hplane is None
+    assert isinstance(measure.direction_layout, AzimuthRingLayout)
+    assert measure.direction_layout.zenith == 45 * ureg.deg
 
     angles = (
         np.reshape(
@@ -127,27 +294,26 @@ def test_multi_distant_measure_from_viewing_angles_convention(mode_mono):
     )
 
     # The requested azimuth convention is correctly passed to the constructor
-    assert measure.azimuth_convention is AzimuthConvention.NORTH_LEFT
+    assert measure.direction_layout.azimuth_convention is AzimuthConvention.NORTH_LEFT
 
     # Selecting a non-standard convention doesn't modify the hemispherical plane
     # azimuth and viewing angles are not modified (beyond the hemispherical
     # plane transform)
-    assert measure.hplane == 0.0 * ureg.deg
-    assert np.allclose(
-        measure.viewing_angles.squeeze(),
-        [
-            [60, 180],
-            [45, 180],
-            [30, 180],
-            [15, 180],
-            [0, 90],
-            [15, 0],
-            [30, 0],
-            [45, 0],
-            [60, 0],
-        ]
-        * ureg.deg,
-    )
+    assert isinstance(measure.direction_layout, HemispherePlaneLayout)
+    assert measure.direction_layout.azimuth == 0.0 * ureg.deg
+    expected = [
+        [-60, 0],
+        [-45, 0],
+        [-30, 0],
+        [-15, 0],
+        [0, 0],
+        [15, 0],
+        [30, 0],
+        [45, 0],
+        [60, 0],
+    ] * ureg.deg
+    result = measure.viewing_angles.squeeze()
+    assert np.allclose(expected, result), f"\n{expected} vs\n{result}"
 
     # Another check of the azimuth values: computed viewing angles are expressed
     # in the specified convention
@@ -156,17 +322,9 @@ def test_multi_distant_measure_from_viewing_angles_convention(mode_mono):
         azimuths=[0, 45, 90, 180, 360] * ureg.deg,
         azimuth_convention="north_left",
     )
-    assert np.allclose(
-        measure.viewing_angles.squeeze(),
-        [
-            [45, 0],
-            [45, 45],
-            [45, 90],
-            [45, 180],
-            [45, 0],
-        ]
-        * ureg.deg,
-    )
+    expected = [[45, 0], [45, 45], [45, 90], [45, 180], [45, 0]] * ureg.deg
+    result = measure.viewing_angles.squeeze()
+    assert np.allclose(expected, result), f"\n{expected} vs\n{result}"
 
     # Check that generated directions are correct: the constructor internally
     # performs a transform to East right
@@ -176,7 +334,7 @@ def test_multi_distant_measure_from_viewing_angles_convention(mode_mono):
         azimuth_convention="north_left",
     )
     assert np.allclose(
-        -measure.directions,  # Directions are inwards, flip them for convenience
+        measure.direction_layout.directions,
         [
             [0, 1, 0],
             [np.sqrt(2) / 2, np.sqrt(2) / 2, 0],
