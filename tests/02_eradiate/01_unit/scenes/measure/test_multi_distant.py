@@ -56,9 +56,7 @@ def test_layout_azimuth_convention(mode_mono, convention, expected):
     layout = AngleLayout(
         angles=[[90, 0], [90, 90]] * ureg.deg, azimuth_convention=convention
     )
-    assert np.allclose(
-        expected, layout.directions
-    ), f"\nexpected {expected}\ngot      {layout.directions}"
+    assert np.allclose(layout.directions, expected)
 
 
 def test_direction_layout(mode_mono):
@@ -200,17 +198,13 @@ def test_multi_distant_measure_viewing_angles(mode_mono):
         * ureg.deg
     )
 
-    assert np.allclose(
-        expected, measure.viewing_angles
-    ), f"\nexpected {expected},\ngot      {measure.viewing_angles}"
+    assert np.allclose(measure.viewing_angles, expected)
 
     # Directions which would normally map to the [-π, 0] domain are normalised
     # to [0, 2π]
     measure = MultiDistantMeasure(direction_layout=[[0, -1, 1]])
     expected = [45, 270] * ureg.deg
-    assert np.allclose(
-        expected, measure.viewing_angles
-    ), f"\nexpected {expected},\ngot      {measure.viewing_angles}"
+    assert np.allclose(measure.viewing_angles, expected)
 
 
 def test_multi_distant_measure_from_viewing_angles(mode_mono):
@@ -223,10 +217,7 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
     angles = np.reshape(np.stack((zeniths, azimuths), axis=-1), (-1, 1, 2)) * ureg.deg
 
     measure = MultiDistantMeasure.from_viewing_angles(zeniths, azimuths)
-    print(measure.direction_layout)
-    assert np.allclose(
-        angles, measure.viewing_angles
-    ), f"\n{angles} vs\n{measure.viewing_angles}"
+    assert np.allclose(measure.viewing_angles, angles)
 
     # Specifying the hplane param will have the validation step raise
     with pytest.raises(TypeError):
@@ -246,9 +237,7 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
         )
         * ureg.deg
     )
-    assert np.allclose(
-        angles, measure.viewing_angles
-    ), f"\n{angles} vs\n{measure.viewing_angles}"
+    assert np.allclose(measure.viewing_angles, angles)
 
     # Construct from viewing angles within the same plane using a single azimuth value
     zeniths = np.array([-60, -45, -30, -15, 0, 15, 30, 45, 60])
@@ -264,9 +253,7 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
         )
         * ureg.deg
     )
-    assert np.allclose(
-        angles, measure.viewing_angles
-    ), f"\n{angles} vs\n{measure.viewing_angles}"
+    assert np.allclose(measure.viewing_angles, angles)
 
     # Construct an azimuthal ring
     zeniths = 45
@@ -282,7 +269,7 @@ def test_multi_distant_measure_from_viewing_angles(mode_mono):
         )
         * ureg.deg
     )
-    assert np.allclose(angles, measure.viewing_angles)
+    assert np.allclose(measure.viewing_angles, angles)
 
 
 def test_multi_distant_measure_from_viewing_angles_convention(mode_mono):
@@ -313,7 +300,7 @@ def test_multi_distant_measure_from_viewing_angles_convention(mode_mono):
         [60, 0],
     ] * ureg.deg
     result = measure.viewing_angles.squeeze()
-    assert np.allclose(expected, result), f"\n{expected} vs\n{result}"
+    assert np.allclose(result, expected)
 
     # Another check of the azimuth values: computed viewing angles are expressed
     # in the specified convention
@@ -324,7 +311,7 @@ def test_multi_distant_measure_from_viewing_angles_convention(mode_mono):
     )
     expected = [[45, 0], [45, 45], [45, 90], [45, 180], [45, 0]] * ureg.deg
     result = measure.viewing_angles.squeeze()
-    assert np.allclose(expected, result), f"\n{expected} vs\n{result}"
+    assert np.allclose(result, expected)
 
     # Check that generated directions are correct: the constructor internally
     # performs a transform to East right

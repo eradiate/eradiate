@@ -81,7 +81,7 @@ def test_eval(variant_llvm_ad_rgb, rho_0, k, g):
     values = eval_bsdf(rpv, wi, wo)
     reference = rpv_reference(rho_0, rho_0, g, k, theta_i, phi_i, theta_o, phi_o)
 
-    assert dr.allclose(reference, values, rtol=1e-3, atol=1e-3)
+    assert dr.allclose(values, reference, rtol=1e-3, atol=1e-3)
 
 
 @pytest.mark.parametrize("rho_0", [0.0, 0.5, 1.0])
@@ -108,7 +108,7 @@ def test_eval_diffuse(variant_llvm_ad_rgb, rho_0):
     values = eval_bsdf(rpv, wi, wo)
     reference = eval_bsdf(diffuse, wi, wo)
 
-    assert np.allclose(reference, values)
+    assert np.allclose(values, reference)
 
 
 def test_chi2_rpv3(variant_llvm_ad_rgb):

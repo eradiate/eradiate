@@ -146,17 +146,17 @@ def test_bbox_convert():
     bbox_ref = BoundingBox([0, 0, 0], [1, 1, 1])
 
     bbox_convert = BoundingBox.convert([[0, 0, 0], [1, 1, 1]])
-    assert np.allclose(bbox_ref.min, bbox_convert.min)
-    assert np.allclose(bbox_ref.max, bbox_convert.max)
+    assert np.allclose(bbox_convert.min, bbox_ref.min)
+    assert np.allclose(bbox_convert.max, bbox_ref.max)
 
     bbox_convert = BoundingBox.convert(np.array([[0, 0, 0], [1, 1, 1]]))
-    assert np.allclose(bbox_ref.min, bbox_convert.min)
-    assert np.allclose(bbox_ref.max, bbox_convert.max)
+    assert np.allclose(bbox_convert.min, bbox_ref.min)
+    assert np.allclose(bbox_convert.max, bbox_ref.max)
 
     bbox_ref = BoundingBox([0, 0, 0] * ureg.m, [1, 1, 1] * ureg.m)
     bbox_convert = BoundingBox.convert([[0, 0, 0], [1, 1, 1]] * ureg.m)
-    assert np.allclose(bbox_ref.min, bbox_convert.min)
-    assert np.allclose(bbox_ref.max, bbox_convert.max)
+    assert np.allclose(bbox_convert.min, bbox_ref.min)
+    assert np.allclose(bbox_convert.max, bbox_ref.max)
 
 
 def test_bbox_contains():

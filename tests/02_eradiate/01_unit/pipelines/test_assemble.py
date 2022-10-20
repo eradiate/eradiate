@@ -150,8 +150,8 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
     assert "vaa" in result.coords
 
     # Viewing angles are set to appropriate values
-    assert np.allclose(expected_zenith, result.coords["vza"].values.squeeze())
-    assert np.allclose(expected_azimuth, result.coords["vaa"].values.squeeze())
+    assert np.allclose(result.coords["vza"].values.squeeze(), expected_zenith)
+    assert np.allclose(result.coords["vaa"].values.squeeze(), expected_azimuth)
 
 
 def test_add_srf(modes_all_single):

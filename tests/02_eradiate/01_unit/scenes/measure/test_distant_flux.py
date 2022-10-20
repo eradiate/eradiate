@@ -70,4 +70,4 @@ def test_distant_flux_viewing_angles(mode_mono):
         )
         * ureg.deg
     )
-    assert np.allclose(expected, d.viewing_angles)
+    assert np.allclose(d.viewing_angles, expected)
