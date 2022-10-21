@@ -30,7 +30,22 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 %
 % ### Internal changes
 
-## v0.22.5 (upcoming release)
+
+## v0.22.6 (upcoming release)
+
+% ### New features
+%
+% ### Breaking changes
+%
+% ### Deprecations and removals
+%
+% ### Improvements and fixes
+%
+% ### Documentation
+%
+% ### Internal changes
+
+## v0.22.5 (17 October 2022)
 
 ### New features
 
