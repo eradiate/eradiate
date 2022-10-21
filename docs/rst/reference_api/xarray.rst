@@ -2,6 +2,7 @@
 ===================
 
 .. automodule:: eradiate.xarray
+   :members:
 
 ``eradiate.xarray.interp``
 --------------------------
