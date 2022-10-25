@@ -12,15 +12,13 @@ Updates are tracked in this change log. Every time you decide to update to a
 newer version, we recommend that you to go through the list of changes.
 We try hard to remain backward-compatible and warn in advance for deprecation
 when necessary—we also advise to not ignore `DeprecationWarning`s.
+
+Entries marked with a  ︎⚠️ symbol require particular attention during upgrade.
 ```
 
 % HEREAFTER IS A TEMPLATE FOR THE NEXT RELEASE
 %
 % ## vXX.YY.ZZ (upcoming release)
-%
-% ### New features
-%
-% ### Breaking changes
 %
 % ### Deprecations and removals
 %
@@ -33,16 +31,23 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 ## v0.22.6 (upcoming release)
 
-% ### New features
-%
-% ### Breaking changes
-%
-% ### Deprecations and removals
-%
+### Deprecations and removals
+
+* The `MultiDistantMeasure.from_viewing_angles()` constructor is deprecated and
+  will be removed in v0.23.1.
+
 ### Improvements and fixes
 
 * Added support for loading spectral response function data sets from custom
   paths ({ghpr}`270`).
+* ⚠️ Complete rewrite of the {class}`.MultiDistantMeasure` construction code 
+  ({ghpr}`274`). Previous functionality is preserved in the form of more 
+  specialised and simpler interfaces, and we now support a gridded coverage of 
+  the hemisphere specified as the Cartesian product of zenith and azimuth 
+  lists of values.
+* Added a helper to grid against VZA and VAA the results obtained with a 
+  `MultiDistantMeasure` with a grid layout ({ghpr}`274`). See 
+  {meth}`~eradiate.xarray.unstack_mdistant_grid`.
 
 % ### Documentation
 %
