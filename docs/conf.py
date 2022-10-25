@@ -15,6 +15,8 @@ copyright = f"2020-{datetime.datetime.now().year}, The Eradiate Team"
 author = "The Eradiate Team"
 release = version("eradiate")
 version = ".".join(release.split(".")[:3])
+if "dev" in release:
+    version += ".dev"
 
 # -- General configuration -----------------------------------------------------
 

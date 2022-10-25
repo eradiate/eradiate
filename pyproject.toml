@@ -105,7 +105,7 @@ git_describe_command = [
   "--match",
   "v[0-9]*",
 ] # Redefined to avoid crashing with special build tags
-version_scheme = "post-release" # Count commits since last tag, don't anticipate new version
+version_scheme = "guess-next-dev" # Count commits since last tag, don't anticipate new version
 
 [tool.isort]
 profile = "black"
