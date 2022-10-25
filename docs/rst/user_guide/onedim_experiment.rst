@@ -83,8 +83,7 @@ Distant radiancemeter [:class:`.MultiDistantMeasure`, ``distant``]
     This flexible measure records radiance exiting the scene. In practice, it
     outputs the top-of-atmosphere radiance under the set illumination
     conditions. The viewing directions for which radiance is computed can be
-    controlled easily using the :meth:`.MultiDistantMeasure.from_viewing_angles`
-    constructor.
+    controlled easily using various class method constructors.
 
     When this measure is used, a number of derived quantities are
     computed. In the next paragraph, quantities available after post-processing
