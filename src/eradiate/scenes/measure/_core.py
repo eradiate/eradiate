@@ -69,7 +69,7 @@ measure_factory.register_lazy_batch(
 
 
 def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
-    if isinstance(value, (str, eradiate.typing.PathLike)):
+    if isinstance(value, eradiate.typing.PathLike):
         ds = converters.load_dataset(
             f"spectra/srf/{value}.nc"
             if not str(value).endswith(".nc")  # keyword for file in data store
