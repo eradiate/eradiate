@@ -15,7 +15,7 @@ import eradiate
 
 from ..core import SceneElement
 from ..spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum, spectrum_factory
-from ... import ckd, converters, data, validators
+from ... import ckd, converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
@@ -69,10 +69,14 @@ measure_factory.register_lazy_batch(
 
 
 def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
-    if isinstance(value, str):
-        with data.open_dataset(f"spectra/srf/{value}.nc") as ds:
-            w = ureg.Quantity(ds.w.values, ds.w.attrs["units"])
-            srf = ds.data_vars["srf"].values
+    if isinstance(value, (str, eradiate.typing.PathLike)):
+        ds = converters.load_dataset(
+            f"spectra/srf/{value}.nc"
+            if not str(value).endswith(".nc")  # keyword for file in data store
+            else value  # path to file (local or in data store)
+        )
+        w = ureg.Quantity(ds.w.values, ds.w.attrs["units"])
+        srf = ds.data_vars["srf"].values
 
         return InterpolatedSpectrum(quantity="dimensionless", wavelengths=w, values=srf)
 
@@ -101,9 +105,11 @@ class MeasureSpectralConfig(ABC):
             converter=_measure_spectral_config_srf_converter,
             validator=validators.has_quantity(PhysicalQuantity.DIMENSIONLESS),
         ),
-        doc="Spectral response function. If a string is passed, the "
-        "corresponding shipped SRF data will be loaded from the Eradiate "
-        "database. Other types will be converted by :data:`.spectrum_factory`.",
+        doc="Spectral response function. If a path is passed, it attempts "
+        "to load a dataset from that location. If a keyword is passed, e.g., "
+        "``'sentinel_2a-msi-4'`` it tries to serve the corresponding dataset "
+        "from the Eradiate data store."
+        "Other types will be converted by :data:`.spectrum_factory`.",
         type=".Spectrum",
         init_type="str or .Spectrum or dict or float",
         default=":class:`UniformSpectrum(value=1.0) <.UniformSpectrum>`",

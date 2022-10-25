@@ -29,15 +29,21 @@ def srf():
 @click.argument("output", type=click.Path())
 @click.option("-v", "--verbose", is_flag=True, help="Display filtering summary.")
 @click.option(
-    "-i",
-    "--interactive",
+    "-s",
+    "--show-plot",
     is_flag=True,
-    help="Prompt before writing filtered data to disk.",
+    help="Show plot of the filtered region.",
 )
 @click.option(
     "-d", "--dry-run", is_flag=True, help="Do not write filtered data to disk."
 )
-def trim(filename, output, verbose, interactive, dry_run):
+@click.option(
+    "-i",
+    "--interactive",
+    is_flag=True,
+    help="Prompt user to proceed to saving the filtered dataset.",
+)
+def trim(filename, output, verbose, show_plot, dry_run, interactive):
     """
     Trim a spectral response function.
 
@@ -50,8 +56,9 @@ def trim(filename, output, verbose, interactive, dry_run):
         srf=filename,
         path=output,
         verbose=verbose,
-        interactive=interactive,
+        show_plot=show_plot,
         dry_run=dry_run,
+        interactive=interactive,
     )
 
 
@@ -110,7 +117,13 @@ def text_input_to_quantity(
     "-i",
     "--interactive",
     is_flag=True,
-    help="Prompt before writing filtered data to disk.",
+    help="Prompt user to proceed to saving the filtered dataset.",
+)
+@click.option(
+    "-s",
+    "--show-plot",
+    is_flag=True,
+    help="Show plot of the filtered region.",
 )
 @click.option(
     "-t",
@@ -141,6 +154,7 @@ def filter(
     verbose,
     dry_run,
     interactive,
+    show_plot,
     threshold,
     wmin,
     wmax,
@@ -159,13 +173,14 @@ def filter(
     wmax = text_input_to_quantity(value=wmax)
 
     # filter
-    srf_tools.filter(
+    srf_tools.filter_srf(
         srf=srf,
         path=output,
         trim_prior=trim,
         verbose=verbose,
-        interactive=interactive,
+        show_plot=show_plot,
         dry_run=dry_run,
+        interactive=interactive,
         threshold=threshold,
         wmin=wmin,
         wmax=wmax,
