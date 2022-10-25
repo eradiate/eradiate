@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import os
 import typing as t
 import warnings
 from abc import ABC, abstractmethod
@@ -69,7 +70,7 @@ measure_factory.register_lazy_batch(
 
 
 def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
-    if isinstance(value, eradiate.typing.PathLike):
+    if isinstance(value, (str, os.PathLike)):
         ds = converters.load_dataset(
             f"spectra/srf/{value}.nc"
             if not str(value).endswith(".nc")  # keyword for file in data store
