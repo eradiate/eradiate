@@ -38,6 +38,14 @@ Multi distant radiance meter (:monosp:`mdistant`)
      surface.
    - —
 
+ * - ray_offset
+   - |float|
+   - *Optional.* Define the ray origin offsetting policy.
+     If this parameter is unset, ray origins are positioned at a far distance
+     from the target. If a value is set, rays are offset by the corresponding
+     distance.
+   - —
+
 This sensor plugin aggregates an arbitrary number of distant directional sensors
 which records the spectral radiance leaving the scene in specified directions.
 It is the aggregation of multiple :monosp:`distant` sensors.
@@ -68,11 +76,11 @@ template <typename Float, typename Spectrum>
 class MultiDistantSensor final : public Sensor<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(Sensor, m_to_world, m_film, m_needs_sample_2,
-                    m_needs_sample_3)
+                   m_needs_sample_3)
     MI_IMPORT_TYPES(Scene, Shape)
 
     using Matrix = dr::Matrix<Float, Transform4f::Size>;
-    using Index  = dr::int32_array_t<Float>;
+    using Index = dr::int32_array_t<Float>;
 
     MultiDistantSensor(const Properties &props) : Base(props) {
         // Collect directions and set transforms accordingly
@@ -90,7 +98,7 @@ public:
                   directions_str.size());
 
         m_sensor_count = (size_t) directions_str.size() / 3;
-        size_t width   = m_sensor_count * 16;
+        size_t width = m_sensor_count * 16;
         std::vector<ScalarFloat> buffer(width);
 
         // TODO: update transform storage loading with new TensorXf interface
@@ -102,7 +110,8 @@ public:
                                std::stof(directions_str[index + 1]),
                                std::stof(directions_str[index + 2]));
 
-            auto [up, _] = coordinate_system(direction);
+            ScalarVector3f up;
+            std::tie(up, std::ignore) = coordinate_system(direction);
             ScalarTransform4f transform =
                 ScalarTransform4f::look_at(ScalarPoint3f{ 0.f, 0.f, 0.f },
                                            ScalarPoint3f(direction), up)
@@ -111,7 +120,11 @@ public:
         }
 
         size_t shape[3] = { (size_t) m_sensor_count, 4, 4 };
-        m_transforms    = TensorXf(buffer.data(), 3, shape);
+        m_transforms = TensorXf(buffer.data(), 3, shape);
+
+        // Collect ray offset value
+        // Default is -1, overridden upon set_scene() call
+        m_ray_offset = props.get<ScalarFloat>("ray_offset", -1);
 
         // Check film size
         ScalarPoint2i expected_size{ m_sensor_count, 1 };
@@ -121,8 +134,7 @@ public:
                   expected_size, m_film->size());
 
         // Check reconstruction filter radius
-        if (m_film->rfilter()->radius() >
-            0.5f + math::RayEpsilon<Float>) {
+        if (m_film->rfilter()->radius() > 0.5f + math::RayEpsilon<Float>) {
             Log(Warn, "This sensor should be used with a reconstruction filter "
                       "with a radius of 0.5 or lower (e.g. default box)");
         }
@@ -130,12 +142,12 @@ public:
         // Set ray target if relevant
         if (props.has_property("target")) {
             if (props.type("target") == Properties::Type::Array3f) {
-                m_target_type  = RayTargetType::Point;
+                m_target_type = RayTargetType::Point;
                 m_target_point = props.get<ScalarPoint3f>("target");
             } else if (props.type("target") == Properties::Type::Object) {
                 // We assume it's a shape
-                m_target_type  = RayTargetType::Shape;
-                auto obj       = props.object("target");
+                m_target_type = RayTargetType::Shape;
+                auto obj = props.object("target");
                 m_target_shape = dynamic_cast<Shape *>(obj.get());
 
                 if (!m_target_shape)
@@ -158,6 +170,11 @@ public:
         m_bsphere.radius =
             dr::maximum(math::RayEpsilon<Float>,
                         m_bsphere.radius * (1.f + math::RayEpsilon<Float>) );
+
+        if (m_ray_offset < 0.f)
+            m_ray_offset = m_target_type == RayTargetType::None
+                               ? m_bsphere.radius
+                               : 2.f * m_bsphere.radius;
     }
 
     std::pair<Ray3f, Spectrum> sample_ray(Float time, Float wavelength_sample,
@@ -188,13 +205,13 @@ public:
         Spectrum ray_weight = 0.f;
 
         if (m_target_type == RayTargetType::Point) {
-            ray.o      = m_target_point - 2.f * ray.d * m_bsphere.radius;
+            ray.o = m_target_point - ray.d * m_ray_offset;
             ray_weight = wav_weight;
         } else if (m_target_type == RayTargetType::Shape) {
             // Use area-based sampling of shape
             PositionSample3f ps =
                 m_target_shape->sample_position(time, aperture_sample, active);
-            ray.o      = ps.p - 2.f * ray.d * m_bsphere.radius;
+            ray.o = ps.p - ray.d * m_ray_offset;
             ray_weight = wav_weight / (ps.pdf * m_target_shape->surface_area());
         } else { // if (m_target_type == RayTargetType::None) {
             // Sample target uniformly on bounding sphere cross section
@@ -203,7 +220,7 @@ public:
             Vector3f perp_offset =
                 trafo.transform_affine(Vector3f{ offset.x(), offset.y(), 0.f });
             ray.o = m_bsphere.center + perp_offset * m_bsphere.radius -
-                    ray.d * m_bsphere.radius;
+                    ray.d * m_ray_offset;
             ray_weight = wav_weight;
         }
 
@@ -234,18 +251,17 @@ public:
     std::string to_string() const override {
         std::ostringstream oss;
         oss << "MultiDistantSensor[" << std::endl
-            << "  transforms = " << string::indent(m_transforms.array()) << ","
-            << std::endl
+            << "  transforms = " << string::indent(m_transforms.array()) << "," << std::endl
             << "  film = " << string::indent(m_film) << "," << std::endl;
 
         if (m_target_type == RayTargetType::Point)
-            oss << "  target = " << m_target_point << std::endl;
+            oss << "  target = " << m_target_point << "," << std::endl;
         else if (m_target_type == RayTargetType::Shape)
-            oss << "  target = " << string::indent(m_target_shape) << std::endl;
+            oss << "  target = " << string::indent(m_target_shape) << "," << std::endl;
         else // if (m_target_type == RayTargetType::None)
-            oss << "  target = none" << std::endl;
+            oss << "  target = none" << "," << std::endl;
 
-        oss << "]";
+        oss << "  ray_offset = " << m_ray_offset << std::endl << "]";
 
         return oss.str();
     }
@@ -265,6 +281,8 @@ protected:
     TensorXf m_transforms;
     // Number of directions
     size_t m_sensor_count;
+    // Ray offset distance (-1 means "distant")
+    ScalarFloat m_ray_offset;
 };
 
 MI_IMPLEMENT_CLASS_VARIANT(MultiDistantSensor, Sensor)

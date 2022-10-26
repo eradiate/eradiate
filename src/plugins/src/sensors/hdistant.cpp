@@ -36,6 +36,14 @@ Hemispherical distant radiancemeter sensor (:monosp:`hdistant`)
      surface.
    - —
 
+ * - ray_offset
+   - |float|
+   - *Optional.* Define the ray origin offsetting policy.
+     If this parameter is unset, ray origins are positioned at a far distance
+     from the target. If a value is set, rays are offset by the corresponding
+     distance.
+   - —
+
 This sensor plugin implements a distant directional sensor which records
 radiation leaving the scene. It records the spectral radiance leaving the scene
 in directions covering a hemisphere defined by its ``to_world`` parameter and
@@ -169,8 +177,7 @@ public:
 
     HemisphericalDistantSensor(const Properties &props) : Base(props) {
         // Check reconstruction filter radius
-        if (m_film->rfilter()->radius() >
-            0.5f + math::RayEpsilon<Float>) {
+        if (m_film->rfilter()->radius() > 0.5f + math::RayEpsilon<Float>) {
             Log(Warn, "This sensor is best used with a reconstruction filter "
                       "with a radius of 0.5 or lower (e.g. default box)");
         }
@@ -179,15 +186,19 @@ public:
         m_d.x() = 1.0f / m_film->size().x();
         m_d.y() = 1.0f / m_film->size().y();
 
+        // Collect ray offset value
+        // Default is -1, overridden upon set_scene() call
+        m_ray_offset = props.get<ScalarFloat>("ray_offset", -1);
+
         // Set ray target if relevant
         if (props.has_property("target")) {
             if (props.type("target") == Properties::Type::Array3f) {
-                m_target_type  = RayTargetType::Point;
+                m_target_type = RayTargetType::Point;
                 m_target_point = props.get<ScalarPoint3f>("target");
             } else if (props.type("target") == Properties::Type::Object) {
                 // We assume it's a shape
-                m_target_type  = RayTargetType::Shape;
-                auto obj       = props.object("target");
+                m_target_type = RayTargetType::Shape;
+                auto obj = props.object("target");
                 m_target_shape = dynamic_cast<Shape *>(obj.get());
 
                 if (!m_target_shape)
@@ -207,6 +218,11 @@ public:
         m_bsphere.radius =
             dr::maximum(math::RayEpsilon<Float>,
                         m_bsphere.radius * (1.f + math::RayEpsilon<Float>) );
+
+        if (m_ray_offset < 0.f)
+            m_ray_offset = m_target_type == RayTargetType::None
+                               ? m_bsphere.radius
+                               : 2.f * m_bsphere.radius;
     }
 
     std::pair<Ray3f, Spectrum> sample_ray(Float time, Float wavelength_sample,
@@ -223,22 +239,21 @@ public:
             sample_wavelength<Float, Spectrum>(wavelength_sample);
         ray.wavelengths = wavelengths;
 
-        // Sample ray origin
-        Spectrum ray_weight = 0.f;
-
         // Sample ray direction
         ray.d = -m_to_world.value().transform_affine(
             warp::square_to_uniform_hemisphere(film_sample));
 
         // Sample target point and position ray origin
+        Spectrum ray_weight = 0.f;
+
         if (m_target_type == RayTargetType::Point) {
-            ray.o      = m_target_point - 2.f * ray.d * m_bsphere.radius;
+            ray.o = m_target_point - ray.d * m_ray_offset;
             ray_weight = wav_weight;
         } else if (m_target_type == RayTargetType::Shape) {
             // Use area-based sampling of shape
             PositionSample3f ps =
                 m_target_shape->sample_position(time, aperture_sample, active);
-            ray.o      = ps.p - 2.f * ray.d * m_bsphere.radius;
+            ray.o = ps.p - ray.d * m_ray_offset;
             ray_weight = wav_weight / (ps.pdf * m_target_shape->surface_area());
         } else { // if (m_target_type == RayTargetType::None) {
             // Sample target uniformly on bounding sphere cross section
@@ -247,7 +262,7 @@ public:
             Vector3f perp_offset = m_to_world.value().transform_affine(
                 Vector3f(offset.x(), offset.y(), 0.f));
             ray.o = m_bsphere.center + perp_offset * m_bsphere.radius -
-                    ray.d * m_bsphere.radius;
+                    ray.d * m_ray_offset;
             ray_weight = wav_weight;
         }
 
@@ -261,7 +276,7 @@ public:
 
         RayDifferential3f ray;
         ray.has_differentials = true;
-        ray.time              = time;
+        ray.time = time;
 
         // Sample spectrum
         auto [wavelengths, wav_weight] =
@@ -283,17 +298,17 @@ public:
 
         // Sample target point and position ray origin
         if (m_target_type == RayTargetType::Point) {
-            ray.o      = m_target_point - 2.f * ray.d * m_bsphere.radius;
-            ray.o_x    = m_target_point - 2.f * ray.d_x * m_bsphere.radius;
-            ray.o_y    = m_target_point - 2.f * ray.d_y * m_bsphere.radius;
+            ray.o = m_target_point - ray.d * m_ray_offset;
+            ray.o_x = m_target_point - ray.d_x * m_ray_offset;
+            ray.o_y = m_target_point - ray.d_y * m_ray_offset;
             ray_weight = wav_weight;
         } else if (m_target_type == RayTargetType::Shape) {
             // Use area-based sampling of shape
             PositionSample3f ps =
                 m_target_shape->sample_position(time, aperture_sample, active);
-            ray.o      = ps.p - 2.f * ray.d * m_bsphere.radius;
-            ray.o_x    = ps.p - 2.f * ray.d_x * m_bsphere.radius;
-            ray.o_y    = ps.p - 2.f * ray.d_y * m_bsphere.radius;
+            ray.o = ps.p - ray.d * m_ray_offset;
+            ray.o_x = ps.p - ray.d_x * m_ray_offset;
+            ray.o_y = ps.p - ray.d_y * m_ray_offset;
             ray_weight = wav_weight / (ps.pdf * m_target_shape->surface_area());
         } else { // if (m_target_type == RayTargetType::None) {
             // Sample target uniformly on bounding sphere cross section
@@ -302,11 +317,11 @@ public:
             Vector3f perp_offset = m_to_world.value().transform_affine(
                 Vector3f(offset.x(), offset.y(), 0.f));
             ray.o = m_bsphere.center + perp_offset * m_bsphere.radius -
-                    ray.d * m_bsphere.radius;
+                    ray.d * m_ray_offset;
             ray.o_x = m_bsphere.center + perp_offset * m_bsphere.radius -
-                      ray.d_x * m_bsphere.radius;
+                      ray.d_x * m_ray_offset;
             ray.o_y = m_bsphere.center + perp_offset * m_bsphere.radius -
-                      ray.d_y * m_bsphere.radius;
+                      ray.d_y * m_ray_offset;
             ray_weight = wav_weight;
         }
 
@@ -320,17 +335,17 @@ public:
     std::string to_string() const override {
         std::ostringstream oss;
         oss << "HemisphericalDistantSensor[" << std::endl
-            << "  to_world = " << string::indent(m_to_world) << "," << std::endl
+            << "  to_world = " << string::indent(m_to_world, 13) << "," << std::endl
             << "  film = " << string::indent(m_film) << "," << std::endl;
 
         if (m_target_type == RayTargetType::Point)
-            oss << "  target = " << m_target_point << std::endl;
+            oss << "  target = " << m_target_point << "," << std::endl;
         else if (m_target_type == RayTargetType::Shape)
-            oss << "  target = " << string::indent(m_target_shape) << std::endl;
+            oss << "  target = " << string::indent(m_target_shape) << "," << std::endl;
         else // if (m_target_type == RayTargetType::None)
-            oss << "  target = None" << std::endl;
+            oss << "  target = None" << "," << std::endl;
 
-        oss << "]";
+        oss << "  ray_offset = " << m_ray_offset << std::endl << "]";
 
         return oss.str();
     }
@@ -348,6 +363,8 @@ protected:
     Point3f m_target_point;
     // Spacing between two pixels in film coordinates
     ScalarPoint2f m_d;
+    // Ray offset distance (-1 means "distant")
+    ScalarFloat m_ray_offset;
 };
 
 MI_IMPLEMENT_CLASS_VARIANT(HemisphericalDistantSensor, Sensor)

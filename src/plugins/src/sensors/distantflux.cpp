@@ -36,6 +36,14 @@ Distant fluxmeter sensor (:monosp:`distantflux`)
      surface.
    - —
 
+ * - ray_offset
+   - |float|
+   - *Optional.* Define the ray origin offsetting policy.
+     If this parameter is unset, ray origins are positioned at a far distance
+     from the target. If a value is set, rays are offset by the corresponding
+     distance.
+   - —
+
 This sensor plugin implements a distant sensor which records the radiative flux
 density leaving the scene (in W/m², scaled by scene unit length). It covers a
 hemisphere defined by its ``to_world`` parameter and mapped to film coordinates.
@@ -79,6 +87,10 @@ public:
         }
         m_npixels = m_film->size().x() * m_film->size().y();
 
+        // Collect ray offset value
+        // Default is -1, overridden upon set_scene() call
+        m_ray_offset = props.get<ScalarFloat>("ray_offset", -1);
+
         // Set ray target if relevant
         // Get target
         if (props.has_property("target")) {
@@ -114,6 +126,11 @@ public:
         m_bsphere.radius =
             dr::maximum(math::RayEpsilon<Float>,
                         m_bsphere.radius * (1.f + math::RayEpsilon<Float>));
+
+        if (m_ray_offset < 0.f)
+            m_ray_offset = m_target_type == RayTargetType::None
+                               ? m_bsphere.radius
+                               : 2.f * m_bsphere.radius;
     }
 
     std::pair<Ray3f, Spectrum> sample_ray_impl(Float time,
@@ -139,16 +156,15 @@ public:
         Spectrum ray_weight =
             dot(-ray.d, m_reference_normal) /
             (warp::square_to_uniform_hemisphere_pdf(ray.d) * m_npixels);
-        Point3f ray_target = m_target_point;
 
         if (m_target_type == RayTargetType::Point) {
-            // Target point selection already handled during init
+            ray.o = m_target_point - ray.d * m_ray_offset;
             ray_weight *= wav_weight;
         } else if (m_target_type == RayTargetType::Shape) {
             // Use area-based sampling of shape
             PositionSample3f ps =
                 m_target_shape->sample_position(time, aperture_sample, active);
-            ray_target = ps.p;
+            ray.o = ps.p - ray.d * m_ray_offset;
             ray_weight *=
                 wav_weight / (ps.pdf * m_target_shape->surface_area());
         } else { // if (m_target_type == RayTargetType::None) {
@@ -157,14 +173,11 @@ public:
             Point2f offset =
                 warp::square_to_uniform_disk_concentric(aperture_sample);
             Vector3f perp_offset = m_to_world.value().transform_affine(
-                Vector3f(offset.x(), offset.y(), 0.f));
-            ray_target = m_bsphere.center + perp_offset * m_bsphere.radius;
+                Vector3f{ offset.x(), offset.y(), 0.f });
+            ray.o = m_bsphere.center + perp_offset * m_bsphere.radius -
+                    ray.d * m_ray_offset;
             ray_weight *= wav_weight;
         }
-
-        // Set ray origin
-        // Use the scene's bounding sphere to safely position ray origin
-        ray.o = ray_target - ray.d * 2.f * m_bsphere.radius;
 
         return { ray, ray_weight & active };
     }
@@ -210,13 +223,13 @@ public:
             << "  film = " << string::indent(m_film) << "," << std::endl;
 
         if (m_target_type == RayTargetType::Point)
-            oss << "  target = " << m_target_point << std::endl;
+            oss << "  target = " << m_target_point << "," << std::endl;
         else if (m_target_type == RayTargetType::Shape)
-            oss << "  target = " << string::indent(m_target_shape) << std::endl;
+            oss << "  target = " << string::indent(m_target_shape) << "," << std::endl;
         else // if (m_target_type == RayTargetType::None)
-            oss << "  target = None" << std::endl;
+            oss << "  target = None" << "," << std::endl;
 
-        oss << "]";
+        oss << "  ray_offset = " << m_ray_offset << std::endl << "]";
 
         return oss.str();
     }
@@ -236,6 +249,8 @@ protected:
     Vector3f m_reference_normal;
     // Total number of film pixels
     size_t m_npixels;
+    // Ray offset distance (-1 means "distant")
+    ScalarFloat m_ray_offset;
 };
 
 MI_IMPLEMENT_CLASS_VARIANT(DistantFluxSensor, Sensor)
