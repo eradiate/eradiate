@@ -359,3 +359,57 @@ def test_checkerboard(variant_scalar_rgb):
 
     expected = l_o * 0.5 * (rho0 + rho1) / np.pi
     assert np.allclose(result, expected, atol=1e-3)
+
+
+@pytest.mark.parametrize("offset", [0.9, 0.5, 0.1])
+@pytest.mark.parametrize("sigma", [0.1, 0.5, 1.0])
+def test_ray_offset(variant_scalar_rgb, offset, sigma):
+    rho = 1.0
+    l = 1.0
+    scene = mi.load_dict(
+        {
+            "type": "scene",
+            "medium": {
+                "type": "homogeneous",
+                "sigma_t": sigma,
+                "albedo": 0.0,
+                "phase": {"type": "isotropic"},
+            },
+            "cube": {
+                "type": "cube",
+                "bsdf": {"type": "null"},
+                "interior": {"type": "ref", "id": "medium"},
+            },
+            "rectangle": {
+                "type": "rectangle",
+                "bsdf": {"type": "diffuse", "reflectance": rho},
+            },
+            "illumination": {
+                "type": "directional",
+                "direction": [0.0, 0.0, -1.0],
+                "irradiance": 1.0,
+            },
+            "integrator": {"type": "volpath"},
+            "measure": {
+                "type": "mdistant",
+                "id": "measure",
+                "directions": "0,0,-1",
+                "sampler": {"type": "independent"},
+                "film": {
+                    "type": "hdrfilm",
+                    "width": 1,
+                    "height": 1,
+                    "pixel_format": "luminance",
+                    "component_format": "float32",
+                    "rfilter": {"type": "box"},
+                },
+                "ray_offset": offset,
+                "target": [0, 0, 0],
+                "medium": {"type": "ref", "id": "medium"},
+            },
+        }
+    )
+    result = np.squeeze(mi.render(scene, spp=4**8))
+    expected = rho * np.exp(-sigma * (l + offset)) / np.pi
+    # Fairly loose criterion, but a stricter one requires too many samples
+    assert np.isclose(result, expected, rtol=1e-2), f"{result = }, {expected = }"
