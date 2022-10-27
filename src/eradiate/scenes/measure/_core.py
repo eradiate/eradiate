@@ -11,6 +11,7 @@ import attrs
 import numpy as np
 import pint
 import pinttr
+import xarray as xr
 
 import eradiate
 
@@ -21,7 +22,7 @@ from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
 from ...contexts import CKDSpectralContext, MonoSpectralContext, SpectralContext
-from ...exceptions import ModeError, UnsupportedModeError
+from ...exceptions import DataError, ModeError, UnsupportedModeError
 from ...units import PhysicalQuantity, interpret_quantities
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -69,20 +70,63 @@ measure_factory.register_lazy_batch(
 # ------------------------------------------------------------------------------
 
 
+def _load_srf_ds(value: t.Union[str, os.PathLike]) -> xr.Dataset:
+    # path (local or in data store)
+    if str(value).endswith(".nc"):
+        return converters.load_dataset(value)
+
+    # identifier for a file in the data store
+    if isinstance(value, str):
+        try:
+            return converters.load_dataset(f"spectra/srf/{value}.nc")
+        except DataError as e:
+            if value.endswith("-raw"):
+                raise e
+            else:
+                warnings.warn(
+                    f"Could not serve SRF '{value}' from the data store."
+                    f"Trying to serve '{value}-raw' instead."
+                )
+                return converters.load_dataset(f"spectra/srf/{value}-raw.nc")
+
+    # this is an abnormal state
+    raise ValueError(f"unhandled value '{value}'")
+
+
 def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
+    """
+    Converter for :class:`MeasureSpectralConfig` ``srf`` attribute.
+
+    Parameters
+    ----------
+    value : Any
+        Value to convert.
+
+    Returns
+    -------
+    Spectrum
+        Converted value.
+
+    Notes
+    -----
+    The behaviour of this converter depends on the value type:
+    * If ``value`` is not a string or path, it is passed to the
+      :class:`.spectrum_factory`'s converter.
+    * If ``value`` is a path, the corresponding file is loaded
+    * If ``value`` is a string, it is interpreted as a SRF identifier:
+      * If the identifier does not end with `-raw`, the converter looks for a
+        prepared version of the SRF and loads it if it exists, else it loads the
+        raw SRF.
+      * If the identifier ends with `-raw`, the converter loads the raw SRF.
+    """
     if isinstance(value, (str, os.PathLike)):
-        ds = converters.load_dataset(
-            f"spectra/srf/{value}.nc"
-            if not str(value).endswith(".nc")  # keyword for file in data store
-            else value  # path to file (local or in data store)
-        )
+        ds = _load_srf_ds(value)
         w = ureg.Quantity(ds.w.values, ds.w.attrs["units"])
         srf = ds.data_vars["srf"].values
-
         return InterpolatedSpectrum(quantity="dimensionless", wavelengths=w, values=srf)
-
-    converter = spectrum_factory.converter(quantity="dimensionless")
-    return converter(value)
+    else:
+        converter = spectrum_factory.converter(quantity="dimensionless")
+        return converter(value)
 
 
 @parse_docs
@@ -106,13 +150,18 @@ class MeasureSpectralConfig(ABC):
             converter=_measure_spectral_config_srf_converter,
             validator=validators.has_quantity(PhysicalQuantity.DIMENSIONLESS),
         ),
-        doc="Spectral response function. If a path is passed, it attempts "
+        doc="Spectral response function (SRF). If a path is passed, it attempts "
         "to load a dataset from that location. If a keyword is passed, e.g., "
         "``'sentinel_2a-msi-4'`` it tries to serve the corresponding dataset "
-        "from the Eradiate data store."
+        "from the Eradiate data store. By default, the *prepared* version of "
+        "the SRF is served unless it does not exist in which case the *raw* "
+        "version is served. To request that the raw version is served, append "
+        "``'-raw'`` to the keyword, e.g., ``'sentinel_2a-msi-4-raw'``. "
+        "Note that the prepared SRF provide a better speed versus accuracy "
+        "trade-off, but for the best accuracy, the raw SRF should be used. "
         "Other types will be converted by :data:`.spectrum_factory`.",
         type=".Spectrum",
-        init_type="str or .Spectrum or dict or float",
+        init_type="Path or str or .Spectrum or dict or float",
         default=":class:`UniformSpectrum(value=1.0) <.UniformSpectrum>`",
     )
 

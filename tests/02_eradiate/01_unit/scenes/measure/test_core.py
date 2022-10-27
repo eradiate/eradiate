@@ -7,6 +7,7 @@ from eradiate import data
 from eradiate import unit_registry as ureg
 from eradiate.ckd import Bin
 from eradiate.contexts import CKDSpectralContext, MonoSpectralContext
+from eradiate.exceptions import DataError
 from eradiate.quad import Quad
 from eradiate.scenes.measure import Measure, MeasureSpectralConfig
 from eradiate.scenes.measure._core import (
@@ -16,19 +17,6 @@ from eradiate.scenes.measure._core import (
     _active,
 )
 from eradiate.scenes.spectra import InterpolatedSpectrum, UniformSpectrum
-
-
-@pytest.fixture
-def local_file_srf(tmpdir) -> Path:
-    ds = data.load_dataset("spectra/srf/sentinel_2a-msi-4.nc")
-    tmpfile = Path(tmpdir / "srf.nc")
-    ds.to_netcdf(tmpfile)
-    return tmpfile
-
-
-@pytest.fixture
-def data_store_srf() -> str:
-    return "sentinel_2a-msi-4"
 
 
 def test_active(mode_mono):
@@ -98,16 +86,32 @@ def test_mono_spectral_config(modes_all_mono):
     assert len(cfg.spectral_ctxs()) == 1
 
 
-@pytest.mark.parametrize("srf", ["data_store_srf", "local_file_srf"])
-def test_mono_spectral_config_srf(modes_all_mono, request, srf):
+def test_mono_spectral_config_srf(modes_all_mono, tmpdir):
     """
     A SRF is loaded from the data store/a local file.
     """
-    cfg = MeasureSpectralConfig.new(
-        wavelengths=[640.0, 650.0, 660.0],
-        srf=request.getfixturevalue(srf),
-    )
-    assert len(cfg.spectral_ctxs()) == 2  # The 640 nm point is filtered out
+    # existing prepared SRF
+    assert MeasureSpectralConfig.new(wavelengths=[650.0], srf="sentinel_2a-msi-4")
+
+    # raw SRF
+    assert MeasureSpectralConfig.new(wavelengths=[650.0], srf="sentinel_2a-msi-4-raw")
+
+    # local SRF file
+    ds = data.load_dataset("spectra/srf/sentinel_2a-msi-4.nc")
+    tmpfile = Path(tmpdir / "srf.nc")
+    ds.to_netcdf(tmpfile)
+    assert MeasureSpectralConfig.new(wavelengths=[650.0], srf=tmpfile)
+
+
+def test_mono_spectral_config_srf_invalid(modes_all_mono):
+    """
+    An invalid SRF value raises a DataError.
+    """
+    with pytest.raises(DataError):
+        MeasureSpectralConfig.new(srf="file_does_not_exist.nc")
+
+    with pytest.raises(DataError):
+        MeasureSpectralConfig.new(srf="srf-not-in-data-store-raw")
 
 
 def test_ckd_spectral_config(modes_all_ckd):
@@ -137,19 +141,6 @@ def test_ckd_spectral_config(modes_all_ckd):
     ctxs = cfg.spectral_ctxs()
     assert len(ctxs) == 96
     assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
-
-
-@pytest.mark.parametrize("srf", ["data_store_srf", "local_file_srf"])
-def test_ckd_spectral_config_srf(modes_all_ckd, request, srf):
-    """
-    A SRF is loaded from the data store/a local file.
-    """
-    cfg = MeasureSpectralConfig.new(
-        bin_set="10nm",
-        srf=request.getfixturevalue(srf),
-    )
-    # Using the S2A-MSI-B4 SRF results in 4 * 16 = 64 contexts being generated
-    assert len(cfg.spectral_ctxs()) == 64
 
 
 def test_measure_flags(mode_mono):

@@ -48,6 +48,9 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Added a helper to grid against VZA and VAA the results obtained with a 
   `MultiDistantMeasure` with a grid layout ({ghpr}`274`). See 
   {meth}`~eradiate.xarray.unstack_mdistant_grid`.
+* `MeasureSpectralConfig.srf`'s converter loads the prepared SRF version first,
+  by default, and falls back to the raw version if the former does not exist,
+  in the case where `srf` is specified by a keyword ({ghpr}`278`).
 
 % ### Documentation
 %
