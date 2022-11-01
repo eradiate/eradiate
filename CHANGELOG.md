@@ -51,6 +51,8 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * `MeasureSpectralConfig.srf`'s converter loads the prepared SRF version first,
   by default, and falls back to the raw version if the former does not exist,
   in the case where `srf` is specified by a keyword ({ghpr}`278`).
+* Fixed the behaviour of the `MeshTreeElement` constructor when no units are 
+  specified ({ghpr}`279`).
 
 % ### Documentation
 %
