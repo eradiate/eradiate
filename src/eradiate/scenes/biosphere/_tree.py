@@ -313,31 +313,25 @@ class MeshTreeElement:
     def _mesh_filename_validator(self, attribute, value):
         validators.path_exists(self, attribute, value)
 
-        if not value.suffix in [".obj", ".ply"]:
+        if value.suffix not in {".obj", ".ply"}:
             raise ValueError(
                 f"While validating {attribute.name}: File extension must be '.obj'"
-                f"or '.ply', got {value.suffix}"
+                f"or '.ply', got '{value.suffix}'"
             )
 
     mesh_units: t.Optional[pint.Unit] = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(ureg.Unit),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(pint.Unit)
+            ),
         ),
         doc="Units the mesh was defined in. Used to convert to kernel units. "
-        "If this value is ``None``, the mesh is interpreted as being defined in"
-        "kernel units.",
+        "If unset, the mesh is interpreted as being defined in kernel units.",
         type=":class:`pint.Unit`, optional",
         init_type="str or :class:`pint.Unit`, optional",
     )
-
-    @mesh_units.validator
-    def _mesh_units_validator(self, attribute, value):
-        if not isinstance(value, pint.unit.Unit):
-            raise ValueError(
-                f"While validating {attribute.name}: Mesh unit parameter must be "
-                f"a pint Unit object, got {type(value)}"
-            )
 
     reflectance: Spectrum = documented(
         attrs.field(
@@ -439,12 +433,11 @@ class MeshTreeElement:
         # Inherit docstring
 
         bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
-
-        if self.mesh_units is None:
-            scaling_factor = 1.0
-        else:
-            kernel_length = uck.get("length")
-            scaling_factor = (1.0 * self.mesh_units).m_as(kernel_length)
+        scaling_factor = (
+            1.0
+            if self.mesh_units is None
+            else ureg.convert(1.0, self.mesh_units, uck.get("length"))
+        )
 
         base_dict = {
             "filename": str(self.mesh_filename),
