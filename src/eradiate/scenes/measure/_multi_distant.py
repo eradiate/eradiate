@@ -8,13 +8,10 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Measure, MeasureFlags
-from ._target import Target, TargetPoint, TargetRectangle
-from ..core import KernelDict
+from ._distant import DistantMeasure
 from ... import converters, frame
 from ..._config import config
-from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext
+from ...attrs import documented, parse_docs
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -366,7 +363,7 @@ def _collect_layout_kwargs(kwargs: dict) -> dict:
 
 @parse_docs
 @attrs.define
-class MultiDistantMeasure(Measure):
+class MultiDistantMeasure(DistantMeasure):
     """
     Multi-distant radiance measure scene element [``distant``, ``mdistant``, \
     ``multi_distant``].
@@ -414,33 +411,6 @@ class MultiDistantMeasure(Measure):
         default="DirectionLayout(directions=[0, 0, 1])",
     )
 
-    target: t.Optional[Target] = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(Target.convert),
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(
-                    (
-                        TargetPoint,
-                        TargetRectangle,
-                    )
-                )
-            ),
-            on_setattr=attrs.setters.pipe(
-                attrs.setters.convert, attrs.setters.validate
-            ),
-        ),
-        doc="Target specification. The target can be specified using an "
-        "array-like with 3 elements (which will be converted to a "
-        ":class:`.TargetPoint`) or a dictionary interpreted by "
-        ":meth:`Target.convert() <.Target.convert>`. If set to "
-        "``None`` (not recommended), the default target point selection "
-        "method is used: rays will not target a particular region of the "
-        "scene.",
-        type=":class:`.Target` or None",
-        init_type=":class:`.Target` or dict or array-like, optional",
-    )
-
     @property
     def viewing_angles(self) -> pint.Quantity:
         """
@@ -455,12 +425,6 @@ class MultiDistantMeasure(Measure):
     def film_resolution(self) -> t.Tuple[int, int]:
         # Inherit docstring
         return (self.direction_layout.n_directions, 1)
-
-    flags: MeasureFlags = documented(
-        attrs.field(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
-        doc=get_doc(Measure, "flags", "doc"),
-        type=get_doc(Measure, "flags", "type"),
-    )
 
     # --------------------------------------------------------------------------
     #                         Additional constructors
@@ -736,16 +700,8 @@ class MultiDistantMeasure(Measure):
         if self.target is not None:
             result["target"] = self.target.kernel_item()
 
-        return result
-
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-        sensor_ids = self._sensor_ids()
-        sensor_spps = self._sensor_spps()
-        result = KernelDict()
-
-        for spp, sensor_id in zip(sensor_spps, sensor_ids):
-            result.data[sensor_id] = self._kernel_dict_impl(sensor_id, spp)
+        if self.ray_offset is not None:
+            result["ray_offset"] = self.ray_offset.m_as(uck.get("length"))
 
         return result
 

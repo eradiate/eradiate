@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import attr
 import pytest
 
 from eradiate import data
@@ -12,7 +11,6 @@ from eradiate.quad import Quad
 from eradiate.scenes.measure import Measure, MeasureSpectralConfig
 from eradiate.scenes.measure._core import (
     CKDMeasureSpectralConfig,
-    MeasureFlags,
     MonoMeasureSpectralConfig,
     _active,
 )
@@ -143,26 +141,6 @@ def test_ckd_spectral_config(modes_all_ckd):
     assert all(isinstance(ctx, CKDSpectralContext) for ctx in ctxs)
 
 
-def test_measure_flags(mode_mono):
-    @attr.s
-    class MyMeasure(Measure):
-        flags = attr.ib(
-            default=MeasureFlags.DISTANT,
-            converter=MeasureFlags,
-            init=False,
-        )
-
-        @property
-        def film_resolution(self):
-            return (32, 32)
-
-        def kernel_dict(self, ctx):
-            pass
-
-    measure = MyMeasure()
-    assert measure.flags & MeasureFlags.DISTANT
-
-
 def test_spp_splitting(mode_mono):
     """
     Unit tests for SPP splitting.
@@ -173,7 +151,7 @@ def test_spp_splitting(mode_mono):
         def film_resolution(self):
             return (32, 32)
 
-        def kernel_dict(self, ctx):
+        def _kernel_dict_impl(self, sensor_id, spp):
             pass
 
     m = MyMeasure(id="my_measure", spp=256, split_spp=100)

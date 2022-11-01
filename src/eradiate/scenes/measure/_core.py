@@ -15,13 +15,18 @@ import xarray as xr
 
 import eradiate
 
-from ..core import SceneElement
+from ..core import KernelDict, SceneElement
 from ..spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum, spectrum_factory
 from ... import ckd, converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
-from ...contexts import CKDSpectralContext, MonoSpectralContext, SpectralContext
+from ...contexts import (
+    CKDSpectralContext,
+    KernelDictContext,
+    MonoSpectralContext,
+    SpectralContext,
+)
 from ...exceptions import DataError, ModeError, UnsupportedModeError
 from ...units import PhysicalQuantity, interpret_quantities
 from ...units import unit_context_config as ucc
@@ -510,16 +515,6 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
 # ------------------------------------------------------------------------------
 
 
-class MeasureFlags(enum.Flag):
-    """
-    Measure flags.
-    """
-
-    DISTANT = (
-        enum.auto()
-    )  #: Measure records radiometric quantities at an infinite distance from the scene.
-
-
 def _str_summary_raw(x):
     if not x:
         return "{}"
@@ -562,12 +557,6 @@ class Measure(SceneElement, ABC):
     # --------------------------------------------------------------------------
     #                           Fields and properties
     # --------------------------------------------------------------------------
-
-    flags: MeasureFlags = documented(
-        attrs.field(default=0, converter=MeasureFlags, init=False),
-        doc="Measure flags.",
-        type=":class:`.MeasureFlags",
-    )
 
     id: t.Optional[str] = documented(
         attrs.field(
@@ -653,7 +642,8 @@ class Measure(SceneElement, ABC):
         Return ``True`` iff measure records radiometric quantities at infinite
         distance.
         """
-        return self.flags & MeasureFlags.DISTANT
+        # Default implementation returns False
+        return False
 
     def is_split(self) -> bool:
         """
@@ -717,6 +707,33 @@ class Measure(SceneElement, ABC):
 
         else:
             return [self._sensor_id()]
+
+    @KernelDictContext.DYNAMIC_FIELDS.register("atmosphere_medium_id")
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        # Inherit docstring
+        sensor_ids = self._sensor_ids()
+        sensor_spps = self._sensor_spps()
+        result = KernelDict()
+
+        for spp, sensor_id in zip(sensor_spps, sensor_ids):
+            result_dict = self._kernel_dict_impl(sensor_id, spp)
+
+            try:
+                result_dict["medium"] = {
+                    "type": "ref",
+                    "id": ctx.atmosphere_medium_id,
+                }
+            except AttributeError:
+                pass
+
+            result.data[sensor_id] = result_dict
+
+        return result
+
+    @abstractmethod
+    def _kernel_dict_impl(self, sensor_id, spp):
+        # Implementation of the kernel dict generation routine
+        pass
 
     # --------------------------------------------------------------------------
     #                        Post-processing information

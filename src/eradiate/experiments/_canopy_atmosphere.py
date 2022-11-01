@@ -25,6 +25,7 @@ from ..scenes.integrators import (
     integrator_factory,
 )
 from ..scenes.measure import Measure, TargetPoint, TargetRectangle
+from ..scenes.measure._distant import DistantMeasure
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface, surface_factory
 from ..units import unit_context_config as ucc
@@ -293,7 +294,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         overridden if relevant.
         """
         for measure in self.measures:
-            if measure.is_distant():
+            if isinstance(measure, DistantMeasure):
                 if measure.target is None:
                     if (
                         self.canopy is None

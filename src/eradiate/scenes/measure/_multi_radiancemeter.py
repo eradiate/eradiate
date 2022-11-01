@@ -8,9 +8,7 @@ import pint
 import pinttr
 
 from ._core import Measure
-from ..core import KernelDict
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -83,7 +81,7 @@ class MultiRadiancemeterMeasure(Measure):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _kernel_dict(self, sensor_id, spp):
+    def _kernel_dict_impl(self, sensor_id, spp):
         origins = self.origins.m_as(uck.get("length"))
         directions = self.directions
 
@@ -105,25 +103,6 @@ class MultiRadiancemeterMeasure(Measure):
                 "rfilter": {"type": "box"},
             },
         }
-
-        return result
-
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        sensor_ids = self._sensor_ids()
-        sensor_spps = self._sensor_spps()
-        result = KernelDict()
-
-        for spp, sensor_id in zip(sensor_spps, sensor_ids):
-            result_dict = self._kernel_dict(sensor_id, spp)
-            try:
-                result_dict["medium"] = {
-                    "type": "ref",
-                    "id": ctx.atmosphere_medium_id,
-                }
-            except AttributeError:
-                pass
-
-            result.data[sensor_id] = result_dict
 
         return result
 
