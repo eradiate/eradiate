@@ -53,6 +53,10 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   in the case where `srf` is specified by a keyword ({ghpr}`278`).
 * Fixed the behaviour of the `MeshTreeElement` constructor when no units are 
   specified ({ghpr}`279`).
+* Extended the distant measure line with the possibility to control the
+  distance between ray origins and the target ({ghpr}`275`). The default 
+  behaviour is unchanged, effectively positioning ray origins at an infinite 
+  distance from the target.   
 
 % ### Documentation
 %
