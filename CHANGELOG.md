@@ -28,7 +28,6 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 %
 % ### Internal changes
 
-
 ## v0.22.6 (upcoming release)
 
 ### Deprecations and removals
@@ -56,10 +55,11 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Extended the distant measure line with the possibility to control the
   distance between ray origins and the target ({ghpr}`275`). The default 
   behaviour is unchanged, effectively positioning ray origins at an infinite 
-  distance from the target.   
+  distance from the target.
+* All measures can now be attached a non-default sampler ({ghpr}`280`).
 
 % ### Documentation
-%
+
 ### Internal changes
 
 * Updated Mitsuba submodule to a recent post-v3.0.2 `master` ({ghpr}`277`).

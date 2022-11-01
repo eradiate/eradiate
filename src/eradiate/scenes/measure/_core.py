@@ -589,6 +589,20 @@ class Measure(SceneElement, ABC):
         default=":meth:`MeasureSpectralConfig.new() <.MeasureSpectralConfig.new>`",
     )
 
+    sampler: str = documented(
+        attrs.field(
+            default="independent",
+            validator=attrs.validators.in_(
+                {"independent", "stratified", "multijitter", "orthogonal", "ldsampler"}
+            ),
+        ),
+        doc="Mitsuba sampler used to generate pseudo-random number sequences.",
+        type="str",
+        init_type='{"independent", "stratified", "multijitter", "orthogonal", '
+        '"ldsampler"}',
+        default='"independent"',
+    )
+
     spp: int = documented(
         attrs.field(default=1000, converter=int, validator=validators.is_positive),
         doc="Number of samples per pixel.",

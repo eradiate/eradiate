@@ -88,7 +88,7 @@ class RadiancemeterMeasure(Measure):
             "origin": origin,
             "direction": direction,
             "sampler": {
-                "type": "independent",
+                "type": self.sampler,
                 "sample_count": spp,
             },
             "film": {

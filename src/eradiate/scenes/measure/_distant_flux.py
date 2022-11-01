@@ -137,7 +137,7 @@ class DistantFluxMeasure(DistantMeasure):
                 up=up,
             ),
             "sampler": {
-                "type": "independent",
+                "type": self.sampler,
                 "sample_count": spp,
             },
             "film": {
