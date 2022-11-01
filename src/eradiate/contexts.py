@@ -419,7 +419,7 @@ class KernelDictContext(Context):
     def _dynamic_validator(self, attribute, value):
         for field in value:
             if field not in self.DYNAMIC_FIELDS.data:
-                warnings.warn(f"Dynamic field '{field}' is not used by Eradiate")
+                warnings.warn(f"Dynamic field '{field}' was set but is not used")
 
     def __init__(self, **kwargs):
         fields = {
