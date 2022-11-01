@@ -20,7 +20,7 @@ from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import Measure, MultiRadiancemeterMeasure, TargetPoint
-from ..scenes.measure._core import MeasureFlags
+from ..scenes.measure._distant import DistantMeasure
 from ..scenes.shapes import RectangleShape, SphereShape
 from ..scenes.surface import BasicSurface, DEMSurface, surface_factory
 from ..units import unit_context_config as ucc
@@ -53,10 +53,15 @@ def measure_inside_atmosphere(atmosphere, measure, ctx):
                 "Origins must lie either all inside or all outside of the "
                 "atmosphere."
             )
-    elif measure.flags & MeasureFlags.DISTANT:
-        return False
+
+    elif isinstance(measure, DistantMeasure):
+        # Note: This will break if the user makes something weird such as using
+        # a large offset value which would put some origins outside and others
+        # inside the atmosphere shape
+        return not measure.is_distant()
 
     else:
+        # Note: This will likely break if a new measure type is added
         return shape.contains(measure.origin)
 
 
@@ -271,7 +276,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
         overridden if relevant.
         """
         for measure in self.measures:
-            if measure.is_distant():
+            if isinstance(measure, DistantMeasure):
                 if measure.target is None:
                     if isinstance(self.geometry, PlaneParallelGeometry):
                         # Plane parallel geometry: target ground level

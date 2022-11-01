@@ -8,11 +8,16 @@ import mitsuba as mi
 import pint
 import pinttr
 
+from ._core import Measure
 from ... import converters, validators
 from ...attrs import documented, parse_docs
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...util.misc import is_vector3
+
+# ------------------------------------------------------------------------------
+#                             Measure target interface
+# ------------------------------------------------------------------------------
 
 
 @attrs.define
@@ -216,12 +221,12 @@ class TargetRectangle(Target):
 
     def kernel_item(self) -> t.Dict:
         """Return kernel item."""
-
-        xmin = self.xmin.m_as(uck.get("length"))
-        xmax = self.xmax.m_as(uck.get("length"))
-        ymin = self.ymin.m_as(uck.get("length"))
-        ymax = self.ymax.m_as(uck.get("length"))
-        z = self.z.m_as(uck.get("length"))
+        kernel_length = uck.get("length")
+        xmin = self.xmin.m_as(kernel_length)
+        xmax = self.xmax.m_as(kernel_length)
+        ymin = self.ymin.m_as(kernel_length)
+        ymax = self.ymax.m_as(kernel_length)
+        z = self.z.m_as(kernel_length)
 
         dx = xmax - xmin
         dy = ymax - ymin
@@ -231,3 +236,76 @@ class TargetRectangle(Target):
         ) @ mi.ScalarTransform4f.scale([0.5 * dx, 0.5 * dy, 1.0])
 
         return {"type": "rectangle", "to_world": to_world}
+
+
+# ------------------------------------------------------------------------------
+#                             Distant measure interface
+# ------------------------------------------------------------------------------
+
+
+@parse_docs
+@attrs.define
+class DistantMeasure(Measure):
+    """
+    Abstract interface of all distant measure classes.
+    """
+
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
+
+    target: t.Optional[Target] = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(Target.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(
+                    (
+                        TargetPoint,
+                        TargetRectangle,
+                    )
+                )
+            ),
+            on_setattr=attrs.setters.pipe(
+                attrs.setters.convert, attrs.setters.validate
+            ),
+        ),
+        doc="Target specification. The target can be specified using an "
+        "array-like with 3 elements (which will be converted to a "
+        ":class:`.TargetPoint`) or a dictionary interpreted by "
+        ":meth:`Target.convert() <.Target.convert>`. If set to "
+        "``None`` (not recommended), the default target point selection "
+        "method is used: rays will not target a particular region of the "
+        "scene.",
+        type=":class:`.Target` or None",
+        init_type=":class:`.Target` or dict or array-like, optional",
+    )
+
+    ray_offset: t.Optional[pint.Quantity] = documented(
+        pinttr.field(default=None, units=ucc.deferred("length")),
+        doc="Manually control the distance between the target and ray origins. "
+        "If unset, ray origins are positioned outside of the scene and this "
+        "measure is rigorously distant.",
+        type="quantity or None",
+        init_type="float or quantity, optional",
+        default="None",
+    )
+
+    @ray_offset.validator
+    def _ray_offset_validator(self, attribute, value):
+        if value is None:
+            return
+
+        if value.magnitude <= 0:
+            raise ValueError(
+                f"while validating '{attribute.name}': only positive values "
+                f"are allowed, got {value}"
+            )
+
+    # --------------------------------------------------------------------------
+    #                             Flag-style queries
+    # --------------------------------------------------------------------------
+
+    def is_distant(self) -> bool:
+        # Inherit docstring
+        return self.ray_offset is None

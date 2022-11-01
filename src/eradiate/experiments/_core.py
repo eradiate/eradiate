@@ -35,7 +35,7 @@ from ..scenes.measure import (
     MultiDistantMeasure,
     measure_factory,
 )
-from ..util.deprecation import deprecated
+from ..scenes.measure._distant import DistantMeasure
 
 logger = logging.getLogger(__name__)
 
@@ -592,7 +592,7 @@ class EarthObservationExperiment(Experiment, ABC):
                 ),
             )
 
-            if measure.is_distant():
+            if isinstance(measure, DistantMeasure):
                 pipeline.add(
                     "add_viewing_angles", pipelines.AddViewingAngles(measure=measure)
                 )

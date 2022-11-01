@@ -7,13 +7,10 @@ import mitsuba as mi
 import numpy as np
 import pint
 
-from ._core import Measure, MeasureFlags
-from ._target import Target, TargetPoint, TargetRectangle
-from ..core import KernelDict
+from ._distant import DistantMeasure
 from ... import frame, validators
 from ..._config import config
-from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext
+from ...attrs import documented, parse_docs
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -22,7 +19,7 @@ from ...warp import square_to_uniform_hemisphere
 
 @parse_docs
 @attrs.define
-class DistantFluxMeasure(Measure):
+class DistantFluxMeasure(DistantMeasure):
     """
     Distant radiosity measure scene element [``distant_flux``].
 
@@ -75,33 +72,6 @@ class DistantFluxMeasure(Measure):
         default="[0, 0, 1]",
     )
 
-    target: t.Optional[Target] = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(Target.convert),
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(
-                    (
-                        TargetPoint,
-                        TargetRectangle,
-                    )
-                )
-            ),
-            on_setattr=attrs.setters.pipe(
-                attrs.setters.convert, attrs.setters.validate
-            ),
-        ),
-        doc="Target specification. The target can be specified using an "
-        "array-like with 3 elements (which will be converted to a "
-        ":class:`.TargetPoint`) or a dictionary interpreted by "
-        ":meth:`Target.convert() <.Target.convert>`. If set to "
-        "``None`` (not recommended), the default target point selection "
-        "method is used: rays will not target a particular region of the "
-        "scene.",
-        type=":class:`.Target` or None",
-        init_type=":class:`.Target` or dict or array-like, optional",
-    )
-
     _film_resolution: t.Tuple[int, int] = documented(
         attrs.field(
             default=(32, 32),
@@ -118,12 +88,6 @@ class DistantFluxMeasure(Measure):
     @property
     def film_resolution(self) -> t.Tuple[int, int]:
         return self._film_resolution
-
-    flags: MeasureFlags = documented(
-        attrs.field(default=MeasureFlags.DISTANT, converter=MeasureFlags, init=False),
-        doc=get_doc(Measure, "flags", "doc"),
-        type=get_doc(Measure, "flags", "type"),
-    )
 
     @property
     def viewing_angles(self) -> pint.Quantity:
@@ -161,7 +125,7 @@ class DistantFluxMeasure(Measure):
     #                        Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _kernel_dict(self, sensor_id, spp):
+    def _kernel_dict_impl(self, sensor_id, spp):
         _, up = mi.coordinate_system(self.direction)
 
         result = {
@@ -189,15 +153,8 @@ class DistantFluxMeasure(Measure):
         if self.target is not None:
             result["target"] = self.target.kernel_item()
 
-        return result
-
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        sensor_ids = self._sensor_ids()
-        sensor_spps = self._sensor_spps()
-        result = KernelDict()
-
-        for spp, sensor_id in zip(sensor_spps, sensor_ids):
-            result.data[sensor_id] = self._kernel_dict(sensor_id, spp)
+        if self.ray_offset is not None:
+            result["ray_offset"] = self.ray_offset.m_as(uck.get("length"))
 
         return result
 
