@@ -157,7 +157,7 @@ class PerspectiveCameraMeasure(Measure):
                 origin=origin, target=target, up=self.up
             ),
             "sampler": {
-                "type": "independent",
+                "type": self.sampler,
                 "sample_count": spp,
             },
             "film": {

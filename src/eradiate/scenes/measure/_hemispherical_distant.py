@@ -164,7 +164,7 @@ class HemisphericalDistantMeasure(DistantMeasure):
                 origin=[0.0, 0.0, 0.0], target=self.direction, up=up
             ),
             "sampler": {
-                "type": "independent",
+                "type": self.sampler,
                 "sample_count": spp,
             },
             "film": {

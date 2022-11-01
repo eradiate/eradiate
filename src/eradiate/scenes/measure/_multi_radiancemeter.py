@@ -91,7 +91,7 @@ class MultiRadiancemeterMeasure(Measure):
             "origins": ",".join(map(str, origins.ravel(order="C"))),
             "directions": ",".join(map(str, directions.ravel(order="C"))),
             "sampler": {
-                "type": "independent",
+                "type": self.sampler,
                 "sample_count": spp,
             },
             "film": {

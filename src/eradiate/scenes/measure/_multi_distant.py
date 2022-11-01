@@ -684,7 +684,7 @@ class MultiDistantMeasure(DistantMeasure):
                 map(str, -self.direction_layout.directions.ravel(order="C"))
             ),
             "sampler": {
-                "type": "independent",
+                "type": self.sampler,
                 "sample_count": spp,
             },
             "film": {
