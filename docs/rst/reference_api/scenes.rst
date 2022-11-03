@@ -167,10 +167,11 @@
 .. autosummary::
    :toctree: generated/autosummary/
 
-   LambertianBSDF
    BlackBSDF
-   RPVBSDF
    CheckerboardBSDF
+   LambertianBSDF
+   MQDiffuseBSDF
+   RPVBSDF
 
 ``eradiate.scenes.shapes``
 --------------------------
