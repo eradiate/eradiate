@@ -59,10 +59,10 @@ def discretize(bsdf, n_theta_o, n_theta_i, n_phi_d):
 
 def test_construct(variant_scalar_rgb):
     grid = mi.VolumeGrid(np.ones((5, 4, 3, 1)))
-    print(grid)
+    # print(grid)
 
     mqd = mi.load_dict({"type": "mqdiffuse", "grid": grid})
-    print(mqd)
+    # print(mqd)
     assert mqd is not None
 
 
