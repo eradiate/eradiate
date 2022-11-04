@@ -364,8 +364,17 @@ def test_checkerboard(variant_scalar_rgb):
 @pytest.mark.parametrize("offset", [0.9, 0.5, 0.1])
 @pytest.mark.parametrize("sigma", [0.1, 0.5, 1.0])
 def test_ray_offset(variant_scalar_rgb, offset, sigma):
-    rho = 1.0
-    l = 1.0
+    """
+    We consider the very simple case of a uniform and absorbing medium with
+    absorbing coefficient σ under directional illumination above a diffuse
+    surface with reflectance ρ.
+    The reflected radiance is equal to ρ/π * exp(-σL) where L is the geometric
+    distance through which light travels until it reaches the sensor.
+    This test checks that the mdistant plugin can compute this correctly.
+    """
+
+    rho = 1.0  # diffuse surface reflectance
+    l = 1.0  # thickness of the medium
     scene = mi.load_dict(
         {
             "type": "scene",
@@ -379,6 +388,7 @@ def test_ray_offset(variant_scalar_rgb, offset, sigma):
                 "type": "cube",
                 "bsdf": {"type": "null"},
                 "interior": {"type": "ref", "id": "medium"},
+                "to_world": mi.ScalarTransform4f.scale([1, 1, l]),
             },
             "rectangle": {
                 "type": "rectangle",
@@ -410,6 +420,8 @@ def test_ray_offset(variant_scalar_rgb, offset, sigma):
         }
     )
     result = np.squeeze(mi.render(scene, spp=4**8))
-    expected = rho * np.exp(-sigma * (l + offset)) / np.pi
+    expected = (
+        rho * np.exp(-sigma * (l + offset)) / np.pi
+    )  # geometric distance is l + offset
     # Fairly loose criterion, but a stricter one requires too many samples
     assert np.isclose(result, expected, rtol=1e-2), f"{result = }, {expected = }"
