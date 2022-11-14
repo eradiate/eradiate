@@ -39,22 +39,22 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 
 * Added support for loading spectral response function data sets from custom
   paths ({ghpr}`270`).
-* ⚠️ Complete rewrite of the {class}`.MultiDistantMeasure` construction code 
-  ({ghpr}`274`). Previous functionality is preserved in the form of more 
-  specialised and simpler interfaces, and we now support a gridded coverage of 
-  the hemisphere specified as the Cartesian product of zenith and azimuth 
+* ⚠️ Complete rewrite of the {class}`.MultiDistantMeasure` construction code
+  ({ghpr}`274`, {ghpr}`281`). Previous functionality is preserved in the form of
+  more specialised and simpler interfaces, and we now support a gridded coverage
+  of the hemisphere specified as the Cartesian product of zenith and azimuth
   lists of values.
-* Added a helper to grid against VZA and VAA the results obtained with a 
-  `MultiDistantMeasure` with a grid layout ({ghpr}`274`). See 
+* Added a helper to grid against VZA and VAA the results obtained with a
+  `MultiDistantMeasure` with a grid layout ({ghpr}`274`). See
   {meth}`~eradiate.xarray.unstack_mdistant_grid`.
 * `MeasureSpectralConfig.srf`'s converter loads the prepared SRF version first,
   by default, and falls back to the raw version if the former does not exist,
   in the case where `srf` is specified by a keyword ({ghpr}`278`).
-* Fixed the behaviour of the `MeshTreeElement` constructor when no units are 
+* Fixed the behaviour of the `MeshTreeElement` constructor when no units are
   specified ({ghpr}`279`).
 * Extended the distant measure line with the possibility to control the
-  distance between ray origins and the target ({ghpr}`275`). The default 
-  behaviour is unchanged, effectively positioning ray origins at an infinite 
+  distance between ray origins and the target ({ghpr}`275`). The default
+  behaviour is unchanged, effectively positioning ray origins at an infinite
   distance from the target.
 * All measures can now be attached a non-default sampler ({ghpr}`280`).
 
@@ -63,7 +63,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 ### Internal changes
 
 * Updated Mitsuba submodule to a recent post-v3.0.2 `master` ({ghpr}`277`).
-  This notably fixes a 
+  This notably fixes a
   [k-d tree creation issue](https://github.com/mitsuba-renderer/mitsuba3/issues/233).
 
 ## v0.22.5 (17 October 2022)

@@ -39,8 +39,8 @@ class Layout(ABC):
             validator=attrs.validators.instance_of(frame.AzimuthConvention),
             kw_only=True,
         ),
-        doc="Azimuth convention. If ``None``, the global default configuration "
-        "is used (see :class:`.EradiateConfig`).",
+        doc="Azimuth convention used by this layout. If ``None``, the global "
+        "default configuration is used (see :class:`.EradiateConfig`).",
         type=".AzimuthConvention",
         init_type=".AzimuthConvention or str, optional",
         default="None",
@@ -84,7 +84,7 @@ class Layout(ABC):
             return value
 
         if isinstance(value, dict):
-            d = value.copy()
+            d = pinttr.interpret_units(value, ureg=ureg)
             type_key = d.pop("type")
             cls = {
                 "angles": AngleLayout,
@@ -354,11 +354,11 @@ class GridLayout(Layout):
 # ------------------------------------------------------------------------------
 
 
-def _collect_layout_kwargs(kwargs: dict) -> dict:
+def _extract_kwargs(kwargs: dict, keys: t.List[str]) -> dict:
     # Helper function to collect common layout keyword arguments
     # (mutates the param dictionary)
     # Used in MultiDistantMeasure constructors
-    return {key: kwargs.pop(key) for key in ["azimuth_convention"] if key in kwargs}
+    return {key: kwargs.pop(key) for key in keys if key in kwargs}
 
 
 @parse_docs
@@ -444,44 +444,12 @@ class MultiDistantMeasure(DistantMeasure):
         ----------
         zeniths : array-like
             List of zenith values. Negative values are mapped to the
-            `azimuth + 180°` half-plane.
+            `azimuth + 180°` half-plane. Unitless values are converted to
+            ``ucc['angle']``.
 
         azimuth : float or quantity
-            Hemisphere plane cut azimuth value.
-
-        azimuth_convention : .AzimuthConvention or str
-            The azimuth convention applying to the viewing direction layout.
-            If unset, the global default convention is used.
-
-        **kwargs
-            Remaining keyword arguments are forwarded to the
-            :class:`.MultiDistantMeasure` constructor.
-
-        Returns
-        -------
-        MultiDistantMeasure
-        """
-        layout_kwargs = _collect_layout_kwargs(kwargs)
-        layout = HemispherePlaneLayout(zeniths, azimuth, **layout_kwargs)
-        return cls(direction_layout=layout, **kwargs)
-
-    @classmethod
-    def aring(
-        cls,
-        zenith: t.Union[float, pint.Quantity],
-        azimuths: np.typing.ArrayLike,
-        **kwargs,
-    ) -> MultiDistantMeasure:
-        """
-        Construct using a azimuth ring viewing direction layout.
-
-        Parameters
-        ----------
-        zenith : float or quantity
-            Azimuth ring zenith value.
-
-        azimuths : array-like
-            List of azimuth values.
+            Hemisphere plane cut azimuth value. Unitless values are converted to
+            ``ucc['angle']``.
 
         azimuth_convention : .AzimuthConvention or str, optional
             The azimuth convention applying to the viewing direction layout.
@@ -495,8 +463,50 @@ class MultiDistantMeasure(DistantMeasure):
         -------
         MultiDistantMeasure
         """
-        layout_kwargs = _collect_layout_kwargs(kwargs)
-        layout = AzimuthRingLayout(zenith, azimuths, **layout_kwargs)
+        layout = HemispherePlaneLayout(
+            zeniths=zeniths,
+            azimuth=azimuth,
+            **_extract_kwargs(kwargs, ["azimuth_convention"]),
+        )
+        return cls(direction_layout=layout, **kwargs)
+
+    @classmethod
+    def aring(
+        cls,
+        zenith: t.Union[float, pint.Quantity],
+        azimuths: np.typing.ArrayLike,
+        **kwargs,
+    ) -> MultiDistantMeasure:
+        """
+        Construct using an azimuth ring viewing direction layout.
+
+        Parameters
+        ----------
+        zenith : float or quantity
+            Azimuth ring zenith value. Unitless values are converted to
+            ``ucc['angle']``.
+
+        azimuths : array-like
+            List of azimuth values. Unitless values are converted to
+            ``ucc['angle']``.
+
+        azimuth_convention : .AzimuthConvention or str, optional
+            The azimuth convention applying to the viewing direction layout.
+            If unset, the global default convention is used.
+
+        **kwargs
+            Remaining keyword arguments are forwarded to the
+            :class:`.MultiDistantMeasure` constructor.
+
+        Returns
+        -------
+        MultiDistantMeasure
+        """
+        layout = AzimuthRingLayout(
+            zenith=zenith,
+            azimuths=azimuths,
+            **_extract_kwargs(kwargs, ["azimuth_convention"]),
+        )
         return cls(direction_layout=layout, **kwargs)
 
     @classmethod
@@ -527,8 +537,11 @@ class MultiDistantMeasure(DistantMeasure):
         -------
         MultiDistantMeasure
         """
-        layout_kwargs = _collect_layout_kwargs(kwargs)
-        layout = GridLayout(zeniths, azimuths, **layout_kwargs)
+        layout = GridLayout(
+            zeniths=zeniths,
+            azimuths=azimuths,
+            **_extract_kwargs(kwargs, ["azimuth_convention"]),
+        )
         return cls(direction_layout=layout, **kwargs)
 
     @classmethod
@@ -554,8 +567,10 @@ class MultiDistantMeasure(DistantMeasure):
         -------
         MultiDistantMeasure
         """
-        layout_kwargs = _collect_layout_kwargs(kwargs)
-        layout = AngleLayout(angles, **layout_kwargs)
+        layout = AngleLayout(
+            angles=angles,
+            **_extract_kwargs(kwargs, ["azimuth_convention"]),
+        )
         return cls(direction_layout=layout, **kwargs)
 
     @classmethod
@@ -587,8 +602,10 @@ class MultiDistantMeasure(DistantMeasure):
         --------
         Viewing directions are defined pointing *outwards* the target location.
         """
-        layout_kwargs = _collect_layout_kwargs(kwargs)
-        layout = DirectionLayout(directions, **layout_kwargs)
+        layout = DirectionLayout(
+            directions=directions,
+            **_extract_kwargs(kwargs, ["azimuth_convention"]),
+        )
         return cls(direction_layout=layout, **kwargs)
 
     @classmethod
@@ -645,9 +662,6 @@ class MultiDistantMeasure(DistantMeasure):
                 "from_viewing_angles() got an unexpected keyword argument 'hplane'"
             )
 
-        # Collect common layout kwargs
-        layout_kwargs = _collect_layout_kwargs(kwargs)
-
         # Basic unit conversion and array reshaping
         angle_units = ucc.get("angle")
         zeniths = pinttr.util.ensure_units(
@@ -660,14 +674,23 @@ class MultiDistantMeasure(DistantMeasure):
         # Detect layout
         if len(zeniths) == 1 and len(azimuths) != 1:
             layout = AzimuthRingLayout(
-                zenith=zeniths[0], azimuths=azimuths, **layout_kwargs
+                zenith=zeniths[0],
+                azimuths=azimuths,
+                **_extract_kwargs(kwargs, ["azimuth_convention"]),
             )
+
         elif len(zeniths) != 1 and len(azimuths) == 1 and auto_hplane:
             layout = HemispherePlaneLayout(
-                zeniths=zeniths, azimuth=azimuths[0], **layout_kwargs
+                zeniths=zeniths,
+                azimuth=azimuths[0],
+                **_extract_kwargs(kwargs, ["azimuth_convention"]),
             )
+
         else:
-            layout = AngleLayout(angles=np.hstack((zeniths, azimuths)))
+            layout = AngleLayout(
+                angles=np.hstack((zeniths, azimuths)),
+                **_extract_kwargs(kwargs, ["azimuth_convention"]),
+            )
 
         # Create instance
         return cls(direction_layout=layout, **kwargs)

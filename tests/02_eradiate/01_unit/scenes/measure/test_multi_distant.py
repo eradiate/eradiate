@@ -4,12 +4,14 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.frame import AzimuthConvention
+from eradiate.scenes.measure import measure_factory
 from eradiate.scenes.measure._multi_distant import (
     AngleLayout,
     AzimuthRingLayout,
     DirectionLayout,
     GridLayout,
     HemispherePlaneLayout,
+    Layout,
     MultiDistantMeasure,
 )
 
@@ -42,6 +44,21 @@ def test_angle_layout(mode_mono):
             [-np.sqrt(2) / 2, 0, np.sqrt(2) / 2],
         ],
     )
+
+    # Dictionary conversion protocol applies units
+    layout = Layout.convert(
+        {
+            "type": "angles",
+            "angles": [
+                [0, 0],
+                [np.pi / 4, 0],
+                [np.pi / 4, np.pi / 2],
+                [np.pi / 4, np.pi],
+            ],
+            "angles_units": "rad",
+        }
+    )
+    assert np.allclose(layout.angles, [[0, 0], [45, 0], [45, 90], [45, 180]] * ureg.deg)
 
 
 @pytest.mark.parametrize(
@@ -170,6 +187,29 @@ def test_multi_distant_measure_construct(mode_mono):
     # The produced kernel dictionary can be instantiated
     kernel_dict = measure.kernel_dict(ctx)
     assert kernel_dict.load()
+
+
+def test_multi_distant_measure_construct_specific(mode_mono):
+    """
+    Class method constructor testing for MultiDistantMeasure
+    """
+    # Unitless values are attached default units
+    measure = MultiDistantMeasure.hplane(zeniths=[0, 45], azimuth=0)
+    assert isinstance(measure.direction_layout, HemispherePlaneLayout)
+    assert np.allclose(measure.direction_layout.angles, [[0, 0], [45, 0]] * ureg.deg)
+
+    # The dictionary conversion protocol applies units, including when used with
+    # a class method constructor
+    measure = measure_factory.convert(
+        {
+            "type": "mdistant",
+            "construct": "from_angles",
+            "angles": [np.pi / 4, 0],
+            "angles_units": "rad",
+        }
+    )
+    assert isinstance(measure.direction_layout, AngleLayout)
+    assert np.allclose(measure.direction_layout.angles, [[45, 0]] * ureg.deg)
 
 
 def test_multi_distant_measure_viewing_angles(mode_mono):
