@@ -96,6 +96,8 @@ class SolarIrradianceSpectrum(Spectrum):
       to account for the seasonal variations of the Earth-Sun distance using the
       ephemeris of :func:`astropy.coordinates.get_sun`.
       The dataset is assumed to be normalised to an Earth-Sun distance of 1 AU.
+      This will trigger the import of :mod:`astropy.coordinates` and consume a
+      significant amount of memory (150 MiB with astropy v5.1).
 
     * The ``scale`` field can be used to apply additional arbitrary scaling.
       It is mostly used for debugging purposes. It can also be used to rescale
@@ -170,16 +172,19 @@ class SolarIrradianceSpectrum(Spectrum):
         Compute scaling factor applied to the irradiance spectrum based on the
         Earth-Sun distance.
         """
-        import astropy.coordinates
-        import astropy.time
-        import astropy.units
-
         # Note: We assume that the loaded dataset is for a reference
         # Earth-Sun distance of 1 AU
         if self.datetime is None:
             return 1.0
 
         else:
+            # Note: astropy.coordinates consumes a significant amount of memory
+            # (150 MiB with astropy v5.1). The import is therefore optional for
+            # performance.
+            import astropy.coordinates
+            import astropy.time
+            import astropy.units
+
             # The irradiance scales as the inverse of d**2, where d is the
             # Earth-Sun distance divided by the AU (reference distance for all
             # Solar irradiance spectra in Eradiate).
