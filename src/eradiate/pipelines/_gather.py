@@ -171,7 +171,7 @@ class Gather(PipelineStep):
 
         # Combine all the data
         with xr.set_options(keep_attrs=True):
-            result = xr.merge(sensor_datasets)
+            result = xr.combine_by_coords(sensor_datasets)
 
         # Drop "channel" dimension when using a mono variant
         if eradiate.mode().has_flags(ModeFlags.MI_MONO):
