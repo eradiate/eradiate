@@ -32,8 +32,8 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 
 ### Deprecations and removals
 
-* The `MultiDistantMeasure.from_viewing_angles()` constructor is deprecated and
-  will be removed in v0.23.1.
+* The {meth}`.MultiDistantMeasure.from_viewing_angles()` constructor is
+  deprecated and will be removed in v0.23.1.
 
 ### Improvements and fixes
 
@@ -45,13 +45,13 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   of the hemisphere specified as the Cartesian product of zenith and azimuth
   lists of values.
 * Added a helper to grid against VZA and VAA the results obtained with a
-  `MultiDistantMeasure` with a grid layout ({ghpr}`274`). See
+  {class}`.MultiDistantMeasure` with a grid layout ({ghpr}`274`). See
   {meth}`~eradiate.xarray.unstack_mdistant_grid`.
 * `MeasureSpectralConfig.srf`'s converter loads the prepared SRF version first,
   by default, and falls back to the raw version if the former does not exist,
   in the case where `srf` is specified by a keyword ({ghpr}`278`).
-* Fixed the behaviour of the `MeshTreeElement` constructor when no units are
-  specified ({ghpr}`279`).
+* Fixed the behaviour of the {class}`.MeshTreeElement` constructor when no units
+  are specified ({ghpr}`279`).
 * Extended the distant measure line with the possibility to control the
   distance between ray origins and the target ({ghpr}`275`). The default
   behaviour is unchanged, effectively positioning ray origins at an infinite
