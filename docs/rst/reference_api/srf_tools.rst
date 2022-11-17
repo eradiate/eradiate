@@ -31,4 +31,10 @@ Plotting
 Utilities
 ---------
 
+.. autofunction:: wavelength_range_width
+
+.. autofunction:: wavelength_bandwidth
+
+.. autofunction:: mean_wavelength
+
 .. autofunction:: summarize

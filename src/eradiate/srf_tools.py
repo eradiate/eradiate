@@ -17,6 +17,7 @@ from eradiate import __version__
 from . import converters
 from .typing import PathLike
 from .units import to_quantity
+from .units import unit_registry as ureg
 
 
 def update_attrs(srf: xr.Dataset, filter_name: str, filter_attr: str) -> None:
@@ -59,9 +60,97 @@ def update_attrs(srf: xr.Dataset, filter_name: str, filter_attr: str) -> None:
     )
 
 
+def wavelength_range_width(
+    srf: t.Union[PathLike, xr.Dataset]
+) -> pint.Quantity:
+    """
+    Compute the wavelength range width of a spectral response function.
+
+    Parameters
+    ----------
+    srf: path-like, Dataset
+        Spectral response function data set.
+
+    Notes
+    -----
+    The wavelength range width is defined as the difference between the upper 
+    and lower wavelength bounds.
+    """
+    srf = converters.load_dataset(srf)
+    return to_quantity(srf.w).max() - to_quantity(srf.w).min()
+
+
+def wavelength_bandwidth(
+    srf: t.Union[PathLike, xr.Dataset]
+) -> pint.Quantity:
+    r"""
+    Compute the wavelength bandwidth of a spectral response function.
+
+    Parameters
+    ----------
+    srf: path-like, Dataset
+        Spectral response function data set.
+
+    Notes
+    -----
+    The wavelength bandwidth is defined according to the following formula:
+
+    .. math::
+
+        \Delta \lambda = \int \lambda \, \phi(\lambda) \mathrm{d} \lambda
+    
+    where
+        * :math:`\phi(\lambda)` is the spectral response function.
+        * :math:`\lambda` is the wavelength.
+        * :math:`\Delta \lambda` is the wavelength bandwidth.
+    
+    and the integral is performed over the wavelength range of the spectral
+    response function.
+    """
+    srf = converters.load_dataset(srf)
+    return srf.srf.integrate(coord="w").values * ureg(srf.w.attrs["units"])
+
+
+def mean_wavelength(
+    srf: t.Union[PathLike, xr.Dataset]
+) -> pint.Quantity:
+    r"""
+    Compute the mean wavelength of a spectral response function.
+
+    Parameters
+    ----------
+    srf: path-like, Dataset
+        Spectral response function data set.
+
+    Notes
+    -----
+    The mean wavelength is defined according to the following formula:
+
+    .. math::
+
+        \overline{\lambda} = \frac{
+            \int \lambda \, \phi(\lambda) \, \mathrm{d} \lambda
+        }{
+            \int \phi(\lambda) \, \mathrm{d} \lambda
+        }
+    
+    where
+        * :math:`\phi(\lambda)` is the spectral response function.
+        * :math:`\lambda` is the wavelength.
+        * :math:`\overline{\lambda}` is the mean wavelength.
+    
+    and the integrals are performed over the wavelength range of the spectral
+    response function.
+    """
+    srf = converters.load_dataset(srf)
+    srf_integrated = srf.srf.integrate(coord="w")
+    mean_value = (srf.w * srf.srf).integrate(coord="w").values / srf_integrated.values
+    return mean_value * ureg(srf.w.attrs["units"])
+
+
 def filtering_summary(
     srf: t.Union[PathLike, xr.Dataset], filtered: xr.Dataset
-) -> t.Mapping[str, str]:
+) -> t.Mapping[str, t.Mapping[str, t.Union[int, pint.Quantity]]]:
     srf = converters.load_dataset(srf)
     ni = srf.w.size
     nf = filtered.w.size
@@ -69,22 +158,43 @@ def filtering_summary(
     w_max_i = to_quantity(srf.w).max()
     w_min_f = to_quantity(filtered.w).min()
     w_max_f = to_quantity(filtered.w).max()
+    range_width_i = wavelength_range_width(srf)
+    range_width_f = wavelength_range_width(filtered)
+    bandwidth_i = wavelength_bandwidth(srf)
+    bandwidth_f = wavelength_bandwidth(filtered)
+    mean_wavelength_i = mean_wavelength(srf)
+    mean_wavelength_f = mean_wavelength(filtered)
 
     return {
-        "Initial": {
-            "Lower wavelength": f"{w_min_i:~}",
-            "Upper wavelength": f"{w_max_i:~}",
-            "# wavelength": f"{ni}",
+        "Lower wavelength": {
+            "Initial": f"{w_min_i:.1f~}",
+            "Final": f"{w_min_f:.1f~}",
+            "Difference": f"{(w_min_f - w_min_i):.1f~}",
         },
-        "Final": {
-            "Lower wavelength": f"{w_min_f:~}",
-            "Upper wavelength": f"{w_max_f:~}",
-            "# wavelength": f"{nf}",
+        "Upper wavelength": {
+            "Initial": f"{w_max_i:.1f~}",
+            "Final": f"{w_max_f:.1f~}",
+            "Difference": f"{(w_max_f - w_max_i):.1f~}",
         },
-        "Difference": {
-            "Lower wavelength": f"{(w_min_f-w_min_i):~}",
-            "Upper wavelength": f"{(w_max_f-w_max_i):~}",
-            "# wavelength": f"{nf - ni}",
+        "# wavelength": {
+            "Initial": f"{ni}",
+            "Final": f"{nf}",
+            "Difference": f"{(nf - ni)}",
+        },
+        "Wavelength range width": {
+            "Initial": f"{range_width_i:.1f~}",
+            "Final": f"{range_width_f:.1f~}",
+            "Difference": f"{(range_width_f - range_width_i):.1f~}",
+        },
+        "Wavelength bandwidth": {
+            "Initial": f"{bandwidth_i:.1f~}",
+            "Final": f"{bandwidth_f:.1f~}",
+            "Difference": f"{(bandwidth_f - bandwidth_i):.1f~}",
+        },
+        "Mean wavelength": {
+            "Initial": f"{mean_wavelength_i:.1f~}",
+            "Final": f"{mean_wavelength_f:.1f~}",
+            "Difference": f"{(mean_wavelength_f - mean_wavelength_i):.1f~}",
         },
     }
 
@@ -117,26 +227,17 @@ def summarize(
     table = Table(
         title="Filtering summary",
         box=rich.box.HEAVY_HEAD,
-        show_footer=True,
     )
 
     columns = {
-        "SRF": "left",
-        "Lower wavelength": "center",
-        "Upper wavelength": "center",
-        "# wavelength": "center",
-    }
-
-    footer = {
-        **{"SRF": "Difference"},
-        **{
-            name: summary["Difference"][name]
-            for name in ["Lower wavelength", "Upper wavelength", "# wavelength"]
-        },
+        "Characteristic": "left",
+        "Initial": "center",
+        "Final": "center",
+        "Difference": "center",
     }
 
     for name, justification in columns.items():
-        table.add_column(name, justify=justification, footer=footer[name])
+        table.add_column(name, justify=justification)
 
     for key in summary:
         row_items = [key] + list(summary[key].values())
@@ -339,7 +440,7 @@ def spectral_filter(
         filter_name="spectral filter",
         filter_attr=(
             f"All points in the original data set that fell out of the "
-            f"wavelength range [{_wmin}, {_wmax}] {w_units} were dropped."
+            f"wavelength range [{_wmin:.2f}, {_wmax:.2f}] {w_units} were dropped."
         ),
     )
 
