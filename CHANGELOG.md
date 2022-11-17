@@ -57,6 +57,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   behaviour is unchanged, effectively positioning ray origins at an infinite
   distance from the target.
 * All measures can now be attached a non-default sampler ({ghpr}`280`).
+* Fixed unnecessary memory allocations ({ghpr}`282`).
 
 % ### Documentation
 
