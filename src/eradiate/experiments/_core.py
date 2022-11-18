@@ -17,7 +17,7 @@ from .. import pipelines
 from .._config import ProgressLevel, config
 from .._mode import ModeFlags, supported_mode
 from ..attrs import documented, parse_docs
-from ..contexts import KernelDictContext
+from ..contexts import KernelDictContext, SpectralContext
 from ..exceptions import KernelVariantError
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
@@ -51,6 +51,17 @@ def _check_variant():
     variant = mi.variant()
     if variant not in _SUPPORTED_VARIANTS:
         raise KernelVariantError(f"unsupported kernel variant '{variant}'")
+
+
+def _normalize_measures(measures, exp) -> t.List[Measure]:
+    return (
+        [
+            exp.measures[measure] if isinstance(measure, int) else measure
+            for measure in measures
+        ]
+        if measures
+        else exp.measures
+    )
 
 
 def mitsuba_run(
@@ -159,9 +170,9 @@ def mitsuba_run(
 
 def run(
     exp: Experiment,
-    measure: t.Union[Measure, int] = 0,
+    *measures: t.Union[Measure, int],
     seed_state: t.Optional[SeedState] = None,
-) -> xr.Dataset:
+) -> t.Tuple[xr.Dataset]:
     """
     Run an Eradiate experiment, including the Monte Carlo simulation and data
     post-processing.
@@ -171,8 +182,10 @@ def run(
     exp : .Experiment
         The experiment to be run.
 
-    measure : .Measure or int, optional
-        The measure to be simulated.
+    *measures : :class:`.Measure` or int
+        One or several measures for which to compute radiative transfer.
+        Alternatively, indexes in the measure array can be passed.
+        If no value is passed, all measures are processed.
 
     seed_state : .SeedState, optional
         A RNG seed state used to generate the seeds used by Mitsuba's random
@@ -181,16 +194,15 @@ def run(
 
     Returns
     -------
-    result : Dataset
+    result : Dataset or tuple of Dataset
         Experiment result data.
     """
 
-    if isinstance(measure, int):
-        measure = exp.measures[measure]
-
-    exp.process(measure, seed_state=seed_state)
-    exp.postprocess(measure)
-    return exp.results[measure.id]
+    selected_measures = _normalize_measures(measures, exp)
+    exp.process(*selected_measures, seed_state=seed_state)
+    exp.postprocess(*selected_measures)
+    result = tuple(exp.results[measure.id] for measure in selected_measures)
+    return result if len(result) > 1 else result[0]
 
 
 # ------------------------------------------------------------------------------
@@ -327,49 +339,54 @@ class Experiment(ABC):
         # Mode safeguard
         supported_mode(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD)
 
-        if not measures:
-            measures = self.measures
-
-        for measure in measures:
-            if isinstance(measure, int):
-                measure = self.measures[measure]
-
-            logger.info(f"Processing measure '{measure.id}'")
-
-            # Reset measure results
+        # Select measures, cleanup and collect associated sensor IDs
+        selected_measures = _normalize_measures(measures, self)
+        sensor_ids = []
+        for measure in selected_measures:
+            sensor_ids.extend(measure._sensor_ids())
             measure.results = {}
 
-            # Collect sensor IDs
-            sensor_ids = measure._sensor_ids()
+        # Spectral loop
+        # TODO: we pick the first measure's spectral config and ignore the
+        #       others; maybe change this?
+        spectral_ctxs = selected_measures[0].spectral_cfg.spectral_ctxs()
 
-            # Spectral loop
-            spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
+        with tqdm(
+            initial=0,
+            total=len(spectral_ctxs),
+            unit_scale=1.0,
+            leave=True,
+            bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
+            disable=config.progress < ProgressLevel.SPECTRAL_LOOP
+            or len(spectral_ctxs) <= 1,
+        ) as pbar:
+            for spectral_ctx, (kernel_dict, ctx) in zip(
+                spectral_ctxs, self.kernel_dicts(spectral_ctxs)
+            ):
+                pbar.set_description(
+                    f"Spectral loop [{spectral_ctx.spectral_index_formatted}]",
+                    refresh=True,
+                )
 
-            with tqdm(
-                initial=0,
-                total=len(spectral_ctxs),
-                unit_scale=1.0,
-                leave=True,
-                bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
-                disable=config.progress < ProgressLevel.SPECTRAL_LOOP
-                or len(spectral_ctxs) <= 1,
-            ) as pbar:
-                for kernel_dict, ctx in self.kernel_dicts(measure):
-                    spectral_ctx = ctx.spectral_ctx
+                # Run simulation
+                run_results = mitsuba_run(kernel_dict, sensor_ids, seed_state)
 
-                    pbar.set_description(
-                        f"Spectral loop [{spectral_ctx.spectral_index_formatted}]",
-                        refresh=True,
-                    )
+                # Scatter results to relevant measure
+                for measure in selected_measures:
+                    if spectral_ctx.spectral_index not in measure.results:
+                        measure.results[spectral_ctx.spectral_index] = {}
 
-                    # Run simulation
-                    run_results = mitsuba_run(kernel_dict, sensor_ids, seed_state)
+                    for var in ["values", "spp"]:
+                        if var not in measure.results[spectral_ctx.spectral_index]:
+                            measure.results[spectral_ctx.spectral_index][var] = {}
 
-                    # Store results
-                    measure.results[spectral_ctx.spectral_index] = run_results
+                        for sensor_id in measure._sensor_ids():
+                            measure.results[spectral_ctx.spectral_index][var][
+                                sensor_id
+                            ] = run_results[var][sensor_id]
 
-                    # Update progress display
-                    pbar.update()
+                # Update progress display
+                pbar.update()
 
     @abstractmethod
     def pipeline(
@@ -491,7 +508,7 @@ class Experiment(ABC):
 
     def kernel_dicts(
         self,
-        measure: t.Union[Measure, int],
+        spectral_ctxs: t.Optional[t.List[SpectralContext]] = None,
     ) -> t.Generator[t.Tuple[KernelDict, KernelDictContext], None, None]:
         """
         A generator which returns kernel dictionaries (and the associated
@@ -499,9 +516,10 @@ class Experiment(ABC):
 
         Parameters
         ----------
-        measure : .Measure or int
-            Measure for which kernel dictionaries are to be generated.
-            Alternatively, the index in the ``self.measure`` list can be passed.
+        spectral_ctxs : list of .SpectralContext, optional
+            A list of spectral contexts for which kernel dicts are to be
+            generated. If unset, the list of spectral contexts associated with
+            the first measure is used.
 
         Yields
         ------
@@ -511,10 +529,8 @@ class Experiment(ABC):
         ctx : .KernelDictContext
             Context used to generate ``kernel_dict``.
         """
-        if isinstance(measure, int):
-            measure = self.measures[measure]
-
-        spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
+        if spectral_ctxs is None:
+            spectral_ctxs = self.measures[0].spectral_cfg.spectral_ctxs()
 
         for spectral_ctx in spectral_ctxs:
             ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
