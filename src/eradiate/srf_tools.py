@@ -424,13 +424,15 @@ def spectral_filter(
     if wmin is not None:
         _wmin = wmin.m_as(w_units)
         filtered = srf.where(srf.w >= _wmin, drop=True)
+        _wmin = f"{_wmin:.2f}"
     else:
         filtered = srf
-        _wmin = 0
+        _wmin = 0.0
 
     if wmax is not None:
         _wmax = wmax.m_as(w_units)
         filtered = filtered.where(srf.w <= _wmax, drop=True)
+        _wmax = f"{_wmax:.2f}"
     else:
         _wmax = "∞"
 
@@ -440,7 +442,7 @@ def spectral_filter(
         filter_name="spectral filter",
         filter_attr=(
             f"All points in the original data set that fell out of the "
-            f"wavelength range [{_wmin:.2f}, {_wmax:.2f}] {w_units} were dropped."
+            f"wavelength range [{_wmin}, {_wmax}] {w_units} were dropped."
         ),
     )
 
