@@ -17,7 +17,7 @@ from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import KernelDict
 from ..phase import TabulatedPhaseFunction
-from ... import converters
+from ... import converters, data
 from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -39,7 +39,6 @@ def _particle_layer_distribution_converter(value):
             return particle_distribution_factory.convert({"type": "exponential"})
 
     return particle_distribution_factory.convert(value)
-
 
 @parse_docs
 @attrs.define
@@ -172,17 +171,25 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     dataset: xr.Dataset = documented(
         attrs.field(
-            default="spectra/particles/govaerts_2021-continental.nc",
-            converter=converters.load_dataset,
+            default="govaerts_2021-continental",
+            converter=converters.to_dataset(
+                load_from_id=lambda x: data.load_dataset(
+                    f"spectra/particles/{x}.nc",
+                )
+            ),
             validator=attrs.validators.instance_of(xr.Dataset),
         ),
-        doc="Particle radiative property data set. If a path is passed, the "
-        "converter tries to open the corresponding file on the hard drive; "
-        "if this fails, it tries to load a resource from the data store. "
-        "Refer to the data guide for the format requirements of this data set.",
+        doc="Particle radiative property data set."
+        "If a xarray.Dataset is passed, the dataset is used as is "
+        "(refer to the data guide for the format requirements of this dataset)."
+        "If a path is passed, the converter tries to open the corresponding "
+        "file on the hard drive; should that fail, it queries the Eradiate data"
+        "store with that path."
+        "If a string is passed, it is interpreted as an identifier for a "
+        "particle radiative property dataset in the Eradiate data store.",
         type="Dataset",
-        init_type="Dataset or path-like, optional",
-        default="spectra/particles/govaerts_2021-continental.nc",
+        init_type="Dataset or path-like or str, optional",
+        default="govaerts_2021-continental",
     )
 
     _phase: t.Optional[TabulatedPhaseFunction] = attrs.field(default=None, init=False)

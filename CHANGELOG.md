@@ -67,6 +67,8 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Updated Mitsuba submodule to a recent post-v3.0.2 `master` ({ghpr}`277`).
   This notably fixes a
   [k-d tree creation issue](https://github.com/mitsuba-renderer/mitsuba3/issues/233).
+* Harmonise dataset converters for solar irradiance spectra, spectral response
+  function and particle radiative property datasets ({ghpr}`284`).
 
 ## v0.22.5 (17 October 2022)
 

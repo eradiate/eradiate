@@ -20,30 +20,6 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
-# This table maps known spectra to their relative paths in the data store
-ALIASES = {
-    name: f"spectra/solar_irradiance/{name}.nc"
-    for name in [
-        "blackbody_sun",
-        "meftah_2017",
-        "solid_2017_mean",
-        "thuillier_2003",
-        "thuillier_2003_extrapolated",
-        "whi_2008",
-        "whi_2008_time_period_1",
-        "whi_2008_time_period_2",
-        "whi_2008_time_period_3",
-    ]
-}
-
-
-def _dataset_converter(x: t.Any):
-    if isinstance(x, str):
-        if x in ALIASES:
-            return data.load_dataset(ALIASES[x])
-
-    return converters.load_dataset(x)
-
 
 def _datetime_converter(x: t.Any):
     if x is not None:
@@ -127,16 +103,22 @@ class SolarIrradianceSpectrum(Spectrum):
     dataset: xr.Dataset = documented(
         attrs.field(
             default="thuillier_2003_extrapolated",
-            converter=_dataset_converter,
+            converter=converters.to_dataset(
+                load_from_id=lambda x: data.load_dataset(
+                    f"spectra/solar_irradiance/{x}.nc",
+                )
+            ),
             validator=attrs.validators.instance_of(xr.Dataset),
         ),
-        doc="Solar spectrum dataset. If a string is passed, it is first "
-        "interpreted as a Solar irradiance spectrum identifier "
-        "(see :ref:`sec-user_guide-data-solar_irradiance` for the list); "
-        "should that fail, it is interpreted as a path. If a path is passed, "
-        "loading the corresponding file on the hard drive is attempted; should "
-        "that fail, a query to the data store is made "
-        "(see :func:`converters.load_dataset <eradiate.converters.load_dataset>`).",
+        doc="Solar irradiance spectrum dataset. "
+        "If a xarray.Dataset is passed, the dataset is used as is "
+        "(refer to the data guide for the format requirements of this dataset)."
+        "If a path is passed, the converter tries to open the corresponding "
+        "file on the hard drive; should that fail, it queries the Eradiate data"
+        "store with that path."
+        "If a string is passed, it is interpreted as a Solar irradiance "
+        "spectrum identifier "
+        "(see :ref:`sec-user_guide-data-solar_irradiance` for the list); ",
         type="Dataset",
         init_type="Dataset or str or path-like, optional",
         default='"thuillier_2003_extrapolated"',

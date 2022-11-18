@@ -1,3 +1,9 @@
+__all__ = [
+    "auto_or",
+    "to_dataset",
+    "on_quantity",
+]
+
 import os
 import typing as t
 
@@ -6,12 +12,7 @@ import xarray as xr
 
 from . import data
 from .attrs import AUTO
-
-__all__ = [
-    "auto_or",
-    "load_dataset",
-    "on_quantity",
-]
+from .typing import PathLike
 
 
 def on_quantity(
@@ -65,29 +66,72 @@ def auto_or(
     return f
 
 
-def load_dataset(value: t.Any) -> t.Any:
+def to_dataset(
+    load_from_id: t.Optional[t.Callable[[str], xr.Dataset]] = None,
+) -> t.Callable[[t.Union[xr.Dataset, PathLike]], xr.Dataset]:
     """
-    Try to load an xarray dataset from the passed value:
+    Generates a converter that converts a value to a :class:`xarray.Dataset`.
 
-    * if `value` is a string or path-like object, it attempts to load
-      a dataset from that location;
-    * if the previous step fails, it tries to serve it from the data store;
-    * if `value` is an xarray dataset, it is returned directly;
-    * otherwise, a :class:`ValueError` is raised.
+    Parameters
+    ----------
+    load_from_id : callable, optional
+        A callable with the signature ``f(x: str) -> Dataset`` used to
+        interpret dataset identifiers.
+        Set this parameter to handle dataset identifiers.
+        If unset, dataset identifiers are not supported.
+
+    Returns
+    -------
+    A dataset converter.
+
+    Notes
+    -----
+    The conversion logic is as follows:
+
+    1. If the value is an xarray dataset, it is returned directly.
+    2. If the value is a path-like object ending with the ``.nc`` extension, the
+       converter tries to load a dataset from that location, first locally, then
+       (should that fail) from the Eradiate data store.
+    3. If the value is a string and ``load_from_id`` is not ``None``, it is 
+        interpreted as a dataset identifier and ``load_from_id(value)`` is 
+        returned.
+    4. Otherwise, a :class:`ValueError` is raised.
+
+    Examples
+    --------
+    A converter with basic dataset identifier interpretation (the passed 
+    callable may implement more complex logic, *e.g.* with identifier
+    fallback substitution):
+
+    >>> aerosol_converter = to_dataset(
+    ...     lambda x: data.load_dataset(f"spectra/particles/{x}.nc")
+    ... )
+
+    A converter without dataset identifier interpretation:
+
+    >>> aerosol_converter = to_dataset()
     """
-    if isinstance(value, (str, os.PathLike, bytes)):
-        # Try to open a file if it is directly referenced
-        if os.path.isfile(value):
-            return xr.load_dataset(value)
 
-        # Try to serve the file from the data store
-        return data.load_dataset(value)
+    def converter(value: t.Union[xr.Dataset, PathLike]) -> xr.Dataset:
+        
+        if isinstance(value, xr.Dataset):
+            return value
 
-    elif isinstance(value, xr.Dataset):
-        return value
+        # Path (local or remote)
+        if str(value).endswith(".nc"):
+            # Try and open a file if it is directly referenced
+            if os.path.isfile(value):
+                return xr.load_dataset(value)
 
-    else:
-        raise ValueError(
-            "Reference must be provided as a Dataset or a file path. "
-            f"Got {type(value).__name__}"
-        )
+            # Try and serve the file from the data store
+            return data.load_dataset(value)
+
+        # Identifier for a dataset in the data store
+        if isinstance(value, str) and load_from_id is not None:
+            return load_from_id(value)
+
+        # Abnormal state
+        # Reference must be provided as a Dataset, a path-like or a str
+        raise ValueError(f"Cannot convert value '{value}'")
+
+    return converter

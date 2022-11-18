@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import enum
 import os
 import typing as t
 import warnings
@@ -27,7 +26,8 @@ from ...contexts import (
     MonoSpectralContext,
     SpectralContext,
 )
-from ...exceptions import DataError, ModeError, UnsupportedModeError
+from ...exceptions import ModeError, UnsupportedModeError
+from ...srf_tools import convert as convert_srf
 from ...units import PhysicalQuantity, interpret_quantities
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -75,29 +75,6 @@ measure_factory.register_lazy_batch(
 # ------------------------------------------------------------------------------
 
 
-def _load_srf_ds(value: t.Union[str, os.PathLike]) -> xr.Dataset:
-    # path (local or in data store)
-    if str(value).endswith(".nc"):
-        return converters.load_dataset(value)
-
-    # identifier for a file in the data store
-    if isinstance(value, str):
-        try:
-            return converters.load_dataset(f"spectra/srf/{value}.nc")
-        except DataError as e:
-            if value.endswith("-raw"):
-                raise e
-            else:
-                warnings.warn(
-                    f"Could not serve SRF '{value}' from the data store."
-                    f"Trying to serve '{value}-raw' instead."
-                )
-                return converters.load_dataset(f"spectra/srf/{value}-raw.nc")
-
-    # this is an abnormal state
-    raise ValueError(f"unhandled value '{value}'")
-
-
 def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
     """
     Converter for :class:`MeasureSpectralConfig` ``srf`` attribute.
@@ -117,15 +94,17 @@ def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
     The behaviour of this converter depends on the value type:
     * If ``value`` is not a string or path, it is passed to the
       :class:`.spectrum_factory`'s converter.
-    * If ``value`` is a path, the corresponding file is loaded
+    * If ``value`` is a path, the converter tries to open the corresponding "
+        file on the hard drive; should that fail, it queries the Eradiate data
+        store with that path.
     * If ``value`` is a string, it is interpreted as a SRF identifier:
       * If the identifier does not end with `-raw`, the converter looks for a
         prepared version of the SRF and loads it if it exists, else it loads the
         raw SRF.
       * If the identifier ends with `-raw`, the converter loads the raw SRF.
     """
-    if isinstance(value, (str, os.PathLike)):
-        ds = _load_srf_ds(value)
+    if isinstance(value, (str, os.PathLike, xr.Dataset)):
+        ds = convert_srf(value)
         w = ureg.Quantity(ds.w.values, ds.w.attrs["units"])
         srf = ds.data_vars["srf"].values
         return InterpolatedSpectrum(quantity="dimensionless", wavelengths=w, values=srf)

@@ -9,7 +9,7 @@ import mitsuba as mi
 import numpy as np
 import xarray as xr
 
-from .. import converters
+from .. import data
 from ..attrs import documented, parse_docs
 from ..exceptions import DataError
 from ..typing import PathLike
@@ -68,21 +68,57 @@ def regression_test_plots(
     plt.close()
 
 
-def reference_converter(value):
+def reference_converter(
+        value: t.Optional[t.Union[os.PathLike, xr.Dataset]],
+    ) -> t.Optional[xr.Dataset]:
     """
     A converter for handling the reference data attribute.
 
-    * if ``value`` is a string or path-like object, it attempts to load
-      a dataset from that location or to serve it from the data store; if that
-      fails, it returns ``None``;
-    * if ``value`` is an xarray dataset or ``None``, it is returned directly;
-    * otherwise, a ValueError is raised.
+    Parameters
+    ----------
+    value : path-like or Dataset or None
+        Path to the reference dataset file or dataset identifier or Dataset or
+        None.
+
+    Raises
+    ------
+    ValueError
+        If the reference data is not a valid dataset.
+
+    Returns
+    -------
+    xr.Dataset or None
+        The reference dataset.
+    
+    Notes
+    -----
+    If value is ``None``, the converter returns ``None``.
+    If value is a path to a local file, load it as a dataset.
+    If value is a path to a remote file, load it from the Eradiate data store.
+    If value is a dataset, return it as is.
+    If value is a path to a remote file but the data store raised a DataError,
+    returns ``None``.
     """
     if value is None:
         return value
 
     try:
-        return converters.load_dataset(value)
+        if isinstance(value, (str, os.PathLike, bytes)):
+            # Try to open a file if it is directly referenced
+            if os.path.isfile(value):
+                return xr.load_dataset(value)
+
+            # Try to serve the file from the data store
+            return data.load_dataset(value)
+
+        elif isinstance(value, xr.Dataset):
+            return value
+
+        else:
+            raise ValueError(
+                "Reference must be provided as a Dataset or a file path. "
+                f"Got {type(value).__name__}"
+            )
 
     except DataError:
         return None
