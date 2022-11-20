@@ -33,5 +33,11 @@ kernel_dict = traversal.traverse(scene)
 mi.load_dict(kernel_dict.render(w=500))
 
 # Processing (parametric loop)
-exp = traversal.SomeExperiment(shape=rectangle)
+exp = traversal.SomeExperiment(
+    shape=rectangle,
+    measures=[
+        traversal.PerspectiveCamera(),
+        traversal.PerspectiveCamera(),
+    ],
+)
 print(exp.process())
