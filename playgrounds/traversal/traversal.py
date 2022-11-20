@@ -219,7 +219,7 @@ class SceneElement:
     def partials(self) -> t.Optional[t.List[SceneElement]]:
         """
         List of partial scene elements whose kernel dictionary templates and
-        update maps will be merged with theis scene element's.
+        update maps will be merged with this scene element's.
         """
         return None
 
@@ -242,6 +242,7 @@ class SceneElement:
             for name, obj in self.objects.items():
                 callback.put_object(name, obj)
 
+        # Merge partials if any
         if self.partials is not None:
             for obj in self.partials:
                 obj.traverse(callback)
