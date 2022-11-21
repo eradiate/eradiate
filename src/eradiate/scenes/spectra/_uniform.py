@@ -1,21 +1,22 @@
 from __future__ import annotations
 
+import typing as t
+
 import attrs
 import numpy as np
 import pint
 import pinttr
 
 from ._core import Spectrum
-from ..core import KernelDict
+from ..core import Param, ParamFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
-from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class UniformSpectrum(Spectrum):
     """
     Uniform spectrum [``uniform``] (*i.e.* constant vs wavelength).
@@ -65,15 +66,17 @@ class UniformSpectrum(Spectrum):
         wmax = pinttr.util.ensure_units(wmax, ucc.get("wavelength"))
         return self.value * (wmax - wmin)
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        kernel_units = uck.get(self.quantity)
-        spectral_ctx = ctx.spectral_ctx
+    @property
+    def kernel_type(self) -> str:
+        return "uniform"
 
-        return KernelDict(
-            {
-                "spectrum": {
-                    "type": "uniform",
-                    "value": float(self.eval(spectral_ctx).m_as(kernel_units)),
-                }
-            }
-        )
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return {
+            "value": Param(
+                lambda ctx: float(
+                    self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
+                ),
+                ParamFlags.SPECTRAL,
+            )
+        }

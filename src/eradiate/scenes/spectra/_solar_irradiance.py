@@ -10,11 +10,10 @@ import pint
 import xarray as xr
 
 from ._core import Spectrum
-from ..core import KernelDict
+from ..core import Param, ParamFlags
 from ... import converters, data, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
-from ...contexts import KernelDictContext
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -47,7 +46,7 @@ def _datetime_converter(x: t.Any):
 
 
 @parse_docs
-@attrs.frozen
+@attrs.define(eq=False)
 class SolarIrradianceSpectrum(Spectrum):
     """
     Solar irradiance spectrum [``solar_irradiance``].
@@ -234,10 +233,20 @@ class SolarIrradianceSpectrum(Spectrum):
 
         return result * quantity_units
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Apply scaling, build kernel dict
-        value = float(self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance")))
-        return KernelDict({"spectrum": {"type": "uniform", "value": value}})
-
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         raise NotImplementedError
+
+    @property
+    def kernel_type(self) -> str:
+        return "uniform"
+
+    @property
+    def params(self) -> dict:
+        return {
+            "value": Param(
+                lambda ctx: float(
+                    self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
+                ),
+                ParamFlags.SPECTRAL,
+            )
+        }

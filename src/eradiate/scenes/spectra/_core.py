@@ -106,7 +106,7 @@ spectrum_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class Spectrum(SceneElement, ABC):
     """
     Spectrum abstract base class.

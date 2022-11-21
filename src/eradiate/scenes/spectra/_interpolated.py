@@ -9,19 +9,17 @@ import pinttr
 import xarray as xr
 
 from ._core import Spectrum
-from ..core import KernelDict
+from ..core import Param, ParamFlags
 from ... import converters, validators
-from ..._mode import SpectralMode, supported_mode
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
-from ...contexts import KernelDictContext
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class InterpolatedSpectrum(Spectrum):
     """
     Linearly interpolated spectrum [``interpolated``].
@@ -255,16 +253,17 @@ class InterpolatedSpectrum(Spectrum):
         # Compute integral
         return np.trapz(interp, w)
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
+    @property
+    def kernel_type(self) -> str:
+        return "uniform"
 
-        return KernelDict(
-            {
-                "spectrum": {
-                    "type": "uniform",
-                    "value": float(
-                        self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
-                    ),
-                }
-            }
-        )
+    @property
+    def params(self) -> dict:
+        return {
+            "value": Param(
+                lambda ctx: float(
+                    self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
+                ),
+                ParamFlags.SPECTRAL,
+            )
+        }

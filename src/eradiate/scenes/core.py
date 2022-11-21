@@ -1,322 +1,266 @@
 from __future__ import annotations
 
+import enum
 import typing as t
-import warnings
-from abc import ABC, abstractmethod
-from collections import abc as collections_abc
+from collections import UserDict
 from typing import Mapping, Sequence
 
 import attrs
-import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
 from pinttr.util import ensure_units
 
 from ..attrs import documented, parse_docs
-from ..contexts import KernelDictContext
-from ..exceptions import KernelVariantError
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-from ..util.misc import onedict_value
+from ..util.misc import nest
+
+# -- Kernel dict ---------------------------------------------------------------
 
 
-def _kernel_dict_get_mitsuba_variant() -> str:
-    variant = mi.variant()
+class ParamFlags(enum.Flag):
+    """
+    Parameter flags.
+    """
 
-    if variant:
-        return variant
-    else:
-        raise KernelVariantError(
-            "a kernel variant must be selected to create a KernelDict instance"
-        )
+    SPECTRAL = enum.auto()
 
 
-@parse_docs
 @attrs.define
-class KernelDict(collections_abc.MutableMapping):
+class Param:
     """
-    A dictionary-like object designed to contain a scene specification
-    appropriate for instantiation with :func:`~mitsuba.core.load_dict`.
-
-    :class:`.KernelDict` keeps track of the variant it has been created with
-    and performs minimal checks to help prevent inconsistent scene creation.
+    A kernel scene parameter generator.
     """
 
-    data: dict = documented(
-        attrs.field(
-            factory=dict,
-            converter=dict,
-        ),
-        doc="Scene dictionary.",
-        default="{}",
-        type="dict",
-    )
+    #: An attached callable which evaluates the parameter.
+    _callable: t.Callable = attrs.field(repr=False)
 
-    post_load: dict = documented(
-        attrs.field(
-            factory=dict,
-            converter=dict,
-        ),
-        doc="Post-load update dictionary.",
-        default="{}",
-        type="dict",
-    )
+    #: Flags specifying parameter attributes.
+    flags: t.Optional[ParamFlags] = attrs.field(default=None)
 
-    variant: str = documented(
-        attrs.field(
-            factory=_kernel_dict_get_mitsuba_variant,
-            validator=attrs.validators.instance_of(str),
-        ),
-        doc="Kernel variant for which the dictionary is created. Defaults to "
-        "currently active variant (if any; otherwise raises).",
-        type="str",
-        default=":func:`mitsuba.set_variant`",
-    )
+    def __call__(self, *args, **kwargs):
+        return self._callable(*args, **kwargs)
 
-    def __getitem__(self, k):
-        return self.data.__getitem__(k)
 
-    def __delitem__(self, v):
-        return self.data.__delitem__(v)
+@attrs.define
+class ParameterMap(UserDict):
+    """
+    A dict-like structure mapping parameter paths to methods generating them.
+    """
 
-    def __len__(self):
-        return self.data.__len__()
+    data: dict[str, Param] = attrs.field(factory=dict)
 
-    def __iter__(self):
-        return self.data.__iter__()
-
-    def __setitem__(self, k, v):
-        try:
-            self.data.__getitem__(k)
-            warnings.warn(
-                f"Duplicate key '{k}' will be overwritten. Are you trying to "
-                "add scene elements with duplicate IDs to this KernelDict?"
-            )
-        except KeyError:
-            pass
-        return self.data.__setitem__(k, v)
-
-    def check(self) -> None:
+    def render(
+        self, ctx, flags: t.Optional[ParamFlags] = None, drop: bool = False
+    ) -> dict:
         """
-        Perform basic checks on the dictionary:
-
-        * check that the ``"type"`` parameter is included;
-        * check if the variant for which the kernel dictionary was created is
-          the same as the current one.
-
-        Raises
-        ------
-        ValueError
-            If the ``"type"`` parameter is missing.
-
-        :class:`.KernelVariantError`
-            If the variant for which the kernel dictionary was created is
-            not the same as the current one
+        Evaluate the parameter map for a set of arguments.
         """
-        variant = mi.variant()
-        if self.variant != variant:
-            raise KernelVariantError(
-                f"scene dictionary created for kernel variant '{self.variant}', "
-                f"incompatible with current variant '{variant}'"
-            )
-
-        if "type" not in self:
-            raise ValueError("kernel scene dictionary is missing a 'type' parameter")
-
-    def fix(self) -> None:
-        if "type" not in self.data:
-            self.data["type"] = "scene"
-
-    def load(
-        self, strip: bool = True, post_load_update: bool = True
-    ) -> "mitsuba.Object":
-        """
-        Call :func:`~mitsuba.core.load_dict` on self. In addition, a
-        post-load update can be applied.
-
-        If the encapsulated dictionary misses a ``"type"`` key, it will be
-        promoted to a scene dictionary through the addition of
-        ``{"type": "scene"}``. For instance, it means that
-
-        .. code:: python
-
-           {
-               "shape1": {"type": "sphere"},
-               "shape2": {"type": "sphere"},
-           }
-
-        will be interpreted as
-
-        .. code:: python
-
-           {
-               "type": "scene",
-               "shape1": {"type": "sphere"},
-               "shape2": {"type": "sphere"},
-           }
-
-        .. note::
-           Requires a valid selected operational mode.
-
-        Parameters
-        ----------
-        strip : bool
-            If ``True``, if ``data`` has no ``'type'`` entry and if ``data``
-            consists of one nested dictionary, it will be loaded directly.
-            For instance, it means that
-
-            .. code:: python
-
-               {"phase": {"type": "rayleigh"}}
-
-            will be stripped to
-
-            .. code:: python
-
-               {"type": "rayleigh"}
-
-        post_load_update : bool
-            If ``True``, use :func:`~mitsuba.python.util.traverse` and update
-            loaded scene parameters according to data stored in ``post_load``.
-
-        Returns
-        -------
-        :class:`mitsuba.core.Object`
-            Loaded Mitsuba object.
-        """
-        d = self.data
-        d_extra = {}
-
-        if "type" not in self:
-            if len(self) == 1 and strip:
-                # Extract plugin dictionary
-                d = onedict_value(d)
-            else:
-                # Promote to scene dictionary
-                d_extra = {"type": "scene"}
-
-        obj = mi.load_dict({**d, **d_extra})
-
-        if self.post_load and post_load_update:
-            params = mi.traverse(obj)
-            params.keep(list(self.post_load.keys()))
-            for k, v in self.post_load.items():
-                params[k] = v
-
-            params.update()
-
-        return obj
-
-    def add(self, *elements: SceneElement, ctx: KernelDictContext) -> None:
-        """
-        Merge the content of a :class:`~eradiate.scenes.core.SceneElement` or
-        another dictionary object with the current :class:`KernelDict`.
-
-        Parameters
-        ----------
-        *elements : :class:`SceneElement`
-            :class:`~eradiate.scenes.core.SceneElement` instances to add to the
-            scene dictionary.
-
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation. *This argument is keyword-only and required.*
-        """
-        for element in elements:
-            self.update(element.kernel_dict(ctx))
-
-    def merge(self, other: KernelDict) -> None:
-        """
-        Merge another :class:`.KernelDict` with the current one.
-
-        Parameters
-        ----------
-        other : :class:`.KernelDict`
-            A kernel dictionary whose main and post-load dictionaries will be
-            used to update the current one.
-        """
-        if self.variant != other.variant:
-            raise KernelVariantError("merged kernel dicts must share the same variant")
-
-        self.data.update(other.data)
-        self.post_load.update(other.post_load)
-
-    @classmethod
-    def from_elements(
-        cls, *elements: SceneElement, ctx: KernelDictContext
-    ) -> KernelDict:
-        """
-        Create a new :class:`.KernelDict` from one or more scene elements.
-
-        Parameters
-        ----------
-        *elements : :class:`SceneElement`
-            :class:`~eradiate.scenes.core.SceneElement` instances to add to the
-            scene dictionary.
-
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation. *This argument is keyword-only and required.*
-
-        Returns
-        -------
-        :class:`KernelDict`
-            Created scene kernel dictionary.
-        """
-        result = cls()
-        result.add(*elements, ctx=ctx)
+        result = self.data.copy()
+        render_params(result, ctx=ctx, flags=flags, drop=drop)
         return result
 
 
-@parse_docs
 @attrs.define
-class SceneElement(ABC):
+class KernelDictTemplate(UserDict):
     """
-    Abstract class for all scene elements.
-
-    This abstract base class provides a basic template for all scene element
-    classes. It is written using the `attrs <https://www.attrs.org>`_ library.
+    A dictionary containing placeholders meant to be substituted using a
+    :class:`ParameterMap`.
     """
 
-    id: t.Optional[str] = documented(
-        attrs.field(
-            default=None,
-            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
-        ),
-        doc="User-defined object identifier.",
-        type="str or None",
-        init_type="str, optional",
-        default="None",
+    data: dict = attrs.field(factory=dict)
+
+    def render(self, ctx) -> dict:
+        """
+        Render the template as a nested dictionary using a parameter map to fill
+        in empty fields.
+        """
+        result = self.data.copy()
+        skipped = render_params(result, ctx=ctx, flags=None, drop=False)
+
+        # Check for leftover empty values
+        if skipped:
+            raise ValueError(f"Unevaluated parameters: {skipped}")
+
+        return nest(result, sep=".")
+
+
+def render_params(
+    d: dict, flags: t.Optional[ParamFlags] = None, drop: bool = False, **kwargs
+) -> list:
+    """
+    Render parameters in a template dictionary.
+    """
+    skipped = []
+
+    for k, v in d.items():
+        if isinstance(v, Param):
+            if flags is None:
+                d[k] = v(**kwargs)
+            else:
+                if v.flags is None:
+                    skipped.append(k)
+                elif v.flags & flags:
+                    d[k] = v(**kwargs)
+                else:
+                    skipped.append(k)
+
+    if drop:
+        for k in skipped:
+            del d[k]
+
+    return skipped
+
+
+# -- Scene element interface ---------------------------------------------------
+
+
+@attrs.define(eq=False)
+class SceneElement:
+    """
+    Important: All subclasses *must* have a hash, thus eq must be False (see
+    attrs docs on hashing for a complete explanation).
+    """
+
+    id: t.Optional[str] = attrs.field(
+        default=None,
+        validator=attrs.validators.optional(attrs.validators.instance_of(str)),
     )
 
-    def _kernel_dict_id(self) -> t.Dict:
+    @property
+    def kernel_type(self) -> t.Optional[str]:
         """
-        Return a scene dictionary entry with the object's ``id`` field if it is
-        not ``None``.
+        Kernel type if this scene element can be modelled by a single kernel
+        scene graph node; ``None`` otherwise. The default implementation raises
+        a :class:`NotImplementedError`.
+        """
+        raise NotImplementedError
+
+    @property
+    def template(self) -> dict:
+        """
+        Kernel dictionary template contents associated with this scene element.
+        The default implementation raises a :class:`NotImplementedError`.
         """
         result = {}
-        if self.id is not None:
-            result["id"] = self.id
+
+        if self.kernel_type is not None:
+            result["type"] = self.kernel_type
+
+        if self.params is not None:
+            result.update(self.params)
+
         return result
 
-    @abstractmethod
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+    @property
+    def params(self) -> t.Optional[t.Dict[str, Param]]:
         """
-        Return a dictionary suitable for kernel scene configuration.
+        Map of updatable parameters associated with this scene element.
+        """
+        return None
+
+    @property
+    def objects(self) -> t.Optional[t.Dict[str, SceneElement]]:
+        """
+        Map of child objects associated with this scene element.
+        """
+        return None
+
+    def traverse(self, callback: SceneTraversal) -> None:
+        """
+        Traverse this scene element and collect kernel dictionary template,
+        parameter and object map contributions.
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        :class:`.KernelDict`
-            Kernel dictionary which can be loaded as a Mitsuba object.
+        callback : SceneTraversal
+            Callback data structure storing the collected data.
         """
-        pass
+        callback.put_template(self.template)
+
+        if self.params is not None:
+            callback.put_params(self.params)
+
+        if self.objects is not None:
+            if self.kernel_type is not None:
+                for name, obj in self.objects.items():
+                    callback.put_object(name, obj)
+            else:
+                for _, obj in self.objects.items():
+                    obj.traverse(callback)
+
+
+# -- Scene tree traversal ------------------------------------------------------
+
+
+@attrs.define
+class SceneTraversal:
+    #: Current traversal node
+    node: SceneElement
+
+    #: Parent to current node
+    parent: t.Optional[SceneElement] = attrs.field(default=None)
+
+    #: Current node's name
+    name: t.Optional[str] = attrs.field(default=None)
+
+    #: Current depth
+    depth: int = attrs.field(default=0)
+
+    #: Dictionary mapping nodes to their parents
+    hierarchy: dict = attrs.field(factory=dict)
+
+    #: Kernel dictionary template
+    template: dict = attrs.field(factory=dict)
+
+    #: Dictionary mapping nodes to their defined parameters
+    params: dict = attrs.field(factory=dict)
+
+    def __attrs_post_init__(self):
+        self.hierarchy[self.node] = (self.parent, self.depth)
+
+    def put_template(self, template: dict):
+        prefix = "" if self.name is None else f"{self.name}."
+
+        for k, v in template.items():
+            self.template[f"{prefix}{k}"] = v
+
+    def put_params(self, params: dict):
+        prefix = "" if self.name is None else f"{self.name}."
+
+        for k, v in params.items():
+            self.params[f"{prefix}{k}"] = v
+
+    def put_object(self, name: str, node: SceneElement):
+        if node is None or node in self.hierarchy:
+            return
+
+        cb = type(self)(
+            node=node,
+            parent=self.node,
+            name=name if self.name is None else f"{self.name}.{name}",
+            depth=self.depth + 1,
+            hierarchy=self.hierarchy,
+            template=self.template,
+            params=self.params,
+        )
+        node.traverse(cb)
+
+
+def traverse(node: SceneElement) -> t.Tuple[KernelDictTemplate, ParameterMap]:
+    """
+    Traverse a scene element tree and collect kernel dictionary data.
+    """
+    # Traverse scene element tree
+    cb = SceneTraversal(node)
+    node.traverse(cb)
+
+    # Use collected data to generate the kernel dictionary
+    return KernelDictTemplate(cb.template), ParameterMap(cb.params)
+
+
+# -- Misc (to be moved elsewhere) ----------------------------------------------
 
 
 @parse_docs

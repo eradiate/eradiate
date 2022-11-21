@@ -9,7 +9,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 
-from eradiate.util.misc import nest_flat as unflatten
+from eradiate.util.misc import nest as unflatten
 
 # -- Kernel dict ---------------------------------------------------------------
 
@@ -271,7 +271,6 @@ class PerspectiveCamera(SceneElement):
 @attrs.define(eq=False)
 class Scene(SceneElement):
     _objects: dict = attrs.field(factory=dict)
-    _partials: list = attrs.field(factory=list)
 
     @property
     def kernel_type(self) -> str:
@@ -280,10 +279,6 @@ class Scene(SceneElement):
     @property
     def objects(self):
         return self._objects
-
-    @property
-    def partials(self):
-        return self._partials
 
 
 # -- Traversal -----------------------------------------------------------------

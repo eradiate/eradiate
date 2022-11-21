@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -6,58 +7,90 @@ from eradiate import unit_registry as ureg
 from eradiate.ckd import BinSet
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.exceptions import DataError
-from eradiate.scenes.core import KernelDict
+from eradiate.scenes.core import traverse
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
+from eradiate.units import PhysicalQuantity
 
 
-def test_solar_irradiance(mode_mono):
+@pytest.mark.parametrize(
+    "tested, expected",
+    [
+        ({}, SolarIrradianceSpectrum()),
+        ({"dataset": "doesnt_exist"}, DataError),
+    ],
+    ids=[
+        "no_args",
+        "dataset_doesnt_exist",
+    ],
+)
+def test_solar_irradiance_construct(modes_all, tested, expected):
+    if isinstance(expected, SolarIrradianceSpectrum):
+        s = SolarIrradianceSpectrum(**tested)
+        assert s.quantity is PhysicalQuantity.IRRADIANCE
 
-    # Default context
+    elif issubclass(expected, Exception):
+        with pytest.raises(expected):
+            SolarIrradianceSpectrum(**tested)
+
+    else:
+        raise RuntimeError
+
+
+@pytest.mark.parametrize(
+    "tested",
+    [
+        {},
+        {"scale": 2.0},
+        {"dataset": "solid_2017_mean"},
+    ],
+    ids=[
+        "no_args",
+        "scale",
+        "solid_spectrum",
+    ],
+)
+def test_solar_irradiance_kernel_dict(mode_mono, tested):
     ctx = KernelDictContext()
 
-    # We can instantiate the element
-    s = SolarIrradianceSpectrum()
-
-    # Unsupported solar spectrum keywords raise
-    with pytest.raises(DataError):
-        SolarIrradianceSpectrum(dataset="doesnt_exist")
+    s = SolarIrradianceSpectrum(**tested)
 
     # Produced kernel dict is valid
-    assert KernelDict.from_elements(s, ctx=ctx).load()
-
-    # A more detailed specification still produces a valid object
-    s = SolarIrradianceSpectrum(scale=2.0)
-    assert KernelDict.from_elements(s, ctx=ctx).load()
-
-    # Element doesn't work out of the supported spectral range
-    s = SolarIrradianceSpectrum(dataset="thuillier_2003")
-
-    with pytest.raises(ValueError):
-        ctx = KernelDictContext(spectral_ctx={"wavelength": 2400.0})
-        s.kernel_dict(ctx)
-
-    # solid_2017-mean dataset can be used
-    ctx = KernelDictContext()
-    s = SolarIrradianceSpectrum(dataset="solid_2017-mean")
-    assert KernelDict.from_elements(s, ctx=ctx).load()
+    template, _ = traverse(s)
+    kernel_dict = template.render(ctx=ctx)
+    assert isinstance(mi.load_dict(kernel_dict), mi.Texture)
 
 
-def test_solar_irradiance_eval(modes_all):
+def test_solar_irradiance_eval(modes_all_double):
     # Irradiance is correctly interpolated in mono mode
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
 
     if eradiate.mode().is_mono:
         spectral_ctx = SpectralContext.new(wavelength=550.0)
-        # Reference value computed manually
-        assert np.allclose(s.eval(spectral_ctx), ureg.Quantity(1.87938, "W/m^2/nm"))
+        expected = ureg.Quantity(
+            1.87938, "W/m^2/nm"
+        )  # Reference value computed manually
 
     elif eradiate.mode().is_ckd:
         bin_set = BinSet.from_db("10nm")
         bin = bin_set.select_bins("550")[0]
         bindex = bin.bindexes[0]
         spectral_ctx = SpectralContext.new(bindex=bindex)
-        # Reference value computed manually
-        assert np.allclose(s.eval(spectral_ctx), ureg.Quantity(1.871527, "W/m^2/nm"))
+        expected = ureg.Quantity(
+            1.871527, "W/m^2/nm"
+        )  # Reference value computed manually
+
+    else:
+        assert False
+
+    assert np.allclose(s.eval(spectral_ctx), expected)
+
+    # Eval raises out of the supported spectral range
+    if eradiate.mode().is_mono:
+        with pytest.raises(ValueError):
+            s.eval(SpectralContext.new(wavelength=1.0 * ureg.km))
+
+    elif eradiate.mode().is_ckd:
+        pass
 
     else:
         assert False

@@ -7,6 +7,7 @@ import inspect
 import re
 import typing as t
 from collections import OrderedDict
+from collections.abc import Mapping
 from numbers import Number
 
 import numpy as np
@@ -110,7 +111,7 @@ def deduplicate(value: t.Sequence, preserve_order: bool = True) -> t.List:
         return list(set(value))
 
 
-def flatten_nested(d: t.Mapping, sep: str = ".", name: str = "") -> dict:
+def flatten(d: t.Mapping, sep: str = ".", name: str = "") -> dict:
     """
     Flatten a nested dictionary.
 
@@ -251,7 +252,7 @@ def natsorted(l):
     return sorted(l, key=natsort_alphanum_key)
 
 
-def nest_flat(d: t.Mapping, sep: str = ".") -> dict:
+def nest(d: t.Mapping, sep: str = ".") -> dict:
     """
     Turn a flat dictionary into a nested dictionary.
 
