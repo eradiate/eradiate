@@ -9,89 +9,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 
-# -- Utilities -----------------------------------------------------------------
-
-
-def flatten(d: dict, sep: str = ".", name: str = "") -> dict:
-    """
-    Flatten a nested dictionary.
-
-    Parameters
-    ----------
-    d : dict
-        Dictionary to be flattened.
-
-    name : str, optional, default: ""
-        Path to the parent dictionary. By default, no parent name is defined.
-
-    sep : str, optional, default: "."
-        Flattened dict key separator.
-
-    Returns
-    -------
-    dict
-        A flattened copy of `d`.
-    """
-    result = {}
-
-    for k, v in d.items():
-        full_key = k if not name else f"{name}{sep}{k}"
-        if isinstance(v, dict):
-            result.update(flatten(v, sep=sep, name=full_key))
-        else:
-            result[full_key] = v
-
-    return result
-
-
-def set_nested(d: dict, path: str, value: t.Any, sep: str = "."):
-    """
-    Set values in a nested dictionary using a flat path.
-
-    Parameters
-    ----------
-    d : dict
-        Dictionary to operate on.
-
-    path : str
-        Path to the value to be set.
-
-    value
-        Value to which `path` is to be set.
-
-    sep : str, optional, default: "."
-        Separator used to decompose `path`.
-    """
-    *path, last = path.split(sep)
-    for bit in path:
-        d = d.setdefault(bit, {})
-    d[last] = value
-
-
-def unflatten(d: dict, sep: str = ".") -> dict:
-    """
-    Turn a flat dictionary into a nested dictionary.
-
-    Parameters
-    ----------
-    d : dict
-        Dictionary to be unflattened.
-
-    sep : str, optional, default: "."
-        Flattened dict key separator.
-
-    Returns
-    -------
-    dict
-        A nested copy of `d`.
-    """
-    result = {}
-
-    for key, value in d.items():
-        set_nested(result, key, value, sep)
-
-    return result
-
+from eradiate.util.misc import nest_flat as unflatten
 
 # -- Kernel dict ---------------------------------------------------------------
 
@@ -449,7 +367,7 @@ class Experiment:
     def kernel_dict(self) -> KernelDict:
         raise NotImplementedError
 
-    def process(self, *measures, rebuild_kernel_scene: bool = False, spp=4):
+    def process(self, *measures, rebuild_kernel_scene: bool = False, spp=None):
         mi.set_variant("scalar_mono_double")
 
         if not measures:
@@ -477,9 +395,11 @@ class Experiment:
             for sensor in self.kernel_scene.sensors():
                 loop_index = (w, sensor.id())
 
-                self.results[loop_index] = mi.render(
-                    self.kernel_scene, sensor=sensor, spp=spp
-                )
+                render_kwargs = {"sensor": sensor}
+                if spp is not None:
+                    spp = spp
+
+                self.results[loop_index] = mi.render(self.kernel_scene, **render_kwargs)
                 print()
 
         return self.results
