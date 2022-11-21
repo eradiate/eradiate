@@ -1,8 +1,8 @@
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
 import pytest
+from pinttr.exceptions import UnitsError
 
 import eradiate
 from eradiate import unit_context_config as ucc
@@ -10,58 +10,96 @@ from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.ckd import BinSet
 from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.scenes.core import traverse
 from eradiate.scenes.spectra import InterpolatedSpectrum, spectrum_factory
 from eradiate.units import PhysicalQuantity
 
 
-def test_interpolated_construct(modes_all):
-    # Instantiating without argument fails
-    with pytest.raises(TypeError):
-        InterpolatedSpectrum()
-    # Instantiating with missing argument fails
-    with pytest.raises(TypeError):
-        InterpolatedSpectrum(wavelengths=[500.0, 600.0])
-    with pytest.raises(TypeError):
-        InterpolatedSpectrum(values=[0.0, 1.0])
-    # Shape mismatch raises
-    with pytest.raises(ValueError):
-        InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0, 2.0])
+@pytest.mark.parametrize(
+    "tested, expected, units",
+    [
+        ({}, TypeError, None),
+        (
+            {"wavelengths": [500.0, 600.0]},
+            TypeError,
+            None,
+        ),
+        (
+            {"values": [0.0, 1.0]},
+            TypeError,
+            None,
+        ),
+        (
+            {"wavelengths": [500.0, 600.0], "values": [0.0, 1.0, 2.0]},
+            ValueError,
+            None,
+        ),
+        (
+            {"wavelengths": [500.0, 600.0], "values": [0.0, 1.0]},
+            InterpolatedSpectrum(
+                quantity=PhysicalQuantity.DIMENSIONLESS,
+                wavelengths=[500.0, 600.0] * ureg.nm,
+                values=[0.0, 1.0] * ureg.dimensionless,
+            ),
+            "dimensionless",
+        ),
+        (
+            {
+                "quantity": "irradiance",
+                "wavelengths": [500.0, 600.0],
+                "values": [0.0, 1.0],
+            },
+            InterpolatedSpectrum(
+                quantity=PhysicalQuantity.IRRADIANCE,
+                wavelengths=[500.0, 600.0] * ureg.nm,
+                values=[0.0, 1.0] * ureg("W/m^2/nm"),
+            ),
+            "W/m^2/nm",
+        ),
+        (
+            {
+                "quantity": "irradiance",
+                "wavelengths": [500.0, 600.0],
+                "values": [0.0, 1.0] * ureg.kg,
+            },
+            UnitsError,
+            None,
+        ),
+        (
+            {
+                "quantity": "irradiance",
+                "wavelengths": [500.0, 600.0] * ureg.s,
+                "values": [0.0, 1.0],
+            },
+            UnitsError,
+            None,
+        ),
+    ],
+    ids=[
+        "no_args",
+        "missing_args_1",
+        "missing_args_2",
+        "array_shape_mismatch",
+        "no_quantity",
+        "no_units",
+        "inconsistent_units_1",
+        "inconsistent_units_2",
+    ],
+)
+def test_interpolated_construct(modes_all, tested, expected, units):
+    if isinstance(expected, InterpolatedSpectrum):
+        s = InterpolatedSpectrum(**tested)
+        assert s.quantity is expected.quantity
+        assert isinstance(s.values, pint.Quantity)
+        assert isinstance(s.values.magnitude, np.ndarray)
+        assert np.all(s.values == expected.values)
 
-    # Instantiating with no quantity makes spectrum dimensionless
-    spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
-    assert spectrum.quantity is PhysicalQuantity.DIMENSIONLESS
-    assert isinstance(spectrum.values, pint.Quantity)
-    # Instantiating with a quantity applies units
-    spectrum = InterpolatedSpectrum(
-        quantity="irradiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
-    )
-    assert spectrum.values.is_compatible_with("W/m^2/nm")
+    elif issubclass(expected, Exception):
+        with pytest.raises(expected):
+            InterpolatedSpectrum(**tested)
 
-    # Inconsistent units raise
-    with pytest.raises(pinttr.exceptions.UnitsError):
-        InterpolatedSpectrum(
-            quantity="irradiance",
-            wavelengths=[500.0, 600.0],
-            values=[0.0, 1.0] * ureg("W/m^2"),
-        )
-    with pytest.raises(pinttr.exceptions.UnitsError):
-        InterpolatedSpectrum(
-            quantity="irradiance",
-            wavelengths=[500.0, 600.0] * ureg.s,
-            values=[0.0, 1.0],
-        )
-
-    # Instantiate from factory
-    assert spectrum_factory.convert(
-        {
-            "type": "interpolated",
-            "quantity": "irradiance",
-            "wavelengths": [0.5, 0.6],
-            "wavelengths_units": "micron",
-            "values": [0.5, 1.0],
-            "values_units": "kW/m^2/nm",
-        }
-    )
+    else:
+        raise RuntimeError
 
 
 def test_interpolated_integral(mode_mono):
@@ -168,36 +206,37 @@ def test_interpolated_eval(modes_all):
     # Spectrum performs linear interpolation and yields units consistent with
     # quantity
     spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
-    assert spectrum.eval(spectral_ctx) == expected * ureg.dimensionless
+    assert spectrum.eval(spectral_ctx) == expected * spectrum.values.units
 
     spectrum = InterpolatedSpectrum(
         quantity="irradiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
     )
     # Interpolation returns quantity
-    assert spectrum.eval(spectral_ctx) == expected * ucc.get("irradiance")
+    assert spectrum.eval(spectral_ctx) == expected * spectrum.values.units
 
 
 def test_interpolated_kernel_dict(modes_all_mono):
     ctx = KernelDictContext(spectral_ctx=SpectralContext.new(wavelength=550.0))
 
-    spectrum = InterpolatedSpectrum(
-        id="spectrum",
-        quantity="irradiance",
-        wavelengths=[500.0, 600.0],
-        values=[0.0, 1.0],
-    )
-
-    # Produced kernel dict is valid
-    assert isinstance(spectrum.kernel_dict(ctx=ctx).load(), mi.Texture)
-
-    # Unit scaling is properly applied
+    # Instantiate from factory
     with ucc.override({"radiance": "W/m^2/sr/nm"}):
-        s = InterpolatedSpectrum(
-            quantity="radiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
+        spectrum = spectrum_factory.convert(
+            {
+                "type": "interpolated",
+                "quantity": "radiance",
+                "wavelengths": [0.5, 0.6],
+                "wavelengths_units": "micron",
+                "values": [0.0, 1.0],
+            }
         )
+
     with uck.override({"radiance": "kW/m^2/sr/nm"}):
-        d = s.kernel_dict(ctx)
-        assert np.allclose(d["spectrum"]["value"], 5e-4)
+        template, _ = traverse(spectrum)
+        kernel_dict = template.render(ctx=ctx)
+        # Produced kernel dict is valid
+        assert isinstance(mi.load_dict(kernel_dict), mi.Texture)
+        # Unit scaling is properly applied
+        assert np.isclose(kernel_dict["value"], 5e-4)
 
 
 def test_interpolated_from_dataarray(mode_mono):

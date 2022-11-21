@@ -1,25 +1,50 @@
-import pinttr
 import pytest
+from pinttr.exceptions import UnitsError
 
 from eradiate import unit_registry as ureg
 from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
 
 
-def test_converter(mode_mono):
-    # Dicts are correctly processed
-    s = spectrum_factory.converter("radiance")({"type": "uniform", "value": 1.0})
-    assert s == UniformSpectrum(quantity="radiance", value=1.0)
-    s = spectrum_factory.converter("irradiance")({"type": "uniform", "value": 1.0})
-    assert s == UniformSpectrum(quantity="irradiance", value=1.0)
+@pytest.mark.parametrize(
+    "tested, expected",
+    [
+        (
+            {"type": "uniform", "value": 1.0},
+            UniformSpectrum(quantity="radiance", value=1.0),
+        ),
+        (
+            1.0,
+            UniformSpectrum(quantity="radiance", value=1.0),
+        ),
+        (
+            ureg.Quantity(1e6, "W/km^2/sr/nm"),
+            UniformSpectrum(quantity="radiance", value=1.0),
+        ),
+        (
+            1,
+            UniformSpectrum(quantity="radiance", value=1.0),
+        ),
+        (
+            ureg.Quantity(1, "W/m^2/nm"),
+            UnitsError,
+        ),
+    ],
+    ids=["dict", "float", "quantity", "int", "wrong_units"],
+)
+def test_converter(mode_mono, tested, expected):
+    """
+    Tests for the Spectrum factory's conversion protocol.
+    """
 
-    # Floats and quantities are correctly processed
-    s = spectrum_factory.converter("radiance")(1.0)
-    assert s == UniformSpectrum(quantity="radiance", value=1.0)
-    s = spectrum_factory.converter("radiance")(ureg.Quantity(1e6, "W/km^2/sr/nm"))
-    assert s == UniformSpectrum(quantity="radiance", value=1.0)
-    with pytest.raises(pinttr.exceptions.UnitsError):
-        spectrum_factory.converter("irradiance")(ureg.Quantity(1, "W/m^2/sr/nm"))
+    if isinstance(expected, UniformSpectrum):
+        s = spectrum_factory.converter("radiance")(tested)
+        assert (s.quantity == expected.quantity) and (
+            s.value == expected.value
+        ), f"Failed: converted value is {s}"
 
-    # Ints are also accepted
-    s = spectrum_factory.converter("radiance")(1)
-    assert s == UniformSpectrum(quantity="radiance", value=1)
+    elif issubclass(expected, Exception):
+        with pytest.raises(expected):
+            spectrum_factory.converter("radiance")(tested)
+
+    else:
+        raise RuntimeError

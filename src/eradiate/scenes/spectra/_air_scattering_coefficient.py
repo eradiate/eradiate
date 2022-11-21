@@ -1,15 +1,15 @@
 from __future__ import annotations
 
+import typing as t
+
 import attrs
 import numpy as np
 import pint
 
 from ._core import Spectrum
-from ..core import KernelDict
-from ..._mode import SpectralMode, supported_mode
+from ..core import Param
 from ...attrs import parse_docs
 from ...ckd import Bindex
-from ...contexts import KernelDictContext
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity
 from ...units import unit_context_config as ucc
@@ -17,17 +17,8 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
-def _eval_impl(w: pint.Quantity) -> pint.Quantity:
-    return compute_sigma_s_air(wavelength=w)
-
-
-def _eval_impl_ckd(w: pint.Quantity) -> pint.Quantity:
-    values = _eval_impl(w)
-    return np.trapz(values, w) / (w.max() - w.min())
-
-
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class AirScatteringCoefficientSpectrum(Spectrum):
     """
     Air scattering coefficient spectrum [``air_scattering_coefficient``].
@@ -54,9 +45,11 @@ class AirScatteringCoefficientSpectrum(Spectrum):
     )
 
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
+        # Inherit docstring
         return compute_sigma_s_air(wavelength=w)
 
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        # Inherit docstring
         # Spectrum is averaged over spectral bin
 
         result = np.zeros((len(bindexes),))
@@ -89,21 +82,19 @@ class AirScatteringCoefficientSpectrum(Spectrum):
 
         return result * quantity_units
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
-
-        return KernelDict(
-            {
-                "spectrum": {
-                    "type": "uniform",
-                    "value": float(
-                        self.eval(ctx.spectral_ctx).m_as(
-                            uck.get("collision_coefficient")
-                        )
-                    ),
-                }
-            }
-        )
-
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         raise NotImplementedError
+
+    @property
+    def kernel_type(self) -> str:
+        return "uniform"
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return {
+            "value": Param(
+                lambda ctx: float(
+                    self.eval(ctx.spectral_ctx).m_as(uck.get("collision_coefficient"))
+                )
+            )
+        }

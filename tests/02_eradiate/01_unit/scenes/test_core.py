@@ -1,122 +1,37 @@
-import mitsuba as mi
 import numpy as np
 import pint
 import pytest
 
-import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.exceptions import KernelVariantError
-from eradiate.scenes.core import BoundingBox, KernelDict
+from eradiate.scenes.core import BoundingBox, Param, ParamFlags, render_params
 
 
-def test_kernel_dict_construct():
-    # variant attribute is set properly
-    for mode in eradiate.modes():
-        eradiate.set_mode(mode)
-        kernel_dict = KernelDict({})
-        assert kernel_dict.variant == eradiate.mode().mi_variant
+def test_render_params():
+    param_map = {
+        "foo": 0,
+        "bar": Param(lambda x: x),
+        "baz": Param(lambda x: x, ParamFlags.SPECTRAL),
+    }
 
+    # If no flags are passed, all params are rendered
+    d = param_map.copy()
+    skipped = render_params(d, flags=None, x=1)
+    assert not skipped
+    assert d["bar"] == 1 and d["baz"] == 1
 
-def test_kernel_dict_check(mode_mono_single):
-    # Check method raises upon missing scene type
-    kernel_dict = KernelDict({})
-    with pytest.raises(ValueError):
-        kernel_dict.check()
+    # If a flag is passed, only the corresponding params are rendered
+    d = param_map.copy()
+    skipped = render_params(d, flags=ParamFlags.SPECTRAL, x=1)
+    assert skipped == ["bar"]
+    assert d["baz"] == 1
+    assert "bar" in d
 
-    # Check method raises if dict and set variants are incompatible
-    mi.set_variant("scalar_mono_double")
-    with pytest.raises(KernelVariantError):
-        kernel_dict.check()
-
-
-def test_kernel_dict_load(mode_mono):
-    # Load method returns a kernel object
-
-    kernel_dict = KernelDict({"type": "scene", "shape": {"type": "sphere"}})
-    assert isinstance(kernel_dict.load(), mi.Scene)
-
-    # Also works if "type" is missing
-    kernel_dict = KernelDict({"shape": {"type": "sphere"}})
-    assert isinstance(kernel_dict.load(strip=False), mi.Scene)
-
-    # Setting strip to True instantiates a Shape directly...
-    kernel_dict = KernelDict({"shape": {"type": "sphere"}})
-    assert isinstance(kernel_dict.load(strip=True), mi.Shape)
-
-    # ... but not if the dict has two entries
-    kernel_dict = KernelDict(
-        {
-            "shape_1": {"type": "sphere"},
-            "shape_2": {"type": "sphere"},
-        }
-    )
-    assert isinstance(kernel_dict.load(strip=True), mi.Scene)
-
-
-def test_kernel_dict_post_load(mode_mono):
-    kernel_dict = KernelDict(
-        data={
-            "type": "directional",
-            "irradiance": {
-                "type": "irregular",
-                "wavelengths": "400, 500",
-                "values": "1, 1",
-            },
-        },
-        post_load={
-            "irradiance.wavelengths": np.array([400.0, 500.0, 600.0]),
-            "irradiance.values": np.array([0.0, 1.0, 2.0]),
-        },
-    )
-
-    # Without post-load update, buffers are initialised as in data
-    obj = kernel_dict.load(post_load_update=False)
-    params = mi.traverse(obj)
-    assert params["irradiance.wavelengths"] == np.array([400.0, 500.0])
-    assert params["irradiance.values"] == np.array([1.0, 1.0])
-
-    # Without post-load update, buffers are initialised as in post_load
-    obj = kernel_dict.load(post_load_update=True)
-    params = mi.traverse(obj)
-    assert params["irradiance.wavelengths"] == np.array([400.0, 500.0, 600.0])
-    assert params["irradiance.values"] == np.array([0.0, 1.0, 2.0])
-
-
-def test_kernel_dict_duplicate_id():
-    from eradiate.contexts import KernelDictContext
-    from eradiate.scenes.illumination import illumination_factory
-
-    # Upon trying to add a scene element, whose ID is already present
-    # in the KernelDict, a Warning must be issued.
-    with pytest.warns(Warning):
-        kd = KernelDict(
-            {
-                "testmeasure": {
-                    "type": "directional",
-                    "id": "testmeasure",
-                    "irradiance": {
-                        "type": "interpolated",
-                        "wavelengths": [400, 500],
-                        "values": [1, 1],
-                    },
-                }
-            }
-        )
-
-        kd.add(
-            illumination_factory.convert(
-                {
-                    "type": "directional",
-                    "id": "testmeasure",
-                    "irradiance": {
-                        "type": "interpolated",
-                        "wavelengths": [400, 500],
-                        "values": [2, 2],
-                    },
-                }
-            ),
-            ctx=KernelDictContext(),
-        )
+    # If drop is set to True, unrendered parameters are dropped
+    d = param_map.copy()
+    skipped = render_params(d, flags=ParamFlags.SPECTRAL, drop=True, x=1)
+    assert skipped == ["bar"]
+    assert d["baz"] == 1
+    assert "bar" not in d
 
 
 def test_bbox():
