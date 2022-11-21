@@ -110,6 +110,42 @@ def deduplicate(value: t.Sequence, preserve_order: bool = True) -> t.List:
         return list(set(value))
 
 
+def flatten_nested(d: t.Mapping, sep: str = ".", name: str = "") -> dict:
+    """
+    Flatten a nested dictionary.
+
+    Parameters
+    ----------
+    d : dict
+        Dictionary to be flattened.
+
+    name : str, optional, default: ""
+        Path to the parent dictionary. By default, no parent name is defined.
+
+    sep : str, optional, default: "."
+        Flattened dict key separator.
+
+    Returns
+    -------
+    dict
+        A flattened copy of `d`.
+
+    See Also
+    --------
+    :func:`.nest_flat`, :func:`.set_nested`
+    """
+    result = {}
+
+    for k, v in d.items():
+        full_key = k if not name else f"{name}{sep}{k}"
+        if isinstance(v, dict):
+            result.update(flatten(v, sep=sep, name=full_key))
+        else:
+            result[full_key] = v
+
+    return result
+
+
 def fullname(obj: t.Any) -> str:
     """
     Get the fully qualified name of `obj`. Aliases will be dereferenced.
@@ -215,6 +251,35 @@ def natsorted(l):
     return sorted(l, key=natsort_alphanum_key)
 
 
+def nest_flat(d: t.Mapping, sep: str = ".") -> dict:
+    """
+    Turn a flat dictionary into a nested dictionary.
+
+    Parameters
+    ----------
+    d : dict
+        Dictionary to be unflattened.
+
+    sep : str, optional, default: "."
+        Flattened dict key separator.
+
+    Returns
+    -------
+    dict
+        A nested copy of `d`.
+
+    See Also
+    --------
+    :func:`.flatten_nested`, :func:`.set_nested`
+    """
+    result = {}
+
+    for key, value in d.items():
+        set_nested(result, key, value, sep)
+
+    return result
+
+
 def onedict_value(d: t.Mapping) -> t.Any:
     """
     Get the value of a single-entry dictionary.
@@ -259,6 +324,34 @@ def onedict_value(d: t.Mapping) -> t.Any:
         raise ValueError(f"dictionary has wrong length (expected 1, got {len(d)}")
 
     return next(iter(d.values()))
+
+
+def set_nested(d: t.Mapping, path: str, value: t.Any, sep: str = ".") -> None:
+    """
+    Set values in a nested dictionary using a flat path.
+
+    Parameters
+    ----------
+    d : dict
+        Dictionary to operate on.
+
+    path : str
+        Path to the value to be set.
+
+    value
+        Value to which `path` is to be set.
+
+    sep : str, optional, default: "."
+        Separator used to decompose `path`.
+
+    See Also
+    --------
+    :func:`.flatten_nested`, :func:`.nest_flat`
+    """
+    *path, last = path.split(sep)
+    for bit in path:
+        d = d.setdefault(bit, {})
+    d[last] = value
 
 
 def str_summary_numpy(x):
