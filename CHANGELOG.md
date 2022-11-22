@@ -59,6 +59,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * All measures can now be attached a non-default sampler ({ghpr}`280`).
 * Fixed unnecessary memory allocations ({ghpr}`282`).
 * Added utility functions to `srf_tools` module ({ghpr}`283`).
+* Added {class}`.MQDiffuseBSDF` reflection model ({ghpr}`286`).
 
 % ### Documentation
 
