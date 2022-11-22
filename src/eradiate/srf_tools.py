@@ -14,10 +14,34 @@ from rich.table import Table
 
 from eradiate import __version__
 
-from . import converters
+from . import converters, data
+from .exceptions import DataError
 from .typing import PathLike
 from .units import to_quantity
 from .units import unit_registry as ureg
+
+
+def load_from_id(value: str) -> xr.Dataset:
+    """Load a SRF dataset from its identifier."""
+
+    # look for the prepared version of the SRF
+    try:
+        return data.load_dataset(f"spectra/srf/{value}.nc")
+
+    # if it doesn't exist, load the raw SRF
+    except DataError as e:
+        if value.endswith("-raw"):
+            raise e
+        else:
+            warnings.warn(
+                f"Could not serve SRF '{value}' from the data store."
+                f"Trying to serve '{value}-raw' instead."
+            )
+            return data.load_dataset(f"spectra/srf/{value}-raw.nc")
+
+
+convert = converters.to_dataset(load_from_id=load_from_id)
+convert_no_id = converters.to_dataset(load_from_id=None)
 
 
 def update_attrs(srf: xr.Dataset, filter_name: str, filter_attr: str) -> None:
@@ -76,7 +100,7 @@ def wavelength_range_width(
     The wavelength range width is defined as the difference between the upper 
     and lower wavelength bounds.
     """
-    srf = converters.load_dataset(srf)
+    srf = convert_no_id(srf)
     return to_quantity(srf.w).max() - to_quantity(srf.w).min()
 
 
@@ -107,7 +131,7 @@ def wavelength_bandwidth(
     and the integral is performed over the wavelength range of the spectral
     response function.
     """
-    srf = converters.load_dataset(srf)
+    srf = convert_no_id(srf)
     return srf.srf.integrate(coord="w").values * ureg(srf.w.attrs["units"])
 
 
@@ -142,7 +166,7 @@ def mean_wavelength(
     and the integrals are performed over the wavelength range of the spectral
     response function.
     """
-    srf = converters.load_dataset(srf)
+    srf = convert_no_id(srf)
     srf_integrated = srf.srf.integrate(coord="w")
     mean_value = (srf.w * srf.srf).integrate(coord="w").values / srf_integrated.values
     return mean_value * ureg(srf.w.attrs["units"])
@@ -151,7 +175,7 @@ def mean_wavelength(
 def filtering_summary(
     srf: t.Union[PathLike, xr.Dataset], filtered: xr.Dataset
 ) -> t.Mapping[str, t.Mapping[str, t.Union[int, pint.Quantity]]]:
-    srf = converters.load_dataset(srf)
+    srf = convert_no_id(srf)
     ni = srf.w.size
     nf = filtered.w.size
     w_min_i = to_quantity(srf.w).min()
@@ -220,8 +244,8 @@ def summarize(
         Summary table.
     """
     # convert inputs
-    srf = converters.load_dataset(srf)
-    filtered = converters.load_dataset(filtered)
+    srf = convert_no_id(srf)
+    filtered = convert_no_id(filtered)
 
     summary = filtering_summary(srf=srf, filtered=filtered)
     table = Table(
@@ -264,7 +288,7 @@ def trim(srf: t.Union[PathLike, xr.Dataset]) -> xr.Dataset:
     Dataset
         Trimmed data set.
     """
-    ds = converters.load_dataset(srf)
+    ds = convert_no_id(srf)
 
     # trim
     wsize = ds.srf.values.size
@@ -355,7 +379,7 @@ def trim_and_save(
     :meth:`trim`
     """
     # convert inputs
-    ds = converters.load_dataset(srf)
+    ds = convert_no_id(srf)
     output_path = Path(path).absolute()
 
     # trim
@@ -402,7 +426,7 @@ def spectral_filter(
 
     Parameters
     ----------
-    srf: Dataset
+    srf: path-like or Dataset
         Spectral response function data set to filter.
 
     wmin: quantity
@@ -416,7 +440,7 @@ def spectral_filter(
     Dataset
         Filtered data set.
     """
-    srf = converters.load_dataset(srf)
+    srf = convert_no_id(srf)
 
     # filter
     w_units = srf.w.attrs["units"]
@@ -465,7 +489,7 @@ def threshold_filter(
 
     Parameters
     ----------
-    srf: Dataset
+    srf: path-like or Dataset
         Spectral response function data set to filter.
 
     value: float
@@ -481,7 +505,7 @@ def threshold_filter(
         Filtered data set.
     """
     # Convert input
-    srf = converters.load_dataset(srf)
+    srf = convert_no_id(srf)
 
     # validate input
     if value < 0.0 or value >= 1.0:
@@ -520,7 +544,7 @@ def threshold_filter(
 
 
 def integral_filter_w_bounds(
-    ds: xr.Dataset, percentage: float = 99.0
+    ds: t.Union[PathLike, xr.Dataset], percentage: float = 99.0
 ) -> t.Tuple[float, float]:
     """
     Compute the wavelength bounds for the integral filter.
@@ -531,7 +555,7 @@ def integral_filter_w_bounds(
 
     Parameters
     ----------
-    ds: Dataset
+    ds: path-like or Dataset
         Dataset to filter.
 
     percentage: float
@@ -544,7 +568,7 @@ def integral_filter_w_bounds(
         Wavelength bounds.
     """
     # convert input
-    ds = converters.load_dataset(ds)
+    ds = convert_no_id(ds)
 
     # interpolate the spectral reponse on a regular wavelength mesh
     dwmin = ds.w.diff(dim="w").values.min()
@@ -592,7 +616,7 @@ def integral_filter(
 
     Parameters
     ----------
-    ds: Dataset
+    ds: path-like or Dataset
         Dataset to filter.
 
     percentage: float
@@ -609,7 +633,7 @@ def integral_filter(
         Filtered data set.
     """
     # convert input
-    srf = converters.load_dataset(srf)
+    srf = convert_no_id(srf)
 
     # validate_percentage
     if percentage < 0.0 or percentage > 100.0:
@@ -681,6 +705,9 @@ def show(
     ValueError:
         If the threshold value is not in [0, 1[.
     """
+    # convert input
+    ds = convert_no_id(ds)
+
     # setup figure
     plt.figure(dpi=100)
     ax = plt.gca()
@@ -692,15 +719,14 @@ def show(
         "yscale": "log",
     }
 
-    # convert input
-    ds = converters.load_dataset(ds)
-
+    # optionally trim
     if trim_prior:
         trimmed = trim(srf=ds)
     else:
         trimmed = ds
         plt_params.update({"yscale": "linear"})
 
+    # plot
     trimmed.srf.plot(**plt_params)
 
     if threshold is not None:
@@ -888,7 +914,7 @@ def filter_srf(
     :meth:`threshold_filter`
     """
     # convert inputs
-    srf = converters.load_dataset(srf)
+    srf = convert_no_id(srf)
     output_path = Path(path).absolute()
 
     # trimming

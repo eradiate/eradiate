@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate import converters
+from eradiate import data
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext, MonoSpectralContext, SpectralContext
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
@@ -294,7 +294,7 @@ def test_particle_layer_eval_sigma_t_mono(
     tau = layer.eval_sigma_t_mono(wavelengths) * layer.height
 
     # data set extinction @ running and reference wavelength
-    ds = converters.load_dataset(test_dataset_path)
+    ds = data.load_dataset(test_dataset_path)
     w_units = ureg(ds.w.attrs["units"])
     sigma_t = to_quantity(ds.sigma_t.interp(w=wavelengths.m_as(w_units)))
     sigma_t_ref = to_quantity(ds.sigma_t.interp(w=w_ref.m_as(w_units)))
