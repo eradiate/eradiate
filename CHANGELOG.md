@@ -36,6 +36,9 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   spectrum ({ghpr}`300`). If you used to work with the default value
   when defining the illumination in your experiments, this change might affect
   the measured radiance values.
+* The newly introduced {class}`.DEMExperiment` now holds the support for digital
+  elevation models. Accordingly, the {class}`.AtmosphereExperiment` does no longer
+  support digital elevation models.
 
 ### Deprecations and removals
 
@@ -75,6 +78,8 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   TSIS-1 HSRS solar irradiance spectra ({ghpr}`300`)
 * The `coddington_2021-1_nm` dataset is now the default solar irradiance
   spectrum ({ghpr}`300`).
+* Introduced the {class}`.DEMExperiment` to handle scenes with digital elevation
+  models. At this point it only supports plane-parallel atmospheric geometries. ({ghpr}`289`)
 
 % ### Documentation
 

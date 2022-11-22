@@ -2,7 +2,7 @@ import typing as t
 
 import attrs
 
-from ._atmosphere import measure_inside_atmosphere
+from ._helpers import measure_inside_atmosphere
 from ._core import EarthObservationExperiment
 from .. import converters, validators
 from ..attrs import AUTO, documented, parse_docs

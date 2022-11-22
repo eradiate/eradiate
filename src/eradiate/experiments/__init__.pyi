@@ -8,3 +8,4 @@ from ._core import EarthObservationExperiment as EarthObservationExperiment
 from ._core import Experiment as Experiment
 from ._core import mitsuba_run as mitsuba_run
 from ._core import run as run
+from ._dem import DEMExperiment as DEMExperiment

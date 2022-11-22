@@ -5,53 +5,55 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.experiments import AtmosphereExperiment
+from eradiate.experiments import DEMExperiment
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     HomogeneousAtmosphere,
     MolecularAtmosphere,
 )
+from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.measure import MeasureSpectralConfig, MultiDistantMeasure
+from eradiate.scenes.surface import DEMSurface
 
 
-def test_onedim_experiment_construct_default(modes_all_double):
+def test_dem_experiment_construct_default(modes_all_double):
     """
-    AtmosphereExperiment initialises with default params in all modes
+    DEMExperiment initialises with default params in all modes
     """
-    assert AtmosphereExperiment()
+    assert DEMExperiment()
 
 
-def test_onedim_experiment_construct_measures(modes_all):
+def test_dem_experiment_construct_measures(modes_all):
     """
     A variety of measure specifications are acceptable
     """
     # Init with a single measure (not wrapped in a sequence)
-    assert AtmosphereExperiment(measures=MultiDistantMeasure())
+    assert DEMExperiment(measures=MultiDistantMeasure())
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert AtmosphereExperiment(measures=[{"type": "distant"}])
+    assert DEMExperiment(measures=[{"type": "distant"}])
     # -- Not wrapped in a sequence
-    assert AtmosphereExperiment(measures={"type": "distant"})
+    assert DEMExperiment(measures={"type": "distant"})
 
 
-def test_onedim_experiment_construct_normalize_measures(mode_mono):
+def test_dem_experiment_construct_normalize_measures(mode_mono):
     # When setting atmosphere to None, measure target is at ground level
-    exp = AtmosphereExperiment(atmosphere=None)
+    exp = DEMExperiment(atmosphere=None)
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
     # When atmosphere is set, measure target is at ground level
-    exp = AtmosphereExperiment(atmosphere=HomogeneousAtmosphere(top=100.0 * ureg.km))
+    exp = DEMExperiment(atmosphere=HomogeneousAtmosphere(top=100.0 * ureg.km))
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
 
 @pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
-def test_onedim_experiment_ckd(mode_ckd, bin_set):
+def test_dem_experiment_ckd(mode_ckd, bin_set):
     """
-    AtmosphereExperiment with heterogeneous atmosphere in CKD mode can be created.
+    DEMExperiment with heterogeneous atmosphere in CKD mode can be created.
     """
     ctx = KernelDictContext(spectral_ctx={"bin_set": bin_set})
-    exp = AtmosphereExperiment(
+    exp = DEMExperiment(
         atmosphere=HeterogeneousAtmosphere(
             molecular_atmosphere=MolecularAtmosphere.afgl_1986()
         ),
@@ -61,28 +63,15 @@ def test_onedim_experiment_ckd(mode_ckd, bin_set):
     assert exp.kernel_dict(ctx=ctx).load()
 
 
-def test_onedim_experiment_kernel_dict(modes_all_double):
+def test_dem_experiment_kernel_dict(modes_all_double):
     """
     Test non-trivial kernel dict generation behaviour.
     """
 
     ctx = KernelDictContext()
 
-    # Surface width is appropriately inherited from geometry
-    exp = AtmosphereExperiment(
-        geometry={"type": "plane_parallel", "width": 42.0, "width_units": "km"},
-        atmosphere=HomogeneousAtmosphere(),
-    )
-    kernel_dict = exp.kernel_dict(ctx)
-    assert np.allclose(
-        kernel_dict["shape_surface"]["to_world"].matrix,
-        mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
-    )
-    assert "shape_atmosphere" in kernel_dict
-
     # Setting atmosphere to None
-    exp = AtmosphereExperiment(
-        geometry="plane_parallel",
+    exp = DEMExperiment(
         atmosphere=None,
         surface={"type": "lambertian"},
         measures=[
@@ -105,14 +94,14 @@ def test_onedim_experiment_kernel_dict(modes_all_double):
 
 
 @pytest.mark.slow
-def test_onedim_experiment_real_life(mode_mono):
+def test_dem_experiment_real_life(mode_mono):
     ctx = KernelDictContext()
 
     # Construct with typical parameters
     test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
-    exp = AtmosphereExperiment(
+    exp = DEMExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
@@ -139,7 +128,7 @@ def test_onedim_experiment_real_life(mode_mono):
     }
 
 
-def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
+def test_dem_experiment_inconsistent_multiradiancemeter(mode_mono):
     # A MultiRadiancemeter measure must have all origins inside the atmosphere or none.
     # A mix of both will raise an error.
 
@@ -149,8 +138,7 @@ def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
     test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
     )
-    exp = AtmosphereExperiment(
-        geometry={"type": "plane_parallel"},
+    exp = DEMExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
@@ -173,9 +161,9 @@ def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
         exp.kernel_dict(ctx=ctx)
 
 
-def test_onedim_experiment_run_basic(modes_all):
+def test_dem_experiment_run_basic(modes_all):
     """
-    AtmosphereExperiment runs successfully in all modes.
+    DEMExperiment runs successfully in all modes.
     """
     if eradiate.mode().is_mono:
         spectral_cfg = MeasureSpectralConfig.new(wavelengths=550.0 * ureg.nm)
@@ -184,7 +172,7 @@ def test_onedim_experiment_run_basic(modes_all):
     else:
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
 
-    exp = AtmosphereExperiment()
+    exp = DEMExperiment()
     exp.measures[0].spectral_cfg = spectral_cfg
 
     eradiate.run(exp)
@@ -192,9 +180,9 @@ def test_onedim_experiment_run_basic(modes_all):
 
 
 @pytest.mark.slow
-def test_onedim_experiment_run_detailed(modes_all):
+def test_dem_experiment_run_detailed(modes_all):
     """
-    Test for correctness of the result dataset generated by AtmosphereExperiment.
+    Test for correctness of the result dataset generated by DEMExperiment.
     """
     if eradiate.mode().is_mono:
         spectral_cfg = {"wavelengths": 550.0 * ureg.nm}
@@ -204,7 +192,7 @@ def test_onedim_experiment_run_detailed(modes_all):
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
 
     # Create simple scene
-    exp = AtmosphereExperiment(
+    exp = DEMExperiment(
         measures=[
             {
                 "type": "hemispherical_distant",
@@ -243,3 +231,29 @@ def test_onedim_experiment_run_detailed(modes_all):
 
     # We just check that we record something as expected
     assert np.all(results["radiance"].data > 0.0)
+
+
+def test_dem_experiment_warn_targeting_dem(modes_all):
+    """
+    Test that Eradiate raises a warning, when the measure target is a point and a DEM is defined in the scene.
+    """
+
+    with pytest.warns(UserWarning):
+        exp = DEMExperiment(
+            dem=DEMSurface.from_analytical(
+                elevation_function=lambda x, y: 1,
+                x_length=1 * ureg.m,
+                x_steps=10,
+                y_length=1 * ureg.m,
+                y_steps=10,
+                bsdf=LambertianBSDF(),
+            ),
+            measures=[
+                {
+                    "type": "distant",
+                    "id": "distant_measure",
+                    "target": {"type": "point", "xyz": [1, 1, 0]},
+                },
+            ],
+        )
+        kd = exp.kernel_dict(ctx=KernelDictContext())
