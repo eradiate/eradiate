@@ -39,6 +39,66 @@ from ..scenes.measure._distant import DistantMeasure
 
 logger = logging.getLogger(__name__)
 
+# ------------------------------------------------------------------------------
+#                             Experiment helpers
+# ------------------------------------------------------------------------------
+
+def measure_inside_atmosphere(atmosphere, measure, ctx):
+    """
+    Evaluate whether a sensor is placed within an atmosphere.
+
+    Raises a ValueError if called with a :class:`.MultiRadiancemeterMeasure`
+    with origins both inside and outside the atmosphere.
+    """
+    if atmosphere is None:
+        return False
+
+    shape = atmosphere.eval_shape(ctx)
+
+    if isinstance(measure, MultiRadiancemeterMeasure):
+        inside = shape.contains(measure.origins)
+
+        if all(inside):
+            return True
+        elif not any(inside):
+            return False
+        else:
+            raise ValueError(
+                "Inconsistent placement of MultiRadiancemeterMeasure origins. "
+                "Origins must lie either all inside or all outside of the "
+                "atmosphere."
+            )
+
+    elif isinstance(measure, DistantMeasure):
+        # Note: This will break if the user makes something weird such as using
+        # a large offset value which would put some origins outside and others
+        # inside the atmosphere shape
+        return not measure.is_distant()
+
+    else:
+        # Note: This will likely break if a new measure type is added
+        return shape.contains(measure.origin)
+
+
+def _surface_converter(value):
+    if isinstance(value, dict):
+        try:
+            # First, attempt conversion to BSDF
+            value = bsdf_factory.convert(value)
+        except TypeError:
+            # If this doesn't work, attempt conversion to Surface
+            return surface_factory.convert(value)
+
+    # If we make it to this point, it means that dict conversion has been
+    # performed with success
+    if isinstance(value, BSDF):
+        return BasicSurface(
+            shape=RectangleShape(),
+            bsdf=value,
+        )
+
+    return value
+
 
 # ------------------------------------------------------------------------------
 #                               Mitsuba runner
