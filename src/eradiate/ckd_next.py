@@ -61,9 +61,14 @@ class Bin:
         return self.wmax - self.wmin
 
     @property
-    def w(self) -> pint.Quantity:
+    def wcenter(self) -> pint.Quantity:
         """quantity : Bin central wavelength."""
         return 0.5 * (self.wmin + self.wmax)
+    
+    @property
+    def w(self) -> pint.Quantity:
+        """quantity : Bin central wavelength."""
+        return self.wcenter
 
     @property
     def bings(self) -> t.List[Bing]:
