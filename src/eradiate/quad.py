@@ -142,6 +142,31 @@ class Quad:
 
         else:
             raise ValueError(f"unknown quadrature type '{type}'")
+    
+
+    @classmethod
+    def convert(cls, quad: t.Union[Quad, t.Dict[str, t.Any]]) -> Quad:
+        """
+        Convert a :class:`.Quad` instance or a dictionary to a :class:`.Quad`
+        instance.
+
+        Parameters
+        ----------
+        quad : :class:`.Quad` or dict
+            Quadrature definition.
+
+        Returns
+        -------
+        :class:`.Quad`
+            Quadrature definition.
+        """
+        if isinstance(quad, Quad):
+            return quad
+        elif isinstance(quad, dict):
+            return cls.new(**quad)
+        else:
+            raise ValueError(f"invalid type for quad: {type(quad)}")
+
 
     def eval_nodes(
         self, interval: t.Optional[t.Tuple[float, float]] = None

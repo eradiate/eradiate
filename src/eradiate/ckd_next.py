@@ -10,10 +10,6 @@ from .attrs import documented, parse_docs
 from .quad import Quad
 from .units import unit_context_config as ucc
 
-# ------------------------------------------------------------------------------
-#                              CKD bin data classes
-# ------------------------------------------------------------------------------
-
 
 @parse_docs
 @attrs.frozen
@@ -51,7 +47,9 @@ class Bin:
 
     quad: Quad = documented(
         attrs.field(
-            repr=lambda x: x.str_summary, validator=attrs.validators.instance_of(Quad)
+            repr=lambda x: x.str_summary,
+            converter=Quad.convert,
+            validator=attrs.validators.instance_of(Quad),
         ),
         doc="Quadrature rule attached to the CKD bin.",
         type=":class:`.Quad`",

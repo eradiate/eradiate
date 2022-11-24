@@ -13,7 +13,10 @@ import eradiate
 from . import validators
 from .attrs import documented, parse_docs
 from .ckd import Bin, Bindex, BinSet
+from .ckd_next import Bin as BinNext
+from .ckd_next import Bing
 from .exceptions import UnsupportedModeError
+from .quad import Quad
 from .units import unit_context_config as ucc
 from .units import unit_registry as ureg
 from .util.misc import fullname
@@ -273,6 +276,62 @@ class CKDSpectralContext(SpectralContext):
     def spectral_index_formatted(self) -> str:
         """str : Formatted spectral index (human-readable string)."""
         return f"{self.bin.id}:{self.bindex.index}"
+
+
+@parse_docs
+@attrs.frozen
+class CKDSpectralContextNext(SpectralContext):
+    """
+    CKD spectral context data structure.
+    """
+
+    bing: Bing = documented(
+        attrs.field(
+            factory=lambda: Bing(
+                BinNext(
+                    545.0,
+                    555.0,
+                    quad=Quad.gauss_legendre(5),
+                ),
+                g=0.5,
+            ),
+            converter=Bing.convert,
+            validator=attrs.validators.instance_of(Bing),
+        ),
+        doc="The (bin, g) pair corresponding to this spectral context. "
+        "The default value is a simple placeholder used for testing purposes.",
+        type=":class:`.Bing`",
+        init_type=":class:`.Bing` or tuple or dict, optional",
+    )
+
+    @property
+    def wavelength(self) -> pint.Quantity:
+        """
+        quantity : Wavelength associated with spectral context. Alias for \
+            ``self.bing.bin.w``.
+        """
+        return self.bing.bin.w
+
+    @property
+    def bin(self) -> Bin:
+        """
+        :class:`.Bin` : Bin associated with spectral context. Alias for \
+            ``self.bing.bin``.
+        """
+        return self.bing.bin
+
+    @property
+    def spectral_index(self) -> t.Tuple[pint.Quantity, float]:
+        """
+        tuple[quantity, float] : Spectral index associated with spectral \
+            context, equal to active bing (bin center wavelength, g-point) pair.
+        """
+        return self.bin.w, self.bing.g
+
+    @property
+    def spectral_index_formatted(self) -> str:
+        """str : Formatted spectral index (human-readable string)."""
+        return f"{self.bin.w:.2f~}:{self.bing.g:.2f}"
 
 
 # ------------------------------------------------------------------------------
