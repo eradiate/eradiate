@@ -27,6 +27,7 @@ from ...contexts import (
     SpectralContext,
 )
 from ...exceptions import ModeError, UnsupportedModeError
+from ...quad import Quad
 from ...srf_tools import convert as convert_srf
 from ...units import PhysicalQuantity, interpret_quantities
 from ...units import unit_context_config as ucc
@@ -485,6 +486,53 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
         for bin in self.bins:
             for bindex in bin.bindexes:
                 ctxs.append(CKDSpectralContext(bindex, bin_set))
+
+        return ctxs
+
+@parse_docs
+@attrs.frozen
+class CKDMeasureSpectralConfigNext(MeasureSpectralConfig):
+    """
+    A data structure specifying the spectral configuration of a
+    :class:`.Measure` in CKD modes.
+    """
+
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
+
+    quad: ckd.Quad = documented(
+        attrs.field(
+            default=Quad.gauss_legendre(n=4),
+            converter=ckd.Quad.convert,
+            validator=attrs.validators.instance_of(ckd.Quad),
+        ),
+        doc="Quadrature rule to use for the spectral integration.",
+        type=":class:`~.ckd.Quad`",
+        init_type=":class:`~.ckd.Quad or dict",
+        default=":class:`~.ckd.Quad.gauss_legendre(n=4)`",
+    )
+
+    @property
+    def bins(self) -> t.Tuple[Bin]:
+        """
+        Returns
+        -------
+        tuple of :class:`.Bin`
+            List of selected bins.
+        """
+        pass
+
+    # --------------------------------------------------------------------------
+    #                         Spectral context generation
+    # --------------------------------------------------------------------------
+
+    def spectral_ctxs(self) -> t.List[CKDSpectralContext]:
+        ctxs = []
+
+        for bin in self.bins:
+            for bindex in bin.bindexes:
+                ctxs.append(CKDSpectralContext(bindex, "10nm"))
 
         return ctxs
 
