@@ -20,8 +20,10 @@ from ... import ckd, converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
+from ...ckd_next import Bin as BinNext
 from ...contexts import (
     CKDSpectralContext,
+    CKDSpectralContextNext,
     KernelDictContext,
     MonoSpectralContext,
     SpectralContext,
@@ -489,6 +491,10 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
 
         return ctxs
 
+
+def _ckd_measure_spectral_config_next_converter(value):
+    return tuple([BinNext.convert(v) for v in value])
+
 @parse_docs
 @attrs.frozen
 class CKDMeasureSpectralConfigNext(MeasureSpectralConfig):
@@ -497,42 +503,30 @@ class CKDMeasureSpectralConfigNext(MeasureSpectralConfig):
     :class:`.Measure` in CKD modes.
     """
 
-    # --------------------------------------------------------------------------
-    #                           Fields and properties
-    # --------------------------------------------------------------------------
-
-    quad: ckd.Quad = documented(
+    bins: t.Tuple[BinNext] = documented(
         attrs.field(
-            default=Quad.gauss_legendre(n=4),
-            converter=ckd.Quad.convert,
-            validator=attrs.validators.instance_of(ckd.Quad),
+            factory= lambda: (
+                BinNext(
+                    545.0,
+                    555.0,
+                    quad=Quad.gauss_legendre(5),
+                ),
+            ),
+            converter=_ckd_measure_spectral_config_next_converter,
+            validator=attrs.validators.instance_of(tuple),
         ),
-        doc="Quadrature rule to use for the spectral integration.",
-        type=":class:`~.ckd.Quad`",
-        init_type=":class:`~.ckd.Quad or dict",
-        default=":class:`~.ckd.Quad.gauss_legendre(n=4)`",
+        doc="List of CKD bins on which to perform the spectral loop.",
+        type="tuple",
+        init_type="iterable of BinNext convertible objects",
+        default="(BinNext(545.0, 555.0, quad=Quad.gauss_legendre(5)),)",
     )
-
-    @property
-    def bins(self) -> t.Tuple[Bin]:
-        """
-        Returns
-        -------
-        tuple of :class:`.Bin`
-            List of selected bins.
-        """
-        pass
-
-    # --------------------------------------------------------------------------
-    #                         Spectral context generation
-    # --------------------------------------------------------------------------
 
     def spectral_ctxs(self) -> t.List[CKDSpectralContext]:
         ctxs = []
 
         for bin in self.bins:
-            for bindex in bin.bindexes:
-                ctxs.append(CKDSpectralContext(bindex, "10nm"))
+            for bing in bin.bings:
+                ctxs.append(CKDSpectralContextNext(bing))
 
         return ctxs
 
