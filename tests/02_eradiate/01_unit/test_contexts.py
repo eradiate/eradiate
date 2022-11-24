@@ -3,8 +3,10 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.ckd import Bin
+from eradiate.ckd_next import Bin as BinNext
 from eradiate.contexts import (
     CKDSpectralContext,
+    CKDSpectralContextNext,
     KernelDictContext,
     MonoSpectralContext,
     SpectralContext,
@@ -62,6 +64,17 @@ def test_ckd_spectral_context(mode_ckd):
     # Index string repr is a compact "{bin_id}:{quad_point_index}" string
     assert ctx.spectral_index_formatted == "510:8"
 
+
+def test_ckd_spectral_context_next(mode_ckd):
+    """
+    Unit tests for :meth:`CKDSpectralContextNext`.
+    """
+    quad = Quad.gauss_legendre(8)
+    bin = BinNext.convert({"wmin": 505.0, "wmax": 515.0, "quad": quad})
+    ctx = CKDSpectralContextNext(bing=bin.bings[7])
+
+    assert ctx.wavelength == 510.0 * ureg.nm
+    assert ctx.spectral_index == (bin.wcenter, quad.nodes[7])
 
 def test_kernel_dict_context_construct(modes_all_double):
     # A default context can be instantiated without argument
