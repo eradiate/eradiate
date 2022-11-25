@@ -74,7 +74,13 @@ def test_ckd_spectral_context_next(mode_ckd):
     ctx = CKDSpectralContextNext(bing=bin.bings[7])
 
     assert ctx.wavelength == 510.0 * ureg.nm
+
+    # index is a (center wavelength, g-point) pair
     assert ctx.spectral_index == (bin.wcenter, quad.nodes[7])
+
+    # Index string representation is "{bin center wavelength}:{g-point}" string
+    assert ctx.spectral_index_formatted == f"{bin.wcenter:.2f~}:{quad.nodes[7]:.2f}"
+
 
 def test_kernel_dict_context_construct(modes_all_double):
     # A default context can be instantiated without argument

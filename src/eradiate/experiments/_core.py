@@ -284,7 +284,7 @@ class Experiment(ABC):
         exception.
 
         Parameters
-        ---------
+        ----------
         d : dict
             Dictionary to be converted to an :class:`.Experiment`.
 
@@ -297,6 +297,31 @@ class Experiment(ABC):
     # --------------------------------------------------------------------------
     #                              Processing
     # --------------------------------------------------------------------------
+
+    def preprocess(
+            self,
+            *measures: t.Union[Measure, int],
+            seed_state: t.Optional[SeedState] = None,
+        ) -> None:
+        """
+        Pre-process the simulation.
+
+        This method is called before the simulation is run. It is meant to
+        perform any pre-processing steps required by the simulation.
+
+        Parameters
+        ----------
+        measure : .Measure
+            Measure specification.
+        """
+        logger.debug("Preprocessing measure spectral configuration (CKD mode)")
+
+        for measure in measures:
+            measure = self.measures[measure] if isinstance(measure, int) else measure
+
+            # default implementation: child classes may override this method
+            measure.preprocess()
+
 
     def process(
         self,

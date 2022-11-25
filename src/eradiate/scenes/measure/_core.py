@@ -18,6 +18,7 @@ from ..core import KernelDict, SceneElement
 from ..spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum, spectrum_factory
 from ... import ckd, converters, validators
 from ..._factory import Factory
+from ..._mode import ModeFlags
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
 from ...ckd_next import Bin as BinNext
@@ -31,7 +32,7 @@ from ...contexts import (
 from ...exceptions import ModeError, UnsupportedModeError
 from ...quad import Quad
 from ...srf_tools import convert as convert_srf
-from ...units import PhysicalQuantity, interpret_quantities
+from ...units import PhysicalQuantity, interpret_quantities, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 
@@ -170,6 +171,26 @@ class MeasureSpectralConfig(ABC):
             List of generated spectral contexts. The concrete class
             (:class:`.MonoSpectralContext`, :class:`.CKDSpectralContext`, etc.)
             depends on the active mode.
+        """
+        pass
+
+    # --------------------------------------------------------------------------
+    #                           Preprocessing
+    # --------------------------------------------------------------------------
+
+    @abstractmethod
+    def preprocess(
+        self,
+        ctx: KernelDictContext,
+        **kwargs: t.Mapping[str, t.Any],
+    ) -> None:
+        """
+        Preprocess the spectral configuration.
+
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
+            Kernel dictionary context.
         """
         pass
 
@@ -323,6 +344,17 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
             for wavelength in self._wavelengths
             if not np.isclose(self.srf.eval_mono(wavelength), 0.0)
         ]
+    
+    # --------------------------------------------------------------------------
+    #                           Preprocessing
+    # --------------------------------------------------------------------------
+
+    def preprocess(
+        self,
+        ctx: KernelDictContext,    
+        **kwargs: t.Mapping[str, t.Any],
+    ) -> None:
+        pass # Nothing to do here
 
 
 def _ckd_measure_spectral_config_bins_converter(value):
@@ -491,6 +523,17 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
 
         return ctxs
 
+    # --------------------------------------------------------------------------
+    #                           Preprocessing
+    # --------------------------------------------------------------------------
+
+    def preprocess(
+        self,
+        ctx: KernelDictContext,
+        **kwargs: t.Mapping[str, t.Any],
+    ) -> None:
+        pass  # Nothing to do here
+
 
 def _ckd_measure_spectral_config_next_converter(value):
     return tuple([BinNext.convert(v) for v in value])
@@ -529,6 +572,41 @@ class CKDMeasureSpectralConfigNext(MeasureSpectralConfig):
                 ctxs.append(CKDSpectralContextNext(bing))
 
         return ctxs
+    
+    # --------------------------------------------------------------------------
+    #                           Preprocessing
+    # --------------------------------------------------------------------------
+
+    def preprocess(
+        self,
+        ctx: KernelDictContext,
+        **kwargs: t.Mapping[str, t.Any],
+    ) -> None:
+        if "absorption_ckd_dataset" in kwargs:
+            ds = kwargs["absorption_ckd_dataset"]
+
+            # create bins from dataset
+            wlowers = to_quantity(ds.wbounds.sel(wbv="lower"))
+            wuppers = to_quantity(ds.wbounds.sel(wbv="upper"))
+            bins = [
+                BinNext(
+                    wlower,
+                    wupper,
+                    quad=Quad.gauss_legendre(4),
+                )
+                for wlower, wupper in zip(wlowers, wuppers)
+            ]
+
+            # intersect bins with srf
+            bins = [
+                bin
+                for bin in bins
+                if _active(bin, self.srf)
+            ]
+
+            # assign bins
+            self.bins = tuple(bins)
+    
 
 
 # ------------------------------------------------------------------------------
@@ -685,6 +763,25 @@ class Measure(SceneElement, ABC):
         Return ``True`` iff sample count split shall be activated.
         """
         return self.split_spp is not None and self.spp > self.split_spp
+
+    # --------------------------------------------------------------------------
+    #                           Preprocessing
+    # --------------------------------------------------------------------------
+    
+    def preprocess(self, ctx: KernelDictContext) -> None:
+        """
+        Preprocess the measure.
+
+        This method is called by a parent experiment before the
+        measure is converted to a kernel dictionary.
+
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
+            Context.
+        """
+        # default implementation: child classes may override this method
+        self.spectral_cfg.preprocess(ctx)
 
     # --------------------------------------------------------------------------
     #                        Kernel dictionary generation
