@@ -15,7 +15,12 @@ from ..exceptions import UnsupportedModeError
 from ..frame import angles_in_hplane
 from ..scenes.illumination import ConstantIllumination, DirectionalIllumination
 from ..scenes.measure import Measure
-from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum
+from ..scenes.spectra import (
+    InterpolatedSpectrum,
+    RectangularSRF,
+    Spectrum,
+    UniformSpectrum,
+)
 from ..units import symbol, to_quantity
 from ..units import unit_context_kernel as uck
 from ..units import unit_registry as ureg
@@ -83,6 +88,7 @@ class AddIllumination(PipelineStep):
             if eradiate.mode().is_mono:
                 # Very important: sort spectral coordinate
                 wavelengths = np.sort(measure.spectral_cfg.wavelengths)
+                print(wavelengths, wavelengths_dataset)
                 assert np.allclose(wavelengths, wavelengths_dataset)
                 return spectrum.eval_mono(wavelengths).m_as(k_units)
 
@@ -312,6 +318,11 @@ class AddSpectralResponseFunction(PipelineStep):
             srf_values = pinttr.util.ensure_units(srf.values, ureg.dimensionless)
 
         elif isinstance(srf, UniformSpectrum):
+            srf_w = to_quantity(result.w)
+            srf_values = pinttr.util.ensure_units(
+                srf.eval_mono(srf_w), ureg.dimensionless
+            )
+        elif isinstance(srf, RectangularSRF):
             srf_w = to_quantity(result.w)
             srf_values = pinttr.util.ensure_units(
                 srf.eval_mono(srf_w), ureg.dimensionless

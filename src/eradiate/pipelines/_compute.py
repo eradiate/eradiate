@@ -7,7 +7,7 @@ from pinttr.util import always_iterable
 from ._core import PipelineStep
 from ..attrs import documented, parse_docs
 from ..scenes.measure import Measure
-from ..scenes.spectra import InterpolatedSpectrum, UniformSpectrum
+from ..scenes.spectra import InterpolatedSpectrum, RectangularSRF, UniformSpectrum
 from ..units import symbol, to_quantity
 from ..units import unit_registry as ureg
 
@@ -72,6 +72,8 @@ class ApplySpectralResponseFunction(PipelineStep):
         if isinstance(srf, InterpolatedSpectrum):
             srf_w = srf.wavelengths
         elif isinstance(srf, UniformSpectrum):
+            srf_w = np.array([wmin.m_as(ureg.nm), wmax.m_as(ureg.nm)]) * ureg.nm
+        elif isinstance(srf, RectangularSRF):
             srf_w = np.array([wmin.m_as(ureg.nm), wmax.m_as(ureg.nm)]) * ureg.nm
         else:
             raise TypeError(f"unhandled SRF type '{srf.__class__.__name__}'")

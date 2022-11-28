@@ -114,7 +114,7 @@ def test_canopy_experiment_run_detailed(modes_all_double):
     tests for measure post-processing pipelines.
     """
     if eradiate.mode().is_mono:
-        spectral_cfg = {"wavelengths": [550.0]}
+        spectral_cfg = {"srf": {"type": "rectangular_srf"}}
         expected_vars = {
             "irradiance",
             "brf",

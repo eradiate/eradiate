@@ -70,11 +70,18 @@ def test_run_function(modes_all_double):
     mode = eradiate.mode()
 
     measure = {"type": "mdistant"}
+    srf = {
+        "type": "interpolated",
+        "wavelengths": [540.0, 550.0, 560.0],
+        "values": [1.0, 1.0, 1.0],
+    }
     if mode.is_mono:
-        measure["spectral_cfg"] = {"wavelengths": [540.0, 550.0]}
+        measure["spectral_cfg"] = {
+            "srf": srf,
+        }
 
     elif mode.is_ckd:
-        measure["spectral_cfg"] = {"bin_set": "10nm", "bins": ["540", "550"]}
+        measure["spectral_cfg"] = {"srf": srf}
 
     else:
         assert False, f"Please add a test for mode '{mode.id}'"

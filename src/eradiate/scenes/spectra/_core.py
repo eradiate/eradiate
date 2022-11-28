@@ -100,6 +100,11 @@ spectrum_factory.register_lazy_batch(
             "uniform",
             {},
         ),
+        (
+            "_srf.RectangularSRF",
+            "rectangular_srf",
+            {},
+        )
     ],
     cls_prefix="eradiate.scenes.spectra",
 )

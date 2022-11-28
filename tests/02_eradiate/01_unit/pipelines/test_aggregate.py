@@ -78,7 +78,7 @@ def test_aggregate_radiosity(mode_mono):
                 "type": "distant_flux",
                 "film_resolution": (32, 32),
                 "spp": 1000,
-                "spectral_cfg": {"wavelengths": [550.0]},
+                "spectral_cfg": {"srf": {"type": "rectangular_srf", "wavelength": 550.0}},
             }
         ],
     )

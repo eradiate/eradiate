@@ -1,6 +1,7 @@
 import pytest
 
 import eradiate
+from eradiate.units import unit_registry as ureg
 
 
 @pytest.fixture(scope="module")
@@ -16,7 +17,12 @@ def results_mono():
                 "type": "hemispherical_distant",
                 "film_resolution": (32, 32),
                 "spp": 250,
-                "spectral_cfg": {"wavelengths": [550.0]},
+                "spectral_cfg": {
+                    "srf": {
+                        "type": "rectangular_srf",
+                        "wavelength": 550.0 * ureg.nanometer,
+                    },
+                },
             }
         ],
     )
@@ -38,7 +44,12 @@ def results_mono_spp():
                 "film_resolution": (32, 32),
                 "spp": 250,
                 "split_spp": 100,
-                "spectral_cfg": {"wavelengths": [550.0]},
+                "spectral_cfg": {
+                    "srf": {
+                        "type": "rectangular_srf",
+                        "wavelength": 550.0 * ureg.nanometer,
+                    },
+                },
             }
         ],
     )
@@ -59,7 +70,12 @@ def results_ckd():
                 "type": "hemispherical_distant",
                 "film_resolution": (32, 32),
                 "spp": 250,
-                "spectral_cfg": {"bins": ["550"]},
+                "spectral_cfg": {
+                    "srf": {
+                        "type": "rectangular_srf",
+                        "wavelength": 550.0 * ureg.nanometer,
+                    },
+                },
             }
         ],
     )
@@ -81,7 +97,12 @@ def results_ckd_spp():
                 "film_resolution": (32, 32),
                 "spp": 250,
                 "split_spp": 100,
-                "spectral_cfg": {"bins": ["550"]},
+                "spectral_cfg": {
+                    "srf": {
+                        "type": "rectangular_srf",
+                        "wavelength": 550.0 * ureg.nanometer,
+                    },
+                },
             }
         ],
     )

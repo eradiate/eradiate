@@ -15,7 +15,13 @@ import xarray as xr
 import eradiate
 
 from ..core import KernelDict, SceneElement
-from ..spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum, spectrum_factory
+from ..spectra import (
+    InterpolatedSpectrum,
+    RectangularSRF,
+    Spectrum,
+    UniformSpectrum,
+    spectrum_factory,
+)
 from ... import ckd, converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
@@ -130,7 +136,7 @@ class MeasureSpectralConfig(ABC):
 
     srf: Spectrum = documented(
         attrs.field(
-            factory=lambda: UniformSpectrum(value=1.0),
+            factory=lambda: RectangularSRF(),
             converter=_measure_spectral_config_srf_converter,
             validator=validators.has_quantity(PhysicalQuantity.DIMENSIONLESS),
         ),
@@ -276,38 +282,17 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
     #                           Fields and properties
     # --------------------------------------------------------------------------
 
-    _wavelengths: pint.Quantity = documented(
-        pinttr.field(
-            default=ureg.Quantity([550.0], ureg.nm),
-            units=ucc.deferred("wavelength"),
-            converter=lambda x: converters.on_quantity(np.atleast_1d)(
-                pinttr.util.ensure_units(x, ucc.get("wavelength"))
-            ),
-        ),
-        doc="List of wavelengths on which to perform the monochromatic spectral "
-        "loop.\n\nUnit-enabled field (default: ucc['wavelength']).",
-        type="quantity",
-        init_type="quantity or array-like",
-        default="[550.0] nm",
-    )
-
     @property
-    def wavelengths(self):
-        return self._wavelengths
-
-    @wavelengths.setter
-    def wavelengths(self, value):
-        self._wavelengths = value
-
-    def __attrs_post_init__(self):
-        # Special post-init check to ensure that wavelengths and spectral
-        # response are compatible
-        srf = self.srf.eval_mono(self.wavelengths)
-
-        if np.allclose(srf, 0.0):
-            raise ValueError(
-                "specified spectral response function evaluates to 0 at every "
-                "selected wavelength"
+    def wavelengths(self) -> pint.Quantity:
+        if isinstance(self.srf, InterpolatedSpectrum):
+            return self.srf.wavelengths
+        elif isinstance(self.srf, RectangularSRF):
+            return np.atleast_1d(self.srf.wavelength)
+        elif isinstance(self.srf, UniformSpectrum):
+            return [549.9 * ureg.nm]
+        else:
+            raise NotImplementedError(
+                f"Cannot determine wavelengths for SRF of type {type(self.srf)}"
             )
 
     # --------------------------------------------------------------------------
@@ -315,9 +300,20 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
     # --------------------------------------------------------------------------
 
     def spectral_ctxs(self) -> t.List[MonoSpectralContext]:
+        if isinstance(self.srf, InterpolatedSpectrum):
+            wavelengths = self.srf.wavelengths
+        elif isinstance(self.srf, RectangularSRF):
+            wavelengths = [self.srf.wavelength]
+        elif isinstance(self.srf, UniformSpectrum):
+            wavelengths = [549.9 * ureg.nm]
+        else:
+            raise NotImplementedError(
+                f"Cannot determine wavelengths for SRF of type {type(self.srf)}"
+            )
+        
         return [
             MonoSpectralContext(wavelength=wavelength)
-            for wavelength in self._wavelengths
+            for wavelength in wavelengths
             if not np.isclose(self.srf.eval_mono(wavelength), 0.0)
         ]
 

@@ -51,7 +51,12 @@ def test_mono_spectral_config(modes_all_mono):
     """
     # The new() class method constructor selects an appropriate config class
     # depending on the active mode
-    cfg = MeasureSpectralConfig.new(wavelengths=[500.0, 600.0])
+    srf = {
+        "type": "interpolated",
+        "wavelengths": [500.0, 600.0],
+        "values": [1.0, 1.0],
+    }
+    cfg = MeasureSpectralConfig.new(srf=srf)
     assert isinstance(cfg, MonoMeasureSpectralConfig)
 
     # Generated spectral contexts are of the appropriate type and in correct numbers
@@ -59,46 +64,22 @@ def test_mono_spectral_config(modes_all_mono):
     assert len(ctxs) == 2
     assert all(isinstance(ctx, MonoSpectralContext) for ctx in ctxs)
 
-    # Selecting wavelengths outside SRF range raises
-    with pytest.raises(ValueError):
-        MeasureSpectralConfig.new(
-            wavelengths=[500.0, 600.0],
-            srf={
-                "type": "interpolated",
-                "wavelengths": [300.0, 400.0],
-                "values": [1.0, 1.0],
-            },
-        )
-
-    # Works with at least one wavelength in SRF range
-    cfg = MeasureSpectralConfig.new(
-        wavelengths=[300.0, 550.0],
-        srf={
-            "type": "interpolated",
-            "wavelengths": [500.0, 600.0],
-            "values": [1.0, 1.0],
-        },
-    )
-
-    # Off-SRF values are filtered out
-    assert len(cfg.spectral_ctxs()) == 1
-
 
 def test_mono_spectral_config_srf(modes_all_mono, tmpdir):
     """
     A SRF is loaded from the data store/a local file.
     """
     # existing prepared SRF
-    assert MeasureSpectralConfig.new(wavelengths=[650.0], srf="sentinel_2a-msi-4")
+    assert MeasureSpectralConfig.new(srf="sentinel_2a-msi-4")
 
     # raw SRF
-    assert MeasureSpectralConfig.new(wavelengths=[650.0], srf="sentinel_2a-msi-4-raw")
+    assert MeasureSpectralConfig.new(srf="sentinel_2a-msi-4-raw")
 
     # local SRF file
     ds = data.load_dataset("spectra/srf/sentinel_2a-msi-4.nc")
     tmpfile = Path(tmpdir / "srf.nc")
     ds.to_netcdf(tmpfile)
-    assert MeasureSpectralConfig.new(wavelengths=[650.0], srf=tmpfile)
+    assert MeasureSpectralConfig.new(srf=tmpfile)
 
 
 def test_mono_spectral_config_srf_invalid(modes_all_mono):

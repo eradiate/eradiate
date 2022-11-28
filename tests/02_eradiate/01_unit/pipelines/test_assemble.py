@@ -26,10 +26,15 @@ from eradiate.scenes.measure import HemisphericalDistantMeasure, MultiDistantMea
 )
 def test_add_illumination(modes_all_single, illumination_type, expected_dims):
     # Initialise test data
+    srf = {
+        "type": "interpolated",
+        "wavelengths": [540.0, 550.0, 560.0],
+        "values": [1.0, 1.0, 1.0],
+    }
     if eradiate.mode().is_mono:
-        spectral_cfg = {"wavelengths": [540.0, 550.0, 560.0]}
+        spectral_cfg = {"srf": srf}
     elif eradiate.mode().is_ckd:
-        spectral_cfg = {"bins": ["540", "550", "560"]}
+        spectral_cfg = {"srf": srf}
     else:
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
 
@@ -155,10 +160,13 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
 
 
 def test_add_srf(modes_all_single):
-    if eradiate.mode().is_mono:
-        spectral_cfg = {"wavelengths": [550.0]}
-    elif eradiate.mode().is_ckd:
-        spectral_cfg = {"bins": ["550"]}
+    if eradiate.mode().is_mono or eradiate.mode().is_ckd:
+        spectral_cfg = {
+            "srf": {
+                "type": "rectangular_srf",
+                "wavelength": 550.0 * ureg.nanometer,
+            },
+        }
     else:
         pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
 
