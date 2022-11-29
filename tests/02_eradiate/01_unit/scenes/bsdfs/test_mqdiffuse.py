@@ -1,9 +1,11 @@
+import mitsuba as mi
 import numpy as np
 import pytest
 import xarray as xr
 
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.bsdfs import MQDiffuseBSDF
+from eradiate.scenes.core import traverse
 
 ds = xr.Dataset(
     {
@@ -23,7 +25,7 @@ ds = xr.Dataset(
 )
 
 
-def test_construct():
+def test_mqdiffuse_construct(modes_all):
     # Constructing with a well-formed dataset succeeds
     assert MQDiffuseBSDF(data=ds)
 
@@ -71,10 +73,7 @@ def test_construct():
 
 def test_kernel_dict(mode_mono):
     bsdf = MQDiffuseBSDF(data=ds)
+    template, _ = traverse(bsdf)
     ctx = KernelDictContext()
-
-    # Kernel dictionary generation succeeds
-    kernel_dict = bsdf.kernel_dict(ctx)
-
-    # Generated kernel dictionary can be loaded by Mitsuba
-    assert kernel_dict.load()
+    kernel_dict = template.render(ctx=ctx)
+    assert isinstance(mi.load_dict(kernel_dict), mi.BSDF)

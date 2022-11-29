@@ -3,16 +3,14 @@ import typing as t
 import attrs
 
 from ._core import BSDF
-from ..core import KernelDict
+from ..core import SceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
-from ...util.misc import onedict_value
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class RPVBSDF(BSDF):
     """
     RPV BSDF [``rpv``].
@@ -33,7 +31,6 @@ class RPVBSDF(BSDF):
       (:cite:`Rahman1993CoupledSurfaceatmosphereReflectance`, Table 1).
     * Parameter names are defined as per the symbols used in the Eradiate
       Scientific Handbook :cite:`EradiateScientificHandbook2020`.
-
     """
 
     rho_0: Spectrum = documented(
@@ -105,18 +102,13 @@ class RPVBSDF(BSDF):
         default="-0.1",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-        result = {
-            self.id: {
-                "type": "rpv",
-                "rho_0": onedict_value(self.rho_0.kernel_dict(ctx)),
-                "k": onedict_value(self.k.kernel_dict(ctx)),
-                "g": onedict_value(self.g.kernel_dict(ctx)),
-            }
-        }
+    @property
+    def kernel_type(self) -> str:
+        return "rpv"
 
+    @property
+    def objects(self) -> t.Dict[str, SceneElement]:
+        result = {"rho_0": self.rho_0, "k": self.k, "g": self.g}
         if self.rho_c is not None:
-            result[self.id]["rho_c"] = onedict_value(self.rho_c.kernel_dict(ctx))
-
-        return KernelDict(result)
+            result["rho_c"] = self.rho_c
+        return result

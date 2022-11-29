@@ -1,14 +1,26 @@
+import mitsuba as mi
+import pytest
+
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.bsdfs import LambertianBSDF
+from eradiate.scenes.core import traverse
+from eradiate.scenes.spectra import UniformSpectrum
 
 
-def test_lambertian(modes_all_double):
-    ctx = KernelDictContext()
-
+@pytest.mark.parametrize(
+    "kwargs",
+    [{}, {"reflectance": 0.5}],
+    ids=["noargs", "args"],
+)
+def test_lambertian_construct(modes_all, kwargs):
     # Default constructor
-    bsdf = LambertianBSDF()
-    assert bsdf.kernel_dict(ctx).load()
+    l = LambertianBSDF(**kwargs)
+    assert isinstance(l.reflectance, UniformSpectrum)
 
-    # Constructor with arguments
-    bsdf = LambertianBSDF(reflectance={"type": "uniform", "value": 0.3})
-    assert bsdf.kernel_dict(ctx).load()
+
+def test_lambertian_kernel_dict(modes_all_double):
+    l = LambertianBSDF()
+    template, _ = traverse(l)
+    ctx = KernelDictContext()
+    kernel_dict = template.render(ctx=ctx)
+    assert isinstance(mi.load_dict(kernel_dict), mi.BSDF)

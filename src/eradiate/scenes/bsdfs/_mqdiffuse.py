@@ -1,19 +1,20 @@
+import typing as t
+
 import attrs
 import mitsuba as mi
 import numpy as np
 import xarray as xr
 
 from ._core import BSDF
-from ..core import KernelDict
+from ..core import Param
 from ... import converters
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...units import to_quantity
 from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class MQDiffuseBSDF(BSDF):
     """
     Measured quasi-diffuse BSDF [``mqdiffuse``].
@@ -107,20 +108,18 @@ class MQDiffuseBSDF(BSDF):
                     f"expected {expected}"
                 )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-
+    def _eval_grid_impl(self, ctx):
         values = (
             self.data.data_vars["brdf"]
             .transpose("cos_theta_o", "phi_d", "cos_theta_i")
             .values
         )
+        return mi.VolumeGrid(values.astype(np.float32))
 
-        result = {
-            self.id: {
-                "type": "mqdiffuse",
-                "grid": mi.VolumeGrid(values.astype(np.float32)),
-            }
-        }
+    @property
+    def kernel_type(self) -> str:
+        return "mqdiffuse"
 
-        return KernelDict(result)
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return {"grid": Param(lambda ctx: self._eval_grid_impl(ctx))}
