@@ -630,7 +630,7 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
 @pytest.mark.slow
 @pytest.mark.parametrize("atmosphere", [None, "homogeneous"])
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
-def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
+def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, ert_seed_state):
     r"""
     RPV(:math:`\rho, g=0, k=1, rho_c=1`) equivalent to Lambertian(:math:`\rho`)
     ===========================================================================
@@ -720,15 +720,13 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
     experiments = {
         bsdf: eradiate.experiments.AtmosphereExperiment(
             illumination={"type": "directional", "zenith": 30.0 * ureg.deg},
-            measures={
-                "type": "mdistant",
-                "construct": "from_viewing_angles",
-                **dict(
-                    zeniths=np.arange(-75, 75, 11),
-                    azimuths=0.0 * ureg.deg,
-                    spp=1 if atmosphere is None else 100000,
-                ),
-            },
+            measures=eradiate.scenes.measure.MultiDistantMeasure(
+                spp=1 if atmosphere is None else 100000,
+                direction_layout=eradiate.scenes.measure._multi_distant.HemispherePlaneLayout(
+                    np.arange(-75, 75, 11)*ureg.deg,
+                    0 * ureg.deg
+                )
+            ),
             atmosphere=None if atmosphere is None else {"type": atmosphere},
             surface=bsdfs[bsdf],
         )
@@ -736,7 +734,10 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
     }
 
     # Run experiments
-    results = {bsdf: eradiate.run(exp) for bsdf, exp in experiments.items()}
+    results = dict()
+    for bsdf, exp in experiments.items():
+        # ert_seed_state.reset()
+        results[bsdf] = eradiate.run(exp)
 
     # Make figure
     filename = (
@@ -758,6 +759,8 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
     if atmosphere is None:
         assert np.all(results["rpv"].brf.values == results["lambertian"].brf.values)
     else:
+        reldiff = ((results["rpv"].brf - results["lambertian"].brf)/results["lambertian"].brf).values
+        absdiff = (results["rpv"].brf - results["lambertian"].brf).values
         assert np.allclose(
             results["rpv"].brf, results["lambertian"].brf, rtol=1e-2, atol=1e-3
-        )
+        ), f"Expected rtol=1e-2, max: {np.max(reldiff)}; expected atol=1e-3, max {np.max(absdiff)}"
