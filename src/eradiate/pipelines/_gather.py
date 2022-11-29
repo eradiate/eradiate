@@ -122,6 +122,7 @@ class Gather(PipelineStep):
             )
         )
 
+        print(x.keys())
         # Loop on spectral indexes
         for spectral_index in x.keys():
             # Loop on sensors

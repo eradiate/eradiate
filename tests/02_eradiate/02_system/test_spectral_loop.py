@@ -7,6 +7,7 @@ from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
+from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.parametrize("cls", ["onedim", "rami"])
@@ -60,13 +61,23 @@ def test_spectral_loop(mode_mono, cls, wavelengths, irradiance):
     elif irradiance == "solar":
         illumination = DirectionalIllumination(irradiance=SolarIrradianceSpectrum())
 
+    if len(wavelengths) == 1:
+        srf = {"type": "rectangular_srf", "wavelength": wavelengths[0]}
+    elif len(wavelengths) > 2:
+        response = np.ones(len(wavelengths)) * ureg.dimensionless
+        srf = {
+            "type": "interpolated",
+            "wavelengths": wavelengths,
+            "values": response,
+        }
+
     exp = cls_exp(
         surface=LambertianBSDF(reflectance=1.0),
         illumination=illumination,
         measures=[
             MultiDistantMeasure(
                 spp=1,
-                spectral_cfg={"wavelengths": wavelengths},
+                spectral_cfg={"srf": srf},
             )
         ],
         **kwargs,

@@ -62,7 +62,11 @@ def test_albedo(mode_mono, artefact_dir):
                 {
                     "type": "distant_flux",
                     "spectral_cfg": {
-                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
+                        "srf": {
+                            "type": "interpolated",
+                            "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0],
+                            "values": [1.0, 1.0, 1.0, 1.0, 1.0],
+                        }
                     },
                     "film_resolution": (64, 64),
                     "spp": 256,
@@ -84,7 +88,11 @@ def test_albedo(mode_mono, artefact_dir):
                 {
                     "type": "distant_flux",
                     "spectral_cfg": {
-                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
+                        "srf": {
+                            "type": "interpolated",
+                            "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0],
+                            "values": [1.0, 1.0, 1.0, 1.0, 1.0],
+                        }
                     },
                     "film_resolution": (64, 64),
                     "spp": 256,
@@ -106,7 +114,11 @@ def test_albedo(mode_mono, artefact_dir):
                 {
                     "type": "distant_flux",
                     "spectral_cfg": {
-                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
+                        "srf": {
+                            "type": "interpolated",
+                            "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0],
+                            "values": [1.0, 1.0, 1.0, 1.0, 1.0],
+                        }
                     },
                     "film_resolution": (64, 64),
                     "spp": 256,
@@ -128,7 +140,11 @@ def test_albedo(mode_mono, artefact_dir):
                 {
                     "type": "distant_flux",
                     "spectral_cfg": {
-                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
+                        "srf": {
+                            "type": "interpolated",
+                            "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0],
+                            "values": [1.0, 1.0, 1.0, 1.0, 1.0],
+                        }
                     },
                     "film_resolution": (64, 64),
                     "spp": 256,

@@ -11,6 +11,7 @@ import eradiate.scenes as esc
 from eradiate import unit_registry as ureg
 from eradiate.scenes.atmosphere import ParticleLayer
 from eradiate.scenes.phase import TabulatedPhaseFunction
+from eradiate.scenes.spectra import RectangularSRF
 from eradiate.units import symbol, to_quantity
 
 
@@ -155,7 +156,7 @@ def test_homogeneous_vs_particle_layer(
         return eradiate.experiments.AtmosphereExperiment(
             measures=esc.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=esc.measure.MeasureSpectralConfig.new(
-                    wavelengths=w,
+                    srf=RectangularSRF(wavelength=w)
                 ),
                 zeniths=np.linspace(-75, 75, 11) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
@@ -185,7 +186,7 @@ def test_homogeneous_vs_particle_layer(
         return eradiate.experiments.AtmosphereExperiment(
             measures=esc.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=esc.measure.MeasureSpectralConfig.new(
-                    wavelengths=w,
+                    srf=RectangularSRF(wavelength=w),
                 ),
                 zeniths=np.linspace(-75, 75, 11) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
@@ -502,7 +503,7 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
         return eradiate.experiments.AtmosphereExperiment(
             measures=esc.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=esc.measure.MeasureSpectralConfig.new(
-                    wavelengths=w,
+                    srf=RectangularSRF(wavelength=w),
                 ),
                 zeniths=np.linspace(-75, 75, 11) * ureg.deg,
                 azimuths=0.0 * ureg.deg,

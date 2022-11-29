@@ -7,6 +7,7 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.scenes.spectra import RectangularSRF
 from eradiate.units import to_quantity
 
 
@@ -17,7 +18,7 @@ def init_experiment(bottom, top, sigma_a, sigma_s, phase, r, w, spp):
         measures=[
             eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
                 spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
-                    wavelengths=w,
+                    srf=RectangularSRF(wavelength=w),
                 ),
                 zeniths=np.linspace(-75, 75, 11) * ureg.deg,
                 azimuths=0.0 * ureg.deg,

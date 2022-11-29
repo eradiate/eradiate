@@ -8,6 +8,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import UnsupportedModeError
 from eradiate.scenes.measure import MeasureSpectralConfig
+from eradiate.scenes.spectra import RectangularSRF
 
 
 @pytest.mark.slow
@@ -37,10 +38,10 @@ def test_radiance_scaling(modes_all_double, measure, scale, datetime):
         dataset="thuillier_2003"
     )
 
-    if eradiate.mode().is_mono:
-        spectral_cfg = MeasureSpectralConfig.new(wavelengths=[550.0] * ureg.nm)
-    elif eradiate.mode().is_ckd:
-        spectral_cfg = MeasureSpectralConfig.new(bin_set="1nm", bins=["550"])
+    if eradiate.mode().is_mono or eradiate.mode().is_ckd:
+        spectral_cfg = MeasureSpectralConfig.new(
+            srf=RectangularSRF(wavelength=550.0 * ureg.nm),
+        )
     else:
         raise UnsupportedModeError
 

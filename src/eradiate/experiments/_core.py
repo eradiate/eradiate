@@ -366,6 +366,7 @@ class Experiment(ABC):
                     run_results = mitsuba_run(kernel_dict, sensor_ids, seed_state)
 
                     # Store results
+                    print(f"{spectral_ctx.spectral_index=}")
                     measure.results[spectral_ctx.spectral_index] = run_results
 
                     # Update progress display
