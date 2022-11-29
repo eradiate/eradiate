@@ -53,6 +53,10 @@ class DataError(Exception):
     pass
 
 
+class TraversalError(Exception):
+    """Raised when an error is encountered during scene element traversal."""
+
+
 # ------------------------------------------------------------------------------
 #                                   Warnings
 # ------------------------------------------------------------------------------

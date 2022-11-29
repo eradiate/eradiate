@@ -1,9 +1,11 @@
 import os
 import tempfile
 
+import mitsuba as mi
 import pytest
 
 from eradiate.contexts import KernelDictContext
+from eradiate.scenes.core import traverse
 from eradiate.scenes.shapes import FileMeshShape
 
 
@@ -40,28 +42,22 @@ def tempfile_obj():
         yield filename
 
 
-def test_construct_file_ply(modes_all_double, tempfile_ply):
-
-    ctx = KernelDictContext()
-    mesh = FileMeshShape(filename=tempfile_ply)
-    assert mesh.kernel_dict(ctx=ctx)
-    kd = mesh.kernel_dict(ctx=ctx)
-    assert kd[mesh.id]["type"] == "ply"
-    assert kd.load(strip=False)
-
-
-def test_construct_file_obj(modes_all_double, tempfile_obj):
-
-    ctx = KernelDictContext()
-    mesh = FileMeshShape(filename=tempfile_obj)
-    assert mesh.kernel_dict(ctx=ctx)
-    kd = mesh.kernel_dict(ctx=ctx)
-    assert kd[mesh.id]["type"] == "obj"
-    assert kd.load(strip=False)
+@pytest.mark.parametrize(
+    "file_type, tempfile",
+    [
+        ("ply", "tempfile_ply"),
+        ("obj", "tempfile_obj"),
+    ],
+    ids=["ply", "obj"],
+)
+def test_construct_file(modes_all_double, file_type, tempfile, request):
+    mesh = FileMeshShape(filename=request.getfixturevalue(tempfile))
+    template, _ = traverse(mesh)
+    kernel_dict = template.render(ctx=KernelDictContext())
+    assert kernel_dict["type"] == file_type
+    assert isinstance(mi.load_dict(kernel_dict), mi.Mesh)
 
 
 def test_construct_file_illegal(modes_all_double):
-
-    with pytest.raises(ValueError):
-        ctx = KernelDictContext()
-        mesh = FileMeshShape(filename="path/to/file.wrong")
+    with pytest.raises(ValueError, match="mesh files only in PLY or OBJ format"):
+        FileMeshShape(filename="path/to/file.wrong")

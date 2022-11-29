@@ -11,7 +11,7 @@ from pinttr.util import ensure_units
 
 from ._core import Shape
 from ..bsdfs import BSDF
-from ..core import KernelDict
+from ..core import Param, ParamFlags, SceneElement
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
@@ -36,7 +36,7 @@ def _edges_converter(x):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class CuboidShape(Shape):
     """
     Cuboid shape [``cuboid``].
@@ -98,20 +98,41 @@ class CuboidShape(Shape):
         )
         return np.all(cmp, axis=1)
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
+    def eval_to_world(
+        self, ctx: t.Optional[KernelDictContext] = None
+    ) -> "mitsuba.ScalarTransform4f":
+        kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
 
-        length_units = uck.get("length")
-        to_world = mi.ScalarTransform4f.translate(
-            self.center.m_as(length_units)
-        ) @ mi.ScalarTransform4f.scale(0.5 * self.edges.m_as(length_units))
+        if "to_world" in kwargs:
+            return kwargs["to_world"]
 
-        result = KernelDict({self.id: {"type": "cube", "to_world": to_world}})
+        else:
+            length_units = uck.get("length")
+            converters = {field.name: field.converter for field in self.__attrs_attrs__}
 
-        if self.bsdf is not None:
-            result[self.id]["bsdf"] = onedict_value(self.bsdf.kernel_dict(ctx))
+            edges = (
+                converters["edges"](kwargs["edges"])
+                if "edges" in kwargs
+                else self.edges
+            )
 
-        return result
+            center = (
+                converters["center"](kwargs["center"])
+                if "center" in kwargs
+                else self.center
+            )
+
+            return mi.ScalarTransform4f.translate(
+                center.m_as(length_units)
+            ) @ mi.ScalarTransform4f.scale(0.5 * edges.m_as(length_units))
+
+    @property
+    def kernel_type(self) -> str:
+        return "cube"
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return {"to_world": Param(self.eval_to_world, ParamFlags.GEOMETRIC)}
 
     @classmethod
     def atmosphere(

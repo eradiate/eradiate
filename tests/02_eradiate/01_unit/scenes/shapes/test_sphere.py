@@ -1,32 +1,28 @@
 import mitsuba as mi
 import numpy as np
+import pytest
 
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
+from eradiate.scenes.core import traverse
 from eradiate.scenes.shapes import SphereShape
 
 
-def test_sphere_construct(mode_mono_double):
+@pytest.mark.parametrize(
+    "kwargs, expected_reflectance",
+    [({}, None), ({"bsdf": {"type": "black"}}, 0.0)],
+    ids=["noargs", "args"],
+)
+def test_sphere_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
+    sphere = SphereShape(**kwargs)
+    template, _ = traverse(sphere)
     ctx = KernelDictContext()
+    kernel_dict = template.render(ctx=ctx)
 
-    # Construct without parameter
-    sphere = SphereShape()
-    kernel_dict = sphere.kernel_dict(ctx)
-    # No BSDF is specified
-    assert "bsdf" not in kernel_dict[sphere.id]
-    # But despite that, Mitsuba can create a Shape with a default BSDF
-    assert isinstance(kernel_dict.load(), mi.Shape)
-
-    # Set BSDF
-    sphere = SphereShape(bsdf={"type": "black"})
-    kernel_dict = sphere.kernel_dict(ctx)
-    # We have a proper BSDF specification
-    assert kernel_dict[sphere.id]["bsdf"] == {
-        "type": "diffuse",
-        "reflectance": {"type": "uniform", "value": 0.0},
-    }
-    assert isinstance(kernel_dict.load(), mi.Shape)
+    if expected_reflectance is not None:
+        assert kernel_dict["bsdf"]["reflectance"]["value"] == expected_reflectance
+    assert isinstance(mi.load_dict(kernel_dict), mi.Shape)
 
 
 def test_sphere_surface():

@@ -1,74 +1,74 @@
 import drjit as dr
 import mitsuba as mi
 import numpy as np
+import pytest
 
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
+from eradiate.scenes.core import traverse
 from eradiate.scenes.shapes import RectangleShape
 
 
-def test_rectangle_construct(mode_mono_double):
+@pytest.mark.parametrize(
+    "kwargs, expected_reflectance",
+    [({}, None), ({"bsdf": {"type": "black"}}, 0.0)],
+    ids=["noargs", "args"],
+)
+def test_rectangle_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
+    rectangle = RectangleShape(**kwargs)
+    template, _ = traverse(rectangle)
     ctx = KernelDictContext()
+    kernel_dict = template.render(ctx=ctx)
 
-    # Construct without parameter
-    rectangle = RectangleShape()
-    kernel_dict = rectangle.kernel_dict(ctx)
-    # No BSDF is specified
-    assert "bsdf" not in kernel_dict[rectangle.id]
-    # But despite that, Mitsuba can create a Shape with a default BSDF
-    assert isinstance(kernel_dict.load(), mi.Shape)
-
-    # Set BSDF
-    rectangle = RectangleShape(bsdf={"type": "black"})
-    kernel_dict = rectangle.kernel_dict(ctx)
-    # We have a proper BSDF specification
-    assert kernel_dict[rectangle.id]["bsdf"] == {
-        "type": "diffuse",
-        "reflectance": {"type": "uniform", "value": 0.0},
-    }
-    assert isinstance(kernel_dict.load(), mi.Shape)
+    if expected_reflectance is not None:
+        assert kernel_dict["bsdf"]["reflectance"]["value"] == expected_reflectance
+    assert isinstance(mi.load_dict(kernel_dict), mi.Shape)
 
 
-def test_rectangle_params(mode_mono_double):
-    ctx = KernelDictContext()
-
+@pytest.mark.parametrize(
+    "kwargs, expected_transform",
+    [
+        (
+            {"edges": [2, 4]},
+            [(-1, -2, 0), (1, 2, 0)],
+        ),
+        (
+            {"edges": [2, 2], "center": [0, 0, 1]},
+            [(-1, -1, 1), (1, 1, 1)],
+        ),
+        (
+            {"edges": [2, 2], "up": [-1, 0, 0]},
+            [(1, -1, 0), (-1, 1, 0)],
+        ),
+        (
+            {"edges": [2, 2], "normal": [0, -1, 0], "up": [-1, 0, 0]},
+            [(1, 0, -1), (-1, 0, 1)],
+        ),
+        (
+            {
+                "edges": [2, 4],
+                "normal": [0, -1, 0],
+                "up": [-1, 0, 0],
+                "center": [0, 0, 1],
+            },
+            [(2, 0, 0), (-2, 0, 2)],
+        ),
+    ],
+    ids=["edges", "center", "up", "normal_up", "full"],
+)
+def test_rectangle_params(mode_mono_double, kwargs, expected_transform):
     # Set edges
-    rectangle = RectangleShape(edges=[2, 4])
-    kernel_dict = rectangle.kernel_dict(ctx)
-    to_world = kernel_dict[rectangle.id]["to_world"]
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(-1, -1, 0)), [-1, -2, 0])
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 0)), [1, 2, 0])
-
-    # Set center
-    rectangle = RectangleShape(edges=[2, 2], center=[0, 0, 1])
-    kernel_dict = rectangle.kernel_dict(ctx)
-    to_world = kernel_dict[rectangle.id]["to_world"]
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(-1, -1, 0)), [-1, -1, 1])
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 0)), [1, 1, 1])
-
-    # Set up
-    rectangle = RectangleShape(edges=[2, 2], normal=[0, 0, 1], up=[-1, 0, 0])
-    kernel_dict = rectangle.kernel_dict(ctx)
-    to_world = kernel_dict[rectangle.id]["to_world"]
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(-1, -1, 0)), [1, -1, 0])
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 0)), [-1, 1, 0])
-
-    # Set normal and up
-    rectangle = RectangleShape(edges=[2, 2], normal=[0, -1, 0], up=[-1, 0, 0])
-    kernel_dict = rectangle.kernel_dict(ctx)
-    to_world = kernel_dict[rectangle.id]["to_world"]
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(-1, -1, 0)), [1, 0, -1])
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 0)), [-1, 0, 1])
-
-    # Full setup
-    rectangle = RectangleShape(
-        edges=[2, 4], normal=[0, -1, 0], up=[-1, 0, 0], center=[0, 0, 1]
+    rectangle = RectangleShape(**kwargs)
+    template, _ = traverse(rectangle)
+    kernel_dict = template.render(ctx=KernelDictContext())
+    to_world = kernel_dict["to_world"]
+    assert dr.allclose(
+        to_world.transform_affine(mi.Point3f(-1, -1, 0)), expected_transform[0]
     )
-    kernel_dict = rectangle.kernel_dict(ctx)
-    to_world = kernel_dict[rectangle.id]["to_world"]
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(-1, -1, 0)), [2, 0, 0])
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 0)), [-2, 0, 2])
+    assert dr.allclose(
+        to_world.transform_affine(mi.Point3f(1, 1, 0)), expected_transform[1]
+    )
 
 
 def test_rectangle_surface():

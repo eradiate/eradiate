@@ -10,14 +10,13 @@ import pinttr
 
 from ._core import Shape
 from ..bsdfs import BSDF
-from ..core import KernelDict
+from ..core import Param, ParamFlags
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...util.misc import onedict_value
 
 
 def _normalize(v: np.typing.ArrayLike) -> np.ndarray:
@@ -41,7 +40,7 @@ def _edges_converter(value):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class RectangleShape(Shape):
     """
     Rectangle shape [``rectangle``].
@@ -99,25 +98,49 @@ class RectangleShape(Shape):
         default="[0, 1, 0]",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
+    @property
+    def kernel_type(self) -> str:
+        return "rectangle"
 
-        length_units = uck.get("length")
-        scale = self.edges.m_as(length_units) * 0.5
-        center = self.center.m_as(length_units)
-        normal = self.normal
-        up = self.up
+    def eval_to_world(
+        self, ctx: t.Optional[KernelDictContext] = None
+    ) -> "mitsuba.ScalarTransform4f":
+        kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
 
-        trafo = mi.ScalarTransform4f.look_at(
-            origin=center, target=center + normal, up=up
-        ) @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0])
+        if "to_world" in kwargs:
+            return kwargs["to_world"]
 
-        result = KernelDict({self.id: {"type": "rectangle", "to_world": trafo}})
+        else:
+            length_units = uck.get("length")
+            converters = {field.name: field.converter for field in self.__attrs_attrs__}
 
-        if self.bsdf is not None:
-            result[self.id]["bsdf"] = onedict_value(self.bsdf.kernel_dict(ctx))
+            scale = (
+                converters["edges"](kwargs["edges"])
+                if "edges" in kwargs
+                else self.edges
+            ).m_as(length_units) * 0.5
 
-        return result
+            center = (
+                converters["center"](kwargs["center"])
+                if "center" in kwargs
+                else self.center
+            ).m_as(length_units)
+
+            normal = (
+                converters["normal"](kwargs["normal"])
+                if "normal" in kwargs
+                else self.normal
+            )
+
+            up = converters["up"](kwargs["up"]) if "up" in kwargs else self.up
+
+            return mi.ScalarTransform4f.look_at(
+                origin=center, target=center + normal, up=up
+            ) @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0])
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return {"to_world": Param(self.eval_to_world, ParamFlags.GEOMETRIC)}
 
     @classmethod
     def surface(

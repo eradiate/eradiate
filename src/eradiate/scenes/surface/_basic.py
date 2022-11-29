@@ -7,15 +7,14 @@ import attrs
 
 from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..core import KernelDict
+from ..core import Ref, SceneElement, SceneTraversal
 from ..shapes import RectangleShape, Shape, SphereShape, shape_factory
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
-from ...exceptions import OverriddenValueWarning
+from ...exceptions import OverriddenValueWarning, TraversalError
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class BasicSurface(Surface):
     """
     Basic surface [``basic``].
@@ -32,25 +31,24 @@ class BasicSurface(Surface):
             ),
         ),
         doc="Shape describing the surface. This parameter may be left unset "
-        "for situations in which setting its value is delegated to another "
-        "component (*e.g.* an :class:`.Experiment` instance owning the "
+        "for situations in which the task of setting its value is delegated to "
+        "another component (*e.g.* an :class:`.Experiment` instance owning the "
         "surface object); however, if it is still unset upon kernel dictionary "
         "generation, the call to :meth:`.kernel_dict` will raise.",
         type=".RectangleShape or .SphereShape or None",
         init_type=".RectangleShape or .SphereShape or dict, optional",
-        default="None",
+        default=":class:`.RectangleShape <RectangleShape()>",
     )
 
     @shape.validator
     def _shape_validator(self, attribute, value):
-        if value is not None:  # Means it's a Shape
-            if value.bsdf is not None:
-                warnings.warn(
-                    f"while validating '{attribute.name}': "
-                    f"'{attribute.name}.bsdf' should be set to None; it will "
-                    "be overridden upon kernel dictionary generation",
-                    OverriddenValueWarning,
-                )
+        if value is not None and value.bsdf is not None:
+            warnings.warn(
+                f"while validating '{attribute.name}': "
+                f"'{attribute.name}.bsdf' should be set to None; it will "
+                "be overridden during kernel dictionary generation",
+                OverriddenValueWarning,
+            )
 
     bsdf: BSDF = documented(
         attrs.field(
@@ -64,23 +62,34 @@ class BasicSurface(Surface):
         default=":class:`LambertianBSDF() <.LambertianBSDF>`",
     )
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
+    def update(self) -> None:
+        # Force BSDF referencing if the shape is defined
+        if self.shape is not None:
+            if isinstance(self.shape.bsdf, BSDF):
+                warnings.warn("Set BSDF will be overridden by surface BSDF settings.")
+            self.shape.bsdf = Ref(id=self._bsdf_id)
 
+    @property
+    def _shape_id(self):
+        """
+        Mitsuba shape object identifier.
+        """
+        return f"{self.id}_shape"
+
+    @property
+    def _bsdf_id(self):
+        """
+        Mitsuba BSDF object identifier.
+        """
+        return f"{self.id}_bsdf"
+
+    def traverse(self, callback: SceneTraversal) -> None:
         if self.shape is None:
-            # This is allowed for clarity: many Surface instances will actually
-            # have their surface overridden by a higher-level component such as
-            # and Experiment. However, the 'shape' field must be a Shape for
-            # kernel dict generation to happen.
-            raise ValueError(
-                "The 'shape' field must be a Shape for kernel dictionary "
-                "generation to work (got None)."
+            raise TraversalError(
+                "A 'BasicSurface' cannot be traversed if its 'shape' field is unset."
             )
-        else:
-            # Note: No coupling between the shape and BSDF is not done at this
-            # level: this part is delegate to the kernel_dict() method.
-            return self.shape.kernel_dict(ctx)
+        super().traverse(callback)
 
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-        return self.bsdf.kernel_dict(ctx)
+    @property
+    def objects(self) -> t.Dict[str, SceneElement]:
+        return {self._shape_id: self.shape, self._bsdf_id: self.bsdf}

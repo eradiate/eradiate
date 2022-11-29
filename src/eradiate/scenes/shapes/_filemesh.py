@@ -4,15 +4,12 @@ from pathlib import Path
 
 import attrs
 
-from ._core import Shape, shape_factory
-from ..core import KernelDict
+from ._core import Shape
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
-from ...util.misc import onedict_value
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class FileMeshShape(Shape):
     """
     File based mesh shape [``file_mesh``].
@@ -37,23 +34,19 @@ class FileMeshShape(Shape):
                 f"Eradiate supports mesh files only in PLY or OBJ format."
             )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+    @property
+    def kernel_type(self) -> str:
         if self.filename.suffix == ".obj":
-            type = "obj"
+            return "obj"
         elif self.filename.suffix == ".ply":
-            type = "ply"
+            return "ply"
         else:
             raise ValueError(f"unknown mesh file type '{self.filename.suffix}'")
 
-        meshdict = {
-            "type": type,
+    @property
+    def template(self) -> dict:
+        return {
+            **super().template,
             "filename": str(self.filename),
             "face_normals": True,
         }
-
-        if self.bsdf:
-            meshdict["bsdf"] = onedict_value(self.bsdf.kernel_dict(ctx=ctx))
-
-        result = KernelDict({self.id: meshdict})
-
-        return result

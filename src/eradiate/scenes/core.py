@@ -12,19 +12,25 @@ import pinttr
 from pinttr.util import ensure_units
 
 from ..attrs import documented, parse_docs
+from ..exceptions import TraversalError
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.misc import nest
 
-# -- Kernel dict ---------------------------------------------------------------
+# ------------------------------------------------------------------------------
+#                             Kernel dictionary
+# ------------------------------------------------------------------------------
 
 
-class ParamFlags(enum.Flag):
+class ParamFlags(enum.IntFlag):
     """
     Parameter flags.
     """
 
-    SPECTRAL = enum.auto()
+    NONE = 0
+    SPECTRAL = enum.auto()  #: Varies during the spectral loop
+    GEOMETRIC = enum.auto()  #: Triggers a scene rebuild
+    ALL = SPECTRAL | GEOMETRIC
 
 
 @attrs.define
@@ -36,8 +42,9 @@ class Param:
     #: An attached callable which evaluates the parameter.
     _callable: t.Callable = attrs.field(repr=False)
 
-    #: Flags specifying parameter attributes.
-    flags: t.Optional[ParamFlags] = attrs.field(default=None)
+    #: Flags specifying parameter attributes. By default, the declared parameter
+    #: will pass all filters.
+    flags: ParamFlags = attrs.field(default=ParamFlags.ALL)
 
     def __call__(self, *args, **kwargs):
         return self._callable(*args, **kwargs)
@@ -52,7 +59,7 @@ class ParameterMap(UserDict):
     data: dict[str, Param] = attrs.field(factory=dict)
 
     def render(
-        self, ctx, flags: t.Optional[ParamFlags] = None, drop: bool = False
+        self, ctx, flags: ParamFlags = ParamFlags.ALL, drop: bool = False
     ) -> dict:
         """
         Evaluate the parameter map for a set of arguments.
@@ -77,7 +84,7 @@ class KernelDictTemplate(UserDict):
         in empty fields.
         """
         result = self.data.copy()
-        skipped = render_params(result, ctx=ctx, flags=None, drop=False)
+        skipped = render_params(result, ctx=ctx, flags=ParamFlags.ALL, drop=False)
 
         # Check for leftover empty values
         if skipped:
@@ -87,7 +94,7 @@ class KernelDictTemplate(UserDict):
 
 
 def render_params(
-    d: dict, flags: t.Optional[ParamFlags] = None, drop: bool = False, **kwargs
+    d: dict, flags: ParamFlags = ParamFlags.ALL, drop: bool = False, **kwargs
 ) -> list:
     """
     Render parameters in a template dictionary.
@@ -96,15 +103,12 @@ def render_params(
 
     for k, v in d.items():
         if isinstance(v, Param):
-            if flags is None:
+            if v.flags is None:
+                skipped.append(k)
+            elif v.flags & flags:
                 d[k] = v(**kwargs)
             else:
-                if v.flags is None:
-                    skipped.append(k)
-                elif v.flags & flags:
-                    d[k] = v(**kwargs)
-                else:
-                    skipped.append(k)
+                skipped.append(k)
 
     if drop:
         for k in skipped:
@@ -113,7 +117,9 @@ def render_params(
     return skipped
 
 
-# -- Scene element interface ---------------------------------------------------
+# ------------------------------------------------------------------------------
+#                           Scene element interface
+# ------------------------------------------------------------------------------
 
 
 @attrs.define(eq=False)
@@ -146,7 +152,6 @@ class SceneElement:
     def template(self) -> dict:
         """
         Kernel dictionary template contents associated with this scene element.
-        The default implementation raises a :class:`NotImplementedError`.
         """
         result = {}
 
@@ -172,6 +177,14 @@ class SceneElement:
         """
         return None
 
+    @property
+    def instance(self) -> t.Optional["mitsuba.Object"]:
+        """
+        Not None iff element produces no contribution to dictionary template
+        and directly expands as a Mitsuba object.
+        """
+        return None
+
     def traverse(self, callback: SceneTraversal) -> None:
         """
         Traverse this scene element and collect kernel dictionary template,
@@ -182,25 +195,79 @@ class SceneElement:
         callback : SceneTraversal
             Callback data structure storing the collected data.
         """
-        callback.put_template(self.template)
+        print(f"In SceneElement.traverse() --- {self.__class__.__name__}")
 
-        if self.params is not None:
-            callback.put_params(self.params)
+        try:
+            if (
+                self.instance is not None
+            ):  # Element expands as instance and doesn't contribute to dict template
+                callback.put_instance(self)
+            else:  # Element contributes to dict template
+                callback.put_template(self.template)
 
-        if self.objects is not None:
-            if self.kernel_type is not None:
+            if self.params is not None:
+                callback.put_params(self.params)
+
+            if self.objects is not None:
                 for name, obj in self.objects.items():
-                    callback.put_object(name, obj)
-            else:
-                for _, obj in self.objects.items():
-                    obj.traverse(callback)
+                    if obj.is_composite:
+                        template, params = traverse(obj)
+
+                    else:
+                        callback.put_object(name, obj)
+
+        except Exception as e:
+            raise TraversalError(
+                f"Partial callback state: "
+                f"depth={callback.depth}, name={callback.name}"
+            ) from e
 
 
-# -- Scene tree traversal ------------------------------------------------------
+@attrs.define(eq=False)
+class Ref(SceneElement):
+    id: str = documented(
+        attrs.field(
+            kw_only=True,
+            validator=attrs.validators.instance_of(str),
+        ),
+        doc="Identifier of the referenced kernel scene object (required).",
+        type="str",
+    )
+
+    @property
+    def kernel_type(self) -> str:
+        return "ref"
+
+    @property
+    def template(self) -> dict:
+        return {**super().template, "id": self.id}
+
+
+@attrs.define(eq=False)
+class Scene(SceneElement):
+    _objects: t.Dict[str, SceneElement] = attrs.field(factory=dict, converter=dict)
+
+    @property
+    def kernel_type(self) -> str:
+        return "scene"
+
+    @property
+    def objects(self) -> t.Dict[str, SceneElement]:
+        return self._objects
+
+
+# ------------------------------------------------------------------------------
+#                         Scene element tree traversal
+# ------------------------------------------------------------------------------
 
 
 @attrs.define
 class SceneTraversal:
+    """
+    Data structure used to collect kernel dictionary data during scene element
+    traversal.
+    """
+
     #: Current traversal node
     node: SceneElement
 
@@ -252,10 +319,28 @@ class SceneTraversal:
         )
         node.traverse(cb)
 
+    def put_instance(self, obj: "mitsuba.Object"):
+        if not self.name:
+            raise TraversalError("Instances may only be inserted as child nodes.")
+        self.template[self.name] = obj
+
 
 def traverse(node: SceneElement) -> t.Tuple[KernelDictTemplate, ParameterMap]:
     """
     Traverse a scene element tree and collect kernel dictionary data.
+
+    Parameters
+    ----------
+    node : .SceneElement
+        Scene element where to start traversal.
+
+    Returns
+    -------
+    template : .KernelDictTemplate
+        Kernel dictionary template corresponding to the traversed scene element.
+
+    params : .ParameterMap
+        Kernel parameter table associated with the traversed scene element.
     """
     # Traverse scene element tree
     cb = SceneTraversal(node)
