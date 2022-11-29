@@ -18,7 +18,7 @@ integrator_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class Integrator(SceneElement):
     """
     Abstract base class for all integrator elements.
