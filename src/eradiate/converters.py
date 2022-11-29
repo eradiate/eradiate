@@ -92,14 +92,14 @@ def to_dataset(
     2. If the value is a path-like object ending with the ``.nc`` extension, the
        converter tries to load a dataset from that location, first locally, then
        (should that fail) from the Eradiate data store.
-    3. If the value is a string and ``load_from_id`` is not ``None``, it is 
-        interpreted as a dataset identifier and ``load_from_id(value)`` is 
+    3. If the value is a string and ``load_from_id`` is not ``None``, it is
+        interpreted as a dataset identifier and ``load_from_id(value)`` is
         returned.
     4. Otherwise, a :class:`ValueError` is raised.
 
     Examples
     --------
-    A converter with basic dataset identifier interpretation (the passed 
+    A converter with basic dataset identifier interpretation (the passed
     callable may implement more complex logic, *e.g.* with identifier
     fallback substitution):
 
@@ -113,7 +113,7 @@ def to_dataset(
     """
 
     def converter(value: t.Union[xr.Dataset, PathLike]) -> xr.Dataset:
-        
+
         if isinstance(value, xr.Dataset):
             return value
 

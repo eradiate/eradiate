@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import typing as t
+
 import attrs
 import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
 
-from ._core import Shape, shape_factory
-from ..core import KernelDict
+from ._core import Shape
+from ..core import Param, traverse
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
@@ -15,7 +17,7 @@ from ...units import unit_context_kernel as uck
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class BufferMeshShape(Shape):
     """
     Buffer mesh shape [``buffer_mesh``].
@@ -31,7 +33,7 @@ class BufferMeshShape(Shape):
             kw_only=True,
         ),
         doc="List of vertex positions. The passed list must contain a (n, 3) list"
-        "of three dimensional points.",
+        "of three dimensional points.\n\nUnit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="array-like",
     )
@@ -56,9 +58,11 @@ class BufferMeshShape(Shape):
                 f"(n, 3), got {value.shape}"
             )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+    @property
+    def instance(self) -> "mitsuba.Object":
         if self.bsdf is not None:
-            bsdf = self.bsdf.kernel_dict(ctx).load()
+            template, _ = traverse(self.bsdf)
+            bsdf = mi.load_dict(template.render(ctx=KernelDictContext()))
         else:
             bsdf = None
 
@@ -80,6 +84,12 @@ class BufferMeshShape(Shape):
         mesh_params["faces"] = self.faces.ravel()
         mesh_params.update()
 
-        result = KernelDict({self.id: mesh})
+        return mesh
 
-        return result
+    @property
+    def params(self) -> t.Optional[t.Dict[str, Param]]:
+        if self.bsdf is None:
+            return None
+
+        _, params = traverse(self.bsdf)
+        return {f"bsdf.{k}": v for k, v in params.items()}

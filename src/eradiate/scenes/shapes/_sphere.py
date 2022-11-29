@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as t
 
 import attrs
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -10,13 +11,12 @@ from pinttr.util import ensure_units
 
 from ._core import Shape
 from ..bsdfs import BSDF
-from ..core import KernelDict
+from ..core import Param, ParamFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...util.misc import onedict_value
 
 
 def _normalize(v: np.typing.ArrayLike) -> np.ndarray:
@@ -24,7 +24,7 @@ def _normalize(v: np.typing.ArrayLike) -> np.ndarray:
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class SphereShape(Shape):
     """
     Sphere shape [``sphere``].
@@ -51,22 +51,41 @@ class SphereShape(Shape):
         default="1.0",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-        result = KernelDict(
-            {
-                self.id: {
-                    "type": "sphere",
-                    "center": self.center.m_as(uck.get("length")),
-                    "radius": self.radius.m_as(uck.get("length")),
-                }
-            }
-        )
+    def eval_to_world(self, ctx: t.Optional[KernelDictContext] = None):
+        kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
 
-        if self.bsdf is not None:
-            result[self.id]["bsdf"] = onedict_value(self.bsdf.kernel_dict(ctx))
+        if "to_world" in kwargs:
+            return kwargs["to_world"]
 
-        return result
+        else:
+            length_units = uck.get("length")
+            converters = {field.name: field.converter for field in self.__attrs_attrs__}
+
+            center = (
+                converters["center"](kwargs["center"])
+                if "center" in kwargs
+                else self.center
+            ).m_as(length_units)
+
+            radius = (
+                converters["radius"](kwargs["radius"])
+                if "radius" in kwargs
+                else self.radius
+            ).m_as(length_units)
+
+            return mi.ScalarTransform4f.translate(center) @ mi.ScalarTransform4f.scale(
+                radius
+            )
+
+    @property
+    def kernel_type(self) -> str:
+        return "sphere"
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return {
+            "to_world": Param(self.eval_to_world, ParamFlags.GEOMETRIC),
+        }
 
     def contains(self, p: np.typing.ArrayLike, strict: bool = False) -> bool:
         """

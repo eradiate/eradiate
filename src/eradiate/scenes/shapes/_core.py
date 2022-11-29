@@ -6,7 +6,7 @@ from abc import ABC
 import attrs
 
 from ..bsdfs import BSDF, bsdf_factory
-from ..core import SceneElement
+from ..core import Ref, SceneElement
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
@@ -24,7 +24,7 @@ shape_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class Shape(SceneElement, ABC):
     """
     Abstract interface for all shape scene elements.
@@ -41,16 +41,25 @@ class Shape(SceneElement, ABC):
         default='"shape"',
     )
 
-    bsdf: t.Optional[BSDF] = documented(
+    bsdf: t.Union[BSDF, Ref, None] = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(bsdf_factory.convert),
-            validator=attrs.validators.optional(attrs.validators.instance_of(BSDF)),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of((BSDF, Ref))
+            ),
         ),
         doc="BSDF attached to the shape. If a dictionary is passed, it is "
         "interpreted by :class:`bsdf_factory.convert() <.Factory>`. "
         "If unset, no BSDF will be specified during the kernel dictionary "
         "generation: the kernel's default will be used.",
-        type="BSDF or None",
-        init_type="BSDF or dict, optional",
+        type="BSDF or Ref or None",
+        init_type="BSDF or Ref or dict, optional",
     )
+
+    @property
+    def objects(self) -> t.Optional[t.Dict[str, SceneElement]]:
+        if self.bsdf is None:
+            return None
+        else:
+            return {"bsdf": self.bsdf}
