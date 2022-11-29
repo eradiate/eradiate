@@ -18,7 +18,7 @@ illumination_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class Illumination(SceneElement, ABC):
     """
     Abstract base class for all illumination scene elements.

@@ -1,14 +1,15 @@
+import typing as t
+
 import attrs
 import numpy as np
 import pint
 import pinttr
 
 from ._core import Illumination
-from ..core import KernelDict
+from ..core import Param, SceneElement
 from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
 from ..._config import config
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...frame import AzimuthConvention, angles_to_direction
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -16,7 +17,7 @@ from ...validators import has_quantity, is_positive
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class DirectionalIllumination(Illumination):
     """
     Directional illumination scene element [``directional``].
@@ -95,14 +96,14 @@ class DirectionalIllumination(Illumination):
             flip=True,
         ).reshape((3,))
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-        return KernelDict(
-            {
-                self.id: {
-                    "type": "directional",
-                    "direction": list(self.direction),
-                    "irradiance": self.irradiance.kernel_dict(ctx=ctx)["spectrum"],
-                }
-            }
-        )
+    @property
+    def kernel_type(self) -> str:
+        return "directional"
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return {"direction": Param(lambda ctx: list(self.direction))}
+
+    @property
+    def objects(self) -> t.Dict[str, SceneElement]:
+        return {"irradiance": self.irradiance}
