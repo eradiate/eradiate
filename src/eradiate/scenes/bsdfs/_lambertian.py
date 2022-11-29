@@ -1,16 +1,16 @@
+import typing as t
+
 import attrs
 
 from ._core import BSDF
-from ..core import KernelDict
+from ..core import SceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
-from ...util.misc import onedict_value
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class LambertianBSDF(BSDF):
     """
     Lambertian BSDF [``lambertian``].
@@ -18,10 +18,6 @@ class LambertianBSDF(BSDF):
     This class implements the Lambertian (a.k.a. diffuse) reflectance model.
     A surface with this scattering model attached scatters radiation equally in
     every direction.
-
-    Notes
-    -----
-    This is a thin wrapper around the ``diffuse`` kernel plugin.
     """
 
     reflectance: Spectrum = documented(
@@ -40,13 +36,10 @@ class LambertianBSDF(BSDF):
         default="0.5",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-        return KernelDict(
-            {
-                self.id: {
-                    "type": "diffuse",
-                    "reflectance": onedict_value(self.reflectance.kernel_dict(ctx=ctx)),
-                }
-            }
-        )
+    @property
+    def kernel_type(self) -> str:
+        return "diffuse"
+
+    @property
+    def objects(self) -> t.Dict[str, SceneElement]:
+        return {"reflectance": self.reflectance}

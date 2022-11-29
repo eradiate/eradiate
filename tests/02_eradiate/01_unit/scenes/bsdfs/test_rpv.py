@@ -1,22 +1,36 @@
 import mitsuba as mi
+import pytest
 
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.bsdfs import RPVBSDF
+from eradiate.scenes.core import traverse
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {},
+        {"rho_0": 0.3, "k": 1.4, "g": -0.23},
+        {
+            "rho_0": 0.3,
+            "k": {"type": "uniform", "value": 0.3},
+            "g": {
+                "type": "interpolated",
+                "wavelengths": [300.0, 800.0],
+                "values": [-0.23, 0.23],
+            },
+            "rho_c": 0.2,
+        },
+    ],
+    ids=["noargs", "uniform", "mixed"],
+)
+def test_rpv_construct(modes_all, kwargs):
+    # Default constructor
+    assert RPVBSDF(**kwargs)
 
 
 def test_rpv(modes_all_double):
-    ctx = KernelDictContext()
-
-    # Default constructor
-    rpv_bsdf = RPVBSDF()
-    assert rpv_bsdf.kernel_dict(ctx).load()
-
-    # Construct from floats
-    rpv_bsdf = RPVBSDF(rho_0=0.3, k=1.4, g=-0.23)
-    assert rpv_bsdf.kernel_dict(ctx).load()
-
-    # Construct from mixed spectrum types
-    rpv_bsdf = RPVBSDF(
+    bsdf = RPVBSDF(
         rho_0=0.3,
         k={"type": "uniform", "value": 0.3},
         g={
@@ -26,4 +40,7 @@ def test_rpv(modes_all_double):
         },
         rho_c=0.2,
     )
-    assert isinstance(rpv_bsdf.kernel_dict(ctx).load(), mi.BSDF)
+    template, _ = traverse(bsdf)
+    ctx = KernelDictContext()
+    kernel_dict = template.render(ctx=ctx)
+    assert isinstance(mi.load_dict(kernel_dict), mi.BSDF)

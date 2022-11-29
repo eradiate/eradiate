@@ -1,16 +1,17 @@
+import typing as t
+
 import attrs
 import mitsuba as mi
 
 from ._core import BSDF
-from ..core import KernelDict
+from ..core import Param, ParamFlags
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class CheckerboardBSDF(BSDF):
     """
     Checkerboard BSDF [``checkerboard``].
@@ -61,19 +62,24 @@ class CheckerboardBSDF(BSDF):
         default=2.0,
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
+    @property
+    def kernel_type(self) -> str:
+        return "diffuse"
 
-        return KernelDict(
-            {
-                self.id: {
-                    "type": "diffuse",
-                    "reflectance": {
-                        "type": "checkerboard",
-                        "color0": self.reflectance_a.kernel_dict(ctx=ctx)["spectrum"],
-                        "color1": self.reflectance_b.kernel_dict(ctx=ctx)["spectrum"],
-                        "to_uv": mi.ScalarTransform4f.scale(self.scale_pattern),
-                    },
-                }
-            }
-        )
+    @property
+    def template(self) -> dict:
+        return {**super().template, "reflectance": {"type": "checkerboard"}}
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        {
+            "reflectance.color0": Param(
+                lambda ctx: self.reflectance_a.eval(ctx), ParamFlags.SPECTRAL
+            ),
+            "reflectance.color1": Param(
+                lambda ctx: self.reflectance_a.eval(ctx), ParamFlags.SPECTRAL
+            ),
+            "reflectance.to_uv": Param(
+                lambda ctx: mi.ScalarTransform4f.scale(self.scale_pattern)
+            ),
+        }
