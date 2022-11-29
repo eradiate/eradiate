@@ -15,7 +15,7 @@ def test_air_scattering_coefficient_construct(modes_all):
     assert s
 
 
-def test_air_scattering_coefficient_eval(modes_all_mono):
+def test_air_scattering_coefficient_eval(modes_all_double):
     # The spectrum evaluates correctly (reference values computed manually)
     if eradiate.mode().is_mono:
         expected = ureg.Quantity(0.0114934, "km^-1")

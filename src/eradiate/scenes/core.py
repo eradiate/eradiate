@@ -123,9 +123,14 @@ class SceneElement:
     attrs docs on hashing for a complete explanation).
     """
 
-    id: t.Optional[str] = attrs.field(
-        default=None,
-        validator=attrs.validators.optional(attrs.validators.instance_of(str)),
+    id: t.Optional[str] = documented(
+        attrs.field(
+            default=None,
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
+        ),
+        doc="Identifier of the current scene element.",
+        type="str or None",
+        init_type="str, optional",
     )
 
     @property

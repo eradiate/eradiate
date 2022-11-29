@@ -1,15 +1,16 @@
+import typing as t
+
 import attrs
 
 from ._core import Illumination
-from ..core import KernelDict
+from ..core import SceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...validators import has_quantity
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class ConstantIllumination(Illumination):
     """
     Constant illumination scene element [``constant``].
@@ -31,12 +32,10 @@ class ConstantIllumination(Illumination):
         default="1.0 ucc[radiance]",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        return KernelDict(
-            {
-                self.id: {
-                    "type": "constant",
-                    "radiance": self.radiance.kernel_dict(ctx=ctx)["spectrum"],
-                }
-            }
-        )
+    @property
+    def kernel_type(self) -> str:
+        return "constant"
+
+    @property
+    def objects(self) -> t.Dict[str, SceneElement]:
+        return {"radiance": self.radiance}

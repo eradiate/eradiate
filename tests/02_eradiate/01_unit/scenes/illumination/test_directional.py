@@ -1,37 +1,33 @@
+import mitsuba as mi
 import numpy as np
-import pinttr
 import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
+from eradiate.scenes.core import traverse
 from eradiate.scenes.illumination import DirectionalIllumination
+from eradiate.scenes.spectra import SolarIrradianceSpectrum, UniformSpectrum
 
 
-def test_directional(mode_mono):
-    # We need a default spectral config
-    ctx = KernelDictContext()
+@pytest.mark.parametrize(
+    "kwargs, expected_irradiance_type",
+    [({}, SolarIrradianceSpectrum), ({"irradiance": 1.0}, UniformSpectrum)],
+    ids=["noargs", "from_scalar"],
+)
+def test_directional_construct(modes_all, kwargs, expected_irradiance_type):
+    # Construction without argument succeeds
+    d = DirectionalIllumination(**kwargs)
+    assert d
+    assert isinstance(d.irradiance, expected_irradiance_type)
 
-    # Constructor
+
+def test_directional_kernel_dict(modes_all_double):
+    # The associated kernel dict is correctly formed and can be loaded
     d = DirectionalIllumination()
-    assert d.kernel_dict(ctx).load() is not None
-
-    # Check if a more detailed spec is valid
-    d = DirectionalIllumination(irradiance={"type": "uniform", "value": 1.0})
-    assert d.kernel_dict(ctx).load() is not None
-
-    # Check if solar irradiance spectrum can be used
-    d = DirectionalIllumination(irradiance={"type": "solar_irradiance"})
-    assert d.kernel_dict(ctx).load() is not None
-
-    # Check if specification from a float works
-    d = DirectionalIllumination(irradiance=1.0)
-    assert d.kernel_dict(ctx).load() is not None
-
-    # Check if specification from a constant works
-    d = DirectionalIllumination(irradiance=ureg.Quantity(1.0, "W/m^2/nm"))
-    assert d.kernel_dict(ctx).load() is not None
-    with pytest.raises(pinttr.exceptions.UnitsError):  # Wrong units
-        DirectionalIllumination(irradiance=ureg.Quantity(1.0, "W/m^2/sr/nm"))
+    template, _ = traverse(d)
+    ctx = KernelDictContext()
+    kernel_dict = template.render(ctx)
+    assert isinstance(mi.load_dict(kernel_dict), mi.Emitter)
 
 
 COS_PI_4 = np.sqrt(2) / 2
