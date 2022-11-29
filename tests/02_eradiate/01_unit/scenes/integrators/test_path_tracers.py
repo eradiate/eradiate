@@ -1,7 +1,8 @@
 import mitsuba as mi
+import pytest
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import KernelDict
+from eradiate.scenes.core import traverse
 from eradiate.scenes.integrators import (
     PathIntegrator,
     VolPathIntegrator,
@@ -9,70 +10,41 @@ from eradiate.scenes.integrators import (
 )
 
 
-def test_path(mode_mono):
-    # Basic specification
-    integrator = PathIntegrator()
+@pytest.mark.parametrize(
+    "integrator_cls",
+    [PathIntegrator, VolPathIntegrator, VolPathMISIntegrator],
+    ids=["path", "volpath", "volpathmis"],
+)
+@pytest.mark.parametrize(
+    "kwargs",
+    [{}, {"max_depth": 5, "rr_depth": 3, "hide_emitters": False}],
+    ids=["noargs", "args"],
+)
+def test_path_tracers_construct(modes_all, integrator_cls, kwargs):
+    # Construction succeed
+    assert integrator_cls(**kwargs)
+
+
+@pytest.mark.parametrize(
+    "integrator_cls, kwargs",
+    [
+        (PathIntegrator, {"max_depth": 5, "rr_depth": 3, "hide_emitters": False}),
+        (VolPathIntegrator, {"max_depth": 5, "rr_depth": 3, "hide_emitters": False}),
+        (
+            VolPathMISIntegrator,
+            {
+                "max_depth": 5,
+                "rr_depth": 3,
+                "hide_emitters": False,
+                "use_spectral_mis": True,
+            },
+        ),
+    ],
+    ids=["path", "volpath", "volpathmis"],
+)
+def test_path_tracers_kernel_dict(mode_mono, integrator_cls, kwargs):
+    integrator = integrator_cls(**kwargs)
+    template, _ = traverse(integrator)
     ctx = KernelDictContext()
-    assert integrator.kernel_dict(ctx)["integrator"] == {"type": "path"}
-    assert isinstance(
-        KernelDict.from_elements(integrator, ctx=ctx).load(), mi.Integrator
-    )
-
-    # More detailed specification
-    integrator = PathIntegrator(max_depth=5, rr_depth=3, hide_emitters=False)
-    assert integrator.kernel_dict(ctx)["integrator"] == {
-        "type": "path",
-        "max_depth": 5,
-        "rr_depth": 3,
-        "hide_emitters": False,
-    }
-    assert isinstance(
-        KernelDict.from_elements(integrator, ctx=ctx).load(), mi.Integrator
-    )
-
-
-def test_volpath(mode_mono):
-    # Basic specification
-    integrator = VolPathIntegrator()
-    ctx = KernelDictContext()
-    assert integrator.kernel_dict(ctx)["integrator"] == {"type": "volpath"}
-    assert isinstance(
-        KernelDict.from_elements(integrator, ctx=ctx).load(), mi.Integrator
-    )
-
-    # More detailed specification
-    integrator = VolPathIntegrator(max_depth=5, rr_depth=3, hide_emitters=False)
-    assert integrator.kernel_dict(ctx)["integrator"] == {
-        "type": "volpath",
-        "max_depth": 5,
-        "rr_depth": 3,
-        "hide_emitters": False,
-    }
-    assert isinstance(
-        KernelDict.from_elements(integrator, ctx=ctx).load(), mi.Integrator
-    )
-
-
-def test_volpathmis(mode_mono):
-    # Basic specification
-    integrator = VolPathMISIntegrator()
-    ctx = KernelDictContext()
-    assert integrator.kernel_dict(ctx)["integrator"] == {"type": "volpathmis"}
-    assert isinstance(
-        KernelDict.from_elements(integrator, ctx=ctx).load(), mi.Integrator
-    )
-
-    # More detailed specification
-    integrator = VolPathMISIntegrator(
-        max_depth=5, rr_depth=3, hide_emitters=False, use_spectral_mis=True
-    )
-    assert integrator.kernel_dict(ctx)["integrator"] == {
-        "type": "volpathmis",
-        "max_depth": 5,
-        "rr_depth": 3,
-        "hide_emitters": False,
-        "use_spectral_mis": True,
-    }
-    assert isinstance(
-        KernelDict.from_elements(integrator, ctx=ctx).load(), mi.Integrator
-    )
+    kernel_dict = template.render(ctx=ctx)
+    assert isinstance(mi.load_dict(kernel_dict), mi.MonteCarloIntegrator)

@@ -3,13 +3,11 @@ import typing as t
 import attrs
 
 from ._core import Integrator
-from ..core import KernelDict
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class MonteCarloIntegrator(Integrator):
     """
     Base class for integrator elements wrapping kernel classes
@@ -25,7 +23,8 @@ class MonteCarloIntegrator(Integrator):
         "corresponds to ∞). A value of 1 will display only visible emitters. 2 "
         "computes only direct illumination (no multiple scattering), etc. If "
         "unset, the kernel default value (-1) is used.",
-        type="int, optional",
+        type="int or None",
+        init_type="int, optional",
     )
 
     rr_depth: t.Optional[int] = documented(
@@ -33,48 +32,50 @@ class MonteCarloIntegrator(Integrator):
         doc="Minimum path depth after which the implementation starts applying "
         "the Russian roulette path termination criterion. If unset, the kernel "
         "default value (5) is used.",
-        type="int, optional",
+        type="int or None",
+        init_type="int, optional",
     )
 
     hide_emitters: t.Optional[bool] = documented(
         attrs.field(default=None, converter=attrs.converters.optional(bool)),
         doc="Hide directly visible emitters. If unset, the kernel default "
         "value (``false``) is used.",
-        type="bool, optional",
+        type="bool or None",
+        init_type="bool, optional",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = {self.id: {}}
+    @property
+    def template(self) -> dict:
+        result = super().template
 
         if self.max_depth is not None:
-            result[self.id]["max_depth"] = self.max_depth
+            result["max_depth"] = self.max_depth
         if self.rr_depth is not None:
-            result[self.id]["rr_depth"] = self.rr_depth
+            result["rr_depth"] = self.rr_depth
         if self.hide_emitters is not None:
-            result[self.id]["hide_emitters"] = self.hide_emitters
+            result["hide_emitters"] = self.hide_emitters
 
-        return KernelDict(result)
+        return result
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class PathIntegrator(MonteCarloIntegrator):
     """
-    A thin interface to the `path tracer kernel plugin <https://eradiate-kernel.readthedocs.io/en/latest/generated/plugins.html#path-tracer-path>`_.
+    A thin interface to the `path tracer kernel plugin.
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering and does not account for volume
     interactions.
     """
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = super(PathIntegrator, self).kernel_dict(ctx)
-        result[self.id]["type"] = "path"
-        return result
+    @property
+    def kernel_type(self) -> str:
+        return "path"
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class VolPathIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the volumetric path tracer kernel plugin.
@@ -83,14 +84,13 @@ class VolPathIntegrator(MonteCarloIntegrator):
     It supports multiple scattering and accounts for volume interactions.
     """
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = super(VolPathIntegrator, self).kernel_dict(ctx)
-        result[self.id]["type"] = "volpath"
-        return result
+    @property
+    def kernel_type(self) -> str:
+        return "volpath"
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class VolPathMISIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the volumetric path tracer (with spectral multiple
@@ -102,11 +102,14 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
         default=None, converter=attrs.converters.optional(bool)
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = super(VolPathMISIntegrator, self).kernel_dict(ctx)
+    @property
+    def kernel_type(self) -> str:
+        return "volpathmis"
 
-        result[self.id]["type"] = "volpathmis"
+    @property
+    def template(self) -> dict:
+        result = super().template
         if self.use_spectral_mis is not None:
-            result[self.id]["use_spectral_mis"] = self.use_spectral_mis
+            result["use_spectral_mis"] = self.use_spectral_mis
 
         return result
