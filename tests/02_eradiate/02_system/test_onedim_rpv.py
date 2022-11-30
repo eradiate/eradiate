@@ -763,4 +763,4 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, ert
         absdiff = (results["rpv"].brf - results["lambertian"].brf).values
         assert np.allclose(
             results["rpv"].brf, results["lambertian"].brf, rtol=1e-2, atol=1e-3
-        ), f"Expected rtol=1e-2, max: {np.max(reldiff)}; expected atol=1e-3, max {np.max(absdiff)}"
+        ), f"Expected reldiff<=1e-2, max: {np.max(reldiff)}; expected absdiff<=1e-3, max {np.max(absdiff)}"
