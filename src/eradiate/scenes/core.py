@@ -22,7 +22,7 @@ from ..util.misc import nest
 # ------------------------------------------------------------------------------
 
 
-class ParamFlags(enum.IntFlag):
+class ParamFlags(enum.Flag):
     """
     Parameter flags.
     """
@@ -122,12 +122,25 @@ def render_params(
 # ------------------------------------------------------------------------------
 
 
+class SceneElementFlags(enum.Flag):
+    """
+    Parameter flags.
+    """
+
+    NONE = 0
+    COMPOSITE = enum.auto()
+    INSTANCE = enum.auto()
+    ALL = COMPOSITE | INSTANCE
+
+
 @attrs.define(eq=False)
 class SceneElement:
     """
     Important: All subclasses *must* have a hash, thus eq must be False (see
     attrs docs on hashing for a complete explanation).
     """
+
+    _flags: t.ClassVar[SceneElementFlags] = SceneElementFlags.NONE
 
     id: t.Optional[str] = documented(
         attrs.field(
@@ -138,6 +151,16 @@ class SceneElement:
         type="str or None",
         init_type="str, optional",
     )
+
+    @classmethod
+    @property
+    def flags(cls):
+        if not cls._flags:
+            raise NotImplementedError(
+                f"Please specify scene elements flags for '{cls.__name__}'."
+            )
+        else:
+            return cls._flags
 
     @property
     def kernel_type(self) -> t.Optional[str]:
@@ -195,11 +218,9 @@ class SceneElement:
         callback : SceneTraversal
             Callback data structure storing the collected data.
         """
-        print(f"In SceneElement.traverse() --- {self.__class__.__name__}")
-
         try:
             if (
-                self.instance is not None
+                self.flags & SceneElementFlags.INSTANCE
             ):  # Element expands as instance and doesn't contribute to dict template
                 callback.put_instance(self)
             else:  # Element contributes to dict template
@@ -210,9 +231,8 @@ class SceneElement:
 
             if self.objects is not None:
                 for name, obj in self.objects.items():
-                    if obj.is_composite:
+                    if self.flags & SceneElementFlags.COMPOSITE:
                         template, params = traverse(obj)
-
                     else:
                         callback.put_object(name, obj)
 
