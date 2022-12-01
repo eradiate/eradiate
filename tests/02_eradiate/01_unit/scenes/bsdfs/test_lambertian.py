@@ -14,13 +14,13 @@ from eradiate.scenes.spectra import UniformSpectrum
 )
 def test_lambertian_construct(modes_all, kwargs):
     # Default constructor
-    l = LambertianBSDF(**kwargs)
-    assert isinstance(l.reflectance, UniformSpectrum)
+    bsdf = LambertianBSDF(**kwargs)
+    assert isinstance(bsdf.reflectance, UniformSpectrum)
 
 
 def test_lambertian_kernel_dict(modes_all_double):
-    l = LambertianBSDF()
-    template, _ = traverse(l)
+    bsdf = LambertianBSDF()
+    template, _ = traverse(bsdf)
     ctx = KernelDictContext()
     kernel_dict = template.render(ctx=ctx)
     assert isinstance(mi.load_dict(kernel_dict), mi.BSDF)

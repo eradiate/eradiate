@@ -14,7 +14,7 @@ import xarray as xr
 
 import eradiate
 
-from ..core import KernelDict, SceneElement
+from ..core import KernelDict, NodeSceneElement
 from ..spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum, spectrum_factory
 from ... import ckd, converters, validators
 from ..._factory import Factory
@@ -508,7 +508,7 @@ def _str_summary_raw(x):
 
 @parse_docs
 @attrs.define
-class Measure(SceneElement, ABC):
+class Measure(NodeSceneElement, ABC):
     """
     Abstract base class for all measure scene elements.
 
@@ -542,9 +542,9 @@ class Measure(SceneElement, ABC):
             default="measure",
             validator=attrs.validators.optional((attrs.validators.instance_of(str))),
         ),
-        doc=get_doc(SceneElement, "id", "doc"),
-        type=get_doc(SceneElement, "id", "type"),
-        init_type=get_doc(SceneElement, "id", "init_type"),
+        doc=get_doc(NodeSceneElement, "id", "doc"),
+        type=get_doc(NodeSceneElement, "id", "type"),
+        init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"measure"',
     )
 

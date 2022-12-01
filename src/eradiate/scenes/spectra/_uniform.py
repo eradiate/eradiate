@@ -8,7 +8,7 @@ import pint
 import pinttr
 
 from ._core import Spectrum
-from ..core import Param, ParamFlags
+from ..core import NodeSceneElement, Param, ParamFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...units import unit_context_config as ucc
@@ -16,8 +16,8 @@ from ...units import unit_context_kernel as uck
 
 
 @parse_docs
-@attrs.define(eq=False)
-class UniformSpectrum(Spectrum):
+@attrs.define(eq=False, slots=False)
+class UniformSpectrum(Spectrum, NodeSceneElement):
     """
     Uniform spectrum [``uniform``] (*i.e.* constant vs wavelength).
     """
@@ -48,9 +48,6 @@ class UniformSpectrum(Spectrum):
                     f"'{value.units}' incompatible with quantity {self.quantity} "
                     f"(expected '{expected_units}')",
                 )
-
-    def __attrs_post_init__(self):
-        self.update()
 
     def update(self):
         self.value = pinttr.util.ensure_units(self.value, ucc.get(self.quantity))

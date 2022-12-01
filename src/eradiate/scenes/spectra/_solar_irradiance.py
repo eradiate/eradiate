@@ -10,7 +10,7 @@ import pint
 import xarray as xr
 
 from ._core import Spectrum
-from ..core import Param, ParamFlags
+from ..core import NodeSceneElement, Param, ParamFlags
 from ... import converters, data, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -46,8 +46,8 @@ def _datetime_converter(x: t.Any):
 
 
 @parse_docs
-@attrs.define(eq=False)
-class SolarIrradianceSpectrum(Spectrum):
+@attrs.define(eq=False, slots=False)
+class SolarIrradianceSpectrum(NodeSceneElement, Spectrum):
     """
     Solar irradiance spectrum [``solar_irradiance``].
 

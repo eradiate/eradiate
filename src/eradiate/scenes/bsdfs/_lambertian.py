@@ -3,15 +3,15 @@ import typing as t
 import attrs
 
 from ._core import BSDF
-from ..core import SceneElement
+from ..core import NodeSceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 
 
 @parse_docs
-@attrs.define(eq=False)
-class LambertianBSDF(BSDF):
+@attrs.define(eq=False, slots=False)
+class LambertianBSDF(NodeSceneElement, BSDF):
     """
     Lambertian BSDF [``lambertian``].
 
@@ -41,5 +41,5 @@ class LambertianBSDF(BSDF):
         return "diffuse"
 
     @property
-    def objects(self) -> t.Dict[str, SceneElement]:
+    def objects(self) -> t.Dict[str, NodeSceneElement]:
         return {"reflectance": self.reflectance}

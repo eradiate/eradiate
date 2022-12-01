@@ -4,15 +4,15 @@ import attrs
 import mitsuba as mi
 
 from ._core import BSDF
-from ..core import Param, ParamFlags
+from ..core import NodeSceneElement, Param, ParamFlags
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 
 
 @parse_docs
-@attrs.define(eq=False)
-class CheckerboardBSDF(BSDF):
+@attrs.define(eq=False, slots=False)
+class CheckerboardBSDF(NodeSceneElement, BSDF):
     """
     Checkerboard BSDF [``checkerboard``].
 
@@ -72,12 +72,14 @@ class CheckerboardBSDF(BSDF):
 
     @property
     def params(self) -> t.Dict[str, Param]:
-        {
+        return {
             "reflectance.color0": Param(
-                lambda ctx: self.reflectance_a.eval(ctx), ParamFlags.SPECTRAL
+                lambda ctx: self.reflectance_a.eval(ctx.spectral_ctx),
+                ParamFlags.SPECTRAL,
             ),
             "reflectance.color1": Param(
-                lambda ctx: self.reflectance_a.eval(ctx), ParamFlags.SPECTRAL
+                lambda ctx: self.reflectance_a.eval(ctx.spectral_ctx),
+                ParamFlags.SPECTRAL,
             ),
             "reflectance.to_uv": Param(
                 lambda ctx: mi.ScalarTransform4f.scale(self.scale_pattern)
