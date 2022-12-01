@@ -2,7 +2,7 @@ import typing as t
 
 import attrs
 
-from ..core import SceneElement
+from ..core import NodeSceneElement
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
@@ -19,7 +19,7 @@ integrator_factory.register_lazy_batch(
 
 @parse_docs
 @attrs.define(eq=False)
-class Integrator(SceneElement):
+class Integrator(NodeSceneElement):
     """
     Abstract base class for all integrator elements.
     """
@@ -29,8 +29,8 @@ class Integrator(SceneElement):
             default="integrator",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
-        doc=get_doc(SceneElement, "id", "doc"),
-        type=get_doc(SceneElement, "id", "type"),
-        init_type=get_doc(SceneElement, "id", "init_type"),
+        doc=get_doc(NodeSceneElement, "id", "doc"),
+        type=get_doc(NodeSceneElement, "id", "type"),
+        init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"integrator"',
     )

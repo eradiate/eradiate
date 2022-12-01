@@ -3,7 +3,7 @@ import typing as t
 import attrs
 
 from ._core import Illumination
-from ..core import SceneElement
+from ..core import NodeSceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...validators import has_quantity
@@ -37,5 +37,5 @@ class ConstantIllumination(Illumination):
         return "constant"
 
     @property
-    def objects(self) -> t.Dict[str, SceneElement]:
+    def objects(self) -> t.Dict[str, NodeSceneElement]:
         return {"radiance": self.radiance}

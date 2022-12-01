@@ -5,7 +5,7 @@ from abc import ABC
 
 import attrs
 
-from ..core import SceneElement
+from ..core import NodeSceneElement
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
@@ -22,7 +22,7 @@ surface_factory.register_lazy_batch(
 
 @parse_docs
 @attrs.define(eq=False)
-class Surface(SceneElement, ABC):
+class Surface(NodeSceneElement, ABC):
     """
     An abstract base class defining common facilities for all surfaces.
 
@@ -36,22 +36,11 @@ class Surface(SceneElement, ABC):
             default="surface",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
-        doc=get_doc(SceneElement, "id", "doc"),
-        type=get_doc(SceneElement, "id", "type"),
-        init_type=get_doc(SceneElement, "id", "init_type"),
+        doc=get_doc(NodeSceneElement, "id", "doc"),
+        type=get_doc(NodeSceneElement, "id", "type"),
+        init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"surface"',
     )
-
-    def __attrs_post_init__(self):
-        self.update()
-
-    def update(self) -> None:
-        """
-        Enforce internal state consistency. This method should be called when
-        fields are modified. It is automatically called as a post-init step.
-        The default implementation is a no-op.
-        """
-        pass
 
     @property
     def kernel_type(self) -> None:

@@ -13,7 +13,6 @@ from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import SpectralContext
 from ...exceptions import UnsupportedModeError
-from ...scenes.core import SceneElement
 from ...units import PhysicalQuantity
 
 
@@ -106,17 +105,23 @@ spectrum_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define(eq=False)
-class Spectrum(SceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class Spectrum:
     """
-    Spectrum abstract base class.
+    Spectrum interface.
+
+    Notes
+    -----
+    * This class is to be used as a mixin.
+    * Subclasses must implement :meth:`eval_mono`, :meth:`eval_ckd` and
+      :meth:`integral`.
     """
 
     quantity: PhysicalQuantity = documented(
         attrs.field(
             default="dimensionless",
             converter=PhysicalQuantity,
-            repr=lambda x: f"{x.value.upper()}",
+            repr=lambda x: x.value.upper(),
         ),
         doc="Physical quantity which the spectrum represents. The specified "
         "quantity must be one which varies with wavelength. "
@@ -163,7 +168,6 @@ class Spectrum(SceneElement, ABC):
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    @abstractmethod
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         """
         Evaluate spectrum in monochromatic modes.
@@ -178,9 +182,8 @@ class Spectrum(SceneElement, ABC):
         value : quantity
             Evaluated spectrum as an array with the same shape as ``w``.
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         """
         Evaluate spectrum in CKD modes.
@@ -195,9 +198,8 @@ class Spectrum(SceneElement, ABC):
         value : quantity
             Evaluated spectrum as an array with shape ``(len(bindexes),)``.
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         """
         Compute the integral of the spectrum on a given interval.
@@ -215,4 +217,4 @@ class Spectrum(SceneElement, ABC):
         value : quantity
             Computed integral value.
         """
-        pass
+        raise NotImplementedError

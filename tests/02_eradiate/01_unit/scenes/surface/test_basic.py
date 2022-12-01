@@ -33,12 +33,14 @@ def test_basic_surface_construct(
         raise NotImplementedError
 
     if isinstance(expected_traversal, dict):
+        print(surface)
         template, params = traverse(surface)
-        print(template.render(KernelDictContext()))
+        print(f"template = {template.render(KernelDictContext())}")
 
         scene = Scene(objects={"surface": surface})
         template, params = traverse(scene)
         kernel_dict = template.render(KernelDictContext())
+        print("kernel_dict =")
         pprint(kernel_dict)
         mitsuba.load_dict(kernel_dict)
 

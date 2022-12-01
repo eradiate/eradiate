@@ -3,15 +3,15 @@ import typing as t
 import attrs
 
 from ._core import BSDF
-from ..core import SceneElement
+from ..core import NodeSceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 
 
 @parse_docs
-@attrs.define(eq=False)
-class RPVBSDF(BSDF):
+@attrs.define(eq=False, slots=False)
+class RPVBSDF(NodeSceneElement, BSDF):
     """
     RPV BSDF [``rpv``].
 
@@ -107,7 +107,7 @@ class RPVBSDF(BSDF):
         return "rpv"
 
     @property
-    def objects(self) -> t.Dict[str, SceneElement]:
+    def objects(self) -> t.Dict[str, NodeSceneElement]:
         result = {"rho_0": self.rho_0, "k": self.k, "g": self.g}
         if self.rho_c is not None:
             result["rho_c"] = self.rho_c

@@ -7,7 +7,7 @@ import attrs
 
 from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..core import Ref, SceneElement, SceneTraversal
+from ..core import NodeSceneElement, Ref, SceneElementFlags, SceneTraversal
 from ..shapes import RectangleShape, Shape, SphereShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
@@ -21,6 +21,8 @@ class BasicSurface(Surface):
 
     A basic surface description consisting of a single shape and BSDF.
     """
+
+    flags: t.ClassVar[SceneElementFlags] = SceneElementFlags.COMPOSITE
 
     shape: t.Optional[Shape] = documented(
         attrs.field(
@@ -91,5 +93,5 @@ class BasicSurface(Surface):
         super().traverse(callback)
 
     @property
-    def objects(self) -> t.Dict[str, SceneElement]:
+    def objects(self) -> t.Dict[str, NodeSceneElement]:
         return {self._shape_id: self.shape, self._bsdf_id: self.bsdf}

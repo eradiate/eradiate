@@ -6,7 +6,7 @@ import pint
 import pinttr
 
 from ._core import Illumination
-from ..core import Param, SceneElement
+from ..core import NodeSceneElement, Param
 from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
 from ..._config import config
 from ...attrs import documented, parse_docs
@@ -105,5 +105,5 @@ class DirectionalIllumination(Illumination):
         return {"direction": Param(lambda ctx: list(self.direction))}
 
     @property
-    def objects(self) -> t.Dict[str, SceneElement]:
+    def objects(self) -> t.Dict[str, NodeSceneElement]:
         return {"irradiance": self.irradiance}

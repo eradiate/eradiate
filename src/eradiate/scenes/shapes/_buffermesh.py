@@ -9,7 +9,7 @@ import pint
 import pinttr
 
 from ._core import Shape
-from ..core import Param, traverse
+from ..core import Param, SceneElementFlags, traverse
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
@@ -25,6 +25,8 @@ class BufferMeshShape(Shape):
     This shape represents a triangulated mesh directly defined by lists of vertex
     positions and faces.
     """
+
+    flags: t.ClassVar[SceneElementFlags] = SceneElementFlags.INSTANCE
 
     vertices: pint.Quantity = documented(
         pinttr.field(

@@ -5,7 +5,7 @@ from abc import ABC
 
 import attrs
 
-from ..core import SceneElement
+from ..core import NodeSceneElement
 from ..._factory import Factory
 from ...attrs import documented, get_doc
 
@@ -22,10 +22,14 @@ bsdf_factory.register_lazy_batch(
 )
 
 
-@attrs.define(eq=False)
-class BSDF(SceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class BSDF:
     """
-    Abstract interface for all BSDF scene elements.
+    Interface for all BSDF scene elements.
+
+    Notes
+    -----
+    * This class is to be used as a mixin.
     """
 
     id: t.Optional[str] = documented(
@@ -33,8 +37,8 @@ class BSDF(SceneElement, ABC):
             default="bsdf",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
-        doc=get_doc(SceneElement, "id", "doc"),
-        type=get_doc(SceneElement, "id", "type"),
-        init_type=get_doc(SceneElement, "id", "init_type"),
+        doc=get_doc(NodeSceneElement, "id", "doc"),
+        type=get_doc(NodeSceneElement, "id", "type"),
+        init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"bsdf"',
     )

@@ -11,7 +11,7 @@ from pinttr.util import ensure_units
 
 from ._core import Shape
 from ..bsdfs import BSDF
-from ..core import Param, ParamFlags, SceneElement
+from ..core import NodeSceneElement, Param, ParamFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc

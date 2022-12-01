@@ -122,25 +122,12 @@ def render_params(
 # ------------------------------------------------------------------------------
 
 
-class SceneElementFlags(enum.Flag):
-    """
-    Parameter flags.
-    """
-
-    NONE = 0
-    COMPOSITE = enum.auto()
-    INSTANCE = enum.auto()
-    ALL = COMPOSITE | INSTANCE
-
-
-@attrs.define(eq=False)
+@attrs.define(eq=False, slots=False)
 class SceneElement:
     """
     Important: All subclasses *must* have a hash, thus eq must be False (see
     attrs docs on hashing for a complete explanation).
     """
-
-    _flags: t.ClassVar[SceneElementFlags] = SceneElementFlags.NONE
 
     id: t.Optional[str] = documented(
         attrs.field(
@@ -152,18 +139,41 @@ class SceneElement:
         init_type="str, optional",
     )
 
-    @classmethod
-    @property
-    def flags(cls):
-        if not cls._flags:
-            raise NotImplementedError(
-                f"Please specify scene elements flags for '{cls.__name__}'."
-            )
-        else:
-            return cls._flags
+    def __attrs_post_init__(self):
+        self.update()
 
     @property
-    def kernel_type(self) -> t.Optional[str]:
+    def params(self) -> t.Optional[t.Dict[str, Param]]:
+        """
+        Map of updatable parameters associated with this scene element.
+        """
+        return None
+
+    def traverse(self, callback):
+        """
+        Traverse this scene element and collect kernel dictionary template,
+        parameter and object map contributions.
+
+        Parameters
+        ----------
+        callback : SceneTraversal
+            Callback data structure storing the collected data.
+        """
+        raise NotImplementedError
+
+    def update(self) -> None:
+        """
+        Enforce internal state consistency. This method should be called when
+        fields are modified. It is automatically called as a post-init step.
+        """
+        # The default implementation is a no-op
+        pass
+
+
+@attrs.define(eq=False, slots=False)
+class NodeSceneElement(SceneElement):
+    @property
+    def kernel_type(self) -> str:
         """
         Kernel type if this scene element can be modelled by a single kernel
         scene graph node; ``None`` otherwise. The default implementation raises
@@ -176,10 +186,7 @@ class SceneElement:
         """
         Kernel dictionary template contents associated with this scene element.
         """
-        result = {}
-
-        if self.kernel_type is not None:
-            result["type"] = self.kernel_type
+        result = {"type": self.kernel_type}
 
         if self.params is not None:
             result.update(self.params)
@@ -187,14 +194,7 @@ class SceneElement:
         return result
 
     @property
-    def params(self) -> t.Optional[t.Dict[str, Param]]:
-        """
-        Map of updatable parameters associated with this scene element.
-        """
-        return None
-
-    @property
-    def objects(self) -> t.Optional[t.Dict[str, SceneElement]]:
+    def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
         """
         Map of child objects associated with this scene element.
         """
@@ -218,33 +218,44 @@ class SceneElement:
         callback : SceneTraversal
             Callback data structure storing the collected data.
         """
-        try:
-            if (
-                self.flags & SceneElementFlags.INSTANCE
-            ):  # Element expands as instance and doesn't contribute to dict template
-                callback.put_instance(self)
-            else:  # Element contributes to dict template
-                callback.put_template(self.template)
+        callback.put_template(self.template)
 
-            if self.params is not None:
-                callback.put_params(self.params)
+        if self.params is not None:
+            callback.put_params(self.params)
 
-            if self.objects is not None:
-                for name, obj in self.objects.items():
-                    if self.flags & SceneElementFlags.COMPOSITE:
-                        template, params = traverse(obj)
-                    else:
-                        callback.put_object(name, obj)
-
-        except Exception as e:
-            raise TraversalError(
-                f"Partial callback state: "
-                f"depth={callback.depth}, name={callback.name}"
-            ) from e
+        if self.objects is not None:
+            for name, obj in self.objects.items():
+                callback.put_object(name, obj)
 
 
-@attrs.define(eq=False)
-class Ref(SceneElement):
+@attrs.define(eq=False, slots=False)
+class InstanceSceneElement(SceneElement):
+    def traverse(self, callback):
+        callback.put_instance(self)
+
+        if self.params is not None:
+            callback.put_params(self.params)
+
+
+@attrs.define(eq=False, slots=False)
+class CompositeSceneElement(SceneElement):
+    @property
+    def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
+        """
+        Map of child objects associated with this scene element.
+        """
+        return None
+
+    def traverse(self, callback):
+        if self.objects is not None:
+            for name, obj in self.objects.items():
+                template, params = traverse(obj)
+                callback.put_template({f"{name}.{k}": v for k, v in template.items()})
+                callback.put_params({f"{name}.{k}": v for k, v in params.items()})
+
+
+@attrs.define(eq=False, slots=False)
+class Ref(NodeSceneElement):
     id: str = documented(
         attrs.field(
             kw_only=True,
@@ -263,16 +274,16 @@ class Ref(SceneElement):
         return {**super().template, "id": self.id}
 
 
-@attrs.define(eq=False)
-class Scene(SceneElement):
-    _objects: t.Dict[str, SceneElement] = attrs.field(factory=dict, converter=dict)
+@attrs.define(eq=False, slots=False)
+class Scene(NodeSceneElement):
+    _objects: t.Dict[str, NodeSceneElement] = attrs.field(factory=dict, converter=dict)
 
     @property
     def kernel_type(self) -> str:
         return "scene"
 
     @property
-    def objects(self) -> t.Dict[str, SceneElement]:
+    def objects(self) -> t.Dict[str, NodeSceneElement]:
         return self._objects
 
 
@@ -289,10 +300,10 @@ class SceneTraversal:
     """
 
     #: Current traversal node
-    node: SceneElement
+    node: NodeSceneElement
 
     #: Parent to current node
-    parent: t.Optional[SceneElement] = attrs.field(default=None)
+    parent: t.Optional[NodeSceneElement] = attrs.field(default=None)
 
     #: Current node's name
     name: t.Optional[str] = attrs.field(default=None)
@@ -312,19 +323,19 @@ class SceneTraversal:
     def __attrs_post_init__(self):
         self.hierarchy[self.node] = (self.parent, self.depth)
 
-    def put_template(self, template: dict):
+    def put_template(self, template: t.Mapping):
         prefix = "" if self.name is None else f"{self.name}."
 
         for k, v in template.items():
             self.template[f"{prefix}{k}"] = v
 
-    def put_params(self, params: dict):
+    def put_params(self, params: t.Mapping):
         prefix = "" if self.name is None else f"{self.name}."
 
         for k, v in params.items():
             self.params[f"{prefix}{k}"] = v
 
-    def put_object(self, name: str, node: SceneElement):
+    def put_object(self, name: str, node: NodeSceneElement):
         if node is None or node in self.hierarchy:
             return
 
@@ -345,7 +356,7 @@ class SceneTraversal:
         self.template[self.name] = obj
 
 
-def traverse(node: SceneElement) -> t.Tuple[KernelDictTemplate, ParameterMap]:
+def traverse(node: NodeSceneElement) -> t.Tuple[KernelDictTemplate, ParameterMap]:
     """
     Traverse a scene element tree and collect kernel dictionary data.
 
