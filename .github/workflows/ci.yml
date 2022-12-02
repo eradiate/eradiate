@@ -74,6 +74,7 @@ jobs:
           export CUDA_VISIBLE_DEVICES=""
           sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y cmake
           make conda-init
+          conda deactivate && conda activate eradiate
           pip install --editable . --no-deps
           source setpath.sh
           pytest ./tests
