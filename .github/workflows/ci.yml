@@ -108,7 +108,7 @@ jobs:
         id: cache
       - name: Update environment
         run:
-        conda activate eradiate
+          conda activate eradiate
           make conda-init
           conda deactivate && conda activate eradiate
         if: steps.cache.outputs.cache-hit != 'true'
