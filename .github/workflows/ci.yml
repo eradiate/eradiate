@@ -40,6 +40,7 @@ jobs:
           CACHE_NUMBER: 0
         id: cache
       - name: Update environment
+        shell: bash -l {0}
         run:
           conda activate eradiate
           make conda-init
@@ -107,6 +108,7 @@ jobs:
           CACHE_NUMBER: 0
         id: cache
       - name: Update environment
+        shell: bash -l {0}
         run:
           conda activate eradiate
           make conda-init
