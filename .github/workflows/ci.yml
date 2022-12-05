@@ -23,18 +23,14 @@ jobs:
           token: ${{ secrets.ERADIATECI_PAT }}
       - uses: conda-incubator/setup-miniconda@v2
         with:
+          miniconda-version: latest
           activate-environment: eradiate
-      - name: Get Date
-        id: get-date
-        run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
-        shell: bash
       - name: Cache Conda env
         uses: actions/cache@v2
         with:
           path: ${{ env.CONDA }}/envs
           key:
-            conda-${{ runner.os }}--${{ runner.arch }}--${{
-            steps.get-date.outputs.today }}-${{ env.CACHE_NUMBER}}
+            conda-${{ runner.os }}-${{ runner.arch }}--${{ env.CACHE_NUMBER}}
         env:
           # Increase this value to reset cache if etc/example-environment.yml has not changed
           CACHE_NUMBER: 0
@@ -43,7 +39,9 @@ jobs:
         shell: bash -l {0}
         run:
           conda activate eradiate
+
           make conda-init
+
           conda deactivate && conda activate eradiate
         if: steps.cache.outputs.cache-hit != 'true'
       - name: Build and run tests
@@ -87,22 +85,18 @@ jobs:
           token: ${{ secrets.ERADIATECI_PAT }}
       - uses: conda-incubator/setup-miniconda@v2
         with:
+          miniconda-version: latest
           activate-environment: eradiate
       - uses: actions/download-artifact@master
         with:
           name: mitsuba
           path: build
-      - name: Get Date
-        id: get-date
-        run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
-        shell: bash
       - name: Cache Conda env
         uses: actions/cache@v2
         with:
           path: ${{ env.CONDA }}/envs
           key:
-            conda-${{ runner.os }}--${{ runner.arch }}--${{
-            steps.get-date.outputs.today }}-${{ env.CACHE_NUMBER}}
+            conda-${{ runner.os }}-${{ runner.arch }}--${{ env.CACHE_NUMBER}}
         env:
           # Increase this value to reset cache if etc/example-environment.yml has not changed
           CACHE_NUMBER: 0
@@ -111,7 +105,9 @@ jobs:
         shell: bash -l {0}
         run:
           conda activate eradiate
+
           make conda-init
+
           conda deactivate && conda activate eradiate
         if: steps.cache.outputs.cache-hit != 'true'
       - name: run tests
