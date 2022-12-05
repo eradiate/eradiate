@@ -25,25 +25,15 @@ jobs:
         with:
           miniconda-version: latest
           activate-environment: eradiate
-      - name: Cache Conda env
+      - name: Cache Mitsuba
         uses: actions/cache@v2
         with:
-          path: ${{ env.CONDA }}/envs
+          path: build
           key:
-            conda-${{ runner.os }}-${{ runner.arch }}--${{ env.CACHE_NUMBER}}
+            conda-${{ runner.os }}-${{ runner.arch }}-${{hashFiles('ext/mitsuba') }}-${{ env.CACHE_NUMBER}}
         env:
-          # Increase this value to reset cache if etc/example-environment.yml has not changed
           CACHE_NUMBER: 0
         id: cache
-      - name: Update environment
-        shell: bash -l {0}
-        run:
-          conda activate eradiate
-
-          make conda-init
-
-          conda deactivate && conda activate eradiate
-        if: steps.cache.outputs.cache-hit != 'true'
       - name: Build and run tests
         shell: bash -l {0}
         run: |          
@@ -68,11 +58,12 @@ jobs:
           cmake --preset default
           cmake --build build
           python -c "import drjit; import mitsuba; mitsuba.set_variant('scalar_rgb')"
-      - uses: actions/upload-artifact@v3
-        with:
-          name: mitsuba
-          path: build
-          retention-days: 5
+        if: steps.cache.outputs.cache-hit != 'true'
+      # - uses: actions/upload-artifact@v3
+      #   with:
+      #     name: mitsuba
+      #     path: build
+      #     retention-days: 5
   test:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -87,36 +78,26 @@ jobs:
         with:
           miniconda-version: latest
           activate-environment: eradiate
-      - uses: actions/download-artifact@master
-        with:
-          name: mitsuba
-          path: build
-      - name: Cache Conda env
+      # - uses: actions/download-artifact@master
+      #   with:
+      #     name: mitsuba
+      #     path: build
+      - name: Cache Mitsuba
         uses: actions/cache@v2
         with:
-          path: ${{ env.CONDA }}/envs
+          path: build
           key:
-            conda-${{ runner.os }}-${{ runner.arch }}--${{ env.CACHE_NUMBER}}
+            conda-${{ runner.os }}-${{ runner.arch }}-${{hashFiles('ext/mitsuba') }}-${{ env.CACHE_NUMBER}}
         env:
-          # Increase this value to reset cache if etc/example-environment.yml has not changed
           CACHE_NUMBER: 0
         id: cache
-      - name: Update environment
-        shell: bash -l {0}
-        run:
-          conda activate eradiate
-
-          make conda-init
-
-          conda deactivate && conda activate eradiate
-        if: steps.cache.outputs.cache-hit != 'true'
       - name: run tests
         shell: bash -l {0}
         run: |
           export CUDA_VISIBLE_DEVICES=""
-          sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y cmake
           make conda-init
-          conda deactivate && conda activate eradiate
+          conda deactivate
+          conda activate eradiate
           make test
       - name: archive test results
         uses: actions/upload-artifact@v3
