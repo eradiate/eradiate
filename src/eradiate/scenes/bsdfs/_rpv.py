@@ -11,7 +11,7 @@ from ...attrs import documented, parse_docs
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class RPVBSDF(NodeSceneElement, BSDF):
+class RPVBSDF(BSDF, NodeSceneElement):
     """
     RPV BSDF [``rpv``].
 

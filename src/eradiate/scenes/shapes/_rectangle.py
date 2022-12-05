@@ -10,7 +10,7 @@ import pinttr
 
 from ._core import Shape
 from ..bsdfs import BSDF
-from ..core import Param, ParamFlags
+from ..core import NodeSceneElement, Param, ParamFlags
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
@@ -40,12 +40,12 @@ def _edges_converter(value):
 
 
 @parse_docs
-@attrs.define(eq=False)
-class RectangleShape(Shape):
+@attrs.define(eq=False, slots=False)
+class RectangleShape(Shape, NodeSceneElement):
     """
     Rectangle shape [``rectangle``].
 
-    This shape represents a rectangle parametrised by the length of its edges,
+    This shape represents a rectangle parametrized by the length of its edges,
     the coordinates of its central point, a normal vector and an orientation
     vector.
     """

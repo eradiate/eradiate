@@ -18,10 +18,14 @@ integrator_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define(eq=False)
-class Integrator(NodeSceneElement):
+@attrs.define(eq=False, slots=False)
+class Integrator:
     """
     Abstract base class for all integrator elements.
+
+    Notes
+    -----
+    * This class is to be used as a mixin.
     """
 
     id: t.Optional[str] = documented(

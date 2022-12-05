@@ -36,8 +36,8 @@ def _edges_converter(x):
 
 
 @parse_docs
-@attrs.define(eq=False)
-class CuboidShape(Shape):
+@attrs.define(eq=False, slots=False)
+class CuboidShape(Shape, NodeSceneElement):
     """
     Cuboid shape [``cuboid``].
 

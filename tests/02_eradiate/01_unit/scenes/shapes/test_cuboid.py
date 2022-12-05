@@ -7,8 +7,17 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import traverse
-from eradiate.scenes.shapes import CuboidShape
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.shapes import CuboidShape, Shape
+from eradiate.test_tools.types import check_type
+
+
+def test_cuboid_type():
+    check_type(
+        CuboidShape,
+        expected_mro=[Shape, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.mark.parametrize(

@@ -8,9 +8,18 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import traverse
-from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.spectra import Spectrum, UniformSpectrum, spectrum_factory
+from eradiate.test_tools.types import check_type
 from eradiate.units import PhysicalQuantity
+
+
+def test_uniform_type():
+    check_type(
+        UniformSpectrum,
+        expected_mro=[Spectrum, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.mark.parametrize(

@@ -5,8 +5,17 @@ import eradiate
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import traverse
-from eradiate.scenes.spectra import AirScatteringCoefficientSpectrum
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.spectra import AirScatteringCoefficientSpectrum, Spectrum
+from eradiate.test_tools.types import check_type
+
+
+def test_air_scattering_coefficient_type():
+    check_type(
+        AirScatteringCoefficientSpectrum,
+        expected_mro=[Spectrum, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 def test_air_scattering_coefficient_construct(modes_all):

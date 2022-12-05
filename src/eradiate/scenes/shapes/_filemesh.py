@@ -5,12 +5,13 @@ from pathlib import Path
 import attrs
 
 from ._core import Shape
+from ..core import NodeSceneElement
 from ...attrs import documented, parse_docs
 
 
 @parse_docs
-@attrs.define(eq=False)
-class FileMeshShape(Shape):
+@attrs.define(eq=False, slots=False)
+class FileMeshShape(Shape, NodeSceneElement):
     """
     File based mesh shape [``file_mesh``].
 

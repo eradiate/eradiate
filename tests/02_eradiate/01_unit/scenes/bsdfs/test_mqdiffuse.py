@@ -4,8 +4,18 @@ import pytest
 import xarray as xr
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.bsdfs import MQDiffuseBSDF
-from eradiate.scenes.core import traverse
+from eradiate.scenes.bsdfs import BSDF, MQDiffuseBSDF
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.test_tools.types import check_type
+
+
+def test_mqdiffuse_type():
+    check_type(
+        MQDiffuseBSDF,
+        expected_mro=[BSDF, NodeSceneElement],
+        expected_slots=[],
+    )
+
 
 ds = xr.Dataset(
     {

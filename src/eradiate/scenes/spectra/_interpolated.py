@@ -20,7 +20,7 @@ from ...units import unit_context_kernel as uck
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class InterpolatedSpectrum(NodeSceneElement, Spectrum):
+class InterpolatedSpectrum(Spectrum, NodeSceneElement):
     """
     Linearly interpolated spectrum [``interpolated``].
 
