@@ -21,7 +21,9 @@ jobs:
         with:
           submodules: 'recursive'
           token: ${{ secrets.ERADIATECI_PAT }}
-          ref: main
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: eradiate
       - name: Build and run tests
         shell: bash -l {0}
         run: |          
@@ -37,12 +39,15 @@ jobs:
           libjpeg-dev      \
           ninja-build      \
           cmake
+
+          cmake --version
           
           export CC=clang-11
           export CXX=clang++-11
           
-          source setpath.sh
-          
+          make conda-init
+          conda deactivate && conda activate eradiate
+
           cmake --preset default
           cmake --build build
           python -c "import drjit; import mitsuba; mitsuba.set_variant('scalar_rgb')"
@@ -61,7 +66,6 @@ jobs:
         with:
           submodules: 'recursive'
           token: ${{ secrets.ERADIATECI_PAT }}
-          ref: main
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: eradiate
