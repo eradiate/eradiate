@@ -5,7 +5,7 @@ from ..core import NodeSceneElement
 
 
 @attrs.define(eq=False, slots=False)
-class BlackBSDF(NodeSceneElement, BSDF):
+class BlackBSDF(BSDF, NodeSceneElement):
     """
     Black BSDF [``black``].
 

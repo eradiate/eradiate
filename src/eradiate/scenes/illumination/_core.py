@@ -18,10 +18,14 @@ illumination_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define(eq=False)
-class Illumination(NodeSceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class Illumination:
     """
     Abstract base class for all illumination scene elements.
+
+    Notes
+    -----
+    * This class is to be used as a mixin.
     """
 
     id: t.Optional[str] = documented(

@@ -11,7 +11,7 @@ from pinttr.util import ensure_units
 
 from ._core import Shape
 from ..bsdfs import BSDF
-from ..core import Param, ParamFlags
+from ..core import NodeSceneElement, Param, ParamFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
@@ -24,12 +24,12 @@ def _normalize(v: np.typing.ArrayLike) -> np.ndarray:
 
 
 @parse_docs
-@attrs.define(eq=False)
-class SphereShape(Shape):
+@attrs.define(eq=False, slots=False)
+class SphereShape(Shape, NodeSceneElement):
     """
     Sphere shape [``sphere``].
 
-    This shape represents a sphere parametrised by its centre and radius.
+    This shape represents a sphere parametrized by its centre and radius.
     """
 
     center: pint.Quantity = documented(

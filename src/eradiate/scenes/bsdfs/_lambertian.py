@@ -11,7 +11,7 @@ from ...attrs import documented, parse_docs
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class LambertianBSDF(NodeSceneElement, BSDF):
+class LambertianBSDF(BSDF, NodeSceneElement):
     """
     Lambertian BSDF [``lambertian``].
 

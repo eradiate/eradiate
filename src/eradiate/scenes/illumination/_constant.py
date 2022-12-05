@@ -10,8 +10,8 @@ from ...validators import has_quantity
 
 
 @parse_docs
-@attrs.define(eq=False)
-class ConstantIllumination(Illumination):
+@attrs.define(eq=False, slots=False)
+class ConstantIllumination(Illumination, NodeSceneElement):
     """
     Constant illumination scene element [``constant``].
     """

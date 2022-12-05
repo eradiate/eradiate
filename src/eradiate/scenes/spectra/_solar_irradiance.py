@@ -47,7 +47,7 @@ def _datetime_converter(x: t.Any):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class SolarIrradianceSpectrum(NodeSceneElement, Spectrum):
+class SolarIrradianceSpectrum(Spectrum, NodeSceneElement):
     """
     Solar irradiance spectrum [``solar_irradiance``].
 

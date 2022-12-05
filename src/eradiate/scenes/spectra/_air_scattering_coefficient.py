@@ -19,7 +19,7 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class AirScatteringCoefficientSpectrum(NodeSceneElement, Spectrum):
+class AirScatteringCoefficientSpectrum(Spectrum, NodeSceneElement):
     """
     Air scattering coefficient spectrum [``air_scattering_coefficient``].
 

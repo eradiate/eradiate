@@ -2,9 +2,18 @@ import mitsuba as mi
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import traverse
-from eradiate.scenes.illumination import ConstantIllumination
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.illumination import ConstantIllumination, Illumination
 from eradiate.scenes.spectra import UniformSpectrum
+from eradiate.test_tools.types import check_type
+
+
+def test_constant_type():
+    check_type(
+        ConstantIllumination,
+        expected_mro=[Illumination, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 def test_constant_construct(modes_all):

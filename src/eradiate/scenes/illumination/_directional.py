@@ -17,8 +17,8 @@ from ...validators import has_quantity, is_positive
 
 
 @parse_docs
-@attrs.define(eq=False)
-class DirectionalIllumination(Illumination):
+@attrs.define(eq=False, slots=False)
+class DirectionalIllumination(Illumination, NodeSceneElement):
     """
     Directional illumination scene element [``directional``].
 

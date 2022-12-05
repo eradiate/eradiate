@@ -24,10 +24,14 @@ shape_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define(eq=False)
-class Shape(NodeSceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class Shape:
     """
     Abstract interface for all shape scene elements.
+
+    Notes
+    -----
+    * This class is to be used as a mixin.
     """
 
     id: t.Optional[str] = documented(

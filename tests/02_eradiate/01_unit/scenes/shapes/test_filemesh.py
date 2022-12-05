@@ -5,8 +5,17 @@ import mitsuba as mi
 import pytest
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import traverse
-from eradiate.scenes.shapes import FileMeshShape
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.shapes import FileMeshShape, Shape
+from eradiate.test_tools.types import check_type
+
+
+def test_file_mesh_type():
+    check_type(
+        FileMeshShape,
+        expected_mro=[Shape, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.fixture(scope="module")

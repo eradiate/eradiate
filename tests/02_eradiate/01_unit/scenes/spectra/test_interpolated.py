@@ -10,9 +10,18 @@ from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.ckd import BinSet
 from eradiate.contexts import KernelDictContext, SpectralContext
-from eradiate.scenes.core import traverse
-from eradiate.scenes.spectra import InterpolatedSpectrum, spectrum_factory
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.spectra import InterpolatedSpectrum, Spectrum, spectrum_factory
+from eradiate.test_tools.types import check_type
 from eradiate.units import PhysicalQuantity
+
+
+def test_interpolated_type():
+    check_type(
+        InterpolatedSpectrum,
+        expected_mro=[Spectrum, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.mark.parametrize(

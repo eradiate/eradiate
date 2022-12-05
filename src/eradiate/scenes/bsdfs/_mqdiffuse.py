@@ -15,7 +15,7 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class MQDiffuseBSDF(NodeSceneElement, BSDF):
+class MQDiffuseBSDF(BSDF, NodeSceneElement):
     """
     Measured quasi-diffuse BSDF [``mqdiffuse``].
 

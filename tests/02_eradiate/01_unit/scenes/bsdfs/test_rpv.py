@@ -2,8 +2,17 @@ import mitsuba as mi
 import pytest
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.bsdfs import RPVBSDF
-from eradiate.scenes.core import traverse
+from eradiate.scenes.bsdfs import BSDF, RPVBSDF
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.test_tools.types import check_type
+
+
+def test_rpv_type():
+    check_type(
+        RPVBSDF,
+        expected_mro=[BSDF, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.mark.parametrize(

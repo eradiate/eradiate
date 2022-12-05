@@ -12,7 +12,7 @@ from ...attrs import documented, parse_docs
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class CheckerboardBSDF(NodeSceneElement, BSDF):
+class CheckerboardBSDF(BSDF, NodeSceneElement):
     """
     Checkerboard BSDF [``checkerboard``].
 

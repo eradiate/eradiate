@@ -1,7 +1,17 @@
 import mitsuba as mi
 import pytest
 
-from eradiate.scenes.shapes import BufferMeshShape
+from eradiate.scenes.core import InstanceSceneElement
+from eradiate.scenes.shapes import BufferMeshShape, Shape
+from eradiate.test_tools.types import check_type
+
+
+def test_buffer_mesh_type():
+    check_type(
+        BufferMeshShape,
+        expected_mro=[Shape, InstanceSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.mark.parametrize(

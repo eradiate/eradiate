@@ -1,8 +1,17 @@
 import mitsuba as mi
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.bsdfs import BlackBSDF
-from eradiate.scenes.core import traverse
+from eradiate.scenes.bsdfs import BSDF, BlackBSDF
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.test_tools.types import check_type
+
+
+def test_black_type():
+    check_type(
+        BlackBSDF,
+        expected_mro=[BSDF, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 def test_black_constructor(modes_all):

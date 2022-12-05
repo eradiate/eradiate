@@ -4,9 +4,18 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import traverse
-from eradiate.scenes.illumination import DirectionalIllumination
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.illumination import DirectionalIllumination, Illumination
 from eradiate.scenes.spectra import SolarIrradianceSpectrum, UniformSpectrum
+from eradiate.test_tools.types import check_type
+
+
+def test_directional_type():
+    check_type(
+        DirectionalIllumination,
+        expected_mro=[Illumination, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.mark.parametrize(
