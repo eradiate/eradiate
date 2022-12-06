@@ -11,13 +11,18 @@ import eradiate
 
 from ._core import Surface
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
-from ..core import KernelDict
+from ..core import (
+    CompositeSceneElement,
+    NodeSceneElement,
+    Param,
+    Ref,
+    SceneTraversal,
+    traverse,
+)
 from ..shapes import RectangleShape, shape_factory
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
-from ...exceptions import OverriddenValueWarning
+from ...exceptions import OverriddenValueWarning, TraversalError
 from ...units import unit_context_config as ucc
-from ...util.misc import onedict_value
 
 
 def _edges_converter(value):
@@ -36,8 +41,8 @@ def _edges_converter(value):
 
 
 @parse_docs
-@attrs.define
-class CentralPatchSurface(Surface):
+@attrs.define(eq=False, slots=False)
+class CentralPatchSurface(Surface, CompositeSceneElement):
     """
     Central patch surface [``central_patch``].
 
@@ -140,25 +145,30 @@ class CentralPatchSurface(Surface):
             else (self.shape.edges / (3.0 * self.patch_edges)).m_as("dimensionless")
         )
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
+    def update(self) -> None:
+        # Force BSDF referencing if the shape is defined
+        if self.shape is not None:
+            if isinstance(self.shape.bsdf, BSDF):
+                warnings.warn("Set BSDF will be overridden by surface BSDF settings.")
+            self.shape.bsdf = Ref(id=self._bsdf_id)
 
-        if self.shape is None:
-            # This is allowed for clarity: many Surface instances will actually
-            # have their surface overridden by a higher-level component such as
-            # and Experiment. However, the 'shape' field must be a Shape for
-            # kernel dict generation to happen.
-            raise ValueError(
-                "The 'shape' field must be a Shape for kernel dictionary "
-                "generation to work (got None)."
-            )
-        else:
-            # Note: No coupling between the shape and BSDF is not done at this
-            # level: this part is delegate to the kernel_dict() method.
-            return self.shape.kernel_dict(ctx)
+    @property
+    def _shape_id(self):
+        """
+        Mitsuba shape object identifier.
+        """
+        return f"{self.id}_shape"
 
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
+    @property
+    def _bsdf_id(self):
+        """
+        Mitsuba BSDF object identifier (background).
+        """
+        return f"{self.id}_bsdf"
+
+    @property
+    def template(self) -> dict:
+        result = super().template
 
         scale = self._texture_scale()
         to_uv = mi.ScalarTransform4f.scale(
@@ -167,23 +177,49 @@ class CentralPatchSurface(Surface):
             [-0.5 + (0.5 / scale[0]), -0.5 + (0.5 / scale[1]), 0.0]
         )
 
-        return KernelDict(
-            {
-                self.bsdf_id: {
-                    "type": "blendbsdf",
-                    "bsdf_0": onedict_value(self.patch_bsdf.kernel_dict(ctx=ctx)),
-                    "bsdf_1": onedict_value(self.bsdf.kernel_dict(ctx=ctx)),
-                    "weight": {
-                        "type": "bitmap",
-                        "filename": str(
-                            eradiate.data.data_store.fetch(
-                                "textures/central_patch_surface_mask.bmp"
-                            )
-                        ),
-                        "filter_type": "nearest",
-                        "to_uv": to_uv,
-                        "wrap_mode": "clamp",
-                    },
-                }
-            }
-        )
+        result[f"{self._bsdf_id}.type"] = "blendbsdf"
+
+        for bsdf, prefix in [(self.bsdf, "bsdf_0"), (self.patch_bsdf, "bsdf_1")]:
+            template, _ = traverse(bsdf)
+            for k, v in template.items():
+                result[f"{self._bsdf_id}.{prefix}.{k}"] = v
+
+        weight_dict = {
+            "type": "bitmap",
+            "filename": str(
+                eradiate.data.data_store.fetch(
+                    "textures/central_patch_surface_mask.bmp"
+                )
+            ),
+            "filter_type": "nearest",
+            "to_uv": to_uv,
+            "wrap_mode": "clamp",
+        }
+
+        for k, v in weight_dict.items():
+            result[f"{self._bsdf_id}.weight.{k}"] = v
+
+        return result
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        result = {}
+
+        for bsdf, prefix in [(self.bsdf, "bsdf_0"), (self.patch_bsdf, "bsdf_1")]:
+            _, params = traverse(bsdf)
+            for k, v in params.items():
+                result[f"{self._bsdf_id}.{prefix}.{k}"] = v
+
+        return result
+
+    @property
+    def objects(self) -> t.Dict[str, NodeSceneElement]:
+        return {self._shape_id: self.shape}
+
+    def traverse(self, callback: SceneTraversal) -> None:
+        if self.shape is None:
+            raise TraversalError(
+                "A 'CentralPatchSurface' cannot be traversed if its 'shape' field is unset."
+            )
+
+        super().traverse(callback)

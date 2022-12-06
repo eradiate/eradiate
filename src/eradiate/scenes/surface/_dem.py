@@ -1,48 +1,50 @@
 from __future__ import annotations
 
 import typing as t
+import warnings
 
 import attrs
 import numpy as np
 import pint
 import xarray as xr
+from pinttr.util import ensure_units
 
-from ._core import Surface, surface_factory
+from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..core import KernelDict
+from ..core import CompositeSceneElement, InstanceSceneElement, NodeSceneElement
 from ..shapes import BufferMeshShape, FileMeshShape, Shape, shape_factory
 from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
-from ...util.misc import onedict_value
 
 
 @parse_docs
-@attrs.define
-class DEMSurface(Surface):
+@attrs.define(eq=False, slots=False)
+class DEMSurface(Surface, CompositeSceneElement):
     """
     DEM surface [``dem``]
 
-    A surface description for digital elevation models. This object holds only the Shape.
-    The associated BSDF is defined within the Shape plugin.
+    A surface description for digital elevation models.
 
-    This surface supports instantiation based on preprocessed geotiff files,
-    triangulated meshes in the PLY and OBJ formats and analytical surfaces based on functions
-    which map x and y coordinates to an elevation value.
+    This surface supports instantiation based on an xarray data array, a
+    triangulated mesh file in the PLY and OBJ formats and an analytical
+    elevation mapping the x and y coordinates to an elevation value.
 
     .. admonition:: Class method constructors
 
-        .. autosummary::
+       .. autosummary::
 
-            from_dataarray
-            from_analytical
+          from_dataarray
+          from_analytical
 
-    Note: The DEMSurface overwrites :meth:`.Surface.kernel_dict`, because of the way, kernel dict
-    creation is handled in :class:`BufferMeshShape`. That class returns a mitsuba Mesh object, instead
-    of a kernel dict and so it cannot be updated to hold a reference to the BSDF specified here. Instead we
-    overwrite the bsdf member of the underlying shape class directly before kernel dict creation.
+    Notes
+    -----
+    * Contrary to most other surfaces, this scene element expands as a single
+      Mitsuba Shape plugin which includes its child BSDF rather than referencing
+      a top-level dictionary entry. The reason for this is that some allowed
+      shapes expand as Mitsuba instances rather than dictionaries, which
+      prevents object referencing.
     """
 
     id: t.Optional[str] = documented(
@@ -65,7 +67,7 @@ class DEMSurface(Surface):
             kw_only=True,
         ),
         doc="Shape describing the surface.",
-        type=".BufferMeshShape or .OBJMeshShape or .PLYMeshShape",
+        type=".BufferMeshShape or .FileMeshShape",
         init_type=".BufferMeshShape or .OBJMeshShape or .PLYMeshShape or dict",
     )
 
@@ -102,37 +104,42 @@ class DEMSurface(Surface):
 
     @classmethod
     def from_dataarray(
-        cls, data: xr.DataArray, bsdf: BSDF, planet_radius=6371 * ureg.km
+        cls,
+        data: xr.DataArray,
+        bsdf: BSDF,
+        planet_radius: t.Union[pint.Quantity, float] = 6371.0 * ureg.km,
     ) -> DEMSurface:
         """
-        This classmethod enables the instantiation of a DEM from an xarray data array holding elevation data.
-        The dataarray must use latitude and longitude as its dimensional coordinates.
+        Construct a DEM from an xarray data array holding elevation data.
+        The data array must use latitude and longitude as its dimensional
+        coordinates.
 
         Parameters
         ----------
         data : DataArray
-            Dataarray holding the elevation data. Dimensional coordinates must be latitude `lat`
-            and longitude `lon`. Data will be interpreted to be given in kernel units.
+            Data array holding the elevation data. Dimensional coordinates must
+            be latitude `lat` and longitude `lon`. Data will be interpreted to
+            be given in kernel units.
 
         bsdf : .BSDF
             BSDF to be attached to the mesh shape.
 
-        planet_radius : quantity
-            Planet radius used to convert latitude and longitude into distance units.
-            Defaults to Earth's radius.
+        planet_radius : quantity or float, optional
+            Planet radius used to convert latitude and longitude into distance
+            units. Unitless values are interpreted in default configuration
+            units. Defaults to Earth's radius.
 
         Returns
         -------
         :class:`.DEMSurface`
-            Created :class:`DEMSurface`.
         """
-        radius = planet_radius.m_as(ucc.get("length"))
+        radius = ensure_units(planet_radius, ucc.get("length"), convert=True).magnitude
 
         len_lat = len(data.lat)  # x
         len_lon = len(data.lon)  # y
 
-        # I convert the degrees to local distances based on the planet radius
-        # This will be handled differently when I include the AtmosphereGeometry.
+        # Convert the degrees to local distances based on planet radius
+        # TODO: Update this when adding support for spherical shell geometry
         lon_rad = to_quantity(data.lon).m_as(ureg.rad)
         lat_rad = to_quantity(data.lat).m_as(ureg.rad)
         mean_lon = lon_rad.mean()
@@ -142,8 +149,8 @@ class DEMSurface(Surface):
         lat_length = lat_range * radius * np.cos(mean_lon)
 
         lat_range = list(np.linspace(-lat_length / 2.0, lat_length / 2.0, len_lat))
-        # Duplicate the first and last entry for the extra vertices, which form the
-        # vertical walls
+        # Duplicate the first and last entry for the extra vertices, which form
+        # the vertical walls
         lat_range.insert(0, lat_range[0])
         lat_range.append(lat_range[-1])
 
@@ -177,39 +184,41 @@ class DEMSurface(Surface):
         face_indices = cls._generate_face_indices(len_lat, len_lon)
 
         return cls(
-            shape=BufferMeshShape(
-                vertices=vertex_positions, faces=face_indices, bsdf=bsdf
-            )
+            shape=BufferMeshShape(vertices=vertex_positions, faces=face_indices),
+            bsdf=bsdf,
         )
 
     @classmethod
     def from_analytical(
         cls,
         elevation_function: t.Callable,
-        x_length: pint.Quantity,
+        x_length: t.Union[pint.Quantity, float],
         x_steps: int,
-        y_length: pint.Quantity,
+        y_length: t.Union[pint.Quantity, float],
         y_steps: int,
         bsdf: BSDF,
     ) -> DEMSurface:
         """
-        This classmethod allows the creation of a DEM surface based on a function, which
-        maps x,y points to an elevation.
+        Construct a DEM from an analytical function mapping the x and y
+        coordinates to elevation values.
 
         Parameters
         ----------
         elevation_function : callable
-            Function that takes x, y points as inputs and returns the corresponding elevation
-            value. Elevation values are interpreted in kernel units.
+            Function that takes x, y points as inputs and returns the
+            corresponding elevation value. Elevation values are interpreted in
+            kernel units.
 
-        x_length : pint.Quantity
-            Extent of the mapped area along the x-axis.
+        x_length : pint.Quantity or float
+            Extent of the mapped area along the x-axis. Unitless values are
+            interpreted in default configuration units.
 
         x_steps : int
             Number of data points to generate along the x-axis.
 
         y_length : pint.Quantity
-            Extent of the mapped area along the y-axis.
+            Extent of the mapped area along the y-axis. Unitless values are
+            interpreted in default configuration units.
 
         y_steps : int
             Number of data points to generate along the y-axis.
@@ -217,10 +226,10 @@ class DEMSurface(Surface):
         bsdf : .BSDF
             BSDF to be attached to the mesh shape.
         """
-        x_length_m = x_length.m_as(ucc.get("length"))
-        y_length_m = y_length.m_as(ucc.get("length"))
+        x_length_m = ensure_units(x_length, ucc.get("length"), convert=True).magnitude
+        y_length_m = ensure_units(y_length, ucc.get("length"), convert=True).magnitude
 
-        # duplicate the first and last entries in x and y, for the vertices
+        # Duplicate the first and last entries in x and y, for the vertices
         # that form the vertical walls
         x_range = np.empty((x_steps + 2,))
         x_range[1:-1] = np.linspace(-x_length_m / 2.0, x_length_m / 2.0, x_steps)
@@ -244,29 +253,21 @@ class DEMSurface(Surface):
                 vertex_positions.append([x, y, z])
 
         return cls(
-            shape=BufferMeshShape(
-                vertices=vertex_positions, faces=face_indices, bsdf=bsdf
-            )
+            shape=BufferMeshShape(vertices=vertex_positions, faces=face_indices),
+            bsdf=bsdf,
         )
 
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-        return self.bsdf.kernel_dict(ctx)
+    def update(self) -> None:
+        # Force BSDF nesting if the shape is defined
+        if self.shape is not None:
+            if isinstance(self.shape.bsdf, BSDF):
+                warnings.warn("Set BSDF will be overridden by surface BSDF settings.")
+            self.shape.bsdf = self.bsdf
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-        return self.shape.kernel_dict(ctx)
+    @property
+    def _shape_id(self):
+        return self.id
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-
-        # This will overwrite any set BSDF
-        self.shape.bsdf = self.bsdf
-
-        # This is handled differently, because BufferMeshShape instantiates
-        # a mitsuba object instead of returning a dict
-        kernel_dict = {
-            self.shape_id: onedict_value(self.kernel_shapes(ctx)),
-        }
-
-        return KernelDict(kernel_dict)
+    @property
+    def objects(self) -> t.Dict[str, t.Union[NodeSceneElement, InstanceSceneElement]]:
+        return {self._shape_id: self.shape}
