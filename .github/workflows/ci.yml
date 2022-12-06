@@ -28,7 +28,7 @@ jobs:
       - name: Get Mitsuba hash
         run: |
           cd ext/mitsuba
-          export MITSUBA_HASH=`git rev-parse --short HEAD`
+          echo "MITSUBA_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Cache Mitsuba
         uses: actions/cache@v2
         with:
@@ -54,6 +54,7 @@ jobs:
           ninja-build      \
           cmake
 
+          export CUDA_VISIBLE_DEVICES=""
           make conda-init
           conda deactivate
           conda activate eradiate
@@ -93,7 +94,7 @@ jobs:
       - name: Get Mitsuba hash
         run: |
           cd ext/mitsuba
-          export MITSUBA_HASH=`git rev-parse --short HEAD`
+          echo "MITSUBA_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Cache Mitsuba
         uses: actions/cache@v2
         with:
