@@ -114,6 +114,11 @@ class InterpolatedSpectrum(Spectrum):
         # Apply appropriate units to values field
         self.values = pinttr.util.ensure_units(self.values, ucc.get(self.quantity))
 
+        # Sort by increasing wavelength (required by numpy.interp in eval_mono)
+        idx = np.argsort(self.wavelengths)
+        self.wavelengths = self.wavelengths[idx]
+        self.values = self.values[idx]
+
     @classmethod
     def from_dataarray(
         cls,
