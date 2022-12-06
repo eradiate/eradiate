@@ -51,9 +51,16 @@ class InterpolatedSpectrum(Spectrum):
             units=ucc.deferred("wavelength"),
             kw_only=True,
         ),
-        doc="Wavelengths defining the interpolation grid.",
+        doc="Wavelengths defining the interpolation grid. Values must be "
+            "monotonically increasing.",
         type="quantity",
     )
+
+    @wavelengths.validator
+    def _wavelengths_validator(self, attribute, value):
+        # wavelength must be monotonically increasing
+        if not np.all(np.diff(value) > 0):
+            raise ValueError("wavelengths must be monotonically increasing")
 
     values: pint.Quantity = documented(
         attrs.field(

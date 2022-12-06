@@ -144,11 +144,12 @@ def test_interpolated_eval_mono(mode_mono, quantity, values, w, expected):
 
 def test_interpolated_eval_mono_wavelengths_decreasing(mode_mono):
     # decreasing wavelength values
-    eval = InterpolatedSpectrum(
-        quantity="dimensionless", values=[1.0, 0.0], wavelengths=[600.0, 500.0]
-    ).eval_mono(550.0 * ureg.nm)
-    assert np.all(0.5 == eval)
-    assert isinstance(eval, pint.Quantity)
+    with pytest.raises(ValueError):
+        InterpolatedSpectrum(
+            quantity="dimensionless",
+            values=[0.0, 1.0],
+            wavelengths=[600.0, 500.0],
+        )
 
 
 def test_interpolated_eval(modes_all):
