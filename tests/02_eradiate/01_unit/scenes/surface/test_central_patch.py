@@ -4,42 +4,99 @@ import numpy as np
 import pytest
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.surface import CentralPatchSurface
+from eradiate.exceptions import TraversalError
+from eradiate.scenes.core import CompositeSceneElement, Ref, Scene, traverse
+from eradiate.scenes.shapes import RectangleShape, Shape
+from eradiate.scenes.surface import CentralPatchSurface, Surface
+from eradiate.test_tools.types import check_type
 from eradiate.units import unit_registry as ureg
 
 
-def test_central_patch_construct(modes_all_double):
-    ctx = KernelDictContext()
+def test_central_patch_type():
+    check_type(
+        CentralPatchSurface,
+        expected_mro=[Surface, CompositeSceneElement],
+        expected_slots=[],
+    )
 
-    # Default constructor
-    surface = CentralPatchSurface()
-    # The default value for `shape` is invalid: a shape must be manually
-    # specified
-    assert surface.shape is None
 
-    with pytest.raises(ValueError):
-        surface.kernel_dict(ctx).load()
+@pytest.mark.parametrize(
+    "kwargs, expected_shape, expected_traversal_param_keys",
+    [
+        ({}, None, TraversalError),
+        (
+            {"shape": {"type": "rectangle"}},
+            RectangleShape,
+            {
+                "surface_bsdf.bsdf_0.reflectance.value",
+                "surface_shape.to_world",
+            },
+        ),
+        (
+            {"shape": {"type": "rectangle"}, "patch_edges": 1.0},
+            RectangleShape,
+            {
+                "surface_bsdf.bsdf_0.reflectance.value",
+                "surface_shape.to_world",
+            },
+        ),
+        (
+            {"shape": {"type": "rectangle"}, "patch_edges": [1.0, 0.5]},
+            RectangleShape,
+            {
+                "surface_bsdf.bsdf_0.reflectance.value",
+                "surface_shape.to_world",
+            },
+        ),
+    ],
+    ids=[
+        "noargs",
+        "shape",
+        "edges_scalar",
+        "edges_vector",
+    ],
+)
+def test_central_patch_construct_new(
+    modes_all_double, kwargs, expected_shape, expected_traversal_param_keys
+):
+    surface = CentralPatchSurface(**kwargs)
 
-    # Specify shape
-    surface = CentralPatchSurface(shape={"type": "rectangle"})
-    kernel_dict = surface.kernel_dict(ctx)
-    # The BSDF is referenced
-    assert kernel_dict.data[surface.shape_id]["bsdf"]["type"] == "ref"
-    # The constructed dict can be loaded
-    assert kernel_dict.load()
+    if expected_shape is None:
+        assert surface.shape is None
+    elif issubclass(expected_shape, Shape):
+        assert isinstance(surface.shape, expected_shape)
+        # Shape BSDF is referenced
+        assert isinstance(surface.shape.bsdf, Ref)
+    else:
+        raise NotImplementedError
 
-    # Specify patch parameters
-    # -- Square patch with edges specified with a scalar
-    surface = CentralPatchSurface(shape={"type": "rectangle"}, patch_edges=1.0)
-    assert surface.kernel_dict(ctx).load()
-    # -- Rectangular patch with edges specified with a 2-vector
-    surface = CentralPatchSurface(shape={"type": "rectangle"}, patch_edges=[1.0, 0.5])
-    assert surface.kernel_dict(ctx).load()
+    if isinstance(expected_traversal_param_keys, set):
+        template, params = traverse(surface)
+
+        # Scene element is composite: template has not "type" key
+        assert "type" not in template
+        # Parameter map keys are fetched recursively
+        assert set(params.keys()) == expected_traversal_param_keys
+
+        # When enclosed in a Scene, the surface can be traversed
+        scene = Scene(objects={"surface": surface})
+        template, params = traverse(scene)
+        kernel_dict = template.render(KernelDictContext())
+        assert isinstance(mi.load_dict(kernel_dict), mi.Scene)
+
+    elif isinstance(expected_traversal_param_keys, type) and issubclass(
+        expected_traversal_param_keys, TraversalError
+    ):
+        with pytest.raises(
+            expected_traversal_param_keys,
+            match="A 'CentralPatchSurface' cannot be traversed if its 'shape' field is unset",
+        ):
+            traverse(surface)
+    else:
+        raise NotImplementedError
 
 
 def test_central_patch_texture_scale(mode_mono):
-    ctx = KernelDictContext()
-
     # Default value: the patch is not scaled
     surface = CentralPatchSurface(shape={"type": "rectangle", "edges": 10.0})
     assert np.allclose(1.0, surface._texture_scale())
@@ -53,16 +110,15 @@ def test_central_patch_texture_scale(mode_mono):
 
 
 def test_central_patch_scale_kernel_dict(mode_mono):
-    ctx = KernelDictContext()
-
     surface = CentralPatchSurface(
         shape={"type": "rectangle", "edges": 3000.0 * ureg.km},
         patch_edges=100 * ureg.km,
         id="surface",
     )
 
-    kernel_dict = surface.kernel_bsdfs(ctx=ctx)
-    result = kernel_dict["bsdf_surface"]["weight"]["to_uv"].matrix
+    template, params = traverse(surface)
+    kernel_dict = template.render(ctx=KernelDictContext())
+    result = kernel_dict["surface_bsdf"]["weight"]["to_uv"].matrix
     expected = (
         mi.ScalarTransform4f.scale([10, 10, 1])
         @ mi.ScalarTransform4f.translate((-0.45, -0.45, 0))

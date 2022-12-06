@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing as t
-from abc import ABC
 
 import attrs
 
@@ -21,14 +20,18 @@ surface_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define(eq=False)
-class Surface(NodeSceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class Surface:
     """
     An abstract base class defining common facilities for all surfaces.
 
     All scene elements deriving from this interface are composite and cannot be
     turned into a kernel scene instance on their own: they must be owned by a
     container which take care of expanding them.
+
+    Notes
+    -----
+    * This class is to be used as a mixin.
     """
 
     id: t.Optional[str] = documented(
@@ -41,7 +44,3 @@ class Surface(NodeSceneElement, ABC):
         init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"surface"',
     )
-
-    @property
-    def kernel_type(self) -> None:
-        return None

@@ -1,17 +1,26 @@
 import os
 import tempfile
+from copy import deepcopy
 
-import drjit as dr
 import mitsuba as mi
 import numpy as np
 import pytest
 import xarray as xr
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.bsdfs import LambertianBSDF
-from eradiate.scenes.shapes import FileMeshShape
-from eradiate.scenes.surface import DEMSurface
+from eradiate.scenes.core import CompositeSceneElement, Scene, traverse
+from eradiate.scenes.shapes import BufferMeshShape, FileMeshShape, Shape
+from eradiate.scenes.surface import DEMSurface, Surface
+from eradiate.test_tools.types import check_type
 from eradiate.units import unit_registry as ureg
+
+
+def test_dem_surface_type():
+    check_type(
+        DEMSurface,
+        expected_mro=[Surface, CompositeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.fixture(scope="module")
@@ -26,50 +35,93 @@ def tempfile_obj():
         yield filename
 
 
-def test_dem_construct_default(modes_all_double, tempfile_obj):
-
-    ctx = KernelDictContext()
-
-    dem = DEMSurface(
-        id="dem", shape=FileMeshShape(filename=tempfile_obj, bsdf=LambertianBSDF())
-    )
-
-    assert dem.kernel_dict(ctx=ctx).load(strip=False)
-
-
-def test_dem_construct_dataarray(modes_all_double, tempfile_obj):
-
-    ctx = KernelDictContext()
-
-    da = xr.DataArray(
-        data=np.zeros((10, 10)),
-        dims=["x", "y"],
-        coords=dict(
-            lat=(["x"], np.linspace(-5, 5.1, 10)),
-            lon=(["y"], np.linspace(-6, 6, 10)),
+@pytest.mark.parametrize(
+    "constructor, kwargs, expected_shape, expected_traversal_param_keys",
+    [
+        (
+            None,
+            {
+                "shape": {"type": "file_mesh", "filename": "tempfile_obj"},
+                "bsdf": {"type": "lambertian"},
+            },
+            FileMeshShape,
+            {"terrain.bsdf.reflectance.value"},
         ),
-    )
-    da.lat.attrs["units"] = "degree"
-    da.lon.attrs["units"] = "degree"
+        (
+            DEMSurface.from_dataarray,
+            {
+                "data": xr.DataArray(
+                    data=np.zeros((10, 10)),
+                    dims=["x", "y"],
+                    coords={
+                        "lat": (["x"], np.linspace(-5, 5.1, 10), {"units": "degree"}),
+                        "lon": (["y"], np.linspace(-6, 6, 10), {"units": "degree"}),
+                    },
+                ),
+                "bsdf": {"type": "lambertian"},
+            },
+            BufferMeshShape,
+            {"terrain.bsdf.reflectance.value"},
+        ),
+        (
+            DEMSurface.from_analytical,
+            {
+                "elevation_function": lambda x, y: 10.0,
+                "x_length": 10 * ureg.m,
+                "y_length": 10 * ureg.m,
+                "x_steps": 100,
+                "y_steps": 100,
+                "bsdf": {"type": "lambertian"},
+            },
+            BufferMeshShape,
+            {"terrain.bsdf.reflectance.value"},
+        ),
+    ],
+    ids=["minimal", "from_dataarray", "from_analytical"],
+)
+def test_dem_surface_construct(
+    modes_all_double,
+    constructor,
+    kwargs,
+    expected_shape,
+    expected_traversal_param_keys,
+    request,
+):
+    # Expand fixtures
+    kwargs = deepcopy(kwargs)
 
-    dem = DEMSurface.from_dataarray(data=da, bsdf=LambertianBSDF())
-    assert dem.kernel_dict(ctx=ctx).load(strip=False)
+    try:
+        if kwargs["shape"]["type"] == "file_mesh":
+            kwargs["shape"]["filename"] = request.getfixturevalue(
+                kwargs["shape"]["filename"]
+            )
+    except KeyError:
+        pass
 
+    # Instantiate DEM surface
+    if constructor is None:
+        surface = DEMSurface(**kwargs)
+    else:
+        surface = constructor(**kwargs)
 
-def test_dem_construct_analytical(modes_all_double, tempfile_obj):
+    if issubclass(expected_shape, Shape):
+        assert isinstance(surface.shape, expected_shape)
+    else:
+        raise NotImplementedError
 
-    # Default constructor
-    ctx = KernelDictContext()
+    if isinstance(expected_traversal_param_keys, set):
+        template, params = traverse(surface)
 
-    def elevation(x, y):
-        return 10.0
+        # Scene element is composite: template has not "type" key
+        assert "type" not in template
+        # Parameter map keys are fetched recursively
+        assert set(params.keys()) == expected_traversal_param_keys
 
-    dem = DEMSurface.from_analytical(
-        elevation,
-        x_length=10 * ureg.m,
-        y_length=10 * ureg.m,
-        x_steps=100,
-        y_steps=100,
-        bsdf=LambertianBSDF(),
-    )
-    assert dem.kernel_dict(ctx=ctx).load(strip=False)
+        # When enclosed in a Scene, the surface can be traversed
+        scene = Scene(objects={"surface": surface})
+        template, params = traverse(scene)
+        kernel_dict = template.render(KernelDictContext())
+        assert isinstance(mi.load_dict(kernel_dict), mi.Scene)
+
+    else:
+        raise NotImplementedError

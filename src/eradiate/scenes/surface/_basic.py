@@ -7,22 +7,20 @@ import attrs
 
 from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..core import NodeSceneElement, Ref, SceneElementFlags, SceneTraversal
+from ..core import CompositeSceneElement, NodeSceneElement, Ref, SceneTraversal
 from ..shapes import RectangleShape, Shape, SphereShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
 
 
 @parse_docs
-@attrs.define(eq=False)
-class BasicSurface(Surface):
+@attrs.define(eq=False, slots=False)
+class BasicSurface(Surface, CompositeSceneElement):
     """
     Basic surface [``basic``].
 
     A basic surface description consisting of a single shape and BSDF.
     """
-
-    flags: t.ClassVar[SceneElementFlags] = SceneElementFlags.COMPOSITE
 
     shape: t.Optional[Shape] = documented(
         attrs.field(
@@ -85,13 +83,14 @@ class BasicSurface(Surface):
         """
         return f"{self.id}_bsdf"
 
+    @property
+    def objects(self) -> t.Dict[str, NodeSceneElement]:
+        # Mind the order: the BSDF has to be BEFORE the shape
+        return {self._bsdf_id: self.bsdf, self._shape_id: self.shape}
+
     def traverse(self, callback: SceneTraversal) -> None:
         if self.shape is None:
             raise TraversalError(
                 "A 'BasicSurface' cannot be traversed if its 'shape' field is unset."
             )
         super().traverse(callback)
-
-    @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
-        return {self._shape_id: self.shape, self._bsdf_id: self.bsdf}

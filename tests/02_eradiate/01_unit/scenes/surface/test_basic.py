@@ -1,19 +1,31 @@
-import mitsuba
+import mitsuba as mi
 import pytest
-from rich.pretty import pprint
 
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import TraversalError
-from eradiate.scenes.core import Scene, traverse
+from eradiate.scenes.core import CompositeSceneElement, Scene, traverse
 from eradiate.scenes.shapes import RectangleShape, Shape
-from eradiate.scenes.surface import BasicSurface
+from eradiate.scenes.surface import BasicSurface, Surface
+from eradiate.test_tools.types import check_type
+
+
+def test_basic_surface_type():
+    check_type(
+        BasicSurface,
+        expected_mro=[Surface, CompositeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.mark.parametrize(
-    "kwargs, expected_shape, expected_traversal",
+    "kwargs, expected_shape, expected_traversal_param_keys",
     [
         ({}, None, TraversalError),
-        ({"shape": {"type": "rectangle"}}, RectangleShape, {"surface_bsdf": "nope"}),
+        (
+            {"shape": {"type": "rectangle"}},
+            RectangleShape,
+            {"surface_bsdf.reflectance.value", "surface_shape.to_world"},
+        ),
     ],
     ids=[
         "noargs",
@@ -21,7 +33,7 @@ from eradiate.scenes.surface import BasicSurface
     ],
 )
 def test_basic_surface_construct(
-    modes_all_double, kwargs, expected_shape, expected_traversal
+    modes_all_double, kwargs, expected_shape, expected_traversal_param_keys
 ):
     surface = BasicSurface(**kwargs)
 
@@ -32,31 +44,27 @@ def test_basic_surface_construct(
     else:
         raise NotImplementedError
 
-    if isinstance(expected_traversal, dict):
-        print(surface)
+    if isinstance(expected_traversal_param_keys, set):
         template, params = traverse(surface)
-        print(f"template = {template.render(KernelDictContext())}")
 
+        # Scene element is composite: template has not "type" key
+        assert "type" not in template
+        # Parameter map keys are fetched recursively
+        assert set(params.keys()) == expected_traversal_param_keys
+
+        # When enclosed in a Scene, the surface can be traversed
         scene = Scene(objects={"surface": surface})
         template, params = traverse(scene)
         kernel_dict = template.render(KernelDictContext())
-        print("kernel_dict =")
-        pprint(kernel_dict)
-        mitsuba.load_dict(kernel_dict)
+        assert isinstance(mi.load_dict(kernel_dict), mi.Scene)
 
-    elif issubclass(expected_traversal, TraversalError):
-        with pytest.raises(expected_traversal):
+    elif isinstance(expected_traversal_param_keys, type) and issubclass(
+        expected_traversal_param_keys, TraversalError
+    ):
+        with pytest.raises(
+            expected_traversal_param_keys,
+            match="A 'BasicSurface' cannot be traversed if its 'shape' field is unset",
+        ):
             traverse(surface)
     else:
         raise NotImplementedError
-
-    # with pytest.raises(ValueError):
-    #     surface.kernel_dict(ctx).load()
-    #
-    # # Specify shape
-    # surface = BasicSurface(shape={"type": "rectangle"})
-    # kernel_dict = surface.kernel_dict(ctx)
-    # # The BSDF is referenced
-    # assert kernel_dict.data[surface.shape_id]["bsdf"]["type"] == "ref"
-    # # The constructed dict can be loaded
-    # assert kernel_dict.load()

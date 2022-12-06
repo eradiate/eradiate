@@ -200,24 +200,8 @@ class NodeSceneElement(SceneElement):
         """
         return None
 
-    @property
-    def instance(self) -> t.Optional["mitsuba.Object"]:
-        """
-        Not None iff element produces no contribution to dictionary template
-        and directly expands as a Mitsuba object.
-        """
-        return None
-
     def traverse(self, callback: SceneTraversal) -> None:
-        """
-        Traverse this scene element and collect kernel dictionary template,
-        parameter and object map contributions.
-
-        Parameters
-        ----------
-        callback : SceneTraversal
-            Callback data structure storing the collected data.
-        """
+        # Inherit docstring
         callback.put_template(self.template)
 
         if self.params is not None:
@@ -230,8 +214,12 @@ class NodeSceneElement(SceneElement):
 
 @attrs.define(eq=False, slots=False)
 class InstanceSceneElement(SceneElement):
+    @property
+    def instance(self) -> "mitsuba.Object":
+        raise NotImplementedError
+
     def traverse(self, callback):
-        callback.put_instance(self)
+        callback.put_instance(self.instance)
 
         if self.params is not None:
             callback.put_params(self.params)
@@ -240,6 +228,11 @@ class InstanceSceneElement(SceneElement):
 @attrs.define(eq=False, slots=False)
 class CompositeSceneElement(SceneElement):
     @property
+    def template(self) -> dict:
+        # The default implementation returns an empty dictionary
+        return {}
+
+    @property
     def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
         """
         Map of child objects associated with this scene element.
@@ -247,11 +240,22 @@ class CompositeSceneElement(SceneElement):
         return None
 
     def traverse(self, callback):
+        callback.put_template(self.template)
+
+        if self.params is not None:
+            callback.put_params(self.params)
+
         if self.objects is not None:
             for name, obj in self.objects.items():
-                template, params = traverse(obj)
-                callback.put_template({f"{name}.{k}": v for k, v in template.items()})
-                callback.put_params({f"{name}.{k}": v for k, v in params.items()})
+                if isinstance(obj, InstanceSceneElement):
+                    callback.put_object(name, obj)
+
+                else:
+                    template, params = traverse(obj)
+                    callback.put_template(
+                        {f"{name}.{k}": v for k, v in template.items()}
+                    )
+                    callback.put_params({f"{name}.{k}": v for k, v in params.items()})
 
 
 @attrs.define(eq=False, slots=False)
@@ -324,33 +328,55 @@ class SceneTraversal:
         self.hierarchy[self.node] = (self.parent, self.depth)
 
     def put_template(self, template: t.Mapping):
+        """
+        Add a contribution to the kernel dictionary template.
+        """
         prefix = "" if self.name is None else f"{self.name}."
 
         for k, v in template.items():
             self.template[f"{prefix}{k}"] = v
 
     def put_params(self, params: t.Mapping):
+        """
+        Add a contribution to the parameter map.
+        """
         prefix = "" if self.name is None else f"{self.name}."
 
         for k, v in params.items():
             self.params[f"{prefix}{k}"] = v
 
-    def put_object(self, name: str, node: NodeSceneElement):
-        if node is None or node in self.hierarchy:
-            return
+    def put_object(self, name: str, node: SceneElement):
+        """
+        Add a child object to the template and parameter map.
+        """
+        if isinstance(node, CompositeSceneElement):
+            node.traverse(self)
 
-        cb = type(self)(
-            node=node,
-            parent=self.node,
-            name=name if self.name is None else f"{self.name}.{name}",
-            depth=self.depth + 1,
-            hierarchy=self.hierarchy,
-            template=self.template,
-            params=self.params,
-        )
-        node.traverse(cb)
+        else:
+            if node is None or node in self.hierarchy:
+                return
+
+            cb = type(self)(
+                node=node,
+                parent=self.node,
+                name=name if self.name is None else f"{self.name}.{name}",
+                depth=self.depth + 1,
+                hierarchy=self.hierarchy,
+                template=self.template,
+                params=self.params,
+            )
+
+            if isinstance(node, InstanceSceneElement):
+                cb.put_instance(node.instance)
+                cb.put_params(node.params)
+
+            else:
+                node.traverse(cb)
 
     def put_instance(self, obj: "mitsuba.Object"):
+        """
+        Add an instance to the kernel dictionary template.
+        """
         if not self.name:
             raise TraversalError("Instances may only be inserted as child nodes.")
         self.template[self.name] = obj
