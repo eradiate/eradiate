@@ -25,16 +25,20 @@ jobs:
         with:
           miniconda-version: latest
           activate-environment: eradiate
+      - name: Get Mitsuba hash
+        run: |
+          cd ext/mitsuba
+          export MITSUBA_HASH=`git rev-parse --short HEAD`
       - name: Cache Mitsuba
         uses: actions/cache@v2
         with:
           path: build
           key:
-            conda-${{ runner.os }}-${{ runner.arch }}-${{hashFiles('ext/mitsuba') }}-${{ env.CACHE_NUMBER}}
+            mitsuba-${{ env.MITSUBA_HASH }}-${{ env.CACHE_NUMBER}}
         env:
           CACHE_NUMBER: 0
         id: cache
-      - name: Build and run tests
+      - name: Build
         shell: bash -l {0}
         run: |          
           sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y   \
@@ -49,6 +53,10 @@ jobs:
           libjpeg-dev      \
           ninja-build      \
           cmake
+
+          make conda-init
+          conda deactivate
+          conda activate eradiate
 
           cmake --version
           
@@ -82,15 +90,18 @@ jobs:
       #   with:
       #     name: mitsuba
       #     path: build
+      - name: Get Mitsuba hash
+        run: |
+          cd ext/mitsuba
+          export MITSUBA_HASH=`git rev-parse --short HEAD`
       - name: Cache Mitsuba
         uses: actions/cache@v2
         with:
           path: build
           key:
-            conda-${{ runner.os }}-${{ runner.arch }}-${{hashFiles('ext/mitsuba') }}-${{ env.CACHE_NUMBER}}
+            mitsuba-${{ env.MITSUBA_HASH }}-${{ env.CACHE_NUMBER}}
         env:
           CACHE_NUMBER: 0
-        id: cache
       - name: run tests
         shell: bash -l {0}
         run: |
