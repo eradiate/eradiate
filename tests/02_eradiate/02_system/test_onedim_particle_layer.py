@@ -207,7 +207,7 @@ def test_homogeneous_vs_particle_layer(
         )
 
     w = w * ureg.nm
-    spp = 1e7
+    spp = 1e6
     reflectance = 1.0
     bottom = 0.0 * ureg.km
     top = 5.0 * ureg.km

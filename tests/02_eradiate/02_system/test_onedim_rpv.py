@@ -721,7 +721,7 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, ert
         bsdf: eradiate.experiments.AtmosphereExperiment(
             illumination={"type": "directional", "zenith": 30.0 * ureg.deg},
             measures=eradiate.scenes.measure.MultiDistantMeasure(
-                spp=1 if atmosphere is None else 1000000,
+                spp=1 if atmosphere is None else 100000,
                 direction_layout=eradiate.scenes.measure._multi_distant.HemispherePlaneLayout(
                     np.arange(-75, 75, 11)*ureg.deg,
                     0 * ureg.deg

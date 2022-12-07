@@ -34,7 +34,7 @@ jobs:
         with:
           path: build
           key:
-            mitsuba-${{ env.MITSUBA_HASH }}-${{hashFiles('src/plugins/**.cpp', 'src/plugins/**.h')}}-${{ env.CACHE_NUMBER}}
+            mitsuba-${{ env.MITSUBA_HASH }}-${{hashFiles('src/plugins/**.cpp')}}-${{ env.CACHE_NUMBER}}
         env:
           CACHE_NUMBER: 0
         id: cache
