@@ -1,22 +1,32 @@
+import mitsuba as mi
 import numpy as np
 import pytest
 import xarray as xr
 
 import eradiate
 from eradiate.contexts import KernelDictContext, SpectralContext
-from eradiate.scenes.phase._tabulated import TabulatedPhaseFunction
-from eradiate.util.misc import onedict_value
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.phase import PhaseFunction, TabulatedPhaseFunction
+from eradiate.test_tools.types import check_type
+
+
+def test_tabulated_phase_type():
+    check_type(
+        TabulatedPhaseFunction,
+        expected_mro=[PhaseFunction, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.fixture
-def regular_mu() -> xr.DataArray:
+def regular() -> xr.DataArray:
     """Phase function data with a regular mu grid."""
     result = eradiate.data.load_dataset("tests/spectra/particles/random-regular_mu.nc")
     return result.phase
 
 
 @pytest.fixture
-def irregular_mu() -> xr.DataArray:
+def irregular() -> xr.DataArray:
     """Phase function data with an irregular mu grid."""
     result = eradiate.data.load_dataset(
         "tests/spectra/particles/random-irregular_mu.nc"
@@ -24,16 +34,24 @@ def irregular_mu() -> xr.DataArray:
     return result.phase
 
 
-def test_tabulated_basic(modes_all_double, regular_mu):
-    # The phase function can be constructed
-    phase = TabulatedPhaseFunction(data=regular_mu)
+@pytest.mark.parametrize("grid", ["regular", "irregular"])
+def test_tabulated_construct(modes_all_double, grid, request):
+    phase = TabulatedPhaseFunction(data=request.getfixturevalue(grid))
 
-    # Its kernel dict can be generated
-    ctx = KernelDictContext()
-    kernel_dict = phase.kernel_dict(ctx)
+    # Irregular grid layout is detected
+    assert phase._is_irregular == (grid == "irregular")
+    assert (
+        phase.kernel_type == "tabphase" if "grid" == "regular" else "tabphase_irregular"
+    )
 
-    # The kernel dict can be loaded
-    assert kernel_dict.load()
+    # Kernel dict can be generated and instantiated
+    template, params = traverse(phase)
+    kernel_phase = mi.load_dict(template.render(KernelDictContext()))
+    assert isinstance(kernel_phase, mi.PhaseFunction)
+
+    # Phase function can be updated
+    kernel_params = mi.traverse(kernel_phase)
+    kernel_params.update(params.render(KernelDictContext()))
 
 
 def test_tabulated_order(mode_mono, tmpdir):
@@ -71,23 +89,3 @@ def test_tabulated_order(mode_mono, tmpdir):
     phase_mu_decreasing = layer_mu_decreasing.eval(spectral_ctx)
 
     assert np.all(phase_mu_increasing == phase_mu_decreasing)
-
-
-@pytest.mark.parametrize("grid", ["regular", "irregular"])
-def test_tabulated_plugin_selection(modes_all_double, grid, regular_mu, irregular_mu):
-    """
-    Phase function data with regular mu grid is not interpolated along mu.
-    """
-    ctx = KernelDictContext()
-
-    if grid == "regular":
-        data = regular_mu
-        expected_plugin = "tabphase"
-
-    elif grid == "irregular":
-        data = irregular_mu
-        expected_plugin = "tabphase_irregular"
-
-    tabphase = TabulatedPhaseFunction(data=data)
-    phase_dict = onedict_value(tabphase.kernel_dict(ctx).data)
-    assert phase_dict["type"] == expected_plugin

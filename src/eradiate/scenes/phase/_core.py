@@ -41,8 +41,8 @@ phase_function_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define
-class PhaseFunction(SceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class PhaseFunction:
     """
     An abstract base class defining common facilities for all phase functions.
     """

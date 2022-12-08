@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import typing as t
+
 import attrs
 
 import eradiate
 
 from ._core import PhaseFunction
-from ..core import KernelDict
+from ..core import NodeSceneElement, Param, ParamFlags
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
@@ -15,8 +17,8 @@ from ...util.misc import onedict_value
 
 
 @parse_docs
-@attrs.define
-class HenyeyGreensteinPhaseFunction(PhaseFunction):
+@attrs.define(eq=False, slots=False)
+class HenyeyGreensteinPhaseFunction(PhaseFunction, NodeSceneElement):
     """
     Henyey-Greenstein phase function [``hg``].
 
@@ -44,18 +46,15 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
         default="0.0",
     )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        if eradiate.mode().is_mono:
-            # TODO: This is a workaround until the hg plugin accepts spectra for
-            #  its g parameter
-            g = float(onedict_value(self.g.kernel_dict(ctx=ctx))["value"])
-            return KernelDict(
-                {
-                    self.id: {
-                        "type": "hg",
-                        "g": g,
-                    }
-                }
+    @property
+    def kernel_type(self) -> str:
+        return "hg"
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return {
+            "g": Param(
+                lambda ctx: float(self.g.eval(ctx.spectral_ctx)),
+                ParamFlags.SPECTRAL,
             )
-        else:
-            raise UnsupportedModeError(supported="monochromatic")
+        }

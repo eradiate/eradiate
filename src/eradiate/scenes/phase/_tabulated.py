@@ -1,3 +1,5 @@
+import typing as t
+
 import attrs
 import numpy as np
 import pint
@@ -6,7 +8,7 @@ import xarray as xr
 import eradiate
 
 from ._core import PhaseFunction
-from ..core import KernelDict
+from ..core import NodeSceneElement, Param, ParamFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
@@ -50,8 +52,8 @@ def _validate_data(instance, attribute, value):
 
 
 @parse_docs
-@attrs.define
-class TabulatedPhaseFunction(PhaseFunction):
+@attrs.define(eq=False, slots=False)
+class TabulatedPhaseFunction(PhaseFunction, NodeSceneElement):
     r"""
     Tabulated phase function [``tab_phase``].
 
@@ -80,6 +82,14 @@ class TabulatedPhaseFunction(PhaseFunction):
         "(``i``) and column (``j``) indices (integer) as coordinates. "
         "This parameter has no default.",
     )
+
+    _is_irregular: bool = attrs.field(default=False, init=False, repr=False)
+
+    def __attrs_post_init__(self):
+        # Check whether mu coordinate spacing is regular
+        mu = self.data.mu.values
+        dmu = mu[1:] - mu[:-1]
+        self._is_irregular = not np.allclose(dmu, dmu[0])
 
     def eval(self, spectral_ctx: SpectralContext) -> np.ndarray:
         r"""
@@ -154,32 +164,32 @@ class TabulatedPhaseFunction(PhaseFunction):
         w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
         return self.eval_mono(w)
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Evaluate phase function
-        phase_values = self.eval(ctx.spectral_ctx)
+    @property
+    def kernel_type(self) -> str:
+        return "tabphase" if not self._is_irregular else "tabphase_irregular"
 
-        # Retrieve mu grid
+    @property
+    def template(self):
+        result = super().template
+
+        # Note: This is a bit hacky: the template contains placeholder values
+        # defining the isotropic phase function instead of evaluating the
+        # phase function at the requested spectral coordinate. Consequently,
+        # scenes created with this *must* be updated prior to processing.
         mu = self.data.mu.values
-        dmu = mu[1:] - mu[:-1]
+        phase_values = np.full_like(mu, 1.0 / (4.0 * np.pi))
+        result["values"] = ",".join(map(str, phase_values))
 
-        # Create kernel dict
-        if np.allclose(dmu, dmu[0]):  # mu grid is regular
-            return KernelDict(
-                {
-                    self.id: {
-                        "type": "tabphase",
-                        "values": ",".join(map(str, phase_values)),
-                    }
-                }
-            )
+        if self._is_irregular:
+            result["nodes"] = ",".join(map(str, mu))
 
-        else:  # mu grid is irregular
-            return KernelDict(
-                {
-                    self.id: {
-                        "type": "tabphase_irregular",
-                        "values": ",".join(map(str, phase_values)),
-                        "nodes": ",".join(map(str, mu)),
-                    }
-                }
+        return result
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return {
+            "values": Param(
+                lambda ctx: self.eval(spectral_ctx=ctx.spectral_ctx),
+                ParamFlags.SPECTRAL,
             )
+        }

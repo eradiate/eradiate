@@ -1,19 +1,25 @@
 import mitsuba as mi
+import pytest
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import KernelDict
-from eradiate.scenes.phase import HenyeyGreensteinPhaseFunction
+from eradiate.scenes.core import traverse
+from eradiate.scenes.phase import HenyeyGreensteinPhaseFunction, PhaseFunction
+from eradiate.test_tools.types import check_type
 
 
-def test_hg(mode_mono):
-    ctx = KernelDictContext()
+def test_hg_type():
+    check_type(
+        HenyeyGreensteinPhaseFunction,
+        expected_mro=[HenyeyGreensteinPhaseFunction, PhaseFunction],
+        expected_slots=[],
+    )
 
-    # Default constructor
-    phase = HenyeyGreensteinPhaseFunction()
 
-    # Construct with custom asymmetry parameter
-    phase = HenyeyGreensteinPhaseFunction(g=0.25)
+@pytest.mark.parametrize("kwargs", [{}, {"g": 0.25}], ids=["noargs", "args"])
+def test_hg(modes_all_double, kwargs):
+    phase = HenyeyGreensteinPhaseFunction(**kwargs)
 
-    # Check if produced kernel dict can be instantiated
-    kernel_dict = KernelDict.from_elements(phase, ctx=ctx)
-    assert isinstance(kernel_dict.load(), mi.PhaseFunction)
+    # Produced kernel dictionary is valid
+    template, params = traverse(phase)
+    kernel_dict = template.render(ctx=KernelDictContext())
+    assert isinstance(mi.load_dict(kernel_dict), mi.PhaseFunction)

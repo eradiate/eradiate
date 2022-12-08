@@ -3,14 +3,14 @@ from __future__ import annotations
 import attrs
 
 from ._core import PhaseFunction
-from ..core import KernelDict
+from ..core import NodeSceneElement
 from ...attrs import parse_docs
 from ...contexts import KernelDictContext
 
 
 @parse_docs
-@attrs.define
-class RayleighPhaseFunction(PhaseFunction):
+@attrs.define(eq=False, slots=False)
+class RayleighPhaseFunction(PhaseFunction, NodeSceneElement):
     """
     Rayleigh phase function [``rayleigh``].
 
@@ -20,5 +20,6 @@ class RayleighPhaseFunction(PhaseFunction):
     atmosphere.
     """
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        return KernelDict({self.id: {"type": "rayleigh"}})
+    @property
+    def kernel_type(self) -> str:
+        return "rayleigh"
