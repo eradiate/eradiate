@@ -5,7 +5,7 @@ import mitsuba as mi
 import numpy as np
 
 from ._core import PhaseFunction, phase_function_factory
-from ..core import BoundingBox, KernelDict
+from ..core import BoundingBox, NodeSceneElement, Param, traverse
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...kernel.transform import map_unit_cube
@@ -29,8 +29,8 @@ def _weights_converter(value: np.typing.ArrayLike) -> np.ndarray:
 
 
 @parse_docs
-@attrs.define
-class BlendPhaseFunction(PhaseFunction):
+@attrs.define(eq=False, slots=False)
+class BlendPhaseFunction(PhaseFunction, NodeSceneElement):
     """
     Blended phase function [``blend_phase``].
 
@@ -108,70 +108,102 @@ class BlendPhaseFunction(PhaseFunction):
     # --------------------------------------------------------------------------
 
     def _gridvolume_transform(self) -> "mitsuba.ScalarTransform4f":
+        # TODO: FIX THIS
         if self.bbox is None:
             raise ValueError(
                 "computing the gridvolume transform requires a bounding box"
             )
 
         length_units = uck.get("length")
-        width = self.bbox.extents[1].m_as(length_units)
-        top = self.bbox.max[2].m_as(length_units)
-        bottom = self.bbox.min[2].m_as(length_units)
+        bbox_min = self.bbox.min.m_as(length_units)
+        bbox_max = self.bbox.max.m_as(length_units)
 
         return map_unit_cube(
-            xmin=-0.5 * width,
-            xmax=0.5 * width,
-            ymin=-0.5 * width,
-            ymax=0.5 * width,
-            zmin=bottom,
-            zmax=top,
+            xmin=bbox_min[0],
+            xmax=bbox_max[0],
+            ymin=bbox_min[1],
+            ymax=bbox_max[1],
+            zmin=bbox_min[2],
+            zmax=bbox_max[2],
         )
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Build kernel dict recursively
+    @property
+    def kernel_type(self) -> str:
+        return "blendphase"
 
-        # Summed weights of all components except the first, used to
-        # set up the kernel dictionary of the phase function
+    @property
+    def template(self) -> dict:
+        result = {"type": "blendphase"}
+
+        # The second kernel component aggregates all components except for the
+        # first. Consequently, its weight is equal to the sum of all weights,
+        # except for the first one.
         weight = self.weights[1:, ...].sum(axis=0)
-        phase_dict_1 = onedict_value(self.components[0].kernel_dict(ctx))
+        template_1, _ = traverse(self.components[0])
 
         if len(self.components) == 2:
-            phase_dict_2 = onedict_value(self.components[1].kernel_dict(ctx))
+            template_2, _ = traverse(self.components[1])
 
         else:
             # The phase function corresponding to remaining components
             # is built recursively
-            phase_dict_2 = onedict_value(
+            template_2, _ = traverse(
                 BlendPhaseFunction(
                     id=f"{self.id}_phase2",
                     components=self.components[1:],
                     weights=self.weights[1:, ...],
                     bbox=self.bbox,
                 )
-                .kernel_dict(ctx)
-                .data
             )
+
+        result.update(
+            {
+                **{f"phase1.{k}": v for k, v in template_1.items()},
+                **{f"phase2.{k}": v for k, v in template_2.items()},
+            }
+        )
 
         # Pass weight values either as a GridVolume or a scalar
         if self.weights.ndim == 2 and self.weights.shape[1] > 1:
             # Mind dim ordering! (C-style, i.e. zyx)
             values = np.reshape(weight, (-1, 1, 1))
             grid_weight = mi.VolumeGrid(values.astype(np.float32))
-            weight = {"type": "gridvolume", "grid": grid_weight}
+            result.update({"weight.type": "gridvolume", "weight.grid": grid_weight})
 
             if self.bbox is not None:
-                weight["to_world"] = self._gridvolume_transform()
+                result["weight.to_world"] = self._gridvolume_transform()
 
         else:
-            weight = float(weight)
+            result["weight"] = float(weight)
 
-        return KernelDict(
+        return result
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        result = {}
+
+        _, params_1 = traverse(self.components[0])
+
+        if len(self.components) == 2:
+            _, params_2 = traverse(self.components[1])
+
+        else:
+            # The phase function corresponding to remaining components
+            # is built recursively
+            n_components = len(self.components) - 1
+            _, params_2 = traverse(
+                BlendPhaseFunction(
+                    id=f"{self.id}_phase2",
+                    components=self.components[1:],
+                    weights=[1.0 / n_components for _ in range(n_components)],
+                    bbox=None,
+                )
+            )
+
+        result.update(
             {
-                self.id: {
-                    "type": "blendphase",
-                    "phase1": phase_dict_1,
-                    "phase2": phase_dict_2,
-                    "weight": weight,
-                }
+                **{f"phase1.{k}": v for k, v in params_1.items()},
+                **{f"phase2.{k}": v for k, v in params_2.items()},
             }
         )
+        return result

@@ -3,14 +3,13 @@ from __future__ import annotations
 import attrs
 
 from ._core import PhaseFunction
-from ..core import KernelDict
+from ..core import NodeSceneElement
 from ...attrs import parse_docs
-from ...contexts import KernelDictContext
 
 
 @parse_docs
-@attrs.define
-class IsotropicPhaseFunction(PhaseFunction):
+@attrs.define(eq=False, slots=False)
+class IsotropicPhaseFunction(PhaseFunction, NodeSceneElement):
     """
     Isotropic phase function [``isotropic``].
 
@@ -18,5 +17,6 @@ class IsotropicPhaseFunction(PhaseFunction):
     all directions.
     """
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        return KernelDict({self.id: {"type": "isotropic"}})
+    @property
+    def kernel_type(self) -> str:
+        return "isotropic"
