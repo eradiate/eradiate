@@ -34,7 +34,7 @@ jobs:
         with:
           path: build
           key:
-            mitsuba-${{ env.MITSUBA_HASH }}-${{hashFiles('src/plugins/**.cpp')}}-${{ env.CACHE_NUMBER}}
+            mitsuba-${{ env.MITSUBA_HASH }}-${{hashFiles('src/plugins/src/*/*.cpp', 'src/plugins/src/*/*.h')}}-${{ env.CACHE_NUMBER}}
         env:
           CACHE_NUMBER: 0
         id: cache
@@ -51,14 +51,14 @@ jobs:
           zlib1g-dev       \
           build-essential  \
           libjpeg-dev      \
-          ninja-build      \
-          cmake
+          ninja-build
 
           export CUDA_VISIBLE_DEVICES=""
           make conda-init
           conda deactivate
           conda activate eradiate
 
+          conda install cmake=3.22
           cmake --version
           
           export CC=clang-11
@@ -100,7 +100,7 @@ jobs:
         with:
           path: build
           key:
-            mitsuba-${{ env.MITSUBA_HASH }}-${{ env.CACHE_NUMBER}}
+            mitsuba-${{ env.MITSUBA_HASH }}-${{hashFiles('src/plugins/src/*/*.cpp', 'src/plugins/src/*/*.h')}}-${{ env.CACHE_NUMBER}}
         env:
           CACHE_NUMBER: 0
       - name: run tests
