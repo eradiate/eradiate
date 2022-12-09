@@ -9,26 +9,26 @@ from eradiate.scenes.core import BoundingBox, Param, ParamFlags, render_params
 def test_render_params():
     param_map = {
         "foo": 0,
-        "bar": Param(lambda x: x),
-        "baz": Param(lambda x: x, ParamFlags.SPECTRAL),
+        "bar": Param(lambda ctx: ctx, ParamFlags.GEOMETRIC),
+        "baz": Param(lambda ctx: ctx, ParamFlags.SPECTRAL),
     }
 
     # If no flags are passed, all params are rendered
     d = param_map.copy()
-    skipped = render_params(d, flags=None, x=1)
+    skipped = render_params(d, ctx=1, flags=ParamFlags.ALL)
     assert not skipped
     assert d["bar"] == 1 and d["baz"] == 1
 
     # If a flag is passed, only the corresponding params are rendered
     d = param_map.copy()
-    skipped = render_params(d, flags=ParamFlags.SPECTRAL, x=1)
+    skipped = render_params(d, ctx=1, flags=ParamFlags.SPECTRAL)
     assert skipped == ["bar"]
     assert d["baz"] == 1
     assert "bar" in d
 
     # If drop is set to True, unrendered parameters are dropped
     d = param_map.copy()
-    skipped = render_params(d, flags=ParamFlags.SPECTRAL, drop=True, x=1)
+    skipped = render_params(d, ctx=1, flags=ParamFlags.SPECTRAL, drop=True)
     assert skipped == ["bar"]
     assert d["baz"] == 1
     assert "bar" not in d

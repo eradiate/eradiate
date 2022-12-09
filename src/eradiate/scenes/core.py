@@ -12,6 +12,7 @@ import pinttr
 from pinttr.util import ensure_units
 
 from ..attrs import documented, parse_docs
+from ..contexts import KernelDictContext
 from ..exceptions import TraversalError
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -46,8 +47,8 @@ class Param:
     #: will pass all filters.
     flags: ParamFlags = attrs.field(default=ParamFlags.ALL)
 
-    def __call__(self, *args, **kwargs):
-        return self._callable(*args, **kwargs)
+    def __call__(self, ctx: KernelDictContext) -> t.Any:
+        return self._callable(ctx)
 
 
 @attrs.define
@@ -72,16 +73,37 @@ class ParameterMap(UserDict):
 @attrs.define
 class KernelDictTemplate(UserDict):
     """
-    A dictionary containing placeholders meant to be substituted using a
-    :class:`ParameterMap`.
+    A dict-like structure which contains the structure of an instantiable kernel
+    dictionary.
+
+    Entries are indexed by dot-separated paths which can then be expanded to
+    a nested dictionary using the :meth:`.render` method.
+
+    Each entry can be either a hard-coded value which can be directly
+    interpreted by the :func:`mitsuba.load_dict` function, or a :class:`.Param`
+    object, which must be rendered before the template can be instantiated.
     """
 
     data: dict = attrs.field(factory=dict)
 
-    def render(self, ctx) -> dict:
+    def render(self, ctx: KernelDictContext, nested: bool = True) -> dict:
         """
         Render the template as a nested dictionary using a parameter map to fill
         in empty fields.
+
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
+            A kernel dictionary context.
+
+        nested : bool, optional
+            If ``True``, the returned dictionary will be nested and suitable for
+            instantiation by Mitsuba; otherwise, the returned dictionary will be
+            flat.
+
+        Returns
+        -------
+        dict
         """
         result = self.data.copy()
         skipped = render_params(result, ctx=ctx, flags=ParamFlags.ALL, drop=False)
@@ -90,11 +112,14 @@ class KernelDictTemplate(UserDict):
         if skipped:
             raise ValueError(f"Unevaluated parameters: {skipped}")
 
-        return nest(result, sep=".")
+        return nest(result, sep=".") if nested else result
 
 
 def render_params(
-    d: dict, flags: ParamFlags = ParamFlags.ALL, drop: bool = False, **kwargs
+    d: dict,
+    ctx: KernelDictContext,
+    flags: ParamFlags = ParamFlags.ALL,
+    drop: bool = False,
 ) -> list:
     """
     Render parameters in a template dictionary.
@@ -106,7 +131,7 @@ def render_params(
             if v.flags is None:
                 skipped.append(k)
             elif v.flags & flags:
-                d[k] = v(**kwargs)
+                d[k] = v(ctx)
             else:
                 skipped.append(k)
 
