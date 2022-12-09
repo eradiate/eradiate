@@ -15,8 +15,9 @@ from ..shapes import CuboidShape, SphereShape
 from ... import converters, validators
 from ..._factory import Factory
 from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import KernelDictContext
 from ...kernel.transform import map_unit_cube
+from ...spectral_index import SpectralIndex
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -214,6 +215,15 @@ class Atmosphere(SceneElement, ABC):
         pint.Quantity: Atmosphere height.
         """
         return self.top - self.bottom
+    
+    @property
+    @abstractmethod
+    def is_molecular(self) -> bool:
+        """
+        bool: True if the atmosphere (or at least one of its component) is
+        molecular, False otherwise.
+        """
+        return False
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -466,7 +476,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_radprops(
-        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+        self, spectral_index: SpectralIndex, optional_fields: bool = False
     ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties profile of this
@@ -474,10 +484,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         Parameters
         ----------
-        spectral_ctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        spectral_index : .SpectralIndex
+            Spectral index.
 
         optional_fields : bool, optional, default: False
             If ``True``, export optional fields, not required for scene
@@ -498,7 +506,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         # Inherit docstring
 
         # Collect extinction properties
-        radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
+        radprops = self.eval_radprops(spectral_index=ctx.spectral_index)
         albedo = radprops.albedo.values
         sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
 

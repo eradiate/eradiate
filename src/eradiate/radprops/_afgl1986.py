@@ -4,20 +4,23 @@ AFGL (1986) radiative profile definition.
 
 from __future__ import annotations
 
-import functools
 import typing as t
+import warnings
+from functools import partial, singledispatchmethod
+from os import PathLike
 
 import attrs
 import numpy as np
+import pandas as pd
 import pint
 import xarray as xr
 
-from . import _util_ckd
 from ._core import RadProfile, make_dataset
 from .rayleigh import compute_sigma_s_air
-from .._mode import UnsupportedModeError
+from .. import converters
 from ..attrs import documented, parse_docs
-from ..ckd import Bindex
+from ..quad import Quad
+from ..spectral_index import CKDSpectralIndex, SpectralIndex
 from ..thermoprops import afgl_1986
 from ..thermoprops.util import (
     column_mass_density,
@@ -26,6 +29,10 @@ from ..thermoprops.util import (
 )
 from ..units import to_quantity
 from ..units import unit_registry as ureg
+
+G16 = Quad.gauss_legendre(16).eval_nodes(interval=[0.0, 1.0])
+
+absorption_dataset_convert = converters.to_dataset(load_from_id=None)
 
 
 def _convert_thermoprops_afgl_1986(
@@ -87,6 +94,28 @@ class AFGL1986RadProfile(RadProfile):
         default="True",
     )
 
+    absorption_dataset: t.Optional[t.Union[PathLike, xr.Dataset]] = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(absorption_dataset_convert),  # TODO: open dataset (not load)
+            validator=attrs.validators.optional(attrs.validators.instance_of(xr.Dataset)),
+        ),
+        doc="Absorption coefficient dataset. If ``None``, the absorption "
+        "coefficient is set to zero.",
+        type=":class:`~xarray.Dataset`",
+        default="None",
+    )
+
+    @absorption_dataset.validator
+    @has_absorption.validator
+    def _check_absorption_dataset(self, attribute, value):
+        if not self.has_absorption and self.absorption_dataset is not None:
+            warnings.warn(
+                "When validating attribute 'absorption_dataset': specified "
+                "absorption dataset will be ignored because absorption is "
+                "disabled."
+            )
+
     @property
     def thermoprops(self) -> xr.Dataset:
         return self._thermoprops
@@ -95,55 +124,85 @@ class AFGL1986RadProfile(RadProfile):
     def levels(self) -> pint.Quantity:
         return to_quantity(self.thermoprops.z_level)
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        if bin_set_id is None:
-            raise ValueError("argument 'bin_set_id' is required")
+    @singledispatchmethod
+    def eval_albedo(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        raise NotImplementedError
+    
+    @eval_albedo.register
+    def _(self, spectral_index: CKDSpectralIndex) -> pint.Quantity:
+        return self.eval_albedo_ckd(spectral_index.bindexes, spectral_index.bin_set_id)
 
+    @singledispatchmethod
+    def eval_sigma_a(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        raise NotImplementedError
+    
+    @eval_sigma_a.register
+    def _(self, spectral_index: CKDSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(w=spectral_index.w, g=spectral_index.g)
+    
+    @singledispatchmethod
+    def eval_sigma_s(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        raise NotImplementedError
+    
+    @eval_sigma_s.register
+    def _(self, spectral_index: CKDSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_s_ckd(w=spectral_index.w, g=spectral_index.g)
+    
+    @singledispatchmethod
+    def eval_sigma_t(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        raise NotImplementedError
+    
+    @eval_sigma_t.register
+    def _(self, spectral_index: CKDSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_t_ckd(w=spectral_index.w, g=spectral_index.g)
+
+    def eval_sigma_a_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
         if not self.has_absorption:
             return ureg.Quantity(np.zeros(self.thermoprops.z_layer.size), "km^-1")
 
-        ds_id = f"{self.thermoprops.attrs['identifier']}-{bin_set_id}-v3"
-        with _util_ckd.open_dataset(ds_id) as ds:
-            # This table maps species to the function used to compute
-            # corresponding physical quantities used for concentration rescaling
-            compute = {
-                "H2O": functools.partial(column_mass_density, species="H2O"),
-                "CO2": functools.partial(volume_mixing_ratio_at_surface, species="CO2"),
-                "O3": functools.partial(column_number_density, species="O3"),
-            }
+        ds = self.absorption_dataset
 
-            # Evaluate species concentrations
-            # Note: This includes a conversion to units appropriate for interpolation
-            rescaled_species = list(compute.keys())
-            concentrations = {
-                species: compute[species](ds=self.thermoprops).m_as(ds[species].units)
-                for species in rescaled_species
-            }
+        # Combine the 'bin' and 'index' coordinates into a multi-index, then reindex dataset
+        idx = pd.MultiIndex.from_arrays(
+            (ds.bin.values, ds.index.values), names=("bin", "index")
+        )
+        ds = ds.drop_vars(("bin", "index"))
+        ds = ds.reindex({"bd": idx})
+        
+        # This table maps species to the function used to compute
+        # corresponding physical quantities used for concentration rescaling
+        compute = {
+            "H2O": partial(column_mass_density, species="H2O"),
+            "CO2": partial(volume_mixing_ratio_at_surface, species="CO2"),
+            "O3": partial(column_number_density, species="O3"),
+        }
 
-            # Convert altitude to units appropriate for interpolation
-            z = to_quantity(self.thermoprops.z_layer).m_as(ds.z.units)
+        # Evaluate species concentrations
+        # Note: This includes a conversion to units appropriate for interpolation
+        rescaled_species = list(compute.keys())
+        concentrations = {
+            species: compute[species](ds=self.thermoprops).m_as(ds[species].units)
+            for species in rescaled_species
+        }
 
-            # Interpolate absorption coefficient on concentration coordinates
-            result = ureg.Quantity(
-                [
-                    ds.k.sel(bd=(bindex.bin.id, bindex.index))
-                    .interp(
-                        z=z,
-                        kwargs=dict(fill_value=0.0),
-                    )  # extrapolate to 0.0 for altitude out of bounds
-                    .interp(
-                        **concentrations,
-                        kwargs=dict(
-                            bounds_error=True
-                        ),  # raise when concentration are out of bounds
-                    )
-                    .values
-                    for bindex in bindexes
-                ],
-                ds.k.units,
-            )
+        # Convert altitude to units appropriate for interpolation
+        z = to_quantity(self.thermoprops.z_layer).m_as(ds.z.units)
 
-            return result
+        # Interpolate absorption coefficient on concentration coordinates
+        bin_id = str(int(w.m_as("nm")))
+        g_index = int(np.where(np.isclose(g, G16))[0])
+
+        sigma_a_value = ds.k.sel(bd=(bin_id, g_index)).interp(
+            z=z,
+            kwargs=dict(fill_value=0.0),  # extrapolate to 0.0 for altitude out of bounds
+        ).interp(
+            **concentrations,
+            kwargs=dict(
+                bounds_error=True  # raise when concentration are out of bounds
+            ),
+        ).values
+
+        return ureg.Quantity(sigma_a_value, ds.k.units)
 
     def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
         thermoprops = self.thermoprops
@@ -155,41 +214,30 @@ class AFGL1986RadProfile(RadProfile):
         else:
             return ureg.Quantity(np.zeros((1, thermoprops.z_layer.size)), "km^-1")
 
-    def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        wavelengths = ureg.Quantity(
-            np.array([bindex.bin.wcenter.m_as("nm") for bindex in bindexes]), "nm"
-        )
-        return self.eval_sigma_s_mono(w=wavelengths)
+    def eval_sigma_s_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        return self.eval_sigma_s_mono(w=w)
 
-    def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
-        raise UnsupportedModeError(supported="ckd")
-
-    def eval_albedo_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        sigma_s = self.eval_sigma_s_ckd(*bindexes)
-        sigma_t = self.eval_sigma_t_ckd(*bindexes, bin_set_id=bin_set_id)
+    def eval_albedo_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        sigma_s = self.eval_sigma_s_ckd(w=w, g=g)
+        sigma_t = self.eval_sigma_t_ckd(w=w, g=g)
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
-        raise UnsupportedModeError(supported="ckd")
-
-    def eval_sigma_t_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        return self.eval_sigma_a_ckd(
-            *bindexes, bin_set_id=bin_set_id
-        ) + self.eval_sigma_s_ckd(*bindexes)
+    def eval_sigma_t_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(w=w, g=g) + self.eval_sigma_s_ckd(w=w, g=g)
 
     def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
-        raise UnsupportedModeError(supported="ckd")
+        raise NotImplementedError
 
-    def eval_dataset_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
-        if len(bindexes) > 1:
+    def eval_dataset_ckd(self, w: pint.Quantity, g: float) -> xr.Dataset:
+        if w.size > 1:
             raise NotImplementedError
         else:
             return make_dataset(
-                wavelength=bindexes[0].bin.wcenter,
+                wavelength=w,
                 z_level=to_quantity(self.thermoprops.z_level),
                 z_layer=to_quantity(self.thermoprops.z_layer),
-                sigma_a=self.eval_sigma_a_ckd(*bindexes, bin_set_id=bin_set_id),
-                sigma_s=self.eval_sigma_s_ckd(*bindexes),
+                sigma_a=self.eval_sigma_a_ckd(w=w, g=g),
+                sigma_s=self.eval_sigma_s_ckd(w=w, g=g),
             ).squeeze()

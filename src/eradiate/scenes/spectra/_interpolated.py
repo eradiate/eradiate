@@ -8,16 +8,12 @@ import pint
 import pinttr
 import xarray as xr
 
-import eradiate
-
 from ._core import Spectrum
 from ..core import KernelDict
 from ... import converters, validators
-from ..._mode import ModeFlags
 from ...attrs import documented, parse_docs
-from ...ckd import Bindex
 from ...contexts import KernelDictContext
-from ...exceptions import UnsupportedModeError
+from ...spectral_index import CKDSpectralIndex, MonoSpectralIndex
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -188,39 +184,13 @@ class InterpolatedSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.interp(w, self.wavelengths, self.values, left=0.0, right=0.0)
 
-    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        # Spectrum is averaged over spectral bin
-        result = np.zeros((len(bindexes),))
-        wavelength_units = ucc.get("wavelength")
-        quantity_units = self.values.units
+    def eval_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        return self.eval_mono(w=w)
 
-        for i_bindex, bindex in enumerate(bindexes):
-            bin = bindex.bin
-
-            wmin_m = bin.wmin.m_as(wavelength_units)
-            wmax_m = bin.wmax.m_as(wavelength_units)
-
-            # -- Collect relevant spectral coordinate values
-            w_m = self.wavelengths.m_as(wavelength_units)
-            w = (
-                np.hstack(
-                    (
-                        [wmin_m],
-                        w_m[np.where(np.logical_and(wmin_m < w_m, w_m < wmax_m))[0]],
-                        [wmax_m],
-                    )
-                )
-                * wavelength_units
-            )
-
-            # -- Evaluate spectrum at wavelengths
-            interp = self.eval_mono(w)
-
-            # -- Average spectrum on bin extent
-            integral = np.trapz(interp, w)
-            result[i_bindex] = (integral / bin.width).m_as(quantity_units)
-
-        return result * quantity_units
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        kernel_units = uck.get(self.quantity)
+        value = float(self.eval(ctx.spectral_index).m_as(kernel_units))
+        return KernelDict({"spectrum": {"type": "uniform", "value": value}})
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         # Collect spectral coordinates
@@ -251,25 +221,8 @@ class InterpolatedSpectrum(Spectrum):
             pass
 
         # Evaluate spectrum at wavelengths
-        w.sort()
-        w = w * wavelength_units
+        w = np.array(w) * wavelength_units
         interp = self.eval_mono(w)
 
         # Compute integral
         return np.trapz(interp, w)
-
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            return KernelDict(
-                {
-                    "spectrum": {
-                        "type": "uniform",
-                        "value": float(
-                            self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
-                        ),
-                    }
-                }
-            )
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))

@@ -1,32 +1,18 @@
 from __future__ import annotations
 
-import attrs
-import numpy as np
-import pint
+import typing as t
 
-import eradiate
+import attrs
+import pint
 
 from ._core import Spectrum
 from ..core import KernelDict
-from ..._mode import ModeFlags
 from ...attrs import parse_docs
-from ...ckd import Bindex
 from ...contexts import KernelDictContext
-from ...exceptions import UnsupportedModeError
 from ...radprops.rayleigh import compute_sigma_s_air
+from ...spectral_index import CKDSpectralIndex, MonoSpectralIndex
 from ...units import PhysicalQuantity
-from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
-from ...units import unit_registry as ureg
-
-
-def _eval_impl(w: pint.Quantity) -> pint.Quantity:
-    return compute_sigma_s_air(wavelength=w)
-
-
-def _eval_impl_ckd(w: pint.Quantity) -> pint.Quantity:
-    values = _eval_impl(w)
-    return np.trapz(values, w) / (w.max() - w.min())
 
 
 @parse_docs
@@ -59,56 +45,13 @@ class AirScatteringCoefficientSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return compute_sigma_s_air(wavelength=w)
 
-    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        # Spectrum is averaged over spectral bin
-
-        result = np.zeros((len(bindexes),))
-        quantity_units = ucc.get(self.quantity)
-
-        for i_bindex, bindex in enumerate(bindexes):
-            bin = bindex.bin
-
-            # -- Build a spectral mesh with spacing finer than 1 nm
-            #    (reasonably accurate)
-            wmin_m = bin.wmin.m_as(ureg.nm)
-            wmax_m = bin.wmax.m_as(ureg.nm)
-            w = np.linspace(wmin_m, wmax_m, 2)
-            n = 10
-
-            while True:
-                if w[1] - w[0] <= 1.0:  # nm
-                    break
-                w = np.linspace(wmin_m, wmax_m, n + 1)
-                n *= 2
-
-            w = w * ureg.nm
-
-            # -- Evaluate spectrum at wavelengths
-            interp = self.eval_mono(w)
-
-            # -- Average spectrum on bin extent
-            integral = np.trapz(interp, w)
-            result[i_bindex] = (integral / bin.width).m_as(quantity_units)
-
-        return result * quantity_units
+    def eval_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        return self.eval_mono(w)
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            return KernelDict(
-                {
-                    "spectrum": {
-                        "type": "uniform",
-                        "value": float(
-                            self.eval(ctx.spectral_ctx).m_as(
-                                uck.get("collision_coefficient")
-                            )
-                        ),
-                    }
-                }
-            )
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        kernel_units = uck.get("collision_coefficient")
+        value = float(self.eval(ctx.spectral_index).m_as(kernel_units))
+        return KernelDict({"spectrum": {"type": "uniform", "value": value}})
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         raise NotImplementedError

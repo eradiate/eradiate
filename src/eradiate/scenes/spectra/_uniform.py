@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing as t
+
 import attrs
 import numpy as np
 import pint
@@ -8,8 +10,8 @@ import pinttr
 from ._core import Spectrum
 from ..core import KernelDict
 from ...attrs import documented, parse_docs
-from ...ckd import Bindex
 from ...contexts import KernelDictContext
+from ...spectral_index import CKDSpectralIndex, MonoSpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
@@ -57,23 +59,15 @@ class UniformSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.full_like(w, self.value.m) * self.value.units
 
-    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        return np.full((len(bindexes),), self.value.m) * self.value.units
+    def eval_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        return self.eval_mono(w)
+
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        kernel_units = uck.get(self.quantity)
+        value = float(self.eval(ctx.spectral_index).m_as(kernel_units))
+        return KernelDict({"spectrum": {"type": "uniform", "value": value}})
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         wmin = pinttr.util.ensure_units(wmin, ucc.get("wavelength"))
         wmax = pinttr.util.ensure_units(wmax, ucc.get("wavelength"))
         return self.value * (wmax - wmin)
-
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        kernel_units = uck.get(self.quantity)
-        spectral_ctx = ctx.spectral_ctx
-
-        return KernelDict(
-            {
-                "spectrum": {
-                    "type": "uniform",
-                    "value": float(self.eval(spectral_ctx).m_as(kernel_units)),
-                }
-            }
-        )

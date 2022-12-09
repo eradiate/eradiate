@@ -7,7 +7,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.exceptions import UnsupportedModeError
-from eradiate.scenes.measure import MeasureSpectralConfig
+from eradiate.spectral_index import SpectralIndex
 
 
 @pytest.mark.slow
@@ -20,6 +20,9 @@ from eradiate.scenes.measure import MeasureSpectralConfig
             "construct": "from_viewing_angles",
             "zeniths": np.arange(-75, 76, 5),
             "azimuths": 0.0,
+            "srf": {
+                "type": "uniform",
+            }
         },
     ],
     ids=["hdistant", "mdistant"],
@@ -37,18 +40,8 @@ def test_radiance_scaling(modes_all_double, measure, scale, datetime):
         dataset="thuillier_2003"
     )
 
-    if eradiate.mode().is_mono:
-        spectral_cfg = MeasureSpectralConfig.new(wavelengths=[550.0] * ureg.nm)
-    elif eradiate.mode().is_ckd:
-        spectral_cfg = MeasureSpectralConfig.new(bin_set="1nm", bins=["550"])
-    else:
-        raise UnsupportedModeError
+    reference_irradiance = irradiance_spectrum.eval(SpectralIndex.new())
 
-    reference_irradiance = irradiance_spectrum.eval(
-        spectral_ctx=spectral_cfg.spectral_ctxs()[0]
-    )
-
-    measure["spectral_cfg"] = spectral_cfg
     exp = eradiate.experiments.AtmosphereExperiment(
         surface={"type": "lambertian", "reflectance": reflectance},
         atmosphere=None,

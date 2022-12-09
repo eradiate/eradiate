@@ -3,8 +3,9 @@ import pytest
 import xarray as xr
 
 import eradiate
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.phase._tabulated import TabulatedPhaseFunction
+from eradiate.spectral_index import SpectralIndex
 from eradiate.util.misc import onedict_value
 
 
@@ -62,13 +63,13 @@ def test_tabulated_order(mode_mono, tmpdir):
         phase=np.array([np.arange(3, 0, -1), np.arange(3, 0, -1)]),
     )
 
-    spectral_ctx = SpectralContext.new()
+    spectral_index = SpectralIndex.new()
 
     layer_mu_increasing = TabulatedPhaseFunction(data=da_mu_increasing)
-    phase_mu_increasing = layer_mu_increasing.eval(spectral_ctx)
+    phase_mu_increasing = layer_mu_increasing.eval(spectral_index)
 
     layer_mu_decreasing = TabulatedPhaseFunction(data=da_mu_decreasing)
-    phase_mu_decreasing = layer_mu_decreasing.eval(spectral_ctx)
+    phase_mu_decreasing = layer_mu_decreasing.eval(spectral_index)
 
     assert np.all(phase_mu_increasing == phase_mu_decreasing)
 

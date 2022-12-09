@@ -21,7 +21,7 @@ def test_us76_approx_rad_profile(mode_mono, us76_approx_test_absorption_data_set
     """
     Collision coefficient evaluation methods return pint.Quantity objects.
     """
-    p = US76ApproxRadProfile(absorption_data_set=us76_approx_test_absorption_data_set)
+    p = US76ApproxRadProfile(absorption_dataset=us76_approx_test_absorption_data_set)
 
     spectral_ctx = SpectralContext.new()
     for field in ["sigma_a", "sigma_s", "sigma_t", "albedo"]:
@@ -37,7 +37,7 @@ def test_us76_approx_rad_profile_levels(
     """
     p = US76ApproxRadProfile(
         thermoprops=dict(levels=ureg.Quantity(np.linspace(0, 120, 121), "km")),
-        absorption_data_set=us76_approx_test_absorption_data_set,
+        absorption_dataset=us76_approx_test_absorption_data_set,
     )
 
     spectral_ctx = SpectralContext.new()
@@ -53,7 +53,7 @@ def test_us76_approx_rad_profile_has_absorption_default(
     Default value for 'has_absorption' is True, hence the absorption
     coefficient is computed and is not zero everywhere at 1650 nm.
     """
-    p = US76ApproxRadProfile(absorption_data_set=us76_approx_test_absorption_data_set)
+    p = US76ApproxRadProfile(absorption_dataset=us76_approx_test_absorption_data_set)
     assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
     ds = p.eval_dataset(spectral_ctx)
@@ -68,7 +68,7 @@ def test_us76_approx_rad_profile_has_absorption_true(
     and is not zero everywhere at 1650 nm.
     """
     p = US76ApproxRadProfile(
-        has_absorption=True, absorption_data_set=us76_approx_test_absorption_data_set
+        has_absorption=True, absorption_dataset=us76_approx_test_absorption_data_set
     )
     assert p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
@@ -84,7 +84,7 @@ def test_us76_approx_rad_profile_has_absorption_false(
     computed and is zero everywhere.
     """
     p = US76ApproxRadProfile(
-        has_absorption=False, absorption_data_set=us76_approx_test_absorption_data_set
+        has_absorption=False, absorption_dataset=us76_approx_test_absorption_data_set
     )
     assert not p.has_absorption
     spectral_ctx = SpectralContext.new(wavelength=1650.0)
@@ -99,7 +99,7 @@ def test_us76_approx_rad_profile_has_scattering_default(
     Default value for 'has_scattering' is True, hence the scattering
     coefficient is computed and is not zero everywhere at 550 nm.
     """
-    p = US76ApproxRadProfile(absorption_data_set=us76_approx_test_absorption_data_set)
+    p = US76ApproxRadProfile(absorption_dataset=us76_approx_test_absorption_data_set)
     assert p.has_scattering
     spectral_ctx = SpectralContext.new(wavelength=550.0)
     ds = p.eval_dataset(spectral_ctx)
@@ -114,7 +114,7 @@ def test_us76_approx_rad_profile_has_scattering_true(
     and is not zero everywhere at 550 nm.
     """
     p = US76ApproxRadProfile(
-        has_scattering=True, absorption_data_set=us76_approx_test_absorption_data_set
+        has_scattering=True, absorption_dataset=us76_approx_test_absorption_data_set
     )
     assert p.has_scattering
     spectral_ctx = SpectralContext.new(wavelength=550.0)
@@ -130,7 +130,7 @@ def test_us76_approx_rad_profile_has_scattering_false(
     computed and is zero everywhere.
     """
     p = US76ApproxRadProfile(
-        has_scattering=False, absorption_data_set=us76_approx_test_absorption_data_set
+        has_scattering=False, absorption_dataset=us76_approx_test_absorption_data_set
     )
     assert not p.has_scattering
     spectral_ctx = SpectralContext.new(wavelength=550.0)

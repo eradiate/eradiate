@@ -7,7 +7,8 @@ from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import KernelDictContext
+from ...spectral_index import SpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -121,86 +122,38 @@ class HomogeneousAtmosphere(Atmosphere):
     def top(self) -> pint.Quantity:
         return self._top
 
+    @property
+    def is_molecular(self) -> bool:
+        return False
+
     # --------------------------------------------------------------------------
     #                           Evaluation methods
     # --------------------------------------------------------------------------
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
         return (
-            1.0 / self.eval_sigma_s(ctx.spectral_ctx)
-            if self.eval_sigma_s(ctx.spectral_ctx).m != 0.0
-            else 1.0 / self.eval_sigma_a(ctx.spectral_ctx)
+            1.0 / self.eval_sigma_s(ctx.spectral_index)
+            if self.eval_sigma_s(ctx.spectral_index).m != 0.0
+            else 1.0 / self.eval_sigma_a(ctx.spectral_index)
         )
 
-    def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
-        """
-        Return albedo.
-
-        Parameters
-        ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
-
-        Returns
-        -------
-        quantity
-            Albedo.
-        """
-        return self.eval_sigma_s(spectral_ctx) / (
-            self.eval_sigma_s(spectral_ctx) + self.eval_sigma_a(spectral_ctx)
+    def eval_albedo(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        """Return albedo at given spectral index."""
+        return self.eval_sigma_s(spectral_index) / (
+            self.eval_sigma_s(spectral_index) + self.eval_sigma_a(spectral_index)
         )
 
-    def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
-        """
-        Return absorption coefficient.
+    def eval_sigma_a(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        """Evaluate absorption coefficient at given spectral index."""
+        return self.sigma_a.eval(spectral_index)
 
-        Parameters
-        ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+    def eval_sigma_s(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        """Return scattering coefficient at given spectral index"""
+        return self.sigma_s.eval(spectral_index)
 
-        Returns
-        -------
-        quantity
-            Absorption coefficient.
-        """
-        return self.sigma_a.eval(spectral_ctx)
-
-    def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
-        """
-        Return scattering coefficient.
-
-        Parameters
-        ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
-
-        Returns
-        -------
-        quantity
-            Scattering coefficient.
-        """
-        return self.sigma_s.eval(spectral_ctx)
-
-    def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
-        """
-        Return extinction coefficient.
-
-        Parameters
-        ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
-
-        Returns
-        -------
-        quantity
-            Extinction coefficient.
-        """
-        return self.eval_sigma_a(spectral_ctx) + self.eval_sigma_s(spectral_ctx)
+    def eval_sigma_t(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        """Evaluate extinction coefficient at given spectral index."""
+        return self.eval_sigma_a(spectral_index) + self.eval_sigma_s(spectral_index)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
@@ -212,16 +165,14 @@ class HomogeneousAtmosphere(Atmosphere):
     def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
         # Note: The "medium" param is set at a higher level: it is set as a
         # reference in the kernel_dict() method.
+        sigma_t = self.eval_sigma_t(ctx.spectral_index).m_as(uck.get("collision_coefficient"))
+        albedo = self.eval_albedo(ctx.spectral_index).m_as(uck.get("albedo"))
         return KernelDict(
             {
                 self.id_medium: {
                     "type": "homogeneous",
-                    "sigma_t": self.eval_sigma_t(ctx.spectral_ctx).m_as(
-                        uck.get("collision_coefficient")
-                    ),
-                    "albedo": self.eval_albedo(ctx.spectral_ctx).m_as(
-                        uck.get("albedo")
-                    ),
+                    "sigma_t": sigma_t,
+                    "albedo": albedo,
                 }
             }
         )

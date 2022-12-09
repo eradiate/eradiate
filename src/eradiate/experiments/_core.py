@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 
 import attrs
 import mitsuba as mi
+import pint
 import pinttr
 import xarray as xr
 from tqdm.auto import tqdm
@@ -36,6 +37,8 @@ from ..scenes.measure import (
     measure_factory,
 )
 from ..scenes.measure._distant import DistantMeasure
+from ..scenes.spectra import InterpolatedSpectrum, UniformSpectrum
+from ..spectral_index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 
 logger = logging.getLogger(__name__)
 
@@ -272,6 +275,24 @@ class Experiment(ABC):
             Dictionary mapping measure IDs to xarray datasets.
         """
         return self._results
+    
+    _ckd_bin_bounds: t.Optional[t.List[t.Tuple[pint.Quantity]]] = documented(
+        attrs.field(
+            default=None,
+            validator=attrs.validators.optional(attrs.validators.instance_of(list)),
+        ),
+        doc="CKD bin bounds (required in CKD mode only).",
+        type="list[tuple[pint.Quantity]]",
+        init_type="list[tuple[pint.Quantity]] or None",
+        default="None",
+    )
+
+    @property
+    def ckd_bin_bounds(self) -> t.Optional[t.List[t.Tuple[pint.Quantity]]]:
+        """
+        CKD bin bounds (required in CKD mode only).
+        """
+        return self._ckd_bin_bounds
 
     # --------------------------------------------------------------------------
     #                          Additional constructors
@@ -343,22 +364,22 @@ class Experiment(ABC):
             sensor_ids = measure._sensor_ids()
 
             # Spectral loop
-            spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
+            spectral_indices = list(self.spectral_indices(measure))
 
             with tqdm(
                 initial=0,
-                total=len(spectral_ctxs),
+                total=len(spectral_indices),
                 unit_scale=1.0,
                 leave=True,
                 bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
                 disable=config.progress < ProgressLevel.SPECTRAL_LOOP
-                or len(spectral_ctxs) <= 1,
+                or len(spectral_indices) <= 1,
             ) as pbar:
                 for kernel_dict, ctx in self.kernel_dicts(measure):
-                    spectral_ctx = ctx.spectral_ctx
+                    spectral_index = ctx.spectral_index
 
                     pbar.set_description(
-                        f"Spectral loop [{spectral_ctx.spectral_index_formatted}]",
+                        f"Spectral loop [{spectral_index.formatted_repr}]",
                         refresh=True,
                     )
 
@@ -366,7 +387,7 @@ class Experiment(ABC):
                     run_results = mitsuba_run(kernel_dict, sensor_ids, seed_state)
 
                     # Store results
-                    measure.results[spectral_ctx.spectral_index] = run_results
+                    measure.results[spectral_index.as_hashable] = run_results
 
                     # Update progress display
                     pbar.update()
@@ -464,7 +485,7 @@ class Experiment(ABC):
             Metadata to be attached to the produced dataset.
         """
         return {
-            "convention": "CF-1.8",
+            "Conventions": "CF-1.8",
             "source": f"eradiate, version {eradiate.__version__}",
             "history": f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
             f"data creation - {self.__class__.__name__}.postprocess()",
@@ -514,11 +535,36 @@ class Experiment(ABC):
         if isinstance(measure, int):
             measure = self.measures[measure]
 
-        spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
-
-        for spectral_ctx in spectral_ctxs:
-            ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
+        for spectral_index in self.spectral_indices(measure):
+            ctx = KernelDictContext(spectral_index=spectral_index, ref=True)
             yield self.kernel_dict(ctx=ctx), ctx
+        
+    def spectral_indices(self, measure: Measure) -> t.Generator[SpectralIndex]:
+        """
+        Generates spectral indices relevant to a given measure.
+
+        Parameters
+        ----------
+        measure : .Measure
+            Measure for which spectral indices are to be generated.
+
+        Yields
+        ------
+        spectral_index : .SpectralIndex
+            Generated spectral indices.
+        """
+        # Child classes may override this method to implement custom spectral
+        # index generation
+        if isinstance(measure.srf, UniformSpectrum):
+            yield SpectralIndex()
+        elif isinstance(measure.srf, InterpolatedSpectrum):
+            for w in measure.srf.wavelengths:
+                yield SpectralIndex(wavelength=w)
+        else:
+            raise NotImplementedError(
+                f"unsupported SRF type: {measure.srf.__class__.__name__}"
+            )
+
 
 
 @parse_docs
@@ -570,7 +616,11 @@ class EarthObservationExperiment(Experiment, ABC):
             pipeline.add("aggregate_sample_count", pipelines.AggregateSampleCount())
             pipeline.add(
                 "aggregate_ckd_quad",
-                pipelines.AggregateCKDQuad(measure=measure, var=measure.var[0]),
+                pipelines.AggregateCKDQuad(
+                    measure=measure,
+                    ckd_bin_bounds=self.ckd_bin_bounds,
+                    var=measure.var[0],
+                ),
             )
 
             if isinstance(measure, (DistantFluxMeasure,)):

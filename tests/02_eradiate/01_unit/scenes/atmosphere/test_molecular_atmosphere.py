@@ -12,10 +12,10 @@ def test_molecular_atmosphere_default(
     mode_mono, tmpdir, ussa76_approx_test_absorption_data_set
 ):
     """Default  constructor produces a valid kernel dictionary."""
-    ctx = KernelDictContext(spectral_ctx={"wavelength": 550.0})
+    ctx = KernelDictContext(spectral_index={"w": 550.0})
     atmosphere = MolecularAtmosphere(
         geometry="plane_parallel",
-        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set),
+        absorption_dataset=dict(us76_u86_4=ussa76_approx_test_absorption_data_set),
     )
     assert atmosphere.kernel_dict(ctx).load()
 
@@ -49,7 +49,7 @@ def test_molecular_atmosphere_afgl_1986(mode_ckd, bin):
     dictionary."""
     bin = eradiate.scenes.measure.MeasureSpectralConfig.new(bins=bin).bins[0]
     bindex = eradiate.ckd.Bindex(bin=bin, index=3)
-    ctx = KernelDictContext(spectral_ctx={"bindex": bindex, "bin_set": "10nm"})
+    ctx = KernelDictContext(spectral_index={"w": w})
     atmosphere = MolecularAtmosphere.afgl_1986(geometry="plane_parallel")
     assert atmosphere.kernel_dict(ctx).load()
 

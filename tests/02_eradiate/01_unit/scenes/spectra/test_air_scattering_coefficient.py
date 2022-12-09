@@ -23,7 +23,7 @@ def test_air_scattering_coefficient(modes_all_mono_ckd):
     else:
         assert False
 
-    value = s.eval(ctx.spectral_ctx)
+    value = s.eval(ctx.spectral_index)
     assert np.allclose(value, expected)
 
     # The associated kernel dict is correctly formed and can be loaded

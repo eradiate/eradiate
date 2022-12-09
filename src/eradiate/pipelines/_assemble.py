@@ -13,6 +13,7 @@ from ._core import PipelineStep
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..frame import angles_in_hplane
+from ..radprops._afgl1986 import G16
 from ..scenes.illumination import ConstantIllumination, DirectionalIllumination
 from ..scenes.measure import Measure
 from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum
@@ -80,20 +81,20 @@ class AddIllumination(PipelineStep):
 
             spectrum: Spectrum = getattr(illumination, field_name)
 
+            wavelengths = x.w.values * ureg.nm
+
             if eradiate.mode().is_mono:
-                # Very important: sort spectral coordinate
-                wavelengths = np.sort(measure.spectral_cfg.wavelengths)
-                assert np.allclose(wavelengths, wavelengths_dataset)
                 return spectrum.eval_mono(wavelengths).m_as(k_units)
 
             elif eradiate.mode().is_ckd:
                 # Collect bins and wavelengths, evaluate spectrum
-                bins = measure.spectral_cfg.bins
-                wavelengths = [bin.wcenter.m_as(ureg.nm) for bin in bins] * ureg.nm
+                #bins = measure.spectral_cfg.bins
+                bins = [str(int(_)) for _ in x.w.values]
+                #wavelengths = [bin.wcenter.m_as(ureg.nm) for bin in bins] * ureg.nm
 
                 # Note: This line assumes that eval_ckd() returns a constant
                 # value over the entire bin
-                result = spectrum.eval_ckd(*(bin.bindexes[0] for bin in bins)).m_as(
+                result = spectrum.eval_ckd(w=wavelengths, g=G16).m_as(
                     k_units
                 )
 

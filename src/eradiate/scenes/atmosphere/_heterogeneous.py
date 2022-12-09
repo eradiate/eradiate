@@ -18,14 +18,15 @@ from ..core import BoundingBox, KernelDict
 from ..phase import BlendPhaseFunction
 from ..shapes import CuboidShape, SphereShape
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import KernelDictContext
+from ...spectral_index import SpectralIndex
 from ...units import symbol, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import onedict_value
 
 
-def _zero_radprops(spectral_ctx: SpectralContext) -> xr.Dataset:
+def _zero_radprops(spectral_index: SpectralIndex) -> xr.Dataset:
     """
     Returns a radiative properties data set with extinction coefficient and
     albedo set to zero.
@@ -59,7 +60,7 @@ def _zero_radprops(spectral_ctx: SpectralContext) -> xr.Dataset:
             ),
             "w": (
                 "w",
-                [spectral_ctx.wavelength.m_as(ureg.nm)],
+                [spectral_index.w.m_as(ureg.nm)],
                 dict(
                     standard_name="radiation_wavelength",
                     long_name="wavelength",
@@ -168,6 +169,10 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 f"while validating {attribute.name}: components cannot be "
                 "scaled individually"
             )
+    
+    @property
+    def is_molecular(self) -> bool:
+        return any(component.is_molecular for component in self.components)
 
     @property
     def components(self) -> t.List[t.Union[MolecularAtmosphere, ParticleLayer]]:
@@ -218,17 +223,15 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return z_layer
 
     def eval_radprops(
-        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+        self, spectral_index: SpectralIndex, optional_fields: bool = False
     ) -> xr.Dataset:
         """
         Evaluate the extinction coefficients and albedo profiles.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        spectral_index : :class:`.SpectralIndex`
+            Spectral index.
 
         optional_fields : bool, optional, default: False
             If ``True``, extra the optional ``sigma_a`` and ``sigma_s`` fields,
@@ -253,7 +256,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         # Single component: just forward encapsulated component
         if len(components) == 1:
             return components[0].eval_radprops(
-                spectral_ctx, optional_fields=optional_fields
+                spectral_index, optional_fields=optional_fields
             )
 
         # Two components or more: interpolate all components on a fine grid and
@@ -266,7 +269,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             for component in components:
                 radprops = interpolate_radprops(
-                    component.eval_radprops(spectral_ctx),
+                    component.eval_radprops(spectral_index),
                     new_z_layer=hrz,
                 )
                 # We store only the magnitude
@@ -387,7 +390,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
             for component in components:
                 radprops = interpolate_radprops(
-                    component.eval_radprops(ctx.spectral_ctx), new_z_layer=hrz
+                    component.eval_radprops(ctx.spectral_index), new_z_layer=hrz
                 )
                 sigma_ss.append(radprops.sigma_t * radprops.albedo)
 

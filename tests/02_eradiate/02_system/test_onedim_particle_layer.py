@@ -351,7 +351,7 @@ def test_particle_layer_energy_conservation(
     assert np.allclose(albedo.values, 1.0, rtol=5e-3)
 
 
-@pytest.mark.parametrize("w", [400, 550, 1000] * ureg.nm)
+@pytest.mark.parametrize("w", [400.0, 550.0, 1000.0] * ureg.nm)
 @pytest.mark.slow
 def test_one_layer_molecular_atmosphere_vs_particle_layer(
     mode_mono_double, tabulated_rayleigh, artefact_dir, ert_seed_state, w
@@ -409,9 +409,9 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
         phase function of the latter is a tabulated phase function."""
 
         # extract molecular atmosphere radiative properties
-        spectral_ctx = exp_mol_atm.measures[0].spectral_cfg.spectral_ctxs()[0]
+        spectral_index = exp_mol_atm.measures[0].spectral_indices()[0]
         mol_atm = exp_mol_atm.atmosphere
-        mol_atm_radprops = mol_atm.eval_radprops(spectral_ctx)
+        mol_atm_radprops = mol_atm.eval_radprops(spectral_index)
         mol_atm_albedo = to_quantity(mol_atm_radprops.albedo)
 
         # compute molecular atmosphere optical thickness

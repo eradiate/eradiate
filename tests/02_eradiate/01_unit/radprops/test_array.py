@@ -3,8 +3,8 @@ import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import SpectralContext
 from eradiate.radprops import ArrayRadProfile
+from eradiate.spectral_index import SpectralIndex
 
 
 def test_array_rad_props_profile(mode_mono):
@@ -20,10 +20,10 @@ def test_array_rad_props_profile(mode_mono):
         sigma_t_values=sigma_t_values,
     )
 
-    spectral_ctx = SpectralContext.new()
+    spectral_index = SpectralIndex.new()
     assert np.allclose(p.levels, levels)
-    assert np.allclose(p.eval_albedo(spectral_ctx=spectral_ctx), albedo_values)
-    assert np.allclose(p.eval_sigma_t(spectral_ctx=spectral_ctx), sigma_t_values)
+    assert np.allclose(p.eval_albedo(spectral_index), albedo_values)
+    assert np.allclose(p.eval_sigma_t(spectral_index), sigma_t_values)
 
 
 def test_array_rad_props_profile_eval_dataset(mode_mono):
@@ -35,8 +35,7 @@ def test_array_rad_props_profile_eval_dataset(mode_mono):
         albedo_values=ureg.Quantity(np.linspace(0.0, 1.0, 11), ureg.dimensionless),
         sigma_t_values=ureg.Quantity(np.linspace(0.0, 1e-5, 11), "m^-1"),
     )
-    spectral_ctx = SpectralContext.new()
-    assert isinstance(p.eval_dataset(spectral_ctx), xr.Dataset)
+    assert isinstance(p.eval_dataset(SpectralIndex.new()), xr.Dataset)
 
 
 def test_array_rad_props_profile_invalid_values(mode_mono):
