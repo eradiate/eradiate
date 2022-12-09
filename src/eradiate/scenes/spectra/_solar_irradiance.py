@@ -13,10 +13,8 @@ from ._core import Spectrum
 from ..core import KernelDict
 from ... import converters, data, validators
 from ...attrs import documented, parse_docs
-from ...ckd import Bindex
 from ...contexts import KernelDictContext
 from ...units import PhysicalQuantity, to_quantity
-from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
@@ -194,49 +192,12 @@ class SolarIrradianceSpectrum(Spectrum):
 
         return irradiance * self.scale * self._scale_earth_sun_distance()
 
-    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        # Inherit docstring
-        # Note: Spectrum is averaged over the spectral bin
-
-        result = np.zeros((len(bindexes),))
-        wavelength_units = ucc.get("wavelength")
-        quantity_units = ucc.get(self.quantity)
-
-        for i_bindex, bindex in enumerate(bindexes):
-            bin = bindex.bin
-
-            wmin_m = bin.wmin.m_as(wavelength_units)
-            wmax_m = bin.wmax.m_as(wavelength_units)
-
-            # -- Collect relevant spectral coordinate values
-            w_m = ureg.convert(
-                self.dataset.ssi.w.values,
-                self.dataset.ssi.w.attrs["units"],
-                wavelength_units,
-            )
-            w = (
-                np.hstack(
-                    (
-                        [wmin_m],
-                        w_m[np.where(np.logical_and(wmin_m < w_m, w_m < wmax_m))[0]],
-                        [wmax_m],
-                    )
-                )
-                * wavelength_units
-            )
-
-            # -- Evaluate spectrum at wavelengths
-            interp = self.eval_mono(w)
-
-            # -- Average spectrum on bin extent
-            integral = np.trapz(interp, w)
-            result[i_bindex] = (integral / bin.width).m_as(quantity_units)
-
-        return result * quantity_units
+    def eval_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        return self.eval_mono(w=w)
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Apply scaling, build kernel dict
-        value = float(self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance")))
+        kernel_units = uck.get("irradiance")
+        value = float(self.eval(ctx.spectral_index).m_as(kernel_units))
         return KernelDict({"spectrum": {"type": "uniform", "value": value}})
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:

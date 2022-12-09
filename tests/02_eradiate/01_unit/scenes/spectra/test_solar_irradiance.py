@@ -4,10 +4,11 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.ckd import BinSet
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import DataError
 from eradiate.scenes.core import KernelDict
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
+from eradiate.spectral_index import SpectralIndex
 
 
 def test_solar_irradiance(mode_mono):
@@ -33,7 +34,7 @@ def test_solar_irradiance(mode_mono):
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
 
     with pytest.raises(ValueError):
-        ctx = KernelDictContext(spectral_ctx={"wavelength": 2400.0})
+        ctx = KernelDictContext(spectral_index={"wavelength": 2400.0})
         s.kernel_dict(ctx)
 
     # solid_2017_mean dataset can be used
@@ -47,17 +48,16 @@ def test_solar_irradiance_eval(modes_all):
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
 
     if eradiate.mode().is_mono:
-        spectral_ctx = SpectralContext.new(wavelength=550.0)
+        spectral_index = SpectralIndex.new(w=550.0)
         # Reference value computed manually
-        assert np.allclose(s.eval(spectral_ctx), ureg.Quantity(1.87938, "W/m^2/nm"))
+        assert np.allclose(s.eval(spectral_index), ureg.Quantity(1.87938, "W/m^2/nm"))
 
     elif eradiate.mode().is_ckd:
         bin_set = BinSet.from_db("10nm")
         bin = bin_set.select_bins("550")[0]
-        bindex = bin.bindexes[0]
-        spectral_ctx = SpectralContext.new(bindex=bindex)
+        spectral_index = SpectralIndex.new(w=bin.wcenter)
         # Reference value computed manually
-        assert np.allclose(s.eval(spectral_ctx), ureg.Quantity(1.871527, "W/m^2/nm"))
+        assert np.allclose(s.eval(spectral_index), ureg.Quantity(1.871527, "W/m^2/nm"))
 
     else:
         assert False

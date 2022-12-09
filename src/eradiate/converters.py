@@ -1,7 +1,7 @@
 __all__ = [
     "auto_or",
-    "to_dataset",
     "on_quantity",
+    "to_dataset",
 ]
 
 import os

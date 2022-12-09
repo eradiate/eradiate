@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import datetime
 import typing as t
-from abc import ABC
+from abc import ABC, abstractmethod
+from functools import singledispatchmethod
 
 import attrs
 import numpy as np
@@ -12,9 +13,7 @@ import xarray as xr
 import eradiate
 
 from .._factory import Factory
-from ..ckd import Bindex
-from ..contexts import SpectralContext
-from ..exceptions import UnsupportedModeError
+from ..spectral_index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_registry as ureg
 
 rad_profile_factory = Factory()
@@ -185,79 +184,48 @@ class RadProfile(ABC):
     :class:`.RadProfileFactory`
     """
 
-    def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
-        """
-        Evaluate albedo spectrum based on a spectral context. This method
-        dispatches evaluation to specialised methods depending on the active
-        mode.
+    @singledispatchmethod
+    def eval_albedo(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        """Evaluate albedo at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
-
+        spectral_index : :class:`.SpectralIndex`
+            Spectral index.
+        
         Returns
         -------
         quantity
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-
-        if eradiate.mode().is_mono:
-            return self.eval_albedo_mono(spectral_ctx.wavelength).squeeze()
-
-        elif eradiate.mode().is_ckd:
-            return self.eval_albedo_ckd(spectral_ctx.bindex).squeeze()
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        raise NotImplementedError
+    
+    @eval_albedo.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_albedo_mono(spectral_index.w).squeeze()
+    
+    @eval_albedo.register
+    def _(self, spectral_index: CKDSpectralIndex) -> pint.Quantity:
+        return self.eval_albedo_ckd(spectral_index.w, spectral_index.g).squeeze()
 
     def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
-        """
-        Evaluate albedo spectrum in monochromatic modes.
-
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile albedo as an array with shape (n_layers, len(w)).
-        """
+        """Evaluate albedo spectrum in monochromatic modes."""
         raise NotImplementedError
 
-    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        """
-        Evaluate albedo spectrum in CKD modes.
-
-        Parameters
-        ----------
-        *bindexes : :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate the spectrum.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile albedo as an array with shape (n_layers, len(bindexes)).
-        """
+    def eval_albedo_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        """Evaluate albedo spectrum in CKD modes."""
         raise NotImplementedError
 
-    def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    @singledispatchmethod
+    def eval_sigma_t(self, spectral_index: SpectralIndex) -> pint.Quantity:
         """
-        Evaluate extinction coefficient spectrum based on a spectral context.
-        This method dispatches evaluation to specialised methods depending on
-        the active mode.
+        Evaluate extinction coefficient at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        spectral_index : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
@@ -265,62 +233,33 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-
-        if eradiate.mode().is_mono:
-            return self.eval_sigma_t_mono(spectral_ctx.wavelength).squeeze()
-
-        elif eradiate.mode().is_ckd:
-            return self.eval_sigma_t_ckd(spectral_ctx.bindex).squeeze()
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        raise NotImplementedError
+    
+    @eval_sigma_t.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_t_mono(spectral_index.w).squeeze()
+    
+    @eval_sigma_t.register
+    def _(self, spectral_index: CKDSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_t_ckd(spectral_index.w, spectral_index.g).squeeze()
 
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
-        """
-        Evaluate extinction coefficient spectrum in monochromatic modes.
-
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile extinction coefficient as an array with shape
-            (n_layers, len(w)).
-        """
+        """Evaluate extinction coefficient spectrum in monochromatic modes."""
         raise NotImplementedError
 
-    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        """
-        Evaluate extinction coefficient spectrum in CKD modes.
-
-        Parameters
-        ----------
-        *bindexes : :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate the spectrum.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile extinction coefficient as an array with shape
-            (n_layers, len(bindexes)).
-        """
+    def eval_sigma_t_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        """Evaluate extinction coefficient spectrum in CKD modes."""
         raise NotImplementedError
 
-    def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    @singledispatchmethod
+    def eval_sigma_a(self, spectral_index: SpectralIndex) -> pint.Quantity:
         """
-        Evaluate absorption coefficient spectrum based on a spectral context.
-        This method dispatches evaluation to specialised methods depending on
-        the active mode.
+        Evaluate absorption coefficient at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        spectral_index : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
@@ -328,67 +267,33 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-
-        if eradiate.mode().is_mono:
-            return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
-
-        elif eradiate.mode().is_ckd:
-            return self.eval_sigma_a_ckd(
-                spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
-            ).squeeze()
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        raise NotImplementedError
+    
+    @eval_sigma_a.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_a_mono(spectral_index.w).squeeze()
+    
+    @eval_sigma_a.register
+    def _(self, spectral_index: CKDSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(spectral_index.w, spectral_index.g).squeeze()
 
     def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
-        """
-        Evaluate absorption coefficient spectrum in monochromatic modes.
-
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile absorption coefficient as an array with shape
-            (n_layers, len(w)).
-        """
+        """Evaluate absorption coefficient spectrum in monochromatic modes."""
         raise NotImplementedError
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        """
-        Evaluate absorption coefficient spectrum in CKD modes.
-
-        Parameters
-        ----------
-        *bindexes : :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate the spectrum.
-
-        bin_set_id : str
-            CKD bin set identifier.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile absorption coefficient as an array with shape
-            (n_layers, len(bindexes)).
-        """
+    def eval_sigma_a_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        """Evaluate absorption coefficient spectrum in CKD modes."""
         raise NotImplementedError
 
-    def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    @singledispatchmethod
+    def eval_sigma_s(self, spectral_index: SpectralIndex) -> pint.Quantity:
         """
-        Evaluate scattering coefficient spectrum based on a spectral context.
-        This method dispatches evaluation to specialised methods depending on
-        the active mode.
+        Evaluate scattering coefficient at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        spectral_index : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
@@ -396,111 +301,55 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
+        raise NotImplementedError
 
-        if eradiate.mode().is_mono:
-            return self.eval_sigma_s_mono(spectral_ctx.wavelength).squeeze()
-
-        elif eradiate.mode().is_ckd:
-            return self.eval_sigma_s_ckd(spectral_ctx.bindex).squeeze()
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_sigma_s.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_s_mono(spectral_index.w).squeeze()
+    
+    @eval_sigma_s.register
+    def _(self, spectral_index: CKDSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_s_ckd(spectral_index.w, spectral_index.g).squeeze()
 
     def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
-        """
-        Evaluate scattering coefficient spectrum in monochromatic modes.
-
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile scattering coefficient as an array with shape
-            (n_layers, len(w)).
-        """
+        """Evaluate scattering coefficient spectrum in monochromatic modes."""
         raise NotImplementedError
 
-    def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        """
-        Evaluate scattering coefficient spectrum in CKD modes.
-
-        Parameters
-        ----------
-        *bindexes : :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate the spectrum.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile scattering coefficient as an array with shape
-            (n_layers, len(bindexes)).
-        """
+    def eval_sigma_s_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        """Evaluate scattering coefficient spectrum in CKD modes."""
         raise NotImplementedError
 
-    def eval_dataset(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    @singledispatchmethod
+    def eval_dataset(self, spectral_index: SpectralIndex) -> xr.Dataset:
         """
-        Return a dataset that holds the radiative properties of the corresponding
-        atmospheric profile. This method dispatches evaluation to specialised
-        methods depending on the active mode.
+        Evaluate radiative properties at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+        spectral_index : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
         Dataset
             Radiative properties dataset.
         """
-        if eradiate.mode().is_mono:
-            return self.eval_dataset_mono(spectral_ctx.wavelength).squeeze()
+        raise NotImplementedError
+    
+    @eval_dataset.register
+    def _(self, spectral_index: MonoSpectralIndex) -> xr.Dataset:
+        return self.eval_dataset_mono(w=spectral_index.w)
+    
+    @eval_dataset.register
+    def _(self, spectral_index: CKDSpectralIndex) -> xr.Dataset:
+        return self.eval_dataset_ckd(w=spectral_index.w, g=spectral_index.g)
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_dataset_ckd(
-                spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
-            ).squeeze()
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
-
+    @abstractmethod
     def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
-        """
-        Return a dataset that holds the radiative properties of the corresponding
-        atmospheric profile in monochromatic modes.
+        """Evaluate radiative properties in monochromatic modes."""
+        pass
 
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which spectra are to be evaluated.
-
-        Returns
-        -------
-        Dataset
-            Radiative properties dataset.
-        """
-        raise NotImplementedError
-
-    def eval_dataset_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
-        """
-        Return a dataset that holds the radiative properties of the corresponding
-        atmospheric profile in CKD modes
-
-        Parameters
-        ----------
-        *bindexes : :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate spectra.
-
-        bin_set_id : str
-            CKD bin set identifier.
-
-        Returns
-        -------
-        Dataset
-            Radiative properties dataset.
-        """
-        raise NotImplementedError
+    @abstractmethod
+    def eval_dataset_ckd(self, w: pint.Quantity, g: float) -> xr.Dataset:
+        """Evaluate radiative properties in CKD modes."""
+        pass

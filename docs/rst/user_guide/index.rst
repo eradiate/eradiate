@@ -10,5 +10,6 @@ User guide
    conventions
    package_structure
    onedim_experiment
+   spectral_resolution
    unit_guide_user
    data/index

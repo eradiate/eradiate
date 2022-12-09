@@ -13,7 +13,6 @@ Data structures
 
    BinSet
    Bin
-   Bindex
 
 Bin filter implementation
 -------------------------
@@ -22,5 +21,4 @@ Bin filter implementation
    :toctree: generated/autosummary/
 
    bin_filter
-   bin_filter_ids
    bin_filter_interval

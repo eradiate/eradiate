@@ -5,6 +5,7 @@ Molecular atmospheres.
 from __future__ import annotations
 
 import typing as t
+from os import PathLike
 
 import attrs
 import numpy as np
@@ -15,9 +16,11 @@ import xarray as xr
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
+from ... import converters
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import KernelDictContext
 from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
+from ...spectral_index import SpectralIndex
 from ...thermoprops import afgl_1986, us76
 from ...thermoprops.util import (
     compute_scaling_factors,
@@ -97,22 +100,21 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 "and 'has_scattering' must be True"
             )
 
-    absorption_data_sets: t.Optional[t.Dict[str, str]] = documented(
+    absorption_dataset: t.Optional[t.Union[PathLike, xr.Dataset]] = documented(
         attrs.field(
             default=None,
-            converter=attrs.converters.optional(dict),
-            validator=attrs.validators.optional(attrs.validators.instance_of(dict)),
+            converter=attrs.converters.optional(converters.to_dataset(load_from_id=None)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(xr.Dataset)),
         ),
-        doc="Mapping of species and absorption data set files paths. If "
-        "``None``, the default absorption data sets are used to compute "
-        "the absorption coefficient. If not ``None``, the absorption data "
-        "set files whose paths are provided in the mapping will be used to "
-        "compute the absorption coefficient. If the mapping does not "
-        "include all species from the atmospheric "
-        "thermophysical profile, the default data sets will be used to "
-        "compute the absorption coefficient of the corresponding species.",
-        type="dict",
+        doc="Absorption coefficient dataset. If ``None``, the absorption "
+        "coefficient is set to zero.",
+        type=":class:`~xarray.Dataset`",
+        default="None",
     )
+    
+    @property
+    def is_molecular(self) -> bool:
+        return True
 
     def update(self) -> None:
         super(MolecularAtmosphere, self).update()
@@ -135,7 +137,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._thermoprops
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
-        min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
+        min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_index).min()
         return np.divide(
             1.0,
             min_sigma_s,
@@ -150,31 +152,30 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def radprops_profile(self) -> RadProfile:
         if self.thermoprops.title == "U.S. Standard Atmosphere 1976":
-            if self.absorption_data_sets is not None:
-                absorption_data_set = self.absorption_data_sets["us76_u86_4"]
-            else:
-                absorption_data_set = None
             return US76ApproxRadProfile(
                 thermoprops=self.thermoprops,
                 has_scattering=self.has_scattering,
                 has_absorption=self.has_absorption,
-                absorption_data_set=absorption_data_set,
+                absorption_dataset=self.absorption_dataset,
             )
         elif "AFGL (1986)" in self.thermoprops.title:
             return AFGL1986RadProfile(
                 thermoprops=self.thermoprops,
                 has_scattering=self.has_scattering,
                 has_absorption=self.has_absorption,
+                absorption_dataset=self.absorption_dataset,
             )
         else:
-            raise NotImplementedError("Unsupported thermophysical properties data set.")
+            raise NotImplementedError(
+                "Unsupported thermophysical properties data set."
+            )
 
     def eval_radprops(
-        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+        self, spectral_index: SpectralIndex, optional_fields: bool = False
     ) -> xr.Dataset:
         # Inherit docstrings
         # All fields are already exported: `optional_fields` has no effect
-        return self.radprops_profile.eval_dataset(spectral_ctx=spectral_ctx)
+        return self.radprops_profile.eval_dataset(spectral_index)
 
     # --------------------------------------------------------------------------
     #                             Kernel dictionary
@@ -193,6 +194,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         model: str = "us_standard",
         levels: t.Optional[pint.Quantity] = None,
         concentrations: t.Optional[t.Dict[str, t.Union[str, pint.Quantity]]] = None,
+        binset: str = "10nm",
         **kwargs: t.MutableMapping[str],
     ) -> MolecularAtmosphere:
         """
@@ -214,6 +216,9 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             Molecular concentrations as a ``{str: quantity}`` mapping.
             This dictionary is interpreted by :func:`pinttr.util.ensure_units`,
             which allows for passing units as strings.
+        
+        binset: str
+            Wavelength bin set identifier. Either ``"10nm"`` or ``"1nm"``.
 
         **kwargs
             Keyword arguments passed to the :class:`.MolecularAtmosphere`
@@ -279,19 +284,35 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         individual molecular species to custom concentration values.
         Custom concentrations can be provided in different units.
         """
-        ds = afgl_1986.make_profile(model_id=model)
+        thermoprops = afgl_1986.make_profile(model_id=model)
+
+        path = "ckd/absorption"
+        if binset == "10nm":
+            absorption_dataset = f"{path}/10nm/afgl_1986-{model}-10nm-v3.nc"
+        elif binset == "1nm":
+            absorption_dataset = f"{path}/1nm/afgl_1986-{model}-1nm-v3.nc"
+        else:
+            raise ValueError(f"Invalid binset: {binset}")
 
         if concentrations is not None:
             factors = compute_scaling_factors(
-                ds=ds,
+                ds=thermoprops,
                 concentration=pinttr.interpret_units(concentrations, ureg=ureg),
             )
-            ds = rescale_concentration(ds=ds, factors=factors)
+            thermoprops = rescale_concentration(ds=thermoprops, factors=factors)
 
         if levels is not None:
-            ds = interpolate(ds=ds, z_level=levels, conserve_columns=True)
+            thermoprops = interpolate(
+                ds=thermoprops,
+                z_level=levels,
+                conserve_columns=True,
+            )
 
-        return cls(thermoprops=ds, **kwargs)
+        return cls(
+            thermoprops=thermoprops,
+            absorption_dataset=absorption_dataset,
+            **kwargs,
+        )
 
     @classmethod
     def ussa_1976(

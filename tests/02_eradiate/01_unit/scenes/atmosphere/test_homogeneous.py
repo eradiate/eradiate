@@ -4,10 +4,11 @@ import pinttr
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.contexts import KernelDictContext
 from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.phase import RayleighPhaseFunction, phase_function_factory
+from eradiate.spectral_index import SpectralIndex
 
 
 def test_homogeneous_default(mode_mono):
@@ -24,9 +25,8 @@ def test_homogeneous_sigma_s(mode_mono):
     """
     Assigns custom 'sigma_s' value.
     """
-    spectral_ctx = SpectralContext.new()
     r = HomogeneousAtmosphere(sigma_s=1e-5)
-    assert r.eval_sigma_s(spectral_ctx) == ureg.Quantity(1e-5, ureg.m**-1)
+    assert r.eval_sigma_s(SpectralIndex.new()) == ureg.Quantity(1e-5, ureg.m**-1)
 
 
 def test_homogeneous_top(mode_mono):
@@ -84,7 +84,7 @@ def test_homogeneous_mfp(mode_mono):
     """
     ctx = KernelDictContext()
     r = HomogeneousAtmosphere(geometry="plane_parallel")
-    sigma_s = compute_sigma_s_air(wavelength=ctx.spectral_ctx.wavelength)
+    sigma_s = compute_sigma_s_air(wavelength=ctx.spectral_index.wavelength)
 
     assert np.isclose(r.eval_mfp(ctx), 1.0 / sigma_s)
     assert np.isclose(r.kernel_width_plane_parallel(ctx), 10.0 / sigma_s)

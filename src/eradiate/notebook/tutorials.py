@@ -6,15 +6,15 @@ import typing as t
 
 import matplotlib.pyplot as plt
 
-from ..contexts import SpectralContext
 from ..scenes.atmosphere import AbstractHeterogeneousAtmosphere
+from ..spectral_index import SpectralIndex
 
 
 def plot_sigma_t(
     *atmospheres: AbstractHeterogeneousAtmosphere,
     labels: t.Optional[t.List[str]] = None,
     altitude_extent: t.Optional[t.Tuple[float, float]] = None,
-    spectral_ctx: t.Optional[SpectralContext] = None,
+    spectral_index: t.Optional[SpectralIndex] = None,
     show: bool = True,
 ) -> t.Tuple[plt.Figure, plt.Axes]:
     """
@@ -34,10 +34,10 @@ def plot_sigma_t(
     altitude_extent : tuple of float
         A (min, max) altitude pair (in km) to which the plot is restricted.
 
-    spectral_ctx : .SpectralContext, optional
+    spectral_index : .SpectralIndex, optional
         The spectral context for which the extinction coefficient is evaluated.
-        If unset, a default spectral context is created using
-        :meth:`.SpectralContext.new`.
+        If unset, a default spectral index is created using
+        :meth:`.SpectralIndex.new`.
 
     show : bool, optional
         If ``True``, return ``None`` and display the plot. Otherwise, return a
@@ -48,8 +48,8 @@ def plot_sigma_t(
 
     from eradiate.units import to_quantity
 
-    if spectral_ctx is None:  # Use the default spectral context (550 nm) if unspecified
-        spectral_ctx = SpectralContext.new()
+    if spectral_index is None:  # Use the default spectral context (550 nm) if unspecified
+        spectral_index = SpectralIndex.new()
 
     if labels is None:
         label_iter = iter([None for _ in atmospheres])
@@ -61,10 +61,10 @@ def plot_sigma_t(
     with plt.rc_context({"lines.linestyle": ":", "lines.marker": "."}):
         for atmosphere in atmospheres:
             altitude = to_quantity(
-                atmosphere.eval_radprops(spectral_ctx=spectral_ctx).z_layer
+                atmosphere.eval_radprops(spectral_index=spectral_index).z_layer
             ).m_as("km")
             sigma_t = to_quantity(
-                atmosphere.eval_radprops(spectral_ctx=spectral_ctx).sigma_t
+                atmosphere.eval_radprops(spectral_index=spectral_index).sigma_t
             ).m_as("1/m")
             ax.plot(altitude, sigma_t, label=next(label_iter))
 

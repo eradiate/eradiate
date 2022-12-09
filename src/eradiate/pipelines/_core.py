@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import logging
 import typing as t
 from abc import ABC, abstractmethod
 from collections import Counter
@@ -9,6 +10,11 @@ import attrs
 
 from ..attrs import documented, parse_docs
 from ..util.misc import camel_to_snake
+
+logger = logging.getLogger(__name__)
+
+def describe(x: t.Any):
+    return x.to_dict(data=False)
 
 # ------------------------------------------------------------------------------
 #                                Local utilities

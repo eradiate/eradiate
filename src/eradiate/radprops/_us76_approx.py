@@ -1,20 +1,21 @@
 from __future__ import annotations
 
 import typing as t
+from functools import singledispatchmethod
+from os import PathLike
 
 import attrs
 import numpy as np
 import pint
 import xarray as xr
 
-from ._core import RadProfile, make_dataset, rad_profile_factory
+from ._core import RadProfile, make_dataset
 from ._util_mono import get_us76_u86_4_spectrum_filename
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
-from .. import data
-from .._mode import UnsupportedModeError
+from .. import converters, data
 from ..attrs import documented, parse_docs
-from ..ckd import Bindex
+from ..spectral_index import MonoSpectralIndex, SpectralIndex
 from ..thermoprops import us76
 from ..units import to_quantity
 from ..units import unit_registry as ureg
@@ -144,17 +145,16 @@ class US76ApproxRadProfile(RadProfile):
         default="True",
     )
 
-    absorption_data_set: t.Optional[str] = documented(
+    absorption_dataset: t.Optional[t.Union[PathLike, xr.Dataset]] = documented(
         attrs.field(
             default=None,
-            converter=attrs.converters.optional(str),
-            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
+            converter=attrs.converters.optional(converters.to_dataset(load_from_id=None)),
+            validator=attrs.validators.optional(attrs.validators.instance_of(xr.Dataset)),
         ),
-        doc="Absorption data set file path. If ``None``, the default "
-        "absorption data sets will be used to compute the absorption "
-        "coefficient. Otherwise, the absorption data set whose path is "
-        "provided will be used to compute the absorption coefficient.",
-        type="str",
+        doc="Absorption coefficient data set. If ``None``, the default "
+        "absorption coefficient data set is opened.",
+        type=":class:`xarray.Dataset` or None",
+        default="None",
     )
 
     @property
@@ -171,13 +171,21 @@ class US76ApproxRadProfile(RadProfile):
         """
         return to_quantity(self.thermoprops.z_level)
 
+    @singledispatchmethod
+    def eval_sigma_a(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        raise NotImplementedError
+    
+    @eval_sigma_a.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_a_mono(w=spectral_index.w)
+
     def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
         profile = self.thermoprops
         if self.has_absorption:
-            if self.absorption_data_set is None:  # ! this is never tested
+            if self.absorption_dataset is None:  # ! this is never tested
                 ds = data.open_dataset(get_us76_u86_4_spectrum_filename(w))
             else:
-                ds = xr.open_dataset(self.absorption_data_set)
+                ds = xr.open_dataset(self.absorption_dataset)
 
             # Compute scattering coefficient
             result = compute_sigma_a(
@@ -200,8 +208,13 @@ class US76ApproxRadProfile(RadProfile):
         else:
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
+    @singledispatchmethod
+    def eval_sigma_s(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        raise NotImplementedError
+    
+    @eval_sigma_s.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_s_mono(w=spectral_index.w)
 
     def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
         profile = self.thermoprops
@@ -213,8 +226,13 @@ class US76ApproxRadProfile(RadProfile):
         else:
             return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
 
-    def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
+    @singledispatchmethod
+    def eval_albedo(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        raise NotImplementedError
+    
+    @eval_albedo.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_albedo_mono(w=spectral_index.w)
 
     def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
         sigma_s = self.eval_sigma_s_mono(w)
@@ -223,14 +241,24 @@ class US76ApproxRadProfile(RadProfile):
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_albedo_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
+    @singledispatchmethod
+    def eval_sigma_t(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        raise NotImplementedError
+    
+    @eval_sigma_t.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_sigma_t_mono(w=spectral_index.w)
 
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
         return self.eval_sigma_a_mono(w) + self.eval_sigma_s_mono(w)
 
-    def eval_sigma_t_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
+    @singledispatchmethod
+    def eval_dataset(self, spectral_index: SpectralIndex) -> pint.Quantity:
+        raise NotImplementedError
+    
+    @eval_dataset.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_dataset_mono(w=spectral_index.w)
 
     def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
         profile = self.thermoprops
@@ -241,6 +269,3 @@ class US76ApproxRadProfile(RadProfile):
             sigma_a=self.eval_sigma_a_mono(w),
             sigma_s=self.eval_sigma_s_mono(w),
         ).squeeze()
-
-    def eval_dataset_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
-        raise UnsupportedModeError(supported="monochromatic")

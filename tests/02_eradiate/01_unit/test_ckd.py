@@ -1,19 +1,20 @@
+import numpy as np
 import pytest
 
-from eradiate import data
 from eradiate import unit_registry as ureg
-from eradiate.ckd import Bin, BinSet, bin_filter_ids, bin_filter_interval
+from eradiate.ckd import Bin, BinSet, includes, overlaps
 from eradiate.quad import Quad
+from eradiate.scenes.spectra import InterpolatedSpectrum
 
 
-def test_ckd_bin(mode_ckd):
+def test_ckd_bin():
     """
     Unit tests for :class:`eradiate.ckd.Bin`.
     """
     quad = Quad.gauss_legendre(16)
 
     # Construct a bin
-    bin = Bin(id="505", wmin=500.0, wmax=510.0, quad=quad)
+    bin = Bin(wmin=500.0, wmax=510.0, quad=quad)
 
     # Scalar values are correctly converted to config default units
     assert bin.wmin == 500.0 * ureg.nm
@@ -27,167 +28,107 @@ def test_ckd_bin(mode_ckd):
 
     # Wrong bound ordering raises
     with pytest.raises(ValueError):
-        Bin(id="505", wmin=510.0, wmax=500.0, quad=quad)
-
-    # Conversion from tuple is supported
-    assert isinstance(Bin.convert(("505", 500.0, 510.0, quad)), Bin)
-
-    # Conversion from dict is supported
-    assert isinstance(
-        Bin.convert(dict(id="505", wmin=500.0, wmax=510.0, quad=quad)), Bin
-    )
+        Bin(wmin=510.0, wmax=500.0, quad=quad)
 
 
-def test_ckd_bin_filter_interval(mode_ckd):
+@pytest.mark.parametrize(("bin", "wmin", "wmax", "selected"), [
+    (Bin(wmin=500.0, wmax=510.0), 505.0 * ureg.nm, 515.0 * ureg.nm, True),
+    (Bin(wmin=500.0, wmax=510.0), 500.0 * ureg.nm, 510.0 * ureg.nm, True),
+    (Bin(wmin=500.0, wmax=510.0), 500.0 * ureg.nm, 505.0 * ureg.nm, True),
+    (Bin(wmin=500.0, wmax=510.0), 505.0 * ureg.nm, 510.0 * ureg.nm, True),
+    (Bin(wmin=500.0, wmax=510.0), 495.0 * ureg.nm, 505.0 * ureg.nm, True),
+    (Bin(wmin=500.0, wmax=510.0), 505.0 * ureg.nm, 515.0 * ureg.nm, True),
+    (Bin(wmin=500.0, wmax=510.0), 490.0 * ureg.nm, 500.0 * ureg.nm, False),
+    (Bin(wmin=500.0, wmax=510.0), 510.0 * ureg.nm, 520.0 * ureg.nm, False),
+    (Bin(wmin=500.0, wmax=510.0), 400.0 * ureg.nm, 490.0 * ureg.nm, False),
+    (Bin(wmin=500.0, wmax=510.0), 520.0 * ureg.nm, 530.0 * ureg.nm, False),
+])
+def test_overlaps(bin, wmin, wmax, selected):
+    select = overlaps(wmin, wmax)
+    assert select(bin) == selected
+
+@pytest.mark.parametrize(("bin", "w", "selected"), [
+    (Bin(wmin=500.0, wmax=510.0), 505.0 * ureg.nm, True),
+    (Bin(wmin=500.0, wmax=510.0), 500.0 * ureg.nm, True),
+    (Bin(wmin=500.0, wmax=510.0), 510.0 * ureg.nm, False),
+    (Bin(wmin=500.0, wmax=510.0), 495.0 * ureg.nm, False),
+    (Bin(wmin=500.0, wmax=510.0), 515.0 * ureg.nm, False),
+])
+def test_includes(bin, w, selected):
+    select = includes(w)
+    assert select(bin) == selected
+    
+
+def test_select_from_connex_interpolated_spectrum():
     """
-    Unit tests for :func:`eradiate.ckd.bin_filter_interval`.
+    Unit tests for :meth:`eradiate.ckd.BinSet.select_from_srf`.
     """
-    quad = Quad.gauss_legendre(16)
-
-    assert bin_filter_interval(wmin=505 * ureg.nm, wmax=595 * ureg.nm)(
-        Bin(id="foo", wmin=510, wmax=520, quad=quad)
+    binset = BinSet.arange(
+        start=280.0 * ureg.nm,
+        stop=2400.0 * ureg.nm,
+        step=10.0 * ureg.nm,
     )
-    assert not bin_filter_interval(wmin=505 * ureg.nm, wmax=595 * ureg.nm)(
-        Bin(id="foo", wmin=400, wmax=410, quad=quad)
-    )
-
-    # By default, coverage is such that enpoints are included
-    assert bin_filter_interval(wmin=505 * ureg.nm, wmax=595 * ureg.nm)(
-        Bin(id="foo", wmin=500, wmax=510, quad=quad)
-    )
-    assert bin_filter_interval(wmin=505 * ureg.nm, wmax=595 * ureg.nm)(
-        Bin(id="foo", wmin=590, wmax=600, quad=quad)
+    
+    srf = InterpolatedSpectrum(
+        wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
+        values=np.ones(11),
     )
 
-    # Endpoint exclusion flag trims endpoint bins
-    assert not bin_filter_interval(
-        wmin=505 * ureg.nm, wmax=595 * ureg.nm, endpoints=False
-    )(Bin(id="foo", wmin=500, wmax=510, quad=quad))
-    assert not bin_filter_interval(
-        wmin=505 * ureg.nm, wmax=595 * ureg.nm, endpoints=False
-    )(Bin(id="foo", wmin=590, wmax=600, quad=quad))
-
-    # Tightly fit bounds pass the filter
-    assert bin_filter_interval(wmin=500 * ureg.nm, wmax=510 * ureg.nm, endpoints=True)(
-        Bin(id="foo", wmin=500, wmax=510, quad=quad)
-    )
-
-    # wmin == wmax selects a bin which contains wmin
-    assert bin_filter_interval(wmin=505 * ureg.nm, wmax=505 * ureg.nm, endpoints=True)(
-        Bin(id="foo", wmin=500, wmax=510, quad=quad)
-    )
+    selected = binset.select_with(srf)
+    wmin_expected = np.linspace(500.0, 600.0, 11) * ureg.nm
+    assert len(selected.bins) == 10
+    for bin, wmin in zip(selected.bins, wmin_expected):
+        assert np.isclose(bin.wmin, wmin)
+        assert np.isclose(bin.wmax, wmin + 10.0 * ureg.nm)
 
 
-def test_ckd_bin_set_constructors(mode_ckd):
+def test_select_from_non_connex_interpolated_spectrum_1():
     """
-    Unit tests for :class:`eradiate.ckd.BinSet` constructors.
+    Unit tests for :meth:`eradiate.ckd.BinSet.select_from_srf`.
     """
+    binset = BinSet.arange(
+        start=280.0 * ureg.nm,
+        stop=2400.0 * ureg.nm,
+        step=10.0 * ureg.nm,
+    )
+    
+    srf = InterpolatedSpectrum(
+        wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
+        values = np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0]),
+    )
 
-    # Load from database
-    bin_set = BinSet.from_db("10nm")
-    assert bin_set.id == "10nm"
+    selected = binset.select_with(srf)
+    expected_selected_bins = [
+        Bin(wmin=520.0 * ureg.nm, wmax=530.0 * ureg.nm),
+        Bin(wmin=560.0 * ureg.nm, wmax=570.0 * ureg.nm),
+        Bin(wmin=570.0 * ureg.nm, wmax=580.0 * ureg.nm),
+        Bin(wmin=580.0 * ureg.nm, wmax=590.0 * ureg.nm),
+    ]
+    for bin, expected in zip(selected.bins, expected_selected_bins):
+        assert np.isclose(bin.wmin, expected.wmin)
+        assert np.isclose(bin.wmax, expected.wmax)
 
-    # Load from node (i.e. gas absorption) dataset
-    with data.open_dataset("ckd/absorption/10nm/afgl_1986-us_standard-10nm.nc") as ds:
-        bin_set = BinSet.from_node_dataset(ds)
-    assert bin_set.id == "10nm"
-
-
-def test_ckd_bin_set_filter(mode_ckd):
+def test_select_from_non_connex_interpolated_spectrum_2():
     """
-    Unit tests for :meth:`eradiate.ckd.BinSet.filter_bins`.
+    Unit tests for :meth:`eradiate.ckd.BinSet.select_from_srf`.
     """
-    bin_set = BinSet.from_db("10nm")
-
-    # We get a single bin using wmin == wmax
-    filter = bin_filter_interval(wmin=550 * ureg.nm, wmax=550 * ureg.nm, endpoints=True)
-    assert len(bin_set.filter_bins(filter)) == 1
-
-    # We extend the range to get 2 items
-    filter = bin_filter_interval(wmin=545 * ureg.nm, wmax=565 * ureg.nm, endpoints=True)
-    assert len(bin_set.filter_bins(filter)) == 2
-
-    # The previous also works with endpoints set to False
-    filter = bin_filter_interval(
-        wmin=545 * ureg.nm, wmax=565 * ureg.nm, endpoints=False
+    binset = BinSet.arange(
+        start=280.0 * ureg.nm,
+        stop=2400.0 * ureg.nm,
+        step=10.0 * ureg.nm,
     )
-    assert len(bin_set.filter_bins(filter)) == 2
-
-    # Now we further extend the range to get 3 bins
-    filter = bin_filter_interval(wmin=545 * ureg.nm, wmax=570 * ureg.nm, endpoints=True)
-    assert len(bin_set.filter_bins(filter)) == 3
-
-    # Setting endpoints to False excludes partly covered bins
-    filter = bin_filter_interval(
-        wmin=545 * ureg.nm, wmax=570 * ureg.nm, endpoints=False
-    )
-    assert len(bin_set.filter_bins(filter)) == 2
-
-    # Multiple filters can be combined
-    assert (
-        len(
-            bin_set.filter_bins(
-                bin_filter_interval(wmin=545 * ureg.nm, wmax=555 * ureg.nm),
-                bin_filter_ids(["510"]),
-            )
-        )
-        == 2
+    srf = InterpolatedSpectrum(
+        wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
+        values = np.array([0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0]),
     )
 
-    # A bin can only be selected once
-    assert (
-        len(
-            bin_set.filter_bins(
-                bin_filter_interval(wmin=545 * ureg.nm, wmax=555 * ureg.nm),
-                bin_filter_ids(["550"]),
-            )
-        )
-        == 1
-    )
-    assert (
-        len(
-            bin_set.filter_bins(
-                bin_filter_interval(wmin=545 * ureg.nm, wmax=565 * ureg.nm),
-                bin_filter_ids(["550", "560"]),
-            )
-        )
-        == 2
-    )
-
-
-def test_ckd_bin_set_select(mode_ckd):
-    """
-    Unit tests for :meth:`eradiate.ckd.BinSet.select_bins`.
-    """
-
-    bin_set = BinSet.from_db("10nm")
-
-    # Select with an explicit filter
-    filter = bin_filter_interval(wmin=550 * ureg.nm, wmax=560 * ureg.nm)
-    assert len(bin_set.select_bins(filter)) == 2
-
-    # Select with a string
-    assert len(bin_set.select_bins("550", "560")) == 2
-
-    # Select with a tuple
-    assert (
-        len(
-            bin_set.select_bins(
-                ("interval", {"wmin": 550 * ureg.nm, "wmax": 560 * ureg.nm})
-            )
-        )
-        == 2
-    )
-
-    # Select with a dict
-    assert (
-        len(
-            bin_set.select_bins(
-                {
-                    "type": "interval",
-                    "filter_kwargs": {"wmin": 550 * ureg.nm, "wmax": 560 * ureg.nm},
-                }
-            )
-        )
-        == 2
-    )
+    selected = binset.select_with(srf)
+    expected_selected_bins = [
+        Bin(wmin=520.0 * ureg.nm, wmax=530.0 * ureg.nm),
+        Bin(wmin=560.0 * ureg.nm, wmax=570.0 * ureg.nm),
+        Bin(wmin=570.0 * ureg.nm, wmax=580.0 * ureg.nm),
+        Bin(wmin=580.0 * ureg.nm, wmax=590.0 * ureg.nm),
+    ]
+    for bin, expected in zip(selected.bins, expected_selected_bins):
+        assert np.isclose(bin.wmin, expected.wmin)
+        assert np.isclose(bin.wmax, expected.wmax)

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import typing as t
+from itertools import groupby
 
 import attrs
 import numpy as np
+import numpy.typing as npt
 import pint
 import pinttr
 import xarray as xr
@@ -13,7 +15,6 @@ from ..core import KernelDict
 from ... import converters, validators
 from ..._mode import SpectralMode, supported_mode
 from ...attrs import documented, parse_docs
-from ...ckd import Bindex
 from ...contexts import KernelDictContext
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
@@ -185,39 +186,14 @@ class InterpolatedSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.interp(w, self.wavelengths, self.values, left=0.0, right=0.0)
 
-    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        # Spectrum is averaged over spectral bin
-        result = np.zeros((len(bindexes),))
-        wavelength_units = ucc.get("wavelength")
-        quantity_units = self.values.units
+    def eval_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        return self.eval_mono(w=w)
 
-        for i_bindex, bindex in enumerate(bindexes):
-            bin = bindex.bin
-
-            wmin_m = bin.wmin.m_as(wavelength_units)
-            wmax_m = bin.wmax.m_as(wavelength_units)
-
-            # -- Collect relevant spectral coordinate values
-            w_m = self.wavelengths.m_as(wavelength_units)
-            w = (
-                np.hstack(
-                    (
-                        [wmin_m],
-                        w_m[np.where(np.logical_and(wmin_m < w_m, w_m < wmax_m))[0]],
-                        [wmax_m],
-                    )
-                )
-                * wavelength_units
-            )
-
-            # -- Evaluate spectrum at wavelengths
-            interp = self.eval_mono(w)
-
-            # -- Average spectrum on bin extent
-            integral = np.trapz(interp, w)
-            result[i_bindex] = (integral / bin.width).m_as(quantity_units)
-
-        return result * quantity_units
+    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
+        kernel_units = uck.get(self.quantity)
+        value = float(self.eval(ctx.spectral_index).m_as(kernel_units))
+        return KernelDict({"spectrum": {"type": "uniform", "value": value}})
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         # Collect spectral coordinates
@@ -248,23 +224,55 @@ class InterpolatedSpectrum(Spectrum):
             pass
 
         # Evaluate spectrum at wavelengths
-        w.sort()
-        w = w * wavelength_units
+        w = np.array(w) * wavelength_units
         interp = self.eval_mono(w)
 
         # Compute integral
         return np.trapz(interp, w)
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
 
-        return KernelDict(
-            {
-                "spectrum": {
-                    "type": "uniform",
-                    "value": float(
-                        self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
-                    ),
-                }
-            }
-        )
+
+def where_contiguous(mask: npt.ArrayLike[bool]) -> t.Tuple[t.List[int], t.List[int]]:
+    """
+    Returns start indices and lengths of sequences of contiguous True values in
+    a mask.
+    """
+    indices = []
+    lengths = []
+    index = 0
+    for key, group in groupby(mask):
+        g = list(group)
+        length = len(g)
+        if key:
+            indices.append(index)
+            lengths.append(length)
+        index += length
+
+    return indices, lengths
+
+
+def where_non_zero(
+    spectrum: InterpolatedSpectrum,
+) -> t.List[pint.Quantity]:
+    """
+    Returns the list of wavelength values where the spectrum is non-zero.
+
+    Returns
+    -------
+    list of pint.Quantity
+        Wavelength intervals where the spectrum evaluates to a non-zero value.
+    """
+    start, length = where_contiguous(mask=np.abs(spectrum.values) > 0.0)
+
+    # Add one wavelength to each side of each interval since evaluation based on 
+    # linear interpolation would return a non-zero value for wavelengths in
+    # these "side-intervals".
+    indices = []
+    array_length = len(spectrum.wavelengths)
+    for i in range(len(start)):
+        _start = start[i] - 1 if start[i] > 0 else start[i]
+        _end = start[i] + length[i]
+        _end = _end + 1 if _end < array_length else _end
+        indices.append((_start, _end))
+
+    return [spectrum.wavelengths[i[0]:i[1]] for i in indices]

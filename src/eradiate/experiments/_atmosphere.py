@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import logging
 import typing as t
-import warnings
 
 import attrs
 
 from ._core import EarthObservationExperiment, Experiment
 from ..attrs import AUTO, documented, get_doc, parse_docs
+from ..ckd import BinSet
 from ..contexts import KernelDictContext
+from ..mono import WavelengthSet
+from ..quad import Quad
+from ..radprops._afgl1986 import G16
 from ..scenes.atmosphere import (
     Atmosphere,
     AtmosphereGeometry,
@@ -27,6 +31,7 @@ from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.deprecation import substitute
 
+logger = logging.getLogger(__name__)
 
 def measure_inside_atmosphere(atmosphere, measure, ctx):
     """
@@ -185,7 +190,38 @@ class AtmosphereExperiment(EarthObservationExperiment):
     )
 
     def __attrs_post_init__(self):
+        super().__attrs_post_init__()
         self._normalize_measures()
+    
+    def set_wset(self) -> t.Optional[t.Mapping[int, WavelengthSet]]:
+        wset = {}
+        if self.atmosphere and self.atmosphere.is_molecular:
+            dataset = self.atmosphere.absorption_dataset
+            for i, measure in enumerate(self.measures):
+                wset[i] = WavelengthSet.from_absorption_dataset(
+                    dataset=dataset,
+                ).select_with(measure.srf)
+        else:
+            for i, measure in enumerate(self.measures):
+                wset[i] = self.default_wset.select_with(measure.srf)
+            
+        return wset
+
+
+    def set_binset(self) -> t.Optional[t.Mapping[int, BinSet]]:
+        binset = {}
+        if self.atmosphere and self.atmosphere.is_molecular:
+            dataset = self.atmosphere.absorption_dataset
+            for i, measure in enumerate(self.measures):
+                binset[i] = BinSet.from_absorption_dataset(
+                    dataset=dataset,
+                    quad=Quad.gauss_legendre(16),
+                ).select_with(measure.srf)
+        else:
+            for i, measure in enumerate(self.measures):
+                binset[i] = self.default_binset.select_with(measure.srf)
+            
+        return binset
 
     @property
     def _default_surface_width(self):
@@ -272,7 +308,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
     def _normalize_measures(self) -> None:
         """
         Ensure that distant measure targets are set to appropriate values.
-        Processed measures will have its ray target and origin parameters
+        Processed measures will have their ray target and origin parameters
         overridden if relevant.
         """
         for measure in self.measures:

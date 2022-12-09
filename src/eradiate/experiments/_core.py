@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 
 import attrs
 import mitsuba as mi
+import numpy as np
+import pint
 import pinttr
 import xarray as xr
 from tqdm.auto import tqdm
@@ -17,8 +19,10 @@ from .. import pipelines
 from .._config import ProgressLevel, config
 from .._mode import SpectralMode, supported_mode
 from ..attrs import documented, parse_docs
+from ..ckd import BinSet
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
+from ..mono import WavelengthSet
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
 from ..scenes.core import KernelDict
@@ -36,6 +40,9 @@ from ..scenes.measure import (
     measure_factory,
 )
 from ..scenes.measure._distant import DistantMeasure
+from ..scenes.spectra import InterpolatedSpectrum, MultiDeltaSpectrum, Spectrum
+from ..spectral_index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
+from ..units import unit_registry as ureg
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +204,6 @@ def run(
 #                                 Base classes
 # ------------------------------------------------------------------------------
 
-
 @parse_docs
 @attrs.define
 class Experiment(ABC):
@@ -272,6 +278,76 @@ class Experiment(ABC):
             Dictionary mapping measure IDs to xarray datasets.
         """
         return self._results
+    
+    default_wset: WavelengthSet = documented(
+        attrs.field(
+            default=WavelengthSet.arange(280 * ureg.nm, 2401 * ureg.nm, 1 * ureg.nm),
+            validator=attrs.validators.instance_of(WavelengthSet),
+        ),
+        doc="Default wavelength set used by the experiment."
+            "This attribute is used in mono mode only."
+            "This attribute is not used in CKD mode.",
+        type="WavelengthSet.arange(280 * ureg.nm, 2401 * ureg.nm, 1 * ureg.nm)",
+    )
+
+    _wset: t.Optional[t.Mapping[int, WavelengthSet]] = documented(
+        attrs.field(init=False),
+        doc="Mapping of measure index and wavelength set (required in mono mode only)."
+            "This attribute is set by the :meth:`.set_wset` method."
+            "This attribute is not used in CKD mode.",
+        type="dict[int, :class:`.WavelengthSet`], optional",
+    )
+
+    @property
+    def wset(self) -> t.Optional[t.Mapping[int, WavelengthSet]]:
+        return self._wset
+
+    default_binset: BinSet = documented(
+        attrs.field(
+            default=BinSet.arange(280 * ureg.nm, 2401 * ureg.nm, 10 * ureg.nm),
+            validator=attrs.validators.instance_of(BinSet),
+        ),
+        doc="Default bin set used by the experiment."
+            "This attribute is used in CKD mode only."
+            "This attribute is not used in mono mode.",
+        type="BinSet.arange(280 * ureg.nm, 2401 * ureg.nm, 10 * ureg.nm)",
+    )
+
+    _binset: t.Optional[t.Mapping[int, BinSet]] = documented(
+        attrs.field(init=False),
+        doc="Mapping of measure index and bin set (required in CKD mode only)."
+            "This attribute is set by the :meth:`.set_binset` method."
+            "This attribute is not used in mono mode.",
+        type="dict[int, :class:`.BinSet`], optional",
+    )
+
+    @property
+    def binset(self) -> t.Optional[t.Mapping[int, BinSet]]:
+        return self._binset
+    
+    def __attrs_post_init__(self):
+        if eradiate.mode().is_mono:
+            self._wset = self.set_wset()
+            self._binset = None
+        elif eradiate.mode().is_ckd:
+            self._wset = None
+            self._binset = self.set_binset()
+        else:
+            raise NotImplementedError(f"unsupported mode: {eradiate.mode().id}")
+
+    def set_wset(self) -> t.Optional[t.Mapping[int, WavelengthSet]]:
+        # Child classes may override this method
+        return {
+            i: WavelengthSet(measure.srf.wavelengths)
+            for i, measure in enumerate(self.measures)
+        }
+
+    def set_binset(self) -> t.Optional[t.Mapping[int, BinSet]]:
+        # Child classes may override this method
+        return {
+            i: BinSet.from_wavelengths(measure.srf.wavelengths)
+            for i, measure in enumerate(self.measures)
+        }
 
     # --------------------------------------------------------------------------
     #                          Additional constructors
@@ -334,7 +410,9 @@ class Experiment(ABC):
             if isinstance(measure, int):
                 measure = self.measures[measure]
 
-            logger.info(f"Processing measure '{measure.id}'")
+            measure_index = self.measures.index(measure)
+
+            logger.info("Processing %s-th measure (%s)", measure_index, measure.id)
 
             # Reset measure results
             measure.results = {}
@@ -343,22 +421,22 @@ class Experiment(ABC):
             sensor_ids = measure._sensor_ids()
 
             # Spectral loop
-            spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
+            spectral_indices = list(self.spectral_indices(measure_index))
 
             with tqdm(
                 initial=0,
-                total=len(spectral_ctxs),
+                total=len(spectral_indices),
                 unit_scale=1.0,
                 leave=True,
                 bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
                 disable=config.progress < ProgressLevel.SPECTRAL_LOOP
-                or len(spectral_ctxs) <= 1,
+                or len(spectral_indices) <= 1,
             ) as pbar:
                 for kernel_dict, ctx in self.kernel_dicts(measure):
-                    spectral_ctx = ctx.spectral_ctx
+                    spectral_index = ctx.spectral_index
 
                     pbar.set_description(
-                        f"Spectral loop [{spectral_ctx.spectral_index_formatted}]",
+                        f"Spectral loop [{spectral_index.formatted_repr}]",
                         refresh=True,
                     )
 
@@ -366,7 +444,7 @@ class Experiment(ABC):
                     run_results = mitsuba_run(kernel_dict, sensor_ids, seed_state)
 
                     # Store results
-                    measure.results[spectral_ctx.spectral_index] = run_results
+                    measure.results[spectral_index.as_hashable] = run_results
 
                     # Update progress display
                     pbar.update()
@@ -464,7 +542,7 @@ class Experiment(ABC):
             Metadata to be attached to the produced dataset.
         """
         return {
-            "convention": "CF-1.8",
+            "Conventions": "CF-1.8",
             "source": f"eradiate, version {eradiate.__version__}",
             "history": f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
             f"data creation - {self.__class__.__name__}.postprocess()",
@@ -513,13 +591,41 @@ class Experiment(ABC):
         """
         if isinstance(measure, int):
             measure = self.measures[measure]
+        
+        measure_index = self.measures.index(measure)
 
-        spectral_ctxs = measure.spectral_cfg.spectral_ctxs()
-
-        for spectral_ctx in spectral_ctxs:
-            ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
+        for spectral_index in self.spectral_indices(measure_index):
+            ctx = KernelDictContext(spectral_index=spectral_index, ref=True)
             yield self.kernel_dict(ctx=ctx), ctx
+        
+    def spectral_indices(self, measure_index: int) -> t.Generator[SpectralIndex]:
+        """
+        Generate spectral indices for a given measure.
 
+        Parameters
+        ----------
+        measure_index : int
+            Measure for which spectral indices are generated.
+        
+        Yields
+        ------
+        :class:`.SpectralIndex`
+            Spectral index.
+        """
+        if eradiate.mode().is_mono:
+            generator = self.spectral_indices_mono
+        elif eradiate.mode().is_ckd:
+            generator = self.spectral_indices_ckd
+        else:
+            raise RuntimeError(f"unsupported mode '{eradiate.mode().id}'")
+        
+        yield from generator(measure_index)
+
+    def spectral_indices_mono(self, measure: int) -> t.Generator[MonoSpectralIndex]:
+        yield from self.wset[measure].spectral_indices()
+
+    def spectral_indices_ckd(self, measure_index: int) -> t.Generator[CKDSpectralIndex]:
+        yield from self.binset[measure_index].spectral_indices()
 
 @parse_docs
 @attrs.define
@@ -557,8 +663,8 @@ class EarthObservationExperiment(Experiment, ABC):
             for measure in measures
         ]
 
-        for measure in measures:
-            pipeline = pipelines.Pipeline()
+        for i, measure in enumerate(measures):
+            pipeline = Pipeline()
 
             # Gather
             pipeline.add(
@@ -568,10 +674,16 @@ class EarthObservationExperiment(Experiment, ABC):
 
             # Aggregate
             pipeline.add("aggregate_sample_count", pipelines.AggregateSampleCount())
-            pipeline.add(
-                "aggregate_ckd_quad",
-                pipelines.AggregateCKDQuad(measure=measure, var=measure.var[0]),
-            )
+
+            if eradiate.mode().is_ckd:
+                pipeline.add(
+                    "aggregate_ckd_quad",
+                    pipelines.AggregateCKDQuad(
+                        measure=measure,
+                        binset=self.binset[i],
+                        var=measure.var[0],
+                    ),
+                )
 
             if isinstance(measure, (DistantFluxMeasure,)):
                 pipeline.add(

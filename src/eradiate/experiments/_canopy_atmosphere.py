@@ -28,6 +28,7 @@ from ..scenes.measure import Measure, TargetPoint, TargetRectangle
 from ..scenes.measure._distant import DistantMeasure
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface, surface_factory
+from ..spectral_index import SpectralIndex
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.deprecation import substitute
@@ -286,6 +287,12 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         result.add(self.integrator, ctx=ctx)
 
         return result
+
+    def spectral_indices(self, measure: Measure) -> t.Generator[SpectralIndex]:
+        if self.atmosphere is None:
+            return super().spectral_indices(measure)
+        else:
+            raise NotImplementedError  # TODO: implement
 
     def _normalize_measures(self) -> None:
         """

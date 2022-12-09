@@ -1,3 +1,4 @@
+import logging
 import re
 import typing as t
 
@@ -15,6 +16,7 @@ from ..kernel import bitmap_to_dataset
 from ..units import symbol
 from ..units import unit_context_config as ucc
 
+logger = logging.getLogger(__name__)
 
 def _spectral_dims():
     if eradiate.mode().is_mono:

@@ -1,3 +1,4 @@
+import logging
 import typing as t
 import warnings
 
@@ -13,6 +14,7 @@ from ._core import PipelineStep
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..frame import angles_in_hplane
+from ..radprops._afgl1986 import G16
 from ..scenes.illumination import ConstantIllumination, DirectionalIllumination
 from ..scenes.measure import Measure
 from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum
@@ -20,7 +22,7 @@ from ..units import symbol, to_quantity
 from ..units import unit_context_kernel as uck
 from ..units import unit_registry as ureg
 
-
+logger = logging.getLogger(__name__)
 @parse_docs
 @attrs.define
 class AddIllumination(PipelineStep):
@@ -65,13 +67,10 @@ class AddIllumination(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
+        logger.debug("AddIllumination pipeline step: start")
         k_irradiance_units = uck.get("irradiance")
         illumination = self.illumination
-        measure = self.measure
         result = x.copy(deep=False)
-
-        # Collect spectral coordinate values for verification purposes
-        wavelengths_dataset = to_quantity(x.w)
 
         def eval_illumination_spectrum(
             field_name: str, k_units: pint.Unit
@@ -80,27 +79,17 @@ class AddIllumination(PipelineStep):
 
             spectrum: Spectrum = getattr(illumination, field_name)
 
+            wavelengths = x.w.values * ureg.nm
+
             if eradiate.mode().is_mono:
-                # Very important: sort spectral coordinate
-                wavelengths = np.sort(measure.spectral_cfg.wavelengths)
-                assert np.allclose(wavelengths, wavelengths_dataset)
                 return spectrum.eval_mono(wavelengths).m_as(k_units)
 
             elif eradiate.mode().is_ckd:
-                # Collect bins and wavelengths, evaluate spectrum
-                bins = measure.spectral_cfg.bins
-                wavelengths = [bin.wcenter.m_as(ureg.nm) for bin in bins] * ureg.nm
-
-                # Note: This line assumes that eval_ckd() returns a constant
-                # value over the entire bin
-                result = spectrum.eval_ckd(*(bin.bindexes[0] for bin in bins)).m_as(
-                    k_units
-                )
+                result = spectrum.eval_ckd(w=wavelengths, g=G16).m_as(k_units)
 
                 # Reorder data by ascending wavelengths
                 indices = wavelengths.argsort()
                 wavelengths = wavelengths[indices]
-                assert np.allclose(wavelengths, wavelengths_dataset)
                 result = result[indices]
 
                 return result
@@ -159,6 +148,7 @@ class AddIllumination(PipelineStep):
             "long_name": "horizontal spectral irradiance",
             "units": symbol(k_irradiance_units),
         }
+        logger.debug("AddIllumination pipeline step: stop")
 
         return result
 
@@ -181,6 +171,7 @@ class AddViewingAngles(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
+        logger.debug("AddViewingAngles pipeline step: start")
         measure = self.measure
         viewing_angles = measure.viewing_angles
 
@@ -212,6 +203,7 @@ class AddViewingAngles(PipelineStep):
                     ),
                 }
             )
+        logger.debug("AddViewingAngles pipeline step: stop")
 
         return result
 
@@ -302,21 +294,20 @@ class AddSpectralResponseFunction(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
+        logger.debug("AddSpectralResponseFunction pipeline step: start")
         result = x.copy(deep=False)
 
         # Evaluate SRF
-        srf = self.measure.spectral_cfg.srf
+        srf = self.measure.srf
 
         if isinstance(srf, InterpolatedSpectrum):
             srf_w = srf.wavelengths
             srf_values = pinttr.util.ensure_units(srf.values, ureg.dimensionless)
-
         elif isinstance(srf, UniformSpectrum):
             srf_w = to_quantity(result.w)
             srf_values = pinttr.util.ensure_units(
                 srf.eval_mono(srf_w), ureg.dimensionless
             )
-
         else:
             raise TypeError(f"unsupported SRF type '{srf.__class__.__name__}'")
 
@@ -328,7 +319,7 @@ class AddSpectralResponseFunction(PipelineStep):
                     "srf_w",
                     srf_w.m_as(w_units),
                     {
-                        "standard_name": "wavelength",
+                        "standard_name": "radiation_wavelength",
                         "long_name": "wavelength",
                         "units": "nm",
                     },
@@ -343,5 +334,6 @@ class AddSpectralResponseFunction(PipelineStep):
             "long_name": "spectral response function",
             "units": "",
         }
+        logger.debug("AddSpectralResponseFunction pipeline step: stop")
 
         return result

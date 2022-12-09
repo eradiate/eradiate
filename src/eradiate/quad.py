@@ -20,7 +20,7 @@ class QuadType(Enum):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(frozen=True)
 class Quad:
     """
     A data class storing information about a quadrature rule. Nodes and weights
@@ -52,6 +52,14 @@ class Quad:
         doc="Quadrature rule weights.",
         type="ndarray",
     )
+
+    def __hash__(self) -> int:
+        # we implement a custom hash method because numpy arrays are not hashable
+        key = (self.type, *tuple(self.nodes.tolist()), *tuple(self.weights.tolist()))
+        return hash(key)
+    
+    def pretty_repr(self) -> str:
+        return f"{self.type.value}, {self.nodes.size} points"
 
     @nodes.validator
     @weights.validator

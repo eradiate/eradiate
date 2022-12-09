@@ -9,8 +9,9 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.ckd import BinSet
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.spectra import InterpolatedSpectrum, spectrum_factory
+from eradiate.spectral_index import SpectralIndex
 from eradiate.units import PhysicalQuantity
 
 
@@ -64,58 +65,6 @@ def test_interpolated_construct(modes_all):
     )
 
 
-def test_interpolated_integral(mode_mono):
-    s = InterpolatedSpectrum(
-        wavelengths=[500.0, 525.0, 550.0, 575.0, 600.0],
-        values=[0.0, 0.25, 0.5, 0.75, 1.0],
-    )
-
-    # Easy case: integrate over full interval
-    assert np.isclose(
-        50.0 * ureg.nm, s.integral(500.0 * ureg.nm, 600.0 * ureg.nm), rtol=1e-10
-    )
-
-    # Min or max falls in-between two coordinate values
-    assert np.isclose(
-        42.0 * ureg.nm, s.integral(540.0 * ureg.nm, 600.0 * ureg.nm), rtol=1e-10
-    )
-    assert np.isclose(
-        28.0 * ureg.nm, s.integral(550.0 * ureg.nm, 590.0 * ureg.nm), rtol=1e-10
-    )
-    assert np.isclose(
-        32.5 * ureg.nm, s.integral(540.0 * ureg.nm, 590.0 * ureg.nm), rtol=1e-10
-    )
-    assert np.isclose(
-        3.5 * ureg.nm, s.integral(530.0 * ureg.nm, 540.0 * ureg.nm), rtol=1e-10
-    )
-
-    # Integrating on an interval not intersecting the support yields 0
-    assert np.isclose(
-        0.0 * ureg.nm, s.integral(400.0 * ureg.nm, 450.0 * ureg.nm), atol=1e-10
-    )
-    assert np.isclose(
-        0.0 * ureg.nm, s.integral(400.0 * ureg.nm, 500.0 * ureg.nm), atol=1e-10
-    )
-    assert np.isclose(
-        0.0 * ureg.nm, s.integral(650.0 * ureg.nm, 700.0 * ureg.nm), atol=1e-10
-    )
-    assert np.isclose(
-        0.0 * ureg.nm, s.integral(600.0 * ureg.nm, 700.0 * ureg.nm), atol=1e-10
-    )
-
-    # Integrating on an interval covering the whole support yields correct
-    # integral values
-    assert np.isclose(
-        50.0 * ureg.nm, s.integral(450.0 * ureg.nm, 650.0 * ureg.nm), rtol=1e-10
-    )
-    assert np.isclose(
-        50.0 * ureg.nm, s.integral(500.0 * ureg.nm, 650.0 * ureg.nm), rtol=1e-10
-    )
-    assert np.isclose(
-        50.0 * ureg.nm, s.integral(450.0 * ureg.nm, 600.0 * ureg.nm), rtol=1e-10
-    )
-
-
 @pytest.mark.parametrize(
     "quantity, values, w, expected",
     [
@@ -154,12 +103,12 @@ def test_interpolated_eval_mono_wavelengths_decreasing(mode_mono):
 
 def test_interpolated_eval(modes_all):
     if eradiate.mode().is_mono:
-        spectral_ctx = SpectralContext.new(wavelength=550.0)
+        spectral_index = SpectralIndex.new(w=550.0)
         expected = 0.5
 
     elif eradiate.mode().is_ckd:
         bin = BinSet.from_db("10nm").select_bins("550")[0]
-        spectral_ctx = SpectralContext.new(bindex=bin.bindexes[0])
+        spectral_index = SpectralIndex.new(w=bin.wcenter)
         expected = 0.5
 
     else:
@@ -168,17 +117,17 @@ def test_interpolated_eval(modes_all):
     # Spectrum performs linear interpolation and yields units consistent with
     # quantity
     spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
-    assert spectrum.eval(spectral_ctx) == expected * ureg.dimensionless
+    assert spectrum.eval(spectral_index) == expected * ureg.dimensionless
 
     spectrum = InterpolatedSpectrum(
         quantity="irradiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
     )
     # Interpolation returns quantity
-    assert spectrum.eval(spectral_ctx) == expected * ucc.get("irradiance")
+    assert spectrum.eval(spectral_index) == expected * ucc.get("irradiance")
 
 
 def test_interpolated_kernel_dict(modes_all_mono):
-    ctx = KernelDictContext(spectral_ctx=SpectralContext.new(wavelength=550.0))
+    ctx = KernelDictContext(spectral_index=SpectralIndex.new(w=550.0))
 
     spectrum = InterpolatedSpectrum(
         id="spectrum",

@@ -1,3 +1,4 @@
+import logging
 import typing as t
 
 import attrs
@@ -11,6 +12,7 @@ from ..scenes.spectra import InterpolatedSpectrum, UniformSpectrum
 from ..units import symbol, to_quantity
 from ..units import unit_registry as ureg
 
+logger = logging.getLogger(__name__)
 
 @parse_docs
 @attrs.define
@@ -54,6 +56,7 @@ class ApplySpectralResponseFunction(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
+        logger.debug("ApplySpectralResponseFunction pipeline step: begin")
         result = x.copy(deep=False)
 
         if not {"bin_wmin", "bin_wmax"}.issubset(set(result.coords.keys())):
@@ -66,7 +69,7 @@ class ApplySpectralResponseFunction(PipelineStep):
         # Evaluate integral of spectral response function within selected interval
         wmin = to_quantity(result.bin_wmin).min()
         wmax = to_quantity(result.bin_wmax).max()
-        srf = measure.spectral_cfg.srf
+        srf = measure.srf
         srf_int = srf.integral(wmin, wmax)
 
         if isinstance(srf, InterpolatedSpectrum):
@@ -122,6 +125,8 @@ class ApplySpectralResponseFunction(PipelineStep):
                 attrs["long_name"] += " (SRF applied)"
             result[f"{var}_srf"].attrs = attrs
 
+        logger.debug("ApplySpectralResponseFunction pipeline step: end")
+
         return result
 
 
@@ -161,6 +166,7 @@ class ComputeReflectance(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
+        logger.debug("ComputeReflectance pipeline step: begin")
         # Compute BRDF and BRF
         result = x.copy(deep=False)
 
@@ -178,6 +184,7 @@ class ComputeReflectance(PipelineStep):
             "long_name": "bi-directional reflectance factor",
             "units": symbol("dimensionless"),
         }
+        logger.debug("ComputeReflectance pipeline step: end")
 
         return result
 
@@ -211,6 +218,7 @@ class ComputeAlbedo(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
+        logger.debug("ComputeAlbedo pipeline step: begin")
         # Compute albedo
         result = x.copy(deep=False)
 
@@ -223,5 +231,6 @@ class ComputeAlbedo(PipelineStep):
             "long_name": "surface albedo",
             "units": "",
         }
+        logger.debug("ComputeAlbedo pipeline step: end")
 
         return result

@@ -3,7 +3,6 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.contexts import SpectralContext
 from eradiate.radprops import AFGL1986RadProfile
 
 

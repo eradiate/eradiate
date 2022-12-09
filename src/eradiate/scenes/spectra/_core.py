@@ -2,18 +2,15 @@ from __future__ import annotations
 
 import typing as t
 from abc import ABC, abstractmethod
+from functools import singledispatchmethod
 
 import attrs
 import pint
 
-import eradiate
-
 from ..._factory import Factory
 from ...attrs import documented, parse_docs
-from ...ckd import Bindex
-from ...contexts import SpectralContext
-from ...exceptions import UnsupportedModeError
 from ...scenes.core import SceneElement
+from ...spectral_index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ...units import PhysicalQuantity
 
 
@@ -100,6 +97,11 @@ spectrum_factory.register_lazy_batch(
             "uniform",
             {},
         ),
+        (
+            "_multi_delta.MultiDeltaSpectrum",
+            "multi_delta",
+            {},
+        ),
     ],
     cls_prefix="eradiate.scenes.spectra",
 )
@@ -137,31 +139,35 @@ class Spectrum(SceneElement, ABC):
                 f"got value '{value}', expected one of {str(PhysicalQuantity.spectrum())}"
             )
 
-    def eval(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    @singledispatchmethod
+    def eval(self, spectral_index: SpectralIndex) -> pint.Quantity:
         """
-        Evaluate spectrum based on a spectral context. This method dispatches
-        evaluation to specialised methods depending on the active mode.
-
+        Evaluate spectrum at a given spectral index.
+        
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        spectral_index : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
         value : quantity
-            Evaluated spectrum as a scalar.
+            Evaluated spectrum.
+        
+        Notes
+        -----
+        This method dispatches evaluation to specialised methods depending
+        on the spectral index type.
         """
-        if eradiate.mode().is_mono:
-            return self.eval_mono(spectral_ctx.wavelength).squeeze()
+        raise NotImplementedError
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_ckd(spectral_ctx.bindex).squeeze()
+    @eval.register
+    def _(self, spectral_index: MonoSpectralIndex) -> pint.Quantity:
+        return self.eval_mono(spectral_index.w)
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval.register
+    def _(self, spectral_index: CKDSpectralIndex) -> pint.Quantity:
+        return self.eval_ckd(spectral_index.w, spectral_index.g)
 
     @abstractmethod
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
@@ -171,7 +177,7 @@ class Spectrum(SceneElement, ABC):
         Parameters
         ----------
         w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
+            Wavelength.
 
         Returns
         -------
@@ -181,19 +187,30 @@ class Spectrum(SceneElement, ABC):
         pass
 
     @abstractmethod
-    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    def eval_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
         """
         Evaluate spectrum in CKD modes.
 
         Parameters
         ----------
-        *bindexes : .Bindex
-            One or several CKD bindexes for which to evaluate the spectrum.
+        w : quantity
+            Spectral bin center wavelength.
+        
+        g: float
+            Absorption coefficient cumulative probability.
 
         Returns
         -------
         value : quantity
-            Evaluated spectrum as an array with shape ``(len(bindexes),)``.
+            Evaluated spectrum as an array with shape ``w``.
+        
+        Notes
+        -----
+        It is assumed that ``w`` and ``g`` have the same shape.
+
+        In CKD mode, it is assumed that all spectra—except that of the 
+        absorption coefficient—are uniform over the spectral bin. These
+        spectra are evaluated at the spectral bin center wavelength.
         """
         pass
 
@@ -206,7 +223,7 @@ class Spectrum(SceneElement, ABC):
         ----------
         wmin : quantity
             Integration interval's lower bound.
-
+            
         wmax : quantity
             Integration interval's upper bound.
 
