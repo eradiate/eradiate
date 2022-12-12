@@ -142,33 +142,6 @@ class EradiateConfig:
                 "source the provided setpath.sh script."
             ) from FileNotFoundError(eradiate_init)
 
-    #: A colon-separated list of paths where to search for data files.
-    data_path = var(
-        default=None,
-        converter=lambda x: [pathlib.Path(y) for y in x.split(":") if y]
-        if isinstance(x, str)
-        else x,
-        help="A colon-separated list of paths where to search for data files.",
-    )
-
-    @data_path.validator
-    def _data_path_validator(self, var, paths):
-        if paths is None:
-            return
-
-        do_not_exist = []
-
-        for path in paths:
-            if not path.is_dir():
-                do_not_exist.append(path)
-
-        if do_not_exist:
-            warnings.warn(
-                "While configuring Eradiate: 'ERADIATE_DATA_PATH' contains "
-                f"paths to nonexisting directories {[str(x) for x in do_not_exist]}",
-                ConfigWarning,
-            )
-
     #: URL where large data files are located.
     data_store_url = var(
         default="http://eradiate.eu/data/store/",

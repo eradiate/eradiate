@@ -27,33 +27,6 @@ def test_config(tmpdir):
     with pytest.raises(ConfigError):
         EradiateConfig.from_environ({"ERADIATE_SOURCE_DIR": tmpdir_path})
 
-    # Warns if nonexisting paths are passed
-    with pytest.warns(ConfigWarning):
-        paths = [
-            f"{tmpdir_path / 'eradiate_data_0'}",
-            f"{tmpdir_path / 'eradiate_data_1'}",
-        ]
-
-        # Colon-separated paths are processed correctly
-        cfg = EradiateConfig.from_environ(
-            {
-                "ERADIATE_SOURCE_DIR": tmpdir_path / "eradiate",
-                "ERADIATE_DATA_PATH": ":".join(paths),
-            }
-        )
-
-        assert [str(x) for x in cfg.data_path] == paths
-
-        # Empty paths are omitted
-        cfg = EradiateConfig.from_environ(
-            {
-                "ERADIATE_SOURCE_DIR": tmpdir_path / "eradiate",
-                "ERADIATE_DATA_PATH": ":::" + "::".join(paths) + ":",
-            }
-        )
-
-        assert [str(x) for x in cfg.data_path] == paths
-
 
 def test_config_progress():
     cfg = EradiateConfig.from_environ()
