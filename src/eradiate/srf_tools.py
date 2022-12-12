@@ -667,8 +667,8 @@ def integral_filter(
 
 def show(
     ds: t.Union[PathLike, xr.Dataset],
-    title: str,
     trim_prior: bool = True,
+    title: t.Optional[str] = None,
     threshold: t.Optional[float] = None,
     wmin: t.Optional[pint.Quantity] = None,
     wmax: t.Optional[pint.Quantity] = None,
@@ -682,11 +682,11 @@ def show(
     ds: path-like, Dataset
         Spectral response function to be filtered.
 
-    title: str
-        Figure title.
-
     trim_prior: bool
         If ``True``, trim spectral response function prior to filter.
+
+    title: str, optional
+        Figure title.
 
     threshold: float, optional
         Threshold value for the threshold filter.
@@ -829,7 +829,9 @@ def show(
             alpha=0.1,
         )
 
-    plt.title(title)
+    if title is not None:
+        plt.title(title)
+        
     plt.tight_layout()
     plt.grid()
     plt.show()
