@@ -34,6 +34,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 
 * The {meth}`.MultiDistantMeasure.from_viewing_angles()` constructor is
   deprecated and will be removed in v0.23.1.
+* Removed `.EradiateConfig.data_path` ({ghpr}`292`).
 
 ### Improvements and fixes
 
