@@ -507,8 +507,8 @@ def _str_summary_raw(x):
 
 
 @parse_docs
-@attrs.define
-class Measure(NodeSceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class Measure:
     """
     Abstract base class for all measure scene elements.
 
@@ -518,19 +518,20 @@ class Measure(NodeSceneElement, ABC):
 
     Notes
     -----
-    Raw results stored in the `results` field as nested dictionaries with the
-    following structure:
+    * This class is meant to be used as a mixin.
+    * Raw results stored in the `results` field as nested dictionaries with the
+      following structure:
 
-    .. code:: python
+      .. code:: python
 
-       {
-           spectral_key_0: dict_0,
-           spectral_key_1: dict_1,
-           ...
-       }
+         {
+             spectral_key_0: dict_0,
+             spectral_key_1: dict_1,
+             ...
+         }
 
-    Keys are spectral loop indexes; values are nested dictionaries produced by
-    :func:`.mitsuba_run`.
+      Keys are spectral loop indexes; values are nested dictionaries produced by
+      :func:`.mitsuba_run`.
     """
 
     # --------------------------------------------------------------------------
@@ -588,35 +589,6 @@ class Measure(NodeSceneElement, ABC):
         type="int",
         default="1000",
     )
-
-    split_spp: t.Optional[int] = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(int),
-            validator=attrs.validators.optional(validators.is_positive),
-        ),
-        type="int",
-        init_type="int, optional",
-        doc="If set, this measure will be split into multiple sensors, each "
-        "with a sample count lower or equal to `split_spp`. This parameter "
-        "should be used in single-precision modes when the sample count is "
-        "higher than 100,000 (very high sample count might result in floating "
-        "point number precision issues otherwise).",
-    )
-
-    @split_spp.validator
-    def _split_spp_validator(self, attribute, value):
-        if (
-            eradiate.mode().is_single_precision
-            and self.spp > 1e5
-            and self.split_spp is None
-        ):
-            warnings.warn(
-                "In single-precision modes, setting a sample count ('spp') to "
-                "values greater than 100,000 may result in floating point "
-                "precision issues: using the measure's 'split_spp' parameter is "
-                "recommended."
-            )
 
     @property
     @abstractmethod
