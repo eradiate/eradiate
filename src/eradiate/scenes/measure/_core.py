@@ -14,7 +14,7 @@ import xarray as xr
 
 import eradiate
 
-from ..core import KernelDict, NodeSceneElement
+from ..core import NodeSceneElement, Param, ParamFlags
 from ..spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum, spectrum_factory
 from ... import ckd, converters, validators
 from ..._factory import Factory
@@ -541,7 +541,7 @@ class Measure:
     id: t.Optional[str] = documented(
         attrs.field(
             default="measure",
-            validator=attrs.validators.optional((attrs.validators.instance_of(str))),
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc=get_doc(NodeSceneElement, "id", "doc"),
         type=get_doc(NodeSceneElement, "id", "type"),
@@ -590,6 +590,15 @@ class Measure:
         default="1000",
     )
 
+    @spp.validator
+    def _spp_validator(self, attribute, value):
+        if eradiate.mode().is_single_precision and value > 1000000:
+            warnings.warn(
+                f"Measure {self.id} is defined with a sample count greater "
+                "than 1e6, but the selected mode is single-precision: results "
+                "may be incorrect."
+            )
+
     @property
     @abstractmethod
     def film_resolution(self) -> t.Tuple[int, int]:
@@ -610,95 +619,38 @@ class Measure:
         # Default implementation returns False
         return False
 
-    def is_split(self) -> bool:
-        """
-        Return ``True`` iff sample count split shall be activated.
-        """
-        return self.split_spp is not None and self.spp > self.split_spp
-
     # --------------------------------------------------------------------------
     #                        Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _sensor_id(self, i_spp=None) -> str:
-        """
-        Assemble a sensor ID from indexes on sensor coordinates. This basic
-        implementation assumes that the only sensor dimension is ``i_spp``.
-
-        Returns
-        -------
-        str
-            Generated sensor ID.
-        """
-        components = [self.id]
-
-        if i_spp is not None:
-            components.append(f"spp{i_spp}")
-
-        return "_".join(components)
-
-    def _sensor_spps(self) -> t.List[int]:
-        """
-        Generate a list of sample counts, possibly accounting for a sample count
-        splitting strategy.
-
-        Returns
-        -------
-        list of int
-            List of split sample counts.
-        """
-        if self.is_split():
-            spps = [self.split_spp] * int(self.spp / self.split_spp)
-
-            if self.spp % self.split_spp:
-                spps.append(self.spp % self.split_spp)
-
-            return spps
-
-        else:
-            return [self.spp]
-
-    def _sensor_ids(self) -> t.List[str]:
-        """
-        Return list of sensor IDs for the current measure.
-
-        Returns
-        -------
-        list of str
-            List of sensor IDs.
-        """
-        if self.split_spp is not None and self.spp > self.split_spp:
-            return [self._sensor_id(i) for i, _ in enumerate(self._sensor_spps())]
-
-        else:
-            return [self._sensor_id()]
-
-    @KernelDictContext.DYNAMIC_FIELDS.register("atmosphere_medium_id")
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-        sensor_ids = self._sensor_ids()
-        sensor_spps = self._sensor_spps()
-        result = KernelDict()
-
-        for spp, sensor_id in zip(sensor_spps, sensor_ids):
-            result_dict = self._kernel_dict_impl(sensor_id, spp)
-
-            try:
-                result_dict["medium"] = {
-                    "type": "ref",
-                    "id": ctx.atmosphere_medium_id,
-                }
-            except AttributeError:
-                pass
-
-            result.data[sensor_id] = result_dict
+    @property
+    def template(self) -> dict:
+        result = {
+            "type": self.kernel_type,
+            "id": self.id,
+            "film.type": "hdrfilm",
+            "film.width": self.film_resolution[0],
+            "film.height": self.film_resolution[1],
+            "film.pixel_format": "luminance",
+            "film.component_format": "float32",
+            "film.rfilter.type": "box",
+            "sampler.type": self.sampler,
+            "sampler.sample_count": self.spp,
+            "medium.type": Param(
+                lambda ctx: "ref"
+                if "atmosphere_medium_id" in ctx.kwargs
+                else Param.UNUSED,
+                flags=ParamFlags.INIT,
+            ),
+            "medium.id": Param(
+                lambda ctx: ctx.kwargs["atmosphere_medium_id"]
+                if "atmosphere_medium_id" in ctx.kwargs
+                else Param.UNUSED,
+                flags=ParamFlags.INIT,
+            ),
+        }
 
         return result
-
-    @abstractmethod
-    def _kernel_dict_impl(self, sensor_id, spp):
-        # Implementation of the kernel dict generation routine
-        pass
 
     # --------------------------------------------------------------------------
     #                        Post-processing information
@@ -710,13 +662,3 @@ class Measure:
         str, dict: Post-processing variable field name and metadata.
         """
         return "img", dict()
-
-    @property
-    def sensor_dims(self) -> t.Tuple[str]:
-        """
-        tuple of str: List of sensor dimension labels.
-        """
-        if self.is_split():
-            return ("spp",)
-        else:
-            return tuple()

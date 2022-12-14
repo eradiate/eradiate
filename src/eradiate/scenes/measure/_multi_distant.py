@@ -9,6 +9,7 @@ import pint
 import pinttr
 
 from ._distant import DistantMeasure
+from ..core import NodeSceneElement
 from ... import converters, frame
 from ..._config import config
 from ...attrs import documented, parse_docs
@@ -17,6 +18,7 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...util.deprecation import deprecated
+from ...util.misc import flatten
 
 # ------------------------------------------------------------------------------
 #                               Layout framework
@@ -362,8 +364,8 @@ def _extract_kwargs(kwargs: dict, keys: t.List[str]) -> dict:
 
 
 @parse_docs
-@attrs.define
-class MultiDistantMeasure(DistantMeasure):
+@attrs.define(eq=False, slots=False)
+class MultiDistantMeasure(DistantMeasure, NodeSceneElement):
     """
     Multi-distant radiance measure scene element [``distant``, ``mdistant``, \
     ``multi_distant``].
@@ -699,29 +701,19 @@ class MultiDistantMeasure(DistantMeasure):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _kernel_dict_impl(self, sensor_id, spp):
-        result = {
-            "type": "mdistant",
-            "id": sensor_id,
-            "directions": ",".join(
-                map(str, -self.direction_layout.directions.ravel(order="C"))
-            ),
-            "sampler": {
-                "type": self.sampler,
-                "sample_count": spp,
-            },
-            "film": {
-                "type": "hdrfilm",
-                "width": self.film_resolution[0],
-                "height": self.film_resolution[1],
-                "pixel_format": "luminance",
-                "component_format": "float32",
-                "rfilter": {"type": "box"},
-            },
-        }
+    @property
+    def kernel_type(self) -> str:
+        return "mdistant"
+
+    @property
+    def template(self) -> dict:
+        result = super().template
+        result["directions"] = ",".join(
+            map(str, -self.direction_layout.directions.ravel(order="C"))
+        )
 
         if self.target is not None:
-            result["target"] = self.target.kernel_item()
+            result.update(flatten({"target": self.target.kernel_item()}))
 
         if self.ray_offset is not None:
             result["ray_offset"] = self.ray_offset.m_as(uck.get("length"))

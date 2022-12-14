@@ -29,9 +29,37 @@ class ParamFlags(enum.Flag):
     """
 
     NONE = 0
+    INIT = enum.auto()
     SPECTRAL = enum.auto()  #: Varies during the spectral loop
     GEOMETRIC = enum.auto()  #: Triggers a scene rebuild
     ALL = SPECTRAL | GEOMETRIC
+
+
+class _Unused:
+    """
+    Sentinel class to indicate when a parameter is unused, accessible as
+    :data:`.Param.UNUSED`.
+
+    Notes
+    -----
+    ``bool(_Unused)`` evaluates to ``False``.
+    """
+
+    _singleton = None
+
+    def __new__(cls):
+        if _Unused._singleton is None:
+            _Unused._singleton = super(_Unused, cls).__new__(cls)
+        return _Unused._singleton
+
+    def __repr__(self):
+        return "UNUSED"
+
+    def __bool__(self):
+        return False
+
+    def __len__(self):
+        return 0
 
 
 @attrs.define
@@ -39,6 +67,9 @@ class Param:
     """
     A kernel scene parameter generator.
     """
+
+    #: Sentinel value indicated that a parameter is not used
+    UNUSED: t.ClassVar = _Unused()
 
     #: An attached callable which evaluates the parameter.
     _callable: t.Callable = attrs.field(repr=False)
@@ -59,19 +90,61 @@ class ParameterMap(UserDict):
 
     data: dict[str, Param] = attrs.field(factory=dict)
 
+    def remove(self, regex) -> None:
+        """
+        Remove all parameters matching the given regular expression.
+        """
+        for key in list(self.data.keys()):
+            if regex.match(key):
+                del self.data[key]
+
+    def keep(self, regex) -> None:
+        """
+        Keep only parameters matching the given regular expression.
+        """
+        for key in list(self.data.keys()):
+            if not regex.match(key):
+                del self.data[key]
+
     def render(
-        self, ctx, flags: ParamFlags = ParamFlags.ALL, drop: bool = False
+        self,
+        ctx: KernelDictContext,
+        flags: ParamFlags = ParamFlags.ALL,
+        drop: bool = False,
     ) -> dict:
         """
         Evaluate the parameter map for a set of arguments.
+
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
+            A kernel dictionary context.
+
+        flags : :class:`.ParamFlags`
+            Parameter flags. Only parameters with at least one of the specified
+            will pass the filter.
+
+        drop : bool
+            If ``True``, drop unused parameters. Parameters may be unused either
+            because they were filtered out by the flags or because context
+            information implied it.
+
+        Returns
+        -------
+        dict
         """
         result = self.data.copy()
-        render_params(result, ctx=ctx, flags=flags, drop=drop)
+        unused = render_params(result, ctx=ctx, flags=ParamFlags.ALL, drop=drop)
+
+        # Check for leftover empty values
+        if unused:
+            raise ValueError(f"Unevaluated parameters: {unused}")
+
         return result
 
 
 @attrs.define
-class KernelDictTemplate(UserDict):
+class KernelDictTemplate(ParameterMap):
     """
     A dict-like structure which contains the structure of an instantiable kernel
     dictionary.
@@ -84,9 +157,13 @@ class KernelDictTemplate(UserDict):
     object, which must be rendered before the template can be instantiated.
     """
 
-    data: dict = attrs.field(factory=dict)
-
-    def render(self, ctx: KernelDictContext, nested: bool = True) -> dict:
+    def render(
+        self,
+        ctx: KernelDictContext,
+        flags: ParamFlags = ParamFlags.INIT,
+        drop: bool = False,
+        nested: bool = True,
+    ) -> dict:
         """
         Render the template as a nested dictionary using a parameter map to fill
         in empty fields.
@@ -95,6 +172,15 @@ class KernelDictTemplate(UserDict):
         ----------
         ctx : :class:`.KernelDictContext`
             A kernel dictionary context.
+
+        flags : :class:`.ParamFlags`
+            Parameter flags. Only parameters with at least one of the specified
+            will pass the filter.
+
+        drop : bool
+            If ``True``, drop unused parameters. Parameters may be unused either
+            because they were filtered out by the flags or because context
+            information implied it.
 
         nested : bool, optional
             If ``True``, the returned dictionary will be nested and suitable for
@@ -105,13 +191,7 @@ class KernelDictTemplate(UserDict):
         -------
         dict
         """
-        result = self.data.copy()
-        skipped = render_params(result, ctx=ctx, flags=ParamFlags.ALL, drop=False)
-
-        # Check for leftover empty values
-        if skipped:
-            raise ValueError(f"Unevaluated parameters: {skipped}")
-
+        result = super().render(ctx=ctx, flags=flags, drop=drop)
         return nest(result, sep=".") if nested else result
 
 
@@ -123,23 +203,46 @@ def render_params(
 ) -> list:
     """
     Render parameters in a template dictionary.
+
+    Parameters
+    ----------
+    d : dict
+        A dictionary containing parameters to render. *In-place* modification
+        will be performed.
+
+    ctx : :class:`.KernelDictContext`
+        A kernel dictionary context.
+
+    flags : :class:`.ParamFlags`
+        Parameter flags. Only parameters with at least one of the specified
+        will pass the filter.
+
+    drop : bool
+        If ``True``, drop unused parameters.
+
+    Returns
+    -------
+    list
+        A list of unused parameters. A parameter may be unused because it was
+        filtered out by flags or because context information implied it.
     """
-    skipped = []
+    unused = []
 
     for k, v in d.items():
         if isinstance(v, Param):
-            if v.flags is None:
-                skipped.append(k)
-            elif v.flags & flags:
+            if v.flags & flags:
                 d[k] = v(ctx)
             else:
-                skipped.append(k)
+                d[k] = Param.UNUSED
+
+            if d[k] is Param.UNUSED:
+                unused.append(k)
 
     if drop:
-        for k in skipped:
+        for k in unused:
             del d[k]
 
-    return skipped
+    return unused
 
 
 # ------------------------------------------------------------------------------
