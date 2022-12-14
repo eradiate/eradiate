@@ -220,7 +220,8 @@ class TargetRectangle(Target):
             )
 
     def kernel_item(self) -> t.Dict:
-        """Return kernel item."""
+        # Inherit docstring
+
         kernel_length = uck.get("length")
         xmin = self.xmin.m_as(kernel_length)
         xmax = self.xmax.m_as(kernel_length)
@@ -244,7 +245,7 @@ class TargetRectangle(Target):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class DistantMeasure(Measure):
     """
     Abstract interface of all distant measure classes.
