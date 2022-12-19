@@ -103,8 +103,8 @@ class RPVBSDF(BSDF, NodeSceneElement):
     )
 
     @property
-    def kernel_type(self) -> str:
-        return "rpv"
+    def template(self) -> dict:
+        return {"type": "rpv"}
 
     @property
     def objects(self) -> t.Dict[str, NodeSceneElement]:

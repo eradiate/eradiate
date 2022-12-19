@@ -237,8 +237,16 @@ class SolarIrradianceSpectrum(Spectrum, NodeSceneElement):
         raise NotImplementedError
 
     @property
-    def kernel_type(self) -> str:
-        return "uniform"
+    def template(self) -> dict:
+        return {
+            "type": "uniform",
+            "value": Param(
+                lambda ctx: float(
+                    self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
+                ),
+                ParamFlags.INIT,
+            ),
+        }
 
     @property
     def params(self) -> dict:

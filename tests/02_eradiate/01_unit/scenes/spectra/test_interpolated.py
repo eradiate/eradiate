@@ -9,10 +9,10 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.ckd import BinSet
-from eradiate.contexts import KernelDictContext, SpectralContext
-from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.contexts import SpectralContext
+from eradiate.scenes.core import NodeSceneElement
 from eradiate.scenes.spectra import InterpolatedSpectrum, Spectrum, spectrum_factory
-from eradiate.test_tools.types import check_type
+from eradiate.test_tools.types import check_node_scene_element, check_type
 from eradiate.units import PhysicalQuantity
 
 
@@ -225,8 +225,6 @@ def test_interpolated_eval(modes_all):
 
 
 def test_interpolated_kernel_dict(modes_all_mono):
-    ctx = KernelDictContext(spectral_ctx=SpectralContext.new(wavelength=550.0))
-
     # Instantiate from factory
     with ucc.override({"radiance": "W/m^2/sr/nm"}):
         spectrum = spectrum_factory.convert(
@@ -240,12 +238,10 @@ def test_interpolated_kernel_dict(modes_all_mono):
         )
 
     with uck.override({"radiance": "kW/m^2/sr/nm"}):
-        template, _ = traverse(spectrum)
-        kernel_dict = template.render(ctx=ctx)
-        # Produced kernel dict is valid
-        assert isinstance(mi.load_dict(kernel_dict), mi.Texture)
+        # Produced kernel dict and params are valid
+        mi_obj, mi_params = check_node_scene_element(spectrum, mi.Texture)
         # Unit scaling is properly applied
-        assert np.isclose(kernel_dict["value"], 5e-4)
+        assert np.isclose(mi_params["value"], 5e-4)
 
 
 def test_interpolated_from_dataarray(mode_mono):

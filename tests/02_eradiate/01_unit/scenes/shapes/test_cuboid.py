@@ -9,7 +9,7 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import NodeSceneElement, traverse
 from eradiate.scenes.shapes import CuboidShape, Shape
-from eradiate.test_tools.types import check_type
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
 def test_cuboid_type():
@@ -27,13 +27,11 @@ def test_cuboid_type():
 )
 def test_cuboid_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
     cuboid = CuboidShape(**kwargs)
-    template, _ = traverse(cuboid)
-    ctx = KernelDictContext()
-    kernel_dict = template.render(ctx=ctx)
+
+    mi_obj, mi_params = check_node_scene_element(cuboid, mi.Shape)
 
     if expected_reflectance is not None:
-        assert kernel_dict["bsdf"]["reflectance"]["value"] == expected_reflectance
-    assert isinstance(mi.load_dict(kernel_dict), mi.Shape)
+        assert mi_params["bsdf.reflectance.value"] == expected_reflectance
 
 
 @pytest.mark.parametrize(

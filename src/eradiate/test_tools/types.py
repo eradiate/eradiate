@@ -1,5 +1,10 @@
 import typing as t
 
+import mitsuba as mi
+
+from ..contexts import KernelDictContext
+from ..scenes.core import NodeSceneElement, traverse
+
 
 def check_type(
     cls,
@@ -41,3 +46,49 @@ def check_type(
             + (f"no slots" if not expected_slots else f"slots {expected_slots}")
             + (" but has none" if not slots else f", not {slots}")
         )
+
+
+def check_node_scene_element(instance: NodeSceneElement, mi_cls: "mitsuba.Object"):
+    """
+    Perform kernel dictionary checks on a node scene element.
+
+    This function checks if the node scene element can produce a valid kernel
+    dictionary template, as well as an appropriate parameter table.
+
+    The returned Mitsuba object and parameter table can be used to perform
+    additional checks.
+
+    Parameters
+    ----------
+    instance : :class:`.NodeSceneElement`
+        Node scene element to check.
+
+    mi_cls : :class:`mitsuba.Object`
+        Mitsuba class the node scene element expands to.
+
+    Returns
+    -------
+    mi_obj : :class:`mitsuba.Object`
+        Mitsuba object the node scene element expands to.
+
+    mi_params : dict
+        Parameter table of the Mitsuba object.
+    """
+    template, params = traverse(instance)
+
+    # Check if the template can be instantiated
+    ctx = KernelDictContext()
+    kernel_dict = template.render(ctx)
+    mi_obj = mi.load_dict(kernel_dict)
+    assert isinstance(mi_obj, mi_cls)
+
+    # Check if parameters can be updated
+    kernel_params = params.render(ctx)
+    mi_params = mi.traverse(mi_obj)
+
+    for key, value in kernel_params.items():
+        mi_params[key] = value
+
+    mi_params.update()
+
+    return mi_obj, mi_params

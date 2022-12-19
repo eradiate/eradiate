@@ -1,9 +1,8 @@
 import mitsuba as mi
 
-from eradiate.contexts import KernelDictContext
 from eradiate.scenes.bsdfs import BSDF, BlackBSDF
-from eradiate.scenes.core import NodeSceneElement, traverse
-from eradiate.test_tools.types import check_type
+from eradiate.scenes.core import NodeSceneElement
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
 def test_black_type():
@@ -21,7 +20,5 @@ def test_black_constructor(modes_all):
 
 def test_black_kernel_dict(modes_all_double):
     b = BlackBSDF()
-    template, _ = traverse(b)
-    kernel_dict = template.render(ctx=KernelDictContext())
-    assert kernel_dict["reflectance"]["value"] == 0.0
-    assert isinstance(mi.load_dict(kernel_dict), mi.BSDF)
+    mi_obj, mi_params = check_node_scene_element(b, mi.BSDF)
+    assert mi_params["reflectance.value"] == 0.0

@@ -6,7 +6,7 @@ import numpy as np
 import xarray as xr
 
 from ._core import BSDF
-from ..core import NodeSceneElement, Param
+from ..core import NodeSceneElement, Param, ParamFlags
 from ... import converters
 from ...attrs import documented, parse_docs
 from ...units import to_quantity
@@ -117,9 +117,8 @@ class MQDiffuseBSDF(BSDF, NodeSceneElement):
         return mi.VolumeGrid(values.astype(np.float32))
 
     @property
-    def kernel_type(self) -> str:
-        return "mqdiffuse"
-
-    @property
-    def params(self) -> t.Dict[str, Param]:
-        return {"grid": Param(lambda ctx: self._eval_grid_impl(ctx))}
+    def template(self) -> dict:
+        return {
+            "type": "mqdiffuse",
+            "grid": Param(lambda ctx: self._eval_grid_impl(ctx), ParamFlags.INIT),
+        }

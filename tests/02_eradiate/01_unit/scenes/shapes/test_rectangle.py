@@ -6,8 +6,17 @@ import pytest
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import traverse
-from eradiate.scenes.shapes import RectangleShape
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.shapes import RectangleShape, Shape
+from eradiate.test_tools.types import check_node_scene_element, check_type
+
+
+def test_rectangle_type():
+    check_type(
+        RectangleShape,
+        expected_mro=[Shape, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.mark.parametrize(
@@ -17,13 +26,10 @@ from eradiate.scenes.shapes import RectangleShape
 )
 def test_rectangle_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
     rectangle = RectangleShape(**kwargs)
-    template, _ = traverse(rectangle)
-    ctx = KernelDictContext()
-    kernel_dict = template.render(ctx=ctx)
+    mi_obj, mi_params = check_node_scene_element(rectangle, mi.Shape)
 
     if expected_reflectance is not None:
-        assert kernel_dict["bsdf"]["reflectance"]["value"] == expected_reflectance
-    assert isinstance(mi.load_dict(kernel_dict), mi.Shape)
+        assert mi_params["bsdf.reflectance.value"] == expected_reflectance
 
 
 @pytest.mark.parametrize(

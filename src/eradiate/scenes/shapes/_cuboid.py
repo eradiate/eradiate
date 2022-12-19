@@ -127,12 +127,11 @@ class CuboidShape(Shape, NodeSceneElement):
             ) @ mi.ScalarTransform4f.scale(0.5 * edges.m_as(length_units))
 
     @property
-    def kernel_type(self) -> str:
-        return "cube"
-
-    @property
-    def params(self) -> t.Dict[str, Param]:
-        return {"to_world": Param(self.eval_to_world, ParamFlags.GEOMETRIC)}
+    def template(self) -> dict:
+        return {
+            "type": "cube",
+            "to_world": Param(self.eval_to_world, ParamFlags.INIT),
+        }
 
     @classmethod
     def atmosphere(

@@ -254,8 +254,16 @@ class InterpolatedSpectrum(Spectrum, NodeSceneElement):
         return np.trapz(interp, w)
 
     @property
-    def kernel_type(self) -> str:
-        return "uniform"
+    def template(self) -> dict:
+        return {
+            "type": "uniform",
+            "value": Param(
+                lambda ctx: float(
+                    self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
+                ),
+                ParamFlags.INIT,
+            ),
+        }
 
     @property
     def params(self) -> dict:

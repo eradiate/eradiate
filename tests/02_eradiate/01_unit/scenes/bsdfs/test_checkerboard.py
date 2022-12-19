@@ -4,7 +4,7 @@ import pytest
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.bsdfs import BSDF, CheckerboardBSDF
 from eradiate.scenes.core import NodeSceneElement, traverse
-from eradiate.test_tools.types import check_type
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
 def test_checkerboard_type():

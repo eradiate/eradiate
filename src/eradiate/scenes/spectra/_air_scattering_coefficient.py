@@ -7,7 +7,7 @@ import numpy as np
 import pint
 
 from ._core import Spectrum
-from ..core import NodeSceneElement, Param
+from ..core import NodeSceneElement, Param, ParamFlags
 from ...attrs import parse_docs
 from ...ckd import Bindex
 from ...radprops.rayleigh import compute_sigma_s_air
@@ -86,15 +86,24 @@ class AirScatteringCoefficientSpectrum(Spectrum, NodeSceneElement):
         raise NotImplementedError
 
     @property
-    def kernel_type(self) -> str:
-        return "uniform"
+    def template(self) -> dict:
+        return {
+            "type": "uniform",
+            "value": Param(
+                lambda ctx: float(
+                    self.eval(ctx.spectral_ctx).m_as(uck.get("collision_coefficient")),
+                ),
+                ParamFlags.INIT,
+            ),
+        }
 
     @property
     def params(self) -> t.Dict[str, Param]:
         return {
             "value": Param(
                 lambda ctx: float(
-                    self.eval(ctx.spectral_ctx).m_as(uck.get("collision_coefficient"))
-                )
+                    self.eval(ctx.spectral_ctx).m_as(uck.get("collision_coefficient")),
+                ),
+                ParamFlags.SPECTRAL,
             )
         }
