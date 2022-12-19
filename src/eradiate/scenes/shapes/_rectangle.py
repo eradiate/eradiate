@@ -98,10 +98,6 @@ class RectangleShape(Shape, NodeSceneElement):
         default="[0, 1, 0]",
     )
 
-    @property
-    def kernel_type(self) -> str:
-        return "rectangle"
-
     def eval_to_world(
         self, ctx: t.Optional[KernelDictContext] = None
     ) -> "mitsuba.ScalarTransform4f":
@@ -137,6 +133,13 @@ class RectangleShape(Shape, NodeSceneElement):
             return mi.ScalarTransform4f.look_at(
                 origin=center, target=center + normal, up=up
             ) @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0])
+
+    @property
+    def template(self) -> dict:
+        return {
+            "type": "rectangle",
+            "to_world": Param(self.eval_to_world, ParamFlags.INIT),
+        }
 
     @property
     def params(self) -> t.Dict[str, Param]:

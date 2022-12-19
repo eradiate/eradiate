@@ -14,9 +14,8 @@ class BlackBSDF(BSDF, NodeSceneElement):
     """
 
     @property
-    def kernel_type(self) -> str:
-        return "diffuse"
-
-    @property
     def template(self) -> dict:
-        return {**super().template, "reflectance": {"type": "uniform", "value": 0.0}}
+        return {
+            "type": "diffuse",
+            "reflectance": {"type": "uniform", "value": 0.0},
+        }

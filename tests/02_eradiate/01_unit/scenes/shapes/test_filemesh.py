@@ -4,10 +4,9 @@ import tempfile
 import mitsuba as mi
 import pytest
 
-from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.core import NodeSceneElement
 from eradiate.scenes.shapes import FileMeshShape, Shape
-from eradiate.test_tools.types import check_type
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
 def test_file_mesh_type():
@@ -59,12 +58,9 @@ def tempfile_obj():
     ],
     ids=["ply", "obj"],
 )
-def test_construct_file(modes_all_double, file_type, tempfile, request):
+def test_filemesh_kernel_dict(modes_all_double, file_type, tempfile, request):
     mesh = FileMeshShape(filename=request.getfixturevalue(tempfile))
-    template, _ = traverse(mesh)
-    kernel_dict = template.render(ctx=KernelDictContext())
-    assert kernel_dict["type"] == file_type
-    assert isinstance(mi.load_dict(kernel_dict), mi.Mesh)
+    check_node_scene_element(mesh, mi.Mesh)
 
 
 def test_construct_file_illegal(modes_all_double):

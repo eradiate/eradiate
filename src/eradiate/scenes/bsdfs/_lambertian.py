@@ -37,8 +37,8 @@ class LambertianBSDF(BSDF, NodeSceneElement):
     )
 
     @property
-    def kernel_type(self) -> str:
-        return "diffuse"
+    def template(self) -> dict:
+        return {"type": "diffuse"}
 
     @property
     def objects(self) -> t.Dict[str, NodeSceneElement]:

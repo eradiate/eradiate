@@ -3,10 +3,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate.contexts import KernelDictContext
 from eradiate.scenes.bsdfs import BSDF, MQDiffuseBSDF
-from eradiate.scenes.core import NodeSceneElement, traverse
-from eradiate.test_tools.types import check_type
+from eradiate.scenes.core import NodeSceneElement
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
 def test_mqdiffuse_type():
@@ -83,7 +82,4 @@ def test_mqdiffuse_construct(modes_all):
 
 def test_kernel_dict(mode_mono):
     bsdf = MQDiffuseBSDF(data=ds)
-    template, _ = traverse(bsdf)
-    ctx = KernelDictContext()
-    kernel_dict = template.render(ctx=ctx)
-    assert isinstance(mi.load_dict(kernel_dict), mi.BSDF)
+    check_node_scene_element(bsdf, mi.BSDF)

@@ -5,11 +5,11 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.ckd import BinSet
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.contexts import SpectralContext
 from eradiate.exceptions import DataError
-from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.core import NodeSceneElement
 from eradiate.scenes.spectra import SolarIrradianceSpectrum, Spectrum
-from eradiate.test_tools.types import check_type
+from eradiate.test_tools.types import check_node_scene_element, check_type
 from eradiate.units import PhysicalQuantity
 
 
@@ -59,14 +59,8 @@ def test_solar_irradiance_construct(modes_all, tested, expected):
     ],
 )
 def test_solar_irradiance_kernel_dict(mode_mono, tested):
-    ctx = KernelDictContext()
-
     s = SolarIrradianceSpectrum(**tested)
-
-    # Produced kernel dict is valid
-    template, _ = traverse(s)
-    kernel_dict = template.render(ctx=ctx)
-    assert isinstance(mi.load_dict(kernel_dict), mi.Texture)
+    check_node_scene_element(s, mi.Texture)
 
 
 def test_solar_irradiance_eval(modes_all_double):

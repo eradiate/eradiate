@@ -63,12 +63,11 @@ class CheckerboardBSDF(BSDF, NodeSceneElement):
     )
 
     @property
-    def kernel_type(self) -> str:
-        return "diffuse"
-
-    @property
     def template(self) -> dict:
-        return {**super().template, "reflectance": {"type": "checkerboard"}}
+        return {
+            "type": "diffuse",
+            "reflectance": {"type": "checkerboard"},
+        }
 
     @property
     def params(self) -> t.Dict[str, Param]:

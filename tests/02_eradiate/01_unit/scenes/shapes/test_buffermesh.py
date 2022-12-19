@@ -1,11 +1,10 @@
 import mitsuba as mi
 import pytest
 
-from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import TraversalError
 from eradiate.scenes.core import InstanceSceneElement, Scene, traverse
 from eradiate.scenes.shapes import BufferMeshShape, Shape
-from eradiate.test_tools.types import check_type
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
 def test_buffer_mesh_type():
@@ -70,5 +69,4 @@ def test_buffer_mesh_traverse(mode_mono):
 
     # Traversal as part of an enclosing object should succeed
     scene = Scene(objects={"mesh": mesh})
-    template, _ = traverse(scene)
-    assert isinstance(mi.load_dict(template.render(KernelDictContext())), mi.Scene)
+    check_node_scene_element(scene, mi.Scene)

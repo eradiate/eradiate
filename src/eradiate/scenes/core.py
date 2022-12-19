@@ -29,10 +29,11 @@ class ParamFlags(enum.Flag):
     """
 
     NONE = 0
-    INIT = enum.auto()
+    INIT = enum.auto()  #: Used for kernel dict generation
     SPECTRAL = enum.auto()  #: Varies during the spectral loop
     GEOMETRIC = enum.auto()  #: Triggers a scene rebuild
-    ALL = SPECTRAL | GEOMETRIC
+    ALL = INIT | SPECTRAL | GEOMETRIC
+    UPDATE = SPECTRAL | GEOMETRIC  #: Update-specific flags
 
 
 class _Unused:
@@ -134,7 +135,7 @@ class ParameterMap(UserDict):
         dict
         """
         result = self.data.copy()
-        unused = render_params(result, ctx=ctx, flags=ParamFlags.ALL, drop=drop)
+        unused = render_params(result, ctx=ctx, flags=flags, drop=drop)
 
         # Check for leftover empty values
         if unused:
@@ -301,25 +302,11 @@ class SceneElement:
 @attrs.define(eq=False, slots=False)
 class NodeSceneElement(SceneElement):
     @property
-    def kernel_type(self) -> str:
-        """
-        Kernel type if this scene element can be modelled by a single kernel
-        scene graph node; ``None`` otherwise. The default implementation raises
-        a :class:`NotImplementedError`.
-        """
-        raise NotImplementedError
-
-    @property
     def template(self) -> dict:
         """
         Kernel dictionary template contents associated with this scene element.
         """
-        result = {"type": self.kernel_type}
-
-        if self.params is not None:
-            result.update(self.params)
-
-        return result
+        raise NotImplementedError
 
     @property
     def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
@@ -411,8 +398,8 @@ class Scene(NodeSceneElement):
     _objects: t.Dict[str, NodeSceneElement] = attrs.field(factory=dict, converter=dict)
 
     @property
-    def kernel_type(self) -> str:
-        return "scene"
+    def template(self) -> dict:
+        return {"type": "scene"}
 
     @property
     def objects(self) -> t.Dict[str, NodeSceneElement]:

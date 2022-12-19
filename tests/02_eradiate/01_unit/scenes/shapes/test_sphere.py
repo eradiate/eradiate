@@ -5,8 +5,17 @@ import pytest
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import traverse
+from eradiate.scenes.core import NodeSceneElement, traverse
 from eradiate.scenes.shapes import SphereShape
+from eradiate.test_tools.types import check_node_scene_element, check_type
+
+
+def test_sphere_type():
+    check_type(
+        SphereShape,
+        expected_mro=[SphereShape, NodeSceneElement],
+        expected_slots=[],
+    )
 
 
 @pytest.mark.parametrize(
@@ -16,13 +25,10 @@ from eradiate.scenes.shapes import SphereShape
 )
 def test_sphere_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
     sphere = SphereShape(**kwargs)
-    template, _ = traverse(sphere)
-    ctx = KernelDictContext()
-    kernel_dict = template.render(ctx=ctx)
+    mi_obj, mi_params = check_node_scene_element(sphere, mi.Shape)
 
     if expected_reflectance is not None:
-        assert kernel_dict["bsdf"]["reflectance"]["value"] == expected_reflectance
-    assert isinstance(mi.load_dict(kernel_dict), mi.Shape)
+        assert mi_params["bsdf.reflectance.value"] == expected_reflectance
 
 
 def test_sphere_surface():

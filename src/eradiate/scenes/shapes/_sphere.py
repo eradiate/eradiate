@@ -78,8 +78,11 @@ class SphereShape(Shape, NodeSceneElement):
             )
 
     @property
-    def kernel_type(self) -> str:
-        return "sphere"
+    def template(self) -> dict:
+        return {
+            "type": "sphere",
+            "to_world": Param(self.eval_to_world, ParamFlags.INIT),
+        }
 
     @property
     def params(self) -> t.Dict[str, Param]:

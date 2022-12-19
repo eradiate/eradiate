@@ -10,7 +10,7 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import NodeSceneElement, traverse
 from eradiate.scenes.spectra import Spectrum, UniformSpectrum, spectrum_factory
-from eradiate.test_tools.types import check_type
+from eradiate.test_tools.types import check_node_scene_element, check_type
 from eradiate.units import PhysicalQuantity
 
 
@@ -90,24 +90,16 @@ def test_uniform_kernel_dict(mode_mono):
             "type": "uniform",
             "quantity": "radiance",
             "value": 1.0,
-            "value_units": "W/km^2/sr/nm",
+            "value_units": "W/m^2/sr/nm",
         }
     )
 
     # Produced kernel dict is valid
-    ctx = KernelDictContext()
-    template, _ = traverse(s)
-    kernel_dict = template.render(ctx=ctx)
-    assert isinstance(mi.load_dict(kernel_dict), mi.Texture)
+    with uck.override({"radiance": "kW/m^2/sr/nm"}):
+        mi_obj, mi_params = check_node_scene_element(s, mi.Texture)
 
     # Unit scaling is properly applied
-    with ucc.override({"radiance": "W/m^2/sr/nm"}):
-        s = UniformSpectrum(quantity="radiance", value=1.0)
-    with uck.override({"radiance": "kW/m^2/sr/nm"}):
-        ctx = KernelDictContext()
-        template, _ = traverse(s)
-        kernel_dict = template.render(ctx=ctx)
-        assert np.allclose(kernel_dict["value"], 1e-3)
+    assert np.allclose(mi_params["value"], 1e-3)
 
 
 @pytest.mark.parametrize(

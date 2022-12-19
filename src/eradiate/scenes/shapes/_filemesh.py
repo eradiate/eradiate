@@ -47,7 +47,7 @@ class FileMeshShape(Shape, NodeSceneElement):
     @property
     def template(self) -> dict:
         return {
-            **super().template,
+            "type": self.kernel_type,
             "filename": str(self.filename),
             "face_normals": True,
         }
