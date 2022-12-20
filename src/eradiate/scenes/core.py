@@ -385,12 +385,8 @@ class Ref(NodeSceneElement):
     )
 
     @property
-    def kernel_type(self) -> str:
-        return "ref"
-
-    @property
     def template(self) -> dict:
-        return {**super().template, "id": self.id}
+        return {"type": "ref", "id": self.id}
 
 
 @attrs.define(eq=False, slots=False)

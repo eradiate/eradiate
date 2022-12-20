@@ -9,16 +9,9 @@ import pinttr
 
 import eradiate
 
-from ._core import Surface
+from ._core import SurfaceComposite
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
-from ..core import (
-    CompositeSceneElement,
-    NodeSceneElement,
-    Param,
-    Ref,
-    SceneTraversal,
-    traverse,
-)
+from ..core import NodeSceneElement, Param, Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
@@ -42,7 +35,7 @@ def _edges_converter(value):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class CentralPatchSurface(Surface, CompositeSceneElement):
+class CentralPatchSurface(SurfaceComposite):
     """
     Central patch surface [``central_patch``].
 

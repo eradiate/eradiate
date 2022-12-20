@@ -6,7 +6,7 @@ from abc import ABC
 import attrs
 
 from ..bsdfs import BSDF, bsdf_factory
-from ..core import NodeSceneElement, Ref
+from ..core import InstanceSceneElement, NodeSceneElement, Ref
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
@@ -67,3 +67,13 @@ class Shape:
             return None
         else:
             return {"bsdf": self.bsdf}
+
+
+@attrs.define(eq=False, slots=False)
+class ShapeNode(Shape, NodeSceneElement):
+    pass
+
+
+@attrs.define(eq=False, slots=False)
+class ShapeInstance(Shape, InstanceSceneElement):
+    pass

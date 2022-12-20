@@ -9,9 +9,9 @@ import pint
 import pinttr
 from pinttr.util import ensure_units
 
-from ._core import Shape
+from ._core import ShapeNode
 from ..bsdfs import BSDF
-from ..core import NodeSceneElement, Param, ParamFlags
+from ..core import Param, ParamFlags
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
@@ -25,7 +25,7 @@ def _normalize(v: np.typing.ArrayLike) -> np.ndarray:
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class SphereShape(Shape, NodeSceneElement):
+class SphereShape(ShapeNode):
     """
     Sphere shape [``sphere``].
 

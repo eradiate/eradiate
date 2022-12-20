@@ -6,8 +6,8 @@ import attrs
 import numpy as np
 import pint
 
-from ._core import Spectrum
-from ..core import NodeSceneElement, Param, ParamFlags
+from ._core import SpectrumNode
+from ..core import Param, ParamFlags
 from ...attrs import parse_docs
 from ...ckd import Bindex
 from ...radprops.rayleigh import compute_sigma_s_air
@@ -19,7 +19,7 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class AirScatteringCoefficientSpectrum(Spectrum, NodeSceneElement):
+class AirScatteringCoefficientSpectrum(SpectrumNode):
     """
     Air scattering coefficient spectrum [``air_scattering_coefficient``].
 

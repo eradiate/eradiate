@@ -4,7 +4,7 @@ import typing as t
 
 import attrs
 
-from ..core import NodeSceneElement
+from ..core import CompositeSceneElement, NodeSceneElement
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
@@ -44,3 +44,8 @@ class Surface:
         init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"surface"',
     )
+
+
+@attrs.define(eq=False, slots=False)
+class SurfaceComposite(Surface, CompositeSceneElement):
+    pass

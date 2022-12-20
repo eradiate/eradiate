@@ -5,9 +5,9 @@ import warnings
 
 import attrs
 
-from ._core import Surface
+from ._core import SurfaceComposite
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..core import CompositeSceneElement, NodeSceneElement, Ref, SceneTraversal
+from ..core import NodeSceneElement, Ref, SceneTraversal
 from ..shapes import RectangleShape, Shape, SphereShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
@@ -15,7 +15,7 @@ from ...exceptions import OverriddenValueWarning, TraversalError
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class BasicSurface(Surface, CompositeSceneElement):
+class BasicSurface(SurfaceComposite):
     """
     Basic surface [``basic``].
 

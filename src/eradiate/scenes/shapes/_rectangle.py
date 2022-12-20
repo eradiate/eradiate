@@ -8,9 +8,9 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Shape
+from ._core import ShapeNode
 from ..bsdfs import BSDF
-from ..core import NodeSceneElement, Param, ParamFlags
+from ..core import Param, ParamFlags
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
@@ -41,7 +41,7 @@ def _edges_converter(value):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class RectangleShape(Shape, NodeSceneElement):
+class RectangleShape(ShapeNode):
     """
     Rectangle shape [``rectangle``].
 

@@ -4,8 +4,7 @@ import pytest
 
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.core import NodeSceneElement
 from eradiate.scenes.shapes import SphereShape
 from eradiate.test_tools.types import check_node_scene_element, check_type
 

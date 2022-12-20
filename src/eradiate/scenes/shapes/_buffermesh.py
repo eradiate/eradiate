@@ -8,8 +8,8 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Shape
-from ..core import InstanceSceneElement, Param, traverse
+from ._core import ShapeInstance
+from ..core import Param, traverse
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
@@ -18,7 +18,7 @@ from ...units import unit_context_kernel as uck
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class BufferMeshShape(Shape, InstanceSceneElement):
+class BufferMeshShape(ShapeInstance):
     """
     Buffer mesh shape [``buffer_mesh``].
 

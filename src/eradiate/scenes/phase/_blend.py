@@ -4,13 +4,11 @@ import attrs
 import mitsuba as mi
 import numpy as np
 
-from ._core import PhaseFunction, phase_function_factory
-from ..core import BoundingBox, NodeSceneElement, Param, traverse
+from ._core import PhaseFunction, PhaseFunctionNode, phase_function_factory
+from ..core import BoundingBox, Param, traverse
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...kernel.transform import map_unit_cube
 from ...units import unit_context_kernel as uck
-from ...util.misc import onedict_value
 
 
 def _weights_converter(value: np.typing.ArrayLike) -> np.ndarray:
@@ -30,7 +28,7 @@ def _weights_converter(value: np.typing.ArrayLike) -> np.ndarray:
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class BlendPhaseFunction(PhaseFunction, NodeSceneElement):
+class BlendPhaseFunction(PhaseFunctionNode):
     """
     Blended phase function [``blend_phase``].
 
@@ -126,10 +124,6 @@ class BlendPhaseFunction(PhaseFunction, NodeSceneElement):
             zmin=bbox_min[2],
             zmax=bbox_max[2],
         )
-
-    @property
-    def kernel_type(self) -> str:
-        return "blendphase"
 
     @property
     def template(self) -> dict:

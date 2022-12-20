@@ -4,21 +4,16 @@ import typing as t
 
 import attrs
 
-import eradiate
-
-from ._core import PhaseFunction
-from ..core import NodeSceneElement, Param, ParamFlags
+from ._core import PhaseFunctionNode
+from ..core import Param, ParamFlags
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
-from ...exceptions import UnsupportedModeError
-from ...util.misc import onedict_value
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class HenyeyGreensteinPhaseFunction(PhaseFunction, NodeSceneElement):
+class HenyeyGreensteinPhaseFunction(PhaseFunctionNode):
     """
     Henyey-Greenstein phase function [``hg``].
 
@@ -47,8 +42,14 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction, NodeSceneElement):
     )
 
     @property
-    def kernel_type(self) -> str:
-        return "hg"
+    def template(self) -> dict:
+        return {
+            "type": "hg",
+            "g": Param(
+                lambda ctx: float(self.g.eval(ctx.spectral_ctx)),
+                ParamFlags.INIT,
+            ),
+        }
 
     @property
     def params(self) -> t.Dict[str, Param]:

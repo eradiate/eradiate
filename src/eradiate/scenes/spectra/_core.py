@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import typing as t
-from abc import ABC, abstractmethod
 
 import attrs
 import pint
 
 import eradiate
 
+from ..core import NodeSceneElement
 from ..._factory import Factory
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -218,3 +218,8 @@ class Spectrum:
             Computed integral value.
         """
         raise NotImplementedError
+
+
+@attrs.define(eq=False, slots=False)
+class SpectrumNode(Spectrum, NodeSceneElement):
+    pass

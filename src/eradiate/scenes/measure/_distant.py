@@ -9,6 +9,7 @@ import pint
 import pinttr
 
 from ._core import Measure
+from ..core import NodeSceneElement
 from ... import converters, validators
 from ...attrs import documented, parse_docs
 from ...units import unit_context_config as ucc
@@ -310,3 +311,8 @@ class DistantMeasure(Measure):
     def is_distant(self) -> bool:
         # Inherit docstring
         return self.ray_offset is None
+
+
+@attrs.define(eq=False, slots=False)
+class DistantMeasureNode(DistantMeasure, NodeSceneElement):
+    pass

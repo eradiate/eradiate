@@ -38,3 +38,8 @@ class Integrator:
         init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"integrator"',
     )
+
+
+@attrs.define(eq=False, slots=False)
+class IntegratorNode(Integrator, NodeSceneElement):
+    pass

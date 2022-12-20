@@ -4,10 +4,10 @@ import pytest
 import xarray as xr
 
 import eradiate
-from eradiate.contexts import KernelDictContext, SpectralContext
-from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.contexts import SpectralContext
+from eradiate.scenes.core import NodeSceneElement
 from eradiate.scenes.phase import PhaseFunction, TabulatedPhaseFunction
-from eradiate.test_tools.types import check_type
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
 def test_tabulated_phase_type():
@@ -45,13 +45,7 @@ def test_tabulated_construct(modes_all_double, grid, request):
     )
 
     # Kernel dict can be generated and instantiated
-    template, params = traverse(phase)
-    kernel_phase = mi.load_dict(template.render(KernelDictContext()))
-    assert isinstance(kernel_phase, mi.PhaseFunction)
-
-    # Phase function can be updated
-    kernel_params = mi.traverse(kernel_phase)
-    kernel_params.update(params.render(KernelDictContext()))
+    check_node_scene_element(phase, mi.PhaseFunction)
 
 
 def test_tabulated_order(mode_mono, tmpdir):
