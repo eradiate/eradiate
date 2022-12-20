@@ -7,8 +7,8 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Spectrum
-from ..core import NodeSceneElement, Param, ParamFlags
+from ._core import SpectrumNode
+from ..core import Param, ParamFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...units import unit_context_config as ucc
@@ -17,7 +17,7 @@ from ...units import unit_context_kernel as uck
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class UniformSpectrum(Spectrum, NodeSceneElement):
+class UniformSpectrum(SpectrumNode):
     """
     Uniform spectrum [``uniform``] (*i.e.* constant vs wavelength).
     """

@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import attrs
 
-from ._core import PhaseFunction
-from ..core import NodeSceneElement
+from ._core import PhaseFunctionNode
 from ...attrs import parse_docs
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class IsotropicPhaseFunction(PhaseFunction, NodeSceneElement):
+class IsotropicPhaseFunction(PhaseFunctionNode):
     """
     Isotropic phase function [``isotropic``].
 
@@ -18,5 +17,5 @@ class IsotropicPhaseFunction(PhaseFunction, NodeSceneElement):
     """
 
     @property
-    def kernel_type(self) -> str:
-        return "isotropic"
+    def template(self) -> dict:
+        return {"type": "isotropic"}

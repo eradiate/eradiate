@@ -3,7 +3,7 @@ from abc import ABC
 
 import attrs
 
-from ..core import SceneElement
+from ..core import NodeSceneElement, SceneElement
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
@@ -57,3 +57,8 @@ class PhaseFunction:
         init_type=get_doc(SceneElement, "id", "init_type"),
         default='"phase"',
     )
+
+
+@attrs.define(eq=False, slots=False)
+class PhaseFunctionNode(PhaseFunction, NodeSceneElement):
+    pass

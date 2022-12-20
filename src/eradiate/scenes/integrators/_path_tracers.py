@@ -2,14 +2,13 @@ import typing as t
 
 import attrs
 
-from ._core import Integrator
-from ..core import NodeSceneElement
+from ._core import IntegratorNode
 from ...attrs import documented, parse_docs
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class MonteCarloIntegrator(Integrator):
+class MonteCarloIntegrator(IntegratorNode):
     """
     Base class for integrator elements wrapping kernel classes
     deriving from
@@ -46,8 +45,12 @@ class MonteCarloIntegrator(Integrator):
     )
 
     @property
+    def kernel_type(self) -> str:
+        raise NotImplementedError
+
+    @property
     def template(self) -> dict:
-        result = super().template
+        result = {"type": self.kernel_type}
 
         if self.max_depth is not None:
             result["max_depth"] = self.max_depth
@@ -61,7 +64,7 @@ class MonteCarloIntegrator(Integrator):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class PathIntegrator(MonteCarloIntegrator, NodeSceneElement):
+class PathIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the `path tracer kernel plugin.
 
@@ -77,7 +80,7 @@ class PathIntegrator(MonteCarloIntegrator, NodeSceneElement):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class VolPathIntegrator(MonteCarloIntegrator, NodeSceneElement):
+class VolPathIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the volumetric path tracer kernel plugin.
 
@@ -92,7 +95,7 @@ class VolPathIntegrator(MonteCarloIntegrator, NodeSceneElement):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class VolPathMISIntegrator(MonteCarloIntegrator, NodeSceneElement):
+class VolPathMISIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the volumetric path tracer (with spectral multiple
     importance sampling) kernel plugin

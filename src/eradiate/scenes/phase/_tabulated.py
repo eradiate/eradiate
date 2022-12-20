@@ -7,11 +7,11 @@ import xarray as xr
 
 import eradiate
 
-from ._core import PhaseFunction
-from ..core import NodeSceneElement, Param, ParamFlags
+from ._core import PhaseFunctionNode
+from ..core import Param, ParamFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import SpectralContext
 from ...exceptions import UnsupportedModeError
 from ...units import unit_registry as ureg
 
@@ -53,7 +53,7 @@ def _validate_data(instance, attribute, value):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class TabulatedPhaseFunction(PhaseFunction, NodeSceneElement):
+class TabulatedPhaseFunction(PhaseFunctionNode):
     r"""
     Tabulated phase function [``tab_phase``].
 
@@ -165,23 +165,22 @@ class TabulatedPhaseFunction(PhaseFunction, NodeSceneElement):
         return self.eval_mono(w)
 
     @property
-    def kernel_type(self) -> str:
-        return "tabphase" if not self._is_irregular else "tabphase_irregular"
-
-    @property
     def template(self):
-        result = super().template
-
-        # Note: This is a bit hacky: the template contains placeholder values
-        # defining the isotropic phase function instead of evaluating the
-        # phase function at the requested spectral coordinate. Consequently,
-        # scenes created with this *must* be updated prior to processing.
-        mu = self.data.mu.values
-        phase_values = np.full_like(mu, 1.0 / (4.0 * np.pi))
-        result["values"] = ",".join(map(str, phase_values))
+        result = {
+            "type": "tabphase" if not self._is_irregular else "tabphase_irregular",
+            "values": Param(
+                lambda ctx: ",".join(
+                    map(str, self.eval(spectral_ctx=ctx.spectral_ctx))
+                ),
+                ParamFlags.INIT,
+            ),
+        }
 
         if self._is_irregular:
-            result["nodes"] = ",".join(map(str, mu))
+            result["nodes"] = Param(
+                lambda ctx: ",".join(map(str, self.data.mu.values)),
+                ParamFlags.INIT,
+            )
 
         return result
 

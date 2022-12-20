@@ -1,8 +1,7 @@
 import mitsuba as mi
 import pytest
 
-from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.core import NodeSceneElement
 from eradiate.scenes.integrators import (
     Integrator,
     PathIntegrator,
@@ -10,7 +9,7 @@ from eradiate.scenes.integrators import (
     VolPathMISIntegrator,
 )
 from eradiate.scenes.integrators._path_tracers import MonteCarloIntegrator
-from eradiate.test_tools.types import check_type
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
 @pytest.mark.parametrize(
@@ -60,7 +59,4 @@ def test_path_tracers_construct(modes_all, integrator_cls, kwargs):
 )
 def test_path_tracers_kernel_dict(mode_mono, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
-    template, _ = traverse(integrator)
-    ctx = KernelDictContext()
-    kernel_dict = template.render(ctx=ctx)
-    assert isinstance(mi.load_dict(kernel_dict), mi.MonteCarloIntegrator)
+    check_node_scene_element(integrator, mi.MonteCarloIntegrator)

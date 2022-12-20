@@ -8,8 +8,8 @@ import pint
 import pinttr
 import xarray as xr
 
-from ._core import Spectrum
-from ..core import NodeSceneElement, Param, ParamFlags
+from ._core import SpectrumNode
+from ..core import Param, ParamFlags
 from ... import converters, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -20,7 +20,7 @@ from ...units import unit_context_kernel as uck
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class InterpolatedSpectrum(Spectrum, NodeSceneElement):
+class InterpolatedSpectrum(SpectrumNode):
     """
     Linearly interpolated spectrum [``interpolated``].
 

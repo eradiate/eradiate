@@ -9,9 +9,9 @@ import pint
 import xarray as xr
 from pinttr.util import ensure_units
 
-from ._core import Surface
+from ._core import Surface, SurfaceComposite
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..core import CompositeSceneElement, InstanceSceneElement, NodeSceneElement
+from ..core import InstanceSceneElement, NodeSceneElement
 from ..shapes import BufferMeshShape, FileMeshShape, Shape, shape_factory
 from ...attrs import documented, get_doc, parse_docs
 from ...units import to_quantity
@@ -21,7 +21,7 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class DEMSurface(Surface, CompositeSceneElement):
+class DEMSurface(SurfaceComposite):
     """
     DEM surface [``dem``]
 
