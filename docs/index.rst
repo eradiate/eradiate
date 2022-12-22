@@ -6,6 +6,7 @@ Eradiate Documentation
 :doc:`src/CHANGELOG`
 
 **Useful links**:
+`Home <https://www.eradiate.eu>`_ |
 `Source repository <https://github.com/eradiate/eradiate>`_ |
 `Issues & ideas <https://github.com/eradiate/eradiate/issues>`_ |
 `Q&A support <https://github.com/eradiate/eradiate/discussions>`_
