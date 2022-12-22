@@ -7,7 +7,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Measure
+from ._core import Measure, MeasureNode
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...units import symbol
@@ -17,8 +17,8 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attrs.define
-class RadiancemeterMeasure(Measure):
+@attrs.define(eq=False, slots=False)
+class RadiancemeterMeasure(MeasureNode):
     """
     Radiance meter measure scene element [``radiancemeter``].
 
@@ -77,29 +77,19 @@ class RadiancemeterMeasure(Measure):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _kernel_dict_impl(self, sensor_id, spp):
+    @property
+    def kernel_type(self) -> str:
+        return "radiancemeter"
+
+    @property
+    def template(self) -> dict:
+        result = super().template
+
         target = self.target.m_as(uck.get("length"))
         origin = self.origin.m_as(uck.get("length"))
         direction = target - origin
-
-        result = {
-            "type": "radiancemeter",
-            "id": sensor_id,
-            "origin": origin,
-            "direction": direction,
-            "sampler": {
-                "type": self.sampler,
-                "sample_count": spp,
-            },
-            "film": {
-                "type": "hdrfilm",
-                "width": self.film_resolution[0],
-                "height": self.film_resolution[1],
-                "pixel_format": "luminance",
-                "component_format": "float32",
-                "rfilter": {"type": "box"},
-            },
-        }
+        result["origin"] = origin
+        result["direction"] = direction
 
         return result
 

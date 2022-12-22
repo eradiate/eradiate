@@ -8,7 +8,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Measure
+from ._core import MeasureNode
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...units import symbol
@@ -18,8 +18,8 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attrs.define
-class PerspectiveCameraMeasure(Measure):
+@attrs.define(eq=False, slots=False)
+class PerspectiveCameraMeasure(MeasureNode):
     """
     Perspective camera scene element [``perspective``].
 
@@ -144,31 +144,24 @@ class PerspectiveCameraMeasure(Measure):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _kernel_dict_impl(self, sensor_id, spp):
+    @property
+    def kernel_type(self) -> str:
+        # Inherit docstring
+        return "perspective"
+
+    @property
+    def template(self) -> dict:
+        # Inherit docstring
+        result = super().template
+
+        result["far_clip"] = self.far_clip.m_as(uck.get("length"))
+        result["fov"] = self.fov.m_as(ureg.deg)
+
         target = self.target.m_as(uck.get("length"))
         origin = self.origin.m_as(uck.get("length"))
-
-        result = {
-            "type": "perspective",
-            "id": sensor_id,
-            "far_clip": self.far_clip.m_as(uck.get("length")),
-            "fov": self.fov.m_as(ureg.deg),
-            "to_world": mi.ScalarTransform4f.look_at(
-                origin=origin, target=target, up=self.up
-            ),
-            "sampler": {
-                "type": self.sampler,
-                "sample_count": spp,
-            },
-            "film": {
-                "type": "hdrfilm",
-                "width": self.film_resolution[0],
-                "height": self.film_resolution[1],
-                "pixel_format": "luminance",
-                "component_format": "float32",
-                "rfilter": {"type": "box"},
-            },
-        }
+        result["to_world"] = mi.ScalarTransform4f.look_at(
+            origin=origin, target=target, up=self.up
+        )
 
         return result
 

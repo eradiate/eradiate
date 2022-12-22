@@ -7,7 +7,7 @@ import mitsuba as mi
 import numpy as np
 import pint
 
-from ._distant import DistantMeasure
+from ._distant import DistantMeasureNode
 from ... import frame, validators
 from ..._config import config
 from ...attrs import documented, parse_docs
@@ -18,8 +18,8 @@ from ...warp import square_to_uniform_hemisphere
 
 
 @parse_docs
-@attrs.define
-class DistantFluxMeasure(DistantMeasure):
+@attrs.define(eq=False, slots=False)
+class DistantFluxMeasure(DistantMeasureNode):
     """
     Distant radiosity measure scene element [``distant_flux``].
 
@@ -125,30 +125,22 @@ class DistantFluxMeasure(DistantMeasure):
     #                        Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _kernel_dict_impl(self, sensor_id, spp):
-        _, up = mi.coordinate_system(self.direction)
+    @property
+    def kernel_type(self) -> str:
+        # Inherit docstring
+        return "distantflux"
 
-        result = {
-            "type": "distantflux",
-            "id": sensor_id,
-            "to_world": mi.ScalarTransform4f.look_at(
-                origin=[0, 0, 0],
-                target=mi.ScalarVector3f(self.direction),
-                up=up,
-            ),
-            "sampler": {
-                "type": self.sampler,
-                "sample_count": spp,
-            },
-            "film": {
-                "type": "hdrfilm",
-                "width": self.film_resolution[0],
-                "height": self.film_resolution[1],
-                "pixel_format": "luminance",
-                "component_format": "float32",
-                "rfilter": {"type": "box"},
-            },
-        }
+    @property
+    def template(self) -> dict:
+        # Inherit docstring
+        result = super().template
+
+        _, up = mi.coordinate_system(self.direction)
+        result["to_world"] = mi.ScalarTransform4f.look_at(
+            origin=[0, 0, 0],
+            target=mi.ScalarVector3f(self.direction),
+            up=up,
+        )
 
         if self.target is not None:
             result["target"] = self.target.kernel_item()
@@ -164,6 +156,7 @@ class DistantFluxMeasure(DistantMeasure):
 
     @property
     def var(self) -> t.Tuple[str, t.Dict]:
+        # Inherit docstring
         return "sector_radiosity", {
             "standard_name": "sector_radiosity",
             "long_name": "sector radiosity",

@@ -1,29 +1,34 @@
+import mitsuba as mi
+
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import KernelDict
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.measure import Measure, MultiRadiancemeterMeasure
 from eradiate.scenes.measure._radiancemeter import RadiancemeterMeasure
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
-def test_radiancemeter(mode_mono):
-    # Instantiation succeeds
-    s = RadiancemeterMeasure()
+def test_radiancemeter_type():
+    check_type(
+        RadiancemeterMeasure,
+        expected_mro=[Measure, NodeSceneElement],
+        expected_slots=[],
+    )
 
-    # The kernel dict can be instantiated
-    ctx = KernelDictContext()
-    assert KernelDict.from_elements(s, ctx=ctx).load()
+
+def test_radiancemeter_construct(mode_mono):
+    measure = RadiancemeterMeasure()
+    check_node_scene_element(measure, mi.Sensor)
 
 
-def test_radiancemeter_external_medium(mode_mono):
-    # create a series of radiancemeter measures and a kernel dict context
-    # which places some of them inside and outside the atmospheric volume
-    # assert that the external medium is set correctly in the cameras' kernel dicts
+def test_radiancemeter_medium(mode_mono):
+    measure = MultiRadiancemeterMeasure()
+    template, _ = traverse(measure)
 
-    s1 = RadiancemeterMeasure()
+    ctx1 = KernelDictContext()
+    ctx2 = KernelDictContext(kwargs={"atmosphere_medium_id": "test_atmosphere"})
 
-    ctx1 = KernelDictContext(atmosphere_medium_id="test_atmosphere")
-    ctx2 = KernelDictContext()
+    kd1 = template.render(ctx=ctx1, drop=True)
+    assert "medium" not in kd1
 
-    kd1 = s1.kernel_dict(ctx=ctx1)
-    kd2 = s1.kernel_dict(ctx=ctx2)
-
-    assert kd1["measure"]["medium"] == {"type": "ref", "id": "test_atmosphere"}
-    assert "medium" not in kd2["measure"].keys()
+    kd2 = template.render(ctx=ctx2, drop=True)
+    assert kd2["medium"] == {"type": "ref", "id": "test_atmosphere"}

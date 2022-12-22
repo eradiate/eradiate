@@ -4,28 +4,36 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import KernelDict
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.measure._distant import DistantMeasure
 from eradiate.scenes.measure._distant_flux import DistantFluxMeasure
-from eradiate.util.misc import onedict_value
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
-def test_distant_flux_construct(modes_all):
-    # Test default constructor
-    d = DistantFluxMeasure()
-    ctx = KernelDictContext()
-    assert isinstance(KernelDict.from_elements(d, ctx=ctx).load(), mi.Sensor)
-
-    # Test target support
-    # -- Target a point
-    d = DistantFluxMeasure(target=[0, 0, 0])
-    assert isinstance(KernelDict.from_elements(d, ctx=ctx).load(), mi.Sensor)
-
-    # -- Target an axis-aligned rectangular patch
-    d = DistantFluxMeasure(
-        target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
+def test_distant_flux_type():
+    check_type(
+        DistantFluxMeasure,
+        expected_mro=[DistantMeasure, NodeSceneElement],
+        expected_slots=[],
     )
-    assert isinstance(KernelDict.from_elements(d, ctx=ctx).load(), mi.Sensor)
+
+
+@pytest.mark.parametrize(
+    "tested",
+    [
+        {},
+        {"target": [0, 0, 0]},
+        {"target": {"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}},
+    ],
+    ids=[
+        "no_args",
+        "target_point",
+        "target_rectangle",
+    ],
+)
+def test_distant_flux_construct(modes_all_double, tested):
+    measure = DistantFluxMeasure(**tested)
+    check_node_scene_element(measure, mi_cls=mi.Sensor)
 
 
 @pytest.mark.parametrize(
@@ -41,10 +49,10 @@ def test_distant_flux_construct(modes_all):
         ),
     ],
 )
-def test_distant_flux_direction(modes_all, direction, frame):
-    d = DistantFluxMeasure(direction=direction)
-    ctx = KernelDictContext()
-    to_world = onedict_value(d.kernel_dict(ctx))["to_world"]
+def test_distant_flux_direction(modes_all_double, direction, frame):
+    measure = DistantFluxMeasure(direction=direction)
+    template, _ = traverse(measure)
+    to_world = template["to_world"]
 
     # The reference frame is rotated as expected
     assert dr.allclose(to_world.transform_affine(mi.Vector3f(1, 0, 0)), frame[0])

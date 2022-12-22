@@ -48,7 +48,7 @@ def check_type(
         )
 
 
-def check_node_scene_element(instance: NodeSceneElement, mi_cls: "mitsuba.Object"):
+def check_node_scene_element(instance: NodeSceneElement, mi_cls):
     """
     Perform kernel dictionary checks on a node scene element.
 
@@ -78,7 +78,7 @@ def check_node_scene_element(instance: NodeSceneElement, mi_cls: "mitsuba.Object
 
     # Check if the template can be instantiated
     ctx = KernelDictContext()
-    kernel_dict = template.render(ctx)
+    kernel_dict = template.render(ctx, drop=True)
     mi_obj = mi.load_dict(kernel_dict)
     assert isinstance(mi_obj, mi_cls)
 

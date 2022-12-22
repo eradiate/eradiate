@@ -1,28 +1,38 @@
 import mitsuba as mi
 import numpy as np
+import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import KernelDict
+from eradiate.scenes.core import NodeSceneElement
+from eradiate.scenes.measure._distant import DistantMeasure
 from eradiate.scenes.measure._hemispherical_distant import HemisphericalDistantMeasure
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
-def test_hemispherical_distant(modes_all):
-    # Test default constructor
-    d = HemisphericalDistantMeasure()
-    ctx = KernelDictContext()
-    assert isinstance(KernelDict.from_elements(d, ctx=ctx).load(), mi.Sensor)
-
-    # Test target support
-    # -- Target a point
-    d = HemisphericalDistantMeasure(target=[0, 0, 0])
-    assert isinstance(KernelDict.from_elements(d, ctx=ctx).load(), mi.Sensor)
-
-    # -- Target an axis-aligned rectangular patch
-    d = HemisphericalDistantMeasure(
-        target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}
+def test_hemispherical_distant_type():
+    check_type(
+        HemisphericalDistantMeasure,
+        expected_mro=[DistantMeasure, NodeSceneElement],
+        expected_slots=[],
     )
-    assert isinstance(KernelDict.from_elements(d, ctx=ctx).load(), mi.Sensor)
+
+
+@pytest.mark.parametrize(
+    "tested",
+    [
+        {},
+        dict(target=[0, 0, 0]),
+        dict(target={"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}),
+    ],
+    ids=[
+        "no_args",
+        "target_point",
+        "target_rectangle",
+    ],
+)
+def test_hemispherical_distant_construct(modes_all_double, tested):
+    measure = HemisphericalDistantMeasure(**tested)
+    check_node_scene_element(measure, mi.Sensor)
 
 
 def test_hemispherical_distant_viewing_angles(mode_mono):

@@ -624,6 +624,10 @@ class Measure:
     # --------------------------------------------------------------------------
 
     @property
+    def kernel_type(self) -> str:
+        raise NotImplementedError
+
+    @property
     def template(self) -> dict:
         result = {
             "type": self.kernel_type,
@@ -662,3 +666,8 @@ class Measure:
         str, dict: Post-processing variable field name and metadata.
         """
         return "img", dict()
+
+
+@attrs.define(eq=False, slots=False)
+class MeasureNode(Measure, NodeSceneElement):
+    pass

@@ -1,38 +1,72 @@
+import mitsuba as mi
 import pytest
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import KernelDict
-from eradiate.scenes.measure import PerspectiveCameraMeasure
+from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.measure import Measure, PerspectiveCameraMeasure
+from eradiate.test_tools.types import check_node_scene_element, check_type
 
 
-def test_perspective(mode_mono):
+def test_perspective_type():
+    check_type(
+        PerspectiveCameraMeasure,
+        expected_mro=[Measure, NodeSceneElement],
+        expected_slots=[],
+    )
+
+
+@pytest.mark.parametrize(
+    "tested, expected",
+    [
+        ({}, None),
+        (
+            {"origin": [0, 0, 0], "target": [0, 0, 0], "up": [0, 0, 1]},
+            ValueError,
+        ),
+        (
+            {"origin": [1, 1, 1], "target": [1, 1, 1], "up": [0, 0, 1]},
+            ValueError,
+        ),
+        (
+            {"origin": [-1, 0.5, 1.5], "target": [-1, 0.5, 1.5], "up": [0, 0, 1]},
+            ValueError,
+        ),
+        (
+            {"origin": [0, 1, 0], "target": [1, 0, 0], "up": [1, -1, 0]},
+            ValueError,
+        ),
+    ],
+    ids=[
+        "no_args",
+        "same_origin_target_1",  # origin and target cannot be the same
+        "same_origin_target_2",
+        "same_origin_target_3",
+        "same_up_direction",  # up and viewing direction cannot be the same
+    ],
+)
+def test_perspective_construct(mode_mono, tested, expected):
     # Constructor
-    d = PerspectiveCameraMeasure()
-    ctx = KernelDictContext()
-    assert KernelDict.from_elements(d, ctx=ctx).load()
+    if expected is None:
+        measure = PerspectiveCameraMeasure(**tested)
+        check_node_scene_element(measure, mi.Sensor)
 
-    # Origin and target cannot be the same
-    for point in [[0, 0, 0], [1, 1, 1], [-1, 0.5, 1.3333]]:
-        with pytest.raises(ValueError):
-            PerspectiveCameraMeasure(origin=point, target=point)
+    elif issubclass(expected, ValueError):
+        with pytest.raises(expected):
+            PerspectiveCameraMeasure(**tested)
 
-    # Up must differ from the camera's viewing direction
-    with pytest.raises(ValueError):
-        PerspectiveCameraMeasure(origin=[0, 1, 0], target=[1, 0, 0], up=[1, -1, 0])
+    else:
+        RuntimeError("unhandled expected value")
 
 
-def test_perspective_external_medium(mode_mono):
-    # create a series of perspective camera measures and a kernel dict context
-    # which places some of them inside and outside the atmospheric volume
-    # assert that the external medium is set correctly in the cameras' kernel dicts
+def test_perspective_medium(mode_mono):
+    measure = PerspectiveCameraMeasure()
+    template, _ = traverse(measure)
 
-    s1 = PerspectiveCameraMeasure()
+    ctx1 = KernelDictContext()
+    ctx2 = KernelDictContext(kwargs={"atmosphere_medium_id": "test_atmosphere"})
 
-    ctx1 = KernelDictContext(atmosphere_medium_id="test_atmosphere")
-    ctx2 = KernelDictContext()
+    kd1 = template.render(ctx=ctx1, drop=True)
+    assert "medium" not in kd1
 
-    kd1 = s1.kernel_dict(ctx=ctx1)
-    kd2 = s1.kernel_dict(ctx=ctx2)
-
-    assert kd1["measure"]["medium"] == {"type": "ref", "id": "test_atmosphere"}
-    assert "medium" not in kd2["measure"].keys()
+    kd2 = template.render(ctx=ctx2, drop=True)
+    assert kd2["medium"] == {"type": "ref", "id": "test_atmosphere"}
