@@ -7,7 +7,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Measure
+from ._core import MeasureNode
 from ...attrs import documented, parse_docs
 from ...units import symbol
 from ...units import unit_context_config as ucc
@@ -16,8 +16,8 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attrs.define
-class MultiRadiancemeterMeasure(Measure):
+@attrs.define(eq=False, slots=False)
+class MultiRadiancemeterMeasure(MeasureNode):
     """
     Radiance meter array measure scene element [``mradiancemeter``,
     ``multi_radiancemeter``].
@@ -81,28 +81,20 @@ class MultiRadiancemeterMeasure(Measure):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _kernel_dict_impl(self, sensor_id, spp):
-        origins = self.origins.m_as(uck.get("length"))
-        directions = self.directions
+    @property
+    def kernel_type(self) -> str:
+        # Inherit docstring
+        return "mradiancemeter"
 
-        result = {
-            "type": "mradiancemeter",
-            "id": sensor_id,
-            "origins": ",".join(map(str, origins.ravel(order="C"))),
-            "directions": ",".join(map(str, directions.ravel(order="C"))),
-            "sampler": {
-                "type": self.sampler,
-                "sample_count": spp,
-            },
-            "film": {
-                "type": "hdrfilm",
-                "width": self.film_resolution[0],
-                "height": self.film_resolution[1],
-                "pixel_format": "luminance",
-                "component_format": "float32",
-                "rfilter": {"type": "box"},
-            },
-        }
+    @property
+    def template(self) -> dict:
+        # Inherit docstring
+        result = super().template
+
+        origins = self.origins.m_as(uck.get("length"))
+        result["origins"] = ",".join(map(str, origins.ravel(order="C")))
+        directions = self.directions
+        result["directions"] = ",".join(map(str, directions.ravel(order="C")))
 
         return result
 

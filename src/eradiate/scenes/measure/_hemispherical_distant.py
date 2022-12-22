@@ -9,7 +9,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._distant import DistantMeasure
+from ._distant import DistantMeasureNode
 from ... import frame, validators
 from ..._config import config
 from ...attrs import documented, parse_docs
@@ -21,8 +21,8 @@ from ...warp import square_to_uniform_hemisphere
 
 
 @parse_docs
-@attrs.define
-class HemisphericalDistantMeasure(DistantMeasure):
+@attrs.define(eq=False, slots=False)
+class HemisphericalDistantMeasure(DistantMeasureNode):
     """
     Hemispherical distant radiance measure scene element
     [``hdistant``, ``hemispherical_distant``].
@@ -143,8 +143,15 @@ class HemisphericalDistantMeasure(DistantMeasure):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _kernel_dict_impl(self, sensor_id, spp):
+    @property
+    def kernel_type(self) -> str:
         # Inherit docstring
+        return "hdistant"
+
+    @property
+    def template(self) -> dict:
+        # Inherit docstring
+        result = super().template
 
         up = dr.normalize(
             dr.cross(
@@ -156,26 +163,9 @@ class HemisphericalDistantMeasure(DistantMeasure):
                 ),
             )
         )
-
-        result = {
-            "type": "hdistant",
-            "id": sensor_id,
-            "to_world": mi.ScalarTransform4f.look_at(
-                origin=[0.0, 0.0, 0.0], target=self.direction, up=up
-            ),
-            "sampler": {
-                "type": self.sampler,
-                "sample_count": spp,
-            },
-            "film": {
-                "type": "hdrfilm",
-                "width": self.film_resolution[0],
-                "height": self.film_resolution[1],
-                "pixel_format": "luminance",
-                "component_format": "float32",
-                "rfilter": {"type": "box"},
-            },
-        }
+        result["to_world"] = mi.ScalarTransform4f.look_at(
+            origin=[0.0, 0.0, 0.0], target=self.direction, up=up
+        )
 
         if self.target is not None:
             result["target"] = self.target.kernel_item()

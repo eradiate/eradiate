@@ -3,7 +3,13 @@ import pint
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.scenes.core import BoundingBox, Param, ParamFlags, render_params
+from eradiate.scenes.core import (
+    BoundingBox,
+    Param,
+    ParameterMap,
+    ParamFlags,
+    render_params,
+)
 
 
 def test_render_params():
@@ -32,6 +38,26 @@ def test_render_params():
     assert unused == ["bar"]
     assert d["baz"] == 1
     assert "bar" not in d
+
+
+def test_parameter_map():
+    parameter_map = ParameterMap(
+        {
+            "foo": 0,
+            "foo.bar": 1,
+            "bar": Param(lambda ctx: ctx, ParamFlags.GEOMETRIC),
+            "baz": Param(lambda ctx: ctx, ParamFlags.SPECTRAL),
+        }
+    )
+
+    # We can remove or keep selected parameters
+    pmap = parameter_map.copy()
+    pmap.remove(r"foo.*")
+    assert pmap.keys() == {"bar", "baz"}
+
+    pmap = parameter_map.copy()
+    pmap.keep(r"foo.*")
+    assert pmap.keys() == {"foo", "foo.bar"}
 
 
 def test_bbox():

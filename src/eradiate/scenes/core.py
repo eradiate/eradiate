@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import re
 import typing as t
 from collections import UserDict
 from typing import Mapping, Sequence
@@ -83,7 +84,7 @@ class Param:
         return self._callable(ctx)
 
 
-@attrs.define
+@attrs.define(slots=False)
 class ParameterMap(UserDict):
     """
     A dict-like structure mapping parameter paths to methods generating them.
@@ -91,21 +92,52 @@ class ParameterMap(UserDict):
 
     data: dict[str, Param] = attrs.field(factory=dict)
 
-    def remove(self, regex) -> None:
+    def remove(self, keys: t.Union[str, t.List[str]]) -> None:
         """
         Remove all parameters matching the given regular expression.
-        """
-        for key in list(self.data.keys()):
-            if regex.match(key):
-                del self.data[key]
 
-    def keep(self, regex) -> None:
+        Parameters
+        ----------
+        keys : str or list of str
+            Regular expressions matching the parameters to remove.
+
+        Notes
+        -----
+        This method mutates the parameter map.
+        """
+        if not isinstance(keys, list):
+            keys = [keys]
+
+        import re
+
+        regexps = [re.compile(k).match for k in keys]
+        keys = [k for k in self.keys() if any(r(k) for r in regexps)]
+
+        for key in keys:
+            del self.data[key]
+
+    def keep(self, keys: t.Union[str, t.List[str]]) -> None:
         """
         Keep only parameters matching the given regular expression.
+
+        Parameters
+        ----------
+        keys : str or list of str
+            Regular expressions matching the parameters to keep.
+
+        Notes
+        -----
+        This method mutates the parameter map.
         """
-        for key in list(self.data.keys()):
-            if not regex.match(key):
-                del self.data[key]
+        if not isinstance(keys, list):
+            keys = [keys]
+
+        import re
+
+        regexps = [re.compile(k).match for k in keys]
+        keys = [k for k in self.keys() if any(r(k) for r in regexps)]
+        result = {k: self.data[k] for k in keys}
+        self.data = result
 
     def render(
         self,
@@ -133,12 +165,18 @@ class ParameterMap(UserDict):
         Returns
         -------
         dict
+
+        Raises
+        ------
+        ValueError
+            If ``drop`` is ``False`` and the rendered parameter map contains an
+            unused parameter.
         """
         result = self.data.copy()
         unused = render_params(result, ctx=ctx, flags=flags, drop=drop)
 
         # Check for leftover empty values
-        if unused:
+        if not drop and unused:
             raise ValueError(f"Unevaluated parameters: {unused}")
 
         return result
@@ -197,7 +235,7 @@ class KernelDictTemplate(ParameterMap):
 
 
 def render_params(
-    d: dict,
+    d: t.MutableMapping,
     ctx: KernelDictContext,
     flags: ParamFlags = ParamFlags.ALL,
     drop: bool = False,
@@ -207,8 +245,8 @@ def render_params(
 
     Parameters
     ----------
-    d : dict
-        A dictionary containing parameters to render. *In-place* modification
+    d : dict-like
+        A dict-like containing parameters to render. *In-place* modification
         will be performed.
 
     ctx : :class:`.KernelDictContext`
