@@ -4,22 +4,11 @@ import pint
 import pytest
 from pinttr.exceptions import UnitsError
 
-from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import NodeSceneElement, traverse
-from eradiate.scenes.spectra import Spectrum, UniformSpectrum, spectrum_factory
-from eradiate.test_tools.types import check_node_scene_element, check_type
+from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
+from eradiate.test_tools.types import check_scene_element
 from eradiate.units import PhysicalQuantity
-
-
-def test_uniform_type():
-    check_type(
-        UniformSpectrum,
-        expected_mro=[Spectrum, NodeSceneElement],
-        expected_slots=[],
-    )
 
 
 @pytest.mark.parametrize(
@@ -96,7 +85,7 @@ def test_uniform_kernel_dict(mode_mono):
 
     # Produced kernel dict is valid
     with uck.override({"radiance": "kW/m^2/sr/nm"}):
-        mi_obj, mi_params = check_node_scene_element(s, mi.Texture)
+        mi_obj, mi_params = check_scene_element(s, mi.Texture)
 
     # Unit scaling is properly applied
     assert np.allclose(mi_params["value"], 1e-3)

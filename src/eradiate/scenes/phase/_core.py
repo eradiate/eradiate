@@ -60,5 +60,5 @@ class PhaseFunction:
 
 
 @attrs.define(eq=False, slots=False)
-class PhaseFunctionNode(PhaseFunction, NodeSceneElement):
+class PhaseFunctionNode(PhaseFunction, NodeSceneElement, ABC):
     pass

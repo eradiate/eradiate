@@ -5,17 +5,8 @@ import xarray as xr
 
 import eradiate
 from eradiate.contexts import SpectralContext
-from eradiate.scenes.core import NodeSceneElement
-from eradiate.scenes.phase import PhaseFunction, TabulatedPhaseFunction
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_tabulated_phase_type():
-    check_type(
-        TabulatedPhaseFunction,
-        expected_mro=[PhaseFunction, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.scenes.phase import TabulatedPhaseFunction
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.fixture
@@ -45,7 +36,7 @@ def test_tabulated_construct(modes_all_double, grid, request):
     )
 
     # Kernel dict can be generated and instantiated
-    check_node_scene_element(phase, mi.PhaseFunction)
+    check_scene_element(phase, mi.PhaseFunction)
 
 
 def test_tabulated_order(mode_mono, tmpdir):

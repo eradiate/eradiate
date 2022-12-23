@@ -13,7 +13,7 @@ import pinttr
 import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere
-from ..core import KernelDict
+from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
@@ -29,7 +29,7 @@ from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     """
     Molecular atmosphere scene element [``molecular``].
@@ -173,15 +173,22 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         self, spectral_ctx: SpectralContext, optional_fields: bool = False
     ) -> xr.Dataset:
         # Inherit docstrings
-        # All fields are already exported: `optional_fields` has no effect
         return self.radprops_profile.eval_dataset(spectral_ctx=spectral_ctx)
+
+    def eval_albedo(self, ctx: KernelDictContext) -> pint.Quantity:
+        return self.radprops_profile.eval_albedo(ctx.spectral_ctx)
+
+    def eval_sigma_t(self, ctx: KernelDictContext) -> pint.Quantity:
+        return self.radprops_profile.eval_sigma_t(ctx.spectral_ctx)
 
     # --------------------------------------------------------------------------
     #                             Kernel dictionary
     # --------------------------------------------------------------------------
 
-    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
-        return self.phase.kernel_dict(ctx=ctx)
+    @property
+    def _template_phase(self) -> dict:
+        result, _ = traverse(self.phase)
+        return result.data
 
     # --------------------------------------------------------------------------
     #                               Constructors

@@ -1,16 +1,7 @@
 import mitsuba as mi
 
-from eradiate.scenes.bsdfs import BSDF, BlackBSDF
-from eradiate.scenes.core import NodeSceneElement
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_black_type():
-    check_type(
-        BlackBSDF,
-        expected_mro=[BSDF, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.scenes.bsdfs import BlackBSDF
+from eradiate.test_tools.types import check_scene_element
 
 
 def test_black_constructor(modes_all):
@@ -20,5 +11,5 @@ def test_black_constructor(modes_all):
 
 def test_black_kernel_dict(modes_all_double):
     b = BlackBSDF()
-    mi_obj, mi_params = check_node_scene_element(b, mi.BSDF)
+    mi_obj, mi_params = check_scene_element(b, mi.BSDF)
     assert mi_params["reflectance.value"] == 0.0

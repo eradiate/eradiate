@@ -3,19 +3,9 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import NodeSceneElement, traverse
-from eradiate.scenes.illumination import DirectionalIllumination, Illumination
+from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.spectra import SolarIrradianceSpectrum, UniformSpectrum
-from eradiate.test_tools.types import check_type
-
-
-def test_directional_type():
-    check_type(
-        DirectionalIllumination,
-        expected_mro=[Illumination, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
@@ -25,18 +15,15 @@ def test_directional_type():
 )
 def test_directional_construct(modes_all, kwargs, expected_irradiance_type):
     # Construction without argument succeeds
-    d = DirectionalIllumination(**kwargs)
-    assert d
-    assert isinstance(d.irradiance, expected_irradiance_type)
+    illumination = DirectionalIllumination(**kwargs)
+    assert illumination
+    assert isinstance(illumination.irradiance, expected_irradiance_type)
 
 
 def test_directional_kernel_dict(modes_all_double):
     # The associated kernel dict is correctly formed and can be loaded
-    d = DirectionalIllumination()
-    template, _ = traverse(d)
-    ctx = KernelDictContext()
-    kernel_dict = template.render(ctx)
-    assert isinstance(mi.load_dict(kernel_dict), mi.Emitter)
+    illumination = DirectionalIllumination()
+    check_scene_element(illumination, mi_cls=mi.Emitter)
 
 
 COS_PI_4 = np.sqrt(2) / 2

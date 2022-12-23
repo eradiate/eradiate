@@ -51,43 +51,12 @@ class SphereShape(ShapeNode):
         default="1.0",
     )
 
-    def eval_to_world(self, ctx: t.Optional[KernelDictContext] = None):
-        kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
-
-        if "to_world" in kwargs:
-            return kwargs["to_world"]
-
-        else:
-            length_units = uck.get("length")
-            converters = {field.name: field.converter for field in self.__attrs_attrs__}
-
-            center = (
-                converters["center"](kwargs["center"])
-                if "center" in kwargs
-                else self.center
-            ).m_as(length_units)
-
-            radius = (
-                converters["radius"](kwargs["radius"])
-                if "radius" in kwargs
-                else self.radius
-            ).m_as(length_units)
-
-            return mi.ScalarTransform4f.translate(center) @ mi.ScalarTransform4f.scale(
-                radius
-            )
-
     @property
     def template(self) -> dict:
         return {
             "type": "sphere",
-            "to_world": Param(self.eval_to_world, ParamFlags.INIT),
-        }
-
-    @property
-    def params(self) -> t.Dict[str, Param]:
-        return {
-            "to_world": Param(self.eval_to_world, ParamFlags.GEOMETRIC),
+            "center": self.center.m_as(uck.get("length")),
+            "radius": self.radius.m_as(uck.get("length")),
         }
 
     def contains(self, p: np.typing.ArrayLike, strict: bool = False) -> bool:

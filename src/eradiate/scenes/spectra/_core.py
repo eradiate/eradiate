@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+from abc import ABC
 
 import attrs
 import pint
@@ -221,5 +222,5 @@ class Spectrum:
 
 
 @attrs.define(eq=False, slots=False)
-class SpectrumNode(Spectrum, NodeSceneElement):
+class SpectrumNode(Spectrum, NodeSceneElement, ABC):
     pass

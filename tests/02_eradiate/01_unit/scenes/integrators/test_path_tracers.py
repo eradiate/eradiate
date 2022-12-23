@@ -1,28 +1,12 @@
 import mitsuba as mi
 import pytest
 
-from eradiate.scenes.core import NodeSceneElement
 from eradiate.scenes.integrators import (
-    Integrator,
     PathIntegrator,
     VolPathIntegrator,
     VolPathMISIntegrator,
 )
-from eradiate.scenes.integrators._path_tracers import MonteCarloIntegrator
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-@pytest.mark.parametrize(
-    "integrator_cls",
-    [PathIntegrator, VolPathIntegrator, VolPathMISIntegrator],
-    ids=["path", "volpath", "volpathmis"],
-)
-def test_path_tracers_type(integrator_cls):
-    check_type(
-        integrator_cls,
-        expected_mro=[MonteCarloIntegrator, Integrator, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
@@ -59,4 +43,4 @@ def test_path_tracers_construct(modes_all, integrator_cls, kwargs):
 )
 def test_path_tracers_kernel_dict(mode_mono, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
-    check_node_scene_element(integrator, mi.MonteCarloIntegrator)
+    check_scene_element(integrator, mi.MonteCarloIntegrator)

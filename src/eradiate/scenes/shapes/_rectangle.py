@@ -10,7 +10,6 @@ import pinttr
 
 from ._core import ShapeNode
 from ..bsdfs import BSDF
-from ..core import Param, ParamFlags
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
@@ -136,14 +135,19 @@ class RectangleShape(ShapeNode):
 
     @property
     def template(self) -> dict:
-        return {
+        length_units = uck.get("length")
+        scale = self.edges.m_as(length_units) * 0.5
+        result = {
             "type": "rectangle",
-            "to_world": Param(self.eval_to_world, ParamFlags.INIT),
+            "to_world": mi.ScalarTransform4f.look_at(
+                origin=self.center.m_as(length_units),
+                target=self.center.m_as(length_units) + self.normal,
+                up=self.up,
+            )
+            @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0]),
         }
 
-    @property
-    def params(self) -> t.Dict[str, Param]:
-        return {"to_world": Param(self.eval_to_world, ParamFlags.GEOMETRIC)}
+        return result
 
     @classmethod
     def surface(

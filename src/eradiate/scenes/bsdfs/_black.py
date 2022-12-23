@@ -1,11 +1,10 @@
 import attrs
 
-from ._core import BSDF
-from ..core import NodeSceneElement
+from ._core import BSDFNode
 
 
 @attrs.define(eq=False, slots=False)
-class BlackBSDF(BSDF, NodeSceneElement):
+class BlackBSDF(BSDFNode):
     """
     Black BSDF [``black``].
 

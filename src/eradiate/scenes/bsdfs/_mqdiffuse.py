@@ -1,12 +1,10 @@
-import typing as t
-
 import attrs
 import mitsuba as mi
 import numpy as np
 import xarray as xr
 
-from ._core import BSDF
-from ..core import NodeSceneElement, Param, ParamFlags
+from ._core import BSDFNode
+from ..core import Param, ParamFlags
 from ... import converters
 from ...attrs import documented, parse_docs
 from ...units import to_quantity
@@ -15,7 +13,7 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class MQDiffuseBSDF(BSDF, NodeSceneElement):
+class MQDiffuseBSDF(BSDFNode):
     """
     Measured quasi-diffuse BSDF [``mqdiffuse``].
 

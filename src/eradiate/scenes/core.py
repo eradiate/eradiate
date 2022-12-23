@@ -3,6 +3,7 @@ from __future__ import annotations
 import enum
 import re
 import typing as t
+from abc import ABC, abstractmethod
 from collections import UserDict
 from typing import Mapping, Sequence
 
@@ -290,7 +291,7 @@ def render_params(
 
 
 @attrs.define(eq=False, slots=False)
-class SceneElement:
+class SceneElement(ABC):
     """
     Important: All subclasses *must* have a hash, thus eq must be False (see
     attrs docs on hashing for a complete explanation).
@@ -316,6 +317,7 @@ class SceneElement:
         """
         return None
 
+    @abstractmethod
     def traverse(self, callback):
         """
         Traverse this scene element and collect kernel dictionary template,
@@ -326,7 +328,7 @@ class SceneElement:
         callback : SceneTraversal
             Callback data structure storing the collected data.
         """
-        raise NotImplementedError
+        pass
 
     def update(self) -> None:
         """
@@ -338,13 +340,14 @@ class SceneElement:
 
 
 @attrs.define(eq=False, slots=False)
-class NodeSceneElement(SceneElement):
+class NodeSceneElement(SceneElement, ABC):
     @property
+    @abstractmethod
     def template(self) -> dict:
         """
         Kernel dictionary template contents associated with this scene element.
         """
-        raise NotImplementedError
+        pass
 
     @property
     def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
@@ -366,10 +369,11 @@ class NodeSceneElement(SceneElement):
 
 
 @attrs.define(eq=False, slots=False)
-class InstanceSceneElement(SceneElement):
+class InstanceSceneElement(SceneElement, ABC):
     @property
+    @abstractmethod
     def instance(self) -> "mitsuba.Object":
-        raise NotImplementedError
+        pass
 
     def traverse(self, callback):
         callback.put_instance(self.instance)
@@ -379,7 +383,7 @@ class InstanceSceneElement(SceneElement):
 
 
 @attrs.define(eq=False, slots=False)
-class CompositeSceneElement(SceneElement):
+class CompositeSceneElement(SceneElement, ABC):
     @property
     def template(self) -> dict:
         # The default implementation returns an empty dictionary
@@ -429,14 +433,14 @@ class Ref(NodeSceneElement):
 
 @attrs.define(eq=False, slots=False)
 class Scene(NodeSceneElement):
-    _objects: t.Dict[str, NodeSceneElement] = attrs.field(factory=dict, converter=dict)
+    _objects: t.Dict[str, SceneElement] = attrs.field(factory=dict, converter=dict)
 
     @property
     def template(self) -> dict:
         return {"type": "scene"}
 
     @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
+    def objects(self) -> t.Dict[str, SceneElement]:
         return self._objects
 
 

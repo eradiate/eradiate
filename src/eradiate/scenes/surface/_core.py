@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+from abc import ABC
 
 import attrs
 
@@ -47,5 +48,5 @@ class Surface:
 
 
 @attrs.define(eq=False, slots=False)
-class SurfaceComposite(Surface, CompositeSceneElement):
+class SurfaceComposite(Surface, CompositeSceneElement, ABC):
     pass

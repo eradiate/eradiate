@@ -38,3 +38,8 @@ class Illumination:
         init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"illumination"',
     )
+
+
+@attrs.define(eq=False, slots=False)
+class IlluminationNode(Illumination, NodeSceneElement, ABC):
+    pass

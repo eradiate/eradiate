@@ -10,18 +10,16 @@ import pint
 import pinttr
 import xarray as xr
 
-from ..core import KernelDict, SceneElement
+from ..core import CompositeSceneElement, Param, ParamFlags, SceneElement, traverse
 from ..shapes import CuboidShape, SphereShape
-from ... import converters, validators
 from ..._factory import Factory
-from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
+from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel.transform import map_unit_cube
-from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...util.misc import onedict_value
+from ...util.misc import flatten
 
 atmosphere_factory = Factory()
 atmosphere_factory.register_lazy_batch(
@@ -117,19 +115,12 @@ class PlaneParallelGeometry(AtmosphereGeometry):
     the `width` field.
     """
 
-    width: t.Union[pint.Quantity, AutoType] = documented(
-        pinttr.field(
-            default=AUTO,
-            converter=converters.auto_or(
-                pinttr.converters.to_units(ucc.deferred("length"))
-            ),
-            validator=validators.auto_or(pinttr.validators.has_compatible_units),
-            units=ucc.deferred("length"),
-        ),
+    width: pint.Quantity = documented(
+        pinttr.field(default=1e7 * ureg.m, units=ucc.deferred("length")),
         doc="Cuboid shape width.",
-        type="quantity or AUTO",
+        type="quantity",
         init_type="quantity or float",
-        default="AUTO",
+        default="1e7 m",
     )
 
 
@@ -154,8 +145,8 @@ class SphericalShellGeometry(AtmosphereGeometry):
 
 
 @parse_docs
-@attrs.define
-class Atmosphere(SceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class Atmosphere(CompositeSceneElement, ABC):
     """
     An abstract base class defining common facilities for all atmospheres.
 
@@ -174,18 +165,16 @@ class Atmosphere(SceneElement, ABC):
         default='"atmosphere"',
     )
 
-    geometry: t.Optional[AtmosphereGeometry] = documented(
+    geometry: AtmosphereGeometry = documented(
         attrs.field(
-            default=None,
-            converter=attrs.converters.optional(AtmosphereGeometry.convert),
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(AtmosphereGeometry)
-            ),
+            default="plane_parallel",
+            converter=AtmosphereGeometry.convert,
+            validator=attrs.validators.instance_of(AtmosphereGeometry),
         ),
         doc="Parameters defining the basic geometry of the atmosphere.",
-        type=".AtmosphereGeometry or None",
+        type=".AtmosphereGeometry",
         init_type=".AtmosphereGeometry or dict or str, optional",
-        default="None",
+        default='"plane_parallel"',
     )
 
     # --------------------------------------------------------------------------
@@ -239,48 +228,6 @@ class Atmosphere(SceneElement, ABC):
         """
         pass
 
-    def eval_shape(self, ctx: KernelDictContext) -> t.Union[CuboidShape, SphereShape]:
-        """
-        Return the shape enclosing the atmosphere's volume.
-
-        Parameters
-        ----------
-        ctx : .KernelDictContext
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        shape : .CuboidShape or .SphereShape
-            Computed shape used as the medium stencil for kernel dictionary
-            generation.
-        """
-
-        if isinstance(self.geometry, PlaneParallelGeometry):
-            width = (
-                self.geometry.width
-                if self.geometry.width is not AUTO
-                else self.kernel_width_plane_parallel(ctx)
-            )
-
-            return CuboidShape.atmosphere(top=self.top, bottom=self.bottom, width=width)
-
-        elif isinstance(self.geometry, SphericalShellGeometry):
-            planet_radius = self.geometry.planet_radius
-
-            return SphereShape.atmosphere(top=self.top, planet_radius=planet_radius)
-
-        elif self.geometry is None:
-            raise ValueError(
-                "The 'geometry' field must be an AtmosphereGeometry for "
-                "kernel dictionary generation to work (got None)."
-            )
-
-        else:  # Shouldn't happen, prevented by validator
-            raise TypeError(
-                f"unhandled atmosphere geometry type '{type(self.geometry).__name__}'"
-            )
-
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
@@ -306,126 +253,100 @@ class Atmosphere(SceneElement, ABC):
         """
         return f"phase_{self.id}"
 
-    def kernel_width_plane_parallel(self, ctx: KernelDictContext) -> pint.Quantity:
-        """
-        When using a plane parallel geometry, compute the size of the cuboid
-        shape enclosing the participating medium representing the atmosphere.
+    @property
+    @abstractmethod
+    def _template_phase(self) -> dict:
+        pass
 
-        Parameters
-        ----------
-        ctx : .KernelDictContext
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
+    @property
+    @abstractmethod
+    def _template_medium(self) -> dict:
+        pass
+
+    @property
+    def _template_shape(self) -> dict:
+        """
+        Return the shape enclosing the atmosphere's volume.
 
         Returns
         -------
-        width : quantity
-            Computed cuboid width, eval to
-            :meth:`10 / self.eval_mfp(ctx) <.eval_mfp>` if `
-            `self.geometry.width`` is set to ``AUTO``, ``self.geometry.width``
-            otherwise.
-
-        Raises
-        ------
-        ValueError
-            When a geometry other than :class:`.PlaneParallelGeometry` is used.
-
+        shape : .CuboidShape or .SphereShape
+            Computed shape used as the medium stencil for kernel dictionary
+            generation.
         """
-        if not isinstance(self.geometry, PlaneParallelGeometry):
-            raise ValueError(
-                "Cuboid shape width is only relevant when using 'PlaneParallelGeometry' "
-                f"(currently using a '{type(self.geometry).__name__}')"
+
+        if isinstance(self.geometry, PlaneParallelGeometry):
+            shape = CuboidShape.atmosphere(
+                top=self.top, bottom=self.bottom, width=self.geometry.width
             )
 
-        if self.geometry.width is AUTO:
-            mfp = self.eval_mfp(ctx)
-            if mfp.magnitude == np.inf:
-                return 1e7 * ureg.m  # default atmosphere width value
-            else:
-                return 10.0 * mfp
-        else:
-            return self.geometry.width
+        elif isinstance(self.geometry, SphericalShellGeometry):
+            shape = SphereShape.atmosphere(
+                top=self.top, planet_radius=self.geometry.planet_radius
+            )
 
-    @abstractmethod
-    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
-        """
-        Return phase function plugin specifications only.
+        elif self.geometry is None:
+            raise ValueError(
+                "The 'geometry' field must be an AtmosphereGeometry for "
+                "kernel dictionary generation to work (got None)."
+            )
 
-        Parameters
-        ----------
-        ctx : .KernelDictContext
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
+        else:  # Shouldn't happen, prevented by validator
+            raise TypeError(
+                f"unhandled atmosphere geometry type '{type(self.geometry).__name__}'"
+            )
 
-        Returns
-        -------
-        kernel_dict : .KernelDict
-            A kernel dictionary containing all the phase functions attached to
-            the atmosphere.
-        """
-        pass
+        result, _ = traverse(shape)
+        return result.data
 
-    @abstractmethod
-    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
-        """
-        Return medium plugin specifications only.
-
-        Parameters
-        ----------
-        ctx : .KernelDictContext
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        kernel_dict : .KernelDict
-            A kernel dictionary containing all the media attached to the
-            atmosphere.
-        """
-        pass
-
-    def kernel_shapes(self, ctx: KernelDictContext) -> KernelDict:
-        """
-        Return shape plugin specifications only.
-
-        Parameters
-        ----------
-        ctx : .KernelDictContext
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        kernel_dict : .KernelDict
-            A kernel dictionary containing all the shapes attached to the
-            atmosphere.
-        """
-        return self.eval_shape(ctx).kernel_dict(ctx)
-
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-
-        # Note: Order matters! Mitsuba processes this dictionary in the order it
-        # is iterated on.
-        result = {
-            self.id_phase: onedict_value(self.kernel_phase(ctx=ctx)),
-            self.id_medium: onedict_value(self.kernel_media(ctx=ctx)),
-            self.id_shape: onedict_value(self.kernel_shapes(ctx=ctx)),
-        }
-
-        result[self.id_medium].update({"phase": {"type": "ref", "id": self.id_phase}})
-        result[self.id_shape].update(
+    @property
+    def template(self) -> dict:
+        result = flatten(
             {
-                "bsdf": {"type": "null"},
-                "interior": {"type": "ref", "id": self.id_medium},
+                self.id_phase: self._template_phase,
+                self.id_medium: self._template_medium,
+                self.id_shape: self._template_shape,
             }
         )
 
-        return KernelDict(result)
+        result.update(
+            {
+                f"{self.id_medium}.phase.type": "ref",
+                f"{self.id_medium}.phase.id": self.id_phase,
+                f"{self.id_shape}.bsdf.type": "null",
+                f"{self.id_shape}.interior.type": "ref",
+                f"{self.id_shape}.interior.id": self.id_medium,
+            }
+        )
+
+        return result
+
+    @property
+    def _params_phase(self) -> t.Dict[str, Param]:
+        return {}
+
+    @property
+    def _params_medium(self) -> t.Dict[str, Param]:
+        return {}
+
+    @property
+    def _params_shape(self) -> t.Dict[str, Param]:
+        return {}
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        # Inherit docstring
+        return flatten(
+            {
+                self.id_phase: self._params_phase,
+                self.id_medium: self._params_medium,
+                self.id_shape: self._params_shape,
+            }
+        )
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     """
     Heterogeneous atmosphere base class. This class defines the basic interface
@@ -490,32 +411,40 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         """
         pass
 
+    @abstractmethod
+    def eval_albedo(self, ctx: KernelDictContext) -> pint.Quantity:
+        pass
+
+    @abstractmethod
+    def eval_sigma_t(self, ctx: KernelDictContext) -> pint.Quantity:
+        pass
+
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
-        # Inherit docstring
-
-        # Collect extinction properties
-        radprops = self.eval_radprops(spectral_ctx=ctx.spectral_ctx)
-        albedo = radprops.albedo.values
-        sigma_t = to_quantity(radprops.sigma_t).m_as(uck.get("collision_coefficient"))
-
-        # Define volume data sources
+    @property
+    def _template_medium(self) -> dict:
         length_units = uck.get("length")
         top = self.top.m_as(length_units)
         bottom = self.bottom.m_as(length_units)
 
         if isinstance(self.geometry, PlaneParallelGeometry):
-            grid_albedo = mi.VolumeGrid(
-                np.reshape(albedo, (-1, 1, 1)).astype(np.float32)
-            )
-            grid_sigma_t = mi.VolumeGrid(
-                np.reshape(sigma_t, (-1, 1, 1)).astype(np.float32)
-            )
 
-            width = self.kernel_width_plane_parallel(ctx).m_as(length_units)
+            def eval_albedo(ctx):
+                return mi.VolumeGrid(
+                    np.reshape(self.eval_albedo(ctx), (-1, 1, 1)).astype(np.float32)
+                )
+
+            def eval_sigma_t(ctx):
+                return mi.VolumeGrid(
+                    np.reshape(
+                        self.eval_sigma_t(ctx).m_as(uck.get("collision_coefficient")),
+                        (-1, 1, 1),
+                    ).astype(np.float32)
+                )
+
+            width = self.geometry.width.m_as(length_units)
             to_world = map_unit_cube(
                 xmin=-0.5 * width,
                 xmax=0.5 * width,
@@ -528,23 +457,30 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             volumes = {
                 "albedo": {
                     "type": "gridvolume",
-                    "grid": grid_albedo,
+                    "grid": Param(eval_albedo, ParamFlags.INIT),
                     "to_world": to_world,
                 },
                 "sigma_t": {
                     "type": "gridvolume",
-                    "grid": grid_sigma_t,
+                    "grid": Param(eval_sigma_t, ParamFlags.INIT),
                     "to_world": to_world,
                 },
             }
 
         elif isinstance(self.geometry, SphericalShellGeometry):
-            grid_albedo = mi.VolumeGrid(
-                np.reshape(albedo, (1, 1, -1)).astype(np.float32)
-            )
-            grid_sigma_t = mi.VolumeGrid(
-                np.reshape(sigma_t, (1, 1, -1)).astype(np.float32)
-            )
+
+            def eval_albedo(ctx):
+                return mi.VolumeGrid(
+                    np.reshape(self.eval_albedo(ctx), (1, 1, -1)).astype(np.float32)
+                )
+
+            def eval_sigma_t(ctx):
+                return mi.VolumeGrid(
+                    np.reshape(
+                        self.eval_sigma_t(ctx).m_as(uck.get("collision_coefficient")),
+                        (1, 1, -1),
+                    ).astype(np.float32)
+                )
 
             planet_radius = self.geometry.planet_radius.m_as(length_units)
             rmax = planet_radius + top
@@ -553,23 +489,23 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             volumes = {
                 "albedo": {
                     "type": "sphericalcoordsvolume",
-                    "volume": {"type": "gridvolume", "grid": grid_albedo},
+                    "volume": {
+                        "type": "gridvolume",
+                        "grid": Param(eval_albedo, ParamFlags.INIT),
+                    },
                     "to_world": to_world,
                     "rmin": planet_radius / rmax,
                 },
                 "sigma_t": {
                     "type": "sphericalcoordsvolume",
-                    "volume": {"type": "gridvolume", "grid": grid_sigma_t},
+                    "volume": {
+                        "type": "gridvolume",
+                        "grid": Param(eval_sigma_t, ParamFlags.INIT),
+                    },
                     "to_world": to_world,
                     "rmin": planet_radius / rmax,
                 },
             }
-
-        elif self.geometry is None:
-            raise ValueError(
-                "The 'geometry' field must be an AtmosphereGeometry for "
-                "kernel dictionary generation to work (got None)."
-            )
 
         else:  # Shouldn't happen, prevented by validator
             raise ValueError(
@@ -577,14 +513,14 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             )
 
         # Create medium dictionary
-        medium_dict = {
+        result = {
             "type": "heterogeneous",
             **volumes
-            # Note: "phase" is deliberately unset, this is left to kernel_dict()
+            # Note: "phase" is deliberately unset, this is left to the
+            # Atmosphere.template property
         }
 
         if self.scale is not None:
-            medium_dict["scale"] = self.scale
+            result["scale"] = self.scale
 
-        # Wrap it in a KernelDict
-        return KernelDict({self.id_medium: medium_dict})
+        return result

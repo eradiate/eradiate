@@ -4,17 +4,8 @@ import tempfile
 import mitsuba as mi
 import pytest
 
-from eradiate.scenes.core import NodeSceneElement
-from eradiate.scenes.shapes import FileMeshShape, Shape
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_file_mesh_type():
-    check_type(
-        FileMeshShape,
-        expected_mro=[Shape, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.scenes.shapes import FileMeshShape
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.fixture(scope="module")
@@ -60,7 +51,7 @@ def tempfile_obj():
 )
 def test_filemesh_kernel_dict(modes_all_double, file_type, tempfile, request):
     mesh = FileMeshShape(filename=request.getfixturevalue(tempfile))
-    check_node_scene_element(mesh, mi.Mesh)
+    check_scene_element(mesh, mi.Mesh)
 
 
 def test_construct_file_illegal(modes_all_double):

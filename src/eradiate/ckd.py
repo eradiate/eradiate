@@ -69,6 +69,13 @@ class Bin:
         type=":class:`.Quad`",
     )
 
+    bin_set_id: t.Optional[str] = documented(
+        attrs.field(default=None, converter=str),
+        doc="Id of the bin set used to create this bin.",
+        type="str or None",
+        init_type="str",
+    )
+
     @property
     def width(self) -> pint.Quantity:
         """quantity : Bin spectral width."""
@@ -460,8 +467,8 @@ class BinSet:
             id=id,
             quad=quad,
             bins=tuple(
-                Bin(id=id, wmin=wmin, wmax=wmax, quad=quad)
-                for id, wmin, wmax in zip(bin_ids, bin_wmin, bin_wmax)
+                Bin(id=bin_id, wmin=wmin, wmax=wmax, quad=quad, bin_set_id=id)
+                for bin_id, wmin, wmax in zip(bin_ids, bin_wmin, bin_wmax)
             ),
         )
 
@@ -470,10 +477,6 @@ class BinSet:
     def from_db(id: str) -> BinSet:
         """
         Get a bin set definition from Eradiate's database.
-
-        .. note::
-           This static function is cached using :func:`functools.lru_cache` for
-           optimal performance.
 
         Parameters
         ----------
@@ -485,6 +488,11 @@ class BinSet:
         -------
         :class:`.BinSet`
             Bin set definition.
+
+        Notes
+        -----
+        This static function is cached using :func:`functools.lru_cache` for
+        optimal performance.
         """
         with data.open_dataset(f"ckd/bin_sets/{id}.nc") as ds:
             result = BinSet.from_dataset(id=id, ds=ds)

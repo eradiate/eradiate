@@ -1,11 +1,13 @@
+import typing as t
+
 import attrs
 import pint
 import pinttr
 
 from ._core import Atmosphere
-from ..core import KernelDict
-from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
-from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
+from ..core import Param, ParamFlags, traverse
+from ..phase import PhaseFunctionNode, RayleighPhaseFunction, phase_function_factory
+from ..spectra import AirScatteringCoefficientSpectrum, SpectrumNode, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...units import unit_context_config as ucc
@@ -15,7 +17,7 @@ from ...validators import has_quantity
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class HomogeneousAtmosphere(Atmosphere):
     """
     Homogeneous atmosphere scene element [``homogeneous``].
@@ -49,16 +51,16 @@ class HomogeneousAtmosphere(Atmosphere):
 
     @_bottom.validator
     @_top.validator
-    def _validate_bottom_and_top(instance, attribute, value):
-        if instance.bottom >= instance.top:
+    def _validate_bottom_and_top(self, attribute, value):
+        if self.bottom >= self.top:
             raise ValueError("bottom altitude must be lower than top altitude")
 
-    sigma_s: Spectrum = documented(
+    sigma_s: SpectrumNode = documented(
         attrs.field(
             factory=AirScatteringCoefficientSpectrum,
             converter=spectrum_factory.converter("collision_coefficient"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 has_quantity("collision_coefficient"),
             ],
         ),
@@ -71,12 +73,12 @@ class HomogeneousAtmosphere(Atmosphere):
         "<.AirScatteringCoefficientSpectrum>`",
     )
 
-    sigma_a: Spectrum = documented(
+    sigma_a: SpectrumNode = documented(
         attrs.field(
             default=0.0,
             converter=spectrum_factory.converter("collision_coefficient"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 has_quantity("collision_coefficient"),
             ],
         ),
@@ -89,11 +91,11 @@ class HomogeneousAtmosphere(Atmosphere):
         default="0.0 ucc[collision_coefficient]",
     )
 
-    phase: PhaseFunction = documented(
+    phase: PhaseFunctionNode = documented(
         attrs.field(
             factory=lambda: RayleighPhaseFunction(),
             converter=phase_function_factory.convert,
-            validator=attrs.validators.instance_of(PhaseFunction),
+            validator=attrs.validators.instance_of(PhaseFunctionNode),
         ),
         doc="Scattering phase function.\n"
         "\n"
@@ -206,22 +208,47 @@ class HomogeneousAtmosphere(Atmosphere):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
-        return self.phase.kernel_dict(ctx=ctx)
+    @property
+    def _template_phase(self) -> dict:
+        result, _ = traverse(self.phase)
+        return result.data
 
-    def kernel_media(self, ctx: KernelDictContext) -> KernelDict:
-        # Note: The "medium" param is set at a higher level: it is set as a
-        # reference in the kernel_dict() method.
-        return KernelDict(
-            {
-                self.id_medium: {
-                    "type": "homogeneous",
-                    "sigma_t": self.eval_sigma_t(ctx.spectral_ctx).m_as(
-                        uck.get("collision_coefficient")
-                    ),
-                    "albedo": self.eval_albedo(ctx.spectral_ctx).m_as(
-                        uck.get("albedo")
-                    ),
-                }
-            }
-        )
+    @property
+    def _template_medium(self) -> dict:
+        return {
+            "type": "homogeneous",
+            "sigma_t": Param(
+                lambda ctx: self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                    uck.get("collision_coefficient")
+                ),
+                ParamFlags.INIT,
+            ),
+            "albedo": Param(
+                lambda ctx: self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo")),
+                ParamFlags.INIT,
+            ),
+            # Note: "phase" is deliberately unset, this is left to the
+            # Atmosphere.template property
+        }
+
+    @property
+    def _params_medium(self) -> t.Dict[str, Param]:
+        return {
+            # Note: "value" appears twice because the mi.Spectrum is
+            # encapsulated in a mi.ConstVolume
+            "sigma_t.value.value": Param(
+                lambda ctx: self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                    uck.get("collision_coefficient")
+                ),
+                ParamFlags.SPECTRAL,
+            ),
+            "albedo.value.value": Param(
+                lambda ctx: self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo")),
+                ParamFlags.SPECTRAL,
+            ),
+        }
+
+    @property
+    def _params_phase(self) -> t.Dict[str, Param]:
+        _, params = traverse(self.phase)
+        return params.data

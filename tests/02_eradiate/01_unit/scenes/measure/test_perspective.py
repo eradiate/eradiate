@@ -2,17 +2,9 @@ import mitsuba as mi
 import pytest
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import NodeSceneElement, traverse
-from eradiate.scenes.measure import Measure, PerspectiveCameraMeasure
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_perspective_type():
-    check_type(
-        PerspectiveCameraMeasure,
-        expected_mro=[Measure, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.scenes.core import traverse
+from eradiate.scenes.measure import PerspectiveCameraMeasure
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
@@ -48,7 +40,7 @@ def test_perspective_construct(mode_mono, tested, expected):
     # Constructor
     if expected is None:
         measure = PerspectiveCameraMeasure(**tested)
-        check_node_scene_element(measure, mi.Sensor)
+        check_scene_element(measure, mi.Sensor)
 
     elif issubclass(expected, ValueError):
         with pytest.raises(expected):

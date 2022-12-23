@@ -14,7 +14,7 @@ import xarray as xr
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular_atmosphere import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
-from ..core import BoundingBox, KernelDict
+from ..core import BoundingBox
 from ..phase import BlendPhaseFunction
 from ..shapes import CuboidShape, SphereShape
 from ...attrs import documented, parse_docs
@@ -97,7 +97,7 @@ def _heterogeneous_atmosphere_particle_converter(value):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     """
     Heterogeneous atmosphere scene element [``heterogeneous``].
@@ -113,9 +113,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 attrs.validators.instance_of(MolecularAtmosphere)
             ),
         ),
-        doc="Molecular atmosphere. Can be specified as a dictionary interpreted "
+        doc="Molecular atmosphere. May be specified as a dictionary interpreted "
         'by :data:`.atmosphere_factory`; in that case, the ``"type"`` parameter '
-        'can be omitted and will automatically be set to \'``"molecular"``.',
+        'may be omitted and will automatically be set to ``"molecular"``.',
         type=":class:`.MolecularAtmosphere` or None",
         init_type=":class:`.MolecularAtmosphere` or dict, optional",
         default="None",
@@ -146,10 +146,10 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 attrs.validators.instance_of(ParticleLayer)
             ),
         ),
-        doc="Particle layers. Can be specified as a dictionary interpreted "
-        "by :data:`.atmosphere_factory`; in that case, the ``type`` parameter "
-        "can be omitted and will automatically be set to "
-        "``particle_layer``.",
+        doc="List of particle layers. Elements may be specified as "
+        "dictionaries interpreted by :data:`.atmosphere_factory`; in that "
+        "case, the ``type`` parameter may be omitted and will automatically "
+        'be set to ``"particle_layer"``.',
         type="list of :class:`.ParticleLayer`",
         init_type="list of :class:`.ParticleLayer`, optional",
         default="[]",

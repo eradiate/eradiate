@@ -3,18 +3,9 @@ import pytest
 
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import TraversalError
-from eradiate.scenes.core import CompositeSceneElement, Scene, traverse
+from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.shapes import RectangleShape, Shape
-from eradiate.scenes.surface import BasicSurface, Surface
-from eradiate.test_tools.types import check_type
-
-
-def test_basic_surface_type():
-    check_type(
-        BasicSurface,
-        expected_mro=[Surface, CompositeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.scenes.surface import BasicSurface
 
 
 @pytest.mark.parametrize(
@@ -24,7 +15,7 @@ def test_basic_surface_type():
         (
             {"shape": {"type": "rectangle"}},
             RectangleShape,
-            {"surface_bsdf.reflectance.value", "surface_shape.to_world"},
+            {"surface_bsdf.reflectance.value"},
         ),
     ],
     ids=[

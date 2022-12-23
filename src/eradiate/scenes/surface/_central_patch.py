@@ -161,7 +161,7 @@ class CentralPatchSurface(SurfaceComposite):
 
     @property
     def template(self) -> dict:
-        result = super().template
+        result = {}
 
         scale = self._texture_scale()
         to_uv = mi.ScalarTransform4f.scale(

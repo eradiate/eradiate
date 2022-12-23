@@ -5,19 +5,10 @@ import pytest
 
 from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import TraversalError
-from eradiate.scenes.core import CompositeSceneElement, Ref, Scene, traverse
+from eradiate.scenes.core import Ref, Scene, traverse
 from eradiate.scenes.shapes import RectangleShape, Shape
-from eradiate.scenes.surface import CentralPatchSurface, Surface
-from eradiate.test_tools.types import check_type
+from eradiate.scenes.surface import CentralPatchSurface
 from eradiate.units import unit_registry as ureg
-
-
-def test_central_patch_type():
-    check_type(
-        CentralPatchSurface,
-        expected_mro=[Surface, CompositeSceneElement],
-        expected_slots=[],
-    )
 
 
 @pytest.mark.parametrize(
@@ -27,26 +18,17 @@ def test_central_patch_type():
         (
             {"shape": {"type": "rectangle"}},
             RectangleShape,
-            {
-                "surface_bsdf.bsdf_0.reflectance.value",
-                "surface_shape.to_world",
-            },
+            {"surface_bsdf.bsdf_0.reflectance.value"},
         ),
         (
             {"shape": {"type": "rectangle"}, "patch_edges": 1.0},
             RectangleShape,
-            {
-                "surface_bsdf.bsdf_0.reflectance.value",
-                "surface_shape.to_world",
-            },
+            {"surface_bsdf.bsdf_0.reflectance.value"},
         ),
         (
             {"shape": {"type": "rectangle"}, "patch_edges": [1.0, 0.5]},
             RectangleShape,
-            {
-                "surface_bsdf.bsdf_0.reflectance.value",
-                "surface_shape.to_world",
-            },
+            {"surface_bsdf.bsdf_0.reflectance.value"},
         ),
     ],
     ids=[

@@ -4,9 +4,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.frame import AzimuthConvention
-from eradiate.scenes.core import NodeSceneElement
 from eradiate.scenes.measure import measure_factory
-from eradiate.scenes.measure._distant import DistantMeasure
 from eradiate.scenes.measure._multi_distant import (
     AngleLayout,
     AzimuthRingLayout,
@@ -16,7 +14,7 @@ from eradiate.scenes.measure._multi_distant import (
     Layout,
     MultiDistantMeasure,
 )
-from eradiate.test_tools.types import check_node_scene_element, check_type
+from eradiate.test_tools.types import check_scene_element
 
 # ------------------------------------------------------------------------------
 #                               Layout framework
@@ -177,21 +175,13 @@ def test_grid_layout(mode_mono):
 # ------------------------------------------------------------------------------
 
 
-def test_multi_distant_measure_type():
-    check_type(
-        MultiDistantMeasure,
-        expected_mro=[DistantMeasure, NodeSceneElement],
-        expected_slots=[],
-    )
-
-
 def test_multi_distant_measure_construct(mode_mono):
     """
     Basic constructor testing for MultiDistantMeasure.
     """
     # Constructing without argument succeeds
     measure = MultiDistantMeasure(direction_layout=[0, 45] * ureg.deg)
-    check_node_scene_element(measure, mi.Sensor)
+    check_scene_element(measure, mi.Sensor)
 
 
 def test_multi_distant_measure_construct_specific(mode_mono):

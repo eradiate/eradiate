@@ -1,105 +1,95 @@
-import numpy as np
-import pint
-import pinttr
+import drjit as dr
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext, SpectralContext
-from eradiate.radprops.rayleigh import compute_sigma_s_air
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
-from eradiate.scenes.phase import RayleighPhaseFunction, phase_function_factory
-
-
-def test_homogeneous_default(mode_mono):
-    """
-    Applies default attributes values.
-    """
-    r = HomogeneousAtmosphere()
-    assert r.bottom == 0.0 * ureg.km
-    assert r.top == 10.0 * ureg.km
-    assert isinstance(r.phase, RayleighPhaseFunction)
-
-
-def test_homogeneous_sigma_s(mode_mono):
-    """
-    Assigns custom 'sigma_s' value.
-    """
-    spectral_ctx = SpectralContext.new()
-    r = HomogeneousAtmosphere(sigma_s=1e-5)
-    assert r.eval_sigma_s(spectral_ctx) == ureg.Quantity(1e-5, ureg.m**-1)
-
-
-def test_homogeneous_top(mode_mono):
-    """
-    Assigns custom 'top' value.
-    """
-    r = HomogeneousAtmosphere(top=8.0 * ureg.km)
-    assert r.top == 8.0 * ureg.km
-
-
-def test_homogeneous_top_invalid_units(mode_mono):
-    """
-    Raises when invalid units are passed to 'top'.
-    """
-    with pytest.raises(pint.errors.DimensionalityError):
-        HomogeneousAtmosphere(top=10 * ureg.s)
-
-
-def test_homogeneous_sigma_s_invalid_units(mode_mono):
-    """
-    Raises when invalid units are passed to 'sigma_s'.
-    """
-    with pytest.raises(pinttr.exceptions.UnitsError):
-        HomogeneousAtmosphere(sigma_s=1e-7 * ureg.m)
-
-
-def test_homogeneous_top_invalid_value(mode_mono):
-    """
-    Raises when invalid value is passed to 'top'.
-    """
-    with pytest.raises(ValueError):
-        HomogeneousAtmosphere(top=-100.0)
+from eradiate.scenes.core import traverse
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
-    "phase_id",
-    set(phase_function_factory.registry.keys())
-    - {
-        "blend_phase",
-        "tab_phase",
-    },  # Exclude phase functions with no default parametrisation
+    "kwargs",
+    [
+        {},
+        {"phase": {"type": "isotropic"}},
+        {"phase": {"type": "hg"}},
+        {"bottom": 1.0 * ureg.km, "top": 8.0 * ureg.km},
+        {"geometry": "spherical_shell"},
+    ],
+    ids=[
+        "noargs",
+        "phase_isotropic",
+        "phase_hg",
+        "bottom_top",
+        "geometry_spherical_shell",
+    ],
 )
-def test_homogeneous_phase_function(mode_mono, phase_id):
-    """Supports all available phase function types."""
-    r = HomogeneousAtmosphere(geometry="plane_parallel", phase={"type": phase_id})
-
-    # The resulting object produces a valid kernel dictionary
-    ctx = KernelDictContext()
-    assert r.kernel_dict(ctx).load()
+def test_homogeneous_atmosphere_construct(modes_all_double, kwargs):
+    atmosphere = HomogeneousAtmosphere(**kwargs)
+    check_scene_element(atmosphere)
 
 
-def test_homogeneous_mfp(mode_mono):
-    """
-    Automatically sets width to ten times the scattering mean free path.
-    """
-    ctx = KernelDictContext()
-    r = HomogeneousAtmosphere(geometry="plane_parallel")
-    sigma_s = compute_sigma_s_air(wavelength=ctx.spectral_ctx.wavelength)
+def test_homogeneous_atmosphere_params(mode_mono):
+    atmosphere = HomogeneousAtmosphere(
+        phase={
+            "type": "hg",
+            "g": {
+                "type": "interpolated",
+                "wavelengths": [400, 700],
+                "values": [0.0, 0.8],
+            },
+        }
+    )
 
-    assert np.isclose(r.eval_mfp(ctx), 1.0 / sigma_s)
-    assert np.isclose(r.kernel_width_plane_parallel(ctx), 10.0 / sigma_s)
+    # Phase function parameters are exposed at highest level
+    _, params = traverse(atmosphere)
+    assert "phase_atmosphere.g" in params
+
+    _, mi_params = check_scene_element(atmosphere)
+    assert "phase_atmosphere.g" in mi_params
 
 
-@pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
-def test_homogeneous_kernel_dict(modes_all_double, geometry):
-    """
-    Produces kernel dictionaries that can be loaded by the kernel.
-    """
+@pytest.mark.parametrize(
+    "kwargs, expected",
+    [
+        (
+            {
+                "geometry": {"type": "plane_parallel", "width": 1.0 * ureg.km},
+                "bottom": 0.0 * ureg.km,
+                "top": 1.0 * ureg.km,
+            },
+            {
+                "bbox_min": [-500.0, -500.0, -10.0],
+                "bbox_max": [500.0, 500.0, 1000.0],
+                "atmosphere_shape_type_name": "Cube",
+            },
+        ),
+        (
+            {
+                "geometry": {"type": "spherical_shell", "planet_radius": 1.0 * ureg.km},
+                "bottom": 0.0 * ureg.km,
+                "top": 1.0 * ureg.km,
+            },
+            {
+                "bbox_min": [-2000.0, -2000.0, -2000.0],
+                "bbox_max": [2000.0, 2000.0, 2000.0],
+                "atmosphere_shape_type_name": "Sphere",
+            },
+        ),
+    ],
+    ids=[
+        "plane_parallel",
+        "spherical_shell",
+    ],
+)
+def test_homogeneous_atmosphere_geometry(mode_mono, kwargs, expected):
+    atmosphere = HomogeneousAtmosphere(**kwargs)
+    mi_obj, mi_params = check_scene_element(atmosphere)
 
-    r = HomogeneousAtmosphere(geometry=geometry)
-    ctx = KernelDictContext()
+    # Check scene shape type
+    mi_shape_type_name = mi_obj.shapes()[0].class_().name()
+    assert mi_shape_type_name == expected["atmosphere_shape_type_name"]
 
-    assert r.kernel_phase(ctx).load()
-    assert r.kernel_media(ctx).load()
-    assert r.kernel_shapes(ctx).load()
-    assert r.kernel_dict(ctx).load()
+    # Check scene bounding box
+    assert dr.allclose(mi_obj.bbox().min, expected["bbox_min"])
+    assert dr.allclose(mi_obj.bbox().max, expected["bbox_max"])

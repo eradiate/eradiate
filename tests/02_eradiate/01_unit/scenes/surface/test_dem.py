@@ -8,19 +8,10 @@ import pytest
 import xarray as xr
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import CompositeSceneElement, Scene, traverse
+from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.shapes import BufferMeshShape, FileMeshShape, Shape
-from eradiate.scenes.surface import DEMSurface, Surface
-from eradiate.test_tools.types import check_type
+from eradiate.scenes.surface import DEMSurface
 from eradiate.units import unit_registry as ureg
-
-
-def test_dem_surface_type():
-    check_type(
-        DEMSurface,
-        expected_mro=[Surface, CompositeSceneElement],
-        expected_slots=[],
-    )
 
 
 @pytest.fixture(scope="module")

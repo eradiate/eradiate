@@ -26,13 +26,11 @@ def test_afgl_1986_rad_profile_default_ckd(mode_ckd, model_id):
     """
     Collision coefficient evaluation methods return pint.Quantity objects.
     """
-    p = AFGL1986RadProfile(dict(model_id=model_id))
+    p = AFGL1986RadProfile({"model_id": model_id})
 
     spectral_ctx = SpectralContext.new(bin_set="10nm")
     for field in ["albedo", "sigma_a", "sigma_t"]:
-        x = getattr(p, f"eval_{field}_ckd")(
-            spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
-        )
+        x = getattr(p, f"eval_{field}_ckd")(spectral_ctx.bindex)
         assert isinstance(x, ureg.Quantity)
 
     sigma_s = p.eval_sigma_s_ckd(spectral_ctx.bindex)

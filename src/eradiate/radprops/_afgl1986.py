@@ -95,9 +95,14 @@ class AFGL1986RadProfile(RadProfile):
     def levels(self) -> pint.Quantity:
         return to_quantity(self.thermoprops.z_level)
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        if bin_set_id is None:
-            raise ValueError("argument 'bin_set_id' is required")
+    def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        bin_set_ids = {bindex.bin.bin_set_id for bindex in bindexes}
+        if len(bin_set_ids) != 1:
+            raise ValueError(
+                f"all bindexes must be from the same bin set, got {bin_set_ids}"
+            )
+        else:
+            bin_set_id = bin_set_ids.pop()
 
         if not self.has_absorption:
             return ureg.Quantity(np.zeros(self.thermoprops.z_layer.size), "km^-1")
@@ -164,9 +169,9 @@ class AFGL1986RadProfile(RadProfile):
     def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
         raise UnsupportedModeError(supported="ckd")
 
-    def eval_albedo_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
+    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         sigma_s = self.eval_sigma_s_ckd(*bindexes)
-        sigma_t = self.eval_sigma_t_ckd(*bindexes, bin_set_id=bin_set_id)
+        sigma_t = self.eval_sigma_t_ckd(*bindexes)
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
@@ -174,10 +179,8 @@ class AFGL1986RadProfile(RadProfile):
     def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
         raise UnsupportedModeError(supported="ckd")
 
-    def eval_sigma_t_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        return self.eval_sigma_a_ckd(
-            *bindexes, bin_set_id=bin_set_id
-        ) + self.eval_sigma_s_ckd(*bindexes)
+    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(*bindexes) + self.eval_sigma_s_ckd(*bindexes)
 
     def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
         raise UnsupportedModeError(supported="ckd")
@@ -190,6 +193,6 @@ class AFGL1986RadProfile(RadProfile):
                 wavelength=bindexes[0].bin.wcenter,
                 z_level=to_quantity(self.thermoprops.z_level),
                 z_layer=to_quantity(self.thermoprops.z_layer),
-                sigma_a=self.eval_sigma_a_ckd(*bindexes, bin_set_id=bin_set_id),
+                sigma_a=self.eval_sigma_a_ckd(*bindexes),
                 sigma_s=self.eval_sigma_s_ckd(*bindexes),
             ).squeeze()
