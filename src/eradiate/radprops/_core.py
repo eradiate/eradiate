@@ -333,9 +333,7 @@ class RadProfile(ABC):
             return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_a_ckd(
-                spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
-            ).squeeze()
+            return self.eval_sigma_a_ckd(spectral_ctx.bindex).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))

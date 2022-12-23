@@ -2,21 +2,21 @@ import typing as t
 
 import attrs
 
-from ._core import Illumination
+from ._core import IlluminationNode
 from ..core import NodeSceneElement
-from ..spectra import Spectrum, spectrum_factory
+from ..spectra import Spectrum, SpectrumNode, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...validators import has_quantity
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class ConstantIllumination(Illumination, NodeSceneElement):
+class ConstantIllumination(IlluminationNode):
     """
     Constant illumination scene element [``constant``].
     """
 
-    radiance: Spectrum = documented(
+    radiance: SpectrumNode = documented(
         attrs.field(
             default=1.0,
             converter=spectrum_factory.converter("radiance"),
@@ -33,8 +33,8 @@ class ConstantIllumination(Illumination, NodeSceneElement):
     )
 
     @property
-    def kernel_type(self) -> str:
-        return "constant"
+    def template(self) -> dict:
+        return {"type": "constant"}
 
     @property
     def objects(self) -> t.Dict[str, NodeSceneElement]:

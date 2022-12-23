@@ -3,18 +3,8 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.scenes.core import NodeSceneElement
-from eradiate.scenes.measure._distant import DistantMeasure
 from eradiate.scenes.measure._hemispherical_distant import HemisphericalDistantMeasure
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_hemispherical_distant_type():
-    check_type(
-        HemisphericalDistantMeasure,
-        expected_mro=[DistantMeasure, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
@@ -32,7 +22,7 @@ def test_hemispherical_distant_type():
 )
 def test_hemispherical_distant_construct(modes_all_double, tested):
     measure = HemisphericalDistantMeasure(**tested)
-    check_node_scene_element(measure, mi.Sensor)
+    check_scene_element(measure, mi.Sensor)
 
 
 def test_hemispherical_distant_viewing_angles(mode_mono):

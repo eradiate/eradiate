@@ -5,17 +5,8 @@ import eradiate
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import NodeSceneElement
-from eradiate.scenes.spectra import AirScatteringCoefficientSpectrum, Spectrum
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_air_scattering_coefficient_type():
-    check_type(
-        AirScatteringCoefficientSpectrum,
-        expected_mro=[Spectrum, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.scenes.spectra import AirScatteringCoefficientSpectrum
+from eradiate.test_tools.types import check_scene_element
 
 
 def test_air_scattering_coefficient_construct(modes_all):
@@ -46,7 +37,7 @@ def test_air_scattering_coefficient_kernel_dict(modes_all):
     s = AirScatteringCoefficientSpectrum()
 
     with uck.override(length="m"):
-        mi_obj, mi_params = check_node_scene_element(s, mi.Texture)
+        mi_obj, mi_params = check_scene_element(s, mi.Texture)
 
     if eradiate.mode().is_mono:
         expected = ureg.convert(0.0114934, "km^-1", "m^-1")

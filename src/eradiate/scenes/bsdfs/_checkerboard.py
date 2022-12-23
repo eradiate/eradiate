@@ -3,51 +3,51 @@ import typing as t
 import attrs
 import mitsuba as mi
 
-from ._core import BSDF
+from ._core import BSDFNode
 from ..core import NodeSceneElement, Param, ParamFlags
-from ..spectra import Spectrum, spectrum_factory
+from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class CheckerboardBSDF(BSDF, NodeSceneElement):
+class CheckerboardBSDF(BSDFNode):
     """
     Checkerboard BSDF [``checkerboard``].
 
     This class defines a Lambertian BSDF textured with a checkerboard pattern.
     """
 
-    reflectance_a: Spectrum = documented(
+    reflectance_a: SpectrumNode = documented(
         attrs.field(
             default=0.2,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
         "processed by :data:`.spectrum_factory`.",
-        type=".Spectrum",
-        init_type=".Spectrum or dict or float",
+        type=".SpectrumNode",
+        init_type=".SpectrumNode or dict or float",
         default="0.2",
     )
 
-    reflectance_b: Spectrum = documented(
+    reflectance_b: SpectrumNode = documented(
         attrs.field(
             default=0.8,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
         "processed by :data:`.spectrum_factory`.",
-        type=".Spectrum",
-        init_type=":class:`.Spectrum` or dict or float",
+        type=".SpectrumNode",
+        init_type=":class:`.SpectrumNode` or dict or float",
         default="0.8",
     )
 
@@ -56,31 +56,22 @@ class CheckerboardBSDF(BSDF, NodeSceneElement):
             default=2.0, converter=float, validator=attrs.validators.instance_of(float)
         ),
         doc="Scaling factor for the checkerboard pattern. The higher the value, "
-        "the more checkboard patterns will fit on the surface to which this "
+        "the more checkerboard patterns will fit on the surface to which this "
         "reflection model is attached.",
         type="float",
-        default=2.0,
+        default="2.0",
     )
 
     @property
     def template(self) -> dict:
         return {
             "type": "diffuse",
-            "reflectance": {"type": "checkerboard"},
+            "reflectance.type": "checkerboard",
         }
 
     @property
-    def params(self) -> t.Dict[str, Param]:
+    def objects(self) -> t.Dict[str, NodeSceneElement]:
         return {
-            "reflectance.color0": Param(
-                lambda ctx: self.reflectance_a.eval(ctx.spectral_ctx),
-                ParamFlags.SPECTRAL,
-            ),
-            "reflectance.color1": Param(
-                lambda ctx: self.reflectance_a.eval(ctx.spectral_ctx),
-                ParamFlags.SPECTRAL,
-            ),
-            "reflectance.to_uv": Param(
-                lambda ctx: mi.ScalarTransform4f.scale(self.scale_pattern)
-            ),
+            "reflectance.color0": self.reflectance_a,
+            "reflectance.color1": self.reflectance_b,
         }

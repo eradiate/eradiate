@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from eradiate.scenes.atmosphere._particle_dist import (
+from eradiate.scenes.atmosphere import (
     ArrayParticleDistribution,
     ExponentialParticleDistribution,
     GaussianParticleDistribution,

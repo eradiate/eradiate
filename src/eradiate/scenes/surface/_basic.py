@@ -8,7 +8,7 @@ import attrs
 from ._core import SurfaceComposite
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..core import NodeSceneElement, Ref, SceneTraversal
-from ..shapes import RectangleShape, Shape, SphereShape, shape_factory
+from ..shapes import RectangleShape, SphereShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
 
@@ -22,7 +22,7 @@ class BasicSurface(SurfaceComposite):
     A basic surface description consisting of a single shape and BSDF.
     """
 
-    shape: t.Optional[Shape] = documented(
+    shape: t.Union[None, RectangleShape, SphereShape] = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(shape_factory.convert),

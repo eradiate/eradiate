@@ -1,23 +1,15 @@
 import mitsuba as mi
 
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import NodeSceneElement, traverse
-from eradiate.scenes.measure import Measure, MultiRadiancemeterMeasure
+from eradiate.scenes.core import traverse
+from eradiate.scenes.measure import MultiRadiancemeterMeasure
 from eradiate.scenes.measure._radiancemeter import RadiancemeterMeasure
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_radiancemeter_type():
-    check_type(
-        RadiancemeterMeasure,
-        expected_mro=[Measure, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.test_tools.types import check_scene_element
 
 
 def test_radiancemeter_construct(mode_mono):
     measure = RadiancemeterMeasure()
-    check_node_scene_element(measure, mi.Sensor)
+    check_scene_element(measure, mi.Sensor)
 
 
 def test_radiancemeter_medium(mode_mono):

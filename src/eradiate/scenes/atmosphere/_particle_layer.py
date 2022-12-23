@@ -15,7 +15,7 @@ import eradiate
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
-from ..core import KernelDict
+from ..core import traverse
 from ..phase import TabulatedPhaseFunction
 from ... import converters, data
 from ..._mode import SpectralMode, supported_mode
@@ -42,7 +42,7 @@ def _particle_layer_distribution_converter(value):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class ParticleLayer(AbstractHeterogeneousAtmosphere):
     """
     Particle layer scene element [``particle_layer``].
@@ -174,14 +174,12 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         attrs.field(
             default="govaerts_2021-continental",
             converter=converters.to_dataset(
-                load_from_id=lambda x: data.load_dataset(
-                    f"spectra/particles/{x}.nc",
-                )
+                load_from_id=lambda x: data.load_dataset(f"spectra/particles/{x}.nc")
             ),
             validator=attrs.validators.instance_of(xr.Dataset),
         ),
         doc="Particle radiative property data set."
-        "If a xarray.Dataset is passed, the dataset is used as is "
+        "If an xarray dataset is passed, the dataset is used as is "
         "(refer to the data guide for the format requirements of this dataset)."
         "If a path is passed, the converter tries to open the corresponding "
         "file on the hard drive; should that fail, it queries the Eradiate data"
@@ -565,5 +563,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def phase(self) -> TabulatedPhaseFunction:
         return self._phase
 
-    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
-        return self.phase.kernel_dict(ctx)
+    @property
+    def _template_phase(self) -> dict:
+        result, _ = traverse(self.phase)
+        return result.data

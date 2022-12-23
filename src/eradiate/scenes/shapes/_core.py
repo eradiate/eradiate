@@ -45,7 +45,7 @@ class Shape:
         default='"shape"',
     )
 
-    bsdf: t.Union[BSDF, Ref, None] = documented(
+    bsdf: t.Union[BSDFNode, Ref, None] = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(bsdf_factory.convert),
@@ -70,10 +70,10 @@ class Shape:
 
 
 @attrs.define(eq=False, slots=False)
-class ShapeNode(Shape, NodeSceneElement):
+class ShapeNode(Shape, NodeSceneElement, ABC):
     pass
 
 
 @attrs.define(eq=False, slots=False)
-class ShapeInstance(Shape, InstanceSceneElement):
+class ShapeInstance(Shape, InstanceSceneElement, ABC):
     pass

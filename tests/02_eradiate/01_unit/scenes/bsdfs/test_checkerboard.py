@@ -1,18 +1,8 @@
 import mitsuba as mi
 import pytest
 
-from eradiate.contexts import KernelDictContext
-from eradiate.scenes.bsdfs import BSDF, CheckerboardBSDF
-from eradiate.scenes.core import NodeSceneElement, traverse
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_checkerboard_type():
-    check_type(
-        CheckerboardBSDF,
-        expected_mro=[BSDF, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.scenes.bsdfs import CheckerboardBSDF
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
@@ -26,8 +16,7 @@ def test_checkerboard_construct(modes_all, kwargs):
 
 
 def test_checkerboard_kernel_dict(modes_all_double):
-    c = CheckerboardBSDF()
-    template, _ = traverse(c)
-    ctx = KernelDictContext()
-    kernel_dict = template.render(ctx=ctx)
-    assert isinstance(mi.load_dict(kernel_dict), mi.BSDF)
+    bsdf = CheckerboardBSDF()
+    mi_obj, mi_params = check_scene_element(bsdf, mi.BSDF)
+    assert "reflectance.color0.value" in mi_params
+    assert "reflectance.color1.value" in mi_params

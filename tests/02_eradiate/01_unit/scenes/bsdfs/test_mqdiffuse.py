@@ -3,18 +3,8 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate.scenes.bsdfs import BSDF, MQDiffuseBSDF
-from eradiate.scenes.core import NodeSceneElement
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_mqdiffuse_type():
-    check_type(
-        MQDiffuseBSDF,
-        expected_mro=[BSDF, NodeSceneElement],
-        expected_slots=[],
-    )
-
+from eradiate.scenes.bsdfs import MQDiffuseBSDF
+from eradiate.test_tools.types import check_scene_element
 
 ds = xr.Dataset(
     {
@@ -82,4 +72,4 @@ def test_mqdiffuse_construct(modes_all):
 
 def test_kernel_dict(mode_mono):
     bsdf = MQDiffuseBSDF(data=ds)
-    check_node_scene_element(bsdf, mi.BSDF)
+    check_scene_element(bsdf, mi.BSDF)

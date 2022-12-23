@@ -1,79 +1,74 @@
 """Test cases of the _molecular_atmosphere module."""
 
+import mitsuba as mi
 import numpy as np
 import pytest
 
-import eradiate
+from eradiate import unit_registry as ureg
+from eradiate.ckd import Bindex
 from eradiate.contexts import KernelDictContext
+from eradiate.data import data_store
 from eradiate.scenes.atmosphere import MolecularAtmosphere
+from eradiate.scenes.core import Scene, traverse
+from eradiate.scenes.measure import MeasureSpectralConfig
+from eradiate.test_tools.types import check_scene_element
 
 
-def test_molecular_atmosphere_default(
-    mode_mono, tmpdir, ussa76_approx_test_absorption_data_set
-):
+def test_molecular_atmosphere_default(mode_mono):
     """Default  constructor produces a valid kernel dictionary."""
-    ctx = KernelDictContext(spectral_ctx={"wavelength": 550.0})
-    atmosphere = MolecularAtmosphere(
-        geometry="plane_parallel",
-        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set),
-    )
-    assert atmosphere.kernel_dict(ctx).load()
+    atmosphere = MolecularAtmosphere()
+    check_scene_element(atmosphere)
 
 
 def test_molecular_atmosphere_scale(mode_mono):
-    ctx = KernelDictContext()
-    d = MolecularAtmosphere(geometry="plane_parallel", scale=2.0).kernel_dict(ctx)
-    assert d["medium_atmosphere"]["scale"] == 2.0
-    assert d.load()
+    atmosphere = MolecularAtmosphere(scale=2.0)
+    template, params = traverse(atmosphere)
+    kernel_dict = template.render(KernelDictContext())
+    assert kernel_dict["medium_atmosphere"]["scale"] == 2.0
 
 
-@pytest.fixture
-def afgl_1986_test_absorption_data_sets():
-    return {
-        name: eradiate.data.data_store.fetch(filename)
-        for (name, filename) in [
-            ("CH4", "tests/spectra/absorption/CH4-spectra-4000_11502.nc"),
-            ("CO2", "tests/spectra/absorption/CO2-spectra-4000_14076.nc"),
-            ("CO", "tests/spectra/absorption/CO-spectra-4000_14478.nc"),
-            ("H2O", "tests/spectra/absorption/H2O-spectra-4000_25711.nc"),
-            ("N2O", "tests/spectra/absorption/N2O-spectra-4000_10364.nc"),
-            ("O2", "tests/spectra/absorption/O2-spectra-4000_17273.nc"),
-            ("O3", "tests/spectra/absorption/O3-spectra-4000_6997.nc"),
-        ]
-    }
+def test_molecular_atmosphere_afgl_1986(mode_ckd):
+    # afgl_1986() constructor produces a valid kernel dictionary
+    atmosphere = MolecularAtmosphere.afgl_1986()
+    template, params = traverse(Scene(objects={"atmosphere": atmosphere}))
+    mi_scene: mi.Scene = mi.load_dict(template.render(KernelDictContext()))
 
+    # CKD evaluation generates valid parameter update tables
+    mi_params: mi.SceneParameters = mi.traverse(mi_scene)
 
-@pytest.mark.parametrize("bin", ["280", "550", "1040", "2120", "2400"])
-def test_molecular_atmosphere_afgl_1986(mode_ckd, bin):
-    """MolecularAtmosphere 'afgl_1986' constructor produces a valid kernel
-    dictionary."""
-    bin = eradiate.scenes.measure.MeasureSpectralConfig.new(bins=bin).bins[0]
-    bindex = eradiate.ckd.Bindex(bin=bin, index=3)
-    ctx = KernelDictContext(spectral_ctx={"bindex": bindex, "bin_set": "10nm"})
-    atmosphere = MolecularAtmosphere.afgl_1986(geometry="plane_parallel")
-    assert atmosphere.kernel_dict(ctx).load()
+    for ckd_bin in ["280", "550", "1040", "2120", "2400"]:
+        ctx = KernelDictContext(
+            spectral_ctx={
+                "bindex": Bindex(
+                    bin=MeasureSpectralConfig.new(bins=ckd_bin).bins[0], index=3
+                ),
+                "bin_set": "10nm",
+            }
+        )
+        mi_params.update(params.render(ctx))
 
 
 @pytest.fixture
 def ussa76_approx_test_absorption_data_set():
-    return eradiate.data.data_store.fetch(
-        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
-    )
+    return data_store.fetch("tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc")
 
 
 def test_molecular_atmosphere_ussa_1976(
-    mode_mono,
-    tmpdir,
-    ussa76_approx_test_absorption_data_set,
+    mode_mono, ussa76_approx_test_absorption_data_set
 ):
-    """MolecularAtmosphere 'ussa_1976' constructor produces a valid kernel
-    dictionary."""
-    ctx = KernelDictContext(spectral_ctx={"wavelength": 550.0})
+    # ussa_1976() constructor produces a valid kernel dictionary
     atmosphere = MolecularAtmosphere.ussa_1976(
-        geometry="plane_parallel",
-        absorption_data_sets=dict(us76_u86_4=ussa76_approx_test_absorption_data_set),
+        absorption_data_sets={"us76_u86_4": ussa76_approx_test_absorption_data_set},
     )
-    assert atmosphere.kernel_dict(ctx).load()
+    template, params = traverse(Scene(objects={"atmosphere": atmosphere}))
+    mi_scene: mi.Scene = mi.load_dict(template.render(KernelDictContext()))
+
+    # CKD evaluation generates valid parameter update tables
+    mi_params: mi.SceneParameters = mi.traverse(mi_scene)
+
+    for w in [280.0, 550.0, 1040.0, 2120.0, 2400.0] * ureg.nm:
+        ctx = KernelDictContext(spectral_ctx={"wavelength": w})
+        mi_params.update(params.render(ctx))
 
 
 def test_molecular_atmosphere_switches(mode_mono):

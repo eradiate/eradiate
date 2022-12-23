@@ -7,18 +7,9 @@ from eradiate import unit_registry as ureg
 from eradiate.ckd import BinSet
 from eradiate.contexts import SpectralContext
 from eradiate.exceptions import DataError
-from eradiate.scenes.core import NodeSceneElement
-from eradiate.scenes.spectra import SolarIrradianceSpectrum, Spectrum
-from eradiate.test_tools.types import check_node_scene_element, check_type
+from eradiate.scenes.spectra import SolarIrradianceSpectrum
+from eradiate.test_tools.types import check_scene_element
 from eradiate.units import PhysicalQuantity
-
-
-def test_solar_irradiance_type():
-    check_type(
-        SolarIrradianceSpectrum,
-        expected_mro=[Spectrum, NodeSceneElement],
-        expected_slots=[],
-    )
 
 
 @pytest.mark.parametrize(
@@ -60,7 +51,7 @@ def test_solar_irradiance_construct(modes_all, tested, expected):
 )
 def test_solar_irradiance_kernel_dict(mode_mono, tested):
     s = SolarIrradianceSpectrum(**tested)
-    check_node_scene_element(s, mi.Texture)
+    check_scene_element(s, mi.Texture)
 
 
 def test_solar_irradiance_eval(modes_all_double):

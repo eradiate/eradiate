@@ -6,9 +6,8 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import NodeSceneElement, traverse
+from eradiate.scenes.core import traverse
 from eradiate.scenes.phase._blend import BlendPhaseFunction
-from eradiate.test_tools.types import check_node_scene_element, check_type
 from eradiate.util.misc import flatten
 
 
@@ -50,14 +49,6 @@ def assert_cmp_dict(first, second):
                 assert False, f"Different values for {key}"
 
         assert True
-
-
-def test_blend_phase_type():
-    check_type(
-        BlendPhaseFunction,
-        expected_mro=[BlendPhaseFunction, NodeSceneElement],
-        expected_slots=[],
-    )
 
 
 def test_blend_phase_construct_basic():

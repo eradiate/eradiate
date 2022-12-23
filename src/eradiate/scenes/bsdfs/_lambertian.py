@@ -2,16 +2,16 @@ import typing as t
 
 import attrs
 
-from ._core import BSDF
+from ._core import BSDFNode
 from ..core import NodeSceneElement
-from ..spectra import Spectrum, spectrum_factory
+from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class LambertianBSDF(BSDF, NodeSceneElement):
+class LambertianBSDF(BSDFNode):
     """
     Lambertian BSDF [``lambertian``].
 
@@ -20,19 +20,19 @@ class LambertianBSDF(BSDF, NodeSceneElement):
     every direction.
     """
 
-    reflectance: Spectrum = documented(
+    reflectance: SpectrumNode = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
         "processed by :data:`.spectrum_factory`.",
-        type=".Spectrum",
-        init_type=".Spectrum or dict or float",
+        type=".SpectrumNode",
+        init_type=".SpectrumNode or dict or float",
         default="0.5",
     )
 

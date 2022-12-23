@@ -4,18 +4,9 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.scenes.core import NodeSceneElement, traverse
-from eradiate.scenes.measure._distant import DistantMeasure
+from eradiate.scenes.core import traverse
 from eradiate.scenes.measure._distant_flux import DistantFluxMeasure
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_distant_flux_type():
-    check_type(
-        DistantFluxMeasure,
-        expected_mro=[DistantMeasure, NodeSceneElement],
-        expected_slots=[],
-    )
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
@@ -33,7 +24,7 @@ def test_distant_flux_type():
 )
 def test_distant_flux_construct(modes_all_double, tested):
     measure = DistantFluxMeasure(**tested)
-    check_node_scene_element(measure, mi_cls=mi.Sensor)
+    check_scene_element(measure, mi_cls=mi.Sensor)
 
 
 @pytest.mark.parametrize(

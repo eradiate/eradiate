@@ -41,7 +41,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
         attrs.field(
             converter=lambda x: [phase_function_factory.convert(y) for y in x],
             validator=attrs.validators.deep_iterable(
-                attrs.validators.instance_of(PhaseFunction)
+                attrs.validators.instance_of(PhaseFunctionNode)
             ),
             kw_only=True,
         ),

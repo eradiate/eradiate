@@ -42,3 +42,8 @@ class BSDF:
         init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"bsdf"',
     )
+
+
+@attrs.define(eq=False, slots=False)
+class BSDFNode(BSDF, NodeSceneElement, ABC):
+    pass

@@ -35,7 +35,7 @@ class FileMeshShape(ShapeNode):
             )
 
     @property
-    def kernel_type(self) -> str:
+    def _kernel_type(self) -> str:
         if self.filename.suffix == ".obj":
             return "obj"
         elif self.filename.suffix == ".ply":
@@ -46,7 +46,7 @@ class FileMeshShape(ShapeNode):
     @property
     def template(self) -> dict:
         return {
-            "type": self.kernel_type,
+            "type": self._kernel_type,
             "filename": str(self.filename),
             "face_normals": True,
         }

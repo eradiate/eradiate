@@ -2,17 +2,9 @@ import mitsuba as mi
 import pytest
 
 from eradiate.exceptions import TraversalError
-from eradiate.scenes.core import InstanceSceneElement, Scene, traverse
-from eradiate.scenes.shapes import BufferMeshShape, Shape
-from eradiate.test_tools.types import check_node_scene_element, check_type
-
-
-def test_buffer_mesh_type():
-    check_type(
-        BufferMeshShape,
-        expected_mro=[Shape, InstanceSceneElement],
-        expected_slots=[],
-    )
+from eradiate.scenes.core import Scene, traverse
+from eradiate.scenes.shapes import BufferMeshShape
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
@@ -69,4 +61,4 @@ def test_buffer_mesh_traverse(mode_mono):
 
     # Traversal as part of an enclosing object should succeed
     scene = Scene(objects={"mesh": mesh})
-    check_node_scene_element(scene, mi.Scene)
+    check_scene_element(scene, mi.Scene)

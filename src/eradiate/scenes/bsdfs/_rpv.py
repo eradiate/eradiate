@@ -2,16 +2,16 @@ import typing as t
 
 import attrs
 
-from ._core import BSDF
+from ._core import BSDFNode
 from ..core import NodeSceneElement
-from ..spectra import Spectrum, spectrum_factory
+from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class RPVBSDF(BSDF, NodeSceneElement):
+class RPVBSDF(BSDFNode):
     """
     RPV BSDF [``rpv``].
 
@@ -33,23 +33,23 @@ class RPVBSDF(BSDF, NodeSceneElement):
       Scientific Handbook :cite:`EradiateScientificHandbook2020`.
     """
 
-    rho_0: Spectrum = documented(
+    rho_0: SpectrumNode = documented(
         attrs.field(
             default=0.183,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("dimensionless"),
             ],
         ),
         doc="Amplitude parameter. Must be dimensionless. "
         "Should be in :math:`[0, 1]`.",
-        type=".Spectrum",
-        init_type=".Spectrum or dict or float, optional",
+        type=".SpectrumNode",
+        init_type=".SpectrumNode or dict or float, optional",
         default="0.183",
     )
 
-    rho_c: t.Optional[Spectrum] = documented(
+    rho_c: t.Optional[SpectrumNode] = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(
@@ -57,7 +57,7 @@ class RPVBSDF(BSDF, NodeSceneElement):
             ),
             validator=attrs.validators.optional(
                 [
-                    attrs.validators.instance_of(Spectrum),
+                    attrs.validators.instance_of(SpectrumNode),
                     validators.has_quantity("dimensionless"),
                 ]
             ),
@@ -65,40 +65,40 @@ class RPVBSDF(BSDF, NodeSceneElement):
         doc="Hot spot parameter. Must be dimensionless. "
         r"Should be in :math:`[0, 1]`. If unset, :math:`\rho_\mathrm{c}` "
         r"defaults to the kernel plugin default (equal to :math:`\rho_0`).",
-        type=".Spectrum or None",
-        init_type=".Spectrum or dict or float or None, optional",
+        type=".SpectrumNode or None",
+        init_type=".SpectrumNode or dict or float or None, optional",
         default="None",
     )
 
-    k: Spectrum = documented(
+    k: SpectrumNode = documented(
         attrs.field(
             default=0.780,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("dimensionless"),
             ],
         ),
         doc="Bowl-shape parameter. Must be dimensionless. "
         "Should be in :math:`[0, 2]`.",
-        type=".Spectrum",
-        init_type=".Spectrum or dict or float, optional",
+        type=".SpectrumNode",
+        init_type=".SpectrumNode or dict or float, optional",
         default="0.780",
     )
 
-    g: Spectrum = documented(
+    g: SpectrumNode = documented(
         attrs.field(
             default=-0.1,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("dimensionless"),
             ],
         ),
         doc="Asymmetry parameter. Must be dimensionless. "
         "Should be in :math:`[-1, 1]`.",
-        type=".Spectrum",
-        init_type=".Spectrum or dict or float, optional",
+        type=".SpectrumNode",
+        init_type=".SpectrumNode or dict or float, optional",
         default="-0.1",
     )
 

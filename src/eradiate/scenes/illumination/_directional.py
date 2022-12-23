@@ -7,7 +7,7 @@ import pinttr
 
 from ._core import Illumination
 from ..core import NodeSceneElement, Param
-from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
+from ..spectra import SolarIrradianceSpectrum, Spectrum, SpectrumNode, spectrum_factory
 from ..._config import config
 from ...attrs import documented, parse_docs
 from ...frame import AzimuthConvention, angles_to_direction
@@ -67,7 +67,7 @@ class DirectionalIllumination(Illumination, NodeSceneElement):
         default="None",
     )
 
-    irradiance: Spectrum = documented(
+    irradiance: SpectrumNode = documented(
         attrs.field(
             factory=SolarIrradianceSpectrum,
             converter=spectrum_factory.converter("irradiance"),
@@ -97,8 +97,8 @@ class DirectionalIllumination(Illumination, NodeSceneElement):
         ).reshape((3,))
 
     @property
-    def kernel_type(self) -> str:
-        return "directional"
+    def template(self) -> dict:
+        return {"type": "directional"}
 
     @property
     def params(self) -> t.Dict[str, Param]:
