@@ -20,18 +20,13 @@ class QuadType(Enum):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class Quad:
     """
     A data class storing information about a quadrature rule. Nodes and weights
     are defined in the [-1, 1] interval. The reference interval can be changed
     using the ``interval`` argument of the :meth:`.eval_nodes` and
     :meth:`.integrate` functions.
-
-    .. important::
-       Node and weight computation is performed using Mitsuba's quadrature rule
-       functions. Therefore, an Eradiate mode must be selected for this class
-       to work as intended.
     """
 
     type: QuadType = documented(
