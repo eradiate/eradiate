@@ -196,8 +196,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @property
     def top(self) -> pint.Quantity:
-        tops = [component.top for component in self.components]
-        return max(tops)
+        return max([component.top for component in self.components])
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
         mfp = [component.eval_mfp(ctx=ctx) for component in self.components]
@@ -353,6 +352,74 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
+
+    def _template_phase(self) -> dict:
+        components = self.components
+
+        # Single component: just forward encapsulated component
+        if len(components) == 1:
+            return components[0]._template_phase
+
+        # Two components or more: blend phase functions
+        else:
+            # Component weights are given by the scattering coefficient:
+            # we collect values and interpolate on the global grid
+            def eval_weights(ctx):
+                hrz = self._high_res_z_layer()
+                sigma_ss = []
+
+                for component in components:
+                    radprops = interpolate_radprops(
+                        component.eval_radprops(ctx.spectral_ctx), new_z_layer=hrz
+                    )
+                    sigma_ss.append(radprops.sigma_t * radprops.albedo)
+
+                return sigma_ss
+
+            # Construct a blended phase function based on those weighting values
+            shape = self._shape
+            length_units = ucc.get("length")
+
+            if isinstance(shape, CuboidShape):
+                # In this case, the bounding box corresponds to the corners of
+                # the cuboid
+                min_x, min_y = (shape.center[0:2] - shape.edges[0:2] * 0.5).m_as(
+                    length_units
+                )
+                min_z = self.bottom.m_as(length_units)
+
+                max_x, max_y = (shape.center[0:2] + shape.edges[0:2] * 0.5).m_as(
+                    length_units
+                )
+                max_z = self.top.m_as(length_units)
+
+                bbox = BoundingBox(
+                    [min_x, min_y, min_z] * length_units,
+                    [max_x, max_y, max_z] * length_units,
+                )
+
+            elif isinstance(shape, SphereShape):
+                # In this case, the bounding box is the cuboid that contains the
+                # sphere
+                r = shape.radius.m_as(length_units)
+
+                bbox = BoundingBox(
+                    [-r, -r, -r] * length_units,
+                    [r, r, r] * length_units,
+                )
+
+            else:
+                raise RuntimeError(
+                    f"Unsupported atmosphere geometry shape '{type(shape).__name__}'"
+                )
+
+            phase = BlendPhaseFunction(
+                components=[component.phase for component in components],
+                weights=sigma_ss,
+                bbox=bbox,
+            )
+
+            return phase.kernel_dict(ctx)
 
     def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
         """

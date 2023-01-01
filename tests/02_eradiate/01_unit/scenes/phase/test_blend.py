@@ -7,7 +7,7 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import traverse
-from eradiate.scenes.phase._blend import BlendPhaseFunction
+from eradiate.scenes.phase import BlendPhaseFunction
 from eradiate.util.misc import flatten
 
 
@@ -343,7 +343,6 @@ def test_blend_phase_kernel_dict_3_components(
     assert isinstance(phase_plugin, mi.PhaseFunction)
     if isinstance(weights[0], np.ndarray):
         weight_plugin = mi.traverse(phase_plugin)["weight.data"]
-        print(weight_plugin)
         assert np.allclose(
             weight_plugin, np.reshape(weights[1] + weights[2], (-1, 1, 1, 1))
         )
