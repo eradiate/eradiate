@@ -106,8 +106,9 @@ class BlendPhaseFunction(PhaseFunctionNode):
     # --------------------------------------------------------------------------
 
     def _gridvolume_transform(self) -> "mitsuba.ScalarTransform4f":
-        # TODO: FIX THIS
         if self.bbox is None:
+            # This is currently possible because the bounding box is expected to
+            # be set by a parent Atmosphere object based on the selected geometry
             raise ValueError(
                 "computing the gridvolume transform requires a bounding box"
             )

@@ -233,6 +233,27 @@ class Atmosphere(CompositeSceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @property
+    def _shape(self) -> t.Union[CuboidShape, SphereShape]:
+        """
+        Return the shape associated with this atmosphere, factoring in the
+        geometry and radiative property profile.
+        """
+        if isinstance(self.geometry, PlaneParallelGeometry):
+            return CuboidShape.atmosphere(
+                top=self.top, bottom=self.bottom, width=self.geometry.width
+            )
+
+        elif isinstance(self.geometry, SphericalShellGeometry):
+            return SphereShape.atmosphere(
+                top=self.top, planet_radius=self.geometry.planet_radius
+            )
+
+        else:  # Shouldn't happen, prevented by validator
+            raise TypeError(
+                f"unhandled atmosphere geometry type '{type(self.geometry).__name__}'"
+            )
+
+    @property
     def id_shape(self):
         """
         str: Kernel dictionary key of the atmosphere's shape object.
@@ -274,30 +295,8 @@ class Atmosphere(CompositeSceneElement, ABC):
             Computed shape used as the medium stencil for kernel dictionary
             generation.
         """
-
-        if isinstance(self.geometry, PlaneParallelGeometry):
-            shape = CuboidShape.atmosphere(
-                top=self.top, bottom=self.bottom, width=self.geometry.width
-            )
-
-        elif isinstance(self.geometry, SphericalShellGeometry):
-            shape = SphereShape.atmosphere(
-                top=self.top, planet_radius=self.geometry.planet_radius
-            )
-
-        elif self.geometry is None:
-            raise ValueError(
-                "The 'geometry' field must be an AtmosphereGeometry for "
-                "kernel dictionary generation to work (got None)."
-            )
-
-        else:  # Shouldn't happen, prevented by validator
-            raise TypeError(
-                f"unhandled atmosphere geometry type '{type(self.geometry).__name__}'"
-            )
-
-        result, _ = traverse(shape)
-        return result.data
+        template, _ = traverse(self._shape)
+        return template.data
 
     @property
     def template(self) -> dict:
