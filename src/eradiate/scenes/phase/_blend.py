@@ -1,32 +1,19 @@
 import typing as t
+from collections import abc as cabc
+from functools import lru_cache
 
 import attrs
 import mitsuba as mi
 import numpy as np
 
-from ._core import PhaseFunction, PhaseFunctionNode, phase_function_factory
-from ..core import BoundingBox, Param, traverse
-from ...attrs import documented, parse_docs
+from ._core import PhaseFunctionNode, phase_function_factory
+from ..core import BoundingBox, Param, ParamFlags, traverse
+from ...attrs import documented
+from ...contexts import KernelDictContext, SpectralContext
 from ...kernel.transform import map_unit_cube
 from ...units import unit_context_kernel as uck
 
 
-def _weights_converter(value: np.typing.ArrayLike) -> np.ndarray:
-    """
-    Normalise weights so that their sum is 1.
-    If all weights are zeros, leave their values at 0.
-    """
-    weights = np.array(value, dtype=np.float64)  # Ensure conversion of int to float
-    weights_sum = weights.sum(axis=0)
-    return np.divide(
-        weights,
-        weights_sum,
-        where=weights_sum != 0.0,
-        out=np.zeros_like(weights),
-    )
-
-
-@parse_docs
 @attrs.define(eq=False, slots=False)
 class BlendPhaseFunction(PhaseFunctionNode):
     """
@@ -37,7 +24,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
     usually based on the associated medium's scattering coefficient.
     """
 
-    components: t.List[PhaseFunction] = documented(
+    components: t.List[PhaseFunctionNode] = documented(
         attrs.field(
             converter=lambda x: [phase_function_factory.convert(y) for y in x],
             validator=attrs.validators.deep_iterable(
@@ -58,13 +45,15 @@ class BlendPhaseFunction(PhaseFunctionNode):
                 "have at least two components"
             )
 
-    weights: np.ndarray = documented(
+    weights: t.Union[
+        np.ndarray, t.List[t.Callable[[KernelDictContext], np.ndarray]]
+    ] = documented(
         attrs.field(
-            converter=_weights_converter,
+            converter=lambda x: x if callable(x[0]) else np.array(x, dtype=np.float64),
             kw_only=True,
         ),
-        type="ndarray",
-        init_type="array-like",
+        type="ndarray or list of callables",
+        init_type="array-like or list of callables",
         doc="List of weights associated with each component. Must be of shape "
         "(n,) or (n, m) where n is the number of components and m the number "
         "of cells along the atmosphere's vertical axis. This parameter has no "
@@ -73,23 +62,31 @@ class BlendPhaseFunction(PhaseFunctionNode):
 
     @weights.validator
     def _weights_validator(self, attribute, value):
-        if value.ndim == 0 or value.ndim > 2:
-            raise ValueError(
-                f"while validating '{attribute.name}': array must have 1 or 2 "
-                f"dimensions, got {value.ndim}"
-            )
+        if isinstance(value, np.ndarray):
+            if value.ndim == 0 or value.ndim > 2:
+                raise ValueError(
+                    f"while validating '{attribute.name}': array must have 1 or 2 "
+                    f"dimensions, got {value.ndim}"
+                )
 
-        if not value.shape[0] == len(self.components):
-            raise ValueError(
-                f"while validating '{attribute.name}': array must have shape "
-                f"(n,) or (n, m) where n is the number of components; got "
-                f"{value.shape}"
-            )
+            if not value.shape[0] == len(self.components):
+                raise ValueError(
+                    f"while validating '{attribute.name}': array must have shape "
+                    "(n,) or (n, m) where n is the number of components; got "
+                    f"{value.shape}"
+                )
+
+        elif isinstance(value, cabc.Sequence):
+            if not len(value) == len(self.components):
+                raise ValueError(
+                    f"while validating '{attribute.name}': weight and component "
+                    "lists must have the same length"
+                )
 
     bbox: t.Optional[BoundingBox] = documented(
         attrs.field(
             default=None,
-            converter=BoundingBox.convert,
+            converter=attrs.converters.optional(BoundingBox.convert),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(BoundingBox)
             ),
@@ -98,17 +95,26 @@ class BlendPhaseFunction(PhaseFunctionNode):
         type=":class:`.BoundingBox` or None",
         init_type="quantity or array-like or :class:`.BoundingBox`, optional",
         doc="Optional bounding box describing the extent of the volume "
-        "associated with this phase function.",
+        "associated with this phase function. If a component is another "
+        "blended phase function, its bounding box will be forced to match "
+        "this one.",
     )
 
-    # --------------------------------------------------------------------------
-    #                       Kernel dictionary generation
-    # --------------------------------------------------------------------------
+    def update(self) -> None:
+        super().update()
+
+        # Synchronise bounding boxes
+        for component in self.components:
+            component.update()
+
+            if isinstance(component, BlendPhaseFunction):
+                component.bbox = self.bbox
 
     def _gridvolume_transform(self) -> "mitsuba.ScalarTransform4f":
         if self.bbox is None:
             # This is currently possible because the bounding box is expected to
-            # be set by a parent Atmosphere object based on the selected geometry
+            # be set by a parent Atmosphere object based on the selected
+            # geometry
             raise ValueError(
                 "computing the gridvolume transform requires a bounding box"
             )
@@ -126,50 +132,115 @@ class BlendPhaseFunction(PhaseFunctionNode):
             zmax=bbox_max[2],
         )
 
+    @lru_cache(maxsize=1)
+    def _eval_conditional_weights_impl(self, sctx: SpectralContext) -> np.ndarray:
+        """
+        Memoised weight evaluation, used if weights are defined as callables.
+        """
+        n_comp = len(self.components)
+
+        if isinstance(self.weights, list):
+            weights = np.array([w(sctx) for w in self.weights], dtype=np.float64)
+        else:  # if isinstance(self.weights, np.ndarray):
+            weights = np.array(self.weights, dtype=np.float64)
+
+        if weights.ndim < 2:
+            weights = weights.reshape((-1, 1))
+
+        result = np.empty((n_comp - 1, *weights.shape[1:]), dtype=np.float64)
+
+        # Compute conditional weights
+        for i in range(n_comp - 1):
+            # Normalise weights
+            weights_sum = weights[i:, ...].sum(axis=0, keepdims=True)
+            weights_normalized = np.divide(
+                weights[i:, ...],
+                weights_sum,
+                where=weights_sum != 0.0,
+                out=np.zeros_like(weights[i:, ...]),
+            )
+            # Aggregate weights of all components except the first one
+            result[i] = weights_normalized[1:, ...].sum(axis=0, keepdims=True)
+
+        return result
+
+    def eval_conditional_weights(
+        self,
+        ctx: KernelDictContext,
+        n_component: t.Union[int, t.List[int], None] = None,
+    ) -> np.ndarray:
+        """
+        Evaluate the conditional weights of specified Mitsuba phase function
+        components.
+
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
+            Evaluation context.
+
+        n_component : int or list of int, optional
+            The index of the Mitsuba phase function component for which the
+            conditional weight should be evaluated. If ``None``, the conditional
+            weights of all components will be evaluated.
+
+        Returns
+        -------
+        ndarray
+            Conditional weights of the specified components as an array of shape
+            (N, M) where n is the number of components and m the number of cells
+            along the atmosphere's vertical axis.
+        """
+        if n_component is None:
+            n_component = range(len(self.components) - 1)
+        elif isinstance(n_component, int):
+            n_component = [n_component]
+
+        # Compute normalised component weights (cached until call with different context)
+        weights = self._eval_conditional_weights_impl(ctx.spectral_ctx)
+
+        # Return selected components
+        return weights[n_component, ...]
+
     @property
     def template(self) -> dict:
         result = {"type": "blendphase"}
 
-        # The second kernel component aggregates all components except for the
-        # first. Consequently, its weight is equal to the sum of all weights,
-        # except for the first one.
-        weight = self.weights[1:, ...].sum(axis=0)
-        template_1, _ = traverse(self.components[0])
+        for i in range(len(self.components) - 1):
+            prefix = "phase_1." * i
 
-        if len(self.components) == 2:
-            template_2, _ = traverse(self.components[1])
-
-        else:
-            # The phase function corresponding to remaining components
-            # is built recursively
-            template_2, _ = traverse(
-                BlendPhaseFunction(
-                    id=f"{self.id}_phase2",
-                    components=self.components[1:],
-                    weights=self.weights[1:, ...],
-                    bbox=self.bbox,
-                )
+            # Add components
+            template, _ = traverse(self.components[i])
+            result.update(
+                {
+                    **{f"{prefix}phase_0.{k}": v for k, v in template.items()},
+                    f"{prefix}phase_1.type": "blendphase",
+                }
             )
 
-        result.update(
-            {
-                **{f"phase1.{k}": v for k, v in template_1.items()},
-                **{f"phase2.{k}": v for k, v in template_2.items()},
-            }
-        )
+            # Assign conditional weight to second component
+            result[f"{prefix}weight.type"] = "gridvolume"
 
-        # Pass weight values either as a GridVolume or a scalar
-        if self.weights.ndim == 2 and self.weights.shape[1] > 1:
-            # Mind dim ordering! (C-style, i.e. zyx)
-            values = np.reshape(weight, (-1, 1, 1))
-            grid_weight = mi.VolumeGrid(values.astype(np.float32))
-            result.update({"weight.type": "gridvolume", "weight.grid": grid_weight})
+            # Note: This defines a partial and evaluates the component index.
+            # Passing i as the kwarg default value is essential to force the
+            # dereferencing of the loop variable.
+            def eval_conditional_weights(ctx, n_component=i):
+                return mi.VolumeGrid(
+                    np.reshape(
+                        self.eval_conditional_weights(ctx, n_component),
+                        (-1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyx)
+                    ).astype(np.float32)
+                )
+
+            result[f"{prefix}weight.grid"] = Param(
+                eval_conditional_weights, ParamFlags.INIT
+            )
 
             if self.bbox is not None:
-                result["weight.to_world"] = self._gridvolume_transform()
+                result[f"{prefix}weight.to_world"] = self._gridvolume_transform()
 
         else:
-            result["weight"] = float(weight)
+            template, _ = traverse(self.components[-1])
+            result.update({**{f"{prefix}phase_1.{k}": v for k, v in template.items()}})
 
         return result
 
@@ -177,28 +248,33 @@ class BlendPhaseFunction(PhaseFunctionNode):
     def params(self) -> t.Dict[str, Param]:
         result = {}
 
-        _, params_1 = traverse(self.components[0])
+        for i in range(len(self.components) - 1):
+            prefix = "phase_1." * i
 
-        if len(self.components) == 2:
-            _, params_2 = traverse(self.components[1])
-
-        else:
-            # The phase function corresponding to remaining components
-            # is built recursively
-            n_components = len(self.components) - 1
-            _, params_2 = traverse(
-                BlendPhaseFunction(
-                    id=f"{self.id}_phase2",
-                    components=self.components[1:],
-                    weights=[1.0 / n_components for _ in range(n_components)],
-                    bbox=None,
-                )
+            # Add components
+            _, params = traverse(self.components[i])
+            result.update(
+                {
+                    **{f"{prefix}phase_0.{k}": v for k, v in params.items()},
+                }
             )
 
-        result.update(
-            {
-                **{f"phase1.{k}": v for k, v in params_1.items()},
-                **{f"phase2.{k}": v for k, v in params_2.items()},
-            }
-        )
+            # Note: This defines a partial and evaluates the component index.
+            # Passing i as the kwarg default value is essential to force the
+            # dereferencing of the loop variable.
+            def eval_conditional_weights(ctx, n_component=i):
+                return np.reshape(
+                    self.eval_conditional_weights(ctx, n_component),
+                    (-1, 1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyxc)
+                ).astype(np.float32)
+
+            # Assign conditional weight to second component
+            result[f"{prefix}weight.data"] = Param(
+                eval_conditional_weights, ParamFlags.SPECTRAL
+            )
+
+        else:
+            _, params = traverse(self.components[-1])
+            result.update({**{f"{prefix}phase_1.{k}": v for k, v in params.items()}})
+
         return result

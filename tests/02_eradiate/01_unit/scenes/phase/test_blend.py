@@ -1,5 +1,3 @@
-import typing as t
-
 import mitsuba as mi
 import numpy as np
 import pytest
@@ -8,45 +6,47 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import traverse
 from eradiate.scenes.phase import BlendPhaseFunction
-from eradiate.util.misc import flatten
+from eradiate.test_tools.types import check_scene_element
 
 
-def assert_cmp_dict(first, second):
+def mi_to_numpy(d):
+    result = {}
+
+    for k, v in d.items():
+        if isinstance(v, mi.VolumeGrid):
+            result[k] = np.array(v)
+        elif isinstance(v, mi.Transform4f):
+            result[k] = np.array(v.matrix)
+        else:
+            result[k] = v
+
+    return result
+
+
+def assert_cmp_dict(value, expected):
     """
     Helper function to compare two dictionaries.
     """
-    if first.keys() != second.keys():
-        assert False, (
-            f"Keys are not the same: expected {set(first.keys())}, "
-            f"got {set(second.keys())} "
-            f"(diff: {set(first.keys()) - set(second.keys())})"
-        )
+    # Keys should be identical
+    assert set(value.keys()) == set(expected.keys())
 
-    for key in first.keys():
-        first_element = first[key]
-        second_element = second[key]
-
-        # Convert to numpy arrays if necessary
-        if isinstance(first_element, mi.VolumeGrid):
-            first_element = np.array(first_element)
-        elif isinstance(first_element, mi.Transform4f):
-            first_element = np.array(first_element.matrix)
-
-        if isinstance(second_element, mi.VolumeGrid):
-            second_element = np.array(second_element)
-        elif isinstance(second_element, mi.Transform4f):
-            second_element = np.array(second_element.matrix)
+    for key in value.keys():
+        first_element = value[key]
+        second_element = expected[key]
 
         if isinstance(first_element, np.ndarray) or isinstance(
             second_element, np.ndarray
         ):
-            if not np.allclose(first_element, second_element):
-                assert (
-                    False
-                ), f"Different values for {key}: expected {first_element}, got {second_element}"
+            # Handle special case of NumPy arrays
+            np.testing.assert_allclose(
+                first_element, second_element, err_msg=f"Failing key: '{key}'"
+            )
+
         else:
-            if first_element != second_element:
-                assert False, f"Different values for {key}"
+            # Other types are compared for proper equality
+            np.testing.assert_equal(
+                first_element, second_element, err_msg=f"failing key: '{key}'"
+            )
 
         assert True
 
@@ -56,10 +56,11 @@ def test_blend_phase_construct_basic():
     Test instantiation with simple weight values.
     """
     # Constructing with reasonable settings succeeds
-    assert BlendPhaseFunction(
+    phase = BlendPhaseFunction(
         components=[{"type": "isotropic"}, {"type": "rayleigh"}, {"type": "hg"}],
         weights=[0.25, 0.25, 0.5],
     )
+    assert phase.weights.shape == (3,)  # Scalar weights are stored as a 1D array
 
     # Improper number of components raises
     with pytest.raises(ValueError):
@@ -67,13 +68,6 @@ def test_blend_phase_construct_basic():
             components=[{"type": "isotropic"}],
             weights=[1],
         )
-
-    # Weights are normalised
-    phase = BlendPhaseFunction(
-        components=[{"type": "isotropic"}, {"type": "rayleigh"}, {"type": "hg"}],
-        weights=[1, 1, 2],
-    )
-    assert np.allclose(phase.weights, [0.25, 0.25, 0.5])
 
     # Improper weight array shape raises
     with pytest.raises(ValueError):
@@ -102,9 +96,35 @@ def test_blend_phase_construct_array(modes_all_double):
         weights=[np.ones((10,)), np.ones((10,)), np.ones((10,))],
         bbox=[[0, 0, 0], [1, 1, 1]],
     )
+    assert phase.weights.shape == (3, 10)  # Array weights are stored as a 2D array
 
-    # Weights are normalised
-    assert np.allclose(phase.weights, 1 / 3)
+
+@pytest.mark.parametrize(
+    "weights, expected",
+    [
+        (
+            [[0, 1, 2], [1, 0, 2]],
+            [[1, 0, 0.5]],
+        ),
+        (
+            [[0, 1, 2], [1, 0, 2], [0.5, 0.5, 2]],
+            [[1, 1 / 3, 2 / 3], [1 / 3, 1, 0.5]],
+        ),
+    ],
+    ids=[
+        "array_2cmp",
+        "array_3cmp",
+    ],
+)
+def test_blend_phase_weights(mode_mono, weights, expected):
+    phase = BlendPhaseFunction(
+        components=[{"type": "isotropic"}] * len(weights),
+        weights=weights,
+        bbox=[[0, 0, 0], [1, 1, 1]],
+    )
+    np.testing.assert_allclose(
+        phase.eval_conditional_weights(KernelDictContext()), expected
+    )
 
 
 def test_blend_phase_bbox(mode_mono):
@@ -126,7 +146,7 @@ def test_blend_phase_bbox(mode_mono):
         weights=[0.25, 0.25, 0.5],
         bbox=([0, 0, 0] * ureg.m, [1, 1, 1] * ureg.m),
     )
-    assert np.allclose(
+    np.testing.assert_allclose(
         np.array(phase._gridvolume_transform().matrix),
         [
             [1, 0, 0, 0],
@@ -137,9 +157,22 @@ def test_blend_phase_bbox(mode_mono):
     )
 
     # Nested BlendPhaseFunction objects must have the same bbox
+    phase = BlendPhaseFunction(
+        components=[
+            {"type": "isotropic"},
+            {
+                "type": "blend_phase",
+                "components": [{"type": "rayleigh"}, {"type": "hg"}],
+                "weights": [0.25, 0.75],
+            },
+        ],
+        weights=[0.25, 0.75],
+        bbox=([0, 0, 0] * ureg.m, [1, 1, 1] * ureg.m),
+    )
+
     for comp in phase.components:
         if isinstance(comp, BlendPhaseFunction):
-            assert np.allclose(
+            np.testing.assert_allclose(
                 np.array(comp._gridvolume_transform().matrix),
                 [
                     [1, 0, 0, 0],
@@ -151,20 +184,20 @@ def test_blend_phase_bbox(mode_mono):
 
 
 @pytest.mark.parametrize(
-    "weights, bbox",
+    "kwargs",
     [
-        ((0.0, 0.0), None),
-        ((1.0, 0.0), None),
-        ((0.0, 1.0), None),
-        ((0.5, 0.5), None),
-        ((0.3, 0.7), None),
-        (
-            (
+        {"weights": [0.0, 0.0]},
+        {"weights": [1.0, 0.0]},
+        {"weights": [0.0, 1.0]},
+        {"weights": [0.5, 0.5]},
+        {"weights": [0.3, 0.7]},
+        {
+            "weights": [
                 np.array([1.0, 0.7, 0.5, 0.3, 0.0]),
                 np.array([0.0, 0.3, 0.5, 0.7, 1.0]),
-            ),
-            ([0, 0, 0], [1, 1, 1]),
-        ),
+            ],
+            "bbox": [[0, 0, 0], [1, 1, 1]],
+        },
     ],
     ids=[
         "scalar0",
@@ -175,78 +208,61 @@ def test_blend_phase_bbox(mode_mono):
         "array",
     ],
 )
-def test_blend_phase_kernel_dict_2_components(
-    mode_mono, weights: t.Tuple[float, float], bbox
-):
+def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
     """
     Blendphase with 2 components produces correct kernel dict and can be loaded.
     """
     phase = BlendPhaseFunction(
         components=[{"type": "isotropic"}, {"type": "rayleigh"}],
-        weights=weights,
-        bbox=bbox,
+        **kwargs,
     )
-    template, _ = traverse(phase)
+    mi_obj, mi_params = check_scene_element(phase, mi.PhaseFunction)
 
-    if bbox is None:
-        # Scalar weights
-        assert_cmp_dict(
-            template.data,
-            {
-                "type": "blendphase",
-                "phase1.type": "isotropic",
-                "phase2.type": "rayleigh",
-                "weight": weights[1],
-            },
-        )
-    else:
-        # Array weights
-        assert_cmp_dict(
-            template.data,
-            {
-                "type": "blendphase",
-                "phase1.type": "isotropic",
-                "phase2.type": "rayleigh",
-                "weight.type": "gridvolume",
-                "weight.grid": np.reshape(weights[1], (-1, 1, 1)),
-                "weight.to_world": np.array(
-                    [
-                        [1, 0, 0, 0],
-                        [0, 1, 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1],
-                    ]
-                ),
-            },
-        )
+    template, params = traverse(phase)
+    ctx = KernelDictContext()
+    kernel_dict = mi_to_numpy(template.render(ctx, nested=False))
 
-    # Check plugin weights
-    phase_plugin = mi.load_dict(template.render(KernelDictContext()))
-    assert isinstance(phase_plugin, mi.PhaseFunction)
-    if isinstance(weights[0], np.ndarray):
-        weight_plugin = mi.traverse(phase_plugin)["weight.data"]
-        assert np.allclose(weight_plugin, np.reshape(weights[1], (-1, 1, 1, 1)))
+    # Check that the kernel dict is correct
+    expected = {
+        "type": "blendphase",
+        "phase_0.type": "isotropic",
+        "phase_1.type": "rayleigh",
+        "weight.type": "gridvolume",
+        "weight.grid": np.reshape(phase.eval_conditional_weights(ctx), (-1, 1, 1)),
+    }
+    if "bbox" in kwargs:
+        expected["weight.to_world"] = np.identity(4)
+    assert_cmp_dict(kernel_dict, expected)
+
+    # Check that the parameter map is correct
+    assert set(params.keys()) == {"weight.data"}
 
 
 @pytest.mark.parametrize(
-    "weights, bbox",
+    "kwargs, expected_mi_weights",
     [
-        ((0.0, 0.0, 0.0), None),
-        ((1.0, 0.0, 0.0), None),
-        ((0.0, 1.0, 0.0), None),
-        ((0.0, 0.0, 1.0), None),
-        ((0.5, 0.5, 0.0), None),
-        ((0.0, 0.5, 0.5), None),
-        ((0.5, 0.0, 0.5), None),
-        ((1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0), None),
-        ((0.3, 0.3, 0.4), None),
+        ({"weights": [0.0, 0.0, 0.0]}, [0.0, 0.0]),
+        ({"weights": [1.0, 0.0, 0.0]}, [0.0, 0.0]),
+        ({"weights": [0.0, 1.0, 0.0]}, [1.0, 0.0]),
+        ({"weights": [0.0, 0.0, 1.0]}, [1.0, 1.0]),
+        ({"weights": [0.5, 0.5, 0.0]}, [0.5, 0.0]),
+        ({"weights": [0.0, 0.5, 0.5]}, [1.0, 0.5]),
+        ({"weights": [0.5, 0.0, 0.5]}, [0.5, 1.0]),
+        ({"weights": [1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]}, [2.0 / 3.0, 0.5]),
+        ({"weights": [0.3, 0.3, 0.4]}, [0.7, 4.0 / 7.0]),
         (
-            (
-                np.array([1.0, 0.6, 0.2, 0.2, 0.0]),
-                np.array([0.0, 0.2, 0.6, 0.2, 0.5]),
-                np.array([0.0, 0.2, 0.2, 0.6, 0.5]),
-            ),
-            ([0, 0, 0], [1, 1, 1]),
+            {
+                "weights": [
+                    np.array([1.0, 0.6, 0.2, 0.2, 0.0]),
+                    np.array([0.0, 0.2, 0.6, 0.2, 0.5]),
+                    np.array([0.0, 0.2, 0.2, 0.6, 0.5]),
+                ],
+                "bbox": [[0, 0, 0], [1, 1, 1]],
+            },
+            [
+                [0.0, 0.4, 0.8, 0.8, 1.0],
+                [0.0, 0.5, 0.25, 0.75, 0.5],
+            ],
         ),
     ],
     ids=[
@@ -262,91 +278,48 @@ def test_blend_phase_kernel_dict_2_components(
         "array",
     ],
 )
-def test_blend_phase_kernel_dict_3_components(
-    mode_mono, weights: t.Tuple[float, float, float], bbox
-):
+def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_weights):
     """
     Blendphase with 3 components produces correct kernel dict and can be loaded.
     """
     phase = BlendPhaseFunction(
         components=[
-            {"type": "isotropic"},
+            {"type": "hg", "g": -0.1},
             {"type": "rayleigh"},
             {"type": "hg", "g": 0.1},
         ],
-        weights=weights,
-        bbox=bbox,
+        **kwargs,
     )
-    nested_weight = np.divide(
-        weights[2],
-        weights[1] + weights[2],
-        where=weights[1] + weights[2] != 0.0,
-        out=np.zeros_like(weights[2]),
-    )  # This is the predicted weight of the nested blended component
-    if bbox is None:  # No bbox means scalar weights
-        nested_weight = float(nested_weight)
+    mi_obj, mi_params = check_scene_element(phase, mi.PhaseFunction)
 
-    template, _ = traverse(phase)
-    kernel_dict = template.render(KernelDictContext())
+    template, params = traverse(phase)
+    kernel_dict = mi_to_numpy(template.render(KernelDictContext(), nested=False))
 
-    if bbox is None:
-        # Scalar weights
-        assert_cmp_dict(
-            flatten(kernel_dict),
-            {
-                "type": "blendphase",
-                "weight": weights[1] + weights[2],
-                "phase1.type": "isotropic",
-                "phase2.type": "blendphase",
-                "phase2.weight": nested_weight,
-                "phase2.phase1.type": "rayleigh",
-                "phase2.phase2.type": "hg",
-                "phase2.phase2.g": 0.1,
-            },
-        )
-    else:
-        # Array weights
-        assert_cmp_dict(
-            flatten(kernel_dict),
-            {
-                "type": "blendphase",
-                "weight.type": "gridvolume",
-                "weight.grid": np.reshape(weights[1] + weights[2], (-1, 1, 1)),
-                "weight.to_world": np.array(
-                    [
-                        [1, 0, 0, 0],
-                        [0, 1, 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1],
-                    ]
-                ),
-                "phase1.type": "isotropic",
-                "phase2.type": "blendphase",
-                "phase2.weight.type": "gridvolume",
-                "phase2.weight.grid": np.reshape(nested_weight, (-1, 1, 1)),
-                "phase2.weight.to_world": np.array(
-                    [
-                        [1, 0, 0, 0],
-                        [0, 1, 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1],
-                    ]
-                ),
-                "phase2.phase1.type": "rayleigh",
-                "phase2.phase2.type": "hg",
-                "phase2.phase2.g": 0.1,
-            },
-        )
+    # Array weights
+    expected = {
+        "type": "blendphase",
+        "weight.type": "gridvolume",
+        "weight.grid": np.reshape(expected_mi_weights[0], (-1, 1, 1)),
+        "phase_0.type": "hg",
+        "phase_0.g": -0.1,
+        "phase_1.type": "blendphase",
+        "phase_1.weight.type": "gridvolume",
+        "phase_1.weight.grid": np.reshape(expected_mi_weights[1], (-1, 1, 1)),
+        "phase_1.phase_0.type": "rayleigh",
+        "phase_1.phase_1.type": "hg",
+        "phase_1.phase_1.g": 0.1,
+    }
 
-    # Check plugin weights
-    phase_plugin = mi.load_dict(template.render(KernelDictContext()))
-    assert isinstance(phase_plugin, mi.PhaseFunction)
-    if isinstance(weights[0], np.ndarray):
-        weight_plugin = mi.traverse(phase_plugin)["weight.data"]
-        assert np.allclose(
-            weight_plugin, np.reshape(weights[1] + weights[2], (-1, 1, 1, 1))
-        )
+    if "bbox" in kwargs:
+        expected["weight.to_world"] = np.identity(4)
+        expected["phase_1.weight.to_world"] = np.identity(4)
 
-    # Also check the parameter table: g must be present (we already checked that
-    # it evaluates to 0.1 above)
-    assert set(phase.params.keys()) == {"phase2.phase2.g"}
+    assert_cmp_dict(expected, kernel_dict)
+
+    # Check that the parameter map is correct
+    assert set(params.keys()) == {
+        "weight.data",
+        "phase_0.g",
+        "phase_1.weight.data",
+        "phase_1.phase_1.g",
+    }

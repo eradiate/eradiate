@@ -6,7 +6,7 @@ import eradiate
 #                            Pre-process helpers
 # ------------------------------------------------------------------------------
 
-pytest.register_assert_rewrite("eradiate.test_tools.types.check_node_scene_element")
+pytest.register_assert_rewrite("eradiate.test_tools.types.check_scene_element")
 
 # ------------------------------------------------------------------------------
 #                                 Mode fixtures
