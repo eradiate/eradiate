@@ -79,8 +79,8 @@ conda-lock-all: conda-env
 # Initialise development environment
 conda-init:
 	python3 requirements/check_conda_env.py
-	conda config --env --add channels conda-forge --add channels eradiate
-	conda update --file requirements/environment-$(PLATFORM).lock
+	mamba config --env --add channels conda-forge --add channels eradiate
+	mamba update --file requirements/environment-$(PLATFORM).lock
 	python3 requirements/copy_envvars.py
 	pip install --editable . --no-deps
 

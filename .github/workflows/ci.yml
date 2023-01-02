@@ -54,6 +54,7 @@ jobs:
           ninja-build
 
           export CUDA_VISIBLE_DEVICES=""
+          conda install mamba -n base -c conda-forge
           make conda-init
           conda deactivate
           conda activate eradiate
