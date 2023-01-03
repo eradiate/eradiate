@@ -3,7 +3,7 @@ import pytest
 
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import traverse
-from eradiate.scenes.measure._multi_radiancemeter import MultiRadiancemeterMeasure
+from eradiate.scenes.measure import MultiRadiancemeterMeasure
 from eradiate.test_tools.types import check_scene_element
 
 

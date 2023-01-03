@@ -2,8 +2,7 @@ import mitsuba as mi
 
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import traverse
-from eradiate.scenes.measure import MultiRadiancemeterMeasure
-from eradiate.scenes.measure._radiancemeter import RadiancemeterMeasure
+from eradiate.scenes.measure import RadiancemeterMeasure
 from eradiate.test_tools.types import check_scene_element
 
 
@@ -13,7 +12,7 @@ def test_radiancemeter_construct(mode_mono):
 
 
 def test_radiancemeter_medium(mode_mono):
-    measure = MultiRadiancemeterMeasure()
+    measure = RadiancemeterMeasure()
     template, _ = traverse(measure)
 
     ctx1 = KernelDictContext()
