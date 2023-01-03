@@ -1,5 +1,6 @@
 # This is a basic CI pipeline, which will build eradiate and
 # run the test suite on it.
+# This is the CI file on the test branch
 name: Eradiate build and test
 
 on:
