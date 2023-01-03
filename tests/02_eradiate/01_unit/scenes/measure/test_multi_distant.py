@@ -4,8 +4,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.frame import AzimuthConvention
-from eradiate.scenes.measure import measure_factory
-from eradiate.scenes.measure._multi_distant import (
+from eradiate.scenes.measure import (
     AngleLayout,
     AzimuthRingLayout,
     DirectionLayout,
@@ -13,6 +12,7 @@ from eradiate.scenes.measure._multi_distant import (
     HemispherePlaneLayout,
     Layout,
     MultiDistantMeasure,
+    measure_factory,
 )
 from eradiate.test_tools.types import check_scene_element
 

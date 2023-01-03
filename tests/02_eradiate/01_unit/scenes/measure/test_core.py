@@ -8,7 +8,7 @@ from eradiate.ckd import Bin
 from eradiate.contexts import CKDSpectralContext, MonoSpectralContext
 from eradiate.exceptions import DataError
 from eradiate.quad import Quad
-from eradiate.scenes.measure import Measure, MeasureSpectralConfig
+from eradiate.scenes.measure import MeasureSpectralConfig
 from eradiate.scenes.measure._core import (
     CKDMeasureSpectralConfig,
     MonoMeasureSpectralConfig,

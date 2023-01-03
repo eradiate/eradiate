@@ -6,7 +6,7 @@ import pytest
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.scenes.measure._distant import Target, TargetPoint, TargetRectangle
+from eradiate.scenes.measure import Target, TargetPoint, TargetRectangle
 
 
 def test_target_origin(modes_all):

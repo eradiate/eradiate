@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.scenes.measure._hemispherical_distant import HemisphericalDistantMeasure
+from eradiate.scenes.measure import HemisphericalDistantMeasure
 from eradiate.test_tools.types import check_scene_element
 
 
