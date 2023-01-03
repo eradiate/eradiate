@@ -10,6 +10,9 @@ on:
       - main
   issue_comment:
     types: [created, edited]
+  pull_request:
+    types: [ready_for_review]
+
 jobs:
   build:
     # The type of runner that the job will run on
