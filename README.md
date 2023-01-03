@@ -3,14 +3,11 @@
 # Eradiate Radiative Transfer Model
 
 [![docs][rtd-badge]][rtd-url]
-[![build][docker-badge]][docker-url]
 [![black][black-badge]][black-url]
 [![isort][isort-badge]][isort-url]
 
 [rtd-badge]: https://img.shields.io/readthedocs/eradiate?logo=readthedocs&logoColor=white&style=flat-square
 [rtd-url]: https://eradiate.readthedocs.io/en/latest/
-[docker-badge]: https://img.shields.io/github/workflow/status/eradiate/eradiate/Docker%20build?label=docker&logo=docker&logoColor=white&style=flat-square
-[docker-url]: https://github.com/eradiate/eradiate/actions/workflows/docker.yml
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square
 [black-url]: https://github.com/psf/black/
 [isort-badge]: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat-square&labelColor=ef8336
