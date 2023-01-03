@@ -6,7 +6,6 @@ import eradiate
 #                            Pre-process helpers
 # ------------------------------------------------------------------------------
 
-pytest.register_assert_rewrite("eradiate.test_tools.types.check_type")
 pytest.register_assert_rewrite("eradiate.test_tools.types.check_node_scene_element")
 
 # ------------------------------------------------------------------------------
