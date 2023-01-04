@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import typing as t
 from collections import abc as cabc
+from functools import lru_cache
 
 import attrs
 import numpy as np
@@ -14,74 +15,27 @@ import xarray as xr
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular_atmosphere import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
-from ..core import BoundingBox
-from ..phase import BlendPhaseFunction
+from ..core import BoundingBox, traverse
+from ..phase import BlendPhaseFunction, PhaseFunctionNode
 from ..shapes import CuboidShape, SphereShape
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...units import symbol, to_quantity
 from ...units import unit_context_config as ucc
-from ...units import unit_registry as ureg
-from ...util.misc import onedict_value
 
 
-def _zero_radprops(spectral_ctx: SpectralContext) -> xr.Dataset:
-    """
-    Returns a radiative properties data set with extinction coefficient and
-    albedo set to zero.
-    """
-    return xr.Dataset(
-        data_vars={
-            "sigma_t": (
-                "z_layer",
-                np.zeros(2),
-                dict(
-                    standard_name="volume_extinction_coefficient",
-                    long_name="extinction coefficient",
-                    units="km^-1",
-                ),
-            ),
-            "albedo": (
-                "z_layer",
-                np.zeros(2),
-                dict(
-                    standard_name="albedo",
-                    long_name="albedo",
-                    units="",
-                ),
-            ),
-        },
-        coords={
-            "z_layer": (
-                "z_layer",
-                np.array([0, 1]),
-                dict(standard_name="altitude", long_name="altitude", units="km"),
-            ),
-            "w": (
-                "w",
-                [spectral_ctx.wavelength.m_as(ureg.nm)],
-                dict(
-                    standard_name="radiation_wavelength",
-                    long_name="wavelength",
-                    units="nm",
-                ),
-            ),
-        },
-    )
-
-
-def _heterogeneous_atmosphere_molecular_converter(value):
+def _molecular_converter(value):
     if isinstance(value, cabc.MutableMapping) and ("type" not in value):
         value["type"] = "molecular"
     return atmosphere_factory.convert(value, allowed_cls=MolecularAtmosphere)
 
 
-def _heterogeneous_atmosphere_particle_converter(value):
+def _particle_layer_converter(value):
     if not value:
         return []
 
     if not isinstance(value, (list, tuple)):
-        return _heterogeneous_atmosphere_particle_converter([value])
+        return _particle_layer_converter([value])
 
     else:
         result = []
@@ -106,9 +60,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     molecular_atmosphere: t.Optional[MolecularAtmosphere] = documented(
         attrs.field(
             default=None,
-            converter=attrs.converters.optional(
-                _heterogeneous_atmosphere_molecular_converter
-            ),
+            converter=attrs.converters.optional(_molecular_converter),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(MolecularAtmosphere)
             ),
@@ -126,12 +78,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         if value is None:
             return
 
-        if value.geometry is not None:
-            raise ValueError(
-                f"while validating {attribute.name}: all components must have "
-                "their 'geometry' field set to None"
-            )
-
         if value.scale is not None:
             raise ValueError(
                 f"while validating {attribute.name}: components cannot be "
@@ -141,7 +87,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     particle_layers: t.List[ParticleLayer] = documented(
         attrs.field(
             factory=list,
-            converter=_heterogeneous_atmosphere_particle_converter,
+            converter=_particle_layer_converter,
             validator=attrs.validators.deep_iterable(
                 attrs.validators.instance_of(ParticleLayer)
             ),
@@ -157,17 +103,19 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @particle_layers.validator
     def _particle_layers_validator(self, attribute, value):
-        if not all([component.geometry is None for component in value]):
-            raise ValueError(
-                f"while validating {attribute.name}: all components must have "
-                f"their 'geometry' field set to None"
-            )
-
         if not all(component.scale is None for component in value):
             raise ValueError(
                 f"while validating {attribute.name}: components cannot be "
                 "scaled individually"
             )
+
+    #: A high-resolution layer altitude mesh to interpolate the components'
+    #: radiative properties on, before computing the total radiative
+    #: properties. This is an internal field that is automatically set by
+    #: the :meth:`update` method.
+    _zgrid: t.Optional[pint.Quantity] = attrs.field(
+        default=None, init=False, repr=False
+    )
 
     @property
     def components(self) -> t.List[t.Union[MolecularAtmosphere, ParticleLayer]]:
@@ -176,23 +124,32 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return result
 
     def update(self):
+        # Force component IDs and geometry
+        for i, component in enumerate(self.components):
+            component.id = f"{self.id}_component_{i}"
+            component.geometry = self.geometry
+            component.update()
+
+        # Set fine altitude grid
+        z_level = np.linspace(self.bottom, self.top, 11)
+        self._zgrid = 0.5 * (z_level[1:] + z_level[:-1])
+
         if not self.components:
             raise ValueError("HeterogeneousAtmosphere must have at least one component")
 
         super().update()
-
-        # Force IDs
-        for i, component in enumerate(self.components):
-            component.id = f"{self.id}_component_{i}"
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
     # --------------------------------------------------------------------------
 
     @property
+    def zgrid(self) -> pint.Quantity:
+        return self._zgrid
+
+    @property
     def bottom(self) -> pint.Quantity:
-        bottoms = [component.bottom for component in self.components]
-        return min(bottoms)
+        return min([component.bottom for component in self.components])
 
     @property
     def top(self) -> pint.Quantity:
@@ -206,327 +163,125 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     #                       Radiative properties
     # --------------------------------------------------------------------------
 
-    def _high_res_z_layer(self) -> pint.Quantity:
-        """
-        A high-resolution layer altitude mesh to interpolate the components'
-        radiative properties on, before computing the total radiative
-        properties.
-        """
-        z_level = np.linspace(self.bottom, self.top, 100001)
-        z_layer = 0.5 * (z_level[1:] + z_level[:-1])
-        return z_layer
+    def eval_albedo(self, sctx: SpectralContext) -> pint.Quantity:
+        return self.eval_sigma_s(sctx) / self.eval_sigma_t(sctx)
 
-    def eval_radprops(
-        self, spectral_ctx: SpectralContext, optional_fields: bool = False
-    ) -> xr.Dataset:
-        """
-        Evaluate the extinction coefficients and albedo profiles.
+    @lru_cache(maxsize=1)
+    def _eval_sigma_t_impl(self, sctx: SpectralContext) -> pint.Quantity:
+        result = np.zeros((len(self.components), len(self.zgrid)))
+        sigma_units = ucc.get("collision_coefficient")
 
-        Parameters
-        ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
-
-        optional_fields : bool, optional, default: False
-            If ``True``, extra the optional ``sigma_a`` and ``sigma_s`` fields,
-            not required for scene construction but useful for analysis and
-            debugging.
-
-        Returns
-        -------
-        Dataset
-            A dataset containing with the following variables for the specified
-            spectral context:
-
-            * ``sigma_t``: extinction coefficient;
-            * ``albedo``: albedo.
-
-            Coordinates are the following:
-
-            * ``z``: altitude.
-        """
-        components = self.components
-
-        # Single component: just forward encapsulated component
-        if len(components) == 1:
-            return components[0].eval_radprops(
-                spectral_ctx, optional_fields=optional_fields
+        # Retrieve scattering coefficient and corresponding altitude grid for
+        # current component, interpolate collision coefficient on fine grid
+        for i, component in enumerate(self.components):
+            result[i] = np.interp(
+                self.zgrid,
+                component.zgrid,
+                component.eval_sigma_t(sctx).m_as(sigma_units),
+                left=0.0,
+                right=0.0,
             )
 
-        # Two components or more: interpolate all components on a fine grid and
-        # aggregate collision coefficients
-        else:
-            hrz = self._high_res_z_layer()
-            sigma_units = ucc.get("collision_coefficient")
-            sigma_ss = []
-            sigma_ts = []
+        return result * sigma_units
 
-            for component in components:
-                radprops = interpolate_radprops(
-                    component.eval_radprops(spectral_ctx),
-                    new_z_layer=hrz,
-                )
-                # We store only the magnitude
-                sigma_ts.append(to_quantity(radprops.sigma_t).m_as(sigma_units))
-                sigma_ss.append(
-                    (to_quantity(radprops.sigma_t) * radprops.albedo.values).m_as(
-                        sigma_units
-                    )
-                )
+    def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:
+        return self._eval_sigma_t_impl(sctx).sum(axis=0)
 
-            sigma_t = sum(sigma_ts)
-            sigma_s = sum(sigma_ss)
+    def eval_sigma_a(self, sctx: SpectralContext) -> pint.Quantity:
+        return self._eval_sigma_t(sctx) - self._eval_sigma_s(sctx)
 
-            albedo = np.divide(
-                sigma_s,
-                sigma_t,
-                where=sigma_t != 0.0,
-                out=np.ones_like(sigma_t),
+    @lru_cache(maxsize=1)
+    def _eval_sigma_s_impl(self, sctx: SpectralContext) -> pint.Quantity:
+        result = np.zeros((len(self.components), len(self.zgrid)))
+        sigma_units = ucc.get("collision_coefficient")
+
+        # Retrieve scattering coefficient and corresponding altitude grid for
+        # current component, interpolate collision coefficient on fine grid
+        for i, component in enumerate(self.components):
+            result[i] = np.interp(
+                self.zgrid,
+                component.zgrid,
+                component.eval_sigma_s(sctx).m_as(sigma_units),
+                left=0.0,
+                right=0.0,
             )
 
-            data_vars = {
-                "sigma_t": (
-                    "z_layer",
-                    sigma_t,
-                    {
-                        "units": f"{symbol(sigma_units)}",
-                        "standard_name": "extinction_coefficient",
-                        "long_name": "extinction coefficient",
-                    },
-                ),
-                "albedo": (
-                    "z_layer",
-                    albedo,
-                    {
-                        "standard_name": "albedo",
-                        "long_name": "albedo",
-                        "units": "",
-                    },
-                ),
-            }
+        return result * sigma_units
 
-            if optional_fields:
-                sigma_a = sigma_t - sigma_s
-                data_vars.update(
-                    {
-                        "sigma_a": (
-                            "z_layer",
-                            sigma_a,
-                            {
-                                "units": f"{symbol(sigma_units)}",
-                                "standard_name": "absorption_coefficient",
-                                "long_name": "absorption coefficient",
-                            },
-                        ),
-                        "sigma_s": (
-                            "z_layer",
-                            sigma_s,
-                            {
-                                "units": f"{symbol(sigma_units)}",
-                                "standard_name": "scattering_coefficient",
-                                "long_name": "scattering coefficient",
-                            },
-                        ),
-                    }
-                )
+    def _eval_sigma_s_component(
+        self, sctx: SpectralContext, n_component: int
+    ) -> pint.Quantity:
+        return self._eval_sigma_s_impl(sctx)[n_component]
 
-            result = xr.Dataset(
-                data_vars=data_vars,
-                coords={
-                    "z_layer": (
-                        "z_layer",
-                        hrz.magnitude,
-                        {
-                            "units": f"{symbol(hrz.units)}",
-                            "standard_name": "layer_altitude",
-                            "long_name": "layer altitude",
-                        },
-                    )
-                },
-            )
-
-            return result
+    def eval_sigma_s(self, sctx: SpectralContext) -> pint.Quantity:
+        return self._eval_sigma_s_impl(sctx).sum(axis=0)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def _template_phase(self) -> dict:
-        components = self.components
+    @property
+    def _bbox(self) -> BoundingBox:
+        shape = self._shape
+        length_units = ucc.get("length")
 
-        # Single component: just forward encapsulated component
-        if len(components) == 1:
-            return components[0]._template_phase
+        if isinstance(shape, CuboidShape):
+            # In this case, the bounding box corresponds to the corners of
+            # the cuboid
+            min_x, min_y = (shape.center[0:2] - shape.edges[0:2] * 0.5).m_as(
+                length_units
+            )
+            min_z = self.bottom.m_as(length_units)
 
-        # Two components or more: blend phase functions
+            max_x, max_y = (shape.center[0:2] + shape.edges[0:2] * 0.5).m_as(
+                length_units
+            )
+            max_z = self.top.m_as(length_units)
+
+            return BoundingBox(
+                [min_x, min_y, min_z] * length_units,
+                [max_x, max_y, max_z] * length_units,
+            )
+
+        elif isinstance(shape, SphereShape):
+            # In this case, the bounding box is the cuboid that contains the
+            # sphere
+            r = shape.radius.m_as(length_units)
+
+            return BoundingBox(
+                [-r, -r, -r] * length_units,
+                [r, r, r] * length_units,
+            )
+
         else:
-            # Component weights are given by the scattering coefficient:
-            # we collect values and interpolate on the global grid
-            def eval_weights(ctx):
-                hrz = self._high_res_z_layer()
-                sigma_ss = []
+            raise NotImplementedError
 
-                for component in components:
-                    radprops = interpolate_radprops(
-                        component.eval_radprops(ctx.spectral_ctx), new_z_layer=hrz
+    @property
+    def phase(self) -> PhaseFunctionNode:
+        if len(self.components) == 1:
+            return self.components[0].phase
+
+        else:
+            components, weights = [], []
+            sigma_units = ucc.get("collision_coefficient")
+
+            for i, component in enumerate(self.components):
+                components.append(component.phase)
+
+                def eval_sigma_s(
+                    sctx: SpectralContext, n_component: int = i
+                ) -> np.ndarray:
+                    return self._eval_sigma_s_component(sctx, n_component).m_as(
+                        sigma_units
                     )
-                    sigma_ss.append(radprops.sigma_t * radprops.albedo)
 
-                return sigma_ss
+                weights.append(eval_sigma_s)
 
-            # Construct a blended phase function based on those weighting values
-            shape = self._shape
-            length_units = ucc.get("length")
-
-            if isinstance(shape, CuboidShape):
-                # In this case, the bounding box corresponds to the corners of
-                # the cuboid
-                min_x, min_y = (shape.center[0:2] - shape.edges[0:2] * 0.5).m_as(
-                    length_units
-                )
-                min_z = self.bottom.m_as(length_units)
-
-                max_x, max_y = (shape.center[0:2] + shape.edges[0:2] * 0.5).m_as(
-                    length_units
-                )
-                max_z = self.top.m_as(length_units)
-
-                bbox = BoundingBox(
-                    [min_x, min_y, min_z] * length_units,
-                    [max_x, max_y, max_z] * length_units,
-                )
-
-            elif isinstance(shape, SphereShape):
-                # In this case, the bounding box is the cuboid that contains the
-                # sphere
-                r = shape.radius.m_as(length_units)
-
-                bbox = BoundingBox(
-                    [-r, -r, -r] * length_units,
-                    [r, r, r] * length_units,
-                )
-
-            else:
-                raise RuntimeError(
-                    f"Unsupported atmosphere geometry shape '{type(shape).__name__}'"
-                )
-
-            phase = BlendPhaseFunction(
-                components=[component.phase for component in components],
-                weights=sigma_ss,
-                bbox=bbox,
+            return BlendPhaseFunction(
+                components=components, weights=weights, bbox=self._bbox
             )
 
-            return phase.kernel_dict(ctx)
-
-    def kernel_phase(self, ctx: KernelDictContext) -> KernelDict:
-        """
-        Return phase function plugin specifications only.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        :class:`.KernelDict`
-            A kernel dictionary containing all the phase functions attached to
-            the atmosphere.
-        """
-        components = self.components
-
-        # Single component: just forward encapsulated component
-        if len(components) == 1:
-            return KernelDict(
-                {self.id_phase: onedict_value(components[0].kernel_phase(ctx).data)}
-            )
-
-        # Two components or more: blend phase functions
-        else:
-            # Component weights are given by the scattering coefficient:
-            # we collect values and interpolate on the global grid
-            hrz = self._high_res_z_layer()
-            sigma_ss = []
-
-            for component in components:
-                radprops = interpolate_radprops(
-                    component.eval_radprops(ctx.spectral_ctx), new_z_layer=hrz
-                )
-                sigma_ss.append(radprops.sigma_t * radprops.albedo)
-
-            # Construct a blended phase function based on those weighting values
-            shape = self.eval_shape(ctx)
-
-            if isinstance(shape, CuboidShape):
-                shape_min = shape.center - shape.edges * 0.5
-                shape_min[2] = self.bottom
-                shape_max = shape.center + shape.edges * 0.5
-
-            elif isinstance(shape, SphereShape):
-                length_units = ucc.get("length")
-                shape_min = [0, 0, 0] * length_units
-                shape_max = [1, 1, shape.radius.m_as(length_units)] * length_units
-
-            else:
-                raise RuntimeError(
-                    f"Unsupported atmosphere geometry shape '{type(shape).__name__}'"
-                )
-
-            phase = BlendPhaseFunction(
-                components=[component.phase for component in components],
-                weights=sigma_ss,
-                bbox=BoundingBox(min=shape_min, max=shape_max),
-            )
-
-            return phase.kernel_dict(ctx)
-
-
-def interpolate_radprops(
-    radprops: xr.Dataset, new_z_layer: pint.Quantity
-) -> xr.Dataset:
-    """
-    Interpolate a radiative property data set onto a new level altitude grid.
-
-    Out of bounds values are replaced with zeros.
-
-    Parameters
-    ----------
-    radprops : :class:`~xarray.Dataset`
-        Radiative property data set.
-
-    new_z_layer : :class:`~pint.Quantity`)
-        Layer altitude grid to interpolate onto.
-
-    Returns
-    -------
-    interpolated : Dataset
-        Interpolated radiative property data set.
-    """
-    mask = (new_z_layer >= to_quantity(radprops.z_level).min()) & (
-        new_z_layer <= to_quantity(radprops.z_level).max()
-    )
-    masked = new_z_layer[mask]  # altitudes that fall within the bounds of radprops
-
-    # interpolate within radprops altitude bounds (safe)
-    with xr.set_options(keep_attrs=True):
-        interpolated_safe = radprops.interp(
-            z_layer=masked.m_as(radprops.z_layer.units),
-            kwargs=dict(
-                fill_value="extrapolate"
-            ),  # handle floating point arithmetic issue
-            method="nearest",  # radiative properties are assumed uniform in altitude layers
-        )
-
-    # interpolate over the full range
-    with xr.set_options(keep_attrs=True):
-        interpolated = interpolated_safe.interp(
-            z_layer=new_z_layer.m_as(radprops.z_layer.units),
-            kwargs=dict(fill_value=0.0),
-            method="nearest",
-        )
-
-    return interpolated
+    @property
+    def _template_phase(self) -> dict:
+        template, _ = traverse(self.phase)
+        return template.data

@@ -54,10 +54,13 @@ class BlendPhaseFunction(PhaseFunctionNode):
         ),
         type="ndarray or list of callables",
         init_type="array-like or list of callables",
-        doc="List of weights associated with each component. Must be of shape "
-        "(n,) or (n, m) where n is the number of components and m the number "
-        "of cells along the atmosphere's vertical axis. This parameter has no "
-        "default.",
+        doc="List of weights associated with each component. Weights may be "
+        "numerical values; in that case, they ust be of shape (n,) or (n, m), "
+        "where n is the number of components and m the number of cells along "
+        "the atmosphere's vertical axis. Alternatively, weights may be "
+        "callables that take a :class:`.KernelDictContext` as argument and "
+        "return an array of shape (n, m). "
+        "This parameter is required and has no default.",
     )
 
     @weights.validator
@@ -147,7 +150,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
         if weights.ndim < 2:
             weights = weights.reshape((-1, 1))
 
-        result = np.empty((n_comp - 1, *weights.shape[1:]), dtype=np.float64)
+        result = np.zeros((n_comp - 1, *weights.shape[1:]), dtype=np.float64)
 
         # Compute conditional weights
         for i in range(n_comp - 1):
@@ -166,7 +169,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
 
     def eval_conditional_weights(
         self,
-        ctx: KernelDictContext,
+        sctx: SpectralContext,
         n_component: t.Union[int, t.List[int], None] = None,
     ) -> np.ndarray:
         """
@@ -175,8 +178,8 @@ class BlendPhaseFunction(PhaseFunctionNode):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
-            Evaluation context.
+        sctx : :class:`.SpectralContext`
+            Spectral context.
 
         n_component : int or list of int, optional
             The index of the Mitsuba phase function component for which the
@@ -196,7 +199,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
             n_component = [n_component]
 
         # Compute normalised component weights (cached until call with different context)
-        weights = self._eval_conditional_weights_impl(ctx.spectral_ctx)
+        weights = self._eval_conditional_weights_impl(sctx)
 
         # Return selected components
         return weights[n_component, ...]
@@ -223,10 +226,10 @@ class BlendPhaseFunction(PhaseFunctionNode):
             # Note: This defines a partial and evaluates the component index.
             # Passing i as the kwarg default value is essential to force the
             # dereferencing of the loop variable.
-            def eval_conditional_weights(ctx, n_component=i):
+            def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
                 return mi.VolumeGrid(
                     np.reshape(
-                        self.eval_conditional_weights(ctx, n_component),
+                        self.eval_conditional_weights(ctx.spectral_ctx, n_component),
                         (-1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyx)
                     ).astype(np.float32)
                 )
@@ -262,9 +265,9 @@ class BlendPhaseFunction(PhaseFunctionNode):
             # Note: This defines a partial and evaluates the component index.
             # Passing i as the kwarg default value is essential to force the
             # dereferencing of the loop variable.
-            def eval_conditional_weights(ctx, n_component=i):
+            def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
                 return np.reshape(
-                    self.eval_conditional_weights(ctx, n_component),
+                    self.eval_conditional_weights(ctx.spectral_ctx, n_component),
                     (-1, 1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyxc)
                 ).astype(np.float32)
 

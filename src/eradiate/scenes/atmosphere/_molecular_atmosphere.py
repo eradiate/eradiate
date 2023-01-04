@@ -14,7 +14,7 @@ import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import traverse
-from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
+from ..phase import PhaseFunctionNode, RayleighPhaseFunction, phase_function_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
@@ -52,11 +52,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         default=":meth:`us76.make_profile() <eradiate.thermoprops.us76.make_profile>`",
     )
 
-    phase: PhaseFunction = documented(
+    phase: PhaseFunctionNode = documented(
         attrs.field(
             factory=lambda: RayleighPhaseFunction(),
             converter=phase_function_factory.convert,
-            validator=attrs.validators.instance_of(PhaseFunction),
+            validator=attrs.validators.instance_of(PhaseFunctionNode),
         ),
         doc="Phase function.",
         type=":class:`.PhaseFunction`",
@@ -115,7 +115,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     def update(self) -> None:
-        super(MolecularAtmosphere, self).update()
+        super().update()
         self.phase.id = self.id_phase
 
     # --------------------------------------------------------------------------
@@ -123,12 +123,16 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
 
     @property
+    def zgrid(self) -> pint.Quantity:
+        return to_quantity(self.thermoprops.z_layer)
+
+    @property
     def bottom(self) -> pint.Quantity:
-        return to_quantity(self.thermoprops.z_level).min()
+        return self.zgrid.min()
 
     @property
     def top(self) -> pint.Quantity:
-        return to_quantity(self.thermoprops.z_level).max()
+        return self.zgrid.max()
 
     @property
     def thermoprops(self) -> xr.Dataset:
@@ -169,17 +173,17 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         else:
             raise NotImplementedError("Unsupported thermophysical properties data set.")
 
-    def eval_radprops(
-        self, spectral_ctx: SpectralContext, optional_fields: bool = False
-    ) -> xr.Dataset:
-        # Inherit docstrings
-        return self.radprops_profile.eval_dataset(spectral_ctx=spectral_ctx)
+    def eval_albedo(self, sctx: SpectralContext) -> pint.Quantity:
+        return self.radprops_profile.eval_albedo(sctx)
 
-    def eval_albedo(self, ctx: KernelDictContext) -> pint.Quantity:
-        return self.radprops_profile.eval_albedo(ctx.spectral_ctx)
+    def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:
+        return self.radprops_profile.eval_sigma_t(sctx)
 
-    def eval_sigma_t(self, ctx: KernelDictContext) -> pint.Quantity:
-        return self.radprops_profile.eval_sigma_t(ctx.spectral_ctx)
+    def eval_sigma_s(self, sctx: SpectralContext) -> pint.Quantity:
+        return self.radprops_profile.eval_sigma_s(sctx)
+
+    def eval_sigma_a(self, sctx: SpectralContext) -> pint.Quantity:
+        return self.radprops_profile.eval_sigma_a(sctx)
 
     # --------------------------------------------------------------------------
     #                             Kernel dictionary

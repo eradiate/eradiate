@@ -12,6 +12,8 @@ from eradiate.scenes.atmosphere import (
     MolecularAtmosphere,
     ParticleLayer,
 )
+from eradiate.scenes.core import traverse
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.fixture
@@ -50,9 +52,8 @@ def test_heterogeneous_single_mono(
             geometry=geometry, particle_layers=[component]
         )
 
-    # Produced kernel dict can be loaded
-    ctx = KernelDictContext()
-    assert atmosphere.kernel_dict(ctx).load()
+    # The scene element produces valid kernel dictionary specifications
+    check_scene_element(atmosphere, KernelDictContext())
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
@@ -74,9 +75,8 @@ def test_heterogeneous_single_ckd(mode_ckd, geometry, component, bin_set):
             geometry=geometry, particle_layers=[component]
         )
 
-    # Produced kernel dict can be loaded
-    ctx = KernelDictContext(spectral_ctx={"bin_set": bin_set})
-    assert atmosphere.kernel_dict(ctx).load()
+    # The scene element produces valid kernel dictionary specifications
+    check_scene_element(atmosphere, KernelDictContext())
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
@@ -95,16 +95,8 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, path_to_ussa76_approx_dat
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
 
-    ctx = KernelDictContext()
-
-    # Kernel dict production succeeds
-    assert atmosphere.kernel_phase(ctx)
-    assert atmosphere.kernel_media(ctx)
-    assert atmosphere.kernel_shapes(ctx)
-
-    # Produced kernel dict can be loaded
-    kernel_dict = atmosphere.kernel_dict(ctx)
-    assert kernel_dict.load()
+    # The scene element produces valid kernel dictionary specifications
+    check_scene_element(atmosphere, KernelDictContext())
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
@@ -122,15 +114,8 @@ def test_heterogeneous_multi_ckd(mode_ckd, geometry, bin_set):
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
 
-    ctx = KernelDictContext(spectral_ctx={"bin_set": bin_set})
-
-    # Kernel dict production succeeds and produced data can be loaded
-    assert isinstance(atmosphere.kernel_phase(ctx).load(), mi.PhaseFunction)
-    assert isinstance(atmosphere.kernel_media(ctx).load(), mi.Medium)
-    assert isinstance(atmosphere.kernel_shapes(ctx).load(), mi.Shape)
-
-    kernel_dict = atmosphere.kernel_dict(ctx)
-    assert isinstance(kernel_dict.load(), mi.Scene)
+    # The scene element produces valid kernel dictionary specifications
+    check_scene_element(atmosphere, KernelDictContext())
 
 
 @pytest.mark.parametrize("field", ["sigma_a", "sigma_t"])
@@ -189,7 +174,7 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         assert np.allclose(total, expected), f"{z = }"
 
 
-def test_heterogeneous_mix_weight(modes_all_double):
+def test_heterogeneous_mix_weights(modes_all_double):
     """
     Check that component weights are correctly computed.
     """
@@ -211,16 +196,34 @@ def test_heterogeneous_mix_weight(modes_all_double):
             distribution={"type": "uniform"},
         ),
     )
-    phase_mixed = mixed.kernel_phase(ctx).load()
+    print(f"{mixed.phase.eval_conditional_weights(ctx.spectral_ctx) = }")  # OK
+    template, params = traverse(mixed.phase)
+    mi_phase = mi.load_dict(template.render(ctx))
+    mi_params = mi.traverse(mi_phase)
+    mi_params["weight.data"] = np.array(
+        [1, 1, 1, 1, 1, 0, 0, 0, 0, 0], dtype=np.float32
+    ).reshape((-1, 1, 1, 1))
+    mi_params.update()
+    print(np.array(mi_params["weight.data"]))
+    assert False
+    # We have a bug here: the first two weights are set to nonsense values
+    mi_params.update(params.render(ctx))
+    print(np.array(mi_params["weight.data"]))
+    mi_phase, mi_params = check_scene_element(mixed.phase, mi.PhaseFunction)
 
     # Weights should be non zero over the first 50 km, and 0 above
     # (all to the molecular component)
-    params = mi.traverse(phase_mixed)
-    weight = np.squeeze(params["weight.data"])
-    middle = len(weight) // 2
+    print(np.array(mi_params["weight.data"]))
+    weights = np.squeeze(mi_params["weight.data"])
+    assert len(weights) == len(mixed.zgrid)
+    middle = len(weights) // 2
 
-    assert np.all((weight[:middle] > 0.0) & (weight[:middle] < 1.0))
-    assert np.all(weight[middle:] == 0.0)
+    print(f"{mixed._eval_sigma_t_impl(ctx.spectral_ctx) = }")
+    print(f"{mixed._eval_sigma_s_impl(ctx.spectral_ctx) = }")
+    print(f"{weights = }")
+
+    assert np.all((weights[:middle] > 0.0) & (weights[:middle] < 1.0))
+    assert np.all(weights[middle:] == 0.0)
 
     # Second check: simple disjoint components, more than 1
     mixed = HeterogeneousAtmosphere(
@@ -243,10 +246,9 @@ def test_heterogeneous_mix_weight(modes_all_double):
             ),
         ],
     )
-    phase_mixed = mixed.kernel_phase(ctx).load()
-    params = mi.traverse(phase_mixed)
-    weight_1 = np.squeeze(params["weight.data"])
-    weight_2 = np.squeeze(params["phase_1.weight.data"])
+    mi_phase, mi_params = check_scene_element(mixed.phase, mi.PhaseFunction)
+    weight_1 = np.squeeze(mi_params["weight.data"])
+    weight_2 = np.squeeze(mi_params["phase_1.weight.data"])
     middle = len(weight_1) // 2
     threeq = len(weight_1) * 3 // 4
 
@@ -277,11 +279,11 @@ def test_heterogeneous_mix_weight(modes_all_double):
     )
     phase_mixed = mixed.kernel_phase(ctx).load()
     params = mi.traverse(phase_mixed)
-    weight = np.squeeze(params["weight.data"])
-    middle = len(weight) // 2
+    weights = np.squeeze(params["weight.data"])
+    middle = len(weights) // 2
 
-    assert np.all(weight[:middle] == 0.0)
-    assert np.all(weight[middle:] == 0.5)
+    assert np.all(weights[:middle] == 0.0)
+    assert np.all(weights[middle:] == 0.5)
 
 
 def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):

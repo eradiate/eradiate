@@ -205,44 +205,30 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     @property
     def top(self) -> pint.Quantity:
+        # Inherit docstring
         return self._top
 
     @property
     def bottom(self) -> pint.Quantity:
+        # Inherit docstring
         return self._bottom
 
     @property
+    def zgrid(self) -> pint.Quantity:
+        # Inherit docstring
+        z_level = self.z_level
+        return 0.5 * (z_level[:-1] + z_level[1:])
+
+    @property
     def z_level(self) -> pint.Quantity:
-        """
-        Compute the level altitude mesh within the particle layer.
-
-        The level altitude mesh corresponds to a regular level altitude mesh
-        from the layer's bottom altitude to the layer's top altitude with
-        a number of points specified by ``n_layer + 1``.
-
-        Returns
-        -------
-        quantity
-            Level altitude mesh.
-        """
-        return np.linspace(start=self.bottom, stop=self.top, num=self.n_layers + 1)
+        return np.linspace(self.bottom, self.top, self.n_layers + 1)
 
     @property
     def z_layer(self) -> pint.Quantity:
         """
-        Compute the layer altitude mesh within the particle layer.
-
-        The layer altitude mesh corresponds to a regular level altitude mesh
-        from the layer's bottom altitude to the layer's top altitude with
-        a number of points specified by ``n_layer``.
-
-        Returns
-        -------
-        quantity
-            Layer altitude mesh.
+        Alias to :attr:`zgrid`.
         """
-        z_level = self.z_level
-        return 0.5 * (z_level[:-1] + z_level[1:])
+        return self.zgrid
 
     def eval_fractions(self) -> np.ndarray:
         """
@@ -259,14 +245,14 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return fractions
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
-        min_sigma_s = self.eval_sigma_s(spectral_ctx=ctx.spectral_ctx).min()
+        min_sigma_s = self.eval_sigma_s(sctx=ctx.spectral_ctx).min()
         return 1.0 / min_sigma_s if min_sigma_s != 0.0 else np.inf * ureg.m
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
     # --------------------------------------------------------------------------
 
-    def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_albedo(self, sctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate albedo spectrum based on a spectral context. This method
         dispatches evaluation to specialised methods depending on the active
@@ -274,7 +260,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        sctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
@@ -286,10 +272,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             layers.
         """
         if eradiate.mode().is_mono:
-            return self.eval_albedo_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_albedo_mono(sctx.wavelength)
 
         elif eradiate.mode().is_ckd:
-            return self.eval_albedo_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_albedo_ckd(sctx.bindex)
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -308,13 +294,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
         return self.eval_albedo_mono(w)
 
-    def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate extinction coefficient given a spectral context.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        sctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
@@ -325,10 +311,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             Particle layer extinction coefficient.
         """
         if eradiate.mode().is_mono:
-            return self.eval_sigma_t_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_sigma_t_mono(sctx.wavelength)
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_t_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_sigma_t_ckd(sctx.bindex)
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -347,20 +333,20 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             dz=dz,
             tau=self.tau_ref,
         )
-        return normalized_sigma_t_array * xs_t / xs_t_ref
+        return np.atleast_1d(normalized_sigma_t_array * xs_t / xs_t_ref)
 
     def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
         w_units = ureg.nm
         w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
         return self.eval_sigma_t_mono(w)
 
-    def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_a(self, sctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate absorption coefficient given a spectral context.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        sctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
@@ -371,10 +357,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             Particle layer extinction coefficient.
         """
         if eradiate.mode().is_mono:
-            return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_sigma_a_mono(sctx.wavelength)
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_a_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_sigma_a_ckd(sctx.bindex)
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -385,13 +371,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def eval_sigma_a_ckd(self, *bindexes: Bindex):
         return self.eval_sigma_t_ckd(*bindexes) - self.eval_sigma_s_ckd(*bindexes)
 
-    def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_s(self, sctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate scattering coefficient given a spectral context.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        sctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
@@ -402,10 +388,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             Particle layer scattering coefficient.
         """
         if eradiate.mode().is_mono:
-            return self.eval_sigma_s_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_sigma_s_mono(sctx.wavelength)
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_s_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_sigma_s_ckd(sctx.bindex)
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -415,116 +401,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     def eval_sigma_s_ckd(self, *bindexes: Bindex):
         return self.eval_sigma_t_ckd(*bindexes) * self.eval_albedo_ckd(*bindexes)
-
-    def eval_radprops(
-        self, spectral_ctx: SpectralContext, optional_fields: bool = False
-    ) -> xr.Dataset:
-        """
-        Return a dataset that holds the radiative properties profile of the
-        particle layer.
-
-        Parameters
-        ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
-
-        optional_fields : bool, optional, default: False
-            If ``True``, extra the optional ``sigma_a`` and ``sigma_s`` fields,
-            not required for scene construction but useful for analysis and
-            debugging.
-
-        Returns
-        -------
-        Dataset
-            Particle layer radiative properties profile dataset.
-        """
-        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
-
-        sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx)
-        albedo = self.eval_albedo(spectral_ctx=spectral_ctx)
-        wavelength = spectral_ctx.wavelength
-        data_vars = {
-            "sigma_t": (
-                "z_layer",
-                np.atleast_1d(sigma_t.magnitude),
-                dict(
-                    standard_name="extinction_coefficient",
-                    long_name="extinction coefficient",
-                    units=symbol(sigma_t.units),
-                ),
-            ),
-            "albedo": (
-                "z_layer",
-                np.atleast_1d(albedo.magnitude),
-                dict(
-                    standard_name="albedo",
-                    long_name="albedo",
-                    units=symbol(albedo.units),
-                ),
-            ),
-        }
-
-        if optional_fields:
-            sigma_a = self.eval_sigma_a(spectral_ctx=spectral_ctx)
-            sigma_s = self.eval_sigma_s(spectral_ctx=spectral_ctx)
-
-            data_vars.update(
-                {
-                    "sigma_a": (
-                        "z_layer",
-                        np.atleast_1d(sigma_a.magnitude),
-                        dict(
-                            standard_name="absorption_coefficient",
-                            long_name="absorption coefficient",
-                            units=symbol(sigma_a.units),
-                        ),
-                    ),
-                    "sigma_s": (
-                        "z_layer",
-                        np.atleast_1d(sigma_s.magnitude),
-                        dict(
-                            standard_name="scattering_coefficient",
-                            long_name="scattering coefficient",
-                            units=symbol(sigma_s.units),
-                        ),
-                    ),
-                }
-            )
-
-        return xr.Dataset(
-            data_vars=data_vars,
-            coords={
-                "z_layer": (
-                    "z_layer",
-                    self.z_layer.magnitude,
-                    dict(
-                        standard_name="layer_altitude",
-                        long_name="layer altitude",
-                        units=symbol(self.z_layer.units),
-                    ),
-                ),
-                "z_level": (
-                    "z_level",
-                    self.z_level.magnitude,
-                    dict(
-                        standard_name="level_altitude",
-                        long_name="level altitude",
-                        units=symbol(self.z_level.units),
-                    ),
-                ),
-                "w": (
-                    "w",
-                    [wavelength.magnitude],
-                    dict(
-                        standard_name="wavelength",
-                        long_name="wavelength",
-                        units=symbol(wavelength.units),
-                    ),
-                ),
-            },
-        ).isel(w=0)
 
     @staticmethod
     @ureg.wraps(ret="km^-1", args=("", "km", ""), strict=False)
