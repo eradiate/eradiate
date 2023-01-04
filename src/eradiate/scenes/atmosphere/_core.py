@@ -16,6 +16,7 @@ from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel.transform import map_unit_cube
+from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -378,44 +379,130 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     #                    Spatial and thermophysical properties
     # --------------------------------------------------------------------------
 
-    # Nothing at the moment
+    @property
+    @abstractmethod
+    def zgrid(self) -> pint.Quantity:
+        """
+        pint.Quantity: Altitude grid at which thermophysical and radiative
+                       properties are evaluated.
+        """
+        pass
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
     # --------------------------------------------------------------------------
 
-    @abstractmethod
     def eval_radprops(
-        self, spectral_ctx: SpectralContext, optional_fields: bool = False
+        self, sctx: SpectralContext, optional_fields: bool = False
     ) -> xr.Dataset:
         """
-        Return a dataset that holds the radiative properties profile of this
-        atmospheric model.
+        Evaluate the extinction coefficients and albedo profiles.
 
         Parameters
         ----------
-        spectral_ctx : .SpectralContext
+        sctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
         optional_fields : bool, optional, default: False
-            If ``True``, export optional fields, not required for scene
-            construction but useful for analysis and debugging.
+            If ``True``, also output the absorption and scattering coefficients,
+            not required for scene setup but useful for analysis and debugging.
 
         Returns
         -------
         Dataset
-            Radiative properties profile dataset.
+            A dataset containing with the following variables for the specified
+            spectral context:
+
+            * ``sigma_t``: extinction coefficient;
+            * ``albedo``: albedo;
+            * ``sigma_a``: absorption coefficient (optional);
+            * ``sigma_s``: scattering coefficient (optional).
+
+            Coordinates are the following:
+
+            * ``z``: altitude.
         """
+        sigma_units = ucc.get("collision_coefficient")
+        sigma_t = self.eval_sigma_t(sctx).m_as(sigma_units)
+        albedo = self.eval_albedo(sctx).magnitude
+        print(sigma_t)
+
+        data_vars = {
+            "sigma_t": (
+                "z_layer",
+                sigma_t,
+                {
+                    "units": f"{symbol(sigma_units)}",
+                    "standard_name": "extinction_coefficient",
+                    "long_name": "extinction coefficient",
+                },
+            ),
+            "albedo": (
+                "z_layer",
+                albedo,
+                {
+                    "standard_name": "albedo",
+                    "long_name": "albedo",
+                    "units": "",
+                },
+            ),
+        }
+
+        if optional_fields:
+            data_vars.update(
+                {
+                    "sigma_a": (
+                        "z_layer",
+                        sigma_t * (1.0 - albedo),
+                        {
+                            "units": f"{symbol(sigma_units)}",
+                            "standard_name": "absorption_coefficient",
+                            "long_name": "absorption coefficient",
+                        },
+                    ),
+                    "sigma_s": (
+                        "z_layer",
+                        sigma_t * albedo,
+                        {
+                            "units": f"{symbol(sigma_units)}",
+                            "standard_name": "scattering_coefficient",
+                            "long_name": "scattering coefficient",
+                        },
+                    ),
+                }
+            )
+
+        return xr.Dataset(
+            data_vars,
+            coords={
+                "z_layer": (
+                    "z_layer",
+                    self.zgrid.magnitude,
+                    {
+                        "units": f"{symbol(self.zgrid.units)}",
+                        "standard_name": "layer_altitude",
+                        "long_name": "layer altitude",
+                    },
+                )
+            },
+        )
+
+    @abstractmethod
+    def eval_albedo(self, sctx: SpectralContext) -> pint.Quantity:
         pass
 
     @abstractmethod
-    def eval_albedo(self, ctx: KernelDictContext) -> pint.Quantity:
+    def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:
         pass
 
     @abstractmethod
-    def eval_sigma_t(self, ctx: KernelDictContext) -> pint.Quantity:
+    def eval_sigma_a(self, sctx: SpectralContext) -> pint.Quantity:
+        pass
+
+    @abstractmethod
+    def eval_sigma_s(self, sctx: SpectralContext) -> pint.Quantity:
         pass
 
     # --------------------------------------------------------------------------
@@ -430,15 +517,19 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         if isinstance(self.geometry, PlaneParallelGeometry):
 
-            def eval_albedo(ctx):
+            def eval_albedo(ctx: KernelDictContext):
                 return mi.VolumeGrid(
-                    np.reshape(self.eval_albedo(ctx), (-1, 1, 1)).astype(np.float32)
+                    np.reshape(self.eval_albedo(ctx.spectral_ctx), (-1, 1, 1)).astype(
+                        np.float32
+                    )
                 )
 
-            def eval_sigma_t(ctx):
+            def eval_sigma_t(ctx: KernelDictContext):
                 return mi.VolumeGrid(
                     np.reshape(
-                        self.eval_sigma_t(ctx).m_as(uck.get("collision_coefficient")),
+                        self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                            uck.get("collision_coefficient")
+                        ),
                         (-1, 1, 1),
                     ).astype(np.float32)
                 )
@@ -470,13 +561,17 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
             def eval_albedo(ctx):
                 return mi.VolumeGrid(
-                    np.reshape(self.eval_albedo(ctx), (1, 1, -1)).astype(np.float32)
+                    np.reshape(self.eval_albedo(ctx.spectral_ctx), (1, 1, -1)).astype(
+                        np.float32
+                    )
                 )
 
             def eval_sigma_t(ctx):
                 return mi.VolumeGrid(
                     np.reshape(
-                        self.eval_sigma_t(ctx).m_as(uck.get("collision_coefficient")),
+                        self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                            uck.get("collision_coefficient")
+                        ),
                         (1, 1, -1),
                     ).astype(np.float32)
                 )

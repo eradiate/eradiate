@@ -61,10 +61,10 @@ def plot_sigma_t(
     with plt.rc_context({"lines.linestyle": ":", "lines.marker": "."}):
         for atmosphere in atmospheres:
             altitude = to_quantity(
-                atmosphere.eval_radprops(spectral_ctx=spectral_ctx).z_layer
+                atmosphere.eval_radprops(sctx=spectral_ctx).z_layer
             ).m_as("km")
             sigma_t = to_quantity(
-                atmosphere.eval_radprops(spectral_ctx=spectral_ctx).sigma_t
+                atmosphere.eval_radprops(sctx=spectral_ctx).sigma_t
             ).m_as("1/m")
             ax.plot(altitude, sigma_t, label=next(label_iter))
 

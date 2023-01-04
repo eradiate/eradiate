@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.core import traverse
 from eradiate.scenes.phase import BlendPhaseFunction
 from eradiate.test_tools.types import check_scene_element
@@ -123,7 +123,7 @@ def test_blend_phase_weights(mode_mono, weights, expected):
         bbox=[[0, 0, 0], [1, 1, 1]],
     )
     np.testing.assert_allclose(
-        phase.eval_conditional_weights(KernelDictContext()), expected
+        phase.eval_conditional_weights(SpectralContext.new()), expected
     )
 
 
@@ -216,7 +216,7 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
         components=[{"type": "isotropic"}, {"type": "rayleigh"}],
         **kwargs,
     )
-    mi_obj, mi_params = check_scene_element(phase, mi.PhaseFunction)
+    check_scene_element(phase, mi.PhaseFunction)
 
     template, params = traverse(phase)
     ctx = KernelDictContext()
@@ -228,7 +228,9 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
         "phase_0.type": "isotropic",
         "phase_1.type": "rayleigh",
         "weight.type": "gridvolume",
-        "weight.grid": np.reshape(phase.eval_conditional_weights(ctx), (-1, 1, 1)),
+        "weight.grid": np.reshape(
+            phase.eval_conditional_weights(ctx.spectral_ctx), (-1, 1, 1)
+        ),
     }
     if "bbox" in kwargs:
         expected["weight.to_world"] = np.identity(4)
@@ -290,7 +292,7 @@ def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_wei
         ],
         **kwargs,
     )
-    mi_obj, mi_params = check_scene_element(phase, mi.PhaseFunction)
+    check_scene_element(phase, mi.PhaseFunction)
 
     template, params = traverse(phase)
     kernel_dict = mi_to_numpy(template.render(KernelDictContext(), nested=False))

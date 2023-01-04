@@ -153,13 +153,13 @@ class HomogeneousAtmosphere(Atmosphere):
             self.eval_sigma_s(spectral_ctx) + self.eval_sigma_a(spectral_ctx)
         )
 
-    def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_a(self, sctx: SpectralContext) -> pint.Quantity:
         """
         Return absorption coefficient.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        sctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -168,15 +168,15 @@ class HomogeneousAtmosphere(Atmosphere):
         quantity
             Absorption coefficient.
         """
-        return self.sigma_a.eval(spectral_ctx)
+        return self.sigma_a.eval(sctx)
 
-    def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_s(self, sctx: SpectralContext) -> pint.Quantity:
         """
         Return scattering coefficient.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        sctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -185,15 +185,15 @@ class HomogeneousAtmosphere(Atmosphere):
         quantity
             Scattering coefficient.
         """
-        return self.sigma_s.eval(spectral_ctx)
+        return self.sigma_s.eval(sctx)
 
-    def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:
         """
         Return extinction coefficient.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        sctx : :class:`.SpectralContext`
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -202,7 +202,7 @@ class HomogeneousAtmosphere(Atmosphere):
         quantity
             Extinction coefficient.
         """
-        return self.eval_sigma_a(spectral_ctx) + self.eval_sigma_s(spectral_ctx)
+        return self.eval_sigma_a(sctx) + self.eval_sigma_s(sctx)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation

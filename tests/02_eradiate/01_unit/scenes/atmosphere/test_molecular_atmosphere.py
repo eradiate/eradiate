@@ -75,12 +75,16 @@ def test_molecular_atmosphere_switches(mode_mono):
     # Absorption can be deactivated
     atmosphere = MolecularAtmosphere(has_absorption=False)
     ctx = KernelDictContext()
-    assert np.all(atmosphere.eval_radprops(ctx.spectral_ctx).sigma_a == 0.0)
+    assert np.all(
+        atmosphere.eval_radprops(ctx.spectral_ctx, optional_fields=True).sigma_a == 0.0
+    )
 
     # Scattering can be deactivated
     atmosphere = MolecularAtmosphere(has_scattering=False)
     ctx = KernelDictContext()
-    assert np.all(atmosphere.eval_radprops(ctx.spectral_ctx).sigma_s == 0.0)
+    assert np.all(
+        atmosphere.eval_radprops(ctx.spectral_ctx, optional_fields=True).sigma_s == 0.0
+    )
 
     # At least one must be active
     with pytest.raises(ValueError):
