@@ -54,6 +54,7 @@ public:
                                BSDFFlags::FrontSide | BSDFFlags::BackSide);
 
         m_flags = m_components[0] | m_components[1];
+        dr::set_attr(this, "flags", m_flags);
     }
 
     std::pair<BSDFSample3f, Spectrum>
@@ -75,9 +76,10 @@ public:
         UnpolarizedSpectrum value(0.f);
 
         // Select the lobe to be sampled
-        UnpolarizedSpectrum r              = m_reflectance->eval(si, active),
-                            t              = m_transmittance->eval(si, active);
-        Float reflection_sampling_weight   = dr::mean(r / (r + t)),
+        UnpolarizedSpectrum r = m_reflectance->eval(si, active),
+                            t = m_transmittance->eval(si, active);
+
+        Float reflection_sampling_weight = dr::mean(r / (r + t)),
               transmission_sampling_weight = 1.f - reflection_sampling_weight;
 
         // Handle case where r = t = 0
@@ -170,15 +172,16 @@ public:
         Float cos_theta_i = Frame3f::cos_theta(si.wi),
               cos_theta_o = Frame3f::cos_theta(wo);
 
-        // Ensure that uncoming direction is in upper hemisphere
+        // Ensure that incoming direction is in upper hemisphere
         Vector3f wo_flip{ wo.x(), wo.y(), dr::abs(cos_theta_o) };
 
         Float result = dr::select(
             active, warp::square_to_cosine_hemisphere_pdf(wo_flip), 0.f);
 
-        UnpolarizedSpectrum r              = m_reflectance->eval(si, active),
-                            t              = m_transmittance->eval(si, active);
-        Float reflection_sampling_weight   = dr::mean(r / (r + t)),
+        UnpolarizedSpectrum r = m_reflectance->eval(si, active),
+                            t = m_transmittance->eval(si, active);
+
+        Float reflection_sampling_weight = dr::mean(r / (r + t)),
               transmission_sampling_weight = 1.f - reflection_sampling_weight;
 
         // Handle case where r = t = 0
