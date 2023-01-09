@@ -28,12 +28,12 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 %
 % ### Internal changes
 
-## v0.22.6 (upcoming release)
+## v0.23.1 (upcoming release)
 
 ### Deprecations and removals
 
 * The {meth}`.MultiDistantMeasure.from_viewing_angles()` constructor is
-  deprecated and will be removed in v0.23.1.
+  deprecated and will be removed in v0.23.2.
 * Removed `.EradiateConfig.data_path` ({ghpr}`292`).
 
 ### Improvements and fixes
@@ -61,6 +61,8 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Fixed unnecessary memory allocations ({ghpr}`282`).
 * Added utility functions to `srf_tools` module ({ghpr}`283`).
 * Added {class}`.MQDiffuseBSDF` reflection model ({ghpr}`286`).
+* Fixed a bug where the `bilambertian` BSDF plugin would produce incorrect
+  results when used with LLVM Mitsuba variants ({ghpr}`297`).
 
 % ### Documentation
 
