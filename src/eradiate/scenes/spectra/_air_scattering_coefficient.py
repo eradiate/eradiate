@@ -4,15 +4,12 @@ import attrs
 import numpy as np
 import pint
 
-import eradiate
-
 from ._core import Spectrum
 from ..core import KernelDict
-from ..._mode import ModeFlags
+from ..._mode import SpectralMode, supported_mode
 from ...attrs import parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext
-from ...exceptions import UnsupportedModeError
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity
 from ...units import unit_context_config as ucc
@@ -93,22 +90,20 @@ class AirScatteringCoefficientSpectrum(Spectrum):
         return result * quantity_units
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            return KernelDict(
-                {
-                    "spectrum": {
-                        "type": "uniform",
-                        "value": float(
-                            self.eval(ctx.spectral_ctx).m_as(
-                                uck.get("collision_coefficient")
-                            )
-                        ),
-                    }
-                }
-            )
+        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        return KernelDict(
+            {
+                "spectrum": {
+                    "type": "uniform",
+                    "value": float(
+                        self.eval(ctx.spectral_ctx).m_as(
+                            uck.get("collision_coefficient")
+                        )
+                    ),
+                }
+            }
+        )
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         raise NotImplementedError

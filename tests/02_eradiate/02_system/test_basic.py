@@ -7,7 +7,6 @@ import pytest
 
 import eradiate
 import eradiate.scenes as ertsc
-from eradiate import ModeFlags
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.experiments import mitsuba_run
@@ -60,7 +59,7 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
 
     # Ignore warning in single precision
     with pytest.warns(UserWarning) if (
-        eradiate.mode().has_flags(ModeFlags.MI_SINGLE) and spp > 100000
+        eradiate.mode().is_single_precision and spp > 100000
     ) else nullcontext():
         measure = ertsc.measure.MultiDistantMeasure.from_viewing_angles(
             zeniths=vza, azimuths=0.0, target=[0, 0, 0], spp=spp

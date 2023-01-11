@@ -14,7 +14,7 @@ def test_kernel_dict_construct():
     for mode in eradiate.modes():
         eradiate.set_mode(mode)
         kernel_dict = KernelDict({})
-        assert kernel_dict.variant == eradiate.mode().kernel_variant
+        assert kernel_dict.variant == eradiate.mode().mi_variant
 
 
 def test_kernel_dict_check(mode_mono_single):

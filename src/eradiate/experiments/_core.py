@@ -15,7 +15,7 @@ import eradiate
 
 from .. import pipelines
 from .._config import ProgressLevel, config
-from .._mode import ModeFlags, supported_mode
+from .._mode import SpectralMode, supported_mode
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import KernelVariantError
@@ -325,7 +325,7 @@ class Experiment(ABC):
         """
 
         # Mode safeguard
-        supported_mode(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD)
+        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
 
         if not measures:
             measures = self.measures

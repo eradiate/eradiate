@@ -2,7 +2,6 @@ import mitsuba as mi
 import numpy as np
 
 import eradiate
-from eradiate import ModeFlags
 from eradiate.experiments import mitsuba_run
 from eradiate.scenes.core import KernelDict
 
@@ -33,7 +32,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
     Tolerance is set according to the defaults for :func:`numpy.allclose`.
     Metrics are reported only for the double precision version of this test.
     """
-    expected_min_size = 1e8 if eradiate.mode().has_flags(ModeFlags.MI_MONO) else 1e12
+    expected_min_size = 1e8 if eradiate.mode().is_single_precision else 1e12
     spp = 1
     rho = 0.5
     li = 1.0
@@ -93,7 +92,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
     # Report test metrics
     max_size = float(np.max(scene_sizes[passed])) if np.any(passed) else 0.0
 
-    if eradiate.mode().has_flags(ModeFlags.MI_DOUBLE):
+    if eradiate.mode().is_double_precision:
         json_metadata["metrics"] = {
             "test_maximum_scene_size": {
                 "name": "Maximum scene size",

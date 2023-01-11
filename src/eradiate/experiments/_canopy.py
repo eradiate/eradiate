@@ -193,7 +193,7 @@ __getattr__ = substitute(
     {
         "RamiExperiment": (
             CanopyExperiment,
-            {"deprecated_in": "0.22.5", "removed_in": "0.22.7"},
+            {"deprecated_in": "0.22.5", "removed_in": "0.23.2"},
         )
     }
 )

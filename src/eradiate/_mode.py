@@ -14,52 +14,51 @@ from .exceptions import UnsupportedModeError
 # ------------------------------------------------------------------------------
 
 
-class ModeFlags(enum.Flag):
+class Flag(enum.Flag):
     """
-    Flags defining Eradiate mode features.
+    Small extension to :class:`enum.Flag` that adds a ``convert()`` class method
+    constructor.
     """
 
-    # -- Mode feature flags ----------------------------------------------------
+    @classmethod
+    def convert(cls, value: t.Any) -> Flag:
+        """
+        Try to convert a value to a flag. Strings are capitalised and converted
+        to the corresponding enum member.
+        """
+        if isinstance(value, str):
+            return cls[value.upper()]
+        else:
+            return cls(value)
 
-    # Eradiate
-    ERT_MONO = enum.auto()  #: Mode performs monochromatic simulations
-    ERT_CKD = enum.auto()  #: Mode performs correlated-k spectral simulation
-    # ERT_RGB = enum.auto()  #: Mode performs renders RGB images
 
-    # Mitsuba
-    MI_SCALAR = enum.auto()  #: Mode maps to a scalar Mitsuba variant
-    # MI_LLVM = enum.auto()  #: Mode maps to a LLVM Mitsuba variant
-    # MI_AD = enum.auto()  #: Mode maps to an autodiff Mitsuba variant
-    MI_MONO = enum.auto()  #: Mode maps to a monochromatic Mitsuba variant
-    # MI_RGB = enum.auto()  #: Mode maps to an RGB Mitsuba variant
-    # MI_SPECTRAL = enum.auto()  #: Mode maps to a spectral Mitsuba variant
-    # MI_UNPOLARIZED = enum.auto() #: Mode maps to an unpolarised Mitsuba variant
-    # MI_POLARIZED = enum.auto() #: Mode maps to a polarised Mitsuba variant
-    MI_SINGLE = enum.auto()  #: Mode maps to a single-precision Mitsuba variant
-    MI_DOUBLE = enum.auto()  #: Mode maps to a double-precision Mitsuba variant
+class SpectralMode(Flag):
+    """
+    Spectral dimension handling flags.
+    """
 
-    # -- Mode definition flags -------------------------------------------------
+    MONO = enum.auto()  #: Monochromatic (line-by-line) mode
+    CKD = enum.auto()  #: Correlated-k distribution mode
 
-    MONO_SINGLE = (
-        ERT_MONO | MI_SCALAR | MI_MONO | MI_SINGLE
-    )  #: Monochromatic mode, single precision
-    MONO_DOUBLE = (
-        ERT_MONO | MI_SCALAR | MI_MONO | MI_DOUBLE
-    )  #: Monochromatic mode, double precision
-    CKD_SINGLE = (
-        ERT_CKD | MI_SCALAR | MI_MONO | MI_SINGLE
-    )  #: CKD mode, single precision
-    CKD_DOUBLE = (
-        ERT_CKD | MI_SCALAR | MI_MONO | MI_DOUBLE
-    )  #: CKD mode, double precision
 
-    # -- Other convenience aliases ---------------------------------------------
+_SPECTRAL_COORD_LABELS = {SpectralMode.MONO: "w", SpectralMode.CKD: "bd"}
 
-    ANY_MONO = ERT_MONO  #: Any monochromatic mode
-    ANY_CKD = ERT_CKD  #: Any CKD mode
-    ANY_SCALAR = MI_SCALAR  #: Any scalar mode
-    ANY_SINGLE = MI_SINGLE  #: Any single-precision mode
-    ANY_DOUBLE = MI_DOUBLE  #: Any double-precision mode
+
+class MitsubaBackend(Flag):
+    """
+    Mitsuba backend flags.
+    """
+
+    SCALAR = enum.auto()  #: Scalar backend
+    LLVM = enum.auto()  #: LLVM backend
+
+
+class MitsubaColorMode(Flag):
+    """
+    Mitsuba color mode flags.
+    """
+
+    MONO = enum.auto()  #: Monochromatic mode
 
 
 # ------------------------------------------------------------------------------
@@ -68,32 +67,44 @@ class ModeFlags(enum.Flag):
 
 # Map associating a mode ID string to the corresponding class
 # (aliased in public API section)
-_mode_registry = {
+_mode_registry: t.Dict[str, dict] = {
     "mono_single": {
-        "flags": ModeFlags.MONO_SINGLE,
-        "spectral_coord_label": "w",
+        "spectral_mode": SpectralMode.MONO,
+        "mi_backend": MitsubaBackend.SCALAR,
+        "mi_color_mode": MitsubaColorMode.MONO,
+        "mi_double_precision": False,
+        "mi_polarized": False,
     },
     "mono_double": {
-        "flags": ModeFlags.MONO_DOUBLE,
-        "spectral_coord_label": "w",
-    },
-    "mono": {  # Alias to mono_double
-        "flags": ModeFlags.MONO_DOUBLE,
-        "spectral_coord_label": "w",
+        "spectral_mode": SpectralMode.MONO,
+        "mi_backend": MitsubaBackend.SCALAR,
+        "mi_color_mode": MitsubaColorMode.MONO,
+        "mi_double_precision": True,
+        "mi_polarized": False,
     },
     "ckd_single": {
-        "flags": ModeFlags.CKD_SINGLE,
-        "spectral_coord_label": "bd",
+        "spectral_mode": SpectralMode.CKD,
+        "mi_backend": MitsubaBackend.SCALAR,
+        "mi_color_mode": MitsubaColorMode.MONO,
+        "mi_double_precision": False,
+        "mi_polarized": False,
     },
     "ckd_double": {
-        "flags": ModeFlags.CKD_DOUBLE,
-        "spectral_coord_label": "bd",
-    },
-    "ckd": {  # Alias to ckd_double
-        "flags": ModeFlags.CKD_DOUBLE,
-        "spectral_coord_label": "bd",
+        "spectral_mode": SpectralMode.CKD,
+        "mi_backend": MitsubaBackend.SCALAR,
+        "mi_color_mode": MitsubaColorMode.MONO,
+        "mi_double_precision": True,
+        "mi_polarized": False,
     },
 }
+
+# Aliases
+_mode_registry.update(
+    {
+        "mono": _mode_registry["mono_double"].copy(),
+        "ckd": _mode_registry["ckd_double"].copy(),
+    }
+)
 
 
 @parse_docs
@@ -103,7 +114,9 @@ class Mode:
     Data structure describing Eradiate's operational mode and associated
     ancillary data.
 
-    .. important:: Instances are immutable.
+    Warnings
+    --------
+    Instances are immutable.
     """
 
     id: str = documented(
@@ -112,75 +125,130 @@ class Mode:
         type="str",
     )
 
-    flags: ModeFlags = documented(
-        attrs.field(converter=ModeFlags),
-        doc="Mode flags.",
-        type=":class:`.ModeFlags`",
+    spectral_mode: SpectralMode = documented(
+        attrs.field(converter=SpectralMode.convert),
+        doc="Spectral dimension handling.",
+        type=":class:`.SpectralMode`",
+        init_type=":class:`.SpectralMode` or str",
     )
 
-    spectral_coord_label: str = documented(
-        attrs.field(converter=attrs.converters.optional(str)),
-        doc="Mode spectral coordinate label.",
-        type="str",
+    mi_backend: MitsubaBackend = documented(
+        attrs.field(converter=MitsubaBackend.convert),
+        doc="Mitsuba computational backend.",
+        type=":class:`.MitsubaBackend`",
+        init_type=":class:`.MitsubaBackend` or str",
+    )
+
+    mi_color_mode: MitsubaColorMode = documented(
+        attrs.field(converter=MitsubaColorMode.convert),
+        doc="Mitsuba color mode.",
+        type=".MitsubaColorMode",
+        init_type=":class:`.MitsubaColorMode` or str",
+    )
+
+    mi_polarized: bool = documented(
+        attrs.field(default=False, converter=bool),
+        doc="Mitsuba polarized mode.",
+        type="bool",
+        default="False",
+    )
+
+    mi_double_precision: bool = documented(
+        attrs.field(default=True, converter=bool),
+        doc="Mitsuba double precision.",
+        type="bool",
+        default="True",
     )
 
     @property
-    def kernel_variant(self) -> str:
-        """Mode kernel variant."""
-        components = []
+    def spectral_coord_label(self) -> str:
+        """
+        Spectral coordinate label.
+        """
+        return _SPECTRAL_COORD_LABELS[self.spectral_mode]
 
-        # Backend selection
-        if self.flags & ModeFlags.MI_SCALAR:
-            components.append("scalar")
+    @property
+    def mi_variant(self):
+        """
+        Mitsuba variant associated with the selected mode.
+        """
 
-        # Todo: Autodiff mode selection
+        result = [self.mi_backend.name.lower(), self.mi_color_mode.name.lower()]
+        if self.mi_polarized:
+            result.append("polarized")
+        if self.mi_double_precision:
+            result.append("double")
+        return "_".join(result)
 
-        # Spectral mode selection
-        if self.flags & ModeFlags.MI_MONO:
-            components.append("mono")
-
-        # Todo: Polarisation mode selection
-
-        # Precision mode selection
-        if self.flags & ModeFlags.MI_DOUBLE:
-            components.append("double")
-
-        return "_".join(components)
-
-    def has_flags(self, flags: t.Union[ModeFlags, str]) -> bool:
+    def check(
+        self,
+        spectral_mode: t.Union[None, SpectralMode, str] = None,
+        mi_backend: t.Union[None, MitsubaBackend, str] = None,
+        mi_color_mode: t.Union[None, MitsubaColorMode, str] = None,
+        mi_polarized: t.Optional[bool] = None,
+        mi_double_precision: t.Optional[bool] = None,
+    ) -> bool:
         """
         Check if the currently active mode has the passed flags.
 
         Parameters
         ----------
-        flags : .ModeFlags or str
-            Flags to check for. If a string is passed, conversion to a
-            :class:`.ModeFlags` instance will be attempted.
+        spectral_mode : :class:`.SpectralMode` or str, optional
+            Spectral mode to check. If unset, the check is skipped.
+
+        mi_backend : :class:`.MitsubaBackend` or str, optional
+            Mitsuba backend to check. If unset, the check is skipped.
+
+        mi_color_mode : :class:`.MitsubaColorMode` or str, optional
+            Mitsuba color mode to check. If unset, the check is skipped.
+
+        mi_polarized : bool, optional
+            Mitsuba polarized mode to check. If unset, the check is skipped.
+
+        mi_double_precision : bool, optional
+            Mitsuba double precision mode to check. If unset, the check is skipped.
 
         Returns
         -------
         bool
             ``True`` if current mode has the passed flags, ``False`` otherwise.
         """
-        if isinstance(flags, str):
-            flags = ModeFlags[flags.upper()]
-        return bool(self.flags & flags)
+        outcome = True
+
+        if spectral_mode is not None:
+            outcome &= bool(self.spectral_mode & SpectralMode.convert(spectral_mode))
+
+        if mi_backend is not None:
+            outcome &= bool(self.mi_backend & MitsubaBackend.convert(mi_backend))
+
+        if mi_color_mode is not None:
+            outcome &= bool(
+                self.mi_color_mode & MitsubaColorMode.convert(mi_color_mode)
+            )
+
+        if mi_polarized is not None:
+            outcome &= self.mi_polarized == mi_polarized
+
+        if mi_double_precision is not None:
+            outcome &= self.mi_double_precision == mi_double_precision
+
+        return outcome
 
     @property
-    def is_mono(self):
-        return bool(self.flags & ModeFlags.ANY_MONO)
+    def is_mono(self) -> bool:
+        return self.spectral_mode is SpectralMode.MONO
 
     @property
-    def is_ckd(self):
-        return bool(self.flags & ModeFlags.ANY_CKD)
+    def is_ckd(self) -> bool:
+        return self.spectral_mode is SpectralMode.CKD
 
     @property
-    def is_single_precision(self):
-        return bool(self.flags & ModeFlags.ANY_SINGLE)
+    def is_single_precision(self) -> bool:
+        return self.mi_double_precision is False
 
     @property
-    def is_double_precision(self):
-        return bool(self.flags & ModeFlags.ANY_DOUBLE)
+    def is_double_precision(self) -> bool:
+        return self.mi_double_precision is True
 
     @staticmethod
     def new(mode_id: str) -> Mode:
@@ -275,7 +343,7 @@ def set_mode(mode_id: str):
 
     if mode_id in _mode_registry:
         mode = Mode.new(mode_id)
-        mitsuba.set_variant(mode.kernel_variant)
+        mitsuba.set_variant(mode.mi_variant)
     elif mode_id.lower() == "none":
         mode = None
     else:
@@ -284,37 +352,37 @@ def set_mode(mode_id: str):
     _active_mode = mode
 
 
-def supported_mode(flags):
+def supported_mode(**kwargs):
     """
-    Check whether the current mode has specific flags. If not, raise.
+    Check whether the current mode has specific features. If not, raise.
 
     Parameters
     ----------
-    flags : .ModeFlags
-        Flags the current mode is expected to have.
+    kwargs
+        Keyword arguments passed to :meth:`.Mode.check`.
 
     Raises
     ------
     .UnsupportedModeError
-        Current mode does not have the requested flags.
+        Current mode does not pass the check.
     """
-    if mode() is None or not mode().has_flags(flags):
+    if mode() is None or not mode().check(**kwargs):
         raise UnsupportedModeError
 
 
-def unsupported_mode(flags):
+def unsupported_mode(**kwargs):
     """
-    Check whether the current mode has specific flags. If so, raise.
+    Check whether the current mode has specific features. If so, raise.
 
     Parameters
     ----------
-    flags : .ModeFlags
-        Flags the current mode is expected not to have.
+    kwargs
+        Keyword arguments passed to :meth:`.Mode.check`.
 
     Raises
     ------
     .UnsupportedModeError
         Current mode has the requested flags.
     """
-    if mode() is None or mode().has_flags(flags):
+    if mode() is None or mode().check(**kwargs):
         raise UnsupportedModeError

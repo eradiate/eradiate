@@ -32,7 +32,13 @@ Mode management
 .. autodata:: Mode
    :annotation:
 
-.. autodata:: ModeFlags
+.. autodata:: SpectralMode
+   :annotation:
+
+.. autodata:: MitsubaBackend
+   :annotation:
+
+.. autodata:: MitsubaColorMode
    :annotation:
 
 Unit management

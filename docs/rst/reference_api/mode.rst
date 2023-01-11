@@ -25,4 +25,6 @@ Classes
    :toctree: generated/autosummary/
 
    Mode
-   ModeFlags
+   SpectralMode
+   MitsubaBackend
+   MitsubaColorMode
