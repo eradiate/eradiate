@@ -38,15 +38,19 @@ def test_cuboid_params(mode_mono_double):
     cuboid = CuboidShape(edges=[2, 4, 8])
     kernel_dict = cuboid.kernel_dict(ctx)
     to_world = kernel_dict[cuboid.id]["to_world"]
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(-1, -1, -1)), [-1, -2, -4])
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 1)), [1, 2, 4])
+    assert dr.allclose(
+        to_world.transform_affine(mi.ScalarPoint3f(-1, -1, -1)), [-1, -2, -4]
+    )
+    assert dr.allclose(to_world.transform_affine(mi.ScalarPoint3f(1, 1, 1)), [1, 2, 4])
 
     # Set centre
     cuboid = CuboidShape(edges=[2, 2, 2], center=[1, 1, 1])
     kernel_dict = cuboid.kernel_dict(ctx)
     to_world = kernel_dict[cuboid.id]["to_world"]
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(-1, -1, -1)), [0, 0, 0])
-    assert dr.allclose(to_world.transform_affine(mi.Point3f(1, 1, 1)), [2, 2, 2])
+    assert dr.allclose(
+        to_world.transform_affine(mi.ScalarPoint3f(-1, -1, -1)), [0, 0, 0]
+    )
+    assert dr.allclose(to_world.transform_affine(mi.ScalarPoint3f(1, 1, 1)), [2, 2, 2])
 
 
 def test_cuboid_atmosphere(mode_mono_double):

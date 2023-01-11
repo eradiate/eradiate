@@ -126,7 +126,7 @@ class DistantFluxMeasure(DistantMeasure):
     # --------------------------------------------------------------------------
 
     def _kernel_dict_impl(self, sensor_id, spp):
-        _, up = mi.coordinate_system(self.direction)
+        _, up = mi.scalar_rgb.coordinate_system(self.direction)
 
         result = {
             "type": "distantflux",

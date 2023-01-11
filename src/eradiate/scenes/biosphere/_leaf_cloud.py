@@ -1189,7 +1189,7 @@ class LeafCloud(CanopyElement):
                 self.leaf_radii.m_as(kernel_length),
             )
         ):
-            _, up = mi.coordinate_system(normal)
+            _, up = mi.scalar_rgb.coordinate_system(normal)
             to_world = mi.ScalarTransform4f.look_at(
                 origin=position, target=position + normal, up=up
             ) @ mi.ScalarTransform4f.scale(radius)

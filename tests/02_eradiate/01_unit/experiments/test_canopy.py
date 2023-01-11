@@ -74,7 +74,7 @@ def test_canopy_experiment_kernel_dict(modes_all_double, padding):
     kernel_scene = s.kernel_dict(ctx)
     assert np.allclose(
         kernel_scene["shape_surface"]["to_world"].transform_affine(
-            mi.Point3f(1, -1, 0)
+            mi.ScalarPoint3f(1, -1, 0)
         ),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
