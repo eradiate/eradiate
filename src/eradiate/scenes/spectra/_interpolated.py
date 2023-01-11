@@ -8,16 +8,13 @@ import pint
 import pinttr
 import xarray as xr
 
-import eradiate
-
 from ._core import Spectrum
 from ..core import KernelDict
 from ... import converters, validators
-from ..._mode import ModeFlags
+from ..._mode import SpectralMode, supported_mode
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext
-from ...exceptions import UnsupportedModeError
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -52,7 +49,7 @@ class InterpolatedSpectrum(Spectrum):
             kw_only=True,
         ),
         doc="Wavelengths defining the interpolation grid. Values must be "
-            "monotonically increasing.",
+        "monotonically increasing.",
         type="quantity",
     )
 
@@ -259,17 +256,15 @@ class InterpolatedSpectrum(Spectrum):
         return np.trapz(interp, w)
 
     def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            return KernelDict(
-                {
-                    "spectrum": {
-                        "type": "uniform",
-                        "value": float(
-                            self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
-                        ),
-                    }
-                }
-            )
+        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        return KernelDict(
+            {
+                "spectrum": {
+                    "type": "uniform",
+                    "value": float(
+                        self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
+                    ),
+                }
+            }
+        )

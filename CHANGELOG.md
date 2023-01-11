@@ -63,6 +63,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Added {class}`.MQDiffuseBSDF` reflection model ({ghpr}`286`).
 * Fixed a bug where the `bilambertian` BSDF plugin would produce incorrect
   results when used with LLVM Mitsuba variants ({ghpr}`297`).
+* ⚠️ Refactoring of the {class}`.Mode` infrastructure ({ghpr}`298`).
 
 % ### Documentation
 

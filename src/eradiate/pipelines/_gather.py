@@ -9,7 +9,6 @@ from pinttr.util import always_iterable
 import eradiate
 
 from ._core import PipelineStep
-from .._mode import ModeFlags
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..kernel import bitmap_to_dataset
@@ -173,8 +172,8 @@ class Gather(PipelineStep):
         with xr.set_options(keep_attrs=True):
             result = xr.combine_by_coords(sensor_datasets)
 
-        # Drop "channel" dimension when using a mono variant
-        if eradiate.mode().has_flags(ModeFlags.MI_MONO):
+        # Drop "channel" dimension when using a monochromatic Mitsuba variant
+        if eradiate.mode().check(mi_color_mode="mono"):
             result = result.squeeze("channel", drop=True)
 
         # Apply metadata to new dimensions

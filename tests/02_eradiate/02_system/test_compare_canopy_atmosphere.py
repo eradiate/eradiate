@@ -19,12 +19,12 @@ def test_compare_canopy_atmosphere_vs_atmosphere(
 ):
     r"""
     Compare CanopyAtmosphereExperiment with AtmosphereExperiment
-    ====================================================
+    ============================================================
 
     This test compares the results of an AtmosphereExperiment with a
-    corresponding
-    CanopyAtmosphereExperiment run. To achieve that, the CanopyAtmosphereExperiment is set up
-    without an explicit canopy and a basic atmosphere.
+    corresponding CanopyAtmosphereExperiment run. To achieve that, the
+    CanopyAtmosphereExperiment is set up without an explicit canopy and a basic
+    atmosphere.
 
     Rationale
     ---------

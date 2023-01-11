@@ -2,23 +2,23 @@
 import pytest
 
 import eradiate
-from eradiate import ModeFlags, supported_mode, unsupported_mode
+from eradiate import supported_mode, unsupported_mode
 from eradiate.exceptions import UnsupportedModeError
 
 
 def test_mode_mono(mode_mono):
     mode = eradiate.mode()
-    assert mode.kernel_variant == "scalar_mono_double"
+    assert mode.mi_variant == "scalar_mono_double"
 
 
 def test_mode_mono_single(mode_mono_single):
     mode = eradiate.mode()
-    assert mode.kernel_variant == "scalar_mono"
+    assert mode.mi_variant == "scalar_mono"
 
 
 def test_mode_mono_double(mode_mono_double):
     mode = eradiate.mode()
-    assert mode.kernel_variant == "scalar_mono_double"
+    assert mode.mi_variant == "scalar_mono_double"
 
 
 def test_modes():
@@ -35,20 +35,14 @@ def test_modes():
     assert mitsuba.variant() == "scalar_mono"
 
 
-def test_mode_flags():
+def test_mode_check():
     # Check flags for mono single mode
     eradiate.set_mode("mono_single")
-    assert eradiate.mode().has_flags(ModeFlags.ERT_MONO)
-    assert eradiate.mode().has_flags(ModeFlags.MI_SINGLE)
+    assert eradiate.mode().check(spectral_mode="mono", mi_double_precision=False)
 
     # Check flags for mono_double mode
     eradiate.set_mode("mono_double")
-    assert eradiate.mode().has_flags(ModeFlags.ERT_MONO)
-    assert eradiate.mode().has_flags(ModeFlags.MI_DOUBLE)
-
-    # Check if conversion of string to flags works as intended
-    eradiate.set_mode("mono_double")
-    assert eradiate.mode().has_flags("any_double")
+    assert eradiate.mode().check(spectral_mode="mono", mi_double_precision=True)
 
 
 def test_supported_mode():
@@ -56,33 +50,33 @@ def test_supported_mode():
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
-            supported_mode("ANY_CKD")
+            supported_mode(spectral_mode="ckd")
 
-        supported_mode("ANY_MONO")
+        supported_mode(spectral_mode="mono")
 
     for mode in ["ckd_single", "ckd_double", "ckd"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
-            supported_mode("ANY_MONO")
+            supported_mode(spectral_mode="mono")
 
-        supported_mode("ANY_CKD")
+        supported_mode(spectral_mode="ckd")
 
     for mode in ["mono", "ckd"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
-            supported_mode("ANY_SINGLE")
+            supported_mode(mi_double_precision=False)
 
-        supported_mode("ANY_DOUBLE")
+        supported_mode(mi_double_precision=True)
 
     for mode in ["mono_double", "ckd_double"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
-            supported_mode("ANY_SINGLE")
+            supported_mode(mi_double_precision=False)
 
-        supported_mode("ANY_DOUBLE")
+        supported_mode(mi_double_precision=True)
 
 
 def test_unsupported_mode():
@@ -90,30 +84,30 @@ def test_unsupported_mode():
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
-            unsupported_mode("ANY_MONO")
+            unsupported_mode(spectral_mode="mono")
 
-        unsupported_mode("ANY_CKD")
+        unsupported_mode(spectral_mode="ckd")
 
     for mode in ["ckd_single", "ckd_double", "ckd"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
-            unsupported_mode("ANY_CKD")
+            unsupported_mode(spectral_mode="ckd")
 
-        unsupported_mode("ANY_MONO")
+        unsupported_mode(spectral_mode="mono")
 
     for mode in ["mono_double", "ckd_double", "mono", "ckd"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
-            unsupported_mode("ANY_DOUBLE")
+            unsupported_mode(mi_double_precision=True)
 
-        unsupported_mode("ANY_SINGLE")
+        unsupported_mode(mi_double_precision=False)
 
     for mode in ["mono_single", "ckd_single"]:
         eradiate.set_mode(mode)
 
         with pytest.raises(UnsupportedModeError):
-            unsupported_mode("ANY_SINGLE")
+            unsupported_mode(mi_double_precision=False)
 
-        unsupported_mode("ANY_DOUBLE")
+        unsupported_mode(mi_double_precision=True)

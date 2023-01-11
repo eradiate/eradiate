@@ -18,7 +18,7 @@ from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import KernelDict
 from ..phase import TabulatedPhaseFunction
 from ... import converters, data
-from ..._mode import ModeFlags
+from ..._mode import SpectralMode, supported_mode
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
@@ -39,6 +39,7 @@ def _particle_layer_distribution_converter(value):
             return particle_distribution_factory.convert({"type": "exponential"})
 
     return particle_distribution_factory.convert(value)
+
 
 @parse_docs
 @attrs.define
@@ -441,93 +442,91 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         Dataset
             Particle layer radiative properties profile dataset.
         """
-        if eradiate.mode().has_flags(ModeFlags.ANY_MONO | ModeFlags.ANY_CKD):
-            sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx)
-            albedo = self.eval_albedo(spectral_ctx=spectral_ctx)
-            wavelength = spectral_ctx.wavelength
-            data_vars = {
-                "sigma_t": (
-                    "z_layer",
-                    np.atleast_1d(sigma_t.magnitude),
-                    dict(
-                        standard_name="extinction_coefficient",
-                        long_name="extinction coefficient",
-                        units=symbol(sigma_t.units),
-                    ),
+        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
+
+        sigma_t = self.eval_sigma_t(spectral_ctx=spectral_ctx)
+        albedo = self.eval_albedo(spectral_ctx=spectral_ctx)
+        wavelength = spectral_ctx.wavelength
+        data_vars = {
+            "sigma_t": (
+                "z_layer",
+                np.atleast_1d(sigma_t.magnitude),
+                dict(
+                    standard_name="extinction_coefficient",
+                    long_name="extinction coefficient",
+                    units=symbol(sigma_t.units),
                 ),
-                "albedo": (
-                    "z_layer",
-                    np.atleast_1d(albedo.magnitude),
-                    dict(
-                        standard_name="albedo",
-                        long_name="albedo",
-                        units=symbol(albedo.units),
-                    ),
+            ),
+            "albedo": (
+                "z_layer",
+                np.atleast_1d(albedo.magnitude),
+                dict(
+                    standard_name="albedo",
+                    long_name="albedo",
+                    units=symbol(albedo.units),
                 ),
-            }
+            ),
+        }
 
-            if optional_fields:
-                sigma_a = self.eval_sigma_a(spectral_ctx=spectral_ctx)
-                sigma_s = self.eval_sigma_s(spectral_ctx=spectral_ctx)
+        if optional_fields:
+            sigma_a = self.eval_sigma_a(spectral_ctx=spectral_ctx)
+            sigma_s = self.eval_sigma_s(spectral_ctx=spectral_ctx)
 
-                data_vars.update(
-                    {
-                        "sigma_a": (
-                            "z_layer",
-                            np.atleast_1d(sigma_a.magnitude),
-                            dict(
-                                standard_name="absorption_coefficient",
-                                long_name="absorption coefficient",
-                                units=symbol(sigma_a.units),
-                            ),
-                        ),
-                        "sigma_s": (
-                            "z_layer",
-                            np.atleast_1d(sigma_s.magnitude),
-                            dict(
-                                standard_name="scattering_coefficient",
-                                long_name="scattering coefficient",
-                                units=symbol(sigma_s.units),
-                            ),
-                        ),
-                    }
-                )
-
-            return xr.Dataset(
-                data_vars=data_vars,
-                coords={
-                    "z_layer": (
+            data_vars.update(
+                {
+                    "sigma_a": (
                         "z_layer",
-                        self.z_layer.magnitude,
+                        np.atleast_1d(sigma_a.magnitude),
                         dict(
-                            standard_name="layer_altitude",
-                            long_name="layer altitude",
-                            units=symbol(self.z_layer.units),
+                            standard_name="absorption_coefficient",
+                            long_name="absorption coefficient",
+                            units=symbol(sigma_a.units),
                         ),
                     ),
-                    "z_level": (
-                        "z_level",
-                        self.z_level.magnitude,
+                    "sigma_s": (
+                        "z_layer",
+                        np.atleast_1d(sigma_s.magnitude),
                         dict(
-                            standard_name="level_altitude",
-                            long_name="level altitude",
-                            units=symbol(self.z_level.units),
+                            standard_name="scattering_coefficient",
+                            long_name="scattering coefficient",
+                            units=symbol(sigma_s.units),
                         ),
                     ),
-                    "w": (
-                        "w",
-                        [wavelength.magnitude],
-                        dict(
-                            standard_name="wavelength",
-                            long_name="wavelength",
-                            units=symbol(wavelength.units),
-                        ),
-                    ),
-                },
-            ).isel(w=0)
+                }
+            )
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+        return xr.Dataset(
+            data_vars=data_vars,
+            coords={
+                "z_layer": (
+                    "z_layer",
+                    self.z_layer.magnitude,
+                    dict(
+                        standard_name="layer_altitude",
+                        long_name="layer altitude",
+                        units=symbol(self.z_layer.units),
+                    ),
+                ),
+                "z_level": (
+                    "z_level",
+                    self.z_level.magnitude,
+                    dict(
+                        standard_name="level_altitude",
+                        long_name="level altitude",
+                        units=symbol(self.z_level.units),
+                    ),
+                ),
+                "w": (
+                    "w",
+                    [wavelength.magnitude],
+                    dict(
+                        standard_name="wavelength",
+                        long_name="wavelength",
+                        units=symbol(wavelength.units),
+                    ),
+                ),
+            },
+        ).isel(w=0)
 
     @staticmethod
     @ureg.wraps(ret="km^-1", args=("", "km", ""), strict=False)
