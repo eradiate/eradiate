@@ -77,7 +77,7 @@ _mode_registry: t.Dict[str, dict] = {
     },
     "mono_double": {
         "spectral_mode": SpectralMode.MONO,
-        "mi_backend": MitsubaBackend.SCALAR,
+        "mi_backend": MitsubaBackend.LLVM,
         "mi_color_mode": MitsubaColorMode.MONO,
         "mi_double_precision": True,
         "mi_polarized": False,
@@ -91,7 +91,7 @@ _mode_registry: t.Dict[str, dict] = {
     },
     "ckd_double": {
         "spectral_mode": SpectralMode.CKD,
-        "mi_backend": MitsubaBackend.SCALAR,
+        "mi_backend": MitsubaBackend.LLVM,
         "mi_color_mode": MitsubaColorMode.MONO,
         "mi_double_precision": True,
         "mi_polarized": False,

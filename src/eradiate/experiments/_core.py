@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 #                               Mitsuba runner
 # ------------------------------------------------------------------------------
 
-_SUPPORTED_VARIANTS = {"scalar_mono", "scalar_mono_double"}
+_SUPPORTED_VARIANTS = {"scalar_mono", "scalar_mono_double", "llvm_mono_double"}
 
 
 def _check_variant():
