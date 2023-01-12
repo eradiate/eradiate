@@ -12,11 +12,12 @@ repos:
     rev: 22.3.0
     hooks:
       - id: black
-  - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.220  # Ruff version
     hooks:
-      - id: isort
-        name: isort (python)
+      - id: ruff
+        # Respect `exclude` and `extend-exclude` settings.
+        args: [ "--force-exclude" ]
   - repo: https://github.com/kynan/nbstripout
     rev: 0.6.0
     hooks:

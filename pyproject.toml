@@ -111,6 +111,16 @@ version_scheme = "guess-next-dev" # Count commits since last tag, don't anticipa
 profile = "black"
 reverse_relative = true
 
+[tool.ruff]
+src = ["src", "tests"]
+select = [  # No selected rules for now
+  "I",
+]
+
+[tool.ruff.isort]
+relative-imports-order = "closest-to-furthest"
+
+
 [tool.coverage.run]
 omit = [
   "*/tests/*",
