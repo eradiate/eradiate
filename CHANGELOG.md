@@ -74,6 +74,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   [k-d tree creation issue](https://github.com/mitsuba-renderer/mitsuba3/issues/233).
 * Harmonise dataset converters for solar irradiance spectra, spectral response
   function and particle radiative property datasets ({ghpr}`284`).
+* Replaced isort with [Ruff](https://github.com/charliermarsh/ruff) ({ghpr}`299`).
 
 ## v0.22.5 (17 October 2022)
 
