@@ -50,13 +50,9 @@ jobs:
           ninja-build
 
           export CUDA_VISIBLE_DEVICES=""
-          conda install mamba -n base -c conda-forge
           make conda-init
           conda deactivate
           conda activate eradiate
-
-          conda install cmake=3.22
-          cmake --version
           
           export CC=clang-11
           export CXX=clang++-11
