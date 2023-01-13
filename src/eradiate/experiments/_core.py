@@ -9,6 +9,7 @@ import attrs
 import mitsuba as mi
 import pinttr
 import xarray as xr
+from rich.pretty import pprint
 from tqdm.auto import tqdm
 
 import eradiate
@@ -113,6 +114,7 @@ def mitsuba_run(
     results = {}
 
     # Run computation
+    logger.debug("Building kernel scene...")
     kernel_scene = kernel_dict.load()
 
     # Define the list of processed sensors
@@ -126,9 +128,10 @@ def mitsuba_run(
         ]
 
     # Run kernel for selected sensors
-    for i_sensor, sensor in enumerate(sensors):
+    for _, sensor in enumerate(sensors):
         # Run Mitsuba
-        seed = seed_state.next()
+        seed = int(seed_state.next())
+        logger.debug(f"Processing sensor '{sensor.id()}'...")
         mi.render(kernel_scene, sensor=sensor, seed=seed)
 
         # Collect results (store a copy of the sensor's bitmap)
