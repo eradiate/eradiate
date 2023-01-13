@@ -323,11 +323,9 @@ def set_mode(mode_id: str):
     .. admonition:: Valid mode IDs
        :class: info
 
-       * ``mono`` (monochromatic mode, single precision)
-       * ``mono_double`` (monochromatic mode, double-precision)
-       * ``ckd`` (CKD mode, single precision)
-       * ``ckd_double`` (CKD mode, double-precision)
-       * ``none`` (no mode selected)
+       * ``mono``: Monochromatic
+       * ``ckd``: CKD
+       * For more values, see :meth:`.Mode.new`
 
     Parameters
     ----------
