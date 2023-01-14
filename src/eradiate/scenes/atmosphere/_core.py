@@ -338,8 +338,10 @@ class Atmosphere(CompositeSceneElement, ABC):
         # Inherit docstring
         return flatten(
             {
-                self.id_phase: self._params_phase,
-                self.id_medium: self._params_medium,
+                self.id_medium: {
+                    **self._params_medium,
+                    "phase_function": self._params_phase,
+                },
                 self.id_shape: self._params_shape,
             }
         )

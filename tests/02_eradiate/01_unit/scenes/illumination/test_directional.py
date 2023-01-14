@@ -20,13 +20,49 @@ def test_directional_construct(modes_all, kwargs, expected_irradiance_type):
     assert isinstance(illumination.irradiance, expected_irradiance_type)
 
 
+@pytest.mark.parametrize(
+    "zenith, azimuth, direction, to_world",
+    [
+        (
+            0.0 * ureg.deg,
+            0.0 * ureg.deg,
+            [0, 0, -1],
+            [
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, -1, 0],
+                [0, 0, 0, 1],
+            ],
+        ),
+        (
+            30 * ureg.deg,
+            0.0 * ureg.deg,
+            [-0.5, 0.0, -np.sqrt(3) / 2],
+            [
+                [0.0, np.sqrt(3) / 2, -0.5, 0.0],
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, -0.5, -np.sqrt(3) / 2, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        ),
+    ],
+)
+def test_directional_to_world(mode_mono, zenith, azimuth, direction, to_world):
+    """
+    Direction is correctly converted to transformation matrix.
+    """
+    illumination = DirectionalIllumination(zenith=zenith, azimuth=azimuth)
+    np.testing.assert_allclose(illumination.direction, direction)
+    np.testing.assert_allclose(illumination._to_world.matrix, to_world)
+
+
 def test_directional_kernel_dict(modes_all_double):
     # The associated kernel dict is correctly formed and can be loaded
     illumination = DirectionalIllumination()
     check_scene_element(illumination, mi_cls=mi.Emitter)
 
 
-COS_PI_4 = np.sqrt(2) / 2
+COS_PI_4 = 0.5 * np.sqrt(2)
 
 
 @pytest.mark.parametrize(

@@ -43,10 +43,10 @@ def test_homogeneous_atmosphere_params(mode_mono):
 
     # Phase function parameters are exposed at highest level
     _, params = traverse(atmosphere)
-    assert "phase_atmosphere.g" in params
+    assert "medium_atmosphere.phase_function.g" in params
 
     _, mi_params = check_scene_element(atmosphere)
-    assert "phase_atmosphere.g" in mi_params
+    assert "medium_atmosphere.phase_function.g" in mi_params
 
 
 @pytest.mark.parametrize(

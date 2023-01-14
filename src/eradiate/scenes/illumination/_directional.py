@@ -1,12 +1,13 @@
 import typing as t
-
+import drjit as dr
+import mitsuba as mi
 import attrs
 import numpy as np
 import pint
 import pinttr
 
 from ._core import Illumination
-from ..core import NodeSceneElement, Param
+from ..core import NodeSceneElement, Param, ParamFlags
 from ..spectra import SolarIrradianceSpectrum, Spectrum, SpectrumNode, spectrum_factory
 from ..._config import config
 from ...attrs import documented, parse_docs
@@ -97,12 +98,16 @@ class DirectionalIllumination(Illumination, NodeSceneElement):
         ).reshape((3,))
 
     @property
-    def template(self) -> dict:
-        return {"type": "directional"}
+    def _to_world(self) -> "mitsuba.ScalarTransorm4f":
+        direction = dr.normalize(mi.ScalarVector3f(self.direction))
+        up, _ = mi.coordinate_system(direction)
+        return mi.ScalarTransform4f.look_at(
+            origin=0.0, target=mi.ScalarPoint3f(direction), up=up
+        )
 
     @property
-    def params(self) -> t.Dict[str, Param]:
-        return {"direction": Param(lambda ctx: list(self.direction))}
+    def template(self) -> dict:
+        return {"type": "directional", "to_world": self._to_world}
 
     @property
     def objects(self) -> t.Dict[str, NodeSceneElement]:
