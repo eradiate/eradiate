@@ -7,6 +7,9 @@ from eradiate.contexts import KernelDictContext
 from eradiate.scenes.atmosphere import MolecularAtmosphere, PlaneParallelGeometry
 
 
+# TODO: Add tests for ZGrid
+
+
 @pytest.mark.parametrize(
     "kwargs",
     [

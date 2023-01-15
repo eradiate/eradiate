@@ -173,7 +173,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         else:
             raise NotImplementedError("Unsupported thermophysical properties data set.")
 
-    def eval_albedo(self, sctx: SpectralContext) -> pint.Quantity:
+    def eval_albedo(self, sctx: SpectralContext, zgrid) -> pint.Quantity:
         return self.radprops_profile.eval_albedo(sctx)
 
     def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:

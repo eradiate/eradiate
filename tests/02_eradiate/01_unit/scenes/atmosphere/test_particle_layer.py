@@ -260,7 +260,7 @@ def test_particle_layer_eval_sigma_t_mono(
 
     # layer optical thickness @ current wavelength
     wavelengths = np.linspace(500.0, 1500.0, 101) * ureg.nm
-    tau = layer.eval_sigma_t_mono(wavelengths) * layer.height
+    tau = layer.eval_sigma_t_mono(wavelengths, layer.zgrid) * layer.height
 
     # data set extinction @ running and reference wavelength
     ds = data.load_dataset(test_dataset_path)

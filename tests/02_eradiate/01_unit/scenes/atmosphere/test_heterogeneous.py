@@ -1,6 +1,7 @@
 import mitsuba as mi
 import numpy as np
 import pytest
+from rich.pretty import pprint
 
 import eradiate
 from eradiate import unit_context_config as ucc
@@ -196,32 +197,16 @@ def test_heterogeneous_mix_weights(modes_all_double):
             distribution={"type": "uniform"},
         ),
     )
-    print(f"{mixed.phase.eval_conditional_weights(ctx.spectral_ctx) = }")  # OK
     template, params = traverse(mixed.phase)
     mi_phase = mi.load_dict(template.render(ctx))
     mi_params = mi.traverse(mi_phase)
-    mi_params["weight.data"] = np.array(
-        [1, 1, 1, 1, 1, 0, 0, 0, 0, 0], dtype=np.float32
-    ).reshape((-1, 1, 1, 1))
-    mi_params.update()
-    print(np.array(mi_params["weight.data"]))
-    assert False
-    # We have a bug here: the first two weights are set to nonsense values
-    mi_params.update(params.render(ctx))
-    print(np.array(mi_params["weight.data"]))
-    mi_phase, mi_params = check_scene_element(mixed.phase, mi.PhaseFunction)
 
-    # Weights should be non zero over the first 50 km, and 0 above
+    # Weights should be non-zero over the first 50 km, and 0 above
     # (all to the molecular component)
-    print(np.array(mi_params["weight.data"]))
     weights = np.squeeze(mi_params["weight.data"])
+    pprint(weights)
     assert len(weights) == len(mixed.zgrid)
     middle = len(weights) // 2
-
-    print(f"{mixed._eval_sigma_t_impl(ctx.spectral_ctx) = }")
-    print(f"{mixed._eval_sigma_s_impl(ctx.spectral_ctx) = }")
-    print(f"{weights = }")
-
     assert np.all((weights[:middle] > 0.0) & (weights[:middle] < 1.0))
     assert np.all(weights[middle:] == 0.0)
 
@@ -251,6 +236,8 @@ def test_heterogeneous_mix_weights(modes_all_double):
     weight_2 = np.squeeze(mi_params["phase_1.weight.data"])
     middle = len(weight_1) // 2
     threeq = len(weight_1) * 3 // 4
+    print(f"{weight_1 = }")
+    print(f"{weight_2 = }")
 
     assert np.all(weight_1[:middle] == 0.0)
     assert np.all(weight_1[middle:] == 1.0)
