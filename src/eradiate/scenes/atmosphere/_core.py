@@ -145,6 +145,52 @@ class SphericalShellGeometry(AtmosphereGeometry):
     )
 
 
+@attrs.define(eq=False)
+class ZGrid:
+    """
+    This class simply provides a hashable container for an altitude grid.
+    This is required to allow for using the altitude as an argument of a
+    LRU-cached function.
+    """
+
+    levels: pint.Quantity = pinttr.field(
+        units=ucc.deferred("length"),
+    )
+
+    _layers: pint.Quantity = pinttr.field(
+        init=False,
+        default=None,
+        units=ucc.deferred("length"),
+    )
+
+    _layer_height: pint.Quantity = pinttr.field(
+        init=False,
+        default=None,
+        units=ucc.deferred("length"),
+    )
+
+    def __attrs_post_init__(self):
+        self.update()
+
+    def update(self):
+        self._layer_height = np.diff(self.levels)
+        self._layers = self.levels[:-1] + self._layer_height / 2
+
+    @property
+    def layers(self):
+        return self._layers
+
+    @property
+    def layer_heights(self):
+        return self._layer_height
+
+    def n_levels(self):
+        return len(self.levels)
+
+    def n_layers(self):
+        return len(self.layers)
+
+
 @parse_docs
 @attrs.define(eq=False, slots=False)
 class Atmosphere(CompositeSceneElement, ABC):
@@ -383,10 +429,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @property
     @abstractmethod
-    def zgrid(self) -> pint.Quantity:
+    def zgrid(self) -> ZGrid:
         """
-        pint.Quantity: Altitude grid at which thermophysical and radiative
-                       properties are evaluated.
+        ZGrid: Altitude grid at which thermophysical and radiative
+               properties are evaluated. Corresponds to layer centres.
         """
         pass
 
@@ -428,8 +474,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         """
         sigma_units = ucc.get("collision_coefficient")
         sigma_t = self.eval_sigma_t(sctx).m_as(sigma_units)
-        albedo = self.eval_albedo(sctx).magnitude
-        print(sigma_t)
+        albedo = self.eval_albedo(sctx, None).magnitude
 
         data_vars = {
             "sigma_t": (
@@ -481,9 +526,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             coords={
                 "z_layer": (
                     "z_layer",
-                    self.zgrid.magnitude,
+                    self.zgrid.layers.magnitude,
                     {
-                        "units": f"{symbol(self.zgrid.units)}",
+                        "units": f"{symbol(self.zgrid.layers.units)}",
                         "standard_name": "layer_altitude",
                         "long_name": "layer altitude",
                     },
@@ -492,19 +537,94 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         )
 
     @abstractmethod
-    def eval_albedo(self, sctx: SpectralContext) -> pint.Quantity:
+    def eval_albedo(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        """
+        Evaluate albedo spectrum based on a spectral context. This method
+        dispatches evaluation to specialised methods depending on the active
+        mode.
+
+        Parameters
+        ----------
+        sctx : :class:`.SpectralContext`
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Returns
+        -------
+        quantity
+            Evaluated spectrum as an array with length equal to the number of
+            layers.
+        """
+
         pass
 
     @abstractmethod
-    def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_t(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        """
+        Evaluate extinction coefficient given a spectral context.
+
+        Parameters
+        ----------
+        sctx : :class:`.SpectralContext`
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Returns
+        -------
+        quantity
+            Particle layer extinction coefficient.
+        """
+
         pass
 
     @abstractmethod
-    def eval_sigma_a(self, sctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_a(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        """
+        Evaluate absorption coefficient given a spectral context.
+
+        Parameters
+        ----------
+        sctx : :class:`.SpectralContext`
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Returns
+        -------
+        quantity
+            Particle layer extinction coefficient.
+        """
+
         pass
 
     @abstractmethod
-    def eval_sigma_s(self, sctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_s(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        """
+        Evaluate scattering coefficient given a spectral context.
+
+        Parameters
+        ----------
+        sctx : :class:`.SpectralContext`
+            A spectral context data structure containing relevant spectral
+            parameters (*e.g.* wavelength in monochromatic mode, bin and
+            quadrature point index in CKD mode).
+
+        Returns
+        -------
+        quantity
+            Particle layer scattering coefficient.
+        """
+
         pass
 
     # --------------------------------------------------------------------------
@@ -521,9 +641,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
             def eval_albedo(ctx: KernelDictContext):
                 return mi.VolumeGrid(
-                    np.reshape(self.eval_albedo(ctx.spectral_ctx), (-1, 1, 1)).astype(
-                        np.float32
-                    )
+                    np.reshape(
+                        self.eval_albedo(ctx.spectral_ctx, None), (-1, 1, 1)
+                    ).astype(np.float32)
                 )
 
             def eval_sigma_t(ctx: KernelDictContext):
@@ -563,9 +683,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
             def eval_albedo(ctx):
                 return mi.VolumeGrid(
-                    np.reshape(self.eval_albedo(ctx.spectral_ctx), (1, 1, -1)).astype(
-                        np.float32
-                    )
+                    np.reshape(
+                        self.eval_albedo(ctx.spectral_ctx, None), (1, 1, -1)
+                    ).astype(np.float32)
                 )
 
             def eval_sigma_t(ctx):

@@ -13,7 +13,7 @@ import xarray as xr
 
 import eradiate
 
-from ._core import AbstractHeterogeneousAtmosphere
+from ._core import AbstractHeterogeneousAtmosphere, ZGrid
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import traverse
 from ..phase import TabulatedPhaseFunction
@@ -192,12 +192,14 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     )
 
     _phase: t.Optional[TabulatedPhaseFunction] = attrs.field(default=None, init=False)
+    _zgrid: t.Optional[ZGrid] = attrs.field(default=None, init=False)
 
     def update(self) -> None:
         super().update()
 
         ds = self.dataset
         self._phase = TabulatedPhaseFunction(id=self.id_phase, data=ds.phase)
+        self._zgrid = ZGrid(np.linspace(self.bottom, self.top, self.n_layers + 1))
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -214,21 +216,17 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return self._bottom
 
     @property
-    def zgrid(self) -> pint.Quantity:
+    def zgrid(self) -> ZGrid:
         # Inherit docstring
-        z_level = self.z_level
-        return 0.5 * (z_level[:-1] + z_level[1:])
+        return self._zgrid
 
     @property
     def z_level(self) -> pint.Quantity:
-        return np.linspace(self.bottom, self.top, self.n_layers + 1)
+        return self.zgrid.levels
 
     @property
     def z_layer(self) -> pint.Quantity:
-        """
-        Alias to :attr:`zgrid`.
-        """
-        return self.zgrid
+        return self.zgrid.layers
 
     def eval_fractions(self) -> np.ndarray:
         """
@@ -252,74 +250,60 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     #                       Radiative properties
     # --------------------------------------------------------------------------
 
-    def eval_albedo(self, sctx: SpectralContext) -> pint.Quantity:
-        """
-        Evaluate albedo spectrum based on a spectral context. This method
-        dispatches evaluation to specialised methods depending on the active
-        mode.
+    def eval_albedo(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        # Inherit docstring
 
-        Parameters
-        ----------
-        sctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        if zgrid is None:
+            zgrid = self.zgrid
 
-        Returns
-        -------
-        quantity
-            Evaluated spectrum as an array with length equal to the number of
-            layers.
-        """
         if eradiate.mode().is_mono:
-            return self.eval_albedo_mono(sctx.wavelength)
+            return self.eval_albedo_mono(sctx.wavelength, zgrid)
 
         elif eradiate.mode().is_ckd:
-            return self.eval_albedo_ckd(sctx.bindex)
+            return self.eval_albedo_ckd(sctx.bindex, zgrid)
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
+    def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         ds = self.dataset
         wavelengths = w.m_as(ds.w.attrs["units"])
         interpolated_albedo = ds.albedo.interp(w=wavelengths)
-
         albedo = to_quantity(interpolated_albedo)
-        albedo_array = albedo * np.ones(self.n_layers)
-        return albedo_array
 
-    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+        # Albedo is constant vs spatial dimension
+        return np.full_like(zgrid.layers, albedo)
+
+    def eval_albedo_ckd(
+        self, bindexes: t.Union[Bindex, t.List[Bindex]], zgrid: ZGrid
+    ) -> pint.Quantity:
         w_units = ureg.nm
+        if isinstance(bindexes, Bindex):
+            bindexes = [bindexes]
+
         w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
-        return self.eval_albedo_mono(w)
+        return self.eval_albedo_mono(w, zgrid)
 
-    def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:
-        """
-        Evaluate extinction coefficient given a spectral context.
+    def eval_sigma_t(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        # Inherit docstring
 
-        Parameters
-        ----------
-        sctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        if zgrid is None:
+            zgrid = self.zgrid
 
-        Returns
-        -------
-        quantity
-            Particle layer extinction coefficient.
-        """
         if eradiate.mode().is_mono:
-            return self.eval_sigma_t_mono(sctx.wavelength)
+            return self.eval_sigma_t_mono(sctx.wavelength, zgrid)
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_t_ckd(sctx.bindex)
+            return self.eval_sigma_t_ckd(sctx.bindex, zgrid)
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
+    def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         ds = self.dataset
         ds_w_units = ureg(ds.w.attrs["units"])
         wavelength = w.m_as(ds_w_units)
@@ -327,109 +311,73 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         xs_t_ref = to_quantity(ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units)))
         fractions = self.eval_fractions()
         sigma_t_array = xs_t_ref * fractions
-        dz = (self.top - self.bottom) / self.n_layers
-        normalized_sigma_t_array = self._normalize_to_tau(
-            ki=sigma_t_array.magnitude,
-            dz=dz,
-            tau=self.tau_ref,
-        )
+
+        # Normalise the extinction coefficient to the nominal optical thickness
+        # so that Σ_i (k_i Δz_i) == τ
+        normalized_sigma_t_array = (
+            sigma_t_array.magnitude
+            * self.tau_ref
+            / (np.sum(sigma_t_array.magnitude) * zgrid.layer_heights.magnitude)
+        ) * zgrid.layer_heights.units**-1
+
         return np.atleast_1d(normalized_sigma_t_array * xs_t / xs_t_ref)
 
-    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    def eval_sigma_t_ckd(
+        self, bindexes: t.Union[Bindex, t.List[Bindex]], zgrid: ZGrid
+    ) -> pint.Quantity:
         w_units = ureg.nm
+        if isinstance(bindexes, Bindex):
+            bindexes = [bindexes]
         w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
-        return self.eval_sigma_t_mono(w)
+        return self.eval_sigma_t_mono(w, zgrid)
 
-    def eval_sigma_a(self, sctx: SpectralContext) -> pint.Quantity:
-        """
-        Evaluate absorption coefficient given a spectral context.
+    def eval_sigma_a(self, sctx: SpectralContext, zgrid: ZGrid = None) -> pint.Quantity:
+        # Inherit docstring
 
-        Parameters
-        ----------
-        sctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        if zgrid is None:
+            zgrid = self.zgrid
 
-        Returns
-        -------
-        quantity
-            Particle layer extinction coefficient.
-        """
         if eradiate.mode().is_mono:
-            return self.eval_sigma_a_mono(sctx.wavelength)
+            return self.eval_sigma_a_mono(sctx.wavelength, zgrid)
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_a_ckd(sctx.bindex)
+            return self.eval_sigma_a_ckd(sctx.bindex, zgrid)
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
-        return self.eval_sigma_t_mono(w) - self.eval_sigma_s_mono(w)
+    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_t_mono(w, zgrid) - self.eval_sigma_s_mono(w, zgrid)
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex):
-        return self.eval_sigma_t_ckd(*bindexes) - self.eval_sigma_s_ckd(*bindexes)
+    def eval_sigma_a_ckd(self, bindexes: t.Union[Bindex, t.List[Bindex]], zgrid: ZGrid):
+        return self.eval_sigma_t_ckd(bindexes, zgrid) - self.eval_sigma_s_ckd(
+            bindexes, zgrid
+        )
 
-    def eval_sigma_s(self, sctx: SpectralContext) -> pint.Quantity:
-        """
-        Evaluate scattering coefficient given a spectral context.
+    def eval_sigma_s(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        # Inherit docstring
 
-        Parameters
-        ----------
-        sctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        if zgrid is None:
+            zgrid = self.zgrid
 
-        Returns
-        -------
-        quantity
-            Particle layer scattering coefficient.
-        """
         if eradiate.mode().is_mono:
-            return self.eval_sigma_s_mono(sctx.wavelength)
+            return self.eval_sigma_s_mono(sctx.wavelength, zgrid)
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_s_ckd(sctx.bindex)
+            return self.eval_sigma_s_ckd(sctx.bindex, zgrid)
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
-        return self.eval_sigma_t_mono(w) * self.eval_albedo_mono(w)
+    def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_t_mono(w, zgrid) * self.eval_albedo_mono(w, zgrid)
 
-    def eval_sigma_s_ckd(self, *bindexes: Bindex):
-        return self.eval_sigma_t_ckd(*bindexes) * self.eval_albedo_ckd(*bindexes)
-
-    @staticmethod
-    @ureg.wraps(ret="km^-1", args=("", "km", ""), strict=False)
-    def _normalize_to_tau(ki: np.ndarray, dz: np.ndarray, tau: float) -> pint.Quantity:
-        r"""
-        Normalise extinction coefficient values :math:`k_i` so that:
-
-        .. math::
-           \sum_i k_i \Delta z = \tau
-
-        where :math:`\tau` is the particle layer optical thickness.
-
-        Parameters
-        ----------
-        ki : quantity or ndarray
-            Dimensionless extinction coefficients values [].
-
-        dz : quantity or ndarray
-            Layer divisions thickness [km].
-
-        tau : float
-            Layer optical thickness (dimensionless).
-
-        Returns
-        -------
-        quantity
-            Normalised extinction coefficients.
-        """
-        return ki * tau / (np.sum(ki) * dz)
+    def eval_sigma_s_ckd(self, bindexes: Bindex, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_t_ckd(bindexes, zgrid) * self.eval_albedo_ckd(
+            bindexes, zgrid
+        )
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
