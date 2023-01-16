@@ -23,7 +23,6 @@ rad_profile_factory = Factory()
 rad_profile_factory.register_lazy_batch(
     [
         ("_afgl1986.AFGL1986RadProfile", "afgl_1986", {}),
-        ("_array.ArrayRadProfile", "array", {}),
         ("_us76_approx.US76ApproxRadProfile", "us76_approx", {}),
     ],
     cls_prefix="eradiate.radprops",
