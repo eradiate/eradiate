@@ -13,17 +13,17 @@ import xarray as xr
 
 import eradiate
 
-from ._core import AbstractHeterogeneousAtmosphere, ZGrid
+from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import traverse
 from ..phase import TabulatedPhaseFunction
 from ... import converters, data
-from ..._mode import SpectralMode, supported_mode
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
-from ...units import symbol, to_quantity
+from ...radprops._core import ZGrid
+from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...validators import is_positive

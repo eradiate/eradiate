@@ -18,6 +18,7 @@ from ..phase import PhaseFunctionNode, RayleighPhaseFunction, phase_function_fac
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
+from ...radprops._core import ZGrid
 from ...thermoprops import afgl_1986, us76
 from ...thermoprops.util import (
     compute_scaling_factors,
@@ -173,7 +174,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         else:
             raise NotImplementedError("Unsupported thermophysical properties data set.")
 
-    def eval_albedo(self, sctx: SpectralContext, zgrid) -> pint.Quantity:
+    def eval_albedo(self, sctx: SpectralContext, zgrid: ZGrid) -> pint.Quantity:
         return self.radprops_profile.eval_albedo(sctx)
 
     def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:

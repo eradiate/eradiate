@@ -16,6 +16,7 @@ from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel.transform import map_unit_cube
+from ...radprops._core import ZGrid
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -143,52 +144,6 @@ class SphericalShellGeometry(AtmosphereGeometry):
         init_type="quantity or float",
         default="6378.1 km",
     )
-
-
-@attrs.define(eq=False)
-class ZGrid:
-    """
-    This class simply provides a hashable container for an altitude grid.
-    This is required to allow for using the altitude as an argument of a
-    LRU-cached function.
-    """
-
-    levels: pint.Quantity = pinttr.field(
-        units=ucc.deferred("length"),
-    )
-
-    _layers: pint.Quantity = pinttr.field(
-        init=False,
-        default=None,
-        units=ucc.deferred("length"),
-    )
-
-    _layer_height: pint.Quantity = pinttr.field(
-        init=False,
-        default=None,
-        units=ucc.deferred("length"),
-    )
-
-    def __attrs_post_init__(self):
-        self.update()
-
-    def update(self):
-        self._layer_height = np.diff(self.levels)
-        self._layers = self.levels[:-1] + self._layer_height / 2
-
-    @property
-    def layers(self):
-        return self._layers
-
-    @property
-    def layer_heights(self):
-        return self._layer_height
-
-    def n_levels(self):
-        return len(self.levels)
-
-    def n_layers(self):
-        return len(self.layers)
 
 
 @parse_docs

@@ -11,7 +11,7 @@ import attrs
 import numpy as np
 import pint
 
-from ._core import AbstractHeterogeneousAtmosphere, ZGrid, atmosphere_factory
+from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular_atmosphere import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
 from ..core import BoundingBox, traverse
@@ -19,6 +19,7 @@ from ..phase import BlendPhaseFunction, PhaseFunctionNode
 from ..shapes import CuboidShape, SphereShape
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
+from ...radprops._core import ZGrid
 from ...units import unit_context_config as ucc
 
 
