@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import datetime
 import typing as t
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import attrs
 import numpy as np
 import pint
+import pinttr
 import xarray as xr
 
 import eradiate
@@ -15,6 +16,7 @@ from .._factory import Factory
 from ..ckd import Bindex
 from ..contexts import SpectralContext
 from ..exceptions import UnsupportedModeError
+from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
 rad_profile_factory = Factory()
@@ -167,7 +169,57 @@ def make_dataset(
     )
 
 
-@attrs.define
+@attrs.frozen(eq=False, init=False)
+class ZGrid:
+    """
+    This class provides a container for a regular altitude grid.
+
+    Notes
+    -----
+    * Instances are immutable.
+    * Instances are hashable by ID. This is required to allow for using them as
+      an argument of an LRU-cached function.
+    * This class is used as the argument of the ``eval()`` family of methods.
+    """
+
+    levels: pint.Quantity = pinttr.field(
+        units=ucc.deferred("length"),
+        on_setattr=None,  # frozen instance: on_setattr must be disabled
+    )
+
+    _layers: pint.Quantity = pinttr.field(
+        default=None,
+        units=ucc.deferred("length"),
+        on_setattr=None,  # frozen instance: on_setattr must be disabled
+    )
+
+    _layer_height: pint.Quantity = pinttr.field(
+        default=None,
+        units=ucc.deferred("length"),
+        on_setattr=None,  # frozen instance: on_setattr must be disabled
+    )
+
+    def __init__(self, levels: pint.Quantity):
+        layer_height = np.diff(levels)
+        layers = levels[:-1] + 0.5 * layer_height
+        self.__attrs_init__(levels=levels, layers=layers, layer_height=layer_height)
+
+    @property
+    def layers(self):
+        return self._layers
+
+    @property
+    def layer_heights(self):
+        return self._layer_height
+
+    def n_levels(self):
+        return len(self.levels)
+
+    def n_layers(self):
+        return len(self.layers)
+
+
+@attrs.define(eq=False)
 class RadProfile(ABC):
     """
     An abstract base class for radiative property profiles. Classes deriving
@@ -185,7 +237,17 @@ class RadProfile(ABC):
     :class:`.RadProfileFactory`
     """
 
-    def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    @property
+    @abstractmethod
+    def zgrid(self) -> ZGrid:
+        """
+        Default altitude grid used for profile evaluation.
+        """
+        pass
+
+    def eval_albedo(
+        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
         """
         Evaluate albedo spectrum based on a spectral context. This method
         dispatches evaluation to specialised methods depending on the active
@@ -204,17 +266,20 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
+        if zgrid is None:
+            zgrid = self.zgrid
 
         if eradiate.mode().is_mono:
-            return self.eval_albedo_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_albedo_mono(spectral_ctx.wavelength, zgrid).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_albedo_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_albedo_ckd([spectral_ctx.bindex], zgrid).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
+    @abstractmethod
+    def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate albedo spectrum in monochromatic modes.
 
@@ -228,25 +293,28 @@ class RadProfile(ABC):
         quantity
             Evaluated profile albedo as an array with shape (n_layers, len(w)).
         """
-        raise NotImplementedError
+        pass
 
-    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    @abstractmethod
+    def eval_albedo_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate albedo spectrum in CKD modes.
 
         Parameters
         ----------
-        *bindexes : :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate the spectrum.
+        bindexes : list of :class:`.Bindex`
+            CKD bindexes for which to evaluate the spectrum.
 
         Returns
         -------
         quantity
             Evaluated profile albedo as an array with shape (n_layers, len(bindexes)).
         """
-        raise NotImplementedError
+        pass
 
-    def eval_sigma_t(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_t(
+        self, spectral_ctx: SpectralContext, zgrid: ZGrid
+    ) -> pint.Quantity:
         """
         Evaluate extinction coefficient spectrum based on a spectral context.
         This method dispatches evaluation to specialised methods depending on
@@ -267,15 +335,16 @@ class RadProfile(ABC):
         """
 
         if eradiate.mode().is_mono:
-            return self.eval_sigma_t_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_sigma_t_mono(spectral_ctx.wavelength, zgrid).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_t_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_sigma_t_ckd([spectral_ctx.bindex], zgrid).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
+    @abstractmethod
+    def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate extinction coefficient spectrum in monochromatic modes.
 
@@ -290,15 +359,16 @@ class RadProfile(ABC):
             Evaluated profile extinction coefficient as an array with shape
             (n_layers, len(w)).
         """
-        raise NotImplementedError
+        pass
 
-    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    @abstractmethod
+    def eval_sigma_t_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate extinction coefficient spectrum in CKD modes.
 
         Parameters
         ----------
-        *bindexes : :class:`.Bindex`
+        bindexes : list of :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
 
         Returns
@@ -307,9 +377,11 @@ class RadProfile(ABC):
             Evaluated profile extinction coefficient as an array with shape
             (n_layers, len(bindexes)).
         """
-        raise NotImplementedError
+        pass
 
-    def eval_sigma_a(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_a(
+        self, spectral_ctx: SpectralContext, zgrid: ZGrid
+    ) -> pint.Quantity:
         """
         Evaluate absorption coefficient spectrum based on a spectral context.
         This method dispatches evaluation to specialised methods depending on
@@ -330,15 +402,16 @@ class RadProfile(ABC):
         """
 
         if eradiate.mode().is_mono:
-            return self.eval_sigma_a_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_sigma_a_mono(spectral_ctx.wavelength, zgrid).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_a_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_sigma_a_ckd([spectral_ctx.bindex], zgrid).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
+    @abstractmethod
+    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate absorption coefficient spectrum in monochromatic modes.
 
@@ -353,19 +426,17 @@ class RadProfile(ABC):
             Evaluated profile absorption coefficient as an array with shape
             (n_layers, len(w)).
         """
-        raise NotImplementedError
+        pass
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
+    @abstractmethod
+    def eval_sigma_a_ckd(self, bindexes: Bindex, zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate absorption coefficient spectrum in CKD modes.
 
         Parameters
         ----------
-        *bindexes : :class:`.Bindex`
+        bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
-
-        bin_set_id : str
-            CKD bin set identifier.
 
         Returns
         -------
@@ -373,9 +444,11 @@ class RadProfile(ABC):
             Evaluated profile absorption coefficient as an array with shape
             (n_layers, len(bindexes)).
         """
-        raise NotImplementedError
+        pass
 
-    def eval_sigma_s(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_s(
+        self, spectral_ctx: SpectralContext, zgrid: ZGrid
+    ) -> pint.Quantity:
         """
         Evaluate scattering coefficient spectrum based on a spectral context.
         This method dispatches evaluation to specialised methods depending on
@@ -396,15 +469,16 @@ class RadProfile(ABC):
         """
 
         if eradiate.mode().is_mono:
-            return self.eval_sigma_s_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_sigma_s_mono(spectral_ctx.wavelength, zgrid).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_s_ckd(spectral_ctx.bindex).squeeze()
+            return self.eval_sigma_s_ckd([spectral_ctx.bindex], zgrid).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
+    @abstractmethod
+    def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate scattering coefficient spectrum in monochromatic modes.
 
@@ -419,15 +493,16 @@ class RadProfile(ABC):
             Evaluated profile scattering coefficient as an array with shape
             (n_layers, len(w)).
         """
-        raise NotImplementedError
+        pass
 
-    def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    @abstractmethod
+    def eval_sigma_s_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate scattering coefficient spectrum in CKD modes.
 
         Parameters
         ----------
-        *bindexes : :class:`.Bindex`
+        bindexes : list of :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
 
         Returns
@@ -436,9 +511,11 @@ class RadProfile(ABC):
             Evaluated profile scattering coefficient as an array with shape
             (n_layers, len(bindexes)).
         """
-        raise NotImplementedError
+        pass
 
-    def eval_dataset(self, spectral_ctx: SpectralContext) -> xr.Dataset:
+    def eval_dataset(
+        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the corresponding
         atmospheric profile. This method dispatches evaluation to specialised
@@ -453,20 +530,22 @@ class RadProfile(ABC):
         Returns
         -------
         Dataset
-            Radiative properties dataset.
+            Radiative property dataset.
         """
+        if zgrid is None:
+            zgrid = self.zgrid
+
         if eradiate.mode().is_mono:
-            return self.eval_dataset_mono(spectral_ctx.wavelength).squeeze()
+            return self.eval_dataset_mono(spectral_ctx.wavelength, zgrid).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_dataset_ckd(
-                spectral_ctx.bindex, bin_set_id=spectral_ctx.bin_set.id
-            ).squeeze()
+            return self.eval_dataset_ckd([spectral_ctx.bindex], zgrid).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
-    def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
+    @abstractmethod
+    def eval_dataset_mono(self, w: pint.Quantity, zgrid: ZGrid) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the corresponding
         atmospheric profile in monochromatic modes.
@@ -481,24 +560,22 @@ class RadProfile(ABC):
         Dataset
             Radiative properties dataset.
         """
-        raise NotImplementedError
+        pass
 
-    def eval_dataset_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
+    @abstractmethod
+    def eval_dataset_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> xr.Dataset:
         """
-        Return a dataset that holds the radiative properties of the corresponding
-        atmospheric profile in CKD modes
+        Return a dataset that holds the radiative properties of the
+        corresponding atmospheric profile in CKD modes.
 
         Parameters
         ----------
-        *bindexes : :class:`.Bindex`
+        bindexes : list of :class:`.Bindex`
             One or several CKD bindexes for which to evaluate spectra.
-
-        bin_set_id : str
-            CKD bin set identifier.
 
         Returns
         -------
         Dataset
             Radiative properties dataset.
         """
-        raise NotImplementedError
+        pass

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import typing as t
+from functools import lru_cache
 
 import attrs
 import numpy as np
 import pint
 import xarray as xr
 
-from ._core import RadProfile, make_dataset, rad_profile_factory
+from ._core import RadProfile, ZGrid, make_dataset
 from ._util_mono import get_us76_u86_4_spectrum_filename
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
@@ -30,7 +31,7 @@ def _convert_thermoprops_us76_approx(
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class US76ApproxRadProfile(RadProfile):
     """
     Radiative properties profile approximately corresponding to an
@@ -157,6 +158,14 @@ class US76ApproxRadProfile(RadProfile):
         type="str",
     )
 
+    _zgrid: t.Optional[ZGrid] = attrs.field(default=None, init=False)
+
+    def __attrs_post_init__(self):
+        self.update()
+
+    def update(self) -> None:
+        self._zgrid = ZGrid(levels=self.levels)
+
     @property
     def thermoprops(self) -> xr.Dataset:
         """
@@ -171,8 +180,52 @@ class US76ApproxRadProfile(RadProfile):
         """
         return to_quantity(self.thermoprops.z_level)
 
-    def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
-        profile = self.thermoprops
+    @property
+    def zgrid(self) -> ZGrid:
+        # Inherit docstring
+        return self._zgrid
+
+    @lru_cache(maxsize=1)
+    def _thermoprops_interp(self, zgrid: ZGrid) -> xr.Dataset:
+        # Interpolate thermophysical profile on specified altitude grid
+        # Note: we use a nearest neighbour scheme
+        # Note: this value is cached so that repeated calls with the same zgrid
+        #       won't trigger an unnecessary computation.
+        with xr.set_options(keep_attrs=True):
+            result = self.thermoprops.interp(
+                z_layer=zgrid.layers.m_as(self.thermoprops.z_layer.units),
+                method="nearest",
+                kwargs={"fill_value": "extrapolate"},
+            )
+
+        return result.assign_coords(
+            z_level=(
+                "z_level",
+                zgrid.levels.m_as(self.thermoprops.z_level.units),
+                self.thermoprops.z_level.attrs,
+            )
+        )
+
+    def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        # Inherit docstring
+        sigma_s = self.eval_sigma_s_mono(w, zgrid)
+        sigma_t = self.eval_sigma_t_mono(w, zgrid)
+        return np.divide(
+            sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
+        ).to("dimensionless")
+
+    def eval_albedo_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+        raise UnsupportedModeError(supported="monochromatic")
+
+    def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_a_mono(w, zgrid) + self.eval_sigma_s_mono(w, zgrid)
+
+    def eval_sigma_t_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+        raise UnsupportedModeError(supported="monochromatic")
+
+    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        profile = self._thermoprops_interp(zgrid)
+
         if self.has_absorption:
             if self.absorption_data_set is None:  # ! this is never tested
                 ds = data.open_dataset(get_us76_u86_4_spectrum_filename(w))
@@ -185,62 +238,45 @@ class US76ApproxRadProfile(RadProfile):
                 wl=w,
                 p=to_quantity(profile.p),
                 n=to_quantity(profile.n),
-                fill_values=dict(
-                    pt=0.0
-                ),  # us76_u86_4 dataset is limited to pressures above
-                # 0.101325 Pa, but us76 thermophysical profile goes below that
-                # value for altitudes larger than 93 km. At these altitudes, the
-                # number density is so small compared to that at the sea level that
-                # we assume it is negligible.
+                fill_values={"pt": 0.0},
+                # 'us76_u86_4' dataset is limited to pressure > 0.101325 Pa,
+                # but us76 thermophysical profile goes under that value for
+                # z > 93 km. At these altitudes, we consider that the number
+                # density is low enough (vs sea level value) to be negligible.
             )
             ds.close()
 
             return result
 
         else:
-            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
+            return np.zeros(profile.z_layer.size) * ureg.km**-1
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
+    def eval_sigma_a_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="monochromatic")
 
-    def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
-        profile = self.thermoprops
+    def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        profile = self._thermoprops_interp(zgrid)
+
         if self.has_scattering:
             return compute_sigma_s_air(
                 wavelength=w,
                 number_density=to_quantity(profile.n),
             )
+
         else:
-            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
+            return np.zeros(profile.z_layer.size) * ureg.km**-1
 
-    def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    def eval_sigma_s_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="monochromatic")
 
-    def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
-        sigma_s = self.eval_sigma_s_mono(w)
-        sigma_t = self.eval_sigma_t_mono(w)
-        return np.divide(
-            sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
-        ).to("dimensionless")
-
-    def eval_albedo_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
-
-    def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
-        return self.eval_sigma_a_mono(w) + self.eval_sigma_s_mono(w)
-
-    def eval_sigma_t_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
-
-    def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
-        profile = self.thermoprops
+    def eval_dataset_mono(self, w: pint.Quantity, zgrid: ZGrid) -> xr.Dataset:
         return make_dataset(
             wavelength=w,
-            z_level=to_quantity(profile.z_level),
-            z_layer=to_quantity(profile.z_layer),
-            sigma_a=self.eval_sigma_a_mono(w),
-            sigma_s=self.eval_sigma_s_mono(w),
+            z_level=zgrid.levels,
+            z_layer=zgrid.layers,
+            sigma_a=self.eval_sigma_a_mono(w, zgrid),
+            sigma_s=self.eval_sigma_s_mono(w, zgrid),
         ).squeeze()
 
-    def eval_dataset_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
+    def eval_dataset_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> xr.Dataset:
         raise UnsupportedModeError(supported="monochromatic")

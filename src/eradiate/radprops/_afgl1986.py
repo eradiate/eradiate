@@ -13,7 +13,7 @@ import pint
 import xarray as xr
 
 from . import _util_ckd
-from ._core import RadProfile, make_dataset
+from ._core import RadProfile, ZGrid, make_dataset
 from .rayleigh import compute_sigma_s_air
 from .._mode import UnsupportedModeError
 from ..attrs import documented, parse_docs
@@ -38,7 +38,7 @@ def _convert_thermoprops_afgl_1986(
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False)
 class AFGL1986RadProfile(RadProfile):
     """
     Radiative properties profile corresponding to the AFGL (1986) atmospheric
@@ -87,6 +87,14 @@ class AFGL1986RadProfile(RadProfile):
         default="True",
     )
 
+    _zgrid: t.Optional[ZGrid] = attrs.field(default=None, init=False)
+
+    def __attrs_post_init__(self):
+        self.update()
+
+    def update(self) -> None:
+        self._zgrid = ZGrid(levels=self.levels)
+
     @property
     def thermoprops(self) -> xr.Dataset:
         return self._thermoprops
@@ -95,19 +103,68 @@ class AFGL1986RadProfile(RadProfile):
     def levels(self) -> pint.Quantity:
         return to_quantity(self.thermoprops.z_level)
 
-    def eval_sigma_a_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        bin_set_ids = {bindex.bin.bin_set_id for bindex in bindexes}
+    @property
+    def zgrid(self) -> ZGrid:
+        # Inherit docstring
+        return self._zgrid
+
+    @functools.lru_cache(maxsize=1)
+    def _thermoprops_interp(self, zgrid: ZGrid) -> xr.Dataset:
+        # Interpolate thermophysical profile on specified altitude grid
+        # Note: we use a nearest neighbour scheme
+        # Note: this value is cached so that repeated calls with the same zgrid
+        #       won't trigger an unnecessary computation.
+        with xr.set_options(keep_attrs=True):
+            result = self.thermoprops.interp(
+                z_layer=zgrid.layers.m_as(self.thermoprops.z_layer.units),
+                method="nearest",
+                kwargs={"fill_value": "extrapolate"},
+            )
+
+        return result.assign_coords(
+            z_level=(
+                "z_level",
+                zgrid.levels.m_as(self.thermoprops.z_level.units),
+                self.thermoprops.z_level.attrs,
+            )
+        )
+
+    def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        raise UnsupportedModeError(supported="ckd")
+
+    def eval_albedo_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+        sigma_s = self.eval_sigma_s_ckd(bindexes, zgrid)
+        sigma_t = self.eval_sigma_t_ckd(bindexes, zgrid)
+        return np.divide(
+            sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
+        ).to("dimensionless")
+
+    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        raise UnsupportedModeError(supported="ckd")
+
+    def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        raise UnsupportedModeError(supported="ckd")
+
+    def eval_sigma_t_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(bindexes, zgrid) + self.eval_sigma_s_ckd(
+            bindexes, zgrid
+        )
+
+    def eval_sigma_a_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+        thermoprops = self._thermoprops_interp(zgrid)
+
+        bin_set_ids: set[str] = {bindex.bin.bin_set_id for bindex in bindexes}
         if len(bin_set_ids) != 1:
             raise ValueError(
                 f"all bindexes must be from the same bin set, got {bin_set_ids}"
             )
-        else:
-            bin_set_id = bin_set_ids.pop()
+
+        bin_set_id = bin_set_ids.pop()
 
         if not self.has_absorption:
-            return ureg.Quantity(np.zeros(self.thermoprops.z_layer.size), "km^-1")
+            return ureg.Quantity(np.zeros(thermoprops.z_layer.size), "km^-1")
 
-        ds_id = f"{self.thermoprops.attrs['identifier']}-{bin_set_id}-v3"
+        ds_id = f"{thermoprops.attrs['identifier']}-{bin_set_id}-v3"
         with _util_ckd.open_dataset(ds_id) as ds:
             # This table maps species to the function used to compute
             # corresponding physical quantities used for concentration rescaling
@@ -121,37 +178,35 @@ class AFGL1986RadProfile(RadProfile):
             # Note: This includes a conversion to units appropriate for interpolation
             rescaled_species = list(compute.keys())
             concentrations = {
-                species: compute[species](ds=self.thermoprops).m_as(ds[species].units)
+                species: compute[species](ds=thermoprops).m_as(ds[species].units)
                 for species in rescaled_species
             }
 
             # Convert altitude to units appropriate for interpolation
-            z = to_quantity(self.thermoprops.z_layer).m_as(ds.z.units)
+            z = ureg.convert(thermoprops.z_layer, thermoprops.z_layer.units, ds.z.units)
 
             # Interpolate absorption coefficient on concentration coordinates
-            result = ureg.Quantity(
-                [
-                    ds.k.sel(bd=(bindex.bin.id, bindex.index))
-                    .interp(
-                        z=z,
-                        kwargs=dict(fill_value=0.0),
-                    )  # extrapolate to 0.0 for altitude out of bounds
-                    .interp(
-                        **concentrations,
-                        kwargs=dict(
-                            bounds_error=True
-                        ),  # raise when concentration are out of bounds
-                    )
-                    .values
-                    for bindex in bindexes
-                ],
-                ds.k.units,
-            )
+            result: pint.Quantity = [
+                ds.k.sel(bd=(bindex.bin.id, bindex.index))
+                .interp(
+                    z=z,
+                    kwargs=dict(fill_value=0.0),
+                )  # extrapolate to 0.0 for altitude out of bounds
+                .interp(
+                    **concentrations,
+                    kwargs=dict(
+                        bounds_error=True
+                    ),  # raise when concentration are out of bounds
+                )
+                .values
+                for bindex in bindexes
+            ] * ureg(ds.k.units)
 
             return result
 
-    def eval_sigma_s_mono(self, w: pint.Quantity) -> pint.Quantity:
-        thermoprops = self.thermoprops
+    def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        thermoprops = self._thermoprops_interp(zgrid)
+
         if self.has_scattering:
             return compute_sigma_s_air(
                 wavelength=w,
@@ -160,39 +215,26 @@ class AFGL1986RadProfile(RadProfile):
         else:
             return ureg.Quantity(np.zeros((1, thermoprops.z_layer.size)), "km^-1")
 
-    def eval_sigma_s_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        wavelengths = ureg.Quantity(
-            np.array([bindex.bin.wcenter.m_as("nm") for bindex in bindexes]), "nm"
+    def eval_sigma_s_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+        wavelengths = (
+            np.array([bindex.bin.wcenter.m_as(ureg.nm) for bindex in bindexes])
+            * ureg.nm
         )
-        return self.eval_sigma_s_mono(w=wavelengths)
 
-    def eval_albedo_mono(self, w: pint.Quantity) -> pint.Quantity:
+        return self.eval_sigma_s_mono(wavelengths, zgrid)
+
+    def eval_dataset_mono(self, w: pint.Quantity, zgrid: ZGrid) -> xr.Dataset:
         raise UnsupportedModeError(supported="ckd")
 
-    def eval_albedo_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        sigma_s = self.eval_sigma_s_ckd(*bindexes)
-        sigma_t = self.eval_sigma_t_ckd(*bindexes)
-        return np.divide(
-            sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
-        ).to("dimensionless")
-
-    def eval_sigma_t_mono(self, w: pint.Quantity) -> pint.Quantity:
-        raise UnsupportedModeError(supported="ckd")
-
-    def eval_sigma_t_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        return self.eval_sigma_a_ckd(*bindexes) + self.eval_sigma_s_ckd(*bindexes)
-
-    def eval_dataset_mono(self, w: pint.Quantity) -> xr.Dataset:
-        raise UnsupportedModeError(supported="ckd")
-
-    def eval_dataset_ckd(self, *bindexes: Bindex, bin_set_id: str) -> xr.Dataset:
+    def eval_dataset_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> xr.Dataset:
         if len(bindexes) > 1:
             raise NotImplementedError
+
         else:
             return make_dataset(
                 wavelength=bindexes[0].bin.wcenter,
-                z_level=to_quantity(self.thermoprops.z_level),
-                z_layer=to_quantity(self.thermoprops.z_layer),
-                sigma_a=self.eval_sigma_a_ckd(*bindexes),
-                sigma_s=self.eval_sigma_s_ckd(*bindexes),
+                z_level=zgrid.levels,
+                z_layer=zgrid.layers,
+                sigma_a=self.eval_sigma_a_ckd(bindexes, zgrid),
+                sigma_s=self.eval_sigma_s_ckd(bindexes, zgrid),
             ).squeeze()
