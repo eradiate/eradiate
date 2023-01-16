@@ -1,3 +1,5 @@
+from ._access import load_dataset as load_dataset
+from ._access import open_dataset as open_dataset
 from ._blind_directory import BlindDirectoryDataStore as BlindDirectoryDataStore
 from ._blind_online import BlindOnlineDataStore as BlindOnlineDataStore
 from ._core import DataStore as DataStore

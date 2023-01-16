@@ -21,6 +21,11 @@ def init_data_store(offline: t.Optional[bool] = None) -> None:
     offline : bool, optional
         If ``True``, replace all online data stores with blind directory data
         stores. If unset, the global offline configuration is used.
+
+    Notes
+    -----
+    This function is called automatically when the ``eradiate.data`` package is
+    imported.
     """
     global data_store
 
