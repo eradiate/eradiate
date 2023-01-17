@@ -89,7 +89,7 @@ def make_dataset(
     else:
         raise ValueError(
             "You must provide either one of the two pairs of arguments "
-            "'sigma_a' and 'sigma_s' or 'sigma_t' and 'albedo'."
+            "('sigma_a', 'sigma_s') or ('sigma_t', 'albedo')."
         )
 
     return xr.Dataset(

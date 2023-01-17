@@ -228,7 +228,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def z_layer(self) -> pint.Quantity:
         return self.zgrid.layers
 
-    def eval_fractions(self) -> np.ndarray:
+    def eval_fractions(self, zgrid: ZGrid) -> np.ndarray:
         """
         Compute the particle number fraction in the particle layer.
 
@@ -237,8 +237,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         ndarray
             Particle fractions.
         """
-        x = (self.z_layer - self.bottom) / (self.top - self.bottom)
-        fractions = self.distribution(x.magnitude)
+        x = (zgrid.layers - self.bottom) / (self.top - self.bottom)
+        fractions = self.distribution(x.m_as(ureg.dimensionless))
         fractions /= np.sum(fractions)
         return fractions
 
@@ -310,12 +310,15 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        # Prepare input data
         ds = self.dataset
         ds_w_units = ureg(ds.w.attrs["units"])
         wavelength = w.m_as(ds_w_units)
         xs_t = to_quantity(ds.sigma_t.interp(w=wavelength))
         xs_t_ref = to_quantity(ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units)))
-        fractions = self.eval_fractions()
+
+        # Compute volume fractions on the requested altitude grid
+        fractions = self.eval_fractions(zgrid)
         sigma_t_array = xs_t_ref * fractions
 
         # Normalise the extinction coefficient to the nominal optical thickness
@@ -325,8 +328,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             * self.tau_ref
             / (np.sum(sigma_t_array.magnitude) * zgrid.layer_height.magnitude)
         ) * zgrid.layer_height.units**-1
+        result = np.atleast_1d(normalized_sigma_t_array * xs_t / xs_t_ref)
 
-        return np.atleast_1d(normalized_sigma_t_array * xs_t / xs_t_ref)
+        return result
 
     def eval_sigma_t_ckd(
         self, bindexes: t.Union[Bindex, t.List[Bindex]], zgrid: ZGrid

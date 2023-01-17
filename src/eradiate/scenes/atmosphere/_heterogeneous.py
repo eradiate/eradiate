@@ -10,6 +10,7 @@ from functools import lru_cache
 import attrs
 import numpy as np
 import pint
+import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular_atmosphere import MolecularAtmosphere
@@ -112,8 +113,10 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     #: radiative properties on, before computing the total radiative
     #: properties. This is an internal field that is automatically set by
     #: the :meth:`update` method.
-    _zgrid: t.Optional[ZGrid] = attrs.field(
-        default=None, converter=ZGrid, init=False, repr=False
+    _zgrid: ZGrid = attrs.field(
+        default=None,
+        validator=attrs.validators.optional(attrs.validators.instance_of(ZGrid)),
+        repr=False,
     )
 
     @property
@@ -123,6 +126,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return result
 
     def update(self):
+        super().update()
+
         # Force component IDs and geometry
         for i, component in enumerate(self.components):
             component.id = f"{self.id}_component_{i}"
@@ -130,14 +135,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             component.update()
 
         # Set altitude grid
-        # TODO: Add n_layers parameter to control the number of layers
-        z_level = np.linspace(self.bottom, self.top, 11)
-        self._zgrid = ZGrid(0.5 * (z_level[1:] + z_level[:-1]))
+        if self._zgrid is None:
+            self._zgrid = ZGrid(np.linspace(self.bottom, self.top, 100001))
 
         if not self.components:
             raise ValueError("HeterogeneousAtmosphere must have at least one component")
-
-        super().update()
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
@@ -166,65 +168,57 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def eval_albedo(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
-        return self.eval_sigma_s(sctx, zgrid) / self.eval_sigma_t(sctx, zgrid)
+        if zgrid is not None and zgrid is not self.zgrid:
+            raise ValueError("zgrid must be left unset or set to self.zgrid")
+        return self.eval_sigma_s(sctx) / self.eval_sigma_t(sctx)
 
     @lru_cache(maxsize=1)
-    def _eval_sigma_t_impl(self, sctx: SpectralContext, zgrid: ZGrid) -> pint.Quantity:
-        result = np.zeros((len(self.components), len(zgrid.values)))
+    def _eval_sigma_t_impl(self, sctx: SpectralContext) -> pint.Quantity:
+        result = np.zeros((len(self.components), len(self.zgrid.layers)))
         sigma_units = ucc.get("collision_coefficient")
 
-        # Retrieve scattering coefficient and corresponding altitude grid for
-        # current component, interpolate collision coefficient on fine grid
-        # TODO: Rewrite after updating component APIs with new zgrid parameter
+        # Evaluate extinction for current component
         for i, component in enumerate(self.components):
-            result[i] = np.interp(
-                zgrid.values,
-                component.zgrid.values,
-                component.eval_sigma_t(sctx).m_as(sigma_units),
-                left=0.0,
-                right=0.0,
-            )
+            result[i] = component.eval_sigma_t(sctx, self.zgrid).m_as(sigma_units)
 
         return result * sigma_units
 
     def eval_sigma_t(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
+        if zgrid is not None and zgrid is not self.zgrid:
+            raise ValueError("zgrid must be left unset or set to self.zgrid")
         return self._eval_sigma_t_impl(sctx).sum(axis=0)
 
     def eval_sigma_a(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
-        return self._eval_sigma_t(sctx) - self._eval_sigma_s(sctx)
+        if zgrid is not None and zgrid is not self.zgrid:
+            raise ValueError("zgrid must be left unset or set to self.zgrid")
+        return self.eval_sigma_t(sctx) - self.eval_sigma_s(sctx)
 
     @lru_cache(maxsize=1)
-    def _eval_sigma_s_impl(self, sctx: SpectralContext, zgrid: ZGrid) -> pint.Quantity:
-        result = np.zeros((len(self.components), len(zgrid.values)))
+    def _eval_sigma_s_impl(self, sctx: SpectralContext) -> pint.Quantity:
+        result = np.zeros((len(self.components), len(self.zgrid.layers)))
         sigma_units = ucc.get("collision_coefficient")
 
-        # Retrieve scattering coefficient and corresponding altitude grid for
-        # current component, interpolate collision coefficient on fine grid
-        # TODO: Rewrite after updating component APIs with new zgrid parameter
+        # Evaluate scattering coefficient for current component
         for i, component in enumerate(self.components):
-            result[i] = np.interp(
-                zgrid.values,
-                component.zgrid.values,
-                component.eval_sigma_s(sctx).m_as(sigma_units),
-                left=0.0,
-                right=0.0,
-            )
+            result[i] = component.eval_sigma_s(sctx, self.zgrid).m_as(sigma_units)
 
         return result * sigma_units
 
     def _eval_sigma_s_component(
-        self, sctx: SpectralContext, zgrid: ZGrid, n_component: int
+        self, sctx: SpectralContext, n_component: int
     ) -> pint.Quantity:
-        return self._eval_sigma_s_impl(sctx, zgrid)[n_component]
+        return self._eval_sigma_s_impl(sctx)[n_component]
 
     def eval_sigma_s(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
-        return self._eval_sigma_s_impl(sctx, zgrid).sum(axis=0)
+        if zgrid is not None and zgrid is not self.zgrid:
+            raise ValueError("zgrid must be left unset or set to self.zgrid")
+        return self._eval_sigma_s_impl(sctx).sum(axis=0)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
