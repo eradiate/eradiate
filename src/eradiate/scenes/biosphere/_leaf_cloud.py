@@ -13,7 +13,7 @@ import scipy as sp
 import scipy.special
 
 from ._core import CanopyElement
-from ..core import SceneElement
+from ..core import Param, SceneElement, traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
@@ -21,6 +21,7 @@ from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+from ...util.misc import flatten
 
 
 def _sample_lad(mu, nu, rng):
@@ -603,7 +604,7 @@ class ConeLeafCloudParams(LeafCloudParams):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class LeafCloud(CanopyElement):
     """
     A container class for leaf clouds in abstract discrete canopies.
@@ -1132,61 +1133,34 @@ class LeafCloud(CanopyElement):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
-        """
-        Return BSDF plugin specifications.
+    @property
+    def id_bsdf(self) -> str:
+        return f"bsdf_{self.id}"
 
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
+    @property
+    def _template_bsdfs(self) -> dict:
+        template_reflectance, _ = traverse(self.leaf_reflectance)
+        template_transmittance, _ = traverse(self.leaf_transmittance)
 
-        Returns
-        -------
-        dict
-            Return a dictionary suitable for merge with a :class:`.KernelDict`
-            containing all the BSDFs attached to the shapes in the leaf cloud.
-        """
         return {
-            f"bsdf_{self.id}": {
+            self.id_bsdf: {
                 "type": "bilambertian",
-                "reflectance": self.leaf_reflectance.kernel_dict(ctx=ctx)["spectrum"],
-                "transmittance": self.leaf_transmittance.kernel_dict(ctx=ctx)[
-                    "spectrum"
-                ],
+                "reflectance": template_reflectance.data,
+                "transmittance": template_transmittance.data,
             }
         }
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
-        """
-        Return shape plugin specifications.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            A dictionary suitable for merge with a :class:`.KernelDict`
-            containing all the shapes in the leaf cloud.
-        """
-        kernel_length = uck.get("length")
+    @property
+    def _template_shapes(self) -> dict:
+        length_units = uck.get("length")
         shapes_dict = {}
-
-        if ctx.ref:
-            bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
-        else:
-            bsdf = self.kernel_bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
+        bsdf_dict = {"type": "ref", "id": f"bsdf_{self.id}"}
 
         for i_leaf, (position, normal, radius) in enumerate(
             zip(
-                self.leaf_positions.m_as(kernel_length),
+                self.leaf_positions.m_as(length_units),
                 self.leaf_orientations,
-                self.leaf_radii.m_as(kernel_length),
+                self.leaf_radii.m_as(length_units),
             )
         ):
             _, up = mi.coordinate_system(normal)
@@ -1196,11 +1170,34 @@ class LeafCloud(CanopyElement):
 
             shapes_dict[f"{self.id}_leaf_{i_leaf}"] = {
                 "type": "disk",
-                "bsdf": bsdf,
+                "bsdf": bsdf_dict,
                 "to_world": to_world,
             }
 
         return shapes_dict
+
+    @property
+    def template(self) -> dict:
+        return flatten({**self._template_bsdfs, **self._template_shapes})
+
+    @property
+    def _params_bsdfs(self) -> dict:
+        _, params_reflectance = traverse(self.leaf_reflectance)
+        _, params_transmittance = traverse(self.leaf_transmittance)
+        return {
+            self.id_bsdf: {
+                "reflectance": params_reflectance.data,
+                "transmittance": params_transmittance.data,
+            }
+        }
+
+    @property
+    def _params_shapes(self) -> dict:
+        return {}
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return flatten({**self._params_bsdfs, **self._params_shapes})
 
     # --------------------------------------------------------------------------
     #                               Other methods

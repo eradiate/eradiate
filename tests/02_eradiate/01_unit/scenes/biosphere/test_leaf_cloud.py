@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import attr
+import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -17,7 +18,8 @@ from eradiate.scenes.biosphere._leaf_cloud import (
     _leaf_cloud_radii,
     _sample_lad,
 )
-from eradiate.scenes.core import KernelDict
+from eradiate.scenes.core import traverse
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.fixture(scope="function")
@@ -259,23 +261,22 @@ def test_leaf_cloud_generate(mode_mono):
 
 def test_leaf_cloud_from_file(mode_mono, tempfile_leaves):
     """Unit testing for :meth:`LeafCloud.from_file`."""
-    ctx = KernelDictContext()
 
     # A LeafCloud instance can be loaded from a file on the hard drive
-    cloud = LeafCloud.from_file(tempfile_leaves)
-    assert len(cloud.leaf_positions) == 5
-    assert np.allclose(cloud.leaf_radii, 0.1 * ureg.m)
+    leaf_cloud = LeafCloud.from_file(tempfile_leaves)
+    assert len(leaf_cloud.leaf_positions) == 5
+    assert np.allclose(leaf_cloud.leaf_radii, 0.1 * ureg.m)
+
     # Produced kernel dict is valid
-    assert KernelDict.from_elements(cloud, ctx=ctx).load()
+    check_scene_element(leaf_cloud)
 
 
 def test_leaf_cloud_kernel_dict(mode_mono):
     """Partial unit testing for :meth:`LeafCloud.kernel_dict`."""
-    ctx = KernelDictContext()
 
-    cloud_id = "my_cloud"
-    cloud = LeafCloud(
-        id=cloud_id,
+    leaf_cloud_id = "leaf_cloud"
+    leaf_cloud = LeafCloud(
+        id=leaf_cloud_id,
         leaf_positions=[[0, 0, 0], [1, 1, 1]],
         leaf_orientations=[[1, 0, 0], [0, 1, 0]],
         leaf_radii=[0.1, 0.1],
@@ -283,21 +284,22 @@ def test_leaf_cloud_kernel_dict(mode_mono):
         leaf_transmittance=0.5,
     )
 
-    kernel_dict = cloud.kernel_dict(ctx=ctx)
+    template, params = traverse(leaf_cloud)
 
     # The BSDF is bilambertian with the parameters we initially set
-    assert kernel_dict[f"bsdf_{cloud_id}"] == {
+    kernel_dict = template.render(ctx=KernelDictContext())
+    assert kernel_dict[f"bsdf_{leaf_cloud_id}"] == {
         "type": "bilambertian",
         "reflectance": {"type": "uniform", "value": 0.5},
         "transmittance": {"type": "uniform", "value": 0.5},
     }
 
     # Leaves are disks
-    for shape_key in [f"{cloud_id}_leaf_0", f"{cloud_id}_leaf_1"]:
+    for shape_key in [f"{leaf_cloud_id}_leaf_0", f"{leaf_cloud_id}_leaf_1"]:
         assert kernel_dict[shape_key]["type"] == "disk"
 
     # Kernel dict is valid
-    assert KernelDict(kernel_dict).load()
+    check_scene_element(leaf_cloud)
 
 
 def test_surface_area(mode_mono):
