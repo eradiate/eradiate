@@ -17,15 +17,13 @@ from ..core import traverse
 from ..phase import PhaseFunctionNode, RayleighPhaseFunction, phase_function_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
-from ...radprops._core import ZGrid
+from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile, ZGrid
 from ...thermoprops import afgl_1986, us76
 from ...thermoprops.util import (
     compute_scaling_factors,
     interpolate,
     rescale_concentration,
 )
-from ...units import to_quantity
 from ...units import unit_registry as ureg
 
 
@@ -115,25 +113,56 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         type="dict",
     )
 
+    _radprops_profile: t.Optional[RadProfile] = attrs.field(
+        default=None,
+        validator=attrs.validators.optional(attrs.validators.instance_of(RadProfile)),
+        init=False,
+        repr=False,
+    )
+
     def update(self) -> None:
         super().update()
+
         self.phase.id = self.id_phase
+
+        if self.thermoprops.title == "U.S. Standard Atmosphere 1976":
+            if self.absorption_data_sets is not None:
+                absorption_data_set = self.absorption_data_sets["us76_u86_4"]
+            else:
+                absorption_data_set = None
+
+            self._radprops_profile = US76ApproxRadProfile(
+                thermoprops=self.thermoprops,
+                has_scattering=self.has_scattering,
+                has_absorption=self.has_absorption,
+                absorption_data_set=absorption_data_set,
+            )
+
+        elif "AFGL (1986)" in self.thermoprops.title:
+            self._radprops_profile = AFGL1986RadProfile(
+                thermoprops=self.thermoprops,
+                has_scattering=self.has_scattering,
+                has_absorption=self.has_absorption,
+            )
+
+        else:
+            raise NotImplementedError("Unsupported thermophysical property data set.")
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
     # --------------------------------------------------------------------------
 
     @property
-    def zgrid(self) -> pint.Quantity:
-        return to_quantity(self.thermoprops.z_layer)
+    def zgrid(self) -> ZGrid:
+        return self.radprops_profile.zgrid
 
     @property
     def bottom(self) -> pint.Quantity:
-        return self.zgrid.min()
+        return self.zgrid.levels.min()
 
     @property
     def top(self) -> pint.Quantity:
-        return self.zgrid.max()
+        return self.zgrid.levels.max()
 
     @property
     def thermoprops(self) -> xr.Dataset:
@@ -154,37 +183,39 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @property
     def radprops_profile(self) -> RadProfile:
-        if self.thermoprops.title == "U.S. Standard Atmosphere 1976":
-            if self.absorption_data_sets is not None:
-                absorption_data_set = self.absorption_data_sets["us76_u86_4"]
-            else:
-                absorption_data_set = None
-            return US76ApproxRadProfile(
-                thermoprops=self.thermoprops,
-                has_scattering=self.has_scattering,
-                has_absorption=self.has_absorption,
-                absorption_data_set=absorption_data_set,
-            )
-        elif "AFGL (1986)" in self.thermoprops.title:
-            return AFGL1986RadProfile(
-                thermoprops=self.thermoprops,
-                has_scattering=self.has_scattering,
-                has_absorption=self.has_absorption,
-            )
-        else:
-            raise NotImplementedError("Unsupported thermophysical properties data set.")
+        return self._radprops_profile
 
-    def eval_albedo(self, sctx: SpectralContext, zgrid: ZGrid) -> pint.Quantity:
-        return self.radprops_profile.eval_albedo(sctx)
+    def eval_albedo(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        return self.radprops_profile.eval_albedo(
+            sctx,
+            self.zgrid if zgrid is None else zgrid,
+        )
 
-    def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:
-        return self.radprops_profile.eval_sigma_t(sctx)
+    def eval_sigma_t(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        return self.radprops_profile.eval_sigma_t(
+            sctx,
+            self.zgrid if zgrid is None else zgrid,
+        )
 
-    def eval_sigma_s(self, sctx: SpectralContext) -> pint.Quantity:
-        return self.radprops_profile.eval_sigma_s(sctx)
+    def eval_sigma_a(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        return self.radprops_profile.eval_sigma_a(
+            sctx,
+            self.zgrid if zgrid is None else zgrid,
+        )
 
-    def eval_sigma_a(self, sctx: SpectralContext) -> pint.Quantity:
-        return self.radprops_profile.eval_sigma_a(sctx)
+    def eval_sigma_s(
+        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+    ) -> pint.Quantity:
+        return self.radprops_profile.eval_sigma_s(
+            sctx,
+            self.zgrid if zgrid is None else zgrid,
+        )
 
     # --------------------------------------------------------------------------
     #                             Kernel dictionary
@@ -325,7 +356,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             Molecules concentrations as a ``{str: quantity}`` mapping.
 
         **kwargs
-            Keyword arguments passed to the :class:`MolecularAtmosphere`
+            Keyword arguments passed to the :class:`.MolecularAtmosphere`
             constructor.
 
         Returns
