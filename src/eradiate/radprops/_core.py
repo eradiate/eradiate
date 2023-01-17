@@ -265,14 +265,17 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-        if zgrid is None:
-            zgrid = self.zgrid
-
         if eradiate.mode().is_mono:
-            return self.eval_albedo_mono(spectral_ctx.wavelength, zgrid).squeeze()
+            return self.eval_albedo_mono(
+                spectral_ctx.wavelength,
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_albedo_ckd([spectral_ctx.bindex], zgrid).squeeze()
+            return self.eval_albedo_ckd(
+                [spectral_ctx.bindex],
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -312,7 +315,7 @@ class RadProfile(ABC):
         pass
 
     def eval_sigma_t(
-        self, spectral_ctx: SpectralContext, zgrid: ZGrid
+        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient spectrum based on a spectral context.
@@ -332,12 +335,17 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-
         if eradiate.mode().is_mono:
-            return self.eval_sigma_t_mono(spectral_ctx.wavelength, zgrid).squeeze()
+            return self.eval_sigma_t_mono(
+                spectral_ctx.wavelength,
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_t_ckd([spectral_ctx.bindex], zgrid).squeeze()
+            return self.eval_sigma_t_ckd(
+                [spectral_ctx.bindex],
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -379,7 +387,7 @@ class RadProfile(ABC):
         pass
 
     def eval_sigma_a(
-        self, spectral_ctx: SpectralContext, zgrid: ZGrid
+        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
         """
         Evaluate absorption coefficient spectrum based on a spectral context.
@@ -399,12 +407,17 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-
         if eradiate.mode().is_mono:
-            return self.eval_sigma_a_mono(spectral_ctx.wavelength, zgrid).squeeze()
+            return self.eval_sigma_a_mono(
+                spectral_ctx.wavelength,
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_a_ckd([spectral_ctx.bindex], zgrid).squeeze()
+            return self.eval_sigma_a_ckd(
+                [spectral_ctx.bindex],
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -446,7 +459,7 @@ class RadProfile(ABC):
         pass
 
     def eval_sigma_s(
-        self, spectral_ctx: SpectralContext, zgrid: ZGrid
+        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
         """
         Evaluate scattering coefficient spectrum based on a spectral context.
@@ -466,12 +479,17 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-
         if eradiate.mode().is_mono:
-            return self.eval_sigma_s_mono(spectral_ctx.wavelength, zgrid).squeeze()
+            return self.eval_sigma_s_mono(
+                spectral_ctx.wavelength,
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_s_ckd([spectral_ctx.bindex], zgrid).squeeze()
+            return self.eval_sigma_s_ckd(
+                [spectral_ctx.bindex],
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -531,14 +549,17 @@ class RadProfile(ABC):
         Dataset
             Radiative property dataset.
         """
-        if zgrid is None:
-            zgrid = self.zgrid
-
         if eradiate.mode().is_mono:
-            return self.eval_dataset_mono(spectral_ctx.wavelength, zgrid).squeeze()
+            return self.eval_dataset_mono(
+                spectral_ctx.wavelength,
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         elif eradiate.mode().is_ckd:
-            return self.eval_dataset_ckd([spectral_ctx.bindex], zgrid).squeeze()
+            return self.eval_dataset_ckd(
+                [spectral_ctx.bindex],
+                self.zgrid if zgrid is None else zgrid,
+            ).squeeze()
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
