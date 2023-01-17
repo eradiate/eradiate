@@ -1,13 +1,11 @@
 import mitsuba as mi
 import numpy as np
 import pytest
-from rich.pretty import pprint
 
 import eradiate
 from eradiate import unit_context_config as ucc
-from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.contexts import CKDSpectralContext, KernelDictContext
+from eradiate.contexts import KernelDictContext
 from eradiate.radprops import ZGrid
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
@@ -65,16 +63,22 @@ def test_heterogeneous_single_ckd(mode_ckd, geometry, component, bin_set):
     """
     Unit tests for a HeterogeneousAtmosphere with a single component.
     """
+    zgrid = ZGrid(np.linspace(0, 100, 101) * ureg.km)
+
     # Construct succeeds
     if component == "molecular":
         atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, molecular_atmosphere=MolecularAtmosphere.afgl_1986()
+            geometry=geometry,
+            zgrid=zgrid,
+            molecular_atmosphere=MolecularAtmosphere.afgl_1986(),
         )
 
     else:
         component = ParticleLayer()
         atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, particle_layers=[component]
+            geometry=geometry,
+            zgrid=zgrid,
+            particle_layers=[component],
         )
 
     # The scene element produces valid kernel dictionary specifications
@@ -112,6 +116,7 @@ def test_heterogeneous_multi_ckd(mode_ckd, geometry, bin_set):
 
     atmosphere = HeterogeneousAtmosphere(
         geometry=geometry,
+        zgrid=np.linspace(0, 100, 101) * ureg.km,
         molecular_atmosphere=molecular_atmosphere,
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
@@ -133,6 +138,7 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
 
     mixed = HeterogeneousAtmosphere(
         geometry="plane_parallel",
+        zgrid=np.linspace(0, 100, 101) * ureg.km,
         particle_layers=[component_1, component_2, component_3],
     )
     ctx = KernelDictContext()
@@ -188,13 +194,13 @@ def test_heterogeneous_mix_weights(modes_all_double):
     Check that component weights are correctly computed.
     """
     ctx = KernelDictContext()
-    zgrid = ZGrid(np.linspace(0, 100, 11) * ureg.km)
+    zgrid = ZGrid(np.linspace(0, 100, 101) * ureg.km)
 
     # Fist basic check: a uniform layer and a molecular atmosphere
     molecular = (
-        MolecularAtmosphere.afgl_1986(levels=np.linspace(0, 100, 101) * ureg.km)
+        MolecularAtmosphere.afgl_1986(levels=zgrid.levels)
         if eradiate.mode().is_ckd
-        else MolecularAtmosphere.ussa_1976(levels=np.linspace(0, 100, 101) * ureg.km)
+        else MolecularAtmosphere.ussa_1976(levels=zgrid.levels)
     )
 
     mixed = HeterogeneousAtmosphere(
@@ -285,17 +291,19 @@ def test_heterogeneous_mix_weights(modes_all_double):
 
 
 def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
-    ctx = KernelDictContext()
-    d = HeterogeneousAtmosphere(
+    atmosphere = HeterogeneousAtmosphere(
         geometry="plane_parallel",
         molecular_atmosphere=MolecularAtmosphere.ussa_1976(
             absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
         ),
         particle_layers=[ParticleLayer() for _ in range(2)],
         scale=2.0,
-    ).kernel_dict(ctx)
-    assert d["medium_atmosphere"]["scale"] == 2.0
-    assert isinstance(d.load(), mi.Scene)
+    )
+    template, params = traverse(atmosphere)
+    assert template["medium_atmosphere.scale"] == 2.0
+
+    # The scene element produces valid kernel dictionary specifications
+    check_scene_element(atmosphere, KernelDictContext())
 
 
 def test_heterogeneous_blend_switches(mode_mono):
@@ -327,6 +335,7 @@ def test_heterogeneous_absorbing_mol_atm(mode_ckd, particle_radprops, request):
         dataset=request.getfixturevalue(particle_radprops),
     )
     atmosphere = HeterogeneousAtmosphere(
+        zgrid=np.linspace(0, 100, 101) * ureg.km,
         molecular_atmosphere=MolecularAtmosphere.afgl_1986(
             has_absorption=True,
             has_scattering=False,
@@ -335,30 +344,25 @@ def test_heterogeneous_absorbing_mol_atm(mode_ckd, particle_radprops, request):
         geometry={"type": "spherical_shell"},  # arbitrary
     )
 
-    # Generate kernel dict
-    kernel_dict = atmosphere.kernel_phase(
-        KernelDictContext(
-            spectral_ctx=CKDSpectralContext(bin_set="1nm"),
-        )
-    )
+    # Collect phase function weights
+    mi_phase, mi_params = check_scene_element(atmosphere.phase, mi.PhaseFunction)
+    weights = np.squeeze(mi_params["weight.data"])
 
     # Extract phase function weights
-    weight = np.array(kernel_dict.data["phase"]["weight"]["grid"])
-    z_mesh = atmosphere._high_res_z_layer().m_as(uck["length"])
-    inside_particle_layer = (z_mesh >= pl_bottom.m_as(uck["length"])) & (
-        z_mesh <= pl_top.m_as(uck["length"])
+    inside_particle_layer = (atmosphere.zgrid.layers >= pl_bottom) & (
+        atmosphere.zgrid.layers <= pl_top
     )
 
     # Outside the particle layer, the phase function weight should be zero.
-    assert np.all(weight[~inside_particle_layer] == 0.0)
+    assert np.all(weights[~inside_particle_layer] == 0.0)
 
     # Within the particle layer, the phase function weight should be:
     #   - zero, if the particle layer is not scattering (i.e., absorbing-only)
     #   - larger than zero, if the particle layer is scattering
     if particle_radprops == "absorbing_only":
-        assert np.all(weight[inside_particle_layer] == 0.0)
+        assert np.all(weights[inside_particle_layer] == 0.0)
     elif particle_radprops == "scattering_only":
-        assert np.all(weight[inside_particle_layer] > 0.0)
+        assert np.all(weights[inside_particle_layer] > 0.0)
     else:
         raise ValueError(
             f"Test parametrisation inconsistent. Expected 'absorbing_only' or "
