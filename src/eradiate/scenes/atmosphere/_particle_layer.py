@@ -323,8 +323,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         normalized_sigma_t_array = (
             sigma_t_array.magnitude
             * self.tau_ref
-            / (np.sum(sigma_t_array.magnitude) * zgrid.layer_heights.magnitude)
-        ) * zgrid.layer_heights.units**-1
+            / (np.sum(sigma_t_array.magnitude) * zgrid.layer_height.magnitude)
+        ) * zgrid.layer_height.units**-1
 
         return np.atleast_1d(normalized_sigma_t_array * xs_t / xs_t_ref)
 
