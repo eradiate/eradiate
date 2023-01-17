@@ -396,7 +396,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     # --------------------------------------------------------------------------
 
     def eval_radprops(
-        self, sctx: SpectralContext, optional_fields: bool = False
+        self,
+        sctx: SpectralContext,
+        zgrid: t.Optional[ZGrid] = None,
+        optional_fields: bool = False,
     ) -> xr.Dataset:
         """
         Evaluate the extinction coefficients and albedo profiles.
@@ -427,14 +430,17 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
             * ``z``: altitude.
         """
+        if zgrid is None:
+            zgrid = self.zgrid
+
         sigma_units = ucc.get("collision_coefficient")
-        sigma_t = self.eval_sigma_t(sctx).m_as(sigma_units)
-        albedo = self.eval_albedo(sctx, None).magnitude
+        sigma_t = self.eval_sigma_t(sctx, zgrid)
+        albedo = self.eval_albedo(sctx, zgrid).m_as(ureg.dimensionless)
 
         data_vars = {
             "sigma_t": (
                 "z_layer",
-                sigma_t,
+                sigma_t.m_as(sigma_units),
                 {
                     "units": f"{symbol(sigma_units)}",
                     "standard_name": "extinction_coefficient",
@@ -457,7 +463,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 {
                     "sigma_a": (
                         "z_layer",
-                        sigma_t * (1.0 - albedo),
+                        (sigma_t * (1.0 - albedo)).m_as(sigma_units),
                         {
                             "units": f"{symbol(sigma_units)}",
                             "standard_name": "absorption_coefficient",
@@ -481,9 +487,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             coords={
                 "z_layer": (
                     "z_layer",
-                    self.zgrid.layers.magnitude,
+                    zgrid.layers.magnitude,
                     {
-                        "units": f"{symbol(self.zgrid.layers.units)}",
+                        "units": f"{symbol(zgrid.layers.units)}",
                         "standard_name": "layer_altitude",
                         "long_name": "layer altitude",
                     },
@@ -597,7 +603,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             def eval_albedo(ctx: KernelDictContext):
                 return mi.VolumeGrid(
                     np.reshape(
-                        self.eval_albedo(ctx.spectral_ctx, None), (-1, 1, 1)
+                        self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
+                        (-1, 1, 1),
                     ).astype(np.float32)
                 )
 
@@ -639,7 +646,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             def eval_albedo(ctx):
                 return mi.VolumeGrid(
                     np.reshape(
-                        self.eval_albedo(ctx.spectral_ctx, None), (1, 1, -1)
+                        self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
+                        (1, 1, -1),
                     ).astype(np.float32)
                 )
 
