@@ -16,7 +16,7 @@ from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel.transform import map_unit_cube
-from ...radprops._core import ZGrid
+from ...radprops import ZGrid
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck

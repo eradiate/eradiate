@@ -19,7 +19,7 @@ from ..phase import BlendPhaseFunction, PhaseFunctionNode
 from ..shapes import CuboidShape, SphereShape
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...radprops._core import ZGrid
+from ...radprops import ZGrid
 from ...units import unit_context_config as ucc
 
 
