@@ -115,6 +115,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     #: the :meth:`update` method.
     _zgrid: ZGrid = attrs.field(
         default=None,
+        converter=attrs.converters.optional(
+            lambda x: ZGrid(x) if not isinstance(x, ZGrid) else x
+        ),
         validator=attrs.validators.optional(attrs.validators.instance_of(ZGrid)),
         repr=False,
     )
