@@ -30,6 +30,13 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 
 ## v0.23.1 (upcoming release)
 
+### Breaking changes
+
+* The `coddington_2021-1_nm` dataset is now the default solar irradiance
+  spectrum ({ghpr}`300`). If you used to work with the default value
+  when defining the illumination in your experiments, this change might affect
+  the measured radiance values.
+
 ### Deprecations and removals
 
 * The {meth}`.MultiDistantMeasure.from_viewing_angles()` constructor is
@@ -64,6 +71,10 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Fixed a bug where the `bilambertian` BSDF plugin would produce incorrect
   results when used with LLVM Mitsuba variants ({ghpr}`297`).
 * ⚠️ Refactoring of the {class}`.Mode` infrastructure ({ghpr}`298`).
+* Added versions 1 and 2 and the full spectrum extension of the
+  TSIS-1 HSRS solar irradiance spectra ({ghpr}`300`)
+* The `coddington_2021-1_nm` dataset is now the default solar irradiance
+  spectrum ({ghpr}`300`).
 
 % ### Documentation
 
@@ -75,6 +86,8 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Harmonise dataset converters for solar irradiance spectra, spectral response
   function and particle radiative property datasets ({ghpr}`284`).
 * Replaced isort with [Ruff](https://github.com/charliermarsh/ruff) ({ghpr}`299`).
+* Changed data types of data variables in spectral response function datasets
+  from double to single floating point numbers ({ghpr}`300`).
 
 ## v0.22.5 (17 October 2022)
 

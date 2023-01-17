@@ -36,9 +36,9 @@ def test_solar_irradiance(mode_mono):
         ctx = KernelDictContext(spectral_ctx={"wavelength": 2400.0})
         s.kernel_dict(ctx)
 
-    # solid_2017_mean dataset can be used
+    # solid_2017-mean dataset can be used
     ctx = KernelDictContext()
-    s = SolarIrradianceSpectrum(dataset="solid_2017_mean")
+    s = SolarIrradianceSpectrum(dataset="solid_2017-mean")
     assert KernelDict.from_elements(s, ctx=ctx).load()
 
 
