@@ -12,7 +12,6 @@ import pinttr
 
 from ._core import Canopy, InstancedCanopyElement, biosphere_factory
 from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
-from ..core import KernelDict
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc

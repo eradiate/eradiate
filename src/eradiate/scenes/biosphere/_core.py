@@ -18,6 +18,7 @@ from ...typing import PathLike
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+from ...util.misc import flatten
 
 biosphere_factory = Factory()
 biosphere_factory.register_lazy_batch(
@@ -284,8 +285,10 @@ class InstancedCanopyElement(CompositeSceneElement):
     @property
     def template(self) -> dict:
         # Inherit docstring
-        return {
-            **self._template_bsdfs,
-            **self._template_shapes,
-            **self._template_instances,
-        }
+        return flatten(
+            {
+                **self._template_bsdfs,
+                **self._template_shapes,
+                **self._template_instances,
+            }
+        )
