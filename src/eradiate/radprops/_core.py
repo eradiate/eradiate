@@ -198,23 +198,46 @@ class ZGrid:
         on_setattr=None,  # frozen instance: on_setattr must be disabled
     )
 
+    @_layer_height.validator
+    def _layer_height_validator(self, attribute, value):
+        if not np.isscalar(value.magnitude):
+            raise ValueError("layer height must be a scalar")
+
     def __init__(self, levels: pint.Quantity):
         layer_height = np.diff(levels)
+        if not np.allclose(layer_height, layer_height[0]):
+            raise ValueError("levels must be regularly spaced")
         layers = levels[:-1] + 0.5 * layer_height
-        self.__attrs_init__(levels=levels, layers=layers, layer_height=layer_height)
+        self.__attrs_init__(levels=levels, layers=layers, layer_height=layer_height[0])
 
     @property
-    def layers(self):
+    def layers(self) -> pint.Quantity:
+        """
+        quantity:
+            Vector of altitudes of layer centres.
+        """
         return self._layers
 
     @property
-    def layer_heights(self):
+    def layer_height(self) -> pint.Quantity:
+        """
+        quantity:
+            Layer height.
+        """
         return self._layer_height
 
-    def n_levels(self):
+    @property
+    def n_levels(self) -> int:
+        """
+        Number of levels.
+        """
         return len(self.levels)
 
-    def n_layers(self):
+    @property
+    def n_layers(self) -> int:
+        """
+        Number of layers.
+        """
         return len(self.layers)
 
 
