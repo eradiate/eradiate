@@ -10,11 +10,10 @@ import numpy as np
 import pint
 import pinttr
 
-from ..core import KernelDict, SceneElement
+from ..core import CompositeSceneElement, SceneElement
 from ... import validators
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext
 from ...typing import PathLike
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -54,8 +53,8 @@ biosphere_factory.register_lazy_batch(
 
 
 @parse_docs
-@attrs.define
-class Canopy(SceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class Canopy(CompositeSceneElement, ABC):
     """
     An abstract base class defining a base type for all canopies.
     """
@@ -82,107 +81,46 @@ class Canopy(SceneElement, ABC):
             ),
             units=ucc.deferred("length"),
         ),
-        doc="Canopy size as a 3-vector.\n\nUnit-enabled field (default: ucc['length']).",
+        doc="Canopy extent as a 3-vector.\n"
+        "\n"
+        "Unit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="array-like",
     )
 
-    @abstractmethod
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
-        """
-        Return BSDF plugin specifications only.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
-            attached to the shapes in the canopy.
-        """
-        pass
-
-    @abstractmethod
-    def kernel_shapes(self, ctx: KernelDictContext) -> t.MutableMapping:
-        """
-        Return shape plugin specifications only.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
-            in the canopy.
-        """
-        pass
-
 
 @parse_docs
-@attrs.define
-class CanopyElement(SceneElement, ABC):
+@attrs.define(eq=False, slots=False)
+class CanopyElement(CompositeSceneElement, ABC):
     """
     An abstract class representing a component of a :class:`.Canopy` object.
     Concrete canopy classes can manage their components as they prefer.
     """
 
+    @property
     @abstractmethod
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
-        """
-        Return BSDF plugin specifications only.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            Return a dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
-            attached to the shapes in the canopy.
-        """
+    def _template_bsdfs(self) -> dict:
         pass
 
+    @property
     @abstractmethod
-    def kernel_shapes(self, ctx: KernelDictContext) -> t.MutableMapping:
-        """
-        Return shape plugin specifications only.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
-            in the canopy.
-        """
+    def _template_shapes(self) -> dict:
         pass
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        return KernelDict({**self.kernel_bsdfs(ctx=ctx), **self.kernel_shapes(ctx=ctx)})
+    @property
+    @abstractmethod
+    def _params_bsdfs(self) -> dict:
+        pass
+
+    @property
+    @abstractmethod
+    def _params_shapes(self) -> dict:
+        pass
 
 
 @parse_docs
-@attrs.define
-class InstancedCanopyElement(SceneElement):
+@attrs.define(eq=False, slots=False)
+class InstancedCanopyElement(CompositeSceneElement):
     """
     Instanced canopy element [``instanced``].
 
@@ -312,80 +250,42 @@ class InstancedCanopyElement(SceneElement):
     #                        Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.MutableMapping:
-        """
-        Return BSDF plugin specifications.
+    @property
+    def _template_bsdfs(self) -> dict:
+        # Produces the part of the kernel dictionary template describing
+        # the BSDFs of the encapsulated canopy element
+        return self.canopy_element._template_bsdfs
 
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            Return a dictionary suitable for merge with a :class:`.KernelDict`
-            containing all the BSDFs attached to the shapes in the leaf cloud.
-        """
-        return self.canopy_element.kernel_bsdfs(ctx=ctx)
-
-    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
-        """
-        Return shape plugin specifications.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
-            in the canopy.
-        """
+    @property
+    def _template_shapes(self) -> dict:
+        # Produces the part of the kernel dictionary template describing
+        # the shape group of the encapsulated canopy element
         return {
             self.canopy_element.id: {
                 "type": "shapegroup",
-                **self.canopy_element.kernel_shapes(ctx=ctx),
+                **self.canopy_element._template_shapes,
             }
         }
 
-    def kernel_instances(self, ctx: KernelDictContext) -> t.Dict:
-        """
-        Return instance plugin specifications.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing instances.
-        """
-        kernel_length = uck.get("length")
-
+    @property
+    def _template_instances(self) -> dict:
+        # Produces the part of the kernel dictionary template describing
+        # instances of the encapsulated canopy element
+        length_units = uck.get("length")
         return {
             f"{self.canopy_element.id}_instance_{i}": {
                 "type": "instance",
                 "group": {"type": "ref", "id": self.canopy_element.id},
                 "to_world": mi.ScalarTransform4f.translate(position),
             }
-            for i, position in enumerate(self.instance_positions.m_as(kernel_length))
+            for i, position in enumerate(self.instance_positions.m_as(length_units))
         }
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        return KernelDict(
-            {
-                **self.kernel_bsdfs(ctx=ctx),
-                **self.kernel_shapes(ctx=ctx),
-                **self.kernel_instances(ctx=ctx),
-            }
-        )
+    @property
+    def template(self) -> dict:
+        # Inherit docstring
+        return {
+            **self._template_bsdfs,
+            **self._template_shapes,
+            **self._template_instances,
+        }
