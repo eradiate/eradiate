@@ -22,7 +22,7 @@ from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
-from ...radprops._core import ZGrid
+from ...radprops import ZGrid
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -255,14 +255,17 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     ) -> pint.Quantity:
         # Inherit docstring
 
-        if zgrid is None:
-            zgrid = self.zgrid
-
         if eradiate.mode().is_mono:
-            return self.eval_albedo_mono(sctx.wavelength, zgrid)
+            return self.eval_albedo_mono(
+                sctx.wavelength,
+                self.zgrid if zgrid is None else zgrid,
+            )
 
         elif eradiate.mode().is_ckd:
-            return self.eval_albedo_ckd(sctx.bindex, zgrid)
+            return self.eval_albedo_ckd(
+                sctx.bindex,
+                self.zgrid if zgrid is None else zgrid,
+            )
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -291,14 +294,17 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     ) -> pint.Quantity:
         # Inherit docstring
 
-        if zgrid is None:
-            zgrid = self.zgrid
-
         if eradiate.mode().is_mono:
-            return self.eval_sigma_t_mono(sctx.wavelength, zgrid)
+            return self.eval_sigma_t_mono(
+                sctx.wavelength,
+                self.zgrid if zgrid is None else zgrid,
+            )
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_t_ckd(sctx.bindex, zgrid)
+            return self.eval_sigma_t_ckd(
+                sctx.bindex,
+                self.zgrid if zgrid is None else zgrid,
+            )
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -334,14 +340,17 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def eval_sigma_a(self, sctx: SpectralContext, zgrid: ZGrid = None) -> pint.Quantity:
         # Inherit docstring
 
-        if zgrid is None:
-            zgrid = self.zgrid
-
         if eradiate.mode().is_mono:
-            return self.eval_sigma_a_mono(sctx.wavelength, zgrid)
+            return self.eval_sigma_a_mono(
+                sctx.wavelength,
+                self.zgrid if zgrid is None else zgrid,
+            )
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_a_ckd(sctx.bindex, zgrid)
+            return self.eval_sigma_a_ckd(
+                sctx.bindex,
+                self.zgrid if zgrid is None else zgrid,
+            )
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
@@ -359,14 +368,17 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     ) -> pint.Quantity:
         # Inherit docstring
 
-        if zgrid is None:
-            zgrid = self.zgrid
-
         if eradiate.mode().is_mono:
-            return self.eval_sigma_s_mono(sctx.wavelength, zgrid)
+            return self.eval_sigma_s_mono(
+                sctx.wavelength,
+                self.zgrid if zgrid is None else zgrid,
+            )
 
         elif eradiate.mode().is_ckd:
-            return self.eval_sigma_s_ckd(sctx.bindex, zgrid)
+            return self.eval_sigma_s_ckd(
+                sctx.bindex,
+                self.zgrid if zgrid is None else zgrid,
+            )
 
         else:
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
