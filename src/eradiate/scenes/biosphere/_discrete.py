@@ -15,6 +15,7 @@ from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
+from ...util.misc import flatten
 
 
 def _instanced_canopy_elements_converter(value):
@@ -76,26 +77,18 @@ class DiscreteCanopy(Canopy):
     #                          Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
-        """
-        Return BSDF plugin specifications.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            Return a dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the BSDFs
-            attached to the shapes in the canopy.
-        """
+    @property
+    def _template_bsdfs(self) -> dict:
         result = {}
-        for instanced_canopy_element in self.instanced_canopy_elements:
-            result = {**result, **instanced_canopy_element.kernel_bsdfs(ctx=ctx)}
+        for element in self.instanced_canopy_elements:
+            result.update(element._template_bsdfs)
+        return result
+
+    @property
+    def _template_shapes(self) -> dict:
+        result = {}
+        for element in self.instanced_canopy_elements:
+            result.update(element._template_shapes)
         return result
 
     def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
@@ -120,36 +113,27 @@ class DiscreteCanopy(Canopy):
             result = {**result, **instanced_canopy_element.kernel_shapes(ctx=ctx)}
         return result
 
-    def kernel_instances(self, ctx: KernelDictContext) -> t.Dict:
-        """
-        Return instance plugin specifications.
-
-        Returns
-        -------
-        dict
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing instances.
-        """
+    @property
+    def _template_instances(self) -> dict:
         result = {}
-        for instanced_canopy_element in self.instanced_canopy_elements:
-            result = {**result, **instanced_canopy_element.kernel_instances(ctx)}
+        for element in self.instanced_canopy_elements:
+            result.update(element._template_instances)
         return result
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        if not ctx.ref:
-            raise ValueError("'ctx.ref' must be set to True")
+    @property
+    def template(self) -> dict:
+        result = {}
 
-        result = KernelDict()
-        for instanced_canopy_element in self.instanced_canopy_elements:
+        for element in self.instanced_canopy_elements:
             result.update(
                 {
-                    **instanced_canopy_element.kernel_bsdfs(ctx=ctx),
-                    **instanced_canopy_element.kernel_shapes(ctx=ctx),
-                    **instanced_canopy_element.kernel_instances(ctx=ctx),
+                    **element._template_bsdfs,
+                    **element._template_shapes,
+                    **element._template_instances,
                 }
             )
 
-        return result
+        return flatten(result)
 
     # --------------------------------------------------------------------------
     #                                  Padding
