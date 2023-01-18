@@ -42,11 +42,12 @@ public:
 
     MI_INLINE Float eval_rayleigh(Float cos_theta) const {
         Float value;
+        Float cos_theta_sqr = dr::sqr(cos_theta);
 
         /* Non-zero elements */
-        value(0, 0) = (3.f / 4.f) * (1.f + dr::sqr(cos_theta));
+        value(0, 0) = (3.f / 4.f) * (1.f + cos_theta_sqr);
         value(1, 1) = value(0, 0);
-        value(0, 1) = (-3.f / 4.f) * (1 - dr::sqr(cos_theta));
+        value(0, 1) = (-3.f / 4.f) * (1.f - cos_theta_sqr);
         value(1, 0) = value(0, 1);
         value(2, 2) = (3.f / 2.f) * cos_theta;
         value(3, 3) = value(2, 2);
