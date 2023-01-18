@@ -77,7 +77,16 @@ public:
                const MediumInteraction3f &mi, const Vector3f &wo,
                Mask active) const override {
         MI_MASKED_FUNCTION(ProfilerPhase::PhaseFunctionEvaluate, active);
-        return eval_rayleigh(dot(wo, mi.wi));
+
+        /* Due to the coordinate system rotations for polarization-aware
+           PhaseFunctions below we need to know the propagation direction of
+           light.
+           In the following, light arrives along `-wo_hat` and leaves along
+           `+wi_hat`. */
+        Vector3f wo_hat = ctx.mode == TransportMode::Radiance ? wo : mi.wi,
+                 wi_hat = ctx.mode == TransportMode::Radiance ? mi.wi : wo;
+
+        return eval_rayleigh(dot(wo_hat, wi_hat));
     }
 
     std::string to_string() const override { return "RayleighPolarizedPhaseFunction[]"; }
