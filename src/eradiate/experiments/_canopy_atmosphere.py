@@ -17,7 +17,6 @@ from ..scenes.atmosphere import (
 )
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..scenes.core import KernelDict
 from ..scenes.integrators import (
     Integrator,
     PathIntegrator,
@@ -202,7 +201,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     def _default_surface_width(self):
         return 10.0 * ucc.get("length")
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+    def kernel_dict(self, ctx: KernelDictContext):
         # Inherit docstring
 
         result = KernelDict()

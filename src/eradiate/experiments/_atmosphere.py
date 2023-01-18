@@ -18,7 +18,6 @@ from ..scenes.atmosphere import (
     atmosphere_factory,
 )
 from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import Measure, MultiRadiancemeterMeasure, TargetPoint
 from ..scenes.measure._distant import DistantMeasure
