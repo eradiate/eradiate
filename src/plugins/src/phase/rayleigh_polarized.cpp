@@ -5,9 +5,9 @@
 
 /**!
 
-.. _phase-polarised_rayleigh:
+.. _phase-rayleigh_polarized:
 
-Polarised Rayleigh phase function (:monosp:`polarised_rayleigh`)
+Rayleigh polarized phase function (:monosp:`rayleigh_polarized`)
 ----------------------------------------------------------------
 
 Scattering by particles that are much smaller than the wavelength
@@ -21,22 +21,22 @@ This model has no parameters.
 .. tabs::
     .. code-tab:: xml
 
-        <phase type="polarised_rayleigh" />
+        <phase type="rayleigh_polarized" />
 
     .. code-tab:: python
-        'type': 'polarised_rayleigh'
+        'type': 'rayleigh_polarized'
 
 */
 
 NAMESPACE_BEGIN(mitsuba)
 
 template <typename Float, typename Spectrum>
-class PolarisedRayleighPhaseFunction final : public PhaseFunction<Float, Spectrum> {
+class RayleighPolarizedPhaseFunction final : public PhaseFunction<Float, Spectrum> {
 public:
     MI_IMPORT_BASE(PhaseFunction, m_flags)
     MI_IMPORT_TYPES(PhaseFunctionContext)
 
-    PolarisedRayleighPhaseFunction(const Properties &props) : Base(props) {
+    RayleighPolarizedPhaseFunction(const Properties &props) : Base(props) {
         /*
         if constexpr (is_polarized_v<Spectrum>)
             Log(Warn,
@@ -79,11 +79,11 @@ public:
         return eval_rayleigh(dot(wo, mi.wi));
     }
 
-    std::string to_string() const override { return "PolarisedRayleighPhaseFunction[]"; }
+    std::string to_string() const override { return "RayleighPolarizedPhaseFunction[]"; }
 
     MI_DECLARE_CLASS()
 };
 
-MI_IMPLEMENT_CLASS_VARIANT(PolarisedRayleighPhaseFunction, PhaseFunction)
-MI_EXPORT_PLUGIN(PolarisedRayleighPhaseFunction, "Polarised Rayleigh phase function")
+MI_IMPLEMENT_CLASS_VARIANT(RayleighPolarizedPhaseFunction, PhaseFunction)
+MI_EXPORT_PLUGIN(RayleighPolarizedPhaseFunction, "Rayleigh polarized phase function")
 NAMESPACE_END(mitsuba)
