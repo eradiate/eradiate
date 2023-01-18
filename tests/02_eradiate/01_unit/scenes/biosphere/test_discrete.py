@@ -13,7 +13,7 @@ from eradiate.scenes.biosphere import (
     MeshTreeElement,
 )
 from eradiate.scenes.biosphere._discrete import DiscreteCanopy, LeafCloud
-from eradiate.scenes.core import KernelDict
+from eradiate.test_tools.types import check_scene_element
 
 # ------------------------------------------------------------------------------
 #                            Fixture definitions
@@ -109,18 +109,14 @@ def test_discrete_canopy_instantiate(mode_mono):
 
 
 def test_discrete_canopy_homogeneous(mode_mono):
-    ctx = KernelDictContext()
-
     # The generate_homogeneous() constructor returns a valid canopy object
     canopy = DiscreteCanopy.homogeneous(
         n_leaves=1, leaf_radius=0.1, l_horizontal=10, l_vertical=3
     )
-    assert KernelDict.from_elements(canopy, ctx=ctx).load()
+    check_scene_element(canopy)
 
 
 def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves):
-    ctx = KernelDictContext()
-
     # The from_files() constructor returns a valid canopy object
     canopy = DiscreteCanopy.leaf_cloud_from_files(
         size=[1, 1, 1],
@@ -137,7 +133,7 @@ def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves
             },
         ],
     )
-    assert KernelDict.from_elements(canopy, ctx=ctx).load()
+    check_scene_element(canopy)
 
 
 def test_discrete_canopy_advanced(
@@ -227,12 +223,11 @@ def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
     )
     # The padded canopy object is valid and instantiable
     padded_canopy = canopy.padded_copy(2)
-    assert padded_canopy
-    assert KernelDict.from_elements(padded_canopy, ctx=ctx).load()
+    assert isinstance(padded_canopy, DiscreteCanopy)
+    assert check_scene_element(padded_canopy)
     # Padded canopy has (2*padding + 1) ** 2 times more instances than original
     assert (
-        len(padded_canopy.kernel_instances(ctx))
-        == len(canopy.kernel_instances(ctx)) * 25
+        len(padded_canopy._template_instances) == len(canopy._template_instances) * 25
     )
     # Padded canopy has 2*padding + 1 times larger horizontal size than original
     assert np.allclose(padded_canopy.size[:2], 5 * canopy.size[:2])
