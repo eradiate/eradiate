@@ -1,12 +1,15 @@
 import os
 import tempfile
 
+import mitsuba as mi
 import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere import MeshTree, MeshTreeElement
-from eradiate.scenes.core import KernelDict
+from eradiate.scenes.core import KernelDictTemplate
+from eradiate.test_tools.types import check_scene_element
+from eradiate.util.misc import flatten
 
 # ------------------------------------------------------------------------------
 #                            Fixture definitions
@@ -71,33 +74,33 @@ def tmpfile_ply():
         filename = os.path.join(tmpdir, "tmpfile_mesh.ply")
         with open(filename, "w") as tf:
             tf.write(
-                """ply 
-format ascii 1.0 
-element vertex 8 
-property float x 
-property float y 
-property float z 
-element face 12 
+                """ply
+format ascii 1.0
+element vertex 8
+property float x
+property float y
+property float z
+element face 12
 property list uchar int32 vertex_index
-end_header 
-0 0 0 
-0 0 1 
-0 1 1 
-0 1 0 
-1 0 0 
-1 0 1 
-1 1 1 
-1 1 0  
+end_header
+0 0 0
+0 0 1
+0 1 1
+0 1 0
+1 0 0
+1 0 1
+1 1 1
+1 1 0
 3 0 1 2
 3 0 2 3
 3 7 6 5
-3 7 5 4 
+3 7 5 4
 3 0 4 5
-3 0 5 1 
+3 0 5 1
 3 1 5 6
-3 1 6 2 
+3 1 6 2
 3 2 6 7
-3 2 7 3 
+3 2 7 3
 3 3 7 4
 3 3 4 0
 """
@@ -158,7 +161,6 @@ def test_mesh_tree_element_load(mode_mono, tmp_file, request):
     corresponding Mitsuba objects.
     """
     tmp_file = request.getfixturevalue(tmp_file)
-    ctx = KernelDictContext(ref=True)
 
     tree_element = MeshTreeElement(
         id="mesh_tree_obj",
@@ -167,9 +169,16 @@ def test_mesh_tree_element_load(mode_mono, tmp_file, request):
         reflectance=0.5,
         transmittance=0.5,
     )
-    d = {**tree_element.kernel_bsdfs(ctx), **tree_element.kernel_shapes(ctx)}
-
-    assert KernelDict(d).load()
+    template = KernelDictTemplate(
+        flatten(
+            {
+                "type": "scene",
+                **tree_element._template_bsdfs,
+                **tree_element._template_shapes,
+            }
+        )
+    )
+    assert isinstance(mi.load_dict(template.render(KernelDictContext())), mi.Scene)
 
 
 def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
@@ -177,7 +186,6 @@ def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
     Instantiate a MeshTree object holding two MeshTreeElements and load the
     corresponding Mitsuba objects.
     """
-    ctx = KernelDictContext()
 
     # Constructor based instantiation
     assert MeshTree(
@@ -218,7 +226,7 @@ def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
         ]
     )
 
-    assert KernelDict.from_elements(tree, ctx=ctx).load()
+    check_scene_element(tree)
 
     # check that special converter for the mesh_tree_elements field works as
     # expected

@@ -3,12 +3,13 @@ import tempfile
 
 import numpy as np
 import pytest
+from rich.pretty import pprint
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.biosphere._discrete import LeafCloud
-from eradiate.scenes.biosphere._tree import AbstractTree
-from eradiate.scenes.core import KernelDict
+from eradiate.scenes.biosphere import AbstractTree, LeafCloud
+from eradiate.scenes.core import traverse
+from eradiate.test_tools.types import check_scene_element
 
 # ------------------------------------------------------------------------------
 #                            Fixture definitions
@@ -52,14 +53,13 @@ def test_abstract_tree_instantiate(mode_mono):
 
 def test_abstract_tree_dispatch_leaf_cloud(mode_mono, tempfile_leaves):
     """Test if contained LeafCloud is instantiated in all variants"""
-    ctx = KernelDictContext()
 
     # A LeafCloud instance can be loaded from a file on the hard drive
     tree = AbstractTree(leaf_cloud=LeafCloud.from_file(tempfile_leaves))
     assert len(tree.leaf_cloud.leaf_positions) == 5
     assert np.allclose(tree.leaf_cloud.leaf_radii, 0.1 * ureg.m)
     # Produced kernel dict is valid
-    assert KernelDict.from_elements(tree.leaf_cloud, ctx=ctx).load()
+    check_scene_element(tree)
 
     # When passing a dict for the leaf_cloud field, the 'type' param can be omitted
     assert AbstractTree(
@@ -81,11 +81,13 @@ def test_abstract_tree_dispatch_leaf_cloud(mode_mono, tempfile_leaves):
         tree1.leaf_cloud.leaf_orientations == tree2.leaf_cloud.leaf_orientations
     )
     assert np.all(tree1.leaf_cloud.leaf_radii == tree2.leaf_cloud.leaf_radii)
-    assert np.all(
-        tree1.leaf_cloud.leaf_transmittance == tree2.leaf_cloud.leaf_transmittance
+    assert (
+        tree1.leaf_cloud.leaf_transmittance.value
+        == tree2.leaf_cloud.leaf_transmittance.value
     )
-    assert np.all(
-        tree1.leaf_cloud.leaf_reflectance == tree2.leaf_cloud.leaf_reflectance
+    assert (
+        tree1.leaf_cloud.leaf_reflectance.value
+        == tree2.leaf_cloud.leaf_reflectance.value
     )
 
     # Dispatch to generator if requested
@@ -125,7 +127,9 @@ def test_abstract_tree_kernel_dict(mode_mono):
         trunk_reflectance=0.5,
     )
 
-    kernel_dict = tree.kernel_dict(ctx=ctx)
+    template, _ = traverse(tree)
+    kernel_dict = template.render(KernelDictContext())
+    pprint(kernel_dict)
 
     # The BSDF is bilambertian with the parameters we initially set
     assert kernel_dict[f"bsdf_{cloud_id}"] == {
@@ -139,4 +143,4 @@ def test_abstract_tree_kernel_dict(mode_mono):
         assert kernel_dict[shape_key]["type"] == "disk"
 
     # Kernel dict is valid
-    assert KernelDict(kernel_dict).load()
+    check_scene_element(tree)

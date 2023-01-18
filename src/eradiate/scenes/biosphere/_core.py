@@ -10,7 +10,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ..core import CompositeSceneElement, SceneElement
+from ..core import CompositeSceneElement, Param
 from ... import validators
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
@@ -65,9 +65,9 @@ class Canopy(CompositeSceneElement, ABC):
             default="canopy",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
-        doc=get_doc(SceneElement, "id", "doc"),
-        type=get_doc(SceneElement, "id", "type"),
-        init_type=get_doc(SceneElement, "id", "init_type"),
+        doc=get_doc(CompositeSceneElement, "id", "doc"),
+        type=get_doc(CompositeSceneElement, "id", "type"),
+        init_type=get_doc(CompositeSceneElement, "id", "init_type"),
         default='"canopy"',
     )
 
@@ -109,6 +109,10 @@ class CanopyElement(CompositeSceneElement, ABC):
         pass
 
     @property
+    def template(self) -> dict:
+        return flatten({**self._template_bsdfs, **self._template_shapes})
+
+    @property
     @abstractmethod
     def _params_bsdfs(self) -> dict:
         pass
@@ -117,6 +121,10 @@ class CanopyElement(CompositeSceneElement, ABC):
     @abstractmethod
     def _params_shapes(self) -> dict:
         pass
+
+    @property
+    def params(self) -> t.Dict[str, Param]:
+        return flatten({**self._params_bsdfs, **self._params_shapes})
 
 
 @parse_docs

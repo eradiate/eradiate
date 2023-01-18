@@ -203,7 +203,7 @@ def test_discrete_canopy_advanced(
             ),
         ],
     )
-    assert KernelDict.from_elements(canopy, ctx=ctx).load()
+    check_scene_element(canopy)
 
 
 def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
