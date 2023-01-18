@@ -37,17 +37,18 @@ public:
     MI_IMPORT_TYPES(PhaseFunctionContext)
 
     RayleighPolarizedPhaseFunction(const Properties &props) : Base(props) {
-        /*
-        if constexpr (is_polarized_v<Spectrum>)
-            Log(Warn,
-                "Polarized version of Rayleigh phase function not implemented, "
-                "falling back to scalar version");
-        */
         m_flags = +PhaseFunctionFlags::Anisotropic;
     }
 
     MI_INLINE Float eval_rayleigh(Float cos_theta) const {
-        return (3.f / 16.f) * dr::InvPi<Float> * (1.f + dr::sqr(cos_theta));
+        Float value;
+        value(0, 0) = (3.f / 4.f) * (1.f + dr::sqr(cos_theta));
+        value(1, 1) = value(0, 0);
+        value(0, 1) = (-3.f / 4.f) * (1 - dr::sqr(cos_theta));
+        value(1, 0) = value(0, 1);
+        value(2, 2) = (3.f / 2.f) * cos_theta;
+        value(3, 3) = value(2, 2);
+        return (1.f / 4.f) * dr::InvPi<Float> * value
     }
 
     std::pair<Vector3f, Float> sample(const PhaseFunctionContext & /* ctx */,
@@ -72,7 +73,7 @@ public:
         return { wo, pdf };
     }
 
-    Float eval(const PhaseFunctionContext & /* ctx */,
+    Float eval(const PhaseFunctionContext & ctx,
                const MediumInteraction3f &mi, const Vector3f &wo,
                Mask active) const override {
         MI_MASKED_FUNCTION(ProfilerPhase::PhaseFunctionEvaluate, active);
