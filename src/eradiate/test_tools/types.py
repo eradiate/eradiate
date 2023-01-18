@@ -1,6 +1,7 @@
 import typing as t
 
 import mitsuba as mi
+import pytest
 
 from ..contexts import KernelDictContext
 from ..scenes.core import CompositeSceneElement, NodeSceneElement, Scene, traverse
@@ -59,7 +60,15 @@ def check_scene_element(
     # Check if the template can be instantiated
     ctx = KernelDictContext()
     kernel_dict = template.render(ctx, drop=True)
-    mi_obj = mi.load_dict(kernel_dict)
+
+    try:
+        mi_obj = mi.load_dict(kernel_dict)
+    except RuntimeError as e:
+        pytest.fail(
+            reason=f"could not load scene dictionary, got RuntimeError: {e}\n"
+            f"{kernel_dict = }"
+        )
+
     assert isinstance(mi_obj, mi_cls)
 
     # Check if parameters can be updated
@@ -67,7 +76,12 @@ def check_scene_element(
     mi_params = mi.traverse(mi_obj)
 
     for key, value in kernel_params.items():
-        mi_params[key] = value
+        try:
+            mi_params[key] = value
+        except KeyError as e:
+            pytest.fail(
+                reason=f"could not set parameter, got KeyError: {e}\n{mi_params = }"
+            )
 
     mi_params.update()
 
