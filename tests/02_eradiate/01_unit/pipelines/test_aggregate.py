@@ -1,12 +1,12 @@
 import numpy as np
 
 from eradiate.experiments import AtmosphereExperiment
-from eradiate.pipelines._aggregate import (
+from eradiate.pipelines import (
     AggregateCKDQuad,
     AggregateRadiosity,
     AggregateSampleCount,
+    Gather,
 )
-from eradiate.pipelines._gather import Gather
 from eradiate.units import symbol
 from eradiate.units import unit_context_kernel as uck
 

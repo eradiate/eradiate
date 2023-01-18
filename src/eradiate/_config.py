@@ -8,14 +8,12 @@ for convenience.
 import enum
 import os.path
 import pathlib
-import warnings
 
 import attrs
 import environ
 from environ._environ_config import CNF_KEY, RAISE, _ConfigEntry
 from environ.exceptions import ConfigError
 
-from .exceptions import ConfigWarning
 from .frame import AzimuthConvention
 
 

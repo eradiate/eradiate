@@ -309,3 +309,7 @@ class KernelDictContext(Context):
         type="dict",
         default="{}",
     )
+
+    @property
+    def index_formatted(self) -> str:
+        return self.spectral_ctx.spectral_index_formatted

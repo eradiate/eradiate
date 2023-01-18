@@ -21,7 +21,6 @@ from ..contexts import KernelDictContext, SpectralContext
 from ..exceptions import KernelVariantError
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
-from ..scenes.core import KernelDict
 from ..scenes.illumination import (
     ConstantIllumination,
     DirectionalIllumination,

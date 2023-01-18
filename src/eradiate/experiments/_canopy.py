@@ -8,7 +8,6 @@ from ..attrs import documented, get_doc, parse_docs
 from ..contexts import KernelDictContext
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..scenes.core import KernelDict
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import Measure
 from ..scenes.shapes import RectangleShape
@@ -114,7 +113,7 @@ class CanopyExperiment(EarthObservationExperiment):
     def __attrs_post_init__(self):
         self._normalize_measures()
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+    def kernel_dict(self, ctx: KernelDictContext):
         result = KernelDict()
 
         # Process canopy
