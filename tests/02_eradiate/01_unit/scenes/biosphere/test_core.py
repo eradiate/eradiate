@@ -6,7 +6,7 @@ import pytest
 
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere import AbstractTree, InstancedCanopyElement, LeafCloud
-from eradiate.scenes.core import KernelDict
+from eradiate.test_tools.types import check_scene_element
 
 # ------------------------------------------------------------------------------
 #                            Fixture definitions
@@ -62,12 +62,12 @@ def test_instanced_canopy_element_kernel_dict(mode_mono):
         id="tree",
     )
     positions = np.array([[-5, -5, -5], [5, 5, 5]])
-    kernel_dict = InstancedCanopyElement(
+    instances = InstancedCanopyElement(
         canopy_element=tree, instance_positions=positions, id="element"
-    ).kernel_dict(ctx=ctx)
+    )
 
     # The generated kernel dictionary can be instantiated
-    assert KernelDict(kernel_dict).load()
+    check_scene_element(instances)
 
 
 def test_instanced_leaf_cloud_from_file(mode_mono, tempfile_spheres):

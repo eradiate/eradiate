@@ -12,18 +12,17 @@ import pinttr
 
 from ._core import CanopyElement, biosphere_factory
 from ._leaf_cloud import LeafCloud
-from ..core import SceneElement
-from ..spectra import Spectrum, spectrum_factory
+from ..core import SceneElement, traverse
+from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class Tree(CanopyElement, ABC):
     """
     Abstract base class for tree-like canopy elements.
@@ -42,7 +41,7 @@ def _leaf_cloud_converter(value):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class AbstractTree(Tree):
     """
     A container class for abstract trees in discrete canopies.
@@ -104,12 +103,12 @@ class AbstractTree(Tree):
         default="0.1 m",
     )
 
-    trunk_reflectance: Spectrum = documented(
+    trunk_reflectance: SpectrumNode = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("reflectance"),
             ],
         ),
@@ -133,50 +132,20 @@ class AbstractTree(Tree):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
-        """
-        Return BSDF plugin specifications.
+    @property
+    def id_bsdf(self) -> str:
+        return f"bsdf_{self.id}"
 
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            Return a dictionary suitable for merge with a :class:`.KernelDict`
-            containing all the BSDFs attached to the shapes
-            in the abstract tree.
-        """
-
-        bsdfs_dict = self.leaf_cloud.kernel_bsdfs(ctx=ctx)
-
-        bsdfs_dict[f"bsdf_{self.id}"] = {
-            "type": "diffuse",
-            "reflectance": self.trunk_reflectance.kernel_dict(ctx=ctx)["spectrum"],
+    @property
+    def _template_bsdfs(self) -> dict:
+        template, _ = traverse(self.trunk_reflectance)
+        return {
+            **self.leaf_cloud._template_bsdfs,
+            f"bsdf_{self.id}": {"type": "diffuse", "reflectance": template.data},
         }
 
-        return bsdfs_dict
-
-    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
-        """
-        Return shape plugin specifications.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
-            in the abstract tree.
-        """
+    @property
+    def _template_shapes(self) -> dict:
         kernel_length = uck.get("length")
 
         kernel_height = self.trunk_height.m_as(kernel_length)
@@ -187,33 +156,42 @@ class AbstractTree(Tree):
             + self.leaf_cloud_extra_offset.to(kernel_length)
         )
 
-        if ctx.ref:
-            bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
-        else:
-            bsdf = self.kernel_bsdfs(ctx=ctx)[f"bsdf_{self.id}"]
+        bsdf = {"type": "ref", "id": self.id_bsdf}
 
-        shapes_dict = leaf_cloud.kernel_shapes(ctx=ctx)
-
-        shapes_dict[f"trunk_cyl_{self.id}"] = {
-            "type": "cylinder",
-            "bsdf": bsdf,
-            "radius": kernel_radius,
-            "p0": [0, 0, -0.1],
-            "p1": [0, 0, kernel_height],
+        result = {
+            **leaf_cloud._template_shapes,
+            f"trunk_cyl_{self.id}": {
+                "type": "cylinder",
+                "bsdf": bsdf,
+                "radius": kernel_radius,
+                "p0": [0, 0, -0.1],
+                "p1": [0, 0, kernel_height],
+            },
+            f"trunk_cap_{self.id}": {
+                "type": "disk",
+                "bsdf": bsdf,
+                "to_world": mi.ScalarTransform4f.scale(kernel_radius)
+                @ mi.ScalarTransform4f.translate([0, 0, kernel_height]),
+            },
         }
 
-        shapes_dict[f"trunk_cap_{self.id}"] = {
-            "type": "disk",
-            "bsdf": bsdf,
-            "to_world": mi.ScalarTransform4f.scale(kernel_radius)
-            @ mi.ScalarTransform4f.translate([0, 0, kernel_height]),
+        return result
+
+    @property
+    def _params_bsdfs(self) -> dict:
+        _, params_reflectance = traverse(self.trunk_reflectance)
+        return {
+            **self.leaf_cloud._params_bsdfs,
+            f"bsdf_{self.id}.reflectance": params_reflectance.data,
         }
 
-        return shapes_dict
+    @property
+    def _params_shapes(self) -> dict:
+        return {}
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class MeshTree(Tree):
     """
     A container class for mesh based tree-like objects in canopies.
@@ -258,21 +236,34 @@ class MeshTree(Tree):
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
+    @property
+    def _template_bsdfs(self) -> dict:
         result = {}
-        for mesh_tree_element in self.mesh_tree_elements:
-            result = {**result, **mesh_tree_element.kernel_bsdfs(ctx=ctx)}
+        for element in self.mesh_tree_elements:
+            result.update(element._template_bsdfs)
         return result
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
+    @property
+    def _template_shapes(self) -> dict:
         result = {}
-        for mesh_tree_element in self.mesh_tree_elements:
-            result = {**result, **mesh_tree_element.kernel_shapes(ctx=ctx)}
+        for element in self.mesh_tree_elements:
+            result.update(element._template_shapes)
         return result
+
+    @property
+    def _params_bsdfs(self) -> dict:
+        result = {}
+        for element in self.mesh_tree_elements:
+            result.update(element._params_bsdfs)
+        return result
+
+    @property
+    def _params_shapes(self) -> dict:
+        return {}
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class MeshTreeElement:
     """
     Container class for mesh based constituents of tree-like objects in a canopy.
@@ -333,35 +324,35 @@ class MeshTreeElement:
         init_type="str or :class:`pint.Unit`, optional",
     )
 
-    reflectance: Spectrum = documented(
+    reflectance: SpectrumNode = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance of the object. "
         "Must be a reflectance spectrum (dimensionless).",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict",
+        type=":class:`.SpectrumNode`",
+        init_type=":class:`.SpectrumNode` or dict",
         default="0.5",
     )
 
-    transmittance: Spectrum = documented(
+    transmittance: SpectrumNode = documented(
         attrs.field(
             default=0.0,
             converter=spectrum_factory.converter("transmittance"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("transmittance"),
             ],
         ),
         doc="Transmittance of the object. "
         "Must be a transmittance spectrum (dimensionless).",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict",
+        type=":class:`.SpectrumNode`",
+        init_type=":class:`.SpectrumNode` or dict",
         default="0.0",
     )
 
@@ -420,38 +411,63 @@ class MeshTreeElement:
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
 
-    def kernel_bsdfs(self, ctx: KernelDictContext) -> t.Dict:
+    @property
+    def id_bsdf(self) -> str:
+        return f"bsdf_{self.id}"
+
+    @property
+    def _template_bsdfs(self) -> dict:
+        template_reflectance, _ = traverse(self.reflectance)
+        template_transmittance, _ = traverse(self.transmittance)
+
         return {
-            f"bsdf_{self.id}": {
+            self.id_bsdf: {
                 "type": "bilambertian",
-                "reflectance": self.reflectance.kernel_dict(ctx=ctx)["spectrum"],
-                "transmittance": self.transmittance.kernel_dict(ctx=ctx)["spectrum"],
+                "reflectance": template_reflectance.data,
+                "transmittance": template_transmittance.data,
             }
         }
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
-        # Inherit docstring
-
-        bsdf = {"type": "ref", "id": f"bsdf_{self.id}"}
+    @property
+    def _template_shapes(self) -> dict:
         scaling_factor = (
             1.0
             if self.mesh_units is None
             else ureg.convert(1.0, self.mesh_units, uck.get("length"))
         )
 
-        base_dict = {
-            "filename": str(self.mesh_filename),
-            "bsdf": bsdf,
-            "to_world": mi.ScalarTransform4f.scale(scaling_factor),
-        }
-
         if self.mesh_filename.suffix == ".obj":
-            base_dict["type"] = "obj"
+            shape_type = "obj"
         elif self.mesh_filename.suffix == ".ply":
-            base_dict["type"] = "ply"
+            shape_type = "ply"
         else:
             raise ValueError(
                 f"unsupported file extension '{self.mesh_filename.suffix}'"
             )
 
-        return {self.id: base_dict}
+        result = {
+            self.id: {
+                "type": shape_type,
+                "bsdf": {"type": "ref", "id": self.id_bsdf},
+                "filename": str(self.mesh_filename),
+                "to_world": mi.ScalarTransform4f.scale(scaling_factor),
+            }
+        }
+
+        return result
+
+    @property
+    def _params_bsdfs(self) -> dict:
+        _, params_reflectance = traverse(self.reflectance)
+        _, params_transmittance = traverse(self.transmittance)
+
+        return {
+            self.id_bsdf: {
+                "reflectance": params_reflectance.data,
+                "transmittance": params_transmittance.data,
+            }
+        }
+
+    @property
+    def _params_shapes(self) -> dict:
+        return {}

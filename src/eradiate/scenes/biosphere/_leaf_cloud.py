@@ -13,15 +13,13 @@ import scipy as sp
 import scipy.special
 
 from ._core import CanopyElement
-from ..core import Param, SceneElement, traverse
-from ..spectra import Spectrum, spectrum_factory
+from ..core import SceneElement, traverse
+from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...util.misc import flatten
 
 
 def _sample_lad(mu, nu, rng):
@@ -713,35 +711,35 @@ class LeafCloud(CanopyElement):
                 f"len(leaf_radii) = {len(self.leaf_radii)}."
             )
 
-    leaf_reflectance: Spectrum = documented(
+    leaf_reflectance: SpectrumNode = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance spectrum of the leaves in the cloud. "
         "Must be a reflectance spectrum (dimensionless).",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict",
+        type=":class:`.SpectrumNode`",
+        init_type=":class:`.SpectrumNode` or dict",
         default="0.5",
     )
 
-    leaf_transmittance: Spectrum = documented(
+    leaf_transmittance: SpectrumNode = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("transmittance"),
             validator=[
-                attrs.validators.instance_of(Spectrum),
+                attrs.validators.instance_of(SpectrumNode),
                 validators.has_quantity("transmittance"),
             ],
         ),
         doc="Transmittance spectrum of the leaves in the cloud. "
         "Must be a transmittance spectrum (dimensionless).",
-        type=":class:`.Spectrum`",
-        init_type=":class:`.Spectrum` or dict",
+        type=":class:`.SpectrumNode`",
+        init_type=":class:`.SpectrumNode` or dict",
         default="0.5",
     )
 
@@ -1053,8 +1051,8 @@ class LeafCloud(CanopyElement):
     def from_file(
         cls,
         filename,
-        leaf_transmittance: t.Union[float, Spectrum] = 0.5,
-        leaf_reflectance: t.Union[float, Spectrum] = 0.5,
+        leaf_transmittance: t.Union[float, SpectrumNode] = 0.5,
+        leaf_reflectance: t.Union[float, SpectrumNode] = 0.5,
         id: str = "leaf_cloud",
     ) -> LeafCloud:
         """
@@ -1080,11 +1078,11 @@ class LeafCloud(CanopyElement):
             Path to the text file specifying the leaves in the leaf cloud.
             Can be absolute or relative.
 
-        leaf_reflectance : :class:`.Spectrum` or float
+        leaf_reflectance : :class:`.SpectrumNode` or float
             Reflectance spectrum of the leaves in the cloud. Must be a reflectance
             spectrum (dimensionless). Default: 0.5.
 
-        leaf_transmittance : :class:`.Spectrum` of float
+        leaf_transmittance : :class:`.SpectrumNode` of float
             Transmittance spectrum of the leaves in the cloud. Must be a
             transmittance spectrum (dimensionless). Default: 0.5.
 
@@ -1177,10 +1175,6 @@ class LeafCloud(CanopyElement):
         return shapes_dict
 
     @property
-    def template(self) -> dict:
-        return flatten({**self._template_bsdfs, **self._template_shapes})
-
-    @property
     def _params_bsdfs(self) -> dict:
         _, params_reflectance = traverse(self.leaf_reflectance)
         _, params_transmittance = traverse(self.leaf_transmittance)
@@ -1194,10 +1188,6 @@ class LeafCloud(CanopyElement):
     @property
     def _params_shapes(self) -> dict:
         return {}
-
-    @property
-    def params(self) -> t.Dict[str, Param]:
-        return flatten({**self._params_bsdfs, **self._params_shapes})
 
     # --------------------------------------------------------------------------
     #                               Other methods

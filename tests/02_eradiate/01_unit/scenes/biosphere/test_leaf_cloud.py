@@ -2,7 +2,6 @@ import os
 import tempfile
 
 import attr
-import mitsuba as mi
 import numpy as np
 import pytest
 
