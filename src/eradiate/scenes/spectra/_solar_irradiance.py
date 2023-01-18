@@ -102,7 +102,7 @@ class SolarIrradianceSpectrum(Spectrum):
 
     dataset: xr.Dataset = documented(
         attrs.field(
-            default="thuillier_2003_extrapolated",
+            default="coddington_2021-1_nm",
             converter=converters.to_dataset(
                 load_from_id=lambda x: data.load_dataset(
                     f"spectra/solar_irradiance/{x}.nc",
@@ -121,7 +121,7 @@ class SolarIrradianceSpectrum(Spectrum):
         "(see :ref:`sec-user_guide-data-solar_irradiance` for the list); ",
         type="Dataset",
         init_type="Dataset or str or path-like, optional",
-        default='"thuillier_2003_extrapolated"',
+        default='"coddington_2021-1_nm"',
     )
 
     scale: float = documented(
