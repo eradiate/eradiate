@@ -1,6 +1,7 @@
 from ._core import Measure as Measure
 from ._core import MeasureSpectralConfig as MeasureSpectralConfig
 from ._core import measure_factory as measure_factory
+from ._distant import DistantMeasure as DistantMeasure
 from ._distant import Target as Target
 from ._distant import TargetPoint as TargetPoint
 from ._distant import TargetRectangle as TargetRectangle

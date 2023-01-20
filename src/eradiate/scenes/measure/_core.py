@@ -549,7 +549,7 @@ class Measure:
         default='"measure"',
     )
 
-    results: t.Dict = documented(
+    mi_results: t.Dict = documented(
         attrs.field(factory=dict, repr=_str_summary_raw, init=False),
         doc="Storage for raw results yielded by the kernel.",
         type="dict",
