@@ -235,7 +235,7 @@ class Atmosphere(CompositeSceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @property
-    def _shape(self) -> t.Union[CuboidShape, SphereShape]:
+    def shape(self) -> t.Union[CuboidShape, SphereShape]:
         """
         Return the shape associated with this atmosphere, factoring in the
         geometry and radiative property profile.
@@ -297,7 +297,7 @@ class Atmosphere(CompositeSceneElement, ABC):
             Computed shape used as the medium stencil for kernel dictionary
             generation.
         """
-        template, _ = traverse(self._shape)
+        template, _ = traverse(self.shape)
         return template.data
 
     @property

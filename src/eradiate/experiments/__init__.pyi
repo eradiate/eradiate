@@ -1,5 +1,4 @@
-from ._atmosphere import AtmosphereExperiment as AtmosphereExperiment
-from ._atmosphere import OneDimExperiment as OneDimExperiment
+from ._atmosphere_new import AtmosphereExperiment as AtmosphereExperiment
 from ._canopy import CanopyExperiment as CanopyExperiment
 from ._canopy import RamiExperiment as RamiExperiment
 from ._canopy_atmosphere import CanopyAtmosphereExperiment as CanopyAtmosphereExperiment
