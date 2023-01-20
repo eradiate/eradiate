@@ -16,7 +16,7 @@ def test_radiancemeter_medium(mode_mono):
     template, _ = traverse(measure)
 
     ctx1 = KernelDictContext()
-    ctx2 = KernelDictContext(kwargs={"atmosphere_medium_id": "test_atmosphere"})
+    ctx2 = KernelDictContext(kwargs={"measure.atmosphere_medium_id": "test_atmosphere"})
 
     kd1 = template.render(ctx=ctx1, drop=True)
     assert "medium" not in kd1
