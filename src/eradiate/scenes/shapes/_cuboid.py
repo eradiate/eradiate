@@ -65,7 +65,9 @@ class CuboidShape(ShapeNode):
         default="[1, 1, 1]",
     )
 
-    def contains(self, p: np.typing.ArrayLike, strict: bool = False) -> bool:
+    def contains(
+        self, p: np.typing.ArrayLike, strict: bool = False
+    ) -> t.Sequence[bool]:
         """
         Test whether a point lies within the cuboid.
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import typing as t
 
-from ..contexts import KernelDictContext
 from ..scenes.atmosphere import Atmosphere
 from ..scenes.bsdfs import BSDF, bsdf_factory
 from ..scenes.measure import Measure, MultiRadiancemeterMeasure
@@ -15,9 +14,7 @@ from ..scenes.surface import BasicSurface, Surface, surface_factory
 # ------------------------------------------------------------------------------
 
 
-def measure_inside_atmosphere(
-    atmosphere: Atmosphere, measure: Measure, ctx: KernelDictContext
-) -> bool:
+def measure_inside_atmosphere(atmosphere: Atmosphere, measure: Measure) -> bool:
     """
     Evaluate whether a sensor is placed within an atmosphere.
 
@@ -27,15 +24,17 @@ def measure_inside_atmosphere(
     if atmosphere is None:
         return False
 
-    shape = atmosphere.eval_shape(ctx)
+    shape = atmosphere.shape
 
     if isinstance(measure, MultiRadiancemeterMeasure):
         inside = shape.contains(measure.origins)
 
         if all(inside):
             return True
+
         elif not any(inside):
             return False
+
         else:
             raise ValueError(
                 "Inconsistent placement of MultiRadiancemeterMeasure origins. "
@@ -54,7 +53,7 @@ def measure_inside_atmosphere(
         return shape.contains(measure.origin)
 
 
-def _surface_converter(value: t.Union[dict, Surface, BSDF]) -> Surface:
+def surface_converter(value: t.Union[dict, Surface, BSDF]) -> Surface:
     """
     Attempt to convert the surface specification into a surface type.
 

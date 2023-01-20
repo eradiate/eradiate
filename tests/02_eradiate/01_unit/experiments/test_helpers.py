@@ -5,7 +5,6 @@ from eradiate.contexts import KernelDictContext
 from eradiate.experiments._helpers import measure_inside_atmosphere
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
-    HomogeneousAtmosphere,
     MolecularAtmosphere,
 )
 
