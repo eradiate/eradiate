@@ -41,7 +41,7 @@ def test_solar_irradiance_construct(modes_all, tested, expected):
     [
         {},
         {"scale": 2.0},
-        {"dataset": "solid_2017_mean"},
+        {"dataset": "solid_2017-mean"},
     ],
     ids=[
         "no_args",
