@@ -628,10 +628,14 @@ class Measure:
         raise NotImplementedError
 
     @property
+    def sensor_id(self) -> str:
+        return self.id
+
+    @property
     def template(self) -> dict:
         result = {
             "type": self.kernel_type,
-            "id": self.id,
+            "id": self.sensor_id,
             "film.type": "hdrfilm",
             "film.width": self.film_resolution[0],
             "film.height": self.film_resolution[1],
@@ -642,13 +646,13 @@ class Measure:
             "sampler.sample_count": self.spp,
             "medium.type": Param(
                 lambda ctx: "ref"
-                if "atmosphere_medium_id" in ctx.kwargs
+                if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
                 else Param.UNUSED,
                 flags=ParamFlags.INIT,
             ),
             "medium.id": Param(
-                lambda ctx: ctx.kwargs["atmosphere_medium_id"]
-                if "atmosphere_medium_id" in ctx.kwargs
+                lambda ctx: ctx.kwargs[f"{self.sensor_id}.atmosphere_medium_id"]
+                if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
                 else Param.UNUSED,
                 flags=ParamFlags.INIT,
             ),
