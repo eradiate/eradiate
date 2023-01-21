@@ -291,7 +291,9 @@ class EarthObservationExperiment(Experiment, ABC):
         )
 
         # Assign collected results to the appropriate measure
-        sensor_to_measure = {measure.id: measure.sensor_id for measure in self.measures}
+        sensor_to_measure: t.Dict[str, Measure] = {
+            measure.sensor_id: measure for measure in self.measures
+        }
 
         for (ctx_index, sensor_id), mi_result in mi_results.items():
             sensor_to_measure[sensor_id].mi_results[ctx_index] = mi_result

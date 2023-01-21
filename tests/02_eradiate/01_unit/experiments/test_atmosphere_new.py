@@ -1,10 +1,8 @@
 import numpy as np
-import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.atmosphere import (
-    HeterogeneousAtmosphere,
     HomogeneousAtmosphere,
     MolecularAtmosphere,
 )
