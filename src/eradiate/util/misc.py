@@ -111,6 +111,19 @@ def deduplicate(value: t.Sequence, preserve_order: bool = True) -> t.List:
         return list(set(value))
 
 
+def deduplicate_sorted(value: t.Sequence, cmp: t.Optional[t.Callable] = None) -> t.List:
+    if cmp is None:
+        cmp = lambda x, y: x == y
+
+    result = [value[0]]
+
+    for i in range(1, len(value)):
+        if not cmp(value[i], value[i - 1]):
+            result.append(value[i])
+
+    return result
+
+
 def flatten(d: t.Mapping, sep: str = ".", name: str = "") -> dict:
     """
     Flatten a nested dictionary.
