@@ -1,3 +1,4 @@
+import functools
 import typing as t
 
 import attrs
@@ -6,7 +7,12 @@ import mitsuba as mi
 from ._core_new import EarthObservationExperiment, Experiment
 from ._helpers import measure_inside_atmosphere, surface_converter
 from ..attrs import documented, get_doc, parse_docs
-from ..contexts import KernelDictContext
+from ..contexts import (
+    CKDSpectralContext,
+    KernelDictContext,
+    MonoSpectralContext,
+    SpectralContext,
+)
 from ..scenes.atmosphere import (
     Atmosphere,
     AtmosphereGeometry,
@@ -21,6 +27,7 @@ from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_facto
 from ..scenes.measure import DistantMeasure, Measure, TargetPoint
 from ..scenes.surface import BasicSurface
 from ..units import unit_context_config as ucc
+from ..util.misc import deduplicate_sorted
 
 
 @parse_docs
@@ -150,7 +157,6 @@ class AtmosphereExperiment(EarthObservationExperiment):
         kwargs = {}
 
         for measure in self.measures:
-            print(measure.spectral_cfg.spectral_ctxs())
             sctxs.extend(measure.spectral_cfg.spectral_ctxs())
             if measure_inside_atmosphere(self.atmosphere, measure):
                 kwargs[
@@ -158,8 +164,21 @@ class AtmosphereExperiment(EarthObservationExperiment):
                 ] = self.atmosphere.id_medium
 
         # Sort and remove duplicates
-        # TODO: define key function for CDKSpectralContext
-        sctxs = sorted(set(sctxs), key=lambda sctx: sctx.spectral_index)
+        @functools.singledispatch
+        def key(sctx: SpectralContext):
+            raise NotImplementedError
+
+        @key.register(MonoSpectralContext)
+        def _(sctx: MonoSpectralContext):
+            return sctx.wavelength.m
+
+        @key.register(CKDSpectralContext)
+        def _(sctx: CKDSpectralContext):
+            return sctx.bindex.bin.wcenter.m, sctx.bindex.index
+
+        sctxs = deduplicate_sorted(
+            sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
+        )
 
         return [KernelDictContext(spectral_ctx=sctx) for sctx in sctxs]
 

@@ -1,5 +1,6 @@
 import numpy as np
 
+import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.atmosphere import (
@@ -40,24 +41,21 @@ def test_atmosphere_experiment_construct_normalize_measures(mode_mono):
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
 
-def test_atmosphere_experiment_mono(mode_mono):
+def test_atmosphere_experiment(modes_all_double):
     # TODO: add more atmosphere types (ParticleLayer, HeterogeneousAtmosphere)
     exp = AtmosphereExperiment(
-        atmosphere=MolecularAtmosphere.ussa_1976(),
+        atmosphere={
+            "type": "molecular",
+            "construct": "afgl_1986" if eradiate.mode().is_ckd else "ussa_1976",
+        },
         surface={"type": "lambertian"},
-        measures={"type": "distant", "id": "distant_measure"},
+        measures={
+            "type": "distant",
+            "id": "distant_measure",
+            "spectral_cfg": {"srf": "sentinel_2a-msi-3"}
+            if eradiate.mode().is_ckd
+            else {"wavelengths": [550.0] * ureg.nm},
+        },
     )
     exp.init()
     exp.process()
-
-
-def test_atmosphere_experiment_ckd(mode_ckd):
-    """
-    AtmosphereExperiment with heterogeneous atmosphere in CKD mode can be created.
-    """
-    exp = AtmosphereExperiment(
-        atmosphere=MolecularAtmosphere.afgl_1986(),
-        surface={"type": "lambertian"},
-        measures={"type": "distant", "id": "distant_measure"},
-    )
-    exp.init()
