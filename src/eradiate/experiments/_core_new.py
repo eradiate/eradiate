@@ -17,7 +17,7 @@ from ..attrs import documented
 from ..contexts import KernelDictContext
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
-from ..scenes.core import ParameterMap
+from ..scenes.core import ParameterMap, Scene, traverse
 from ..scenes.illumination import (
     ConstantIllumination,
     DirectionalIllumination,
@@ -230,6 +230,10 @@ class Experiment(ABC):
 
     @abstractmethod
     def init(self) -> None:
+        """
+        Generate kernel dictionary and initialise Mitsuba scene.
+        """
+
         pass
 
     @abstractmethod
@@ -285,6 +289,7 @@ class EarthObservationExperiment(Experiment, ABC):
         dict[str, str]
             Metadata to be attached to the produced dataset.
         """
+
         return {
             "convention": "CF-1.8",
             "source": f"eradiate, version {eradiate.__version__}",
@@ -293,11 +298,30 @@ class EarthObservationExperiment(Experiment, ABC):
             "references": "",
         }
 
+    @property
+    @abstractmethod
+    def scene(self) -> Scene:
+        """
+        Return a scene object used for kernel dictionary template and parameter
+        table generation.
+        """
+        pass
+
+    def init(self):
+        # Inherit docstring
+
+        template, params = traverse(self.scene)
+        kernel_dict = template.render(ctx=KernelDictContext(), drop=True)
+        self.mi_scene = mi.load_dict(kernel_dict)
+        self.params = params
+
     def process(
         self,
         spp: int = 0,
         seed_state: t.Optional[SeedState] = None,
     ) -> None:
+        # Inherit docstring
+
         # Set up Mitsuba scene
         if self.mi_scene is None:
             self.init()
