@@ -164,17 +164,13 @@ class AtmosphereExperiment(EarthObservationExperiment):
                 ] = self.atmosphere.id_medium
 
         # Sort and remove duplicates
-        @functools.singledispatch
-        def key(sctx: SpectralContext):
-            raise NotImplementedError
-
-        @key.register(MonoSpectralContext)
-        def _(sctx: MonoSpectralContext):
-            return sctx.wavelength.m
-
-        @key.register(CKDSpectralContext)
-        def _(sctx: CKDSpectralContext):
-            return sctx.bindex.bin.wcenter.m, sctx.bindex.index
+        key = {
+            MonoSpectralContext: lambda sctx: sctx.wavelength.m,
+            CKDSpectralContext: lambda sctx: (
+                sctx.bindex.bin.wcenter.m,
+                sctx.bindex.index,
+            ),
+        }[type(sctxs[0])]
 
         sctxs = deduplicate_sorted(
             sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)

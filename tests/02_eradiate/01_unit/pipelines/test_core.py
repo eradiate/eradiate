@@ -1,6 +1,6 @@
 import pytest
 
-from eradiate.pipelines._core import ApplyCallable, Pipeline
+from eradiate.pipelines import ApplyCallable, Pipeline
 
 
 def test_pipeline_step_apply_callable():

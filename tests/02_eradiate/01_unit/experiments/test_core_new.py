@@ -4,7 +4,7 @@ import numpy as np
 import eradiate.kernel.logging
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.experiments._core_new import mi_render
+from eradiate.experiments import mi_render
 from eradiate.scenes.biosphere import LeafCloud
 from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.illumination import DirectionalIllumination

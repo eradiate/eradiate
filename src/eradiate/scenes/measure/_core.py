@@ -22,7 +22,6 @@ from ...attrs import AUTO, AutoType, documented, get_doc, parse_docs
 from ...ckd import Bin
 from ...contexts import (
     CKDSpectralContext,
-    KernelDictContext,
     MonoSpectralContext,
     SpectralContext,
 )

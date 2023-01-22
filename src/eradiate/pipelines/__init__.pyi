@@ -1,5 +1,7 @@
 # Basic pipeline infrastructure
-from ._core import Pipeline as Pipeline, PipelineStep as PipelineStep  # isort: skip
+from ._core import Pipeline as Pipeline  # isort: skip
+from ._core import PipelineStep as PipelineStep  # isort: skip
+from ._core import ApplyCallable as ApplyCallable  # isort: skip
 
 # Aggregate steps
 from ._aggregate import AggregateCKDQuad as AggregateCKDQuad

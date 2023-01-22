@@ -3,10 +3,7 @@ import numpy as np
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.experiments import AtmosphereExperiment
-from eradiate.scenes.atmosphere import (
-    HomogeneousAtmosphere,
-    MolecularAtmosphere,
-)
+from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.measure import MultiDistantMeasure
 
 
@@ -42,11 +39,14 @@ def test_atmosphere_experiment_construct_normalize_measures(mode_mono):
 
 
 def test_atmosphere_experiment(modes_all_double):
-    # TODO: add more atmosphere types (ParticleLayer, HeterogeneousAtmosphere)
     exp = AtmosphereExperiment(
         atmosphere={
-            "type": "molecular",
-            "construct": "afgl_1986" if eradiate.mode().is_ckd else "ussa_1976",
+            "type": "heterogeneous",
+            "molecular_atmosphere": {
+                "type": "molecular",
+                "construct": "afgl_1986" if eradiate.mode().is_ckd else "ussa_1976",
+            },
+            "particle_layers": [{"type": "particle_layer"}],
         },
         surface={"type": "lambertian"},
         measures={
@@ -57,5 +57,5 @@ def test_atmosphere_experiment(modes_all_double):
             else {"wavelengths": [550.0] * ureg.nm},
         },
     )
-    exp.init()
     exp.process()
+    exp.postprocess()
