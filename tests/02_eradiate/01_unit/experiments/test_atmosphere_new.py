@@ -57,5 +57,5 @@ def test_atmosphere_experiment(modes_all_double):
             else {"wavelengths": [550.0] * ureg.nm},
         },
     )
-    exp.process()
+    exp.process(spp=100)
     exp.postprocess()

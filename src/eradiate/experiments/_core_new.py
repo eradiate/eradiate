@@ -18,7 +18,11 @@ from ..contexts import KernelDictContext
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
 from ..scenes.core import ParameterMap
-from ..scenes.illumination import DirectionalIllumination, illumination_factory
+from ..scenes.illumination import (
+    ConstantIllumination,
+    DirectionalIllumination,
+    illumination_factory,
+)
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import (
     DistantFluxMeasure,
@@ -251,11 +255,13 @@ class Experiment(ABC):
 
 @attrs.define
 class EarthObservationExperiment(Experiment, ABC):
-    illumination: DirectionalIllumination = documented(
+    illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
         attrs.field(
             factory=DirectionalIllumination,
             converter=illumination_factory.convert,
-            validator=attrs.validators.instance_of(DirectionalIllumination),
+            validator=attrs.validators.instance_of(
+                (DirectionalIllumination, ConstantIllumination)
+            ),
         ),
         doc="Illumination specification. "
         "This parameter can be specified as a dictionary which will be "
@@ -343,16 +349,10 @@ class EarthObservationExperiment(Experiment, ABC):
         # Gather
         pipeline.add(
             "gather",
-            pipelines.Gather(sensor_dims=measure.sensor_dims, var=measure.var),
+            pipelines.Gather(var=measure.var),
         )
 
         # Aggregate
-        # TODO: Remove
-        pipeline.add(
-            "aggregate_sample_count",
-            pipelines.AggregateSampleCount(),
-        )
-
         pipeline.add(
             "aggregate_ckd_quad",
             pipelines.AggregateCKDQuad(measure=measure, var=measure.var[0]),

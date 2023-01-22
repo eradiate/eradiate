@@ -1,8 +1,5 @@
 from ._core import AbstractHeterogeneousAtmosphere as AbstractHeterogeneousAtmosphere
 from ._core import Atmosphere as Atmosphere
-from ._core import AtmosphereGeometry as AtmosphereGeometry
-from ._core import PlaneParallelGeometry as PlaneParallelGeometry
-from ._core import SphericalShellGeometry as SphericalShellGeometry
 from ._core import atmosphere_factory as atmosphere_factory
 from ._heterogeneous import HeterogeneousAtmosphere as HeterogeneousAtmosphere
 from ._homogeneous import HomogeneousAtmosphere as HomogeneousAtmosphere

@@ -6,7 +6,6 @@ from ._core import ApplyCallable as ApplyCallable  # isort: skip
 # Aggregate steps
 from ._aggregate import AggregateCKDQuad as AggregateCKDQuad
 from ._aggregate import AggregateRadiosity as AggregateRadiosity
-from ._aggregate import AggregateSampleCount as AggregateSampleCount
 
 # Assemble steps
 from ._assemble import AddIllumination as AddIllumination

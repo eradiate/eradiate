@@ -43,16 +43,14 @@ class Gather(PipelineStep):
     Gather raw kernel results (output as nested dictionaries) into an xarray
     dataset.
 
-    This pipeline step takes a nested dictionary produced by the spectral loop
+    This pipeline step takes a nested dictionary produced by the parametric loop
     of an :class:`.Experiment` and repackages it as a :class:`~xarray.Dataset`.
     The top-level spectral index is mapped to mode-dependent spectral
-    coordinates. Results from the sensors part of a single measurement are
-    mapped to specified sensor dimensions, which can then be further processed
-    by aggregation steps. Film dimensions are left unmodified and retain their
+    coordinates. Film dimensions are left unmodified and retain their
     metadata.
 
-    An ``img`` variable holds sensor values. An ``spp`` variable holds sample
-    count.
+    An ``img`` variable holds sensor values. An ``spp`` variable holds the
+    sample count.
     """
 
     var: t.Union[str, t.Tuple[str, t.Dict]] = documented(

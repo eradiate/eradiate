@@ -1,4 +1,3 @@
-import functools
 import typing as t
 
 import attrs
@@ -11,22 +10,25 @@ from ..contexts import (
     CKDSpectralContext,
     KernelDictContext,
     MonoSpectralContext,
-    SpectralContext,
 )
 from ..scenes.atmosphere import (
     Atmosphere,
-    AtmosphereGeometry,
     HomogeneousAtmosphere,
-    PlaneParallelGeometry,
-    SphericalShellGeometry,
     atmosphere_factory,
 )
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import Scene, traverse
+from ..scenes.geometry import (
+    PlaneParallelGeometry,
+    SceneGeometry,
+    SphericalShellGeometry,
+)
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import DistantMeasure, Measure, TargetPoint
+from ..scenes.shapes import RectangleShape, SphereShape
 from ..scenes.surface import BasicSurface
 from ..units import unit_context_config as ucc
+from ..units import unit_registry as ureg
 from ..util.misc import deduplicate_sorted
 
 
@@ -57,7 +59,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
     geometry: t.Union[PlaneParallelGeometry, SphericalShellGeometry] = documented(
         attrs.field(
             default="plane_parallel",
-            converter=AtmosphereGeometry.convert,
+            converter=SceneGeometry.convert,
             validator=attrs.validators.instance_of(
                 (PlaneParallelGeometry, SphericalShellGeometry)
             ),
@@ -120,7 +122,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
     def _normalize_measures(self) -> None:
         """
         Ensure that distant measure targets are set to appropriate values.
-        Processed measures will have its ray target and origin parameters
+        Processed measures will have their ray target and origin parameters
         overridden if relevant.
         """
         for measure in self.measures:
@@ -180,10 +182,49 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
     def init(self) -> None:
         # Create scene
+        objects = {}
+
+        # Process atmosphere
+        if self.atmosphere is not None:
+            objects["atmosphere"] = attrs.evolve(
+                self.atmosphere, geometry=self.geometry
+            )
+
+        # Process surface
+        if self.surface is not None:
+            if isinstance(self.geometry, PlaneParallelGeometry):
+                width = self.geometry.width
+                altitude = (
+                    self.atmosphere.bottom
+                    if self.atmosphere is not None
+                    else 0.0 * ureg.km
+                )
+
+                objects["surface"] = attrs.evolve(
+                    self.surface,
+                    shape=RectangleShape.surface(altitude=altitude, width=width),
+                )
+
+            elif isinstance(self.geometry, SphericalShellGeometry):
+                altitude = (
+                    self.atmosphere.bottom
+                    if self.atmosphere is not None
+                    else 0.0 * ureg.km
+                )
+
+                objects["surface"] = attrs.evolve(
+                    self.surface,
+                    shape=SphereShape.surface(
+                        altitude=altitude, planet_radius=self.geometry.planet_radius
+                    ),
+                )
+
+            else:  # Shouldn't happen, prevented by validator
+                raise RuntimeError
+
         scene = Scene(
             objects={
-                "atmosphere": self.atmosphere,
-                "surface": self.surface,
+                **objects,
                 "illumination": self.illumination,
                 **{measure.id: measure for measure in self.measures},
                 "integrator": self.integrator,

@@ -18,29 +18,6 @@ from ..units import unit_context_kernel as uck
 
 @parse_docs
 @attrs.define
-class AggregateSampleCount(PipelineStep):
-    """
-    Aggregate sample count.
-
-    This post-processing pipeline step aggregates sample counts:
-
-    * it computes the average of sensor values weighted by the sample count;
-    * it sums the ``spp`` dimension.
-
-    The ``spp_index`` dimension is dropped during this step and the ``spp``
-    variable ends up with no dimension.
-    """
-
-    def transform(self, x: t.Any) -> t.Any:
-        with xr.set_options(keep_attrs=True):
-            result = x.weighted(x.spp).mean(dim="spp_index")
-            result["spp"] = x.spp.sum(dim="spp_index")
-
-        return result
-
-
-@parse_docs
-@attrs.define
 class AggregateCKDQuad(PipelineStep):
     """
     Compute CKD quadrature.
@@ -57,7 +34,6 @@ class AggregateCKDQuad(PipelineStep):
     * a ``bin_wmin`` (resp. ``bin_wmax``) coordinate is created and contains the
       lower (resp. upper) spectral bound of each bin;
     * the dataset is reordered by ascending ``w`` values.
-
 
     Notes
     -----
