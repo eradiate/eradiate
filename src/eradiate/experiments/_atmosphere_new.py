@@ -1,7 +1,6 @@
 import typing as t
 
 import attrs
-import mitsuba as mi
 
 from ._core_new import EarthObservationExperiment, Experiment
 from ._helpers import measure_inside_atmosphere, surface_converter
@@ -17,7 +16,7 @@ from ..scenes.atmosphere import (
     atmosphere_factory,
 )
 from ..scenes.bsdfs import LambertianBSDF
-from ..scenes.core import Scene, traverse
+from ..scenes.core import Scene
 from ..scenes.geometry import (
     PlaneParallelGeometry,
     SceneGeometry,
@@ -180,8 +179,10 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
         return [KernelDictContext(spectral_ctx=sctx) for sctx in sctxs]
 
-    def init(self) -> None:
-        # Create scene
+    @property
+    def scene(self) -> Scene:
+        # Inherit docstring
+
         objects = {}
 
         # Process atmosphere
@@ -222,7 +223,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
             else:  # Shouldn't happen, prevented by validator
                 raise RuntimeError
 
-        scene = Scene(
+        return Scene(
             objects={
                 **objects,
                 "illumination": self.illumination,
@@ -230,9 +231,3 @@ class AtmosphereExperiment(EarthObservationExperiment):
                 "integrator": self.integrator,
             }
         )
-
-        # Generate kernel dictionary and initialise Mitsuba scene
-        template, params = traverse(scene)
-        kernel_dict = template.render(ctx=KernelDictContext(), drop=True)
-        self.mi_scene = mi.load_dict(kernel_dict)
-        self.params = params

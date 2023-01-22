@@ -6,9 +6,9 @@ import attrs
 import pint
 import pinttr
 
-from eradiate import unit_context_config as ucc
-from eradiate import unit_registry as ureg
-from eradiate.attrs import documented, parse_docs
+from ..attrs import documented, parse_docs
+from ..units import unit_context_config as ucc
+from ..units import unit_registry as ureg
 
 
 @parse_docs
