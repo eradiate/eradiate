@@ -10,7 +10,6 @@ from functools import lru_cache
 import attrs
 import numpy as np
 import pint
-import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular_atmosphere import MolecularAtmosphere
@@ -229,7 +228,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @property
     def _bbox(self) -> BoundingBox:
-        shape = self._shape
+        shape = self.shape
         length_units = ucc.get("length")
 
         if isinstance(shape, CuboidShape):

@@ -22,12 +22,12 @@ from ..scenes.illumination import DirectionalIllumination, illumination_factory
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import (
     DistantFluxMeasure,
+    DistantMeasure,
     HemisphericalDistantMeasure,
     Measure,
     MultiDistantMeasure,
     measure_factory,
 )
-from ..scenes.measure._distant import DistantMeasure
 from ..util.misc import onedict_value
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ def mi_render(
     ctxs: t.List[KernelDictContext],
     mi_params: t.Optional["mitsuba.SceneParameters"] = None,
     sensors: t.Union[None, int, t.List[int]] = 0,
-    spp: int = 4,
+    spp: int = 0,
     seed_state: t.Optional[SeedState] = None,
 ) -> t.Dict[t.Any, "mitsuba.Bitmap"]:
     """
@@ -66,12 +66,19 @@ def mi_render(
     sensors : int or list of int, optional
         Sensor indices to render. If ``None``, all sensors are rendered.
 
-    spp : int, optional, default: 4
-        Number of samples per pixel.
+    spp : int, optional, default: 0
+        Number of samples per pixel. If set to 0, the value set in the original
+        scene definition takes precedence.
 
     seed_state : :class:`.SeedState, optional
         Seed state used to generate seeds to initialise Mitsuba's RNG at
         each run. If unset, Eradiate's root seed state is used.
+
+    Returns
+    -------
+    dict
+        A nested dictionary mapping context and sensor indices to rendered
+        bitmaps.
     """
     if mi_params is None:
         mi_params = mi.traverse(mi_scene)
@@ -102,6 +109,7 @@ def mi_render(
                 mi_sensors = [
                     (i, sensor) for i, sensor in enumerate(mi_scene.sensors())
                 ]
+
             else:
                 if isinstance(sensors, int):
                     sensors = [sensors]
@@ -113,12 +121,15 @@ def mi_render(
                 mi.render(
                     mi_scene,
                     sensor=i_sensor,
-                    spp=spp,
                     seed=int(seed_state.next()),
+                    spp=spp,
                 )
 
                 # Store result in a new Bitmap object
-                results[(ctx.spectral_ctx.spectral_index, mi_sensor.id())] = mi.Bitmap(
+                if ctx.spectral_ctx.spectral_index not in results:
+                    results[ctx.spectral_ctx.spectral_index] = {}
+
+                results[ctx.spectral_ctx.spectral_index][mi_sensor.id()] = mi.Bitmap(
                     mi_sensor.film().bitmap()
                 )
 
@@ -220,7 +231,7 @@ class Experiment(ABC):
     @abstractmethod
     def process(
         self,
-        spp: int = 4,
+        spp: int = 0,
         seed_state: t.Optional[SeedState] = None,
     ) -> None:
         pass
@@ -278,9 +289,13 @@ class EarthObservationExperiment(Experiment, ABC):
 
     def process(
         self,
-        spp: int = 4,
+        spp: int = 0,
         seed_state: t.Optional[SeedState] = None,
     ) -> None:
+        # Set up Mitsuba scene
+        if self.mi_scene is None:
+            self.init()
+
         # Run Mitsuba for each context
         mi_results = mi_render(
             self.mi_scene,
@@ -288,6 +303,7 @@ class EarthObservationExperiment(Experiment, ABC):
             self.contexts(),
             mi_params=self.mi_params,
             seed_state=seed_state,
+            spp=spp,
         )
 
         # Assign collected results to the appropriate measure
@@ -295,8 +311,13 @@ class EarthObservationExperiment(Experiment, ABC):
             measure.sensor_id: measure for measure in self.measures
         }
 
-        for (ctx_index, sensor_id), mi_result in mi_results.items():
-            sensor_to_measure[sensor_id].mi_results[ctx_index] = mi_result
+        for ctx_index, spectral_group_dict in mi_results.items():
+            for sensor_id, mi_bitmap in spectral_group_dict.items():
+                measure = sensor_to_measure[sensor_id]
+                measure.mi_results[ctx_index] = {
+                    "bitmap": mi_bitmap,
+                    "spp": spp if spp > 0 else measure.spp,
+                }
 
     def postprocess(self, pipeline_kwargs: t.Optional[t.Dict] = None) -> None:
         measures = self.measures
@@ -432,7 +453,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
 def run(
     exp: Experiment,
-    spp: int = 4,
+    spp: int = 0,
     seed_state: t.Optional[SeedState] = None,
 ) -> t.Tuple[xr.Dataset]:
     exp.process(spp=spp, seed_state=seed_state)

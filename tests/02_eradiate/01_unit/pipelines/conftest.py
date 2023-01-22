@@ -21,7 +21,7 @@ def results_mono():
         ],
     )
     exp.process()
-    return exp.measures[0].results, exp
+    return exp.measures[0].mi_results, exp
 
 
 @pytest.fixture(scope="module")
@@ -64,7 +64,7 @@ def results_ckd():
         ],
     )
     exp.process()
-    return exp.measures[0].results, exp
+    return exp.measures[0].mi_results, exp
 
 
 @pytest.fixture(scope="module")

@@ -1,4 +1,3 @@
-import re
 import typing as t
 
 import attrs
@@ -56,27 +55,6 @@ class Gather(PipelineStep):
     count.
     """
 
-    prefix: str = documented(
-        attrs.field(default=r".*"),
-        default='".*"',
-        type="str",
-        init_type="str, optional",
-        doc="Prefix string used to match sensor IDs. The default value will "
-        "match anything.",
-    )
-
-    sensor_dims: t.Sequence = documented(
-        attrs.field(
-            factory=list,
-            validator=attrs.validators.instance_of((list, tuple)),
-        ),
-        default="[]",
-        type="list of (str or tuple)",
-        init_type="list of (str or tuple), optional",
-        doc="List of sensor dimensions. Each list item can be a string or a "
-        "(dimension, metadata) pair.",
-    )
-
     var: t.Union[str, t.Tuple[str, t.Dict]] = documented(
         attrs.field(default="img"),
         default='"img"',
@@ -88,19 +66,6 @@ class Gather(PipelineStep):
 
     def transform(self, x: t.Dict) -> xr.Dataset:
         # Basic preparation
-        prefix = self.prefix
-
-        sensor_dims = []
-        sensor_dim_metadata = {}
-
-        for y in self.sensor_dims:
-            if isinstance(y, str):
-                sensor_dims.append(y)
-                sensor_dim_metadata[y] = {}
-            else:
-                sensor_dims.append(y[0])
-                sensor_dim_metadata[y[0]] = y[1]
-
         spectral_dims = []
         spectral_dim_metadata = {}
 
@@ -114,59 +79,27 @@ class Gather(PipelineStep):
 
         sensor_datasets = []
 
-        regex = re.compile(
-            r"\_".join(
-                [prefix]
-                + [rf"{sensor_dim}(?P<{sensor_dim}>\d*)" for sensor_dim in sensor_dims]
-            )
-        )
-
         # Loop on spectral indexes
-        for spectral_index in x.keys():
-            # Loop on sensors
-            for sensor_id, sensor_bitmap in x[spectral_index]["values"].items():
-                # Collect data
-                ds = bitmap_to_dataset(sensor_bitmap)
-                spp = x[spectral_index]["spp"][sensor_id]
+        for spectral_index, result_dict in x.items():
+            ds = bitmap_to_dataset(result_dict["bitmap"])
+            spp = result_dict["spp"]
 
-                # Set spectral coordinates
-                spectral_coords = {
-                    spectral_dim: [spectral_coord]
-                    for spectral_dim, spectral_coord in zip(
-                        spectral_dims, always_iterable(spectral_index)
-                    )
-                }
+            # Set spectral coordinates
+            all_coords = {
+                spectral_dim: [spectral_coord]
+                for spectral_dim, spectral_coord in zip(
+                    spectral_dims, always_iterable(spectral_index)
+                )
+            }
 
-                # Detect sensor coordinates
-                match = regex.match(sensor_id)
+            # Add spectral and sensor dimensions to img array
+            ds["img"] = ds.img.expand_dims(dim=all_coords)
 
-                if match is None:
-                    raise RuntimeError(
-                        "could not detect requested sensor dimensions in "
-                        f"sensor ID '{sensor_id}' using regex '{regex.pattern}'; "
-                        "this could be due to incorrect values or order of "
-                        "'sensor_dims'"
-                    )
+            # Package spp in a data array
+            all_dims = list(all_coords.keys())
+            ds["spp"] = (all_dims, np.reshape(spp, [1 for _ in all_dims]))
 
-                sensor_coords = {
-                    f"{sensor_dim}_index": [int(match.group(sensor_dim))]
-                    for sensor_dim in sensor_dims
-                }
-
-                # Add spp dimension even though sample count split did not
-                # produce any extra sensor
-                if "spp" not in sensor_dims:
-                    sensor_coords["spp_index"] = [0]
-
-                # Add spectral and sensor dimensions to img array
-                all_coords = {**spectral_coords, **sensor_coords}
-                ds["img"] = ds.img.expand_dims(dim=all_coords)
-
-                # Package spp in a data array
-                all_dims = list(all_coords.keys())
-                ds["spp"] = (all_dims, np.reshape(spp, [1 for _ in all_dims]))
-
-                sensor_datasets.append(ds)
+            sensor_datasets.append(ds)
 
         # Combine all the data
         with xr.set_options(keep_attrs=True):
@@ -175,16 +108,6 @@ class Gather(PipelineStep):
         # Drop "channel" dimension when using a monochromatic Mitsuba variant
         if eradiate.mode().check(mi_color_mode="mono"):
             result = result.squeeze("channel", drop=True)
-
-        # Apply metadata to new dimensions
-        for sensor_dim in sensor_dims:
-            result[f"{sensor_dim}_index"].attrs = sensor_dim_metadata[sensor_dim]
-
-        if "spp" not in sensor_dims:
-            result["spp_index"].attrs = {
-                "standard_name": "spp_index",
-                "long_name": "SPP index",
-            }
 
         for spectral_dim in spectral_dims:
             result[spectral_dim].attrs = spectral_dim_metadata[spectral_dim]
@@ -199,10 +122,5 @@ class Gather(PipelineStep):
 
         result = result.rename({"img": var})
         result[var].attrs.update(var_metadata)
-
-        result["spp"].attrs = {
-            "standard_name": "sample_count",
-            "long_name": "sample count",
-        }
 
         return result
