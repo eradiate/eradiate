@@ -47,7 +47,7 @@ def test_add_illumination(modes_all_single, illumination_type, expected_dims):
             ("gather", Gather(var="radiance")),
             ("aggregate_ckd_quad", AggregateCKDQuad(var="radiance", measure=measure)),
         ]
-    ).transform(measure.results)
+    ).transform(measure.mi_results)
 
     step = AddIllumination(illumination=exp.illumination, measure=measure)
     result = step.transform(values)
@@ -140,7 +140,7 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
     measure = exp.measures[0]
 
     # Apply basic post-processing
-    values = Gather(var="radiance").transform(measure.results)
+    values = Gather(var="radiance").transform(measure.mi_results)
 
     step = AddViewingAngles(measure=measure)
     result = step.transform(values)
@@ -177,7 +177,7 @@ def test_add_srf(modes_all_single):
     # Apply basic post-processing
     values = Pipeline(
         [Gather(var="radiance"), AggregateCKDQuad(var="radiance", measure=measure)]
-    ).transform(measure.results)
+    ).transform(measure.mi_results)
 
     step = AddSpectralResponseFunction(measure=measure)
     result = step.transform(values)

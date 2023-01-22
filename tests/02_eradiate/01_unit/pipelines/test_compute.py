@@ -34,11 +34,11 @@ def test_apply_spectral_response_function_transform(mode_id, spectral_cfg):
         ),
     )
     measure = exp.measures[0]
-    exp.process(measure)
+    exp.process()
 
     # Apply first steps of post-processing
     pipeline = exp.pipeline(measure)
-    values = pipeline.transform(measure.results, stop_after="add_viewing_angles")
+    values = pipeline.transform(measure.mi_results, stop_after="add_viewing_angles")
 
     # Apply tested pipeline step
     step = ApplySpectralResponseFunction(measure=measure, vars=["radiance"])
