@@ -7,39 +7,8 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.experiments import AtmosphereExperiment
 from eradiate.units import to_quantity
-
-
-def init_experiment(bottom, top, sigma_a, sigma_s, phase, r, w, spp):
-    assert eradiate.mode().id == "mono_double"
-
-    return eradiate.experiments.AtmosphereExperiment(
-        measures=[
-            eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
-                spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
-                    wavelengths=w,
-                ),
-                zeniths=np.linspace(-75, 75, 11) * ureg.deg,
-                azimuths=0.0 * ureg.deg,
-                spp=spp,
-            )
-        ],
-        illumination=eradiate.scenes.illumination.DirectionalIllumination(
-            zenith=30 * ureg.deg,
-            azimuth=0.0 * ureg.deg,
-            irradiance=eradiate.scenes.spectra.SolarIrradianceSpectrum(
-                dataset="blackbody_sun"
-            ),
-        ),
-        atmosphere=eradiate.scenes.atmosphere.HomogeneousAtmosphere(
-            bottom=bottom,
-            top=top,
-            sigma_a=sigma_a,
-            sigma_s=sigma_s,
-            phase=phase,
-        ),
-        surface=eradiate.scenes.bsdfs.LambertianBSDF(reflectance=r),
-    )
 
 
 def make_figure(fname_plot, brf_1, brf_2):
@@ -50,16 +19,14 @@ def make_figure(fname_plot, brf_1, brf_2):
     plt.legend(["experiment 1", "experiment 2"])
     plt.title(f"w = {to_quantity(brf_1.w).squeeze():~}")
     plt.tight_layout()
+
+    print(f"Saving figure to {fname_plot}")
     fig.savefig(fname_plot, dpi=200)
     plt.close()
 
 
-@pytest.mark.parametrize(
-    "w",
-    [280, 400, 550, 650, 1000, 1500, 2400],
-)
 @pytest.mark.slow
-def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_state):
+def test(mode_mono_double, rayleigh_tab_phase, artefact_dir, ert_seed_state, request):
     r"""
     Equivalency of plugin and tabulated versions of Rayleigh phase function
     =======================================================================
@@ -111,64 +78,83 @@ def test(mode_mono_double, onedim_rayleigh_radprops, w, artefact_dir, ert_seed_s
     .. image:: generated/plots/test_onedim_phase_2400.0.png
        :width: 95%
     """
-    w = w * ureg.nm
-    spp = 1e6
+    wavelengths = [280, 400, 550, 650, 1000, 1500, 2400] * ureg.nm
+    spp = int(1e6)
     reflectance = 0.35
     bottom = 0.0 * ureg.km
     top = 10.0 * ureg.km
 
-    sigma_a_1 = 0.0
-    sigma_s_1 = eradiate.scenes.spectra.AirScatteringCoefficientSpectrum()
-    phase_1 = eradiate.scenes.phase.RayleighPhaseFunction()
+    def init_experiment(sigma_a, sigma_s, phase):
+        assert eradiate.mode().id == "mono_double"
 
-    radprops = onedim_rayleigh_radprops(albedo=1.0)
-    w_units = radprops.w.attrs["units"]
-    sigma_t = to_quantity(radprops.sigma_t.interp(w=w.m_as(w_units)))
-    albedo = to_quantity(radprops.albedo.interp(w=w.m_as(w_units)))
+        return AtmosphereExperiment(
+            measures={
+                "type": "mdistant",
+                "construct": "from_viewing_angles",
+                "spectral_cfg": {"wavelengths": wavelengths},
+                "zeniths": np.linspace(-75, 75, 11) * ureg.deg,
+                "azimuths": 0.0 * ureg.deg,
+            },
+            illumination={
+                "type": "directional",
+                "zenith": 30 * ureg.deg,
+                "azimuth": 0.0 * ureg.deg,
+                "irradiance": {"type": "solar_irradiance", "dataset": "blackbody_sun"},
+            },
+            atmosphere={
+                "type": "homogeneous",
+                "bottom": bottom,
+                "top": top,
+                "sigma_a": sigma_a,
+                "sigma_s": sigma_s,
+                "phase": phase,
+            },
+            surface={"type": "lambertian", "reflectance": reflectance},
+        )
+
+    experiment_1 = init_experiment(
+        sigma_a=0.0,
+        sigma_s=eradiate.scenes.spectra.AirScatteringCoefficientSpectrum(),
+        phase=eradiate.scenes.phase.RayleighPhaseFunction(),
+    )
+
+    ert_seed_state.reset()
+    eradiate.run(experiment_1, seed_state=ert_seed_state, spp=spp)
+
+    radprops = rayleigh_tab_phase(albedo=1.0)
+    w = to_quantity(radprops.w)
+    sigma_t = to_quantity(radprops.sigma_t)
+    albedo = to_quantity(radprops.albedo)
     sigma_s_2 = sigma_t * albedo
     sigma_a_2 = sigma_t * (1.0 - albedo)
     phase_2 = eradiate.scenes.phase.TabulatedPhaseFunction(data=radprops.phase)
 
-    experiment_1 = init_experiment(
-        bottom=bottom,
-        top=top,
-        sigma_a=sigma_a_1,
-        sigma_s=sigma_s_1,
-        phase=phase_1,
-        r=reflectance,
-        w=w,
-        spp=spp,
-    )
-
     experiment_2 = init_experiment(
-        bottom=bottom,
-        top=top,
-        sigma_a=sigma_a_2,
-        sigma_s=sigma_s_2,
+        sigma_a={
+            "type": "interpolated",
+            "values": sigma_a_2,
+            "wavelengths": w,
+        },
+        sigma_s={
+            "type": "interpolated",
+            "values": sigma_s_2,
+            "wavelengths": w,
+        },
         phase=phase_2,
-        r=reflectance,
-        w=w,
-        spp=spp,
     )
 
     ert_seed_state.reset()
-    eradiate.run(experiment_1, seed_state=ert_seed_state)
-
-    ert_seed_state.reset()
-    eradiate.run(experiment_2, seed_state=ert_seed_state)
+    eradiate.run(experiment_2, seed_state=ert_seed_state, spp=spp)
 
     brf_1 = experiment_1.results["measure"]["brf"]
     brf_2 = experiment_2.results["measure"]["brf"]
 
     # Make figure
-    filename = f"test_onedim_phase_{w.magnitude}.png"
-    outdir = os.path.join(artefact_dir, "plots")
-    os.makedirs(outdir, exist_ok=True)
-    fname_plot = os.path.join(outdir, filename)
-    make_figure(fname_plot=fname_plot, brf_1=brf_1, brf_2=brf_2)
+    for w in wavelengths.magnitude:
+        filename = f"{request.node.originalname}_{w}.png"
+        outdir = os.path.join(artefact_dir, "plots")
+        os.makedirs(outdir, exist_ok=True)
+        fname_plot = os.path.join(outdir, filename)
+        make_figure(fname_plot=fname_plot, brf_1=brf_1.sel(w=w), brf_2=brf_2.sel(w=w))
 
-    outcome = np.allclose(brf_1.values, brf_2.values, rtol=5e-3)
-
-    if outcome is False:
-        print(f"Test failed, see artefact {fname_plot}")
-        assert False
+    np.testing.assert_allclose(brf_1.values, brf_2.values, rtol=5e-3)

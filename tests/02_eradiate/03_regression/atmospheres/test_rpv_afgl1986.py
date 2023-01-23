@@ -1,10 +1,11 @@
+import mitsuba as mi
 import numpy as np
 import pytest
 
 import eradiate
-import eradiate.scenes as esc
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.test_tools.regression import Chi2Test
+from eradiate.test_tools.types import check_scene_element
 from eradiate.units import unit_registry as ureg
 
 
@@ -41,24 +42,24 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
 
     """
     exp = AtmosphereExperiment(
-        surface=esc.bsdfs.RPVBSDF(k=0.95, g=-0.1, rho_0=0.027685),
-        illumination=esc.illumination.DirectionalIllumination(
-            zenith=20 * ureg.deg, irradiance=20.0
-        ),
+        surface={"type": "rpv", "k": 0.95, "g": -0.1, "rho_0": 0.027685},
+        illumination={
+            "type": "directional",
+            "zenith": 20 * ureg.deg,
+            "irradiance": 20.0,
+        },
         measures=[
-            esc.measure.MultiDistantMeasure.from_viewing_angles(
-                azimuths=0.0,
-                zeniths=np.arange(-75.0, 75.01, 2.0),
-                spp=10000,
-                spectral_cfg=esc.measure.MeasureSpectralConfig.new(
-                    bin_set="10nm", bins=["550"]
-                ),
-            )
+            {
+                "type": "mdistant",
+                "construct": "from_viewing_angles",
+                "azimuths": 0.0,
+                "zeniths": np.arange(-75.0, 75.01, 2.0),
+                "spectral_cfg": {"bin_set": "10nm", "bins": ["550"]},
+            }
         ],
-        atmosphere=esc.atmosphere.MolecularAtmosphere.afgl_1986(),
+        atmosphere={"type": "molecular", "construct": "afgl_1986"},
     )
-
-    result = eradiate.run(exp)
+    result = eradiate.run(exp, spp=10000)
 
     test = Chi2Test(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986.nc",

@@ -233,7 +233,6 @@ class Experiment(ABC):
         """
         Generate kernel dictionary and initialise Mitsuba scene.
         """
-
         pass
 
     @abstractmethod
@@ -242,18 +241,59 @@ class Experiment(ABC):
         spp: int = 0,
         seed_state: t.Optional[SeedState] = None,
     ) -> None:
+        """
+        Run simulation and collect raw results.
+
+        Parameters
+        ----------
+        spp : int, optional
+            Sample count. If set to 0, the value set in the original scene
+            definition takes precedence.
+
+        seed_state : :class:`.SeedState`, optional
+            Seed state used to generate seeds to initialise Mitsuba's RNG at
+            every iteration of the parametric loop. If unset, Eradiate's
+            :attr:`root seed state <.root_seed_state>` is used.
+        """
         pass
 
     @abstractmethod
     def postprocess(self) -> None:
+        """
+        Post-process raw results and store them in :attr:`results`.
+        """
         pass
 
     @abstractmethod
     def pipeline(self, measure: Measure) -> Pipeline:
+        """
+        Return the post-processing pipeline for a given measure.
+
+        Parameters
+        ----------
+        measure : .Measure
+            Measure for which the pipeline is to be generated.
+
+        Returns
+        -------
+        .Pipeline
+        """
         pass
 
+    @property
+    @abstractmethod
+    def context_init(self) -> KernelDictContext:
+        """
+        Return a single context used for scene initialisation.
+        """
+        pass
+
+    @property
     @abstractmethod
     def contexts(self) -> t.List[KernelDictContext]:
+        """
+        Return a list of contexts used for processing.
+        """
         pass
 
 
@@ -310,9 +350,16 @@ class EarthObservationExperiment(Experiment, ABC):
     def init(self):
         # Inherit docstring
 
+        logger.info("Initializing kernel scene")
+
         template, params = traverse(self.scene)
-        kernel_dict = template.render(ctx=KernelDictContext(), drop=True)
-        self.mi_scene = mi.load_dict(kernel_dict)
+        kernel_dict = template.render(ctx=self.context_init, drop=True)
+
+        try:
+            self.mi_scene = mi.load_dict(kernel_dict)
+        except RuntimeError as e:
+            raise RuntimeError(f"(while loading kernel scene dictionary){e}") from e
+
         self.params = params
 
     def process(
@@ -327,10 +374,12 @@ class EarthObservationExperiment(Experiment, ABC):
             self.init()
 
         # Run Mitsuba for each context
+        logger.info("Running simulation")
+
         mi_results = mi_render(
             self.mi_scene,
             self.params,
-            self.contexts(),
+            self.contexts,
             mi_params=self.mi_params,
             seed_state=seed_state,
             spp=spp,
@@ -350,6 +399,8 @@ class EarthObservationExperiment(Experiment, ABC):
                 }
 
     def postprocess(self, pipeline_kwargs: t.Optional[t.Dict] = None) -> None:
+        # Inherit docstring
+        logger.info("Post-processing results")
         measures = self.measures
 
         if pipeline_kwargs is None:

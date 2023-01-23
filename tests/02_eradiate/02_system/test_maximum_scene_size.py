@@ -2,8 +2,9 @@ import mitsuba as mi
 import numpy as np
 
 import eradiate
-from eradiate.experiments import mitsuba_run
-from eradiate.scenes.core import KernelDict
+from eradiate.contexts import KernelDictContext
+from eradiate.experiments import mi_render
+from eradiate.scenes.core import ParameterMap
 
 
 def test_maximum_scene_size(modes_all_mono, json_metadata):
@@ -49,7 +50,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
     passed = np.full_like(scene_sizes, False, dtype=bool)
 
     for i, scene_size in enumerate(scene_sizes):
-        kernel_dict = KernelDict(
+        mi_scene = mi.load_dict(
             {
                 "type": "scene",
                 "bsdf_surface": {
@@ -86,7 +87,11 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
             }
         )
 
-        result = np.array(mitsuba_run(kernel_dict)["values"]["measure"])
+        result = np.squeeze(
+            mi_render(mi_scene, params=ParameterMap(), ctxs=[KernelDictContext()])[
+                550.0
+            ]["measure"]
+        )
         passed[i] = np.allclose(result, expected)
 
     # Report test metrics

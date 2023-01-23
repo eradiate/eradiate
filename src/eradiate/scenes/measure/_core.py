@@ -591,10 +591,10 @@ class Measure:
 
     @spp.validator
     def _spp_validator(self, attribute, value):
-        if eradiate.mode().is_single_precision and value > 1000000:
+        if eradiate.mode().is_single_precision and value > 100000:
             warnings.warn(
                 f"Measure {self.id} is defined with a sample count greater "
-                "than 1e6, but the selected mode is single-precision: results "
+                "than 1e5, but the selected mode is single-precision: results "
                 "may be incorrect."
             )
 

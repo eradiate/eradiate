@@ -176,7 +176,6 @@ def test_film_to_angular_coord_conversion_multi_distant(
                 [[-90, -60, -30, 0], [0, 30, 60, 90]],
                 [-45, 45],
             ):
-
                 plt.subplot(*sub)
                 ax = plt.gca()
                 ax.set_xticks(ticks)
@@ -308,7 +307,6 @@ def make_figure(
     res: int,
     artefact_dir,
 ):
-
     fig = plt.figure(figsize=(8, 3))
 
     desc = "Forward" if forward else "Backward"
@@ -630,7 +628,7 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
 @pytest.mark.slow
 @pytest.mark.parametrize("atmosphere", [None, "homogeneous"])
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
-def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
+def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, request):
     r"""
     RPV(:math:`\rho, g=0, k=1, rho_c=1`) equivalent to Lambertian(:math:`\rho`)
     ===========================================================================
@@ -662,18 +660,18 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
     Results
     -------
 
-    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-0.0.png
+    .. image:: generated/plots/test_rpv_vs_lambertian-0.0.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-0.5.png
+    .. image:: generated/plots/test_rpv_vs_lambertian-0.5.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_rpv_vs_lambertian-1.0.png
+    .. image:: generated/plots/test_rpv_vs_lambertian-1.0.png
        :width: 95%
 
-    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-0.0.png
+    .. image:: generated/plots/test_rpv_vs_lambertian_homo_atm-0.0.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-0.5.png
+    .. image:: generated/plots/test_rpv_vs_lambertian_homo_atm-0.5.png
        :width: 95%
-    .. image:: generated/plots/test_onedim_rpv_vs_lambertian_homo_atm-1.0.png
+    .. image:: generated/plots/test_rpv_vs_lambertian_homo_atm-1.0.png
        :width: 95%
     """
 
@@ -702,6 +700,8 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
         )
         plt.title(title)
         plt.tight_layout()
+
+        print(f"Saving figure to {fname_plot}")
         fig.savefig(fname_plot, dpi=200)
         plt.close()
 
@@ -740,7 +740,7 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir):
 
     # Make figure
     filename = (
-        f"test_onedim_rpv_vs_lambertian-{reflectance}.png"
+        f"{request.node.originalname}-{reflectance}.png"
         if atmosphere is None
         else f"test_onedim_rpv_vs_lambertian_homo_atm-{reflectance}.png"
     )

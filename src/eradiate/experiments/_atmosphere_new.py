@@ -9,6 +9,7 @@ from ..contexts import (
     CKDSpectralContext,
     KernelDictContext,
     MonoSpectralContext,
+    SpectralContext,
 )
 from ..scenes.atmosphere import (
     Atmosphere,
@@ -43,11 +44,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
     Notes
     -----
     * A post-initialisation step will constrain the measure setup if a
-      distant measure is used and no target is defined:
-
-      * if an atmosphere is defined, the target will be set to [0, 0, TOA];
-      * if no atmosphere is defined, the target will be set to [0, 0, 0].
-
+      distant measure is used and set the target to [0, 0, 0].
     * This experiment supports arbitrary measure positioning, except for
       :class:`.MultiRadiancemeterMeasure`, for which subsensor origins are
       required to be either all inside or all outside of the atmosphere. If an
@@ -152,17 +149,27 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
         return result
 
-    def contexts(self) -> t.List[KernelDictContext]:
-        # Collect contexts from all measures
-        sctxs = []
+    @property
+    def _context_kwargs(self) -> t.Dict[str, t.Any]:
         kwargs = {}
 
         for measure in self.measures:
-            sctxs.extend(measure.spectral_cfg.spectral_ctxs())
             if measure_inside_atmosphere(self.atmosphere, measure):
                 kwargs[
-                    f"{self.sensor_id}.atmosphere_medium_id"
-                ] = self.atmosphere.id_medium
+                    f"{measure.sensor_id}.atmosphere_medium_id"
+                ] = self.atmosphere.medium_id
+
+        return kwargs
+
+    @property
+    def contexts(self) -> t.List[KernelDictContext]:
+        # Inherit docstring
+
+        # Collect contexts from all measures
+        sctxs = []
+
+        for measure in self.measures:
+            sctxs.extend(measure.spectral_cfg.spectral_ctxs())
 
         # Sort and remove duplicates
         key = {
@@ -176,8 +183,17 @@ class AtmosphereExperiment(EarthObservationExperiment):
         sctxs = deduplicate_sorted(
             sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
         )
+        kwargs = self._context_kwargs
 
-        return [KernelDictContext(spectral_ctx=sctx) for sctx in sctxs]
+        return [KernelDictContext(spectral_ctx=sctx, kwargs=kwargs) for sctx in sctxs]
+
+    @property
+    def context_init(self) -> KernelDictContext:
+        # Inherit docstring
+
+        return KernelDictContext(
+            spectral_ctx=SpectralContext.new(), kwargs=self._context_kwargs
+        )
 
     @property
     def scene(self) -> Scene:
