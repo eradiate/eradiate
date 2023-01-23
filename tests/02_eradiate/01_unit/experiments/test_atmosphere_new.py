@@ -116,7 +116,7 @@ def test_atmosphere_experiment_real_life(mode_mono):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene)
+    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
     # -- Distant measures get no external medium
     mi_sensors = {sensor.id(): sensor for sensor in mi_scene.sensors()}

@@ -1,5 +1,4 @@
 import numpy as np
-import pint
 import pytest
 import xarray as xr
 
@@ -7,9 +6,12 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.units import symbol
 
+eradiate.kernel.logging.install_logging()
+eradiate.config.progress = "spectral_loop"
+
 
 @pytest.fixture(scope="module")
-def onedim_rayleigh_radprops():
+def rayleigh_tab_phase():
     """
     Radiative properties of a Rayleigh scattering medium in [280, 2400] nm.
 
@@ -29,7 +31,7 @@ def onedim_rayleigh_radprops():
     set.
     """
 
-    def radprops(albedo: float = 1.0, sigma_t=None) -> xr.DataArray:
+    def radprops(albedo: float = 1.0, sigma_t=None) -> xr.Dataset:
         w = np.linspace(279.0, 2401.0, 10000) * ureg.nm
 
         # Collision coefficients
@@ -58,7 +60,7 @@ def onedim_rayleigh_radprops():
             data_vars={
                 "sigma_t": (
                     "w",
-                    sigma_t.m,
+                    sigma_t.magnitude,
                     {
                         "standard_name": "air_volume_extinction_coefficient",
                         "long_name": "extinction coefficient",
@@ -67,7 +69,7 @@ def onedim_rayleigh_radprops():
                 ),
                 "albedo": (
                     "w",
-                    albedo.m,
+                    albedo.magnitude,
                     {
                         "standard_name": "single_scattering_albedo",
                         "long_name": "albedo",
@@ -76,7 +78,7 @@ def onedim_rayleigh_radprops():
                 ),
                 "phase": (
                     ("w", "mu", "i", "j"),
-                    phase.m,
+                    phase.magnitude,
                     {
                         "standard_name": "scattering_phase_matrix",
                         "long_name": "phase matrix",

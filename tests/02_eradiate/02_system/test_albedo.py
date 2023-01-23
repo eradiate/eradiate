@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 import eradiate
+from eradiate.experiments import AtmosphereExperiment
 
 
 @pytest.mark.slow
@@ -57,7 +58,7 @@ def test_albedo(mode_mono, artefact_dir):
 
     """
     exps = {
-        "atmosphere_directional": eradiate.experiments.AtmosphereExperiment(
+        "atmosphere_directional": AtmosphereExperiment(
             measures=[
                 {
                     "type": "distant_flux",
@@ -79,7 +80,7 @@ def test_albedo(mode_mono, artefact_dir):
             },
             illumination={"type": "directional", "zenith": 0.0},
         ),
-        "atmosphere_constant": eradiate.experiments.AtmosphereExperiment(
+        "atmosphere_constant": AtmosphereExperiment(
             measures=[
                 {
                     "type": "distant_flux",

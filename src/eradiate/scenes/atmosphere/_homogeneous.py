@@ -109,7 +109,7 @@ class HomogeneousAtmosphere(Atmosphere):
         self.update()
 
     def update(self) -> None:
-        self.phase.id = self.id_phase
+        self.phase.id = self.phase_id
 
     # --------------------------------------------------------------------------
     #                               Properties

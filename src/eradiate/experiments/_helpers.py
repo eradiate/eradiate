@@ -4,14 +4,14 @@ import typing as t
 
 from ..scenes.atmosphere import Atmosphere
 from ..scenes.bsdfs import BSDF, bsdf_factory
-from ..scenes.measure import Measure, MultiRadiancemeterMeasure
-from ..scenes.measure._distant import DistantMeasure
+from ..scenes.measure import (
+    DistantMeasure,
+    Measure,
+    MultiRadiancemeterMeasure,
+    RadiancemeterMeasure,
+)
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, Surface, surface_factory
-
-# ------------------------------------------------------------------------------
-#                             Experiment helpers
-# ------------------------------------------------------------------------------
 
 
 def measure_inside_atmosphere(atmosphere: Atmosphere, measure: Measure) -> bool:
@@ -47,6 +47,9 @@ def measure_inside_atmosphere(atmosphere: Atmosphere, measure: Measure) -> bool:
         # a large offset value which would put some origins outside and others
         # inside the atmosphere shape
         return not measure.is_distant()
+
+    elif isinstance(measure, RadiancemeterMeasure):
+        return shape.contains(measure.origin)
 
     else:
         # Note: This will likely break if a new measure type is added

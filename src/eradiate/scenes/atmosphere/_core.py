@@ -161,21 +161,21 @@ class Atmosphere(CompositeSceneElement, ABC):
             )
 
     @property
-    def id_shape(self):
+    def shape_id(self):
         """
         str: Kernel dictionary key of the atmosphere's shape object.
         """
         return f"shape_{self.id}"
 
     @property
-    def id_medium(self):
+    def medium_id(self):
         """
         str: Kernel dictionary key of the atmosphere's medium object.
         """
         return f"medium_{self.id}"
 
     @property
-    def id_phase(self):
+    def phase_id(self):
         """
         str: Kernel dictionary key of the atmosphere's phase function object.
         """
@@ -209,19 +209,19 @@ class Atmosphere(CompositeSceneElement, ABC):
     def template(self) -> dict:
         result = flatten(
             {
-                self.id_phase: self._template_phase,
-                self.id_medium: self._template_medium,
-                self.id_shape: self._template_shape,
+                self.phase_id: self._template_phase,
+                self.medium_id: self._template_medium,
+                self.shape_id: self._template_shape,
             }
         )
 
         result.update(
             {
-                f"{self.id_medium}.phase.type": "ref",
-                f"{self.id_medium}.phase.id": self.id_phase,
-                f"{self.id_shape}.bsdf.type": "null",
-                f"{self.id_shape}.interior.type": "ref",
-                f"{self.id_shape}.interior.id": self.id_medium,
+                f"{self.medium_id}.phase.type": "ref",
+                f"{self.medium_id}.phase.id": self.phase_id,
+                f"{self.shape_id}.bsdf.type": "null",
+                f"{self.shape_id}.interior.type": "ref",
+                f"{self.shape_id}.interior.id": self.medium_id,
             }
         )
 
@@ -244,11 +244,11 @@ class Atmosphere(CompositeSceneElement, ABC):
         # Inherit docstring
         return flatten(
             {
-                self.id_medium: {
+                self.medium_id: {
                     **self._params_medium,
                     "phase_function": self._params_phase,
                 },
-                self.id_shape: self._params_shape,
+                self.shape_id: self._params_shape,
             }
         )
 

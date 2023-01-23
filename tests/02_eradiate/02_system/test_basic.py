@@ -2,19 +2,26 @@
 
 from contextlib import nullcontext
 
+import mitsuba as mi
 import numpy as np
 import pytest
 
 import eradiate
-import eradiate.scenes as ertsc
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.experiments import mitsuba_run
-from eradiate.scenes.core import KernelDict
+from eradiate.experiments import mi_render
+from eradiate.scenes.bsdfs import LambertianBSDF
+from eradiate.scenes.core import ParameterMap, Scene
+from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination
+from eradiate.scenes.integrators import PathIntegrator
+from eradiate.scenes.measure import MultiDistantMeasure
+from eradiate.scenes.shapes import RectangleShape
+from eradiate.scenes.surface import BasicSurface
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
-    "illumination, spp", [("directional", 1), ("constant", 300000)]
+    "illumination, spp", [("directional", 1), ("constant", 500000)]
 )
 @pytest.mark.parametrize("li", [0.1, 1.0, 10.0])
 @pytest.mark.slow
@@ -61,35 +68,35 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
     with pytest.warns(UserWarning) if (
         eradiate.mode().is_single_precision and spp > 100000
     ) else nullcontext():
-        measure = ertsc.measure.MultiDistantMeasure.from_viewing_angles(
+        measure = MultiDistantMeasure.from_viewing_angles(
             zeniths=vza, azimuths=0.0, target=[0, 0, 0], spp=spp
         )
 
-    elements = [
-        ertsc.surface.BasicSurface(
-            bsdf=ertsc.bsdfs.LambertianBSDF(reflectance=rho),
-            shape=ertsc.shapes.RectangleShape(edges=2.0 * ureg.m),
+    objects = {
+        "surface": BasicSurface(
+            bsdf=LambertianBSDF(reflectance=rho),
+            shape=RectangleShape(edges=2.0 * ureg.m),
         ),
-        measure,
-        ertsc.integrators.PathIntegrator(),
-    ]
+        "measure": measure,
+        "integrator": PathIntegrator(),
+    }
 
     if illumination == "directional":
-        elements.append(
-            ertsc.illumination.DirectionalIllumination(zenith=0.0, irradiance=li)
-        )
+        objects["illumination"] = DirectionalIllumination(zenith=0.0, irradiance=li)
         theoretical_solution = np.full_like(vza, rho * li / np.pi)
 
     elif illumination == "constant":
-        elements.append(ertsc.illumination.ConstantIllumination(radiance=li))
+        objects["illumination"] = ConstantIllumination(radiance=li)
         theoretical_solution = np.full_like(vza, rho * li)
 
     else:
         raise ValueError(f"unsupported illumination '{illumination}'")
 
-    ctx = KernelDictContext()
-    kernel_dict = KernelDict.from_elements(*elements, ctx=ctx)
-    result = np.array(
-        mitsuba_run(kernel_dict, seed_state=ert_seed_state)["values"]["measure"]
+    scene = Scene(objects=objects)
+    mi_scene, _ = check_scene_element(scene, mi.Scene)
+    result = np.squeeze(
+        mi_render(mi_scene, params=ParameterMap(), ctxs=[KernelDictContext()])[550.0][
+            "measure"
+        ]
     )
-    assert np.allclose(result, theoretical_solution, rtol=1e-3)
+    np.testing.assert_allclose(result, theoretical_solution, rtol=1e-3)

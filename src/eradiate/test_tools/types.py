@@ -8,7 +8,9 @@ from ..scenes.core import CompositeSceneElement, NodeSceneElement, Scene, traver
 
 
 def check_scene_element(
-    instance: t.Union[NodeSceneElement, CompositeSceneElement], mi_cls=None
+    instance: t.Union[NodeSceneElement, CompositeSceneElement],
+    mi_cls=None,
+    ctx: KernelDictContext = None,
 ) -> t.Tuple["mitsuba.Object", dict]:
     """
     Perform kernel dictionary checks on a scene element.
@@ -27,6 +29,10 @@ def check_scene_element(
     mi_cls : :class:`mitsuba.Object`
         Mitsuba class the node scene element expands to. Must be set if
         `instance` is a :class:`.NodeSceneElement`; ignored otherwise.
+
+    ctx : .KernelDictContext, optional
+        If provided, the kernel dictionary context to use. Otherwise, a default
+        context is created.
 
     Returns
     -------
@@ -58,7 +64,7 @@ def check_scene_element(
         raise RuntimeError(f"Cannot test type '{instance.__class__}'")
 
     # Check if the template can be instantiated
-    ctx = KernelDictContext()
+    ctx = KernelDictContext() if ctx is None else ctx
     kernel_dict = template.render(ctx, drop=True)
 
     try:

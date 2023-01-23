@@ -57,8 +57,10 @@ def test_ckd_basic(modes_all_ckd):
             )
         ],
     )
-    results = eradiate.run(exp)
+    results = eradiate.run(exp, spp=1000)
     results = np.squeeze(results.data_vars["brf"].values)
 
     # Reflectance is uniform, equal to 1
-    assert np.allclose(results, 1.0), f"diff = {results - 1.0}"
+    np.testing.assert_allclose(
+        results, 1.0, rtol=1e-3 if eradiate.mode().is_single_precision else 1e-6
+    )

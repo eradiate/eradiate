@@ -165,7 +165,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             converter=int,
             validator=attrs.validators.instance_of(int),
         ),
-        doc="Number of layers in which the particle layer is discretised.",
+        doc="Number of layers in which the particle layer is discretised by "
+        "default.",
         type="int",
         default="16",
     )
@@ -198,7 +199,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         super().update()
 
         ds = self.dataset
-        self._phase = TabulatedPhaseFunction(id=self.id_phase, data=ds.phase)
+        self._phase = TabulatedPhaseFunction(id=self.phase_id, data=ds.phase)
         self._zgrid = ZGrid(np.linspace(self.bottom, self.top, self.n_layers + 1))
 
     # --------------------------------------------------------------------------

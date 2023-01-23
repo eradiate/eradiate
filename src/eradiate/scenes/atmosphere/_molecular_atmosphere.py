@@ -123,7 +123,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     def update(self) -> None:
         super().update()
 
-        self.phase.id = self.id_phase
+        self.phase.id = self.phase_id
 
         if self.thermoprops.title == "U.S. Standard Atmosphere 1976":
             if self.absorption_data_sets is not None:
