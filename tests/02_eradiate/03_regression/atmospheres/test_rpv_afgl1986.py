@@ -1,11 +1,9 @@
-import mitsuba as mi
 import numpy as np
 import pytest
 
 import eradiate
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.test_tools.regression import Chi2Test
-from eradiate.test_tools.types import check_scene_element
 from eradiate.units import unit_registry as ureg
 
 
@@ -57,7 +55,14 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
                 "spectral_cfg": {"bin_set": "10nm", "bins": ["550"]},
             }
         ],
-        atmosphere={"type": "molecular", "construct": "afgl_1986"},
+        atmosphere={
+            "type": "heterogeneous",
+            "molecular_atmosphere": {
+                "type": "molecular",
+                "construct": "afgl_1986",
+            },
+            "zgrid": np.linspace(0, 120, 12001) * ureg.km,
+        },
     )
     result = eradiate.run(exp, spp=10000)
 
