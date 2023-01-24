@@ -192,7 +192,6 @@ class US76ApproxRadProfile(RadProfile):
         # Note: this value is cached so that repeated calls with the same zgrid
         #       won't trigger an unnecessary computation.
         with xr.set_options(keep_attrs=True):
-            print(self.thermoprops)
             result = self.thermoprops.interp(
                 z_layer=zgrid.layers.m_as(self.thermoprops.z_layer.units),
                 method="nearest",
@@ -245,6 +244,7 @@ class US76ApproxRadProfile(RadProfile):
                 # z > 93 km. At these altitudes, we consider that the number
                 # density is low enough (vs sea level value) to be negligible.
             )
+
             ds.close()
 
             return result

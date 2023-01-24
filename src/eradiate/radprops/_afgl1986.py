@@ -111,7 +111,7 @@ class AFGL1986RadProfile(RadProfile):
     @functools.lru_cache(maxsize=1)
     def _thermoprops_interp(self, zgrid: ZGrid) -> xr.Dataset:
         # Interpolate thermophysical profile on specified altitude grid
-        # Note: we use a nearest neighbour scheme
+        # Note: we use a nearest neighbour scheme (so far, it doesn't seem to make a difference)
         # Note: this value is cached so that repeated calls with the same zgrid
         #       won't trigger an unnecessary computation.
         with xr.set_options(keep_attrs=True):
@@ -139,9 +139,6 @@ class AFGL1986RadProfile(RadProfile):
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        raise UnsupportedModeError(supported="ckd")
-
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="ckd")
 
@@ -149,6 +146,9 @@ class AFGL1986RadProfile(RadProfile):
         return self.eval_sigma_a_ckd(bindexes, zgrid) + self.eval_sigma_s_ckd(
             bindexes, zgrid
         )
+
+    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        raise UnsupportedModeError(supported="ckd")
 
     def eval_sigma_a_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
         thermoprops = self._thermoprops_interp(zgrid)

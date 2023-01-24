@@ -140,6 +140,21 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         if self._zgrid is None:
             self._zgrid = ZGrid(np.linspace(self.bottom, self.top, 100001))
 
+        else:
+            grid_bottom = self._zgrid.levels[0]
+            if not np.isclose(grid_bottom, self.bottom):
+                raise ValueError(
+                    "altitude grid bottom must match atmosphere; "
+                    f"expected {self.bottom}, got {grid_bottom}"
+                )
+
+            grid_top = self._zgrid.levels[-1]
+            if not np.isclose(grid_top, self.top):
+                raise ValueError(
+                    "altitude grid top must match atmosphere; "
+                    f"expected {self.top}, got {grid_top}"
+                )
+
         if not self.components:
             raise ValueError("HeterogeneousAtmosphere must have at least one component")
 
