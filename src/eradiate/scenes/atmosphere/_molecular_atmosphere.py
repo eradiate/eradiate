@@ -226,6 +226,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         result, _ = traverse(self.phase)
         return result.data
 
+    @property
+    def _params_phase(self) -> dict:
+        _, result = traverse(self.phase)
+        return result.data
+
     # --------------------------------------------------------------------------
     #                               Constructors
     # --------------------------------------------------------------------------
