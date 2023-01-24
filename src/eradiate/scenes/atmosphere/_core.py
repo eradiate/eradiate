@@ -504,25 +504,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         bottom = self.bottom.m_as(length_units)
 
         if isinstance(self.geometry, PlaneParallelGeometry):
-
-            def eval_albedo(ctx: KernelDictContext):
-                return mi.VolumeGrid(
-                    np.reshape(
-                        self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
-                        (-1, 1, 1),
-                    ).astype(np.float32)
-                )
-
-            def eval_sigma_t(ctx: KernelDictContext):
-                return mi.VolumeGrid(
-                    np.reshape(
-                        self.eval_sigma_t(ctx.spectral_ctx).m_as(
-                            uck.get("collision_coefficient")
-                        ),
-                        (-1, 1, 1),
-                    ).astype(np.float32)
-                )
-
             width = self.geometry.width.m_as(length_units)
             to_world = map_unit_cube(
                 xmin=-0.5 * width,
@@ -536,36 +517,37 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             volumes = {
                 "albedo": {
                     "type": "gridvolume",
-                    "grid": Param(eval_albedo, ParamFlags.INIT),
+                    "grid": Param(
+                        lambda ctx: mi.VolumeGrid(
+                            np.reshape(
+                                self.eval_albedo(ctx.spectral_ctx).m_as(
+                                    ureg.dimensionless
+                                ),
+                                (-1, 1, 1),
+                            ).astype(np.float32)
+                        ),
+                        ParamFlags.INIT,
+                    ),
                     "to_world": to_world,
                 },
                 "sigma_t": {
                     "type": "gridvolume",
-                    "grid": Param(eval_sigma_t, ParamFlags.INIT),
+                    "grid": Param(
+                        lambda ctx: mi.VolumeGrid(
+                            np.reshape(
+                                self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                                    uck.get("collision_coefficient")
+                                ),
+                                (-1, 1, 1),
+                            ).astype(np.float32)
+                        ),
+                        ParamFlags.INIT,
+                    ),
                     "to_world": to_world,
                 },
             }
 
         elif isinstance(self.geometry, SphericalShellGeometry):
-
-            def eval_albedo(ctx):
-                return mi.VolumeGrid(
-                    np.reshape(
-                        self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
-                        (1, 1, -1),
-                    ).astype(np.float32)
-                )
-
-            def eval_sigma_t(ctx):
-                return mi.VolumeGrid(
-                    np.reshape(
-                        self.eval_sigma_t(ctx.spectral_ctx).m_as(
-                            uck.get("collision_coefficient")
-                        ),
-                        (1, 1, -1),
-                    ).astype(np.float32)
-                )
-
             planet_radius = self.geometry.planet_radius.m_as(length_units)
             rmax = planet_radius + top
             to_world = mi.ScalarTransform4f.scale(rmax)
@@ -575,7 +557,17 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     "type": "sphericalcoordsvolume",
                     "volume": {
                         "type": "gridvolume",
-                        "grid": Param(eval_albedo, ParamFlags.INIT),
+                        "grid": Param(
+                            lambda ctx: mi.VolumeGrid(
+                                np.reshape(
+                                    self.eval_albedo(ctx.spectral_ctx).m_as(
+                                        ureg.dimensionless
+                                    ),
+                                    (1, 1, -1),
+                                ).astype(np.float32)
+                            ),
+                            ParamFlags.INIT,
+                        ),
                     },
                     "to_world": to_world,
                     "rmin": planet_radius / rmax,
@@ -584,7 +576,17 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     "type": "sphericalcoordsvolume",
                     "volume": {
                         "type": "gridvolume",
-                        "grid": Param(eval_sigma_t, ParamFlags.INIT),
+                        "grid": Param(
+                            lambda ctx: mi.VolumeGrid(
+                                np.reshape(
+                                    self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                                        uck.get("collision_coefficient")
+                                    ),
+                                    (1, 1, -1),
+                                ).astype(np.float32)
+                            ),
+                            ParamFlags.INIT,
+                        ),
                     },
                     "to_world": to_world,
                     "rmin": planet_radius / rmax,
@@ -608,3 +610,50 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             result["scale"] = self.scale
 
         return result
+
+    @property
+    def _params_medium(self) -> t.Dict[str, Param]:
+        if isinstance(self.geometry, PlaneParallelGeometry):
+            return {
+                "albedo.data": Param(
+                    lambda ctx: np.reshape(
+                        self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
+                        (-1, 1, 1, 1),
+                    ).astype(np.float32),
+                    ParamFlags.SPECTRAL,
+                ),
+                "sigma_t.data": Param(
+                    lambda ctx: np.reshape(
+                        self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                            uck.get("collision_coefficient")
+                        ),
+                        (-1, 1, 1, 1),
+                    ).astype(np.float32),
+                    ParamFlags.SPECTRAL,
+                ),
+            }
+
+        elif isinstance(self.geometry, SphericalShellGeometry):
+            return {
+                "albedo.volume.data": Param(
+                    lambda ctx: np.reshape(
+                        self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
+                        (1, 1, -1, 1),
+                    ).astype(np.float32),
+                    ParamFlags.SPECTRAL,
+                ),
+                "sigma_t.volume.data": Param(
+                    lambda ctx: np.reshape(
+                        self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                            uck.get("collision_coefficient")
+                        ),
+                        (1, 1, -1, 1),
+                    ).astype(np.float32),
+                    ParamFlags.SPECTRAL,
+                ),
+            }
+
+        else:  # Shouldn't happen, prevented by validator
+            raise ValueError(
+                f"unhandled atmosphere geometry type '{type(self.geometry).__name__}'"
+            )
