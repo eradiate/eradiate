@@ -44,7 +44,6 @@ def test_particle_dist_exponential(rate, scale, raises):
             ExponentialParticleDistribution(rate=rate, scale=scale)
     else:
         dist = ExponentialParticleDistribution(rate=rate, scale=scale)
-        print(dist)
         x = np.linspace(0, 1, 11)
         expected = 5.0 * np.exp(-5.0 * x) / (1.0 - np.exp(-5.0))
         assert np.allclose(dist(x), expected)

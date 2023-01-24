@@ -63,10 +63,9 @@ def test_heterogeneous_single_ckd(mode_ckd, geometry, component, bin_set):
     """
     Unit tests for a HeterogeneousAtmosphere with a single component.
     """
-    zgrid = ZGrid(np.linspace(0, 100, 101) * ureg.km)
-
     # Construct succeeds
     if component == "molecular":
+        zgrid = ZGrid(np.linspace(0, 120, 121) * ureg.km)
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry,
             zgrid=zgrid,
@@ -74,6 +73,7 @@ def test_heterogeneous_single_ckd(mode_ckd, geometry, component, bin_set):
         )
 
     else:
+        zgrid = ZGrid(np.linspace(0, 1, 101) * ureg.km)
         component = ParticleLayer()
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry,
@@ -116,7 +116,7 @@ def test_heterogeneous_multi_ckd(mode_ckd, geometry, bin_set):
 
     atmosphere = HeterogeneousAtmosphere(
         geometry=geometry,
-        zgrid=np.linspace(0, 100, 101) * ureg.km,
+        zgrid=np.linspace(0, 120, 121) * ureg.km,
         molecular_atmosphere=molecular_atmosphere,
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
@@ -138,7 +138,7 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
 
     mixed = HeterogeneousAtmosphere(
         geometry="plane_parallel",
-        zgrid=np.linspace(0, 100, 101) * ureg.km,
+        zgrid=np.linspace(0, 2, 201) * ureg.km,
         particle_layers=[component_1, component_2, component_3],
     )
     ctx = KernelDictContext()
@@ -335,7 +335,7 @@ def test_heterogeneous_absorbing_mol_atm(mode_ckd, particle_radprops, request):
         dataset=request.getfixturevalue(particle_radprops),
     )
     atmosphere = HeterogeneousAtmosphere(
-        zgrid=np.linspace(0, 100, 101) * ureg.km,
+        zgrid=np.linspace(0, 120, 121) * ureg.km,
         molecular_atmosphere=MolecularAtmosphere.afgl_1986(
             has_absorption=True,
             has_scattering=False,
