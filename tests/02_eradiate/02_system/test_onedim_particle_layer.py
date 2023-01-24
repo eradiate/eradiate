@@ -176,19 +176,13 @@ def test_homogeneous_vs_particle_layer(
 
     experiment_1 = init_experiment(
         {
-            "type": "heterogeneous",
-            "molecular_atmosphere": None,
-            "particle_layers": [
-                {
-                    "type": "particle_layer",
-                    "distribution": "uniform",
-                    "bottom": bottom,
-                    "top": top,
-                    "dataset": radprops_rayleigh,
-                    "w_ref": w_ref,
-                    "tau_ref": tau_ref,
-                },
-            ],
+            "type": "particle_layer",
+            "distribution": "uniform",
+            "bottom": bottom,
+            "top": top,
+            "dataset": radprops_rayleigh,
+            "w_ref": w_ref,
+            "tau_ref": tau_ref,
         },
     )
 
@@ -488,7 +482,6 @@ def test_one_layer_molecular_atmosphere_vs_particle_layer(
 
     # Create the 1D experiment with a particle layer "equivalent" to the
     # molecular atmosphere
-    print(molecular_particle_layer(experiment_1))
     experiment_2 = init_experiment(atmosphere=molecular_particle_layer(experiment_1))
 
     # run the experiments
