@@ -8,6 +8,7 @@ from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
 from eradiate.scenes.core import traverse
 from eradiate.scenes.measure import MeasureSpectralConfig
+from eradiate.test_tools.types import check_scene_element
 from eradiate.units import to_quantity
 
 # ------------------------------------------------------------------------------
@@ -24,6 +25,15 @@ def test_dataset_path():
 # ------------------------------------------------------------------------------
 #                                   Tests
 # ------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
+def test_particle_layer_kernel_dict(mode_mono, geometry):
+    """
+    Kernel dictionary checks
+    """
+    layer = ParticleLayer(geometry=geometry)
+    check_scene_element(layer)
 
 
 @pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])

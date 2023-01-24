@@ -15,7 +15,7 @@ import eradiate
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
-from ..core import traverse
+from ..core import Param, traverse
 from ..phase import TabulatedPhaseFunction
 from ... import converters, data
 from ...attrs import documented, parse_docs
@@ -407,4 +407,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     @property
     def _template_phase(self) -> dict:
         result, _ = traverse(self.phase)
+        return result.data
+
+    @property
+    def _params_phase(self) -> t.Dict[str, Param]:
+        _, result = traverse(self.phase)
         return result.data
