@@ -66,7 +66,9 @@ def test_molecular_atmosphere_ussa_1976(
     # CKD evaluation generates valid parameter update tables
     mi_params: mi.SceneParameters = mi.traverse(mi_scene)
 
-    for w in [280.0, 550.0, 1040.0, 2120.0, 2400.0] * ureg.nm:
+    for w in [400.0, 550.0, 1040.0, 2120.0, 2400.0] * ureg.nm:
+        # Note: Covered range depends on data
+        #       (as of 24-01-2023, 4000-25000 cm-1, i.e. 400-2500 nm)
         ctx = KernelDictContext(spectral_ctx={"wavelength": w})
         mi_params.update(params.render(ctx))
 
