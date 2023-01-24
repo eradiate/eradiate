@@ -122,6 +122,12 @@ public:
 
     ScalarVector3i resolution() const override { return m_volume->resolution(); };
 
+    void traverse(TraversalCallback *callback) override {
+        callback->put_object("volume", m_volume.get(),
+                             +ParamFlags::NonDifferentiable);
+        Base::traverse(callback);
+    }
+
     std::string to_string() const override {
         std::ostringstream oss;
         oss << "SphericalCoordsVolume[" << std::endl
