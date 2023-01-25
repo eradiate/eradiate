@@ -14,7 +14,7 @@ from ..contexts import (
 )
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
-from ..scenes.core import Scene
+from ..scenes.core import SceneElement
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import Measure
 from ..scenes.shapes import RectangleShape
@@ -165,7 +165,7 @@ class CanopyExperiment(EarthObservationExperiment):
         return KernelDictContext(spectral_ctx=SpectralContext.new())
 
     @property
-    def scene(self) -> Scene:
+    def scene_objects(self) -> t.Dict[str, SceneElement]:
         # Inherit docstring
 
         objects = {}
@@ -190,11 +190,12 @@ class CanopyExperiment(EarthObservationExperiment):
             if self.surface is not None:  # Leave surface unchanged
                 objects["surface"] = self.surface
 
-        return Scene(
-            objects={
-                **objects,
+        objects.update(
+            {
                 "illumination": self.illumination,
                 **{measure.id: measure for measure in self.measures},
                 "integrator": self.integrator,
             }
         )
+
+        return objects

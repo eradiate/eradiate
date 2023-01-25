@@ -17,7 +17,7 @@ from ..attrs import documented
 from ..contexts import KernelDictContext
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
-from ..scenes.core import ParameterMap, Scene, traverse
+from ..scenes.core import ParameterMap, Scene, SceneElement, traverse
 from ..scenes.illumination import (
     ConstantIllumination,
     DirectionalIllumination,
@@ -299,6 +299,21 @@ class Experiment(ABC):
 
 @attrs.define
 class EarthObservationExperiment(Experiment, ABC):
+    extra_objects: t.Dict[str, SceneElement] = documented(
+        attrs.field(
+            factory=dict,
+            validator=attrs.validators.deep_mapping(
+                key_validator=attrs.validators.instance_of(str),
+                value_validator=attrs.validators.instance_of(SceneElement),
+            ),
+        ),
+        doc="Dictionary of extra objects to be added to the scene. "
+        "The keys of this dictionary are used to identify the objects "
+        "in the kernel dictionary.",
+        type="dict",
+        default="{}",
+    )
+
     illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
         attrs.field(
             factory=DirectionalIllumination,
@@ -340,12 +355,16 @@ class EarthObservationExperiment(Experiment, ABC):
 
     @property
     @abstractmethod
+    def scene_objects(self) -> t.Dict[str, SceneElement]:
+        pass
+
+    @property
     def scene(self) -> Scene:
         """
         Return a scene object used for kernel dictionary template and parameter
         table generation.
         """
-        pass
+        return Scene(objects={**self.scene_objects, **self.extra_objects})
 
     def init(self):
         # Inherit docstring

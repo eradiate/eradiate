@@ -14,7 +14,7 @@ from ..contexts import (
 )
 from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
-from ..scenes.core import Scene
+from ..scenes.core import SceneElement
 from ..scenes.geometry import PlaneParallelGeometry, SceneGeometry
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import DistantMeasure, Measure, TargetPoint
@@ -227,7 +227,7 @@ class DEMExperiment(EarthObservationExperiment):
         )
 
     @property
-    def scene(self) -> Scene:
+    def scene_objects(self) -> t.Dict[str, SceneElement]:
         # Inherit docstring
 
         objects = {}
@@ -248,20 +248,20 @@ class DEMExperiment(EarthObservationExperiment):
             objects["surface"] = attrs.evolve(
                 self.surface,
                 shape=RectangleShape.surface(
-                    altitude=surface_altitude,
-                    width=surface_width,
+                    altitude=surface_altitude, width=surface_width
                 ),
             )
 
         # Process DEM
         if self.dem is not None:
-            result.add(self.dem, ctx=ctx)
+            objects["surface"] = self.dem
 
-        return Scene(
-            objects={
-                **objects,
+        objects.update(
+            {
                 "illumination": self.illumination,
                 **{measure.id: measure for measure in self.measures},
                 "integrator": self.integrator,
             }
         )
+
+        return objects
