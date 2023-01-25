@@ -15,7 +15,7 @@ from ..contexts import (
 from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
-from ..scenes.core import Scene
+from ..scenes.core import SceneElement
 from ..scenes.geometry import (
     PlaneParallelGeometry,
     SceneGeometry,
@@ -268,7 +268,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         return 10.0 * ucc.get("length")
 
     @property
-    def scene(self) -> Scene:
+    def scene_objects(self) -> t.Dict[str, SceneElement]:
         # Inherit docstring
 
         objects = {}
@@ -335,11 +335,12 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         if surface is not None:
             objects["surface"] = surface
 
-        return Scene(
-            objects={
-                **objects,
+        objects.update(
+            {
                 "illumination": self.illumination,
                 **{measure.id: measure for measure in self.measures},
                 "integrator": self.integrator,
             }
         )
+
+        return objects

@@ -129,6 +129,7 @@ def test_atmosphere_experiment_real_life(mode_mono):
     assert mi_sensors["radiancemeter"].medium().id() == "medium_atmosphere"
 
 
+@pytest.mark.slow
 def test_atmosphere_experiment_run_basic(modes_all_double):
     exp = AtmosphereExperiment(
         atmosphere={

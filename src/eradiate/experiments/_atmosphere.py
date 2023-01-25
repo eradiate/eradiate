@@ -17,7 +17,7 @@ from ..scenes.atmosphere import (
     atmosphere_factory,
 )
 from ..scenes.bsdfs import LambertianBSDF
-from ..scenes.core import Scene
+from ..scenes.core import SceneElement
 from ..scenes.geometry import (
     PlaneParallelGeometry,
     SceneGeometry,
@@ -203,7 +203,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
         )
 
     @property
-    def scene(self) -> Scene:
+    def scene_objects(self) -> t.Dict[str, SceneElement]:
         # Inherit docstring
 
         objects = {}
@@ -246,11 +246,12 @@ class AtmosphereExperiment(EarthObservationExperiment):
             else:  # Shouldn't happen, prevented by validator
                 raise RuntimeError
 
-        return Scene(
-            objects={
-                **objects,
+        objects.update(
+            {
                 "illumination": self.illumination,
                 **{measure.id: measure for measure in self.measures},
                 "integrator": self.integrator,
             }
         )
+
+        return objects
