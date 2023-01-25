@@ -1,11 +1,9 @@
 import mitsuba as mi
 import numpy as np
 import pytest
-from rich.pretty import pprint
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
 from eradiate.experiments import DEMExperiment
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
@@ -13,7 +11,6 @@ from eradiate.scenes.atmosphere import (
     MolecularAtmosphere,
 )
 from eradiate.scenes.bsdfs import LambertianBSDF
-from eradiate.scenes.core import traverse
 from eradiate.scenes.measure import MeasureSpectralConfig, MultiDistantMeasure
 from eradiate.scenes.surface import DEMSurface
 from eradiate.test_tools.types import check_scene_element

@@ -189,7 +189,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     def _normalize_measures(self) -> None:
         """
         Ensure that distant measure targets are set to appropriate values.
-        Processed measures will have its ray target and origin parameters
+        Processed measures will have their ray target and origin parameters
         overridden if relevant.
         """
         for measure in self.measures:

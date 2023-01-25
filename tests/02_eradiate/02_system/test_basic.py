@@ -65,7 +65,7 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
     rho = 0.5
 
     # Ignore warning in single precision
-    with pytest.warns(UserWarning) if (
+    with pytest.warns(UserWarning, match="the selected mode is single-precision") if (
         eradiate.mode().is_single_precision and spp > 100000
     ) else nullcontext():
         measure = MultiDistantMeasure.from_viewing_angles(
