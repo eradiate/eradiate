@@ -1,23 +1,25 @@
-import drjit as dr
 import mitsuba as mi
 import numpy as np
 import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
 from eradiate.experiments import CanopyAtmosphereExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import CentralPatchSurface
+from eradiate.test_tools.types import check_scene_element
 
 
 def test_canopy_atmosphere_experiment_construct_default(mode_mono):
     """
     CanopyAtmosphereExperiment initialises with default params in all modes
     """
-    assert CanopyAtmosphereExperiment()
+    exp = CanopyAtmosphereExperiment()
+
+    # Check that the atmosphere's geometry is overridden by the experiment's
+    assert exp.atmosphere.geometry is exp.geometry
 
 
 def test_canopy_atmosphere_experiment_construct_measures(mode_mono):
@@ -37,7 +39,6 @@ def test_canopy_atmosphere_experiment_construct_measures(mode_mono):
 
 @pytest.mark.parametrize("padding", (0, 1))
 def test_canopy_atmosphere_experiment_construct_normalize_measures(mode_mono, padding):
-
     # When canopy is not None, measure target matches canopy unit cell
     exp = CanopyAtmosphereExperiment(
         atmosphere=None,
@@ -82,10 +83,8 @@ def test_canopy_atmosphere_experiment_construct_normalize_measures(mode_mono, pa
 
 @pytest.mark.parametrize("padding", (0, 1))
 def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
-    ctx = KernelDictContext()
-
     # Surface width is appropriately inherited from canopy, when no atmosphere is present
-    s = CanopyAtmosphereExperiment(
+    exp = CanopyAtmosphereExperiment(
         atmosphere=None,
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
@@ -99,20 +98,18 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    kernel_scene = s.kernel_dict(ctx)
+
+    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene)
     assert np.allclose(
-        kernel_scene["shape_surface"]["to_world"].transform_affine(
-            mi.Point3f(1, -1, 0)
-        ),
+        mi_params["surface_shape.to_world"].transform_affine(mi.Point3f(1, -1, 0)),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
 
     # -- Measures get no external medium assigned
-    assert "medium" not in kernel_scene["distant_measure"]
-    assert "medium" not in kernel_scene["radiancemeter"]
+    assert all(sensor.medium() is None for sensor in mi_scene.sensors())
 
     # Surface width is appropriately inherited from atmosphere
-    s = CanopyAtmosphereExperiment(
+    exp = CanopyAtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
         atmosphere=HomogeneousAtmosphere(),
         canopy=DiscreteCanopy.homogeneous(
@@ -123,9 +120,10 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
             padding=padding,
         ),
     )
-    kernel_dict = s.kernel_dict(ctx)
+
+    _, mi_params = check_scene_element(exp.scene, mi.Scene)
     assert np.allclose(
-        kernel_dict["shape_surface"]["to_world"].matrix,
+        mi_params["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
     )
 
@@ -136,8 +134,6 @@ def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
     Create a CanopyAtmosphereExperiment and assert the central patch surface is created
     with the correct parameters, according to the canopy and atmosphere.
     """
-    ctx = KernelDictContext()
-
     exp = CanopyAtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
         atmosphere=HomogeneousAtmosphere(),
@@ -155,20 +151,18 @@ def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
     )
 
     expected = (
-        mi.ScalarTransform4f.scale([1400, 1400, 1])
-        @ mi.ScalarTransform4f.translate([-0.499642857, -0.499642857, 0.0])
+        mi.ScalarTransform3f.scale([1400, 1400])
+        @ mi.ScalarTransform3f.translate([-0.499642857, -0.499642857])
     ).matrix
 
-    kernel_dict = exp.kernel_dict(ctx=ctx)
-    result = kernel_dict["bsdf_surface"]["weight"]["to_uv"].matrix
+    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene)
+    result = mi_params["surface_bsdf.weight.to_uv"].matrix
 
-    assert dr.allclose(expected, result)
+    np.testing.assert_allclose(expected, result)
 
 
 @pytest.mark.slow
 def test_canopy_atmosphere_experiment_real_life(mode_mono):
-    ctx = KernelDictContext()
-
     # Construct with typical parameters
     test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
@@ -204,16 +198,13 @@ def test_canopy_atmosphere_experiment_real_life(mode_mono):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    assert isinstance(exp.kernel_dict(ctx=ctx).load(), mi.Scene)
+    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
     # -- Distant measures get no external medium
-    assert "medium" not in exp.kernel_dict(ctx=ctx)["distant"]
+    assert mi_scene.sensors()[0].medium() is None
 
     # -- Radiancemeter inside the atmosphere must have a medium assigned
-    assert exp.kernel_dict(ctx=ctx)["radiancemeter"]["medium"] == {
-        "type": "ref",
-        "id": "medium_atmosphere",
-    }
+    assert mi_scene.sensors()[1].medium().id() == "medium_atmosphere"
 
 
 @pytest.mark.slow
@@ -263,8 +254,6 @@ def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(mode_mono)
     # A MultiRadiancemeter measure must have all origins inside the atmosphere
     # or none. A mix of both will raise an error.
 
-    ctx = KernelDictContext()
-
     # Construct with typical parameters
     test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
@@ -296,5 +285,8 @@ def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(mode_mono)
             },
         ],
     )
-    with pytest.raises(ValueError):
-        exp.kernel_dict(ctx=ctx)
+    with pytest.raises(
+        ValueError,
+        match="Inconsistent placement of MultiRadiancemeterMeasure origins",
+    ):
+        exp.init()
