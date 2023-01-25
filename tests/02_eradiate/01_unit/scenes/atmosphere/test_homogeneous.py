@@ -46,7 +46,7 @@ def test_homogeneous_atmosphere_params(mode_mono):
     assert "medium_atmosphere.phase_function.g" in params
 
     _, mi_params = check_scene_element(atmosphere)
-    assert "medium_atmosphere.phase_function.g" in mi_params
+    assert "medium_atmosphere.phase_function.g" in mi_params.keys()
 
 
 @pytest.mark.parametrize(
