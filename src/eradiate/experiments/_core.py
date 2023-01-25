@@ -1,9 +1,7 @@
-from __future__ import annotations
-
-import datetime
 import logging
 import typing as t
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 import attrs
 import mitsuba as mi
@@ -15,12 +13,11 @@ import eradiate
 
 from .. import pipelines
 from .._config import ProgressLevel, config
-from .._mode import SpectralMode, supported_mode
-from ..attrs import documented, parse_docs
-from ..contexts import KernelDictContext, SpectralContext
-from ..exceptions import KernelVariantError
+from ..attrs import documented
+from ..contexts import KernelDictContext
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
+from ..scenes.core import ParameterMap, Scene, traverse
 from ..scenes.illumination import (
     ConstantIllumination,
     DirectionalIllumination,
@@ -29,256 +26,138 @@ from ..scenes.illumination import (
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import (
     DistantFluxMeasure,
+    DistantMeasure,
     HemisphericalDistantMeasure,
     Measure,
     MultiDistantMeasure,
     measure_factory,
 )
-from ..scenes.measure._distant import DistantMeasure
+from ..util.misc import onedict_value
 
 logger = logging.getLogger(__name__)
 
-# ------------------------------------------------------------------------------
-#                             Experiment helpers
-# ------------------------------------------------------------------------------
 
-def measure_inside_atmosphere(atmosphere, measure, ctx):
-    """
-    Evaluate whether a sensor is placed within an atmosphere.
-
-    Raises a ValueError if called with a :class:`.MultiRadiancemeterMeasure`
-    with origins both inside and outside the atmosphere.
-    """
-    if atmosphere is None:
-        return False
-
-    shape = atmosphere.eval_shape(ctx)
-
-    if isinstance(measure, MultiRadiancemeterMeasure):
-        inside = shape.contains(measure.origins)
-
-        if all(inside):
-            return True
-        elif not any(inside):
-            return False
-        else:
-            raise ValueError(
-                "Inconsistent placement of MultiRadiancemeterMeasure origins. "
-                "Origins must lie either all inside or all outside of the "
-                "atmosphere."
-            )
-
-    elif isinstance(measure, DistantMeasure):
-        # Note: This will break if the user makes something weird such as using
-        # a large offset value which would put some origins outside and others
-        # inside the atmosphere shape
-        return not measure.is_distant()
-
-    else:
-        # Note: This will likely break if a new measure type is added
-        return shape.contains(measure.origin)
-
-
-def _surface_converter(value):
-    if isinstance(value, dict):
-        try:
-            # First, attempt conversion to BSDF
-            value = bsdf_factory.convert(value)
-        except TypeError:
-            # If this doesn't work, attempt conversion to Surface
-            return surface_factory.convert(value)
-
-    # If we make it to this point, it means that dict conversion has been
-    # performed with success
-    if isinstance(value, BSDF):
-        return BasicSurface(
-            shape=RectangleShape(),
-            bsdf=value,
-        )
-
-    return value
-
-
-# ------------------------------------------------------------------------------
-#                               Mitsuba runner
-# ------------------------------------------------------------------------------
-
-_SUPPORTED_VARIANTS = {"scalar_mono", "scalar_mono_double"}
-
-
-def _check_variant():
-    variant = mi.variant()
-    if variant not in _SUPPORTED_VARIANTS:
-        raise KernelVariantError(f"unsupported kernel variant '{variant}'")
-
-
-def _normalize_measures(measures, exp) -> t.List[Measure]:
-    return (
-        [
-            exp.measures[measure] if isinstance(measure, int) else measure
-            for measure in measures
-        ]
-        if measures
-        else exp.measures
-    )
-
-
-def mitsuba_run(
-    kernel_dict: KernelDict,
-    sensor_ids: t.Optional[t.List[str]] = None,
+def mi_render(
+    mi_scene: "mitsuba.Scene",
+    params: ParameterMap,
+    ctxs: t.List[KernelDictContext],
+    mi_params: t.Optional["mitsuba.SceneParameters"] = None,
+    sensors: t.Union[None, int, t.List[int]] = 0,
+    spp: int = 0,
     seed_state: t.Optional[SeedState] = None,
-) -> t.Dict:
+) -> t.Dict[t.Any, "mitsuba.Bitmap"]:
     """
-    Run Mitsuba on a kernel dictionary.
-
-    In practice, this function instantiates a kernel scene based on a
-    dictionary and runs the integrator with all sensors. It returns results
-    structured as nested dictionaries.
+    Render a Mitsuba scene multiple times given specified contexts and sensor
+    indices.
 
     Parameters
     ----------
-    kernel_dict : :class:`.KernelDict`
-        Dictionary describing the kernel scene.
+    mi_scene : :class:`mitsuba.Scene`
+        Mitsuba scene to render.
 
-    sensor_ids : list of str, optional
-        Identifiers of the sensors for which the integrator is run. If set to
-        ``None``, all sensors are selected.
+    params : ParameterMap
+        Parameter map used to generate the Mitsuba parameter table at each
+        iteration.
 
-    seed_state : .SeedState, optional
-        A RNG seed state used generate the seeds used by Mitsuba's RNG
-        generator. By default, Eradiate's :data:`.root_seed_state` is used.
+    ctxs : list of :class:`.KernelDictContext`
+        List of contexts used to generate the parameter update table at each
+        iteration.
+
+    mi_params : :class:`mitsuba.SceneParameters`, optional
+        Mitsuba parameter table for the rendered scene. If unset, a new
+        parameter table is created.
+
+    sensors : int or list of int, optional
+        Sensor indices to render. If ``None``, all sensors are rendered.
+
+    spp : int, optional, default: 0
+        Number of samples per pixel. If set to 0, the value set in the original
+        scene definition takes precedence.
+
+    seed_state : :class:`.SeedState, optional
+        Seed state used to generate seeds to initialise Mitsuba's RNG at
+        each run. If unset, Eradiate's root seed state is used.
 
     Returns
     -------
     dict
-        Results stored as nested dictionaries.
-
-    Notes
-    -----
-    The results are stored as dictionaries with the following structure:
-
-    .. code:: python
-
-       {
-           "values": {
-               "sensor_0": data_0, # mitsuba.core.Bitmap object
-               "sensor_1": data_1, # mitsuba.core.Bitmap object
-               ...
-           },
-           "spp": {
-               "sensor_0": sample_count_0,
-               "sensor_1": sample_count_1,
-               ...
-           },
-       }
-
-    The sample count is stored in a dedicated sub-dictionary in order to allow
-    for sample-count-based aggregation.
+        A nested dictionary mapping context and sensor indices to rendered
+        bitmaps.
     """
-    _check_variant()
+    if mi_params is None:
+        mi_params = mi.traverse(mi_scene)
+
     if seed_state is None:
         seed_state = root_seed_state
 
-    # Result storage
     results = {}
 
-    # Run computation
-    kernel_scene = kernel_dict.load()
+    # Loop on contexts
+    with tqdm(
+        initial=0,
+        total=len(ctxs),
+        unit_scale=1.0,
+        leave=True,
+        bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
+        disable=(config.progress < ProgressLevel.SPECTRAL_LOOP) or len(ctxs) <= 1,
+    ) as pbar:
+        for ctx in ctxs:
+            pbar.set_description(
+                f"Eradiate [{ctx.index_formatted}]",
+                refresh=True,
+            )
 
-    # Define the list of processed sensors
-    if sensor_ids is None:
-        sensors = kernel_scene.sensors()
-    else:
-        sensors = [
-            sensor
-            for sensor in kernel_scene.sensors()
-            if str(sensor.id()) in sensor_ids
-        ]
+            mi_params.update(params.render(ctx))
 
-    # Run kernel for selected sensors
-    for i_sensor, sensor in enumerate(sensors):
-        # Run Mitsuba
-        seed = seed_state.next()
-        mi.render(kernel_scene, sensor=sensor, seed=seed)
+            if sensors is None:
+                mi_sensors = [
+                    (i, sensor) for i, sensor in enumerate(mi_scene.sensors())
+                ]
 
-        # Collect results (store a copy of the sensor's bitmap)
-        film = sensor.film()
-        result = mi.Bitmap(film.bitmap())
+            else:
+                if isinstance(sensors, int):
+                    sensors = [sensors]
+                mi_sensors = [(i, mi_scene.sensors()[i]) for i in sensors]
 
-        sensor_id = str(sensor.id())
-        # Raise if sensor doesn't have an ID (shouldn't happen since Mitsuba
-        # should assign defaults based on scene dict keys)
-        assert sensor_id
+            # Loop on sensors
+            for i_sensor, mi_sensor in mi_sensors:
+                # Render sensor
+                mi.render(
+                    mi_scene,
+                    sensor=i_sensor,
+                    seed=int(seed_state.next()),
+                    spp=spp,
+                )
 
-        if "values" not in results:
-            results["values"] = {}
-        results["values"][sensor_id] = result
+                # Store result in a new Bitmap object
+                if ctx.spectral_ctx.spectral_index not in results:
+                    results[ctx.spectral_ctx.spectral_index] = {}
 
-        # Add sensor SPPs
-        if "spp" not in results:
-            results["spp"] = {}
-        results["spp"][sensor_id] = sensor.sampler().sample_count()
+                results[ctx.spectral_ctx.spectral_index][mi_sensor.id()] = mi.Bitmap(
+                    mi_sensor.film().bitmap()
+                )
+
+            pbar.update()
 
     return results
 
 
-# ------------------------------------------------------------------------------
-#                              Experiment runner
-# ------------------------------------------------------------------------------
-
-
-def run(
-    exp: Experiment,
-    *measures: t.Union[Measure, int],
-    seed_state: t.Optional[SeedState] = None,
-) -> t.Tuple[xr.Dataset]:
-    """
-    Run an Eradiate experiment, including the Monte Carlo simulation and data
-    post-processing.
-
-    Parameters
-    ----------
-    exp : .Experiment
-        The experiment to be run.
-
-    *measures : :class:`.Measure` or int
-        One or several measures for which to compute radiative transfer.
-        Alternatively, indexes in the measure array can be passed.
-        If no value is passed, all measures are processed.
-
-    seed_state : .SeedState, optional
-        A RNG seed state used to generate the seeds used by Mitsuba's random
-        number generator. By default, Eradiate's :data:`.root_seed_state` is
-        used.
-
-    Returns
-    -------
-    result : Dataset or tuple of Dataset
-        Experiment result data.
-    """
-
-    selected_measures = _normalize_measures(measures, exp)
-    exp.process(*selected_measures, seed_state=seed_state)
-    exp.postprocess(*selected_measures)
-    result = tuple(exp.results[measure.id] for measure in selected_measures)
-    return result if len(result) > 1 else result[0]
-
-
-# ------------------------------------------------------------------------------
-#                                 Base classes
-# ------------------------------------------------------------------------------
-
-
-@parse_docs
 @attrs.define
 class Experiment(ABC):
-    """
-    Base class for experiment simulations.
-    """
+    mi_scene: t.Optional["mitsuba.Scene"] = attrs.field(
+        default=None,
+        repr=False,
+    )
 
-    # --------------------------------------------------------------------------
-    #                           Fields and properties
-    # --------------------------------------------------------------------------
+    mi_params: t.Optional["mitsuba.SceneParameters"] = attrs.field(
+        default=None,
+        repr=False,
+    )
+
+    params: t.Optional[ParameterMap] = attrs.field(
+        default=None,
+        repr=False,
+    )
 
     measures: t.List[Measure] = documented(
         attrs.field(
@@ -324,13 +203,7 @@ class Experiment(ABC):
         """
         return self._integrator
 
-    _results: t.Dict[str, xr.Dataset] = documented(
-        attrs.field(factory=dict, init=False, repr=False),
-        doc="Post-processed simulation results. Each entry uses a measure ID as "
-        "its key and holds a value consisting of a :class:`~xarray.Dataset` "
-        "holding one variable per physical quantity computed by the measure.",
-        type="dict[str, dataset]",
-    )
+    _results: t.Dict[str, xr.Dataset] = attrs.field(factory=dict, repr=False)
 
     @property
     def results(self) -> t.Dict[str, xr.Dataset]:
@@ -344,186 +217,103 @@ class Experiment(ABC):
         """
         return self._results
 
-    # --------------------------------------------------------------------------
-    #                          Additional constructors
-    # --------------------------------------------------------------------------
-
-    @classmethod
-    def from_dict(cls, d: t.Mapping) -> Experiment:
+    def clear(self) -> None:
         """
-        Instantiate from a dictionary. The default implementation raises an
-        exception.
-
-        Parameters
-        ---------
-        d : dict
-            Dictionary to be converted to an :class:`.Experiment`.
-
-        Returns
-        -------
-        :class:`.Experiment`
+        Clear previous experiment results and reset internal state.
         """
-        raise NotImplementedError
+        self.mi_params = None
+        self.params = None
+        self.results.clear()
 
-    # --------------------------------------------------------------------------
-    #                              Processing
-    # --------------------------------------------------------------------------
-
-    def process(
-        self,
-        *measures: t.Union[Measure, int],
-        seed_state: t.Optional[SeedState] = None,
-    ) -> None:
-        """
-        Run simulation on the configured scene. Raw results yielded by the
-        runner function are stored in ``measure.results``.
-
-        Parameters
-        ----------
-        *measures : :class:`.Measure` or int
-            One or several measures for which to compute radiative transfer.
-            Alternatively, indexes in the measure array can be passed.
-            If no value is passed, all measures are processed.
-
-        seed_state : .SeedState, optional
-            A RNG seed state used to generate the seeds used by Mitsuba's random
-            number generator. By default, Eradiate's :data:`.root_seed_state` is
-            used.
-
-        See Also
-        --------
-        :meth:`.postprocess`
-        """
-
-        # Mode safeguard
-        supported_mode(spectral_mode=SpectralMode.MONO | SpectralMode.CKD)
-
-        # Select measures, cleanup and collect associated sensor IDs
-        selected_measures = _normalize_measures(measures, self)
-        sensor_ids = []
-        for measure in selected_measures:
-            sensor_ids.extend(measure._sensor_ids())
-            measure.results = {}
-
-        # Spectral loop
-        # TODO: we pick the first measure's spectral config and ignore the
-        #       others; maybe change this?
-        spectral_ctxs = selected_measures[0].spectral_cfg.spectral_ctxs()
-
-        with tqdm(
-            initial=0,
-            total=len(spectral_ctxs),
-            unit_scale=1.0,
-            leave=True,
-            bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
-            disable=config.progress < ProgressLevel.SPECTRAL_LOOP
-            or len(spectral_ctxs) <= 1,
-        ) as pbar:
-            for spectral_ctx, (kernel_dict, ctx) in zip(
-                spectral_ctxs, self.kernel_dicts(spectral_ctxs)
-            ):
-                pbar.set_description(
-                    f"Spectral loop [{spectral_ctx.spectral_index_formatted}]",
-                    refresh=True,
-                )
-
-                # Run simulation
-                run_results = mitsuba_run(kernel_dict, sensor_ids, seed_state)
-
-                # Scatter results to relevant measure
-                for measure in selected_measures:
-                    if spectral_ctx.spectral_index not in measure.results:
-                        measure.results[spectral_ctx.spectral_index] = {}
-
-                    for var in ["values", "spp"]:
-                        if var not in measure.results[spectral_ctx.spectral_index]:
-                            measure.results[spectral_ctx.spectral_index][var] = {}
-
-                        for sensor_id in measure._sensor_ids():
-                            measure.results[spectral_ctx.spectral_index][var][
-                                sensor_id
-                            ] = run_results[var][sensor_id]
-
-                # Update progress display
-                pbar.update()
+        for measure in self.measures:
+            measure.mi_results.clear()
 
     @abstractmethod
-    def pipeline(
-        self, *measures: t.Union[Measure, int]
-    ) -> t.Union[Pipeline, t.Tuple[Pipeline, ...]]:
+    def init(self) -> None:
         """
-        Request post-processing pipeline for a given measure.
-
-        Parameters
-        ----------
-        *measures : :class:`.Measure` or int
-            One or several measures for which to get a post-processing pipeline.
-            If integer values are passed, they are used to query the measure
-            list.
-
-        Returns
-        -------
-        pipelines : :class:`.Pipeline` or tuple of :class:`.Pipeline`
-            If a single measure is passed, a single :class:`.Pipeline` instance
-            is returned; if multiple measures are passed, a tuple of pipelines
-            is returned.
+        Generate kernel dictionary and initialise Mitsuba scene.
         """
         pass
 
-    def postprocess(
+    @abstractmethod
+    def process(
         self,
-        *measures: t.Union[Measure, int],
-        pipeline_kwargs: t.Optional[t.Dict] = None,
+        spp: int = 0,
+        seed_state: t.Optional[SeedState] = None,
     ) -> None:
         """
-        Post-process raw results stored in a measure's ``results`` field. This
-        requires a successful execution of :meth:`.process`. Post-processed
-        results are stored in ``self.results``.
+        Run simulation and collect raw results.
 
         Parameters
         ----------
-        *measures : :class:`.Measure` or int
-            One or several measures for which to perform post-processing.
-            Alternatively, indexes in the measure array can be passed.
-            If no value is passed, all measures are processed.
+        spp : int, optional
+            Sample count. If set to 0, the value set in the original scene
+            definition takes precedence.
 
-        pipeline_kwargs : dict, optional
-            A dictionary of pipeline keyword arguments forwarded to
-            :meth:`.Pipeline.transform`.
-
-        Raises
-        ------
-        ValueError
-            If ``measure.results`` is ``None``, *i.e.* if :meth:`.process`
-            has not been successfully run.
-
-        See Also
-        --------
-        :meth:`.process`
+        seed_state : :class:`.SeedState`, optional
+            Seed state used to generate seeds to initialise Mitsuba's RNG at
+            every iteration of the parametric loop. If unset, Eradiate's
+            :attr:`root seed state <.root_seed_state>` is used.
         """
-        if not measures:
-            measures = self.measures
+        pass
 
-        if pipeline_kwargs is None:
-            pipeline_kwargs = {}
+    @abstractmethod
+    def postprocess(self) -> None:
+        """
+        Post-process raw results and store them in :attr:`results`.
+        """
+        pass
 
-        # Convert integer values to measure entries
-        measures = [
-            self.measures[measure] if isinstance(measure, int) else measure
-            for measure in measures
-        ]
+    @abstractmethod
+    def pipeline(self, measure: Measure) -> Pipeline:
+        """
+        Return the post-processing pipeline for a given measure.
 
-        # Apply pipelines
-        for measure in measures:
-            pipeline = self.pipeline(measure)
+        Parameters
+        ----------
+        measure : .Measure
+            Measure for which the pipeline is to be generated.
 
-            # Collect measure results
-            self._results[measure.id] = pipeline.transform(
-                measure.results, **pipeline_kwargs
-            )
+        Returns
+        -------
+        .Pipeline
+        """
+        pass
 
-            # Apply additional metadata
-            self._results[measure.id].attrs.update(self._dataset_metadata(measure))
+    @property
+    @abstractmethod
+    def context_init(self) -> KernelDictContext:
+        """
+        Return a single context used for scene initialisation.
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def contexts(self) -> t.List[KernelDictContext]:
+        """
+        Return a list of contexts used for processing.
+        """
+        pass
+
+
+@attrs.define
+class EarthObservationExperiment(Experiment, ABC):
+    illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
+        attrs.field(
+            factory=DirectionalIllumination,
+            converter=illumination_factory.convert,
+            validator=attrs.validators.instance_of(
+                (DirectionalIllumination, ConstantIllumination)
+            ),
+        ),
+        doc="Illumination specification. "
+        "This parameter can be specified as a dictionary which will be "
+        "interpreted by :data:`.illumination_factory`.",
+        type=":class:`.DirectionalIllumination`",
+        init_type=":class:`.DirectionalIllumination` or dict",
+        default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
+    )
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
         """
@@ -539,202 +329,208 @@ class Experiment(ABC):
         dict[str, str]
             Metadata to be attached to the produced dataset.
         """
+
         return {
             "convention": "CF-1.8",
             "source": f"eradiate, version {eradiate.__version__}",
-            "history": f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+            "history": f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
             f"data creation - {self.__class__.__name__}.postprocess()",
             "references": "",
         }
 
+    @property
     @abstractmethod
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
+    def scene(self) -> Scene:
         """
-        Return a dictionary suitable for kernel scene configuration.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        :class:`.KernelDict`
-            Kernel dictionary which can be loaded as a Mitsuba object.
+        Return a scene object used for kernel dictionary template and parameter
+        table generation.
         """
         pass
 
-    def kernel_dicts(
+    def init(self):
+        # Inherit docstring
+
+        logger.info("Initializing kernel scene")
+
+        template, params = traverse(self.scene)
+        kernel_dict = template.render(ctx=self.context_init, drop=True)
+
+        try:
+            self.mi_scene = mi.load_dict(kernel_dict)
+        except RuntimeError as e:
+            raise RuntimeError(f"(while loading kernel scene dictionary){e}") from e
+
+        self.params = params
+
+    def process(
         self,
-        spectral_ctxs: t.Optional[t.List[SpectralContext]] = None,
-    ) -> t.Generator[t.Tuple[KernelDict, KernelDictContext], None, None]:
-        """
-        A generator which returns kernel dictionaries (and the associated
-        context) relevant to a given measure.
+        spp: int = 0,
+        seed_state: t.Optional[SeedState] = None,
+    ) -> None:
+        # Inherit docstring
 
-        Parameters
-        ----------
-        spectral_ctxs : list of .SpectralContext, optional
-            A list of spectral contexts for which kernel dicts are to be
-            generated. If unset, the list of spectral contexts associated with
-            the first measure is used.
+        # Set up Mitsuba scene
+        if self.mi_scene is None:
+            self.init()
 
-        Yields
-        ------
-        kernel_dict : .KernelDict
-            Generated kernel dictionary.
+        # Run Mitsuba for each context
+        logger.info("Running simulation")
 
-        ctx : .KernelDictContext
-            Context used to generate ``kernel_dict``.
-        """
-        if spectral_ctxs is None:
-            spectral_ctxs = self.measures[0].spectral_cfg.spectral_ctxs()
+        mi_results = mi_render(
+            self.mi_scene,
+            self.params,
+            self.contexts,
+            mi_params=self.mi_params,
+            seed_state=seed_state,
+            spp=spp,
+        )
 
-        for spectral_ctx in spectral_ctxs:
-            ctx = KernelDictContext(spectral_ctx=spectral_ctx, ref=True)
-            yield self.kernel_dict(ctx=ctx), ctx
+        # Assign collected results to the appropriate measure
+        sensor_to_measure: t.Dict[str, Measure] = {
+            measure.sensor_id: measure for measure in self.measures
+        }
 
+        for ctx_index, spectral_group_dict in mi_results.items():
+            for sensor_id, mi_bitmap in spectral_group_dict.items():
+                measure = sensor_to_measure[sensor_id]
+                measure.mi_results[ctx_index] = {
+                    "bitmap": mi_bitmap,
+                    "spp": spp if spp > 0 else measure.spp,
+                }
 
-@parse_docs
-@attrs.define
-class EarthObservationExperiment(Experiment, ABC):
-    """
-    A base class used for Earth observation simulations. These experiments
-    all feature illumination from a distant source such as the Sun.
-    """
+    def postprocess(self, pipeline_kwargs: t.Optional[t.Dict] = None) -> None:
+        # Inherit docstring
+        logger.info("Post-processing results")
+        measures = self.measures
 
-    illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
-        attrs.field(
-            factory=DirectionalIllumination,
-            converter=illumination_factory.convert,
-            validator=attrs.validators.instance_of(
-                (DirectionalIllumination, ConstantIllumination)
-            ),
-        ),
-        doc="Illumination specification. "
-        "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.illumination_factory`.",
-        type=":class:`.DirectionalIllumination` or :class:`.ConstantIllumination`",
-        init_type=":class:`.DirectionalIllumination` or "
-        ":class:`.ConstantIllumination` or dict",
-        default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
-    )
+        if pipeline_kwargs is None:
+            pipeline_kwargs = {}
 
-    def pipeline(
-        self, *measures: t.Union[Measure, int]
-    ) -> t.Union[Pipeline, t.Tuple[Pipeline, ...]]:
-        result = []
-
-        # Convert integer values to measure entries
-        measures = [
-            self.measures[measure] if isinstance(measure, int) else measure
-            for measure in measures
-        ]
-
+        # Apply pipelines
         for measure in measures:
-            pipeline = pipelines.Pipeline()
+            pipeline = self.pipeline(measure)
 
-            # Gather
-            pipeline.add(
-                "gather",
-                pipelines.Gather(sensor_dims=measure.sensor_dims, var=measure.var),
+            # Collect measure results
+            self._results[measure.id] = pipeline.transform(
+                measure.mi_results, **pipeline_kwargs
             )
 
-            # Aggregate
-            pipeline.add("aggregate_sample_count", pipelines.AggregateSampleCount())
-            pipeline.add(
-                "aggregate_ckd_quad",
-                pipelines.AggregateCKDQuad(measure=measure, var=measure.var[0]),
-            )
+            # Apply additional metadata
+            self._results[measure.id].attrs.update(self._dataset_metadata(measure))
 
-            if isinstance(measure, (DistantFluxMeasure,)):
-                pipeline.add(
-                    "aggregate_radiosity",
-                    pipelines.AggregateRadiosity(
-                        sector_radiosity_var=measure.var[0],
-                        radiosity_var="radiosity",
-                    ),
-                )
+    def pipeline(self, measure: Measure) -> Pipeline:
+        pipeline = pipelines.Pipeline()
 
-            # Assemble
+        # Gather
+        pipeline.add(
+            "gather",
+            pipelines.Gather(var=measure.var),
+        )
+
+        # Aggregate
+        pipeline.add(
+            "aggregate_ckd_quad",
+            pipelines.AggregateCKDQuad(measure=measure, var=measure.var[0]),
+        )
+
+        if isinstance(measure, (DistantFluxMeasure,)):
             pipeline.add(
-                "add_illumination",
-                pipelines.AddIllumination(
-                    illumination=self.illumination,
-                    measure=measure,
-                    irradiance_var="irradiance",
+                "aggregate_radiosity",
+                pipelines.AggregateRadiosity(
+                    sector_radiosity_var=measure.var[0],
+                    radiosity_var="radiosity",
                 ),
             )
 
-            if isinstance(measure, DistantMeasure):
-                pipeline.add(
-                    "add_viewing_angles", pipelines.AddViewingAngles(measure=measure)
-                )
+        # Assemble
+        pipeline.add(
+            "add_illumination",
+            pipelines.AddIllumination(
+                illumination=self.illumination,
+                measure=measure,
+                irradiance_var="irradiance",
+            ),
+        )
 
+        if isinstance(measure, DistantMeasure):
             pipeline.add(
-                "add_srf", pipelines.AddSpectralResponseFunction(measure=measure)
+                "add_viewing_angles", pipelines.AddViewingAngles(measure=measure)
             )
 
-            # Compute
-            if isinstance(measure, (MultiDistantMeasure, HemisphericalDistantMeasure)):
+        pipeline.add("add_srf", pipelines.AddSpectralResponseFunction(measure=measure))
+
+        # Compute
+        if isinstance(measure, (MultiDistantMeasure, HemisphericalDistantMeasure)):
+            pipeline.add(
+                "compute_reflectance",
+                pipelines.ComputeReflectance(
+                    radiance_var="radiance",
+                    irradiance_var="irradiance",
+                    brdf_var="brdf",
+                    brf_var="brf",
+                ),
+            )
+
+            if eradiate.mode().is_ckd:
                 pipeline.add(
-                    "compute_reflectance",
+                    "apply_srf",
+                    pipelines.ApplySpectralResponseFunction(
+                        measure=measure,
+                        vars=["radiance", "irradiance"],
+                    ),
+                )
+
+                pipeline.add(
+                    "compute_reflectance_srf",
                     pipelines.ComputeReflectance(
-                        radiance_var="radiance",
-                        irradiance_var="irradiance",
-                        brdf_var="brdf",
-                        brf_var="brf",
+                        radiance_var="radiance_srf",
+                        irradiance_var="irradiance_srf",
+                        brdf_var="brdf_srf",
+                        brf_var="brf_srf",
                     ),
                 )
 
-                if eradiate.mode().is_ckd:
-                    pipeline.add(
-                        "apply_srf",
-                        pipelines.ApplySpectralResponseFunction(
-                            measure=measure,
-                            vars=["radiance", "irradiance"],
-                        ),
-                    )
+        elif isinstance(measure, (DistantFluxMeasure,)):
+            pipeline.add(
+                "compute_albedo",
+                pipelines.ComputeAlbedo(
+                    radiosity_var="radiosity",
+                    irradiance_var="irradiance",
+                    albedo_var="albedo",
+                ),
+            )
 
-                    pipeline.add(
-                        "compute_reflectance_srf",
-                        pipelines.ComputeReflectance(
-                            radiance_var="radiance_srf",
-                            irradiance_var="irradiance_srf",
-                            brdf_var="brdf_srf",
-                            brf_var="brf_srf",
-                        ),
-                    )
-
-            elif isinstance(measure, (DistantFluxMeasure,)):
+            if eradiate.mode().is_ckd:
                 pipeline.add(
-                    "compute_albedo",
-                    pipelines.ComputeAlbedo(
-                        radiosity_var="radiosity",
-                        irradiance_var="irradiance",
-                        albedo_var="albedo",
+                    "apply_srf",
+                    pipelines.ApplySpectralResponseFunction(
+                        measure=measure,
+                        vars=["radiosity", "irradiance"],
                     ),
                 )
 
-                if eradiate.mode().is_ckd:
-                    pipeline.add(
-                        "apply_srf",
-                        pipelines.ApplySpectralResponseFunction(
-                            measure=measure,
-                            vars=["radiosity", "irradiance"],
-                        ),
-                    )
+                pipeline.add(
+                    "compute_albedo_srf",
+                    pipelines.ComputeAlbedo(
+                        radiosity_var="radiosity_srf",
+                        irradiance_var="irradiance_srf",
+                        albedo_var="albedo_srf",
+                    ),
+                )
 
-                    pipeline.add(
-                        "compute_albedo_srf",
-                        pipelines.ComputeAlbedo(
-                            radiosity_var="radiosity_srf",
-                            irradiance_var="irradiance_srf",
-                            albedo_var="albedo_srf",
-                        ),
-                    )
+        return pipeline
 
-            result.append(pipeline)
 
-        return result[0] if len(result) == 1 else tuple(result)
+# ------------------------------------------------------------------------------
+#                              Experiment runner
+# ------------------------------------------------------------------------------
+
+
+def run(
+    exp: Experiment,
+    spp: int = 0,
+    seed_state: t.Optional[SeedState] = None,
+) -> t.Tuple[xr.Dataset]:
+    exp.process(spp=spp, seed_state=seed_state)
+    exp.postprocess()
+    return exp.results if len(exp.results) > 1 else onedict_value(exp.results)

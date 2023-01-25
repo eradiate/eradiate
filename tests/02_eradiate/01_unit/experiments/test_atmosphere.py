@@ -1,29 +1,27 @@
 import mitsuba as mi
 import numpy as np
 import pytest
+import xarray as xr
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
 from eradiate.experiments import AtmosphereExperiment
-from eradiate.scenes.atmosphere import (
-    HeterogeneousAtmosphere,
-    HomogeneousAtmosphere,
-    MolecularAtmosphere,
-)
-from eradiate.scenes.measure import MeasureSpectralConfig, MultiDistantMeasure
+from eradiate.scenes.atmosphere import HomogeneousAtmosphere
+from eradiate.scenes.measure import MultiDistantMeasure
+from eradiate.test_tools.types import check_scene_element
 
 
-def test_onedim_experiment_construct_default(modes_all_double):
+def test_atmosphere_experiment_construct_default(modes_all_double):
     """
-    AtmosphereExperiment initialises with default params in all modes
+    AtmosphereExperiment initialises successfully with default parameters in
+    all modes.
     """
     assert AtmosphereExperiment()
 
 
-def test_onedim_experiment_construct_measures(modes_all):
+def test_atmosphere_experiment_construct_measures(modes_all_double):
     """
-    A variety of measure specifications are acceptable
+    A variety of measure specifications are acceptable.
     """
     # Init with a single measure (not wrapped in a sequence)
     assert AtmosphereExperiment(measures=MultiDistantMeasure())
@@ -35,52 +33,47 @@ def test_onedim_experiment_construct_measures(modes_all):
     assert AtmosphereExperiment(measures={"type": "distant"})
 
 
-def test_onedim_experiment_construct_normalize_measures(mode_mono):
-    # When setting atmosphere to None, measure target is at ground level
-    exp = AtmosphereExperiment(atmosphere=None)
-    assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
-
-    # When atmosphere is set, measure target is at ground level
-    exp = AtmosphereExperiment(atmosphere=HomogeneousAtmosphere(top=100.0 * ureg.km))
-    assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
-
-
-@pytest.mark.parametrize("bin_set", ["1nm", "10nm"])
-def test_onedim_experiment_ckd(mode_ckd, bin_set):
+@pytest.mark.parametrize(
+    "geometry, expected",
+    [
+        ("plane_parallel", [0, 0, 0] * ureg.m),
+        ("spherical_shell", [0, 0, 6378.1] * ureg.km),
+    ],
+    ids=["plane_parallel", "spherical_shell"],
+)
+def test_atmosphere_experiment_construct_normalize_measures(
+    mode_mono, geometry, expected
+):
     """
-    AtmosphereExperiment with heterogeneous atmosphere in CKD mode can be created.
+    Default measure target is set to ground level.
     """
-    ctx = KernelDictContext(spectral_ctx={"bin_set": bin_set})
-    exp = AtmosphereExperiment(
-        atmosphere=HeterogeneousAtmosphere(
-            molecular_atmosphere=MolecularAtmosphere.afgl_1986()
-        ),
-        surface={"type": "lambertian"},
-        measures={"type": "distant", "id": "distant_measure"},
-    )
-    assert exp.kernel_dict(ctx=ctx).load()
+    exp = AtmosphereExperiment(geometry=geometry)
+    assert np.allclose(exp.measures[0].target.xyz, expected)
 
 
-def test_onedim_experiment_kernel_dict(modes_all_double):
+def test_atmosphere_experiment_kernel_dict(mode_mono):
     """
     Test non-trivial kernel dict generation behaviour.
     """
 
-    ctx = KernelDictContext()
-
-    # Surface width is appropriately inherited from geometry
+    # With an atmosphere
     exp = AtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0, "width_units": "km"},
         atmosphere=HomogeneousAtmosphere(),
+        measures={"type": "distant"},
     )
-    kernel_dict = exp.kernel_dict(ctx)
+    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene)
+    # -- Surface width is inherited from geometry
     assert np.allclose(
-        kernel_dict["shape_surface"]["to_world"].matrix,
+        mi_params["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
     )
-    assert "shape_atmosphere" in kernel_dict
+    # -- Atmosphere is part of the scene
+    assert "shape_atmosphere" in set(shape.id() for shape in mi_scene.shapes())
+    # -- Measure gets no external medium assigned
+    assert all(sensor.medium() is None for sensor in mi_scene.sensors())
 
-    # Setting atmosphere to None
+    # Without an atmosphere
     exp = AtmosphereExperiment(
         geometry="plane_parallel",
         atmosphere=None,
@@ -90,24 +83,20 @@ def test_onedim_experiment_kernel_dict(modes_all_double):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    # -- Surface has default value
-    kernel_dict = exp.kernel_dict(ctx)
+    # -- Surface width has default value
+    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene)
     assert np.allclose(
-        kernel_dict["shape_surface"]["to_world"].matrix,
-        mi.ScalarTransform4f.scale([500, 500, 1]).matrix,
+        mi_params["surface_shape.to_world"].matrix,
+        mi.ScalarTransform4f.scale([5e8, 5e8, 1]).matrix,
     )
-    # -- Atmosphere is not in kernel dictionary
-    assert "shape_atmosphere" not in kernel_dict
-
+    # -- Atmosphere is not part of the scene
+    assert "shape_atmosphere" not in set(shape.id() for shape in mi_scene.shapes())
     # -- Measures get no external medium assigned
-    assert "medium" not in kernel_dict["distant_measure"]
-    assert "medium" not in kernel_dict["radiancemeter"]
+    assert all(sensor.medium() is None for sensor in mi_scene.sensors())
 
 
 @pytest.mark.slow
-def test_onedim_experiment_real_life(mode_mono):
-    ctx = KernelDictContext()
-
+def test_atmosphere_experiment_real_life(mode_mono):
     # Construct with typical parameters
     test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
@@ -127,68 +116,35 @@ def test_onedim_experiment_real_life(mode_mono):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    assert isinstance(exp.kernel_dict(ctx=ctx).load(), mi.Scene)
+    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
     # -- Distant measures get no external medium
-    assert "medium" not in exp.kernel_dict(ctx=ctx)["distant_measure"]
-
+    mi_sensors = {sensor.id(): sensor for sensor in mi_scene.sensors()}
+    assert mi_sensors["distant_measure"].medium() is None
     # -- Radiancemeter inside the atmosphere must have a medium assigned
-    assert exp.kernel_dict(ctx=ctx)["radiancemeter"]["medium"] == {
-        "type": "ref",
-        "id": "medium_atmosphere",
-    }
+    assert mi_sensors["radiancemeter"].medium() is not None
 
 
-def test_onedim_experiment_inconsistent_multiradiancemeter(mode_mono):
-    # A MultiRadiancemeter measure must have all origins inside the atmosphere or none.
-    # A mix of both will raise an error.
-
-    ctx = KernelDictContext()
-
-    # Construct with typical parameters
-    test_absorption_data_set = eradiate.data.data_store.fetch(
-        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
-    )
+def test_atmosphere_experiment_run_basic(modes_all_double):
     exp = AtmosphereExperiment(
-        geometry={"type": "plane_parallel"},
-        surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {
-                "construct": "ussa_1976",
-                "absorption_data_sets": dict(us76_u86_4=test_absorption_data_set),
+                "type": "molecular",
+                "construct": "afgl_1986" if eradiate.mode().is_ckd else "ussa_1976",
             },
+            "particle_layers": [{"type": "particle_layer"}],
         },
-        illumination={"type": "directional", "zenith": 45.0},
-        measures=[
-            {
-                "type": "multi_radiancemeter",
-                "origins": [[0, 0, 1], [0, 0, 1000000]],
-                "directions": [[0, 0, -1], [0, 0, -1]],
-                "id": "multi_radiancemeter",
-            },
-        ],
+        surface={"type": "lambertian"},
+        measures={
+            "type": "distant",
+            "id": "distant_measure",
+            "spectral_cfg": {"bins": ["550"]}
+            if eradiate.mode().is_ckd
+            else {"wavelengths": [550.0] * ureg.nm},
+        },
     )
-    with pytest.raises(ValueError):
-        exp.kernel_dict(ctx=ctx)
-
-
-def test_onedim_experiment_run_basic(modes_all):
-    """
-    AtmosphereExperiment runs successfully in all modes.
-    """
-    if eradiate.mode().is_mono:
-        spectral_cfg = MeasureSpectralConfig.new(wavelengths=550.0 * ureg.nm)
-    elif eradiate.mode().is_ckd:
-        spectral_cfg = MeasureSpectralConfig.new(bin_set="10nm", bins="550")
-    else:
-        pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
-
-    exp = AtmosphereExperiment()
-    exp.measures[0].spectral_cfg = spectral_cfg
-
-    eradiate.run(exp)
-    assert isinstance(exp.results, dict)
+    assert isinstance(eradiate.run(exp, spp=100), xr.Dataset)
 
 
 @pytest.mark.slow
@@ -210,7 +166,7 @@ def test_onedim_experiment_run_detailed(modes_all):
                 "type": "hemispherical_distant",
                 "id": "toa_hsphere",
                 "film_resolution": (32, 32),
-                "spp": 1000,
+                "spp": 100,
                 "spectral_cfg": spectral_cfg,
             },
         ]
