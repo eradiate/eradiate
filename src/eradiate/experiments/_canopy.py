@@ -3,36 +3,23 @@ import typing as t
 import attrs
 
 from ._core import EarthObservationExperiment, Experiment
+from ._helpers import surface_converter
 from .. import validators
 from ..attrs import documented, get_doc, parse_docs
-from ..contexts import KernelDictContext
+from ..contexts import (
+    CKDSpectralContext,
+    KernelDictContext,
+    MonoSpectralContext,
+    SpectralContext,
+)
 from ..scenes.biosphere import Canopy, biosphere_factory
-from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
+from ..scenes.bsdfs import LambertianBSDF
+from ..scenes.core import Scene
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import Measure
 from ..scenes.shapes import RectangleShape
-from ..scenes.surface import BasicSurface, surface_factory
-from ..util.deprecation import substitute
-
-
-def _surface_converter(value):
-    if isinstance(value, dict):
-        try:
-            # First, attempt conversion to BSDF
-            value = bsdf_factory.convert(value)
-        except TypeError:
-            # If this doesn't work, attempt conversion to Surface
-            return surface_factory.convert(value)
-
-    # If we make it to this point, it means that dict conversion has been
-    # performed with success
-    if isinstance(value, BSDF):
-        return BasicSurface(
-            shape=RectangleShape(),
-            bsdf=value,
-        )
-
-    return value
+from ..scenes.surface import BasicSurface
+from ..util.misc import deduplicate_sorted
 
 
 @parse_docs
@@ -83,7 +70,7 @@ class CanopyExperiment(EarthObservationExperiment):
     surface: t.Union[None, BasicSurface] = documented(
         attrs.field(
             factory=lambda: LambertianBSDF(),
-            converter=attrs.converters.optional(_surface_converter),
+            converter=attrs.converters.optional(surface_converter),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(BasicSurface)
             ),
@@ -98,6 +85,7 @@ class CanopyExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
+    # Override parent
     _integrator: Integrator = documented(
         attrs.field(
             factory=PathIntegrator,
@@ -113,49 +101,6 @@ class CanopyExperiment(EarthObservationExperiment):
     def __attrs_post_init__(self):
         self._normalize_measures()
 
-    def kernel_dict(self, ctx: KernelDictContext):
-        result = KernelDict()
-
-        # Process canopy
-        if self.canopy is not None:
-            scene_width = max(self.canopy.size[:2])
-
-            if self.padding > 0:  # We must add extra instances if padding is requested
-                scene_width *= 2.0 * self.padding + 1.0
-                canopy = self.canopy.padded_copy(self.padding)
-            else:
-                canopy = self.canopy
-
-            result.add(canopy, ctx=ctx)
-
-            # Surface size always matches canopy size
-            if self.surface is not None:
-                surface = attrs.evolve(
-                    self.surface,
-                    shape=RectangleShape(center=[0, 0, 0], edges=scene_width),
-                )
-
-            else:
-                surface = None
-
-        else:
-            surface = attrs.evolve(self.surface)
-
-        # Process surface
-        if surface is not None:
-            result.add(surface, ctx=ctx)
-
-        # Process measures
-        result.add(*self.measures, ctx=ctx)
-
-        # Process illumination
-        result.add(self.illumination, ctx=ctx)
-
-        # Process integrator
-        result.add(self.integrator, ctx=ctx)
-
-        return result
-
     def _normalize_measures(self) -> None:
         """
         Ensure that distant measure targets are set to appropriate values.
@@ -169,6 +114,7 @@ class CanopyExperiment(EarthObservationExperiment):
             ):  # No target specified: add one
                 if self.canopy is None:  # No canopy: target origin point
                     measure.target = {"type": "point", "xyz": [0, 0, 0]}
+
                 else:  # Canopy: target top of canopy
                     measure.target = {
                         "type": "rectangle",
@@ -180,19 +126,75 @@ class CanopyExperiment(EarthObservationExperiment):
                     }
 
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
-        result = super(CanopyExperiment, self)._dataset_metadata(measure)
+        result = super()._dataset_metadata(measure)
 
         if measure.is_distant():
             result["title"] = "Top-of-canopy simulation results"
 
         return result
 
+    @property
+    def contexts(self) -> t.List[KernelDictContext]:
+        # Inherit docstring
 
-__getattr__ = substitute(
-    {
-        "RamiExperiment": (
-            CanopyExperiment,
-            {"deprecated_in": "0.22.5", "removed_in": "0.23.2"},
+        # Collect contexts from all measures
+        sctxs = []
+
+        for measure in self.measures:
+            sctxs.extend(measure.spectral_cfg.spectral_ctxs())
+
+            # Sort and remove duplicates
+            key = {
+                MonoSpectralContext: lambda sctx: sctx.wavelength.m,
+                CKDSpectralContext: lambda sctx: (
+                    sctx.bindex.bin.wcenter.m,
+                    sctx.bindex.index,
+                ),
+            }[type(sctxs[0])]
+
+            sctxs = deduplicate_sorted(
+                sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
+            )
+
+            return [KernelDictContext(spectral_ctx=sctx) for sctx in sctxs]
+
+    @property
+    def context_init(self) -> KernelDictContext:
+        # Inherit docstring
+
+        return KernelDictContext(spectral_ctx=SpectralContext.new())
+
+    @property
+    def scene(self) -> Scene:
+        # Inherit docstring
+
+        objects = {}
+
+        # Process canopy and surface
+        if self.canopy is not None:
+            scene_width = max(self.canopy.size[:2])
+
+            if self.padding > 0:  # Add extra instances if padding is requested
+                scene_width *= 2.0 * self.padding + 1.0
+                objects["canopy"] = self.canopy.padded_copy(self.padding)
+            else:
+                objects["canopy"] = self.canopy
+
+            if self.surface is not None:  # Adjust surface to match canopy
+                objects["surface"] = attrs.evolve(
+                    self.surface,
+                    shape=RectangleShape(center=[0, 0, 0], edges=scene_width),
+                )
+
+        else:
+            if self.surface is not None:  # Leave surface unchanged
+                objects["surface"] = self.surface
+
+        return Scene(
+            objects={
+                **objects,
+                "illumination": self.illumination,
+                **{measure.id: measure for measure in self.measures},
+                "integrator": self.integrator,
+            }
         )
-    }
-)

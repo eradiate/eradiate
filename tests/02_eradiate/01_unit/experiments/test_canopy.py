@@ -4,11 +4,11 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
 from eradiate.exceptions import UnsupportedModeError
 from eradiate.experiments import CanopyExperiment
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
+from eradiate.test_tools.types import check_scene_element
 
 
 def test_canopy_experiment_construct_default(modes_all_double):
@@ -58,10 +58,8 @@ def test_canopy_experiment_construct_normalize_measures(mode_mono_double, paddin
 
 @pytest.mark.parametrize("padding", (0, 1))
 def test_canopy_experiment_kernel_dict(modes_all_double, padding):
-    ctx = KernelDictContext()
-
     # Surface width is appropriately inherited from canopy
-    s = CanopyExperiment(
+    exp = CanopyExperiment(
         canopy=DiscreteCanopy.homogeneous(
             lai=0.5,  # This very low value ensures fast object initialisation
             leaf_radius=0.1 * ureg.m,
@@ -70,20 +68,16 @@ def test_canopy_experiment_kernel_dict(modes_all_double, padding):
             padding=padding,
         )
     )
+    _, mi_params = check_scene_element(exp.scene, mi.Scene)
 
-    kernel_scene = s.kernel_dict(ctx)
     assert np.allclose(
-        kernel_scene["shape_surface"]["to_world"].transform_affine(
-            mi.Point3f(1, -1, 0)
-        ),
+        mi_params["surface_shape.to_world"].transform_affine(mi.Point3f(1, -1, 0)),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
 
 
 @pytest.mark.slow
 def test_canopy_experiment_real_life(modes_all_double):
-    ctx = KernelDictContext()
-
     # Construct with typical parameters
     exp = CanopyExperiment(
         surface={"type": "lambertian"},
@@ -103,7 +97,7 @@ def test_canopy_experiment_real_life(modes_all_double):
             "azimuths": 0.0,
         },
     )
-    assert exp.kernel_dict(ctx=ctx).load()
+    check_scene_element(exp.scene, mi.Scene)
 
 
 @pytest.mark.slow

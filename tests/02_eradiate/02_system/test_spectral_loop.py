@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.experiments import AtmosphereExperiment
+from eradiate.experiments import AtmosphereExperiment, CanopyExperiment
 from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.illumination import DirectionalIllumination
 from eradiate.scenes.measure import MultiDistantMeasure
