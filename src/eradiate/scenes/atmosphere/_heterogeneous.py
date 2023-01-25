@@ -21,6 +21,7 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...radprops import ZGrid
 from ...units import unit_context_config as ucc
+from ...units import unit_registry as ureg
 
 
 def _molecular_converter(value):
@@ -111,7 +112,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     #: A high-resolution layer altitude mesh to interpolate the components'
     #: radiative properties on, before computing the total radiative
     #: properties. This is an internal field that is automatically set by
-    #: the :meth:`update` method.
+    #: the :meth:`update` method. Defaults to one layer per 100 m.
     _zgrid: ZGrid = attrs.field(
         default=None,
         converter=attrs.converters.optional(
@@ -138,7 +139,14 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
         # Set altitude grid
         if self._zgrid is None:
-            self._zgrid = ZGrid(np.linspace(self.bottom, self.top, 100001))
+            self._zgrid = ZGrid(
+                (
+                    np.arange(
+                        self.bottom.m_as(ureg.m), self.top.m_as(ureg.m) + 1.0, 100.0
+                    )
+                    * ureg.m
+                ).to(ucc.get("length"))
+            )
 
         else:
             grid_bottom = self._zgrid.levels[0]
