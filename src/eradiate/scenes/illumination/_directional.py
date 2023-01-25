@@ -1,13 +1,14 @@
 import typing as t
+
+import attrs
 import drjit as dr
 import mitsuba as mi
-import attrs
 import numpy as np
 import pint
 import pinttr
 
 from ._core import Illumination
-from ..core import NodeSceneElement, Param, ParamFlags
+from ..core import NodeSceneElement
 from ..spectra import SolarIrradianceSpectrum, Spectrum, SpectrumNode, spectrum_factory
 from ..._config import config
 from ...attrs import documented, parse_docs

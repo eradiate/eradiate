@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing as t
-import warnings
 from abc import ABC, abstractmethod
 
 import attrs
@@ -16,7 +15,6 @@ from .ckd import Bin, Bindex, BinSet
 from .exceptions import UnsupportedModeError
 from .units import unit_context_config as ucc
 from .units import unit_registry as ureg
-from .util.misc import fullname
 
 # ------------------------------------------------------------------------------
 #                                      ABC

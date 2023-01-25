@@ -7,7 +7,6 @@ import inspect
 import re
 import typing as t
 from collections import OrderedDict
-from collections.abc import Mapping
 from numbers import Number
 
 import numpy as np

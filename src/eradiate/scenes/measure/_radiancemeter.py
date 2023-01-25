@@ -7,7 +7,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import Measure, MeasureNode
+from ._core import MeasureNode
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...units import symbol
