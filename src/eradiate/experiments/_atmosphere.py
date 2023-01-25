@@ -1,31 +1,35 @@
-from __future__ import annotations
-
 import typing as t
-import warnings
 
 import attrs
 
 from ._core import EarthObservationExperiment, Experiment
-from ._helpers import _surface_converter, measure_inside_atmosphere
-from ..attrs import AUTO, documented, get_doc, parse_docs
-from ..contexts import KernelDictContext
+from ._helpers import measure_inside_atmosphere, surface_converter
+from ..attrs import documented, get_doc, parse_docs
+from ..contexts import (
+    CKDSpectralContext,
+    KernelDictContext,
+    MonoSpectralContext,
+    SpectralContext,
+)
 from ..scenes.atmosphere import (
     Atmosphere,
-    AtmosphereGeometry,
     HomogeneousAtmosphere,
-    PlaneParallelGeometry,
-    SphericalShellGeometry,
     atmosphere_factory,
 )
-from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
+from ..scenes.bsdfs import LambertianBSDF
+from ..scenes.core import Scene
+from ..scenes.geometry import (
+    PlaneParallelGeometry,
+    SceneGeometry,
+    SphericalShellGeometry,
+)
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
-from ..scenes.measure import Measure, MultiRadiancemeterMeasure, TargetPoint
-from ..scenes.measure._distant import DistantMeasure
+from ..scenes.measure import DistantMeasure, Measure, TargetPoint
 from ..scenes.shapes import RectangleShape, SphereShape
-from ..scenes.surface import BasicSurface, DEMSurface, surface_factory
+from ..scenes.surface import BasicSurface
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-from ..util.deprecation import substitute
+from ..util.misc import deduplicate_sorted
 
 
 @parse_docs
@@ -40,11 +44,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
     Notes
     -----
     * A post-initialisation step will constrain the measure setup if a
-      distant measure is used and no target is defined:
-
-      * if an atmosphere is defined, the target will be set to [0, 0, TOA];
-      * if no atmosphere is defined, the target will be set to [0, 0, 0].
-
+      distant measure is used and set the target to [0, 0, 0].
     * This experiment supports arbitrary measure positioning, except for
       :class:`.MultiRadiancemeterMeasure`, for which subsensor origins are
       required to be either all inside or all outside of the atmosphere. If an
@@ -55,7 +55,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
     geometry: t.Union[PlaneParallelGeometry, SphericalShellGeometry] = documented(
         attrs.field(
             default="plane_parallel",
-            converter=AtmosphereGeometry.convert,
+            converter=SceneGeometry.convert,
             validator=attrs.validators.instance_of(
                 (PlaneParallelGeometry, SphericalShellGeometry)
             ),
@@ -86,7 +86,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
     surface: t.Optional[BasicSurface] = documented(
         attrs.field(
             factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
-            converter=attrs.converters.optional(_surface_converter),
+            converter=attrs.converters.optional(surface_converter),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(BasicSurface)
             ),
@@ -99,6 +99,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
+    # Override parent
     _integrator: Integrator = documented(
         attrs.field(
             factory=VolPathIntegrator,
@@ -114,46 +115,120 @@ class AtmosphereExperiment(EarthObservationExperiment):
     def __attrs_post_init__(self):
         self._normalize_measures()
 
-    @property
-    def _default_surface_width(self):
-        return 1.0 * ureg.km
+    def _normalize_measures(self) -> None:
+        """
+        Ensure that distant measure targets are set to appropriate values.
+        Processed measures will have their ray target and origin parameters
+        overridden if relevant.
+        """
+        for measure in self.measures:
+            if isinstance(measure, DistantMeasure) and measure.target is None:
+                if isinstance(self.geometry, PlaneParallelGeometry):
+                    # Plane parallel geometry: target ground level
+                    target_point = [0.0, 0.0, 0.0] * ucc.get("length")
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = KernelDict({"type": "scene"})
+                elif isinstance(self.geometry, SphericalShellGeometry):
+                    # Spherical shell geometry: target ground level
+                    target_point = [
+                        0.0,
+                        0.0,
+                        self.geometry.planet_radius.m,
+                    ] * self.geometry.planet_radius.units
+
+                else:  # Shouldn't happen, prevented by validator
+                    raise RuntimeError
+
+                measure.target = TargetPoint(target_point)
+
+    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
+        result = super()._dataset_metadata(measure)
+
+        if measure.is_distant():
+            result["title"] = "Top-of-atmosphere simulation results"
+
+        return result
+
+    @property
+    def _context_kwargs(self) -> t.Dict[str, t.Any]:
+        kwargs = {}
+
+        for measure in self.measures:
+            if measure_inside_atmosphere(self.atmosphere, measure):
+                kwargs[
+                    f"{measure.sensor_id}.atmosphere_medium_id"
+                ] = self.atmosphere.medium_id
+
+        return kwargs
+
+    @property
+    def contexts(self) -> t.List[KernelDictContext]:
+        # Inherit docstring
+
+        # Collect contexts from all measures
+        sctxs = []
+
+        for measure in self.measures:
+            sctxs.extend(measure.spectral_cfg.spectral_ctxs())
+
+        # Sort and remove duplicates
+        key = {
+            MonoSpectralContext: lambda sctx: sctx.wavelength.m,
+            CKDSpectralContext: lambda sctx: (
+                sctx.bindex.bin.wcenter.m,
+                sctx.bindex.index,
+            ),
+        }[type(sctxs[0])]
+
+        sctxs = deduplicate_sorted(
+            sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
+        )
+        kwargs = self._context_kwargs
+
+        return [KernelDictContext(spectral_ctx=sctx, kwargs=kwargs) for sctx in sctxs]
+
+    @property
+    def context_init(self) -> KernelDictContext:
+        # Inherit docstring
+
+        return KernelDictContext(
+            spectral_ctx=SpectralContext.new(), kwargs=self._context_kwargs
+        )
+
+    @property
+    def scene(self) -> Scene:
+        # Inherit docstring
+
+        objects = {}
 
         # Process atmosphere
         if self.atmosphere is not None:
-            atmosphere = attrs.evolve(self.atmosphere, geometry=self.geometry)
-            result.add(atmosphere, ctx=ctx)
-        else:
-            atmosphere = None
+            objects["atmosphere"] = attrs.evolve(
+                self.atmosphere, geometry=self.geometry
+            )
 
         # Process surface
         if self.surface is not None:
             if isinstance(self.geometry, PlaneParallelGeometry):
-                if atmosphere is not None:
-                    width = atmosphere.kernel_width_plane_parallel(ctx)
-                    altitude = atmosphere.bottom
-                else:
-                    width = (
-                        self.geometry.width
-                        if self.geometry.width is not AUTO
-                        else self._default_surface_width
-                    )
-                    altitude = 0.0 * ureg.km
+                width = self.geometry.width
+                altitude = (
+                    self.atmosphere.bottom
+                    if self.atmosphere is not None
+                    else 0.0 * ureg.km
+                )
 
-                surface = attrs.evolve(
+                objects["surface"] = attrs.evolve(
                     self.surface,
                     shape=RectangleShape.surface(altitude=altitude, width=width),
                 )
 
             elif isinstance(self.geometry, SphericalShellGeometry):
-                if atmosphere is not None:
-                    altitude = self.atmosphere.bottom
-                else:
-                    altitude = 0.0 * ureg.km
+                altitude = (
+                    self.atmosphere.bottom
+                    if self.atmosphere is not None
+                    else 0.0 * ureg.km
+                )
 
-                surface = attrs.evolve(
+                objects["surface"] = attrs.evolve(
                     self.surface,
                     shape=SphereShape.surface(
                         altitude=altitude, planet_radius=self.geometry.planet_radius
@@ -163,66 +238,11 @@ class AtmosphereExperiment(EarthObservationExperiment):
             else:  # Shouldn't happen, prevented by validator
                 raise RuntimeError
 
-            result.add(surface, ctx=ctx)
-
-        # Process measures
-        for measure in self.measures:
-            if measure_inside_atmosphere(atmosphere, measure, ctx):
-                result.add(
-                    measure,
-                    ctx=ctx.evolve(atmosphere_medium_id=self.atmosphere.id_medium),
-                )
-            else:
-                result.add(measure, ctx=ctx)
-
-        # Process illumination
-        result.add(self.illumination, ctx=ctx)
-
-        # Process integrator
-        result.add(self.integrator, ctx=ctx)
-
-        return result
-
-    def _normalize_measures(self) -> None:
-        """
-        Ensure that distant measure targets are set to appropriate values.
-        Processed measures will have its ray target and origin parameters
-        overridden if relevant.
-        """
-        for measure in self.measures:
-            if isinstance(measure, DistantMeasure):
-                if measure.target is None:
-                    if isinstance(self.geometry, PlaneParallelGeometry):
-                        # Plane parallel geometry: target ground level
-                        target_point = [0.0, 0.0, 0.0] * ucc.get("length")
-
-                    elif isinstance(self.geometry, SphericalShellGeometry):
-                        # Spherical shell geometry: target ground level
-                        target_point = [
-                            0.0,
-                            0.0,
-                            self.geometry.planet_radius.m,
-                        ] * self.geometry.planet_radius.units
-
-                    else:  # Shouldn't happen, prevented by validator
-                        raise RuntimeError
-
-                    measure.target = TargetPoint(target_point)
-
-    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
-        result = super(AtmosphereExperiment, self)._dataset_metadata(measure)
-
-        if measure.is_distant():
-            result["title"] = "Top-of-atmosphere simulation results"
-
-        return result
-
-
-__getattr__ = substitute(
-    {
-        "OneDimExperiment": (
-            AtmosphereExperiment,
-            {"deprecated_in": "0.22.5", "removed_in": "0.23.2"},
+        return Scene(
+            objects={
+                **objects,
+                "illumination": self.illumination,
+                **{measure.id: measure for measure in self.measures},
+                "integrator": self.integrator,
+            }
         )
-    }
-)
