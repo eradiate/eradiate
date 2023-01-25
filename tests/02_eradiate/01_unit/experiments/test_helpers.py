@@ -1,11 +1,12 @@
 import pytest
 
 import eradiate
-from eradiate.experiments._helpers import measure_inside_atmosphere
+from eradiate.experiments._helpers import measure_inside_atmosphere, surface_converter
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     MolecularAtmosphere,
 )
+from eradiate.scenes.surface import BasicSurface
 
 
 def test_helpers_measure_inside_atmosphere(mode_mono):
@@ -27,3 +28,11 @@ def test_helpers_measure_inside_atmosphere(mode_mono):
     )
     with pytest.raises(ValueError):
         measure_inside_atmosphere(atm, s3)
+
+
+def test_helpers_surface_converter(mode_mono):
+    # A dictionary specifying a surface is converted to a surface
+    assert isinstance(surface_converter({"type": "basic"}), BasicSurface)
+
+    # A dictionary specifying a BSDF is converted to a surface
+    assert isinstance(surface_converter({"type": "lambertian"}), BasicSurface)

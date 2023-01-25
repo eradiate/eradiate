@@ -67,8 +67,8 @@ def surface_converter(value: t.Union[dict, Surface, BSDF]) -> Surface:
         try:
             # First, attempt conversion to BSDF
             value = bsdf_factory.convert(value)
-        except TypeError:
-            # If this doesn't work, attempt conversion to Surface
+        except ValueError:  # Type ID could not be found in BSDF factory registry
+            # Attempt conversion to Surface
             return surface_factory.convert(value)
 
     # If we make it to this point, it means that dict conversion has been
