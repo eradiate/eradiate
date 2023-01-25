@@ -161,14 +161,9 @@ class DEMExperiment(EarthObservationExperiment):
 
                 else:
                     if measure.target is None:
-                        msg = (
-                            f"Measure '{measure.id}' has its target unset. "
-                            "This is not recommended. Forcing to [0, 0, 0]."
-                        )
                         measure.target = {"type": "point", "xyz": [0, 0, 0]}
 
-                    else:
-                        msg = None
+                    msg = None
 
                 if msg is not None:
                     warnings.warn(UserWarning(msg))

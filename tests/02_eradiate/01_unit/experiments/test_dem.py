@@ -113,6 +113,7 @@ def test_dem_experiment_real_life(mode_mono):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
+
     mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
     # -- Distant measures get no external medium
@@ -234,7 +235,7 @@ def test_dem_experiment_warn_targeting_dem(modes_all_double):
     Test that Eradiate raises a warning, when the measure target is a point and a DEM is defined in the scene.
     """
 
-    with pytest.warns(UserWarning, match="This is not recommended."):
+    with pytest.warns(UserWarning, match="uses a point target"):
         DEMExperiment(
             dem=DEMSurface.from_analytical(
                 elevation_function=lambda x, y: 1,
