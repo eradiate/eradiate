@@ -13,11 +13,9 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.220  # Ruff version
+    rev: v0.0.231  # Ruff version
     hooks:
       - id: ruff
-        # Respect `exclude` and `extend-exclude` settings.
-        args: [ "--force-exclude" ]
   - repo: https://github.com/kynan/nbstripout
     rev: 0.6.0
     hooks:
