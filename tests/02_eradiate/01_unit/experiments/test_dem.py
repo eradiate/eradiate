@@ -1,6 +1,7 @@
 import mitsuba as mi
 import numpy as np
 import pytest
+from rich.pretty import pprint
 
 import eradiate
 from eradiate import unit_registry as ureg
@@ -12,15 +13,20 @@ from eradiate.scenes.atmosphere import (
     MolecularAtmosphere,
 )
 from eradiate.scenes.bsdfs import LambertianBSDF
+from eradiate.scenes.core import traverse
 from eradiate.scenes.measure import MeasureSpectralConfig, MultiDistantMeasure
 from eradiate.scenes.surface import DEMSurface
+from eradiate.test_tools.types import check_scene_element
 
 
 def test_dem_experiment_construct_default(modes_all_double):
     """
     DEMExperiment initialises with default params in all modes
     """
-    assert DEMExperiment()
+    exp = DEMExperiment()
+
+    # Check that the atmosphere's geometry is overridden by the experiment's
+    assert exp.atmosphere.geometry is exp.geometry
 
 
 def test_dem_experiment_construct_measures(modes_all):
@@ -52,7 +58,6 @@ def test_dem_experiment_ckd(mode_ckd, bin_set):
     """
     DEMExperiment with heterogeneous atmosphere in CKD mode can be created.
     """
-    ctx = KernelDictContext(spectral_ctx={"bin_set": bin_set})
     exp = DEMExperiment(
         atmosphere=HeterogeneousAtmosphere(
             molecular_atmosphere=MolecularAtmosphere.afgl_1986()
@@ -60,15 +65,13 @@ def test_dem_experiment_ckd(mode_ckd, bin_set):
         surface={"type": "lambertian"},
         measures={"type": "distant", "id": "distant_measure"},
     )
-    assert exp.kernel_dict(ctx=ctx).load()
+    check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
 
 def test_dem_experiment_kernel_dict(modes_all_double):
     """
     Test non-trivial kernel dict generation behaviour.
     """
-
-    ctx = KernelDictContext()
 
     # Setting atmosphere to None
     exp = DEMExperiment(
@@ -80,23 +83,20 @@ def test_dem_experiment_kernel_dict(modes_all_double):
         ],
     )
     # -- Surface has default value
-    kernel_dict = exp.kernel_dict(ctx)
-    assert np.allclose(
-        kernel_dict["shape_surface"]["to_world"].matrix,
+    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    np.testing.assert_allclose(
+        mi_params["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([500, 500, 1]).matrix,
     )
     # -- Atmosphere is not in kernel dictionary
-    assert "shape_atmosphere" not in kernel_dict
+    assert {shape.id() for shape in mi_scene.shapes()} == {"surface_shape"}
 
     # -- Measures get no external medium assigned
-    assert "medium" not in kernel_dict["distant_measure"]
-    assert "medium" not in kernel_dict["radiancemeter"]
+    assert all(sensor.medium() is None for sensor in mi_scene.sensors())
 
 
 @pytest.mark.slow
 def test_dem_experiment_real_life(mode_mono):
-    ctx = KernelDictContext()
-
     # Construct with typical parameters
     test_absorption_data_set = eradiate.data.data_store.fetch(
         "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
@@ -116,23 +116,18 @@ def test_dem_experiment_real_life(mode_mono):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    assert isinstance(exp.kernel_dict(ctx=ctx).load(), mi.Scene)
+    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
     # -- Distant measures get no external medium
-    assert "medium" not in exp.kernel_dict(ctx=ctx)["distant_measure"]
+    assert mi_scene.sensors()[0].medium() is None
 
     # -- Radiancemeter inside the atmosphere must have a medium assigned
-    assert exp.kernel_dict(ctx=ctx)["radiancemeter"]["medium"] == {
-        "type": "ref",
-        "id": "medium_atmosphere",
-    }
+    assert mi_scene.sensors()[1].medium().id() == "medium_atmosphere"
 
 
 def test_dem_experiment_inconsistent_multiradiancemeter(mode_mono):
     # A MultiRadiancemeter measure must have all origins inside the atmosphere or none.
     # A mix of both will raise an error.
-
-    ctx = KernelDictContext()
 
     # Construct with typical parameters
     test_absorption_data_set = eradiate.data.data_store.fetch(
@@ -157,8 +152,12 @@ def test_dem_experiment_inconsistent_multiradiancemeter(mode_mono):
             },
         ],
     )
-    with pytest.raises(ValueError):
-        exp.kernel_dict(ctx=ctx)
+
+    with pytest.raises(
+        ValueError,
+        match="Inconsistent placement of MultiRadiancemeterMeasure origins",
+    ):
+        exp.init()
 
 
 def test_dem_experiment_run_basic(modes_all):
@@ -233,13 +232,13 @@ def test_dem_experiment_run_detailed(modes_all):
     assert np.all(results["radiance"].data > 0.0)
 
 
-def test_dem_experiment_warn_targeting_dem(modes_all):
+def test_dem_experiment_warn_targeting_dem(modes_all_double):
     """
     Test that Eradiate raises a warning, when the measure target is a point and a DEM is defined in the scene.
     """
 
-    with pytest.warns(UserWarning):
-        exp = DEMExperiment(
+    with pytest.warns(UserWarning, match="This is not recommended."):
+        DEMExperiment(
             dem=DEMSurface.from_analytical(
                 elevation_function=lambda x, y: 1,
                 x_length=1 * ureg.m,
@@ -256,4 +255,3 @@ def test_dem_experiment_warn_targeting_dem(modes_all):
                 },
             ],
         )
-        kd = exp.kernel_dict(ctx=KernelDictContext())

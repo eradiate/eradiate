@@ -1,38 +1,36 @@
-from __future__ import annotations
-
 import typing as t
 import warnings
 
 import attrs
 
 from ._core import EarthObservationExperiment, Experiment
-from ._helpers import measure_inside_atmosphere, _surface_converter
-from ..attrs import AUTO, documented, get_doc, parse_docs
-from ..contexts import KernelDictContext
-from ..scenes.atmosphere import (
-    Atmosphere,
-    HomogeneousAtmosphere,
-    PlaneParallelGeometry,
-    atmosphere_factory,
+from ._helpers import measure_inside_atmosphere, surface_converter
+from ..attrs import documented, get_doc, parse_docs
+from ..contexts import (
+    CKDSpectralContext,
+    KernelDictContext,
+    MonoSpectralContext,
+    SpectralContext,
 )
+from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
-from ..scenes.core import KernelDict
+from ..scenes.core import Scene
+from ..scenes.geometry import PlaneParallelGeometry, SceneGeometry
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
-from ..scenes.measure import Measure, TargetPoint
-from ..scenes.measure._distant import DistantMeasure
+from ..scenes.measure import DistantMeasure, Measure, TargetPoint
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, DEMSurface, surface_factory
-from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
+from ..util.misc import deduplicate_sorted
 
 
 @parse_docs
 @attrs.define
 class DEMExperiment(EarthObservationExperiment):
     """
-    Simulate radiation in a scene with a digital elevation model (DEM). 
-    This experiment approximates a one-dimensional setup using 
-    a 3D geometry set up to reproduce the effect of invariances typical 
+    Simulate radiation in a scene with a digital elevation model (DEM).
+    This experiment approximates a one-dimensional setup using
+    a 3D geometry set up to reproduce the effect of invariances typical
     of 1D geometries.
 
     Notes
@@ -51,6 +49,19 @@ class DEMExperiment(EarthObservationExperiment):
 
     * Currently this experiment is limited to plane-parallel atmospheric geometry.
     """
+
+    # Currently, only the plane parallel geometry is supported
+    geometry: PlaneParallelGeometry = documented(
+        attrs.field(
+            default="plane_parallel",
+            converter=SceneGeometry.convert,
+            validator=attrs.validators.instance_of(PlaneParallelGeometry),
+        ),
+        doc="Problem geometry.",
+        type=".PlaneParallelGeometry",
+        init_type="str or dict or .PlaneParallelGeometry",
+        default='"plane_parallel"',
+    )
 
     atmosphere: t.Optional[Atmosphere] = documented(
         attrs.field(
@@ -72,7 +83,7 @@ class DEMExperiment(EarthObservationExperiment):
     surface: t.Optional[BasicSurface] = documented(
         attrs.field(
             factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
-            converter=attrs.converters.optional(_surface_converter),
+            converter=attrs.converters.optional(surface_converter),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(BasicSurface)
             ),
@@ -114,85 +125,148 @@ class DEMExperiment(EarthObservationExperiment):
     )
 
     def __attrs_post_init__(self):
+        self._normalize_atmosphere()
         self._normalize_measures()
+
+    def _normalize_atmosphere(self) -> None:
+        """
+        Ensure consistency between the atmosphere and experiment geometries.
+        """
+        if self.atmosphere is not None:
+            self.atmosphere.geometry = self.geometry
+
+    def _normalize_measures(self) -> None:
+        """
+        Ensure that distant measure targets are set to appropriate values.
+        Processed measures will have their ray target and origin parameters
+        overridden if relevant.
+        """
+        for measure in self.measures:
+            # Override ray target location if relevant
+            if isinstance(measure, DistantMeasure):
+                if self.dem is not None:
+                    if measure.target is None:
+                        msg = (
+                            f"Measure '{measure.id}' has its target unset "
+                            "and the DEM is set. This is not recommended."
+                        )
+
+                    elif isinstance(measure.target, TargetPoint):
+                        msg = (
+                            f"Measure '{measure.id}' uses a point target "
+                            "and the DEM is set. This is not recommended."
+                        )
+                    else:
+                        msg = None
+
+                else:
+                    if measure.target is None:
+                        msg = (
+                            f"Measure '{measure.id}' has its target unset. "
+                            "This is not recommended. Forcing to [0, 0, 0]."
+                        )
+                        measure.target = {"type": "point", "xyz": [0, 0, 0]}
+
+                    else:
+                        msg = None
+
+                if msg is not None:
+                    warnings.warn(UserWarning(msg))
 
     @property
     def _default_surface_width(self):
         return 1.0 * ureg.km
 
-    def kernel_dict(self, ctx: KernelDictContext) -> KernelDict:
-        result = KernelDict({"type": "scene"})
-
-        # Process atmosphere
-        if self.atmosphere is not None:
-            atmosphere = attrs.evolve(self.atmosphere, geometry=PlaneParallelGeometry())
-            result.add(atmosphere, ctx=ctx)
-        else:
-            atmosphere = None
-
-        # Process surface
-        if self.surface is not None:
-            if atmosphere is not None:
-                width = atmosphere.kernel_width_plane_parallel(ctx)
-                altitude = atmosphere.bottom
-            else:
-                width = self._default_surface_width
-                altitude = 0.0 * ureg.km
-
-            surface = attrs.evolve(
-                self.surface,
-                shape=RectangleShape.surface(altitude=altitude, width=width),
-            )
-
-            result.add(surface, ctx=ctx)
-
-        # Process DEM
-        if self.dem is not None:
-            for measure in self.measures:
-                if isinstance(measure.target, TargetPoint):
-                    warnings.warn(
-                        UserWarning(
-                            f"Your measure {measure.id}, uses a point target. "
-                            f"This might be undesirable when simulating a DEM."
-                        )
-                    )
-
-            result.add(self.dem, ctx=ctx)
-
-        # Process measures
-        for measure in self.measures:
-            if measure_inside_atmosphere(atmosphere, measure, ctx):
-                result.add(
-                    measure,
-                    ctx=ctx.evolve(atmosphere_medium_id=self.atmosphere.id_medium),
-                )
-            else:
-                result.add(measure, ctx=ctx)
-
-        # Process illumination
-        result.add(self.illumination, ctx=ctx)
-
-        # Process integrator
-        result.add(self.integrator, ctx=ctx)
-
-        return result
-
-    def _normalize_measures(self) -> None:
-        """
-        Ensure that distant measure targets are set to appropriate values.
-        Processed measures will have its ray target and origin parameters
-        overridden if relevant.
-        """
-        for measure in self.measures:
-            if isinstance(measure, DistantMeasure):
-                if measure.target is None:
-                    target_point = [0.0, 0.0, 0.0] * ucc.get("length")
-                    measure.target = TargetPoint(target_point)
-
     def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
-        result = super(DEMExperiment, self)._dataset_metadata(measure)
+        result = super()._dataset_metadata(measure)
 
         if measure.is_distant():
             result["title"] = "Top-of-atmosphere simulation results"
 
         return result
+
+    @property
+    def _context_kwargs(self) -> t.Dict[str, t.Any]:
+        kwargs = {}
+
+        for measure in self.measures:
+            if measure_inside_atmosphere(self.atmosphere, measure):
+                kwargs[
+                    f"{measure.sensor_id}.atmosphere_medium_id"
+                ] = self.atmosphere.medium_id
+
+        return kwargs
+
+    @property
+    def contexts(self) -> t.List[KernelDictContext]:
+        # Inherit docstring
+
+        # Collect contexts from all measures
+        sctxs = []
+
+        for measure in self.measures:
+            sctxs.extend(measure.spectral_cfg.spectral_ctxs())
+
+        # Sort and remove duplicates
+        key = {
+            MonoSpectralContext: lambda sctx: sctx.wavelength.m,
+            CKDSpectralContext: lambda sctx: (
+                sctx.bindex.bin.wcenter.m,
+                sctx.bindex.index,
+            ),
+        }[type(sctxs[0])]
+
+        sctxs = deduplicate_sorted(
+            sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
+        )
+        kwargs = self._context_kwargs
+
+        return [KernelDictContext(spectral_ctx=sctx, kwargs=kwargs) for sctx in sctxs]
+
+    @property
+    def context_init(self) -> KernelDictContext:
+        # Inherit docstring
+
+        return KernelDictContext(
+            spectral_ctx=SpectralContext.new(), kwargs=self._context_kwargs
+        )
+
+    @property
+    def scene(self) -> Scene:
+        # Inherit docstring
+
+        objects = {}
+
+        # Process atmosphere
+        if self.atmosphere is not None:
+            objects["atmosphere"] = self.atmosphere
+
+        # Process surface
+        if self.surface is not None:
+            if self.atmosphere is not None:
+                surface_width = self.atmosphere.geometry.width
+                surface_altitude = self.atmosphere.bottom
+            else:
+                surface_width = self._default_surface_width
+                surface_altitude = 0.0 * ureg.km
+
+            objects["surface"] = attrs.evolve(
+                self.surface,
+                shape=RectangleShape.surface(
+                    altitude=surface_altitude,
+                    width=surface_width,
+                ),
+            )
+
+        # Process DEM
+        if self.dem is not None:
+            result.add(self.dem, ctx=ctx)
+
+        return Scene(
+            objects={
+                **objects,
+                "illumination": self.illumination,
+                **{measure.id: measure for measure in self.measures},
+                "integrator": self.integrator,
+            }
+        )
