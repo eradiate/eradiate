@@ -1,10 +1,9 @@
 import typing as t
 
 import attrs
-import mitsuba as mi
 
 from ._core import BSDFNode
-from ..core import NodeSceneElement, Param, ParamFlags
+from ..core import NodeSceneElement
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs

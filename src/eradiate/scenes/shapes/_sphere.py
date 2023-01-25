@@ -3,7 +3,6 @@ from __future__ import annotations
 import typing as t
 
 import attrs
-import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -11,9 +10,7 @@ from pinttr.util import ensure_units
 
 from ._core import ShapeNode
 from ..bsdfs import BSDF
-from ..core import Param, ParamFlags
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg

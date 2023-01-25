@@ -84,9 +84,7 @@ def update_attrs(srf: xr.Dataset, filter_name: str, filter_attr: str) -> None:
     )
 
 
-def wavelength_range_width(
-    srf: t.Union[PathLike, xr.Dataset]
-) -> pint.Quantity:
+def wavelength_range_width(srf: t.Union[PathLike, xr.Dataset]) -> pint.Quantity:
     """
     Compute the wavelength range width of a spectral response function.
 
@@ -97,16 +95,14 @@ def wavelength_range_width(
 
     Notes
     -----
-    The wavelength range width is defined as the difference between the upper 
+    The wavelength range width is defined as the difference between the upper
     and lower wavelength bounds.
     """
     srf = convert_no_id(srf)
     return to_quantity(srf.w).max() - to_quantity(srf.w).min()
 
 
-def wavelength_bandwidth(
-    srf: t.Union[PathLike, xr.Dataset]
-) -> pint.Quantity:
+def wavelength_bandwidth(srf: t.Union[PathLike, xr.Dataset]) -> pint.Quantity:
     r"""
     Compute the wavelength bandwidth of a spectral response function.
 
@@ -122,12 +118,12 @@ def wavelength_bandwidth(
     .. math::
 
         \Delta \lambda = \int \lambda \, \phi(\lambda) \mathrm{d} \lambda
-    
+
     where
         * :math:`\phi(\lambda)` is the spectral response function.
         * :math:`\lambda` is the wavelength.
         * :math:`\Delta \lambda` is the wavelength bandwidth.
-    
+
     and the integral is performed over the wavelength range of the spectral
     response function.
     """
@@ -135,9 +131,7 @@ def wavelength_bandwidth(
     return srf.srf.integrate(coord="w").values * ureg(srf.w.attrs["units"])
 
 
-def mean_wavelength(
-    srf: t.Union[PathLike, xr.Dataset]
-) -> pint.Quantity:
+def mean_wavelength(srf: t.Union[PathLike, xr.Dataset]) -> pint.Quantity:
     r"""
     Compute the mean wavelength of a spectral response function.
 
@@ -157,12 +151,12 @@ def mean_wavelength(
         }{
             \int \phi(\lambda) \, \mathrm{d} \lambda
         }
-    
+
     where
         * :math:`\phi(\lambda)` is the spectral response function.
         * :math:`\lambda` is the wavelength.
         * :math:`\overline{\lambda}` is the mean wavelength.
-    
+
     and the integrals are performed over the wavelength range of the spectral
     response function.
     """
@@ -831,7 +825,7 @@ def show(
 
     if title is not None:
         plt.title(title)
-        
+
     plt.tight_layout()
     plt.grid()
     plt.show()

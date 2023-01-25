@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import enum
-import re
 import typing as t
 from abc import ABC, abstractmethod
 from collections import UserDict
