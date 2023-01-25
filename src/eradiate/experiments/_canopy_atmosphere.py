@@ -2,54 +2,36 @@ import typing as t
 
 import attrs
 
-from ._helpers import measure_inside_atmosphere
 from ._core import EarthObservationExperiment
+from ._helpers import measure_inside_atmosphere, surface_converter
 from .. import converters, validators
 from ..attrs import AUTO, documented, parse_docs
-from ..contexts import KernelDictContext
-from ..scenes.atmosphere import (
-    Atmosphere,
-    AtmosphereGeometry,
-    HomogeneousAtmosphere,
-    PlaneParallelGeometry,
-    SphericalShellGeometry,
-    atmosphere_factory,
+from ..contexts import (
+    CKDSpectralContext,
+    KernelDictContext,
+    MonoSpectralContext,
+    SpectralContext,
 )
+from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ..scenes.biosphere import Canopy, biosphere_factory
-from ..scenes.bsdfs import BSDF, LambertianBSDF, bsdf_factory
+from ..scenes.bsdfs import LambertianBSDF
+from ..scenes.core import Scene
+from ..scenes.geometry import (
+    PlaneParallelGeometry,
+    SceneGeometry,
+)
 from ..scenes.integrators import (
     Integrator,
     PathIntegrator,
     VolPathIntegrator,
     integrator_factory,
 )
-from ..scenes.measure import Measure, TargetPoint, TargetRectangle
-from ..scenes.measure._distant import DistantMeasure
+from ..scenes.measure import DistantMeasure, Measure
 from ..scenes.shapes import RectangleShape
-from ..scenes.surface import BasicSurface, CentralPatchSurface, surface_factory
+from ..scenes.surface import BasicSurface, CentralPatchSurface
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-from ..util.deprecation import substitute
-
-
-def _surface_converter(value):
-    if isinstance(value, dict):
-        try:
-            # First, attempt conversion to BSDF
-            value = bsdf_factory.convert(value)
-        except TypeError:
-            # If this doesn't work, attempt conversion to Surface
-            return surface_factory.convert(value)
-
-    # If we make it to this point, it means that dict conversion has been
-    # performed with success
-    if isinstance(value, BSDF):
-        return BasicSurface(
-            shape=RectangleShape(),
-            bsdf=value,
-        )
-
-    return value
+from ..util.misc import deduplicate_sorted
 
 
 @parse_docs
@@ -85,18 +67,17 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
       during initialisation.
     """
 
-    geometry: t.Union[PlaneParallelGeometry, SphericalShellGeometry] = documented(
+    # Currently, only the plane parallel geometry is supported
+    geometry: PlaneParallelGeometry = documented(
         attrs.field(
             default="plane_parallel",
-            converter=AtmosphereGeometry.convert,
-            validator=attrs.validators.instance_of(
-                (PlaneParallelGeometry, SphericalShellGeometry)
-            ),
+            converter=SceneGeometry.convert,
+            validator=attrs.validators.instance_of(PlaneParallelGeometry),
         ),
-        doc="Atmosphere geometry.",
-        type=".PlaneParallelGeometry or .SphericalShellGeometry",
-        init_type="str or dict or .AtmosphereGeometry",
-        default="plane_parallel",
+        doc="Problem geometry.",
+        type=".PlaneParallelGeometry",
+        init_type="str or dict or .PlaneParallelGeometry",
+        default='"plane_parallel"',
     )
 
     atmosphere: t.Optional[Atmosphere] = documented(
@@ -147,7 +128,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     surface: t.Union[BasicSurface, CentralPatchSurface, None] = documented(
         attrs.field(
             factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
-            converter=attrs.converters.optional(_surface_converter),
+            converter=attrs.converters.optional(surface_converter),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of((BasicSurface, CentralPatchSurface))
             ),
@@ -195,16 +176,102 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         return self._integrator
 
     def __attrs_post_init__(self):
+        self._normalize_atmosphere()
         self._normalize_measures()
+
+    def _normalize_atmosphere(self) -> None:
+        """
+        Ensure consistency between the atmosphere and experiment geometries.
+        """
+        if self.atmosphere is not None:
+            self.atmosphere.geometry = self.geometry
+
+    def _normalize_measures(self) -> None:
+        """
+        Ensure that distant measure targets are set to appropriate values.
+        Processed measures will have its ray target and origin parameters
+        overridden if relevant.
+        """
+        for measure in self.measures:
+            # Override ray target location if relevant
+            if isinstance(measure, DistantMeasure):
+                if measure.target is None:
+                    if self.canopy is None:  # No canopy: target origin point
+                        measure.target = {"type": "point", "xyz": [0, 0, 0]}
+
+                    else:  # Canopy: target top of canopy
+                        measure.target = {
+                            "type": "rectangle",
+                            "xmin": -0.5 * self.canopy.size[0],
+                            "xmax": 0.5 * self.canopy.size[0],
+                            "ymin": -0.5 * self.canopy.size[1],
+                            "ymax": 0.5 * self.canopy.size[1],
+                            "z": self.canopy.size[2],
+                        }
+
+    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
+        result = super()._dataset_metadata(measure)
+
+        if measure.is_distant():
+            result["title"] = "Top-of-atmosphere simulation results"
+
+        return result
+
+    @property
+    def _context_kwargs(self) -> t.Dict[str, t.Any]:
+        kwargs = {}
+
+        for measure in self.measures:
+            if measure_inside_atmosphere(self.atmosphere, measure):
+                kwargs[
+                    f"{measure.sensor_id}.atmosphere_medium_id"
+                ] = self.atmosphere.medium_id
+
+        return kwargs
+
+    @property
+    def contexts(self) -> t.List[KernelDictContext]:
+        # Inherit docstring
+
+        # Collect contexts from all measures
+        sctxs = []
+
+        for measure in self.measures:
+            sctxs.extend(measure.spectral_cfg.spectral_ctxs())
+
+        # Sort and remove duplicates
+        key = {
+            MonoSpectralContext: lambda sctx: sctx.wavelength.m,
+            CKDSpectralContext: lambda sctx: (
+                sctx.bindex.bin.wcenter.m,
+                sctx.bindex.index,
+            ),
+        }[type(sctxs[0])]
+
+        sctxs = deduplicate_sorted(
+            sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
+        )
+        kwargs = self._context_kwargs
+
+        return [KernelDictContext(spectral_ctx=sctx, kwargs=kwargs) for sctx in sctxs]
+
+    @property
+    def context_init(self) -> KernelDictContext:
+        # Inherit docstring
+
+        return KernelDictContext(
+            spectral_ctx=SpectralContext.new(), kwargs=self._context_kwargs
+        )
 
     @property
     def _default_surface_width(self):
         return 10.0 * ucc.get("length")
 
-    def kernel_dict(self, ctx: KernelDictContext):
+    @property
+    def scene(self) -> Scene:
         # Inherit docstring
 
-        result = KernelDict()
+        objects = {}
 
         # Note: Object size computation logic
         # - The atmosphere, if set, must be the largest object in the
@@ -221,7 +288,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         # Pre-process atmosphere
         if self.atmosphere is not None:
             atmosphere = attrs.evolve(self.atmosphere, geometry=self.geometry)
-            atmosphere_width = atmosphere.kernel_width_plane_parallel(ctx)
+            atmosphere_width = self.geometry.width
         else:
             atmosphere = None
             atmosphere_width = 0.0 * ureg.m
@@ -258,72 +325,21 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         else:
             surface = None
 
-        # Add all configured elements
+        # Add all configured elements to the scene
         if atmosphere is not None:
-            result.add(atmosphere, ctx=ctx)
+            objects["atmosphere"] = atmosphere
 
         if canopy is not None:
-            result.add(canopy, ctx=ctx)
+            objects["canopy"] = canopy
 
         if surface is not None:
-            result.add(surface, ctx=ctx)
+            objects["surface"] = surface
 
-        # Process measures
-        for measure in self.measures:
-            if measure_inside_atmosphere(atmosphere, measure, ctx):
-                result.add(
-                    measure,
-                    ctx=ctx.evolve(atmosphere_medium_id=self.atmosphere.id_medium),
-                )
-            else:
-                result.add(measure, ctx=ctx)
-
-        # Process illumination
-        result.add(self.illumination, ctx=ctx)
-
-        # Process integrator
-        result.add(self.integrator, ctx=ctx)
-
-        return result
-
-    def _normalize_measures(self) -> None:
-        """
-        Ensure that distant measure targets are set to appropriate values.
-        Processed measures will have its ray target and origin parameters
-        overridden if relevant.
-        """
-        for measure in self.measures:
-            if isinstance(measure, DistantMeasure):
-                if measure.target is None:
-                    if (
-                        self.canopy is None
-                    ):  # No canopy: target single point at ground level
-                        measure.target = TargetPoint(
-                            [0.0, 0.0, 0.0] * ucc.get("length")
-                        )
-                    else:  # Canopy: target top of canopy
-                        measure.target = TargetRectangle(
-                            xmin=-0.5 * self.canopy.size[0],
-                            xmax=0.5 * self.canopy.size[0],
-                            ymin=-0.5 * self.canopy.size[1],
-                            ymax=0.5 * self.canopy.size[1],
-                            z=self.canopy.size[2],
-                        )
-
-    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
-        result = super(CanopyAtmosphereExperiment, self)._dataset_metadata(measure)
-
-        if measure.is_distant():
-            result["title"] = "Top-of-atmosphere simulation results"
-
-        return result
-
-
-__getattr__ = substitute(
-    {
-        "Rami4ATMExperiment": (
-            CanopyAtmosphereExperiment,
-            {"deprecated_in": "0.22.5", "removed_in": "0.23.2"},
+        return Scene(
+            objects={
+                **objects,
+                "illumination": self.illumination,
+                **{measure.id: measure for measure in self.measures},
+                "integrator": self.integrator,
+            }
         )
-    }
-)

@@ -66,8 +66,7 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
                     "top_units": "meter",
                     "distribution": {"type": "uniform"},
                     "tau_ref": 0.2,
-                    "n_layers": 16,
-                    "dataset": "spectra/particles/govaerts_2021-desert.nc",
+                    "dataset": "govaerts_2021-desert",
                 }
             ],
             "type": "heterogeneous",
