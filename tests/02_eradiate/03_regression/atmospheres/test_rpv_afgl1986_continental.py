@@ -61,7 +61,6 @@ def test_rpv_afgl1986_continental_brfpp(
         },
         atmosphere={
             "type": "heterogeneous",
-            "zgrid": np.linspace(0, 120, 12001) * ureg.km,
             "molecular_atmosphere": {"type": "molecular", "construct": "afgl_1986"},
             "particle_layers": {
                 "type": "particle_layer",
@@ -72,7 +71,6 @@ def test_rpv_afgl1986_continental_brfpp(
             },
         },
     )
-
     result = eradiate.run(exp, spp=10000)
 
     test = Chi2Test(

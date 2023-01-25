@@ -61,7 +61,6 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
                 "type": "molecular",
                 "construct": "afgl_1986",
             },
-            "zgrid": np.linspace(0, 120, 12001) * ureg.km,
         },
     )
     result = eradiate.run(exp, spp=10000)
