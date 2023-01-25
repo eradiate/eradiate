@@ -33,6 +33,7 @@ from ..scenes.measure import (
     HemisphericalDistantMeasure,
     Measure,
     MultiDistantMeasure,
+    MultiDistantMeasureGonio,
     measure_factory,
 )
 from ..scenes.measure._distant import DistantMeasure
@@ -662,7 +663,7 @@ class EarthObservationExperiment(Experiment, ABC):
             )
 
             # Compute
-            if isinstance(measure, (MultiDistantMeasure, HemisphericalDistantMeasure)):
+            if isinstance(measure, (MultiDistantMeasure, HemisphericalDistantMeasure, MultiDistantMeasureGonio)):
                 pipeline.add(
                     "compute_reflectance",
                     pipelines.ComputeReflectance(

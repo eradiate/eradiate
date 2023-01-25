@@ -1,21 +1,19 @@
 from __future__ import annotations
 
 import typing as t
-from abc import ABC, abstractmethod
 
 import attrs
 import numpy as np
 import pint
 import pinttr
 
-from ._distant import DistantMeasure
+from ._distant import DistantMeasure, Target, TargetPoint, TargetDisk
 from ._helpers import AngleLayout, AzimuthRingLayout, DirectionLayout, GridLayout, HemispherePlaneLayout, Layout
 from ...attrs import documented, parse_docs
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...util.deprecation import deprecated
-
 
 # ------------------------------------------------------------------------------
 #                       MultiDistantMeasure implementation
@@ -31,10 +29,10 @@ def _extract_kwargs(kwargs: dict, keys: t.List[str]) -> dict:
 
 @parse_docs
 @attrs.define
-class MultiDistantMeasure(DistantMeasure):
+class MultiDistantMeasureGonio(DistantMeasure):
     """
-    Multi-distant radiance measure scene element [``distant``, ``mdistant``, \
-    ``multi_distant``].
+    Multi-distant radiance measure scene element, goniometer variant [``distant_gonio``, ``mdistant_gonio``, \
+    ``multi_distant_gonio``].
 
     This scene element creates a measure consisting of an array of
     radiancemeters positioned at an infinite distance from the scene. In
@@ -55,13 +53,51 @@ class MultiDistantMeasure(DistantMeasure):
 
     Notes
     -----
-    * Setting the ``target`` parameter is required to get meaningful results.
+    * Setting the ``target`` and ``target_radius`` parameters is required to get meaningful results.
       Experiment classes should take care of setting it appropriately.
+    * This measure defines its target by a point in space and a radius. Rays will be sampled to hit a disk perpendicular
+      to their direction at the target point and with target radius.
     """
 
     # --------------------------------------------------------------------------
     #                           Fields and properties
     # --------------------------------------------------------------------------
+
+    target: t.Optional[Target] = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(Target.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(
+                    (
+                        TargetPoint,
+                    )
+                )
+            ),
+            on_setattr=attrs.setters.pipe(
+                attrs.setters.convert, attrs.setters.validate
+            ),
+        ),
+        doc="Target specification. The target can be specified using an "
+            "array-like with 3 elements (which will be converted to a "
+            ":class:`.TargetPoint`) or a dictionary interpreted by "
+            ":meth:`Target.convert() <.Target.convert>`. If set to "
+            "``None`` (not recommended), the default target point selection "
+            "method is used: rays will not target a particular region of the "
+            "scene.",
+        type=":class:`.TargetPoint` or None",
+        init_type=":class:`.TargetPoint` or dict or array-like, optional",
+    )
+
+    target_radius: pint.Quantity = documented(
+        pinttr.field(
+            factory=lambda: 1.0 * ucc.get("length"), units=ucc.deferred("length")
+        ),
+        doc='Radius of the targeted region. Unit-enabled field (default: ``ucc["length"]``).',
+        type="quantity",
+        init_type="quantity or float, optional",
+        default="1.0",
+    )
 
     direction_layout: Layout = documented(
         attrs.field(
@@ -104,7 +140,7 @@ class MultiDistantMeasure(DistantMeasure):
         zeniths: np.typing.ArrayLike,
         azimuth: t.Union[float, pint.Quantity],
         **kwargs,
-    ) -> MultiDistantMeasure:
+    ) -> MultiDistantMeasureGonio:
         """
         Construct using a hemisphere plane cut viewing direction layout.
 
@@ -144,7 +180,7 @@ class MultiDistantMeasure(DistantMeasure):
         zenith: t.Union[float, pint.Quantity],
         azimuths: np.typing.ArrayLike,
         **kwargs,
-    ) -> MultiDistantMeasure:
+    ) -> MultiDistantMeasureGonio:
         """
         Construct using an azimuth ring viewing direction layout.
 
@@ -177,10 +213,12 @@ class MultiDistantMeasure(DistantMeasure):
         )
         return cls(direction_layout=layout, **kwargs)
 
+    # TODO: MultiDistantGonio should accept only a point target and additionally have a field of view!!!
+
     @classmethod
     def grid(
         cls, zeniths: np.typing.ArrayLike, azimuths: np.typing.ArrayLike, **kwargs
-    ) -> MultiDistantMeasure:
+    ) -> MultiDistantMeasureGonio:
         """
         Construct using a gridded viewing direction layout, defined as the
         Cartesian product of zenith and azimuth arrays.
@@ -213,7 +251,7 @@ class MultiDistantMeasure(DistantMeasure):
         return cls(direction_layout=layout, **kwargs)
 
     @classmethod
-    def from_angles(cls, angles: np.typing.ArrayLike, **kwargs) -> MultiDistantMeasure:
+    def from_angles(cls, angles: np.typing.ArrayLike, **kwargs) -> MultiDistantMeasureGonio:
         """
         Construct using a direction layout defined by explicit (zenith, azimuth)
         pairs.
@@ -244,7 +282,7 @@ class MultiDistantMeasure(DistantMeasure):
     @classmethod
     def from_directions(
         cls, directions: np.typing.ArrayLike, **kwargs
-    ) -> MultiDistantMeasure:
+    ) -> MultiDistantMeasureGonio:
         """
         Construct using a direction layout defined by explicit direction
         vectors.
@@ -369,7 +407,7 @@ class MultiDistantMeasure(DistantMeasure):
 
     def _kernel_dict_impl(self, sensor_id, spp):
         result = {
-            "type": "mdistant",
+            "type": "mdistant_gonio",
             "id": sensor_id,
             "directions": ",".join(
                 map(str, -self.direction_layout.directions.ravel(order="C"))
@@ -389,7 +427,8 @@ class MultiDistantMeasure(DistantMeasure):
         }
 
         if self.target is not None:
-            result["target"] = self.target.kernel_item()
+            target = TargetDisk(center=self.target.xyz, radius=self.target_radius)
+            result["target"] = target.kernel_item()
 
         if self.ray_offset is not None:
             result["ray_offset"] = self.ray_offset.m_as(uck.get("length"))

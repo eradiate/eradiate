@@ -26,7 +26,7 @@ from ..scenes.integrators import (
 )
 from ..scenes.measure import Measure, TargetPoint, TargetRectangle
 from ..scenes.measure._distant import DistantMeasure
-from ..scenes.shapes import RectangleShape
+from ..scenes.shapes import RectangleShape, Shape
 from ..scenes.surface import BasicSurface, CentralPatchSurface, surface_factory
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -115,6 +115,19 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         type=".Atmosphere or None",
         init_type=".Atmosphere or dict or None, optional",
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
+    )
+
+    reference_shape: t.Optional[Shape] = documented(
+        attrs.field(
+            default=None,
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of((Shape))
+            ),
+        ),
+        doc="Reference shape specification.",
+        type=".Shape or None",
+        init_type=".Shape or None, optional",
+        default="None",
     )
 
     canopy: t.Optional[Canopy] = documented(
@@ -268,6 +281,9 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
 
         if surface is not None:
             result.add(surface, ctx=ctx)
+
+        if self.reference_shape is not None:
+            result.add(self.reference_shape, ctx=ctx)
 
         # Process measures
         for measure in self.measures:

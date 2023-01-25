@@ -123,6 +123,46 @@ class TargetPoint(Target):
 
 @parse_docs
 @attrs.define
+class TargetDisk(Target):
+    """
+    Disk target origin specification.
+
+    This class defines a circular zone where ray targets will
+    be sampled or ray origins will be projected.
+    """
+
+    # Target point in config units
+    center: pint.Quantity = documented(
+        pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
+        doc="Location of the centre of the disk. Unit-enabled field "
+        '(default: ``ucc["length"]``).',
+        type="quantity",
+        init_type="quantity or array-like, optional",
+        default="[0, 0, 0]",
+    )
+
+    radius: pint.Quantity = documented(
+        pinttr.field(
+            factory=lambda: 1.0 * ucc.get("length"), units=ucc.deferred("length")
+        ),
+        doc='Disk radius. Unit-enabled field (default: ``ucc["length"]``).',
+        type="quantity",
+        init_type="quantity or float, optional",
+        default="1.0",
+    )
+
+    def kernel_item(self) -> t.Dict:
+        """Return kernel item."""
+
+        to_world = mi.ScalarTransform4f.translate(
+            self.center.m_as(uck.get("length"))
+        ) @ mi.ScalarTransform4f.scale(self.radius.m_as(uck.get("length")))
+
+        return {"type": "disk", "to_world": to_world}
+
+
+@parse_docs
+@attrs.define
 class TargetRectangle(Target):
     """
     Rectangle target origin specification.
@@ -261,6 +301,7 @@ class DistantMeasure(Measure):
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(
                     (
+                        TargetDisk,
                         TargetPoint,
                         TargetRectangle,
                     )
