@@ -3,11 +3,13 @@ import pint
 import pytest
 
 from eradiate import unit_registry as ureg
+from eradiate._factory import Factory
 from eradiate.scenes.core import (
     BoundingBox,
     Param,
     ParameterMap,
     ParamFlags,
+    get_factory,
     render_params,
 )
 
@@ -110,3 +112,22 @@ def test_bbox_contains():
 
     # Works with multiple points
     assert np.all(bbox.contains([[0.5, 0.5, 0.5], [0.5, -0.5, 0.5]]) == [True, False])
+
+
+def test_get_factory():
+    """
+    Check that all declared factories can be retrieved.
+    """
+    for element_type in [
+        "atmosphere",
+        "biosphere",
+        "bsdf",
+        "illumination",
+        "integrator",
+        "measure",
+        "phase",
+        "shape",
+        "spectrum",
+        "surface",
+    ]:
+        assert isinstance(get_factory(element_type), Factory)
