@@ -17,7 +17,7 @@ from ..attrs import documented
 from ..contexts import KernelDictContext
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
-from ..scenes.core import ParameterMap, Scene, SceneElement, traverse
+from ..scenes.core import ParameterMap, Scene, SceneElement, get_factory, traverse
 from ..scenes.illumination import (
     ConstantIllumination,
     DirectionalIllumination,
@@ -297,11 +297,28 @@ class Experiment(ABC):
         pass
 
 
+def _extra_objects_converter(value):
+    result = {}
+
+    for key, element_spec in value.items():
+        if isinstance(element_spec, dict):
+            element_spec = element_spec.copy()
+            element_type = element_spec.pop("factory")
+            factory = get_factory(element_type)
+            result[key] = factory.convert(element_spec)
+
+        else:
+            result[key] = element_spec
+
+    return result
+
+
 @attrs.define
 class EarthObservationExperiment(Experiment, ABC):
     extra_objects: t.Dict[str, SceneElement] = documented(
         attrs.field(
             factory=dict,
+            converter=_extra_objects_converter,
             validator=attrs.validators.deep_mapping(
                 key_validator=attrs.validators.instance_of(str),
                 value_validator=attrs.validators.instance_of(SceneElement),
