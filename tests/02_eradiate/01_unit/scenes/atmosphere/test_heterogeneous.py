@@ -153,7 +153,6 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         ("component_3", component_3),
         ("mixed", mixed),
     ]:
-        print(f"Processing component '{component}'...")
         radprofiles[component] = atmosphere.eval_radprops(
             ctx.spectral_ctx, zgrid, optional_fields=True
         )
@@ -185,7 +184,9 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         total = collision_coefficient[z]["mixed"]
         expected = sum(collision_coefficient[z][component] for component in components)
         np.testing.assert_allclose(
-            total, expected, err_msg=f"Failed for altitude {z = }"
+            total.m_as(ureg.m**-1),
+            expected.m_as(ureg.m**-1),
+            err_msg=f"Failed for altitude {z = }",
         )
 
 
