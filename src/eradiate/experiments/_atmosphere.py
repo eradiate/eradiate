@@ -113,7 +113,15 @@ class AtmosphereExperiment(EarthObservationExperiment):
     )
 
     def __attrs_post_init__(self):
+        self._normalize_atmosphere()
         self._normalize_measures()
+
+    def _normalize_atmosphere(self) -> None:
+        """
+        Ensure consistency between the atmosphere and experiment geometries.
+        """
+        if self.atmosphere is not None:
+            self.atmosphere.geometry = self.geometry
 
     def _normalize_measures(self) -> None:
         """
