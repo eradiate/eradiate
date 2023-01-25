@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import importlib
 import typing as t
 from abc import ABC, abstractmethod
 from collections import UserDict
@@ -12,6 +13,7 @@ import pint
 import pinttr
 from pinttr.util import ensure_units
 
+from .._factory import Factory
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..exceptions import TraversalError
@@ -687,3 +689,84 @@ class BoundingBox:
         )
 
         return np.all(cmp, axis=1)
+
+
+# ------------------------------------------------------------------------------
+#                               Factory accessor
+# ------------------------------------------------------------------------------
+
+_FACTORIES = {
+    "atmosphere": "atmosphere.atmosphere_factory",
+    "biosphere": "biosphere.biosphere_factory",
+    "bsdf": "bsdfs.bsdf_factory",
+    "illumination": "illumination.illumination_factory",
+    "integrator": "integrators.integrator_factory",
+    "measure": "measure.measure_factory",
+    "phase": "phase.phase_function_factory",
+    "shape": "shapes.shape_factory",
+    "spectrum": "spectra.spectrum_factory",
+    "surface": "surface.surface_factory",
+}
+
+
+def get_factory(element_type: str) -> Factory:
+    """
+    Return the factory corresponding to a scene element type.
+
+    Parameters
+    ----------
+    element_type : str
+        String identity of the scene element type associated to the requested
+        factory.
+
+    Returns
+    -------
+    factory : Factory
+        Factory corresponding to the requested scene element type.
+
+    Raises
+    ------
+    ValueError
+        If the requested scene element type is unknown.
+
+    Notes
+    -----
+    The ``element_type`` argument value maps to factories as follows:
+
+    .. list-table::
+       :widths: 1 1
+       :header-rows: 1
+
+       * - Element type ID
+         - Factory
+       * ``"atmosphere"``
+         - :attr:`atmosphere_factory`
+       * ``"biosphere"``
+         - :attr:`biosphere_factory`
+       * ``"bsdf"``
+         - :attr:`bsdf_factory`
+       * ``"illumination"``
+         - :attr:`illumination_factory`
+       * ``"integrator"``
+         - :attr:`integrator_factory`
+       * ``"measure"``
+         - :attr:`measure_factory`
+       * ``"phase"``
+         - :attr:`phase_function_factory`
+       * ``"shape"``
+         - :attr:`shape_factory`
+       * ``"spectrum"``
+         - :attr:`spectrum_factory`
+       * ``"surface"``
+         - :attr:`surface_factory`
+    """
+    try:
+        path = f"eradiate.scenes.{_FACTORIES[element_type]}"
+    except KeyError:
+        raise ValueError(
+            f"unknown scene element type '{element_type}' "
+            f"(should be one of {set(_FACTORIES.keys())})"
+        )
+
+    mod_path, attr = path.rsplit(".", 1)
+    return getattr(importlib.import_module(mod_path), attr)
