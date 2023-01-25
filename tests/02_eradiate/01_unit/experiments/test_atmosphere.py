@@ -16,7 +16,10 @@ def test_atmosphere_experiment_construct_default(modes_all_double):
     AtmosphereExperiment initialises successfully with default parameters in
     all modes.
     """
-    assert AtmosphereExperiment()
+    exp = AtmosphereExperiment()
+
+    # Check that the atmosphere's geometry is overridden by the experiment's
+    assert exp.atmosphere.geometry is exp.geometry
 
 
 def test_atmosphere_experiment_construct_measures(modes_all_double):
