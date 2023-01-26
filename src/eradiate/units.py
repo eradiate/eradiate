@@ -49,6 +49,7 @@ class PhysicalQuantity(enum.Enum):
     ANGLE = "angle"
     COLLISION_COEFFICIENT = "collision_coefficient"
     DIMENSIONLESS = "dimensionless"
+    INTENSITY = "intensity"
     IRRADIANCE = "irradiance"
     LENGTH = "length"
     MASS = "mass"
@@ -71,6 +72,7 @@ class PhysicalQuantity(enum.Enum):
             cls.ALBEDO,
             cls.COLLISION_COEFFICIENT,
             cls.DIMENSIONLESS,
+            cls.INTENSITY,
             cls.IRRADIANCE,
             cls.RADIANCE,
             cls.REFLECTANCE,
@@ -106,6 +108,14 @@ def _make_unit_context():
     uctx.register(
         PhysicalQuantity.COLLISION_COEFFICIENT,
         pinttr.UnitGenerator(lambda: uctx.get(PhysicalQuantity.LENGTH) ** -1),
+    )
+    uctx.register(
+        PhysicalQuantity.INTENSITY,
+        pinttr.UnitGenerator(
+            lambda: unit_registry.watt
+            / unit_registry.steradian
+            / uctx.get(PhysicalQuantity.WAVELENGTH)
+        ),
     )
     uctx.register(
         PhysicalQuantity.IRRADIANCE,
