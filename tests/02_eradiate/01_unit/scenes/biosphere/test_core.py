@@ -4,8 +4,8 @@ import tempfile
 import numpy as np
 import pytest
 
-from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere import AbstractTree, InstancedCanopyElement, LeafCloud
+from eradiate.scenes.core import traverse
 from eradiate.test_tools.types import check_scene_element
 
 # ------------------------------------------------------------------------------
@@ -46,8 +46,6 @@ def test_instanced_canopy_element_create(mode_mono):
 
 def test_instanced_canopy_element_kernel_dict(mode_mono):
     """Unit testing for :meth:`InstancedLeafCloud.kernel_dict`."""
-    ctx = KernelDictContext()
-
     cloud = LeafCloud(
         leaf_positions=[[0, 0, 0]],
         leaf_orientations=[[0, 0, 1]],
@@ -68,6 +66,12 @@ def test_instanced_canopy_element_kernel_dict(mode_mono):
 
     # The generated kernel dictionary can be instantiated
     check_scene_element(instances)
+    template, params = traverse(instances)
+    assert set(params.keys()) == {
+        "bsdf_leaf_cloud.reflectance.value",
+        "bsdf_leaf_cloud.transmittance.value",
+        "bsdf_tree.reflectance.value",
+    }
 
 
 def test_instanced_leaf_cloud_from_file(mode_mono, tempfile_spheres):

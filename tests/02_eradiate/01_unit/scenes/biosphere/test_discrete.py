@@ -5,7 +5,6 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere import (
     AbstractTree,
     InstancedCanopyElement,
@@ -13,6 +12,7 @@ from eradiate.scenes.biosphere import (
     MeshTreeElement,
 )
 from eradiate.scenes.biosphere._discrete import DiscreteCanopy, LeafCloud
+from eradiate.scenes.core import traverse
 from eradiate.test_tools.types import check_scene_element
 
 # ------------------------------------------------------------------------------
@@ -115,6 +115,9 @@ def test_discrete_canopy_homogeneous(mode_mono):
     )
     check_scene_element(canopy)
 
+    # Check template and parameter map contents
+    template, params = traverse(canopy)
+
 
 def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves):
     # The from_files() constructor returns a valid canopy object
@@ -146,12 +149,8 @@ def test_discrete_canopy_advanced(
     - A series of instanced leaf clouds from files
     - An abstract tree with a leaf cloud
     - A mesh based canopy element
-
     """
 
-    ctx = KernelDictContext()
-
-    # First use the regular Python API
     canopy = DiscreteCanopy(
         size=[1.0, 1.0, 1.0] * ureg.m,
         instanced_canopy_elements=[
@@ -168,7 +167,8 @@ def test_discrete_canopy_advanced(
             InstancedCanopyElement.from_file(
                 filename=tempfile_spheres,
                 canopy_element=LeafCloud.from_file(
-                    filename=tempfile_leaves, id="leaf_cloud_precomputed"
+                    filename=tempfile_leaves,
+                    id="leaf_cloud_precomputed",
                 ),
             ),
             InstancedCanopyElement(
@@ -208,7 +208,6 @@ def test_discrete_canopy_advanced(
 
 def test_discrete_canopy_padded(mode_mono, tempfile_leaves, tempfile_spheres):
     """Unit tests for :meth:`.DiscreteCanopy.padded`"""
-    ctx = KernelDictContext()
 
     canopy = DiscreteCanopy.leaf_cloud_from_files(
         id="canopy",

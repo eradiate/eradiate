@@ -28,7 +28,7 @@ def _instanced_canopy_elements_converter(value):
 
 
 @parse_docs
-@attrs.define
+@attrs.define(eq=False, slots=False)
 class DiscreteCanopy(Canopy):
     """
     Discrete canopy scene element [``discrete_canopy``].
@@ -130,6 +130,28 @@ class DiscreteCanopy(Canopy):
                     **element._template_bsdfs,
                     **element._template_shapes,
                     **element._template_instances,
+                }
+            )
+
+        return flatten(result)
+
+    @property
+    def _params_instances(self) -> dict:
+        result = {}
+        for element in self.instanced_canopy_elements:
+            result.update(element._params_instances)
+        return result
+
+    @property
+    def params(self) -> dict:
+        result = {}
+
+        for element in self.instanced_canopy_elements:
+            result.update(
+                {
+                    **element._params_bsdfs,
+                    **element._params_shapes,
+                    **element._params_instances,
                 }
             )
 
