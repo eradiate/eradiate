@@ -50,7 +50,6 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * {class}`.RadProfile`: The {class}`.ArrayRadProfile` class is retired
   ({ghpr}`296`).
 
-
 ### Improvements and fixes
 
 * Added support for loading spectral response function data sets from custom
@@ -96,6 +95,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   iterative loop-based implementation ({ghpr}`296`).
 * {class}`.RadProfile` evaluation on arbitrary altitude grids is now permitted
   ({ghpr}`296`).
+* Introduced the {class}`.SpotIllumination`, which points a beam of light of fixed angular width. ({ghpr}`302`)
 
 ### Documentation
 
