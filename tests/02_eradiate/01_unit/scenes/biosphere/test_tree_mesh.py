@@ -7,7 +7,7 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.scenes.biosphere import MeshTree, MeshTreeElement
-from eradiate.scenes.core import KernelDictTemplate
+from eradiate.scenes.core import KernelDictTemplate, traverse
 from eradiate.test_tools.types import check_scene_element
 from eradiate.util.misc import flatten
 
@@ -178,7 +178,10 @@ def test_mesh_tree_element_load(mode_mono, tmp_file, request):
             }
         )
     )
-    assert isinstance(mi.load_dict(template.render(KernelDictContext())), mi.Scene)
+
+    # Check that the template successfully expands to a valid Mitsuba scene
+    mi_scene = mi.load_dict(template.render(KernelDictContext()))
+    assert isinstance(mi_scene, mi.Scene)
 
 
 def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
@@ -191,18 +194,18 @@ def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
     assert MeshTree(
         mesh_tree_elements=[
             MeshTreeElement(
-                id="mesh_tree_obj",
+                id="foliage",
                 mesh_filename=tmpfile_obj,
                 mesh_units=ureg.m,
                 reflectance=0.5,
                 transmittance=0.5,
             ),
             MeshTreeElement(
-                id="mesh_tree_obj_2",
+                id="trunk",
                 mesh_filename=tmpfile_obj,
                 mesh_units=ureg.m,
-                reflectance=0.1,
-                transmittance=0.9,
+                reflectance=0.9,
+                transmittance=0.1,
             ),
         ]
     )
@@ -210,42 +213,58 @@ def test_mesh_tree_instantiate(mode_mono, tmpfile_obj):
     tree = MeshTree(
         mesh_tree_elements=[
             MeshTreeElement(
-                id="mesh_tree_obj",
+                id="foliage",
                 mesh_filename=tmpfile_obj,
                 mesh_units=ureg.m,
                 reflectance=0.5,
                 transmittance=0.5,
             ),
             MeshTreeElement(
-                id="mesh_tree_obj_2",
+                id="trunk",
                 mesh_filename=tmpfile_obj,
                 mesh_units=ureg.m,
-                reflectance=0.1,
-                transmittance=0.9,
+                reflectance=0.9,
+                transmittance=0.1,
             ),
         ]
     )
 
     check_scene_element(tree)
+    _, params = traverse(tree)
+    assert set(params.keys()) == {
+        "bsdf_foliage.reflectance.value",
+        "bsdf_foliage.transmittance.value",
+        "bsdf_trunk.reflectance.value",
+        "bsdf_trunk.transmittance.value",
+    }
 
     # check that special converter for the mesh_tree_elements field works as
     # expected
-    assert MeshTree(
+    tree = MeshTree(
         id="mesh_tree",
         mesh_tree_elements=[
             {
-                "id": "mesh_tree_obj",
+                "id": "tree_foliage",
                 "mesh_filename": tmpfile_obj,
                 "mesh_units": "m",
                 "reflectance": 0.5,
                 "transmittance": 0.5,
             },
             {
-                "id": "mesh_tree_obj_2",
+                "id": "tree_trunk",
                 "mesh_filename": tmpfile_obj,
                 "mesh_units": "m",
-                "reflectance": 0.1,
-                "transmittance": 0.9,
+                "reflectance": 0.9,
+                "transmittance": 0.1,
             },
         ],
     )
+
+    check_scene_element(tree)
+    _, params = traverse(tree)
+    assert set(params.keys()) == {
+        "bsdf_tree_foliage.reflectance.value",
+        "bsdf_tree_foliage.transmittance.value",
+        "bsdf_tree_trunk.reflectance.value",
+        "bsdf_tree_trunk.transmittance.value",
+    }

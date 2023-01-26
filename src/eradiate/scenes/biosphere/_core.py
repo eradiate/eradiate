@@ -300,3 +300,32 @@ class InstancedCanopyElement(CompositeSceneElement):
                 **self._template_instances,
             }
         )
+
+    @property
+    def _params_bsdfs(self) -> dict:
+        # Produces the part of the parameter map describing the BSDFs of the
+        # encapsulated canopy element
+        return self.canopy_element._params_bsdfs
+
+    @property
+    def _params_shapes(self) -> dict:
+        # Produces the part of the parameter map describing the shape group of
+        # the encapsulated canopy element
+        return self.canopy_element._params_shapes
+
+    @property
+    def _params_instances(self) -> dict:
+        # Produces the part of the parameter map describing instances of the
+        # encapsulated canopy element
+        return {}
+
+    @property
+    def params(self) -> dict:
+        # Inherit docstring
+        return flatten(
+            {
+                **self._params_bsdfs,
+                **self._params_shapes,
+                **self._params_instances,
+            }
+        )

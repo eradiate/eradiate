@@ -119,19 +119,42 @@ def test_leaf_cloud_radii():
     assert np.allclose(radii, 10.0 * ureg.cm)
 
 
-# -- LeafCloud tests -----------------------------------------------------------
+# ------------------------------------------------------------------------------
+#                                 LeafCloud tests
+# ------------------------------------------------------------------------------
 
 
 def test_leaf_cloud_instantiate(mode_mono):
     """Unit tests for :class:`LeafCloud`'s default constructor."""
 
     # Empty constructor does not raise
-    assert LeafCloud()
+    cloud = LeafCloud()
+    check_scene_element(cloud)
 
-    # Now with more sensible values
-    assert LeafCloud(
-        leaf_positions=[[0, 0, 0]], leaf_orientations=[[0, 0, 1]], leaf_radii=[0.1]
+    # Now with more sensible values, also check template and parameter map
+    cloud = LeafCloud(
+        id="cloud",
+        leaf_positions=[[0, 0, 0]],
+        leaf_orientations=[[0, 0, 1]],
+        leaf_radii=[0.1],
     )
+    check_scene_element(cloud)
+    template, params = traverse(cloud)
+    assert set(template.keys()) == {
+        "bsdf_cloud.type",
+        "bsdf_cloud.reflectance.type",
+        "bsdf_cloud.reflectance.value",
+        "bsdf_cloud.transmittance.type",
+        "bsdf_cloud.transmittance.value",
+        "cloud_leaf_0.type",
+        "cloud_leaf_0.bsdf.type",
+        "cloud_leaf_0.bsdf.id",
+        "cloud_leaf_0.to_world",
+    }
+    assert set(params.keys()) == {
+        "bsdf_cloud.reflectance.value",
+        "bsdf_cloud.transmittance.value",
+    }
 
     # Incorrect dimensionality raises
     with pytest.raises(ValueError):
@@ -164,15 +187,15 @@ def test_leaf_cloud_translated(mode_mono, leaf_positions, xyz, expected_leaf_pos
     leaf_orientations = [[0, 0, 1]] * (leaf_positions_size // 3)
     leaf_radii = [0.1] * (leaf_positions_size // 3)
 
-    leaf_cloud = LeafCloud(
+    cloud = LeafCloud(
         leaf_positions=leaf_positions,
         leaf_orientations=leaf_orientations,
         leaf_radii=leaf_radii,
     )
 
     # Translated object is a copy
-    translated_leaf_cloud = leaf_cloud.translated(xyz * ureg.m)
-    assert translated_leaf_cloud is not leaf_cloud
+    translated_leaf_cloud = cloud.translated(xyz * ureg.m)
+    assert translated_leaf_cloud is not cloud
 
     # Translated object has offset leaf positions
     assert np.allclose(
@@ -182,7 +205,7 @@ def test_leaf_cloud_translated(mode_mono, leaf_positions, xyz, expected_leaf_pos
 
     # Shapes do not match: translated() raises
     with pytest.raises(ValueError):
-        leaf_cloud.translated([[1, 0, 0]] * 2 * ureg.m)
+        cloud.translated([[1, 0, 0]] * 2 * ureg.m)
 
 
 @pytest.mark.slow
@@ -197,7 +220,7 @@ def test_leaf_cloud_generate(mode_mono):
         l_horizontal=30.0 * ureg.m,
         l_vertical=3.0 * ureg.m,
     )
-    assert cloud
+    check_scene_element(cloud)
     assert cloud.n_leaves() == 1000
     # Cloud covers the expected extent
     assert np.allclose(
@@ -214,7 +237,7 @@ def test_leaf_cloud_generate(mode_mono):
         l_horizontal=10.0 * ureg.m,
         l_vertical=3.0 * ureg.m,
     )
-    assert cloud
+    check_scene_element(cloud)
     assert cloud.n_leaves() == 4244
     assert np.allclose(
         np.min(cloud.leaf_positions, axis=0).m_as("m"), [-5, -5, 0], atol=0.05
@@ -231,7 +254,7 @@ def test_leaf_cloud_generate(mode_mono):
         hdo=10 * ureg.cm,
         hvr=0.05,
     )
-    assert cloud
+    check_scene_element(cloud)
     assert cloud.n_leaves() == 6366
     assert np.allclose(
         np.min(cloud.leaf_positions, axis=0).m_as("m"), [-5, -5, 0], atol=0.05
@@ -248,7 +271,7 @@ def test_leaf_cloud_generate(mode_mono):
         l_vertical=3.0 * ureg.m,
         avoid_overlap=True,
     )
-    assert cloud
+    check_scene_element(cloud)
     assert cloud.n_leaves() == 1000
     assert np.allclose(
         np.min(cloud.leaf_positions.m_as("m"), axis=0), [-15, -15, 0], atol=0.05
