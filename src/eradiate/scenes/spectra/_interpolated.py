@@ -9,7 +9,7 @@ import pinttr
 import xarray as xr
 
 from ._core import SpectrumNode
-from ..core import Param, ParamFlags
+from ..core import Parameter, ParamFlags
 from ... import converters, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -257,7 +257,7 @@ class InterpolatedSpectrum(SpectrumNode):
     def template(self) -> dict:
         return {
             "type": "uniform",
-            "value": Param(
+            "value": Parameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
                 ),
@@ -268,7 +268,7 @@ class InterpolatedSpectrum(SpectrumNode):
     @property
     def params(self) -> dict:
         return {
-            "value": Param(
+            "value": Parameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
                 ),

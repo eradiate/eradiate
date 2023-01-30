@@ -5,7 +5,7 @@ import pint
 import pinttr
 
 from ._core import Atmosphere
-from ..core import Param, ParamFlags, traverse
+from ..core import Parameter, ParamFlags, traverse
 from ..phase import PhaseFunctionNode, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, SpectrumNode, spectrum_factory
 from ...attrs import documented, parse_docs
@@ -217,13 +217,13 @@ class HomogeneousAtmosphere(Atmosphere):
     def _template_medium(self) -> dict:
         return {
             "type": "homogeneous",
-            "sigma_t": Param(
+            "sigma_t": Parameter(
                 lambda ctx: self.eval_sigma_t(ctx.spectral_ctx).m_as(
                     uck.get("collision_coefficient")
                 ),
                 ParamFlags.INIT,
             ),
-            "albedo": Param(
+            "albedo": Parameter(
                 lambda ctx: self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo")),
                 ParamFlags.INIT,
             ),
@@ -232,23 +232,23 @@ class HomogeneousAtmosphere(Atmosphere):
         }
 
     @property
-    def _params_medium(self) -> t.Dict[str, Param]:
+    def _params_medium(self) -> t.Dict[str, Parameter]:
         return {
             # Note: "value" appears twice because the mi.Spectrum is
             # encapsulated in a mi.ConstVolume
-            "sigma_t.value.value": Param(
+            "sigma_t.value.value": Parameter(
                 lambda ctx: self.eval_sigma_t(ctx.spectral_ctx).m_as(
                     uck.get("collision_coefficient")
                 ),
                 ParamFlags.SPECTRAL,
             ),
-            "albedo.value.value": Param(
+            "albedo.value.value": Parameter(
                 lambda ctx: self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo")),
                 ParamFlags.SPECTRAL,
             ),
         }
 
     @property
-    def _params_phase(self) -> t.Dict[str, Param]:
+    def _params_phase(self) -> t.Dict[str, Parameter]:
         _, params = traverse(self.phase)
         return params.data

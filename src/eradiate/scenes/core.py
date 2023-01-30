@@ -8,6 +8,7 @@ from collections import UserDict
 from typing import Mapping, Sequence
 
 import attrs
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -66,33 +67,60 @@ class _Unused:
         return 0
 
 
+@parse_docs
 @attrs.define
-class Param:
+class Parameter:
     """
-    A kernel scene parameter generator.
+    This class declares an Eradiate parameter. It holds a evaluation protocol
+    for a Mitsuba scene parameter and exposes an interface to generate update
+    values during the execution of a parametric loop.
     """
 
     #: Sentinel value indicated that a parameter is not used
     UNUSED: t.ClassVar = _Unused()
 
-    #: An attached callable which evaluates the parameter.
-    _callable: t.Callable = attrs.field(repr=False)
+    evaluator: t.Callable = documented(
+        attrs.field(repr=False),
+        doc="A callable that returns the value of the parameter for a given "
+        "context, with signature ``f(ctx: KernelDictContext) -> Any``.",
+        type="callable",
+    )
 
-    #: Flags specifying parameter attributes. By default, the declared parameter
-    #: will pass all filters.
-    flags: ParamFlags = attrs.field(default=ParamFlags.ALL)
+    flags: ParamFlags = documented(
+        attrs.field(default=ParamFlags.ALL),
+        doc="Flags specifying parameter attributes. By default, the declared "
+        "parameter will pass all filters.",
+        type=".ParaFlags",
+        default=".ParamFlags.ALL",
+    )
+
+    lookup_id: t.Optional[t.Callable[[mi.Object, str], t.Optional[str]]] = documented(
+        attrs.field(default=None),
+        doc="A callable that searches a Mitsuba scene tree node for a desired "
+        "parameter ID.",
+        type="callable or None",
+        init_type="callable, optional",
+        default="None",
+    )
+
+    parameter_id: t.Optional[str] = documented(
+        attrs.field(default=None),
+        doc="The full ID of the Mitsuba scene parameter to update.",
+        type="str or None",
+        init_type="str, optional",
+    )
 
     def __call__(self, ctx: KernelDictContext) -> t.Any:
-        return self._callable(ctx)
+        return self.evaluator(ctx)
 
 
 @attrs.define(slots=False)
-class ParameterMap(UserDict):
+class ParameterMap(UserDict, ABC):
     """
     A dict-like structure mapping parameter paths to methods generating them.
     """
 
-    data: dict[str, Param] = attrs.field(factory=dict)
+    data: dict[str, Parameter] = attrs.field(factory=dict)
 
     def remove(self, keys: t.Union[str, t.List[str]]) -> None:
         """
@@ -141,6 +169,7 @@ class ParameterMap(UserDict):
         result = {k: self.data[k] for k in keys}
         self.data = result
 
+    @abstractmethod
     def render(
         self,
         ctx: KernelDictContext,
@@ -174,14 +203,7 @@ class ParameterMap(UserDict):
             If ``drop`` is ``False`` and the rendered parameter map contains an
             unused parameter.
         """
-        result = self.data.copy()
-        unused = render_params(result, ctx=ctx, flags=flags, drop=drop)
-
-        # Check for leftover empty values
-        if not drop and unused:
-            raise ValueError(f"Unevaluated parameters: {unused}")
-
-        return result
+        pass
 
 
 @attrs.define
@@ -232,58 +254,111 @@ class KernelDictTemplate(ParameterMap):
         -------
         dict
         """
-        result = super().render(ctx=ctx, flags=flags, drop=drop)
+        result = self.data.copy()
+        unused = render_parameters(result, ctx=ctx, flags=flags, drop=drop)
+
+        # Check for leftover empty values
+        if not drop and unused:
+            raise ValueError(f"Unevaluated parameters: {unused}")
+
         return nest(result, sep=".") if nested else result
 
 
-def render_params(
-    d: t.MutableMapping,
+@attrs.define
+class UpdateMapTemplate(ParameterMap):
+    def render(
+        self,
+        ctx: KernelDictContext,
+        flags: ParamFlags = ParamFlags.ALL,
+        drop: bool = False,
+    ) -> dict:
+        """
+        Evaluate the parameter map for a set of arguments.
+
+        Parameters
+        ----------
+        ctx : :class:`.KernelDictContext`
+            A kernel dictionary context.
+
+        flags : :class:`.ParamFlags`
+            Parameter flags. Only parameters with at least one of the specified
+            will pass the filter.
+
+        drop : bool
+            If ``True``, drop unused parameters. Parameters may be unused either
+            because they were filtered out by the flags or because context
+            information implied it.
+
+        Returns
+        -------
+        dict
+
+        Raises
+        ------
+        ValueError
+            If ``drop`` is ``False`` and the rendered parameter map contains an
+            unused parameter.
+        """
+        result, unused = render_parameters(self, ctx=ctx, flags=flags, drop=drop)
+
+        # Check for leftover empty values
+        if not drop and unused:
+            raise ValueError(f"Unevaluated parameters: {unused}")
+
+        return result
+
+
+def render_parameters(
+    pmap: t.Mapping,
     ctx: KernelDictContext,
     flags: ParamFlags = ParamFlags.ALL,
     drop: bool = False,
-) -> list:
+) -> t.Tuple[dict, list]:
     """
     Render parameters in a template dictionary.
 
     Parameters
     ----------
-    d : dict-like
+    pmap : mapping
         A dict-like containing parameters to render. *In-place* modification
         will be performed.
 
-    ctx : :class:`.KernelDictContext`
+    ctx : .KernelDictContext
         A kernel dictionary context.
 
-    flags : :class:`.ParamFlags`
+    flags : .ParamFlags
         Parameter flags. Only parameters with at least one of the specified
-        will pass the filter.
+        flags will pass the filter.
 
     drop : bool
         If ``True``, drop unused parameters.
 
     Returns
     -------
-    list
+    result : dict
+        A dictionary in which parameters are evaluated.
+
+    unused : list
         A list of unused parameters. A parameter may be unused because it was
         filtered out by flags or because context information implied it.
     """
     unused = []
+    result = {}
 
-    for k, v in d.items():
-        if isinstance(v, Param):
+    for k in list(pmap.keys()):
+        v = pmap[k]
+
+        if isinstance(v, Parameter):
+            key = k if v.parameter_id is None else v.parameter_id
+
             if v.flags & flags:
-                d[k] = v(ctx)
+                result[key] = v(ctx)
             else:
-                d[k] = Param.UNUSED
-
-            if d[k] is Param.UNUSED:
                 unused.append(k)
+                if not drop:
+                    result[key] = Parameter.UNUSED
 
-    if drop:
-        for k in unused:
-            del d[k]
-
-    return unused
+    return result, unused
 
 
 # ------------------------------------------------------------------------------
@@ -312,7 +387,7 @@ class SceneElement(ABC):
         self.update()
 
     @property
-    def params(self) -> t.Optional[t.Dict[str, Param]]:
+    def params(self) -> t.Optional[t.Dict[str, Parameter]]:
         """
         Map of updatable parameters associated with this scene element.
         """
@@ -558,7 +633,7 @@ def traverse(node: NodeSceneElement) -> t.Tuple[KernelDictTemplate, ParameterMap
     node.traverse(cb)
 
     # Use collected data to generate the kernel dictionary
-    return KernelDictTemplate(cb.template), ParameterMap(cb.params)
+    return KernelDictTemplate(cb.template), UpdateMapTemplate(cb.params)
 
 
 # -- Misc (to be moved elsewhere) ----------------------------------------------

@@ -3,7 +3,7 @@ import typing as t
 import attrs
 
 from ._core import PhaseFunctionNode
-from ..core import Param, ParamFlags
+from ..core import Parameter, ParamFlags
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
@@ -43,16 +43,16 @@ class HenyeyGreensteinPhaseFunction(PhaseFunctionNode):
     def template(self) -> dict:
         return {
             "type": "hg",
-            "g": Param(
+            "g": Parameter(
                 lambda ctx: float(self.g.eval(ctx.spectral_ctx)),
                 ParamFlags.INIT,
             ),
         }
 
     @property
-    def params(self) -> t.Dict[str, Param]:
+    def params(self) -> t.Dict[str, Parameter]:
         return {
-            "g": Param(
+            "g": Parameter(
                 lambda ctx: float(self.g.eval(ctx.spectral_ctx)),
                 ParamFlags.SPECTRAL,
             )

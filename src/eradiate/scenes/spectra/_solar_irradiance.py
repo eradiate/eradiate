@@ -10,7 +10,7 @@ import pint
 import xarray as xr
 
 from ._core import SpectrumNode
-from ..core import Param, ParamFlags
+from ..core import Parameter, ParamFlags
 from ... import converters, data, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -240,7 +240,7 @@ class SolarIrradianceSpectrum(SpectrumNode):
     def template(self) -> dict:
         return {
             "type": "uniform",
-            "value": Param(
+            "value": Parameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
                 ),
@@ -251,7 +251,7 @@ class SolarIrradianceSpectrum(SpectrumNode):
     @property
     def params(self) -> dict:
         return {
-            "value": Param(
+            "value": Parameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
                 ),
