@@ -9,7 +9,13 @@ import numpy as np
 import pint
 import xarray as xr
 
-from ..core import CompositeSceneElement, Param, ParamFlags, SceneElement, traverse
+from ..core import (
+    CompositeSceneElement,
+    Parameter,
+    ParamFlags,
+    SceneElement,
+    traverse,
+)
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ..shapes import CuboidShape, SphereShape
 from ..._factory import Factory
@@ -228,19 +234,19 @@ class Atmosphere(CompositeSceneElement, ABC):
         return result
 
     @property
-    def _params_phase(self) -> t.Dict[str, Param]:
+    def _params_phase(self) -> t.Dict[str, Parameter]:
         return {}
 
     @property
-    def _params_medium(self) -> t.Dict[str, Param]:
+    def _params_medium(self) -> t.Dict[str, Parameter]:
         return {}
 
     @property
-    def _params_shape(self) -> t.Dict[str, Param]:
+    def _params_shape(self) -> t.Dict[str, Parameter]:
         return {}
 
     @property
-    def params(self) -> t.Dict[str, Param]:
+    def params(self) -> t.Dict[str, Parameter]:
         # Inherit docstring
         return flatten(
             {
@@ -517,7 +523,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             volumes = {
                 "albedo": {
                     "type": "gridvolume",
-                    "grid": Param(
+                    "grid": Parameter(
                         lambda ctx: mi.VolumeGrid(
                             np.reshape(
                                 self.eval_albedo(ctx.spectral_ctx).m_as(
@@ -532,7 +538,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 },
                 "sigma_t": {
                     "type": "gridvolume",
-                    "grid": Param(
+                    "grid": Parameter(
                         lambda ctx: mi.VolumeGrid(
                             np.reshape(
                                 self.eval_sigma_t(ctx.spectral_ctx).m_as(
@@ -557,7 +563,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     "type": "sphericalcoordsvolume",
                     "volume": {
                         "type": "gridvolume",
-                        "grid": Param(
+                        "grid": Parameter(
                             lambda ctx: mi.VolumeGrid(
                                 np.reshape(
                                     self.eval_albedo(ctx.spectral_ctx).m_as(
@@ -576,7 +582,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     "type": "sphericalcoordsvolume",
                     "volume": {
                         "type": "gridvolume",
-                        "grid": Param(
+                        "grid": Parameter(
                             lambda ctx: mi.VolumeGrid(
                                 np.reshape(
                                     self.eval_sigma_t(ctx.spectral_ctx).m_as(
@@ -612,17 +618,17 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         return result
 
     @property
-    def _params_medium(self) -> t.Dict[str, Param]:
+    def _params_medium(self) -> t.Dict[str, Parameter]:
         if isinstance(self.geometry, PlaneParallelGeometry):
             return {
-                "albedo.data": Param(
+                "albedo.data": Parameter(
                     lambda ctx: np.reshape(
                         self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
                     ParamFlags.SPECTRAL,
                 ),
-                "sigma_t.data": Param(
+                "sigma_t.data": Parameter(
                     lambda ctx: np.reshape(
                         self.eval_sigma_t(ctx.spectral_ctx).m_as(
                             uck.get("collision_coefficient")
@@ -635,14 +641,14 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         elif isinstance(self.geometry, SphericalShellGeometry):
             return {
-                "albedo.volume.data": Param(
+                "albedo.volume.data": Parameter(
                     lambda ctx: np.reshape(
                         self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
                         (1, 1, -1, 1),
                     ).astype(np.float32),
                     ParamFlags.SPECTRAL,
                 ),
-                "sigma_t.volume.data": Param(
+                "sigma_t.volume.data": Parameter(
                     lambda ctx: np.reshape(
                         self.eval_sigma_t(ctx.spectral_ctx).m_as(
                             uck.get("collision_coefficient")

@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 
 from ._core import BSDFNode
-from ..core import Param, ParamFlags
+from ..core import Parameter, ParamFlags
 from ... import converters
 from ...attrs import documented, parse_docs
 from ...units import to_quantity
@@ -118,5 +118,5 @@ class MQDiffuseBSDF(BSDFNode):
     def template(self) -> dict:
         return {
             "type": "mqdiffuse",
-            "grid": Param(lambda ctx: self._eval_grid_impl(ctx), ParamFlags.INIT),
+            "grid": Parameter(lambda ctx: self._eval_grid_impl(ctx), ParamFlags.INIT),
         }

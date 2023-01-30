@@ -7,7 +7,7 @@ import mitsuba as mi
 import numpy as np
 
 from ._core import PhaseFunctionNode, phase_function_factory
-from ..core import BoundingBox, Param, ParamFlags, traverse
+from ..core import BoundingBox, Parameter, ParamFlags, traverse
 from ...attrs import documented
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel.transform import map_unit_cube
@@ -234,7 +234,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
                     ).astype(np.float32)
                 )
 
-            result[f"{prefix}weight.grid"] = Param(
+            result[f"{prefix}weight.grid"] = Parameter(
                 eval_conditional_weights, ParamFlags.INIT
             )
 
@@ -248,7 +248,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
         return result
 
     @property
-    def params(self) -> t.Dict[str, Param]:
+    def params(self) -> t.Dict[str, Parameter]:
         result = {}
 
         for i in range(len(self.components) - 1):
@@ -272,7 +272,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
                 ).astype(np.float32)
 
             # Assign conditional weight to second component
-            result[f"{prefix}weight.data"] = Param(
+            result[f"{prefix}weight.data"] = Parameter(
                 eval_conditional_weights, ParamFlags.SPECTRAL
             )
 

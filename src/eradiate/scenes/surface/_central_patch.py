@@ -11,7 +11,7 @@ import eradiate
 
 from ._core import SurfaceComposite
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
-from ..core import NodeSceneElement, Param, Ref, SceneTraversal, traverse
+from ..core import NodeSceneElement, Parameter, Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
@@ -195,7 +195,7 @@ class CentralPatchSurface(SurfaceComposite):
         return result
 
     @property
-    def params(self) -> t.Dict[str, Param]:
+    def params(self) -> t.Dict[str, Parameter]:
         result = {}
 
         for bsdf, prefix in [(self.bsdf, "bsdf_0"), (self.patch_bsdf, "bsdf_1")]:

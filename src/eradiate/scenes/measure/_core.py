@@ -14,7 +14,7 @@ import xarray as xr
 
 import eradiate
 
-from ..core import NodeSceneElement, Param, ParamFlags
+from ..core import NodeSceneElement, Parameter, ParamFlags
 from ..spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum, spectrum_factory
 from ... import ckd, converters, validators
 from ..._factory import Factory
@@ -643,16 +643,16 @@ class Measure:
             "film.rfilter.type": "box",
             "sampler.type": self.sampler,
             "sampler.sample_count": self.spp,
-            "medium.type": Param(
+            "medium.type": Parameter(
                 lambda ctx: "ref"
                 if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
-                else Param.UNUSED,
+                else Parameter.UNUSED,
                 flags=ParamFlags.INIT,
             ),
-            "medium.id": Param(
+            "medium.id": Parameter(
                 lambda ctx: ctx.kwargs[f"{self.sensor_id}.atmosphere_medium_id"]
                 if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
-                else Param.UNUSED,
+                else Parameter.UNUSED,
                 flags=ParamFlags.INIT,
             ),
         }

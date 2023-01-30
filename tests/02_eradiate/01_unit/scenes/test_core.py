@@ -6,58 +6,78 @@ from eradiate import unit_registry as ureg
 from eradiate._factory import Factory
 from eradiate.scenes.core import (
     BoundingBox,
-    Param,
-    ParameterMap,
+    KernelDictTemplate,
+    Parameter,
     ParamFlags,
+    UpdateMapTemplate,
     get_factory,
-    render_params,
+    render_parameters,
 )
 
 
-def test_render_params():
-    param_map = {
+def test_render_parameters():
+    pmap = {
         "foo": 0,
-        "bar": Param(lambda ctx: ctx, ParamFlags.GEOMETRIC),
-        "baz": Param(lambda ctx: ctx, ParamFlags.SPECTRAL),
+        "bar": Parameter(lambda ctx: ctx, ParamFlags.GEOMETRIC),
+        "baz": Parameter(lambda ctx: ctx, ParamFlags.SPECTRAL),
     }
 
     # If no flags are passed, all params are rendered
-    d = param_map.copy()
-    unused = render_params(d, ctx=1, flags=ParamFlags.ALL)
+    result, unused = render_parameters(pmap, ctx=1, flags=ParamFlags.ALL)
     assert not unused
-    assert d["bar"] == 1 and d["baz"] == 1
+    assert result["bar"] == 1 and result["baz"] == 1
 
     # If a flag is passed, only the corresponding params are rendered
-    d = param_map.copy()
-    unused = render_params(d, ctx=1, flags=ParamFlags.SPECTRAL)
+    result, unused = render_parameters(pmap, ctx=1, flags=ParamFlags.SPECTRAL)
     assert unused == ["bar"]
-    assert d["baz"] == 1
-    assert "bar" in d
+    assert result["baz"] == 1
+    assert "bar" in result
 
     # If drop is set to True, unused parameters are dropped
-    d = param_map.copy()
-    unused = render_params(d, ctx=1, flags=ParamFlags.SPECTRAL, drop=True)
+    result, unused = render_parameters(
+        pmap, ctx=1, flags=ParamFlags.SPECTRAL, drop=True
+    )
     assert unused == ["bar"]
-    assert d["baz"] == 1
-    assert "bar" not in d
+    assert result["baz"] == 1
+    assert "bar" not in result
 
 
-def test_parameter_map():
-    parameter_map = ParameterMap(
+def test_kernel_dict_template():
+    template = KernelDictTemplate(
         {
             "foo": 0,
             "foo.bar": 1,
-            "bar": Param(lambda ctx: ctx, ParamFlags.GEOMETRIC),
-            "baz": Param(lambda ctx: ctx, ParamFlags.SPECTRAL),
+            "bar": Parameter(lambda ctx: ctx, ParamFlags.GEOMETRIC),
+            "baz": Parameter(lambda ctx: ctx, ParamFlags.SPECTRAL),
         }
     )
 
     # We can remove or keep selected parameters
-    pmap = parameter_map.copy()
+    pmap = template.copy()
     pmap.remove(r"foo.*")
     assert pmap.keys() == {"bar", "baz"}
 
-    pmap = parameter_map.copy()
+    pmap = template.copy()
+    pmap.keep(r"foo.*")
+    assert pmap.keys() == {"foo", "foo.bar"}
+
+
+def test_update_map_template():
+    template = UpdateMapTemplate(
+        {
+            "foo": 0,
+            "foo.bar": 1,
+            "bar": Parameter(lambda ctx: ctx, ParamFlags.GEOMETRIC),
+            "baz": Parameter(lambda ctx: ctx, ParamFlags.SPECTRAL),
+        }
+    )
+
+    # We can remove or keep selected parameters
+    pmap = template.copy()
+    pmap.remove(r"foo.*")
+    assert pmap.keys() == {"bar", "baz"}
+
+    pmap = template.copy()
     pmap.keep(r"foo.*")
     assert pmap.keys() == {"foo", "foo.bar"}
 

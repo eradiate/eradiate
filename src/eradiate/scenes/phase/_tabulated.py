@@ -8,7 +8,7 @@ import xarray as xr
 import eradiate
 
 from ._core import PhaseFunctionNode
-from ..core import Param, ParamFlags
+from ..core import Parameter, ParamFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import SpectralContext
@@ -168,7 +168,7 @@ class TabulatedPhaseFunction(PhaseFunctionNode):
     def template(self):
         result = {
             "type": "tabphase" if not self._is_irregular else "tabphase_irregular",
-            "values": Param(
+            "values": Parameter(
                 lambda ctx: ",".join(
                     map(str, self.eval(spectral_ctx=ctx.spectral_ctx))
                 ),
@@ -177,7 +177,7 @@ class TabulatedPhaseFunction(PhaseFunctionNode):
         }
 
         if self._is_irregular:
-            result["nodes"] = Param(
+            result["nodes"] = Parameter(
                 lambda ctx: ",".join(map(str, self.data.mu.values)),
                 ParamFlags.INIT,
             )
@@ -185,9 +185,9 @@ class TabulatedPhaseFunction(PhaseFunctionNode):
         return result
 
     @property
-    def params(self) -> t.Dict[str, Param]:
+    def params(self) -> t.Dict[str, Parameter]:
         return {
-            "values": Param(
+            "values": Parameter(
                 lambda ctx: self.eval(spectral_ctx=ctx.spectral_ctx),
                 ParamFlags.SPECTRAL,
             )

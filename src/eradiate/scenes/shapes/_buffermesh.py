@@ -9,7 +9,7 @@ import pint
 import pinttr
 
 from ._core import ShapeInstance
-from ..core import Param, traverse
+from ..core import Parameter, traverse
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
@@ -87,7 +87,7 @@ class BufferMeshShape(ShapeInstance):
         return mesh
 
     @property
-    def params(self) -> t.Optional[t.Dict[str, Param]]:
+    def params(self) -> t.Optional[t.Dict[str, Parameter]]:
         if self.bsdf is None:
             return None
 

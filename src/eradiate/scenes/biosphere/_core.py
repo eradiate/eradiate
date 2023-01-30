@@ -10,7 +10,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ..core import CompositeSceneElement, Param
+from ..core import CompositeSceneElement, Parameter
 from ... import validators
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
@@ -123,7 +123,7 @@ class CanopyElement(CompositeSceneElement, ABC):
         pass
 
     @property
-    def params(self) -> t.Dict[str, Param]:
+    def params(self) -> t.Dict[str, Parameter]:
         return flatten({**self._params_bsdfs, **self._params_shapes})
 
 
