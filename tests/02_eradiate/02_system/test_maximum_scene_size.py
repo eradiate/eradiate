@@ -4,7 +4,7 @@ import numpy as np
 import eradiate
 from eradiate.contexts import KernelDictContext
 from eradiate.experiments import mi_render
-from eradiate.scenes.core import ParameterMap
+from eradiate.kernel._kernel_dict import ParameterMap
 
 
 def test_maximum_scene_size(modes_all_mono, json_metadata):

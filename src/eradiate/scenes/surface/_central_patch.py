@@ -11,10 +11,11 @@ import eradiate
 
 from ._core import SurfaceComposite
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
-from ..core import NodeSceneElement, Parameter, Ref, SceneTraversal, traverse
+from ..core import NodeSceneElement, Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
+from ...kernel._kernel_dict import Parameter
 from ...units import unit_context_config as ucc
 
 

@@ -11,8 +11,6 @@ import xarray as xr
 
 from ..core import (
     CompositeSceneElement,
-    Parameter,
-    ParamFlags,
     SceneElement,
     traverse,
 )
@@ -21,6 +19,7 @@ from ..shapes import CuboidShape, SphereShape
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
+from ...kernel._kernel_dict import Parameter, ParamFlags
 from ...kernel.transform import map_unit_cube
 from ...radprops import ZGrid
 from ...units import symbol

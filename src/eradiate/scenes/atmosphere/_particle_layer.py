@@ -15,13 +15,14 @@ import eradiate
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
-from ..core import Parameter, traverse
+from ..core import traverse
 from ..phase import TabulatedPhaseFunction
 from ... import converters, data
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
+from ...kernel._kernel_dict import Parameter
 from ...radprops import ZGrid
 from ...units import to_quantity
 from ...units import unit_context_config as ucc

@@ -3,10 +3,10 @@ import typing as t
 import attrs
 
 from ._core import PhaseFunctionNode
-from ..core import Parameter, ParamFlags
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
+from ...kernel._kernel_dict import Parameter, ParamFlags
 
 
 @parse_docs

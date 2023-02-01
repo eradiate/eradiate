@@ -13,6 +13,7 @@ from eradiate.util.misc import (
     fullname,
     is_vector3,
     natsorted,
+    nest,
 )
 
 

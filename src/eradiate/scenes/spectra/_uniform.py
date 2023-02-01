@@ -8,9 +8,9 @@ import pint
 import pinttr
 
 from ._core import SpectrumNode
-from ..core import Parameter, ParamFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
+from ...kernel._kernel_dict import Parameter, ParamFlags
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 

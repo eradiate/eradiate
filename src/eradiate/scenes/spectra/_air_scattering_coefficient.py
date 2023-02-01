@@ -7,9 +7,9 @@ import numpy as np
 import pint
 
 from ._core import SpectrumNode
-from ..core import Parameter, ParamFlags
 from ...attrs import parse_docs
 from ...ckd import Bindex
+from ...kernel._kernel_dict import Parameter, ParamFlags
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity
 from ...units import unit_context_config as ucc

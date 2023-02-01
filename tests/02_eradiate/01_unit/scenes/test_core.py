@@ -6,80 +6,8 @@ from eradiate import unit_registry as ureg
 from eradiate._factory import Factory
 from eradiate.scenes.core import (
     BoundingBox,
-    KernelDictTemplate,
-    Parameter,
-    ParamFlags,
-    UpdateMapTemplate,
     get_factory,
-    render_parameters,
 )
-
-
-def test_render_parameters():
-    pmap = {
-        "foo": 0,
-        "bar": Parameter(lambda ctx: ctx, ParamFlags.GEOMETRIC),
-        "baz": Parameter(lambda ctx: ctx, ParamFlags.SPECTRAL),
-    }
-
-    # If no flags are passed, all params are rendered
-    result, unused = render_parameters(pmap, ctx=1, flags=ParamFlags.ALL)
-    assert not unused
-    assert result["bar"] == 1 and result["baz"] == 1
-
-    # If a flag is passed, only the corresponding params are rendered
-    result, unused = render_parameters(pmap, ctx=1, flags=ParamFlags.SPECTRAL)
-    assert unused == ["bar"]
-    assert result["baz"] == 1
-    assert "bar" in result
-
-    # If drop is set to True, unused parameters are dropped
-    result, unused = render_parameters(
-        pmap, ctx=1, flags=ParamFlags.SPECTRAL, drop=True
-    )
-    assert unused == ["bar"]
-    assert result["baz"] == 1
-    assert "bar" not in result
-
-
-def test_kernel_dict_template():
-    template = KernelDictTemplate(
-        {
-            "foo": 0,
-            "foo.bar": 1,
-            "bar": Parameter(lambda ctx: ctx, ParamFlags.GEOMETRIC),
-            "baz": Parameter(lambda ctx: ctx, ParamFlags.SPECTRAL),
-        }
-    )
-
-    # We can remove or keep selected parameters
-    pmap = template.copy()
-    pmap.remove(r"foo.*")
-    assert pmap.keys() == {"bar", "baz"}
-
-    pmap = template.copy()
-    pmap.keep(r"foo.*")
-    assert pmap.keys() == {"foo", "foo.bar"}
-
-
-def test_update_map_template():
-    template = UpdateMapTemplate(
-        {
-            "foo": 0,
-            "foo.bar": 1,
-            "bar": Parameter(lambda ctx: ctx, ParamFlags.GEOMETRIC),
-            "baz": Parameter(lambda ctx: ctx, ParamFlags.SPECTRAL),
-        }
-    )
-
-    # We can remove or keep selected parameters
-    pmap = template.copy()
-    pmap.remove(r"foo.*")
-    assert pmap.keys() == {"bar", "baz"}
-
-    pmap = template.copy()
-    pmap.keep(r"foo.*")
-    assert pmap.keys() == {"foo", "foo.bar"}
 
 
 def test_bbox():

@@ -7,9 +7,10 @@ import mitsuba as mi
 import numpy as np
 
 from ._core import PhaseFunctionNode, phase_function_factory
-from ..core import BoundingBox, Parameter, ParamFlags, traverse
+from ..core import BoundingBox, traverse
 from ...attrs import documented
 from ...contexts import KernelDictContext, SpectralContext
+from ...kernel._kernel_dict import Parameter, ParamFlags
 from ...kernel.transform import map_unit_cube
 from ...units import unit_context_kernel as uck
 

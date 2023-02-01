@@ -10,8 +10,9 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
 from eradiate.experiments import mi_render
+from eradiate.kernel._kernel_dict import ParameterMap
 from eradiate.scenes.bsdfs import LambertianBSDF
-from eradiate.scenes.core import ParameterMap, Scene
+from eradiate.scenes.core import Scene
 from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination
 from eradiate.scenes.integrators import PathIntegrator
 from eradiate.scenes.measure import MultiDistantMeasure

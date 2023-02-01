@@ -5,11 +5,12 @@ import pint
 import pinttr
 
 from ._core import Atmosphere
-from ..core import Parameter, ParamFlags, traverse
+from ..core import traverse
 from ..phase import PhaseFunctionNode, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, SpectrumNode, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
+from ...kernel._kernel_dict import Parameter, ParamFlags
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
