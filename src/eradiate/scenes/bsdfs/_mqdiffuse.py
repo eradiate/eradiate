@@ -4,9 +4,9 @@ import numpy as np
 import xarray as xr
 
 from ._core import BSDFNode
-from ..core import Parameter, ParamFlags
 from ... import converters
 from ...attrs import documented, parse_docs
+from ...kernel._kernel_dict import Parameter, ParamFlags
 from ...units import to_quantity
 from ...units import unit_registry as ureg
 

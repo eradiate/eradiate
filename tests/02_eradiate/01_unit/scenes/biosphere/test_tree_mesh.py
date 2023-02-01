@@ -6,8 +6,9 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
+from eradiate.kernel._kernel_dict import KernelDictTemplate
 from eradiate.scenes.biosphere import MeshTree, MeshTreeElement
-from eradiate.scenes.core import KernelDictTemplate, traverse
+from eradiate.scenes.core import traverse
 from eradiate.test_tools.types import check_scene_element
 from eradiate.util.misc import flatten
 

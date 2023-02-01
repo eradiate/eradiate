@@ -8,11 +8,11 @@ import xarray as xr
 import eradiate
 
 from ._core import PhaseFunctionNode
-from ..core import Parameter, ParamFlags
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import SpectralContext
 from ...exceptions import UnsupportedModeError
+from ...kernel._kernel_dict import Parameter, ParamFlags
 from ...units import unit_registry as ureg
 
 

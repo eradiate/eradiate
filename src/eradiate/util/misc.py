@@ -283,7 +283,7 @@ def nest(d: t.Mapping, sep: str = ".") -> dict:
 
     See Also
     --------
-    :func:`.flatten_nested`, :func:`.set_nested`
+    :func:`.flatten`, :func:`.set_nested`
     """
     result = {}
 

@@ -15,9 +15,10 @@ from .. import pipelines
 from .._config import ProgressLevel, config
 from ..attrs import documented
 from ..contexts import KernelDictContext
+from ..kernel._kernel_dict import ParameterMap
 from ..pipelines import Pipeline
 from ..rng import SeedState, root_seed_state
-from ..scenes.core import ParameterMap, Scene, SceneElement, get_factory, traverse
+from ..scenes.core import Scene, SceneElement, get_factory, traverse
 from ..scenes.illumination import (
     ConstantIllumination,
     DirectionalIllumination,

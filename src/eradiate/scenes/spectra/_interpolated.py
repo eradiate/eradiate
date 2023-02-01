@@ -9,10 +9,10 @@ import pinttr
 import xarray as xr
 
 from ._core import SpectrumNode
-from ..core import Parameter, ParamFlags
 from ... import converters, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
+from ...kernel._kernel_dict import Parameter, ParamFlags
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
