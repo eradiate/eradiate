@@ -105,7 +105,7 @@ def check_w_range(ds: xr.Dataset, w: pint.Quantity) -> None:
     w_ds = to_quantity(ds.w)
     wmin = w_ds.min()
     wmax = w_ds.max()
-    if w < wmin or w > wmax:
+    if np.any((w < wmin) | (w > wmax)):
         msg = (
             f"Requested w coordinate ({w}) is outside the range of the "
             f"absorption data set ({wmin} to {wmax})."
