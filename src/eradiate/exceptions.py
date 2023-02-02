@@ -53,6 +53,33 @@ class DataError(Exception):
     pass
 
 
+class InterpolationError(Exception):
+    """Raised when encountering issues with interpolation."""
+
+    pass
+
+
+class MissingCoordinateError(InterpolationError):
+    """Raised when a coordinate is missing from a dataset that is being
+    interpolated."""
+
+    pass
+
+
+class ScalarCoordinateError(InterpolationError):
+    """Raised when a coordinate is scalar while interpolation is being
+    performed along that coordinate."""
+
+    pass
+
+
+class CoordinateRangeError(InterpolationError):
+    """Raised when a coordinate is outside the range of the dataset that is
+    being interpolated."""
+
+    pass
+
+
 # ------------------------------------------------------------------------------
 #                                   Warnings
 # ------------------------------------------------------------------------------
