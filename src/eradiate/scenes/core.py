@@ -15,10 +15,10 @@ from .._factory import Factory
 from ..attrs import documented, parse_docs
 from ..exceptions import TraversalError
 from ..kernel import (
+    InitParameter,
     KernelDictTemplate,
-    Parameter,
-    ParameterMap,
     UpdateMapTemplate,
+    UpdateParameter,
 )
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -49,7 +49,7 @@ class SceneElement(ABC):
         self.update()
 
     @property
-    def params(self) -> t.Optional[t.Dict[str, Parameter]]:
+    def params(self) -> t.Optional[t.Dict[str, UpdateParameter]]:
         """
         Map of updatable parameters associated with this scene element.
         """
@@ -273,7 +273,7 @@ class SceneTraversal:
         self.template[self.name] = obj
 
 
-def traverse(node: NodeSceneElement) -> t.Tuple[KernelDictTemplate, ParameterMap]:
+def traverse(node: NodeSceneElement) -> t.Tuple[KernelDictTemplate, UpdateMapTemplate]:
     """
     Traverse a scene element tree and collect kernel dictionary data.
 
@@ -284,10 +284,10 @@ def traverse(node: NodeSceneElement) -> t.Tuple[KernelDictTemplate, ParameterMap
 
     Returns
     -------
-    template : .KernelDictTemplate
+    kdict_template : .KernelDictTemplate
         Kernel dictionary template corresponding to the traversed scene element.
 
-    params : .ParameterMap
+    umap_template : .UpdateMapTemplate
         Kernel parameter table associated with the traversed scene element.
     """
     # Traverse scene element tree

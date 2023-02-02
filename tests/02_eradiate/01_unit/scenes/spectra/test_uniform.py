@@ -6,6 +6,7 @@ from pinttr.exceptions import UnitsError
 
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
+from eradiate.scenes.core import traverse
 from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
 from eradiate.test_tools.types import check_scene_element
 from eradiate.units import PhysicalQuantity
@@ -74,7 +75,7 @@ def test_uniform_construct(modes_all, tested, expected):
 
 def test_uniform_kernel_dict(mode_mono):
     # Instantiate from factory using dict
-    s = spectrum_factory.convert(
+    spectrum = spectrum_factory.convert(
         {
             "type": "uniform",
             "quantity": "radiance",
@@ -82,10 +83,11 @@ def test_uniform_kernel_dict(mode_mono):
             "value_units": "W/m^2/sr/nm",
         }
     )
+    print(traverse(spectrum))
 
     # Produced kernel dict is valid
     with uck.override({"radiance": "kW/m^2/sr/nm"}):
-        mi_obj, mi_params = check_scene_element(s, mi.Texture)
+        mi_obj, mi_params = check_scene_element(spectrum, mi.Texture)
 
     # Unit scaling is properly applied
     assert np.allclose(mi_params["value"], 1e-3)

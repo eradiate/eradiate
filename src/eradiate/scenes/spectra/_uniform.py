@@ -10,7 +10,7 @@ import pinttr
 from ._core import SpectrumNode
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
-from ...kernel._kernel_dict import Parameter, ParamFlags
+from ...kernel._kernel_dict import InitParameter, Parameter, ParamFlags, UpdateParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
@@ -67,18 +67,17 @@ class UniformSpectrum(SpectrumNode):
     def template(self) -> dict:
         return {
             "type": "uniform",
-            "value": Parameter(
+            "value": InitParameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
-                ),
-                ParamFlags.INIT,
+                )
             ),
         }
 
     @property
-    def params(self) -> t.Dict[str, Parameter]:
+    def params(self) -> t.Dict[str, UpdateParameter]:
         return {
-            "value": Parameter(
+            "value": UpdateParameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
                 ),
