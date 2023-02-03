@@ -13,6 +13,7 @@ from ._core import SpectrumNode
 from ... import converters, data, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
+from ...kernel import InitParameter, UpdateParameter
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -239,21 +240,20 @@ class SolarIrradianceSpectrum(SpectrumNode):
     def template(self) -> dict:
         return {
             "type": "uniform",
-            "value": Parameter(
+            "value": InitParameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
-                ),
-                ParamFlags.INIT,
+                )
             ),
         }
 
     @property
     def params(self) -> dict:
         return {
-            "value": Parameter(
+            "value": UpdateParameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get("irradiance"))
                 ),
-                ParamFlags.SPECTRAL,
+                UpdateParameter.Flags.SPECTRAL,
             )
         }

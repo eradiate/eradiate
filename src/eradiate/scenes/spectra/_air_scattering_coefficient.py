@@ -9,7 +9,7 @@ import pint
 from ._core import SpectrumNode
 from ...attrs import parse_docs
 from ...ckd import Bindex
-from ...kernel._kernel_dict import Parameter, ParamFlags
+from ...kernel import InitParameter, UpdateParameter
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity
 from ...units import unit_context_config as ucc
@@ -89,21 +89,20 @@ class AirScatteringCoefficientSpectrum(SpectrumNode):
     def template(self) -> dict:
         return {
             "type": "uniform",
-            "value": Parameter(
+            "value": InitParameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get("collision_coefficient")),
-                ),
-                ParamFlags.INIT,
+                )
             ),
         }
 
     @property
-    def params(self) -> t.Dict[str, Parameter]:
+    def params(self) -> t.Dict[str, UpdateParameter]:
         return {
-            "value": Parameter(
+            "value": UpdateParameter(
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get("collision_coefficient")),
                 ),
-                ParamFlags.SPECTRAL,
+                UpdateParameter.Flags.SPECTRAL,
             )
         }
