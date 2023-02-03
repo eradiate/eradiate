@@ -9,8 +9,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.experiments import mi_render
-from eradiate.kernel._kernel_dict import ParameterMap
+from eradiate.kernel import mi_render
 from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.core import Scene
 from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination

@@ -12,61 +12,18 @@ from collections import UserDict
 import attrs
 import mitsuba as mi
 
-from eradiate.attrs import documented, parse_docs
-from eradiate.contexts import KernelDictContext
-from eradiate.util.misc import nest
-
-
-class ParamFlags(enum.Flag):
-    """
-    Parameter flags.
-    """
-
-    NONE = 0
-    SPECTRAL = enum.auto()  #: Varies during the spectral loop
-    GEOMETRIC = enum.auto()  #: Triggers a scene rebuild
-    ALL = SPECTRAL | GEOMETRIC
-
-
-class _Unused:
-    """
-    Sentinel class to indicate when a parameter is unused, accessible as
-    :data:`.Param.UNUSED`.
-
-    Notes
-    -----
-    ``bool(_Unused)`` evaluates to ``False``.
-    """
-
-    _singleton = None
-
-    def __new__(cls):
-        if _Unused._singleton is None:
-            _Unused._singleton = super(_Unused, cls).__new__(cls)
-        return _Unused._singleton
-
-    def __repr__(self):
-        return "UNUSED"
-
-    def __bool__(self):
-        return False
-
-    def __len__(self):
-        return 0
+from ..attrs import documented, parse_docs
+from ..contexts import KernelDictContext
+from ..util.misc import nest
 
 
 @parse_docs
 @attrs.define
-class Parameter:
+class InitParameter:
     """
-    This class declares an Eradiate parameter. It holds an evaluation protocol
-    for a Mitsuba scene parameter and exposes an interface to generate update
-    values depending on context information.
-
-    Notes
-    -----
-    This class cannot be instantiated directly. Instead, its children
-    :class:`.InitParameter` and :class:`.UpdateParameter` should be used.
+    This class declares an Eradiate parameter in a Mitsuba scene dictionary. It
+    holds an evaluation protocol for this parameter depending on context
+    information.
     """
 
     evaluator: t.Callable = documented(
@@ -76,41 +33,41 @@ class Parameter:
         type="callable",
     )
 
-    def __attrs_pre_init__(self):
-        raise TypeError(
-            f"cannot instantiate abstract class '{self.__class__.__name__}'"
-        )
-
     def __call__(self, ctx: KernelDictContext) -> t.Any:
         return self.evaluator(ctx)
 
 
 @parse_docs
 @attrs.define
-class InitParameter(Parameter):
+class UpdateParameter:
     """
-    This class declares an Eradiate parameter in a kernel dictionary. It holds
-    an evaluation protocol for a Mitsuba scene parameter and exposes an
-    interface to generate update values depending on context information.
-    """
-
-    def __attrs_pre_init__(self):
-        pass
-
-
-@attrs.define
-class UpdateParameter(Parameter):
-    """
-    This class declares an Eradiate parameter in a scene parameter update map.
-    It holds an evaluation protocol for a Mitsuba scene parameter and exposes an
-    interface to generate update values depending on context information.
+    This class declares an Eradiate parameter in a Mitsuba scene parameter
+    update map. It holds an evaluation protocol depending on context
+    information.
     """
 
-    #: Sentinel value indicated that a parameter is not used
-    UNUSED: t.ClassVar = _Unused()
+    #: Sentinel value indicating that a parameter is not used
+    UNUSED: t.ClassVar[object] = object()
 
-    flags: ParamFlags = documented(
-        attrs.field(default=ParamFlags.ALL),
+    class Flags(enum.Flag):
+        """
+        Update parameter flags.
+        """
+
+        NONE = 0
+        SPECTRAL = enum.auto()  #: Varies during the spectral loop
+        GEOMETRIC = enum.auto()  #: Triggers a scene rebuild
+        ALL = SPECTRAL | GEOMETRIC
+
+    evaluator: t.Callable = documented(
+        attrs.field(repr=False),
+        doc="A callable that returns the value of the parameter for a given "
+        "context, with signature ``f(ctx: KernelDictContext) -> Any``.",
+        type="callable",
+    )
+
+    flags: Flags = documented(
+        attrs.field(default=Flags.ALL),
         doc="Flags specifying parameter attributes. By default, the declared "
         "parameter will pass all filters.",
         type=".ParaFlags",
@@ -133,26 +90,26 @@ class UpdateParameter(Parameter):
         init_type="str, optional",
     )
 
-    def __attrs_pre_init__(self):
-        pass
+    def __call__(self, ctx: KernelDictContext) -> t.Any:
+        return self.evaluator(ctx)
 
 
 @attrs.define(slots=False)
 class KernelDictTemplate(UserDict):
     """
-    A dict-like structure which contains the structure of an instantiable kernel
-    dictionary.
+    A dict-like structure which defines the structure of an instantiable
+    Mitsuba scene dictionary.
 
     Entries are indexed by dot-separated paths which can then be expanded to
     a nested dictionary using the :meth:`.render` method.
 
     Each entry can be either a hard-coded value which can be directly
     interpreted by the :func:`mitsuba.load_dict` function, or an
-    :class:`.InitParameter` object, which must be rendered before the template
+    :class:`.InitParameter` object which must be rendered before the template
     can be instantiated.
     """
 
-    data: dict[str, Parameter] = attrs.field(factory=dict)
+    data: dict[str, InitParameter] = attrs.field(factory=dict)
 
     def render(self, ctx: KernelDictContext, nested: bool = True) -> dict:
         """
@@ -191,7 +148,7 @@ class UpdateMapTemplate(UserDict):
     a nested dictionary using the :meth:`.render` method.
     """
 
-    data: dict[str, Parameter] = attrs.field(factory=dict)
+    data: dict[str, UpdateParameter] = attrs.field(factory=dict)
 
     def remove(self, keys: t.Union[str, t.List[str]]) -> None:
         """
@@ -243,7 +200,7 @@ class UpdateMapTemplate(UserDict):
     def render(
         self,
         ctx: KernelDictContext,
-        flags: ParamFlags = ParamFlags.ALL,
+        flags: UpdateParameter.Flags = UpdateParameter.Flags.ALL,
         drop: bool = False,
     ) -> dict:
         """
@@ -279,7 +236,9 @@ class UpdateMapTemplate(UserDict):
         unused = []
         result = {}
 
-        for k in list(self.keys()):
+        for k in list(
+            self.keys()
+        ):  # Ensures correct iteration even if the loop mutates the mapping
             v = self[k]
 
             if isinstance(v, UpdateParameter):

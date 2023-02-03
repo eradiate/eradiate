@@ -14,7 +14,6 @@ from ..core import CompositeSceneElement
 from ... import validators
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
-from ...kernel._kernel_dict import Parameter
 from ...typing import PathLike
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck

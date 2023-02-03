@@ -7,17 +7,15 @@ import attrs
 import mitsuba as mi
 import pinttr
 import xarray as xr
-from tqdm.auto import tqdm
 
 import eradiate
 
 from .. import pipelines
-from .._config import ProgressLevel, config
 from ..attrs import documented
 from ..contexts import KernelDictContext
-from ..kernel._kernel_dict import ParameterMap
+from ..kernel import mi_render
 from ..pipelines import Pipeline
-from ..rng import SeedState, root_seed_state
+from ..rng import SeedState
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
 from ..scenes.illumination import (
     ConstantIllumination,
@@ -36,111 +34,6 @@ from ..scenes.measure import (
 from ..util.misc import onedict_value
 
 logger = logging.getLogger(__name__)
-
-
-def mi_render(
-    mi_scene: "mitsuba.Scene",
-    params: ParameterMap,
-    ctxs: t.List[KernelDictContext],
-    mi_params: t.Optional["mitsuba.SceneParameters"] = None,
-    sensors: t.Union[None, int, t.List[int]] = 0,
-    spp: int = 0,
-    seed_state: t.Optional[SeedState] = None,
-) -> t.Dict[t.Any, "mitsuba.Bitmap"]:
-    """
-    Render a Mitsuba scene multiple times given specified contexts and sensor
-    indices.
-
-    Parameters
-    ----------
-    mi_scene : :class:`mitsuba.Scene`
-        Mitsuba scene to render.
-
-    params : ParameterMap
-        Parameter map used to generate the Mitsuba parameter table at each
-        iteration.
-
-    ctxs : list of :class:`.KernelDictContext`
-        List of contexts used to generate the parameter update table at each
-        iteration.
-
-    mi_params : :class:`mitsuba.SceneParameters`, optional
-        Mitsuba parameter table for the rendered scene. If unset, a new
-        parameter table is created.
-
-    sensors : int or list of int, optional
-        Sensor indices to render. If ``None``, all sensors are rendered.
-
-    spp : int, optional, default: 0
-        Number of samples per pixel. If set to 0, the value set in the original
-        scene definition takes precedence.
-
-    seed_state : :class:`.SeedState, optional
-        Seed state used to generate seeds to initialise Mitsuba's RNG at
-        each run. If unset, Eradiate's root seed state is used.
-
-    Returns
-    -------
-    dict
-        A nested dictionary mapping context and sensor indices to rendered
-        bitmaps.
-    """
-    if mi_params is None:
-        mi_params = mi.traverse(mi_scene)
-
-    if seed_state is None:
-        seed_state = root_seed_state
-
-    results = {}
-
-    # Loop on contexts
-    with tqdm(
-        initial=0,
-        total=len(ctxs),
-        unit_scale=1.0,
-        leave=True,
-        bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
-        disable=(config.progress < ProgressLevel.SPECTRAL_LOOP) or len(ctxs) <= 1,
-    ) as pbar:
-        for ctx in ctxs:
-            pbar.set_description(
-                f"Eradiate [{ctx.index_formatted}]",
-                refresh=True,
-            )
-
-            mi_params.update(params.render(ctx))
-
-            if sensors is None:
-                mi_sensors = [
-                    (i, sensor) for i, sensor in enumerate(mi_scene.sensors())
-                ]
-
-            else:
-                if isinstance(sensors, int):
-                    sensors = [sensors]
-                mi_sensors = [(i, mi_scene.sensors()[i]) for i in sensors]
-
-            # Loop on sensors
-            for i_sensor, mi_sensor in mi_sensors:
-                # Render sensor
-                mi.render(
-                    mi_scene,
-                    sensor=i_sensor,
-                    seed=int(seed_state.next()),
-                    spp=spp,
-                )
-
-                # Store result in a new Bitmap object
-                if ctx.spectral_ctx.spectral_index not in results:
-                    results[ctx.spectral_ctx.spectral_index] = {}
-
-                results[ctx.spectral_ctx.spectral_index][mi_sensor.id()] = mi.Bitmap(
-                    mi_sensor.film().bitmap()
-                )
-
-            pbar.update()
-
-    return results
 
 
 @attrs.define
