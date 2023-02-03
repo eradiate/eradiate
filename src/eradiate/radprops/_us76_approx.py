@@ -7,26 +7,21 @@ import numpy as np
 import pint
 import xarray as xr
 
-from ._core import RadProfile, make_dataset, rad_profile_factory
-from ._util_mono import get_us76_u86_4_spectrum_filename
-from .absorption import compute_sigma_a
+from . import absorption
+from ._core import RadProfile, make_dataset
 from .rayleigh import compute_sigma_s_air
 from .. import data
 from .._mode import UnsupportedModeError
 from ..attrs import documented, parse_docs
 from ..ckd import Bindex
-from ..thermoprops import us76
+from ..converters import to_dataset
+from ..typing import PathLike
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 
 
-def _convert_thermoprops_us76_approx(
-    value: t.Union[t.MutableMapping, xr.Dataset]
-) -> xr.Dataset:
-    if isinstance(value, dict):
-        return us76.make_profile(**value)
-    else:
-        return value
+def absorption_data_set_load_from_id(x: str) -> xr.Dataset:
+    return data.open_dataset(f"spectra/absorption/{x}/{x}.nc")
 
 
 @parse_docs
@@ -48,31 +43,6 @@ class US76ApproxRadProfile(RadProfile):
       :cite:`NASA1976USStandardAtmosphere` technical report.
       In the original atmosphere model, the gases are assumed well-mixed below
       the altitude of 86 kilometers.
-      In the present radiative properties profile, the absorption coefficient is
-      computed using the ``spectra-us76_u86_4`` absorption dataset.
-      This dataset provides the absorption cross section of a specific mixture
-      of N2, O2, CO2 and CH4, the mixing ratio of which are those defined by the
-      *U.S. Standard Atmosphere 1976* model for the region of altitudes under
-      86 kilometers, where these four gas species are well-mixed.
-      As a result, the dataset is representative of the *U.S. Standard Atmosphere
-      1976* model only below 86 kilometers.
-      Since the atmosphere is typically a hundred kilometers high or more in
-      radiative transfer applications, and in order to make the radiative
-      properties profile reach these altitudes, the absorption coefficient
-      is nevertheless computed using the ``spectra-us76_u86_4`` dataset.
-      This approximation assumes that the absorption coefficient does not vary
-      much whether the mixing ratios of the absorbing gas mixture are those
-      below or above 86 km.
-
-    * Furthermore, the *U.S. Standard Atmosphere 1976* model includes other gas
-      species than N2, O2, CO2 and CH4.
-      They are: Ar, He, Ne, Kr, H, O, Xe, He and H2.
-      All these species except H2 are absent from the
-      `HITRAN <https://hitran.org/>`_ spectroscopic database.
-      Since the absorption datasets are computed using HITRAN, the atomic species
-      could not be included in ``spectra-us76_u86_4``.
-      H2 was mistakenly forgotten and should be added to the dataset in a future
-      revision.
 
     * We refer to the *U.S. Standard Atmosphere 1976* atmosphere model as the
       model defined by the set of assumptions and equations in part 1 of the
@@ -107,15 +77,15 @@ class US76ApproxRadProfile(RadProfile):
       not include.
     """
 
-    _thermoprops: xr.Dataset = documented(
+    _thermoprops: t.Union[xr.Dataset, PathLike] = documented(
         attrs.field(
-            factory=lambda: us76.make_profile(),
-            converter=_convert_thermoprops_us76_approx,
+            default="ussa_1976-truncated",
+            converter=to_dataset(lambda x: data.open_dataset(f"thermoprops/{x}.nc")),
             validator=attrs.validators.instance_of(xr.Dataset),
         ),
         doc="Thermophysical properties.",
         type=":class:`~xarray.Dataset`",
-        default="us76.make_profile",
+        default="ussa_1976-truncated",
     )
 
     has_absorption: bool = documented(
@@ -144,17 +114,14 @@ class US76ApproxRadProfile(RadProfile):
         default="True",
     )
 
-    absorption_data_set: t.Optional[str] = documented(
+    absorption_data_set: t.Union[xr.Dataset, PathLike] = documented(
         attrs.field(
-            default=None,
-            converter=attrs.converters.optional(str),
-            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
+            default="w_250_3125-x-CH4_CO2v_H2_O_O2-p_8-t_4",
+            converter=to_dataset(absorption_data_set_load_from_id),
+            validator=attrs.validators.instance_of(xr.Dataset),
         ),
-        doc="Absorption data set file path. If ``None``, the default "
-        "absorption data sets will be used to compute the absorption "
-        "coefficient. Otherwise, the absorption data set whose path is "
-        "provided will be used to compute the absorption coefficient.",
-        type="str",
+        doc="Absorption data set.",
+        type=":class:`~xarray.Dataset`",
     )
 
     @property
@@ -172,33 +139,15 @@ class US76ApproxRadProfile(RadProfile):
         return to_quantity(self.thermoprops.z_level)
 
     def eval_sigma_a_mono(self, w: pint.Quantity) -> pint.Quantity:
-        profile = self.thermoprops
         if self.has_absorption:
-            if self.absorption_data_set is None:  # ! this is never tested
-                ds = data.open_dataset(get_us76_u86_4_spectrum_filename(w))
-            else:
-                ds = xr.open_dataset(self.absorption_data_set)
-
-            # Compute scattering coefficient
-            result = compute_sigma_a(
-                ds=ds,
-                wl=w,
-                p=to_quantity(profile.p),
-                n=to_quantity(profile.n),
-                fill_values=dict(
-                    pt=0.0
-                ),  # us76_u86_4 dataset is limited to pressures above
-                # 0.101325 Pa, but us76 thermophysical profile goes below that
-                # value for altitudes larger than 93 km. At these altitudes, the
-                # number density is so small compared to that at the sea level that
-                # we assume it is negligible.
+            return absorption.compute(
+                ds=self.absorption_data_set,
+                thermoprops=self.thermoprops,
+                w=w,
             )
-            ds.close()
-
-            return result
-
         else:
-            return ureg.Quantity(np.zeros(profile.z_layer.size), "km^-1")
+            shape = (w.size, self.thermoprops.z.size)
+            return np.zeros(shape) / ureg.km
 
     def eval_sigma_a_ckd(self, *bindexes: Bindex, bin_set_id: str) -> pint.Quantity:
         raise UnsupportedModeError(supported="monochromatic")
