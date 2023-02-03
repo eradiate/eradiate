@@ -22,7 +22,7 @@ class MitsubaScene:
     umap_template: t.Optional[UpdateMapTemplate] = attrs.field(default=None)
 
 
-def traverse(
+def mi_traverse(
     scene: "mitsuba.Scene", umap_template: t.Optional[UpdateMapTemplate] = None
 ) -> MitsubaScene:
     """
@@ -154,8 +154,6 @@ def mi_render(
         A nested dictionary mapping context and sensor indices to rendered
         bitmaps.
     """
-    if mi_params is None:
-        mi_params = mi.traverse(mi_scene)
 
     if seed_state is None:
         seed_state = root_seed_state
@@ -177,23 +175,23 @@ def mi_render(
                 refresh=True,
             )
 
-            mi_params.update(params.render(ctx))
+            mi_scene.parameters.update(mi_scene.umap_template.render(ctx))
 
             if sensors is None:
                 mi_sensors = [
-                    (i, sensor) for i, sensor in enumerate(mi_scene.sensors())
+                    (i, sensor) for i, sensor in enumerate(mi_scene.scene.sensors())
                 ]
 
             else:
                 if isinstance(sensors, int):
                     sensors = [sensors]
-                mi_sensors = [(i, mi_scene.sensors()[i]) for i in sensors]
+                mi_sensors = [(i, mi_scene.scene.sensors()[i]) for i in sensors]
 
             # Loop on sensors
             for i_sensor, mi_sensor in mi_sensors:
                 # Render sensor
                 mi.render(
-                    mi_scene,
+                    mi_scene.scene,
                     sensor=i_sensor,
                     seed=int(seed_state.next()),
                     spp=spp,
