@@ -10,7 +10,6 @@ import pinttr
 from ._core import SpectrumNode
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
-from ...kernel._kernel_dict import InitParameter, Parameter, ParamFlags, UpdateParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
