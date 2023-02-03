@@ -15,15 +15,19 @@ import xarray as xr
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import KernelDict
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
+from ... import data
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
+from ...converters import to_dataset
 from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile
-from ...thermoprops import afgl_1986, us76
+from ...radprops._us76_approx import absorption_data_set_load_from_id
+from ...thermoprops import afgl_1986
 from ...thermoprops.util import (
     compute_scaling_factors,
     interpolate,
     rescale_concentration,
 )
+from ...typing import PathLike
 from ...units import to_quantity
 from ...units import unit_registry as ureg
 
@@ -42,14 +46,15 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
           ussa_1976
     """
 
-    _thermoprops: xr.Dataset = documented(
+    _thermoprops: t.Union[PathLike, xr.Dataset] = documented(
         attrs.field(
-            factory=us76.make_profile,
+            default="ussa_1976-truncated",
+            converter=to_dataset(lambda x: data.load_dataset(f"thermoprops/{x}.nc")),
             validator=attrs.validators.instance_of(xr.Dataset),
         ),
         doc="Thermophysical properties.",
-        type="Dataset",
-        default=":meth:`us76.make_profile() <eradiate.thermoprops.us76.make_profile>`",
+        type=":class:`~xarray.Dataset`",
+        default="ussa_1976-truncated",
     )
 
     phase: PhaseFunction = documented(
@@ -97,21 +102,16 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 "and 'has_scattering' must be True"
             )
 
-    absorption_data_sets: t.Optional[t.Dict[str, str]] = documented(
+    absorption_data_set: t.Union[PathLike, xr.Dataset] = documented(
         attrs.field(
-            default=None,
-            converter=attrs.converters.optional(dict),
-            validator=attrs.validators.optional(attrs.validators.instance_of(dict)),
+            default="w_250_3125-x-CH4_CO2v_H2_O_O2-p_8-t_4",
+            converter=to_dataset(absorption_data_set_load_from_id),
+            validator=attrs.validators.instance_of(xr.Dataset),
         ),
-        doc="Mapping of species and absorption data set files paths. If "
-        "``None``, the default absorption data sets are used to compute "
-        "the absorption coefficient. If not ``None``, the absorption data "
-        "set files whose paths are provided in the mapping will be used to "
-        "compute the absorption coefficient. If the mapping does not "
-        "include all species from the atmospheric "
-        "thermophysical profile, the default data sets will be used to "
-        "compute the absorption coefficient of the corresponding species.",
-        type="dict",
+        default="w_250_3125-x-CH4_CO2v_H2_O_O2-p_8-t_4",
+        doc="Absorption dataset.",
+        init_type=":class:`pathlib.Path` or :class:`~xarray.Dataset`",
+        type=":class:`~xarray.Dataset`",
     )
 
     def update(self) -> None:
@@ -150,15 +150,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def radprops_profile(self) -> RadProfile:
         if self.thermoprops.title == "U.S. Standard Atmosphere 1976":
-            if self.absorption_data_sets is not None:
-                absorption_data_set = self.absorption_data_sets["us76_u86_4"]
-            else:
-                absorption_data_set = None
             return US76ApproxRadProfile(
                 thermoprops=self.thermoprops,
                 has_scattering=self.has_scattering,
                 has_absorption=self.has_absorption,
-                absorption_data_set=absorption_data_set,
+                absorption_data_set=self.absorption_data_set,
             )
         elif "AFGL (1986)" in self.thermoprops.title:
             return AFGL1986RadProfile(
@@ -296,8 +292,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     @classmethod
     def ussa_1976(
         cls,
-        levels: t.Optional[pint.Quantity] = None,
-        concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
         **kwargs: t.MutableMapping[str, t.Any],
     ) -> MolecularAtmosphere:
         """
@@ -306,12 +300,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
         Parameters
         ----------
-        levels : quantity, optional
-            Altitude levels. If ``None``, defaults to [0, 1, ..., 99, 100] km.
-
-        concentrations : dict
-            Molecules concentrations as a ``{str: quantity}`` mapping.
-
         **kwargs
             Keyword arguments passed to the :class:`MolecularAtmosphere`
             constructor.
@@ -321,13 +309,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         :class:`.MolecularAtmosphere`
             U.S. Standard Atmosphere (1976) molecular atmosphere object.
         """
-        if levels is None:
-            levels = np.linspace(0, 100, 101) * ureg.km
-
-        ds = us76.make_profile(levels=levels)
-
-        if concentrations is not None:
-            factors = compute_scaling_factors(ds=ds, concentration=concentrations)
-            ds = rescale_concentration(ds=ds, factors=factors)
-
-        return cls(thermoprops=ds, **kwargs)
+        return cls(
+            thermoprops=data.open_dataset("thermoprops/ussa_1976-truncated.nc"),
+            **kwargs,
+        )
