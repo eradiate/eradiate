@@ -1,6 +1,9 @@
+import typing as t
+
 import attrs
 
 from ._core import BSDFNode
+from ...kernel import UpdateParameter
 
 
 @attrs.define(eq=False, slots=False)
@@ -18,3 +21,7 @@ class BlackBSDF(BSDFNode):
             "type": "diffuse",
             "reflectance": {"type": "uniform", "value": 0.0},
         }
+
+    @property
+    def params(self) -> t.Dict[str, UpdateParameter]:
+        return {}
