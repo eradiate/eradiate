@@ -10,6 +10,7 @@ import pinttr
 from ._core import SpectrumNode
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
+from ...kernel import InitParameter, UpdateParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
@@ -80,6 +81,6 @@ class UniformSpectrum(SpectrumNode):
                 lambda ctx: float(
                     self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
                 ),
-                ParamFlags.SPECTRAL,
+                UpdateParameter.Flags.SPECTRAL,
             )
         }

@@ -54,18 +54,18 @@ def check_scene_element(
     if isinstance(instance, NodeSceneElement):
         if mi_cls is None:
             raise ValueError("Expected Mitsuba class must be set")
-        template, params = traverse(instance)
+        kdict_template, umap_template = traverse(instance)
 
     elif isinstance(instance, CompositeSceneElement):
         mi_cls = mi.Scene
-        template, params = traverse(Scene(objects={"composite": instance}))
+        kdict_template, umap_template = traverse(Scene(objects={"composite": instance}))
 
     else:
         raise RuntimeError(f"Cannot test type '{instance.__class__}'")
 
     # Check if the template can be instantiated
     ctx = KernelDictContext() if ctx is None else ctx
-    kernel_dict = template.render(ctx, drop=True)
+    kernel_dict = kdict_template.render(ctx)
 
     try:
         mi_obj = mi.load_dict(kernel_dict)
@@ -78,7 +78,7 @@ def check_scene_element(
     assert isinstance(mi_obj, mi_cls)
 
     # Check if parameters can be updated
-    kernel_params = params.render(ctx)
+    kernel_params = umap_template.render(ctx)
     mi_params = mi.traverse(mi_obj)
 
     for key, value in kernel_params.items():
