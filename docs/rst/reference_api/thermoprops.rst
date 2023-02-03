@@ -12,5 +12,4 @@
    :toctree: generated/autosummary/
 
    afgl_1986
-   us76
    util
