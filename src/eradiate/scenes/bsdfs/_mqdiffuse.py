@@ -1,3 +1,5 @@
+import typing as t
+
 import attrs
 import mitsuba as mi
 import numpy as np
@@ -6,7 +8,7 @@ import xarray as xr
 from ._core import BSDFNode
 from ... import converters
 from ...attrs import documented, parse_docs
-from ...kernel._kernel_dict import Parameter, ParamFlags
+from ...kernel import InitParameter, UpdateParameter
 from ...units import to_quantity
 from ...units import unit_registry as ureg
 
@@ -118,5 +120,9 @@ class MQDiffuseBSDF(BSDFNode):
     def template(self) -> dict:
         return {
             "type": "mqdiffuse",
-            "grid": Parameter(lambda ctx: self._eval_grid_impl(ctx), ParamFlags.INIT),
+            "grid": InitParameter(lambda ctx: self._eval_grid_impl(ctx)),
         }
+
+    @property
+    def params(self) -> t.Dict[str, UpdateParameter]:
+        return {}
