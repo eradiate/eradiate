@@ -1,12 +1,14 @@
 import typing as t
 
 import attrs
+import mitsuba as mi
 
 from ._core import BSDFNode
-from ..core import NodeSceneElement
+from ..core import traverse
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
+from ...kernel import TypeIdLookupStrategy, UpdateParameter
 
 
 @parse_docs
@@ -63,14 +65,37 @@ class CheckerboardBSDF(BSDFNode):
 
     @property
     def template(self) -> dict:
-        return {
-            "type": "diffuse",
-            "reflectance.type": "checkerboard",
-        }
+        # Inherit docstring
+
+        result = {"type": "diffuse", "reflectance.type": "checkerboard"}
+
+        for obj_key, obj_values in {
+            "color0": traverse(self.reflectance_a)[0],
+            "color1": traverse(self.reflectance_b)[0],
+        }.items():
+            for key, value in obj_values.items():
+                result[f"reflectance.{obj_key}.{key}"] = value
+
+        return result
 
     @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
-        return {
-            "reflectance.color0": self.reflectance_a,
-            "reflectance.color1": self.reflectance_b,
-        }
+    def params(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
+
+        result = {}
+
+        for obj_key, obj_params in {
+            "color0": traverse(self.reflectance_a)[1].data,
+            "color1": traverse(self.reflectance_b)[1].data,
+        }.items():
+            for key, param in obj_params.items():
+                result[f"reflectance.{obj_key}.{key}"] = attrs.evolve(
+                    param,
+                    lookup_strategy=TypeIdLookupStrategy(
+                        node_type=mi.BSDF,
+                        node_id=self.id,
+                        parameter_relpath=f"reflectance.{obj_key}.{key}",
+                    ),
+                )
+
+        return result

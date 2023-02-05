@@ -1,12 +1,15 @@
 import typing as t
 
 import attrs
+import mitsuba as mi
+from rich.pretty import pprint
 
 from ._core import BSDFNode
-from ..core import NodeSceneElement
+from ..core import traverse
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
+from ...kernel import TypeIdLookupStrategy, UpdateParameter
 
 
 @parse_docs
@@ -38,8 +41,27 @@ class LambertianBSDF(BSDFNode):
 
     @property
     def template(self) -> dict:
-        return {"type": "diffuse"}
+        return {
+            "type": "diffuse",
+            **{
+                f"reflectance.{key}": value
+                for key, value in traverse(self.reflectance)[0].items()
+            },
+        }
 
     @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
-        return {"reflectance": self.reflectance}
+    def params(self) -> t.Dict[str, UpdateParameter]:
+        params = traverse(self.reflectance)[1].data
+
+        result = {}
+        for key, param in params.items():
+            result[f"reflectance.{key}"] = attrs.evolve(
+                param,
+                lookup_strategy=TypeIdLookupStrategy(
+                    node_type=mi.BSDF,
+                    node_id=self.id,
+                    parameter_relpath=f"reflectance.{key}",
+                ),
+            )
+
+        return result
