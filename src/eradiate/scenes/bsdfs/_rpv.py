@@ -1,12 +1,14 @@
 import typing as t
 
 import attrs
+import mitsuba as mi
 
 from ._core import BSDFNode
-from ..core import NodeSceneElement
+from ..core import NodeSceneElement, traverse
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
+from ...kernel import InitParameter, TypeIdLookupStrategy, UpdateParameter
 
 
 @parse_docs
@@ -104,11 +106,44 @@ class RPVBSDF(BSDFNode):
 
     @property
     def template(self) -> dict:
-        return {"type": "rpv"}
+        objects = {
+            "rho_0": traverse(self.rho_0)[0],
+            "k": traverse(self.k)[0],
+            "g": traverse(self.g)[0],
+        }
+
+        if self.rho_c is not None:
+            objects["rho_c"] = traverse(self.rho_c)[0]
+
+        result = {"type": "rpv"}
+
+        for obj_key, obj_values in objects.items():
+            for key, value in obj_values.items():
+                result[f"{obj_key}.{key}"] = value
+
+        return result
 
     @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
-        result = {"rho_0": self.rho_0, "k": self.k, "g": self.g}
+    def params(self) -> t.Dict[str, UpdateParameter]:
+        objects = {
+            "rho_0": traverse(self.rho_0)[1],
+            "k": traverse(self.k)[1],
+            "g": traverse(self.g)[1],
+        }
+
         if self.rho_c is not None:
-            result["rho_c"] = self.rho_c
+            objects["rho_c"] = traverse(self.rho_c)[1]
+
+        result = {}
+        for obj_key, obj_params in objects.items():
+            for key, param in obj_params.items():
+                result[f"{obj_key}.{key}"] = attrs.evolve(
+                    param,
+                    lookup_strategy=TypeIdLookupStrategy(
+                        node_type=mi.BSDF,
+                        node_id=self.id,
+                        parameter_relpath=f"{obj_key}.{key}",
+                    ),
+                )
+
         return result

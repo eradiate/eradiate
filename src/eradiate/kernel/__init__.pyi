@@ -7,5 +7,6 @@ from ._kernel_dict import InitParameter as InitParameter
 from ._kernel_dict import KernelDictTemplate as KernelDictTemplate
 from ._kernel_dict import UpdateMapTemplate as UpdateMapTemplate
 from ._kernel_dict import UpdateParameter as UpdateParameter
+from ._render import TypeIdLookupStrategy as TypeIdLookupStrategy
 from ._render import mi_render as mi_render
 from ._render import mi_traverse as mi_traverse
