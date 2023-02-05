@@ -4,6 +4,7 @@ import mitsuba as mi
 import pytest
 
 from ..contexts import KernelDictContext
+from ..kernel import mi_traverse
 from ..scenes.core import CompositeSceneElement, NodeSceneElement, Scene, traverse
 
 
@@ -77,11 +78,12 @@ def check_scene_element(
 
     assert isinstance(mi_obj, mi_cls)
 
-    # Check if parameters can be updated
-    kernel_params = umap_template.render(ctx)
-    mi_params = mi.traverse(mi_obj)
+    # Collect Mitsuba parameters, resolve update map parameter paths
+    mi_params = mi_traverse(mi_obj, umap_template).parameters
 
-    for key, value in kernel_params.items():
+    # Check that parameters can all be set
+    umap = umap_template.render(ctx)
+    for key, value in umap.items():
         try:
             mi_params[key] = value
         except KeyError as e:
