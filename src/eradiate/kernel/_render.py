@@ -6,25 +6,91 @@ from tqdm.auto import tqdm
 
 from . import UpdateMapTemplate
 from .._config import ProgressLevel, config
+from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..rng import SeedState, root_seed_state
 
+# ------------------------------------------------------------------------------
+#                         Parameter lookup strategies
+# ------------------------------------------------------------------------------
+
+
+@parse_docs
+@attrs.frozen
+class TypeIdLookupStrategy:
+    """
+    This parameter ID lookup strategy searches for a Mitsuba type and object ID
+    match.
+
+    Instances are callables which take, as argument, the current node during
+    a Mitsuba scene tree traversal and the associated parameter path.
+    If the lookup succeeds, the full parameter path is returned.
+    """
+
+    node_type: t.Type = documented(
+        attrs.field(validator=attrs.validators.instance_of(type)),
+        doc="Type of the node which will be looked up.",
+        type="type",
+    )
+
+    node_id: str = documented(
+        attrs.field(validator=attrs.validators.instance_of(str)),
+        doc="ID of the node which will be looked up.",
+        type="str",
+    )
+
+    parameter_relpath: str = documented(
+        attrs.field(validator=attrs.validators.instance_of(str)),
+        doc="Parameter path relative to its parent object.",
+        type="str",
+    )
+
+    def __call__(self, node, node_path) -> t.Optional[str]:
+        if isinstance(node, self.node_type) and node.id() == self.node_id:
+            return f"{node_path}.{self.parameter_relpath}"
+        return None
+
+
+# ------------------------------------------------------------------------------
+#                           Mitsuba scene traversal
+# ------------------------------------------------------------------------------
+
 
 @attrs.define(repr=False)
-class MitsubaScene:
+class MitsubaObject:
     """
-    This container aggregates a Mitsuba scene, its associated parameters and a
+    This container aggregates a Mitsuba object, its associated parameters and a
     set of updaters that can be used to modify the scene parameters.
     """
 
-    scene: "mitsuba.Scene" = attrs.field()
-    parameters: t.Optional["mitsuba.SceneParameters"] = attrs.field(default=None)
-    umap_template: t.Optional[UpdateMapTemplate] = attrs.field(default=None)
+    obj: "mitsuba.Object" = documented(
+        attrs.field(),
+        doc="Mitsuba object.",
+        type="mitsuba.Object",
+    )
+
+    parameters: t.Optional["mitsuba.SceneParameters"] = documented(
+        attrs.field(default=None),
+        doc="Mitsuba scene parameter map.",
+        type="mitsuba.SceneParameters",
+        init_type="mitsuba.SceneParameters, optional",
+        default="None",
+    )
+
+    umap_template: t.Optional[UpdateMapTemplate] = documented(
+        attrs.field(default=None),
+        doc="An update map template, which can be rendered and used to update "
+        "Mitsuba scene parameters depending on context information.",
+        type=".UpdateMapTemplate",
+        init_type=".UpdateMapTemplate, optional",
+        default="None",
+    )
 
 
 def mi_traverse(
-    scene: "mitsuba.Scene", umap_template: t.Optional[UpdateMapTemplate] = None
-) -> MitsubaScene:
+    obj: "mitsuba.Object",
+    umap_template: t.Optional[UpdateMapTemplate] = None,
+) -> MitsubaObject:
     """
     Traverse a node of Mitsuba's scene graph and return a dictionary-like
     object that can be used to read and write associated scene parameters.
@@ -42,8 +108,8 @@ def mi_traverse(
 
     lookups = {
         k: v
-        for k, v in umap_template
-        if v.parameter_id is None and v.lookup is not None
+        for k, v in umap_template.items()
+        if v.parameter_id is None and v.lookup_strategy is not None
     }
 
     class SceneTraversal(mi.TraversalCallback):
@@ -78,7 +144,7 @@ def mi_traverse(
 
             # Try and recover a parameter ID from this node
             for uparam in list(lookups.values()):
-                lookup_result = uparam.lookup(self.node, self.name)
+                lookup_result = uparam.lookup_strategy(self.node, self.name)
                 if lookup_result is not None:
                     uparam.parameter_id = lookup_result
 
@@ -107,18 +173,23 @@ def mi_traverse(
             )
             node.traverse(cb)
 
-    cb = SceneTraversal(scene)
-    scene.traverse(cb)
+    cb = SceneTraversal(obj)
+    obj.traverse(cb)
 
-    return MitsubaScene(
-        scene=scene,
+    return MitsubaObject(
+        obj=obj,
         parameters=mi.SceneParameters(cb.properties, cb.hierarchy),
         umap_template=umap_template,
     )
 
 
+# ------------------------------------------------------------------------------
+#                             Mitsuba scene render
+# ------------------------------------------------------------------------------
+
+
 def mi_render(
-    mi_scene: MitsubaScene,
+    mi_scene: MitsubaObject,
     ctxs: t.List[KernelDictContext],
     sensors: t.Union[None, int, t.List[int]] = 0,
     spp: int = 0,
@@ -179,19 +250,19 @@ def mi_render(
 
             if sensors is None:
                 mi_sensors = [
-                    (i, sensor) for i, sensor in enumerate(mi_scene.scene.sensors())
+                    (i, sensor) for i, sensor in enumerate(mi_scene.obj.sensors())
                 ]
 
             else:
                 if isinstance(sensors, int):
                     sensors = [sensors]
-                mi_sensors = [(i, mi_scene.scene.sensors()[i]) for i in sensors]
+                mi_sensors = [(i, mi_scene.obj.sensors()[i]) for i in sensors]
 
             # Loop on sensors
             for i_sensor, mi_sensor in mi_sensors:
                 # Render sensor
                 mi.render(
-                    mi_scene.scene,
+                    mi_scene.obj,
                     sensor=i_sensor,
                     seed=int(seed_state.next()),
                     spp=spp,

@@ -12,6 +12,10 @@ from eradiate.scenes.integrators import PathIntegrator
 from eradiate.scenes.measure import PerspectiveCameraMeasure
 from eradiate.scenes.surface import BasicSurface
 
+# TODO: Unit tests
+# TODO: Benchmark
+
+
 wavelengths = np.linspace(500, 600, 21) * ureg.nm
 spp = 100
 

@@ -74,7 +74,9 @@ class UpdateParameter:
         default=".ParamFlags.ALL",
     )
 
-    lookup_id: t.Optional[t.Callable[[mi.Object, str], t.Optional[str]]] = documented(
+    lookup_strategy: t.Optional[
+        t.Callable[[mi.Object, str], t.Optional[str]]
+    ] = documented(
         attrs.field(default=None),
         doc="A callable that searches a Mitsuba scene tree node for a desired "
         "parameter ID.",
