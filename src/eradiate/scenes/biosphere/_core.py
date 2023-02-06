@@ -270,37 +270,41 @@ class InstancedCanopyElement(CompositeSceneElement):
     def _template_shapes(self) -> dict:
         # Produces the part of the kernel dictionary template describing
         # the shape group of the encapsulated canopy element
-        return {
-            self.canopy_element.id: {
-                "type": "shapegroup",
-                **self.canopy_element._template_shapes,
-            }
-        }
+        result = {f"{self.canopy_element.id}.type": "shapegroup"}
+
+        for key, param in self.canopy_element._template_shapes.items():
+            result[f"{self.canopy_element.id}.{key}"] = param
+
+        return result
 
     @property
     def _template_instances(self) -> dict:
         # Produces the part of the kernel dictionary template describing
         # instances of the encapsulated canopy element
         length_units = uck.get("length")
-        return {
-            f"{self.canopy_element.id}_instance_{i}": {
-                "type": "instance",
-                "group": {"type": "ref", "id": self.canopy_element.id},
-                "to_world": mi.ScalarTransform4f.translate(position),
-            }
-            for i, position in enumerate(self.instance_positions.m_as(length_units))
-        }
+
+        result = {}
+
+        for i, position in enumerate(self.instance_positions.m_as(length_units)):
+            result[f"{self.canopy_element.id}_instance_{i}.type"] = "instance"
+            result[f"{self.canopy_element.id}_instance_{i}.group.type"] = "ref"
+            result[
+                f"{self.canopy_element.id}_instance_{i}.group.id"
+            ] = self.canopy_element.id
+            result[
+                f"{self.canopy_element.id}_instance_{i}.to_world"
+            ] = mi.ScalarTransform4f.translate(position)
+
+        return result
 
     @property
     def template(self) -> dict:
         # Inherit docstring
-        return flatten(
-            {
-                **self._template_bsdfs,
-                **self._template_shapes,
-                **self._template_instances,
-            }
-        )
+        return {
+            **self._template_bsdfs,
+            **self._template_shapes,
+            **self._template_instances,
+        }
 
     @property
     def _params_bsdfs(self) -> dict:
@@ -323,10 +327,8 @@ class InstancedCanopyElement(CompositeSceneElement):
     @property
     def params(self) -> dict:
         # Inherit docstring
-        return flatten(
-            {
-                **self._params_bsdfs,
-                **self._params_shapes,
-                **self._params_instances,
-            }
-        )
+        return {
+            **self._params_bsdfs,
+            **self._params_shapes,
+            **self._params_instances,
+        }

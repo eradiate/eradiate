@@ -114,8 +114,6 @@ def test_abstract_tree_dispatch_leaf_cloud(mode_mono, tempfile_leaves):
 
 
 def test_abstract_tree_kernel_dict(mode_mono):
-    ctx = KernelDictContext()
-
     """Partial unit testing for :meth:`LeafCloud.kernel_dict`."""
     tree_id = "my_tree"
     cloud_id = "my_cloud"
@@ -134,12 +132,11 @@ def test_abstract_tree_kernel_dict(mode_mono):
         trunk_reflectance=0.5,
     )
 
-    template, _ = traverse(tree)
-    kernel_dict = template.render(KernelDictContext())
-    pprint(kernel_dict)
+    template = traverse(tree)[0]
+    kdict = template.render(ctx=KernelDictContext())
 
     # The BSDF is bilambertian with the parameters we initially set
-    assert kernel_dict[f"bsdf_{cloud_id}"] == {
+    assert kdict[f"bsdf_{cloud_id}"] == {
         "type": "bilambertian",
         "reflectance": {"type": "uniform", "value": 0.5},
         "transmittance": {"type": "uniform", "value": 0.5},
@@ -147,7 +144,7 @@ def test_abstract_tree_kernel_dict(mode_mono):
 
     # Leaves are disks
     for shape_key in [f"{cloud_id}_leaf_0", f"{cloud_id}_leaf_1"]:
-        assert kernel_dict[shape_key]["type"] == "disk"
+        assert kdict[shape_key]["type"] == "disk"
 
     # Kernel dict is valid
     check_scene_element(tree)

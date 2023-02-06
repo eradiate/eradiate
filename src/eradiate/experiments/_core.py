@@ -13,7 +13,7 @@ import eradiate
 from .. import pipelines
 from ..attrs import documented
 from ..contexts import KernelDictContext
-from ..kernel import mi_render
+from ..kernel import UpdateMapTemplate, mi_render
 from ..pipelines import Pipeline
 from ..rng import SeedState
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
@@ -48,7 +48,7 @@ class Experiment(ABC):
         repr=False,
     )
 
-    params: t.Optional[ParameterMap] = attrs.field(
+    params: t.Optional[UpdateMapTemplate] = attrs.field(
         default=None,
         repr=False,
     )
@@ -308,9 +308,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
         mi_results = mi_render(
             self.mi_scene,
-            self.params,
             self.contexts,
-            mi_params=self.mi_params,
             seed_state=seed_state,
             spp=spp,
         )

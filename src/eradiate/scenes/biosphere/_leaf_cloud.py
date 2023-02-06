@@ -17,6 +17,7 @@ from ..core import SceneElement, traverse
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
+from ...kernel import TypeIdLookupStrategy, UpdateParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -1132,27 +1133,29 @@ class LeafCloud(CanopyElement):
     # --------------------------------------------------------------------------
 
     @property
-    def id_bsdf(self) -> str:
+    def bsdf_id(self) -> str:
         return f"bsdf_{self.id}"
 
     @property
     def _template_bsdfs(self) -> dict:
-        template_reflectance, _ = traverse(self.leaf_reflectance)
-        template_transmittance, _ = traverse(self.leaf_transmittance)
-
-        return {
-            self.id_bsdf: {
-                "type": "bilambertian",
-                "reflectance": template_reflectance.data,
-                "transmittance": template_transmittance.data,
-            }
+        objects = {
+            "reflectance": traverse(self.leaf_reflectance)[0].data,
+            "transmittance": traverse(self.leaf_transmittance)[0].data,
         }
+
+        result = {f"{self.bsdf_id}.type": "bilambertian"}
+
+        for obj_key, obj_template in objects.items():
+            for key, param in obj_template.items():
+                result[f"{self.bsdf_id}.{obj_key}.{key}"] = param
+
+        return result
 
     @property
     def _template_shapes(self) -> dict:
         length_units = uck.get("length")
-        shapes_dict = {}
-        bsdf_dict = {"type": "ref", "id": f"bsdf_{self.id}"}
+        result = {}
+        bsdf_dict = {"type": "ref", "id": self.bsdf_id}
 
         for i_leaf, (position, normal, radius) in enumerate(
             zip(
@@ -1166,24 +1169,39 @@ class LeafCloud(CanopyElement):
                 origin=position, target=position + normal, up=up
             ) @ mi.ScalarTransform4f.scale(radius)
 
-            shapes_dict[f"{self.id}_leaf_{i_leaf}"] = {
+            result[f"{self.id}_leaf_{i_leaf}"] = {
                 "type": "disk",
                 "bsdf": bsdf_dict,
                 "to_world": to_world,
             }
 
-        return shapes_dict
+        return result
 
     @property
     def _params_bsdfs(self) -> dict:
-        _, params_reflectance = traverse(self.leaf_reflectance)
-        _, params_transmittance = traverse(self.leaf_transmittance)
-        return {
-            self.id_bsdf: {
-                "reflectance": params_reflectance.data,
-                "transmittance": params_transmittance.data,
-            }
+        objects = {
+            "reflectance": traverse(self.leaf_reflectance)[1].data,
+            "transmittance": traverse(self.leaf_transmittance)[1].data,
         }
+
+        result = {}
+
+        for obj_key, obj_template in objects.items():
+            for key, param in obj_template.items():
+                # If no lookup strategy is set, we must add one
+                if isinstance(param, UpdateParameter) and param.lookup_strategy is None:
+                    param = attrs.evolve(
+                        param,
+                        lookup_strategy=TypeIdLookupStrategy(
+                            mi.BSDF,
+                            self.bsdf_id,
+                            parameter_relpath=f"{obj_key}.{key}",
+                        ),
+                    )
+
+                result[f"{self.bsdf_id}.{obj_key}.{key}"] = param
+
+        return result
 
     @property
     def _params_shapes(self) -> dict:
