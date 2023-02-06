@@ -13,7 +13,7 @@ import eradiate
 from .. import pipelines
 from ..attrs import documented
 from ..contexts import KernelDictContext
-from ..kernel import UpdateMapTemplate, mi_render
+from ..kernel import MitsubaObject, mi_render, mi_traverse
 from ..pipelines import Pipeline
 from ..rng import SeedState
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
@@ -38,17 +38,7 @@ logger = logging.getLogger(__name__)
 
 @attrs.define
 class Experiment(ABC):
-    mi_scene: t.Optional["mitsuba.Scene"] = attrs.field(
-        default=None,
-        repr=False,
-    )
-
-    mi_params: t.Optional["mitsuba.SceneParameters"] = attrs.field(
-        default=None,
-        repr=False,
-    )
-
-    params: t.Optional[UpdateMapTemplate] = attrs.field(
+    mi_scene: t.Optional[MitsubaObject] = attrs.field(
         default=None,
         repr=False,
     )
@@ -115,8 +105,6 @@ class Experiment(ABC):
         """
         Clear previous experiment results and reset internal state.
         """
-        self.mi_params = None
-        self.params = None
         self.results.clear()
 
         for measure in self.measures:
@@ -282,15 +270,15 @@ class EarthObservationExperiment(Experiment, ABC):
 
         logger.info("Initializing kernel scene")
 
-        template, params = traverse(self.scene)
-        kernel_dict = template.render(ctx=self.context_init, drop=True)
+        kdict_template, umap_template = traverse(self.scene)
 
         try:
-            self.mi_scene = mi.load_dict(kernel_dict)
+            self.mi_scene = mi_traverse(
+                mi.load_dict(kdict_template.render(ctx=self.context_init)),
+                umap_template=umap_template,
+            )
         except RuntimeError as e:
             raise RuntimeError(f"(while loading kernel scene dictionary){e}") from e
-
-        self.params = params
 
     def process(
         self,
