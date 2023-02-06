@@ -112,7 +112,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     #: A high-resolution layer altitude mesh to interpolate the components'
     #: radiative properties on, before computing the total radiative
     #: properties. This is an internal field that is automatically set by
-    #: the :meth:`update` method. Defaults to one layer per 100 m.
+    #: the :meth:`update` method. Defaults to one layer per 100 m
+    #: (or 10 layers if the atmosphere object height is less than 100 m).
     _zgrid: ZGrid = attrs.field(
         default=None,
         converter=attrs.converters.optional(
@@ -139,13 +140,15 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
         # Set altitude grid
         if self._zgrid is None:
+            bottom = self.bottom.m_as(ureg.m)
+            top = self.top.m_as(ureg.m)
+            step = min(100.0, (top - bottom) / 10.0)
             self._zgrid = ZGrid(
-                (
-                    np.arange(
-                        self.bottom.m_as(ureg.m), self.top.m_as(ureg.m) + 1.0, 100.0
-                    )
-                    * ureg.m
-                ).to(ucc.get("length"))
+                ureg.convert(
+                    np.arange(bottom, top + step * 0.1, step),
+                    ureg.m,
+                    ucc.get("length"),
+                )
             )
 
         else:
