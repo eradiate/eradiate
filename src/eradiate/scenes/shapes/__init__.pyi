@@ -5,5 +5,6 @@ from ._core import ShapeNode as ShapeNode
 from ._core import shape_factory as shape_factory
 from ._cuboid import CuboidShape as CuboidShape
 from ._filemesh import FileMeshShape as FileMeshShape
+from ._group import GroupShape as GroupShape
 from ._rectangle import RectangleShape as RectangleShape
 from ._sphere import SphereShape as SphereShape
