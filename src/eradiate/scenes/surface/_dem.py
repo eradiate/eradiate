@@ -9,7 +9,7 @@ import pint
 import xarray as xr
 from pinttr.util import ensure_units
 
-from ._core import Surface, SurfaceComposite
+from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..core import InstanceSceneElement, NodeSceneElement
 from ..shapes import BufferMeshShape, FileMeshShape, Shape, shape_factory
@@ -21,7 +21,7 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class DEMSurface(SurfaceComposite):
+class DEMSurface(Surface):
     """
     DEM surface [``dem``]
 
@@ -258,6 +258,12 @@ class DEMSurface(SurfaceComposite):
         )
 
     def update(self) -> None:
+        # Fix BSDF ID
+        self.bsdf.id = self._bsdf_id
+
+        # Fix shape ID
+        self.shape.id = self._shape_id
+
         # Force BSDF nesting if the shape is defined
         if self.shape is not None:
             if isinstance(self.shape.bsdf, BSDF):
@@ -266,7 +272,33 @@ class DEMSurface(SurfaceComposite):
 
     @property
     def _shape_id(self):
-        return self.id
+        """
+        Mitsuba shape object identifier.
+        """
+        return f"{self.id}_shape"
+
+    @property
+    def _bsdf_id(self):
+        """
+        Mitsuba BSDF object identifier.
+        """
+        return f"{self.id}_bsdf"
+
+    @property
+    def _template_bsdfs(self) -> dict:
+        return {}
+
+    @property
+    def _template_shapes(self) -> dict:
+        return {}
+
+    @property
+    def _params_bsdfs(self) -> dict:
+        return {}
+
+    @property
+    def _params_shapes(self) -> dict:
+        return {}
 
     @property
     def objects(self) -> t.Dict[str, t.Union[NodeSceneElement, InstanceSceneElement]]:

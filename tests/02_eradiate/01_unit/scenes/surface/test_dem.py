@@ -36,7 +36,7 @@ def tempfile_obj():
                 "bsdf": {"type": "lambertian"},
             },
             FileMeshShape,
-            {"terrain.bsdf.reflectance.value"},
+            {"terrain_shape.bsdf.reflectance.value"},
         ),
         (
             DEMSurface.from_dataarray,
@@ -52,7 +52,7 @@ def tempfile_obj():
                 "bsdf": {"type": "lambertian"},
             },
             BufferMeshShape,
-            {"terrain.bsdf.reflectance.value"},
+            {"terrain_shape.bsdf.reflectance.value"},
         ),
         (
             DEMSurface.from_analytical,
@@ -65,7 +65,7 @@ def tempfile_obj():
                 "bsdf": {"type": "lambertian"},
             },
             BufferMeshShape,
-            {"terrain.bsdf.reflectance.value"},
+            {"terrain_shape.bsdf.reflectance.value"},
         ),
     ],
     ids=["minimal", "from_dataarray", "from_analytical"],

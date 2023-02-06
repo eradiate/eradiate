@@ -6,6 +6,7 @@ from eradiate.exceptions import TraversalError
 from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.shapes import RectangleShape, Shape
 from eradiate.scenes.surface import BasicSurface
+from eradiate.test_tools.types import check_scene_element
 
 
 @pytest.mark.parametrize(
@@ -59,3 +60,8 @@ def test_basic_surface_construct(
             traverse(surface)
     else:
         raise NotImplementedError
+
+
+def test_basic_surface_kernel_dict(mode_mono):
+    surface = BasicSurface(shape={"type": "rectangle"})
+    check_scene_element(surface)
