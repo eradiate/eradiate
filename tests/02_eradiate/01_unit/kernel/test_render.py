@@ -4,7 +4,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.kernel import mi_render
+from eradiate.kernel import mi_render, mi_traverse
 from eradiate.scenes.biosphere import LeafCloud
 from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.illumination import DirectionalIllumination
@@ -45,14 +45,9 @@ def test_mi_render(mode_mono):
     and stores results as expected.
     """
     template, params = traverse(make_scene())
-    mi_scene = mi.load_dict(template.render(ctx=KernelDictContext(), drop=True))
+    mi_scene = mi_traverse(mi.load_dict(template.render(ctx=KernelDictContext())))
     contexts = [KernelDictContext(spectral_ctx={"wavelength": w}) for w in wavelengths]
-    result = mi_render(
-        mi_scene,
-        params,
-        ctxs=contexts,
-        spp=spp,
-    )
+    result = mi_render(mi_scene, contexts, spp=spp)
 
     # We store film values and SPPs
     assert set(result.keys()) == set(
@@ -69,13 +64,12 @@ def test_mi_render_rebuild(mode_mono):
     previous.
     """
     template, params = traverse(make_scene())
-    kernel_dict = template.render(ctx=KernelDictContext(), drop=True)
+    kdict = template.render(ctx=KernelDictContext(), drop=True)
 
     for w in wavelengths:
-        mi_scene = mi.load_dict(kernel_dict)
+        mi_scene = mi_traverse(mi.load_dict(kdict))
         mi_render(
             mi_scene,
-            params,
-            ctxs=[KernelDictContext(spectral_ctx={"wavelength": w})],
+            [KernelDictContext(spectral_ctx={"wavelength": w})],
             spp=spp,
         )

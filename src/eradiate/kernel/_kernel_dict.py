@@ -26,6 +26,9 @@ class InitParameter:
     information.
     """
 
+    #: Sentinel value indicating that a parameter is not used
+    UNUSED: t.ClassVar[object] = object()
+
     evaluator: t.Callable = documented(
         attrs.field(repr=False),
         doc="A callable that returns the value of the parameter for a given "
@@ -113,7 +116,9 @@ class KernelDictTemplate(UserDict):
 
     data: dict[str, InitParameter] = attrs.field(factory=dict)
 
-    def render(self, ctx: KernelDictContext, nested: bool = True) -> dict:
+    def render(
+        self, ctx: KernelDictContext, nested: bool = True, drop: bool = True
+    ) -> dict:
         """
         Render the template as a nested dictionary using a parameter map to fill
         in empty fields.
@@ -128,6 +133,11 @@ class KernelDictTemplate(UserDict):
             instantiation by Mitsuba; otherwise, the returned dictionary will be
             flat.
 
+        drop : bool, optional
+            If ``True``, drop unused parameters. Parameters may be unused either
+            because they were filtered out by the flags or because context
+            information implied it.
+
         Returns
         -------
         dict
@@ -135,7 +145,11 @@ class KernelDictTemplate(UserDict):
         result = {}
 
         for k, v in list(self.items()):
-            result[k] = v(ctx) if isinstance(v, InitParameter) else v
+            value = v(ctx) if isinstance(v, InitParameter) else v
+            if (value is InitParameter.UNUSED) and drop:
+                continue
+            else:
+                result[k] = value
 
         return nest(result, sep=".") if nested else result
 
