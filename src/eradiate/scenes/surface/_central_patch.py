@@ -9,8 +9,8 @@ import pinttr
 
 import eradiate
 
-from ._core import SurfaceComposite
-from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
+from ._core import Surface
+from ..bsdfs import BlackBSDF, BSDFNode, LambertianBSDF, bsdf_factory
 from ..core import NodeSceneElement, Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, shape_factory
 from ...attrs import documented, parse_docs
@@ -36,7 +36,7 @@ def _edges_converter(value):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class CentralPatchSurface(SurfaceComposite):
+class CentralPatchSurface(Surface):
     """
     Central patch surface [``central_patch``].
 
@@ -90,11 +90,11 @@ class CentralPatchSurface(SurfaceComposite):
                     OverriddenValueWarning,
                 )
 
-    bsdf: BSDF = documented(
+    bsdf: BSDFNode = documented(
         attrs.field(
             factory=LambertianBSDF,
             converter=bsdf_factory.convert,
-            validator=attrs.validators.instance_of(BSDF),
+            validator=attrs.validators.instance_of(BSDFNode),
         ),
         doc="The reflection model attached to the surface.",
         type=".BSDF",
@@ -115,11 +115,11 @@ class CentralPatchSurface(SurfaceComposite):
         init_type="quantity or array-like, optional",
     )
 
-    patch_bsdf: BSDF = documented(
+    patch_bsdf: BSDFNode = documented(
         attrs.field(
             factory=BlackBSDF,
             converter=bsdf_factory.convert,
-            validator=attrs.validators.instance_of(BSDF),
+            validator=attrs.validators.instance_of(BSDFNode),
         ),
         doc="The reflection model attached to the central patch.",
         type=".BSDF",
@@ -140,9 +140,12 @@ class CentralPatchSurface(SurfaceComposite):
         )
 
     def update(self) -> None:
+        # Fix BSDF IDs
+        self.bsdf.id = self._bsdf_id
+
         # Force BSDF referencing if the shape is defined
         if self.shape is not None:
-            if isinstance(self.shape.bsdf, BSDF):
+            if isinstance(self.shape.bsdf, BSDFNode):
                 warnings.warn("Set BSDF will be overridden by surface BSDF settings.")
             self.shape.bsdf = Ref(id=self._bsdf_id)
 
@@ -161,8 +164,11 @@ class CentralPatchSurface(SurfaceComposite):
         return f"{self.id}_bsdf"
 
     @property
-    def template(self) -> dict:
-        result = {}
+    def _template_bsdfs(self) -> dict:
+        objects = {
+            "bsdf_0": traverse(self.bsdf)[0].data,
+            "bsdf_1": traverse(self.patch_bsdf)[0].data,
+        }
 
         scale = self._texture_scale()
         to_uv = mi.ScalarTransform4f.scale(
@@ -171,12 +177,11 @@ class CentralPatchSurface(SurfaceComposite):
             [-0.5 + (0.5 / scale[0]), -0.5 + (0.5 / scale[1]), 0.0]
         )
 
-        result[f"{self._bsdf_id}.type"] = "blendbsdf"
+        result = {f"{self._bsdf_id}.type": "blendbsdf"}
 
-        for bsdf, prefix in [(self.bsdf, "bsdf_0"), (self.patch_bsdf, "bsdf_1")]:
-            template, _ = traverse(bsdf)
-            for k, v in template.items():
-                result[f"{self._bsdf_id}.{prefix}.{k}"] = v
+        for obj_key, obj_params in objects.items():
+            for key, param in obj_params.items():
+                result[f"{self._bsdf_id}.{obj_key}.{key}"] = param
 
         weight_dict = {
             "type": "bitmap",
@@ -190,25 +195,40 @@ class CentralPatchSurface(SurfaceComposite):
             "wrap_mode": "clamp",
         }
 
-        for k, v in weight_dict.items():
-            result[f"{self._bsdf_id}.weight.{k}"] = v
+        for key, param in weight_dict.items():
+            result[f"{self._bsdf_id}.weight.{key}"] = param
 
         return result
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def _template_shapes(self) -> dict:
+        kdict_template = traverse(self.shape)[0].data
+
         result = {}
 
-        for bsdf, prefix in [(self.bsdf, "bsdf_0"), (self.patch_bsdf, "bsdf_1")]:
-            _, params = traverse(bsdf)
-            for k, v in params.items():
-                result[f"{self._bsdf_id}.{prefix}.{k}"] = v
+        for key, param in kdict_template.items():
+            result[f"{self._shape_id}.{key}"] = param
 
         return result
 
     @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
-        return {self._shape_id: self.shape}
+    def _params_bsdfs(self) -> dict:
+        objects = {
+            "bsdf_0": traverse(self.bsdf)[1].data,
+            "bsdf_1": traverse(self.patch_bsdf)[1].data,
+        }
+
+        result = {}
+
+        for obj_key, obj_params in objects.items():
+            for key, param in obj_params.items():
+                result[f"{self._bsdf_id}.{obj_key}.{key}"] = param
+
+        return result
+
+    @property
+    def _params_shapes(self) -> dict:
+        return {}
 
     def traverse(self, callback: SceneTraversal) -> None:
         if self.shape is None:

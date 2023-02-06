@@ -4,18 +4,21 @@ import typing as t
 import warnings
 
 import attrs
+import mitsuba as mi
+from rich.pretty import pprint
 
-from ._core import SurfaceComposite
-from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..core import NodeSceneElement, Ref, SceneTraversal
+from ._core import Surface
+from ..bsdfs import BSDF, BSDFNode, LambertianBSDF, bsdf_factory
+from ..core import Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, SphereShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
+from ...kernel import TypeIdLookupStrategy, UpdateParameter
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class BasicSurface(SurfaceComposite):
+class BasicSurface(Surface):
     """
     Basic surface [``basic``].
 
@@ -50,7 +53,7 @@ class BasicSurface(SurfaceComposite):
                 OverriddenValueWarning,
             )
 
-    bsdf: BSDF = documented(
+    bsdf: BSDFNode = documented(
         attrs.field(
             factory=LambertianBSDF,
             converter=bsdf_factory.convert,
@@ -63,6 +66,9 @@ class BasicSurface(SurfaceComposite):
     )
 
     def update(self) -> None:
+        # Fix BSDF ID
+        self.bsdf.id = self._bsdf_id
+
         # Force BSDF referencing if the shape is defined
         if self.shape is not None:
             if isinstance(self.shape.bsdf, BSDF):
@@ -84,9 +90,52 @@ class BasicSurface(SurfaceComposite):
         return f"{self.id}_bsdf"
 
     @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
-        # Mind the order: the BSDF has to be BEFORE the shape
-        return {self._bsdf_id: self.bsdf, self._shape_id: self.shape}
+    def _template_bsdfs(self) -> dict:
+        kdict_template = traverse(self.bsdf)[0].data
+
+        result = {}
+
+        for key, param in kdict_template.items():
+            result[f"{self._bsdf_id}.{key}"] = param
+
+        return result
+
+    @property
+    def _template_shapes(self) -> dict:
+        kdict_template = traverse(self.shape)[0].data
+
+        result = {}
+
+        for key, param in kdict_template.items():
+            result[f"{self._shape_id}.{key}"] = param
+
+        return result
+
+    @property
+    def _params_bsdfs(self) -> dict:
+        umap_template = traverse(self.bsdf)[1].data
+
+        result = {}
+
+        for key, param in umap_template.items():
+            # If no lookup strategy is set, we must add one
+            if isinstance(param, UpdateParameter) and param.lookup_strategy is None:
+                param = attrs.evolve(
+                    param,
+                    lookup_strategy=TypeIdLookupStrategy(
+                        mi.BSDF,
+                        self._bsdf_id,
+                        parameter_relpath=key,
+                    ),
+                )
+
+            result[f"{self._bsdf_id}.{key}"] = param
+
+        return result
+
+    @property
+    def _params_shapes(self) -> dict:
+        return {}
 
     def traverse(self, callback: SceneTraversal) -> None:
         if self.shape is None:

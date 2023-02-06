@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing as t
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import attrs
 
@@ -22,7 +22,7 @@ surface_factory.register_lazy_batch(
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class Surface:
+class Surface(CompositeSceneElement, ABC):
     """
     An abstract base class defining common facilities for all surfaces.
 
@@ -46,7 +46,32 @@ class Surface:
         default='"surface"',
     )
 
+    @property
+    @abstractmethod
+    def _template_bsdfs(self) -> dict:
+        pass
 
-@attrs.define(eq=False, slots=False)
-class SurfaceComposite(Surface, CompositeSceneElement, ABC):
-    pass
+    @property
+    @abstractmethod
+    def _template_shapes(self) -> dict:
+        pass
+
+    @property
+    def template(self) -> dict:
+        # Inherit docstring
+        return {**self._template_bsdfs, **self._template_shapes}
+
+    @property
+    @abstractmethod
+    def _params_bsdfs(self) -> dict:
+        pass
+
+    @property
+    @abstractmethod
+    def _params_shapes(self) -> dict:
+        pass
+
+    @property
+    def params(self) -> dict:
+        # Inherit docstring
+        return {**self._params_bsdfs, **self._params_shapes}
