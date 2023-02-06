@@ -24,11 +24,12 @@ def test_multi_radiancemeter_medium(mode_mono):
     measure = MultiRadiancemeterMeasure()
     template, _ = traverse(measure)
 
-    ctx1 = KernelDictContext()
-    ctx2 = KernelDictContext(kwargs={"measure.atmosphere_medium_id": "test_atmosphere"})
+    kdict = template.render(ctx=KernelDictContext())
+    assert "medium" not in kdict
 
-    kd1 = template.render(ctx=ctx1, drop=True)
-    assert "medium" not in kd1
-
-    kd2 = template.render(ctx=ctx2, drop=True)
-    assert kd2["medium"] == {"type": "ref", "id": "test_atmosphere"}
+    kdict = template.render(
+        ctx=KernelDictContext(
+            kwargs={"measure.atmosphere_medium_id": "test_atmosphere"}
+        )
+    )
+    assert kdict["medium"] == {"type": "ref", "id": "test_atmosphere"}
