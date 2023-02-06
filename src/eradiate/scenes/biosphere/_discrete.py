@@ -133,7 +133,7 @@ class DiscreteCanopy(Canopy):
                 }
             )
 
-        return flatten(result)
+        return result
 
     @property
     def _params_instances(self) -> dict:
@@ -155,7 +155,7 @@ class DiscreteCanopy(Canopy):
                 }
             )
 
-        return flatten(result)
+        return result
 
     # --------------------------------------------------------------------------
     #                                  Padding
