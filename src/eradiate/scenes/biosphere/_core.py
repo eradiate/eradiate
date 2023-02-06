@@ -14,6 +14,7 @@ from ..core import CompositeSceneElement
 from ... import validators
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
+from ...kernel import UpdateParameter
 from ...typing import PathLike
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -123,7 +124,7 @@ class CanopyElement(CompositeSceneElement, ABC):
         pass
 
     @property
-    def params(self) -> t.Dict[str, Parameter]:
+    def params(self) -> t.Dict[str, UpdateParameter]:
         return flatten({**self._params_bsdfs, **self._params_shapes})
 
 

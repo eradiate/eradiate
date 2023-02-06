@@ -7,11 +7,12 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.scenes.biosphere import (
     AbstractTree,
+    DiscreteCanopy,
     InstancedCanopyElement,
+    LeafCloud,
     MeshTree,
     MeshTreeElement,
 )
-from eradiate.scenes.biosphere._discrete import DiscreteCanopy, LeafCloud
 from eradiate.scenes.core import traverse
 from eradiate.test_tools.types import check_scene_element
 
