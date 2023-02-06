@@ -10,7 +10,7 @@ from ._core import PhaseFunctionNode, phase_function_factory
 from ..core import BoundingBox, traverse
 from ...attrs import documented
 from ...contexts import KernelDictContext, SpectralContext
-from ...kernel._kernel_dict import Parameter, ParamFlags
+from ...kernel import InitParameter, UpdateParameter
 from ...kernel.transform import map_unit_cube
 from ...units import unit_context_kernel as uck
 
@@ -235,9 +235,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
                     ).astype(np.float32)
                 )
 
-            result[f"{prefix}weight.grid"] = Parameter(
-                eval_conditional_weights, ParamFlags.INIT
-            )
+            result[f"{prefix}weight.grid"] = InitParameter(eval_conditional_weights)
 
             if self.bbox is not None:
                 result[f"{prefix}weight.to_world"] = self._gridvolume_transform()
@@ -249,7 +247,7 @@ class BlendPhaseFunction(PhaseFunctionNode):
         return result
 
     @property
-    def params(self) -> t.Dict[str, Parameter]:
+    def params(self) -> t.Dict[str, UpdateParameter]:
         result = {}
 
         for i in range(len(self.components) - 1):
@@ -273,8 +271,8 @@ class BlendPhaseFunction(PhaseFunctionNode):
                 ).astype(np.float32)
 
             # Assign conditional weight to second component
-            result[f"{prefix}weight.data"] = Parameter(
-                eval_conditional_weights, ParamFlags.SPECTRAL
+            result[f"{prefix}weight.data"] = UpdateParameter(
+                eval_conditional_weights, UpdateParameter.Flags.SPECTRAL
             )
 
         else:

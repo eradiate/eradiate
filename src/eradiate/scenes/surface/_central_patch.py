@@ -15,7 +15,7 @@ from ..core import NodeSceneElement, Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
-from ...kernel._kernel_dict import Parameter
+from ...kernel import UpdateParameter
 from ...units import unit_context_config as ucc
 
 
@@ -196,7 +196,7 @@ class CentralPatchSurface(SurfaceComposite):
         return result
 
     @property
-    def params(self) -> t.Dict[str, Parameter]:
+    def params(self) -> t.Dict[str, UpdateParameter]:
         result = {}
 
         for bsdf, prefix in [(self.bsdf, "bsdf_0"), (self.patch_bsdf, "bsdf_1")]:

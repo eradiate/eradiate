@@ -12,7 +12,7 @@ from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import SpectralContext
 from ...exceptions import UnsupportedModeError
-from ...kernel._kernel_dict import Parameter, ParamFlags
+from ...kernel import InitParameter, UpdateParameter
 from ...units import unit_registry as ureg
 
 
@@ -168,27 +168,25 @@ class TabulatedPhaseFunction(PhaseFunctionNode):
     def template(self):
         result = {
             "type": "tabphase" if not self._is_irregular else "tabphase_irregular",
-            "values": Parameter(
+            "values": InitParameter(
                 lambda ctx: ",".join(
                     map(str, self.eval(spectral_ctx=ctx.spectral_ctx))
                 ),
-                ParamFlags.INIT,
             ),
         }
 
         if self._is_irregular:
-            result["nodes"] = Parameter(
-                lambda ctx: ",".join(map(str, self.data.mu.values)),
-                ParamFlags.INIT,
+            result["nodes"] = InitParameter(
+                lambda ctx: ",".join(map(str, self.data.mu.values))
             )
 
         return result
 
     @property
-    def params(self) -> t.Dict[str, Parameter]:
+    def params(self) -> t.Dict[str, UpdateParameter]:
         return {
-            "values": Parameter(
+            "values": UpdateParameter(
                 lambda ctx: self.eval(spectral_ctx=ctx.spectral_ctx),
-                ParamFlags.SPECTRAL,
+                UpdateParameter.Flags.SPECTRAL,
             )
         }

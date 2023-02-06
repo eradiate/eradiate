@@ -22,7 +22,7 @@ from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import KernelDictContext, SpectralContext
 from ...exceptions import UnsupportedModeError
-from ...kernel._kernel_dict import Parameter
+from ...kernel import UpdateParameter
 from ...radprops import ZGrid
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
@@ -411,6 +411,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return result.data
 
     @property
-    def _params_phase(self) -> t.Dict[str, Parameter]:
+    def _params_phase(self) -> t.Dict[str, UpdateParameter]:
         _, result = traverse(self.phase)
         return result.data

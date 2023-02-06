@@ -10,7 +10,7 @@ from ..phase import PhaseFunctionNode, RayleighPhaseFunction, phase_function_fac
 from ..spectra import AirScatteringCoefficientSpectrum, SpectrumNode, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
-from ...kernel._kernel_dict import Parameter, ParamFlags
+from ...kernel import InitParameter, UpdateParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -218,38 +218,36 @@ class HomogeneousAtmosphere(Atmosphere):
     def _template_medium(self) -> dict:
         return {
             "type": "homogeneous",
-            "sigma_t": Parameter(
+            "sigma_t": InitParameter(
                 lambda ctx: self.eval_sigma_t(ctx.spectral_ctx).m_as(
                     uck.get("collision_coefficient")
                 ),
-                ParamFlags.INIT,
             ),
-            "albedo": Parameter(
-                lambda ctx: self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo")),
-                ParamFlags.INIT,
+            "albedo": InitParameter(
+                lambda ctx: self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo"))
             ),
             # Note: "phase" is deliberately unset, this is left to the
             # Atmosphere.template property
         }
 
     @property
-    def _params_medium(self) -> t.Dict[str, Parameter]:
+    def _params_medium(self) -> t.Dict[str, UpdateParameter]:
         return {
             # Note: "value" appears twice because the mi.Spectrum is
             # encapsulated in a mi.ConstVolume
-            "sigma_t.value.value": Parameter(
+            "sigma_t.value.value": UpdateParameter(
                 lambda ctx: self.eval_sigma_t(ctx.spectral_ctx).m_as(
                     uck.get("collision_coefficient")
                 ),
-                ParamFlags.SPECTRAL,
+                UpdateParameter.Flags.SPECTRAL,
             ),
-            "albedo.value.value": Parameter(
+            "albedo.value.value": UpdateParameter(
                 lambda ctx: self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo")),
-                ParamFlags.SPECTRAL,
+                UpdateParameter.Flags.SPECTRAL,
             ),
         }
 
     @property
-    def _params_phase(self) -> t.Dict[str, Parameter]:
+    def _params_phase(self) -> t.Dict[str, UpdateParameter]:
         _, params = traverse(self.phase)
         return params.data

@@ -26,6 +26,7 @@ from ...contexts import (
     SpectralContext,
 )
 from ...exceptions import ModeError, UnsupportedModeError
+from ...kernel import InitParameter
 from ...srf_tools import convert as convert_srf
 from ...units import PhysicalQuantity, interpret_quantities
 from ...units import unit_context_config as ucc
@@ -643,17 +644,15 @@ class Measure:
             "film.rfilter.type": "box",
             "sampler.type": self.sampler,
             "sampler.sample_count": self.spp,
-            "medium.type": Parameter(
+            "medium.type": InitParameter(
                 lambda ctx: "ref"
                 if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
-                else Parameter.UNUSED,
-                flags=ParamFlags.INIT,
+                else InitParameter.UNUSED,
             ),
-            "medium.id": Parameter(
+            "medium.id": InitParameter(
                 lambda ctx: ctx.kwargs[f"{self.sensor_id}.atmosphere_medium_id"]
                 if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
-                else Parameter.UNUSED,
-                flags=ParamFlags.INIT,
+                else InitParameter.UNUSED,
             ),
         }
 
