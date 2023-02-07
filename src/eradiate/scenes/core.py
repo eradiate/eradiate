@@ -15,7 +15,6 @@ from .._factory import Factory
 from ..attrs import documented, parse_docs
 from ..exceptions import TraversalError
 from ..kernel import (
-    InitParameter,
     KernelDictTemplate,
     UpdateMapTemplate,
     UpdateParameter,

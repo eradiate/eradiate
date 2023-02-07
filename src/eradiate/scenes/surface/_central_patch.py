@@ -10,12 +10,11 @@ import pinttr
 import eradiate
 
 from ._core import Surface
-from ..bsdfs import BlackBSDF, BSDFNode, LambertianBSDF, bsdf_factory
-from ..core import NodeSceneElement, Ref, SceneTraversal, traverse
+from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
+from ..core import Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, shape_factory
 from ...attrs import documented, parse_docs
 from ...exceptions import OverriddenValueWarning, TraversalError
-from ...kernel import UpdateParameter
 from ...units import unit_context_config as ucc
 
 
@@ -90,11 +89,11 @@ class CentralPatchSurface(Surface):
                     OverriddenValueWarning,
                 )
 
-    bsdf: BSDFNode = documented(
+    bsdf: BSDF = documented(
         attrs.field(
             factory=LambertianBSDF,
             converter=bsdf_factory.convert,
-            validator=attrs.validators.instance_of(BSDFNode),
+            validator=attrs.validators.instance_of(BSDF),
         ),
         doc="The reflection model attached to the surface.",
         type=".BSDF",
@@ -115,11 +114,11 @@ class CentralPatchSurface(Surface):
         init_type="quantity or array-like, optional",
     )
 
-    patch_bsdf: BSDFNode = documented(
+    patch_bsdf: BSDF = documented(
         attrs.field(
             factory=BlackBSDF,
             converter=bsdf_factory.convert,
-            validator=attrs.validators.instance_of(BSDFNode),
+            validator=attrs.validators.instance_of(BSDF),
         ),
         doc="The reflection model attached to the central patch.",
         type=".BSDF",
@@ -145,7 +144,7 @@ class CentralPatchSurface(Surface):
 
         # Force BSDF referencing if the shape is defined
         if self.shape is not None:
-            if isinstance(self.shape.bsdf, BSDFNode):
+            if isinstance(self.shape.bsdf, BSDF):
                 warnings.warn("Set BSDF will be overridden by surface BSDF settings.")
             self.shape.bsdf = Ref(id=self._bsdf_id)
 

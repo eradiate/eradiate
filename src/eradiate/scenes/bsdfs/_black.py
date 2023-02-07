@@ -2,12 +2,12 @@ import typing as t
 
 import attrs
 
-from ._core import BSDFNode
+from ._core import BSDF
 from ...kernel import UpdateParameter
 
 
 @attrs.define(eq=False, slots=False)
-class BlackBSDF(BSDFNode):
+class BlackBSDF(BSDF):
     """
     Black BSDF [``black``].
 

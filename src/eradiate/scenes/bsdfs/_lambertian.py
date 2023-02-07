@@ -4,7 +4,7 @@ import attrs
 import mitsuba as mi
 from rich.pretty import pprint
 
-from ._core import BSDFNode
+from ._core import BSDF
 from ..core import traverse
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
@@ -14,7 +14,7 @@ from ...kernel import TypeIdLookupStrategy, UpdateParameter
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class LambertianBSDF(BSDFNode):
+class LambertianBSDF(BSDF):
     """
     Lambertian BSDF [``lambertian``].
 

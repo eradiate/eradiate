@@ -3,7 +3,7 @@ import typing as t
 import attrs
 import mitsuba as mi
 
-from ._core import BSDFNode
+from ._core import BSDF
 from ..core import NodeSceneElement, traverse
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
@@ -13,7 +13,7 @@ from ...kernel import InitParameter, TypeIdLookupStrategy, UpdateParameter
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class RPVBSDF(BSDFNode):
+class RPVBSDF(BSDF):
     """
     RPV BSDF [``rpv``].
 
