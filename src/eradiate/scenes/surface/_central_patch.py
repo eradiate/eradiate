@@ -140,7 +140,8 @@ class CentralPatchSurface(Surface):
 
     def update(self) -> None:
         # Fix BSDF IDs
-        self.bsdf.id = self._bsdf_id
+        self.bsdf.id = self._background_bsdf_id
+        self.patch_bsdf.id = self._patch_bsdf_id
 
         # Force BSDF referencing if the shape is defined
         if self.shape is not None:
@@ -158,9 +159,23 @@ class CentralPatchSurface(Surface):
     @property
     def _bsdf_id(self):
         """
-        Mitsuba BSDF object identifier (background).
+        Mitsuba BSDF object identifier (blend).
         """
         return f"{self.id}_bsdf"
+
+    @property
+    def _background_bsdf_id(self):
+        """
+        Mitsuba BSDF object identifier (background).
+        """
+        return f"{self.id}_background_bsdf"
+
+    @property
+    def _patch_bsdf_id(self):
+        """
+        Mitsuba BSDF object identifier (patch).
+        """
+        return f"{self.id}_patch_bsdf"
 
     @property
     def _template_bsdfs(self) -> dict:
