@@ -5,7 +5,7 @@ from abc import ABC
 
 import attrs
 
-from ..bsdfs import BSDF, BSDFNode, bsdf_factory
+from ..bsdfs import BSDF, bsdf_factory
 from ..core import InstanceSceneElement, NodeSceneElement, Ref
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
@@ -45,7 +45,7 @@ class Shape:
         default='"shape"',
     )
 
-    bsdf: t.Union[BSDFNode, Ref, None] = documented(
+    bsdf: t.Union[BSDF, Ref, None] = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(bsdf_factory.convert),

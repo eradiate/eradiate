@@ -5,10 +5,9 @@ import warnings
 
 import attrs
 import mitsuba as mi
-from rich.pretty import pprint
 
 from ._core import Surface
-from ..bsdfs import BSDF, BSDFNode, LambertianBSDF, bsdf_factory
+from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..core import Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, SphereShape, shape_factory
 from ...attrs import documented, parse_docs
@@ -53,7 +52,7 @@ class BasicSurface(Surface):
                 OverriddenValueWarning,
             )
 
-    bsdf: BSDFNode = documented(
+    bsdf: BSDF = documented(
         attrs.field(
             factory=LambertianBSDF,
             converter=bsdf_factory.convert,

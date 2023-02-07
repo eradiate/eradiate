@@ -5,7 +5,7 @@ import mitsuba as mi
 import numpy as np
 import xarray as xr
 
-from ._core import BSDFNode
+from ._core import BSDF
 from ... import converters
 from ...attrs import documented, parse_docs
 from ...kernel import InitParameter, UpdateParameter
@@ -15,7 +15,7 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class MQDiffuseBSDF(BSDFNode):
+class MQDiffuseBSDF(BSDF):
     """
     Measured quasi-diffuse BSDF [``mqdiffuse``].
 
