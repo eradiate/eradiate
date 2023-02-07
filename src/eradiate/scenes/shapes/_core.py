@@ -56,10 +56,23 @@ class Shape:
         doc="BSDF attached to the shape. If a dictionary is passed, it is "
         "interpreted by :class:`bsdf_factory.convert() <.Factory>`. "
         "If unset, no BSDF will be specified during the kernel dictionary "
-        "generation: the kernel's default will be used.",
+        "generation: the kernel's default will be used. If a :class:`.BSDF` "
+        "instance (or a corresponding dictionary specification) is passed, "
+        "its `id` member is automatically overridden.",
         type="BSDF or Ref or None",
         init_type="BSDF or Ref or dict, optional",
     )
+
+    def __attrs_post_init__(self):
+        self.update()
+
+    def update(self) -> None:
+        if isinstance(self.bsdf, BSDF):
+            self.bsdf.id = self._bsdf_id
+
+    @property
+    def _bsdf_id(self) -> str:
+        return f"{self.id}_bsdf"
 
     @property
     def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:

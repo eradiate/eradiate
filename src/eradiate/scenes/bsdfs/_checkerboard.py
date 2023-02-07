@@ -95,7 +95,9 @@ class CheckerboardBSDF(BSDF):
                         node_type=mi.BSDF,
                         node_id=self.id,
                         parameter_relpath=f"reflectance.{obj_key}.{key}",
-                    ),
+                    )
+                    if self.id is not None
+                    else None,
                 )
 
         return result
