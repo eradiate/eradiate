@@ -230,9 +230,9 @@ def test_interpolated_kernel_dict(modes_all_mono):
 
     with uck.override({"radiance": "kW/m^2/sr/nm"}):
         # Produced kernel dict and params are valid
-        mi_obj, mi_params = check_scene_element(spectrum, mi.Texture)
+        mi_wrapper = check_scene_element(spectrum, mi.Texture)
         # Unit scaling is properly applied
-        assert np.isclose(mi_params["value"], 5e-4)
+        assert np.isclose(mi_wrapper.parameters["value"], 5e-4)
 
 
 def test_interpolated_from_dataarray(mode_mono):

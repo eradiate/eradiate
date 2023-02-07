@@ -11,5 +11,5 @@ def test_black_constructor(modes_all):
 
 def test_black_kernel_dict(modes_all_double):
     b = BlackBSDF()
-    mi_obj, mi_params = check_scene_element(b, mi.BSDF)
-    assert mi_params["reflectance.value"] == 0.0
+    mi_wrapper = check_scene_element(b, mi.BSDF)
+    assert mi_wrapper.parameters["reflectance.value"] == 0.0

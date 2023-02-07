@@ -250,9 +250,9 @@ def test_heterogeneous_mix_weights(modes_all_double):
             ),
         ],
     )
-    mi_phase, mi_params = check_scene_element(mixed.phase, mi.PhaseFunction)
-    weight_1 = np.squeeze(mi_params["weight.data"])
-    weight_2 = np.squeeze(mi_params["phase_1.weight.data"])
+    mi_wrapper = check_scene_element(mixed.phase, mi.PhaseFunction)
+    weight_1 = np.squeeze(mi_wrapper.parameters["weight.data"])
+    weight_2 = np.squeeze(mi_wrapper.parameters["phase_1.weight.data"])
 
     middle = np.argwhere(mixed.zgrid.layers <= 50.0 * ureg.km).max() + 1
     fourfive = np.argwhere(mixed.zgrid.layers <= 80.0 * ureg.km).max() + 1
@@ -283,8 +283,8 @@ def test_heterogeneous_mix_weights(modes_all_double):
             ),
         ],
     )
-    mi_phase, mi_params = check_scene_element(mixed.phase, mi.PhaseFunction)
-    weights = np.squeeze(mi_params["weight.data"])
+    mi_wrapper = check_scene_element(mixed.phase, mi.PhaseFunction)
+    weights = np.squeeze(mi_wrapper.parameters["weight.data"])
     middle = np.argwhere(mixed.zgrid.layers <= 50.0 * ureg.km).max() + 1
 
     assert np.all(weights[:middle] == 0.0)
@@ -346,8 +346,8 @@ def test_heterogeneous_absorbing_mol_atm(mode_ckd, particle_radprops, request):
     )
 
     # Collect phase function weights
-    mi_phase, mi_params = check_scene_element(atmosphere.phase, mi.PhaseFunction)
-    weights = np.squeeze(mi_params["weight.data"])
+    mi_wrapper = check_scene_element(atmosphere.phase, mi.PhaseFunction)
+    weights = np.squeeze(mi_wrapper.parameters["weight.data"])
 
     # Extract phase function weights
     inside_particle_layer = (atmosphere.zgrid.layers >= pl_bottom) & (

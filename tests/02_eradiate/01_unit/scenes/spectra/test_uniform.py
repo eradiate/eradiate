@@ -87,10 +87,10 @@ def test_uniform_kernel_dict(mode_mono):
 
     # Produced kernel dict is valid
     with uck.override({"radiance": "kW/m^2/sr/nm"}):
-        mi_obj, mi_params = check_scene_element(spectrum, mi.Texture)
+        mi_wrapper = check_scene_element(spectrum, mi.Texture)
 
     # Unit scaling is properly applied
-    assert np.allclose(mi_params["value"], 1e-3)
+    assert np.allclose(mi_wrapper.parameters["value"], 1e-3)
 
 
 @pytest.mark.parametrize(

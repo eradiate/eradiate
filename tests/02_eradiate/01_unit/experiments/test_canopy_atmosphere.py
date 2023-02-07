@@ -99,14 +99,16 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
         ],
     )
 
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
     assert np.allclose(
-        mi_params["surface_shape.to_world"].transform_affine(mi.Point3f(1, -1, 0)),
+        mi_wrapper.parameters["surface_shape.to_world"].transform_affine(
+            mi.Point3f(1, -1, 0)
+        ),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
 
     # -- Measures get no external medium assigned
-    assert all(sensor.medium() is None for sensor in mi_scene.sensors())
+    assert all(sensor.medium() is None for sensor in mi_wrapper.obj.sensors())
 
     # Surface width is appropriately inherited from atmosphere
     exp = CanopyAtmosphereExperiment(
@@ -121,9 +123,9 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
         ),
     )
 
-    _, mi_params = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
     assert np.allclose(
-        mi_params["surface_shape.to_world"].matrix,
+        mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
     )
 
@@ -155,8 +157,8 @@ def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
         @ mi.ScalarTransform3f.translate([-0.499642857, -0.499642857])
     ).matrix
 
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene)
-    result = mi_params["surface_bsdf.weight.to_uv"].matrix
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
+    result = mi_wrapper.parameters["surface_bsdf.weight.to_uv"].matrix
 
     np.testing.assert_allclose(expected, result)
 
@@ -198,13 +200,13 @@ def test_canopy_atmosphere_experiment_real_life(mode_mono):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
     # -- Distant measures get no external medium
-    assert mi_scene.sensors()[0].medium() is None
+    assert mi_wrapper.obj.sensors()[0].medium() is None
 
     # -- Radiancemeter inside the atmosphere must have a medium assigned
-    assert mi_scene.sensors()[1].medium().id() == "medium_atmosphere"
+    assert mi_wrapper.obj.sensors()[1].medium().id() == "medium_atmosphere"
 
 
 @pytest.mark.slow

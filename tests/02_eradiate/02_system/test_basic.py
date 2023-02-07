@@ -9,7 +9,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.kernel import mi_render
+from eradiate.kernel import mi_render, mi_traverse
 from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.core import Scene
 from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination
@@ -93,10 +93,9 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
         raise ValueError(f"unsupported illumination '{illumination}'")
 
     scene = Scene(objects=objects)
-    mi_scene, _ = check_scene_element(scene, mi.Scene)
+    mi_wrapper = check_scene_element(scene, mi.Scene)
+
     result = np.squeeze(
-        mi_render(mi_scene, params=ParameterMap(), ctxs=[KernelDictContext()])[550.0][
-            "measure"
-        ]
+        mi_render(mi_wrapper, ctxs=[KernelDictContext()])[550.0]["measure"]
     )
     np.testing.assert_allclose(result, theoretical_solution, rtol=1e-3)

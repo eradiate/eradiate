@@ -15,10 +15,10 @@ from eradiate.test_tools.types import check_scene_element
 )
 def test_sphere_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
     sphere = SphereShape(**kwargs)
-    mi_obj, mi_params = check_scene_element(sphere, mi.Shape)
+    mi_wrapper = check_scene_element(sphere, mi.Shape)
 
     if expected_reflectance is not None:
-        assert mi_params["bsdf.reflectance.value"] == expected_reflectance
+        assert mi_wrapper.parameters["bsdf.reflectance.value"] == expected_reflectance
 
 
 def test_sphere_surface():

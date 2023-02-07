@@ -20,5 +20,5 @@ def test_lambertian_construct(modes_all, kwargs):
 def test_lambertian_kernel_dict(modes_all_double):
     bsdf = LambertianBSDF(reflectance=0.75)
 
-    mi_obj, mi_params = check_scene_element(bsdf, mi.BSDF)
-    assert mi_params["reflectance.value"] == 0.75
+    mi_wrapper = check_scene_element(bsdf, mi.BSDF)
+    assert mi_wrapper.parameters["reflectance.value"] == 0.75

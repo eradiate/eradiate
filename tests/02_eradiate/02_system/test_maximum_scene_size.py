@@ -3,7 +3,7 @@ import numpy as np
 
 import eradiate
 from eradiate.contexts import KernelDictContext
-from eradiate.kernel import mi_render
+from eradiate.kernel import mi_render, mi_traverse
 
 
 def test_maximum_scene_size(modes_all_mono, json_metadata):
@@ -49,47 +49,47 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
     passed = np.full_like(scene_sizes, False, dtype=bool)
 
     for i, scene_size in enumerate(scene_sizes):
-        mi_scene = mi.load_dict(
-            {
-                "type": "scene",
-                "bsdf_surface": {
-                    "type": "diffuse",
-                    "reflectance": rho,
-                },
-                "surface": {
-                    "type": "rectangle",
-                    "to_world": mi.ScalarTransform4f.scale(
-                        mi.ScalarVector3f(scene_size, scene_size, 1)
-                    ),
-                    "bsdf": {"type": "ref", "id": "bsdf_surface"},
-                },
-                "illumination": {
-                    "type": "directional",
-                    "direction": [0, 0, -1],
-                    "irradiance": li,
-                },
-                "measure": {
-                    "type": "hdistant",
-                    "id": "measure",
-                    "target": [0, 0, 0],
-                    "sampler": {"type": "independent", "sample_count": spp},
-                    "film": {
-                        "type": "hdrfilm",
-                        "width": 32,
-                        "height": 32,
-                        "pixel_format": "luminance",
-                        "component_format": "float32",
-                        "rfilter": {"type": "box"},
+        mi_wrapper = mi_traverse(
+            mi.load_dict(
+                {
+                    "type": "scene",
+                    "bsdf_surface": {
+                        "type": "diffuse",
+                        "reflectance": rho,
                     },
-                },
-                "integrator": {"type": "path"},
-            }
+                    "surface": {
+                        "type": "rectangle",
+                        "to_world": mi.ScalarTransform4f.scale(
+                            mi.ScalarVector3f(scene_size, scene_size, 1)
+                        ),
+                        "bsdf": {"type": "ref", "id": "bsdf_surface"},
+                    },
+                    "illumination": {
+                        "type": "directional",
+                        "direction": [0, 0, -1],
+                        "irradiance": li,
+                    },
+                    "measure": {
+                        "type": "hdistant",
+                        "id": "measure",
+                        "target": [0, 0, 0],
+                        "sampler": {"type": "independent", "sample_count": spp},
+                        "film": {
+                            "type": "hdrfilm",
+                            "width": 32,
+                            "height": 32,
+                            "pixel_format": "luminance",
+                            "component_format": "float32",
+                            "rfilter": {"type": "box"},
+                        },
+                    },
+                    "integrator": {"type": "path"},
+                }
+            )
         )
 
         result = np.squeeze(
-            mi_render(mi_scene, params=ParameterMap(), ctxs=[KernelDictContext()])[
-                550.0
-            ]["measure"]
+            mi_render(mi_wrapper, ctxs=[KernelDictContext()])[550.0]["measure"]
         )
         passed[i] = np.allclose(result, expected)
 

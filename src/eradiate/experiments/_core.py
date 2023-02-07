@@ -13,7 +13,7 @@ import eradiate
 from .. import pipelines
 from ..attrs import documented
 from ..contexts import KernelDictContext
-from ..kernel import MitsubaObject, mi_render, mi_traverse
+from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..pipelines import Pipeline
 from ..rng import SeedState
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 @attrs.define
 class Experiment(ABC):
-    mi_scene: t.Optional[MitsubaObject] = attrs.field(
+    mi_scene: t.Optional[MitsubaObjectWrapper] = attrs.field(
         default=None,
         repr=False,
     )

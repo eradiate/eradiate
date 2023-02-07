@@ -42,11 +42,11 @@ def test_homogeneous_atmosphere_params(mode_mono):
     )
 
     # Phase function parameters are exposed at highest level
-    _, params = traverse(atmosphere)
-    assert "medium_atmosphere.phase_function.g" in params
+    _, umap_template = traverse(atmosphere)
+    assert "medium_atmosphere.phase_function.g" in umap_template
 
-    _, mi_params = check_scene_element(atmosphere)
-    assert "medium_atmosphere.phase_function.g" in mi_params.keys()
+    mi_wrapper = check_scene_element(atmosphere)
+    assert "medium_atmosphere.phase_function.g" in mi_wrapper.parameters.keys()
 
 
 @pytest.mark.parametrize(
@@ -84,12 +84,12 @@ def test_homogeneous_atmosphere_params(mode_mono):
 )
 def test_homogeneous_atmosphere_geometry(mode_mono, kwargs, expected):
     atmosphere = HomogeneousAtmosphere(**kwargs)
-    mi_obj, mi_params = check_scene_element(atmosphere)
+    mi_wrapper = check_scene_element(atmosphere)
 
     # Check scene shape type
-    mi_shape_type_name = mi_obj.shapes()[0].class_().name()
+    mi_shape_type_name = mi_wrapper.obj.shapes()[0].class_().name()
     assert mi_shape_type_name == expected["atmosphere_shape_type_name"]
 
     # Check scene bounding box
-    assert dr.allclose(mi_obj.bbox().min, expected["bbox_min"])
-    assert dr.allclose(mi_obj.bbox().max, expected["bbox_max"])
+    assert dr.allclose(mi_wrapper.obj.bbox().min, expected["bbox_min"])
+    assert dr.allclose(mi_wrapper.obj.bbox().max, expected["bbox_max"])

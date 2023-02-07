@@ -68,10 +68,12 @@ def test_canopy_experiment_kernel_dict(modes_all_double, padding):
             padding=padding,
         )
     )
-    _, mi_params = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
 
     assert np.allclose(
-        mi_params["surface_shape.to_world"].transform_affine(mi.Point3f(1, -1, 0)),
+        mi_wrapper.parameters["surface_shape.to_world"].transform_affine(
+            mi.Point3f(1, -1, 0)
+        ),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
 
