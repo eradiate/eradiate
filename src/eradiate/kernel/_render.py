@@ -57,7 +57,7 @@ class TypeIdLookupStrategy:
 
 
 @attrs.define(repr=False)
-class MitsubaObject:
+class MitsubaObjectWrapper:
     """
     This container aggregates a Mitsuba object, its associated parameters and a
     set of updaters that can be used to modify the scene parameters.
@@ -90,7 +90,7 @@ class MitsubaObject:
 def mi_traverse(
     obj: "mitsuba.Object",
     umap_template: t.Optional[UpdateMapTemplate] = None,
-) -> MitsubaObject:
+) -> MitsubaObjectWrapper:
     """
     Traverse a node of Mitsuba's scene graph and return a dictionary-like
     object that can be used to read and write associated scene parameters.
@@ -176,7 +176,7 @@ def mi_traverse(
     cb = SceneTraversal(obj)
     obj.traverse(cb)
 
-    return MitsubaObject(
+    return MitsubaObjectWrapper(
         obj=obj,
         parameters=mi.SceneParameters(cb.properties, cb.hierarchy),
         umap_template=umap_template,
@@ -189,7 +189,7 @@ def mi_traverse(
 
 
 def mi_render(
-    mi_scene: MitsubaObject,
+    mi_scene: MitsubaObjectWrapper,
     ctxs: t.List[KernelDictContext],
     sensors: t.Union[None, int, t.List[int]] = 0,
     spp: int = 0,

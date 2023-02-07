@@ -59,10 +59,10 @@ def test_abstract_tree_dispatch_leaf_cloud(mode_mono, tempfile_leaves):
     assert len(tree.leaf_cloud.leaf_positions) == 5
     assert np.allclose(tree.leaf_cloud.leaf_radii, 0.1 * ureg.m)
     # Produced kernel dict is valid
-    mi_scene, mi_params = check_scene_element(tree)
+    check_scene_element(tree)
     # Check parameter map contents
-    _, params = traverse(tree)
-    assert set(params.keys()) == {
+    _, umap_template = traverse(tree)
+    assert set(umap_template.keys()) == {
         "bsdf_leaf_cloud.reflectance.value",
         "bsdf_leaf_cloud.transmittance.value",
         "bsdf_abstract_tree.reflectance.value",

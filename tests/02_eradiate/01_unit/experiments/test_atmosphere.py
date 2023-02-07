@@ -37,9 +37,9 @@ def test_atmosphere_experiment_extra_objects(mode_mono):
         }
     )
     assert isinstance(exp.extra_objects["reference_surface"], RectangleShape)
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
-    assert mi_scene.shapes()[0].id() == "reference_surface"
-    assert "reference_surface.bsdf.reflectance.value" in mi_params.keys()
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    assert mi_wrapper.obj.shapes()[0].id() == "reference_surface"
+    assert "reference_surface.bsdf.reflectance.value" in mi_wrapper.parameters.keys()
 
 
 def test_atmosphere_experiment_construct_measures(modes_all_double):
@@ -85,16 +85,16 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
         atmosphere=HomogeneousAtmosphere(),
         measures={"type": "distant"},
     )
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
     # -- Surface width is inherited from geometry
     assert np.allclose(
-        mi_params["surface_shape.to_world"].matrix,
+        mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
     )
     # -- Atmosphere is part of the scene
-    assert "shape_atmosphere" in set(shape.id() for shape in mi_scene.shapes())
+    assert "shape_atmosphere" in set(shape.id() for shape in mi_wrapper.obj.shapes())
     # -- Measure gets no external medium assigned
-    assert all(sensor.medium() is None for sensor in mi_scene.sensors())
+    assert all(sensor.medium() is None for sensor in mi_wrapper.obj.sensors())
 
     # Without an atmosphere
     exp = AtmosphereExperiment(
@@ -107,15 +107,17 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
         ],
     )
     # -- Surface width has default value
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
     assert np.allclose(
-        mi_params["surface_shape.to_world"].matrix,
+        mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([5e8, 5e8, 1]).matrix,
     )
     # -- Atmosphere is not part of the scene
-    assert "shape_atmosphere" not in set(shape.id() for shape in mi_scene.shapes())
+    assert "shape_atmosphere" not in set(
+        shape.id() for shape in mi_wrapper.obj.shapes()
+    )
     # -- Measures get no external medium assigned
-    assert all(sensor.medium() is None for sensor in mi_scene.sensors())
+    assert all(sensor.medium() is None for sensor in mi_wrapper.obj.sensors())
 
 
 @pytest.mark.slow
@@ -139,10 +141,10 @@ def test_atmosphere_experiment_real_life(mode_mono):
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
     # -- Distant measures get no external medium
-    mi_sensors = {sensor.id(): sensor for sensor in mi_scene.sensors()}
+    mi_sensors = {sensor.id(): sensor for sensor in mi_wrapper.obj.sensors()}
     assert mi_sensors["distant_measure"].medium() is None
 
     # -- Radiancemeter inside the atmosphere must have a medium assigned

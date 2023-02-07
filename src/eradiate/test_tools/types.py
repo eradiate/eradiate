@@ -4,7 +4,7 @@ import mitsuba as mi
 import pytest
 
 from ..contexts import KernelDictContext
-from ..kernel import mi_traverse
+from ..kernel import MitsubaObjectWrapper, mi_traverse
 from ..scenes.core import CompositeSceneElement, NodeSceneElement, Scene, traverse
 
 
@@ -12,7 +12,7 @@ def check_scene_element(
     instance: t.Union[NodeSceneElement, CompositeSceneElement],
     mi_cls=None,
     ctx: KernelDictContext = None,
-) -> t.Tuple["mitsuba.Object", dict]:
+) -> MitsubaObjectWrapper:
     """
     Perform kernel dictionary checks on a scene element.
 
@@ -79,7 +79,8 @@ def check_scene_element(
     assert isinstance(mi_obj, mi_cls)
 
     # Collect Mitsuba parameters, resolve update map parameter paths
-    mi_params = mi_traverse(mi_obj, umap_template).parameters
+    mi_wrapper = mi_traverse(mi_obj, umap_template)
+    mi_params = mi_wrapper.parameters
 
     # Check that parameters can all be set
     umap = umap_template.render(ctx)
@@ -93,4 +94,4 @@ def check_scene_element(
 
     mi_params.update()
 
-    return mi_obj, mi_params
+    return mi_wrapper

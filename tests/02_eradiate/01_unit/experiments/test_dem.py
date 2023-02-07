@@ -80,16 +80,16 @@ def test_dem_experiment_kernel_dict(modes_all_double):
         ],
     )
     # -- Surface has default value
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
     np.testing.assert_allclose(
-        mi_params["surface_shape.to_world"].matrix,
+        mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([500, 500, 1]).matrix,
     )
     # -- Atmosphere is not in kernel dictionary
-    assert {shape.id() for shape in mi_scene.shapes()} == {"surface_shape"}
+    assert {shape.id() for shape in mi_wrapper.obj.shapes()} == {"surface_shape"}
 
     # -- Measures get no external medium assigned
-    assert all(sensor.medium() is None for sensor in mi_scene.sensors())
+    assert all(sensor.medium() is None for sensor in mi_wrapper.obj.sensors())
 
 
 @pytest.mark.slow
@@ -114,13 +114,13 @@ def test_dem_experiment_real_life(mode_mono):
         ],
     )
 
-    mi_scene, mi_params = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
     # -- Distant measures get no external medium
-    assert mi_scene.sensors()[0].medium() is None
+    assert mi_wrapper.obj.sensors()[0].medium() is None
 
     # -- Radiancemeter inside the atmosphere must have a medium assigned
-    assert mi_scene.sensors()[1].medium().id() == "medium_atmosphere"
+    assert mi_wrapper.obj.sensors()[1].medium().id() == "medium_atmosphere"
 
 
 def test_dem_experiment_inconsistent_multiradiancemeter(mode_mono):
