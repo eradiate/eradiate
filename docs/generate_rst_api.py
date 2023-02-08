@@ -47,7 +47,7 @@ def generate_env_vars_docs():
             dedent(
                 """
                 .. _sec-config-env_vars:
-    
+
                 Environment variables
                 ---------------------
                 """
@@ -124,56 +124,6 @@ def generate_factory_docs():
         write_if_modified(outdir / f"{modname}.{varname}.rst", content)
 
 
-def generate_context_docs():
-    outdir = (
-        Path(__file__).parent.absolute() / "rst/reference_api/generated/context_fields"
-    )
-    print(f"Generating dynamic context field docs in '{outdir}'")
-
-    body = []
-
-    for field in sorted(eradiate.contexts.KernelDictContext.DYNAMIC_FIELDS.data.keys()):
-        methods = eradiate.contexts.KernelDictContext.DYNAMIC_FIELDS.data[field]
-
-        body.append(f"{field}")
-        body.append(
-            indent(
-                ",\n".join(
-                    sorted(
-                        f":meth:`.{'.'.join(method.split('.')[-2:])}`"
-                        for method in methods
-                    )
-                ),
-                "    ",
-            )
-        )
-        body.append("")
-
-    content = "\n".join(
-        [
-            HEADER,
-            "",
-            dedent(
-                """
-                .. _sec-contexts-context_fields:
-
-                ``KernelDictContext``: List of registered dynamic context fields
-                ----------------------------------------------------------------
-                
-                The dynamic field table held by 
-                :attr:`.KernelDictContext.DYNAMIC_FIELDS` contains the following 
-                entries:
-                """
-            ),
-            "\n".join(body),
-            "",
-        ]
-    )
-
-    write_if_modified(outdir / "context_fields.rst", content)
-
-
 if __name__ == "__main__":
     generate_factory_docs()
     generate_env_vars_docs()
-    generate_context_docs()

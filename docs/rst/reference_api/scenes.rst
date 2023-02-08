@@ -14,7 +14,6 @@
    :toctree: generated/autosummary/
 
    SceneElement
-   KernelDict
    BoundingBox
 
 ``eradiate.scenes.atmosphere``
