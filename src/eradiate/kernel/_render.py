@@ -23,8 +23,8 @@ class TypeIdLookupStrategy:
     match.
 
     Instances are callables which take, as argument, the current node during
-    a Mitsuba scene tree traversal and the associated parameter path.
-    If the lookup succeeds, the full parameter path is returned.
+    a Mitsuba scene tree traversal and, optionally, its path in the Mitsuba
+    scene tree. If the lookup succeeds, the full parameter path is returned.
     """
 
     node_type: t.Type = documented(
@@ -45,10 +45,13 @@ class TypeIdLookupStrategy:
         type="str",
     )
 
-    def __call__(self, node, node_path) -> t.Optional[str]:
+    def __call__(self, node, node_path: t.Optional[str] = None) -> t.Optional[str]:
         if isinstance(node, self.node_type) and node.id() == self.node_id:
-            return f"{node_path}.{self.parameter_relpath}"
-        return None
+            prefix = f"{node_path}." if node_path is not None else ""
+            return f"{prefix}{self.parameter_relpath}"
+
+        else:
+            return None
 
 
 # ------------------------------------------------------------------------------
@@ -57,21 +60,30 @@ class TypeIdLookupStrategy:
 
 
 @parse_docs
-@attrs.define(repr=False)
+@attrs.define
 class MitsubaObjectWrapper:
     """
     This container aggregates a Mitsuba object, its associated parameters and a
     set of updaters that can be used to modify the scene parameters.
+
+    See Also
+    --------
+    :func:`mi_traverse`
     """
 
     obj: "mitsuba.Object" = documented(
-        attrs.field(),
+        attrs.field(repr=lambda x: "Scene[...]" if isinstance(x, mi.Scene) else str(x)),
         doc="Mitsuba object.",
         type="mitsuba.Object",
     )
 
     parameters: t.Optional["mitsuba.SceneParameters"] = documented(
-        attrs.field(default=None),
+        attrs.field(
+            default=None,
+            repr=lambda x: "SceneParameters[...]"
+            if x.__class__.__name__ == "SceneParameters"
+            else str(None),
+        ),
         doc="Mitsuba scene parameter map.",
         type="mitsuba.SceneParameters",
         init_type="mitsuba.SceneParameters, optional",
@@ -79,7 +91,12 @@ class MitsubaObjectWrapper:
     )
 
     umap_template: t.Optional[UpdateMapTemplate] = documented(
-        attrs.field(default=None),
+        attrs.field(
+            default=None,
+            repr=lambda x: "UpdateMapTemplate[...]"
+            if isinstance(x, UpdateMapTemplate)
+            else str(x),
+        ),
         doc="An update map template, which can be rendered and used to update "
         "Mitsuba scene parameters depending on context information.",
         type=".UpdateMapTemplate",
