@@ -56,6 +56,7 @@ class TypeIdLookupStrategy:
 # ------------------------------------------------------------------------------
 
 
+@parse_docs
 @attrs.define(repr=False)
 class MitsubaObjectWrapper:
     """
@@ -92,8 +93,23 @@ def mi_traverse(
     umap_template: t.Optional[UpdateMapTemplate] = None,
 ) -> MitsubaObjectWrapper:
     """
-    Traverse a node of Mitsuba's scene graph and return a dictionary-like
-    object that can be used to read and write associated scene parameters.
+    Traverse a node of the Mitsuba scene graph and return a container holding
+    the Mitsuba scene, its parameter map and an updated parameter update map.
+
+    Parameters
+    ----------
+    obj : mitsuba.Object
+        Mitsuba scene graph node to be traversed.
+
+    umap_template : .UpdateMapTemplate, optional
+        An additional update map template which is to be updated during
+        traversal. This is used to perform parameter lookup during traversal.
+
+    Returns
+    -------
+    MitsubaObjectWrapper
+        A container holding the traversed object, the corresponding parameter
+        map and the parameter update map (if any).
 
     Notes
     -----
@@ -201,7 +217,7 @@ def mi_render(
 
     Parameters
     ----------
-    mi_scene : .MitsubaScene
+    mi_scene : .MitsubaObjectWrapper
         Mitsuba scene to render.
 
     ctxs : list of :class:`.KernelDictContext`

@@ -93,7 +93,7 @@ intersphinx_mapping = {
     "dateutil": ("https://dateutil.readthedocs.io/en/stable/", None),
     "dessinemoi": ("https://dessinemoi.readthedocs.io/en/latest/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
-    "mitsuba": ("https://eradiate-kernel.readthedocs.io/en/latest/", None),
+    "mitsuba": ("https://mitsuba.readthedocs.io/en/latest/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "pooch": ("https://www.fatiando.org/pooch/latest/", None),
@@ -128,13 +128,11 @@ autodoc_default_options = {
     # "autosummary": False,
 }
 
-
 # -- Autosummary options -------------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html
 
 autosummary_generate = True
 autosummary_members = True
-
 
 # -- Docstrings ----------------------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
@@ -273,6 +271,7 @@ latex_documents = [
     ),
 ]
 
+
 # -------------------------- Custom generation steps ---------------------------
 
 
@@ -284,7 +283,6 @@ def custom_step(app):
     generate_rst_plugins.generate()  # Plugins
     generate_rst_api.generate_env_vars_docs()  # Environment variables
     generate_rst_api.generate_factory_docs()  # Factories
-    generate_rst_api.generate_context_docs()  # Context fields
 
 
 def setup(app):
