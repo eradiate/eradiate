@@ -15,7 +15,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "MI_ENABLE_EMBREE": "OFF",
-                "MI_DEFAULT_VARIANTS": "scalar_mono;scalar_mono_double;scalar_rgb;scalar_spectral;llvm_mono_double;llvm_ad_rgb"
+                "MI_DEFAULT_VARIANTS": "scalar_mono;scalar_mono_double;scalar_mono_polarized_double;scalar_rgb;scalar_spectral;llvm_mono_double;llvm_ad_rgb"
             }
         }
     ],
