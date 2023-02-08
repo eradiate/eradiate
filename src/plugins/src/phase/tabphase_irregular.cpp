@@ -112,7 +112,7 @@ public:
         m_distr.update();
     }
 
-    std::pair<Vector3f, Float> sample(const PhaseFunctionContext & /* ctx */,
+    std::pair<Vector3f, Spectrum> sample(const PhaseFunctionContext & /* ctx */,
                                       const MediumInteraction3f &mi,
                                       Float /* sample1 */,
                                       const Point2f &sample2,
@@ -134,13 +134,13 @@ public:
         wo = -mi.to_world(wo);
 
         // Retrieve the PDF value from the physics convention-sampled angle
-        Float pdf = m_distr.eval_pdf_normalized(cos_theta_prime, active) *
+        UnpolarizedSpectrum value = m_distr.eval_pdf_normalized(cos_theta_prime, active) *
                     dr::InvTwoPi<ScalarFloat>;
 
-        return { wo, pdf };
+        return { wo, depolarizer<Spectrum>(value) };
     }
 
-    Float eval(const PhaseFunctionContext & /* ctx */,
+    Spectrum eval(const PhaseFunctionContext & /* ctx */,
                const MediumInteraction3f &mi, const Vector3f &wo,
                Mask active) const override {
         MI_MASKED_FUNCTION(ProfilerPhase::PhaseFunctionEvaluate, active);
@@ -150,8 +150,19 @@ public:
         // This parameterization differs from the convention used internally by
         // Mitsuba and is the reason for the minus sign below.
         Float cos_theta = -dot(wo, mi.wi);
-        return m_distr.eval_pdf_normalized(cos_theta, active) *
-               dr::InvTwoPi<ScalarFloat>;
+        return UnpolarizedSpectrum(m_distr.eval_pdf_normalized(cos_theta, active) *
+               dr::InvTwoPi<ScalarFloat>);
+    }
+
+    Float pdf(const PhaseFunctionContext & /* ctx */,
+               const MediumInteraction3f &mi, const Vector3f &wo,
+               Mask active) const override {
+        MI_MASKED_FUNCTION(ProfilerPhase::PhaseFunctionEvaluate, active);
+
+        Float cos_theta = -dot(wo, mi.wi);
+        Float pdf = m_distr.eval_pdf_normalized(cos_theta, active)
+                    * dr::InvTwoPi<ScalarFloat>;
+        return pdf;
     }
 
     std::string to_string() const override {
