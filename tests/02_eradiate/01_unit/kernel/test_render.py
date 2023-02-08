@@ -1,75 +1,180 @@
+import attrs
 import mitsuba as mi
 import numpy as np
-import pytest
 
-from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
-from eradiate.kernel import mi_render, mi_traverse
-from eradiate.scenes.biosphere import LeafCloud
-from eradiate.scenes.core import Scene, traverse
-from eradiate.scenes.illumination import DirectionalIllumination
-from eradiate.scenes.integrators import PathIntegrator
-from eradiate.scenes.measure import PerspectiveCameraMeasure
-from eradiate.scenes.surface import BasicSurface
-
-# TODO: Unit tests
-# TODO: Benchmark
+from eradiate.contexts import SpectralContext
+from eradiate.kernel import (
+    MitsubaObjectWrapper,
+    TypeIdLookupStrategy,
+    UpdateMapTemplate,
+    UpdateParameter,
+    mi_render,
+    mi_traverse,
+)
 
 
-wavelengths = np.linspace(500, 600, 21) * ureg.nm
-spp = 100
-
-
-def make_scene():
-    return Scene(
-        objects={
-            "surface": BasicSurface(shape={"type": "rectangle"}),
-            "canopy": LeafCloud.cuboid(
-                n_leaves=10000,
-                leaf_radius=5 * ureg.cm,
-                l_horizontal=10 * ureg.m,
-                l_vertical=1 * ureg.m,
-            ),
-            "illumination": DirectionalIllumination(),
-            "integrator": PathIntegrator(),
-            "measure": PerspectiveCameraMeasure(
-                target=[0, 0, 0], origin=[2, 2, 2], up=[0, 0, 1]
-            ),
+def test_type_id_lookup_strategy(mode_mono):
+    mi_scene = mi.load_dict(
+        {
+            "type": "scene",
+            "bsdf": {"type": "diffuse", "id": "my_bsdf"},
+            "rectangle_1": {
+                "type": "rectangle",
+                "bsdf": {"type": "ref", "id": "my_bsdf"},
+            },
+            "rectangle_2": {
+                "type": "rectangle",
+                "bsdf": {"type": "ref", "id": "my_bsdf"},
+            },
+            "disk_1": {
+                "type": "disk",
+                "bsdf": {"type": "ref", "id": "my_bsdf"},
+            },
+            "disk_2": {
+                "type": "disk",
+                "bsdf": {"type": "diffuse"},
+            },
         }
+    )
+
+    lookup_strategy = TypeIdLookupStrategy(
+        node_type=mi.BSDF, node_id="my_bsdf", parameter_relpath="reflectance.value"
+    )
+
+    for shape in mi_scene.shapes():
+        path = shape.id()
+        assert lookup_strategy(shape.bsdf(), path) == (
+            f"{path}.reflectance.value" if path != "disk_2" else None
+        )
+
+
+def test_mi_traverse(mode_mono):
+    mi_scene = mi.load_dict(
+        {
+            "type": "scene",
+            "bsdf": {"type": "diffuse", "id": "my_bsdf"},
+            "rectangle_1": {
+                "type": "rectangle",
+                "bsdf": {"type": "ref", "id": "my_bsdf"},
+            },
+            "rectangle_2": {
+                "type": "rectangle",
+                "bsdf": {"type": "ref", "id": "my_bsdf"},
+            },
+            "disk_1": {
+                "type": "disk",
+                "bsdf": {"type": "ref", "id": "my_bsdf"},
+            },
+            "disk_2": {
+                "type": "disk",
+                "bsdf": {"type": "diffuse"},
+            },
+        }
+    )
+
+    umap_template = UpdateMapTemplate(
+        {
+            "my_bsdf.reflectance.value": UpdateParameter(
+                evaluator=lambda x: x,
+                flags=UpdateParameter.Flags.ALL,
+                lookup_strategy=TypeIdLookupStrategy(
+                    node_type=mi.BSDF,
+                    node_id="my_bsdf",
+                    parameter_relpath="reflectance.value",
+                ),
+            )
+        }
+    )
+
+    mi_wrapper = mi_traverse(mi_scene, umap_template)
+
+    # Traversal succeeds
+    assert isinstance(mi_wrapper, MitsubaObjectWrapper)
+
+    # Parameter map is correctly extracted
+    assert set(mi_wrapper.parameters.keys()) == {
+        "my_bsdf.reflectance.value",
+        "disk_1.to_world",
+        "disk_2.bsdf.reflectance.value",
+        "disk_2.to_world",
+        "rectangle_1.to_world",
+        "rectangle_2.to_world",
+    }
+
+    # Parameter ID should be resolved in accordance with the declared lookup strategy
+    assert (
+        mi_wrapper.umap_template["my_bsdf.reflectance.value"].parameter_id
+        == "my_bsdf.reflectance.value"
     )
 
 
 def test_mi_render(mode_mono):
-    """
-    This basic test checks that the mi_render() function runs without failing
-    and stores results as expected.
-    """
-    template, params = traverse(make_scene())
-    mi_scene = mi_traverse(mi.load_dict(template.render(ctx=KernelDictContext())))
-    contexts = [KernelDictContext(spectral_ctx={"wavelength": w}) for w in wavelengths]
-    result = mi_render(mi_scene, contexts, spp=spp)
-
-    # We store film values and SPPs
-    assert set(result.keys()) == set(
-        x.spectral_ctx.wavelength.magnitude for x in contexts
+    mi_scene = mi.load_dict(
+        {
+            "type": "scene",
+            "rectangle": {
+                "type": "rectangle",
+                "bsdf": {"type": "diffuse", "id": "my_bsdf"},
+            },
+            "sensor": {
+                "type": "distant",
+                "film": {"type": "hdrfilm", "width": 1, "height": 1},
+                "direction": [0, 0, -1],
+                "target": [0, 0, 0],
+            },
+            "illumination": {
+                "type": "directional",
+                "direction": [0, 0, -1],
+                "irradiance": 1.0,
+            },
+            "integrator": {"type": "path"},
+        }
     )
-    assert set(result[500.0].keys()) == {"measure"}
 
+    umap_template = UpdateMapTemplate(
+        {
+            "my_bsdf.reflectance.value": UpdateParameter(
+                evaluator=lambda ctx: ctx.x,
+                flags=UpdateParameter.Flags.ALL,
+                lookup_strategy=TypeIdLookupStrategy(
+                    node_type=mi.BSDF,
+                    node_id="my_bsdf",
+                    parameter_relpath="reflectance.value",
+                ),
+            )
+        }
+    )
 
-@pytest.mark.slow
-def test_mi_render_rebuild(mode_mono):
-    """
-    This test performs the same computation as the previous, but rebuilds the
-    scene for each parametric iteration. It is designed for comparison with the
-    previous.
-    """
-    template, params = traverse(make_scene())
-    kdict = template.render(ctx=KernelDictContext(), drop=True)
+    mi_wrapper = mi_traverse(mi_scene, umap_template)
 
-    for w in wavelengths:
-        mi_scene = mi_traverse(mi.load_dict(kdict))
-        mi_render(
-            mi_scene,
-            [KernelDictContext(spectral_ctx={"wavelength": w})],
-            spp=spp,
-        )
+    @attrs.define
+    class ContextMockup:
+        x = attrs.field()
+        w = attrs.field()
+
+        @property
+        def index_formatted(self):
+            return str(self.x)
+
+        @property
+        def spectral_ctx(self):
+            return SpectralContext.new(wavelength=self.w)
+
+    reflectances = [0.0, 0.5, 1.0]
+    wavelengths = [400.0, 500.0, 600.0]
+
+    result = mi_render(
+        mi_wrapper,
+        ctxs=[ContextMockup(r, w) for (r, w) in zip(reflectances, wavelengths)],
+    )
+
+    assert isinstance(result, dict)
+
+    expected = []
+    actual = []
+    for i, (r, w) in enumerate(zip(reflectances, wavelengths)):
+        assert isinstance(result[w]["sensor"], mi.Bitmap)
+        expected.append(r / np.pi)
+        actual.append(np.squeeze(result[w]["sensor"]))
+
+    np.testing.assert_allclose(actual, expected)
