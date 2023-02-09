@@ -10,10 +10,36 @@
 
 .. py:currentmodule:: eradiate.scenes.core
 
+**Scene element traversal**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   traverse
+
+**Basic scene elements**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   Ref
+   Scene
+
+**Scene element interfaces**
+
 .. autosummary::
    :toctree: generated/autosummary/
 
    SceneElement
+   NodeSceneElement
+   InstanceSceneElement
+   CompositeSceneElement
+
+**Others**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
    BoundingBox
 
 ``eradiate.scenes.geometry``

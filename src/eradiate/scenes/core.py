@@ -27,11 +27,22 @@ from ..units import unit_registry as ureg
 # ------------------------------------------------------------------------------
 
 
+@parse_docs
 @attrs.define(eq=False, slots=False)
 class SceneElement(ABC):
     """
-    Important: All subclasses *must* have a hash, thus eq must be False (see
-    attrs docs on hashing for a complete explanation).
+    Abstract base class for all scene elements.
+
+    Warnings
+    --------
+    All subclasses *must* have a hash, thus ``eq`` must be ``False`` (see
+    `attrs docs on hashing <https://www.attrs.org/en/stable/hashing.html>`_
+    for a complete explanation).
+
+    Notes
+    -----
+    The default implementation of ``__attrs_post_init__()`` executes the
+    :meth:`update` method.
     """
 
     id: t.Optional[str] = documented(
@@ -50,15 +61,23 @@ class SceneElement(ABC):
     @property
     def params(self) -> t.Optional[t.Dict[str, UpdateParameter]]:
         """
-        Map of updatable parameters associated with this scene element.
+        Returns
+        -------
+        dict[str, :class:`.UpdateParameter`] or None
+            A dictionary mapping parameter paths, consisting of dot-separated
+            strings, to a corresponding update protocol.
+
+        See Also
+        --------
+        :class:`.UpdateParameter`, :class:`.UpdateMapTemplate`
         """
         return None
 
     @abstractmethod
-    def traverse(self, callback):
+    def traverse(self, callback) -> None:
         """
-        Traverse this scene element and collect kernel dictionary template,
-        parameter and object map contributions.
+        Traverse this scene element and collect kernel dictionary template and
+        parameter update map contributions.
 
         Parameters
         ----------
@@ -76,13 +95,32 @@ class SceneElement(ABC):
         pass
 
 
+@parse_docs
 @attrs.define(eq=False, slots=False)
 class NodeSceneElement(SceneElement, ABC):
+    """
+    Abstract base class for scene elements which expand as a single Mitsuba
+    scene tree node which can be described as a scene dictionary.
+    """
+
     @property
     @abstractmethod
     def template(self) -> dict:
         """
         Kernel dictionary template contents associated with this scene element.
+
+        Returns
+        -------
+        dict
+            A flat dictionary mapping dot-separated strings describing the path
+            of an item in the nested scene dictionary to values. Values may be
+            objects which can be directly used by the :func:`mitsuba.load_dict`
+            functions, or :class:`.InitParameter` instances which must be
+            rendered.
+
+        See Also
+        --------
+        :class:`.InitParameter`, :class:`.KernelDictTemplate`
         """
         pass
 
@@ -90,6 +128,12 @@ class NodeSceneElement(SceneElement, ABC):
     def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
         """
         Map of child objects associated with this scene element.
+
+        Returns
+        -------
+        dict
+            A dictionary mapping object names to a corresponding object to be
+            inserted in the Eradiate scene tree graph.
         """
         return None
 
@@ -105,22 +149,43 @@ class NodeSceneElement(SceneElement, ABC):
                 callback.put_object(name, obj)
 
 
+@parse_docs
 @attrs.define(eq=False, slots=False)
 class InstanceSceneElement(SceneElement, ABC):
+    """
+    Abstract base class for scene elements which represent a node in the Mitsuba
+    scene graph, but can only be expanded to a Mitsuba object.
+    """
+
     @property
     @abstractmethod
     def instance(self) -> "mitsuba.Object":
+        """
+        Mitsuba object which is represented by this scene element.
+
+        Returns
+        -------
+        mitsuba.Object
+        """
+
         pass
 
     def traverse(self, callback):
+        # Inherit docstring
         callback.put_instance(self.instance)
 
         if self.params is not None:
             callback.put_params(self.params)
 
 
+@parse_docs
 @attrs.define(eq=False, slots=False)
 class CompositeSceneElement(SceneElement, ABC):
+    """
+    Abstract based class for scene elements which expand to multiple Mitsuba
+    scene tree nodes.
+    """
+
     @property
     def template(self) -> dict:
         # The default implementation returns an empty dictionary
@@ -130,10 +195,17 @@ class CompositeSceneElement(SceneElement, ABC):
     def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
         """
         Map of child objects associated with this scene element.
+
+        Returns
+        -------
+        dict
+            A dictionary mapping object names to a corresponding object to be
+            inserted in the Eradiate scene tree graph.
         """
         return None
 
     def traverse(self, callback):
+        # Inherit docstring
         callback.put_template(self.template)
 
         if self.params is not None:
@@ -152,8 +224,13 @@ class CompositeSceneElement(SceneElement, ABC):
                     callback.put_params({f"{name}.{k}": v for k, v in params.items()})
 
 
+@parse_docs
 @attrs.define(eq=False, slots=False)
 class Ref(NodeSceneElement):
+    """
+    A scene element which represents a reference to a Mitsuba scene tree node.
+    """
+
     id: str = documented(
         attrs.field(
             kw_only=True,
@@ -165,19 +242,34 @@ class Ref(NodeSceneElement):
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {"type": "ref", "id": self.id}
 
 
+@parse_docs
 @attrs.define(eq=False, slots=False)
 class Scene(NodeSceneElement):
-    _objects: t.Dict[str, SceneElement] = attrs.field(factory=dict, converter=dict)
+    """
+    A generic scene element container which expands as a :class:`mitsuba.Scene`
+    object.
+    """
+
+    _objects: t.Dict[str, SceneElement] = documented(
+        attrs.field(factory=dict, converter=dict),
+        doc="A map of scene elements which will be included in the Mitsuba "
+        "scene definition.",
+        type="dict",
+        default="{}",
+    )
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {"type": "scene"}
 
     @property
     def objects(self) -> t.Dict[str, SceneElement]:
+        # Inherit docstring
         return self._objects
 
 
@@ -274,7 +366,8 @@ class SceneTraversal:
 
 def traverse(node: NodeSceneElement) -> t.Tuple[KernelDictTemplate, UpdateMapTemplate]:
     """
-    Traverse a scene element tree and collect kernel dictionary data.
+    Traverse a scene element tree and collect kernel dictionary template and
+     parameter update table data.
 
     Parameters
     ----------
