@@ -39,24 +39,8 @@ Other helpers
 
    bitmap_to_dataset
    eval_bsdf
-
-``eradiate.kernel.gridvolume``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: eradiate.kernel.gridvolume
-   :members:
-   :no-autosummary:
-
-``eradiate.kernel.logging``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: eradiate.kernel.logging
-   :members:
-   :no-autosummary:
-
-``eradiate.kernel.transform``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: eradiate.kernel.transform
-   :members:
-   :no-autosummary:
+   install_logging
+   map_cube
+   map_unit_cube
+   read_binary_grid3d
+   write_binary_grid3d

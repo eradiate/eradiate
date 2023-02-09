@@ -10,8 +10,7 @@ from ._core import PhaseFunctionNode, phase_function_factory
 from ..core import BoundingBox, traverse
 from ...attrs import documented
 from ...contexts import KernelDictContext, SpectralContext
-from ...kernel import InitParameter, UpdateParameter
-from ...kernel.transform import map_unit_cube
+from ...kernel import InitParameter, UpdateParameter, map_unit_cube
 from ...units import unit_context_kernel as uck
 
 
