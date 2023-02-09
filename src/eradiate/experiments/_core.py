@@ -11,7 +11,7 @@ import xarray as xr
 import eradiate
 
 from .. import pipelines
-from ..attrs import documented
+from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..pipelines import Pipeline
@@ -36,11 +36,22 @@ from ..util.misc import onedict_value
 logger = logging.getLogger(__name__)
 
 
+@parse_docs
 @attrs.define
 class Experiment(ABC):
+    """
+    Abstract base class for all Eradiate experiments. An experiment consists of
+    a high-level scene specification parametrised by natural user input, a
+    processing and post-processing pipeline, and a result storage data
+    structure.
+    """
+
+    # Internal Mitsuba scene. This member is not set by the end-user, but rather
+    # by the Experiment itself during initialisation.
     mi_scene: t.Optional[MitsubaObjectWrapper] = attrs.field(
         default=None,
         repr=False,
+        init=False,
     )
 
     measures: t.List[Measure] = documented(
@@ -195,8 +206,14 @@ def _extra_objects_converter(value):
     return result
 
 
+@parse_docs
 @attrs.define
 class EarthObservationExperiment(Experiment, ABC):
+    """
+    Abstract based class for experiments illuminated by a distant directional
+    emitter.
+    """
+
     extra_objects: t.Dict[str, SceneElement] = documented(
         attrs.field(
             factory=dict,
@@ -446,7 +463,34 @@ def run(
     exp: Experiment,
     spp: int = 0,
     seed_state: t.Optional[SeedState] = None,
-) -> t.Tuple[xr.Dataset]:
+) -> t.Union[xr.Dataset, t.Dict[str, xr.Dataset]]:
+    """
+    Run an Eradiate experiment. This function performs kernel scene assembly,
+    runs the computation and post-processes the raw results. The output consists
+    of one or several xarray datasets.
+
+    Parameters
+    ----------
+    exp : Experiment
+        Reference to the experiment object which will be processed.
+
+    spp : int, optional, default: 0
+        Optional parameter to override the number of samples per pixel for all
+        computed measures. If set to 0, the configured value for each measure
+        takes precedence.
+
+    seed_state : :class:`.SeedState`, optional
+            Seed state used to generate seeds to initialise Mitsuba's RNG at
+            every iteration of the parametric loop. If unset, Eradiate's
+            :attr:`root seed state <.root_seed_state>` is used.
+
+    Returns
+    -------
+    Dataset or dict[str, Dataset]
+        If a single measure is defined, a single xarray dataset is returned.
+        If several measures are defined, a dictionary mapping measure IDs to
+        the corresponding result dataset is returned.
+    """
     exp.process(spp=spp, seed_state=seed_state)
     exp.postprocess()
     return exp.results if len(exp.results) > 1 else onedict_value(exp.results)

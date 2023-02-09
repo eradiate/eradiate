@@ -47,6 +47,10 @@ class UpdateParameter:
     This class declares an Eradiate parameter in a Mitsuba scene parameter
     update map. It holds an evaluation protocol depending on context
     information.
+
+    See Also
+    --------
+    :class:`.KernelDictContext`, :class:`.TypeIdLookupStrategy`
     """
 
     #: Sentinel value indicating that a parameter is not used
@@ -73,8 +77,8 @@ class UpdateParameter:
         attrs.field(default=Flags.ALL),
         doc="Flags specifying parameter attributes. By default, the declared "
         "parameter will pass all filters.",
-        type=".ParaFlags",
-        default=".ParamFlags.ALL",
+        type=".Flags",
+        default=".Flags.ALL",
     )
 
     lookup_strategy: t.Optional[
@@ -82,7 +86,8 @@ class UpdateParameter:
     ] = documented(
         attrs.field(default=None),
         doc="A callable that searches a Mitsuba scene tree node for a desired "
-        "parameter ID.",
+        "parameter ID: with signature "
+        "``f(node: mi.Object, node_relpath: str) -> Optional[str]``.",
         type="callable or None",
         init_type="callable, optional",
         default="None",

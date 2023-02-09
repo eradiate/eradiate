@@ -35,8 +35,8 @@ class CanopyExperiment(EarthObservationExperiment):
     A post-initialisation step will constrain the measure setup if a
     distant measure is used and no target is defined:
 
-    * if a canopy is defined, the target will be set to the top of the canopy unit cell
-      (*i.e.* without its padding);
+    * if a canopy is defined, the target will be set to the top of the canopy
+      unit cell (*i.e.* without its padding);
     * if no canopy is defined, the target will be set to [0, 0, 0].
     """
 

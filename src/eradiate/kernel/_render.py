@@ -257,6 +257,10 @@ def mi_render(
     dict
         A nested dictionary mapping context and sensor indices to rendered
         bitmaps.
+
+    Notes
+    -----
+    This function wraps sequential calls to  :func:`mitsuba.render`.
     """
 
     if seed_state is None:
