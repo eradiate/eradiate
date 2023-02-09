@@ -14,6 +14,7 @@ Concrete classes
    AtmosphereExperiment
    CanopyExperiment
    CanopyAtmosphereExperiment
+   DEMExperiment
 
 Interfaces
 ----------
@@ -30,5 +31,4 @@ Functions
 .. autosummary::
    :toctree: generated/autosummary/
 
-   mitsuba_run
    run

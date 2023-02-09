@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import typing as t
 
 import attrs
@@ -13,9 +14,9 @@ from ..units import unit_registry as ureg
 
 @parse_docs
 @attrs.define
-class SceneGeometry:
+class SceneGeometry(abc.ABC):
     """
-    Base class defining a scene geometry.
+    Abstract base class defining a scene geometry.
     """
 
     @classmethod

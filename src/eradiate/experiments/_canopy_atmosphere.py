@@ -65,6 +65,8 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
       required to be either all inside or all outside of the atmosphere. If an
       unsuitable configuration is detected, a :class:`ValueError` will be raised
       during initialisation.
+
+    * Currently this experiment is limited to the plane-parallel geometry.
     """
 
     # Currently, only the plane parallel geometry is supported

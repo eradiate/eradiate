@@ -16,6 +16,20 @@
    SceneElement
    BoundingBox
 
+``eradiate.scenes.geometry``
+---------------------------
+
+.. automodule:: eradiate.scenes.geometry
+
+.. py:currentmodule:: eradiate.scenes.geometry
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   SceneGeometry
+   PlaneParallelGeometry
+   SphericalShellGeometry
+
 ``eradiate.scenes.atmosphere``
 ------------------------------
 

@@ -28,18 +28,15 @@ from ..util.misc import deduplicate_sorted
 @attrs.define
 class DEMExperiment(EarthObservationExperiment):
     """
-    Simulate radiation in a scene with a digital elevation model (DEM).
-    This experiment approximates a one-dimensional setup using
-    a 3D geometry set up to reproduce the effect of invariances typical
-    of 1D geometries.
+    Simulate radiation in a scene with a digital elevation model (DEM)
+    under a 1D atmosphere.
 
     Notes
     -----
-    * A post-initialisation step will constrain the measure setup if a
-      distant measure is used and no target is defined:
-
-      * if an atmosphere is defined, the target will be set to [0, 0, TOA];
-      * if no atmosphere is defined, the target will be set to [0, 0, 0].
+    * When using distant measures, setting a target is highly recommended. This
+      experiment will issue a warning during configuration if it detects that a
+      distant measure is used with no or an inappropriate target. If a distant
+      measure is used and no target is set, it defaults to [0, 0, 0].
 
     * This experiment supports arbitrary measure positioning, except for
       :class:`.MultiRadiancemeterMeasure`, for which subsensor origins are
@@ -47,7 +44,7 @@ class DEMExperiment(EarthObservationExperiment):
       unsuitable configuration is detected, a :class:`ValueError` will be raised
       during initialisation.
 
-    * Currently this experiment is limited to plane-parallel atmospheric geometry.
+    * Currently this experiment is limited to the plane-parallel geometry.
     """
 
     # Currently, only the plane parallel geometry is supported

@@ -62,7 +62,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
         ),
         doc="Problem geometry.",
         type=".PlaneParallelGeometry or .SphericalShellGeometry",
-        init_type="str or dict or .AtmosphereGeometry",
+        init_type="str or dict or .SceneGeometry",
         default='"plane_parallel"',
     )
 
