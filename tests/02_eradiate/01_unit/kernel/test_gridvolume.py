@@ -3,7 +3,7 @@ import pathlib
 import numpy as np
 import pytest
 
-from eradiate.kernel.gridvolume import read_binary_grid3d, write_binary_grid3d
+from eradiate.kernel import read_binary_grid3d, write_binary_grid3d
 
 
 @pytest.mark.parametrize(

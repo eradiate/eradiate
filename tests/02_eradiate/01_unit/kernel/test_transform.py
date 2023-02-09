@@ -1,7 +1,7 @@
 import drjit as dr
 import mitsuba as mi
 
-from eradiate.kernel.transform import map_cube, map_unit_cube
+from eradiate.kernel import map_cube, map_unit_cube
 
 
 def test_map_unit_cube(mode_mono):
