@@ -224,7 +224,7 @@ def mi_traverse(
 def mi_render(
     mi_scene: MitsubaObjectWrapper,
     ctxs: t.List[KernelDictContext],
-    sensors: t.Union[None, int, t.List[int]] = 0,
+    sensors: t.Union[None, int, t.List[int]] = None,
     spp: int = 0,
     seed_state: t.Optional[SeedState] = None,
 ) -> t.Dict[t.Any, "mitsuba.Bitmap"]:
@@ -242,11 +242,12 @@ def mi_render(
         iteration.
 
     sensors : int or list of int, optional
-        Sensor indices to render. If ``None``, all sensors are rendered.
+        Sensor indices to render. If ``None`` (default), all sensors are
+        rendered.
 
     spp : int, optional, default: 0
-        Number of samples per pixel. If set to 0, the value set in the original
-        scene definition takes precedence.
+        Number of samples per pixel. If set to 0 (default), the value set in the
+        original scene definition takes precedence.
 
     seed_state : :class:`.SeedState, optional
         Seed state used to generate seeds to initialise Mitsuba's RNG at
