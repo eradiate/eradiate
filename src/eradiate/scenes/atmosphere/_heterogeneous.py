@@ -68,8 +68,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         doc="Molecular atmosphere. May be specified as a dictionary interpreted "
         'by :data:`.atmosphere_factory`; in that case, the ``"type"`` parameter '
         'may be omitted and will automatically be set to ``"molecular"``.',
-        type=":class:`.MolecularAtmosphere` or None",
-        init_type=":class:`.MolecularAtmosphere` or dict, optional",
+        type=".MolecularAtmosphere or None",
+        init_type=".MolecularAtmosphere or dict, optional",
         default="None",
     )
 
@@ -96,8 +96,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         "dictionaries interpreted by :data:`.atmosphere_factory`; in that "
         "case, the ``type`` parameter may be omitted and will automatically "
         'be set to ``"particle_layer"``.',
-        type="list of :class:`.ParticleLayer`",
-        init_type="list of :class:`.ParticleLayer`, optional",
+        type="list of .ParticleLayer",
+        init_type="list of .ParticleLayer, optional",
         default="[]",
     )
 
@@ -109,27 +109,37 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
-    #: A high-resolution layer altitude mesh to interpolate the components'
-    #: radiative properties on, before computing the total radiative
-    #: properties. This is an internal field that is automatically set by
-    #: the :meth:`update` method. Defaults to one layer per 100 m
-    #: (or 10 layers if the atmosphere object height is less than 100 m).
-    _zgrid: ZGrid = attrs.field(
-        default=None,
-        converter=attrs.converters.optional(
-            lambda x: ZGrid(x) if not isinstance(x, ZGrid) else x
+    _zgrid: ZGrid = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(
+                lambda x: ZGrid(x) if not isinstance(x, ZGrid) else x
+            ),
+            validator=attrs.validators.optional(attrs.validators.instance_of(ZGrid)),
+            repr=False,
         ),
-        validator=attrs.validators.optional(attrs.validators.instance_of(ZGrid)),
-        repr=False,
+        doc="A high-resolution layer altitude mesh on which the radiative "
+        "properties of the components are interpolated. If unset, a default grid "
+        "grid with one layer per 100 m (or 10 layers if the atmosphere object "
+        "height is less than 100 m) is used.",
+        type=".ZGrid",
+        init_type=".ZGrid, optional",
     )
 
     @property
     def components(self) -> t.List[t.Union[MolecularAtmosphere, ParticleLayer]]:
+        """
+        Returns
+        -------
+        list of .AbstractHeterogeneousAtmosphere
+            The list of all registered atmospheric components.
+        """
         result = [self.molecular_atmosphere] if self.molecular_atmosphere else []
         result.extend(self.particle_layers)
         return result
 
     def update(self):
+        # Inherit docstring
         super().update()
 
         # Force component IDs and geometry
@@ -175,17 +185,21 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @property
     def zgrid(self) -> ZGrid:
+        # Inherit docstring
         return self._zgrid
 
     @property
     def bottom(self) -> pint.Quantity:
+        # Inherit docstring
         return min([component.bottom for component in self.components])
 
     @property
     def top(self) -> pint.Quantity:
+        # Inherit docstring
         return max([component.top for component in self.components])
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+        # Inherit docstring
         mfp = [component.eval_mfp(ctx=ctx) for component in self.components]
         return max(mfp)
 
@@ -196,6 +210,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def eval_albedo(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
+        # Inherit docstring
         if zgrid is not None and zgrid is not self.zgrid:
             raise ValueError("zgrid must be left unset or set to self.zgrid")
         return self.eval_sigma_s(sctx) / self.eval_sigma_t(sctx)
@@ -214,6 +229,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def eval_sigma_t(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
+        # Inherit docstring
         if zgrid is not None and zgrid is not self.zgrid:
             raise ValueError("zgrid must be left unset or set to self.zgrid")
         return self._eval_sigma_t_impl(sctx).sum(axis=0)
@@ -221,6 +237,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def eval_sigma_a(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
+        # Inherit docstring
         if zgrid is not None and zgrid is not self.zgrid:
             raise ValueError("zgrid must be left unset or set to self.zgrid")
         return self.eval_sigma_t(sctx) - self.eval_sigma_s(sctx)
@@ -244,6 +261,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def eval_sigma_s(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
+        # Inherit docstring
         if zgrid is not None and zgrid is not self.zgrid:
             raise ValueError("zgrid must be left unset or set to self.zgrid")
         return self._eval_sigma_s_impl(sctx).sum(axis=0)
@@ -290,6 +308,12 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @property
     def phase(self) -> PhaseFunctionNode:
+        """
+        Returns
+        -------
+        .PhaseFunction
+            Phase function associated with this heterogeneous atmosphere.
+        """
         if len(self.components) == 1:
             return self.components[0].phase
 
@@ -315,5 +339,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @property
     def _template_phase(self) -> dict:
+        # Inherit docstring
         template, _ = traverse(self.phase)
         return template.data

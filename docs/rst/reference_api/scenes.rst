@@ -16,6 +16,7 @@
    :toctree: generated/autosummary/
 
    traverse
+   SceneTraversal
 
 **Basic scene elements**
 
@@ -35,7 +36,7 @@
    InstanceSceneElement
    CompositeSceneElement
 
-**Others**
+**Miscellaneous**
 
 .. autosummary::
    :toctree: generated/autosummary/
@@ -70,7 +71,6 @@
 
    Atmosphere
    AbstractHeterogeneousAtmosphere
-   AtmosphereGeometry
    ParticleDistribution
 
 **Factories**
