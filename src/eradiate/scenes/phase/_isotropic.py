@@ -1,12 +1,12 @@
 import attrs
 
-from ._core import PhaseFunctionNode
+from ._core import PhaseFunction
 from ...attrs import parse_docs
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class IsotropicPhaseFunction(PhaseFunctionNode):
+class IsotropicPhaseFunction(PhaseFunction):
     """
     Isotropic phase function [``isotropic``].
 

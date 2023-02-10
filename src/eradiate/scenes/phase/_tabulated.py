@@ -7,7 +7,7 @@ import xarray as xr
 
 import eradiate
 
-from ._core import PhaseFunctionNode
+from ._core import PhaseFunction
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...contexts import SpectralContext
@@ -53,7 +53,7 @@ def _validate_data(instance, attribute, value):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class TabulatedPhaseFunction(PhaseFunctionNode):
+class TabulatedPhaseFunction(PhaseFunction):
     r"""
     Tabulated phase function [``tab_phase``].
 
