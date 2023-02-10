@@ -4,11 +4,11 @@ import attrs
 import mitsuba as mi
 
 from ._core import BSDF
-from ..core import NodeSceneElement, traverse
-from ..spectra import SpectrumNode, spectrum_factory
+from ..core import traverse
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
-from ...kernel import InitParameter, TypeIdLookupStrategy, UpdateParameter
+from ...kernel import TypeIdLookupStrategy, UpdateParameter
 
 
 @parse_docs
@@ -35,23 +35,23 @@ class RPVBSDF(BSDF):
       Scientific Handbook :cite:`EradiateScientificHandbook2020`.
     """
 
-    rho_0: SpectrumNode = documented(
+    rho_0: Spectrum = documented(
         attrs.field(
             default=0.183,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
         doc="Amplitude parameter. Must be dimensionless. "
         "Should be in :math:`[0, 1]`.",
-        type=".SpectrumNode",
-        init_type=".SpectrumNode or dict or float, optional",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float, optional",
         default="0.183",
     )
 
-    rho_c: t.Optional[SpectrumNode] = documented(
+    rho_c: t.Optional[Spectrum] = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(
@@ -59,7 +59,7 @@ class RPVBSDF(BSDF):
             ),
             validator=attrs.validators.optional(
                 [
-                    attrs.validators.instance_of(SpectrumNode),
+                    attrs.validators.instance_of(Spectrum),
                     validators.has_quantity("dimensionless"),
                 ]
             ),
@@ -67,45 +67,46 @@ class RPVBSDF(BSDF):
         doc="Hot spot parameter. Must be dimensionless. "
         r"Should be in :math:`[0, 1]`. If unset, :math:`\rho_\mathrm{c}` "
         r"defaults to the kernel plugin default (equal to :math:`\rho_0`).",
-        type=".SpectrumNode or None",
-        init_type=".SpectrumNode or dict or float or None, optional",
+        type=".Spectrum or None",
+        init_type=".Spectrum or dict or float or None, optional",
         default="None",
     )
 
-    k: SpectrumNode = documented(
+    k: Spectrum = documented(
         attrs.field(
             default=0.780,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
         doc="Bowl-shape parameter. Must be dimensionless. "
         "Should be in :math:`[0, 2]`.",
-        type=".SpectrumNode",
-        init_type=".SpectrumNode or dict or float, optional",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float, optional",
         default="0.780",
     )
 
-    g: SpectrumNode = documented(
+    g: Spectrum = documented(
         attrs.field(
             default=-0.1,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
         doc="Asymmetry parameter. Must be dimensionless. "
         "Should be in :math:`[-1, 1]`.",
-        type=".SpectrumNode",
-        init_type=".SpectrumNode or dict or float, optional",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float, optional",
         default="-0.1",
     )
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         objects = {
             "rho_0": traverse(self.rho_0)[0],
             "k": traverse(self.k)[0],
@@ -125,6 +126,7 @@ class RPVBSDF(BSDF):
 
     @property
     def params(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         objects = {
             "rho_0": traverse(self.rho_0)[1],
             "k": traverse(self.k)[1],

@@ -58,7 +58,7 @@ biosphere_factory.register_lazy_batch(
 @attrs.define(eq=False, slots=False)
 class Canopy(CompositeSceneElement, ABC):
     """
-    An abstract base class defining a base type for all canopies.
+    Abstract base class for all canopies.
     """
 
     id: t.Optional[str] = documented(
@@ -95,7 +95,7 @@ class Canopy(CompositeSceneElement, ABC):
 @attrs.define(eq=False, slots=False)
 class CanopyElement(CompositeSceneElement, ABC):
     """
-    An abstract class representing a component of a :class:`.Canopy` object.
+    Abstract base class representing a component of a :class:`.Canopy` object.
     Concrete canopy classes can manage their components as they prefer.
     """
 
@@ -125,6 +125,7 @@ class CanopyElement(CompositeSceneElement, ABC):
 
     @property
     def params(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         return flatten({**self._params_bsdfs, **self._params_shapes})
 
 

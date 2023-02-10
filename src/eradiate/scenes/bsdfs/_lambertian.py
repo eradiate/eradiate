@@ -2,11 +2,10 @@ import typing as t
 
 import attrs
 import mitsuba as mi
-from rich.pretty import pprint
 
 from ._core import BSDF
 from ..core import traverse
-from ..spectra import SpectrumNode, spectrum_factory
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
@@ -23,24 +22,25 @@ class LambertianBSDF(BSDF):
     every direction.
     """
 
-    reflectance: SpectrumNode = documented(
+    reflectance: Spectrum = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
         "processed by :data:`.spectrum_factory`.",
-        type=".SpectrumNode",
-        init_type=".SpectrumNode or dict or float",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float",
         default="0.5",
     )
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {
             "type": "diffuse",
             **{
@@ -51,6 +51,7 @@ class LambertianBSDF(BSDF):
 
     @property
     def params(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         params = traverse(self.reflectance)[1].data
 
         result = {}

@@ -7,7 +7,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import SpectrumNode
+from ._core import Spectrum
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
 from ...kernel import InitParameter, UpdateParameter
@@ -17,7 +17,7 @@ from ...units import unit_context_kernel as uck
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class UniformSpectrum(SpectrumNode):
+class UniformSpectrum(Spectrum):
     """
     Uniform spectrum [``uniform``] (*i.e.* constant vs wavelength).
     """
@@ -65,6 +65,7 @@ class UniformSpectrum(SpectrumNode):
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {
             "type": "uniform",
             "value": InitParameter(
@@ -76,6 +77,7 @@ class UniformSpectrum(SpectrumNode):
 
     @property
     def params(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         return {
             "value": UpdateParameter(
                 lambda ctx: float(

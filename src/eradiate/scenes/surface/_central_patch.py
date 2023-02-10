@@ -109,7 +109,7 @@ class CentralPatchSurface(Surface):
         ),
         doc="Length of the central patch's edges. If unset, the central patch "
         "edges will be 1/3 of the surface's edges. "
-        'Unit-enabled field (default: ``ucc["length"]``).',
+        "Unit-enabled field (default: ``ucc['length']``).",
         type="quantity or None",
         init_type="quantity or array-like, optional",
     )
@@ -139,6 +139,8 @@ class CentralPatchSurface(Surface):
         )
 
     def update(self) -> None:
+        # Inherit docstring
+
         # Fix BSDF IDs
         self.bsdf.id = self._background_bsdf_id
         self.patch_bsdf.id = self._patch_bsdf_id
@@ -245,6 +247,8 @@ class CentralPatchSurface(Surface):
         return {}
 
     def traverse(self, callback: SceneTraversal) -> None:
+        # Inherit docstring
+
         if self.shape is None:
             raise TraversalError(
                 "A 'CentralPatchSurface' cannot be traversed if its 'shape' field is unset."

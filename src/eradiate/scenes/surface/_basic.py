@@ -65,6 +65,8 @@ class BasicSurface(Surface):
     )
 
     def update(self) -> None:
+        # Inherit docstring
+
         # Fix BSDF ID
         self.bsdf.id = self._bsdf_id
 
@@ -137,6 +139,7 @@ class BasicSurface(Surface):
         return {}
 
     def traverse(self, callback: SceneTraversal) -> None:
+        # Inherit docstring
         if self.shape is None:
             raise TraversalError(
                 "A 'BasicSurface' cannot be traversed if its 'shape' field is unset."

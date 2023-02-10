@@ -9,7 +9,7 @@ import pinttr
 
 from ._core import Illumination
 from ..core import NodeSceneElement
-from ..spectra import SolarIrradianceSpectrum, Spectrum, SpectrumNode, spectrum_factory
+from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
 from ..._config import config
 from ...attrs import documented, parse_docs
 from ...frame import AzimuthConvention, angles_to_direction
@@ -20,7 +20,7 @@ from ...validators import has_quantity, is_positive
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class DirectionalIllumination(Illumination, NodeSceneElement):
+class DirectionalIllumination(Illumination):
     """
     Directional illumination scene element [``directional``].
 
@@ -69,7 +69,7 @@ class DirectionalIllumination(Illumination, NodeSceneElement):
         default="None",
     )
 
-    irradiance: SpectrumNode = documented(
+    irradiance: Spectrum = documented(
         attrs.field(
             factory=SolarIrradianceSpectrum,
             converter=spectrum_factory.converter("irradiance"),

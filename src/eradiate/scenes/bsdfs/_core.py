@@ -25,7 +25,7 @@ bsdf_factory.register_lazy_batch(
 @attrs.define(eq=False, slots=False)
 class BSDF(NodeSceneElement, ABC):
     """
-    Interface for all BSDF scene elements.
+    Abstract base class  for all BSDF scene elements.
     """
 
     pass

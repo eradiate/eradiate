@@ -6,7 +6,7 @@ import attrs
 import numpy as np
 import pint
 
-from ._core import SpectrumNode
+from ._core import Spectrum
 from ...attrs import parse_docs
 from ...ckd import Bindex
 from ...kernel import InitParameter, UpdateParameter
@@ -19,7 +19,7 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class AirScatteringCoefficientSpectrum(SpectrumNode):
+class AirScatteringCoefficientSpectrum(Spectrum):
     """
     Air scattering coefficient spectrum [``air_scattering_coefficient``].
 
@@ -87,6 +87,7 @@ class AirScatteringCoefficientSpectrum(SpectrumNode):
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {
             "type": "uniform",
             "value": InitParameter(
@@ -98,6 +99,7 @@ class AirScatteringCoefficientSpectrum(SpectrumNode):
 
     @property
     def params(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         return {
             "value": UpdateParameter(
                 lambda ctx: float(

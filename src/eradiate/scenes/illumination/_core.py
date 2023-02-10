@@ -19,7 +19,7 @@ illumination_factory.register_lazy_batch(
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class Illumination:
+class Illumination(NodeSceneElement, ABC):
     """
     Abstract base class for all illumination scene elements.
 
@@ -38,8 +38,3 @@ class Illumination:
         init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"illumination"',
     )
-
-
-@attrs.define(eq=False, slots=False)
-class IlluminationNode(Illumination, NodeSceneElement, ABC):
-    pass

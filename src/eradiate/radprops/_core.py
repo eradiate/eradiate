@@ -192,7 +192,7 @@ class ZGrid:
         init_type="quantity or array-like",
         doc="Grid node altitudes.\n"
         "\n"
-        'Unit-enabled field (default: ``ucc["length"]``).',
+        "Unit-enabled field (default: ``ucc['length']``).",
     )
 
     _layers: pint.Quantity = pinttr.field(

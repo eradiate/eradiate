@@ -107,7 +107,7 @@ spectrum_factory.register_lazy_batch(
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class Spectrum:
+class Spectrum(NodeSceneElement, ABC):
     """
     Spectrum interface.
 
@@ -219,8 +219,3 @@ class Spectrum:
             Computed integral value.
         """
         raise NotImplementedError
-
-
-@attrs.define(eq=False, slots=False)
-class SpectrumNode(Spectrum, NodeSceneElement, ABC):
-    pass

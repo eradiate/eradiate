@@ -2,13 +2,13 @@ import typing as t
 
 import attrs
 
-from ._core import IntegratorNode
+from ._core import Integrator
 from ...attrs import documented, parse_docs
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class MonteCarloIntegrator(IntegratorNode):
+class MonteCarloIntegrator(Integrator):
     """
     Base class for integrator elements wrapping kernel classes
     deriving from

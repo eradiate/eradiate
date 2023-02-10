@@ -46,7 +46,7 @@ class CuboidShape(ShapeNode):
     center: pint.Quantity = documented(
         pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Coordinates of the centre of the cube. "
-        'Unit-enabled field (default: ``ucc["length"]``).',
+        "Unit-enabled field (default: ``ucc['length']``).",
         type="quantity",
         init_type="quantity or array-like, optional",
         default="[0, 0, 0]",
@@ -59,7 +59,7 @@ class CuboidShape(ShapeNode):
             units=ucc.deferred("length"),
         ),
         doc="Lengths of the edges of the cuboid. "
-        'Unit-enabled field (default: ``ucc["length"]``).',
+        "Unit-enabled field (default: ``ucc['length]``).",
         type="quantity",
         init_type="quantity or array-like",
         default="[1, 1, 1]",
@@ -76,7 +76,7 @@ class CuboidShape(ShapeNode):
         p : quantity or array-like
             An array of shape (3,) (resp. (N, 3)) representing one (resp. N)
             points. If a unitless value is passed, it is interpreted as
-            ``ucc["length"]``.
+            ``ucc['length']``.
 
         strict : bool
             If ``True``, comparison is done using strict inequalities (<, >).
@@ -154,11 +154,11 @@ class CuboidShape(ShapeNode):
         ----------
         top : quantity, optional, default: 100 km
             Top of atmosphere altitude. If a unitless value is passed, it is
-            interpreted as ucc["length"].
+            interpreted as ucc['length'].
 
         bottom : quantity, optional, default: 0 km
             Ground altitude. If a unitless value is passed, it is interpreted as
-            ``ucc["length"]``.
+            ``ucc['length']``.
 
         bottom_offset : quantity, optional
             Additional offset by which the cuboid with be extended to avoid an
@@ -166,11 +166,11 @@ class CuboidShape(ShapeNode):
             surface. If left unset, defaults to a negative offset of  1 % of
             the atmosphere's height, *i.e.*
             :math:`- 0.01 \\times (\\mathtt{top} - \\mathtt{bottom})`.
-            If a unitless value is passed, it is interpreted as ``ucc["length"]``.
+            If a unitless value is passed, it is interpreted as ``ucc['length']``.
 
         width : quantity, optional, default: 100 km
             Length of the horizontal edges of the cuboid.
-            If a unitless value is passed, it is interpreted as ``ucc["length"]``.
+            If a unitless value is passed, it is interpreted as ``ucc['length']``.
 
         bsdf : BSDF or dict, optional, default: None
             A BSDF specification, forwarded to the main constructor.

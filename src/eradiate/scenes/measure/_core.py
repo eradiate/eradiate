@@ -508,7 +508,7 @@ def _str_summary_raw(x):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class Measure:
+class Measure(NodeSceneElement, ABC):
     """
     Abstract base class for all measure scene elements.
 
@@ -668,8 +668,3 @@ class Measure:
         str, dict: Post-processing variable field name and metadata.
         """
         return "img", dict()
-
-
-@attrs.define(eq=False, slots=False)
-class MeasureNode(Measure, NodeSceneElement):
-    pass

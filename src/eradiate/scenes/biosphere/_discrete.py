@@ -13,9 +13,7 @@ import pinttr
 from ._core import Canopy, InstancedCanopyElement, biosphere_factory
 from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
-from ...util.misc import flatten
 
 
 def _instanced_canopy_elements_converter(value):
@@ -91,28 +89,6 @@ class DiscreteCanopy(Canopy):
             result.update(element._template_shapes)
         return result
 
-    def kernel_shapes(self, ctx: KernelDictContext) -> t.Dict:
-        """
-        Return shape plugin specifications.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelDictContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        dict
-            A dictionary suitable for merge with a
-            :class:`~eradiate.scenes.core.KernelDict` containing all the shapes
-            in the canopy.
-        """
-        result = {}
-        for instanced_canopy_element in self.instanced_canopy_elements:
-            result = {**result, **instanced_canopy_element.kernel_shapes(ctx=ctx)}
-        return result
-
     @property
     def _template_instances(self) -> dict:
         result = {}
@@ -174,7 +150,7 @@ class DiscreteCanopy(Canopy):
 
         Returns
         -------
-        :class:`.DiscreteCanopy`
+        .DiscreteCanopy
             Padded copy of self.
         """
         if padding < 0:
@@ -280,7 +256,7 @@ class DiscreteCanopy(Canopy):
 
         Returns
         -------
-        :class:`.DiscreteCanopy`
+        .DiscreteCanopy
             Created canopy object.
 
         Notes
@@ -357,7 +333,7 @@ class DiscreteCanopy(Canopy):
 
         Returns
         -------
-        :class:`.DiscreteCanopy`
+        .DiscreteCanopy
             Created canopy object.
         """
         instanced_canopy_elements = []

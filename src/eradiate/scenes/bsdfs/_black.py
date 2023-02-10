@@ -17,6 +17,7 @@ class BlackBSDF(BSDF):
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {
             "type": "diffuse",
             "reflectance": {"type": "uniform", "value": 0.0},
@@ -24,4 +25,5 @@ class BlackBSDF(BSDF):
 
     @property
     def params(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         return {}

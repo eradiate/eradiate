@@ -13,7 +13,7 @@ import pinttr
 from ._core import CanopyElement, biosphere_factory
 from ._leaf_cloud import LeafCloud
 from ..core import SceneElement, traverse
-from ..spectra import SpectrumNode, spectrum_factory
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
@@ -90,7 +90,7 @@ class AbstractTree(Tree):
 
     trunk_height: pint.Quantity = documented(
         pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
-        doc='Trunk height. Unit-enabled field (default: ucc["length"]).',
+        doc="Trunk height. Unit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="quantity or float",
         default="1.0 m",
@@ -98,18 +98,18 @@ class AbstractTree(Tree):
 
     trunk_radius: pint.Quantity = documented(
         pinttr.field(default=0.1 * ureg.m, units=ucc.deferred("length")),
-        doc='Trunk radius. Unit-enabled field (default: ucc["length"]).',
+        doc="Trunk radius. Unit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="quantity or float, optional",
         default="0.1 m",
     )
 
-    trunk_reflectance: SpectrumNode = documented(
+    trunk_reflectance: Spectrum = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
@@ -123,7 +123,7 @@ class AbstractTree(Tree):
     leaf_cloud_extra_offset: pint.Quantity = documented(
         pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Additional offset for the leaf cloud. 3-vector. "
-        'Unit-enabled field (default: ucc["length"])',
+        "Unit-enabled field (default: ucc['length'])",
         type="quantity",
         init_type="quantity or array-like, optional",
         default="[0, 0, 0]",
@@ -347,35 +347,35 @@ class MeshTreeElement:
         init_type="str or :class:`pint.Unit`, optional",
     )
 
-    reflectance: SpectrumNode = documented(
+    reflectance: Spectrum = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance of the object. "
         "Must be a reflectance spectrum (dimensionless).",
-        type=":class:`.SpectrumNode`",
-        init_type=":class:`.SpectrumNode` or dict",
+        type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.5",
     )
 
-    transmittance: SpectrumNode = documented(
+    transmittance: Spectrum = documented(
         attrs.field(
             default=0.0,
             converter=spectrum_factory.converter("transmittance"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("transmittance"),
             ],
         ),
         doc="Transmittance of the object. "
         "Must be a transmittance spectrum (dimensionless).",
-        type=":class:`.SpectrumNode`",
-        init_type=":class:`.SpectrumNode` or dict",
+        type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.0",
     )
 

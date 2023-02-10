@@ -9,7 +9,7 @@ import numpy as np
 import pint
 import xarray as xr
 
-from ._core import SpectrumNode
+from ._core import Spectrum
 from ... import converters, data, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -47,7 +47,7 @@ def _datetime_converter(x: t.Any):
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class SolarIrradianceSpectrum(SpectrumNode):
+class SolarIrradianceSpectrum(Spectrum):
     """
     Solar irradiance spectrum [``solar_irradiance``].
 
@@ -238,6 +238,7 @@ class SolarIrradianceSpectrum(SpectrumNode):
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {
             "type": "uniform",
             "value": InitParameter(
@@ -249,6 +250,7 @@ class SolarIrradianceSpectrum(SpectrumNode):
 
     @property
     def params(self) -> dict:
+        # Inherit docstring
         return {
             "value": UpdateParameter(
                 lambda ctx: float(

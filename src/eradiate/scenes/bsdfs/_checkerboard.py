@@ -5,7 +5,7 @@ import mitsuba as mi
 
 from ._core import BSDF
 from ..core import traverse
-from ..spectra import SpectrumNode, spectrum_factory
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
@@ -20,35 +20,35 @@ class CheckerboardBSDF(BSDF):
     This class defines a Lambertian BSDF textured with a checkerboard pattern.
     """
 
-    reflectance_a: SpectrumNode = documented(
+    reflectance_a: Spectrum = documented(
         attrs.field(
             default=0.2,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
         "processed by :data:`.spectrum_factory`.",
-        type=".SpectrumNode",
-        init_type=".SpectrumNode or dict or float",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float",
         default="0.2",
     )
 
-    reflectance_b: SpectrumNode = documented(
+    reflectance_b: Spectrum = documented(
         attrs.field(
             default=0.8,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance spectrum. Can be initialised with a dictionary "
         "processed by :data:`.spectrum_factory`.",
-        type=".SpectrumNode",
-        init_type=":class:`.SpectrumNode` or dict or float",
+        type=".Spectrum",
+        init_type=":class:`.Spectrum` or dict or float",
         default="0.8",
     )
 

@@ -118,6 +118,7 @@ class MQDiffuseBSDF(BSDF):
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {
             "type": "mqdiffuse",
             "grid": InitParameter(lambda ctx: self._eval_grid_impl(ctx)),
@@ -125,4 +126,5 @@ class MQDiffuseBSDF(BSDF):
 
     @property
     def params(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         return {}
