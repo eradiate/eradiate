@@ -66,7 +66,7 @@ class MonteCarloIntegrator(Integrator):
 @attrs.define(eq=False, slots=False)
 class PathIntegrator(MonteCarloIntegrator):
     """
-    A thin interface to the `path tracer kernel plugin.
+    A thin interface to the path tracer kernel plugin.
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering and does not account for volume
