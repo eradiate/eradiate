@@ -15,6 +15,7 @@ from ..core import (
     traverse,
 )
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
+from ..phase import PhaseFunction
 from ..shapes import CuboidShape, SphereShape
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
@@ -123,6 +124,17 @@ class Atmosphere(CompositeSceneElement, ABC):
             Atmosphere height.
         """
         return self.top - self.bottom
+
+    @property
+    @abstractmethod
+    def phase(self) -> PhaseFunction:
+        """
+        Returns
+        -------
+        .PhaseFunction
+            Phase function associated with the atmosphere.
+        """
+        pass
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
