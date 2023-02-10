@@ -15,7 +15,7 @@ from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular_atmosphere import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
 from ..core import BoundingBox, traverse
-from ..phase import BlendPhaseFunction, PhaseFunctionNode
+from ..phase import BlendPhaseFunction, PhaseFunction
 from ..shapes import CuboidShape, SphereShape
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
@@ -307,13 +307,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             raise NotImplementedError
 
     @property
-    def phase(self) -> PhaseFunctionNode:
-        """
-        Returns
-        -------
-        .PhaseFunction
-            Phase function associated with this heterogeneous atmosphere.
-        """
+    def phase(self) -> PhaseFunction:
+        # Inherit docstring
         if len(self.components) == 1:
             return self.components[0].phase
 

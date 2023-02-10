@@ -2,7 +2,7 @@ import typing as t
 
 import attrs
 
-from ._core import PhaseFunctionNode
+from ._core import PhaseFunction
 from ..spectra import SpectrumNode, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
@@ -11,7 +11,7 @@ from ...kernel import InitParameter, UpdateParameter
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class HenyeyGreensteinPhaseFunction(PhaseFunctionNode):
+class HenyeyGreensteinPhaseFunction(PhaseFunction):
     """
     Henyey-Greenstein phase function [``hg``].
 

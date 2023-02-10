@@ -42,7 +42,7 @@ phase_function_factory.register_lazy_batch(
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class PhaseFunction:
+class PhaseFunction(NodeSceneElement, ABC):
     """
     An abstract base class defining common facilities for all phase functions.
     """
@@ -57,8 +57,3 @@ class PhaseFunction:
         init_type=get_doc(SceneElement, "id", "init_type"),
         default='"phase"',
     )
-
-
-@attrs.define(eq=False, slots=False)
-class PhaseFunctionNode(PhaseFunction, NodeSceneElement, ABC):
-    pass

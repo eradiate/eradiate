@@ -6,7 +6,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 
-from ._core import PhaseFunctionNode, phase_function_factory
+from ._core import PhaseFunction, phase_function_factory
 from ..core import BoundingBox, traverse
 from ...attrs import documented
 from ...contexts import KernelDictContext, SpectralContext
@@ -15,7 +15,7 @@ from ...units import unit_context_kernel as uck
 
 
 @attrs.define(eq=False, slots=False)
-class BlendPhaseFunction(PhaseFunctionNode):
+class BlendPhaseFunction(PhaseFunction):
     """
     Blended phase function [``blend_phase``].
 
@@ -24,11 +24,11 @@ class BlendPhaseFunction(PhaseFunctionNode):
     usually based on the associated medium's scattering coefficient.
     """
 
-    components: t.List[PhaseFunctionNode] = documented(
+    components: t.List[PhaseFunction] = documented(
         attrs.field(
             converter=lambda x: [phase_function_factory.convert(y) for y in x],
             validator=attrs.validators.deep_iterable(
-                attrs.validators.instance_of(PhaseFunctionNode)
+                attrs.validators.instance_of(PhaseFunction)
             ),
             kw_only=True,
         ),
