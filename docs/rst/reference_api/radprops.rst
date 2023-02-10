@@ -26,4 +26,3 @@
    RadProfile
    AFGL1986RadProfile
    US76ApproxRadProfile
-   ArrayRadProfile

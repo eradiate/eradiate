@@ -29,3 +29,16 @@
    RegressionTest
    RMSETest
    Chi2Test
+
+
+``eradiate.test_tools.types``
+----------------------------------
+
+.. automodule:: eradiate.test_tools.types
+
+.. currentmodule:: eradiate.test_tools.types
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   check_scene_element

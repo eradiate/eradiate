@@ -26,7 +26,6 @@ Aggregate steps
    :toctree: generated/autosummary/
 
    AggregateCKDQuad
-   AggregateSampleCount
    AggregateRadiosity
 
 Assemble steps
