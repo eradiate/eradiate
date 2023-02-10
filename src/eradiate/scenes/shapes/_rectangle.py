@@ -56,7 +56,7 @@ class RectangleShape(ShapeNode):
             units=ucc.deferred("length"),
         ),
         doc="Length of the rectangle's edges. "
-        'Unit-enabled field (default: ``ucc["length"]``).',
+        "Unit-enabled field (default: ``ucc['length']``).",
         type="quantity",
         init_type="quantity or array-like, optional",
         default="[1, 1]",
@@ -65,7 +65,7 @@ class RectangleShape(ShapeNode):
     center: pint.Quantity = documented(
         pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Cartesian coordinates of the rectangle's central point. "
-        'Unit-enabled field (default: ``ucc["length"]``).',
+        "Unit-enabled field (default: ``ucc['length]``).",
         type="quantity",
         init_type="quantity or array-like, optional",
         default="[0, 0, 0]",
@@ -97,44 +97,9 @@ class RectangleShape(ShapeNode):
         default="[0, 1, 0]",
     )
 
-    def eval_to_world(
-        self, ctx: t.Optional[KernelDictContext] = None
-    ) -> "mitsuba.ScalarTransform4f":
-        kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
-
-        if "to_world" in kwargs:
-            return kwargs["to_world"]
-
-        else:
-            length_units = uck.get("length")
-            converters = {field.name: field.converter for field in self.__attrs_attrs__}
-
-            scale = (
-                converters["edges"](kwargs["edges"])
-                if "edges" in kwargs
-                else self.edges
-            ).m_as(length_units) * 0.5
-
-            center = (
-                converters["center"](kwargs["center"])
-                if "center" in kwargs
-                else self.center
-            ).m_as(length_units)
-
-            normal = (
-                converters["normal"](kwargs["normal"])
-                if "normal" in kwargs
-                else self.normal
-            )
-
-            up = converters["up"](kwargs["up"]) if "up" in kwargs else self.up
-
-            return mi.ScalarTransform4f.look_at(
-                origin=center, target=center + normal, up=up
-            ) @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0])
-
     @property
     def template(self) -> dict:
+        # Inherit docstring
         length_units = uck.get("length")
         scale = self.edges.m_as(length_units) * 0.5
         result = {
@@ -168,11 +133,11 @@ class RectangleShape(ShapeNode):
         ----------
         altitude : quantity or array-like, optional, default: 0 km
             Surface altitude. If a unitless value is passed, it is interpreted
-            as ``ucc["length"]``.
+            as ``ucc['length']``.
 
         width : quantity or float, optional, default: 1 km
             Edge length. If a unitless value is passed, it is interpreted
-            as ``ucc["length"]``.
+            as ``ucc['length']``.
 
         bsdf : BSDF or dict, optional, default: None
             A BSDF specification, forwarded to the main constructor.

@@ -403,6 +403,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     @property
     def phase(self) -> TabulatedPhaseFunction:
+        # Inherit docstring
         return self._phase
 
     @property

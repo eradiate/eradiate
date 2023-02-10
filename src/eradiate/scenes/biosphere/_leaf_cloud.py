@@ -14,7 +14,7 @@ import scipy.special
 
 from ._core import CanopyElement
 from ..core import SceneElement, traverse
-from ..spectra import SpectrumNode, spectrum_factory
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, get_doc, parse_docs
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
@@ -712,35 +712,35 @@ class LeafCloud(CanopyElement):
                 f"len(leaf_radii) = {len(self.leaf_radii)}."
             )
 
-    leaf_reflectance: SpectrumNode = documented(
+    leaf_reflectance: Spectrum = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("reflectance"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("reflectance"),
             ],
         ),
         doc="Reflectance spectrum of the leaves in the cloud. "
         "Must be a reflectance spectrum (dimensionless).",
-        type=":class:`.SpectrumNode`",
-        init_type=":class:`.SpectrumNode` or dict",
+        type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.5",
     )
 
-    leaf_transmittance: SpectrumNode = documented(
+    leaf_transmittance: Spectrum = documented(
         attrs.field(
             default=0.5,
             converter=spectrum_factory.converter("transmittance"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("transmittance"),
             ],
         ),
         doc="Transmittance spectrum of the leaves in the cloud. "
         "Must be a transmittance spectrum (dimensionless).",
-        type=":class:`.SpectrumNode`",
-        init_type=":class:`.SpectrumNode` or dict",
+        type=":class:`.Spectrum`",
+        init_type=":class:`.Spectrum` or dict",
         default="0.5",
     )
 
@@ -750,13 +750,19 @@ class LeafCloud(CanopyElement):
 
     def n_leaves(self) -> int:
         """
-        int : Number of leaves in the leaf cloud.
+        Returns
+        -------
+        int
+            Number of leaves in the leaf cloud.
         """
         return len(self.leaf_positions)
 
     def surface_area(self) -> pint.Quantity:
         """
-        quantity : Total surface area as a :class:`~pint.Quantity`.
+        Returns
+        -------
+        quantity
+            Total surface area.
         """
         return np.sum(np.pi * self.leaf_radii * self.leaf_radii).squeeze()
 
@@ -801,7 +807,7 @@ class LeafCloud(CanopyElement):
 
         Returns
         -------
-        :class:`.LeafCloud`:
+        .LeafCloud
             Generated leaf cloud.
 
         See Also
@@ -1052,8 +1058,8 @@ class LeafCloud(CanopyElement):
     def from_file(
         cls,
         filename,
-        leaf_transmittance: t.Union[float, SpectrumNode] = 0.5,
-        leaf_reflectance: t.Union[float, SpectrumNode] = 0.5,
+        leaf_transmittance: t.Union[float, Spectrum] = 0.5,
+        leaf_reflectance: t.Union[float, Spectrum] = 0.5,
         id: str = "leaf_cloud",
     ) -> LeafCloud:
         """
@@ -1079,11 +1085,11 @@ class LeafCloud(CanopyElement):
             Path to the text file specifying the leaves in the leaf cloud.
             Can be absolute or relative.
 
-        leaf_reflectance : :class:`.SpectrumNode` or float
+        leaf_reflectance : :class:`.Spectrum` or float
             Reflectance spectrum of the leaves in the cloud. Must be a reflectance
             spectrum (dimensionless). Default: 0.5.
 
-        leaf_transmittance : :class:`.SpectrumNode` of float
+        leaf_transmittance : :class:`.Spectrum` of float
             Transmittance spectrum of the leaves in the cloud. Must be a
             transmittance spectrum (dimensionless). Default: 0.5.
 

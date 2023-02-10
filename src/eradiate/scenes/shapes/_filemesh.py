@@ -45,6 +45,7 @@ class FileMeshShape(ShapeNode):
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {
             "type": self._kernel_type,
             "filename": str(self.filename),

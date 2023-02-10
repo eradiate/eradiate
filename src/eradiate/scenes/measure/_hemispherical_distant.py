@@ -9,7 +9,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._distant import DistantMeasureNode
+from ._distant import DistantMeasure
 from ... import frame, validators
 from ..._config import config
 from ...attrs import documented, parse_docs
@@ -22,7 +22,7 @@ from ...warp import square_to_uniform_hemisphere
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class HemisphericalDistantMeasure(DistantMeasureNode):
+class HemisphericalDistantMeasure(DistantMeasure):
     """
     Hemispherical distant radiance measure scene element
     [``hdistant``, ``hemispherical_distant``].

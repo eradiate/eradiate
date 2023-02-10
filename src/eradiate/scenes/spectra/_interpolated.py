@@ -8,7 +8,7 @@ import pint
 import pinttr
 import xarray as xr
 
-from ._core import SpectrumNode
+from ._core import Spectrum
 from ... import converters, validators
 from ...attrs import documented, parse_docs
 from ...ckd import Bindex
@@ -20,7 +20,7 @@ from ...units import unit_context_kernel as uck
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class InterpolatedSpectrum(SpectrumNode):
+class InterpolatedSpectrum(Spectrum):
     """
     Linearly interpolated spectrum [``interpolated``].
 
@@ -255,6 +255,7 @@ class InterpolatedSpectrum(SpectrumNode):
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         return {
             "type": "uniform",
             "value": InitParameter(
@@ -266,6 +267,7 @@ class InterpolatedSpectrum(SpectrumNode):
 
     @property
     def params(self) -> dict:
+        # Inherit docstring
         return {
             "value": UpdateParameter(
                 lambda ctx: float(

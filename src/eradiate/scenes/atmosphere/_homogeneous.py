@@ -7,7 +7,7 @@ import pinttr
 from ._core import Atmosphere
 from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
-from ..spectra import AirScatteringCoefficientSpectrum, SpectrumNode, spectrum_factory
+from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel import InitParameter, UpdateParameter
@@ -34,7 +34,7 @@ class HomogeneousAtmosphere(Atmosphere):
         ),
         doc="Atmosphere's bottom altitude.\n"
         "\n"
-        'Unit-enabled field (default: ucc["length"]).',
+        "Unit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="quantity or float",
         default="0 km",
@@ -47,7 +47,7 @@ class HomogeneousAtmosphere(Atmosphere):
         ),
         doc="Atmosphere's top altitude.\n"
         "\n"
-        'Unit-enabled field (default: ucc["length"]).',
+        "Unit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="quantity or float",
         default="10 km",
@@ -59,12 +59,12 @@ class HomogeneousAtmosphere(Atmosphere):
         if self.bottom >= self.top:
             raise ValueError("bottom altitude must be lower than top altitude")
 
-    sigma_s: SpectrumNode = documented(
+    sigma_s: Spectrum = documented(
         attrs.field(
             factory=AirScatteringCoefficientSpectrum,
             converter=spectrum_factory.converter("collision_coefficient"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 has_quantity("collision_coefficient"),
             ],
         ),
@@ -77,12 +77,12 @@ class HomogeneousAtmosphere(Atmosphere):
         "<.AirScatteringCoefficientSpectrum>`",
     )
 
-    sigma_a: SpectrumNode = documented(
+    sigma_a: Spectrum = documented(
         attrs.field(
             default=0.0,
             converter=spectrum_factory.converter("collision_coefficient"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 has_quantity("collision_coefficient"),
             ],
         ),

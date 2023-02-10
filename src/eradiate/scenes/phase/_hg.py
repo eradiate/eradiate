@@ -3,7 +3,7 @@ import typing as t
 import attrs
 
 from ._core import PhaseFunction
-from ..spectra import SpectrumNode, spectrum_factory
+from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...kernel import InitParameter, UpdateParameter
@@ -23,12 +23,12 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
     scattering.
     """
 
-    g: SpectrumNode = documented(
+    g: Spectrum = documented(
         attrs.field(
             default=0.0,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
-                attrs.validators.instance_of(SpectrumNode),
+                attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),

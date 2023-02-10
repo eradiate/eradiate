@@ -302,4 +302,5 @@ class DEMSurface(Surface):
 
     @property
     def objects(self) -> t.Dict[str, t.Union[NodeSceneElement, InstanceSceneElement]]:
+        # Inherit docstring
         return {self._shape_id: self.shape}

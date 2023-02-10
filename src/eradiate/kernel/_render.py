@@ -4,7 +4,7 @@ import attrs
 import mitsuba as mi
 from tqdm.auto import tqdm
 
-from . import UpdateMapTemplate
+from ._kernel_dict import UpdateMapTemplate
 from .._config import ProgressLevel, config
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext

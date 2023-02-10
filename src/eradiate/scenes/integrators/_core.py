@@ -1,4 +1,5 @@
 import typing as t
+from abc import ABC
 
 import attrs
 
@@ -19,7 +20,7 @@ integrator_factory.register_lazy_batch(
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class Integrator:
+class Integrator(NodeSceneElement, ABC):
     """
     Abstract base class for all integrator elements.
 
@@ -38,8 +39,3 @@ class Integrator:
         init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"integrator"',
     )
-
-
-@attrs.define(eq=False, slots=False)
-class IntegratorNode(Integrator, NodeSceneElement):
-    pass

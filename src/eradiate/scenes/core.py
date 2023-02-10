@@ -325,7 +325,7 @@ class SceneTraversal:
     def __attrs_post_init__(self):
         self.hierarchy[self.node] = (self.parent, self.depth)
 
-    def put_template(self, template: t.Mapping):
+    def put_template(self, template: t.Mapping) -> None:
         """
         Add a contribution to the kernel dictionary template.
         """
@@ -334,7 +334,7 @@ class SceneTraversal:
         for k, v in template.items():
             self.template[f"{prefix}{k}"] = v
 
-    def put_params(self, params: t.Mapping):
+    def put_params(self, params: t.Mapping) -> None:
         """
         Add a contribution to the parameter map.
         """
@@ -343,7 +343,7 @@ class SceneTraversal:
         for k, v in params.items():
             self.params[f"{prefix}{k}"] = v
 
-    def put_object(self, name: str, node: SceneElement):
+    def put_object(self, name: str, node: SceneElement) -> None:
         """
         Add a child object to the template and parameter map.
         """
@@ -371,7 +371,7 @@ class SceneTraversal:
             else:
                 node.traverse(cb)
 
-    def put_instance(self, obj: "mitsuba.Object"):
+    def put_instance(self, obj: "mitsuba.Object") -> None:
         """
         Add an instance to the kernel dictionary template.
         """
@@ -515,7 +515,7 @@ class BoundingBox:
         p : quantity or array-like
             An array of shape (3,) (resp. (N, 3)) representing one (resp. N)
             points. If a unitless value is passed, it is interpreted as
-            ``ucc["length"]``.
+            ``ucc['length']``.
 
         strict : bool
             If ``True``, comparison is done using strict inequalities (<, >).

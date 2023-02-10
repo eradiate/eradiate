@@ -7,7 +7,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._core import MeasureNode
+from ._core import Measure
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...units import symbol
@@ -18,7 +18,7 @@ from ...units import unit_registry as ureg
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class RadiancemeterMeasure(MeasureNode):
+class RadiancemeterMeasure(Measure):
     """
     Radiance meter measure scene element [``radiancemeter``].
 

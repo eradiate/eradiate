@@ -44,7 +44,7 @@
    BoundingBox
 
 ``eradiate.scenes.geometry``
----------------------------
+----------------------------
 
 .. automodule:: eradiate.scenes.geometry
 
@@ -77,14 +77,6 @@
 
 * :data:`atmosphere_factory`
 * :data:`particle_distribution_factory`
-
-**1D atmosphere geometries**
-
-.. autosummary::
-   :toctree: generated/autosummary/
-
-   PlaneParallelGeometry
-   SphericalShellGeometry
 
 **Scene elements**
 

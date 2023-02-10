@@ -32,7 +32,7 @@ class SphereShape(ShapeNode):
     center: pint.Quantity = documented(
         pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Location of the centre of the sphere. Unit-enabled field "
-        '(default: ``ucc["length"]``).',
+        "(default: ``ucc['length']``).",
         type="quantity",
         init_type="quantity or array-like, optional",
         default="[0, 0, 0]",
@@ -42,7 +42,7 @@ class SphereShape(ShapeNode):
         pinttr.field(
             factory=lambda: 1.0 * ucc.get("length"), units=ucc.deferred("length")
         ),
-        doc='Sphere radius. Unit-enabled field (default: ``ucc["length"]``).',
+        doc="Sphere radius. Unit-enabled field (default: ``ucc['length']``).",
         type="quantity",
         init_type="quantity or float, optional",
         default="1.0",
@@ -65,7 +65,7 @@ class SphereShape(ShapeNode):
         p : quantity or array-like
             An array of shape (3,) (resp. (N, 3)) representing one (resp. N)
             points. If a unitless value is passed, it is interpreted as
-            ``ucc["length"]``.
+            ``ucc['length']``.
 
         strict : bool
             If ``True``, comparison is done using strict inequalities (<, >).
@@ -101,11 +101,11 @@ class SphereShape(ShapeNode):
         ----------
         altitude : quantity or array-like, optional, default: 0 km
             Surface altitude. If a unitless value is passed, it is interpreted
-            as ``ucc["length"]``.
+            as ``ucc['length']``.
 
         planet_radius : quantity or float, optional, default: 6378.1 km
             Planet radius. If a unitless value is passed, it is interpreted
-            as ``ucc["length"]``. The default is Earth's radius.
+            as ``ucc['length']``. The default is Earth's radius.
 
         bsdf : BSDF or dict, optional, default: None
             A BSDF specification, forwarded to the main constructor.
@@ -147,11 +147,11 @@ class SphereShape(ShapeNode):
         ----------
         top : quantity or array-like, optional, default: 100 km
             Top-of-atmosphere altitude. If a unitless value is passed, it is
-            interpreted as ``ucc["length"]``.
+            interpreted as ``ucc['length']``.
 
         planet_radius : quantity or float, optional, default: 6378.1 km
             Planet radius. If a unitless value is passed, it is interpreted
-            as ``ucc["length"]``. The default is Earth's radius.
+            as ``ucc['length']``. The default is Earth's radius.
 
         bsdf : BSDF or dict, optional, default: None
             A BSDF specification, forwarded to the main constructor.

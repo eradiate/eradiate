@@ -67,6 +67,7 @@ class Shape:
         self.update()
 
     def update(self) -> None:
+        # Inherit docstring
         if isinstance(self.bsdf, BSDF):
             self.bsdf.id = self._bsdf_id
 
@@ -76,6 +77,7 @@ class Shape:
 
     @property
     def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
+        # Inherit docstring
         if self.bsdf is None:
             return None
         else:

@@ -2,21 +2,21 @@ import typing as t
 
 import attrs
 
-from ._core import IlluminationNode
+from ._core import Illumination
 from ..core import NodeSceneElement
-from ..spectra import Spectrum, SpectrumNode, spectrum_factory
+from ..spectra import Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...validators import has_quantity
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class ConstantIllumination(IlluminationNode):
+class ConstantIllumination(Illumination):
     """
     Constant illumination scene element [``constant``].
     """
 
-    radiance: SpectrumNode = documented(
+    radiance: Spectrum = documented(
         attrs.field(
             default=1.0,
             converter=spectrum_factory.converter("radiance"),
