@@ -6,7 +6,7 @@ import pinttr
 
 from ._core import Atmosphere
 from ..core import traverse
-from ..phase import PhaseFunctionNode, RayleighPhaseFunction, phase_function_factory
+from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, SpectrumNode, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
@@ -95,11 +95,11 @@ class HomogeneousAtmosphere(Atmosphere):
         default="0.0 km**-1",
     )
 
-    phase: PhaseFunctionNode = documented(
+    _phase: PhaseFunction = documented(
         attrs.field(
             factory=lambda: RayleighPhaseFunction(),
             converter=phase_function_factory.convert,
-            validator=attrs.validators.instance_of(PhaseFunctionNode),
+            validator=attrs.validators.instance_of(PhaseFunction),
         ),
         doc="Scattering phase function.\n"
         "\n"
@@ -129,6 +129,11 @@ class HomogeneousAtmosphere(Atmosphere):
     def top(self) -> pint.Quantity:
         # Inherit docstring
         return self._top
+
+    @property
+    def phase(self) -> PhaseFunction:
+        # Inherit docstring
+        return self._phase
 
     # --------------------------------------------------------------------------
     #                           Evaluation methods

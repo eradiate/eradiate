@@ -14,7 +14,7 @@ import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import traverse
-from ..phase import PhaseFunctionNode, RayleighPhaseFunction, phase_function_factory
+from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile, ZGrid
@@ -51,11 +51,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         default=":meth:`us76.make_profile() <eradiate.thermoprops.us76.make_profile>`",
     )
 
-    phase: PhaseFunctionNode = documented(
+    _phase: PhaseFunction = documented(
         attrs.field(
             factory=lambda: RayleighPhaseFunction(),
             converter=phase_function_factory.convert,
-            validator=attrs.validators.instance_of(PhaseFunctionNode),
+            validator=attrs.validators.instance_of(PhaseFunction),
         ),
         doc="Phase function.",
         type=":class:`.PhaseFunction`",
@@ -121,6 +121,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     def update(self) -> None:
+        # Inherit docstring
         super().update()
 
         self.phase.id = self.phase_id
@@ -154,21 +155,26 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @property
     def zgrid(self) -> ZGrid:
+        # Inherit docstring
         return self.radprops_profile.zgrid
 
     @property
     def bottom(self) -> pint.Quantity:
+        # Inherit docstring
         return self.zgrid.levels.min()
 
     @property
     def top(self) -> pint.Quantity:
+        # Inherit docstring
         return self.zgrid.levels.max()
 
     @property
     def thermoprops(self) -> xr.Dataset:
+        # Inherit docstring
         return self._thermoprops
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+        # Inherit docstring
         min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.spectral_ctx).min()
         return np.divide(
             1.0,
@@ -182,12 +188,19 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
 
     @property
+    def phase(self) -> PhaseFunction:
+        # Inherit docstring
+        return self._phase
+
+    @property
     def radprops_profile(self) -> RadProfile:
+        # Inherit docstring
         return self._radprops_profile
 
     def eval_albedo(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
+        # Inherit docstring
         return self.radprops_profile.eval_albedo(
             sctx,
             self.zgrid if zgrid is None else zgrid,
@@ -196,6 +209,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     def eval_sigma_t(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
+        # Inherit docstring
         return self.radprops_profile.eval_sigma_t(
             sctx,
             self.zgrid if zgrid is None else zgrid,
@@ -204,6 +218,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     def eval_sigma_a(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
+        # Inherit docstring
         return self.radprops_profile.eval_sigma_a(
             sctx,
             self.zgrid if zgrid is None else zgrid,
@@ -212,6 +227,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     def eval_sigma_s(
         self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
+        # Inherit docstring
         return self.radprops_profile.eval_sigma_s(
             sctx,
             self.zgrid if zgrid is None else zgrid,
@@ -223,11 +239,13 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @property
     def _template_phase(self) -> dict:
+        # Inherit docstring
         result, _ = traverse(self.phase)
         return result.data
 
     @property
     def _params_phase(self) -> dict:
+        # Inherit docstring
         _, result = traverse(self.phase)
         return result.data
 
