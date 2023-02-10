@@ -115,7 +115,7 @@ class NodeSceneElement(SceneElement, ABC):
             A flat dictionary mapping dot-separated strings describing the path
             of an item in the nested scene dictionary to values. Values may be
             objects which can be directly used by the :func:`mitsuba.load_dict`
-            functions, or :class:`.InitParameter` instances which must be
+            function, or :class:`.InitParameter` instances which must be
             rendered.
 
         See Also
@@ -188,7 +188,22 @@ class CompositeSceneElement(SceneElement, ABC):
 
     @property
     def template(self) -> dict:
-        # The default implementation returns an empty dictionary
+        """
+        Kernel dictionary template contents associated with this scene element.
+
+        Returns
+        -------
+        dict
+            A flat dictionary mapping dot-separated strings describing the path
+            of an item in the nested scene dictionary to values. Values may be
+            objects which can be directly used by the :func:`mitsuba.load_dict`
+            function, or :class:`.InitParameter` instances which must be
+            rendered.
+
+        See Also
+        --------
+        :class:`.InitParameter`, :class:`.KernelDictTemplate`
+        """
         return {}
 
     @property
@@ -278,6 +293,7 @@ class Scene(NodeSceneElement):
 # ------------------------------------------------------------------------------
 
 
+@parse_docs
 @attrs.define
 class SceneTraversal:
     """

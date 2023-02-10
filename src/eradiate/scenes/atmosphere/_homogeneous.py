@@ -24,8 +24,7 @@ class HomogeneousAtmosphere(Atmosphere):
     Homogeneous atmosphere scene element [``homogeneous``].
 
     This class builds an atmosphere consisting of a homogeneous medium with
-    customisable collision coefficients and phase function, attached to a
-    cuboid shape.
+    customisable collision coefficients and phase function.
     """
 
     _bottom: pint.Quantity = documented(
@@ -33,7 +32,9 @@ class HomogeneousAtmosphere(Atmosphere):
             default=ureg.Quantity(0.0, ureg.km),
             units=ucc.deferred("length"),
         ),
-        doc="Atmosphere's bottom altitude.\n\nUnit-enabled field (default: ucc[length])",
+        doc="Atmosphere's bottom altitude.\n"
+        "\n"
+        'Unit-enabled field (default: ucc["length"]).',
         type="quantity",
         init_type="quantity or float",
         default="0 km",
@@ -44,10 +45,12 @@ class HomogeneousAtmosphere(Atmosphere):
             default=ureg.Quantity(10.0, ureg.km),
             units=ucc.deferred("length"),
         ),
-        doc="Atmosphere's top altitude.\n\nUnit-enabled field (default: ucc[length]).",
+        doc="Atmosphere's top altitude.\n"
+        "\n"
+        'Unit-enabled field (default: ucc["length"]).',
         type="quantity",
         init_type="quantity or float",
-        default="10 km.",
+        default="10 km",
     )
 
     @_bottom.validator
@@ -89,7 +92,7 @@ class HomogeneousAtmosphere(Atmosphere):
         "Can be initialised with a dictionary processed by "
         ":data:`~eradiate.scenes.spectra.spectrum_factory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
-        default="0.0 ucc[collision_coefficient]",
+        default="0.0 km**-1",
     )
 
     phase: PhaseFunctionNode = documented(
@@ -110,6 +113,7 @@ class HomogeneousAtmosphere(Atmosphere):
         self.update()
 
     def update(self) -> None:
+        # Inherit docstring
         self.phase.id = self.phase_id
 
     # --------------------------------------------------------------------------
@@ -118,10 +122,12 @@ class HomogeneousAtmosphere(Atmosphere):
 
     @property
     def bottom(self) -> pint.Quantity:
+        # Inherit docstring
         return self._bottom
 
     @property
     def top(self) -> pint.Quantity:
+        # Inherit docstring
         return self._top
 
     # --------------------------------------------------------------------------
@@ -129,6 +135,7 @@ class HomogeneousAtmosphere(Atmosphere):
     # --------------------------------------------------------------------------
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+        # Inherit docstring
         return (
             1.0 / self.eval_sigma_s(ctx.spectral_ctx)
             if self.eval_sigma_s(ctx.spectral_ctx).m != 0.0
@@ -141,7 +148,7 @@ class HomogeneousAtmosphere(Atmosphere):
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        spectral_ctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -160,7 +167,7 @@ class HomogeneousAtmosphere(Atmosphere):
 
         Parameters
         ----------
-        sctx : :class:`.SpectralContext`
+        sctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -177,7 +184,7 @@ class HomogeneousAtmosphere(Atmosphere):
 
         Parameters
         ----------
-        sctx : :class:`.SpectralContext`
+        sctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -194,7 +201,7 @@ class HomogeneousAtmosphere(Atmosphere):
 
         Parameters
         ----------
-        sctx : :class:`.SpectralContext`
+        sctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
 
@@ -211,11 +218,13 @@ class HomogeneousAtmosphere(Atmosphere):
 
     @property
     def _template_phase(self) -> dict:
+        # Inherit docstring
         result, _ = traverse(self.phase)
         return result.data
 
     @property
     def _template_medium(self) -> dict:
+        # Inherit docstring
         return {
             "type": "homogeneous",
             "sigma_t": InitParameter(
@@ -232,6 +241,7 @@ class HomogeneousAtmosphere(Atmosphere):
 
     @property
     def _params_medium(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         return {
             # Note: "value" appears twice because the mi.Spectrum is
             # encapsulated in a mi.ConstVolume
@@ -249,5 +259,6 @@ class HomogeneousAtmosphere(Atmosphere):
 
     @property
     def _params_phase(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         _, params = traverse(self.phase)
         return params.data

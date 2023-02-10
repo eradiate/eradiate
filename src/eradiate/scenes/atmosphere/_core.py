@@ -59,10 +59,10 @@ atmosphere_factory.register_lazy_batch(
 @attrs.define(eq=False, slots=False)
 class Atmosphere(CompositeSceneElement, ABC):
     """
-    An abstract base class defining common facilities for all atmospheres.
+    Abstract base class defining common facilities for all atmospheres.
 
-    An atmosphere consists of a kernel medium (with a phase function) attached
-    to a kernel shape.
+    An atmosphere expands as a :class:`mitsuba.PhaseFunction`, a
+    :class:`mitsuba.Medium` and a :class:`mitsuba.Shape`.
     """
 
     id: t.Optional[str] = documented(
@@ -82,9 +82,9 @@ class Atmosphere(CompositeSceneElement, ABC):
             converter=SceneGeometry.convert,
             validator=attrs.validators.instance_of(SceneGeometry),
         ),
-        doc="Parameters defining the basic geometry of the atmosphere.",
-        type=".AtmosphereGeometry",
-        init_type=".AtmosphereGeometry or dict or str, optional",
+        doc="Parameters defining the basic geometry of the scene.",
+        type=".SceneGeometry",
+        init_type=".SceneGeometry or dict or str, optional",
         default='"plane_parallel"',
     )
 
@@ -96,7 +96,10 @@ class Atmosphere(CompositeSceneElement, ABC):
     @abstractmethod
     def bottom(self) -> pint.Quantity:
         """
-        pint.Quantity: Atmosphere bottom altitude.
+        Returns
+        -------
+        quantity
+            Atmosphere bottom altitude.
         """
         pass
 
@@ -104,14 +107,20 @@ class Atmosphere(CompositeSceneElement, ABC):
     @abstractmethod
     def top(self) -> pint.Quantity:
         """
-        pint.Quantity: Atmosphere top altitude.
+        Returns
+        -------
+        quantity
+            Atmosphere top altitude.
         """
         pass
 
     @property
     def height(self) -> pint.Quantity:
         """
-        pint.Quantity: Atmosphere height.
+        Returns
+        -------
+        quantity
+            Atmosphere height.
         """
         return self.top - self.bottom
 
@@ -146,8 +155,11 @@ class Atmosphere(CompositeSceneElement, ABC):
     @property
     def shape(self) -> t.Union[CuboidShape, SphereShape]:
         """
-        Return the shape associated with this atmosphere, factoring in the
-        geometry and radiative property profile.
+        Returns
+        -------
+        .CuboidShape or .SphereShape
+            Shape associated with this atmosphere, factoring in the scene
+            geometry and radiative property profile.
         """
         if isinstance(self.geometry, PlaneParallelGeometry):
             return CuboidShape.atmosphere(
@@ -167,50 +179,75 @@ class Atmosphere(CompositeSceneElement, ABC):
     @property
     def shape_id(self):
         """
-        str: Kernel dictionary key of the atmosphere's shape object.
+        Returns
+        -------
+        str
+            ID of the shape associated with the atmosphere in the Mitsuba scene
+            tree.
         """
         return f"shape_{self.id}"
 
     @property
     def medium_id(self):
         """
-        str: Kernel dictionary key of the atmosphere's medium object.
+        Returns
+        -------
+        str
+            ID of the medium associated with the atmosphere in the Mitsuba scene
+            tree.
         """
         return f"medium_{self.id}"
 
     @property
     def phase_id(self):
         """
-        str: Kernel dictionary key of the atmosphere's phase function object.
+        Returns
+        -------
+        str
+            ID of the phase function associated with the atmosphere in the
+            Mitsuba scene tree.
         """
         return f"phase_{self.id}"
 
     @property
     @abstractmethod
     def _template_phase(self) -> dict:
+        """
+        Returns
+        -------
+        dict
+            The phase function-related contribution to the kernel scene
+            dictionary template for the atmosphere.
+        """
         pass
 
     @property
     @abstractmethod
     def _template_medium(self) -> dict:
+        """
+        Returns
+        -------
+        dict
+            The medium-related contribution to the kernel scene dictionary
+            template for the atmosphere.
+        """
         pass
 
     @property
     def _template_shape(self) -> dict:
         """
-        Return the shape enclosing the atmosphere's volume.
-
         Returns
         -------
-        shape : .CuboidShape or .SphereShape
-            Computed shape used as the medium stencil for kernel dictionary
-            generation.
+        dict
+            The shape-related contribution to the kernel scene dictionary
+            template for the atmosphere.
         """
         template, _ = traverse(self.shape)
         return template.data
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
         result = flatten(
             {
                 self.phase_id: self._template_phase,
@@ -233,14 +270,35 @@ class Atmosphere(CompositeSceneElement, ABC):
 
     @property
     def _params_phase(self) -> t.Dict[str, UpdateParameter]:
+        """
+        Returns
+        -------
+        dict
+            The phase function-related contribution to the parameter update map
+            template for the atmosphere.
+        """
         return {}
 
     @property
     def _params_medium(self) -> t.Dict[str, UpdateParameter]:
+        """
+        Returns
+        -------
+        dict
+            The medium-related contribution to the parameter update map template
+            for the atmosphere.
+        """
         return {}
 
     @property
     def _params_shape(self) -> t.Dict[str, UpdateParameter]:
+        """
+        Returns
+        -------
+        dict
+            The shape-related contribution to the parameter update map template
+            for the atmosphere.
+        """
         return {}
 
     @property
@@ -261,8 +319,7 @@ class Atmosphere(CompositeSceneElement, ABC):
 @attrs.define(eq=False, slots=False)
 class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     """
-    Heterogeneous atmosphere base class. This class defines the basic interface
-    common to all heterogeneous atmosphere models.
+    Abstract base class for heterogeneous atmospheres.
     """
 
     scale: t.Optional[float] = documented(
@@ -275,7 +332,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         "amount during computation.",
         type="float or None",
         init_type="float, optional",
-        default="None",
     )
 
     def __attrs_post_init__(self) -> None:
@@ -295,8 +351,12 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     @abstractmethod
     def zgrid(self) -> ZGrid:
         """
-        ZGrid: Altitude grid at which thermophysical and radiative
-               properties are evaluated. Corresponds to layer centres.
+        Returns
+        -------
+        .ZGrid
+            Altitude grid at which thermophysical and radiative properties are
+            evaluated by default. Corresponds to atmospheric profile layer
+            centres.
         """
         pass
 
@@ -315,10 +375,15 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         Parameters
         ----------
-        sctx : :class:`.SpectralContext`
+        sctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        zgrid : .ZGrid, optional
+            Altitude grid on which evaluation is performed. If unset, an
+            instance-specific default is used
+            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
 
         optional_fields : bool, optional, default: False
             If ``True``, also output the absorption and scattering coefficients,
@@ -327,15 +392,14 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         Returns
         -------
         Dataset
-            A dataset containing with the following variables for the specified
-            spectral context:
+            A dataset with the following variables:
 
             * ``sigma_t``: extinction coefficient;
             * ``albedo``: albedo;
             * ``sigma_a``: absorption coefficient (optional);
             * ``sigma_s``: scattering coefficient (optional).
 
-            Coordinates are the following:
+            and coordinates:
 
             * ``z``: altitude.
         """
@@ -422,6 +486,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
+        zgrid : .ZGrid, optional
+            Altitude grid on which evaluation is performed. If unset, an
+            instance-specific default is used
+            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+
         Returns
         -------
         quantity
@@ -445,6 +514,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
+        zgrid : .ZGrid, optional
+            Altitude grid on which evaluation is performed. If unset, an
+            instance-specific default is used
+            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+
         Returns
         -------
         quantity
@@ -466,6 +540,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        zgrid : .ZGrid, optional
+            Altitude grid on which evaluation is performed. If unset, an
+            instance-specific default is used
+            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
 
         Returns
         -------
@@ -489,6 +568,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
 
+        zgrid : .ZGrid, optional
+            Altitude grid on which evaluation is performed. If unset, an
+            instance-specific default is used
+            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+
         Returns
         -------
         quantity
@@ -503,6 +587,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @property
     def _template_medium(self) -> dict:
+        # Inherit docstring
         length_units = uck.get("length")
         top = self.top.m_as(length_units)
         bottom = self.bottom.m_as(length_units)
@@ -613,6 +698,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @property
     def _params_medium(self) -> t.Dict[str, UpdateParameter]:
+        # Inherit docstring
         if isinstance(self.geometry, PlaneParallelGeometry):
             return {
                 "albedo.data": UpdateParameter(

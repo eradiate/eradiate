@@ -13,6 +13,7 @@ import xarray as xr
 import eradiate
 
 from .._factory import Factory
+from ..attrs import documented, parse_docs
 from ..ckd import Bindex
 from ..contexts import SpectralContext
 from ..exceptions import UnsupportedModeError
@@ -168,10 +169,11 @@ def make_dataset(
     )
 
 
+@parse_docs
 @attrs.frozen(eq=False, init=False)
 class ZGrid:
     """
-    This class provides a container for a regular altitude grid.
+    A container for a regular altitude grid.
 
     Notes
     -----
@@ -181,9 +183,16 @@ class ZGrid:
     * This class is used as the argument of the ``eval()`` family of methods.
     """
 
-    levels: pint.Quantity = pinttr.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,  # frozen instance: on_setattr must be disabled
+    levels: pint.Quantity = documented(
+        pinttr.field(
+            units=ucc.deferred("length"),
+            on_setattr=None,  # frozen instance: on_setattr must be disabled
+        ),
+        type="pint.Quantity",
+        init_type="quantity or array-like",
+        doc="Grid node altitudes.\n"
+        "\n"
+        'Unit-enabled field (default: ``ucc["length"]``).',
     )
 
     _layers: pint.Quantity = pinttr.field(
@@ -213,7 +222,9 @@ class ZGrid:
     @property
     def layers(self) -> pint.Quantity:
         """
-        quantity:
+        Returns
+        -------
+        quantity
             Vector of altitudes of layer centres.
         """
         return self._layers
@@ -221,7 +232,9 @@ class ZGrid:
     @property
     def layer_height(self) -> pint.Quantity:
         """
-        quantity:
+        Returns
+        -------
+        quantity
             Layer height.
         """
         return self._layer_height
@@ -229,14 +242,20 @@ class ZGrid:
     @property
     def n_levels(self) -> int:
         """
-        Number of levels.
+        Returns
+        -------
+        int
+            Number of levels.
         """
         return len(self.levels)
 
     @property
     def n_layers(self) -> int:
         """
-        Number of layers.
+        Returns
+        -------
+        int
+            Number of layers.
         """
         return len(self.layers)
 

@@ -22,6 +22,7 @@
    :recursive:
    :toctree: generated/autosummary/
 
+   ZGrid
    RadProfile
    AFGL1986RadProfile
    US76ApproxRadProfile
