@@ -448,7 +448,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 {
                     "sigma_a": (
                         "z_layer",
-                        (sigma_t * (1.0 - albedo)).m_as(sigma_units),
+                        sigma_t.m_as(sigma_units) * (1.0 - albedo),
                         {
                             "units": f"{symbol(sigma_units)}",
                             "standard_name": "absorption_coefficient",
@@ -457,7 +457,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     ),
                     "sigma_s": (
                         "z_layer",
-                        sigma_t * albedo,
+                        sigma_t.m_as(sigma_units) * albedo,
                         {
                             "units": f"{symbol(sigma_units)}",
                             "standard_name": "scattering_coefficient",
