@@ -15,6 +15,7 @@ bsdf_factory.register_lazy_batch(
         ("_checkerboard.CheckerboardBSDF", "checkerboard", {}),
         ("_lambertian.LambertianBSDF", "lambertian", {}),
         ("_mqdiffuse.MQDiffuseBSDF", "mqdiffuse", {}),
+        ("_opacity_mask.OpacityMaskBSDF", "opacity_mask", {}),
         ("_rpv.RPVBSDF", "rpv", {}),
     ],
     cls_prefix="eradiate.scenes.bsdfs",

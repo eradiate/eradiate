@@ -5,24 +5,20 @@ import warnings
 
 import attrs
 
-from ._core import EarthObservationExperiment, Experiment
-from ._helpers import (
-    measure_inside_atmosphere,
-    surface_converter,
-)
-from ..attrs import documented, get_doc, parse_docs
-from ..scenes.atmosphere import (
-    Atmosphere,
-    HomogeneousAtmosphere,
-    atmosphere_factory,
-)
+from ._core import EarthObservationExperiment
+from ._helpers import measure_inside_atmosphere, surface_converter
+from ..attrs import documented, parse_docs
+from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import SceneElement
-from ..scenes.geometry import PlaneParallelGeometry, SceneGeometry
+from ..scenes.geometry import (
+    PlaneParallelGeometry,
+    SceneGeometry,
+    SphericalShellGeometry,
+)
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import DistantMeasure, Measure, TargetPoint
-from ..scenes.shapes import RectangleShape
-from ..scenes.surface import BasicSurface, DEMSurface, surface_factory
+from ..scenes.surface import BasicSurface, DEMSurface
 from ..units import unit_registry as ureg
 
 
@@ -46,19 +42,25 @@ class DEMExperiment(EarthObservationExperiment):
       unsuitable configuration is detected, a :class:`ValueError` will be raised
       during initialization.
 
-    * Currently this experiment is limited to the plane-parallel geometry.
+    * Currently DEM surfaces, which extends below 0 elevation will not yield correct
+      results, when used in combination with atmospheres.
+
+    * When using a DEM which extends below 0 elevation, a .VolPathIntegrator must be
+      used. Otherwise, the low regions of the DEM will be shadowed by the background
+      surface.
     """
 
-    # Currently, only the plane parallel geometry is supported
-    geometry: PlaneParallelGeometry = documented(
+    geometry: SceneGeometry = documented(
         attrs.field(
             default="plane_parallel",
             converter=SceneGeometry.convert,
-            validator=attrs.validators.instance_of(PlaneParallelGeometry),
+            validator=attrs.validators.instance_of(
+                (PlaneParallelGeometry, SphericalShellGeometry)
+            ),
         ),
         doc="Problem geometry.",
-        type=".PlaneParallelGeometry",
-        init_type="str or dict or .PlaneParallelGeometry",
+        type=".SceneGeometry",
+        init_type="str or dict or .PlaneParallelGeometry or .SphericalShellGeometry",
         default='"plane_parallel"',
     )
 
@@ -79,47 +81,34 @@ class DEMExperiment(EarthObservationExperiment):
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )
 
-    surface: BasicSurface | None = documented(
+    surface: BasicSurface | DEMSurface | None = documented(
         attrs.field(
             factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
             converter=attrs.converters.optional(surface_converter),
             validator=attrs.validators.optional(
-                attrs.validators.instance_of(BasicSurface)
+                attrs.validators.instance_of((BasicSurface, DEMSurface))
             ),
         ),
         doc="Surface specification. If set to ``None``, no surface will be "
         "added. This parameter can be specified as a dictionary which will be "
         "interpreted by :data:`.surface_factory` and :data:`.bsdf_factory`.",
-        type=".BasicSurface or None",
-        init_type=".BasicSurface or .BSDF or dict, optional",
+        type=".Surface or None",
+        init_type=".BasicSurface or .DEMSurface or .BSDF or dict, optional",
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
-    )
-
-    dem: DEMSurface | None = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(surface_factory.convert),
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(DEMSurface)
-            ),
-        ),
-        doc="Digital elevation model (DEM) specification. If set to ``None``, no DEM will be "
-        "added. This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.surface_factory`",
-        type=".DEMSurface or None",
-        init_type=".DEMSurface or dict, optional",
-        default="None",
     )
 
     _integrator: Integrator = documented(
         attrs.field(
             factory=VolPathIntegrator,
             converter=integrator_factory.convert,
-            validator=attrs.validators.instance_of(Integrator),
+            validator=attrs.validators.instance_of(VolPathIntegrator),
         ),
-        doc=get_doc(Experiment, attrib="_integrator", field="doc"),
-        type=get_doc(Experiment, attrib="_integrator", field="type"),
-        init_type=get_doc(Experiment, attrib="_integrator", field="init_type"),
+        doc="Monte Carlo integration algorithm specification. "
+        "This parameter can be specified as a dictionary which will be "
+        "interpreted by :data:`.integrator_factory`. The DEMExperiment requires"
+        "the use of a .VolPathIntegrator.",
+        type=":class:`.VolPathIntegrator`",
+        init_type=":class:`.VolPathIntegrator` or dict",
         default=":class:`VolPathIntegrator() <.VolPathIntegrator>`",
     )
 
@@ -144,7 +133,7 @@ class DEMExperiment(EarthObservationExperiment):
         for measure in self.measures:
             # Override ray target location if relevant
             if isinstance(measure, DistantMeasure):
-                if self.dem is not None:
+                if isinstance(self.surface, DEMSurface):
                     if measure.target is None:
                         msg = (
                             f"Measure '{measure.id}' has its target unset "
@@ -200,27 +189,18 @@ class DEMExperiment(EarthObservationExperiment):
 
         # Process atmosphere
         if self.atmosphere is not None:
-            objects["atmosphere"] = self.atmosphere
-
-        # Process surface
-        if self.surface is not None:
-            if self.atmosphere is not None:
-                surface_width = self.atmosphere.geometry.width
-                surface_altitude = self.atmosphere.bottom_altitude
-            else:
-                surface_width = self._default_surface_width
-                surface_altitude = 0.0 * ureg.km
-
-            objects["surface"] = attrs.evolve(
-                self.surface,
-                shape=RectangleShape.surface(
-                    altitude=surface_altitude, width=surface_width
-                ),
+            objects["atmosphere"] = attrs.evolve(
+                self.atmosphere, geometry=self.geometry
             )
 
-        # Process DEM
-        if self.dem is not None:
-            objects["surface"] = self.dem
+        # Process surface
+        if self.surface is not None and isinstance(self.surface, BasicSurface):
+            objects["surface"] = attrs.evolve(
+                self.surface,
+                shape=self.geometry.surface_shape,
+            )
+        else:
+            objects["surface"] = self.surface
 
         objects.update(
             {
