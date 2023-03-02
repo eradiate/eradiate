@@ -1,3 +1,4 @@
+import logging
 import typing as t
 
 import attrs
@@ -9,6 +10,9 @@ from .._config import ProgressLevel, config
 from ..attrs import documented, parse_docs
 from ..contexts import KernelDictContext
 from ..rng import SeedState, root_seed_state
+
+logger = logging.getLogger(__name__)
+
 
 # ------------------------------------------------------------------------------
 #                         Parameter lookup strategies
@@ -284,6 +288,7 @@ def mi_render(
                 refresh=True,
             )
 
+            logger.debug("Updating Mitsuba scene parameters")
             mi_scene.parameters.update(mi_scene.umap_template.render(ctx))
 
             if sensors is None:
@@ -299,6 +304,7 @@ def mi_render(
             # Loop on sensors
             for i_sensor, mi_sensor in mi_sensors:
                 # Render sensor
+                logger.debug('Running Mitsuba for sensor "%s"', mi_sensor.id())
                 mi.render(
                     mi_scene.obj,
                     sensor=i_sensor,
