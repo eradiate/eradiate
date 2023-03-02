@@ -1,9 +1,13 @@
+import os
+
 import mitsuba as mi
 import numpy as np
 import pytest
+import xarray as xr
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import DEMExperiment
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
@@ -11,9 +15,10 @@ from eradiate.scenes.atmosphere import (
     MolecularAtmosphere,
 )
 from eradiate.scenes.bsdfs import LambertianBSDF
+from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.spectra import MultiDeltaSpectrum
-from eradiate.scenes.surface import DEMSurface
+from eradiate.scenes.surface import DEMSurface, mesh_from_dem
 from eradiate.test_tools.types import check_scene_element
 
 
@@ -86,7 +91,7 @@ def test_dem_experiment_kernel_dict(modes_all_double):
     )  # Do not drop untracked parameters: we want to check the surface transform
     np.testing.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
-        mi.ScalarTransform4f.scale([500, 500, 1]).matrix,
+        mi.ScalarTransform4f.scale([5e8, 5e8, 1]).matrix,
     )
     # -- Atmosphere is not in kernel dictionary
     assert {shape.id() for shape in mi_wrapper.obj.shapes()} == {"surface_shape"}
@@ -217,20 +222,33 @@ def test_dem_experiment_run_detailed(modes_all):
     assert np.all(results["radiance"].data > 0.0)
 
 
-def test_dem_experiment_warn_targeting_dem(modes_all_double):
+def test_dem_experiment_warn_targeting_dem(modes_all_double, tmpdir):
     """
     Test that Eradiate raises a warning, when the measure target is a point and a DEM is defined in the scene.
     """
 
+    da = xr.DataArray(
+        data=np.zeros((10, 10)),
+        dims=["x", "y"],
+        coords=dict(
+            x=(["x"], np.linspace(-10, 20, 10), dict(units="kilometer")),
+            y=(["y"], np.linspace(-30, 40, 10), dict(units="kilometer")),
+        ),
+        attrs=dict(units="meter"),
+    )
+
+    mesh, lat, lon = mesh_from_dem(
+        da, geometry=PlaneParallelGeometry(), planet_radius=EARTH_RADIUS
+    )
+
     with pytest.warns(UserWarning, match="uses a point target"):
         DEMExperiment(
-            dem=DEMSurface.from_analytical(
-                elevation_function=lambda x, y: 1,
-                x_length=1 * ureg.m,
-                x_steps=10,
-                y_length=1 * ureg.m,
-                y_steps=10,
-                bsdf=LambertianBSDF(),
+            surface=DEMSurface.from_mesh(
+                id="terrain",
+                mesh=mesh,
+                lat=lat,
+                lon=lon,
+                geometry=PlaneParallelGeometry(),
             ),
             measures=[
                 {

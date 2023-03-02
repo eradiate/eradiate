@@ -11,8 +11,8 @@ from ..core import BoundingBox, traverse
 from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
 from ...kernel import UpdateParameter
-from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
+from ...units import unit_context_config as ucc
 
 
 @parse_docs
@@ -32,7 +32,7 @@ class BufferMeshShape(ShapeInstance):
             kw_only=True,
         ),
         doc="List of vertex positions. The passed list must contain a (n, 3) list"
-        "of three dimensional points.\n\nUnit-enabled field (default: ucc['length']).",
+        "of three dimensional points. \n\nUnit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="array-like",
     )
@@ -90,6 +90,23 @@ class BufferMeshShape(ShapeInstance):
         mesh_params.update()
 
         return mesh
+
+    def write_ply(self, filename: str) -> None:
+        """
+        Write a ply file from the mesh data.
+
+        Parameters
+        ----------
+        filename : str
+            Path and filename to write the mesh file into. No directories
+            are created.
+
+        Notes
+        -----
+        Vertices are converted into kernel units and accordingly written to file in these units.
+        """
+        mesh = self.instance
+        mesh.write_ply(filename)
 
     @property
     def params(self) -> dict[str, UpdateParameter] | None:

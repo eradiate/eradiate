@@ -15,11 +15,7 @@ from pinttr.util import ensure_units
 from .._factory import Factory
 from ..attrs import documented, parse_docs
 from ..exceptions import TraversalError
-from ..kernel import (
-    KernelDictTemplate,
-    UpdateMapTemplate,
-    UpdateParameter,
-)
+from ..kernel import KernelDictTemplate, UpdateMapTemplate, UpdateParameter
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 

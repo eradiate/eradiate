@@ -1,50 +1,342 @@
 from __future__ import annotations
 
-import typing as t
 import warnings
 
 import attrs
+import mitsuba as mi
 import numpy as np
 import pint
 import xarray as xr
-from pinttr.util import ensure_units
 
 from ._core import Surface
-from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
-from ..core import InstanceSceneElement, NodeSceneElement
-from ..shapes import BufferMeshShape, FileMeshShape, Shape, shape_factory
+from ..bsdfs import BSDF, LambertianBSDF, OpacityMaskBSDF
+from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
+from ..shapes import (
+    BufferMeshShape,
+    FileMeshShape,
+    RectangleShape,
+    Shape,
+    SphereShape,
+    shape_factory,
+)
 from ...attrs import documented, get_doc, parse_docs
+from ...constants import EARTH_RADIUS
 from ...units import to_quantity
-from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+
+
+def mesh_from_dem(
+    da: xr.DataArray,
+    geometry: SceneGeometry,
+    planet_radius: pint.Quantity | None = None,
+):
+    """
+    Construct a DEM surface from a dataarray holding elevation data.
+
+    Parameters
+    ----------
+    da : xr.DataArray
+        Data array with elevation data, indexed either by latitude and longitude coordinates or x and y coordinates
+
+    geometry : SceneGeometry
+        Geometry of the scene.
+
+    planet_radius : pint.Quantity
+        Planet radius, used to convert latitude/longitude to x/y, when `geometry` is a :class:`.PlaneParallel` instance.
+        This parameter is unused otherwise. Default: :data:`.EARTH_RADIUS`.
+
+    id : str
+        Identifier of the scene element.
+
+    Notes
+    -----
+    There are two ways of specifying the dataarray:
+    - With latitude and longitude based coordinates:
+      The coordinates must be named "lat" and "lon".
+    - With x and y length based coordinates
+      The coordinates must be named "x" and "y".
+
+    The unit of the coordinates is specified through the `coordinate_units` metadata field in the dataarray.
+
+    The unit of the elevation data is specified through the `unit` metadata field in the dataarray.
+
+    Returns
+    -------
+    mesh : :class:`.BufferMeshShape`
+        A triangulated mesh representing the DEM
+
+    theta_lim : pint.Quantity
+        The limits of the latitude extent of the DEM
+
+    phi_lim : pint.Quantity
+        The limits of the longitude extent of the DEM
+    """
+    if isinstance(geometry, PlaneParallelGeometry):
+        if planet_radius is None:
+            planet_radius = EARTH_RADIUS
+    elif isinstance(geometry, SphericalShellGeometry):
+        if planet_radius is not None:
+            warnings.warn(
+                "SphericalShellGeometry overrides the `planet_radius` argument."
+            )
+
+    if "lat" in da.coords and "lon" in da.coords:
+        elevation = to_quantity(da.transpose("lat", "lon"))
+        lat = ureg.Quantity(da.lat.values, da["lat"].attrs["units"]).m_as(ureg.deg)
+        lon = ureg.Quantity(da.lon.values, da["lon"].attrs["units"]).m_as(ureg.deg)
+        vertices = _generate_dem_vertices(lat, lon, elevation.m_as(uck.get("length")))
+        faces = _generate_face_indices(len(lat), len(lon))
+
+    elif "x" in da.coords and "y" in da.coords:
+        elevation = to_quantity(da.transpose("x", "y"))
+        if isinstance(geometry, SphericalShellGeometry):
+            planet_radius = geometry.planet_radius
+
+        x = np.rad2deg(
+            (ureg.Quantity(da.x.values, da["x"].attrs["units"]) / planet_radius).m
+        )
+        y = np.rad2deg(
+            (ureg.Quantity(da.y.values, da["y"].attrs["units"]) / planet_radius).m
+        )
+
+        vertices = _generate_dem_vertices(x, y, elevation.m_as(uck.get("length")))
+        faces = _generate_face_indices(len(x), len(y))
+    else:
+        raise ValueError(
+            f"Data array coordinates must be either `x/y` or `lat/lon`.\nGot: {da.coords}"
+        )
+
+    theta_lim, phi_lim = _minmax_coordinates(vertices)
+    theta_mean, phi_mean = _mean_coordinates(vertices)
+    atmo_bottom = geometry.ground_altitude
+
+    if isinstance(geometry, SphericalShellGeometry):
+        trafo = (
+            mi.ScalarTransform4f.rotate(axis=[0, 0, 1], angle=-90)
+            @ mi.ScalarTransform4f.rotate(axis=[0, 1, 0], angle=-(90 - theta_mean))
+            @ mi.ScalarTransform4f.rotate(axis=[0, 0, 1], angle=-phi_mean)
+        ).matrix.numpy()[:3, :3]
+
+        vertices_spherical = _transform_vertices_spherical_shell(
+            vertices, geometry.planet_radius.m_as(uck.get("length"))
+        )
+        vertices_new = [trafo.dot(vertex) for vertex in vertices_spherical] * uck.get(
+            "length"
+        )
+
+        mesh = BufferMeshShape(vertices=vertices_new, faces=faces)
+    elif isinstance(geometry, PlaneParallelGeometry):
+        vertices_new = _transform_vertices_plane_parallel(
+            vertices,
+            planet_radius=planet_radius.m_as(uck.get("length")),
+            altitude=atmo_bottom.m_as(uck.get("length")),
+        ) * uck.get("length")
+        mesh = BufferMeshShape(vertices=vertices_new, faces=faces)
+    else:
+        raise ValueError(f"Unsupported scene geometry: {geometry}")
+
+    return mesh, theta_lim * ureg.deg, phi_lim * ureg.deg
+
+
+def _generate_dem_vertices(x, y, elevation):
+    """
+    Generate DEM vertex positions as (latitude, longitude, elevation) triplets
+    for a plane parallel geometry.
+
+    Parameters
+    ----------
+    latitude_points : array-like
+        Points along the latitude axis of the DEM
+
+    longitude_points : array-like
+        Points along the longitude axis of the DEM
+
+    elevation : array-like
+        Elevation data
+
+    Returns
+    -------
+    vertices : array
+        DEM vertices as (lat, lon, elevation) triplets.
+    """
+    y_gr, x_gr = np.meshgrid(y, x)
+
+    vertices = np.array((x_gr.ravel(), y_gr.ravel(), elevation.ravel())).transpose()
+    return vertices
+
+
+def _vertex_index(x, y, len_y):
+    """
+    Vertex index for a given row and column of gridded vertex data
+    This function handles vectorized index lookup with numpy arrays,
+    as well as individual lookup using floats.
+
+    Parameters
+    ----------
+    x : np.array
+        Row index of the vertex grid
+    y : np.array
+        Column index of the vertex grid
+    len_y : float
+        Length of the second dimension of the vertex grid
+
+    Returns
+    -------
+    index : np.array
+        Index of the vertex in a flattened structure.
+    """
+    return x * len_y + y
+
+
+def _generate_face_indices(len_x, len_y):
+    """
+    Generate indices for face definition in a mesh with gridded vertex positions
+
+    Parameters
+    ----------
+    len_x : float
+        Length of the row dimension of the vertex grid
+
+    len_y : float
+        Length of the column dimension of the vertex grid
+
+    Returns
+    -------
+    face_indices : np.array
+        (n, 3) array defining faces of the triangulated mesh for the DEM.
+    """
+    x = np.array(range(len_x - 1))
+    y = np.array(range(len_y - 1))
+    xg, yg = np.meshgrid(x, y)
+    vertex_sw = _vertex_index(xg.flatten(), yg.flatten(), len_y)
+
+    xg, yg = np.meshgrid(x + 1, y + 1)
+    vertex_ne = _vertex_index(xg.flatten(), yg.flatten(), len_y)
+
+    xg, yg = np.meshgrid(x, y + 1)
+    vertex_nw = _vertex_index(xg.flatten(), yg.flatten(), len_y)
+
+    xg, yg = np.meshgrid(x + 1, y)
+    vertex_se = _vertex_index(xg.flatten(), yg.flatten(), len_y)
+
+    face_indices_1 = np.array((vertex_ne, vertex_sw, vertex_nw)).transpose()
+    face_indices_2 = np.array((vertex_se, vertex_sw, vertex_ne)).transpose()
+    face_indices = np.concatenate((face_indices_1, face_indices_2))
+
+    return face_indices
+
+
+def _transform_vertices_spherical_shell(vertices, planet_radius):
+    """
+    Convert the (lat, lon, elevation) vertices from the initial vertex generation
+    into (x, y, z) values for spherical shell geometries.
+
+    Parameters
+    ----------
+    vertices : array-like
+        List of mesh vertices in (lat, lon, elevation) tuples.
+
+    planet_radius : float
+        Planet radius; assumed to be given in kernel units
+    """
+    theta_r = np.deg2rad(90 - vertices[:, 0])
+    phi_r = np.deg2rad(vertices[:, 1])
+    x = np.sin(theta_r) * np.cos(phi_r) * (planet_radius + vertices[:, 2])
+    y = np.sin(theta_r) * np.sin(phi_r) * (planet_radius + vertices[:, 2])
+    z = np.cos(theta_r) * (planet_radius + vertices[:, 2])
+    vertices_new = np.array((x, y, z)).transpose()
+
+    return vertices_new
+
+
+def _transform_vertices_plane_parallel(vertices, planet_radius, altitude):
+    """
+    Convert the (lat, lon, elevation) vertices from the initial vertex generation
+    into (x, y, z) values for plane parallel atmosphere geometries.
+
+    Parameters
+    ----------
+    vertices : array-like
+        List of mesh vertices in (lat, lon, elevation) tuples.
+
+    planet_radius : float
+        Planet radius; assumed to be given in kernel units
+
+    altitude : float
+        Atmosphere bottom altitude; assumed to be given in kernel units
+    """
+    theta_mean, phi_mean = _mean_coordinates(vertices)
+    phi_local = np.deg2rad(vertices[:, 1] - phi_mean)
+    theta_local = np.deg2rad(vertices[:, 0] - theta_mean)
+
+    x = phi_local * planet_radius
+    y = theta_local * planet_radius
+    z = vertices[:, 2] + altitude
+
+    vertices_new = np.array((x, y, z)).transpose()
+    return vertices_new
+
+
+def _mean_coordinates(vertices):
+    """
+    Return the mean of the latitude and longitude values in the vertex list.
+    The mean is computed as the average of the smallest and largest value in each set.
+    """
+    (theta_min, theta_max), (phi_min, phi_max) = _minmax_coordinates(vertices)
+
+    phi_mean = ((phi_max + phi_min) / 2.0) % 360
+    theta_mean = (theta_max + theta_min) / 2.0
+    return theta_mean, phi_mean
+
+
+def _minmax_coordinates(vertices):
+    """
+    Return the minimum and maximum values of the latitude and longitude values
+    in the vertex list.
+    """
+    theta_min = np.min(vertices[:, 0])
+    theta_max = np.max(vertices[:, 0])
+    phi_min = np.min(vertices[:, 1])
+    phi_max = np.max(vertices[:, 1])
+    return (theta_min, theta_max), (phi_min, phi_max)
+
+
+def _to_uv(lat_min, lat_max, lon_min, lon_max) -> "mi.ScalarTransform4f":
+    """
+    Compute the `to_uv` transformation for the opacity mask bitmap. To do this,
+    the latitude and longitude extent of the DEM specification are used.
+
+    To avoid intersection between the terrain mesh and the surrounding background
+    shape, an opacity mask is attached to the background's BSDF.
+
+    """
+    lon_range = lon_max - lon_min
+    lon_scale = 120 / lon_range
+
+    lat_range = lat_max - lat_min
+    lat_scale = 60 / lat_range
+
+    lon_mean = (lon_max + lon_min) / 2.0
+    lon_uv = lon_mean / 360 + 0.5
+
+    lat_mean = (lat_max + lat_min) / 2.0
+    lat_uv = 0.5 - (lat_mean / 180)
+
+    return mi.ScalarTransform4f.scale(
+        (lon_scale, lat_scale, 1)
+    ) @ mi.ScalarTransform4f.translate(
+        (-lon_uv + (0.5 / lon_scale), -lat_uv + (0.5 / lat_scale), 0)
+    )
 
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
 class DEMSurface(Surface):
     """
-    DEM surface [``dem``]
+    DEM Surface [``dem``]
 
-    A surface description for digital elevation models.
-
-    This surface supports instantiation based on an xarray data array, a
-    triangulated mesh file in the PLY and OBJ formats and an analytical
-    elevation mapping the x and y coordinates to an elevation value.
-
-    .. admonition:: Class method constructors
-
-       .. autosummary::
-
-          from_dataarray
-          from_analytical
-
-    Notes
-    -----
-    * Contrary to most other surfaces, this scene element expands as a single
-      Mitsuba Shape plugin which includes its child BSDF rather than referencing
-      a top-level dictionary entry. The reason for this is that some allowed
-      shapes expand as Mitsuba instances rather than dictionaries, which
-      prevents object referencing.
+    A mesh based representation of surface DEMs.
     """
 
     id: str | None = documented(
@@ -65,210 +357,28 @@ class DEMSurface(Surface):
                 attrs.validators.instance_of((BufferMeshShape, FileMeshShape))
             ),
             kw_only=True,
+            default=None,
         ),
         doc="Shape describing the surface.",
-        type=".BufferMeshShape or .FileMeshShape",
+        type=".BufferMeshShape or .FileMeshShape or None",
         init_type=".BufferMeshShape or .OBJMeshShape or .PLYMeshShape or dict",
+        default="None",
     )
 
-    bsdf: BSDF = documented(
+    shape_background: Shape = documented(
         attrs.field(
-            factory=LambertianBSDF,
-            converter=bsdf_factory.convert,
-            validator=attrs.validators.instance_of(BSDF),
+            converter=attrs.converters.optional(shape_factory.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of((SphereShape, RectangleShape))
+            ),
+            kw_only=True,
+            default=None,
         ),
-        doc="The reflection model attached to the surface.",
-        type=".BSDF",
-        init_type=".BSDF or dict, optional",
-        default=":class:`LambertianBSDF() <.LambertianBSDF>`",
+        doc="Shape describing the background surface.",
+        type=".SphereShape or .RectangleShape or None",
+        init_type=".SphereShape or .RectangleShape or dict",
+        default="None",
     )
-
-    @staticmethod
-    def _vertex_index(x, y, len_y):
-        return x * len_y + y
-
-    @staticmethod
-    def _generate_face_indices(len_x, len_y):
-        face_indices = []
-        for x in range(len_x + 1):
-            for y in range(len_y + 1):
-                vertex_sw = DEMSurface._vertex_index(x, y, len_y + 2)
-                vertex_ne = DEMSurface._vertex_index(x + 1, y + 1, len_y + 2)
-                vertex_nw = DEMSurface._vertex_index(x, y + 1, len_y + 2)
-                vertex_se = DEMSurface._vertex_index(x + 1, y, len_y + 2)
-                # In mitsuba, triangles are defined clockwise
-                face_indices.append((vertex_sw, vertex_ne, vertex_nw))
-                face_indices.append((vertex_sw, vertex_se, vertex_ne))
-
-        return face_indices
-
-    @classmethod
-    def from_dataarray(
-        cls,
-        data: xr.DataArray,
-        bsdf: BSDF,
-        planet_radius: pint.Quantity | float = 6371.0 * ureg.km,
-    ) -> DEMSurface:
-        """
-        Construct a DEM from an xarray data array holding elevation data.
-        The data array must use latitude and longitude as its dimensional
-        coordinates.
-
-        Parameters
-        ----------
-        data : DataArray
-            Data array holding the elevation data. Dimensional coordinates must
-            be latitude `lat` and longitude `lon`. Data will be interpreted to
-            be given in kernel units.
-
-        bsdf : .BSDF
-            BSDF to be attached to the mesh shape.
-
-        planet_radius : quantity or float, optional
-            Planet radius used to convert latitude and longitude into distance
-            units. Unitless values are interpreted in default configuration
-            units. Defaults to Earth's radius.
-
-        Returns
-        -------
-        :class:`.DEMSurface`
-        """
-        radius = ensure_units(planet_radius, ucc.get("length"), convert=True).magnitude
-
-        len_lat = len(data.lat)  # x
-        len_lon = len(data.lon)  # y
-
-        # Convert the degrees to local distances based on planet radius
-        # TODO: Update this when adding support for spherical shell geometry
-        lon_rad = to_quantity(data.lon).m_as(ureg.rad)
-        lat_rad = to_quantity(data.lat).m_as(ureg.rad)
-        mean_lon = lon_rad.mean()
-        lon_range = lon_rad.max() - lon_rad.min()
-        lat_range = lat_rad.max() - lat_rad.min()
-        lon_length = lon_range * radius
-        lat_length = lat_range * radius * np.cos(mean_lon)
-
-        lat_range = list(np.linspace(-lat_length / 2.0, lat_length / 2.0, len_lat))
-        # Duplicate the first and last entry for the extra vertices, which form
-        # the vertical walls
-        lat_range.insert(0, lat_range[0])
-        lat_range.append(lat_range[-1])
-
-        lon_range = list(np.linspace(-lon_length / 2.0, lon_length / 2.0, len_lon))
-
-        vertex_positions = np.zeros(((len_lat + 2) * (len_lon + 2), 3))
-        values = np.array(data.data).transpose()[:, ::-1]
-        for i, x in enumerate(lat_range):
-            if i in [0, len_lat + 1]:
-                # For the rows of vertices which are only the lower points of the wall
-                # set the z coordinate to -1
-                z_list = np.full(len_lon + 2, -1.0)
-            else:
-                z_list = values[i - 1]
-                # Add z=-1 on both ends for the points that make up the vertical wall
-                z_list = np.insert(z_list, 0, -1.0)
-                z_list = np.append(z_list, -1.0)
-            for j, z in enumerate(z_list):
-                # Duplicate the first and last entry for the extra vertices, which form the
-                # vertical walls
-                if j == 0:
-                    y = lon_range[0]
-                elif j == len_lon + 1:
-                    y = lon_range[-1]
-                else:
-                    y = lon_range[j - 1]
-                vertex_positions[i * len_lon + j, :] = [x, y, z]
-
-        # For each row and each column, except the last ones, define two
-        # triangles, extending one index in each dimension.
-        face_indices = cls._generate_face_indices(len_lat, len_lon)
-
-        return cls(
-            shape=BufferMeshShape(vertices=vertex_positions, faces=face_indices),
-            bsdf=bsdf,
-        )
-
-    @classmethod
-    def from_analytical(
-        cls,
-        elevation_function: t.Callable,
-        x_length: pint.Quantity | float,
-        x_steps: int,
-        y_length: pint.Quantity | float,
-        y_steps: int,
-        bsdf: BSDF,
-    ) -> DEMSurface:
-        """
-        Construct a DEM from an analytical function mapping the x and y
-        coordinates to elevation values.
-
-        Parameters
-        ----------
-        elevation_function : callable
-            Function that takes x, y points as inputs and returns the
-            corresponding elevation value. Elevation values are interpreted in
-            kernel units.
-
-        x_length : pint.Quantity or float
-            Extent of the mapped area along the x-axis. Unitless values are
-            interpreted in default configuration units.
-
-        x_steps : int
-            Number of data points to generate along the x-axis.
-
-        y_length : pint.Quantity
-            Extent of the mapped area along the y-axis. Unitless values are
-            interpreted in default configuration units.
-
-        y_steps : int
-            Number of data points to generate along the y-axis.
-
-        bsdf : .BSDF
-            BSDF to be attached to the mesh shape.
-        """
-        x_length_m = ensure_units(x_length, ucc.get("length"), convert=True).magnitude
-        y_length_m = ensure_units(y_length, ucc.get("length"), convert=True).magnitude
-
-        # Duplicate the first and last entries in x and y, for the vertices
-        # that form the vertical walls
-        x_range = np.empty((x_steps + 2,))
-        x_range[1:-1] = np.linspace(-x_length_m / 2.0, x_length_m / 2.0, x_steps)
-        x_range[0] = x_range[1]
-        x_range[-1] = x_range[-2]
-
-        y_range = np.empty((y_steps + 2,))
-        y_range[1:-1] = np.linspace(-y_length_m / 2.0, y_length_m / 2.0, y_steps)
-        y_range[0] = y_range[1]
-        y_range[-1] = y_range[-2]
-
-        face_indices = cls._generate_face_indices(x_steps, y_steps)
-
-        vertex_positions = []
-        for i, x in enumerate(x_range):
-            for j, y in enumerate(y_range):
-                if i in [0, x_steps + 1] or j in [0, y_steps + 1]:
-                    z = -1.0
-                else:
-                    z = elevation_function(x, y)
-                vertex_positions.append([x, y, z])
-
-        return cls(
-            shape=BufferMeshShape(vertices=vertex_positions, faces=face_indices),
-            bsdf=bsdf,
-        )
-
-    def update(self) -> None:
-        # Fix BSDF ID
-        self.bsdf.id = self._bsdf_id
-
-        # Fix shape ID
-        self.shape.id = self._shape_id
-
-        # Force BSDF nesting if the shape is defined
-        if self.shape is not None:
-            if isinstance(self.shape.bsdf, BSDF):
-                warnings.warn("Set BSDF will be overridden by surface BSDF settings.")
-            self.shape.bsdf = self.bsdf
 
     @property
     def _shape_id(self):
@@ -285,15 +395,7 @@ class DEMSurface(Surface):
         return f"{self.id}_bsdf"
 
     @property
-    def _template_bsdfs(self) -> dict:
-        return {}
-
-    @property
     def _template_shapes(self) -> dict:
-        return {}
-
-    @property
-    def _params_bsdfs(self) -> dict:
         return {}
 
     @property
@@ -301,6 +403,132 @@ class DEMSurface(Surface):
         return {}
 
     @property
-    def objects(self) -> dict[str, NodeSceneElement | InstanceSceneElement]:
+    def _template_bsdfs(self) -> dict:
+        return {}
+
+    @property
+    def _params_bsdfs(self) -> dict:
+        return {}
+
+    @property
+    def objects(self) -> dict[str, SceneElement]:
         # Inherit docstring
-        return {self._shape_id: self.shape}
+        return {
+            self._shape_id: self.shape,
+            f"{self._shape_id}_background": self.shape_background,
+        }
+
+    @classmethod
+    def from_mesh(
+        cls,
+        mesh: BufferMeshShape | FileMeshShape,
+        lat: pint.Quantity,
+        lon: pint.Quantity,
+        id: str = "surface",
+        geometry: SceneGeometry = PlaneParallelGeometry(),
+        planet_radius: pint.Quantity = None,
+        bsdf: BSDF = LambertianBSDF(),
+    ) -> DEMSurface:
+        """
+        Construct a DEMSurface from a mesh object and coordinates, which specify its location.
+
+        Parameters
+        ----------
+        id : str
+            Identifier of the scene element. Default: "surface"
+
+        mesh : :class:`.BufferMeshShape` or :class:`.FileMeshShape`
+            DEM as a triangulated mesh
+
+        lat : pint.Quantity
+            Limits of the latitude range covered by the DEM
+
+        lon : pint.Quantity
+            Limits of the longitude range covered by the DEM
+
+        geometry : :class:`.SceneGeometry`
+            Atmospheric geometry of the scene
+
+        planet_radius : pint.Quantity
+            Planet radius. Used *ONLY* in case of plane parallel geometry, to convert between
+            latitude/longitude and x/y coordinates
+
+        bsdf : :class:`.BSDF`
+            Scattering model attached to the surface
+
+        Returns
+        -------
+            :class:`.DEMSurface`
+        """
+        bsdf_id = f"{id}_bsdf"
+
+        mesh = attrs.evolve(mesh, bsdf=bsdf)
+
+        if isinstance(geometry, SphericalShellGeometry):
+            if planet_radius is not None:
+                warnings.warn(
+                    "SphericalShellGeometry overrides the `planet_radius` argument."
+                )
+            opacity_mask_trafo = _to_uv(*lat.m_as(ureg.deg), *lon.m_as(ureg.deg))
+            opacity_array = np.ones((3, 3))
+            opacity_array[1, 1] = 0
+            opacity_bitmap = mi.Bitmap(opacity_array)
+
+            opacity_bsdf = OpacityMaskBSDF(
+                id=f"{bsdf_id}_shape_background",
+                nested_bsdf=bsdf,
+                opacity_bitmap=opacity_bitmap,
+                uv_trafo=opacity_mask_trafo,
+            )
+            trafo = (
+                mi.ScalarTransform4f.rotate(axis=[0, 0, 1], angle=90)
+                @ mi.ScalarTransform4f.rotate(
+                    axis=[0, 1, 0], angle=(90 - np.mean(lat.m_as(ureg.deg)))
+                )
+                @ mi.ScalarTransform4f.rotate(
+                    axis=[0, 0, 1], angle=-np.mean(lon.m_as(ureg.deg))
+                )
+            )
+
+            surface_background = SphereShape(
+                id=f"{id}_shape_background",
+                center=[0.0, 0.0, 0.0] * geometry.planet_radius.units,
+                radius=geometry.planet_radius + geometry.ground_altitude,
+                bsdf=opacity_bsdf,
+                to_world=trafo,
+            )
+        elif isinstance(geometry, PlaneParallelGeometry):
+            if planet_radius is None:
+                planet_radius = EARTH_RADIUS
+            lat_length = (lat[1] - lat[0]).m_as(ureg.rad) * planet_radius
+            lat_scale = (geometry.width / (lat_length * 3)).magnitude
+            lon_length = (lon[1] - lon[0]).m_as(ureg.rad) * planet_radius
+            lon_scale = (geometry.width / (lon_length * 3)).magnitude
+            opacity_mask_trafo = mi.ScalarTransform4f.scale(
+                (
+                    lon_scale,
+                    lat_scale,
+                    1,
+                )
+            ) @ mi.ScalarTransform4f.translate(
+                (-0.5 + (0.5 / lon_scale), -0.5 + (0.5 / lat_scale), 0)
+            )
+            opacity_array = np.ones((3, 3))
+            opacity_array[1, 1] = 0
+            opacity_bitmap = mi.Bitmap(opacity_array)
+            opacity_bsdf = OpacityMaskBSDF(
+                nested_bsdf=bsdf,
+                opacity_bitmap=opacity_bitmap,
+                uv_trafo=opacity_mask_trafo,
+            )
+            surface_background = RectangleShape(
+                id=f"{id}_background",
+                edges=geometry.width,
+                center=[0.0, 0.0, geometry.ground_altitude.m]
+                * geometry.ground_altitude.units,
+                normal=np.array([0, 0, 1]),
+                up=np.array([0, 1, 0]),
+                bsdf=opacity_bsdf,
+            )
+
+        return cls(shape=mesh, shape_background=surface_background, id=id)

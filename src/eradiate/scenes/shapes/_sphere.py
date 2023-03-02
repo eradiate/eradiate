@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import warnings
+
 import attrs
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -11,6 +14,7 @@ from ..bsdfs import BSDF
 from ..core import BoundingBox
 from ...attrs import documented, parse_docs
 from ...constants import EARTH_RADIUS
+from ...exceptions import ConfigWarning
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -48,6 +52,29 @@ class SphereShape(ShapeNode):
         default="1.0",
     )
 
+    to_world: mi.ScalarTransform4f = documented(
+        attrs.field(
+            default=None,
+        ),
+        doc="Transform to scale, shift and rotate the sphere. "
+        "This transform will be prepended to the transforms derived "
+        "from the center position and radius of the sphere. If for example a "
+        "scaling is provided here, it will multiply the sphere's radius.",
+        type="mitsuba.ScalarTransform4f",
+        init_type="mitsuba.ScalarTransform4f or dict",
+        default=None,
+    )
+
+    @to_world.validator
+    def to_world_validator(self, attribute, value):
+        if value is not None:
+            if not isinstance(value, mi.ScalarTransform4f):
+                raise TypeError(
+                    f"while validating '{attribute.name}': "
+                    f"'{attribute.name}' must be a mitsuba.ScalarTransform4f;"
+                    f"found: {type(value)}",
+                )
+
     @property
     def bbox(self) -> BoundingBox:
         length_units = ucc.get("length")
@@ -58,11 +85,14 @@ class SphereShape(ShapeNode):
 
     @property
     def template(self) -> dict:
-        return {
+        result = {
             "type": "sphere",
             "center": self.center.m_as(uck.get("length")),
             "radius": self.radius.m_as(uck.get("length")),
         }
+        if self.to_world is not None:
+            result["to_world"] = self.to_world
+        return result
 
     def contains(self, p: np.typing.ArrayLike, strict: bool = False) -> bool:
         """
