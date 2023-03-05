@@ -4,18 +4,8 @@ requires = ["setuptools>=61", "setuptools_scm>=6.2"]
 
 [project]
 authors = [
-  {name = "The Eradiate Team"},
+  {name = "The Eradiate Team"}
 ]
-description = "A radiative transfer model for the Earth observation community"
-dynamic = ["version"]
-license = {text = "LGPLv3"}
-maintainers = [
-  {name = "The Eradiate Team"},
-]
-name = "eradiate"
-readme = "README.md"
-requires-python = ">=3.8"
-
 dependencies = [
   "aenum",
   "attrs>=21.4",
@@ -32,33 +22,25 @@ dependencies = [
   "ruamel.yaml",
   "scipy",
   "tqdm",
-  "xarray>=0.19,!=0.20.*",
+  "xarray>=0.19,!=0.20.*"
 ]
+description = "A radiative transfer model for the Earth observation community"
+dynamic = ["version"]
+license = {text = "LGPLv3"}
+maintainers = [
+  {name = "The Eradiate Team"}
+]
+name = "eradiate"
+readme = "README.md"
+requires-python = ">=3.8"
 
 [project.optional-dependencies]
-recommended = [
-  "aabbtree",  # Used by the leaf collision detection feature
-  "astropy",  # Used by the Solar irradiance spectrum date-based scaling feature
-  "iapws",  # Used by thermophysical property utilities
-  "ipython",
-  "ipywidgets",
-  "jupyterlab",
-  "python-dateutil",  # Used by the Solar irradiance spectrum date-based scaling feature
-  "seaborn",  # Used to define the Eradiate plotting style
-]
-
-tests = [
-  "pytest",
-  "pytest-json-report",
-]
-
 dev = [
   "conda-lock>=0.12",  # Required by dependency management scripts
   "pip>=22",  # Required by dependency management scripts
   "pip-tools>=6.5",  # Required by dependency management scripts
-  "setuptools>=61",  # Required by dependency management scripts
+  "setuptools>=61"  # Required by dependency management scripts
 ]
-
 docs = [
   "autodocsumm",
   "myst-parser",
@@ -70,30 +52,76 @@ docs = [
   "sphinx-autobuild",
   "sphinx-click>=3.0.2",
   "sphinx-copybutton",
-  "sphinx-design",
+  "sphinx-design"
 ]
-
-[project.urls]
-changelog = "https://github.com/eradiate/eradiate/CHANGELOG.md"
-documentation = "https://eradiate.readthedocs.io"
-repository = "https://github.com/eradiate/eradiate"
+recommended = [
+  "aabbtree",  # Used by the leaf collision detection feature
+  "astropy",  # Used by the Solar irradiance spectrum date-based scaling feature
+  "iapws",  # Used by thermophysical property utilities
+  "ipython",
+  "ipywidgets",
+  "jupyterlab",
+  "python-dateutil",  # Used by the Solar irradiance spectrum date-based scaling feature
+  "seaborn"  # Used to define the Eradiate plotting style
+]
+tests = [
+  "pytest",
+  "pytest-json-report"
+]
 
 [project.scripts]
 eradiate = "eradiate.cli:main"
 ertdata = "eradiate.cli:data"
 ertshow = "eradiate.cli:show"
 
+[project.urls]
+changelog = "https://github.com/eradiate/eradiate/CHANGELOG.md"
+documentation = "https://eradiate.readthedocs.io"
+repository = "https://github.com/eradiate/eradiate"
+
+[tool.coverage.run]
+omit = [
+  "*/tests/*"
+]
+source = [
+  "eradiate/"
+]
+
+[tool.isort]
+profile = "black"
+reverse_relative = true
+
+[tool.pytest.ini_options]
+filterwarnings = [
+  "error",
+  "ignore:distutils Version classes are deprecated:DeprecationWarning",
+  # Remove the following when environment issues are solved
+  "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning"
+]
+testpaths = "tests"
+
+[tool.ruff]
+select = [
+  "I"
+]
+src = ["src", "tests"]
+
+[tool.ruff.isort]
+relative-imports-order = "closest-to-furthest"
+
 [tool.setuptools]
 zip-safe = false  # Required because of package data
+
+[tool.setuptools.package-data]
+# Required by PEP 561
+# https://mypy.readthedocs.io/en/stable/installed_packages.html#creating-pep-561-compatible-packages
+eradiate = ["py.typed", "*.pyi"]
 
 [tool.setuptools.packages.find]
 exclude = ["plugins"]
 include = ["eradiate*"]
 namespaces = false
 where = ["src"]
-
-[tool.setuptools.package-data]
-eradiate = ["py.typed", "*.pyi"]  # Required by PEP 561 https://mypy.readthedocs.io/en/stable/installed_packages.html#creating-pep-561-compatible-packages
 
 [tool.setuptools_scm]
 git_describe_command = [
@@ -103,37 +131,6 @@ git_describe_command = [
   "--tags",
   "--long",
   "--match",
-  "v[0-9]*",
-] # Redefined to avoid crashing with special build tags
-version_scheme = "guess-next-dev" # Count commits since last tag, don't anticipate new version
-
-[tool.isort]
-profile = "black"
-reverse_relative = true
-
-[tool.ruff]
-src = ["src", "tests"]
-select = [  # No selected rules for now
-  "I",
-]
-
-[tool.ruff.isort]
-relative-imports-order = "closest-to-furthest"
-
-
-[tool.coverage.run]
-omit = [
-  "*/tests/*",
-]
-source = [
-  "eradiate/",
-]
-
-[tool.pytest.ini_options]
-filterwarnings = [
-    "error",
-    "ignore:distutils Version classes are deprecated:DeprecationWarning",
-    # Remove the following when environment issues are solved
-    "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning",
-]
-testpaths = "tests"
+  "v[0-9]*"
+]  # Redefined to avoid crashing with special build tags
+version_scheme = "guess-next-dev"  # Count commits since last tag, don't anticipate new version
