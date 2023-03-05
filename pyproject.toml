@@ -8,15 +8,15 @@ authors = [
 ]
 dependencies = [
   "aenum",
-  "attrs>=21.4",
+  "attrs>=22.2",
   "click",
-  "dessinemoi>=22.2.0",
+  "dessinemoi>=23.1.0",
   "environ-config",
   "matplotlib",
   "netcdf4",
   "numpy",
   "pint",
-  "pinttrs>=21.3.0",
+  "pinttrs>=23.2.0",
   "pooch",
   "rich",
   "ruamel.yaml",
@@ -36,7 +36,7 @@ requires-python = ">=3.8"
 
 [project.optional-dependencies]
 dev = [
-  "conda-lock>=0.12",  # Required by dependency management scripts
+  "conda-lock>=1.4",  # Required by dependency management scripts
   "pip>=22",  # Required by dependency management scripts
   "pip-tools>=6.5",  # Required by dependency management scripts
   "setuptools>=61"  # Required by dependency management scripts
@@ -45,9 +45,11 @@ docs = [
   "autodocsumm",
   "myst-parser",
   "nbsphinx",
-  "sphinx-book-theme>=0.3",
-  "sphinx-gallery==0.9.0",  # Pinned because v0.10+ don't work with nbsphinx v0.8.8+
-  "sphinx>=3.1",
+  "sphinx-book-theme>=1.0",
+  # Pinned because v0.10+ don't work with nbsphinx v0.8.8+
+  # See https://nbsphinx.readthedocs.io/en/0.8.12/subdir/gallery.html
+  "sphinx-gallery==0.9.0",
+  "sphinx",
   "sphinxcontrib-bibtex>=2.0",
   "sphinx-autobuild",
   "sphinx-click>=3.0.2",
@@ -96,7 +98,9 @@ filterwarnings = [
   "error",
   "ignore:distutils Version classes are deprecated:DeprecationWarning",
   # Remove the following when environment issues are solved
-  "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning"
+  "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning",
+  # Remove the following when Jupyter stops issuing those
+  "ignore:Jupyter is migrating its paths to use standard platformdirs"
 ]
 testpaths = "tests"
 

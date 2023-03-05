@@ -81,7 +81,9 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Introduced the {class}`.DEMExperiment` to handle scenes with digital elevation
   models. At this point it only supports plane-parallel atmospheric geometries. ({ghpr}`289`)
 
-% ### Documentation
+### Documentation
+
+* Upgraded Sphinx Book theme to v1.0.0 ({ghpr}`306`).
 
 ### Internal changes
 
@@ -94,6 +96,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Changed data types of data variables in spectral response function datasets
   from double to single floating point numbers ({ghpr}`300`).
 * Added TOML formatting pre-commit hook ({ghpr}`305`).
+* Updated dependency management system to latest tooling changes ({ghpr}`306`).
 
 ## v0.22.5 (17 October 2022)
 
@@ -113,9 +116,9 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Removed the path resolver component ({ghpr}`251`).
 * Renamed `Experiment` classes ({ghpr}`252`).
 
-  * `OneDimExperiment` ⇒ `AtmosphereExperiment`
-  * `RamiExperiment` ⇒ `CanopyExperiment`
-  * `Rami4ATMExperiment` ⇒ `CanopyAtmosphereExperiment`
+    * `OneDimExperiment` ⇒ `AtmosphereExperiment`
+    * `RamiExperiment` ⇒ `CanopyExperiment`
+    * `Rami4ATMExperiment` ⇒ `CanopyAtmosphereExperiment`
 
 ### Improvements and fixes
 
