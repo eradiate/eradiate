@@ -20,9 +20,10 @@ if "dev" in release:
 
 # -- General configuration -----------------------------------------------------
 
+
 html_theme = "sphinx_book_theme"
-html_logo = "fig/eradiate-logo-typo-darkgrey.svg"
 html_title = ""
+html_logo = "_static/eradiate-logo-typo-darkgrey.svg"
 
 templates_path = ["_templates"]  # Path to templates, relative to this directory.
 exclude_patterns = ["_build", "tutorials/README.md"]
@@ -230,6 +231,10 @@ html_theme_options = {
     "repository_branch": "main",
     "use_repository_button": True,
     "use_issues_button": True,
+    "logo": {
+        "image_light": "_static/eradiate-logo-typo-black.svg",
+        "image_dark": "_static/eradiate-logo-typo-white.svg",
+    },
 }
 
 html_css_files = ["theme_overrides.css"]
