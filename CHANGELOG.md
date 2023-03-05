@@ -93,6 +93,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Replaced isort with [Ruff](https://github.com/charliermarsh/ruff) ({ghpr}`299`).
 * Changed data types of data variables in spectral response function datasets
   from double to single floating point numbers ({ghpr}`300`).
+* Added TOML formatting pre-commit hook ({ghpr}`305`).
 
 ## v0.22.5 (17 October 2022)
 
