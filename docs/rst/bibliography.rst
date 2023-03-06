@@ -5,3 +5,4 @@
 
 .. bibliography::
    :cited:
+   :style: plain
