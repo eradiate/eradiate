@@ -68,6 +68,7 @@ extlinks = {
 # https://sphinxcontrib-bibtex.readthedocs.io/en/latest/
 
 bibtex_bibfiles = ["references.bib"]
+bibtex_reference_style = "author_year"
 
 # -- Tutorials -----------------------------------------------------------------
 # https://nbsphinx.readthedocs.io/
