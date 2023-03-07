@@ -44,7 +44,12 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 
 * The {meth}`.MultiDistantMeasure.from_viewing_angles()` constructor is
   deprecated and will be removed in v0.23.2.
-* Removed `.EradiateConfig.data_path` ({ghpr}`292`).
+* Removed {data}`.EradiateConfig.data_path` ({ghpr}`292`).
+* {class}`.Measure`: Sample count split is retired ({ghpr}`296`).
+* Removed the {class}`.AggregateSampleCount` pipeline step ({ghpr}`296`).
+* {class}`.RadProfile`: The {class}`.ArrayRadProfile` class is retired
+  ({ghpr}`296`).
+
 
 ### Improvements and fixes
 
@@ -75,11 +80,22 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   results when used with LLVM Mitsuba variants ({ghpr}`297`).
 * ⚠️ Refactoring of the {class}`.Mode` infrastructure ({ghpr}`298`).
 * Added versions 1 and 2 and the full spectrum extension of the
-  TSIS-1 HSRS solar irradiance spectra ({ghpr}`300`)
+  TSIS-1 HSRS solar irradiance spectra ({ghpr}`300`).
 * The `coddington_2021-1_nm` dataset is now the default solar irradiance
   spectrum ({ghpr}`300`).
 * Introduced the {class}`.DEMExperiment` to handle scenes with digital elevation
-  models. At this point it only supports plane-parallel atmospheric geometries. ({ghpr}`289`)
+  models. At this point it only supports plane-parallel atmospheric geometries
+  ({ghpr}`289`).
+* ⚠️ Rewrite of the kernel interface ({ghpr}`296`).
+* ⚠️ Updates to the scene type hierarchy ({ghpr}`296`).
+* ⚠️ All measures are now batch-computed at each iteration of the spectral loop
+  ({ghpr}`296`).
+* ⚠️ {class}`.Atmosphere` type hierarchy updates: altitude grid control, common
+  spectral evaluation interface ({ghpr}`296`).
+* {class}`.BlendedPhaseFunction` code was transitioned from a recursive to an
+  iterative loop-based implementation ({ghpr}`296`).
+* {class}`.RadProfile` evaluation on arbitrary altitude grids is now permitted
+  ({ghpr}`296`).
 
 ### Documentation
 
@@ -87,9 +103,11 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 
 ### Internal changes
 
-* Updated Mitsuba submodule to a recent post-v3.0.2 `master` ({ghpr}`277`).
+* Updated Mitsuba submodule to v3.2.1 ({ghpr}`277`, {ghpr}`296`).
   This notably fixes a
-  [k-d tree creation issue](https://github.com/mitsuba-renderer/mitsuba3/issues/233).
+  [k-d tree creation issue](https://github.com/mitsuba-renderer/mitsuba3/issues/233),
+  [missing initialisation code in the `blendphase` plugin](https://github.com/mitsuba-renderer/mitsuba3/issues/488)
+  and [an incorrect setter for volume data containers](https://github.com/mitsuba-renderer/mitsuba3/issues/480).
 * Harmonise dataset converters for solar irradiance spectra, spectral response
   function and particle radiative property datasets ({ghpr}`284`).
 * Replaced isort with [Ruff](https://github.com/charliermarsh/ruff) ({ghpr}`299`).
