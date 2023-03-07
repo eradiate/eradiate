@@ -755,9 +755,10 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
     make_figure_rpv_vs_lambertian(fname_plot, results, title=title)
 
     # assert result BRF values are equal
+    lambertian = np.squeeze(results["lambertian"].brf.values)
+    rpv = np.squeeze(results["rpv"].brf.values)
+
     if atmosphere is None:
-        assert np.all(results["rpv"].brf.values == results["lambertian"].brf.values)
+        np.testing.assert_array_equal(rpv, lambertian)
     else:
-        assert np.allclose(
-            results["rpv"].brf, results["lambertian"].brf, rtol=1e-2, atol=1e-3
-        )
+        np.testing.assert_allclose(rpv, lambertian, rtol=1e-2, atol=1e-3)
