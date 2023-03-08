@@ -255,7 +255,7 @@ def mi_render(
         Number of samples per pixel. If set to 0 (default), the value set in the
         original scene definition takes precedence.
 
-    seed_state : :class:`.SeedState, optional
+    seed_state : .SeedState, optional
         Seed state used to generate seeds to initialise Mitsuba's RNG at
         each run. If unset, Eradiate's root seed state is used.
 
