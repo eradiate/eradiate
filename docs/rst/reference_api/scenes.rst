@@ -217,6 +217,8 @@
    :toctree: generated/autosummary/
 
    Shape
+   ShapeNode
+   ShapeInstance
 
 **Factories**
 

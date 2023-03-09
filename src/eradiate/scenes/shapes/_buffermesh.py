@@ -12,6 +12,7 @@ from ._core import ShapeInstance
 from ..core import traverse
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
+from ...kernel import UpdateParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
@@ -87,7 +88,7 @@ class BufferMeshShape(ShapeInstance):
         return mesh
 
     @property
-    def params(self) -> t.Optional[t.Dict[str, Parameter]]:
+    def params(self) -> t.Optional[t.Dict[str, UpdateParameter]]:
         if self.bsdf is None:
             return None
 

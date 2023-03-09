@@ -86,9 +86,18 @@ class Shape:
 
 @attrs.define(eq=False, slots=False)
 class ShapeNode(Shape, NodeSceneElement, ABC):
+    """
+    Interface for shapes which can be represented as Mitsuba scene dictionary
+    nodes.
+    """
+
     pass
 
 
 @attrs.define(eq=False, slots=False)
 class ShapeInstance(Shape, InstanceSceneElement, ABC):
+    """
+    Interface for shapes which have to be expanded as Mitsuba objects.
+    """
+
     pass

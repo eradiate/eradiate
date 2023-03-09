@@ -1,5 +1,7 @@
 from ._buffermesh import BufferMeshShape as BufferMeshShape
 from ._core import Shape as Shape
+from ._core import ShapeInstance as ShapeInstance
+from ._core import ShapeNode as ShapeNode
 from ._core import shape_factory as shape_factory
 from ._cuboid import CuboidShape as CuboidShape
 from ._filemesh import FileMeshShape as FileMeshShape
