@@ -20,7 +20,7 @@ cftime==1.6.2
     # via
     #   -c requirements/dev.txt
     #   netcdf4
-charset-normalizer==3.0.1
+charset-normalizer==3.1.0
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -38,7 +38,7 @@ dessinemoi==23.1.0
     # via -r requirements/main.in
 environ-config==23.1.0
     # via -r requirements/main.in
-fonttools==4.38.0
+fonttools==4.39.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib

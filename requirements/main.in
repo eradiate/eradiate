@@ -1,14 +1,14 @@
 -c dev.txt
 aenum
-attrs>=21.4
+attrs>=22.2
 click
-dessinemoi>=22.2.0
+dessinemoi>=23.1.0
 environ-config
 matplotlib
 netcdf4
 numpy
 pint
-pinttrs>=21.3.0
+pinttrs>=23.2.0
 pooch
 rich
 ruamel.yaml

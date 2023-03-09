@@ -48,7 +48,7 @@ cftime==1.6.2
     # via
     #   -c requirements/dev.txt
     #   netcdf4
-charset-normalizer==3.0.1
+charset-normalizer==3.1.0
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -95,7 +95,7 @@ fastjsonschema==2.16.3
     # via
     #   -c requirements/dev.txt
     #   nbformat
-fonttools==4.38.0
+fonttools==4.39.0
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -184,7 +184,7 @@ mistune==2.0.5
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-myst-parser==0.19.1
+myst-parser==1.0.0
     # via -r requirements/docs.in
 nbclient==0.7.2
     # via
@@ -269,7 +269,7 @@ pybtex-docutils==1.0.2
     # via
     #   -c requirements/dev.txt
     #   sphinxcontrib-bibtex
-pydata-sphinx-theme==0.13.0
+pydata-sphinx-theme==0.13.1
     # via
     #   -c requirements/dev.txt
     #   sphinx-book-theme
