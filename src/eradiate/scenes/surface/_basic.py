@@ -36,10 +36,11 @@ class BasicSurface(Surface):
         "for situations in which the task of setting its value is delegated to "
         "another component (*e.g.* an :class:`.Experiment` instance owning the "
         "surface object); however, if it is still unset upon kernel dictionary "
-        "generation, the call to :meth:`.kernel_dict` will raise.",
+        "generation, the call to :meth:`.traverse` will raise a "
+        ":class:`.TraversalError`.",
         type=".RectangleShape or .SphereShape or None",
         init_type=".RectangleShape or .SphereShape or dict, optional",
-        default=":class:`.RectangleShape <RectangleShape()>",
+        default=":class:`.RectangleShape <RectangleShape()>`",
     )
 
     @shape.validator
