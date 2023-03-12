@@ -44,11 +44,8 @@ dev = [
 docs = [
   "autodocsumm",
   "myst-parser",
-  "nbsphinx",
+  "nbsphinx>=0.9.0",
   "sphinx-book-theme>=1.0",
-  # Pinned because v0.10+ don't work with nbsphinx v0.8.8+
-  # See https://nbsphinx.readthedocs.io/en/0.8.12/subdir/gallery.html
-  "sphinx-gallery==0.9.0",
   "sphinx",
   "sphinxcontrib-bibtex>=2.0",
   "sphinx-autobuild",

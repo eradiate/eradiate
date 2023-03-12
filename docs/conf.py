@@ -30,7 +30,6 @@ exclude_patterns = ["_build", "tutorials/README.md"]
 html_static_path = ["_static"]
 
 extensions = [
-    "sphinx_gallery.load_style",  # Thumbnail galleries
     # Core extensions
     "sphinx.ext.autodoc",  # Automatic API documentation
     "sphinx.ext.autosummary",  # Summary tables in API docs
