@@ -10,7 +10,7 @@ dependencies:
   - click
   - dessinemoi>=23.1.0
   - environ-config
-  - matplotlib
+  - matplotlib>=3.3
   - netcdf4
   - numpy
   - pint

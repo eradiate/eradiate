@@ -237,8 +237,8 @@ def test_interpolated_kernel_dict(modes_all_mono):
 
 def test_interpolated_from_dataarray(mode_mono):
     da = eradiate.data.load_dataset(
-        "spectra/reflectance/lambertian_soil_01.nc"
-    ).reflectance
+        "spectra/reflectance/lambertian_soil.nc"
+    ).reflectance.sel(brightness="darkest")
     spectrum = InterpolatedSpectrum.from_dataarray(dataarray=da)
     assert np.all(spectrum.wavelengths.m_as(da.w.attrs["units"]) == da.w.values)
     assert np.all(spectrum.values.m_as(da.attrs["units"]) == da.values)
