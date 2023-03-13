@@ -96,7 +96,7 @@ pint==0.20.1
     #   pinttrs
 pinttrs==23.2.0
     # via -r requirements/main.in
-platformdirs==3.1.0
+platformdirs==3.1.1
     # via
     #   -c requirements/dev.txt
     #   pooch
@@ -143,7 +143,7 @@ typing-extensions==4.5.0
     # via
     #   -c requirements/dev.txt
     #   rich
-urllib3==1.26.14
+urllib3==1.26.15
     # via
     #   -c requirements/dev.txt
     #   requests
