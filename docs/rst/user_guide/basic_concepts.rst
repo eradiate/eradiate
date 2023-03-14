@@ -29,6 +29,8 @@ the requested computation and yields its raw results.
 Eradiate's higher-level components are abstractions on top of the radiometric
 kernel and most users do not have to manipulate it directly.
 
+.. _sec-user_guide-basic_concepts-scene_elements:
+
 Scene elements
 --------------
 
@@ -41,9 +43,8 @@ used to populate a scene. For instance, a
 and a BSDF to describe the surface in a one-dimensional scene.
 
 All scene element components derive from the
-:class:`~eradiate.scenes.core.SceneElement` abstract class and implement a
-:meth:`~eradiate.scenes.core.SceneElement.kernel_dict` method which generates
-input data for the kernel.
+:class:`~eradiate.scenes.core.SceneElement` abstract class and implement
+methods which generates input data for the kernel.
 
 Experiments
 -----------

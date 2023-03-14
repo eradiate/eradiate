@@ -37,7 +37,8 @@ class SceneElement(ABC):
     --------
     All subclasses *must* have a hash, thus ``eq`` must be ``False`` (see
     `attrs docs on hashing <https://www.attrs.org/en/stable/hashing.html>`_
-    for a complete explanation).
+    for a complete explanation). This is required in order to make it possible
+    to use caching decorators on instance methods.
 
     Notes
     -----
@@ -133,7 +134,7 @@ class NodeSceneElement(SceneElement, ABC):
         -------
         dict
             A dictionary mapping object names to a corresponding object to be
-            inserted in the Eradiate scene tree graph.
+            inserted in the Eradiate scene graph.
         """
         return None
 
@@ -215,7 +216,7 @@ class CompositeSceneElement(SceneElement, ABC):
         -------
         dict
             A dictionary mapping object names to a corresponding object to be
-            inserted in the Eradiate scene tree graph.
+            inserted in the Eradiate scene graph.
         """
         return None
 
