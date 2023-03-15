@@ -1,3 +1,4 @@
+from ._canopies import wellington_citrus_orchard as wellington_citrus_orchard
 from ._core import Canopy as Canopy
 from ._core import CanopyElement as CanopyElement
 from ._core import InstancedCanopyElement as InstancedCanopyElement
