@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 import warnings
 
@@ -60,7 +62,7 @@ class DEMExperiment(EarthObservationExperiment):
         default='"plane_parallel"',
     )
 
-    atmosphere: t.Optional[Atmosphere] = documented(
+    atmosphere: Atmosphere | None = documented(
         attrs.field(
             factory=HomogeneousAtmosphere,
             converter=attrs.converters.optional(atmosphere_factory.convert),
@@ -77,7 +79,7 @@ class DEMExperiment(EarthObservationExperiment):
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )
 
-    surface: t.Optional[BasicSurface] = documented(
+    surface: BasicSurface | None = documented(
         attrs.field(
             factory=lambda: BasicSurface(bsdf=LambertianBSDF()),
             converter=attrs.converters.optional(surface_converter),
@@ -93,7 +95,7 @@ class DEMExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
-    dem: t.Optional[DEMSurface] = documented(
+    dem: DEMSurface | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(surface_factory.convert),
@@ -169,7 +171,7 @@ class DEMExperiment(EarthObservationExperiment):
     def _default_surface_width(self):
         return 1.0 * ureg.km
 
-    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
+    def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)
 
         if measure.is_distant():
@@ -178,7 +180,7 @@ class DEMExperiment(EarthObservationExperiment):
         return result
 
     @property
-    def _context_kwargs(self) -> t.Dict[str, t.Any]:
+    def _context_kwargs(self) -> dict[str, t.Any]:
         kwargs = {}
 
         for measure in self.measures:
@@ -190,7 +192,7 @@ class DEMExperiment(EarthObservationExperiment):
         return kwargs
 
     @property
-    def contexts(self) -> t.List[KernelDictContext]:
+    def contexts(self) -> list[KernelDictContext]:
         # Inherit docstring
 
         # Collect contexts from all measures
@@ -224,7 +226,7 @@ class DEMExperiment(EarthObservationExperiment):
         )
 
     @property
-    def scene_objects(self) -> t.Dict[str, SceneElement]:
+    def scene_objects(self) -> dict[str, SceneElement]:
         # Inherit docstring
 
         objects = {}

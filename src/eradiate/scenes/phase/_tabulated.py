@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 import numpy as np
@@ -183,7 +183,7 @@ class TabulatedPhaseFunction(PhaseFunction):
         return result
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         return {
             "values": UpdateParameter(
                 lambda ctx: self.eval(spectral_ctx=ctx.spectral_ctx),

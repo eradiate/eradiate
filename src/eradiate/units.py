@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = [
     "symbol",
     "to_quantity",
@@ -25,8 +27,7 @@ from pinttr.util import units_compatible
 unit_registry = pint.UnitRegistry()
 
 unit_registry.define(
-    "dobson_unit = 2.687e20 * meter^-2 "
-    "= du = dobson = dobson_units"  # aliases
+    "dobson_unit = 2.687e20 * meter^-2 " "= du = dobson = dobson_units"  # aliases
 )
 """IUPAC. Compendium of Chemical Terminology, 2nd ed. (the "Gold Book").
 Compiled by A. D. McNaught and A. Wilkinson. Blackwell Scientific Publications,
@@ -150,7 +151,7 @@ unit_context_kernel = _make_unit_context()
 # -- Public functions ----------------------------------------------------------
 
 
-def symbol(units: t.Union[pint.Unit, str]) -> str:
+def symbol(units: pint.Unit | str) -> str:
     """
     Normalise a string or Pint units to a symbol string.
 
@@ -203,8 +204,8 @@ def to_quantity(da: xarray.DataArray) -> pint.Quantity:
 
 
 def interpret_quantities(
-    d: t.Dict[str, t.Any],
-    quantity_map: t.Dict[str, str],
+    d: dict[str, t.Any],
+    quantity_map: dict[str, str],
     uctx: pinttr.UnitContext,
     force: bool = False,
 ):

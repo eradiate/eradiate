@@ -1,4 +1,6 @@
 """Spectral response function (SRF) filtering algorithms."""
+from __future__ import annotations
+
 import datetime
 import typing as t
 import warnings
@@ -84,7 +86,7 @@ def update_attrs(srf: xr.Dataset, filter_name: str, filter_attr: str) -> None:
     )
 
 
-def wavelength_range_width(srf: t.Union[PathLike, xr.Dataset]) -> pint.Quantity:
+def wavelength_range_width(srf: PathLike | xr.Dataset) -> pint.Quantity:
     """
     Compute the wavelength range width of a spectral response function.
 
@@ -102,7 +104,7 @@ def wavelength_range_width(srf: t.Union[PathLike, xr.Dataset]) -> pint.Quantity:
     return to_quantity(srf.w).max() - to_quantity(srf.w).min()
 
 
-def wavelength_bandwidth(srf: t.Union[PathLike, xr.Dataset]) -> pint.Quantity:
+def wavelength_bandwidth(srf: PathLike | xr.Dataset) -> pint.Quantity:
     r"""
     Compute the wavelength bandwidth of a spectral response function.
 
@@ -131,7 +133,7 @@ def wavelength_bandwidth(srf: t.Union[PathLike, xr.Dataset]) -> pint.Quantity:
     return srf.srf.integrate(coord="w").values * ureg(srf.w.attrs["units"])
 
 
-def mean_wavelength(srf: t.Union[PathLike, xr.Dataset]) -> pint.Quantity:
+def mean_wavelength(srf: PathLike | xr.Dataset) -> pint.Quantity:
     r"""
     Compute the mean wavelength of a spectral response function.
 
@@ -167,8 +169,8 @@ def mean_wavelength(srf: t.Union[PathLike, xr.Dataset]) -> pint.Quantity:
 
 
 def filtering_summary(
-    srf: t.Union[PathLike, xr.Dataset], filtered: xr.Dataset
-) -> t.Mapping[str, t.Mapping[str, t.Union[int, pint.Quantity]]]:
+    srf: PathLike | xr.Dataset, filtered: xr.Dataset
+) -> t.Mapping[str, t.Mapping[str, int | pint.Quantity]]:
     srf = convert_no_id(srf)
     ni = srf.w.size
     nf = filtered.w.size
@@ -218,8 +220,8 @@ def filtering_summary(
 
 
 def summarize(
-    srf: t.Union[PathLike, xr.Dataset],
-    filtered: t.Union[PathLike, xr.Dataset],
+    srf: PathLike | xr.Dataset,
+    filtered: PathLike | xr.Dataset,
 ) -> Table:
     """
     Produce a summary table of the spectral response function filtering operation.
@@ -268,7 +270,7 @@ def summarize(
     return table
 
 
-def trim(srf: t.Union[PathLike, xr.Dataset]) -> xr.Dataset:
+def trim(srf: PathLike | xr.Dataset) -> xr.Dataset:
     """
     Trim all leading zeros except last and all trailing zeros except first.
 
@@ -335,7 +337,7 @@ def save(
 
 
 def trim_and_save(
-    srf: t.Union[PathLike, xr.Dataset],
+    srf: PathLike | xr.Dataset,
     path: PathLike,
     verbose=False,
     show_plot: bool = False,
@@ -411,9 +413,9 @@ def trim_and_save(
 
 
 def spectral_filter(
-    srf: t.Union[PathLike, xr.Dataset],
-    wmin: t.Optional[pint.Quantity] = None,
-    wmax: t.Optional[pint.Quantity] = None,
+    srf: PathLike | xr.Dataset,
+    wmin: pint.Quantity | None = None,
+    wmax: pint.Quantity | None = None,
 ) -> xr.Dataset:
     """
     Drop points falling out of wavelength range specified by ``wmin`` and ``wmax``.
@@ -475,7 +477,7 @@ def spectral_filter(
 
 
 def threshold_filter(
-    srf: t.Union[PathLike, xr.Dataset],
+    srf: PathLike | xr.Dataset,
     value: float = 1e-3,
 ) -> xr.Dataset:
     """
@@ -538,8 +540,8 @@ def threshold_filter(
 
 
 def integral_filter_w_bounds(
-    ds: t.Union[PathLike, xr.Dataset], percentage: float = 99.0
-) -> t.Tuple[float, float]:
+    ds: PathLike | xr.Dataset, percentage: float = 99.0
+) -> tuple[float, float]:
     """
     Compute the wavelength bounds for the integral filter.
 
@@ -597,7 +599,7 @@ def integral_filter_w_bounds(
 
 
 def integral_filter(
-    srf: t.Union[PathLike, xr.Dataset],
+    srf: PathLike | xr.Dataset,
     percentage: float = 99.0,
 ) -> xr.Dataset:
     """
@@ -660,13 +662,13 @@ def integral_filter(
 
 
 def show(
-    ds: t.Union[PathLike, xr.Dataset],
+    ds: PathLike | xr.Dataset,
     trim_prior: bool = True,
-    title: t.Optional[str] = None,
-    threshold: t.Optional[float] = None,
-    wmin: t.Optional[pint.Quantity] = None,
-    wmax: t.Optional[pint.Quantity] = None,
-    percentage: t.Optional[float] = None,
+    title: str | None = None,
+    threshold: float | None = None,
+    wmin: pint.Quantity | None = None,
+    wmax: pint.Quantity | None = None,
+    percentage: float | None = None,
 ) -> None:
     """
     Show filtered region on spectral response function plot.
@@ -832,17 +834,17 @@ def show(
 
 
 def filter_srf(
-    srf: t.Union[PathLike, xr.Dataset],
+    srf: PathLike | xr.Dataset,
     path: PathLike,
     verbose: bool = False,
     show_plot: bool = False,
     dry_run: bool = False,
     interactive: bool = False,
     trim_prior: bool = True,
-    threshold: t.Optional[float] = None,
-    wmin: t.Optional[pint.Quantity] = None,
-    wmax: t.Optional[pint.Quantity] = None,
-    percentage: t.Optional[float] = None,
+    threshold: float | None = None,
+    wmin: pint.Quantity | None = None,
+    wmax: pint.Quantity | None = None,
+    percentage: float | None = None,
 ) -> None:
     """
     Filter a spectral response function data set.

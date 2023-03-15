@@ -28,9 +28,7 @@ from ..units import to_quantity
 from ..units import unit_registry as ureg
 
 
-def _convert_thermoprops_afgl_1986(
-    value: t.Union[t.MutableMapping, xr.Dataset]
-) -> xr.Dataset:
+def _convert_thermoprops_afgl_1986(value: t.MutableMapping | xr.Dataset) -> xr.Dataset:
     if isinstance(value, dict):
         return afgl_1986.make_profile(**value)
     else:
@@ -87,7 +85,7 @@ class AFGL1986RadProfile(RadProfile):
         default="True",
     )
 
-    _zgrid: t.Optional[ZGrid] = attrs.field(default=None, init=False)
+    _zgrid: ZGrid | None = attrs.field(default=None, init=False)
 
     def __attrs_post_init__(self):
         self.update()
@@ -132,7 +130,7 @@ class AFGL1986RadProfile(RadProfile):
     def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="ckd")
 
-    def eval_albedo_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_albedo_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         sigma_s = self.eval_sigma_s_ckd(bindexes, zgrid)
         sigma_t = self.eval_sigma_t_ckd(bindexes, zgrid)
         return np.divide(
@@ -142,7 +140,7 @@ class AFGL1986RadProfile(RadProfile):
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="ckd")
 
-    def eval_sigma_t_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_t_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         return self.eval_sigma_a_ckd(bindexes, zgrid) + self.eval_sigma_s_ckd(
             bindexes, zgrid
         )
@@ -150,7 +148,7 @@ class AFGL1986RadProfile(RadProfile):
     def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="ckd")
 
-    def eval_sigma_a_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_a_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         thermoprops = self._thermoprops_interp(zgrid)
 
         bin_set_ids: set[str] = {bindex.bin.bin_set_id for bindex in bindexes}
@@ -215,7 +213,7 @@ class AFGL1986RadProfile(RadProfile):
         else:
             return ureg.Quantity(np.zeros((1, thermoprops.z_layer.size)), "km^-1")
 
-    def eval_sigma_s_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_s_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         wavelengths = (
             np.array([bindex.bin.wcenter.m_as(ureg.nm) for bindex in bindexes])
             * ureg.nm
@@ -226,7 +224,7 @@ class AFGL1986RadProfile(RadProfile):
     def eval_dataset_mono(self, w: pint.Quantity, zgrid: ZGrid) -> xr.Dataset:
         raise UnsupportedModeError(supported="ckd")
 
-    def eval_dataset_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> xr.Dataset:
+    def eval_dataset_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> xr.Dataset:
         if len(bindexes) > 1:
             raise NotImplementedError
 

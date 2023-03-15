@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import functools
 import inspect
@@ -14,8 +16,8 @@ from .._version import _version
 
 
 def deprecated(
-    deprecated_in: t.Optional[str] = None,
-    removed_in: t.Optional[str] = None,
+    deprecated_in: str | None = None,
+    removed_in: str | None = None,
     details: str = "",
     current_version: str = None,
 ):
@@ -216,7 +218,7 @@ def deprecated(
     return _wrapper
 
 
-def substitute(subs: t.Dict[str, t.Tuple[t.Type, t.Dict[str, str]]]) -> t.Callable:
+def substitute(subs: dict[str, tuple[type, dict[str, str]]]) -> t.Callable:
     """
     Generate a simple module :func:`__getattr__` which redirects outdated
     attribute lookups to current values with a deprecation warning.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import typing as t
 
@@ -31,7 +33,7 @@ class TypeIdLookupStrategy:
     scene tree. If the lookup succeeds, the full parameter path is returned.
     """
 
-    node_type: t.Type = documented(
+    node_type: type = documented(
         attrs.field(validator=attrs.validators.instance_of(type)),
         doc="Type of the node which will be looked up.",
         type="type",
@@ -49,7 +51,7 @@ class TypeIdLookupStrategy:
         type="str",
     )
 
-    def __call__(self, node, node_path: t.Optional[str] = None) -> t.Optional[str]:
+    def __call__(self, node, node_path: str | None = None) -> str | None:
         if isinstance(node, self.node_type) and node.id() == self.node_id:
             prefix = f"{node_path}." if node_path is not None else ""
             return f"{prefix}{self.parameter_relpath}"
@@ -75,13 +77,13 @@ class MitsubaObjectWrapper:
     :func:`mi_traverse`
     """
 
-    obj: "mitsuba.Object" = documented(
+    obj: mitsuba.Object = documented(
         attrs.field(repr=lambda x: "Scene[...]" if isinstance(x, mi.Scene) else str(x)),
         doc="Mitsuba object.",
         type="mitsuba.Object",
     )
 
-    parameters: t.Optional["mitsuba.SceneParameters"] = documented(
+    parameters: mitsuba.SceneParameters | None = documented(
         attrs.field(
             default=None,
             repr=lambda x: "SceneParameters[...]"
@@ -94,7 +96,7 @@ class MitsubaObjectWrapper:
         default="None",
     )
 
-    umap_template: t.Optional[UpdateMapTemplate] = documented(
+    umap_template: UpdateMapTemplate | None = documented(
         attrs.field(
             default=None,
             repr=lambda x: "UpdateMapTemplate[...]"
@@ -110,8 +112,8 @@ class MitsubaObjectWrapper:
 
 
 def mi_traverse(
-    obj: "mitsuba.Object",
-    umap_template: t.Optional[UpdateMapTemplate] = None,
+    obj: mitsuba.Object,
+    umap_template: UpdateMapTemplate | None = None,
 ) -> MitsubaObjectWrapper:
     """
     Traverse a node of the Mitsuba scene graph and return a container holding
@@ -227,11 +229,11 @@ def mi_traverse(
 
 def mi_render(
     mi_scene: MitsubaObjectWrapper,
-    ctxs: t.List[KernelDictContext],
-    sensors: t.Union[None, int, t.List[int]] = None,
+    ctxs: list[KernelDictContext],
+    sensors: None | int | list[int] = None,
     spp: int = 0,
-    seed_state: t.Optional[SeedState] = None,
-) -> t.Dict[t.Any, "mitsuba.Bitmap"]:
+    seed_state: SeedState | None = None,
+) -> dict[t.Any, mitsuba.Bitmap]:
     """
     Render a Mitsuba scene multiple times given specified contexts and sensor
     indices.

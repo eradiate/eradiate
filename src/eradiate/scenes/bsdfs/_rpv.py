@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 import mitsuba as mi
@@ -51,7 +51,7 @@ class RPVBSDF(BSDF):
         default="0.183",
     )
 
-    rho_c: t.Optional[Spectrum] = documented(
+    rho_c: Spectrum | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(
@@ -125,7 +125,7 @@ class RPVBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
         objects = {
             "rho_0": traverse(self.rho_0)[1],

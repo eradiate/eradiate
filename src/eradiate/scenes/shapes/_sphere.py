@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-
 import attrs
 import numpy as np
 import pint
@@ -87,7 +85,7 @@ class SphereShape(ShapeNode):
         cls,
         altitude=0.0 * ureg.km,
         planet_radius: pint.Quantity = 6378.1 * ureg.km,
-        bsdf: t.Optional[BSDF] = None,
+        bsdf: BSDF | None = None,
     ) -> SphereShape:
         """
         This class method constructor provides a simplified parametrisation of
@@ -133,7 +131,7 @@ class SphereShape(ShapeNode):
         cls,
         top: pint.Quantity = 100.0 * ureg.km,
         planet_radius: pint.Quantity = 6378.1 * ureg.km,
-        bsdf: t.Optional[BSDF] = None,
+        bsdf: BSDF | None = None,
     ) -> SphereShape:
         """
         This class method constructor provides a simplified parametrisation of

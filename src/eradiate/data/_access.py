@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from ..typing import PathLike
 from ..util import lazy_loader
 
 xr = lazy_loader.load("xarray")
 
 
-def open_dataset(filename: PathLike, **kwargs) -> "xarray.Dataset":
+def open_dataset(filename: PathLike, **kwargs) -> xarray.Dataset:
     """
     Open a dataset from the online data store (requires Internet access).
 
@@ -26,11 +28,12 @@ def open_dataset(filename: PathLike, **kwargs) -> "xarray.Dataset":
     xarray.open_dataset
     """
     from ._store import data_store
+
     filename = data_store.fetch(filename)
     return xr.open_dataset(filename, **kwargs)
 
 
-def load_dataset(*args, **kwargs) -> "xarray.Dataset":
+def load_dataset(*args, **kwargs) -> xarray.Dataset:
     """
     Open, load into memory, and close a dataset from the online data store
     (requires Internet access).

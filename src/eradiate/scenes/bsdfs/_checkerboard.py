@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 import mitsuba as mi
@@ -79,7 +79,7 @@ class CheckerboardBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
 
         result = {}

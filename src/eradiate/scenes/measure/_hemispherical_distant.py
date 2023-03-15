@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-
 import attrs
 import drjit as dr
 import mitsuba as mi
@@ -63,7 +61,7 @@ class HemisphericalDistantMeasure(DistantMeasure):
         default="None",
     )
 
-    _film_resolution: t.Tuple[int, int] = documented(
+    _film_resolution: tuple[int, int] = documented(
         attrs.field(
             default=(32, 32),
             validator=attrs.validators.deep_iterable(
@@ -180,7 +178,7 @@ class HemisphericalDistantMeasure(DistantMeasure):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> t.Tuple[str, t.Dict]:
+    def var(self) -> tuple[str, dict]:
         return "radiance", {
             "standard_name": "radiance",
             "long_name": "radiance",

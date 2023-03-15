@@ -45,7 +45,7 @@ class SceneElement(ABC):
     :meth:`update` method.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default=None,
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
@@ -59,7 +59,7 @@ class SceneElement(ABC):
         self.update()
 
     @property
-    def params(self) -> t.Optional[t.Dict[str, UpdateParameter]]:
+    def params(self) -> dict[str, UpdateParameter] | None:
         """
         Returns
         -------
@@ -125,7 +125,7 @@ class NodeSceneElement(SceneElement, ABC):
         pass
 
     @property
-    def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
+    def objects(self) -> dict[str, NodeSceneElement] | None:
         """
         Map of child objects associated with this scene element.
 
@@ -159,7 +159,7 @@ class InstanceSceneElement(SceneElement, ABC):
 
     @property
     @abstractmethod
-    def instance(self) -> "mitsuba.Object":
+    def instance(self) -> mitsuba.Object:
         """
         Mitsuba object which is represented by this scene element.
 
@@ -207,7 +207,7 @@ class CompositeSceneElement(SceneElement, ABC):
         return {}
 
     @property
-    def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
+    def objects(self) -> dict[str, NodeSceneElement] | None:
         """
         Map of child objects associated with this scene element.
 
@@ -269,7 +269,7 @@ class Scene(NodeSceneElement):
     object.
     """
 
-    _objects: t.Dict[str, SceneElement] = documented(
+    _objects: dict[str, SceneElement] = documented(
         attrs.field(factory=dict, converter=dict),
         doc="A map of scene elements which will be included in the Mitsuba "
         "scene definition.",
@@ -283,7 +283,7 @@ class Scene(NodeSceneElement):
         return {"type": "scene"}
 
     @property
-    def objects(self) -> t.Dict[str, SceneElement]:
+    def objects(self) -> dict[str, SceneElement]:
         # Inherit docstring
         return self._objects
 
@@ -305,10 +305,10 @@ class SceneTraversal:
     node: NodeSceneElement
 
     #: Parent to current node
-    parent: t.Optional[NodeSceneElement] = attrs.field(default=None)
+    parent: NodeSceneElement | None = attrs.field(default=None)
 
     #: Current node's name
-    name: t.Optional[str] = attrs.field(default=None)
+    name: str | None = attrs.field(default=None)
 
     #: Current depth
     depth: int = attrs.field(default=0)
@@ -371,7 +371,7 @@ class SceneTraversal:
             else:
                 node.traverse(cb)
 
-    def put_instance(self, obj: "mitsuba.Object") -> None:
+    def put_instance(self, obj: mitsuba.Object) -> None:
         """
         Add an instance to the kernel dictionary template.
         """
@@ -380,7 +380,7 @@ class SceneTraversal:
         self.template[self.name] = obj
 
 
-def traverse(node: NodeSceneElement) -> t.Tuple[KernelDictTemplate, UpdateMapTemplate]:
+def traverse(node: NodeSceneElement) -> tuple[KernelDictTemplate, UpdateMapTemplate]:
     """
     Traverse a scene element tree and collect kernel dictionary template and
      parameter update table data.
@@ -457,7 +457,7 @@ class BoundingBox:
 
     @classmethod
     def convert(
-        cls, value: t.Union[t.Sequence, t.Mapping, np.typing.ArrayLike, pint.Quantity]
+        cls, value: t.Sequence | t.Mapping | np.typing.ArrayLike | pint.Quantity
     ) -> t.Any:
         """
         Attempt conversion of a value to a :class:`BoundingBox`.

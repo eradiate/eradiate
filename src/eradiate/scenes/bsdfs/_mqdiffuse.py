@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 import mitsuba as mi
@@ -125,6 +125,6 @@ class MQDiffuseBSDF(BSDF):
         }
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
         return {}

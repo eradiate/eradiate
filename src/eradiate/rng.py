@@ -3,8 +3,7 @@ Components related with pseudo-random number generation.
 
 Inspired by `SeedBank <https://github.com/lenskit/seedbank>`_.
 """
-
-import typing as t
+from __future__ import annotations
 
 import attrs
 import numpy as np
@@ -17,7 +16,7 @@ class SeedState:
     Manage a root seed and facilities to derive seeds.
     """
 
-    _seed: t.Optional[np.random.SeedSequence] = attrs.field(
+    _seed: np.random.SeedSequence | None = attrs.field(
         default=None,
         converter=lambda x: x
         if isinstance(x, np.random.SeedSequence)

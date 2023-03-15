@@ -1,6 +1,7 @@
 """
 Utilities for the Eradiate test suite.
 """
+from __future__ import annotations
 
 import os
 import typing as t
@@ -14,9 +15,7 @@ from ..exceptions import DataError
 from ..typing import PathLike
 
 
-def skipif_data_not_found(
-    path: PathLike, action: t.Optional[t.Callable] = None
-) -> None:
+def skipif_data_not_found(path: PathLike, action: t.Callable | None = None) -> None:
     """
     During a Pytest session, skip the current test if the referenced dataset
     cannot be fetched from the data store.

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-
 import attrs
 import numpy as np
 import pint
@@ -98,7 +96,7 @@ class AirScatteringCoefficientSpectrum(Spectrum):
         }
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
         return {
             "value": UpdateParameter(

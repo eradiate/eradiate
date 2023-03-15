@@ -123,7 +123,7 @@ class SpectralContext(ABC, Context):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     @staticmethod
-    def from_dict(d: t.Dict) -> SpectralContext:
+    def from_dict(d: dict) -> SpectralContext:
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -231,7 +231,7 @@ class CKDSpectralContext(SpectralContext):
         init_type=":class:`.Bindex` or tuple or dict, optional",
     )
 
-    bin_set: t.Optional[BinSet] = documented(
+    bin_set: BinSet | None = documented(
         attrs.field(
             default="10nm",
             converter=attrs.converters.optional(BinSet.convert),
@@ -260,7 +260,7 @@ class CKDSpectralContext(SpectralContext):
         return self.bindex.bin
 
     @property
-    def spectral_index(self) -> t.Tuple[str, int]:
+    def spectral_index(self) -> tuple[str, int]:
         """
         tuple[str, int] : Spectral index associated with spectral context, \
             equal to active bindex (bin ID, quadrature point index pair).
@@ -301,7 +301,7 @@ class KernelDictContext(Context):
         default=":meth:`SpectralContext.new() <.SpectralContext.new>`",
     )
 
-    kwargs: t.Dict[str, t.Any] = documented(
+    kwargs: dict[str, t.Any] = documented(
         attrs.field(factory=dict),
         doc="Object-specific parameter overrides.",
         type="dict",

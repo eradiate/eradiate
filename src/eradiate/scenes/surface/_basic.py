@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import typing as t
 import warnings
 
 import attrs
@@ -24,7 +23,7 @@ class BasicSurface(Surface):
     A basic surface description consisting of a single shape and BSDF.
     """
 
-    shape: t.Union[None, RectangleShape, SphereShape] = documented(
+    shape: None | RectangleShape | SphereShape = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(shape_factory.convert),

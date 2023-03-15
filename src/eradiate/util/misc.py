@@ -1,6 +1,7 @@
 """
 A collection of tools which don't really fit anywhere else.
 """
+from __future__ import annotations
 
 import functools
 import inspect
@@ -84,7 +85,7 @@ def camel_to_snake(name):
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
 
-def deduplicate(value: t.Sequence, preserve_order: bool = True) -> t.List:
+def deduplicate(value: t.Sequence, preserve_order: bool = True) -> list:
     """
     Remove duplicates from a sequence.
 
@@ -110,7 +111,7 @@ def deduplicate(value: t.Sequence, preserve_order: bool = True) -> t.List:
         return list(set(value))
 
 
-def deduplicate_sorted(value: t.Sequence, cmp: t.Optional[t.Callable] = None) -> t.List:
+def deduplicate_sorted(value: t.Sequence, cmp: t.Callable | None = None) -> list:
     if cmp is None:
         cmp = lambda x, y: x == y
 
@@ -172,7 +173,7 @@ def fullname(obj: t.Any) -> str:
     return f"{cls.__module__}.{obj.__qualname__}"
 
 
-def get_class_that_defined_method(meth: t.Any) -> t.Type:
+def get_class_that_defined_method(meth: t.Any) -> type:
     """
     Get the class which defined a method, if relevant. Otherwise, return
     ``None``.

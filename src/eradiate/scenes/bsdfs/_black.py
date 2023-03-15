@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 
@@ -24,6 +24,6 @@ class BlackBSDF(BSDF):
         }
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
         return {}

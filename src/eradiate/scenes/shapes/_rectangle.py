@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-
 import attrs
 import mitsuba as mi
 import numpy as np
@@ -12,7 +10,6 @@ from ._core import ShapeNode
 from ..bsdfs import BSDF
 from ... import validators
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -119,7 +116,7 @@ class RectangleShape(ShapeNode):
         cls,
         altitude: pint.Quantity = 0.0 * ureg.km,
         width: pint.Quantity = 1.0 * ureg.km,
-        bsdf: t.Optional[BSDF] = None,
+        bsdf: BSDF | None = None,
     ) -> RectangleShape:
         """
         This class method constructor provides a simplified parametrisation of

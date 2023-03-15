@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 
 import attrs
@@ -26,7 +28,7 @@ class Factory(dessinemoi.Factory):
     def _convert_impl(
         self,
         value,
-        allowed_cls: t.Optional[t.Union[t.Type, t.Tuple[t.Type]]] = None,
+        allowed_cls: type | tuple[type] | None = None,
     ) -> t.Any:
         if isinstance(value, t.MutableMapping):
             # Interpret units and copy value to avoid unintended mutation
@@ -69,7 +71,7 @@ class Factory(dessinemoi.Factory):
 
     def register_lazy_batch(
         self,
-        specs: t.List[t.Tuple[str, str, t.Dict]],
+        specs: list[tuple[str, str, dict]],
         cls_prefix: str = "",
     ):
         """

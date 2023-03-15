@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-
 import attrs
 import numpy as np
 import pint
@@ -74,7 +72,7 @@ class MultiRadiancemeterMeasure(Measure):
             )
 
     @property
-    def film_resolution(self) -> t.Tuple[int, int]:
+    def film_resolution(self) -> tuple[int, int]:
         return (self.origins.shape[0], 1)
 
     # --------------------------------------------------------------------------
@@ -103,7 +101,7 @@ class MultiRadiancemeterMeasure(Measure):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> t.Tuple[str, t.Dict]:
+    def var(self) -> tuple[str, dict]:
         return "radiance", {
             "standard_name": "radiance",
             "long_name": "radiance",

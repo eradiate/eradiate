@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import typing as t
 import warnings
 
 import attrs
@@ -638,7 +637,7 @@ class LeafCloud(CanopyElement):
     #                                 Fields
     # --------------------------------------------------------------------------
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="leaf_cloud",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
@@ -1058,8 +1057,8 @@ class LeafCloud(CanopyElement):
     def from_file(
         cls,
         filename,
-        leaf_transmittance: t.Union[float, Spectrum] = 0.5,
-        leaf_reflectance: t.Union[float, Spectrum] = 0.5,
+        leaf_transmittance: float | Spectrum = 0.5,
+        leaf_reflectance: float | Spectrum = 0.5,
         id: str = "leaf_cloud",
     ) -> LeafCloud:
         """

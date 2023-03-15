@@ -61,7 +61,7 @@ class AbstractTree(Tree):
     used to shift the leaf cloud **in addition** to the trunk's extent.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="abstract_tree",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
@@ -72,7 +72,7 @@ class AbstractTree(Tree):
         default='"abstract_tree"',
     )
 
-    leaf_cloud: t.Optional[LeafCloud] = documented(
+    leaf_cloud: LeafCloud | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(_leaf_cloud_converter),
@@ -237,7 +237,7 @@ class MeshTree(Tree):
         default='"mesh_tree"',
     )
 
-    mesh_tree_elements: t.List[MeshTree] = documented(
+    mesh_tree_elements: list[MeshTree] = documented(
         attrs.field(
             factory=list,
             converter=lambda value: [
@@ -304,7 +304,7 @@ class MeshTreeElement:
     a configuration dictionary.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="mesh_tree_element",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
@@ -333,7 +333,7 @@ class MeshTreeElement:
                 f"or '.ply', got '{value.suffix}'"
             )
 
-    mesh_units: t.Optional[pint.Unit] = documented(
+    mesh_units: pint.Unit | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(ureg.Unit),
@@ -384,7 +384,7 @@ class MeshTreeElement:
     # --------------------------------------------------------------------------
 
     @staticmethod
-    def from_dict(d: t.Dict) -> MeshTreeElement:
+    def from_dict(d: dict) -> MeshTreeElement:
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``

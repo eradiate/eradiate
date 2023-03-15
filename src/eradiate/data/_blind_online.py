@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import shutil
 import typing as t
@@ -40,15 +42,15 @@ class BlindOnlineDataStore(DataStore):
         return self._base_url
 
     @property
-    def registry(self) -> t.Dict:
+    def registry(self) -> dict:
         """
         Raises :class:`NotImplementedError` (this data store has no registry).
         """
         raise NotImplementedError
 
     def registry_files(
-        self, filter: t.Optional[t.Callable[[t.Any], bool]] = None
-    ) -> t.List[str]:
+        self, filter: t.Callable[[t.Any], bool] | None = None
+    ) -> list[str]:
         """
         Returns an empty list (this data store has no registry).
         """
@@ -57,7 +59,7 @@ class BlindOnlineDataStore(DataStore):
     def fetch(
         self,
         filename: PathLike,
-        downloader: t.Optional[t.Callable] = None,
+        downloader: t.Callable | None = None,
     ) -> Path:
         """
         Fetch a file from the data store. This method wraps
@@ -125,7 +127,7 @@ class BlindOnlineDataStore(DataStore):
                         f"file '{fname}' could not be retrieved from {self.base_url}"
                     ) from e
 
-    def purge(self, keep: t.Union[None, str, t.List[str]] = None) -> None:
+    def purge(self, keep: None | str | list[str] = None) -> None:
         """
         Purge local storage location. The default behaviour is very aggressive
         and will wipe out the entire directory contents.

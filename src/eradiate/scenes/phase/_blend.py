@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 from collections import abc as cabc
 from functools import lru_cache
@@ -24,7 +26,7 @@ class BlendPhaseFunction(PhaseFunction):
     usually based on the associated medium's scattering coefficient.
     """
 
-    components: t.List[PhaseFunction] = documented(
+    components: list[PhaseFunction] = documented(
         attrs.field(
             converter=lambda x: [phase_function_factory.convert(y) for y in x],
             validator=attrs.validators.deep_iterable(
@@ -45,9 +47,9 @@ class BlendPhaseFunction(PhaseFunction):
                 "have at least two components"
             )
 
-    weights: t.Union[
-        np.ndarray, t.List[t.Callable[[KernelDictContext], np.ndarray]]
-    ] = documented(
+    weights: (
+        np.ndarray | list[t.Callable[[KernelDictContext], np.ndarray]]
+    ) = documented(
         attrs.field(
             converter=lambda x: x if callable(x[0]) else np.array(x, dtype=np.float64),
             kw_only=True,
@@ -86,7 +88,7 @@ class BlendPhaseFunction(PhaseFunction):
                     "lists must have the same length"
                 )
 
-    bbox: t.Optional[BoundingBox] = documented(
+    bbox: BoundingBox | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(BoundingBox.convert),
@@ -113,7 +115,7 @@ class BlendPhaseFunction(PhaseFunction):
             if isinstance(component, BlendPhaseFunction):
                 component.bbox = self.bbox
 
-    def _gridvolume_transform(self) -> "mitsuba.ScalarTransform4f":
+    def _gridvolume_transform(self) -> mitsuba.ScalarTransform4f:
         if self.bbox is None:
             # This is currently possible because the bounding box is expected to
             # be set by a parent Atmosphere object based on the selected
@@ -170,7 +172,7 @@ class BlendPhaseFunction(PhaseFunction):
     def eval_conditional_weights(
         self,
         sctx: SpectralContext,
-        n_component: t.Union[int, t.List[int], None] = None,
+        n_component: int | list[int] | None = None,
     ) -> np.ndarray:
         """
         Evaluate the conditional weights of specified Mitsuba phase function
@@ -246,7 +248,7 @@ class BlendPhaseFunction(PhaseFunction):
         return result
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         result = {}
 
         for i in range(len(self.components) - 1):

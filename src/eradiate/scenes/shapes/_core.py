@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import typing as t
 from abc import ABC
 
 import attrs
@@ -34,7 +33,7 @@ class Shape:
     * This class is to be used as a mixin.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="shape",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
@@ -45,7 +44,7 @@ class Shape:
         default='"shape"',
     )
 
-    bsdf: t.Union[BSDF, Ref, None] = documented(
+    bsdf: BSDF | Ref | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(bsdf_factory.convert),
@@ -76,7 +75,7 @@ class Shape:
         return f"{self.id}_bsdf"
 
     @property
-    def objects(self) -> t.Optional[t.Dict[str, NodeSceneElement]]:
+    def objects(self) -> dict[str, NodeSceneElement] | None:
         # Inherit docstring
         if self.bsdf is None:
             return None

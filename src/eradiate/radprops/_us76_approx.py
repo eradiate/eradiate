@@ -22,7 +22,7 @@ from ..units import unit_registry as ureg
 
 
 def _convert_thermoprops_us76_approx(
-    value: t.Union[t.MutableMapping, xr.Dataset]
+    value: t.MutableMapping | xr.Dataset,
 ) -> xr.Dataset:
     if isinstance(value, dict):
         return us76.make_profile(**value)
@@ -145,7 +145,7 @@ class US76ApproxRadProfile(RadProfile):
         default="True",
     )
 
-    absorption_data_set: t.Optional[str] = documented(
+    absorption_data_set: str | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(str),
@@ -158,7 +158,7 @@ class US76ApproxRadProfile(RadProfile):
         type="str",
     )
 
-    _zgrid: t.Optional[ZGrid] = attrs.field(default=None, init=False)
+    _zgrid: ZGrid | None = attrs.field(default=None, init=False)
 
     def __attrs_post_init__(self):
         self.update()
@@ -214,13 +214,13 @@ class US76ApproxRadProfile(RadProfile):
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_albedo_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_albedo_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="monochromatic")
 
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         return self.eval_sigma_a_mono(w, zgrid) + self.eval_sigma_s_mono(w, zgrid)
 
-    def eval_sigma_t_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_t_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="monochromatic")
 
     def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
@@ -252,7 +252,7 @@ class US76ApproxRadProfile(RadProfile):
         else:
             return np.zeros(profile.z_layer.size) * ureg.km**-1
 
-    def eval_sigma_a_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_a_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="monochromatic")
 
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
@@ -267,7 +267,7 @@ class US76ApproxRadProfile(RadProfile):
         else:
             return np.zeros(profile.z_layer.size) * ureg.km**-1
 
-    def eval_sigma_s_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_s_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         raise UnsupportedModeError(supported="monochromatic")
 
     def eval_dataset_mono(self, w: pint.Quantity, zgrid: ZGrid) -> xr.Dataset:
@@ -279,5 +279,5 @@ class US76ApproxRadProfile(RadProfile):
             sigma_s=self.eval_sigma_s_mono(w, zgrid),
         ).squeeze()
 
-    def eval_dataset_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> xr.Dataset:
+    def eval_dataset_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> xr.Dataset:
         raise UnsupportedModeError(supported="monochromatic")

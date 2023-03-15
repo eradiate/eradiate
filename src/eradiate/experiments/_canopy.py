@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 
@@ -40,7 +40,7 @@ class CanopyExperiment(EarthObservationExperiment):
     * if no canopy is defined, the target will be set to [0, 0, 0].
     """
 
-    canopy: t.Optional[Canopy] = documented(
+    canopy: Canopy | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(biosphere_factory.convert),
@@ -67,7 +67,7 @@ class CanopyExperiment(EarthObservationExperiment):
         default="0",
     )
 
-    surface: t.Union[None, BasicSurface] = documented(
+    surface: None | BasicSurface = documented(
         attrs.field(
             factory=lambda: LambertianBSDF(),
             converter=attrs.converters.optional(surface_converter),
@@ -125,7 +125,7 @@ class CanopyExperiment(EarthObservationExperiment):
                         "z": self.canopy.size[2],
                     }
 
-    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
+    def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)
 
         if measure.is_distant():
@@ -134,7 +134,7 @@ class CanopyExperiment(EarthObservationExperiment):
         return result
 
     @property
-    def contexts(self) -> t.List[KernelDictContext]:
+    def contexts(self) -> list[KernelDictContext]:
         # Inherit docstring
 
         # Collect contexts from all measures
@@ -165,7 +165,7 @@ class CanopyExperiment(EarthObservationExperiment):
         return KernelDictContext(spectral_ctx=SpectralContext.new())
 
     @property
-    def scene_objects(self) -> t.Dict[str, SceneElement]:
+    def scene_objects(self) -> dict[str, SceneElement]:
         # Inherit docstring
 
         objects = {}

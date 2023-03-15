@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import enum
-import typing as t
 
 import aenum
 import numpy as np
@@ -30,7 +29,7 @@ class AzimuthConvention(enum.Enum):
     SOUTH_LEFT = (1.5 * np.pi, -1)  #: South left
 
     @classmethod
-    def register(cls, name: str, value: t.Tuple[float, float]) -> None:
+    def register(cls, name: str, value: tuple[float, float]) -> None:
         """
         Register a new angular convention.
 
@@ -91,8 +90,8 @@ def normalize_azimuth(angles: np.typing.ArrayLike, inplace: bool = False) -> np.
 
 def transform_azimuth(
     angles: np.typing.ArrayLike,
-    from_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
-    to_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
+    from_convention: AzimuthConvention | str = AzimuthConvention.EAST_RIGHT,
+    to_convention: AzimuthConvention | str = AzimuthConvention.EAST_RIGHT,
     normalize: bool = True,
     inplace: bool = False,
 ) -> np.ndarray:
@@ -161,7 +160,7 @@ def transform_azimuth(
 def cos_angle_to_direction(
     cos_theta: np.typing.ArrayLike,
     phi: np.typing.ArrayLike,
-    azimuth_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
+    azimuth_convention: AzimuthConvention | str = AzimuthConvention.EAST_RIGHT,
     flip: bool = False,
 ) -> np.ndarray:
     r"""
@@ -209,7 +208,7 @@ def cos_angle_to_direction(
 @ureg.wraps(ret=None, args=("rad", None, None), strict=False)
 def angles_to_direction(
     angles: np.typing.ArrayLike,
-    azimuth_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
+    azimuth_convention: AzimuthConvention | str = AzimuthConvention.EAST_RIGHT,
     flip: bool = False,
 ) -> np.ndarray:
     r"""
@@ -257,7 +256,7 @@ def angles_to_direction(
 @ureg.wraps(ret="rad", args=(None, None, None), strict=False)
 def direction_to_angles(
     v: np.typing.ArrayLike,
-    azimuth_convention: t.Union[AzimuthConvention, str] = AzimuthConvention.EAST_RIGHT,
+    azimuth_convention: AzimuthConvention | str = AzimuthConvention.EAST_RIGHT,
     normalize: bool = True,
 ) -> np.ndarray:
     """

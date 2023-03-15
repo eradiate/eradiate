@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import typing as t
 from abc import ABC, abstractmethod
 
 import attrs
@@ -61,7 +60,7 @@ class Canopy(CompositeSceneElement, ABC):
     Abstract base class for all canopies.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="canopy",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
@@ -72,7 +71,7 @@ class Canopy(CompositeSceneElement, ABC):
         default='"canopy"',
     )
 
-    size: t.Optional[pint.Quantity] = documented(
+    size: pint.Quantity | None = documented(
         pinttr.field(
             default=None,
             validator=attrs.validators.optional(
@@ -124,7 +123,7 @@ class CanopyElement(CompositeSceneElement, ABC):
         pass
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
         return flatten({**self._params_bsdfs, **self._params_shapes})
 
@@ -145,7 +144,7 @@ class InstancedCanopyElement(CompositeSceneElement):
           from_file
     """
 
-    canopy_element: t.Optional[CanopyElement] = documented(
+    canopy_element: CanopyElement | None = documented(
         attrs.field(
             default=None,
             validator=attrs.validators.optional(
@@ -187,7 +186,7 @@ class InstancedCanopyElement(CompositeSceneElement):
     def from_file(
         cls,
         filename: PathLike,
-        canopy_element: t.Optional[CanopyElement] = None,
+        canopy_element: CanopyElement | None = None,
     ):
         """
         Construct a :class:`.InstancedCanopyElement` from a text file specifying

@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 import pint
@@ -245,7 +245,7 @@ class HomogeneousAtmosphere(Atmosphere):
         }
 
     @property
-    def _params_medium(self) -> t.Dict[str, UpdateParameter]:
+    def _params_medium(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
         return {
             # Note: "value" appears twice because the mi.Spectrum is
@@ -263,7 +263,7 @@ class HomogeneousAtmosphere(Atmosphere):
         }
 
     @property
-    def _params_phase(self) -> t.Dict[str, UpdateParameter]:
+    def _params_phase(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
         _, params = traverse(self.phase)
         return params.data

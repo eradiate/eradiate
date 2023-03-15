@@ -154,7 +154,7 @@ class MeasureSpectralConfig(ABC):
     # --------------------------------------------------------------------------
 
     @abstractmethod
-    def spectral_ctxs(self) -> t.List[SpectralContext]:
+    def spectral_ctxs(self) -> list[SpectralContext]:
         """
         Return a list of :class:`.SpectralContext` objects based on the
         stored spectral configuration. These data structures can be used to
@@ -225,7 +225,7 @@ class MeasureSpectralConfig(ABC):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     @staticmethod
-    def from_dict(d: t.Dict) -> MeasureSpectralConfig:
+    def from_dict(d: dict) -> MeasureSpectralConfig:
         """
         Create from a dictionary. This class method will additionally pre-process
         the passed dictionary to merge any field with an associated ``"_units"``
@@ -314,7 +314,7 @@ class MonoMeasureSpectralConfig(MeasureSpectralConfig):
     #                         Spectral context generation
     # --------------------------------------------------------------------------
 
-    def spectral_ctxs(self) -> t.List[MonoSpectralContext]:
+    def spectral_ctxs(self) -> list[MonoSpectralContext]:
         return [
             MonoSpectralContext(wavelength=wavelength)
             for wavelength in self._wavelengths
@@ -429,7 +429,7 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
         default='"10nm"',
     )
 
-    _bins: t.Union[t.List[str], AutoType] = documented(
+    _bins: list[str] | AutoType = documented(
         attrs.field(
             default=AUTO,
             converter=converters.auto_or(_ckd_measure_spectral_config_bins_converter),
@@ -458,7 +458,7 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
                 )
 
     @property
-    def bins(self) -> t.Tuple[Bin]:
+    def bins(self) -> tuple[Bin]:
         """
         Returns
         -------
@@ -478,7 +478,7 @@ class CKDMeasureSpectralConfig(MeasureSpectralConfig):
     #                         Spectral context generation
     # --------------------------------------------------------------------------
 
-    def spectral_ctxs(self) -> t.List[CKDSpectralContext]:
+    def spectral_ctxs(self) -> list[CKDSpectralContext]:
         ctxs = []
         bin_set = self.bin_set
 
@@ -538,7 +538,7 @@ class Measure(NodeSceneElement, ABC):
     #                           Fields and properties
     # --------------------------------------------------------------------------
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="measure",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
@@ -549,7 +549,7 @@ class Measure(NodeSceneElement, ABC):
         default='"measure"',
     )
 
-    mi_results: t.Dict = documented(
+    mi_results: dict = documented(
         attrs.field(factory=dict, repr=_str_summary_raw, init=False),
         doc="Storage for raw results yielded by the kernel.",
         type="dict",
@@ -601,7 +601,7 @@ class Measure(NodeSceneElement, ABC):
 
     @property
     @abstractmethod
-    def film_resolution(self) -> t.Tuple[int, int]:
+    def film_resolution(self) -> tuple[int, int]:
         """
         tuple: Getter for film resolution as a (int, int) pair.
         """
@@ -663,7 +663,7 @@ class Measure(NodeSceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> t.Tuple[str, t.Dict]:
+    def var(self) -> tuple[str, dict]:
         """
         str, dict: Post-processing variable field name and metadata.
         """

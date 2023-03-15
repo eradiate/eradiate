@@ -133,7 +133,7 @@ class SolarIrradianceSpectrum(Spectrum):
         default="1.0",
     )
 
-    datetime: t.Optional[datetime.datetime] = documented(
+    datetime: datetime.datetime | None = documented(
         attrs.field(
             default=None,
             converter=_datetime_converter,

@@ -1,4 +1,5 @@
-import typing as t
+from __future__ import annotations
+
 from collections import OrderedDict
 
 from ._blind_directory import BlindDirectoryDataStore
@@ -12,7 +13,7 @@ from .._config import config
 data_store: MultiDataStore = None
 
 
-def init_data_store(offline: t.Optional[bool] = None) -> None:
+def init_data_store(offline: bool | None = None) -> None:
     """
     Initialise the global data store.
 

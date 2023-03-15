@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = [
     "auto_or",
     "to_dataset",
@@ -67,8 +69,8 @@ def auto_or(
 
 
 def to_dataset(
-    load_from_id: t.Optional[t.Callable[[str], xr.Dataset]] = None,
-) -> t.Callable[[t.Union[xr.Dataset, PathLike]], xr.Dataset]:
+    load_from_id: t.Callable[[str], xr.Dataset] | None = None,
+) -> t.Callable[[xr.Dataset | PathLike], xr.Dataset]:
     """
     Generates a converter that converts a value to a :class:`xarray.Dataset`.
 
@@ -112,7 +114,7 @@ def to_dataset(
     >>> aerosol_converter = to_dataset()
     """
 
-    def converter(value: t.Union[xr.Dataset, PathLike]) -> xr.Dataset:
+    def converter(value: xr.Dataset | PathLike) -> xr.Dataset:
 
         if isinstance(value, xr.Dataset):
             return value

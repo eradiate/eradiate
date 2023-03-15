@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import pint
 
@@ -32,7 +32,7 @@ WAVENUMBER_BINS = {
 }
 
 
-def resolve_bin(group: str, wavenumber: pint.Quantity) -> t.Tuple[int, int]:
+def resolve_bin(group: str, wavenumber: pint.Quantity) -> tuple[int, int]:
     """
     Return the wavenumber bin corresponding to a group and a wavenumber value,
     if it exists.

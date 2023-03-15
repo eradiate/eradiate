@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import enum
 import re
-import typing as t
 from textwrap import dedent, indent
 
 import attrs
@@ -83,7 +82,7 @@ class _FieldDoc:
     default = attrs.field(default=None)
 
 
-def _eradiate_formatter(cls_doc: str, field_docs: t.Dict[str, _FieldDoc]) -> str:
+def _eradiate_formatter(cls_doc: str, field_docs: dict[str, _FieldDoc]) -> str:
     """
     Appends a section on attributes to a class docstring.
     This docstring formatter is appropriate for Eradiate's current docstring
@@ -137,7 +136,7 @@ def _eradiate_formatter(cls_doc: str, field_docs: t.Dict[str, _FieldDoc]) -> str
         return cls_doc
 
 
-def _numpy_formatter(cls_doc: str, field_docs: t.Dict[str, _FieldDoc]) -> str:
+def _numpy_formatter(cls_doc: str, field_docs: dict[str, _FieldDoc]) -> str:
     """
     Append a section on attributes to a class docstring.
     This docstring formatter is appropriate for the Numpy docstring format.
@@ -217,7 +216,7 @@ def _numpy_formatter(cls_doc: str, field_docs: t.Dict[str, _FieldDoc]) -> str:
         return cls_doc
 
 
-def parse_docs(cls: t.Type) -> t.Type:
+def parse_docs(cls: type) -> type:
     """
     Extract attribute documentation and update class docstring with it.
 
@@ -280,10 +279,10 @@ def parse_docs(cls: t.Type) -> t.Type:
 
 def documented(
     attrib: attrs.Attribute,
-    doc: t.Optional[str] = None,
-    type: t.Optional[str] = None,
-    init_type: t.Optional[str] = None,
-    default: t.Optional[str] = None,
+    doc: str | None = None,
+    type: str | None = None,
+    init_type: str | None = None,
+    default: str | None = None,
 ) -> attrs.Attribute:
     """
     Declare an attrs field as documented.
@@ -330,7 +329,7 @@ def documented(
     return attrib
 
 
-def get_doc(cls: t.Type, attrib: str, field: str) -> str:
+def get_doc(cls: type, attrib: str, field: str) -> str:
     """
     Fetch attribute documentation field. Requires field metadata to be processed
     with :func:`documented`.

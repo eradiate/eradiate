@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-
 import attrs
 import mitsuba as mi
 import numpy as np
@@ -72,7 +70,7 @@ class DistantFluxMeasure(DistantMeasure):
         default="[0, 0, 1]",
     )
 
-    _film_resolution: t.Tuple[int, int] = documented(
+    _film_resolution: tuple[int, int] = documented(
         attrs.field(
             default=(32, 32),
             validator=attrs.validators.deep_iterable(
@@ -86,7 +84,7 @@ class DistantFluxMeasure(DistantMeasure):
     )
 
     @property
-    def film_resolution(self) -> t.Tuple[int, int]:
+    def film_resolution(self) -> tuple[int, int]:
         return self._film_resolution
 
     @property
@@ -155,7 +153,7 @@ class DistantFluxMeasure(DistantMeasure):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> t.Tuple[str, t.Dict]:
+    def var(self) -> tuple[str, dict]:
         # Inherit docstring
         return "sector_radiosity", {
             "standard_name": "sector_radiosity",

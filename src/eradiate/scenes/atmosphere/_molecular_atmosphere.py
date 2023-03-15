@@ -96,7 +96,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 "and 'has_scattering' must be True"
             )
 
-    absorption_data_sets: t.Optional[t.Dict[str, str]] = documented(
+    absorption_data_sets: dict[str, str] | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(dict),
@@ -113,7 +113,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         type="dict",
     )
 
-    _radprops_profile: t.Optional[RadProfile] = attrs.field(
+    _radprops_profile: RadProfile | None = attrs.field(
         default=None,
         validator=attrs.validators.optional(attrs.validators.instance_of(RadProfile)),
         init=False,
@@ -198,7 +198,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._radprops_profile
 
     def eval_albedo(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_albedo(
@@ -207,7 +207,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_sigma_t(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_t(
@@ -216,7 +216,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_sigma_a(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_a(
@@ -225,7 +225,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_sigma_s(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_s(
@@ -257,8 +257,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     def afgl_1986(
         cls,
         model: str = "us_standard",
-        levels: t.Optional[pint.Quantity] = None,
-        concentrations: t.Optional[t.Dict[str, t.Union[str, pint.Quantity]]] = None,
+        levels: pint.Quantity | None = None,
+        concentrations: dict[str, str | pint.Quantity] | None = None,
         **kwargs: t.MutableMapping[str],
     ) -> MolecularAtmosphere:
         """
@@ -362,8 +362,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     @classmethod
     def ussa_1976(
         cls,
-        levels: t.Optional[pint.Quantity] = None,
-        concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
+        levels: pint.Quantity | None = None,
+        concentrations: t.MutableMapping[str, pint.Quantity] | None = None,
         **kwargs: t.MutableMapping[str, t.Any],
     ) -> MolecularAtmosphere:
         """

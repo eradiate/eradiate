@@ -50,7 +50,7 @@ class DiscreteCanopy(Canopy):
     #                                   Fields
     # --------------------------------------------------------------------------
 
-    instanced_canopy_elements: t.List[InstancedCanopyElement] = documented(
+    instanced_canopy_elements: list[InstancedCanopyElement] = documented(
         attrs.field(
             factory=list,
             converter=lambda value: [
@@ -291,7 +291,7 @@ class DiscreteCanopy(Canopy):
     def leaf_cloud_from_files(
         cls,
         size: pint.Quantity,
-        leaf_cloud_dicts: t.List[t.MutableMapping],
+        leaf_cloud_dicts: list[t.MutableMapping],
         padding: int = 0,
         id: str = "discrete_canopy",
     ):

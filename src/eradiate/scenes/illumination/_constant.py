@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 
@@ -37,5 +37,5 @@ class ConstantIllumination(Illumination):
         return {"type": "constant"}
 
     @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
+    def objects(self) -> dict[str, NodeSceneElement]:
         return {"radiance": self.radiance}

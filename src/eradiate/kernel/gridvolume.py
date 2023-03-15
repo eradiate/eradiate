@@ -1,8 +1,7 @@
 """
 Volume data file I/O helpers.
 """
-
-import typing as t
+from __future__ import annotations
 
 import mitsuba as mi
 import numpy as np
@@ -11,9 +10,7 @@ import xarray as xr
 from ..typing import PathLike
 
 
-def write_binary_grid3d(
-    filename: PathLike, values: t.Union[np.ndarray, xr.DataArray]
-) -> None:
+def write_binary_grid3d(filename: PathLike, values: np.ndarray | xr.DataArray) -> None:
     """
     Write volume data to a binary file so that a ``gridvolume`` kernel plugin
     can be instantiated with that file.

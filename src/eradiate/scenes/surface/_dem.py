@@ -47,7 +47,7 @@ class DEMSurface(Surface):
       prevents object referencing.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="terrain",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
@@ -107,7 +107,7 @@ class DEMSurface(Surface):
         cls,
         data: xr.DataArray,
         bsdf: BSDF,
-        planet_radius: t.Union[pint.Quantity, float] = 6371.0 * ureg.km,
+        planet_radius: pint.Quantity | float = 6371.0 * ureg.km,
     ) -> DEMSurface:
         """
         Construct a DEM from an xarray data array holding elevation data.
@@ -192,9 +192,9 @@ class DEMSurface(Surface):
     def from_analytical(
         cls,
         elevation_function: t.Callable,
-        x_length: t.Union[pint.Quantity, float],
+        x_length: pint.Quantity | float,
         x_steps: int,
-        y_length: t.Union[pint.Quantity, float],
+        y_length: pint.Quantity | float,
         y_steps: int,
         bsdf: BSDF,
     ) -> DEMSurface:
@@ -301,6 +301,6 @@ class DEMSurface(Surface):
         return {}
 
     @property
-    def objects(self) -> t.Dict[str, t.Union[NodeSceneElement, InstanceSceneElement]]:
+    def objects(self) -> dict[str, NodeSceneElement | InstanceSceneElement]:
         # Inherit docstring
         return {self._shape_id: self.shape}

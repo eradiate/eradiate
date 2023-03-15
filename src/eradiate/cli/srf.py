@@ -1,8 +1,8 @@
 """
 Command-line interface to the :mod:`~eradiate.srf_tools` module.
 """
+from __future__ import annotations
 
-import typing as t
 from pathlib import Path
 
 import click
@@ -63,8 +63,8 @@ def trim(filename, output, verbose, show_plot, dry_run, interactive):
 
 
 def text_input_to_quantity(
-    value: t.Union[None, str], default_units: str = "nm"
-) -> t.Optional[pint.Quantity]:
+    value: None | str, default_units: str = "nm"
+) -> pint.Quantity | None:
     """
     Converts text input to wavelength quantity.
 

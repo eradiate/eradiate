@@ -1,8 +1,7 @@
 """
 Extensions and helpers for tutorials.
 """
-
-import typing as t
+from __future__ import annotations
 
 import matplotlib.pyplot as plt
 
@@ -12,11 +11,11 @@ from ..scenes.atmosphere import AbstractHeterogeneousAtmosphere
 
 def plot_sigma_t(
     *atmospheres: AbstractHeterogeneousAtmosphere,
-    labels: t.Optional[t.List[str]] = None,
-    altitude_extent: t.Optional[t.Tuple[float, float]] = None,
-    spectral_ctx: t.Optional[SpectralContext] = None,
+    labels: list[str] | None = None,
+    altitude_extent: tuple[float, float] | None = None,
+    spectral_ctx: SpectralContext | None = None,
     show: bool = True,
-) -> t.Tuple[plt.Figure, plt.Axes]:
+) -> tuple[plt.Figure, plt.Axes]:
     """
     Display the extinction coefficient of one or several atmosphere objects for
     a single spectral context.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 from numbers import Number
 
@@ -156,7 +158,7 @@ def has_len(size: int):
     return f
 
 
-def has_quantity(quantity: t.Union[PhysicalQuantity, str, None]):
+def has_quantity(quantity: PhysicalQuantity | str | None):
     """
     Validate iff initializer is called with a value  featuring a ``quantity``
     field set to an expected value.

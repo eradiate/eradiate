@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import typing as t
 from abc import ABC, abstractmethod
 
 import attrs
@@ -71,7 +70,7 @@ class Atmosphere(CompositeSceneElement, ABC):
     :class:`mitsuba.Medium` and a :class:`mitsuba.Shape`.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="atmosphere",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
@@ -170,7 +169,7 @@ class Atmosphere(CompositeSceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @property
-    def shape(self) -> t.Union[CuboidShape, SphereShape]:
+    def shape(self) -> CuboidShape | SphereShape:
         """
         Returns
         -------
@@ -286,7 +285,7 @@ class Atmosphere(CompositeSceneElement, ABC):
         return result
 
     @property
-    def _params_phase(self) -> t.Dict[str, UpdateParameter]:
+    def _params_phase(self) -> dict[str, UpdateParameter]:
         """
         Returns
         -------
@@ -297,7 +296,7 @@ class Atmosphere(CompositeSceneElement, ABC):
         return {}
 
     @property
-    def _params_medium(self) -> t.Dict[str, UpdateParameter]:
+    def _params_medium(self) -> dict[str, UpdateParameter]:
         """
         Returns
         -------
@@ -308,7 +307,7 @@ class Atmosphere(CompositeSceneElement, ABC):
         return {}
 
     @property
-    def _params_shape(self) -> t.Dict[str, UpdateParameter]:
+    def _params_shape(self) -> dict[str, UpdateParameter]:
         """
         Returns
         -------
@@ -319,7 +318,7 @@ class Atmosphere(CompositeSceneElement, ABC):
         return {}
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
         return flatten(
             {
@@ -339,7 +338,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     Abstract base class for heterogeneous atmospheres.
     """
 
-    scale: t.Optional[float] = documented(
+    scale: float | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(float),
@@ -384,7 +383,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_radprops(
         self,
         sctx: SpectralContext,
-        zgrid: t.Optional[ZGrid] = None,
+        zgrid: ZGrid | None = None,
         optional_fields: bool = False,
     ) -> xr.Dataset:
         """
@@ -489,7 +488,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_albedo(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate albedo spectrum based on a spectral context. This method
@@ -519,7 +518,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_sigma_t(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient given a spectral context.
@@ -546,7 +545,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_sigma_a(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate absorption coefficient given a spectral context.
@@ -573,7 +572,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_sigma_s(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate scattering coefficient given a spectral context.
@@ -714,7 +713,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         return result
 
     @property
-    def _params_medium(self) -> t.Dict[str, UpdateParameter]:
+    def _params_medium(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
         if isinstance(self.geometry, PlaneParallelGeometry):
             return {

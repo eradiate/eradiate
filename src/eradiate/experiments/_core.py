@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import logging
-import typing as t
 from abc import ABC, abstractmethod
 from datetime import datetime
 
@@ -48,13 +49,13 @@ class Experiment(ABC):
 
     # Internal Mitsuba scene. This member is not set by the end-user, but rather
     # by the Experiment itself during initialisation.
-    mi_scene: t.Optional[MitsubaObjectWrapper] = attrs.field(
+    mi_scene: MitsubaObjectWrapper | None = attrs.field(
         default=None,
         repr=False,
         init=False,
     )
 
-    measures: t.List[Measure] = documented(
+    measures: list[Measure] = documented(
         attrs.field(
             factory=lambda: [MultiDistantMeasure()],
             converter=lambda value: [
@@ -98,10 +99,10 @@ class Experiment(ABC):
         """
         return self._integrator
 
-    _results: t.Dict[str, xr.Dataset] = attrs.field(factory=dict, repr=False)
+    _results: dict[str, xr.Dataset] = attrs.field(factory=dict, repr=False)
 
     @property
-    def results(self) -> t.Dict[str, xr.Dataset]:
+    def results(self) -> dict[str, xr.Dataset]:
         """
         Post-processed simulation results.
 
@@ -132,7 +133,7 @@ class Experiment(ABC):
     def process(
         self,
         spp: int = 0,
-        seed_state: t.Optional[SeedState] = None,
+        seed_state: SeedState | None = None,
     ) -> None:
         """
         Run simulation and collect raw results.
@@ -183,7 +184,7 @@ class Experiment(ABC):
 
     @property
     @abstractmethod
-    def contexts(self) -> t.List[KernelDictContext]:
+    def contexts(self) -> list[KernelDictContext]:
         """
         Return a list of contexts used for processing.
         """
@@ -214,7 +215,7 @@ class EarthObservationExperiment(Experiment, ABC):
     emitter.
     """
 
-    extra_objects: t.Dict[str, SceneElement] = documented(
+    extra_objects: dict[str, SceneElement] = documented(
         attrs.field(
             factory=dict,
             converter=_extra_objects_converter,
@@ -230,7 +231,7 @@ class EarthObservationExperiment(Experiment, ABC):
         default="{}",
     )
 
-    illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
+    illumination: DirectionalIllumination | ConstantIllumination = documented(
         attrs.field(
             factory=DirectionalIllumination,
             converter=illumination_factory.convert,
@@ -246,7 +247,7 @@ class EarthObservationExperiment(Experiment, ABC):
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
 
-    def _dataset_metadata(self, measure: Measure) -> t.Dict[str, str]:
+    def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         """
         Generate additional metadata applied to dataset after post-processing.
 
@@ -271,7 +272,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
     @property
     @abstractmethod
-    def scene_objects(self) -> t.Dict[str, SceneElement]:
+    def scene_objects(self) -> dict[str, SceneElement]:
         pass
 
     @property
@@ -300,7 +301,7 @@ class EarthObservationExperiment(Experiment, ABC):
     def process(
         self,
         spp: int = 0,
-        seed_state: t.Optional[SeedState] = None,
+        seed_state: SeedState | None = None,
     ) -> None:
         # Inherit docstring
 
@@ -319,7 +320,7 @@ class EarthObservationExperiment(Experiment, ABC):
         )
 
         # Assign collected results to the appropriate measure
-        sensor_to_measure: t.Dict[str, Measure] = {
+        sensor_to_measure: dict[str, Measure] = {
             measure.sensor_id: measure for measure in self.measures
         }
 
@@ -331,7 +332,7 @@ class EarthObservationExperiment(Experiment, ABC):
                     "spp": spp if spp > 0 else measure.spp,
                 }
 
-    def postprocess(self, pipeline_kwargs: t.Optional[t.Dict] = None) -> None:
+    def postprocess(self, pipeline_kwargs: dict | None = None) -> None:
         # Inherit docstring
         logger.info("Post-processing results")
         measures = self.measures
@@ -462,8 +463,8 @@ class EarthObservationExperiment(Experiment, ABC):
 def run(
     exp: Experiment,
     spp: int = 0,
-    seed_state: t.Optional[SeedState] = None,
-) -> t.Union[xr.Dataset, t.Dict[str, xr.Dataset]]:
+    seed_state: SeedState | None = None,
+) -> xr.Dataset | dict[str, xr.Dataset]:
     """
     Run an Eradiate experiment. This function performs kernel scene assembly,
     runs the computation and post-processes the raw results. The output consists

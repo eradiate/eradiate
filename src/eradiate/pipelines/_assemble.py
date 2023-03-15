@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 import warnings
 
@@ -36,7 +38,7 @@ class AddIllumination(PipelineStep):
       the created data variable has no coordinate.
     """
 
-    illumination: t.Union[DirectionalIllumination, ConstantIllumination] = documented(
+    illumination: DirectionalIllumination | ConstantIllumination = documented(
         attrs.field(
             validator=attrs.validators.instance_of(
                 (DirectionalIllumination, ConstantIllumination)
@@ -221,7 +223,7 @@ def _remap_viewing_angles_plane(
     plane: np.typing.ArrayLike,
     theta: np.typing.ArrayLike,
     phi: np.typing.ArrayLike,
-) -> t.Tuple[np.typing.ArrayLike, np.typing.ArrayLike]:
+) -> tuple[np.typing.ArrayLike, np.typing.ArrayLike]:
     r"""
     Remap viewing angles to a hemisphere plane cut.
 

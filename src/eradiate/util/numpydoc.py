@@ -1,9 +1,9 @@
 """
 Numpydoc docstring tools.
 """
+from __future__ import annotations
 
 import re
-import typing as t
 from textwrap import dedent
 
 #: List of support docstring sections. The "Fields" section is unique to
@@ -26,7 +26,7 @@ NUMPYDOC_SECTION_TITLES = [
 ]
 
 
-def parse_doc(doc: str) -> t.Dict[str, str]:
+def parse_doc(doc: str) -> dict[str, str]:
     """
     Parse a docstring formatted with the Numpydoc style.
 
@@ -71,7 +71,7 @@ def parse_doc(doc: str) -> t.Dict[str, str]:
     return sections
 
 
-def format_doc(sections: t.Dict[str, str]) -> str:
+def format_doc(sections: dict[str, str]) -> str:
     """
     Assemble docstring sections and format them according to the Numpydoc style.
 

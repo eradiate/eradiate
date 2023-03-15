@@ -67,7 +67,7 @@ class MitsubaColorMode(Flag):
 
 # Map associating a mode ID string to the corresponding class
 # (aliased in public API section)
-_mode_registry: t.Dict[str, dict] = {
+_mode_registry: dict[str, dict] = {
     "mono_single": {
         "spectral_mode": SpectralMode.MONO,
         "mi_backend": MitsubaBackend.SCALAR,
@@ -182,11 +182,11 @@ class Mode:
 
     def check(
         self,
-        spectral_mode: t.Union[None, SpectralMode, str] = None,
-        mi_backend: t.Union[None, MitsubaBackend, str] = None,
-        mi_color_mode: t.Union[None, MitsubaColorMode, str] = None,
-        mi_polarized: t.Optional[bool] = None,
-        mi_double_precision: t.Optional[bool] = None,
+        spectral_mode: None | SpectralMode | str = None,
+        mi_backend: None | MitsubaBackend | str = None,
+        mi_color_mode: None | MitsubaColorMode | str = None,
+        mi_polarized: bool | None = None,
+        mi_double_precision: bool | None = None,
     ) -> bool:
         """
         Check if the currently active mode has the passed flags.
@@ -280,7 +280,7 @@ class Mode:
 
 
 # Eradiate's operational mode configuration
-_active_mode: t.Optional[Mode] = None
+_active_mode: Mode | None = None
 
 
 # ------------------------------------------------------------------------------
@@ -288,7 +288,7 @@ _active_mode: t.Optional[Mode] = None
 # ------------------------------------------------------------------------------
 
 
-def mode() -> t.Optional[Mode]:
+def mode() -> Mode | None:
     """
     Get current operational mode.
 
@@ -300,7 +300,7 @@ def mode() -> t.Optional[Mode]:
     return _active_mode
 
 
-def modes() -> t.Dict:
+def modes() -> dict:
     """
     Get list of registered operational modes.
 

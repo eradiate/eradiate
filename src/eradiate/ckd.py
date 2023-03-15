@@ -69,7 +69,7 @@ class Bin:
         type=":class:`.Quad`",
     )
 
-    bin_set_id: t.Optional[str] = documented(
+    bin_set_id: str | None = documented(
         attrs.field(default=None, converter=str),
         doc="Id of the bin set used to create this bin.",
         type="str or None",
@@ -87,7 +87,7 @@ class Bin:
         return 0.5 * (self.wmin + self.wmax)
 
     @property
-    def bindexes(self) -> t.List[Bindex]:
+    def bindexes(self) -> list[Bindex]:
         """list of :class:`.Bindex` : List of associated bindexes."""
         return [Bindex(bin=self, index=i) for i, _ in enumerate(self.quad.nodes)]
 
@@ -227,7 +227,7 @@ def bin_filter_interval(
     return filter
 
 
-def bin_filter(type: str, filter_kwargs: t.Dict[str, t.Any]):
+def bin_filter(type: str, filter_kwargs: dict[str, t.Any]):
     """
     Create a bin filter function dynamically.
 
@@ -291,7 +291,7 @@ class BinSet:
         type=":class:`.Quad`",
     )
 
-    bins: t.Tuple[Bin, ...] = documented(
+    bins: tuple[Bin, ...] = documented(
         attrs.field(
             converter=lambda x: tuple(
                 sorted(
@@ -323,7 +323,7 @@ class BinSet:
             )
 
     @property
-    def bin_ids(self) -> t.List[str]:
+    def bin_ids(self) -> list[str]:
         """
         list of str : Return the identifiers of defined spectral bins.
         """
@@ -345,7 +345,7 @@ class BinSet:
         units = ucc.get("wavelength")
         return ureg.Quantity([bin.wmax.m_as(units) for bin in self.bins], units)
 
-    def filter_bins(self, *filters: t.Callable[[Bin], bool]) -> t.Tuple[Bin, ...]:
+    def filter_bins(self, *filters: t.Callable[[Bin], bool]) -> tuple[Bin, ...]:
         """
         Filter bins based on callables.
 
@@ -372,13 +372,10 @@ class BinSet:
 
     def select_bins(
         self,
-        *filter_specs: t.Union[
-            str,
-            t.Callable[[Bin], bool],
-            t.Tuple[str, t.Dict[str, t.Any]],
-            t.Dict,
-        ],
-    ) -> t.Tuple[Bin, ...]:
+        *filter_specs: (
+            str | t.Callable[[Bin], bool] | tuple[str, dict[str, t.Any]] | dict
+        ),
+    ) -> tuple[Bin, ...]:
         """
         Select a subset of CKD bins. This method is a high-level wrapper for
         :meth:`.filter_bins`.

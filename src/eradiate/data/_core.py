@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import typing as t
 import warnings
@@ -28,7 +30,7 @@ class DataStore(ABC):
 
     @property
     @abstractmethod
-    def registry(self) -> t.Dict:
+    def registry(self) -> dict:
         """
         dict : Registry contents.
         """
@@ -36,8 +38,8 @@ class DataStore(ABC):
 
     @abstractmethod
     def registry_files(
-        self, filter: t.Optional[t.Callable[[t.Any], bool]] = None
-    ) -> t.List[str]:
+        self, filter: t.Callable[[t.Any], bool] | None = None
+    ) -> list[str]:
         """
         Get a list of registered files.
 
@@ -82,7 +84,7 @@ class DataStore(ABC):
         pass
 
 
-def registry_from_file(filename: PathLike, warn: bool = True) -> t.Dict:
+def registry_from_file(filename: PathLike, warn: bool = True) -> dict:
     """
     Read registry content from a file.
 
@@ -148,7 +150,7 @@ def registry_from_file(filename: PathLike, warn: bool = True) -> t.Dict:
     return result
 
 
-def registry_to_file(registry: t.Dict, filename: PathLike) -> None:
+def registry_to_file(registry: dict, filename: PathLike) -> None:
     """
     Write a registry dictionary to a text file.
 
@@ -167,7 +169,7 @@ def registry_to_file(registry: t.Dict, filename: PathLike) -> None:
         f.write(content)
 
 
-def load_rules(filename: PathLike) -> t.Dict:
+def load_rules(filename: PathLike) -> dict:
     """
     Load include and exclude rules from a YAML file.
 
@@ -194,11 +196,11 @@ def load_rules(filename: PathLike) -> t.Dict:
 
 
 def expand_rules(
-    rules: t.List[str],
+    rules: list[str],
     prefix: PathLike = ".",
     as_list: bool = False,
     include_dirs=False,
-) -> t.Union[t.List, t.Set]:
+) -> list | set:
     """
     Expand a list of filesystem selection rules to paths.
 
@@ -237,10 +239,10 @@ def expand_rules(
 
 def list_files(
     path: PathLike,
-    includes: t.Optional[t.List[str]] = None,
-    excludes: t.Optional[t.List[str]] = None,
+    includes: list[str] | None = None,
+    excludes: list[str] | None = None,
     as_list: bool = False,
-) -> t.Union[t.List, t.Set]:
+) -> list | set:
     """
     List files in a directory based on inclusion and exclusion rules.
 
@@ -282,8 +284,8 @@ def list_files(
 def make_registry(
     path: PathLike,
     filename: PathLike = "registry.txt",
-    includes: t.Optional[t.List] = None,
-    excludes: t.Optional[t.List] = None,
+    includes: list | None = None,
+    excludes: list | None = None,
     alg="sha256",
     show_progress=False,
 ) -> None:

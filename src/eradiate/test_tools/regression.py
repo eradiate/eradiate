@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import typing as t
 from abc import ABC, abstractmethod
@@ -20,7 +22,7 @@ def regression_test_plots(
     result: np.typing.ArrayLike,
     vza: np.typing.ArrayLike,
     filename: PathLike,
-    metric: t.Tuple[str, float],
+    metric: tuple[str, float],
 ) -> None:
     """
     Create regression test report plots.
@@ -69,8 +71,8 @@ def regression_test_plots(
 
 
 def reference_converter(
-        value: t.Optional[t.Union[os.PathLike, xr.Dataset]],
-    ) -> t.Optional[xr.Dataset]:
+    value: os.PathLike | xr.Dataset | None,
+) -> xr.Dataset | None:
     """
     A converter for handling the reference data attribute.
 
@@ -89,7 +91,7 @@ def reference_converter(
     -------
     xr.Dataset or None
         The reference dataset.
-    
+
     Notes
     -----
     If value is ``None``, the converter returns ``None``.
@@ -133,7 +135,7 @@ class RegressionTest(ABC):
     """
 
     # Name used for the reference metric. Must be set be subclasses.
-    METRIC_NAME: t.ClassVar[t.Optional[str]] = None
+    METRIC_NAME: t.ClassVar[str | None] = None
 
     name: str = documented(
         attrs.field(validator=attrs.validators.instance_of(str)),
@@ -149,7 +151,7 @@ class RegressionTest(ABC):
         init_type=":class:`xarray.Dataset`",
     )
 
-    reference: t.Optional[xr.Dataset] = documented(
+    reference: xr.Dataset | None = documented(
         attrs.field(
             default=None,
             converter=reference_converter,
@@ -229,7 +231,7 @@ class RegressionTest(ABC):
         return passed
 
     @abstractmethod
-    def _evaluate(self) -> t.Tuple[bool, float]:
+    def _evaluate(self) -> tuple[bool, float]:
         """
         Evaluate the test results and perform a comparison to the reference
         based on the criterion defined in the specialised class.
@@ -252,7 +254,7 @@ class RegressionTest(ABC):
         print(f"Saving dataset to {fname_output}")
         dataset.to_netcdf(fname_output)
 
-    def _plot(self, metric_value: t.Optional[float], reference_only: bool) -> None:
+    def _plot(self, metric_value: float | None, reference_only: bool) -> None:
         """
         Create a plot to visualize the results of the test.
         If the ``reference only`` parameter is set, create only a simple plot
@@ -316,7 +318,7 @@ class RMSETest(RegressionTest):
 
     METRIC_NAME = "rmse"
 
-    def _evaluate(self) -> t.Tuple[bool, float]:
+    def _evaluate(self) -> tuple[bool, float]:
         value_np = self.value.brf.values
         ref_np = self.reference.brf.values
         if np.shape(value_np) != np.shape(ref_np):
@@ -351,7 +353,7 @@ class Chi2Test(RegressionTest):
 
     METRIC_NAME = "p-value"
 
-    def _evaluate(self) -> t.Tuple[bool, float]:
+    def _evaluate(self) -> tuple[bool, float]:
         ref_np = self.reference.brf.values
 
         result_np = self.value.brf.values

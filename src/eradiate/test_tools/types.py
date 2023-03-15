@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import mitsuba as mi
 import pytest
@@ -9,7 +9,7 @@ from ..scenes.core import CompositeSceneElement, NodeSceneElement, Scene, traver
 
 
 def check_scene_element(
-    instance: t.Union[NodeSceneElement, CompositeSceneElement],
+    instance: NodeSceneElement | CompositeSceneElement,
     mi_cls=None,
     ctx: KernelDictContext = None,
 ) -> MitsubaObjectWrapper:

@@ -1,12 +1,14 @@
 """
 Geometric transforms.
 """
+from __future__ import annotations
+
 import mitsuba as mi
 
 
 def map_unit_cube(
     xmin: float, xmax: float, ymin: float, ymax: float, zmin: float, zmax: float
-) -> "mitsuba.ScalarTransform4f":
+) -> mitsuba.ScalarTransform4f:
     r"""
     Map the unit cube :math:`[0, 1]^3` to
     :math:`[x_\mathrm{min}, x_\mathrm{max}] \times [y_\mathrm{min}, y_\mathrm{max}] \times [z_\mathrm{min}, z_\mathrm{max}]`.
@@ -47,7 +49,7 @@ def map_unit_cube(
 
 def map_cube(
     xmin: float, xmax: float, ymin: float, ymax: float, zmin: float, zmax: float
-) -> "mitsuba.ScalarTransform4f":
+) -> mitsuba.ScalarTransform4f:
     r"""
     Map the cube :math:`[-1, 1]^3` to
     :math:`[x_\mathrm{min}, x_\mathrm{max}] \times [y_\mathrm{min}, y_\mathrm{max}] \times [z_\mathrm{min}, z_\mathrm{max}]`.

@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 import numpy as np
@@ -53,7 +53,7 @@ class Gather(PipelineStep):
     sample count.
     """
 
-    var: t.Union[str, t.Tuple[str, t.Dict]] = documented(
+    var: str | tuple[str, dict] = documented(
         attrs.field(default="img"),
         default='"img"',
         type="str or tuple[str, dict]",
@@ -62,7 +62,7 @@ class Gather(PipelineStep):
         "(name, metadata) pair can be passed.",
     )
 
-    def transform(self, x: t.Dict) -> xr.Dataset:
+    def transform(self, x: dict) -> xr.Dataset:
         # Basic preparation
         spectral_dims = []
         spectral_dim_metadata = {}

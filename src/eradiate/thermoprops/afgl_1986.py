@@ -2,6 +2,7 @@
 Atmospheric thermophysical properties profiles models according to
 :cite:`Anderson1986AtmosphericConstituentProfiles`.
 """
+from __future__ import annotations
 
 import typing as t
 
@@ -24,8 +25,8 @@ VALID_MODEL_IDS = [
 
 def make_profile(
     model_id: str = "us_standard",
-    levels: t.Optional[pint.Quantity] = None,
-    concentrations: t.Optional[t.MutableMapping[str, pint.Quantity]] = None,
+    levels: pint.Quantity | None = None,
+    concentrations: t.MutableMapping[str, pint.Quantity] | None = None,
 ) -> xr.Dataset:
     """
     Return atmosphere thermophysical properties based on atmosphere models

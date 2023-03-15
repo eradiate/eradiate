@@ -3,8 +3,6 @@ Particle layers.
 """
 from __future__ import annotations
 
-import typing as t
-
 import attrs
 import numpy as np
 import pint
@@ -193,8 +191,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="govaerts_2021-continental",
     )
 
-    _phase: t.Optional[TabulatedPhaseFunction] = attrs.field(default=None, init=False)
-    _zgrid: t.Optional[ZGrid] = attrs.field(default=None, init=False)
+    _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
+    _zgrid: ZGrid | None = attrs.field(default=None, init=False)
 
     def update(self) -> None:
         super().update()
@@ -253,7 +251,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
 
     def eval_albedo(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
 
@@ -282,7 +280,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return np.full_like(zgrid.layers, albedo)
 
     def eval_albedo_ckd(
-        self, bindexes: t.Union[Bindex, t.List[Bindex]], zgrid: ZGrid
+        self, bindexes: Bindex | list[Bindex], zgrid: ZGrid
     ) -> pint.Quantity:
         w_units = ureg.nm
         if isinstance(bindexes, Bindex):
@@ -292,7 +290,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return self.eval_albedo_mono(w, zgrid)
 
     def eval_sigma_t(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
 
@@ -335,7 +333,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return result
 
     def eval_sigma_t_ckd(
-        self, bindexes: t.Union[Bindex, t.List[Bindex]], zgrid: ZGrid
+        self, bindexes: Bindex | list[Bindex], zgrid: ZGrid
     ) -> pint.Quantity:
         w_units = ureg.nm
         if isinstance(bindexes, Bindex):
@@ -364,13 +362,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         return self.eval_sigma_t_mono(w, zgrid) - self.eval_sigma_s_mono(w, zgrid)
 
-    def eval_sigma_a_ckd(self, bindexes: t.Union[Bindex, t.List[Bindex]], zgrid: ZGrid):
+    def eval_sigma_a_ckd(self, bindexes: Bindex | list[Bindex], zgrid: ZGrid):
         return self.eval_sigma_t_ckd(bindexes, zgrid) - self.eval_sigma_s_ckd(
             bindexes, zgrid
         )
 
     def eval_sigma_s(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
 
@@ -412,6 +410,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return result.data
 
     @property
-    def _params_phase(self) -> t.Dict[str, UpdateParameter]:
+    def _params_phase(self) -> dict[str, UpdateParameter]:
         _, result = traverse(self.phase)
         return result.data

@@ -2,8 +2,8 @@
 Utility functions to manipulate atmosphere thermophysical properties data
 sets.
 """
+from __future__ import annotations
 
-import typing as t
 import warnings
 from datetime import datetime
 
@@ -198,8 +198,8 @@ def _scaling_factor(
 
 
 def compute_scaling_factors(
-    ds: xr.Dataset, concentration: t.Dict[str, pint.Quantity]
-) -> t.Dict[str, float]:
+    ds: xr.Dataset, concentration: dict[str, pint.Quantity]
+) -> dict[str, float]:
     r"""
     Compute the scaling factors to be applied to the mixing ratio values
     of each species in an atmosphere thermophysical properties data set, so
@@ -305,7 +305,7 @@ def compute_scaling_factors(
     return factors
 
 
-def human_readable(items: t.List[str]) -> str:
+def human_readable(items: list[str]) -> str:
     """
     Transforms a list into readable human text.
 
@@ -330,8 +330,8 @@ def human_readable(items: t.List[str]) -> str:
 
 
 def rescale_concentration(
-    ds: xr.Dataset, factors: t.Dict[str, float], inplace: bool = False
-) -> t.Optional[xr.Dataset]:
+    ds: xr.Dataset, factors: dict[str, float], inplace: bool = False
+) -> xr.Dataset | None:
     """
     Rescale mixing ratios in an atmosphere thermophysical properties data
     set by given factors for each species.
@@ -385,7 +385,7 @@ def rescale_concentration(
 @ureg.wraps(ret=None, args=(None, "km", None, None), strict=False)
 def interpolate(
     ds: xr.Dataset,
-    z_level: t.Union[np.ndarray, pint.Quantity],
+    z_level: np.ndarray | pint.Quantity,
     method: str = "linear",
     conserve_columns: bool = False,
 ) -> xr.Dataset:
@@ -654,7 +654,7 @@ def _to_regular(mesh: np.ndarray, atol: float) -> np.ndarray:
 
 def _find_regular_params_gcd(
     mesh: np.ndarray, unit_number: float = 1.0
-) -> t.Tuple[int, float]:
+) -> tuple[int, float]:
     """
     Finds the parameters (number of cells, constant cell width) of the
     regular mesh that approximates the irregular input mesh.

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-
 import attrs
 import mitsuba as mi
 import numpy as np
@@ -60,7 +58,7 @@ class BufferMeshShape(ShapeInstance):
             )
 
     @property
-    def instance(self) -> "mitsuba.Object":
+    def instance(self) -> mitsuba.Object:
         if self.bsdf is not None:
             template, _ = traverse(self.bsdf)
             bsdf = mi.load_dict(template.render(ctx=KernelDictContext()))
@@ -88,7 +86,7 @@ class BufferMeshShape(ShapeInstance):
         return mesh
 
     @property
-    def params(self) -> t.Optional[t.Dict[str, UpdateParameter]]:
+    def params(self) -> dict[str, UpdateParameter] | None:
         if self.bsdf is None:
             return None
 

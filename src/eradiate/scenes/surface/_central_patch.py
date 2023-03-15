@@ -1,4 +1,5 @@
-import typing as t
+from __future__ import annotations
+
 import warnings
 
 import attrs
@@ -60,7 +61,7 @@ class CentralPatchSurface(Surface):
     atmosphere or canopy) is applied.
     """
 
-    shape: t.Optional[RectangleShape] = documented(
+    shape: RectangleShape | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(shape_factory.convert),
@@ -101,7 +102,7 @@ class CentralPatchSurface(Surface):
         default=":class:`LambertianBSDF() <.LambertianBSDF>`",
     )
 
-    patch_edges: t.Optional[pint.Quantity] = documented(
+    patch_edges: pint.Quantity | None = documented(
         pinttr.field(
             default=None,
             converter=attrs.converters.optional(_edges_converter),

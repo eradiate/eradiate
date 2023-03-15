@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 import shutil
@@ -90,13 +92,13 @@ class SafeOnlineDataStore(DataStore):
         return Path(self.manager.path)
 
     @property
-    def registry(self) -> t.Dict[str, str]:
+    def registry(self) -> dict[str, str]:
         # Inherit docstring
         return self.manager.registry
 
     def registry_files(
-        self, filter: t.Optional[t.Callable[[t.Any], bool]] = None
-    ) -> t.List[str]:
+        self, filter: t.Callable[[t.Any], bool] | None = None
+    ) -> list[str]:
         """
         Get a list of registered files.
 
@@ -207,7 +209,7 @@ class SafeOnlineDataStore(DataStore):
     def fetch(
         self,
         filename: PathLike,
-        downloader: t.Optional[t.Callable] = None,
+        downloader: t.Callable | None = None,
     ) -> Path:
         """
         Fetch a file from the data store. This method wraps
@@ -261,7 +263,7 @@ class SafeOnlineDataStore(DataStore):
             self.manager.fetch(fname, processor=processor, downloader=downloader)
         )
 
-    def purge(self, keep: t.Union[None, str, t.List[str]] = None) -> None:
+    def purge(self, keep: None | str | list[str] = None) -> None:
         """
         Purge local storage location. The default behaviour is very aggressive
         and will wipe out the entire directory contents.

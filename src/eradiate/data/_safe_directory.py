@@ -1,6 +1,8 @@
 """
 Manage files stored in the ``eradiate-data`` repository.
 """
+from __future__ import annotations
+
 import os
 import typing as t
 from pathlib import Path
@@ -44,9 +46,7 @@ class SafeDirectoryDataStore(DataStore):
                 "only paths relative to the store root path are allowed"
             )
 
-    _registry: t.Dict = attrs.field(
-        factory=dict, converter=dict, repr=False, init=False
-    )
+    _registry: dict = attrs.field(factory=dict, converter=dict, repr=False, init=False)
 
     def __attrs_post_init__(self):
         self.registry_reload()
@@ -57,13 +57,13 @@ class SafeDirectoryDataStore(DataStore):
         return str(self.path)
 
     @property
-    def registry(self) -> t.Dict:
+    def registry(self) -> dict:
         # Inherit docstring
         return self._registry
 
     def registry_files(
-        self, filter: t.Optional[t.Callable[[t.Any], bool]] = None
-    ) -> t.List[str]:
+        self, filter: t.Callable[[t.Any], bool] | None = None
+    ) -> list[str]:
         # Inherit docstring
         raise NotImplementedError
 

@@ -355,7 +355,7 @@ class GridLayout(Layout):
 # ------------------------------------------------------------------------------
 
 
-def _extract_kwargs(kwargs: dict, keys: t.List[str]) -> dict:
+def _extract_kwargs(kwargs: dict, keys: list[str]) -> dict:
     # Helper function to collect common layout keyword arguments
     # (mutates the param dictionary)
     # Used in MultiDistantMeasure constructors
@@ -423,7 +423,7 @@ class MultiDistantMeasure(DistantMeasure):
         return self.direction_layout.angles.reshape(-1, 1, 2)
 
     @property
-    def film_resolution(self) -> t.Tuple[int, int]:
+    def film_resolution(self) -> tuple[int, int]:
         # Inherit docstring
         return (self.direction_layout.n_directions, 1)
 
@@ -435,7 +435,7 @@ class MultiDistantMeasure(DistantMeasure):
     def hplane(
         cls,
         zeniths: np.typing.ArrayLike,
-        azimuth: t.Union[float, pint.Quantity],
+        azimuth: float | pint.Quantity,
         **kwargs,
     ) -> MultiDistantMeasure:
         """
@@ -474,7 +474,7 @@ class MultiDistantMeasure(DistantMeasure):
     @classmethod
     def aring(
         cls,
-        zenith: t.Union[float, pint.Quantity],
+        zenith: float | pint.Quantity,
         azimuths: np.typing.ArrayLike,
         **kwargs,
     ) -> MultiDistantMeasure:
@@ -724,7 +724,7 @@ class MultiDistantMeasure(DistantMeasure):
     # --------------------------------------------------------------------------
 
     @property
-    def var(self) -> t.Tuple[str, t.Dict]:
+    def var(self) -> tuple[str, dict]:
         # Inherit docstring
         return "radiance", {
             "standard_name": "radiance",

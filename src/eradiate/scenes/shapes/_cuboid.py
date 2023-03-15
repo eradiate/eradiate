@@ -99,8 +99,8 @@ class CuboidShape(ShapeNode):
         return np.all(cmp, axis=1)
 
     def eval_to_world(
-        self, ctx: t.Optional[KernelDictContext] = None
-    ) -> "mitsuba.ScalarTransform4f":
+        self, ctx: KernelDictContext | None = None
+    ) -> mitsuba.ScalarTransform4f:
         kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
 
         if "to_world" in kwargs:
@@ -143,7 +143,7 @@ class CuboidShape(ShapeNode):
         bottom: pint.Quantity = 0.0 * ureg.km,
         bottom_offset: pint.Quantity = None,
         width: pint.Quantity = 100.0 * ureg.km,
-        bsdf: t.Optional[BSDF] = None,
+        bsdf: BSDF | None = None,
     ) -> CuboidShape:
         """
         This class method constructor provides a simplified parametrisation of

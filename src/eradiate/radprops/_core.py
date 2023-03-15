@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import typing as t
 from abc import ABC, abstractmethod
 
 import attrs
@@ -34,13 +33,13 @@ rad_profile_factory.register_lazy_batch(
     ret=None, args=("nm", "km", "km", "km^-1", "km^-1", "km^-1", ""), strict=False
 )
 def make_dataset(
-    wavelength: t.Union[pint.Quantity, float],
-    z_level: t.Union[pint.Quantity, float],
-    z_layer: t.Optional[t.Union[pint.Quantity, float]] = None,
-    sigma_a: t.Optional[t.Union[pint.Quantity, float]] = None,
-    sigma_s: t.Optional[t.Union[pint.Quantity, float]] = None,
-    sigma_t: t.Optional[t.Union[pint.Quantity, float]] = None,
-    albedo: t.Optional[t.Union[pint.Quantity, float]] = None,
+    wavelength: pint.Quantity | float,
+    z_level: pint.Quantity | float,
+    z_layer: pint.Quantity | float | None = None,
+    sigma_a: pint.Quantity | float | None = None,
+    sigma_s: pint.Quantity | float | None = None,
+    sigma_t: pint.Quantity | float | None = None,
+    albedo: pint.Quantity | float | None = None,
 ) -> xr.Dataset:
     """
     Makes an atmospheric radiative properties data set.
@@ -287,7 +286,7 @@ class RadProfile(ABC):
         pass
 
     def eval_albedo(
-        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate albedo spectrum based on a spectral context. This method
@@ -340,7 +339,7 @@ class RadProfile(ABC):
         pass
 
     @abstractmethod
-    def eval_albedo_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_albedo_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate albedo spectrum in CKD modes.
 
@@ -357,7 +356,7 @@ class RadProfile(ABC):
         pass
 
     def eval_sigma_t(
-        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient spectrum based on a spectral context.
@@ -411,7 +410,7 @@ class RadProfile(ABC):
         pass
 
     @abstractmethod
-    def eval_sigma_t_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_t_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate extinction coefficient spectrum in CKD modes.
 
@@ -429,7 +428,7 @@ class RadProfile(ABC):
         pass
 
     def eval_sigma_a(
-        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate absorption coefficient spectrum based on a spectral context.
@@ -501,7 +500,7 @@ class RadProfile(ABC):
         pass
 
     def eval_sigma_s(
-        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate scattering coefficient spectrum based on a spectral context.
@@ -555,7 +554,7 @@ class RadProfile(ABC):
         pass
 
     @abstractmethod
-    def eval_sigma_s_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_s_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
         """
         Evaluate scattering coefficient spectrum in CKD modes.
 
@@ -573,7 +572,7 @@ class RadProfile(ABC):
         pass
 
     def eval_dataset(
-        self, spectral_ctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the corresponding
@@ -625,7 +624,7 @@ class RadProfile(ABC):
         pass
 
     @abstractmethod
-    def eval_dataset_ckd(self, bindexes: t.List[Bindex], zgrid: ZGrid) -> xr.Dataset:
+    def eval_dataset_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the
         corresponding atmospheric profile in CKD modes.

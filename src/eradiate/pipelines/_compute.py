@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 
 import attrs
@@ -38,7 +40,7 @@ class ApplySpectralResponseFunction(PipelineStep):
         type=":class:`.Measure`",
     )
 
-    vars: t.List[str] = documented(
+    vars: list[str] = documented(
         attrs.field(
             factory=list,
             converter=lambda x: list(always_iterable(x)),

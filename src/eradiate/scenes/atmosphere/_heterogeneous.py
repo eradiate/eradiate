@@ -3,7 +3,6 @@ Heterogeneous atmospheres.
 """
 from __future__ import annotations
 
-import typing as t
 from collections import abc as cabc
 from functools import lru_cache
 
@@ -57,7 +56,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     Heterogeneous atmosphere scene element [``heterogeneous``].
     """
 
-    molecular_atmosphere: t.Optional[MolecularAtmosphere] = documented(
+    molecular_atmosphere: MolecularAtmosphere | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(_molecular_converter),
@@ -84,7 +83,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
-    particle_layers: t.List[ParticleLayer] = documented(
+    particle_layers: list[ParticleLayer] = documented(
         attrs.field(
             factory=list,
             converter=_particle_layer_converter,
@@ -127,7 +126,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     @property
-    def components(self) -> t.List[t.Union[MolecularAtmosphere, ParticleLayer]]:
+    def components(self) -> list[MolecularAtmosphere | ParticleLayer]:
         """
         Returns
         -------
@@ -208,7 +207,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
 
     def eval_albedo(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         if zgrid is not None and zgrid is not self.zgrid:
@@ -227,7 +226,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return result * sigma_units
 
     def eval_sigma_t(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         if zgrid is not None and zgrid is not self.zgrid:
@@ -235,7 +234,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._eval_sigma_t_impl(sctx).sum(axis=0)
 
     def eval_sigma_a(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         if zgrid is not None and zgrid is not self.zgrid:
@@ -259,7 +258,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._eval_sigma_s_impl(sctx)[n_component]
 
     def eval_sigma_s(
-        self, sctx: SpectralContext, zgrid: t.Optional[ZGrid] = None
+        self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         if zgrid is not None and zgrid is not self.zgrid:

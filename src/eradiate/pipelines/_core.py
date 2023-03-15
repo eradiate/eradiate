@@ -39,7 +39,7 @@ class Pipeline:
     ``Pipeline`` class.
     """
 
-    steps: t.List[t.Tuple[str, PipelineStep]] = attrs.field(
+    steps: list[tuple[str, PipelineStep]] = attrs.field(
         factory=list, converter=_pipeline_steps_converter
     )
 
@@ -60,7 +60,7 @@ class Pipeline:
                     f"step name {name}"
                 )
 
-    _names: t.List[str] = attrs.field(factory=list, init=False, repr=False)
+    _names: list[str] = attrs.field(factory=list, init=False, repr=False)
 
     def __attrs_post_init__(self):
         self.update()
@@ -76,7 +76,7 @@ class Pipeline:
         return self._names.index(name)
 
     @property
-    def named_steps(self) -> t.Dict[str, PipelineStep]:
+    def named_steps(self) -> dict[str, PipelineStep]:
         """
         dict[str, :class:`.PipelineStep`]: A dictionary mapping names to their
             corresponding step.
@@ -87,9 +87,9 @@ class Pipeline:
         self,
         name: str,
         step: PipelineStep,
-        position: t.Optional[int] = None,
-        before: t.Optional[str] = None,
-        after: t.Optional[str] = None,
+        position: int | None = None,
+        before: str | None = None,
+        after: str | None = None,
     ) -> None:
         """
         Add a step to an existing pipeline.
@@ -153,10 +153,10 @@ class Pipeline:
     def transform(
         self,
         x: t.Any,
-        start: t.Optional[t.Union[int, str]] = None,
-        stop: t.Optional[t.Union[int, str]] = None,
-        stop_after: t.Optional[t.Union[int, str]] = None,
-        step: t.Optional[t.Union[int, str]] = None,
+        start: int | str | None = None,
+        stop: int | str | None = None,
+        stop_after: int | str | None = None,
+        step: int | str | None = None,
     ) -> t.Any:
         """
         Apply the pipeline to a given data. Keyword arguments can be used to
@@ -209,7 +209,7 @@ class Pipeline:
             xt = transform.transform(xt)
         return xt
 
-    def _iter(self, start: t.Optional[int] = None, stop: t.Optional[int] = None):
+    def _iter(self, start: int | None = None, stop: int | None = None):
         """
         Generate (idx, name, trans) tuples from self.steps.
         """

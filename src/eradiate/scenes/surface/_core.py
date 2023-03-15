@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import typing as t
 from abc import ABC, abstractmethod
 
 import attrs
@@ -35,7 +34,7 @@ class Surface(CompositeSceneElement, ABC):
     * This class is to be used as a mixin.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="surface",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),

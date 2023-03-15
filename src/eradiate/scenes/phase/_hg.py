@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 
@@ -47,7 +47,7 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
         }
 
     @property
-    def params(self) -> t.Dict[str, UpdateParameter]:
+    def params(self) -> dict[str, UpdateParameter]:
         return {
             "g": UpdateParameter(
                 lambda ctx: float(self.g.eval(ctx.spectral_ctx)),

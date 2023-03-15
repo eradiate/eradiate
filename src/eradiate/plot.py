@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 import warnings
 
@@ -76,7 +78,7 @@ def detect_axes(from_=None):
 
 def get_axes_from_facet_grid(
     facet_grid: xarray.plot.FacetGrid, exclude: str = None
-) -> t.List[Axes]:
+) -> list[Axes]:
     """
     Extract a flat list of :class:`~matplotlib.axes.Axes` from a
     :class:`~xarray.plot.FacetGrid`.

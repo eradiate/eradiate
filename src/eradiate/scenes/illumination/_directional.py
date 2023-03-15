@@ -1,4 +1,4 @@
-import typing as t
+from __future__ import annotations
 
 import attrs
 import drjit as dr
@@ -99,7 +99,7 @@ class DirectionalIllumination(Illumination):
         ).reshape((3,))
 
     @property
-    def _to_world(self) -> "mitsuba.ScalarTransorm4f":
+    def _to_world(self) -> mitsuba.ScalarTransorm4f:
         direction = dr.normalize(mi.ScalarVector3f(self.direction))
         up, _ = mi.coordinate_system(direction)
         return mi.ScalarTransform4f.look_at(
@@ -111,5 +111,5 @@ class DirectionalIllumination(Illumination):
         return {"type": "directional", "to_world": self._to_world}
 
     @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
+    def objects(self) -> dict[str, NodeSceneElement]:
         return {"irradiance": self.irradiance}

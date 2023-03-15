@@ -130,7 +130,7 @@ class SpotIllumination(Illumination):
         default="1.0 ucc[intensity]",
     )
 
-    beam_profile: t.Optional[Path] = documented(
+    beam_profile: Path | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(Path),
@@ -207,7 +207,7 @@ class SpotIllumination(Illumination):
         return cls(origin=origin, target=target, beam_width=beam_width, **kwargs)
 
     @property
-    def _to_world(self) -> "mitsuba.ScalarTransform4f":
+    def _to_world(self) -> mitsuba.ScalarTransform4f:
         target = self.target.m_as(uck.get("length"))
         origin = self.origin.m_as(uck.get("length"))
         return mi.ScalarTransform4f.look_at(origin=origin, target=target, up=self.up)
@@ -229,5 +229,5 @@ class SpotIllumination(Illumination):
         return retdict
 
     @property
-    def objects(self) -> t.Dict[str, NodeSceneElement]:
+    def objects(self) -> dict[str, NodeSceneElement]:
         return {"intensity": self.intensity}

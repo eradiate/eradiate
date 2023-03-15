@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = ["dataarray_to_rgb", "film_to_angular"]
 
 import typing as t
@@ -18,7 +20,7 @@ def film_to_angular(
     y_label: str = "y",
     theta_label: str = "theta",
     phi_label: str = "phi",
-    azimuth_convention: t.Union[frame.AzimuthConvention, str, None] = None,
+    azimuth_convention: frame.AzimuthConvention | str | None = None,
 ) -> xr.DataArray:
     """
     Interpolate a hemispherical film data array on an angular grid.
@@ -99,7 +101,7 @@ def film_to_angular(
 
 def dataarray_to_rgb(
     da: xr.DataArray,
-    channels: t.Sequence[t.Tuple[str, t.Any]],
+    channels: t.Sequence[tuple[str, t.Any]],
     normalize: bool = True,
     gamma_correction: bool = True,
 ) -> np.ndarray:

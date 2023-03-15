@@ -27,7 +27,7 @@ class Target:
     Interface for target selection objects used by distant measure classes.
     """
 
-    def kernel_item(self) -> t.Dict:
+    def kernel_item(self) -> dict:
         """Return kernel item."""
         raise NotImplementedError
 
@@ -117,7 +117,7 @@ class TargetPoint(Target):
                 f"3-element vector of numbers"
             )
 
-    def kernel_item(self) -> t.Dict:
+    def kernel_item(self) -> dict:
         """Return kernel item."""
         return self.xyz.m_as(uck.get("length"))
 
@@ -220,7 +220,7 @@ class TargetRectangle(Target):
                 f"be lower than 'ymax"
             )
 
-    def kernel_item(self) -> t.Dict:
+    def kernel_item(self) -> dict:
         # Inherit docstring
 
         kernel_length = uck.get("length")
@@ -256,7 +256,7 @@ class DistantMeasure(Measure, ABC):
     #                           Fields and properties
     # --------------------------------------------------------------------------
 
-    target: t.Optional[Target] = documented(
+    target: Target | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(Target.convert),
@@ -283,7 +283,7 @@ class DistantMeasure(Measure, ABC):
         init_type=":class:`.Target` or dict or array-like, optional",
     )
 
-    ray_offset: t.Optional[pint.Quantity] = documented(
+    ray_offset: pint.Quantity | None = documented(
         pinttr.field(default=None, units=ucc.deferred("length")),
         doc="Manually control the distance between the target and ray origins. "
         "If unset, ray origins are positioned outside of the scene and this "

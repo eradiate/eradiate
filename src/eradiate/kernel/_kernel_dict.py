@@ -81,9 +81,7 @@ class UpdateParameter:
         default=".Flags.ALL",
     )
 
-    lookup_strategy: t.Optional[
-        t.Callable[[mi.Object, str], t.Optional[str]]
-    ] = documented(
+    lookup_strategy: None | (t.Callable[[mi.Object, str], str | None]) = documented(
         attrs.field(default=None),
         doc="A callable that searches a Mitsuba scene tree node for a desired "
         "parameter ID: with signature "
@@ -93,7 +91,7 @@ class UpdateParameter:
         default="None",
     )
 
-    parameter_id: t.Optional[str] = documented(
+    parameter_id: str | None = documented(
         attrs.field(default=None),
         doc="The full ID of the Mitsuba scene parameter to update.",
         type="str or None",
@@ -171,7 +169,7 @@ class UpdateMapTemplate(UserDict):
 
     data: dict[str, UpdateParameter] = attrs.field(factory=dict)
 
-    def remove(self, keys: t.Union[str, t.List[str]]) -> None:
+    def remove(self, keys: str | list[str]) -> None:
         """
         Remove all parameters matching the given regular expression.
 
@@ -195,7 +193,7 @@ class UpdateMapTemplate(UserDict):
         for key in keys:
             del self.data[key]
 
-    def keep(self, keys: t.Union[str, t.List[str]]) -> None:
+    def keep(self, keys: str | list[str]) -> None:
         """
         Keep only parameters matching the given regular expression.
 

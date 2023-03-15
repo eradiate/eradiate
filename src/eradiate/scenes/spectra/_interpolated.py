@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-
 import attrs
 import numpy as np
 import pint
@@ -124,8 +122,8 @@ class InterpolatedSpectrum(Spectrum):
     @classmethod
     def from_dataarray(
         cls,
-        id: t.Optional[str] = None,
-        quantity: t.Union[str, PhysicalQuantity, None] = None,
+        id: str | None = None,
+        quantity: str | PhysicalQuantity | None = None,
         *,
         dataarray: xr.DataArray,
     ) -> InterpolatedSpectrum:

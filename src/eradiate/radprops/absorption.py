@@ -1,8 +1,7 @@
 """
 Functions to compute monochromatic absorption.
 """
-
-import typing as t
+from __future__ import annotations
 
 import numpy as np
 import pint
@@ -20,9 +19,9 @@ def compute_sigma_a(
     wl: pint.Quantity = ureg.Quantity(550.0, "nm"),
     p: pint.Quantity = ureg.Quantity(101325.0, "Pa"),
     t: pint.Quantity = ureg.Quantity(288.15, "K"),
-    n: t.Optional[pint.Quantity] = None,
-    fill_values: t.Optional[float] = None,
-    methods: t.Optional[t.Dict[str, str]] = None,
+    n: pint.Quantity | None = None,
+    fill_values: float | None = None,
+    methods: dict[str, str] | None = None,
 ) -> pint.Quantity:
     """
     Compute monochromatic absorption coefficient at given wavelength,

@@ -1,8 +1,4 @@
 # Basic pipeline infrastructure
-from ._core import Pipeline as Pipeline  # isort: skip
-from ._core import PipelineStep as PipelineStep  # isort: skip
-from ._core import ApplyCallable as ApplyCallable  # isort: skip
-
 # Aggregate steps
 from ._aggregate import AggregateCKDQuad as AggregateCKDQuad
 from ._aggregate import AggregateRadiosity as AggregateRadiosity
@@ -16,6 +12,10 @@ from ._assemble import AddViewingAngles as AddViewingAngles
 from ._compute import ApplySpectralResponseFunction as ApplySpectralResponseFunction
 from ._compute import ComputeAlbedo as ComputeAlbedo
 from ._compute import ComputeReflectance as ComputeReflectance
+
+from ._core import ApplyCallable as ApplyCallable  # isort: skip
+from ._core import Pipeline as Pipeline  # isort: skip
+from ._core import PipelineStep as PipelineStep  # isort: skip
 
 # Gather step
 from ._gather import Gather as Gather

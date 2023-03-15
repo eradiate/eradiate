@@ -1,14 +1,15 @@
 """
 Helper tools for plugin tests.
 """
+from __future__ import annotations
 
 import drjit as dr
 import mitsuba as mi
 
 
 def sample_eval_pdf_bsdf(
-    plugin: "mitsuba.BSDF",
-    wi: "mitsuba.ScalarVector3f",
+    plugin: mitsuba.BSDF,
+    wi: mitsuba.ScalarVector3f,
     sample_count: int = 100000,
     seed: int = 0,
 ):

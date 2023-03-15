@@ -18,9 +18,7 @@ from ...units import PhysicalQuantity
 
 
 class SpectrumFactory(Factory):
-    def converter(
-        self, quantity: t.Union[str, PhysicalQuantity]
-    ) -> t.Callable[[t.Any], t.Any]:
+    def converter(self, quantity: str | PhysicalQuantity) -> t.Callable[[t.Any], t.Any]:
         """
         Generate a converter wrapping :meth:`SpectrumFactory.convert` to
         handle defaults for shortened spectrum definitions. The produced

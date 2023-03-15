@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-
 from ..scenes.atmosphere import Atmosphere
 from ..scenes.bsdfs import BSDF, bsdf_factory
 from ..scenes.measure import (
@@ -56,7 +54,7 @@ def measure_inside_atmosphere(atmosphere: Atmosphere, measure: Measure) -> bool:
         return shape.contains(measure.origin)
 
 
-def surface_converter(value: t.Union[dict, Surface, BSDF]) -> Surface:
+def surface_converter(value: dict | Surface | BSDF) -> Surface:
     """
     Attempt to convert the surface specification into a surface type.
 

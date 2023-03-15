@@ -1,4 +1,5 @@
-import typing as t
+from __future__ import annotations
+
 from abc import ABC
 
 import attrs
@@ -29,7 +30,7 @@ class Integrator(NodeSceneElement, ABC):
     * This class is to be used as a mixin.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="integrator",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),

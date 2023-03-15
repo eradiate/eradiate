@@ -1,4 +1,5 @@
-import typing as t
+from __future__ import annotations
+
 from abc import ABC
 
 import attrs
@@ -47,7 +48,7 @@ class PhaseFunction(NodeSceneElement, ABC):
     An abstract base class defining common facilities for all phase functions.
     """
 
-    id: t.Optional[str] = documented(
+    id: str | None = documented(
         attrs.field(
             default="phase",
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),

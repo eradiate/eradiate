@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 from collections import OrderedDict
 from pathlib import Path
@@ -40,15 +42,15 @@ class MultiDataStore(DataStore):
         raise NotImplementedError
 
     @property
-    def registry(self) -> t.Dict:
+    def registry(self) -> dict:
         """
         Raises :class:`NotImplementedError` (this data store has no registry).
         """
         raise NotImplementedError
 
     def registry_files(
-        self, filter: t.Optional[t.Callable[[t.Any], bool]] = None
-    ) -> t.List[str]:
+        self, filter: t.Callable[[t.Any], bool] | None = None
+    ) -> list[str]:
         """
         Returns an empty list (this data store has no registry).
         """
