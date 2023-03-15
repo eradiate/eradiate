@@ -40,7 +40,11 @@ Emoji marks have the following meaning:
 
 % ### Removed
 
-% ### Added
+### Added
+
+* ⚠ Added data files and APIs for the Wellington Citrus Orchard scene
+  ({ghpr}`327`). This is an experimental feature, use with caution and report
+  issues.
 
 ### Changed
 

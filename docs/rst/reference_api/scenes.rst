@@ -149,6 +149,13 @@
       _leaf_cloud.EllipsoidLeafCloudParams
       _leaf_cloud.SphereLeafCloudParams
 
+**Full canopies**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   wellington_citrus_orchard
+
 ``eradiate.scenes.surface``
 ---------------------------
 
