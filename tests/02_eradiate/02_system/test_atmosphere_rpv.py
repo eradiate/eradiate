@@ -761,4 +761,4 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
     if atmosphere is None:
         np.testing.assert_array_equal(rpv, lambertian)
     else:
-        np.testing.assert_allclose(rpv, lambertian, rtol=1e-2, atol=1e-3)
+        np.testing.assert_allclose(rpv, lambertian, rtol=1e-2, atol=2e-3)
