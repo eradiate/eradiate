@@ -1,7 +1,14 @@
 import datetime
 import os
 import sys
+import unittest.mock as mock
 from importlib.metadata import version
+
+# -- Mock Mitsuba modules (required to render CLI reference on RTD) ------------
+
+MOCK_MODULES = ["mitsuba", "drjit"]
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
 
 # -- Path setup ----------------------------------------------------------------
 
