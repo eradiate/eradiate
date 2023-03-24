@@ -14,7 +14,7 @@ from eradiate import unit_registry as ureg
     ],
     ids=["default", "mol_nosc", "mol_noab"],
 )
-def test_heterogeneous_atm_flags(mode_ckd, atm_flags):
+def test_heterogeneous_atm_flags(modes_all_double, atm_flags):
     """
     This system test tries various combinations of atmosphere flags and checks
     that a computation succeeds and returns non-zero values.
@@ -26,7 +26,7 @@ def test_heterogeneous_atm_flags(mode_ckd, atm_flags):
             "zgrid": np.linspace(0, 120, 13) * ureg.km,
             "molecular_atmosphere": {
                 "type": "molecular",
-                "construct": "afgl_1986",
+                "construct": "afgl_1986" if eradiate.mode().is_ckd else "ussa_1976",
                 **atm_flags["molecular"],
             },
             "particle_layers": {
