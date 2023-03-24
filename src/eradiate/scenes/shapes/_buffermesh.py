@@ -58,7 +58,7 @@ class BufferMeshShape(ShapeInstance):
             )
 
     @property
-    def instance(self) -> mitsuba.Object:
+    def instance(self) -> mi.Object:
         if self.bsdf is not None:
             template, _ = traverse(self.bsdf)
             bsdf = mi.load_dict(template.render(ctx=KernelDictContext()))

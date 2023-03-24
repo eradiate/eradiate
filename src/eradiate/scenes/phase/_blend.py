@@ -115,7 +115,7 @@ class BlendPhaseFunction(PhaseFunction):
             if isinstance(component, BlendPhaseFunction):
                 component.bbox = self.bbox
 
-    def _gridvolume_transform(self) -> mitsuba.ScalarTransform4f:
+    def _gridvolume_transform(self) -> mi.ScalarTransform4f:
         if self.bbox is None:
             # This is currently possible because the bounding box is expected to
             # be set by a parent Atmosphere object based on the selected

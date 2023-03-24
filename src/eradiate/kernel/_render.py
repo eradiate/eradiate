@@ -77,13 +77,13 @@ class MitsubaObjectWrapper:
     :func:`mi_traverse`
     """
 
-    obj: mitsuba.Object = documented(
+    obj: mi.Object = documented(
         attrs.field(repr=lambda x: "Scene[...]" if isinstance(x, mi.Scene) else str(x)),
         doc="Mitsuba object.",
         type="mitsuba.Object",
     )
 
-    parameters: mitsuba.SceneParameters | None = documented(
+    parameters: mi.SceneParameters | None = documented(
         attrs.field(
             default=None,
             repr=lambda x: "SceneParameters[...]"
@@ -112,7 +112,7 @@ class MitsubaObjectWrapper:
 
 
 def mi_traverse(
-    obj: mitsuba.Object,
+    obj: mi.Object,
     umap_template: UpdateMapTemplate | None = None,
 ) -> MitsubaObjectWrapper:
     """
@@ -233,7 +233,7 @@ def mi_render(
     sensors: None | int | list[int] = None,
     spp: int = 0,
     seed_state: SeedState | None = None,
-) -> dict[t.Any, mitsuba.Bitmap]:
+) -> dict[t.Any, mi.Bitmap]:
     """
     Render a Mitsuba scene multiple times given specified contexts and sensor
     indices.

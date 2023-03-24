@@ -159,7 +159,7 @@ class InstanceSceneElement(SceneElement, ABC):
 
     @property
     @abstractmethod
-    def instance(self) -> mitsuba.Object:
+    def instance(self) -> mi.Object:
         """
         Mitsuba object which is represented by this scene element.
 
@@ -371,7 +371,7 @@ class SceneTraversal:
             else:
                 node.traverse(cb)
 
-    def put_instance(self, obj: mitsuba.Object) -> None:
+    def put_instance(self, obj: mi.Object) -> None:
         """
         Add an instance to the kernel dictionary template.
         """

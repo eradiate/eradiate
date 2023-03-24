@@ -100,7 +100,7 @@ class CuboidShape(ShapeNode):
 
     def eval_to_world(
         self, ctx: KernelDictContext | None = None
-    ) -> mitsuba.ScalarTransform4f:
+    ) -> mi.ScalarTransform4f:
         kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
 
         if "to_world" in kwargs:

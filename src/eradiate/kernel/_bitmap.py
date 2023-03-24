@@ -7,7 +7,7 @@ import numpy as np
 import xarray as xr
 
 
-def bitmap_to_dataset(bmp: mitsuba.Bitmap, dtype=float) -> xr.Dataset:
+def bitmap_to_dataset(bmp: mi.Bitmap, dtype=float) -> xr.Dataset:
     """
     Format Mitsuba bitmap data as an xarray dataset.
 

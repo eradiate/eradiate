@@ -8,8 +8,8 @@ import mitsuba as mi
 
 
 def sample_eval_pdf_bsdf(
-    plugin: mitsuba.BSDF,
-    wi: mitsuba.ScalarVector3f,
+    plugin: mi.BSDF,
+    wi: mi.ScalarVector3f,
     sample_count: int = 100000,
     seed: int = 0,
 ):
