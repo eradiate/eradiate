@@ -212,7 +212,14 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         if zgrid is not None and zgrid is not self.zgrid:
             raise ValueError("zgrid must be left unset or set to self.zgrid")
-        return self.eval_sigma_s(sctx) / self.eval_sigma_t(sctx)
+
+        units = ucc.get("collision_coefficient")
+        sigma_s = self.eval_sigma_s(sctx).m_as(units)
+        sigma_t = self.eval_sigma_t(sctx).m_as(units)
+        albedo = np.zeros_like(sigma_s)
+        np.divide(sigma_s, sigma_t, where=sigma_t != 0.0, out=albedo)
+
+        return albedo * ureg.dimensionless
 
     @lru_cache(maxsize=1)
     def _eval_sigma_t_impl(self, sctx: SpectralContext) -> pint.Quantity:
