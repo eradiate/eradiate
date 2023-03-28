@@ -28,7 +28,6 @@ Alphabetical list of modules
 
    eradiate_core
    attrs
-   ckd
    constants
    contexts
    converters
@@ -44,6 +43,7 @@ Alphabetical list of modules
    radprops
    rng
    scenes
+   spectral
    srf_tools
    test_tools
    thermoprops

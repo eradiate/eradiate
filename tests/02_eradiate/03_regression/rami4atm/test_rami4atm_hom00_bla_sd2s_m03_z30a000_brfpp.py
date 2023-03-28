@@ -86,7 +86,7 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
                 "zeniths_units": "degree",
                 "azimuths": 0.0,
                 "azimuths_units": "degree",
-                "spectral_cfg": {"srf": "sentinel_2a-msi-3"},
+                "srf": "sentinel_2a-msi-3",
                 "spp": 1000,
             }
         ],

@@ -5,10 +5,17 @@ import typing as t
 import attrs
 
 from ._core import EarthObservationExperiment
-from ._helpers import measure_inside_atmosphere, surface_converter
+from ._helpers import (
+    measure_inside_atmosphere,
+    surface_converter,
+)
 from .. import converters, validators
 from ..attrs import AUTO, documented, parse_docs
-from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
+from ..scenes.atmosphere import (
+    Atmosphere,
+    HomogeneousAtmosphere,
+    atmosphere_factory,
+)
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import SceneElement
@@ -173,6 +180,8 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         return self._integrator
 
     def __attrs_post_init__(self):
+
+        self._normalize_spectral()
         self._normalize_atmosphere()
         self._normalize_measures()
 

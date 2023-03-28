@@ -6,6 +6,7 @@ import pytest
 
 import eradiate
 from eradiate.experiments import AtmosphereExperiment
+from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.slow
@@ -62,8 +63,9 @@ def test_albedo(mode_mono, artefact_dir):
             measures=[
                 {
                     "type": "distant_flux",
-                    "spectral_cfg": {
-                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
+                    "srf": {
+                        "type": "multi_delta",
+                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0] * ureg.nm,
                     },
                     "film_resolution": (64, 64),
                     "spp": 256,
@@ -84,8 +86,9 @@ def test_albedo(mode_mono, artefact_dir):
             measures=[
                 {
                     "type": "distant_flux",
-                    "spectral_cfg": {
-                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
+                    "srf": {
+                        "type": "multi_delta",
+                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0] * ureg.nm,
                     },
                     "film_resolution": (64, 64),
                     "spp": 256,
@@ -106,8 +109,9 @@ def test_albedo(mode_mono, artefact_dir):
             measures=[
                 {
                     "type": "distant_flux",
-                    "spectral_cfg": {
-                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
+                    "srf": {
+                        "type": "multi_delta",
+                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0] * ureg.nm,
                     },
                     "film_resolution": (64, 64),
                     "spp": 256,
@@ -128,8 +132,9 @@ def test_albedo(mode_mono, artefact_dir):
             measures=[
                 {
                     "type": "distant_flux",
-                    "spectral_cfg": {
-                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0]
+                    "srf": {
+                        "type": "multi_delta",
+                        "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0] * ureg.nm,
                     },
                     "film_resolution": (64, 64),
                     "spp": 256,

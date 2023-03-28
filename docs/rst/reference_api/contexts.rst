@@ -13,6 +13,3 @@ Classes
 
    Context
    KernelDictContext
-   SpectralContext
-   MonoSpectralContext
-   CKDSpectralContext

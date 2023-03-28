@@ -12,14 +12,10 @@ import xarray as xr
 
 import eradiate
 
-from .. import pipelines
-from ..attrs import documented, parse_docs
-from ..contexts import (
-    CKDSpectralContext,
-    KernelDictContext,
-    MonoSpectralContext,
-    SpectralContext,
-)
+from .. import pipelines, validators
+from ..attrs import AUTO, documented, parse_docs
+from ..contexts import KernelDictContext
+from ..exceptions import UnsupportedModeError
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..pipelines import Pipeline
 from ..rng import SeedState
@@ -38,9 +34,25 @@ from ..scenes.measure import (
     MultiDistantMeasure,
     measure_factory,
 )
+from ..scenes.spectra import InterpolatedSpectrum
+from ..spectral.ckd import BinSet
+from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
+from ..spectral.mono import WavelengthSet
 from ..util.misc import deduplicate_sorted, onedict_value
 
 logger = logging.getLogger(__name__)
+
+
+def _convert_spectral_set(value):
+    if value is AUTO:
+        if eradiate.mode().is_ckd:
+            return BinSet.default()
+        elif eradiate.mode().is_mono:
+            return WavelengthSet.default()
+        else:
+            raise NotImplementedError(f"unsupported mode: {eradiate.mode().id}")
+    else:
+        return value
 
 
 @parse_docs
@@ -118,6 +130,60 @@ class Experiment(ABC):
             Dictionary mapping measure IDs to xarray datasets.
         """
         return self._results
+
+    default_spectral_set: BinSet | WavelengthSet = documented(
+        attrs.field(
+            default=AUTO,
+            validator=validators.auto_or(
+                attrs.validators.instance_of((BinSet, WavelengthSet))
+            ),
+            converter=_convert_spectral_set,
+        ),
+        doc="Default spectral set. This attribute is used to set the "
+        "default value for :attr:`spectral_set`."
+        "If the value is :data:`AUTO`, the default spectral set is selected "
+        "based on the active mode. Otherwise, the value must be a "
+        ":class:`.BinSet` or :class:`.WavelengthSet` instance.",
+        type=":class:`.BinSet` or :class:`.WavelengthSet`",
+        init_type=":class:`.BinSet` or :class:`.WavelengthSet` or :data:`AUTO`",
+        default=":data:`AUTO`",
+    )
+
+    # Mapping of measure index and WavelengthSet or BinSet depending on active
+    # mode. This attribute is set by the '_normalize_spectral()' method.
+    _spectral_set = attrs.field(init=False)
+
+    @property
+    def spectral_set(self) -> WavelengthSet | BinSet:
+        return self._spectral_set
+
+    def __attrs_post_init__(self):
+        self._normalize_spectral()
+
+    def _normalize_spectral(self) -> None:
+        """
+        Setup spectral set based on active mode.
+        """
+
+        spectral_set = self.default_spectral_set
+
+        atmosphere = getattr(self, "atmosphere", None)
+        if atmosphere:
+            atmosphere_spectral_set = atmosphere.spectral_set
+            if atmosphere_spectral_set is not None:
+                spectral_set = atmosphere_spectral_set
+
+        # try:
+        #    atmosphere = self.atmosphere
+        #    if atmosphere and atmosphere.spectral_set:
+        #        spectral_set = atmosphere.spectral_set
+        # except AttributeError:
+        #    pass
+
+        self._spectral_set = {
+            i: measure.srf.select_in(spectral_set)
+            for i, measure in enumerate(self.measures)
+        }
 
     def clear(self) -> None:
         """
@@ -269,12 +335,43 @@ class EarthObservationExperiment(Experiment, ABC):
         """
 
         return {
-            "convention": "CF-1.8",
+            "convention": "CF-1.10",
             "source": f"eradiate, version {eradiate.__version__}",
-            "history": f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
-            f"data creation - {self.__class__.__name__}.postprocess()",
+            "history": f"{datetime.utcnow().replace(microsecond=0).isoformat()}"
+            f" - data creation - {self.__class__.__name__}.postprocess()",
             "references": "",
         }
+
+    def spectral_indices(self, measure_index: int) -> t.Generator[SpectralIndex]:
+        """
+        Generate spectral indices for a given measure.
+
+        Parameters
+        ----------
+        measure_index : int
+            Measure index for which spectral indices are generated.
+
+        Yields
+        ------
+        :class:`.SpectralIndex`
+            Spectral index.
+        """
+        if eradiate.mode().is_mono:
+            generator = self.spectral_indices_mono
+        elif eradiate.mode().is_ckd:
+            generator = self.spectral_indices_ckd
+        else:
+            raise RuntimeError(f"unsupported mode '{eradiate.mode().id}'")
+
+        yield from generator(measure_index)
+
+    def spectral_indices_mono(
+        self, measure_index: int
+    ) -> t.Generator[MonoSpectralIndex]:
+        yield from self.spectral_set[measure_index].spectral_indices()
+
+    def spectral_indices_ckd(self, measure_index: int) -> t.Generator[CKDSpectralIndex]:
+        yield from self.spectral_set[measure_index].spectral_indices()
 
     @property
     @abstractmethod
@@ -284,7 +381,8 @@ class EarthObservationExperiment(Experiment, ABC):
     @property
     def context_init(self) -> KernelDictContext:
         return KernelDictContext(
-            spectral_ctx=SpectralContext.new(), kwargs=self._context_kwargs
+            si=SpectralIndex.new(),
+            kwargs=self._context_kwargs,
         )
 
     @property
@@ -292,26 +390,24 @@ class EarthObservationExperiment(Experiment, ABC):
         # Inherit docstring
 
         # Collect contexts from all measures
-        sctxs = []
+        sis = []
 
-        for measure in self.measures:
-            sctxs.extend(measure.spectral_cfg.spectral_ctxs())
+        for measure_index, measure in enumerate(self.measures):
+            _si = list(self.spectral_indices(measure_index))
+            sis.extend(_si)
 
         # Sort and remove duplicates
         key = {
-            MonoSpectralContext: lambda sctx: sctx.wavelength.m,
-            CKDSpectralContext: lambda sctx: (
-                sctx.bindex.bin.wcenter.m,
-                sctx.bindex.index,
-            ),
-        }[type(sctxs[0])]
+            MonoSpectralIndex: lambda si: si.w.m,
+            CKDSpectralIndex: lambda si: (si.w.m, si.g),
+        }[type(sis[0])]
 
-        sctxs = deduplicate_sorted(
-            sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
+        sis = deduplicate_sorted(
+            sorted(sis, key=key), cmp=lambda x, y: key(x) == key(y)
         )
         kwargs = self._context_kwargs
 
-        return [KernelDictContext(spectral_ctx=sctx, kwargs=kwargs) for sctx in sctxs]
+        return [KernelDictContext(si, kwargs=kwargs) for si in sis]
 
     @property
     @abstractmethod
@@ -399,6 +495,8 @@ class EarthObservationExperiment(Experiment, ABC):
             self._results[measure.id].attrs.update(self._dataset_metadata(measure))
 
     def pipeline(self, measure: Measure) -> Pipeline:
+        measure_index = self.measures.index(measure)
+
         pipeline = pipelines.Pipeline()
 
         # Gather
@@ -408,10 +506,15 @@ class EarthObservationExperiment(Experiment, ABC):
         )
 
         # Aggregate
-        pipeline.add(
-            "aggregate_ckd_quad",
-            pipelines.AggregateCKDQuad(measure=measure, var=measure.var[0]),
-        )
+        if eradiate.mode().is_ckd:
+            pipeline.add(
+                "aggregate_ckd_quad",
+                pipelines.AggregateCKDQuad(
+                    measure=measure,
+                    binset=self.spectral_set[measure_index],
+                    var=measure.var[0],
+                ),
+            )
 
         if isinstance(measure, (DistantFluxMeasure,)):
             pipeline.add(
@@ -437,7 +540,11 @@ class EarthObservationExperiment(Experiment, ABC):
                 "add_viewing_angles", pipelines.AddViewingAngles(measure=measure)
             )
 
-        pipeline.add("add_srf", pipelines.AddSpectralResponseFunction(measure=measure))
+        if isinstance(measure.srf, InterpolatedSpectrum):
+            pipeline.add(
+                "add_srf",
+                pipelines.AddSpectralResponseFunction(measure=measure),
+            )
 
         # Compute
         if isinstance(measure, (MultiDistantMeasure, HemisphericalDistantMeasure)):
@@ -451,7 +558,7 @@ class EarthObservationExperiment(Experiment, ABC):
                 ),
             )
 
-            if eradiate.mode().is_ckd:
+            if eradiate.mode().is_ckd and isinstance(measure.srf, InterpolatedSpectrum):
                 pipeline.add(
                     "apply_srf",
                     pipelines.ApplySpectralResponseFunction(
@@ -480,7 +587,7 @@ class EarthObservationExperiment(Experiment, ABC):
                 ),
             )
 
-            if eradiate.mode().is_ckd:
+            if eradiate.mode().is_ckd:  # TODO: apply SRF also in mono mode?
                 pipeline.add(
                     "apply_srf",
                     pipelines.ApplySpectralResponseFunction(

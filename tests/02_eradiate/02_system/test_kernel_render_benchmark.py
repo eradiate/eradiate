@@ -42,13 +42,11 @@ def test_mi_render(mode_mono):
     """
     template, params = traverse(make_scene())
     mi_scene = mi_traverse(mi.load_dict(template.render(ctx=KernelDictContext())))
-    contexts = [KernelDictContext(spectral_ctx={"wavelength": w}) for w in wavelengths]
+    contexts = [KernelDictContext(si={"w": w}) for w in wavelengths]
     result = mi_render(mi_scene, contexts, spp=spp)
 
     # We store film values and SPPs
-    assert set(result.keys()) == set(
-        x.spectral_ctx.wavelength.magnitude for x in contexts
-    )
+    assert set(result.keys()) == set(x.si.w.magnitude for x in contexts)
     assert set(result[500.0].keys()) == {"measure"}
 
 
@@ -66,6 +64,6 @@ def test_mi_render_rebuild(mode_mono):
         mi_scene = mi_traverse(mi.load_dict(kdict))
         mi_render(
             mi_scene,
-            [KernelDictContext(spectral_ctx={"wavelength": w})],
+            [KernelDictContext(si={"w": w})],
             spp=spp,
         )

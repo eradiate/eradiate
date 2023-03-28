@@ -43,14 +43,14 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
     def template(self) -> dict:
         return {
             "type": "hg",
-            "g": InitParameter(lambda ctx: float(self.g.eval(ctx.spectral_ctx))),
+            "g": InitParameter(lambda ctx: float(self.g.eval(ctx.si))),
         }
 
     @property
     def params(self) -> dict[str, UpdateParameter]:
         return {
             "g": UpdateParameter(
-                lambda ctx: float(self.g.eval(ctx.spectral_ctx)),
+                lambda ctx: float(self.g.eval(ctx.si)),
                 UpdateParameter.Flags.SPECTRAL,
             )
         }

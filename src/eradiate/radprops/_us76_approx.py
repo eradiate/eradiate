@@ -11,10 +11,8 @@ from ._core import RadProfile, ZGrid, make_dataset
 from ._util_mono import get_us76_u86_4_spectrum_filename
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
-from .. import data
-from .._mode import UnsupportedModeError
+from .. import converters, data
 from ..attrs import documented, parse_docs
-from ..ckd import Bindex
 from ..thermoprops import us76
 from ..units import to_quantity
 from ..units import unit_registry as ureg
@@ -116,7 +114,7 @@ class US76ApproxRadProfile(RadProfile):
             repr=summary_repr,
         ),
         doc="Thermophysical properties.",
-        type=":class:`~xarray.Dataset`",
+        type="Dataset",
         default="us76.make_profile",
     )
 
@@ -146,17 +144,20 @@ class US76ApproxRadProfile(RadProfile):
         default="True",
     )
 
-    absorption_data_set: str | None = documented(
+    absorption_dataset: xr.Dataset | None = documented(
         attrs.field(
             default=None,
-            converter=attrs.converters.optional(str),
-            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
+            converter=attrs.converters.optional(
+                converters.to_dataset(load_from_id=None)
+            ),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(xr.Dataset)
+            ),
         ),
-        doc="Absorption data set file path. If ``None``, the default "
-        "absorption data sets will be used to compute the absorption "
-        "coefficient. Otherwise, the absorption data set whose path is "
-        "provided will be used to compute the absorption coefficient.",
-        type="str",
+        doc="Absorption coefficient data set. If ``None``, the default "
+        "absorption coefficient data set is opened.",
+        type=":class:`xarray.Dataset` or None",
+        default="None",
     )
 
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
@@ -215,23 +216,18 @@ class US76ApproxRadProfile(RadProfile):
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_albedo_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
-
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         return self.eval_sigma_a_mono(w, zgrid) + self.eval_sigma_s_mono(w, zgrid)
-
-    def eval_sigma_t_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
 
     def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         profile = self._thermoprops_interp(zgrid)
 
+        # TODO: refactor so that absorption dataset must be provided at init
         if self.has_absorption:
-            if self.absorption_data_set is None:  # ! this is never tested
+            if self.absorption_dataset is None:  # ! this is never tested
                 ds = data.open_dataset(get_us76_u86_4_spectrum_filename(w))
             else:
-                ds = xr.open_dataset(self.absorption_data_set)
+                ds = self.absorption_dataset
 
             # Compute scattering coefficient
             result = compute_sigma_a(
@@ -239,22 +235,18 @@ class US76ApproxRadProfile(RadProfile):
                 wl=w,
                 p=to_quantity(profile.p),
                 n=to_quantity(profile.n),
-                fill_values={"pt": 0.0},
-                # 'us76_u86_4' dataset is limited to pressure > 0.101325 Pa,
-                # but us76 thermophysical profile goes under that value for
-                # z > 93 km. At these altitudes, we consider that the number
-                # density is low enough (vs sea level value) to be negligible.
+                fill_values=dict(
+                    pt=0.0
+                ),  # us76_u86_4 dataset is limited to pressures above
+                # 0.101325 Pa, but us76 thermophysical profile goes below that
+                # value for altitudes larger than 93 km. At these altitudes, the
+                # number density is so small compared to that at the sea level that
+                # we assume it is negligible.
             )
-
             ds.close()
-
             return result
-
         else:
             return np.zeros(profile.z_layer.size) * ureg.km**-1
-
-    def eval_sigma_a_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
 
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         profile = self._thermoprops_interp(zgrid)
@@ -268,9 +260,6 @@ class US76ApproxRadProfile(RadProfile):
         else:
             return np.zeros(profile.z_layer.size) * ureg.km**-1
 
-    def eval_sigma_s_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        raise UnsupportedModeError(supported="monochromatic")
-
     def eval_dataset_mono(self, w: pint.Quantity, zgrid: ZGrid) -> xr.Dataset:
         return make_dataset(
             wavelength=w,
@@ -279,6 +268,3 @@ class US76ApproxRadProfile(RadProfile):
             sigma_a=self.eval_sigma_a_mono(w, zgrid),
             sigma_s=self.eval_sigma_s_mono(w, zgrid),
         ).squeeze()
-
-    def eval_dataset_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> xr.Dataset:
-        raise UnsupportedModeError(supported="monochromatic")

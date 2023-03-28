@@ -1,19 +1,22 @@
 from __future__ import annotations
 
 import typing as t
-from abc import ABC
+from abc import ABC, abstractmethod
+from functools import singledispatchmethod
 
 import attrs
 import pint
 
-import eradiate
-
 from ..core import NodeSceneElement
 from ..._factory import Factory
 from ...attrs import documented, parse_docs
-from ...ckd import Bindex
-from ...contexts import SpectralContext
-from ...exceptions import UnsupportedModeError
+from ...spectral.ckd import BinSet
+from ...spectral.index import (
+    CKDSpectralIndex,
+    MonoSpectralIndex,
+    SpectralIndex,
+)
+from ...spectral.mono import WavelengthSet
 from ...units import PhysicalQuantity
 
 
@@ -98,6 +101,11 @@ spectrum_factory.register_lazy_batch(
             "uniform",
             {},
         ),
+        (
+            "_multi_delta.MultiDeltaSpectrum",
+            "multi_delta",
+            {},
+        ),
     ],
     cls_prefix="eradiate.scenes.spectra",
 )
@@ -141,32 +149,37 @@ class Spectrum(NodeSceneElement, ABC):
                 f"got value '{value}', expected one of {str(PhysicalQuantity.spectrum())}"
             )
 
-    def eval(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    @singledispatchmethod
+    def eval(self, si: SpectralIndex) -> pint.Quantity:
         """
-        Evaluate spectrum based on a spectral context. This method dispatches
-        evaluation to specialized methods depending on the active mode.
+        Evaluate spectrum at a given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
         value : quantity
-            Evaluated spectrum as a scalar.
+            Evaluated spectrum.
+
+        Notes
+        -----
+        This method dispatches evaluation to specialized methods depending
+        on the spectral index type.
         """
-        if eradiate.mode().is_mono:
-            return self.eval_mono(spectral_ctx.wavelength).squeeze()
+        raise NotImplementedError
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_ckd(spectral_ctx.bindex).squeeze()
+    @eval.register(MonoSpectralIndex)
+    def _(self, si) -> pint.Quantity:
+        return self.eval_mono(w=si.w)
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval.register(CKDSpectralIndex)
+    def _(self, si) -> pint.Quantity:
+        return self.eval_ckd(w=si.w, g=si.g)
 
+    @abstractmethod
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         """
         Evaluate spectrum in monochromatic modes.
@@ -174,7 +187,7 @@ class Spectrum(NodeSceneElement, ABC):
         Parameters
         ----------
         w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
+            Wavelength.
 
         Returns
         -------
@@ -183,21 +196,32 @@ class Spectrum(NodeSceneElement, ABC):
         """
         raise NotImplementedError
 
-    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
+    @abstractmethod
+    def eval_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
         """
         Evaluate spectrum in CKD modes.
 
         Parameters
         ----------
-        *bindexes : .Bindex
-            One or several CKD bindexes for which to evaluate the spectrum.
+        w : quantity
+            Spectral bin center wavelength.
+
+        g : float
+            Absorption coefficient cumulative probability.
 
         Returns
         -------
         value : quantity
-            Evaluated spectrum as an array with shape ``(len(bindexes),)``.
+            Evaluated spectrum as an array with shape ``w``.
+
+        Notes
+        -----
+        It is assumed that ``w`` and ``g`` have the same shape.
+        In CKD mode, it is assumed that all spectra—except that of the
+        absorption coefficient—are uniform over the spectral bin. These
+        spectra are evaluated at the spectral bin center wavelength.
         """
-        raise NotImplementedError
+        pass
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         """
@@ -216,4 +240,45 @@ class Spectrum(NodeSceneElement, ABC):
         value : quantity
             Computed integral value.
         """
+        raise NotImplementedError
+
+    @singledispatchmethod
+    def select_in(self, spectral_set) -> BinSet | WavelengthSet:
+        """
+        Select a subset of a spectral set.
+
+        Parameters
+        ----------
+        spectral_set : :class:`.BinSet` or :class:`.WavelengthSet`
+            Spectral set.
+
+        Returns
+        -------
+        subset : :class:`.BinSet` or :class:`.WavelengthSet`
+            Subset of the spectral set.
+
+        Notes
+        -----
+        This method is only relevant to subclasses used to represent
+        spectral response function (the default implementation raises a
+        :class:`NotImplementedError`). In this context, the spectral response
+        function acts as a sort of filter that *selects* a subset of a spectral
+        set, e.g. where the response is non-zero.
+        This method is useful for :class:`.Experiment` objects to determine
+        which spectral set is relevant for a given sensor.
+        """
+        raise NotImplementedError
+
+    @select_in.register(WavelengthSet)
+    def _(self, spectral_set) -> WavelengthSet:
+        return self.select_in_wavelength_set(spectral_set)
+
+    @select_in.register(BinSet)
+    def _(self, spectral_set) -> BinSet:
+        return self.select_in_bin_set(spectral_set)
+
+    def select_in_wavelength_set(self, wset) -> WavelengthSet:
+        raise NotImplementedError
+
+    def select_in_bin_set(self, binset) -> BinSet:
         raise NotImplementedError

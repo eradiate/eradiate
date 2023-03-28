@@ -6,9 +6,16 @@ import warnings
 import attrs
 
 from ._core import EarthObservationExperiment, Experiment
-from ._helpers import measure_inside_atmosphere, surface_converter
+from ._helpers import (
+    measure_inside_atmosphere,
+    surface_converter,
+)
 from ..attrs import documented, get_doc, parse_docs
-from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
+from ..scenes.atmosphere import (
+    Atmosphere,
+    HomogeneousAtmosphere,
+    atmosphere_factory,
+)
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import SceneElement
 from ..scenes.geometry import PlaneParallelGeometry, SceneGeometry
@@ -117,6 +124,7 @@ class DEMExperiment(EarthObservationExperiment):
     )
 
     def __attrs_post_init__(self):
+        self._normalize_spectral()
         self._normalize_atmosphere()
         self._normalize_measures()
 

@@ -4,20 +4,21 @@ AFGL (1986) radiative profile definition.
 
 from __future__ import annotations
 
-import functools
 import typing as t
+import warnings
+from functools import partial
 
 import attrs
 import numpy as np
+import pandas as pd
 import pint
 import xarray as xr
 
-from . import _util_ckd
 from ._core import RadProfile, ZGrid, make_dataset
 from .rayleigh import compute_sigma_s_air
-from .._mode import UnsupportedModeError
+from .. import converters
 from ..attrs import documented, parse_docs
-from ..ckd import Bindex
+from ..spectral.ckd import G16
 from ..thermoprops import afgl_1986
 from ..thermoprops.util import (
     column_mass_density,
@@ -57,7 +58,7 @@ class AFGL1986RadProfile(RadProfile):
             repr=summary_repr,
         ),
         doc="Thermophysical properties.",
-        type=":class:`~xarray.Dataset`",
+        type="Dataset",
         default=":func:`~eradiate.thermoprops.afgl_1986.make_profile`",
     )
 
@@ -86,6 +87,38 @@ class AFGL1986RadProfile(RadProfile):
         type="bool",
         default="True",
     )
+
+    absorption_dataset: xr.Dataset | None = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(
+                converters.to_dataset(load_from_id=None)
+            ),  # TODO: open dataset (not load)
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(xr.Dataset)
+            ),
+        ),
+        doc="Absorption coefficient dataset. If ``None``, the absorption "
+        "coefficient is set to zero.",
+        type="Dataset or None",
+        init_type="Dataset or :class:`.PathLike`",
+        default="None",
+    )
+
+    @absorption_dataset.validator
+    @has_absorption.validator
+    def _check_absorption_dataset(self, attribute, value):
+        if not self.has_absorption and self.absorption_dataset is not None:
+            warnings.warn(
+                "When validating attribute 'absorption_dataset': specified "
+                "absorption dataset will be ignored because absorption is "
+                "disabled."
+            )
+        if self.has_absorption and self.absorption_dataset is None:
+            raise ValueError(
+                "When validating attribute 'absorption_dataset': no absorption "
+                "dataset was specified, absorption will be disabled."
+            )
 
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
 
@@ -129,80 +162,79 @@ class AFGL1986RadProfile(RadProfile):
             )
         )
 
-    def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        raise UnsupportedModeError(supported="ckd")
-
-    def eval_albedo_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        sigma_s = self.eval_sigma_s_ckd(bindexes, zgrid)
-        sigma_t = self.eval_sigma_t_ckd(bindexes, zgrid)
+    def eval_albedo_ckd(
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
+    ) -> pint.Quantity:
+        sigma_s = self.eval_sigma_s_ckd(w=w, g=g, zgrid=zgrid)
+        sigma_t = self.eval_sigma_t_ckd(w=w, g=g, zgrid=zgrid)
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        raise UnsupportedModeError(supported="ckd")
-
-    def eval_sigma_t_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        return self.eval_sigma_a_ckd(bindexes, zgrid) + self.eval_sigma_s_ckd(
-            bindexes, zgrid
-        )
-
-    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        raise UnsupportedModeError(supported="ckd")
-
-    def eval_sigma_a_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_a_ckd(
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
+    ) -> pint.Quantity:
         thermoprops = self._thermoprops_interp(zgrid)
-
-        bin_set_ids: set[str] = {bindex.bin.bin_set_id for bindex in bindexes}
-        if len(bin_set_ids) != 1:
-            raise ValueError(
-                f"all bindexes must be from the same bin set, got {bin_set_ids}"
-            )
-
-        bin_set_id = bin_set_ids.pop()
 
         if not self.has_absorption:
             return ureg.Quantity(np.zeros(thermoprops.z_layer.size), "km^-1")
 
-        ds_id = f"{thermoprops.attrs['identifier']}-{bin_set_id}-v3"
-        with _util_ckd.open_dataset(ds_id) as ds:
-            # This table maps species to the function used to compute
-            # corresponding physical quantities used for concentration rescaling
-            compute = {
-                "H2O": functools.partial(column_mass_density, species="H2O"),
-                "CO2": functools.partial(volume_mixing_ratio_at_surface, species="CO2"),
-                "O3": functools.partial(column_number_density, species="O3"),
-            }
+        ds = self.absorption_dataset
 
-            # Evaluate species concentrations
-            # Note: This includes a conversion to units appropriate for interpolation
-            rescaled_species = list(compute.keys())
-            concentrations = {
-                species: compute[species](ds=thermoprops).m_as(ds[species].units)
-                for species in rescaled_species
-            }
+        # Combine the 'bin' and 'index' coordinates into a multi-index, then reindex dataset
+        idx = pd.MultiIndex.from_arrays(
+            (ds.bin.values, ds.index.values), names=("bin", "index")
+        )
+        ds = ds.drop_vars(("bin", "index"))
+        ds = ds.reindex({"bd": idx})
 
-            # Convert altitude to units appropriate for interpolation
-            z = ureg.convert(thermoprops.z_layer, thermoprops.z_layer.units, ds.z.units)
+        # This table maps species to the function used to compute
+        # corresponding physical quantities used for concentration rescaling
+        compute = {
+            "H2O": partial(column_mass_density, species="H2O"),
+            "CO2": partial(volume_mixing_ratio_at_surface, species="CO2"),
+            "O3": partial(column_number_density, species="O3"),
+        }
 
-            # Interpolate absorption coefficient on concentration coordinates
-            result: pint.Quantity = [
-                ds.k.sel(bd=(bindex.bin.id, bindex.index))
-                .interp(
-                    z=z,
-                    kwargs=dict(fill_value=0.0),
-                )  # extrapolate to 0.0 for altitude out of bounds
-                .interp(
-                    **concentrations,
-                    kwargs=dict(
-                        bounds_error=True
-                    ),  # raise when concentration are out of bounds
-                )
-                .values
-                for bindex in bindexes
-            ] * ureg(ds.k.units)
+        # Evaluate species concentrations
+        # Note: This includes a conversion to units appropriate for interpolation
+        rescaled_species = list(compute.keys())
+        concentrations = {
+            species: compute[species](ds=thermoprops).m_as(ds[species].units)
+            for species in rescaled_species
+        }
 
-            return result
+        # Convert altitude to units appropriate for interpolation
+        z = ureg.convert(thermoprops.z_layer, thermoprops.z_layer.units, ds.z.units)
+
+        # Interpolate absorption coefficient on concentration coordinates
+        bin_id = str(int(w.m_as("nm")))
+        g_index = np.abs(g - G16).argmin()  # TODO: PR#311 hack
+
+        sigma_a_value = (
+            ds.k.sel(bd=(bin_id, g_index))
+            .interp(
+                z=z,
+                kwargs=dict(
+                    fill_value=0.0
+                ),  # extrapolate to 0.0 for altitude out of bounds
+            )
+            .interp(
+                **concentrations,
+                kwargs=dict(
+                    bounds_error=True  # raise when concentration are out of bounds
+                ),
+            )
+            .values
+        )
+
+        return ureg.Quantity(sigma_a_value, ds.k.units)
 
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         thermoprops = self._thermoprops_interp(zgrid)
@@ -215,26 +247,31 @@ class AFGL1986RadProfile(RadProfile):
         else:
             return ureg.Quantity(np.zeros((1, thermoprops.z_layer.size)), "km^-1")
 
-    def eval_sigma_s_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        wavelengths = (
-            np.array([bindex.bin.wcenter.m_as(ureg.nm) for bindex in bindexes])
-            * ureg.nm
-        )
+    def eval_sigma_s_ckd(
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
+    ) -> pint.Quantity:
+        return self.eval_sigma_s_mono(w=w, zgrid=zgrid)
 
-        return self.eval_sigma_s_mono(wavelengths, zgrid)
+    def eval_sigma_t_ckd(
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
+    ) -> pint.Quantity:
+        sigma_a = self.eval_sigma_a_ckd(w=w, g=g, zgrid=zgrid)
+        sigma_s = self.eval_sigma_s_ckd(w=w, g=g, zgrid=zgrid)
+        return sigma_a + sigma_s
 
-    def eval_dataset_mono(self, w: pint.Quantity, zgrid: ZGrid) -> xr.Dataset:
-        raise UnsupportedModeError(supported="ckd")
+    def eval_dataset_ckd(self, w: pint.Quantity, g: float, zgrid: ZGrid) -> xr.Dataset:
+        thermoprops = self._thermoprops_interp(zgrid)
 
-    def eval_dataset_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> xr.Dataset:
-        if len(bindexes) > 1:
-            raise NotImplementedError
-
-        else:
-            return make_dataset(
-                wavelength=bindexes[0].bin.wcenter,
-                z_level=zgrid.levels,
-                z_layer=zgrid.layers,
-                sigma_a=self.eval_sigma_a_ckd(bindexes, zgrid),
-                sigma_s=self.eval_sigma_s_ckd(bindexes, zgrid),
-            ).squeeze()
+        return make_dataset(
+            wavelength=w,
+            z_level=to_quantity(thermoprops.z_level),
+            z_layer=to_quantity(thermoprops.z_layer),
+            sigma_a=self.eval_sigma_a_ckd(w=w, g=g, zgrid=zgrid),
+            sigma_s=self.eval_sigma_s_ckd(w=w, g=g, zgrid=zgrid),
+        ).squeeze()

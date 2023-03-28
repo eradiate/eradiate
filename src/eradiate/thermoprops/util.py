@@ -547,7 +547,7 @@ def make_profile_regular(profile: xr.Dataset, atol: float) -> xr.Dataset:
 
     Parameters
     ----------
-    profile : :class:`~xarray.Dataset`
+    profile : Dataset
         Original atmosphere thermophysical properties data set, defined over
         an irregular altitude mesh.
 

@@ -33,6 +33,7 @@ def test_canopy_atmosphere_experiment_construct_measures(mode_mono):
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
     assert CanopyAtmosphereExperiment(measures=[{"type": "distant"}])
+
     # -- Not wrapped in a sequence
     assert CanopyAtmosphereExperiment(measures={"type": "distant"})
 
@@ -177,7 +178,7 @@ def test_canopy_atmosphere_experiment_real_life(mode_mono):
             "type": "heterogeneous",
             "molecular_atmosphere": {
                 "construct": "ussa_1976",
-                "absorption_data_sets": dict(us76_u86_4=test_absorption_data_set),
+                "absorption_dataset": test_absorption_data_set,
             },
         },
         canopy={
@@ -236,7 +237,6 @@ def test_canopy_atmosphere_experiment_run_detailed(mode_mono):
         "brdf",
         "radiance",
         "spp",
-        "srf",
     }
 
     # ... dimensions
@@ -266,7 +266,7 @@ def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(mode_mono)
             "type": "heterogeneous",
             "molecular_atmosphere": {
                 "construct": "ussa_1976",
-                "absorption_data_sets": dict(us76_u86_4=test_absorption_data_set),
+                "absorption_dataset": test_absorption_data_set,
             },
         },
         canopy={

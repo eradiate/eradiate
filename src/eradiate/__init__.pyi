@@ -1,4 +1,3 @@
-from . import ckd as ckd
 from . import constants as constants
 from . import contexts as contexts
 from . import converters as converters
@@ -11,6 +10,7 @@ from . import plot as plot
 from . import radprops as radprops
 from . import rng as rng
 from . import scenes as scenes
+from . import spectral as spectral
 from . import units as units
 from . import validators as validators
 from . import xarray as xarray

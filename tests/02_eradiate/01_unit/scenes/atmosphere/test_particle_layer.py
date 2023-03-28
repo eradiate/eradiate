@@ -4,11 +4,11 @@ import xarray as xr
 
 from eradiate import data
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.contexts import KernelDictContext
 from eradiate.radprops import ZGrid
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
 from eradiate.scenes.core import traverse
-from eradiate.scenes.measure import MeasureSpectralConfig
+from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
 from eradiate.units import to_quantity
 
@@ -37,8 +37,8 @@ def test_particle_layer_kernel_dict(mode_mono, geometry):
     check_scene_element(layer)
 
 
-@pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
-def test_particle_layer_eval_mono_absorbing_only(mode_mono, absorbing_only, wavelength):
+@pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
+def test_particle_layer_eval_mono_absorbing_only(mode_mono, absorbing_only, w):
     """eval methods return expected values for an absorbing-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -52,19 +52,17 @@ def test_particle_layer_eval_mono_absorbing_only(mode_mono, absorbing_only, wave
         bottom=bottom,
         top=top,
     )
-    spectral_ctx = SpectralContext.new(wavelength=wavelength)
-    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.0 / ureg.km)
-    assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
-    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 0.0)
+    si = SpectralIndex.new(w=w)
+    assert np.allclose(layer.eval_sigma_s(si), 0.0 / ureg.km)
+    assert np.allclose(layer.eval_sigma_a(si), 0.2 / ureg.km)
+    assert np.allclose(layer.eval_albedo(si).m, 0.0)
 
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
+    ctx = KernelDictContext(si=si)
     assert layer.eval_mfp(ctx).magnitude == np.inf
 
 
-@pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
-def test_particle_layer_eval_mono_scattering_only(
-    mode_mono, scattering_only, wavelength
-):
+@pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
+def test_particle_layer_eval_mono_scattering_only(mode_mono, scattering_only, w):
     """eval methods return expected values for a scattering-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -78,17 +76,17 @@ def test_particle_layer_eval_mono_scattering_only(
         bottom=bottom,
         top=top,
     )
-    spectral_ctx = SpectralContext.new(wavelength=wavelength)
-    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.2 / ureg.km)
-    assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.0 / ureg.km)
-    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 1.0)
+    si = SpectralIndex.new(w=w)
+    assert np.allclose(layer.eval_sigma_s(si), 0.2 / ureg.km)
+    assert np.allclose(layer.eval_sigma_a(si), 0.0 / ureg.km)
+    assert np.allclose(layer.eval_albedo(si).m, 1.0)
 
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
+    ctx = KernelDictContext(si=si)
     assert np.isclose(layer.eval_mfp(ctx), 5.0 * ureg.km)
 
 
-@pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
-def test_particle_layer_eval_mono(mode_mono, test_particles_dataset, wavelength):
+@pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
+def test_particle_layer_eval_mono(mode_mono, test_particles_dataset, w):
     """
     eval_* methods return expected values for a scattering and absorbing layer.
     """
@@ -105,19 +103,18 @@ def test_particle_layer_eval_mono(mode_mono, test_particles_dataset, wavelength)
         bottom=bottom,
         top=top,
     )
-    spectral_ctx = SpectralContext.new(wavelength=wavelength)
-    print(layer.eval_sigma_t(spectral_ctx))
-    assert np.allclose(layer.eval_sigma_t(spectral_ctx), 1.0 / ureg.km)
-    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.8 / ureg.km)
-    assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
-    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 0.8)
+    si = SpectralIndex.new(w=w)
+    assert np.allclose(layer.eval_sigma_t(si), 1.0 / ureg.km)
+    assert np.allclose(layer.eval_sigma_s(si), 0.8 / ureg.km)
+    assert np.allclose(layer.eval_sigma_a(si), 0.2 / ureg.km)
+    assert np.allclose(layer.eval_albedo(si).m, 0.8)
 
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
+    ctx = KernelDictContext(si=si)
     assert np.isclose(layer.eval_mfp(ctx), 1.25 * ureg.km)
 
 
-@pytest.mark.parametrize("ckd_bin", ["280", "550", "1600", "2400"])
-def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, absorbing_only, ckd_bin):
+@pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
+def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, absorbing_only, w):
     """eval methods return expected values for an absorbing-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -131,18 +128,17 @@ def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, absorbing_only, ckd_bi
         bottom=bottom,
         top=top,
     )
-    spectral_config = MeasureSpectralConfig.new(bin_set="10nm", bins=ckd_bin)
-    spectral_ctx = spectral_config.spectral_ctxs()[0]
-    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.0 / ureg.km)
-    assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
-    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 0.0)
+    si = SpectralIndex.new(w=w)
+    assert np.allclose(layer.eval_sigma_s(si), 0.0 / ureg.km)
+    assert np.allclose(layer.eval_sigma_a(si), 0.2 / ureg.km)
+    assert np.allclose(layer.eval_albedo(si).m, 0.0)
 
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
+    ctx = KernelDictContext(si=si)
     assert layer.eval_mfp(ctx).magnitude > 0.0
 
 
-@pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
-def test_particle_layer_eval_ckd_scattering_only(mode_ckd, scattering_only, bins):
+@pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
+def test_particle_layer_eval_ckd_scattering_only(mode_ckd, scattering_only, w):
     """eval methods return expected values for a scattering-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -156,18 +152,17 @@ def test_particle_layer_eval_ckd_scattering_only(mode_ckd, scattering_only, bins
         bottom=bottom,
         top=top,
     )
-    spectral_config = MeasureSpectralConfig.new(bin_set="10nm", bins=bins)
-    spectral_ctx = spectral_config.spectral_ctxs()[0]
-    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.2 / ureg.km)
-    assert np.allclose(layer.eval_sigma_a(spectral_ctx).m, 0.0)
-    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 1.0)
+    si = SpectralIndex.new(w=w)
+    assert np.allclose(layer.eval_sigma_s(si), 0.2 / ureg.km)
+    assert np.allclose(layer.eval_sigma_a(si).m, 0.0)
+    assert np.allclose(layer.eval_albedo(si).m, 1.0)
 
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
+    ctx = KernelDictContext(si=si)
     assert layer.eval_mfp(ctx).magnitude > 0.0
 
 
-@pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
-def test_particle_layer_eval_ckd(mode_ckd, test_particles_dataset, bins):
+@pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
+def test_particle_layer_eval_ckd(mode_ckd, test_particles_dataset, w):
     """eval methods return expected values for a scattering-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -182,14 +177,13 @@ def test_particle_layer_eval_ckd(mode_ckd, test_particles_dataset, bins):
         bottom=bottom,
         top=top,
     )
-    spectral_config = MeasureSpectralConfig.new(bin_set="10nm", bins=bins)
-    spectral_ctx = spectral_config.spectral_ctxs()[0]
-    assert np.allclose(layer.eval_sigma_t(spectral_ctx), 1.0 / ureg.km)
-    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.8 / ureg.km)
-    assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
-    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 0.8)
+    si = SpectralIndex.new(w=w)
+    assert np.allclose(layer.eval_sigma_t(si), 1.0 / ureg.km)
+    assert np.allclose(layer.eval_sigma_s(si), 0.8 / ureg.km)
+    assert np.allclose(layer.eval_sigma_a(si), 0.2 / ureg.km)
+    assert np.allclose(layer.eval_albedo(si).m, 0.8)
 
-    ctx = KernelDictContext(spectral_ctx=spectral_ctx)
+    ctx = KernelDictContext(si=si)
     assert layer.eval_mfp(ctx) == 1.25 * ureg.km
 
 
@@ -258,8 +252,8 @@ def test_particle_layer_eval_radprops_format(
     Method 'eval_radprops' returns dataset with expected datavars and coords.
     """
     layer = ParticleLayer(dataset=test_dataset_path)
-    spectral_ctx = SpectralContext.new()
-    ds = layer.eval_radprops(spectral_ctx)
+    si = SpectralIndex.new()
+    ds = layer.eval_radprops(si)
     expected_data_vars = ["sigma_t", "albedo"]
     expected_coords = ["z_layer"]
     assert all([coord in ds.coords for coord in expected_coords]) and all(
@@ -279,6 +273,17 @@ def test_particle_layer_eval_radprops(mode_mono, test_dataset_path, tau_ref):
         distribution={"type": "uniform"},
         tau_ref=tau_ref,
     )
+
+    # compute optical thickness at reference wavelength from layer's radprops
+    # and check it matches the input tau_ref
+    si = SpectralIndex.new(w=layer.w_ref)
+    radprops = layer.eval_radprops(si)
+    delta_z = layer.geometry.zgrid.layer_height
+
+    with xr.set_options(keep_attrs=True):
+        tau = to_quantity(radprops.sigma_t.sum()) * delta_z
+
+    assert np.isclose(tau, tau_ref)
 
 
 @pytest.mark.parametrize("distribution", ["uniform", "gaussian", "exponential"])

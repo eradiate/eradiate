@@ -325,12 +325,11 @@ def mi_render(
                 mi.render(mi_scene.obj, sensor=i_sensor, seed=seed, spp=spp)
 
                 # Store result in a new Bitmap object
-                if ctx.spectral_ctx.spectral_index not in results:
-                    results[ctx.spectral_ctx.spectral_index] = {}
+                siah = ctx.si.as_hashable
+                if siah not in results:
+                    results[siah] = {}
 
-                results[ctx.spectral_ctx.spectral_index][mi_sensor.id()] = mi.Bitmap(
-                    mi_sensor.film().bitmap()
-                )
+                results[siah][mi_sensor.id()] = mi.Bitmap(mi_sensor.film().bitmap())
 
             pbar.update()
 

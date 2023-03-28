@@ -8,9 +8,8 @@ import eradiate
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.ckd import BinSet
-from eradiate.contexts import SpectralContext
 from eradiate.scenes.spectra import InterpolatedSpectrum, spectrum_factory
+from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
 from eradiate.units import PhysicalQuantity
 
@@ -192,12 +191,11 @@ def test_interpolated_eval_mono_wavelengths_decreasing(mode_mono):
 
 def test_interpolated_eval(modes_all):
     if eradiate.mode().is_mono:
-        spectral_ctx = SpectralContext.new(wavelength=550.0)
+        si = SpectralIndex.new(w=550.0 * ureg.nm)
         expected = 0.5
 
     elif eradiate.mode().is_ckd:
-        bin = BinSet.from_db("10nm").select_bins("550")[0]
-        spectral_ctx = SpectralContext.new(bindex=bin.bindexes[0])
+        si = SpectralIndex.new(w=550.0 * ureg.nm, g=0)
         expected = 0.5
 
     else:
@@ -206,13 +204,13 @@ def test_interpolated_eval(modes_all):
     # Spectrum performs linear interpolation and yields units consistent with
     # quantity
     spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
-    assert spectrum.eval(spectral_ctx) == expected * spectrum.values.units
+    assert spectrum.eval(si) == expected * spectrum.values.units
 
     spectrum = InterpolatedSpectrum(
         quantity="irradiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
     )
     # Interpolation returns quantity
-    assert spectrum.eval(spectral_ctx) == expected * spectrum.values.units
+    assert spectrum.eval(si) == expected * spectrum.values.units
 
 
 def test_interpolated_kernel_dict(modes_all_mono):

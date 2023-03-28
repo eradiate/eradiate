@@ -39,9 +39,9 @@ def test_heterogeneous_atm_flags(modes_all_double, atm_flags):
             "construct": "hplane",
             "azimuth": 0.0,
             "zeniths": np.arange(-75, 76, 5),
-            "spectral_cfg": {"bins": ["550"]}
-            if eradiate.mode().is_ckd
-            else {"wavelengths": [550.0]},
+            "srf": eradiate.scenes.spectra.MultiDeltaSpectrum(
+                wavelengths=550.0 * ureg.nm
+            ),
         },
     )
 

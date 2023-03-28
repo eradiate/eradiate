@@ -19,7 +19,7 @@ class QuadType(Enum):
 
 
 @parse_docs
-@attrs.define(eq=False)
+@attrs.define(eq=False, frozen=True)
 class Quad:
     """
     A data class storing information about a quadrature rule. Nodes and weights
@@ -56,6 +56,9 @@ class Quad:
                 f"must have the same shape, got nodes.shape = {self.nodes.shape} "
                 f"and weights.shape = {self.weights.shape}"
             )
+
+    def pretty_repr(self) -> str:
+        return f"{self.type.value}, {self.nodes.size} points"
 
     @classmethod
     def gauss_legendre(cls, n: int) -> Quad:

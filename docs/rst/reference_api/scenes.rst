@@ -279,21 +279,6 @@
 
 * :data:`measure_factory`
 
-**Measure spectral configuration**
-
-.. autosummary::
-   :toctree: generated/autosummary/
-
-   MeasureSpectralConfig
-
-.. dropdown:: Private
-
-   .. autosummary::
-      :toctree: generated/autosummary/
-
-      _core.MonoMeasureSpectralConfig
-      _core.CKDMeasureSpectralConfig
-
 **Scene elements**
 
 .. autosummary::
@@ -416,5 +401,6 @@
 
    UniformSpectrum
    InterpolatedSpectrum
+   MultiDeltaSpectrum
    SolarIrradianceSpectrum
    AirScatteringCoefficientSpectrum

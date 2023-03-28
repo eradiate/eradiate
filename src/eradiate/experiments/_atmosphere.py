@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import logging
 import typing as t
 
 import attrs
 
 from ._core import EarthObservationExperiment, Experiment
-from ._helpers import measure_inside_atmosphere, surface_converter
+from ._helpers import (
+    measure_inside_atmosphere,
+    surface_converter,
+)
 from ..attrs import documented, get_doc, parse_docs
 from ..scenes.atmosphere import (
     Atmosphere,
@@ -25,6 +29,8 @@ from ..scenes.shapes import RectangleShape, SphereShape
 from ..scenes.surface import BasicSurface
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
+
+logger = logging.getLogger(__name__)
 
 
 @parse_docs
@@ -111,6 +117,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
     )
 
     def __attrs_post_init__(self):
+        self._normalize_spectral()
         self._normalize_atmosphere()
         self._normalize_measures()
 

@@ -8,8 +8,12 @@ from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import KernelDictContext
 from ...kernel import InitParameter, UpdateParameter
+from ...spectral.ckd import BinSet
+from ...spectral.index import SpectralIndex
+from ...spectral.mono import WavelengthSet
+from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...validators import has_quantity
 
@@ -86,6 +90,20 @@ class HomogeneousAtmosphere(Atmosphere):
     # --------------------------------------------------------------------------
 
     @property
+    def bottom(self) -> pint.Quantity:
+        # Inherit docstring
+        return self._bottom
+
+    @property
+    def top(self) -> pint.Quantity:
+        # Inherit docstring
+        return self._top
+
+    @property
+    def spectral_set(self) -> None | BinSet | WavelengthSet:
+        return None
+
+    @property
     def phase(self) -> PhaseFunction:
         # Inherit docstring
         return self._phase
@@ -97,80 +115,74 @@ class HomogeneousAtmosphere(Atmosphere):
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
         # Inherit docstring
         return (
-            1.0 / self.eval_sigma_s(ctx.spectral_ctx)
-            if self.eval_sigma_s(ctx.spectral_ctx).m != 0.0
-            else 1.0 / self.eval_sigma_a(ctx.spectral_ctx)
+            1.0 / self.eval_sigma_s(ctx.si)
+            if self.eval_sigma_s(ctx.si).m != 0.0
+            else 1.0 / self.eval_sigma_a(ctx.si)
         )
 
-    def eval_albedo(self, spectral_ctx: SpectralContext) -> pint.Quantity:
+    def eval_albedo(self, si: SpectralIndex) -> pint.Quantity:
         """
-        Return albedo.
+        Return albedo at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
         quantity
             Albedo.
         """
-        return self.eval_sigma_s(spectral_ctx) / (
-            self.eval_sigma_s(spectral_ctx) + self.eval_sigma_a(spectral_ctx)
-        )
+        return self.eval_sigma_s(si) / (self.eval_sigma_s(si) + self.eval_sigma_a(si))
 
-    def eval_sigma_a(self, sctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_a(self, si: SpectralIndex) -> pint.Quantity:
         """
-        Return absorption coefficient.
+        Return absorption coefficient at given spectral index.
 
         Parameters
         ----------
-        sctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
         quantity
             Absorption coefficient.
         """
-        return self.sigma_a.eval(sctx)
+        return self.sigma_a.eval(si)
 
-    def eval_sigma_s(self, sctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_s(self, si: SpectralIndex) -> pint.Quantity:
         """
-        Return scattering coefficient.
+        Return scattering coefficient at given spectral index.
 
         Parameters
         ----------
-        sctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
         quantity
             Scattering coefficient.
         """
-        return self.sigma_s.eval(sctx)
+        return self.sigma_s.eval(si)
 
-    def eval_sigma_t(self, sctx: SpectralContext) -> pint.Quantity:
+    def eval_sigma_t(self, si: SpectralIndex) -> pint.Quantity:
         """
-        Return extinction coefficient.
+        Return extinction coefficient at given spectral index.
 
         Parameters
         ----------
-        sctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
         quantity
             Extinction coefficient.
         """
-        return self.eval_sigma_a(sctx) + self.eval_sigma_s(sctx)
+        return self.eval_sigma_a(si) + self.eval_sigma_s(si)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
@@ -188,12 +200,12 @@ class HomogeneousAtmosphere(Atmosphere):
         return {
             "type": "homogeneous",
             "sigma_t": InitParameter(
-                lambda ctx: self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                lambda ctx: self.eval_sigma_t(ctx.si).m_as(
                     uck.get("collision_coefficient")
                 ),
             ),
             "albedo": InitParameter(
-                lambda ctx: self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo"))
+                lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo"))
             ),
             # Note: "phase" is deliberately unset, this is left to the
             # Atmosphere.template property
@@ -206,13 +218,13 @@ class HomogeneousAtmosphere(Atmosphere):
             # Note: "value" appears twice because the mi.Spectrum is
             # encapsulated in a mi.ConstVolume
             "sigma_t.value.value": UpdateParameter(
-                lambda ctx: self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                lambda ctx: self.eval_sigma_t(ctx.si).m_as(
                     uck.get("collision_coefficient")
                 ),
                 UpdateParameter.Flags.SPECTRAL,
             ),
             "albedo.value.value": UpdateParameter(
-                lambda ctx: self.eval_albedo(ctx.spectral_ctx).m_as(uck.get("albedo")),
+                lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo")),
                 UpdateParameter.Flags.SPECTRAL,
             ),
         }

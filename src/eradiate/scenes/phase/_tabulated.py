@@ -1,28 +1,22 @@
 from __future__ import annotations
 
+from functools import singledispatchmethod
+
 import attrs
 import numpy as np
 import pint
 import xarray as xr
 
-import eradiate
-
 from ._core import PhaseFunction
 from ...attrs import documented, parse_docs
-from ...ckd import Bindex
-from ...contexts import SpectralContext
-from ...exceptions import UnsupportedModeError
 from ...kernel import InitParameter, UpdateParameter
+from ...spectral.index import (
+    CKDSpectralIndex,
+    MonoSpectralIndex,
+    SpectralIndex,
+)
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
-
-
-def _ensure_magnitude_array(q: pint.Quantity) -> pint.Quantity:
-    """Convert to Quantity whose magnitude is an array"""
-    if np.isscalar(q.magnitude):
-        return ureg.Quantity(np.atleast_1d(q.magnitude), q.units)
-    else:
-        return q
 
 
 def _convert_data(da: xr.DataArray) -> xr.DataArray:
@@ -93,41 +87,44 @@ class TabulatedPhaseFunction(PhaseFunction):
         dmu = mu[1:] - mu[:-1]
         self._is_irregular = not np.allclose(dmu, dmu[0])
 
-    def eval(self, spectral_ctx: SpectralContext) -> np.ndarray:
-        r"""
-        Evaluate phase function based on a spectral context. This method
-        dispatches evaluation to specialized methods depending on the active
-        mode.
+    @singledispatchmethod
+    def eval(self, si: SpectralIndex) -> np.ndarray:
+        """
+        Evaluate phase function at a given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         Returns
         -------
         ndarray
             Evaluated phase function as a 1D array.
+
+        Notes
+        -----
+        This method dispatches evaluation to specialised methods depending on
+        the spectral index type.
         """
-        if eradiate.mode().is_mono:
-            return self.eval_mono(spectral_ctx.wavelength).squeeze()
+        raise NotImplementedError
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_ckd(spectral_ctx.bindex).squeeze()
+    @eval.register(MonoSpectralIndex)
+    def _(self, si) -> np.ndarray:
+        return self.eval_mono(w=si.w)
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval.register(CKDSpectralIndex)
+    def _(self, si) -> np.ndarray:
+        return self.eval_ckd(w=si.w, g=si.g)
 
     def eval_mono(self, w: pint.Quantity) -> np.ndarray:
         """
-        Evaluate phase function in monochromatic modes.
+        Evaluate phase function in momochromatic modes.
 
         Parameters
         ----------
         w : :class:`pint.Quantity`
-            Wavelength values at which the phase function is to be evaluated.
+            Wavelength.
 
         Returns
         -------
@@ -146,34 +143,32 @@ class TabulatedPhaseFunction(PhaseFunction):
             .data
         )
 
-    def eval_ckd(self, *bindexes: Bindex) -> np.ndarray:
+    def eval_ckd(self, w: pint.Quantity, g: float) -> np.ndarray:
         """
-        Evaluate phase function in CKD modes.
+        Evaluate phase function in ckd modes.
 
         Parameters
         ----------
-        *bindexes : :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate the phase
-            function.
+        w : :class:`pint.Quantity`
+            Spectral bin center wavelength.
+
+        g : float
+            Absorption coefficient cumulative probability.
 
         Returns
         -------
         ndarray
-            Evaluated phase function as a 1D or 2D array depending on the number
-            of passed bindexes (angle dimension comes last).
+            Evaluated phase function as a 1D or 2D array depending on the shape
+            of `w` (angle dimension comes last).
         """
-        w_units = ureg(self.data.w.units)
-        w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
-        return self.eval_mono(w)
+        return self.eval_mono(w=w)
 
     @property
     def template(self):
         result = {
             "type": "tabphase" if not self._is_irregular else "tabphase_irregular",
             "values": InitParameter(
-                lambda ctx: ",".join(
-                    map(str, self.eval(spectral_ctx=ctx.spectral_ctx))
-                ),
+                lambda ctx: ",".join(map(str, self.eval(ctx.si))),
             ),
         }
 
@@ -188,7 +183,7 @@ class TabulatedPhaseFunction(PhaseFunction):
     def params(self) -> dict[str, UpdateParameter]:
         return {
             "values": UpdateParameter(
-                lambda ctx: self.eval(spectral_ctx=ctx.spectral_ctx),
+                lambda ctx: self.eval(ctx.si),
                 UpdateParameter.Flags.SPECTRAL,
             )
         }

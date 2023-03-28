@@ -3,10 +3,11 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.contexts import KernelDictContext
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import SceneGeometry
 from eradiate.scenes.phase import BlendPhaseFunction
+from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
 
 
@@ -124,7 +125,7 @@ def test_blend_phase_weights(mode_mono, weights, expected):
         geometry="plane_parallel",
     )
     np.testing.assert_allclose(
-        phase.eval_conditional_weights(SpectralContext.new()), expected
+        phase.eval_conditional_weights(SpectralIndex.new()), expected
     )
 
 
@@ -241,9 +242,7 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
         "phase_0.type": "isotropic",
         "phase_1.type": "rayleigh",
         "weight.type": "gridvolume",
-        "weight.grid": np.reshape(
-            phase.eval_conditional_weights(ctx.spectral_ctx), (-1, 1, 1)
-        ),
+        "weight.grid": np.reshape(phase.eval_conditional_weights(ctx.si), (-1, 1, 1)),
     }
     if "geometry" in kwargs:
         geometry = SceneGeometry.convert(kwargs["geometry"])

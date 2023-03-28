@@ -14,6 +14,7 @@ from eradiate.pipelines import (
 )
 from eradiate.pipelines._assemble import _remap_viewing_angles_plane
 from eradiate.scenes.measure import HemisphericalDistantMeasure, MultiDistantMeasure
+from eradiate.scenes.spectra import InterpolatedSpectrum, MultiDeltaSpectrum
 
 
 @pytest.mark.parametrize(
@@ -25,29 +26,32 @@ from eradiate.scenes.measure import HemisphericalDistantMeasure, MultiDistantMea
     ids=["directional", "constant"],
 )
 def test_add_illumination(modes_all_single, illumination_type, expected_dims):
-    # Initialise test data
-    if eradiate.mode().is_mono:
-        spectral_cfg = {"wavelengths": [540.0, 550.0, 560.0]}
-    elif eradiate.mode().is_ckd:
-        spectral_cfg = {"bins": ["540", "550", "560"]}
-    else:
-        pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
-
     exp = AtmosphereExperiment(
         atmosphere=None,
         illumination={"type": illumination_type},
-        measures=MultiDistantMeasure(spectral_cfg=spectral_cfg),
+        measures=MultiDistantMeasure(
+            srf=MultiDeltaSpectrum(wavelengths=[440.0, 550.0, 660.0] * ureg.nm)
+        ),
     )
     exp.process()
+    measure_index = 0
     measure = exp.measures[0]
 
     # Apply basic post-processing
-    values = Pipeline(
-        steps=[
-            ("gather", Gather(var="radiance")),
-            ("aggregate_ckd_quad", AggregateCKDQuad(var="radiance", measure=measure)),
-        ]
-    ).transform(measure.mi_results)
+    steps = [("gather", Gather(var="radiance"))]
+    if eradiate.mode().is_ckd:
+        steps.append(
+            (
+                "aggregate_ckd_quad",
+                AggregateCKDQuad(
+                    var="radiance",
+                    measure=measure,
+                    binset=exp.spectral_set[measure_index],
+                ),
+            )
+        )
+
+    values = Pipeline(steps=steps).transform(measure.mi_results)
 
     step = AddIllumination(illumination=exp.illumination, measure=measure)
     result = step.transform(values)
@@ -137,7 +141,8 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
 
     exp = AtmosphereExperiment(atmosphere=None, measures=measure)
     exp.process()
-    measure = exp.measures[0]
+    measure_index = 0
+    measure = exp.measures[measure_index]
 
     # Apply basic post-processing
     values = Gather(var="radiance").transform(measure.mi_results)
@@ -155,29 +160,33 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
 
 
 def test_add_srf(modes_all_single):
-    if eradiate.mode().is_mono:
-        spectral_cfg = {"wavelengths": [550.0]}
-    elif eradiate.mode().is_ckd:
-        spectral_cfg = {"bins": ["550"]}
-    else:
-        pytest.skip(f"Please add test for '{eradiate.mode().id}' mode")
-
     exp = AtmosphereExperiment(
         atmosphere=None,
         measures=MultiDistantMeasure.from_viewing_angles(
             zeniths=[-60, -45, 0, 45, 60],
             azimuths=0.0,
             spp=1,
-            spectral_cfg=spectral_cfg,
+            srf=InterpolatedSpectrum(
+                wavelengths=[550.0, 560.0] * ureg.nm,
+                values=[1.0, 1.0] * ureg.dimensionless,
+            ),
         ),
     )
     exp.process()
-    measure = exp.measures[0]
+    measure_index = 0
+    measure = exp.measures[measure_index]
 
     # Apply basic post-processing
-    values = Pipeline(
-        [Gather(var="radiance"), AggregateCKDQuad(var="radiance", measure=measure)]
-    ).transform(measure.mi_results)
+    steps = [Gather(var="radiance")]
+    if eradiate.mode().is_ckd:
+        steps.append(
+            AggregateCKDQuad(
+                var="radiance",
+                measure=measure,
+                binset=exp.spectral_set[measure_index],
+            )
+        )
+    values = Pipeline(steps=steps).transform(measure.mi_results)
 
     step = AddSpectralResponseFunction(measure=measure)
     result = step.transform(values)
