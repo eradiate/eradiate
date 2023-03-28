@@ -143,20 +143,20 @@ class CanopyExperiment(EarthObservationExperiment):
         for measure in self.measures:
             sctxs.extend(measure.spectral_cfg.spectral_ctxs())
 
-            # Sort and remove duplicates
-            key = {
-                MonoSpectralContext: lambda sctx: sctx.wavelength.m,
-                CKDSpectralContext: lambda sctx: (
-                    sctx.bindex.bin.wcenter.m,
-                    sctx.bindex.index,
-                ),
-            }[type(sctxs[0])]
+        # Sort and remove duplicates
+        key = {
+            MonoSpectralContext: lambda sctx: sctx.wavelength.m,
+            CKDSpectralContext: lambda sctx: (
+                sctx.bindex.bin.wcenter.m,
+                sctx.bindex.index,
+            ),
+        }[type(sctxs[0])]
 
-            sctxs = deduplicate_sorted(
-                sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
-            )
+        sctxs = deduplicate_sorted(
+            sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
+        )
 
-            return [KernelDictContext(spectral_ctx=sctx) for sctx in sctxs]
+        return [KernelDictContext(spectral_ctx=sctx) for sctx in sctxs]
 
     @property
     def context_init(self) -> KernelDictContext:
