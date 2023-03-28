@@ -298,6 +298,9 @@ class EarthObservationExperiment(Experiment, ABC):
         except RuntimeError as e:
             raise RuntimeError(f"(while loading kernel scene dictionary){e}") from e
 
+        # Remove unused elements from Mitsuba scene parameter table
+        self.mi_scene.drop_parameters()
+
     def process(
         self,
         spp: int = 0,

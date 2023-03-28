@@ -110,6 +110,15 @@ class MitsubaObjectWrapper:
         default="None",
     )
 
+    def drop_parameters(self) -> None:
+        """
+        Reduce the size of the scene parameter table :attr:`.parameters` by
+        only keeping elements whose keys are listed in the parameter update
+        map template :attr:`.umap_template`.
+        """
+        if self.umap_template is not None:
+            self.parameters.keep(list(self.umap_template.keys()))
+
 
 def mi_traverse(
     obj: mi.Object,

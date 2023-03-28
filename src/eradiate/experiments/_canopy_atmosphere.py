@@ -281,7 +281,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         # - The atmosphere, if set, must be the largest object in the
         #   scene. If the geometry setup defines the atmosphere width, it is
         #   used. Otherwise, a size is computed automatically.
-        # - The canopy size must be lower that the atmosphere size if it is
+        # - The canopy size must be lower than the atmosphere size if it is
         #   defined.
         # - The surface must be larger than the largest object in the scene.
         #   If the atmosphere is set, the surface matches its size.
