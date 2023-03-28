@@ -4,10 +4,9 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.ckd import BinSet
-from eradiate.contexts import SpectralContext
 from eradiate.exceptions import DataError
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
+from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
 from eradiate.units import PhysicalQuantity
 
@@ -58,30 +57,15 @@ def test_solar_irradiance_eval(modes_all_double):
     # Irradiance is correctly interpolated in mono mode
     s = SolarIrradianceSpectrum(dataset="thuillier_2003")
 
-    if eradiate.mode().is_mono:
-        spectral_ctx = SpectralContext.new(wavelength=550.0)
-        expected = ureg.Quantity(
-            1.87938, "W/m^2/nm"
-        )  # Reference value computed manually
+    si = SpectralIndex.new(w=550.0 * ureg.nm)
+    expected = 1.87938 * ureg.W / ureg.m**2 / ureg.nm  # computed manually
 
-    elif eradiate.mode().is_ckd:
-        bin_set = BinSet.from_db("10nm")
-        bin = bin_set.select_bins("550")[0]
-        bindex = bin.bindexes[0]
-        spectral_ctx = SpectralContext.new(bindex=bindex)
-        expected = ureg.Quantity(
-            1.871527, "W/m^2/nm"
-        )  # Reference value computed manually
-
-    else:
-        assert False
-
-    assert np.allclose(s.eval(spectral_ctx), expected)
+    assert np.allclose(s.eval(si), expected)
 
     # Eval raises out of the supported spectral range
     if eradiate.mode().is_mono:
         with pytest.raises(ValueError):
-            s.eval(SpectralContext.new(wavelength=1.0 * ureg.km))
+            s.eval(SpectralIndex.new(w=1.0 * ureg.km))
 
     elif eradiate.mode().is_ckd:
         pass

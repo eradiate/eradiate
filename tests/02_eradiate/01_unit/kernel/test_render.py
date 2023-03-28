@@ -4,7 +4,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 
-from eradiate.contexts import SpectralContext
+from eradiate.contexts import KernelDictContext
 from eradiate.kernel import (
     MitsubaObjectWrapper,
     TypeIdLookupStrategy,
@@ -13,6 +13,8 @@ from eradiate.kernel import (
     mi_render,
     mi_traverse,
 )
+from eradiate.spectral.index import SpectralIndex
+from eradiate.units import unit_registry as ureg
 
 
 def test_type_id_lookup_strategy(mode_mono):
@@ -136,7 +138,7 @@ def test_mi_render(mode_mono):
     umap_template = UpdateMapTemplate(
         {
             "my_bsdf.reflectance.value": UpdateParameter(
-                evaluator=lambda ctx: ctx.x,
+                evaluator=lambda ctx: ctx.kwargs["r"],
                 flags=UpdateParameter.Flags.ALL,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.BSDF,
@@ -149,35 +151,26 @@ def test_mi_render(mode_mono):
 
     mi_wrapper = mi_traverse(mi_scene, umap_template)
 
-    @attrs.define
-    class ContextMockup:
-        x = attrs.field()
-        w = attrs.field()
-
-        @property
-        def index_formatted(self):
-            return str(self.x)
-
-        @property
-        def spectral_ctx(self):
-            return SpectralContext.new(wavelength=self.w)
-
     reflectances = [0.0, 0.5, 1.0]
-    wavelengths = [400.0, 500.0, 600.0]
+    wavelengths = [400.0, 500.0, 600.0] * ureg.nm
 
     result = mi_render(
         mi_wrapper,
-        ctxs=[ContextMockup(r, w) for (r, w) in zip(reflectances, wavelengths)],
+        ctxs=[
+            KernelDictContext(si=SpectralIndex.new(w=w), kwargs={"r": r})
+            for (r, w) in zip(reflectances, wavelengths)
+        ],
     )
 
     assert isinstance(result, dict)
 
     expected = []
     actual = []
-    for i, (r, w) in enumerate(zip(reflectances, wavelengths)):
-        assert isinstance(result[w]["sensor"], mi.Bitmap)
+    for _, (r, w) in enumerate(zip(reflectances, wavelengths)):
+        siah = SpectralIndex.new(w=w).as_hashable
+        assert isinstance(result[siah]["sensor"], mi.Bitmap)
         expected.append(r / np.pi)
-        actual.append(np.squeeze(result[w]["sensor"]))
+        actual.append(np.squeeze(result[siah]["sensor"]))
 
     np.testing.assert_allclose(actual, expected)
 
@@ -214,7 +207,7 @@ def test_mi_render_multisensor(mode_mono):
     umap_template = UpdateMapTemplate(
         {
             "my_bsdf.reflectance.value": UpdateParameter(
-                evaluator=lambda ctx: ctx.x,
+                evaluator=lambda ctx: ctx.kwargs["r"],
                 flags=UpdateParameter.Flags.ALL,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.BSDF,
@@ -227,31 +220,24 @@ def test_mi_render_multisensor(mode_mono):
 
     mi_wrapper = mi_traverse(mi_scene, umap_template)
 
-    @attrs.define
-    class ContextMockup:
-        x = attrs.field()
-        w = attrs.field()
-
-        @property
-        def index_formatted(self):
-            return str(self.x)
-
-        @property
-        def spectral_ctx(self):
-            return SpectralContext.new(wavelength=self.w)
-
     reflectances = [0.0, 0.5, 1.0]
-    wavelengths = [400.0, 500.0, 600.0]
+    wavelengths = [400.0, 500.0, 600.0] * ureg.nm
 
     result = mi_render(
         mi_wrapper,
-        ctxs=[ContextMockup(r, w) for (r, w) in zip(reflectances, wavelengths)],
+        ctxs=[
+            KernelDictContext(si=SpectralIndex.new(w=w), kwargs={"r": r})
+            for (r, w) in zip(reflectances, wavelengths)
+        ],
     )
 
     # The result must be a nested dict with one level-one element per wavelength,
     # and one level-two element per sensor
     assert isinstance(result, dict)
-    assert list(result.keys()) == wavelengths
+    assert np.allclose(
+        list(result.keys()),
+        [w.m for w in wavelengths],
+    )
 
     sensors_keys = set()
     for spectral_key in result.keys():

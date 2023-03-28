@@ -57,7 +57,7 @@ def test_rpv_afgl1986_continental_brfpp(
             "construct": "from_viewing_angles",
             "azimuths": 0.0,
             "zeniths": np.arange(-75.0, 75.01, 2.0),
-            "spectral_cfg": {"bin_set": "10nm", "bins": ["550"]},
+            "srf": {"type": "multi_delta", "wavelengths": 550 * ureg.nm},
         },
         atmosphere={
             "type": "heterogeneous",

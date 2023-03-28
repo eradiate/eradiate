@@ -8,6 +8,7 @@ from eradiate.pipelines import (
 )
 from eradiate.units import symbol
 from eradiate.units import unit_context_kernel as uck
+from eradiate.units import unit_registry as ureg
 
 
 def test_aggregate_ckd(results_ckd):
@@ -17,7 +18,11 @@ def test_aggregate_ckd(results_ckd):
     values = step.transform(raw_results)
 
     # Configure step
-    step = AggregateCKDQuad(measure=exp.measures[0], var="radiance")
+    step = AggregateCKDQuad(
+        measure=exp.measures[0],
+        var="radiance",
+        binset=exp.spectral_set[0],
+    )
     result = step.transform(values)
 
     # Dimension and variable checks
@@ -53,7 +58,7 @@ def test_aggregate_radiosity(mode_mono):
                 "type": "distant_flux",
                 "film_resolution": (32, 32),
                 "spp": 1000,
-                "spectral_cfg": {"wavelengths": [550.0]},
+                "srf": {"type": "multi_delta", "wavelengths": [550.0] * ureg.nm},
             }
         ],
     )

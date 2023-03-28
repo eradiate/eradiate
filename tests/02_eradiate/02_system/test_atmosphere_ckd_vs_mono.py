@@ -7,6 +7,7 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.scenes.spectra import MultiDeltaSpectrum
 from eradiate.test_tools import util as tu
 
 
@@ -19,9 +20,7 @@ def init_mono_experiment(wavelengths, spp, reflectance, zeniths):
     return eradiate.experiments.AtmosphereExperiment(
         measures=[
             eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
-                spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
-                    wavelengths=wavelengths
-                ),
+                srf=MultiDeltaSpectrum(wavelengths=wavelengths),
                 zeniths=zeniths,
                 azimuths=0.0 * ureg.deg,
                 spp=spp,
@@ -49,9 +48,8 @@ def init_ckd_experiment(bin_set, bins, spp, reflectance, zeniths):
     return eradiate.experiments.AtmosphereExperiment(
         measures=[
             eradiate.scenes.measure.MultiDistantMeasure.from_viewing_angles(
-                spectral_cfg=eradiate.scenes.measure.MeasureSpectralConfig.new(
-                    bin_set=bin_set,
-                    bins=bins,
+                srf=MultiDeltaSpectrum(
+                    wavelengths=np.array(bins, dtype=float) * ureg.nm
                 ),
                 zeniths=zeniths,
                 azimuths=0.0 * ureg.deg,

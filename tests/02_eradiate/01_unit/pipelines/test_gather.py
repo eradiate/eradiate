@@ -45,7 +45,7 @@ def test_pipeline_step_gather_ckd(results_ckd):
     result = step.transform(values)
 
     # Check that dimensions are those we expect
-    spectral_dims = {"bin": 1, "index": 16}
+    spectral_dims = {"bin": 1, "index": 2}  # 2 is the default value
     film_dims = {
         "y_index": 32,
         "x_index": 32,

@@ -1,16 +1,14 @@
 """Test cases of the _molecular_atmosphere module."""
 
 import mitsuba as mi
-import numpy as np
+import numpy.testing as npt
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.ckd import Bindex
 from eradiate.contexts import KernelDictContext
 from eradiate.data import data_store
 from eradiate.scenes.atmosphere import MolecularAtmosphere
 from eradiate.scenes.core import Scene, traverse
-from eradiate.scenes.measure import MeasureSpectralConfig
 from eradiate.test_tools.types import check_scene_element
 
 
@@ -22,7 +20,7 @@ def test_molecular_atmosphere_default(mode_mono):
 
 def test_molecular_atmosphere_scale(mode_mono):
     atmosphere = MolecularAtmosphere(scale=2.0)
-    template, params = traverse(atmosphere)
+    template, _ = traverse(atmosphere)
     kernel_dict = template.render(KernelDictContext())
     assert kernel_dict["medium_atmosphere"]["scale"] == 2.0
 
@@ -36,15 +34,8 @@ def test_molecular_atmosphere_afgl_1986(mode_ckd):
     # CKD evaluation generates valid parameter update tables
     mi_params: mi.SceneParameters = mi.traverse(mi_scene)
 
-    for ckd_bin in ["280", "550", "1040", "2120", "2400"]:
-        ctx = KernelDictContext(
-            spectral_ctx={
-                "bindex": Bindex(
-                    bin=MeasureSpectralConfig.new(bins=ckd_bin).bins[0], index=3
-                ),
-                "bin_set": "10nm",
-            }
-        )
+    for w in [280, 550, 1040, 2120, 2400] * ureg.nm:
+        ctx = KernelDictContext(si={"w": w, "g": 0.3})
         mi_params.update(params.render(ctx))
 
 
@@ -58,7 +49,7 @@ def test_molecular_atmosphere_ussa_1976(
 ):
     # ussa_1976() constructor produces a valid kernel dictionary
     atmosphere = MolecularAtmosphere.ussa_1976(
-        absorption_data_sets={"us76_u86_4": ussa76_approx_test_absorption_data_set},
+        absorption_dataset=ussa76_approx_test_absorption_data_set,
     )
     template, params = traverse(Scene(objects={"atmosphere": atmosphere}))
     mi_scene: mi.Scene = mi.load_dict(template.render(KernelDictContext()))
@@ -69,7 +60,7 @@ def test_molecular_atmosphere_ussa_1976(
     for w in [400.0, 550.0, 1040.0, 2120.0, 2400.0] * ureg.nm:
         # Note: Covered range depends on data
         #       (as of 24-01-2023, 4000-25000 cm-1, i.e. 400-2500 nm)
-        ctx = KernelDictContext(spectral_ctx={"wavelength": w})
+        ctx = KernelDictContext(si={"w": w})
         mi_params.update(params.render(ctx))
 
 
@@ -77,16 +68,14 @@ def test_molecular_atmosphere_switches(mode_mono):
     # Absorption can be deactivated
     atmosphere = MolecularAtmosphere(has_absorption=False)
     ctx = KernelDictContext()
-    assert np.all(
-        atmosphere.eval_radprops(ctx.spectral_ctx, optional_fields=True).sigma_a == 0.0
-    )
+    radprops = atmosphere.eval_radprops(ctx.si, optional_fields=True)
+    npt.assert_allclose(radprops.sigma_a, 0.0)
 
     # Scattering can be deactivated
     atmosphere = MolecularAtmosphere(has_scattering=False)
     ctx = KernelDictContext()
-    assert np.all(
-        atmosphere.eval_radprops(ctx.spectral_ctx, optional_fields=True).sigma_s == 0.0
-    )
+    radprops = atmosphere.eval_radprops(ctx.si, optional_fields=True)
+    npt.assert_allclose(radprops.sigma_s, 0.0)
 
     # At least one must be active
     with pytest.raises(ValueError):

@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.contexts import KernelDictContext
 from eradiate.data import data_store
 from eradiate.experiments import CanopyExperiment
 from eradiate.test_tools.regression import Chi2Test

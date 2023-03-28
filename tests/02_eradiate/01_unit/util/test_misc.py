@@ -14,7 +14,6 @@ from eradiate.util.misc import (
     fullname,
     is_vector3,
     natsorted,
-    nest,
 )
 
 
@@ -83,12 +82,12 @@ def test_fullname(mode_mono):
     assert fullname(path.is_file) == "pathlib.Path.is_file"
     # -- Class method from class definition
     assert (
-        fullname(eradiate.contexts.SpectralContext.new)
-        == "eradiate.contexts.SpectralContext.new"
+        fullname(eradiate.spectral.index.SpectralIndex.new)
+        == "eradiate.spectral.index.SpectralIndex.new"
     )
     assert (
-        fullname(eradiate.contexts.SpectralContext.new().new)
-        == "eradiate.contexts.SpectralContext.new"
+        fullname(eradiate.spectral.index.SpectralIndex.new().new)
+        == "eradiate.spectral.index.SpectralIndex.new"
     )
 
     # Classes

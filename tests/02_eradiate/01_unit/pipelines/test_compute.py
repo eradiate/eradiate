@@ -5,18 +5,25 @@ import eradiate
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.pipelines import ApplySpectralResponseFunction
 from eradiate.scenes.measure import MultiDistantMeasure
+from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.parametrize(
-    "mode_id, spectral_cfg",
+    "mode_id, srf",
     (
-        ("mono", {"wavelengths": 550.0}),
-        ("ckd", {"bin_set": "10nm", "bins": ["550"]}),
-        ("ckd", {"bin_set": "10nm", "bins": ["550", "560"]}),
+        ("mono", {"type": "multi_delta", "wavelengths": 550.0 * ureg.nm}),
+        (
+            "ckd",
+            {
+                "type": "interpolated",
+                "wavelengths": [550, 560] * ureg.nm,
+                "values": [1.0, 1.0] * ureg.dimensionless,
+            },
+        ),
     ),
-    ids=("mono", "ckd_single_bin", "ckd_multiple_bins"),
+    ids=("mono", "ckd_multiple_bins"),
 )
-def test_apply_spectral_response_function_transform(mode_id, spectral_cfg):
+def test_apply_spectral_response_function_transform(mode_id, srf):
     """
     Unit tests for ApplySpectralResponseFunction.transform().
     """
@@ -30,7 +37,7 @@ def test_apply_spectral_response_function_transform(mode_id, spectral_cfg):
             zeniths=[-60, -45, 0, 45, 60],
             azimuths=0.0,
             spp=1,
-            spectral_cfg=spectral_cfg,
+            srf=srf,
         ),
     )
     measure = exp.measures[0]

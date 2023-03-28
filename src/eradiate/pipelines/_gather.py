@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 import attrs
 import numpy as np
 import xarray as xr
@@ -14,6 +16,8 @@ from ..kernel import bitmap_to_dataset
 from ..units import symbol
 from ..units import unit_context_config as ucc
 
+logger = logging.getLogger(__name__)
+
 
 def _spectral_dims():
     if eradiate.mode().is_mono:
@@ -21,7 +25,7 @@ def _spectral_dims():
             (
                 "w",
                 {
-                    "standard_name": "wavelength",
+                    "standard_name": "radiation_wavelength",
                     "long_name": "wavelength",
                     "units": symbol(ucc.get("wavelength")),
                 },
@@ -63,6 +67,7 @@ class Gather(PipelineStep):
     )
 
     def transform(self, x: dict) -> xr.Dataset:
+        logger.debug("gather: begin")
         # Basic preparation
         spectral_dims = []
         spectral_dim_metadata = {}
@@ -78,7 +83,15 @@ class Gather(PipelineStep):
         sensor_datasets = []
 
         # Loop on spectral indexes
-        for spectral_index, result_dict in x.items():
+        for siah, result_dict in x.items():
+            if eradiate.mode().is_mono:
+                spectral_index = siah
+            elif eradiate.mode().is_ckd:
+                spectral_index = (
+                    str(int(siah[0])),  # TODO: PR#311 hack
+                    siah[1],
+                )
+
             ds = bitmap_to_dataset(result_dict["bitmap"])
             spp = result_dict["spp"]
 
@@ -120,5 +133,7 @@ class Gather(PipelineStep):
 
         result = result.rename({"img": var})
         result[var].attrs.update(var_metadata)
+
+        logger.debug("gather: end")
 
         return result

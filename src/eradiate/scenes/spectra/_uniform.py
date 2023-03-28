@@ -7,7 +7,6 @@ import pinttr
 
 from ._core import Spectrum
 from ...attrs import documented, parse_docs
-from ...ckd import Bindex
 from ...kernel import InitParameter, UpdateParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -53,8 +52,8 @@ class UniformSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.full_like(w, self.value.m) * self.value.units
 
-    def eval_ckd(self, *bindexes: Bindex) -> pint.Quantity:
-        return np.full((len(bindexes),), self.value.m) * self.value.units
+    def eval_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
+        return self.eval_mono(w=w)
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         wmin = pinttr.util.ensure_units(wmin, ucc.get("wavelength"))
@@ -64,11 +63,12 @@ class UniformSpectrum(Spectrum):
     @property
     def template(self) -> dict:
         # Inherit docstring
+
         return {
             "type": "uniform",
             "value": InitParameter(
-                lambda ctx: float(
-                    self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
+                evaluator=lambda ctx: float(
+                    self.eval(ctx.si).m_as(uck.get(self.quantity))
                 )
             ),
         }
@@ -76,11 +76,12 @@ class UniformSpectrum(Spectrum):
     @property
     def params(self) -> dict[str, UpdateParameter]:
         # Inherit docstring
+
         return {
             "value": UpdateParameter(
-                lambda ctx: float(
-                    self.eval(ctx.spectral_ctx).m_as(uck.get(self.quantity))
+                evaluator=lambda ctx: float(
+                    self.eval(ctx.si).m_as(uck.get(self.quantity))
                 ),
-                UpdateParameter.Flags.SPECTRAL,
+                flags=UpdateParameter.Flags.SPECTRAL,
             )
         }

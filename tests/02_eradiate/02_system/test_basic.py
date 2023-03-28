@@ -9,7 +9,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.kernel import mi_render, mi_traverse
+from eradiate.kernel import mi_render
 from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.core import Scene
 from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination
@@ -20,9 +20,7 @@ from eradiate.scenes.surface import BasicSurface
 from eradiate.test_tools.types import check_scene_element
 
 
-@pytest.mark.parametrize(
-    "illumination, spp", [("directional", 1), ("constant", 500000)]
-)
+@pytest.mark.parametrize("illumination, spp", [("directional", 1), ("constant", 5e5)])
 @pytest.mark.parametrize("li", [0.1, 1.0, 10.0])
 @pytest.mark.slow
 def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_state):

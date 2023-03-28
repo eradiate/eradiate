@@ -3,13 +3,14 @@ Particle layers.
 """
 from __future__ import annotations
 
+import typing as t
+from functools import singledispatchmethod
+
 import attrs
 import numpy as np
 import pint
 import pinttr
 import xarray as xr
-
-import eradiate
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
@@ -17,11 +18,16 @@ from ..core import traverse
 from ..phase import TabulatedPhaseFunction
 from ... import converters, data
 from ...attrs import documented, parse_docs
-from ...ckd import Bindex
-from ...contexts import KernelDictContext, SpectralContext
-from ...exceptions import UnsupportedModeError
+from ...contexts import KernelDictContext
 from ...kernel import UpdateParameter
 from ...radprops import ZGrid
+from ...spectral.ckd import BinSet
+from ...spectral.index import (
+    CKDSpectralIndex,
+    MonoSpectralIndex,
+    SpectralIndex,
+)
+from ...spectral.mono import WavelengthSet
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -216,6 +222,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
 
+    @property
+    def spectral_set(self) -> None | BinSet | WavelengthSet:
+        return None
+
     def update(self) -> None:
         self._phase = TabulatedPhaseFunction(id=self.phase_id, data=self.dataset.phase)
 
@@ -238,7 +248,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return fractions
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
-        min_sigma_s = self.eval_sigma_s(sctx=ctx.spectral_ctx).min()
+        min_sigma_s = self.eval_sigma_s(ctx.si).min()
         return 1.0 / min_sigma_s if min_sigma_s != 0.0 else np.inf * ureg.m
 
     # --------------------------------------------------------------------------
@@ -288,25 +298,27 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         # Return scattering coefficient from dataset (without accounting for bypass switches)
         return self._eval_sigma_t_impl(w, zgrid) * self._eval_albedo_impl(w)
 
+    @singledispatchmethod
     def eval_albedo(
-        self, sctx: SpectralContext, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
         # Inherit docstring
+        raise NotImplementedError
 
-        if eradiate.mode().is_mono:
-            return self.eval_albedo_mono(
-                sctx.wavelength,
-                self.geometry.zgrid if zgrid is None else zgrid,
-            )
+    @eval_albedo.register(MonoSpectralIndex)
+    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+        return self.eval_albedo_mono(
+            w=si.w,
+            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+        )
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_albedo_ckd(
-                sctx.bindex,
-                self.geometry.zgrid if zgrid is None else zgrid,
-            )
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_albedo.register(CKDSpectralIndex)
+    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+        return self.eval_albedo_ckd(
+            w=si.w,
+            g=si.g,
+            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+        )
 
     def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         if self.has_absorption and self.has_scattering:
@@ -325,34 +337,33 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return np.full_like(zgrid.layers, albedo)
 
     def eval_albedo_ckd(
-        self, bindexes: Bindex | list[Bindex], zgrid: ZGrid
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
     ) -> pint.Quantity:
-        w_units = ureg.nm
-        if isinstance(bindexes, Bindex):
-            bindexes = [bindexes]
+        return self.eval_albedo_mono(w=w, zgrid=zgrid)
 
-        w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
-        return self.eval_albedo_mono(w, zgrid)
-
+    @singledispatchmethod
     def eval_sigma_t(
-        self, sctx: SpectralContext, zgrid: ZGrid | None = None
+        self,
+        si: SpectralIndex,
+        zgrid: t.Optional[ZGrid] = None,
     ) -> pint.Quantity:
         # Inherit docstring
+        raise NotImplementedError
 
-        if eradiate.mode().is_mono:
-            return self.eval_sigma_t_mono(
-                sctx.wavelength,
-                self.geometry.zgrid if zgrid is None else zgrid,
-            )
+    @eval_sigma_t.register(MonoSpectralIndex)
+    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+        return self.eval_sigma_t_mono(
+            w=si.w,
+            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+        )
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_sigma_t_ckd(
-                sctx.bindex,
-                self.geometry.zgrid if zgrid is None else zgrid,
-            )
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_sigma_t.register(CKDSpectralIndex)
+    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+        return self.eval_sigma_t_ckd(
+            w=si.w,
+            g=si.g,
+            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+        )
 
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         result = self._eval_sigma_t_impl(w, zgrid)
@@ -369,72 +380,75 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         raise RuntimeError
 
     def eval_sigma_t_ckd(
-        self, bindexes: Bindex | list[Bindex], zgrid: ZGrid
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
     ) -> pint.Quantity:
-        w_units = ureg.nm
-        if isinstance(bindexes, Bindex):
-            bindexes = [bindexes]
-        w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
-        return self.eval_sigma_t_mono(w, zgrid)
+        return self.eval_sigma_t_mono(w=w, zgrid=zgrid)
 
-    def eval_sigma_a(self, sctx: SpectralContext, zgrid: ZGrid = None) -> pint.Quantity:
+    @singledispatchmethod
+    def eval_sigma_a(
+        self,
+        si: SpectralIndex,
+        zgrid: t.Optional[ZGrid] = None,
+    ) -> pint.Quantity:
         # Inherit docstring
+        raise NotImplementedError
 
-        if eradiate.mode().is_mono:
-            return self.eval_sigma_a_mono(
-                sctx.wavelength,
-                self.geometry.zgrid if zgrid is None else zgrid,
-            )
+    @eval_sigma_a.register(MonoSpectralIndex)
+    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+        return self.eval_sigma_a_mono(
+            w=si.w,
+            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+        )
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_sigma_a_ckd(
-                sctx.bindex,
-                self.geometry.zgrid if zgrid is None else zgrid,
-            )
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_sigma_a.register(CKDSpectralIndex)
+    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(
+            w=si.w,
+            g=si.g,
+            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+        )
 
     def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         value = self._eval_sigma_a_impl(w, zgrid)
         return value if self.has_absorption else np.zeros_like(value) * value.units
 
-    def eval_sigma_a_ckd(self, bindexes: Bindex | list[Bindex], zgrid: ZGrid):
-        w_units = ureg.nm
-        if isinstance(bindexes, Bindex):
-            bindexes = [bindexes]
-        w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
+    def eval_sigma_a_ckd(
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
+    ) -> pint.Quantity:
         return self.eval_sigma_a_mono(w, zgrid)
 
+    @singledispatchmethod
     def eval_sigma_s(
-        self, sctx: SpectralContext, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, zgrid: t.Optional[ZGrid] = None
     ) -> pint.Quantity:
         # Inherit docstring
+        raise NotImplementedError
 
-        if eradiate.mode().is_mono:
-            return self.eval_sigma_s_mono(
-                sctx.wavelength,
-                self.geometry.zgrid if zgrid is None else zgrid,
-            )
+    @eval_sigma_s.register(MonoSpectralIndex)
+    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+        return self.eval_sigma_s_mono(
+            w=si.w,
+            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+        )
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_sigma_s_ckd(
-                sctx.bindex,
-                self.geometry.zgrid if zgrid is None else zgrid,
-            )
-
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_sigma_s.register(CKDSpectralIndex)
+    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+        return self.eval_sigma_s_ckd(
+            w=si.w,
+            g=si.g,
+            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+        )
 
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         value = self._eval_sigma_s_impl(w, zgrid)
         return value if self.has_scattering else np.zeros_like(value) * value.units
 
-    def eval_sigma_s_ckd(self, bindexes: Bindex, zgrid: ZGrid) -> pint.Quantity:
-        w_units = ureg.nm
-        if isinstance(bindexes, Bindex):
-            bindexes = [bindexes]
-        w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
+    def eval_sigma_s_ckd(
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
+    ) -> pint.Quantity:
         return self.eval_sigma_s_mono(w, zgrid)
 
     # --------------------------------------------------------------------------

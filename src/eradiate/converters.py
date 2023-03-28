@@ -2,8 +2,8 @@ from __future__ import annotations
 
 __all__ = [
     "auto_or",
-    "to_dataset",
     "on_quantity",
+    "to_dataset",
 ]
 
 import os

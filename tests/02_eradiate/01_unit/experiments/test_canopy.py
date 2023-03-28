@@ -8,6 +8,7 @@ from eradiate.exceptions import UnsupportedModeError
 from eradiate.experiments import CanopyExperiment
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
+from eradiate.scenes.spectra import MultiDeltaSpectrum
 from eradiate.test_tools.types import check_scene_element
 
 
@@ -109,15 +110,14 @@ def test_canopy_experiment_run_detailed(modes_all_double):
     Note: This test is outdated, most of its content should be transferred to
     tests for measure post-processing pipelines.
     """
+    srf = MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm)
     if eradiate.mode().is_mono:
-        spectral_cfg = {"wavelengths": [550.0]}
         expected_vars = {
             "irradiance",
             "brf",
             "brdf",
             "radiance",
             "spp",
-            "srf",
         }
         expected_coords_radiance = {
             "sza",
@@ -133,18 +133,12 @@ def test_canopy_experiment_run_detailed(modes_all_double):
         expected_coords_irradiance = {"sza", "saa", "w"}
 
     elif eradiate.mode().is_ckd:
-        spectral_cfg = {"bins": ["550"]}
         expected_vars = {
             "irradiance",
-            "irradiance_srf",
             "brf",
-            "brf_srf",
             "brdf",
-            "brdf_srf",
             "radiance",
-            "radiance_srf",
             "spp",
-            "srf",
         }
         expected_coords_radiance = {
             "bin",
@@ -179,7 +173,7 @@ def test_canopy_experiment_run_detailed(modes_all_double):
                 "id": "toa_hsphere",
                 "film_resolution": (32, 32),
                 "spp": 1000,
-                "spectral_cfg": spectral_cfg,
+                "srf": srf,
             },
         ]
     )

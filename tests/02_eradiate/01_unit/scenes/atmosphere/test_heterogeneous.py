@@ -43,7 +43,7 @@ def test_heterogeneous_single_mono(
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry,
             molecular_atmosphere=MolecularAtmosphere.ussa_1976(
-                absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
+                absorption_dataset=path_to_ussa76_approx_data,
             ),
         )
 
@@ -89,7 +89,7 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, path_to_ussa76_approx_dat
     """
     # Construct succeeds
     molecular_atmosphere = MolecularAtmosphere.ussa_1976(
-        absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
+        absorption_dataset=path_to_ussa76_approx_data,
     )
 
     atmosphere = HeterogeneousAtmosphere(
@@ -152,7 +152,7 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         ("mixed", mixed),
     ]:
         radprofiles[component] = atmosphere.eval_radprops(
-            ctx.spectral_ctx, zgrid, optional_fields=True
+            ctx.si, zgrid, optional_fields=True
         )
 
     collision_coefficient = {}
@@ -297,7 +297,7 @@ def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
     atmosphere = HeterogeneousAtmosphere(
         geometry="plane_parallel",
         molecular_atmosphere=MolecularAtmosphere.ussa_1976(
-            absorption_data_sets={"us76_u86_4": path_to_ussa76_approx_data},
+            absorption_dataset=path_to_ussa76_approx_data,
         ),
         particle_layers=[ParticleLayer() for _ in range(2)],
         scale=2.0,

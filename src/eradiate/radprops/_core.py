@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 from abc import ABC, abstractmethod
+from functools import singledispatchmethod
 
 import attrs
 import numpy as np
@@ -14,9 +15,7 @@ import eradiate
 
 from .._factory import Factory
 from ..attrs import documented, parse_docs
-from ..ckd import Bindex
-from ..contexts import SpectralContext
-from ..exceptions import UnsupportedModeError
+from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
@@ -299,20 +298,18 @@ class RadProfile(ABC):
         """
         pass
 
+    @singledispatchmethod
     def eval_albedo(
-        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
+        self,
+        si: SpectralIndex,
+        zgrid: ZGrid | None = None,
     ) -> pint.Quantity:
-        """
-        Evaluate albedo spectrum based on a spectral context. This method
-        dispatches evaluation to specialized methods depending on the active
-        mode.
+        """Evaluate albedo at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         zgrid : .ZGrid, optional
             The altitude grid for which the albedo is evaluated. If unset, a
@@ -324,75 +321,40 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-        if eradiate.mode().is_mono:
-            return self.eval_albedo_mono(
-                spectral_ctx.wavelength,
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+        raise NotImplementedError
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_albedo_ckd(
-                [spectral_ctx.bindex],
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+    @eval_albedo.register(MonoSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_albedo_mono(w=si.w, zgrid=zgrid).squeeze()
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_albedo.register(CKDSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_albedo_ckd(w=si.w, g=si.g, zgrid=zgrid).squeeze()
 
-    @abstractmethod
     def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        """
-        Evaluate albedo spectrum in monochromatic modes.
+        raise NotImplementedError
 
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
+    def eval_albedo_ckd(
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
+    ) -> pint.Quantity:
+        raise NotImplementedError
 
-        zgrid : .ZGrid
-            The altitude grid for which the albedo is evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile albedo as an array with shape (n_layers, len(w)).
-        """
-        pass
-
-    @abstractmethod
-    def eval_albedo_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        """
-        Evaluate albedo spectrum in CKD modes.
-
-        Parameters
-        ----------
-        bindexes : list of :class:`.Bindex`
-            CKD bindexes for which to evaluate the spectrum.
-
-        zgrid : .ZGrid
-            The altitude grid for which the albedo is evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile albedo as an array with shape (n_layers, len(bindexes)).
-        """
-        pass
-
+    @singledispatchmethod
     def eval_sigma_t(
-        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
+        self,
+        si: SpectralIndex,
+        zgrid: ZGrid | None = None,
     ) -> pint.Quantity:
         """
-        Evaluate extinction coefficient spectrum based on a spectral context.
-        This method dispatches evaluation to specialized methods depending on
-        the active mode.
+        Evaluate extinction coefficient at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         zgrid : .ZGrid, optional
             The altitude grid for which the extinction coefficient is evaluated.
@@ -404,77 +366,40 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-        if eradiate.mode().is_mono:
-            return self.eval_sigma_t_mono(
-                spectral_ctx.wavelength,
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+        raise NotImplementedError
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_sigma_t_ckd(
-                [spectral_ctx.bindex],
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+    @eval_sigma_t.register(MonoSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_t_mono(w=si.w, zgrid=zgrid).squeeze()
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_sigma_t.register(CKDSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_t_ckd(w=si.w, g=si.g, zgrid=zgrid).squeeze()
 
-    @abstractmethod
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        """
-        Evaluate extinction coefficient spectrum in monochromatic modes.
+        raise NotImplementedError
 
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
+    def eval_sigma_t_ckd(
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
+    ) -> pint.Quantity:
+        raise NotImplementedError
 
-        zgrid : .ZGrid
-            The altitude grid for which the extinction coefficient is evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile extinction coefficient as an array with shape
-            (n_layers, len(w)).
-        """
-        pass
-
-    @abstractmethod
-    def eval_sigma_t_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        """
-        Evaluate extinction coefficient spectrum in CKD modes.
-
-        Parameters
-        ----------
-        bindexes : list of :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate the spectrum.
-
-        zgrid : .ZGrid
-            The altitude grid for which the extinction coefficient is evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile extinction coefficient as an array with shape
-            (n_layers, len(bindexes)).
-        """
-        pass
-
+    @singledispatchmethod
     def eval_sigma_a(
-        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
+        self,
+        si: SpectralIndex,
+        zgrid: ZGrid | None = None,
     ) -> pint.Quantity:
         """
-        Evaluate absorption coefficient spectrum based on a spectral context.
-        This method dispatches evaluation to specialized methods depending on
-        the active mode.
+        Evaluate absorption coefficient at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         zgrid : .ZGrid, optional
             The altitude grid for which the absorption coefficient is evaluated.
@@ -486,79 +411,45 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-        if eradiate.mode().is_mono:
-            return self.eval_sigma_a_mono(
-                spectral_ctx.wavelength,
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+        raise NotImplementedError
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_sigma_a_ckd(
-                [spectral_ctx.bindex],
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+    @eval_sigma_a.register(MonoSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_a_mono(w=si.w, zgrid=zgrid).squeeze()
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_sigma_a.register(CKDSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_a_ckd(w=si.w, g=si.g, zgrid=zgrid).squeeze()
 
-    @abstractmethod
-    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        """
-        Evaluate absorption coefficient spectrum in monochromatic modes.
+    def eval_sigma_a_mono(
+        self,
+        w: pint.Quantity,
+        zgrid: ZGrid,
+    ) -> pint.Quantity:
+        """Evaluate absorption coefficient spectrum in monochromatic modes."""
+        raise NotImplementedError
 
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
+    def eval_sigma_a_ckd(
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
+    ) -> pint.Quantity:
+        """Evaluate absorption coefficient spectrum in CKD modes."""
+        raise NotImplementedError
 
-        zgrid : .ZGrid
-            The altitude grid for which the extinction coefficient is evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile absorption coefficient as an array with shape
-            (n_layers, len(w)).
-        """
-        pass
-
-    @abstractmethod
-    def eval_sigma_a_ckd(self, bindexes: Bindex, zgrid: ZGrid) -> pint.Quantity:
-        """
-        Evaluate absorption coefficient spectrum in CKD modes.
-
-        Parameters
-        ----------
-        bindexes : :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate the spectrum.
-
-        zgrid : .ZGrid
-            The altitude grid for which the extinction coefficient is evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile absorption coefficient as an array with shape
-            (n_layers, len(bindexes)).
-        """
-        pass
-
+    @singledispatchmethod
     def eval_sigma_s(
-        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
+        self,
+        si: SpectralIndex,
+        zgrid: ZGrid | None = None,
     ) -> pint.Quantity:
         """
-        Evaluate scattering coefficient spectrum based on a spectral context.
-        This method dispatches evaluation to specialized methods depending on
-        the active mode.
+        Evaluate scattering coefficient at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
-        zgrid : .ZGrid, optional
+        zgrid : :class:`.ZGrid`, optional
             The altitude grid for which the scattering coefficient is evaluated.
             If unset, a profile-specific default is used.
 
@@ -568,76 +459,37 @@ class RadProfile(ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-        if eradiate.mode().is_mono:
-            return self.eval_sigma_s_mono(
-                spectral_ctx.wavelength,
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+        raise NotImplementedError
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_sigma_s_ckd(
-                [spectral_ctx.bindex],
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+    @eval_sigma_s.register(MonoSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_s_mono(w=si.w, zgrid=zgrid).squeeze()
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_sigma_s.register(CKDSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_sigma_s_ckd(w=si.w, g=si.g, zgrid=zgrid).squeeze()
 
-    @abstractmethod
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        """
-        Evaluate scattering coefficient spectrum in monochromatic modes.
+        raise NotImplementedError
 
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which the spectrum is to be evaluated.
+    def eval_sigma_s_ckd(
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
+    ) -> pint.Quantity:
+        raise NotImplementedError
 
-        zgrid : .ZGrid
-            The altitude grid for which the scattering coefficient is evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile scattering coefficient as an array with shape
-            (n_layers, len(w)).
-        """
-        pass
-
-    @abstractmethod
-    def eval_sigma_s_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> pint.Quantity:
-        """
-        Evaluate scattering coefficient spectrum in CKD modes.
-
-        Parameters
-        ----------
-        bindexes : list of :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate the spectrum.
-
-        zgrid : .ZGrid
-            The altitude grid for which the scattering coefficient is evaluated.
-
-        Returns
-        -------
-        quantity
-            Evaluated profile scattering coefficient as an array with shape
-            (n_layers, len(bindexes)).
-        """
-        pass
-
+    @singledispatchmethod
     def eval_dataset(
-        self, spectral_ctx: SpectralContext, zgrid: ZGrid | None = None
+        self,
+        si: SpectralIndex,
+        zgrid: ZGrid | None = None,
     ) -> xr.Dataset:
         """
-        Return a dataset that holds the radiative properties of the corresponding
-        atmospheric profile. This method dispatches evaluation to specialized
-        methods depending on the active mode.
+        Evaluate radiative properties at given spectral index.
 
         Parameters
         ----------
-        spectral_ctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         zgrid : .ZGrid, optional
             The altitude grid for which the radiative profile is evaluated.
@@ -646,61 +498,25 @@ class RadProfile(ABC):
         Returns
         -------
         Dataset
-            Radiative property dataset.
+            Radiative properties dataset.
         """
-        if eradiate.mode().is_mono:
-            return self.eval_dataset_mono(
-                spectral_ctx.wavelength,
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+        raise NotImplementedError
 
-        elif eradiate.mode().is_ckd:
-            return self.eval_dataset_ckd(
-                [spectral_ctx.bindex],
-                self.zgrid if zgrid is None else zgrid,
-            ).squeeze()
+    @eval_dataset.register(MonoSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> xr.Dataset:
+        return self.eval_dataset_mono(w=si.w, zgrid=zgrid)
 
-        else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+    @eval_dataset.register(CKDSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> xr.Dataset:
+        return self.eval_dataset_ckd(w=si.w, g=si.g, zgrid=zgrid)
 
-    @abstractmethod
     def eval_dataset_mono(self, w: pint.Quantity, zgrid: ZGrid) -> xr.Dataset:
-        """
-        Return a dataset that holds the radiative properties of the corresponding
-        atmospheric profile in monochromatic modes.
+        raise NotImplementedError
 
-        Parameters
-        ----------
-        w : quantity
-            Wavelength values at which spectra are to be evaluated.
-
-        zgrid : .ZGrid
-            The altitude grid for which the radiative profile is evaluated.
-
-        Returns
-        -------
-        Dataset
-            Radiative property dataset.
-        """
-        pass
-
-    @abstractmethod
-    def eval_dataset_ckd(self, bindexes: list[Bindex], zgrid: ZGrid) -> xr.Dataset:
-        """
-        Return a dataset that holds the radiative properties of the
-        corresponding atmospheric profile in CKD modes.
-
-        Parameters
-        ----------
-        bindexes : list of :class:`.Bindex`
-            One or several CKD bindexes for which to evaluate spectra.
-
-        zgrid : .ZGrid
-            The altitude grid for which the radiative profile is evaluated.
-
-        Returns
-        -------
-        Dataset
-            Radiative property dataset.
-        """
-        pass
+    def eval_dataset_ckd(
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
+    ) -> xr.Dataset:
+        raise NotImplementedError

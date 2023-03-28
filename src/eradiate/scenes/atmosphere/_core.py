@@ -18,13 +18,16 @@ from ..phase import PhaseFunction
 from ..shapes import Shape
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext, SpectralContext
+from ...contexts import KernelDictContext
 from ...kernel import (
     InitParameter,
     TypeIdLookupStrategy,
     UpdateParameter,
 )
 from ...radprops import ZGrid
+from ...spectral.ckd import BinSet
+from ...spectral.index import SpectralIndex
+from ...spectral.mono import WavelengthSet
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -125,6 +128,24 @@ class Atmosphere(CompositeSceneElement, ABC):
             Atmosphere height.
         """
         return self.top_altitude - self.bottom_altitude
+
+    @property
+    @abstractmethod
+    def spectral_set(self) -> None | BinSet | WavelengthSet:
+        """
+        The spectral set emitted by the atmosphere (optional).
+
+        Notes
+        -----
+        Typically, absorbing molecular atmosphere are characterised by an
+        absorption dataset which tabulates the absorption coefficient over
+        some spectral set, e.g. wavelengths, CKD bin, etc.
+        This property returns the spectral set associated with the absorption
+        dataset.
+        In experiments, the spectral set emitted by the atmosphere is given
+        highest priority, when creating the experiment's spectral set.
+        """
+        pass
 
     @property
     @abstractmethod
@@ -354,7 +375,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     def eval_radprops(
         self,
-        sctx: SpectralContext,
+        si: SpectralIndex,
         zgrid: ZGrid | None = None,
         optional_fields: bool = False,
     ) -> xr.Dataset:
@@ -363,10 +384,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         Parameters
         ----------
-        sctx : .SpectralContext
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : .SpectralIndex
+            Spectral index.
 
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
@@ -395,8 +414,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             zgrid = self.geometry.zgrid
 
         sigma_units = ucc.get("collision_coefficient")
-        sigma_t = self.eval_sigma_t(sctx, zgrid)
-        albedo = self.eval_albedo(sctx, zgrid).m_as(ureg.dimensionless)
+        sigma_t = self.eval_sigma_t(si, zgrid).reshape(zgrid.layers.shape)
+        albedo = self.eval_albedo(si, zgrid).m_as(ureg.dimensionless)
 
         data_vars = {
             "sigma_t": (
@@ -460,7 +479,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_albedo(
-        self, sctx: SpectralContext, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate albedo spectrum based on a spectral context. This method
@@ -469,10 +488,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         Parameters
         ----------
-        sctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
@@ -485,22 +502,19 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-
         pass
 
     @abstractmethod
     def eval_sigma_t(
-        self, sctx: SpectralContext, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient given a spectral context.
 
         Parameters
         ----------
-        sctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
@@ -512,22 +526,19 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         quantity
             Particle layer extinction coefficient.
         """
-
         pass
 
     @abstractmethod
     def eval_sigma_a(
-        self, sctx: SpectralContext, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate absorption coefficient given a spectral context.
 
         Parameters
         ----------
-        sctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
@@ -539,22 +550,19 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         quantity
             Particle layer extinction coefficient.
         """
-
         pass
 
     @abstractmethod
     def eval_sigma_s(
-        self, sctx: SpectralContext, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate scattering coefficient given a spectral context.
 
         Parameters
         ----------
-        sctx : :class:`.SpectralContext`
-            A spectral context data structure containing relevant spectral
-            parameters (*e.g.* wavelength in monochromatic mode, bin and
-            quadrature point index in CKD mode).
+        si : :class:`.SpectralIndex`
+            Spectral index.
 
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
@@ -588,9 +596,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     "grid": InitParameter(
                         lambda ctx: mi.VolumeGrid(
                             np.reshape(
-                                self.eval_albedo(ctx.spectral_ctx).m_as(
-                                    ureg.dimensionless
-                                ),
+                                self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
                                 (-1, 1, 1),
                             ).astype(np.float32)
                         ),
@@ -602,7 +608,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     "grid": InitParameter(
                         lambda ctx: mi.VolumeGrid(
                             np.reshape(
-                                self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                                self.eval_sigma_t(ctx.si).m_as(
                                     uck.get("collision_coefficient")
                                 ),
                                 (-1, 1, 1),
@@ -626,9 +632,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         "grid": InitParameter(
                             lambda ctx: mi.VolumeGrid(
                                 np.reshape(
-                                    self.eval_albedo(ctx.spectral_ctx).m_as(
-                                        ureg.dimensionless
-                                    ),
+                                    self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
                                     (1, 1, -1),
                                 ).astype(np.float32)
                             ),
@@ -644,7 +648,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         "grid": InitParameter(
                             lambda ctx: mi.VolumeGrid(
                                 np.reshape(
-                                    self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                                    self.eval_sigma_t(ctx.si).m_as(
                                         uck.get("collision_coefficient")
                                     ),
                                     (1, 1, -1),
@@ -682,7 +686,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             return {
                 "albedo.data": UpdateParameter(
                     lambda ctx: np.reshape(
-                        self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
+                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
                     UpdateParameter.Flags.SPECTRAL,
@@ -694,7 +698,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 ),
                 "sigma_t.data": UpdateParameter(
                     lambda ctx: np.reshape(
-                        self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                        self.eval_sigma_t(ctx.si).m_as(
                             uck.get("collision_coefficient")
                         ),
                         (-1, 1, 1, 1),
@@ -712,7 +716,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             return {
                 "albedo.volume.data": UpdateParameter(
                     lambda ctx: np.reshape(
-                        self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
+                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
                         (1, 1, -1, 1),
                     ).astype(np.float32),
                     UpdateParameter.Flags.SPECTRAL,
@@ -724,7 +728,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 ),
                 "sigma_t.volume.data": UpdateParameter(
                     lambda ctx: np.reshape(
-                        self.eval_sigma_t(ctx.spectral_ctx).m_as(
+                        self.eval_sigma_t(ctx.si).m_as(
                             uck.get("collision_coefficient")
                         ),
                         (1, 1, -1, 1),

@@ -30,16 +30,39 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 
 ## v0.23.2 (upcoming release)
 
-% ### Deprecations and removals
+### Breaking changes
 
 * Removed the docker images implemenation, deployment and documentation from the
   Eradiate repository ({ghpr}`322`).
+* {class}`.Measure` no longer takes a `spectral_cfg` parameter but instead a
+  `srf` parameter ({ghpr}`311`).
+* In CKD modes with absorbing molecular atmospheres, the way to control the bin
+  set is to set the atmosphere's `absorption_dataset` with an absorption
+  dataset that has the corresponding desired bin set ({ghpr}`311`).
+* {class}`.UniformSpectrum` is no longer a valid spectrum type to use for
+  spectral response functions ({ghpr}`311`).
 
 % ### Improvements and fixes
 
-% ### Documentation
+### Deprecations and removals
 
-% ### Internal changes
+* Removed {class}`.SpectralContext` and subclasses ({ghpr}`311`).
+* Removed {class}`.MeasureSpectralConfig` and subclasses ({ghpr}`311`).
+
+### Improvements and fixes
+
+* Added {class}`.MultiDeltaSpectrum` spectrum type ({ghpr}`311`)
+
+### Documentation
+
+* Added a user guide page on spectral discretization.
+
+### Internal changes
+
+* Spectral dispatch with `functools.singledispatchmethod` ({ghpr}`311`).
+* Experiments define the spectral discretization, based on information from
+  its measure, its atmosphere components if applicable, and a default
+  spectral set ({ghpr}`311`).
 
 ## v0.23.1 (21 April 2023)
 

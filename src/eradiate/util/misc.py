@@ -11,6 +11,7 @@ from collections import OrderedDict
 from numbers import Number
 
 import numpy as np
+import numpy.typing as npt
 import pint
 import xarray as xr
 
@@ -401,6 +402,17 @@ def onedict_value(d: t.Mapping) -> t.Any:
     return next(iter(d.values()))
 
 
+def round_to_multiple(number, multiple, direction="nearest"):
+    if direction == "nearest":
+        return multiple * round(number / multiple)
+    elif direction == "up":
+        return multiple * np.ceil(number / multiple)
+    elif direction == "down":
+        return multiple * np.floor(number / multiple)
+    else:
+        return multiple * round(number / multiple)
+
+
 def set_nested(d: t.Mapping, path: str, value: t.Any, sep: str = ".") -> None:
     """
     Set values in a nested dictionary using a flat path.
@@ -492,3 +504,111 @@ def _(da: xr.DataArray):
         desc = " | " + desc
 
     return f"<xarray.DataArray{desc}>"
+
+
+def find_runs(
+    x: npt.ArrayLike,
+) -> tuple[npt.ArrayLike, npt.ArrayLike, npt.ArrayLike]:
+    """
+    Find runs of consecutive items in an array.
+
+    Parameters
+    ----------
+    x : array-like
+        Input array.
+
+    Returns
+    -------
+    tuple(array-like, array-like, array-like)
+        Run values, run starts, run lengths.
+
+    Notes
+    -----
+    Credit: Alistair Miles
+    Source: https://gist.github.com/alimanfoo/c5977e87111abe8127453b21204c1065
+    """
+
+    # ensure array
+    x = np.asanyarray(x)
+    if x.ndim != 1:
+        raise ValueError("only 1D array supported")
+    n = x.shape[0]
+
+    # handle empty array
+    if n == 0:
+        return np.array([]), np.array([]), np.array([])
+
+    else:
+        # find run starts
+        loc_run_start = np.empty(n, dtype=bool)
+        loc_run_start[0] = True
+        np.not_equal(x[:-1], x[1:], out=loc_run_start[1:])
+        run_starts = np.nonzero(loc_run_start)[0]
+
+        # find run values
+        run_values = x[loc_run_start]
+
+        # find run lengths
+        run_lengths = np.diff(np.append(run_starts, n))
+
+        return run_values, run_starts, run_lengths
+
+
+def where_consecutive_zeros(
+    x: npt.ArrayLike,
+) -> tuple[npt.ArrayLike, npt.ArrayLike]:
+    """Return indices where consecutive zeros are located.
+
+    Parameters
+    ----------
+    x : array-like
+        Input array.
+
+    Returns
+    -------
+    tuple(array-like, array-like)
+        Consecutive zeros sequences start indices, lengths.
+
+    See Also
+    --------
+    where_non_significant_zeros
+    """
+    values, starts, lengths = find_runs(x == 0)
+    where_length_gt_2 = np.logical_and(True, lengths > 1)
+    where_True = np.logical_and(True, values)
+    where_both = np.logical_and(where_length_gt_2, where_True)
+    return starts[where_both], lengths[where_both]
+
+
+def where_non_significant_zeros(x: npt.ArrayLike) -> npt.ArrayLike:
+    """Return a mask that indicate where non significant zeros are
+
+    Parameters
+    ----------
+    x : array-like
+        Input array.
+
+    Returns
+    -------
+    array-like
+        Mask.
+
+    Notes
+    -----
+    Non significant zeros are defined as the leading (except last) and trailing
+    (except first) zeros in the array.
+
+    See Also
+    --------
+    where_consecutive_zeros
+    """
+    mask = np.full_like(x, False, dtype=bool)
+    starts, lengths = where_consecutive_zeros(x)
+    if starts.size > 0:
+        if starts[0] == 0 and lengths[0] > 1:
+            non_significant_leading = lengths[0] - 1
+            mask[:non_significant_leading] = True
+        if starts[-1] == x.size - lengths[-1] and lengths[-1] > 1:
+            non_significant_trailing = lengths[-1] - 1
+            mask[-non_significant_trailing:] = True
+    return mask

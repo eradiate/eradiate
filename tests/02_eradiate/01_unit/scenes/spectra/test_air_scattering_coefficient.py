@@ -17,19 +17,12 @@ def test_air_scattering_coefficient_construct(modes_all):
 
 def test_air_scattering_coefficient_eval(modes_all_double):
     # The spectrum evaluates correctly (reference values computed manually)
-    if eradiate.mode().is_mono:
-        expected = ureg.Quantity(0.0114934, "km^-1")
-
-    elif eradiate.mode().is_ckd:
-        expected = ureg.Quantity(0.0114968, "km^-1")
-
-    else:
-        raise ValueError(f"no reference value for mode {eradiate.mode()}")
+    expected = 0.0114934 / ureg.km  # value at 550 nm (default wavelength)
 
     s = AirScatteringCoefficientSpectrum()
     ctx = KernelDictContext()
 
-    value = s.eval(ctx.spectral_ctx)
+    value = s.eval(ctx.si)
     assert np.allclose(value, expected)
 
 

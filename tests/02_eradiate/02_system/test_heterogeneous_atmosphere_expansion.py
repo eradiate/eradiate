@@ -42,9 +42,7 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
         "construct": "from_viewing_angles",
         "zeniths": np.arange(-90, 91, 15),
         "azimuths": 0.0,
-        "spectral_cfg": eradiate.scenes.measure.MeasureSpectralConfig.new(
-            bin_set="10nm", bins="550"
-        ),
+        "srf": eradiate.scenes.spectra.MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
     }
 
     # Particle layer only
@@ -121,9 +119,7 @@ def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
         "construct": "from_viewing_angles",
         "zeniths": np.arange(-90, 90, 15),
         "azimuths": 0.0,
-        "spectral_cfg": eradiate.scenes.measure.MeasureSpectralConfig.new(
-            bin_set="10nm", bins="550"
-        ),
+        "srf": eradiate.scenes.spectra.MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
     }
 
     # Non-absorbing molecular atmosphere

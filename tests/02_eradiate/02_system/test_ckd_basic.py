@@ -45,14 +45,15 @@ def test_ckd_basic(modes_all_ckd):
             MultiDistantMeasure.from_viewing_angles(
                 zeniths=np.arange(-60, 61, 5) * ureg.deg,
                 azimuths=0.0 * ureg.deg,
-                spectral_cfg={
-                    "bin_set": "10nm",
-                    "bins": [
-                        "550",
-                        "560",
-                        "570",
-                        "510",
-                    ],  # We specify bins in arbitrary order on purpose
+                srf={
+                    "type": "multi_delta",
+                    "wavelengths": [
+                        550,
+                        560,
+                        570,
+                        510,
+                    ]
+                    * ureg.nm,  # We specify bins in arbitrary order on purpose
                 },
             )
         ],

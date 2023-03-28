@@ -11,8 +11,9 @@ from ._core import PhaseFunction, phase_function_factory
 from ..core import traverse
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ...attrs import documented
-from ...contexts import KernelDictContext, SpectralContext
-from ...kernel import InitParameter, TypeIdLookupStrategy, UpdateParameter
+from ...contexts import KernelDictContext
+from ...kernel import InitParameter, UpdateParameter, map_unit_cube
+from ...spectral.index import SpectralIndex
 from ...units import unit_context_kernel as uck
 from ...util.misc import cache_by_id
 
@@ -116,14 +117,14 @@ class BlendPhaseFunction(PhaseFunction):
                 component.geometry = self.geometry
 
     @cache_by_id
-    def _eval_conditional_weights_impl(self, sctx: SpectralContext) -> np.ndarray:
+    def _eval_conditional_weights_impl(self, si: SpectralIndex) -> np.ndarray:
         """
         Memoised weight evaluation, used if weights are defined as callables.
         """
         n_comp = len(self.components)
 
         if isinstance(self.weights, list):
-            weights = np.array([w(sctx) for w in self.weights], dtype=np.float64)
+            weights = np.array([w(si) for w in self.weights], dtype=np.float64)
         else:  # if isinstance(self.weights, np.ndarray):
             weights = np.array(self.weights, dtype=np.float64)
 
@@ -149,7 +150,7 @@ class BlendPhaseFunction(PhaseFunction):
 
     def eval_conditional_weights(
         self,
-        sctx: SpectralContext,
+        si: SpectralIndex,
         n_component: int | list[int] | None = None,
     ) -> np.ndarray:
         """
@@ -158,7 +159,7 @@ class BlendPhaseFunction(PhaseFunction):
 
         Parameters
         ----------
-        sctx : :class:`.SpectralContext`
+        si : :class:`.SpectralIndex`
             Spectral context.
 
         n_component : int or list of int, optional
@@ -179,7 +180,7 @@ class BlendPhaseFunction(PhaseFunction):
             n_component = [n_component]
 
         # Compute normalized component weights (cached until call with different context)
-        weights = self._eval_conditional_weights_impl(sctx)
+        weights = self._eval_conditional_weights_impl(si)
 
         # Return selected components
         return weights[n_component, ...]
@@ -211,9 +212,7 @@ class BlendPhaseFunction(PhaseFunction):
                 def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
                     return mi.VolumeGrid(
                         np.reshape(
-                            self.eval_conditional_weights(
-                                ctx.spectral_ctx, n_component
-                            ),
+                            self.eval_conditional_weights(ctx.si, n_component),
                             (-1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyx)
                         ).astype(np.float32)
                     )
@@ -231,9 +230,7 @@ class BlendPhaseFunction(PhaseFunction):
                 def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
                     return mi.VolumeGrid(
                         np.reshape(
-                            self.eval_conditional_weights(
-                                ctx.spectral_ctx, n_component
-                            ),
+                            self.eval_conditional_weights(ctx.si, n_component),
                             (1, 1, -1),  # Mind dim ordering! (C-style, i.e. zyx)
                         ).astype(np.float32)
                     )
@@ -282,7 +279,7 @@ class BlendPhaseFunction(PhaseFunction):
                 # dereferencing of the loop variable.
                 def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
                     return np.reshape(
-                        self.eval_conditional_weights(ctx.spectral_ctx, n_component),
+                        self.eval_conditional_weights(ctx.si, n_component),
                         (-1, 1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyxc)
                     ).astype(np.float32)
 
@@ -296,7 +293,7 @@ class BlendPhaseFunction(PhaseFunction):
                 # Same comment as above
                 def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
                     return np.reshape(
-                        self.eval_conditional_weights(ctx.spectral_ctx, n_component),
+                        self.eval_conditional_weights(ctx.si, n_component),
                         (1, 1, -1, 1),  # Mind dim ordering! (C-style, i.e. zyxc)
                     ).astype(np.float32)
 
