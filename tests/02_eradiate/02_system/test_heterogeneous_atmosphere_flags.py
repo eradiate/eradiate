@@ -23,12 +23,6 @@ def test_heterogeneous_atm_flags(modes_all_double, atm_flags):
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "zgrid": np.linspace(0, 120, 13) * ureg.km,
-            "molecular_atmosphere": {
-                "type": "molecular",
-                "construct": "afgl_1986" if eradiate.mode().is_ckd else "ussa_1976",
-                **atm_flags["molecular"],
-            },
             "particle_layers": {
                 "tau_ref": 0.2,
                 "bottom": 0.0,
@@ -45,7 +39,9 @@ def test_heterogeneous_atm_flags(modes_all_double, atm_flags):
             "construct": "hplane",
             "azimuth": 0.0,
             "zeniths": np.arange(-75, 76, 5),
-            "spectral_cfg": {"bins": ["550"]},
+            "spectral_cfg": {"bins": ["550"]}
+            if eradiate.mode().is_ckd
+            else {"wavelengths": [550.0]},
         },
     )
 
