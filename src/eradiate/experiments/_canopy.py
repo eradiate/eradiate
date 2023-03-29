@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing as t
+
 import attrs
 
 from ._core import EarthObservationExperiment, Experiment
@@ -134,35 +136,8 @@ class CanopyExperiment(EarthObservationExperiment):
         return result
 
     @property
-    def contexts(self) -> list[KernelDictContext]:
-        # Inherit docstring
-
-        # Collect contexts from all measures
-        sctxs = []
-
-        for measure in self.measures:
-            sctxs.extend(measure.spectral_cfg.spectral_ctxs())
-
-        # Sort and remove duplicates
-        key = {
-            MonoSpectralContext: lambda sctx: sctx.wavelength.m,
-            CKDSpectralContext: lambda sctx: (
-                sctx.bindex.bin.wcenter.m,
-                sctx.bindex.index,
-            ),
-        }[type(sctxs[0])]
-
-        sctxs = deduplicate_sorted(
-            sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
-        )
-
-        return [KernelDictContext(spectral_ctx=sctx) for sctx in sctxs]
-
-    @property
-    def context_init(self) -> KernelDictContext:
-        # Inherit docstring
-
-        return KernelDictContext(spectral_ctx=SpectralContext.new())
+    def _context_kwargs(self) -> dict[str, t.Any]:
+        return {}
 
     @property
     def scene_objects(self) -> dict[str, SceneElement]:
