@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import typing as t
 from abc import ABC, abstractmethod
 from datetime import datetime
 
@@ -13,7 +14,12 @@ import eradiate
 
 from .. import pipelines
 from ..attrs import documented, parse_docs
-from ..contexts import KernelDictContext
+from ..contexts import (
+    CKDSpectralContext,
+    KernelDictContext,
+    MonoSpectralContext,
+    SpectralContext,
+)
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..pipelines import Pipeline
 from ..rng import SeedState
@@ -32,7 +38,7 @@ from ..scenes.measure import (
     MultiDistantMeasure,
     measure_factory,
 )
-from ..util.misc import onedict_value
+from ..util.misc import deduplicate_sorted, onedict_value
 
 logger = logging.getLogger(__name__)
 
@@ -269,6 +275,43 @@ class EarthObservationExperiment(Experiment, ABC):
             f"data creation - {self.__class__.__name__}.postprocess()",
             "references": "",
         }
+
+    @property
+    @abstractmethod
+    def _context_kwargs(self) -> dict[str, t.Any]:
+        pass
+
+    @property
+    def context_init(self) -> KernelDictContext:
+        return KernelDictContext(
+            spectral_ctx=SpectralContext.new(), kwargs=self._context_kwargs
+        )
+
+    @property
+    def contexts(self) -> list[KernelDictContext]:
+        # Inherit docstring
+
+        # Collect contexts from all measures
+        sctxs = []
+
+        for measure in self.measures:
+            sctxs.extend(measure.spectral_cfg.spectral_ctxs())
+
+        # Sort and remove duplicates
+        key = {
+            MonoSpectralContext: lambda sctx: sctx.wavelength.m,
+            CKDSpectralContext: lambda sctx: (
+                sctx.bindex.bin.wcenter.m,
+                sctx.bindex.index,
+            ),
+        }[type(sctxs[0])]
+
+        sctxs = deduplicate_sorted(
+            sorted(sctxs, key=key), cmp=lambda x, y: key(x) == key(y)
+        )
+        kwargs = self._context_kwargs
+
+        return [KernelDictContext(spectral_ctx=sctx, kwargs=kwargs) for sctx in sctxs]
 
     @property
     @abstractmethod
