@@ -7,12 +7,12 @@ import eradiate
 
 
 def test_logging_setup(mode_mono):
-    eradiate.kernel.logging.install_logging()
+    eradiate.kernel.install_logging()
     assert eradiate.kernel.logging.mi_logger is eradiate.kernel.logging._get_logger()
 
 
 def test_logging_mitsuba(mode_mono, caplog):
-    eradiate.kernel.logging.install_logging()
+    eradiate.kernel.install_logging()
 
     # TRACE log level is defined and set to the expected value
     assert logging.TRACE == logging.DEBUG - 5

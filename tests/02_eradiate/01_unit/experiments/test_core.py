@@ -3,7 +3,7 @@ import xarray as xr
 import eradiate.kernel.logging
 from eradiate.experiments import AtmosphereExperiment
 
-eradiate.kernel.logging.install_logging()
+eradiate.kernel.install_logging()
 
 
 def test_run_function(modes_all_double):

@@ -6,7 +6,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.units import symbol
 
-eradiate.kernel.logging.install_logging()
+eradiate.kernel.install_logging()
 eradiate.config.progress = "spectral_loop"
 
 

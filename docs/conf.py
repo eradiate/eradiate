@@ -6,7 +6,7 @@ from importlib.metadata import version
 
 # -- Mock Mitsuba modules (required to render CLI reference on RTD) ------------
 
-MOCK_MODULES = ["mitsuba", "drjit"]
+MOCK_MODULES = ["mitsuba", "mitsuba.scalar_rgb", "drjit"]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 

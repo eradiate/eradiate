@@ -328,8 +328,7 @@ Minimise class initialisation code
 Initialisation from dictionaries
     A lot of Eradiate's classes can be instantiated using dictionaries. Most of
     them leverage factories for that purpose (see
-    :ref:`sec-developer_guides-factory_guide` and
-    :ref:`sec-developer_guides-scene_element_guide`). This, in practice, reserves
+    :ref:`sec-developer_guides-factory_guide`). This, in practice, reserves
     the ``"type"`` and ``"construct"`` parameters, meaning that
     factory-registered classes cannot have ``type`` or ``construct`` fields.
 
