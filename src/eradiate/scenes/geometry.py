@@ -8,6 +8,7 @@ import pint
 import pinttr
 
 from ..attrs import documented, parse_docs
+from ..constants import EARTH_RADIUS
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
@@ -98,9 +99,9 @@ class SphericalShellGeometry(SceneGeometry):
     """
 
     planet_radius: pint.Quantity = documented(
-        pinttr.field(default=6378.1 * ureg.km, units=ucc.deferred("length")),
+        pinttr.field(default=EARTH_RADIUS, units=ucc.deferred("length")),
         doc="Planet radius. Defaults to Earth's radius.",
         type="quantity",
         init_type="quantity or float",
-        default="6378.1 km",
+        default=":data:`.EARTH_RADIUS`",
     )

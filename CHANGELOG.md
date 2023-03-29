@@ -95,7 +95,10 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   iterative loop-based implementation ({ghpr}`296`).
 * {class}`.RadProfile` evaluation on arbitrary altitude grids is now permitted
   ({ghpr}`296`).
-* Introduced the {class}`.SpotIllumination`, which points a beam of light of fixed angular width. ({ghpr}`302`)
+* Introduced the {class}`.SpotIllumination`, which points a beam of light of
+  fixed angular width ({ghpr}`302`).
+* Added a new module :mod:`eradiate.constants` to store physical constants used
+  in Eradiate ({ghpr}`312`).
 
 ### Documentation
 

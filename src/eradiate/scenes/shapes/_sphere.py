@@ -9,6 +9,7 @@ from pinttr.util import ensure_units
 from ._core import ShapeNode
 from ..bsdfs import BSDF
 from ...attrs import documented, parse_docs
+from ...constants import EARTH_RADIUS
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -84,11 +85,11 @@ class SphereShape(ShapeNode):
     def surface(
         cls,
         altitude=0.0 * ureg.km,
-        planet_radius: pint.Quantity = 6378.1 * ureg.km,
+        planet_radius: pint.Quantity = EARTH_RADIUS,
         bsdf: BSDF | None = None,
     ) -> SphereShape:
         """
-        This class method constructor provides a simplified parametrisation of
+        This class method constructor provides a simplified parametrization of
         the sphere shape better suited for the definition of the surface when
         configuring the one-dimensional model.
 
@@ -101,7 +102,7 @@ class SphereShape(ShapeNode):
             Surface altitude. If a unitless value is passed, it is interpreted
             as ``ucc['length']``.
 
-        planet_radius : quantity or float, optional, default: 6378.1 km
+        planet_radius : quantity or float, optional
             Planet radius. If a unitless value is passed, it is interpreted
             as ``ucc['length']``. The default is Earth's radius.
 
@@ -130,15 +131,15 @@ class SphereShape(ShapeNode):
     def atmosphere(
         cls,
         top: pint.Quantity = 100.0 * ureg.km,
-        planet_radius: pint.Quantity = 6378.1 * ureg.km,
+        planet_radius: pint.Quantity = EARTH_RADIUS,
         bsdf: BSDF | None = None,
     ) -> SphereShape:
         """
-        This class method constructor provides a simplified parametrisation of
+        This class method constructor provides a simplified parametrization of
         the sphere shape better suited for the definition of the surface when
         configuring the one-dimensional model.
 
-        The resulting sphere shape is centred at [0, 0, -`planet_radius`] and
+        The resulting sphere shape is centred at [0, 0, 0] and
         has a radius equal to `planet_radius` + `top`.
 
         Parameters
@@ -147,7 +148,7 @@ class SphereShape(ShapeNode):
             Top-of-atmosphere altitude. If a unitless value is passed, it is
             interpreted as ``ucc['length']``.
 
-        planet_radius : quantity or float, optional, default: 6378.1 km
+        planet_radius : quantity or float, optional
             Planet radius. If a unitless value is passed, it is interpreted
             as ``ucc['length']``. The default is Earth's radius.
 

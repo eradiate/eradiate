@@ -5,6 +5,7 @@ import xarray as xr
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.measure import MultiDistantMeasure
@@ -60,7 +61,7 @@ def test_atmosphere_experiment_construct_measures(modes_all_double):
     "geometry, expected",
     [
         ("plane_parallel", [0, 0, 0] * ureg.m),
-        ("spherical_shell", [0, 0, 6378.1] * ureg.km),
+        ("spherical_shell", [0, 0, EARTH_RADIUS.m] * EARTH_RADIUS.u),
     ],
     ids=["plane_parallel", "spherical_shell"],
 )
