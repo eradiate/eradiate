@@ -29,8 +29,9 @@ Alphabetical list of modules
    eradiate_core
    attrs
    ckd
-   converters
+   constants
    contexts
+   converters
    data
    exceptions
    experiments
