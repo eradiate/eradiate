@@ -4,7 +4,7 @@
 #
 #    pip-compile --allow-unsafe --output-file=requirements/main.txt --resolver=backtracking requirements/main.in
 #
-aenum==3.1.11
+aenum==3.1.12
     # via -r requirements/main.in
 attrs==22.2.0
     # via
@@ -38,7 +38,7 @@ dessinemoi==23.1.0
     # via -r requirements/main.in
 environ-config==23.1.0
     # via -r requirements/main.in
-fonttools==4.39.0
+fonttools==4.39.3
     # via
     #   -c requirements/dev.txt
     #   matplotlib
@@ -54,6 +54,8 @@ kiwisolver==1.4.4
     # via
     #   -c requirements/dev.txt
     #   matplotlib
+lazy-loader==0.2
+    # via -r requirements/main.in
 markdown-it-py==2.2.0
     # via
     #   -c requirements/dev.txt
@@ -96,7 +98,7 @@ pint==0.20.1
     #   pinttrs
 pinttrs==23.2.0
     # via -r requirements/main.in
-platformdirs==3.1.1
+platformdirs==3.2.0
     # via
     #   -c requirements/dev.txt
     #   pooch
@@ -115,7 +117,7 @@ python-dateutil==2.8.2
     #   -c requirements/dev.txt
     #   matplotlib
     #   pandas
-pytz==2022.7.1
+pytz==2023.3
     # via
     #   -c requirements/dev.txt
     #   pandas
@@ -123,7 +125,7 @@ requests==2.28.2
     # via
     #   -c requirements/dev.txt
     #   pooch
-rich==13.3.2
+rich==13.3.3
     # via -r requirements/main.in
 ruamel-yaml==0.17.21
     # via -r requirements/main.in

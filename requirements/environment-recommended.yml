@@ -10,6 +10,7 @@ dependencies:
   - click
   - dessinemoi>=23.1.0
   - environ-config
+  - lazy_loader>=0.1
   - matplotlib>=3.3
   - netcdf4
   - numpy
