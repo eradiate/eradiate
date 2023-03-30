@@ -54,7 +54,7 @@ def deprecated(
     details : str, optional
         Extra details to be added to the method docstring and warning. For
         example, the details may point users to a replacement method, such as
-        "Use the foo_bar method instead". By default there are no details.
+        "Use the foo_bar method instead". By default, there are no details.
 
     current_version : str, optional
         Current version. If unset, Eradiate's package version number is looked

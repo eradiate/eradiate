@@ -52,7 +52,7 @@ class SafeOnlineDataStore(DataStore):
     def __init__(
         self, base_url: str, path: PathLike, registry_fname: PathLike = "registry.txt"
     ):
-        # Initialise attributes
+        # Initialize attributes
         if not base_url.endswith("/"):
             base_url += "/"
         path = Path(path).absolute()
@@ -64,7 +64,7 @@ class SafeOnlineDataStore(DataStore):
         )
         self.__attrs_init__(manager=manager, registry_fname=registry_fname)
 
-        # Initialise register load the registry
+        # Initialize register load the registry
         registry = registry_from_file(self.registry_fetch())
         manager.registry = registry
 
@@ -278,7 +278,7 @@ class SafeOnlineDataStore(DataStore):
 
         Notes
         -----
-        Passing ``keep="registered"`` keeps registered files to minimise the
+        Passing ``keep="registered"`` keeps registered files to minimize the
         amount of data to be downloaded upon future queries the the data store.
         This means, for instance, that if data is registered and downloaded as
         a compressed file, then served decompressed, the compressed file will be

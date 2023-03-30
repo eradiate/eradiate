@@ -251,7 +251,7 @@ def _remap_viewing_angles_plane(
     -----
     When zenith angle values are not sorted in ascending order.
     """
-    # Normalise all angles
+    # Normalize all angles
     twopi = 2.0 * np.pi
     plane = plane % twopi
     theta = theta % twopi
@@ -268,7 +268,7 @@ def _remap_viewing_angles_plane(
     # Normalise zenith values
     theta = np.where(in_plane_positive, theta, -theta)
 
-    # Normalise azimuth values
+    # Normalize azimuth values
     phi = np.full_like(theta, plane)
 
     # Check ordering and warn if it is not strictly increasing

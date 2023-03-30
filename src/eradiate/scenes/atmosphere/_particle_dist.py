@@ -7,8 +7,8 @@ altitude. The particle layer is split into a number of divisions
 
 Notes
 -----
-Particle distributions are not normalised. The parent caller is responsible
-for normalising returned values.
+Particle distributions are not normalized. The parent caller is responsible
+for normalizing returned values.
 """
 
 import typing as t
@@ -104,7 +104,7 @@ class UniformParticleDistribution(ParticleDistribution):
 @attrs.define(init=False)
 class ExponentialParticleDistribution(ParticleDistribution):
     r"""
-    Exponential particle distribution. Returns values given by the normalised
+    Exponential particle distribution. Returns values given by the normalized
     exponential PDF
 
     .. math::

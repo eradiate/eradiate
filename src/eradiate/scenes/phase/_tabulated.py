@@ -94,7 +94,7 @@ class TabulatedPhaseFunction(PhaseFunction):
     def eval(self, spectral_ctx: SpectralContext) -> np.ndarray:
         r"""
         Evaluate phase function based on a spectral context. This method
-        dispatches evaluation to specialised methods depending on the active
+        dispatches evaluation to specialized methods depending on the active
         mode.
 
         Parameters

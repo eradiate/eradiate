@@ -1,4 +1,4 @@
-.. _sec-user_guide-onedim_experiment:
+.. _sec-user_guide-atmosphere_experiment:
 
 One-dimensional experiment features
 ===================================

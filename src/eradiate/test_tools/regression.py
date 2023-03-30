@@ -267,7 +267,7 @@ class RegressionTest(ABC):
             The numerical value of the test metric.
 
         reference_only : bool
-            If ``True``, create only a simple visualisation of the computed
+            If ``True``, create only a simple visualization of the computed
             data.
         """
         vza = np.squeeze(self.value.vza.values)

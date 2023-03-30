@@ -239,7 +239,7 @@ def attach_stub(package_name: str, filename: str):
     ------
     ValueError
         If a stub file is not found for `filename`, or if the stubfile is formmated
-        incorrectly (e.g. if it contains an relative import from outside of the module)
+        incorrectly (e.g. if it contains a relative import from outside the module)
     """
     stubfile = filename if filename.endswith("i") else f"{filename}i"
 

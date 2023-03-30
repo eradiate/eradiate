@@ -290,7 +290,7 @@ class RadProfile(ABC):
     ) -> pint.Quantity:
         """
         Evaluate albedo spectrum based on a spectral context. This method
-        dispatches evaluation to specialised methods depending on the active
+        dispatches evaluation to specialized methods depending on the active
         mode.
 
         Parameters
@@ -360,7 +360,7 @@ class RadProfile(ABC):
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient spectrum based on a spectral context.
-        This method dispatches evaluation to specialised methods depending on
+        This method dispatches evaluation to specialized methods depending on
         the active mode.
 
         Parameters
@@ -432,7 +432,7 @@ class RadProfile(ABC):
     ) -> pint.Quantity:
         """
         Evaluate absorption coefficient spectrum based on a spectral context.
-        This method dispatches evaluation to specialised methods depending on
+        This method dispatches evaluation to specialized methods depending on
         the active mode.
 
         Parameters
@@ -504,7 +504,7 @@ class RadProfile(ABC):
     ) -> pint.Quantity:
         """
         Evaluate scattering coefficient spectrum based on a spectral context.
-        This method dispatches evaluation to specialised methods depending on
+        This method dispatches evaluation to specialized methods depending on
         the active mode.
 
         Parameters
@@ -576,7 +576,7 @@ class RadProfile(ABC):
     ) -> xr.Dataset:
         """
         Return a dataset that holds the radiative properties of the corresponding
-        atmospheric profile. This method dispatches evaluation to specialised
+        atmospheric profile. This method dispatches evaluation to specialized
         methods depending on the active mode.
 
         Parameters
@@ -619,7 +619,7 @@ class RadProfile(ABC):
         Returns
         -------
         Dataset
-            Radiative properties dataset.
+            Radiative property dataset.
         """
         pass
 
@@ -637,6 +637,6 @@ class RadProfile(ABC):
         Returns
         -------
         Dataset
-            Radiative properties dataset.
+            Radiative property dataset.
         """
         pass

@@ -30,7 +30,7 @@ class SeedState:
         Parameters
         ----------
         seed : int or numpy.random.SeedSequence, optional
-            Value used to initialise the internal seed sequence. If unset, the
+            Value used to initialize the internal seed sequence. If unset, the
             current seed sequence is reused, with its children spawned member
             reset.
         """
@@ -62,7 +62,7 @@ class SeedState:
 
     def numpy_default_rng(self) -> numpy.random.Generator:
         """
-        Return a default Numpy RNG initialised with a generated seed.
+        Return a default Numpy RNG initialized with a generated seed.
 
         Returns
         -------

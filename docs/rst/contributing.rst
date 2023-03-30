@@ -422,7 +422,7 @@ filled in as needed. Note that we strongly suggest using string literals
 
     This is some explanatory text
 
-    * This section explaines the details
+    * This section explains the details
     * Of how the test is implemented
     * It can contain math! :math:`e^{i\pi}=-1`
 

@@ -474,7 +474,7 @@ class EllipsoidLeafCloudParams(LeafCloudParams):
     generator. Parameters ``a``, ``b`` and ``c`` denote the ellipsoid's half
     axes along the x, y, and z directions respectively. If either ``b`` or ``c``
     are not set by the user, they default to being equal to ``a``.
-    Accordingly a sphere of radius ``r`` can be parametrized by setting ``a=r``.
+    Accordingly, a sphere of radius ``r`` can be parametrized by setting ``a=r``.
 
     See Also
     --------
@@ -606,7 +606,7 @@ class ConeLeafCloudParams(LeafCloudParams):
 class LeafCloud(CanopyElement):
     """
     A container class for leaf clouds in abstract discrete canopies.
-    Holds parameters completely characterising the leaf cloud's leaves.
+    Holds parameters completely characterizing the leaf cloud's leaves.
 
     In practice, this class should rarely be instantiated directly using its
     constructor. Instead, several class method constructors are available:

@@ -51,7 +51,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
       :class:`.MultiRadiancemeterMeasure`, for which subsensor origins are
       required to be either all inside or all outside of the atmosphere. If an
       unsuitable configuration is detected, a :class:`ValueError` will be raised
-      during initialisation.
+      during initialization.
     """
 
     geometry: PlaneParallelGeometry | SphericalShellGeometry = documented(

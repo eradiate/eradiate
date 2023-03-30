@@ -48,13 +48,13 @@ logger = logging.getLogger(__name__)
 class Experiment(ABC):
     """
     Abstract base class for all Eradiate experiments. An experiment consists of
-    a high-level scene specification parametrised by natural user input, a
+    a high-level scene specification parametrized by natural user input, a
     processing and post-processing pipeline, and a result storage data
     structure.
     """
 
     # Internal Mitsuba scene. This member is not set by the end-user, but rather
-    # by the Experiment itself during initialisation.
+    # by the Experiment itself during initialization.
     mi_scene: MitsubaObjectWrapper | None = attrs.field(
         default=None,
         repr=False,
@@ -151,7 +151,7 @@ class Experiment(ABC):
             definition takes precedence.
 
         seed_state : :class:`.SeedState`, optional
-            Seed state used to generate seeds to initialise Mitsuba's RNG at
+            Seed state used to generate seeds to initialize Mitsuba's RNG at
             every iteration of the parametric loop. If unset, Eradiate's
             :attr:`root seed state <.root_seed_state>` is used.
         """
@@ -184,7 +184,7 @@ class Experiment(ABC):
     @abstractmethod
     def context_init(self) -> KernelDictContext:
         """
-        Return a single context used for scene initialisation.
+        Return a single context used for scene initialization.
         """
         pass
 
@@ -527,7 +527,7 @@ def run(
         takes precedence.
 
     seed_state : :class:`.SeedState`, optional
-            Seed state used to generate seeds to initialise Mitsuba's RNG at
+            Seed state used to generate seeds to initialize Mitsuba's RNG at
             every iteration of the parametric loop. If unset, Eradiate's
             :attr:`root seed state <.root_seed_state>` is used.
 

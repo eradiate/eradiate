@@ -200,7 +200,7 @@ def mi_traverse(
             name = name if self.name is None else self.name + "." + name
 
             flags = self.flags | flags
-            # Non differentiable parameters shouldn't be flagged as discontinuous
+            # Non-differentiable parameters shouldn't be flagged as discontinuous
             if (flags & mi.ParamFlags.NonDifferentiable) != 0:
                 flags = flags & ~mi.ParamFlags.Discontinuous
 

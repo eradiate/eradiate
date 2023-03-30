@@ -15,7 +15,7 @@ data_store: MultiDataStore = None
 
 def init_data_store(offline: bool | None = None) -> None:
     """
-    Initialise the global data store.
+    Initialize the global data store.
 
     Parameters
     ----------

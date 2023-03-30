@@ -94,10 +94,10 @@ def _measure_spectral_config_srf_converter(value: t.Any) -> Spectrum:
     The behaviour of this converter depends on the value type:
     * If ``value`` is not a string or path, it is passed to the
       :class:`.spectrum_factory`'s converter.
-    * If ``value`` is a path, the converter tries to open the corresponding "
+    * If ``value`` is a path, the converter tries to open the corresponding
         file on the hard drive; should that fail, it queries the Eradiate data
         store with that path.
-    * If ``value`` is a string, it is interpreted as a SRF identifier:
+    * If ``value`` is a string, it is interpreted as an SRF identifier:
       * If the identifier does not end with `-raw`, the converter looks for a
         prepared version of the SRF and loads it if it exists, else it loads the
         raw SRF.

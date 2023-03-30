@@ -321,7 +321,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         fractions = self.eval_fractions(zgrid)
         sigma_t_array = xs_t_ref * fractions
 
-        # Normalise the extinction coefficient to the nominal optical thickness
+        # Normalize the extinction coefficient to the nominal optical thickness
         # so that Σ_i (k_i Δz_i) == τ
         normalized_sigma_t_array = (
             sigma_t_array.magnitude

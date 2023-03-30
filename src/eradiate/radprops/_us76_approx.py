@@ -51,7 +51,7 @@ class US76ApproxRadProfile(RadProfile):
       the altitude of 86 kilometers.
       In the present radiative properties profile, the absorption coefficient is
       computed using the ``spectra-us76_u86_4`` absorption dataset.
-      This dataset provides the absorption cross section of a specific mixture
+      This dataset provides the absorption cross-section of a specific mixture
       of N2, O2, CO2 and CH4, the mixing ratio of which are those defined by the
       *U.S. Standard Atmosphere 1976* model for the region of altitudes under
       86 kilometers, where these four gas species are well-mixed.
@@ -83,7 +83,7 @@ class US76ApproxRadProfile(RadProfile):
       provides rough estimates and discussions on the amounts of trace
       constituents such as ozone, water vapor, nitrous oxide, methane, and so
       on, is not considered as part of the *U.S. Standard Atmosphere 1976*
-      atmosphere model because it does not clearly defines the concentration
+      atmosphere model because it does not clearly define the concentration
       values of all trace constituents at all altitudes, neither does it
       provide a way to compute them.
 
@@ -96,7 +96,7 @@ class US76ApproxRadProfile(RadProfile):
       1976 atmosphere model** but instead the so-called "U.S. Standard (1976)
       atmospheric constituent profile model" in a AFGL technical report
       entitled *AFGL Atmospheric Constituent Profiles (0-120km)* and
-      published in 1986 by Anderson et al
+      published in 1986 by Anderson et al.
       :cite:`Anderson1986AtmosphericConstituentProfiles`.
       Although the "U.S. Standard (1976) atmospheric profile model" of the
       AFGL's report is based on the *U.S. Standard Atmosphere* 1976 atmosphere

@@ -70,13 +70,13 @@ class SolarIrradianceSpectrum(Spectrum):
     * When the ``datetime`` field is set, the spectrum is automatically scaled
       to account for the seasonal variations of the Earth-Sun distance using the
       ephemeris of :func:`astropy.coordinates.get_sun`.
-      The dataset is assumed to be normalised to an Earth-Sun distance of 1 AU.
+      The dataset is assumed to be normalized to an Earth-Sun distance of 1 AU.
       This will trigger the import of :mod:`astropy.coordinates` and consume a
       significant amount of memory (150 MiB with astropy v5.1).
 
     * The ``scale`` field can be used to apply additional arbitrary scaling.
       It is mostly used for debugging purposes. It can also be used to rescale
-      user-defined spectra normalised at an Earth-Sun distance different from
+      user-defined spectra normalized at an Earth-Sun distance different from
       1 AU.
 
     * The evaluation method depends on the active mode:

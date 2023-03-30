@@ -50,7 +50,7 @@ class AzimuthConvention(enum.Enum):
 
 def normalize_azimuth(angles: np.typing.ArrayLike, inplace: bool = False) -> np.ndarray:
     """
-    Normalise azimuth values to the [0, 2π[ interval.
+    Normalize azimuth values to the [0, 2π[ interval.
 
     Parameters
     ----------
@@ -64,7 +64,7 @@ def normalize_azimuth(angles: np.typing.ArrayLike, inplace: bool = False) -> np.
     Returns
     -------
     ndarray
-        Azimuth angle values normalised to the [0, 2π[ interval [rad].
+        Azimuth angle values normalized to the [0, 2π[ interval [rad].
 
     Warnings
     --------
@@ -113,7 +113,7 @@ def transform_azimuth(
         converted to a :class:`.AzimuthConvention`.
 
     normalize : bool, optional, default: True
-        If ``True``, normalise returned angle values within the [0, 2π[
+        If ``True``, normalize returned angle values within the [0, 2π[
         interval.
 
     inplace : bool, optional, default: False
@@ -272,7 +272,7 @@ def direction_to_angles(
         converted to a :class:`.AzimuthConvention`.
 
     normalize : bool, optional, default: True
-        If ``True``, normalise azimuth values within the [0, 2π[ interval.
+        If ``True``, normalize azimuth values within the [0, 2π[ interval.
 
     Returns
     -------
@@ -378,7 +378,7 @@ def angles_in_hplane(
     ValueError
         If not all directions are snapped to the specified hemisphere plane cut.
     """
-    # Normalise input parameters
+    # Normalize input parameters
     twopi = 2.0 * np.pi
     phi = np.where(theta >= 0.0, phi % twopi, (phi + np.pi) % twopi)
     theta = np.where(theta >= 0.0, theta, -theta)

@@ -111,7 +111,7 @@ def get_axes_from_facet_grid(
 
 def remove_xylabels(from_=None) -> None:
     """
-    Remove x and y axis labels from ``from_``
+    Remove x- and y-axis labels from ``from_``
     (processed by :func:`detect_axes`).
 
     Parameters
@@ -159,7 +159,7 @@ def make_ticks(num_ticks: int, limits: t.Sequence[float]):
         Number of ticks to generate, including the limits
         of the given range
 
-    limits : pair of float
+    limits : tuple[float, float]
         List of two values, limiting the ticks inclusive
 
     Returns

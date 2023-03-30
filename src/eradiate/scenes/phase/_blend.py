@@ -108,7 +108,7 @@ class BlendPhaseFunction(PhaseFunction):
     def update(self) -> None:
         super().update()
 
-        # Synchronise bounding boxes
+        # Synchronize bounding boxes
         for component in self.components:
             component.update()
 
@@ -156,7 +156,7 @@ class BlendPhaseFunction(PhaseFunction):
 
         # Compute conditional weights
         for i in range(n_comp - 1):
-            # Normalise weights
+            # Normalize weights
             weights_sum = weights[i:, ...].sum(axis=0, keepdims=True)
             weights_normalized = np.divide(
                 weights[i:, ...],
@@ -200,7 +200,7 @@ class BlendPhaseFunction(PhaseFunction):
         elif isinstance(n_component, int):
             n_component = [n_component]
 
-        # Compute normalised component weights (cached until call with different context)
+        # Compute normalized component weights (cached until call with different context)
         weights = self._eval_conditional_weights_impl(sctx)
 
         # Return selected components

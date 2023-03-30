@@ -30,7 +30,7 @@ def compute_sigma_a(
     Parameters
     ----------
     ds : Dataset
-        Absorption cross section data set.
+        Absorption cross-section data set.
 
     wl : quantity
         Wavelength [nm].
@@ -84,10 +84,10 @@ def compute_sigma_a(
 
     Warnings
     --------
-    The values of the absorption cross section at the desired wavelength,
+    The values of the absorption cross-section at the desired wavelength,
     pressure and temperature values,
     :math:`\\sigma_{a\\lambda} (p, T)`,
-    are obtained by interpolating the input absorption cross section data
+    are obtained by interpolating the input absorption cross-section data
     set along the corresponding dimensions.
 
     Notes

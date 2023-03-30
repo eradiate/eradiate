@@ -144,7 +144,7 @@ class Spectrum(NodeSceneElement, ABC):
     def eval(self, spectral_ctx: SpectralContext) -> pint.Quantity:
         """
         Evaluate spectrum based on a spectral context. This method dispatches
-        evaluation to specialised methods depending on the active mode.
+        evaluation to specialized methods depending on the active mode.
 
         Parameters
         ----------

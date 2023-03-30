@@ -386,7 +386,7 @@ DIMS = {
 # altitude regions:
 #   1. the low-altitude region, from 0 to 86 kilometers
 #   2. the high-altitude region, from 86 to 1000 kilometers.
-# The majority of computational functions hereafter are specialised for one or
+# The majority of computational functions hereafter are specialized for one or
 # the other altitude region and is valid only in that altitude region, not in
 # the other.
 #
@@ -622,7 +622,7 @@ def compute_high_altitude(data_set, mask=None, inplace=False):
 @ureg.wraps(ret=None, args="m", strict=False)
 def init_data_set(z):
     r"""
-    Initialises the data set.
+    Initializes the data set.
 
     Parameters
     ----------

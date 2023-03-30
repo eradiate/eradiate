@@ -119,7 +119,7 @@ class RectangleShape(ShapeNode):
         bsdf: BSDF | None = None,
     ) -> RectangleShape:
         """
-        This class method constructor provides a simplified parametrisation of
+        This class method constructor provides a simplified parametrization of
         the rectangle shape better suited for the definition of the surface when
         configuring the one-dimensional model.
 

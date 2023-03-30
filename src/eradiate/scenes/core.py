@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Mapping, Sequence
 
 import attrs
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttr

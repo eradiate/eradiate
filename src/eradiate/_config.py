@@ -112,7 +112,7 @@ class EradiateConfig:
     Global configuration for Eradiate.
 
     This class, instantiated once as the :data:`eradiate.config` attribute,
-    contains global configuration parameters for Eradiate. It is initialised
+    contains global configuration parameters for Eradiate. It is initialized
     using :ref:`environment variables <sec-config-env_vars>` as defaults.
 
     See Also

@@ -24,7 +24,7 @@ class HomogeneousAtmosphere(Atmosphere):
     Homogeneous atmosphere scene element [``homogeneous``].
 
     This class builds an atmosphere consisting of a homogeneous medium with
-    customisable collision coefficients and phase function.
+    customizable collision coefficients and phase function.
     """
 
     _bottom: pint.Quantity = documented(

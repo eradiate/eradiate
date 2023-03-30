@@ -39,7 +39,7 @@ class CuboidShape(ShapeNode):
     """
     Cuboid shape [``cuboid``].
 
-    This shape represents an axis-aligned cuboid parametrised by the length of
+    This shape represents an axis-aligned cuboid parametrized by the length of
     its edges and the coordinates of its central point.
     """
 
@@ -146,7 +146,7 @@ class CuboidShape(ShapeNode):
         bsdf: BSDF | None = None,
     ) -> CuboidShape:
         """
-        This class method constructor provides a simplified parametrisation of
+        This class method constructor provides a simplified parametrization of
         the cuboid shape better suited for the definition of the atmosphere when
         configuring the one-dimensional model with a plane parallel geometry.
 

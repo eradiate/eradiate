@@ -24,7 +24,7 @@ from .units import unit_registry as ureg
 
 
 def load_from_id(value: str) -> xr.Dataset:
-    """Load a SRF dataset from its identifier."""
+    """Load an SRF dataset from its identifier."""
 
     # look for the prepared version of the SRF
     try:

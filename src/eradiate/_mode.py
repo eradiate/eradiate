@@ -23,7 +23,7 @@ class Flag(enum.Flag):
     @classmethod
     def convert(cls, value: t.Any) -> Flag:
         """
-        Try to convert a value to a flag. Strings are capitalised and converted
+        Try to convert a value to a flag. Strings are capitalized and converted
         to the corresponding enum member.
         """
         if isinstance(value, str):
