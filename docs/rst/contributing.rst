@@ -5,6 +5,11 @@ Contributing to Eradiate
 
 ..  TODO: Add "Where to start" section
 
+.. important::
+   Eradiate is written and documented in English using
+   `Oxford spelling <https://en.wikipedia.org/wiki/Oxford_spelling>`_.
+
+
 .. _sec-contributing-documentation:
 
 Contributing to the documentation
