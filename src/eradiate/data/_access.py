@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import lazy_loader
+
 from ..typing import PathLike
-from ..util import lazy_loader
 
 xr = lazy_loader.load("xarray")
 
