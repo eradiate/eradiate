@@ -46,7 +46,7 @@ docs = [
   "autodocsumm",
   "myst-parser",
   "nbsphinx>=0.9.0",
-  "pydata-sphinx-theme==0.13.1",  # Pinned until this is fixed: https://github.com/executablebooks/sphinx-book-theme/issues/711
+  "pydata-sphinx-theme",  # Pinned until this is fixed: https://github.com/executablebooks/sphinx-book-theme/issues/711
   "sphinx-book-theme>=1.0",
   "sphinx",
   "sphinxcontrib-bibtex>=2.0",

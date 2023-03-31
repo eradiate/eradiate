@@ -252,11 +252,11 @@ jupyter-ydoc==0.2.3
     # via
     #   jupyter-server-ydoc
     #   jupyterlab
-jupyterlab==3.6.2
+jupyterlab==3.6.3
     # via -r requirements/recommended.in
 jupyterlab-pygments==0.2.2
     # via nbconvert
-jupyterlab-server==2.21.0
+jupyterlab-server==2.22.0
     # via jupyterlab
 jupyterlab-widgets==3.0.7
     # via ipywidgets
@@ -305,7 +305,7 @@ nbclassic==0.5.4
     # via
     #   jupyterlab
     #   notebook
-nbclient==0.7.2
+nbclient==0.7.3
     # via nbconvert
 nbconvert==7.2.10
     # via
@@ -377,7 +377,7 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pillow==9.4.0
+pillow==9.5.0
     # via matplotlib
 pint==0.20.1
     # via
@@ -425,7 +425,7 @@ pycparser==2.21
     # via cffi
 pydantic==1.10.7
     # via conda-lock
-pydata-sphinx-theme==0.13.1
+pydata-sphinx-theme==0.13.3
     # via
     #   -r requirements/docs.in
     #   sphinx-book-theme
@@ -551,7 +551,7 @@ sphinx==5.3.0
     #   sphinxcontrib-bibtex
 sphinx-autobuild==2021.3.14
     # via -r requirements/docs.in
-sphinx-book-theme==1.0.0
+sphinx-book-theme==1.0.1
     # via -r requirements/docs.in
 sphinx-click==4.4.0
     # via -r requirements/docs.in
@@ -628,6 +628,7 @@ typing-extensions==4.5.0
     #   conda-lock
     #   ipython
     #   pydantic
+    #   pydata-sphinx-theme
     #   rich
 uri-template==1.2.0
     # via jsonschema
