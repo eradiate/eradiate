@@ -356,7 +356,7 @@ class EarthObservationExperiment(Experiment, ABC):
             self.init()
 
         # Run Mitsuba for each context
-        logger.info("Running simulation")
+        logger.info("Launching simulation")
 
         mi_results = mi_render(
             self.mi_scene,

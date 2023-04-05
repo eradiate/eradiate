@@ -101,6 +101,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   in Eradiate ({ghpr}`312`).
 * Added absorption and scattering bypass switches to the {class}`.ParticleLayer`
   class ({ghpr}`316`).
+* ⚠️ Moved Mitsuba logs to the `mitsuba` logger ({ghpr}`318`).
 
 ### Documentation
 
