@@ -7,7 +7,7 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext
-from eradiate.scenes.core import traverse
+from eradiate.scenes.core import BoundingBox, traverse
 from eradiate.scenes.shapes import CuboidShape
 from eradiate.test_tools.types import check_scene_element
 
@@ -83,3 +83,10 @@ def test_cuboid_contains():
 
     # Works with multiple points
     assert np.all(cuboid.contains([[0.5, 0.5, 0.5], [0.5, -0.5, 0.5]]) == [True, False])
+
+
+def test_cuboid_bbox():
+    cuboid = CuboidShape(center=[0.5, 0.5, 0.5], edges=[1, 1, 1])
+    bbox = cuboid.bbox
+    np.testing.assert_array_equal(bbox.min.m_as(ureg.m), [0, 0, 0])
+    np.testing.assert_array_equal(bbox.max.m_as(ureg.m), [1, 1, 1])

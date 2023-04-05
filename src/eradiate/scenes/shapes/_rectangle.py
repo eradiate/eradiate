@@ -8,6 +8,7 @@ import pinttr
 
 from ._core import ShapeNode
 from ..bsdfs import BSDF
+from ..core import BoundingBox
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...units import unit_context_config as ucc
@@ -93,6 +94,10 @@ class RectangleShape(ShapeNode):
         init_type="array-like, optional",
         default="[0, 1, 0]",
     )
+
+    def bbox(self) -> BoundingBox:
+        # Inherit docstring
+        raise NotImplementedError
 
     @property
     def template(self) -> dict:

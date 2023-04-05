@@ -8,11 +8,11 @@ import mitsuba as mi
 import numpy as np
 
 from ._core import PhaseFunction, phase_function_factory
-from ..core import BoundingBox, traverse
+from ..core import traverse
+from ..geometry import SceneGeometry
 from ...attrs import documented
 from ...contexts import KernelDictContext, SpectralContext
-from ...kernel import InitParameter, UpdateParameter, map_unit_cube
-from ...units import unit_context_kernel as uck
+from ...kernel import InitParameter, UpdateParameter
 from ...util.misc import cache_by_id
 
 
@@ -88,54 +88,31 @@ class BlendPhaseFunction(PhaseFunction):
                     "lists must have the same length"
                 )
 
-    bbox: BoundingBox | None = documented(
+    geometry: SceneGeometry | None = documented(
         attrs.field(
             default=None,
-            converter=attrs.converters.optional(BoundingBox.convert),
+            converter=attrs.converters.optional(SceneGeometry.convert),
             validator=attrs.validators.optional(
-                attrs.validators.instance_of(BoundingBox)
+                attrs.validators.instance_of(SceneGeometry)
             ),
         ),
+        doc="Parameters defining the basic geometry of the scene. If unset, "
+        "the volume textures defining component weights will be assigned "
+        "defaults likely unsuitable for atmosphere construction.",
+        type=".SceneGeometry or None",
+        init_type=".SceneGeometry or dict or str, optional",
         default="None",
-        type=":class:`.BoundingBox` or None",
-        init_type="quantity or array-like or :class:`.BoundingBox`, optional",
-        doc="Optional bounding box describing the extent of the volume "
-        "associated with this phase function. If a component is another "
-        "blended phase function, its bounding box will be forced to match "
-        "this one.",
     )
 
     def update(self) -> None:
         super().update()
 
-        # Synchronize bounding boxes
+        # Synchronize geometries
         for component in self.components:
             component.update()
 
             if isinstance(component, BlendPhaseFunction):
-                component.bbox = self.bbox
-
-    def _gridvolume_transform(self) -> mi.ScalarTransform4f:
-        if self.bbox is None:
-            # This is currently possible because the bounding box is expected to
-            # be set by a parent Atmosphere object based on the selected
-            # geometry
-            raise ValueError(
-                "computing the gridvolume transform requires a bounding box"
-            )
-
-        length_units = uck.get("length")
-        bbox_min = self.bbox.min.m_as(length_units)
-        bbox_max = self.bbox.max.m_as(length_units)
-
-        return map_unit_cube(
-            xmin=bbox_min[0],
-            xmax=bbox_max[0],
-            ymin=bbox_min[1],
-            ymax=bbox_max[1],
-            zmin=bbox_min[2],
-            zmax=bbox_max[2],
-        )
+                component.geometry = self.geometry
 
     @cache_by_id
     def _eval_conditional_weights_impl(self, sctx: SpectralContext) -> np.ndarray:
@@ -238,8 +215,10 @@ class BlendPhaseFunction(PhaseFunction):
 
             result[f"{prefix}weight.grid"] = InitParameter(eval_conditional_weights)
 
-            if self.bbox is not None:
-                result[f"{prefix}weight.to_world"] = self._gridvolume_transform()
+            if self.geometry is not None:
+                result[
+                    f"{prefix}weight.to_world"
+                ] = self.geometry.atmosphere_gridvolume_to_world
 
         else:
             template, _ = traverse(self.components[-1])

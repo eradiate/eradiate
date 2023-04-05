@@ -5,7 +5,7 @@ from abc import ABC
 import attrs
 
 from ..bsdfs import BSDF, bsdf_factory
-from ..core import InstanceSceneElement, NodeSceneElement, Ref
+from ..core import BoundingBox, InstanceSceneElement, NodeSceneElement, Ref
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
@@ -67,8 +67,18 @@ class Shape:
 
     def update(self) -> None:
         # Inherit docstring
+
+        # Normalize child BSDF ID
         if isinstance(self.bsdf, BSDF):
             self.bsdf.id = self._bsdf_id
+
+    @property
+    def bbox(self) -> BoundingBox:
+        """
+        :class:`.BoundingBox` : Shape bounding box. Default implementation
+            raises a :class:`NotImplementedError`.
+        """
+        raise NotImplementedError
 
     @property
     def _bsdf_id(self) -> str:

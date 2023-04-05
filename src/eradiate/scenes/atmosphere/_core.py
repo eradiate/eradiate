@@ -15,7 +15,7 @@ from ..core import (
 )
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ..phase import PhaseFunction
-from ..shapes import CuboidShape, SphereShape
+from ..shapes import Shape
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
@@ -98,26 +98,24 @@ class Atmosphere(CompositeSceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @property
-    @abstractmethod
-    def bottom(self) -> pint.Quantity:
+    def bottom_altitude(self) -> pint.Quantity:
         """
         Returns
         -------
         quantity
             Atmosphere bottom altitude.
         """
-        pass
+        return self.geometry.ground_altitude
 
     @property
-    @abstractmethod
-    def top(self) -> pint.Quantity:
+    def top_altitude(self) -> pint.Quantity:
         """
         Returns
         -------
         quantity
             Atmosphere top altitude.
         """
-        pass
+        return self.geometry.toa_altitude
 
     @property
     def height(self) -> pint.Quantity:
@@ -127,7 +125,7 @@ class Atmosphere(CompositeSceneElement, ABC):
         quantity
             Atmosphere height.
         """
-        return self.top - self.bottom
+        return self.top_altitude - self.bottom_altitude
 
     @property
     @abstractmethod
@@ -169,28 +167,14 @@ class Atmosphere(CompositeSceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @property
-    def shape(self) -> CuboidShape | SphereShape:
+    def shape(self) -> Shape:
         """
         Returns
         -------
-        .CuboidShape or .SphereShape
-            Shape associated with this atmosphere, factoring in the scene
-            geometry and radiative property profile.
+        .Shape
+            Shape associated with this atmosphere, based on the scene geometry.
         """
-        if isinstance(self.geometry, PlaneParallelGeometry):
-            return CuboidShape.atmosphere(
-                top=self.top, bottom=self.bottom, width=self.geometry.width
-            )
-
-        elif isinstance(self.geometry, SphericalShellGeometry):
-            return SphereShape.atmosphere(
-                top=self.top, planet_radius=self.geometry.planet_radius
-            )
-
-        else:  # Shouldn't happen, prevented by validator
-            raise TypeError(
-                f"unhandled atmosphere geometry type '{type(self.geometry).__name__}'"
-            )
+        return self.geometry.atmosphere_shape
 
     @property
     def shape_id(self):
@@ -350,9 +334,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         init_type="float, optional",
     )
 
-    def __attrs_post_init__(self) -> None:
-        self.update()
-
     def update(self) -> None:
         """
         Update internal state.
@@ -363,18 +344,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     #                    Spatial and thermophysical properties
     # --------------------------------------------------------------------------
 
-    @property
-    @abstractmethod
-    def zgrid(self) -> ZGrid:
-        """
-        Returns
-        -------
-        .ZGrid
-            Altitude grid at which thermophysical and radiative properties are
-            evaluated by default. Corresponds to atmospheric profile layer
-            centres.
-        """
-        pass
+    # Nothing at the moment
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
@@ -420,7 +390,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             * ``z``: altitude.
         """
         if zgrid is None:
-            zgrid = self.zgrid
+            zgrid = self.geometry.zgrid
 
         sigma_units = ucc.get("collision_coefficient")
         sigma_t = self.eval_sigma_t(sctx, zgrid)
@@ -605,8 +575,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def _template_medium(self) -> dict:
         # Inherit docstring
         length_units = uck.get("length")
-        top = self.top.m_as(length_units)
-        bottom = self.bottom.m_as(length_units)
+        top = self.geometry.toa_altitude.m_as(length_units)
+        bottom = self.geometry.ground_altitude.m_as(length_units)
 
         if isinstance(self.geometry, PlaneParallelGeometry):
             width = self.geometry.width.m_as(length_units)
@@ -652,7 +622,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         elif isinstance(self.geometry, SphericalShellGeometry):
             planet_radius = self.geometry.planet_radius.m_as(length_units)
-            rmax = planet_radius + top
+            rmin = planet_radius
+            rmax = rmin + top
             to_world = mi.ScalarTransform4f.scale(rmax)
 
             volumes = {
@@ -672,7 +643,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         ),
                     },
                     "to_world": to_world,
-                    "rmin": planet_radius / rmax,
+                    "rmin": rmin / rmax,
                 },
                 "sigma_t": {
                     "type": "sphericalcoordsvolume",
@@ -690,7 +661,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         ),
                     },
                     "to_world": to_world,
-                    "rmin": planet_radius / rmax,
+                    "rmin": rmin / rmax,
                 },
             }
 

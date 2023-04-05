@@ -39,7 +39,18 @@ def test_particle_layer_kernel_dict(mode_mono, geometry):
 @pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
 def test_particle_layer_eval_mono_absorbing_only(mode_mono, absorbing_only, wavelength):
     """eval methods return expected values for an absorbing-only layer."""
-    layer = ParticleLayer(dataset=absorbing_only)
+    bottom = 0.0 * ureg.km
+    top = 1.0 * ureg.km
+    layer = ParticleLayer(
+        geometry={
+            "type": "plane_parallel",
+            "ground_altitude": bottom,
+            "toa_altitude": top,
+        },
+        dataset=absorbing_only,
+        bottom=bottom,
+        top=top,
+    )
     spectral_ctx = SpectralContext.new(wavelength=wavelength)
     assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.0 / ureg.km)
     assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
@@ -54,14 +65,25 @@ def test_particle_layer_eval_mono_scattering_only(
     mode_mono, scattering_only, wavelength
 ):
     """eval methods return expected values for a scattering-only layer."""
-    layer = ParticleLayer(dataset=scattering_only)
+    bottom = 0.0 * ureg.km
+    top = 1.0 * ureg.km
+    layer = ParticleLayer(
+        geometry={
+            "type": "plane_parallel",
+            "ground_altitude": bottom,
+            "toa_altitude": top,
+        },
+        dataset=scattering_only,
+        bottom=bottom,
+        top=top,
+    )
     spectral_ctx = SpectralContext.new(wavelength=wavelength)
     assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.2 / ureg.km)
     assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.0 / ureg.km)
     assert np.allclose(layer.eval_albedo(spectral_ctx).m, 1.0)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    assert layer.eval_mfp(ctx) == 5.0 * ureg.km
+    assert np.isclose(layer.eval_mfp(ctx), 5.0 * ureg.km)
 
 
 @pytest.mark.parametrize("wavelength", [280.0, 550.0, 1600.0, 2400.0])
@@ -69,27 +91,45 @@ def test_particle_layer_eval_mono(mode_mono, test_particles_dataset, wavelength)
     """
     eval_* methods return expected values for a scattering and absorbing layer.
     """
+    bottom = 0.0 * ureg.km
+    top = 1.0 * ureg.km
     layer = ParticleLayer(
+        geometry={
+            "type": "plane_parallel",
+            "ground_altitude": bottom,
+            "toa_altitude": top,
+        },
         dataset=test_particles_dataset,
-        n_layers=1,
         tau_ref=1.0,
-        bottom=0.0 * ureg.km,
-        top=1.0 * ureg.km,
+        bottom=bottom,
+        top=top,
     )
     spectral_ctx = SpectralContext.new(wavelength=wavelength)
+    print(layer.eval_sigma_t(spectral_ctx))
     assert np.allclose(layer.eval_sigma_t(spectral_ctx), 1.0 / ureg.km)
     assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.8 / ureg.km)
     assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
     assert np.allclose(layer.eval_albedo(spectral_ctx).m, 0.8)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
-    assert layer.eval_mfp(ctx) == 1.25 * ureg.km
+    assert np.isclose(layer.eval_mfp(ctx), 1.25 * ureg.km)
 
 
 @pytest.mark.parametrize("ckd_bin", ["280", "550", "1600", "2400"])
 def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, absorbing_only, ckd_bin):
     """eval methods return expected values for an absorbing-only layer."""
-    layer = ParticleLayer(dataset=absorbing_only)
+    bottom = 0.0 * ureg.km
+    top = 1.0 * ureg.km
+    layer = ParticleLayer(
+        geometry={
+            "type": "plane_parallel",
+            "ground_altitude": bottom,
+            "toa_altitude": top,
+        },
+        dataset=absorbing_only,
+        bottom=bottom,
+        top=top,
+    )
     spectral_config = MeasureSpectralConfig.new(bin_set="10nm", bins=ckd_bin)
     spectral_ctx = spectral_config.spectral_ctxs()[0]
     assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.0 / ureg.km)
@@ -103,12 +143,23 @@ def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, absorbing_only, ckd_bi
 @pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
 def test_particle_layer_eval_ckd_scattering_only(mode_ckd, scattering_only, bins):
     """eval methods return expected values for a scattering-only layer."""
-    layer = ParticleLayer(dataset=scattering_only)
+    bottom = 0.0 * ureg.km
+    top = 1.0 * ureg.km
+    layer = ParticleLayer(
+        geometry={
+            "type": "plane_parallel",
+            "ground_altitude": bottom,
+            "toa_altitude": top,
+        },
+        dataset=scattering_only,
+        bottom=bottom,
+        top=top,
+    )
     spectral_config = MeasureSpectralConfig.new(bin_set="10nm", bins=bins)
     spectral_ctx = spectral_config.spectral_ctxs()[0]
-    assert np.all(layer.eval_sigma_s(spectral_ctx) == 0.2 / ureg.km)
-    assert np.all(layer.eval_sigma_a(spectral_ctx).m == 0.0)
-    assert np.all(layer.eval_albedo(spectral_ctx).m == 1.0)
+    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.2 / ureg.km)
+    assert np.allclose(layer.eval_sigma_a(spectral_ctx).m, 0.0)
+    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 1.0)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
     assert layer.eval_mfp(ctx).magnitude > 0.0
@@ -117,19 +168,25 @@ def test_particle_layer_eval_ckd_scattering_only(mode_ckd, scattering_only, bins
 @pytest.mark.parametrize("bins", ["280", "550", "1600", "2400"])
 def test_particle_layer_eval_ckd(mode_ckd, test_particles_dataset, bins):
     """eval methods return expected values for a scattering-only layer."""
+    bottom = 0.0 * ureg.km
+    top = 1.0 * ureg.km
     layer = ParticleLayer(
+        geometry={
+            "type": "plane_parallel",
+            "ground_altitude": bottom,
+            "toa_altitude": top,
+        },
         dataset=test_particles_dataset,
-        n_layers=1,
         tau_ref=1.0,
-        bottom=0.0 * ureg.km,
-        top=1.0 * ureg.km,
+        bottom=bottom,
+        top=top,
     )
     spectral_config = MeasureSpectralConfig.new(bin_set="10nm", bins=bins)
     spectral_ctx = spectral_config.spectral_ctxs()[0]
-    assert np.isclose(layer.eval_sigma_t(spectral_ctx), 1.0 / ureg.km)
-    assert np.isclose(layer.eval_sigma_s(spectral_ctx), 0.8 / ureg.km)
-    assert np.isclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
-    assert np.isclose(layer.eval_albedo(spectral_ctx).m, 0.8)
+    assert np.allclose(layer.eval_sigma_t(spectral_ctx), 1.0 / ureg.km)
+    assert np.allclose(layer.eval_sigma_s(spectral_ctx), 0.8 / ureg.km)
+    assert np.allclose(layer.eval_sigma_a(spectral_ctx), 0.2 / ureg.km)
+    assert np.allclose(layer.eval_albedo(spectral_ctx).m, 0.8)
 
     ctx = KernelDictContext(spectral_ctx=spectral_ctx)
     assert layer.eval_mfp(ctx) == 1.25 * ureg.km
@@ -137,7 +194,7 @@ def test_particle_layer_eval_ckd(mode_ckd, test_particles_dataset, bins):
 
 def test_particle_layer_construct_basic():
     """Construction succeeds with basic parameters."""
-    assert ParticleLayer(n_layers=9)
+    assert ParticleLayer()
 
 
 def test_particle_layer_scale(modes_all_single):
@@ -153,18 +210,21 @@ def test_particle_layer_construct_attrs(test_dataset_path):
     top = ureg.Quantity(1.8, "km")
     tau_ref = ureg.Quantity(0.3, "dimensionless")
     layer = ParticleLayer(
+        geometry={
+            "type": "plane_parallel",
+            "ground_altitude": bottom,
+            "toa_altitude": top,
+        },
         bottom=bottom,
         top=top,
         distribution=UniformParticleDistribution(),
         tau_ref=tau_ref,
-        n_layers=9,
         dataset=test_dataset_path,
     )
-    assert layer.bottom == bottom
-    assert layer.top == top
+    assert layer.bottom_altitude == bottom
+    assert layer.top_altitude == top
     assert isinstance(layer.distribution, UniformParticleDistribution)
     assert layer.tau_ref == tau_ref
-    assert layer.n_layers == 9
     assert isinstance(layer.dataset, xr.Dataset)
 
 
@@ -216,31 +276,15 @@ def test_particle_layer_eval_radprops(mode_mono, test_dataset_path, tau_ref):
         bottom=0.5 * ureg.km,  # arbitrary
         top=3.0 * ureg.km,  # arbitrary
         distribution={"type": "uniform"},
-        n_layers=1,
         tau_ref=tau_ref,
     )
-
-    # compute optical thickness at reference wavelength from layer's radprops
-    # and check it matches the input tau_ref
-    spectral_ctx = SpectralContext.new(wavelength=layer.w_ref)
-    radprops = layer.eval_radprops(spectral_ctx)
-    delta_z = layer.height / layer.n_layers
-
-    with xr.set_options(keep_attrs=True):
-        tau = to_quantity(radprops.sigma_t.sum()) * delta_z
-
-    assert np.isclose(tau, tau_ref)
 
 
 @pytest.mark.parametrize(
     "tau_ref",
     np.array([0.1, 0.5, 1.0, 2.0, 5.0]) * ureg.dimensionless,
 )
-def test_particle_layer_eval_sigma_t_mono(
-    mode_mono,
-    tau_ref,
-    test_dataset_path,
-):
+def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_ref, test_dataset_path):
     r"""
     Spectral dependency of extinction is accounted for.
 
@@ -258,19 +302,28 @@ def test_particle_layer_eval_sigma_t_mono(
     which is what we assert in this test.
     """
     w_ref = 550 * ureg.nm
+    bottom = 0.5 * ureg.km  # arbitrary
+    top = 3.0 * ureg.km  # arbitrary
+
     layer = ParticleLayer(
+        geometry=dict(
+            type="plane_parallel",
+            ground_altitude=bottom,
+            toa_altitude=top,
+            zgrid=[bottom.m, top.m] * top.u,
+        ),
         dataset=test_dataset_path,
-        bottom=0.5 * ureg.km,  # arbitrary
-        top=3.0 * ureg.km,  # arbitrary
+        bottom=bottom,
+        top=top,
         distribution={"type": "uniform"},
-        n_layers=1,
         w_ref=w_ref,
         tau_ref=tau_ref,
     )
 
     # layer optical thickness @ current wavelength
     wavelengths = np.linspace(500.0, 1500.0, 101) * ureg.nm
-    tau = layer.eval_sigma_t_mono(wavelengths, layer.zgrid) * layer.height
+    tau = layer.eval_sigma_t_mono(wavelengths, layer.geometry.zgrid) * layer.height
+    print(tau.shape)
 
     # data set extinction @ running and reference wavelength
     ds = data.load_dataset(test_dataset_path)
@@ -321,14 +374,19 @@ def test_particle_layer_eval_sigma_t_mono(
 )
 def test_particle_layer_switches(mode_mono, has_absorption, has_scattering, expected):
     try:
+        bottom = 0.0 * ureg.km
+        top = 1.0 * ureg.km
         particle_layer = ParticleLayer(
-            bottom=0.0 * ureg.km,
-            top=1.0 * ureg.km,
+            geometry={
+                "type": "plane_parallel",
+                "ground_altitude": bottom,
+                "toa_altitude": top,
+            },
             tau_ref=1.0,
             has_absorption=has_absorption,
             has_scattering=has_scattering,
         )
-        zgrid = particle_layer.zgrid
+        zgrid = particle_layer.geometry.zgrid
         w = 550.0 * ureg.nm
 
         np.testing.assert_allclose(

@@ -11,6 +11,7 @@ from pinttr.util import ensure_units
 
 from ._core import ShapeNode
 from ..bsdfs import BSDF
+from ..core import BoundingBox
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...units import unit_context_config as ucc
@@ -64,6 +65,14 @@ class CuboidShape(ShapeNode):
         init_type="quantity or array-like",
         default="[1, 1, 1]",
     )
+
+    @property
+    def bbox(self) -> BoundingBox:
+        # Inherit docstring
+
+        return BoundingBox(
+            self.center - 0.5 * self.edges, self.center + 0.5 * self.edges
+        )
 
     def contains(
         self, p: np.typing.ArrayLike, strict: bool = False

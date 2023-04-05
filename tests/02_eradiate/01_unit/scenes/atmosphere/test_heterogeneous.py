@@ -13,6 +13,7 @@ from eradiate.scenes.atmosphere import (
     ParticleLayer,
 )
 from eradiate.scenes.core import traverse
+from eradiate.scenes.geometry import SceneGeometry
 from eradiate.test_tools.types import check_scene_element
 
 
@@ -65,19 +66,15 @@ def test_heterogeneous_single_ckd(mode_ckd, geometry, component, bin_set):
     """
     # Construct succeeds
     if component == "molecular":
-        zgrid = ZGrid(np.linspace(0, 120, 121) * ureg.km)
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry,
-            zgrid=zgrid,
             molecular_atmosphere=MolecularAtmosphere.afgl_1986(),
         )
 
     else:
-        zgrid = ZGrid(np.linspace(0, 1, 101) * ureg.km)
         component = ParticleLayer()
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry,
-            zgrid=zgrid,
             particle_layers=[component],
         )
 
@@ -115,8 +112,7 @@ def test_heterogeneous_multi_ckd(mode_ckd, geometry, bin_set):
     molecular_atmosphere = MolecularAtmosphere.afgl_1986()
 
     atmosphere = HeterogeneousAtmosphere(
-        geometry=geometry,
-        zgrid=np.linspace(0, 120, 121) * ureg.km,
+        geometry={"type": geometry, "zgrid": np.linspace(0, 120, 121) * ureg.km},
         molecular_atmosphere=molecular_atmosphere,
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
@@ -137,12 +133,14 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         component_3 = ParticleLayer(bottom=0.75, top=2.0)
 
     mixed = HeterogeneousAtmosphere(
-        geometry="plane_parallel",
-        zgrid=np.linspace(0, 2, 201) * ureg.km,
+        geometry={
+            "type": "plane_parallel",
+            "zgrid": np.linspace(0, 120, 1201) * ureg.km,
+        },
         particle_layers=[component_1, component_2, component_3],
     )
     ctx = KernelDictContext()
-    zgrid = mixed.zgrid
+    zgrid = mixed.geometry.zgrid
 
     # Evaluate all profiles on the container's altitude grid
     radprofiles = {}
@@ -195,18 +193,24 @@ def test_heterogeneous_mix_weights(modes_all_double):
     Check that component weights are correctly computed.
     """
     ctx = KernelDictContext()
-    zgrid = ZGrid(np.linspace(0, 100, 101) * ureg.km)
+    geometry = SceneGeometry.convert(
+        {
+            "type": "plane_parallel",
+            "ground_altitude": 0.0 * ureg.km,
+            "toa_altitude": 100.0 * ureg.km,
+            "zgrid": ZGrid(np.linspace(0, 100, 101) * ureg.km),
+        }
+    )
 
     # Fist basic check: a uniform layer and a molecular atmosphere
     molecular = (
-        MolecularAtmosphere.afgl_1986(levels=zgrid.levels)
+        MolecularAtmosphere.afgl_1986(levels=geometry.zgrid.levels)
         if eradiate.mode().is_ckd
-        else MolecularAtmosphere.ussa_1976(levels=zgrid.levels)
+        else MolecularAtmosphere.ussa_1976(levels=geometry.zgrid.levels)
     )
 
     mixed = HeterogeneousAtmosphere(
-        geometry="plane_parallel",
-        zgrid=zgrid,
+        geometry=geometry,
         molecular_atmosphere=molecular,
         particle_layers=ParticleLayer(
             bottom=0.0 * ureg.km,
@@ -221,17 +225,16 @@ def test_heterogeneous_mix_weights(modes_all_double):
     # Weights should be non-zero over the first 50 km, and 0 above
     # (all to the molecular component)
     weights = np.squeeze(mi_params["weight.data"])
-    assert len(weights) == mixed.zgrid.n_layers
+    assert len(weights) == geometry.zgrid.n_layers
 
-    middle = np.argwhere(mixed.zgrid.layers <= 50.0 * ureg.km).max() + 1
+    middle = np.argwhere(geometry.zgrid.layers <= 50.0 * ureg.km).max() + 1
 
     assert np.all((weights[:middle] > 0.0) & (weights[:middle] < 1.0))
     assert np.all(weights[middle:] == 0.0)
 
     # Second check: simple disjoint components, more than 1
     mixed = HeterogeneousAtmosphere(
-        geometry="plane_parallel",
-        zgrid=zgrid,
+        geometry=geometry,
         particle_layers=[
             ParticleLayer(
                 bottom=0.0 * ureg.km,
@@ -254,8 +257,8 @@ def test_heterogeneous_mix_weights(modes_all_double):
     weight_1 = np.squeeze(mi_wrapper.parameters["weight.data"])
     weight_2 = np.squeeze(mi_wrapper.parameters["phase_1.weight.data"])
 
-    middle = np.argwhere(mixed.zgrid.layers <= 50.0 * ureg.km).max() + 1
-    fourfive = np.argwhere(mixed.zgrid.layers <= 80.0 * ureg.km).max() + 1
+    middle = np.argwhere(geometry.zgrid.layers <= 50.0 * ureg.km).max() + 1
+    fourfive = np.argwhere(geometry.zgrid.layers <= 80.0 * ureg.km).max() + 1
 
     assert np.all(weight_1[:middle] == 0.0)
     assert np.all(weight_1[middle:] == 1.0)
@@ -266,8 +269,7 @@ def test_heterogeneous_mix_weights(modes_all_double):
     # Component 1 has twice the optical thickness and extent of component 2,
     # therefore they have the same extinction coefficient
     mixed = HeterogeneousAtmosphere(
-        geometry="plane_parallel",
-        zgrid=zgrid,
+        geometry=geometry,
         particle_layers=[
             ParticleLayer(
                 bottom=0.0 * ureg.km,
@@ -285,7 +287,7 @@ def test_heterogeneous_mix_weights(modes_all_double):
     )
     mi_wrapper = check_scene_element(mixed.phase, mi.PhaseFunction)
     weights = np.squeeze(mi_wrapper.parameters["weight.data"])
-    middle = np.argwhere(mixed.zgrid.layers <= 50.0 * ureg.km).max() + 1
+    middle = np.argwhere(geometry.zgrid.layers <= 50.0 * ureg.km).max() + 1
 
     assert np.all(weights[:middle] == 0.0)
     assert np.all(weights[middle:] == 0.5)
@@ -336,13 +338,15 @@ def test_heterogeneous_absorbing_mol_atm(mode_ckd, particle_radprops, request):
         dataset=request.getfixturevalue(particle_radprops),
     )
     atmosphere = HeterogeneousAtmosphere(
-        zgrid=np.linspace(0, 120, 121) * ureg.km,
         molecular_atmosphere=MolecularAtmosphere.afgl_1986(
             has_absorption=True,
             has_scattering=False,
         ),
         particle_layers=particle_layer,
-        geometry={"type": "spherical_shell"},  # arbitrary
+        geometry={
+            "type": "spherical_shell",  # arbitrary
+            "zgrid": np.linspace(0, 120, 121) * ureg.km,
+        },
     )
 
     # Collect phase function weights
@@ -350,8 +354,8 @@ def test_heterogeneous_absorbing_mol_atm(mode_ckd, particle_radprops, request):
     weights = np.squeeze(mi_wrapper.parameters["weight.data"])
 
     # Extract phase function weights
-    inside_particle_layer = (atmosphere.zgrid.layers >= pl_bottom) & (
-        atmosphere.zgrid.layers <= pl_top
+    inside_particle_layer = (atmosphere.geometry.zgrid.layers >= pl_bottom) & (
+        atmosphere.geometry.zgrid.layers <= pl_top
     )
 
     # Outside the particle layer, the phase function weight should be zero.

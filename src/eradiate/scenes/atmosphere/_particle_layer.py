@@ -63,7 +63,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     (``dataset``).
     """
 
-    _bottom: pint.Quantity = documented(
+    bottom: pint.Quantity = documented(
         pinttr.field(
             default=ureg.Quantity(0.0, ureg.km),
             validator=[
@@ -80,7 +80,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="0 km",
     )
 
-    _top: pint.Quantity = documented(
+    top: pint.Quantity = documented(
         pinttr.field(
             units=ucc.deferred("length"),
             default=ureg.Quantity(1.0, ureg.km),
@@ -97,8 +97,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="1 km.",
     )
 
-    @_bottom.validator
-    @_top.validator
+    @bottom.validator
+    @top.validator
     def _bottom_top_validator(self, attribute, value):
         if self.bottom >= self.top:
             raise ValueError(
@@ -159,18 +159,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="0.2",
     )
 
-    n_layers: int = documented(
-        attrs.field(
-            default=16,
-            converter=int,
-            validator=attrs.validators.instance_of(int),
-        ),
-        doc="Number of layers in which the particle layer is discretised by "
-        "default.",
-        type="int",
-        default="16",
-    )
-
     dataset: xr.Dataset = documented(
         attrs.field(
             default="govaerts_2021-continental",
@@ -227,41 +215,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             )
 
     _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
-    _zgrid: ZGrid | None = attrs.field(default=None, init=False)
 
     def update(self) -> None:
-        super().update()
-
-        ds = self.dataset
-        self._phase = TabulatedPhaseFunction(id=self.phase_id, data=ds.phase)
-        self._zgrid = ZGrid(np.linspace(self.bottom, self.top, self.n_layers + 1))
+        self._phase = TabulatedPhaseFunction(id=self.phase_id, data=self.dataset.phase)
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
     # --------------------------------------------------------------------------
-
-    @property
-    def top(self) -> pint.Quantity:
-        # Inherit docstring
-        return self._top
-
-    @property
-    def bottom(self) -> pint.Quantity:
-        # Inherit docstring
-        return self._bottom
-
-    @property
-    def zgrid(self) -> ZGrid:
-        # Inherit docstring
-        return self._zgrid
-
-    @property
-    def z_level(self) -> pint.Quantity:
-        return self.zgrid.levels
-
-    @property
-    def z_layer(self) -> pint.Quantity:
-        return self.zgrid.layers
 
     def eval_fractions(self, zgrid: ZGrid) -> np.ndarray:
         """
@@ -335,13 +295,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         if eradiate.mode().is_mono:
             return self.eval_albedo_mono(
                 sctx.wavelength,
-                self.zgrid if zgrid is None else zgrid,
+                self.geometry.zgrid if zgrid is None else zgrid,
             )
 
         elif eradiate.mode().is_ckd:
             return self.eval_albedo_ckd(
                 sctx.bindex,
-                self.zgrid if zgrid is None else zgrid,
+                self.geometry.zgrid if zgrid is None else zgrid,
             )
 
         else:
@@ -381,13 +341,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         if eradiate.mode().is_mono:
             return self.eval_sigma_t_mono(
                 sctx.wavelength,
-                self.zgrid if zgrid is None else zgrid,
+                self.geometry.zgrid if zgrid is None else zgrid,
             )
 
         elif eradiate.mode().is_ckd:
             return self.eval_sigma_t_ckd(
                 sctx.bindex,
-                self.zgrid if zgrid is None else zgrid,
+                self.geometry.zgrid if zgrid is None else zgrid,
             )
 
         else:
@@ -422,13 +382,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         if eradiate.mode().is_mono:
             return self.eval_sigma_a_mono(
                 sctx.wavelength,
-                self.zgrid if zgrid is None else zgrid,
+                self.geometry.zgrid if zgrid is None else zgrid,
             )
 
         elif eradiate.mode().is_ckd:
             return self.eval_sigma_a_ckd(
                 sctx.bindex,
-                self.zgrid if zgrid is None else zgrid,
+                self.geometry.zgrid if zgrid is None else zgrid,
             )
 
         else:
@@ -453,13 +413,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         if eradiate.mode().is_mono:
             return self.eval_sigma_s_mono(
                 sctx.wavelength,
-                self.zgrid if zgrid is None else zgrid,
+                self.geometry.zgrid if zgrid is None else zgrid,
             )
 
         elif eradiate.mode().is_ckd:
             return self.eval_sigma_s_ckd(
                 sctx.bindex,
-                self.zgrid if zgrid is None else zgrid,
+                self.geometry.zgrid if zgrid is None else zgrid,
             )
 
         else:

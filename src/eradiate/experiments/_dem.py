@@ -198,7 +198,7 @@ class DEMExperiment(EarthObservationExperiment):
         if self.surface is not None:
             if self.atmosphere is not None:
                 surface_width = self.atmosphere.geometry.width
-                surface_altitude = self.atmosphere.bottom
+                surface_altitude = self.atmosphere.bottom_altitude
             else:
                 surface_width = self._default_surface_width
                 surface_altitude = 0.0 * ureg.km

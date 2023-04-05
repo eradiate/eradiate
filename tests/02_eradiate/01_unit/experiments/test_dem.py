@@ -46,7 +46,7 @@ def test_dem_experiment_construct_normalize_measures(mode_mono):
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
     # When atmosphere is set, measure target is at ground level
-    exp = DEMExperiment(atmosphere=HomogeneousAtmosphere(top=100.0 * ureg.km))
+    exp = DEMExperiment(atmosphere=HomogeneousAtmosphere())
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
 

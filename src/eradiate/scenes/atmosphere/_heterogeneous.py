@@ -12,9 +12,8 @@ import pint
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular_atmosphere import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
-from ..core import BoundingBox, traverse
+from ..core import traverse
 from ..phase import BlendPhaseFunction, PhaseFunction
-from ..shapes import CuboidShape, SphereShape
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...radprops import ZGrid
@@ -108,23 +107,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
-    _zgrid: ZGrid = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(
-                lambda x: ZGrid(x) if not isinstance(x, ZGrid) else x
-            ),
-            validator=attrs.validators.optional(attrs.validators.instance_of(ZGrid)),
-            repr=False,
-        ),
-        doc="A high-resolution layer altitude mesh on which the radiative "
-        "properties of the components are interpolated. If unset, a default grid "
-        "grid with one layer per 100 m (or 10 layers if the atmosphere object "
-        "height is less than 100 m) is used.",
-        type=".ZGrid",
-        init_type=".ZGrid, optional",
-    )
-
     @property
     def components(self) -> list[MolecularAtmosphere | ParticleLayer]:
         """
@@ -139,63 +121,19 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     def update(self):
         # Inherit docstring
-        super().update()
-
-        # Force component IDs and geometry
-        for i, component in enumerate(self.components):
-            component.id = f"{self.id}_component_{i}"
-            component.geometry = self.geometry
-            component.update()
-
-        # Set altitude grid
-        if self._zgrid is None:
-            bottom = self.bottom.m_as(ureg.m)
-            top = self.top.m_as(ureg.m)
-            step = min(100.0, (top - bottom) / 10.0)
-            self._zgrid = ZGrid(
-                ureg.convert(
-                    np.arange(bottom, top + step * 0.1, step),
-                    ureg.m,
-                    ucc.get("length"),
-                )
-            )
-
-        else:
-            grid_bottom = self._zgrid.levels[0]
-            if not np.isclose(grid_bottom, self.bottom):
-                raise ValueError(
-                    "altitude grid bottom must match atmosphere; "
-                    f"expected {self.bottom}, got {grid_bottom}"
-                )
-
-            grid_top = self._zgrid.levels[-1]
-            if not np.isclose(grid_top, self.top):
-                raise ValueError(
-                    "altitude grid top must match atmosphere; "
-                    f"expected {self.top}, got {grid_top}"
-                )
 
         if not self.components:
             raise ValueError("HeterogeneousAtmosphere must have at least one component")
 
+        # Force component IDs and geometry
+        for i, component in enumerate(self.components):
+            component.update()
+            component.id = f"{self.id}_component_{i}"
+            component.geometry = self.geometry
+
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
     # --------------------------------------------------------------------------
-
-    @property
-    def zgrid(self) -> ZGrid:
-        # Inherit docstring
-        return self._zgrid
-
-    @property
-    def bottom(self) -> pint.Quantity:
-        # Inherit docstring
-        return min([component.bottom for component in self.components])
-
-    @property
-    def top(self) -> pint.Quantity:
-        # Inherit docstring
-        return max([component.top for component in self.components])
 
     def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
         # Inherit docstring
@@ -210,8 +148,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if zgrid is not None and zgrid is not self.zgrid:
-            raise ValueError("zgrid must be left unset or set to self.zgrid")
+        if zgrid is not None and zgrid is not self.geometry.zgrid:
+            raise ValueError("zgrid must be left unset or set to self.geometry.zgrid")
 
         units = ucc.get("collision_coefficient")
         sigma_s = self.eval_sigma_s(sctx).m_as(units)
@@ -223,12 +161,14 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @cache_by_id
     def _eval_sigma_t_impl(self, sctx: SpectralContext) -> pint.Quantity:
-        result = np.zeros((len(self.components), len(self.zgrid.layers)))
+        result = np.zeros((len(self.components), len(self.geometry.zgrid.layers)))
         sigma_units = ucc.get("collision_coefficient")
 
         # Evaluate extinction for current component
         for i, component in enumerate(self.components):
-            result[i] = component.eval_sigma_t(sctx, self.zgrid).m_as(sigma_units)
+            result[i] = component.eval_sigma_t(sctx, self.geometry.zgrid).m_as(
+                sigma_units
+            )
 
         return result * sigma_units
 
@@ -236,26 +176,28 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if zgrid is not None and zgrid is not self.zgrid:
-            raise ValueError("zgrid must be left unset or set to self.zgrid")
+        if zgrid is not None and zgrid is not self.geometry.zgrid:
+            raise ValueError("zgrid must be left unset or set to self.geometry.zgrid")
         return self._eval_sigma_t_impl(sctx).sum(axis=0)
 
     def eval_sigma_a(
         self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if zgrid is not None and zgrid is not self.zgrid:
-            raise ValueError("zgrid must be left unset or set to self.zgrid")
+        if zgrid is not None and zgrid is not self.geometry.zgrid:
+            raise ValueError("zgrid must be left unset or set to self.geometry.zgrid")
         return self.eval_sigma_t(sctx) - self.eval_sigma_s(sctx)
 
     @cache_by_id
     def _eval_sigma_s_impl(self, sctx: SpectralContext) -> pint.Quantity:
-        result = np.zeros((len(self.components), len(self.zgrid.layers)))
+        result = np.zeros((len(self.components), len(self.geometry.zgrid.layers)))
         sigma_units = ucc.get("collision_coefficient")
 
         # Evaluate scattering coefficient for current component
         for i, component in enumerate(self.components):
-            result[i] = component.eval_sigma_s(sctx, self.zgrid).m_as(sigma_units)
+            result[i] = component.eval_sigma_s(sctx, self.geometry.zgrid).m_as(
+                sigma_units
+            )
 
         return result * sigma_units
 
@@ -268,49 +210,13 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if zgrid is not None and zgrid is not self.zgrid:
-            raise ValueError("zgrid must be left unset or set to self.zgrid")
+        if zgrid is not None and zgrid is not self.geometry.zgrid:
+            raise ValueError("zgrid must be left unset or set to self.geometry.zgrid")
         return self._eval_sigma_s_impl(sctx).sum(axis=0)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
-
-    @property
-    def _bbox(self) -> BoundingBox:
-        shape = self.shape
-        length_units = ucc.get("length")
-
-        if isinstance(shape, CuboidShape):
-            # In this case, the bounding box corresponds to the corners of
-            # the cuboid
-            min_x, min_y = (shape.center[0:2] - shape.edges[0:2] * 0.5).m_as(
-                length_units
-            )
-            min_z = self.bottom.m_as(length_units)
-
-            max_x, max_y = (shape.center[0:2] + shape.edges[0:2] * 0.5).m_as(
-                length_units
-            )
-            max_z = self.top.m_as(length_units)
-
-            return BoundingBox(
-                [min_x, min_y, min_z] * length_units,
-                [max_x, max_y, max_z] * length_units,
-            )
-
-        elif isinstance(shape, SphereShape):
-            # In this case, the bounding box is the cuboid that contains the
-            # sphere
-            r = shape.radius.m_as(length_units)
-
-            return BoundingBox(
-                [-r, -r, -r] * length_units,
-                [r, r, r] * length_units,
-            )
-
-        else:
-            raise NotImplementedError
 
     @property
     def phase(self) -> PhaseFunction:
@@ -335,7 +241,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 weights.append(eval_sigma_s)
 
             return BlendPhaseFunction(
-                components=components, weights=weights, bbox=self._bbox
+                components=components, weights=weights, geometry=self.geometry
             )
 
     @property
