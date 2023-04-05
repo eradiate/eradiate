@@ -55,7 +55,10 @@ class AtmosphereExperiment(EarthObservationExperiment):
                 (PlaneParallelGeometry, SphericalShellGeometry)
             ),
         ),
-        doc="Problem geometry.",
+        doc="Problem geometry. Can be specified as a simple string "
+        '(``"plane_parallel" or "spherical_shell"``), a dictionary interpreted '
+        "by :meth:`.SceneGeometry.convert`, or a :class:`.SceneGeometry` "
+        "instance.",
         type=".PlaneParallelGeometry or .SphericalShellGeometry",
         init_type="str or dict or .SceneGeometry",
         default='"plane_parallel"',
@@ -180,7 +183,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
             if isinstance(self.geometry, PlaneParallelGeometry):
                 width = self.geometry.width
                 altitude = (
-                    self.atmosphere.bottom
+                    self.atmosphere.bottom_altitude
                     if self.atmosphere is not None
                     else 0.0 * ureg.km
                 )
@@ -192,7 +195,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
             elif isinstance(self.geometry, SphericalShellGeometry):
                 altitude = (
-                    self.atmosphere.bottom
+                    self.atmosphere.bottom_altitude
                     if self.atmosphere is not None
                     else 0.0 * ureg.km
                 )

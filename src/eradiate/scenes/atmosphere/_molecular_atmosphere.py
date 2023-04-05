@@ -124,7 +124,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     def update(self) -> None:
         # Inherit docstring
-        super().update()
 
         self.phase.id = self.phase_id
 
@@ -154,21 +153,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
     # --------------------------------------------------------------------------
-
-    @property
-    def zgrid(self) -> ZGrid:
-        # Inherit docstring
-        return self.radprops_profile.zgrid
-
-    @property
-    def bottom(self) -> pint.Quantity:
-        # Inherit docstring
-        return self.zgrid.levels.min()
-
-    @property
-    def top(self) -> pint.Quantity:
-        # Inherit docstring
-        return self.zgrid.levels.max()
 
     @property
     def thermoprops(self) -> xr.Dataset:
@@ -205,7 +189,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         return self.radprops_profile.eval_albedo(
             sctx,
-            self.zgrid if zgrid is None else zgrid,
+            self.geometry.zgrid if zgrid is None else zgrid,
         )
 
     def eval_sigma_t(
@@ -214,7 +198,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         return self.radprops_profile.eval_sigma_t(
             sctx,
-            self.zgrid if zgrid is None else zgrid,
+            self.geometry.zgrid if zgrid is None else zgrid,
         )
 
     def eval_sigma_a(
@@ -223,7 +207,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         return self.radprops_profile.eval_sigma_a(
             sctx,
-            self.zgrid if zgrid is None else zgrid,
+            self.geometry.zgrid if zgrid is None else zgrid,
         )
 
     def eval_sigma_s(
@@ -232,7 +216,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         return self.radprops_profile.eval_sigma_s(
             sctx,
-            self.zgrid if zgrid is None else zgrid,
+            self.geometry.zgrid if zgrid is None else zgrid,
         )
 
     # --------------------------------------------------------------------------

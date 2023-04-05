@@ -88,6 +88,11 @@ def test(mode_mono_double, rayleigh_tab_phase, artefact_dir, ert_seed_state, req
         assert eradiate.mode().id == "mono_double"
 
         return AtmosphereExperiment(
+            geometry={
+                "type": "plane_parallel",
+                "ground_altitude": bottom,
+                "toa_altitude": top,
+            },
             measures={
                 "type": "mdistant",
                 "construct": "from_viewing_angles",
@@ -103,8 +108,6 @@ def test(mode_mono_double, rayleigh_tab_phase, artefact_dir, ert_seed_state, req
             },
             atmosphere={
                 "type": "homogeneous",
-                "bottom": bottom,
-                "top": top,
                 "sigma_a": sigma_a,
                 "sigma_s": sigma_s,
                 "phase": phase,

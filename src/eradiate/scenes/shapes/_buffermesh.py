@@ -7,7 +7,7 @@ import pint
 import pinttr
 
 from ._core import ShapeInstance
-from ..core import traverse
+from ..core import BoundingBox, traverse
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext
 from ...kernel import UpdateParameter
@@ -56,6 +56,10 @@ class BufferMeshShape(ShapeInstance):
                 f"while validating {attribute.name}, must be an array of shape "
                 f"(n, 3), got {value.shape}"
             )
+
+    def bbox(self) -> BoundingBox:
+        # Inherit docstring
+        raise NotImplementedError
 
     @property
     def instance(self) -> mi.Object:

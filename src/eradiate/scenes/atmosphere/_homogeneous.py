@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import attrs
 import pint
-import pinttr
 
 from ._core import Atmosphere
 from ..core import traverse
@@ -11,9 +10,7 @@ from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_facto
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel import InitParameter, UpdateParameter
-from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
-from ...units import unit_registry as ureg
 from ...validators import has_quantity
 
 
@@ -26,38 +23,6 @@ class HomogeneousAtmosphere(Atmosphere):
     This class builds an atmosphere consisting of a homogeneous medium with
     customizable collision coefficients and phase function.
     """
-
-    _bottom: pint.Quantity = documented(
-        pinttr.field(
-            default=ureg.Quantity(0.0, ureg.km),
-            units=ucc.deferred("length"),
-        ),
-        doc="Atmosphere's bottom altitude.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="quantity",
-        init_type="quantity or float",
-        default="0 km",
-    )
-
-    _top: pint.Quantity = documented(
-        pinttr.field(
-            default=ureg.Quantity(10.0, ureg.km),
-            units=ucc.deferred("length"),
-        ),
-        doc="Atmosphere's top altitude.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="quantity",
-        init_type="quantity or float",
-        default="10 km",
-    )
-
-    @_bottom.validator
-    @_top.validator
-    def _validate_bottom_and_top(self, attribute, value):
-        if self.bottom >= self.top:
-            raise ValueError("bottom altitude must be lower than top altitude")
 
     sigma_s: Spectrum = documented(
         attrs.field(
@@ -119,16 +84,6 @@ class HomogeneousAtmosphere(Atmosphere):
     # --------------------------------------------------------------------------
     #                               Properties
     # --------------------------------------------------------------------------
-
-    @property
-    def bottom(self) -> pint.Quantity:
-        # Inherit docstring
-        return self._bottom
-
-    @property
-    def top(self) -> pint.Quantity:
-        # Inherit docstring
-        return self._top
 
     @property
     def phase(self) -> PhaseFunction:

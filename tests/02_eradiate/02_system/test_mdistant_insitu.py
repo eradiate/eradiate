@@ -16,11 +16,11 @@ def compute(l="distant", sigma=1.0, rho=1.0, exp_cls="AtmosphereExperiment"):
 
     for spp in spps:
         exp = getattr(eradiate.experiments, exp_cls)(
+            geometry={"type": "plane_parallel", "toa_altitude": 1.0 * ureg.m},
             atmosphere={
                 "type": "homogeneous",
                 "sigma_a": sigma * ureg("m^-1"),
                 "sigma_s": 0.0,
-                "top": 1.0 * ureg.m,
             },
             illumination={"type": "directional", "irradiance": 1.0},
             surface={"type": "lambertian", "reflectance": rho},

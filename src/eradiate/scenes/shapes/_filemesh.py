@@ -5,6 +5,7 @@ from pathlib import Path
 import attrs
 
 from ._core import ShapeNode
+from ..core import BoundingBox
 from ...attrs import documented, parse_docs
 
 
@@ -42,6 +43,10 @@ class FileMeshShape(ShapeNode):
             return "ply"
         else:
             raise ValueError(f"unknown mesh file type '{self.filename.suffix}'")
+
+    def bbox(self) -> BoundingBox:
+        # Inherit docstring
+        raise NotImplementedError
 
     @property
     def template(self) -> dict:

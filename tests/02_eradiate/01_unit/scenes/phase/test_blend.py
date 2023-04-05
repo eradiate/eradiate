@@ -5,6 +5,7 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext, SpectralContext
 from eradiate.scenes.core import traverse
+from eradiate.scenes.geometry import SceneGeometry
 from eradiate.scenes.phase import BlendPhaseFunction
 from eradiate.test_tools.types import check_scene_element
 
@@ -94,7 +95,7 @@ def test_blend_phase_construct_array(modes_all_double):
             {"type": "isotropic"},
         ],
         weights=[np.ones((10,)), np.ones((10,)), np.ones((10,))],
-        bbox=[[0, 0, 0], [1, 1, 1]],
+        geometry="plane_parallel",
     )
     assert phase.weights.shape == (3, 10)  # Array weights are stored as a 2D array
 
@@ -120,43 +121,58 @@ def test_blend_phase_weights(mode_mono, weights, expected):
     phase = BlendPhaseFunction(
         components=[{"type": "isotropic"}] * len(weights),
         weights=weights,
-        bbox=[[0, 0, 0], [1, 1, 1]],
+        geometry="plane_parallel",
     )
     np.testing.assert_allclose(
         phase.eval_conditional_weights(SpectralContext.new()), expected
     )
 
 
-def test_blend_phase_bbox(mode_mono):
+@pytest.mark.parametrize(
+    "geometry",
+    [
+        {
+            "type": "plane_parallel",
+            "width": 1.0 * ureg.m,
+            "ground_altitude": 0.0 * ureg.m,
+            "toa_altitude": 1.0 * ureg.m,
+        },
+        {
+            "type": "spherical_shell",
+            "planet_radius": 1.0 * ureg.m,
+            "ground_altitude": 0.0 * ureg.m,
+            "toa_altitude": 1.0 * ureg.m,
+        },
+    ],
+    ids=["plane_parallel", "spherical_shell"],
+)
+def test_blend_phase_geometry(mode_mono, geometry):
     """
-    Test bounding box and grid volume transform.
+    Test geometry and grid volume transform.
     """
-    # By default, no bounding box is defined
+    # Defining no geometry is accepted; in that case, no transform is applied
+    # to the volume data
     phase = BlendPhaseFunction(
         components=[{"type": "isotropic"}, {"type": "rayleigh"}, {"type": "hg"}],
         weights=[0.25, 0.25, 0.5],
     )
-    assert phase.bbox is None
-    with pytest.raises(ValueError):
-        phase._gridvolume_transform()
+    assert phase.geometry is None
+    template = traverse(phase)[0]
+    assert "weight.to_world" not in template
 
-    # Appropriate bounding box setup works
+    # Appropriate geometry setup works
+    geometry = SceneGeometry.convert(geometry)
+    expected = np.array(geometry.atmosphere_gridvolume_to_world.matrix)
     phase = BlendPhaseFunction(
         components=[{"type": "isotropic"}, {"type": "rayleigh"}, {"type": "hg"}],
         weights=[0.25, 0.25, 0.5],
-        bbox=([0, 0, 0] * ureg.m, [1, 1, 1] * ureg.m),
+        geometry=geometry,
     )
-    np.testing.assert_allclose(
-        np.array(phase._gridvolume_transform().matrix),
-        [
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1],
-        ],
-    )
+    template = traverse(phase)[0].render(KernelDictContext())
+    to_world = np.array(template["weight"]["to_world"].matrix)
+    np.testing.assert_allclose(to_world, expected)
 
-    # Nested BlendPhaseFunction objects must have the same bbox
+    # Nested BlendPhaseFunction objects must have the same geometry
     phase = BlendPhaseFunction(
         components=[
             {"type": "isotropic"},
@@ -167,20 +183,14 @@ def test_blend_phase_bbox(mode_mono):
             },
         ],
         weights=[0.25, 0.75],
-        bbox=([0, 0, 0] * ureg.m, [1, 1, 1] * ureg.m),
+        geometry=geometry,
     )
 
     for comp in phase.components:
         if isinstance(comp, BlendPhaseFunction):
-            np.testing.assert_allclose(
-                np.array(comp._gridvolume_transform().matrix),
-                [
-                    [1, 0, 0, 0],
-                    [0, 1, 0, 0],
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1],
-                ],
-            )
+            template = traverse(comp)[0].render(KernelDictContext())
+            to_world = np.array(template["weight"]["to_world"].matrix)
+            np.testing.assert_allclose(to_world, expected)
 
 
 @pytest.mark.parametrize(
@@ -196,7 +206,7 @@ def test_blend_phase_bbox(mode_mono):
                 np.array([1.0, 0.7, 0.5, 0.3, 0.0]),
                 np.array([0.0, 0.3, 0.5, 0.7, 1.0]),
             ],
-            "bbox": [[0, 0, 0], [1, 1, 1]],
+            "geometry": "plane_parallel",
         },
     ],
     ids=[
@@ -232,8 +242,11 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
             phase.eval_conditional_weights(ctx.spectral_ctx), (-1, 1, 1)
         ),
     }
-    if "bbox" in kwargs:
-        expected["weight.to_world"] = np.identity(4)
+    if "geometry" in kwargs:
+        geometry = SceneGeometry.convert(kwargs["geometry"])
+        expected["weight.to_world"] = np.array(
+            geometry.atmosphere_gridvolume_to_world.matrix
+        )
     assert_cmp_dict(kernel_dict, expected)
 
     # Check that the parameter map is correct
@@ -259,7 +272,7 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
                     np.array([0.0, 0.2, 0.6, 0.2, 0.5]),
                     np.array([0.0, 0.2, 0.2, 0.6, 0.5]),
                 ],
-                "bbox": [[0, 0, 0], [1, 1, 1]],
+                "geometry": "plane_parallel",
             },
             [
                 [0.0, 0.4, 0.8, 0.8, 1.0],
@@ -312,9 +325,12 @@ def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_wei
         "phase_1.phase_1.g": 0.1,
     }
 
-    if "bbox" in kwargs:
-        expected["weight.to_world"] = np.identity(4)
-        expected["phase_1.weight.to_world"] = np.identity(4)
+    if "geometry" in kwargs:
+        geometry = SceneGeometry.convert(kwargs["geometry"])
+        expected["weight.to_world"] = np.array(
+            geometry.atmosphere_gridvolume_to_world.matrix
+        )
+        expected["phase_1.weight.to_world"] = expected["weight.to_world"].copy()
 
     assert_cmp_dict(expected, kernel_dict)
 

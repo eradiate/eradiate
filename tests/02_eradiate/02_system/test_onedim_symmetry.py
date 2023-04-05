@@ -69,6 +69,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
 
     # Run simulation
     exp = eradiate.experiments.AtmosphereExperiment(
+        geometry={"type": "plane_parallel", "toa_altitude": 1.0e2 * ureg.km},
         illumination={"type": "directional", "zenith": 0.0, "azimuth": 0.0},
         measures={
             "type": "distant",
@@ -84,11 +85,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
         }[surface],
         atmosphere={
             "none": None,
-            "homogeneous": {
-                "type": "homogeneous",
-                "sigma_s": 1.0e-2 * ureg.km**-1,
-                "top": 1.0e2 * ureg.km,
-            },
+            "homogeneous": {"type": "homogeneous", "sigma_s": 1.0e-2 * ureg.km**-1},
         }[atmosphere],
     )
     results = eradiate.run(exp)

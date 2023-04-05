@@ -280,7 +280,9 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
 
         # Pre-process surface
         if self.surface is not None:
-            altitude = atmosphere.bottom if atmosphere is not None else 0.0 * ureg.km
+            altitude = (
+                atmosphere.bottom_altitude if atmosphere is not None else 0.0 * ureg.km
+            )
             surface = attrs.evolve(
                 self.surface,
                 shape=RectangleShape.surface(altitude=altitude, width=surface_width),

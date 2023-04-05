@@ -13,14 +13,12 @@ from eradiate.test_tools.types import check_scene_element
         {},
         {"phase": {"type": "isotropic"}},
         {"phase": {"type": "hg"}},
-        {"bottom": 1.0 * ureg.km, "top": 8.0 * ureg.km},
         {"geometry": "spherical_shell"},
     ],
     ids=[
         "noargs",
         "phase_isotropic",
         "phase_hg",
-        "bottom_top",
         "geometry_spherical_shell",
     ],
 )
@@ -54,9 +52,12 @@ def test_homogeneous_atmosphere_params(mode_mono):
     [
         (
             {
-                "geometry": {"type": "plane_parallel", "width": 1.0 * ureg.km},
-                "bottom": 0.0 * ureg.km,
-                "top": 1.0 * ureg.km,
+                "geometry": {
+                    "type": "plane_parallel",
+                    "width": 1.0 * ureg.km,
+                    "ground_altitude": 0.0 * ureg.km,
+                    "toa_altitude": 1.0 * ureg.km,
+                }
             },
             {
                 "bbox_min": [-500.0, -500.0, -10.0],
@@ -66,9 +67,12 @@ def test_homogeneous_atmosphere_params(mode_mono):
         ),
         (
             {
-                "geometry": {"type": "spherical_shell", "planet_radius": 1.0 * ureg.km},
-                "bottom": 0.0 * ureg.km,
-                "top": 1.0 * ureg.km,
+                "geometry": {
+                    "type": "spherical_shell",
+                    "planet_radius": 1.0 * ureg.km,
+                    "ground_altitude": 0.0 * ureg.km,
+                    "toa_altitude": 1.0 * ureg.km,
+                },
             },
             {
                 "bbox_min": [-2000.0, -2000.0, -2000.0],
@@ -91,5 +95,7 @@ def test_homogeneous_atmosphere_geometry(mode_mono, kwargs, expected):
     assert mi_shape_type_name == expected["atmosphere_shape_type_name"]
 
     # Check scene bounding box
-    assert dr.allclose(mi_wrapper.obj.bbox().min, expected["bbox_min"])
-    assert dr.allclose(mi_wrapper.obj.bbox().max, expected["bbox_max"])
+    bbmin = mi_wrapper.obj.bbox().min
+    bbmax = mi_wrapper.obj.bbox().max
+    assert dr.allclose(bbmin, expected["bbox_min"])
+    assert dr.allclose(bbmax, expected["bbox_max"])

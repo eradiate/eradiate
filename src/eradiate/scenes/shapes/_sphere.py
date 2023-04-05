@@ -8,6 +8,7 @@ from pinttr.util import ensure_units
 
 from ._core import ShapeNode
 from ..bsdfs import BSDF
+from ..core import BoundingBox
 from ...attrs import documented, parse_docs
 from ...constants import EARTH_RADIUS
 from ...units import unit_context_config as ucc
@@ -46,6 +47,14 @@ class SphereShape(ShapeNode):
         init_type="quantity or float, optional",
         default="1.0",
     )
+
+    @property
+    def bbox(self) -> BoundingBox:
+        length_units = ucc.get("length")
+        offset = (
+            np.full_like(self.center, self.radius.m_as(length_units)) * length_units
+        )
+        return BoundingBox(self.center - offset, self.center + offset)
 
     @property
     def template(self) -> dict:

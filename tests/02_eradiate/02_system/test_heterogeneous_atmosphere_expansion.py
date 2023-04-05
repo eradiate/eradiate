@@ -50,10 +50,19 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
     # Particle layer only
     bottom = bottom * ureg.km
     top = bottom + 1.0 * ureg.km
-    layer = eradiate.scenes.atmosphere.ParticleLayer(
-        bottom=bottom, top=top, tau_ref=tau_ref, n_layers=16
-    )
+    geometry = {
+        "type": "plane_parallel",
+        "ground_altitude": bottom,
+        "toa_altitude": top,
+    }
+    layer = {
+        "type": "particle_layer",
+        "bottom": bottom,
+        "top": top,
+        "tau_ref": tau_ref,
+    }
     exp1 = eradiate.experiments.AtmosphereExperiment(
+        geometry=geometry,
         atmosphere=layer,
         measures=[measure],
     )
@@ -63,10 +72,10 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
 
     # Heterogeneous atmosphere with a particle layer
     exp2 = eradiate.experiments.AtmosphereExperiment(
+        geometry=geometry,
         atmosphere={
             "type": "heterogeneous",
             "particle_layers": [layer],
-            "zgrid": layer.zgrid,
         },
         measures=[measure],
     )
@@ -131,7 +140,6 @@ def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {"type": "molecular", "has_absorption": False},
-            "zgrid": exp1.atmosphere.zgrid,
         },
         measures=[measure],
     )
