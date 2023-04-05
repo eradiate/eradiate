@@ -75,7 +75,7 @@ mi_log_parser = re.compile(
 mi_logger = None
 
 # Module-local logger
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("mitsuba")
 
 
 def _get_logger():

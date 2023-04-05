@@ -280,6 +280,7 @@ def mi_render(
     """
 
     if seed_state is None:
+        logger.debug("Using default RNG seed generator")
         seed_state = root_seed_state
 
     results = {}
@@ -315,13 +316,13 @@ def mi_render(
             # Loop on sensors
             for i_sensor, mi_sensor in mi_sensors:
                 # Render sensor
-                logger.debug('Running Mitsuba for sensor "%s"', mi_sensor.id())
-                mi.render(
-                    mi_scene.obj,
-                    sensor=i_sensor,
-                    seed=int(seed_state.next()),
-                    spp=spp,
+                seed = int(seed_state.next())
+                logger.debug(
+                    'Running Mitsuba for sensor "%s" with seed value %s',
+                    mi_sensor.id(),
+                    seed,
                 )
+                mi.render(mi_scene.obj, sensor=i_sensor, seed=seed, spp=spp)
 
                 # Store result in a new Bitmap object
                 if ctx.spectral_ctx.spectral_index not in results:
