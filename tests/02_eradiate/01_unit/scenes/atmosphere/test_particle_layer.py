@@ -281,3 +281,72 @@ def test_particle_layer_eval_sigma_t_mono(
     # the spectral dependence of the optical thickness and extinction
     # coefficient match, so the below ratios must match
     assert np.allclose(tau / tau_ref, sigma_t / sigma_t_ref)
+
+
+@pytest.mark.parametrize(
+    "has_absorption, has_scattering, expected",
+    [
+        (
+            True,
+            True,
+            {
+                "albedo": 0.97331806,
+                "sigma_t": 1.0,
+                "sigma_a": 0.02668194,
+                "sigma_s": 0.97331806,
+            },
+        ),
+        (
+            False,
+            True,
+            {
+                "albedo": 1.0,
+                "sigma_t": 0.97331806,
+                "sigma_a": 0.0,
+                "sigma_s": 0.97331806,
+            },
+        ),
+        (
+            True,
+            False,
+            {
+                "albedo": 0.0,
+                "sigma_t": 0.02668194,
+                "sigma_a": 0.02668194,
+                "sigma_s": 0.0,
+            },
+        ),
+        (False, False, "raise"),
+    ],
+)
+def test_particle_layer_switches(mode_mono, has_absorption, has_scattering, expected):
+    try:
+        particle_layer = ParticleLayer(
+            bottom=0.0 * ureg.km,
+            top=1.0 * ureg.km,
+            tau_ref=1.0,
+            has_absorption=has_absorption,
+            has_scattering=has_scattering,
+        )
+        zgrid = particle_layer.zgrid
+        w = 550.0 * ureg.nm
+
+        np.testing.assert_allclose(
+            particle_layer.eval_albedo_mono(w, zgrid).m_as(ureg.dimensionless),
+            expected["albedo"],
+        )
+        np.testing.assert_allclose(
+            particle_layer.eval_sigma_t_mono(w, zgrid).m_as("km^-1"),
+            expected["sigma_t"],
+        )
+        np.testing.assert_allclose(
+            particle_layer.eval_sigma_a_mono(w, zgrid).m_as("km^-1"),
+            expected["sigma_a"],
+        )
+        np.testing.assert_allclose(
+            particle_layer.eval_sigma_s_mono(w, zgrid).m_as("km^-1"),
+            expected["sigma_s"],
+        )
+
+    except ValueError:
+        assert expected == "raise"

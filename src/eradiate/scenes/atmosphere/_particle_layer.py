@@ -25,6 +25,7 @@ from ...radprops import ZGrid
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
+from ...util.misc import cache_by_id
 from ...validators import is_positive
 
 
@@ -191,6 +192,39 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="govaerts_2021-continental",
     )
 
+    has_absorption: bool = documented(
+        attrs.field(
+            default=True,
+            converter=bool,
+        ),
+        doc="Absorption bypass switch. If ``True``, the absorption coefficient "
+        "is computed. Else, the absorption coefficient is not computed and "
+        "instead set to zero.",
+        type="bool",
+        default="True",
+    )
+
+    has_scattering: bool = documented(
+        attrs.field(
+            default=True,
+            converter=bool,
+        ),
+        doc="Scattering bypass switch. If ``True``, the scattering coefficient "
+        "is computed. Else, the scattering coefficient is not computed and "
+        "instead set to zero.",
+        type="bool",
+        default="True",
+    )
+
+    @has_absorption.validator
+    @has_scattering.validator
+    def _switch_validator(self, attribute, value):
+        if not self.has_absorption and not self.has_scattering:
+            raise ValueError(
+                f"while validating {attribute.name}: at least one of 'has_absorption' "
+                "and 'has_scattering' must be True"
+            )
+
     _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
 
@@ -250,6 +284,48 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     #                       Radiative properties
     # --------------------------------------------------------------------------
 
+    @cache_by_id
+    def _eval_albedo_impl(self, w: pint.Quantity) -> pint.Quantity:
+        # Return albedo from dataset (without accounting for bypass switches)
+        ds = self.dataset
+        wavelengths = w.m_as(ds.w.attrs["units"])
+        interpolated_albedo = ds.albedo.interp(w=wavelengths)
+        return to_quantity(interpolated_albedo)
+
+    @cache_by_id
+    def _eval_sigma_t_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        # Return extinction coefficient from dataset (without accounting for bypass switches)
+
+        # Prepare input data
+        ds = self.dataset
+        ds_w_units = ureg(ds.w.attrs["units"])
+        wavelength = w.m_as(ds_w_units)
+        xs_t = to_quantity(ds.sigma_t.interp(w=wavelength))
+        xs_t_ref = to_quantity(ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units)))
+
+        # Compute volume fractions on the requested altitude grid
+        fractions = self.eval_fractions(zgrid)
+        sigma_t_array = xs_t_ref * fractions
+
+        # Normalize the extinction coefficient to the nominal optical thickness
+        # so that Σ_i (k_i Δz_i) == τ
+        normalized_sigma_t_array = (
+            sigma_t_array.magnitude
+            * self.tau_ref
+            / (np.sum(sigma_t_array.magnitude) * zgrid.layer_height.magnitude)
+        ) * zgrid.layer_height.units**-1
+        result = np.atleast_1d(normalized_sigma_t_array * xs_t / xs_t_ref)
+
+        return result
+
+    def _eval_sigma_a_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        # Return absorption coefficient from dataset (without accounting for bypass switches)
+        return self._eval_sigma_t_impl(w, zgrid) * (1.0 - self._eval_albedo_impl(w).m)
+
+    def _eval_sigma_s_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+        # Return scattering coefficient from dataset (without accounting for bypass switches)
+        return self._eval_sigma_t_impl(w, zgrid) * self._eval_albedo_impl(w)
+
     def eval_albedo(
         self, sctx: SpectralContext, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
@@ -271,10 +347,17 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        ds = self.dataset
-        wavelengths = w.m_as(ds.w.attrs["units"])
-        interpolated_albedo = ds.albedo.interp(w=wavelengths)
-        albedo = to_quantity(interpolated_albedo)
+        if self.has_absorption and self.has_scattering:
+            albedo = self._eval_albedo_impl(w)
+
+        elif self.has_absorption and not self.has_scattering:
+            albedo = 0.0 * ureg.dimensionless
+
+        elif self.has_scattering and not self.has_absorption:
+            albedo = 1.0 * ureg.dimensionless
+
+        else:
+            raise RuntimeError
 
         # Albedo is constant vs spatial dimension
         return np.full_like(zgrid.layers, albedo)
@@ -310,27 +393,18 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        # Prepare input data
-        ds = self.dataset
-        ds_w_units = ureg(ds.w.attrs["units"])
-        wavelength = w.m_as(ds_w_units)
-        xs_t = to_quantity(ds.sigma_t.interp(w=wavelength))
-        xs_t_ref = to_quantity(ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units)))
+        result = self._eval_sigma_t_impl(w, zgrid)
 
-        # Compute volume fractions on the requested altitude grid
-        fractions = self.eval_fractions(zgrid)
-        sigma_t_array = xs_t_ref * fractions
+        if self.has_absorption and self.has_scattering:
+            return result
 
-        # Normalize the extinction coefficient to the nominal optical thickness
-        # so that Σ_i (k_i Δz_i) == τ
-        normalized_sigma_t_array = (
-            sigma_t_array.magnitude
-            * self.tau_ref
-            / (np.sum(sigma_t_array.magnitude) * zgrid.layer_height.magnitude)
-        ) * zgrid.layer_height.units**-1
-        result = np.atleast_1d(normalized_sigma_t_array * xs_t / xs_t_ref)
+        elif not self.has_absorption and self.has_scattering:
+            return result - self._eval_sigma_a_impl(w, zgrid)
 
-        return result
+        elif self.has_absorption and not self.has_scattering:
+            return result - self._eval_sigma_s_impl(w, zgrid)
+
+        raise RuntimeError
 
     def eval_sigma_t_ckd(
         self, bindexes: Bindex | list[Bindex], zgrid: ZGrid
@@ -360,12 +434,15 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        return self.eval_sigma_t_mono(w, zgrid) - self.eval_sigma_s_mono(w, zgrid)
+        value = self._eval_sigma_a_impl(w, zgrid)
+        return value if self.has_absorption else np.zeros_like(value) * value.units
 
     def eval_sigma_a_ckd(self, bindexes: Bindex | list[Bindex], zgrid: ZGrid):
-        return self.eval_sigma_t_ckd(bindexes, zgrid) - self.eval_sigma_s_ckd(
-            bindexes, zgrid
-        )
+        w_units = ureg.nm
+        if isinstance(bindexes, Bindex):
+            bindexes = [bindexes]
+        w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
+        return self.eval_sigma_a_mono(w, zgrid)
 
     def eval_sigma_s(
         self, sctx: SpectralContext, zgrid: ZGrid | None = None
@@ -388,12 +465,15 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise UnsupportedModeError(supported=("monochromatic", "ckd"))
 
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        return self.eval_sigma_t_mono(w, zgrid) * self.eval_albedo_mono(w, zgrid)
+        value = self._eval_sigma_s_impl(w, zgrid)
+        return value if self.has_scattering else np.zeros_like(value) * value.units
 
     def eval_sigma_s_ckd(self, bindexes: Bindex, zgrid: ZGrid) -> pint.Quantity:
-        return self.eval_sigma_t_ckd(bindexes, zgrid) * self.eval_albedo_ckd(
-            bindexes, zgrid
-        )
+        w_units = ureg.nm
+        if isinstance(bindexes, Bindex):
+            bindexes = [bindexes]
+        w = [bindex.bin.wcenter.m_as(w_units) for bindex in bindexes] * w_units
+        return self.eval_sigma_s_mono(w, zgrid)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
