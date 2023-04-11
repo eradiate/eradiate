@@ -4,7 +4,6 @@ Heterogeneous atmospheres.
 from __future__ import annotations
 
 from collections import abc as cabc
-from functools import lru_cache
 
 import attrs
 import numpy as np
@@ -21,6 +20,7 @@ from ...contexts import KernelDictContext, SpectralContext
 from ...radprops import ZGrid
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
+from ...util.misc import cache_by_id
 
 
 def _molecular_converter(value):
@@ -221,7 +221,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
         return albedo * ureg.dimensionless
 
-    @lru_cache(maxsize=1)
+    @cache_by_id
     def _eval_sigma_t_impl(self, sctx: SpectralContext) -> pint.Quantity:
         result = np.zeros((len(self.components), len(self.zgrid.layers)))
         sigma_units = ucc.get("collision_coefficient")
@@ -248,7 +248,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             raise ValueError("zgrid must be left unset or set to self.zgrid")
         return self.eval_sigma_t(sctx) - self.eval_sigma_s(sctx)
 
-    @lru_cache(maxsize=1)
+    @cache_by_id
     def _eval_sigma_s_impl(self, sctx: SpectralContext) -> pint.Quantity:
         result = np.zeros((len(self.components), len(self.zgrid.layers)))
         sigma_units = ucc.get("collision_coefficient")

@@ -8,6 +8,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.util.misc import (
     Singleton,
+    cache_by_id,
     camel_to_snake,
     deduplicate,
     fullname,
@@ -96,3 +97,48 @@ def test_fullname(mode_mono):
         fullname(eradiate.scenes.spectra.Spectrum)
         == "eradiate.scenes.spectra._core.Spectrum"
     )
+
+
+def test_cache_by_id(capsys):
+    # Function
+    @cache_by_id
+    def f(x, y):
+        print("Calling f")
+        return x, y
+
+    assert f(1, 1) == (1, 1)
+    captured = capsys.readouterr()
+    assert captured.out == "Calling f\n"
+    assert f(1, 1) == (1, 1)
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+    assert f(1, 2) == (1, 2)
+    captured = capsys.readouterr()
+    assert captured.out == "Calling f\n"
+    assert f(1, 2) == (1, 2)
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+    # Class
+    class MyClass:
+        @cache_by_id
+        def f(self, x, y):
+            print("Calling f")
+            return x, y
+
+    obj = MyClass()
+
+    assert obj.f(1, 1) == (1, 1)
+    captured = capsys.readouterr()
+    assert captured.out == "Calling f\n"
+    assert obj.f(1, 1) == (1, 1)
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+    assert obj.f(1, 2) == (1, 2)
+    captured = capsys.readouterr()
+    assert captured.out == "Calling f\n"
+    assert obj.f(1, 2) == (1, 2)
+    captured = capsys.readouterr()
+    assert captured.out == ""
