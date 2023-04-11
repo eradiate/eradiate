@@ -146,7 +146,7 @@ def flatten(d: t.Mapping, sep: str = ".", name: str = "") -> dict:
 
     See Also
     --------
-    :func:`.nest_flat`, :func:`.set_nested`
+    :func:`.nest`, :func:`.set_nested`
     """
     result = {}
 
@@ -360,7 +360,7 @@ def set_nested(d: t.Mapping, path: str, value: t.Any, sep: str = ".") -> None:
 
     See Also
     --------
-    :func:`.flatten_nested`, :func:`.nest_flat`
+    :func:`.flatten`, :func:`.nest`
     """
     *path, last = path.split(sep)
     for bit in path:
