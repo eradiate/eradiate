@@ -26,6 +26,7 @@ from ..thermoprops.util import (
 )
 from ..units import to_quantity
 from ..units import unit_registry as ureg
+from ..util.misc import cache_by_id
 
 
 def _convert_thermoprops_afgl_1986(value: t.MutableMapping | xr.Dataset) -> xr.Dataset:
@@ -106,7 +107,7 @@ class AFGL1986RadProfile(RadProfile):
         # Inherit docstring
         return self._zgrid
 
-    @functools.lru_cache(maxsize=1)
+    @cache_by_id
     def _thermoprops_interp(self, zgrid: ZGrid) -> xr.Dataset:
         # Interpolate thermophysical profile on specified altitude grid
         # Note: we use a nearest neighbour scheme (so far, it doesn't seem to make a difference)

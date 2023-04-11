@@ -14,6 +14,57 @@ import numpy as np
 import pint
 
 
+class cache_by_id:
+    """
+    Cache the result of a function based on the ID of its arguments.
+
+    This decorator caches the value returned by the function it wraps in order
+    to avoid unnecessary execution upon repeated calls with the same arguments.
+
+    Notes
+    -----
+    * Meant to be used as a decorator.
+    * The wrapped function may only have positional arguments.
+    * Works with functions and methods.
+
+    Examples
+    --------
+    >>> @cache_by_id
+    ... def f(x, y):
+    ...     print("Calling f")
+    ...     return x, y
+    >>> f(1, 2)
+    Calling f
+    (1, 2)
+    >>> f(1, 2)
+    (1, 2)
+    >>> f(1, 1)
+    Calling f
+    (1, 1)
+    >>> f(1, 1)
+    (1, 1)
+    """
+
+    def __init__(self, func):
+        functools.update_wrapper(self, func)
+        self.func = func
+        self._cached_value = None
+        self._cached_index = None
+
+    def __call__(self, *args):
+        index = tuple(id(arg) for arg in args)
+
+        if index != self._cached_index:
+            self._cached_index = index
+            self._cached_value = self.func(*args)
+
+        return self._cached_value
+
+    def __get__(self, instance, owner):
+        # See https://stackoverflow.com/questions/30104047 for full explanation
+        return functools.partial(self.__call__, instance)
+
+
 class LoggingContext(object):
     """
     This context manager allows for a temporary override of logger settings.

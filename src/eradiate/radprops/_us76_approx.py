@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing as t
-from functools import lru_cache
 
 import attrs
 import numpy as np
@@ -19,6 +18,7 @@ from ..ckd import Bindex
 from ..thermoprops import us76
 from ..units import to_quantity
 from ..units import unit_registry as ureg
+from ..util.misc import cache_by_id
 
 
 def _convert_thermoprops_us76_approx(
@@ -185,7 +185,7 @@ class US76ApproxRadProfile(RadProfile):
         # Inherit docstring
         return self._zgrid
 
-    @lru_cache(maxsize=1)
+    @cache_by_id
     def _thermoprops_interp(self, zgrid: ZGrid) -> xr.Dataset:
         # Interpolate thermophysical profile on specified altitude grid
         # Note: we use a nearest neighbour scheme

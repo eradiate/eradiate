@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import typing as t
 from collections import abc as cabc
-from functools import lru_cache
 
 import attrs
 import mitsuba as mi
@@ -14,6 +13,7 @@ from ...attrs import documented
 from ...contexts import KernelDictContext, SpectralContext
 from ...kernel import InitParameter, UpdateParameter, map_unit_cube
 from ...units import unit_context_kernel as uck
+from ...util.misc import cache_by_id
 
 
 @attrs.define(eq=False, slots=False)
@@ -137,7 +137,7 @@ class BlendPhaseFunction(PhaseFunction):
             zmax=bbox_max[2],
         )
 
-    @lru_cache(maxsize=1)
+    @cache_by_id
     def _eval_conditional_weights_impl(self, sctx: SpectralContext) -> np.ndarray:
         """
         Memoised weight evaluation, used if weights are defined as callables.
