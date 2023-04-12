@@ -15,6 +15,7 @@ from .. import data
 from ..attrs import documented, parse_docs
 from ..exceptions import DataError
 from ..typing import PathLike
+from ..util.misc import summary_repr
 
 
 def regression_test_plots(
@@ -145,7 +146,10 @@ class RegressionTest(ABC):
     )
 
     value: xr.Dataset = documented(
-        attrs.field(validator=attrs.validators.instance_of(xr.Dataset)),
+        attrs.field(
+            validator=attrs.validators.instance_of(xr.Dataset),
+            repr=summary_repr,
+        ),
         doc="Simulation result. Must be specified as a dataset.",
         type=":class:`xarray.Dataset`",
         init_type=":class:`xarray.Dataset`",

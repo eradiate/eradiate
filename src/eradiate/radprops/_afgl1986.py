@@ -26,7 +26,7 @@ from ..thermoprops.util import (
 )
 from ..units import to_quantity
 from ..units import unit_registry as ureg
-from ..util.misc import cache_by_id
+from ..util.misc import cache_by_id, summary_repr
 
 
 def _convert_thermoprops_afgl_1986(value: t.MutableMapping | xr.Dataset) -> xr.Dataset:
@@ -54,6 +54,7 @@ class AFGL1986RadProfile(RadProfile):
             factory=lambda: afgl_1986.make_profile(),
             converter=_convert_thermoprops_afgl_1986,
             validator=attrs.validators.instance_of(xr.Dataset),
+            repr=summary_repr,
         ),
         doc="Thermophysical properties.",
         type=":class:`~xarray.Dataset`",

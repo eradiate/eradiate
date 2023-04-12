@@ -11,6 +11,7 @@ from ...attrs import documented, parse_docs
 from ...kernel import InitParameter, UpdateParameter
 from ...units import to_quantity
 from ...units import unit_registry as ureg
+from ...util.misc import summary_repr
 
 
 @parse_docs
@@ -54,6 +55,7 @@ class MQDiffuseBSDF(BSDF):
         attrs.field(
             converter=converters.to_dataset(),
             kw_only=True,
+            repr=summary_repr,
         ),
         type="Dataset",
         init_type="Dataset",
