@@ -91,13 +91,13 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   ({ghpr}`296`).
 * ⚠️ {class}`.Atmosphere` type hierarchy updates: altitude grid control, common
   spectral evaluation interface ({ghpr}`296`).
-* {class}`.BlendedPhaseFunction` code was transitioned from a recursive to an
+* {class}`.BlendPhaseFunction` code was transitioned from a recursive to an
   iterative loop-based implementation ({ghpr}`296`).
 * {class}`.RadProfile` evaluation on arbitrary altitude grids is now permitted
   ({ghpr}`296`).
 * Introduced the {class}`.SpotIllumination`, which points a beam of light of
-  fixed angular width ({ghpr}`302`).
-* Added a new module :mod:`eradiate.constants` to store physical constants used
+  fixed angular width at a target location ({ghpr}`302`).
+* Added a new module {mod}`eradiate.constants` to store physical constants used
   in Eradiate ({ghpr}`312`).
 
 ### Documentation
@@ -118,6 +118,8 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   from double to single floating point numbers ({ghpr}`300`).
 * Added TOML formatting pre-commit hook ({ghpr}`305`).
 * Updated dependency management system to latest tooling changes ({ghpr}`306`).
+* Add {func}`.cache_by_id` to replace `@functools.lru_cache(maxsize=1)` when
+  appropriate ({ghpr}`315`).
 
 ## v0.22.5 (17 October 2022)
 

@@ -21,6 +21,15 @@ class cache_by_id:
     This decorator caches the value returned by the function it wraps in order
     to avoid unnecessary execution upon repeated calls with the same arguments.
 
+    Warnings
+    --------
+    The main difference with
+    :func:`functools.lru_cache(maxsize=1) <functools.lru_cache>` is that the
+    cache is referenced by positional argument IDs instead of hashes.
+    Therefore, this decorator can be used with NumPy arrays; but it's also
+    unsafe, because mutating an argument won't trigger a recompute, while it
+    actually shoud! **Use with great care!**
+
     Notes
     -----
     * Meant to be used as a decorator.
