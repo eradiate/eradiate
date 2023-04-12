@@ -14,6 +14,7 @@ from ...contexts import SpectralContext
 from ...exceptions import UnsupportedModeError
 from ...kernel import InitParameter, UpdateParameter
 from ...units import unit_registry as ureg
+from ...util.misc import summary_repr
 
 
 def _ensure_magnitude_array(q: pint.Quantity) -> pint.Quantity:
@@ -75,6 +76,7 @@ class TabulatedPhaseFunction(PhaseFunction):
             converter=_convert_data,
             validator=[attrs.validators.instance_of(xr.DataArray), _validate_data],
             kw_only=True,
+            repr=summary_repr,
         ),
         type="DataArray",
         doc="Value table as a data array with wavelength (``w``), scattering "

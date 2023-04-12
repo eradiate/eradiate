@@ -25,7 +25,7 @@ from ...radprops import ZGrid
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
-from ...util.misc import cache_by_id
+from ...util.misc import cache_by_id, summary_repr
 from ...validators import is_positive
 
 
@@ -178,6 +178,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                 load_from_id=lambda x: data.load_dataset(f"spectra/particles/{x}.nc")
             ),
             validator=attrs.validators.instance_of(xr.Dataset),
+            repr=summary_repr,
         ),
         doc="Particle radiative property data set."
         "If an xarray dataset is passed, the dataset is used as is "

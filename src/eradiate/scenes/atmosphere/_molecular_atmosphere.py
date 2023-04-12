@@ -25,6 +25,7 @@ from ...thermoprops.util import (
     rescale_concentration,
 )
 from ...units import unit_registry as ureg
+from ...util.misc import summary_repr
 
 
 @parse_docs
@@ -45,6 +46,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         attrs.field(
             factory=us76.make_profile,
             validator=attrs.validators.instance_of(xr.Dataset),
+            repr=summary_repr,
         ),
         doc="Thermophysical properties.",
         type="Dataset",

@@ -18,7 +18,7 @@ from ..ckd import Bindex
 from ..thermoprops import us76
 from ..units import to_quantity
 from ..units import unit_registry as ureg
-from ..util.misc import cache_by_id
+from ..util.misc import cache_by_id, summary_repr
 
 
 def _convert_thermoprops_us76_approx(
@@ -113,6 +113,7 @@ class US76ApproxRadProfile(RadProfile):
             factory=lambda: us76.make_profile(),
             converter=_convert_thermoprops_us76_approx,
             validator=attrs.validators.instance_of(xr.Dataset),
+            repr=summary_repr,
         ),
         doc="Thermophysical properties.",
         type=":class:`~xarray.Dataset`",

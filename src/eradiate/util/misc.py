@@ -12,6 +12,7 @@ from numbers import Number
 
 import numpy as np
 import pint
+import xarray as xr
 
 
 class cache_by_id:
@@ -442,3 +443,52 @@ def str_summary_numpy(x):
             array_str = ("\n" + " " * len(prefix)).join(split)
 
         return f"{prefix}{array_str})"
+
+
+@functools.singledispatch
+def summary_repr(value):
+    """
+    Return a summarized repr for `value`.
+    """
+    return repr(value)
+
+
+@summary_repr.register
+def _(ds: xr.Dataset):
+    extra_info = {}
+
+    try:
+        extra_info["source"] = repr(ds.encoding["source"])
+    except KeyError:
+        pass
+
+    desc = ", ".join([f"{key}={value}" for key, value in extra_info.items()])
+
+    if desc:
+        desc = " | " + desc
+
+    return f"<xarray.Dataset{desc}>"
+
+
+@summary_repr.register
+def _(da: xr.DataArray):
+    extra_info = {}
+
+    try:
+        extra_info["name"] = repr(da.name)
+    except AttributeError:
+        pass
+
+    extra_info["dims"] = repr(list(da.dims))
+
+    try:
+        extra_info["source"] = repr(da.encoding["source"])
+    except KeyError:
+        pass
+
+    desc = ", ".join([f"{key}={value}" for key, value in extra_info.items()])
+
+    if desc:
+        desc = " | " + desc
+
+    return f"<xarray.DataArray{desc}>"

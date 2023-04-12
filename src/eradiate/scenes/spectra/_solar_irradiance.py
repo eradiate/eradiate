@@ -18,6 +18,7 @@ from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+from ...util.misc import summary_repr
 
 
 def _datetime_converter(x: t.Any):
@@ -108,6 +109,7 @@ class SolarIrradianceSpectrum(Spectrum):
                 )
             ),
             validator=attrs.validators.instance_of(xr.Dataset),
+            repr=summary_repr,
         ),
         doc="Solar irradiance spectrum dataset. "
         "If a xarray.Dataset is passed, the dataset is used as is "
