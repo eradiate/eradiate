@@ -258,6 +258,7 @@
 
    DirectionalIllumination
    ConstantIllumination
+   SpotIllumination
 
 ``eradiate.scenes.measure``
 ---------------------------
