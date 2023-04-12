@@ -99,6 +99,8 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   fixed angular width at a target location ({ghpr}`302`).
 * Added a new module {mod}`eradiate.constants` to store physical constants used
   in Eradiate ({ghpr}`312`).
+* Added absorption and scattering bypass switches to the {class}`.ParticleLayer`
+  class ({ghpr}`316`).
 
 ### Documentation
 
