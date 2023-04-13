@@ -151,35 +151,32 @@ class SpotIllumination(Illumination):
         **kwargs,
     ) -> SpotIllumination:
         """
-        Create a :class:`.SpotIllumination` which
-        illuminates a region of a specified size around the
-        target point.
+        Create a :class:`.SpotIllumination` which illuminates a region of a
+        specified size around the target point.
 
-        The illuminated area is a circle defined by the
-        spot radius around the target point in the plane
-        orthogonal to the spot direction.
-        The spot origin is inferred from the spot radius
-        and a beam width value (in angle units): the
-        spot origin will be positioned closer to the target
-        point as the beam width increases and further from the
-        target point as the beam width decreases.
+        The illuminated area is a circle defined by the spot radius around the
+        target point in the plane orthogonal to the spot direction. The spot
+        origin is inferred from the spot radius and a beam width value
+        (in angle units): the spot origin will be positioned closer to the
+        target point as the beam width increases and further from the target
+        point as the beam width decreases.
 
-        Parameters:
-        -----------
-
+        Parameters
+        ----------
         target : array-like
-            Target point for the spot. Unitless values are converted to ``ucc['length']``
+            Target point for the spot.
+            Unitless values are converted to ``ucc['length']``.
 
         direction : array-like
             Pointing direction for the spot, towards target.
 
         spot_radius : float or quantity
             Radius of the desired spot at the target position.
-            Unitless values are converted to ``ucc['length']``
+            Unitless values are converted to ``ucc['length']``.
 
         beam_width : float or quantity
             Divergence angle of the spot.
-            Unitless values are converted to ``ucc['angle']``
+            Unitless values are converted to ``ucc['angle']``.
 
         **kwargs
             Remaining keyword arguments are forwarded to the

@@ -266,15 +266,9 @@ class RadProfile(ABC):
     from this one must implement methods which return the albedo and collision
     coefficients as Pint-wrapped Numpy arrays.
 
-    Warnings
-    --------
-    Arrays returned by the :meth:`albedo`, :meth:`sigma_a`, :meth:`sigma_s`
-    and :meth:`sigma_t` methods **must** be 3D. Should the profile
-    be one-dimensional, invariant dimensions can be set to 1.
-
     See Also
     --------
-    :class:`.RadProfileFactory`
+    :data:`.rad_profile_factory`
     """
 
     @property
@@ -295,10 +289,14 @@ class RadProfile(ABC):
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        spectral_ctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        zgrid : .ZGrid, optional
+            The altitude grid for which the albedo is evaluated. If unset, a
+            profile-specific default is used.
 
         Returns
         -------
@@ -331,6 +329,9 @@ class RadProfile(ABC):
         w : quantity
             Wavelength values at which the spectrum is to be evaluated.
 
+        zgrid : .ZGrid
+            The altitude grid for which the albedo is evaluated.
+
         Returns
         -------
         quantity
@@ -347,6 +348,9 @@ class RadProfile(ABC):
         ----------
         bindexes : list of :class:`.Bindex`
             CKD bindexes for which to evaluate the spectrum.
+
+        zgrid : .ZGrid
+            The altitude grid for which the albedo is evaluated.
 
         Returns
         -------
@@ -365,10 +369,14 @@ class RadProfile(ABC):
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        spectral_ctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        zgrid : .ZGrid, optional
+            The altitude grid for which the extinction coefficient is evaluated.
+            If unset, a profile-specific default is used.
 
         Returns
         -------
@@ -401,6 +409,9 @@ class RadProfile(ABC):
         w : quantity
             Wavelength values at which the spectrum is to be evaluated.
 
+        zgrid : .ZGrid
+            The altitude grid for which the extinction coefficient is evaluated.
+
         Returns
         -------
         quantity
@@ -418,6 +429,9 @@ class RadProfile(ABC):
         ----------
         bindexes : list of :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
+
+        zgrid : .ZGrid
+            The altitude grid for which the extinction coefficient is evaluated.
 
         Returns
         -------
@@ -437,10 +451,14 @@ class RadProfile(ABC):
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        spectral_ctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        zgrid : .ZGrid, optional
+            The altitude grid for which the absorption coefficient is evaluated.
+            If unset, a profile-specific default is used.
 
         Returns
         -------
@@ -473,6 +491,9 @@ class RadProfile(ABC):
         w : quantity
             Wavelength values at which the spectrum is to be evaluated.
 
+        zgrid : .ZGrid
+            The altitude grid for which the extinction coefficient is evaluated.
+
         Returns
         -------
         quantity
@@ -490,6 +511,9 @@ class RadProfile(ABC):
         ----------
         bindexes : :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
+
+        zgrid : .ZGrid
+            The altitude grid for which the extinction coefficient is evaluated.
 
         Returns
         -------
@@ -509,10 +533,14 @@ class RadProfile(ABC):
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        spectral_ctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode, bin and
             quadrature point index in CKD mode).
+
+        zgrid : .ZGrid, optional
+            The altitude grid for which the scattering coefficient is evaluated.
+            If unset, a profile-specific default is used.
 
         Returns
         -------
@@ -545,6 +573,9 @@ class RadProfile(ABC):
         w : quantity
             Wavelength values at which the spectrum is to be evaluated.
 
+        zgrid : .ZGrid
+            The altitude grid for which the scattering coefficient is evaluated.
+
         Returns
         -------
         quantity
@@ -562,6 +593,9 @@ class RadProfile(ABC):
         ----------
         bindexes : list of :class:`.Bindex`
             One or several CKD bindexes for which to evaluate the spectrum.
+
+        zgrid : .ZGrid
+            The altitude grid for which the scattering coefficient is evaluated.
 
         Returns
         -------
@@ -581,9 +615,13 @@ class RadProfile(ABC):
 
         Parameters
         ----------
-        spectral_ctx : :class:`.SpectralContext`
+        spectral_ctx : .SpectralContext
             A spectral context data structure containing relevant spectral
             parameters (*e.g.* wavelength in monochromatic mode).
+
+        zgrid : .ZGrid, optional
+            The altitude grid for which the radiative profile is evaluated.
+            If unset, a profile-specific default is used.
 
         Returns
         -------
@@ -616,6 +654,9 @@ class RadProfile(ABC):
         w : quantity
             Wavelength values at which spectra are to be evaluated.
 
+        zgrid : .ZGrid
+            The altitude grid for which the radiative profile is evaluated.
+
         Returns
         -------
         Dataset
@@ -633,6 +674,9 @@ class RadProfile(ABC):
         ----------
         bindexes : list of :class:`.Bindex`
             One or several CKD bindexes for which to evaluate spectra.
+
+        zgrid : .ZGrid
+            The altitude grid for which the radiative profile is evaluated.
 
         Returns
         -------
