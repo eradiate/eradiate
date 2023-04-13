@@ -102,6 +102,11 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Added absorption and scattering bypass switches to the {class}`.ParticleLayer`
   class ({ghpr}`316`).
 * ⚠️ Moved Mitsuba logs to the `mitsuba` logger ({ghpr}`318`).
+* ⚠️ Centralized geometric information to `SceneGeometry` ({ghpr}`319`).
+* ⚠️ Made {class}`Atmosphere`'s `_params_*` properties abstract for improved
+  safety ({ghpr}`319`).
+* Fixed a major issue in volume definitions and parameter updates of
+  {class}`BlendPhaseFunction` ({ghpr}`319`).
 
 ### Documentation
 
