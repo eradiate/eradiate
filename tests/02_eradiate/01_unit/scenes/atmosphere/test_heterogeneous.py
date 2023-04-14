@@ -351,7 +351,7 @@ def test_heterogeneous_absorbing_mol_atm(mode_ckd, particle_radprops, request):
 
     # Collect phase function weights
     mi_wrapper = check_scene_element(atmosphere.phase, mi.PhaseFunction)
-    weights = np.squeeze(mi_wrapper.parameters["weight.data"])
+    weights = np.squeeze(mi_wrapper.parameters["weight.volume.data"])
 
     # Extract phase function weights
     inside_particle_layer = (atmosphere.geometry.zgrid.layers >= pl_bottom) & (

@@ -30,7 +30,7 @@ def test_heterogeneous_parameter_lookup(modes_all_double, geometry):
     # Medium is resolved, regardless the fact that it is first encountered as
     # a member of the "dflux" sensor
     assert (
-        exp.mi_scene.umap_template["medium_atmosphere.albedo.data"].parameter_id
+        exp.mi_scene.umap_template["medium_atmosphere.albedo.volume.data"].parameter_id
         == "dflux.medium.albedo.volume.data"
         if geometry == "spherical_shell"
         else "dflux.medium.albedo.data"

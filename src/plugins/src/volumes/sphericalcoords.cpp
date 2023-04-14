@@ -98,6 +98,8 @@ public:
     }
 
     UnpolarizedSpectrum eval(const Interaction3f &it, Mask active) const override {
+        MI_MASKED_FUNCTION(ProfilerPhase::TextureEvaluate, active);
+
         Point3f p = m_to_local * it.p;
         Float r = dr::norm(p);
 
@@ -114,6 +116,31 @@ public:
             dr::select(r > m_rmax,
                 m_fillmax,
                 m_volume->eval(it_spherical, active)
+            )
+        );
+    }
+
+    Float eval_1(const Interaction3f &it, Mask active = true) const override {
+        MI_MASKED_FUNCTION(ProfilerPhase::TextureEvaluate, active);
+
+        Point3f p = m_to_local * it.p;
+        Float r = dr::norm(p);
+
+        Point3f p_spherical = Point3f(
+            (r - m_rmin) / (m_rmax - m_rmin),
+            dr::acos(p.z() / r) * dr::InvPi<ScalarFloat>,
+            dr::atan2(p.y(), p.x()) * dr::InvTwoPi<ScalarFloat> + .5f
+        );
+        Interaction3f it_spherical = it;
+        it_spherical.p = p_spherical;
+
+        return dr::select(
+            r < m_rmin,
+            m_fillmin,
+            dr::select(
+                r > m_rmax,
+                m_fillmax,
+                m_volume->eval_1(it_spherical, active)
             )
         );
     }

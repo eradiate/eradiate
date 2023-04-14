@@ -6,6 +6,7 @@ from __future__ import annotations
 from collections import abc as cabc
 
 import attrs
+import mitsuba as mi
 import numpy as np
 import pint
 
@@ -16,6 +17,7 @@ from ..core import traverse
 from ..phase import BlendPhaseFunction, PhaseFunction
 from ...attrs import documented, parse_docs
 from ...contexts import KernelDictContext, SpectralContext
+from ...kernel import TypeIdLookupStrategy
 from ...radprops import ZGrid
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -247,5 +249,25 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def _template_phase(self) -> dict:
         # Inherit docstring
-        template, _ = traverse(self.phase)
-        return template.data
+        return traverse(self.phase)[0].data
+
+    @property
+    def _params_phase(self) -> dict:
+        # Inherit docstring
+
+        umap = traverse(self.phase)[1].data
+
+        # Add prefix and lookup strategy to all entries
+        result = {}
+
+        for uparam_key, uparam in umap.items():
+            result[f"phase_function.{uparam_key}"] = attrs.evolve(
+                uparam,
+                lookup_strategy=TypeIdLookupStrategy(
+                    node_type=mi.Medium,
+                    node_id=self.medium_id,
+                    parameter_relpath=f"phase_function.{uparam_key}",
+                ),
+            )
+
+        return result
