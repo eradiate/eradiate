@@ -7,12 +7,6 @@ import attrs
 from ._core import EarthObservationExperiment, Experiment
 from ._helpers import measure_inside_atmosphere, surface_converter
 from ..attrs import documented, get_doc, parse_docs
-from ..contexts import (
-    CKDSpectralContext,
-    KernelDictContext,
-    MonoSpectralContext,
-    SpectralContext,
-)
 from ..scenes.atmosphere import (
     Atmosphere,
     HomogeneousAtmosphere,
@@ -31,7 +25,6 @@ from ..scenes.shapes import RectangleShape, SphereShape
 from ..scenes.surface import BasicSurface
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-from ..util.misc import deduplicate_sorted
 
 
 @parse_docs

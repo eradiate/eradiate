@@ -8,12 +8,6 @@ from ._core import EarthObservationExperiment
 from ._helpers import measure_inside_atmosphere, surface_converter
 from .. import converters, validators
 from ..attrs import AUTO, documented, parse_docs
-from ..contexts import (
-    CKDSpectralContext,
-    KernelDictContext,
-    MonoSpectralContext,
-    SpectralContext,
-)
 from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
@@ -33,7 +27,6 @@ from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-from ..util.misc import deduplicate_sorted
 
 
 @parse_docs

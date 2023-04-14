@@ -8,12 +8,6 @@ from ._core import EarthObservationExperiment, Experiment
 from ._helpers import surface_converter
 from .. import validators
 from ..attrs import documented, get_doc, parse_docs
-from ..contexts import (
-    CKDSpectralContext,
-    KernelDictContext,
-    MonoSpectralContext,
-    SpectralContext,
-)
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import SceneElement
@@ -21,7 +15,6 @@ from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import Measure
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface
-from ..util.misc import deduplicate_sorted
 
 
 @parse_docs
