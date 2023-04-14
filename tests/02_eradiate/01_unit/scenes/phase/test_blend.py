@@ -162,15 +162,16 @@ def test_blend_phase_geometry(mode_mono, geometry):
 
     # Appropriate geometry setup works
     geometry = SceneGeometry.convert(geometry)
-    expected = np.array(geometry.atmosphere_gridvolume_to_world.matrix)
+    expected = np.array(geometry.atmosphere_volume_to_world.matrix)
     phase = BlendPhaseFunction(
         components=[{"type": "isotropic"}, {"type": "rayleigh"}, {"type": "hg"}],
         weights=[0.25, 0.25, 0.5],
         geometry=geometry,
     )
-    template = traverse(phase)[0].render(KernelDictContext())
-    to_world = np.array(template["weight"]["to_world"].matrix)
+    template = traverse(phase)[0]
+    to_world = np.array(template["weight.to_world"].matrix)
     np.testing.assert_allclose(to_world, expected)
+    check_scene_element(phase, mi.PhaseFunction)
 
     # Nested BlendPhaseFunction objects must have the same geometry
     phase = BlendPhaseFunction(
@@ -188,9 +189,11 @@ def test_blend_phase_geometry(mode_mono, geometry):
 
     for comp in phase.components:
         if isinstance(comp, BlendPhaseFunction):
-            template = traverse(comp)[0].render(KernelDictContext())
-            to_world = np.array(template["weight"]["to_world"].matrix)
+            template = traverse(comp)[0]
+            to_world = np.array(template["weight.to_world"].matrix)
             np.testing.assert_allclose(to_world, expected)
+
+    check_scene_element(phase, mi.PhaseFunction)
 
 
 @pytest.mark.parametrize(
@@ -245,7 +248,7 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
     if "geometry" in kwargs:
         geometry = SceneGeometry.convert(kwargs["geometry"])
         expected["weight.to_world"] = np.array(
-            geometry.atmosphere_gridvolume_to_world.matrix
+            geometry.atmosphere_volume_to_world.matrix
         )
     assert_cmp_dict(kernel_dict, expected)
 
@@ -328,7 +331,7 @@ def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_wei
     if "geometry" in kwargs:
         geometry = SceneGeometry.convert(kwargs["geometry"])
         expected["weight.to_world"] = np.array(
-            geometry.atmosphere_gridvolume_to_world.matrix
+            geometry.atmosphere_volume_to_world.matrix
         )
         expected["phase_1.weight.to_world"] = expected["weight.to_world"].copy()
 

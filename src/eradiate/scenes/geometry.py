@@ -150,7 +150,7 @@ class SceneGeometry(ABC):
 
     @property
     @abstractmethod
-    def atmosphere_gridvolume_to_world(self) -> mi.ScalarTransform4f:
+    def atmosphere_volume_to_world(self) -> mi.ScalarTransform4f:
         """
         :class:`mi.ScalarTransform4f` : Mitsuba transform mapping volume texture
             coordinates to world coordinates for heterogeneous atmosphere
@@ -195,7 +195,7 @@ class PlaneParallelGeometry(SceneGeometry):
         )
 
     @property
-    def atmosphere_gridvolume_to_world(self) -> mi.ScalarTransform4f:
+    def atmosphere_volume_to_world(self) -> mi.ScalarTransform4f:
         length_units = uck.get("length")
         shape = self.atmosphere_shape
 
@@ -240,7 +240,7 @@ class SphericalShellGeometry(SceneGeometry):
         )
 
     @property
-    def atmosphere_gridvolume_to_world(self) -> mi.ScalarTransform4f:
+    def atmosphere_volume_to_world(self) -> mi.ScalarTransform4f:
         length_units = ucc.get("length")
 
         # The bounding box corresponds to the vertices of the bounding box
@@ -249,6 +249,16 @@ class SphericalShellGeometry(SceneGeometry):
         xmax, ymax, zmax = bbox.max.m_as(length_units)
 
         return map_cube(xmin, xmax, ymin, ymax, zmin, zmax)
+
+    @property
+    def atmosphere_volume_rmin(self) -> float:
+        """
+        Value for the ``rmin`` parameter of the ``sphericalcoordsvolume`` plugin
+        describing the volume data in the spherical shell geometry.
+        """
+        return (self.planet_radius / (self.planet_radius + self.toa_altitude)).m_as(
+            ureg.dimensionless
+        )
 
     @property
     def surface_shape(self) -> Shape:

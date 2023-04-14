@@ -9,10 +9,11 @@ import numpy as np
 
 from ._core import PhaseFunction, phase_function_factory
 from ..core import traverse
-from ..geometry import SceneGeometry
+from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ...attrs import documented
 from ...contexts import KernelDictContext, SpectralContext
-from ...kernel import InitParameter, UpdateParameter
+from ...kernel import InitParameter, TypeIdLookupStrategy, UpdateParameter
+from ...units import unit_context_kernel as uck
 from ...util.misc import cache_by_id
 
 
@@ -185,6 +186,7 @@ class BlendPhaseFunction(PhaseFunction):
 
     @property
     def template(self) -> dict:
+
         result = {"type": "blendphase"}
 
         for i in range(len(self.components) - 1):
@@ -200,25 +202,56 @@ class BlendPhaseFunction(PhaseFunction):
             )
 
             # Assign conditional weight to second component
-            result[f"{prefix}weight.type"] = "gridvolume"
+            if self.geometry is None or isinstance(
+                self.geometry, PlaneParallelGeometry
+            ):
+                # Note: This defines a partial and evaluates the component index.
+                # Passing i as the kwarg default value is essential to force the
+                # dereferencing of the loop variable.
+                def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
+                    return mi.VolumeGrid(
+                        np.reshape(
+                            self.eval_conditional_weights(
+                                ctx.spectral_ctx, n_component
+                            ),
+                            (-1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyx)
+                        ).astype(np.float32)
+                    )
 
-            # Note: This defines a partial and evaluates the component index.
-            # Passing i as the kwarg default value is essential to force the
-            # dereferencing of the loop variable.
-            def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
-                return mi.VolumeGrid(
-                    np.reshape(
-                        self.eval_conditional_weights(ctx.spectral_ctx, n_component),
-                        (-1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyx)
-                    ).astype(np.float32)
+                result[f"{prefix}weight.type"] = "gridvolume"
+                result[f"{prefix}weight.grid"] = InitParameter(eval_conditional_weights)
+
+                if self.geometry is not None:
+                    result[
+                        f"{prefix}weight.to_world"
+                    ] = self.geometry.atmosphere_volume_to_world
+
+            elif isinstance(self.geometry, SphericalShellGeometry):
+                # Same comment as above
+                def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
+                    return mi.VolumeGrid(
+                        np.reshape(
+                            self.eval_conditional_weights(
+                                ctx.spectral_ctx, n_component
+                            ),
+                            (1, 1, -1),  # Mind dim ordering! (C-style, i.e. zyx)
+                        ).astype(np.float32)
+                    )
+
+                result[f"{prefix}weight.type"] = "sphericalcoordsvolume"
+                result[f"{prefix}weight.volume.type"] = "gridvolume"
+                result[f"{prefix}weight.volume.grid"] = InitParameter(
+                    eval_conditional_weights
                 )
-
-            result[f"{prefix}weight.grid"] = InitParameter(eval_conditional_weights)
-
-            if self.geometry is not None:
                 result[
                     f"{prefix}weight.to_world"
-                ] = self.geometry.atmosphere_gridvolume_to_world
+                ] = self.geometry.atmosphere_volume_to_world
+                result[f"{prefix}weight.rmin"] = self.geometry.atmosphere_volume_rmin
+
+            else:
+                raise ValueError(
+                    f"unhandled scene geometry type '{type(self.geometry).__name__}'"
+                )
 
         else:
             template, _ = traverse(self.components[-1])
@@ -241,19 +274,40 @@ class BlendPhaseFunction(PhaseFunction):
                 }
             )
 
-            # Note: This defines a partial and evaluates the component index.
-            # Passing i as the kwarg default value is essential to force the
-            # dereferencing of the loop variable.
-            def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
-                return np.reshape(
-                    self.eval_conditional_weights(ctx.spectral_ctx, n_component),
-                    (-1, 1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyxc)
-                ).astype(np.float32)
+            if self.geometry is None or isinstance(
+                self.geometry, PlaneParallelGeometry
+            ):
+                # Note: This defines a partial and evaluates the component index.
+                # Passing i as the kwarg default value is essential to force the
+                # dereferencing of the loop variable.
+                def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
+                    return np.reshape(
+                        self.eval_conditional_weights(ctx.spectral_ctx, n_component),
+                        (-1, 1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyxc)
+                    ).astype(np.float32)
 
-            # Assign conditional weight to second component
-            result[f"{prefix}weight.data"] = UpdateParameter(
-                eval_conditional_weights, UpdateParameter.Flags.SPECTRAL
-            )
+                # Assign conditional weight to second component
+                result[f"{prefix}weight.data"] = UpdateParameter(
+                    eval_conditional_weights,
+                    UpdateParameter.Flags.SPECTRAL,
+                )
+
+            elif isinstance(self.geometry, SphericalShellGeometry):
+                # Same comment as above
+                def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
+                    return np.reshape(
+                        self.eval_conditional_weights(ctx.spectral_ctx, n_component),
+                        (1, 1, -1, 1),  # Mind dim ordering! (C-style, i.e. zyxc)
+                    ).astype(np.float32)
+
+                # Assign conditional weight to second component
+                result[f"{prefix}weight.volume.data"] = UpdateParameter(
+                    eval_conditional_weights,
+                    UpdateParameter.Flags.SPECTRAL,
+                )
+
+            else:
+                raise NotImplementedError
 
         else:
             _, params = traverse(self.components[-1])

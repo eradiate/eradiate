@@ -23,7 +23,6 @@ from ...kernel import (
     InitParameter,
     TypeIdLookupStrategy,
     UpdateParameter,
-    map_unit_cube,
 )
 from ...radprops import ZGrid
 from ...units import symbol
@@ -269,6 +268,7 @@ class Atmosphere(CompositeSceneElement, ABC):
         return result
 
     @property
+    @abstractmethod
     def _params_phase(self) -> dict[str, UpdateParameter]:
         """
         Returns
@@ -277,9 +277,10 @@ class Atmosphere(CompositeSceneElement, ABC):
             The phase function-related contribution to the parameter update map
             template for the atmosphere.
         """
-        return {}
+        pass
 
     @property
+    @abstractmethod
     def _params_medium(self) -> dict[str, UpdateParameter]:
         """
         Returns
@@ -288,7 +289,7 @@ class Atmosphere(CompositeSceneElement, ABC):
             The medium-related contribution to the parameter update map template
             for the atmosphere.
         """
-        return {}
+        pass
 
     @property
     def _params_shape(self) -> dict[str, UpdateParameter]:
@@ -299,7 +300,8 @@ class Atmosphere(CompositeSceneElement, ABC):
             The shape-related contribution to the parameter update map template
             for the atmosphere.
         """
-        return {}
+        _, umap = traverse(self.shape)
+        return umap.data
 
     @property
     def params(self) -> dict[str, UpdateParameter]:
@@ -576,18 +578,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         # Inherit docstring
         length_units = uck.get("length")
         top = self.geometry.toa_altitude.m_as(length_units)
-        bottom = self.geometry.ground_altitude.m_as(length_units)
 
         if isinstance(self.geometry, PlaneParallelGeometry):
-            width = self.geometry.width.m_as(length_units)
-            to_world = map_unit_cube(
-                xmin=-0.5 * width,
-                xmax=0.5 * width,
-                ymin=-0.5 * width,
-                ymax=0.5 * width,
-                zmin=bottom,
-                zmax=top,
-            )
+            to_world = self.geometry.atmosphere_volume_to_world
 
             volumes = {
                 "albedo": {
@@ -622,9 +615,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         elif isinstance(self.geometry, SphericalShellGeometry):
             planet_radius = self.geometry.planet_radius.m_as(length_units)
-            rmin = planet_radius
-            rmax = rmin + top
-            to_world = mi.ScalarTransform4f.scale(rmax)
+            volume_rmin = self.geometry.atmosphere_volume_rmin
+            to_world = self.geometry.atmosphere_volume_to_world
 
             volumes = {
                 "albedo": {
@@ -643,7 +635,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         ),
                     },
                     "to_world": to_world,
-                    "rmin": rmin / rmax,
+                    "rmin": volume_rmin,
                 },
                 "sigma_t": {
                     "type": "sphericalcoordsvolume",
@@ -661,13 +653,13 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         ),
                     },
                     "to_world": to_world,
-                    "rmin": rmin / rmax,
+                    "rmin": volume_rmin,
                 },
             }
 
-        else:  # Shouldn't happen, prevented by validator
+        else:
             raise ValueError(
-                f"unhandled atmosphere geometry type '{type(self.geometry).__name__}'"
+                f"unhandled scene geometry type '{type(self.geometry).__name__}'"
             )
 
         # Create medium dictionary
@@ -697,7 +689,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     lookup_strategy=TypeIdLookupStrategy(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
-                        parameter_relpath=f"albedo.data",
+                        parameter_relpath="albedo.data",
                     ),
                 ),
                 "sigma_t.data": UpdateParameter(
@@ -711,7 +703,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     lookup_strategy=TypeIdLookupStrategy(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
-                        parameter_relpath=f"sigma_t.data",
+                        parameter_relpath="sigma_t.data",
                     ),
                 ),
             }
@@ -727,7 +719,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     lookup_strategy=TypeIdLookupStrategy(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
-                        parameter_relpath=f"albedo.volume.data",
+                        parameter_relpath="albedo.volume.data",
                     ),
                 ),
                 "sigma_t.volume.data": UpdateParameter(
@@ -741,12 +733,12 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     lookup_strategy=TypeIdLookupStrategy(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
-                        parameter_relpath=f"sigma_t.volume.data",
+                        parameter_relpath="sigma_t.volume.data",
                     ),
                 ),
             }
 
         else:  # Shouldn't happen, prevented by validator
             raise ValueError(
-                f"unhandled atmosphere geometry type '{type(self.geometry).__name__}'"
+                f"unhandled scene geometry type '{type(self.geometry).__name__}'"
             )
