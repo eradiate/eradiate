@@ -8,6 +8,7 @@ import numpy as np
 import pint
 import pinttr
 import xarray as xr
+from pinttr.util import ensure_units
 
 import eradiate
 
@@ -195,13 +196,11 @@ class ZGrid:
     )
 
     _layers: pint.Quantity = pinttr.field(
-        default=None,
         units=ucc.deferred("length"),
         on_setattr=None,  # frozen instance: on_setattr must be disabled
     )
 
     _layer_height: pint.Quantity = pinttr.field(
-        default=None,
         units=ucc.deferred("length"),
         on_setattr=None,  # frozen instance: on_setattr must be disabled
     )
@@ -211,12 +210,23 @@ class ZGrid:
         if not np.isscalar(value.magnitude):
             raise ValueError("layer height must be a scalar")
 
-    def __init__(self, levels: pint.Quantity):
+    _total_height: pint.Quantity = pinttr.field(
+        units=ucc.deferred("length"),
+        on_setattr=None,  # frozen instance: on_setattr must be disabled
+    )
+
+    def __init__(self, levels: np.typing.ArrayLike):
+        levels = ensure_units(levels, ucc.get("length"))
         layer_height = np.diff(levels)
         if not np.allclose(layer_height, layer_height[0]):
             raise ValueError("levels must be regularly spaced")
         layers = levels[:-1] + 0.5 * layer_height
-        self.__attrs_init__(levels=levels, layers=layers, layer_height=layer_height[0])
+        self.__attrs_init__(
+            levels=levels,
+            layers=layers,
+            layer_height=layer_height[0],
+            total_height=(levels.m[-1] - levels.m[0]) * levels.u,
+        )
 
     @property
     def layers(self) -> pint.Quantity:
@@ -257,6 +267,16 @@ class ZGrid:
             Number of layers.
         """
         return len(self.layers)
+
+    @property
+    def total_height(self) -> pint.Quantity:
+        """
+        Returns
+        -------
+        quantity
+            Total height covered by the altitude grid.
+        """
+        return self._total_height
 
 
 @attrs.define(eq=False)
