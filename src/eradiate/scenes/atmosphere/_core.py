@@ -718,7 +718,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         elif isinstance(self.geometry, SphericalShellGeometry):
             return {
-                "albedo.data": UpdateParameter(
+                "albedo.volume.data": UpdateParameter(
                     lambda ctx: np.reshape(
                         self.eval_albedo(ctx.spectral_ctx).m_as(ureg.dimensionless),
                         (1, 1, -1, 1),
@@ -730,7 +730,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         parameter_relpath=f"albedo.volume.data",
                     ),
                 ),
-                "sigma_t.data": UpdateParameter(
+                "sigma_t.volume.data": UpdateParameter(
                     lambda ctx: np.reshape(
                         self.eval_sigma_t(ctx.spectral_ctx).m_as(
                             uck.get("collision_coefficient")
