@@ -30,7 +30,7 @@ class InitParameter:
     UNUSED: t.ClassVar[object] = object()
 
     evaluator: t.Callable = documented(
-        attrs.field(repr=False),
+        attrs.field(validator=attrs.validators.is_callable()),
         doc="A callable that returns the value of the parameter for a given "
         "context, with signature ``f(ctx: KernelDictContext) -> Any``.",
         type="callable",
@@ -67,7 +67,7 @@ class UpdateParameter:
         ALL = SPECTRAL | GEOMETRIC
 
     evaluator: t.Callable = documented(
-        attrs.field(repr=False),
+        attrs.field(validator=attrs.validators.is_callable()),
         doc="A callable that returns the value of the parameter for a given "
         "context, with signature ``f(ctx: KernelDictContext) -> Any``.",
         type="callable",
