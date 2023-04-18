@@ -126,7 +126,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     w_ref: pint.Quantity = documented(
         pinttr.field(
-            units=ucc.deferred("length"),
+            units=ucc.deferred("wavelength"),
             default=550 * ureg.nm,
             validator=[
                 is_positive,
@@ -136,7 +136,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         doc="Reference wavelength at which the extinction optical thickness is "
         "specified.\n"
         "\n"
-        "Unit-enabled field (default: ucc[length]).",
+        "Unit-enabled field (default: ucc['wavelength']).",
         type="quantity",
         init_type="quantity or float",
         default="550.0",
@@ -230,7 +230,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         Returns
         -------
         ndarray
-            Particle fractions.
+            Particle number fractions as a (n_layers,)-shaped array.
         """
         x = (zgrid.layers - self.bottom) / (self.top - self.bottom)
         fractions = self.distribution(x.m_as(ureg.dimensionless))
@@ -256,28 +256,29 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     @cache_by_id
     def _eval_sigma_t_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         # Return extinction coefficient from dataset (without accounting for bypass switches)
+        # This routine is vectorized and returns an array of shape (n_wavelengths, n_layers)
 
-        # Prepare input data
+        # Collect input data
         ds = self.dataset
         ds_w_units = ureg(ds.w.attrs["units"])
-        wavelength = w.m_as(ds_w_units)
-        xs_t = to_quantity(ds.sigma_t.interp(w=wavelength))
-        xs_t_ref = to_quantity(ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units)))
+        wavelengths = np.atleast_1d(w.m_as(ds_w_units))
+        sigma_t_star = to_quantity(ds.sigma_t.interp(w=wavelengths))
+        sigma_t_star_ref = to_quantity(ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units)))
 
-        # Compute volume fractions on the requested altitude grid
-        fractions = self.eval_fractions(zgrid)
-        sigma_t_array = xs_t_ref * fractions
+        # Compute target optical thickness value
+        tau = self.tau_ref * sigma_t_star / sigma_t_star_ref
 
-        # Normalize the extinction coefficient to the nominal optical thickness
-        # so that Σ_i (k_i Δz_i) == τ
-        normalized_sigma_t_array = (
-            sigma_t_array.magnitude
-            * self.tau_ref
-            / (np.sum(sigma_t_array.magnitude) * zgrid.layer_height.magnitude)
-        ) * zgrid.layer_height.units**-1
-        result = np.atleast_1d(normalized_sigma_t_array * xs_t / xs_t_ref)
+        # Scatter this total OT to all layers
+        # TODO: Make sure that axis order is consistent with other vectorized
+        #  routines
+        tau_layers = np.broadcast_to(
+            np.reshape(tau, (-1, 1)), (len(wavelengths), zgrid.n_layers)
+        ) * np.reshape(self.eval_fractions(zgrid), (1, -1))
 
-        return result
+        # Compute corresponding average coefficient
+        sigma_t = tau_layers / zgrid.layer_height
+
+        return sigma_t
 
     def _eval_sigma_a_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         # Return absorption coefficient from dataset (without accounting for bypass switches)

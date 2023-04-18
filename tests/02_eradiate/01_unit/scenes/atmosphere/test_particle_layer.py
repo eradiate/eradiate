@@ -5,6 +5,7 @@ import xarray as xr
 from eradiate import data
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelDictContext, SpectralContext
+from eradiate.radprops import ZGrid
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
 from eradiate.scenes.core import traverse
 from eradiate.scenes.measure import MeasureSpectralConfig
@@ -280,11 +281,14 @@ def test_particle_layer_eval_radprops(mode_mono, test_dataset_path, tau_ref):
     )
 
 
+@pytest.mark.parametrize("distribution", ["uniform", "gaussian", "exponential"])
 @pytest.mark.parametrize(
     "tau_ref",
     np.array([0.1, 0.5, 1.0, 2.0, 5.0]) * ureg.dimensionless,
 )
-def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_ref, test_dataset_path):
+def test_particle_layer_eval_sigma_t_impl(
+    mode_mono, tau_ref, distribution, test_dataset_path
+):
     r"""
     Spectral dependency of extinction is accounted for.
 
@@ -302,28 +306,35 @@ def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_ref, test_dataset_path)
     which is what we assert in this test.
     """
     w_ref = 550 * ureg.nm
-    bottom = 0.5 * ureg.km  # arbitrary
-    top = 3.0 * ureg.km  # arbitrary
+    bottom = 1.0 * ureg.km  # arbitrary
+    top = 4.0 * ureg.km  # arbitrary
+    n_wavelengths = 3
+    n_layers = 10
+    wavelengths = np.linspace(500.0, 1500.0, n_wavelengths) * ureg.nm
+    zgrid = ZGrid(np.linspace(0, 5, n_layers + 1) * ureg.km)
 
     layer = ParticleLayer(
-        geometry=dict(
-            type="plane_parallel",
-            ground_altitude=bottom,
-            toa_altitude=top,
-            zgrid=[bottom.m, top.m] * top.u,
-        ),
+        geometry={
+            "type": "plane_parallel",
+            "toa_altitude": zgrid.levels[-1],
+            "zgrid": zgrid,
+        },
         dataset=test_dataset_path,
         bottom=bottom,
         top=top,
-        distribution={"type": "uniform"},
+        distribution=distribution,
         w_ref=w_ref,
         tau_ref=tau_ref,
     )
 
     # layer optical thickness @ current wavelength
-    wavelengths = np.linspace(500.0, 1500.0, 101) * ureg.nm
-    tau = layer.eval_sigma_t_mono(wavelengths, layer.geometry.zgrid) * layer.height
-    print(tau.shape)
+    sigma_t = layer._eval_sigma_t_impl(wavelengths, layer.geometry.zgrid)
+    assert sigma_t.units.is_compatible_with(ureg("m**-1"))
+    assert sigma_t.shape == (n_wavelengths, n_layers)
+    tau = np.sum(
+        sigma_t * layer.geometry.zgrid.layer_height,
+        axis=1,
+    )  # Integrate sigma_t * dz vs space coordinate using rectangle method
 
     # data set extinction @ running and reference wavelength
     ds = data.load_dataset(test_dataset_path)
@@ -333,7 +344,9 @@ def test_particle_layer_eval_sigma_t_mono(mode_mono, tau_ref, test_dataset_path)
 
     # the spectral dependence of the optical thickness and extinction
     # coefficient match, so the below ratios must match
-    assert np.allclose(tau / tau_ref, sigma_t / sigma_t_ref)
+    result = (tau / tau_ref).m_as(ureg.dimensionless)
+    expected = (sigma_t / sigma_t_ref).m_as(ureg.dimensionless)
+    np.testing.assert_allclose(result, expected)
 
 
 @pytest.mark.parametrize(
