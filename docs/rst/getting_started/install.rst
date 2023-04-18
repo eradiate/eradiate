@@ -163,9 +163,7 @@ following command:
          git clone --recursive --branch <ref> https://github.com/eradiate/eradiate
 
       where ``<ref>`` is a Git branch or tag. For the latest stable version, use
-      "|version|".
-
-
+      ``stable``.
 
 This will clone the Eradiate repository, as well as all its dependencies.
 This recursive cloning procedure can take up to a few minutes depending on
