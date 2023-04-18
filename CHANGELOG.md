@@ -128,6 +128,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Updated dependency management system to latest tooling changes ({ghpr}`306`).
 * Add {func}`.cache_by_id` to replace `@functools.lru_cache(maxsize=1)` when
   appropriate ({ghpr}`315`).
+* Clarify particle layer optical thickness computation ({ghpr}`321`).
 
 ## v0.22.5 (17 October 2022)
 
