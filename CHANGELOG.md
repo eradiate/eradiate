@@ -28,6 +28,16 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 %
 % ### Internal changes
 
+## v0.23.2 (upcoming release)
+
+% ### Deprecations and removals
+
+% ### Improvements and fixes
+
+% ### Documentation
+
+% ### Internal changes
+
 ## v0.23.1 (21 April 2023)
 
 ### Breaking changes
