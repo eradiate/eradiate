@@ -99,7 +99,7 @@ def plugin():
     "theta_o, phi_o, theta_i, phi_i, expected",
     [
         # The following values are hand-picked to be easily tracked in the table
-        # used to initialise the plugin
+        # used to initialize the plugin
         [np.pi / 3, 0.0, 0.0, 0.0, 1.5],
         [np.pi * 0.4195693767448338, 0.0, 0.0, 0.0, 1.25],  # Such that cos θ = 0.25
         [np.pi / 3, np.pi, 0.0, 0.0, -1.5],

@@ -12,7 +12,7 @@ from eradiate.test_tools import util as tu
 
 def init_mono_experiment(wavelengths, spp, reflectance, zeniths):
     """
-    Initialise the monochromatic experiment.
+    Initialize the monochromatic experiment.
     """
     eradiate.set_mode("mono_double")
 

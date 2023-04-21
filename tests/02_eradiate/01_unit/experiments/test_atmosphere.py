@@ -15,7 +15,7 @@ from eradiate.test_tools.types import check_scene_element
 
 def test_atmosphere_experiment_construct_default(modes_all_double):
     """
-    AtmosphereExperiment initialises successfully with default parameters in
+    AtmosphereExperiment initializes successfully with default parameters in
     all modes.
     """
     exp = AtmosphereExperiment()

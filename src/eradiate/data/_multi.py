@@ -36,7 +36,7 @@ class MultiDataStore(DataStore):
     @property
     def base_url(self) -> str:
         """
-        Raises :class:`NotImplementedError` (this data store has not target
+        Raises :class:`NotImplementedError` (this data store has no target
         location).
         """
         raise NotImplementedError

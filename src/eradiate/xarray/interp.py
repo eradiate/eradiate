@@ -117,7 +117,7 @@ def dataarray_to_rgb(
     channels : sequence of tuples
         Three (coordinate label, coordinate value) pairs used to select the data
         used to compose the image. Channels are ordered as follows: (R, G, B).
-        For instance, to select wavelengths (dimension ``"w'``) at 440 (blue),
+        For instance, to select wavelengths (dimension ``"w"``) at 440 (blue),
         550 (green) and 660 (red) nm, use
         ``channels=[("w", 660), ("w", 550), ("w", 440)]``.
 

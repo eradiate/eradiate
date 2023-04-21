@@ -265,7 +265,7 @@ def mi_render(
         original scene definition takes precedence.
 
     seed_state : .SeedState, optional
-        Seed state used to generate seeds to initialise Mitsuba's RNG at
+        Seed state used to generate seeds to initialize Mitsuba's RNG at
         each run. If unset, Eradiate's root seed state is used.
 
     Returns

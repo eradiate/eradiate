@@ -133,7 +133,7 @@ def test_traverse(variant_scalar_rgb):
     ref_x = np.array([-1, 0.5, 1])
     ref_integral = np.trapz(ref_y, ref_x)
 
-    # Initialise as isotropic and update with parameters
+    # Initialize as isotropic and update with parameters
     phase = mi.load_dict(
         {"type": "tabphase_irregular", "values": "1,1,1", "nodes": "-1,0,1"}
     )

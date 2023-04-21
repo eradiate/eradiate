@@ -10,7 +10,7 @@ def test_seed_state_construct():
     # ... or from an integer seed
     SeedState(0)
 
-    # ... or from an already initialised SeedSequence instance
+    # ... or from an already initialized SeedSequence instance
     SeedState(np.random.SeedSequence(0))
 
 

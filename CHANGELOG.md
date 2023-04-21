@@ -56,7 +56,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   paths ({ghpr}`270`).
 * ⚠️ Complete rewrite of the {class}`.MultiDistantMeasure` construction code
   ({ghpr}`274`, {ghpr}`281`). Previous functionality is preserved in the form of
-  more specialised and simpler interfaces, and we now support a gridded coverage
+  more specialized and simpler interfaces, and we now support a gridded coverage
   of the hemisphere specified as the Cartesian product of zenith and azimuth
   lists of values.
 * Added a helper to grid against VZA and VAA the results obtained with a
@@ -117,9 +117,9 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Updated Mitsuba submodule to v3.2.1 ({ghpr}`277`, {ghpr}`296`).
   This notably fixes a
   [k-d tree creation issue](https://github.com/mitsuba-renderer/mitsuba3/issues/233),
-  [missing initialisation code in the `blendphase` plugin](https://github.com/mitsuba-renderer/mitsuba3/issues/488)
+  [missing initialization code in the `blendphase` plugin](https://github.com/mitsuba-renderer/mitsuba3/issues/488)
   and [an incorrect setter for volume data containers](https://github.com/mitsuba-renderer/mitsuba3/issues/480).
-* Harmonise dataset converters for solar irradiance spectra, spectral response
+* Harmonize dataset converters for solar irradiance spectra, spectral response
   function and particle radiative property datasets ({ghpr}`284`).
 * Replaced isort with [Ruff](https://github.com/charliermarsh/ruff) ({ghpr}`299`).
 * Changed data types of data variables in spectral response function datasets
@@ -159,7 +159,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
   NPP platforms ({ghpr}`253`).
 * Submodules and packages are now imported lazily ({ghpr}`254`, {ghpr}`261`).
   This significantly decreases import time for most use cases.
-* Optimised calls to `Quantity.m_as()` in
+* Optimized calls to `Quantity.m_as()` in
   `InstancedCanopyElement.kernel_instances()` ({ghpr}`256`).
 * Fixed incorrect scaling formula for datetime-based scaling of Solar irradiance
   spectra ({ghpr}`258`).
@@ -171,7 +171,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 * Allow mixing a purely absorbing `MolecularAtmosphere` with a `ParticleLayer`
   ({ghpr}`239`).
 * Change the `ExponentialParticleDistribution` formulation to rate-based; allow
-  scale-based parametrisation for initialisation ({ghpr}`271`).
+  scale-based parametrization for initialisation ({ghpr}`271`).
 * Fixed missing parameters in the `LeafCloud.sphere()` constructor
   ({ghpr}`272`).
 * Add spectral response function filtering utility ({ghpr}`269`).

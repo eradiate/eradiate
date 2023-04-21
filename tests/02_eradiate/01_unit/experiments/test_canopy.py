@@ -13,7 +13,7 @@ from eradiate.test_tools.types import check_scene_element
 
 def test_canopy_experiment_construct_default(modes_all_double):
     """
-    CanopyExperiment initialises with default params in all modes
+    CanopyExperiment initializes with default params in all modes
     """
     assert CanopyExperiment()
 
@@ -61,7 +61,7 @@ def test_canopy_experiment_kernel_dict(modes_all_double, padding):
     # Surface width is appropriately inherited from canopy
     exp = CanopyExperiment(
         canopy=DiscreteCanopy.homogeneous(
-            lai=0.5,  # This very low value ensures fast object initialisation
+            lai=0.5,  # This very low value ensures fast object initialization
             leaf_radius=0.1 * ureg.m,
             l_horizontal=10.0 * ureg.m,
             l_vertical=2.0 * ureg.m,

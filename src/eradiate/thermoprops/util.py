@@ -637,7 +637,7 @@ def _to_regular(mesh: np.ndarray, atol: float) -> np.ndarray:
 
     Warnings
     --------
-    The algorithm is not optimised to find the approximating regular mesh with
+    The algorithm is not optimized to find the approximating regular mesh with
     the smallest number of layers. Depending on the value of ``atol``, the
     resulting mesh size can be large.
 

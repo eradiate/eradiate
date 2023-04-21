@@ -9,7 +9,6 @@ __all__ = [
     "PhysicalQuantity",
 ]
 
-
 import enum
 import typing as t
 from functools import lru_cache
@@ -153,7 +152,7 @@ unit_context_kernel = _make_unit_context()
 
 def symbol(units: pint.Unit | str) -> str:
     """
-    Normalise a string or Pint units to a symbol string.
+    Normalize a string or Pint units to a symbol string.
 
     Parameters
     ----------
