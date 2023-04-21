@@ -13,7 +13,7 @@ newer version, we recommend that you to go through the list of changes.
 We try hard to remain backward-compatible and warn in advance for deprecation
 when necessary—we also advise to not ignore `DeprecationWarning`s.
 
-Entries marked with a  ︎⚠️ symbol require particular attention during upgrade.
+Entries marked with a ︎⚠️ symbol require particular attention during upgrade.
 ```
 
 % HEREAFTER IS A TEMPLATE FOR THE NEXT RELEASE
@@ -28,7 +28,7 @@ Entries marked with a  ︎⚠️ symbol require particular attention during upgr
 %
 % ### Internal changes
 
-## v0.23.1 (upcoming release)
+## v0.23.1 (21 April 2023)
 
 ### Breaking changes
 
