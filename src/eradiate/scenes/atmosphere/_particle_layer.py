@@ -292,10 +292,12 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     def _eval_sigma_a_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         # Return absorption coefficient from dataset (without accounting for bypass switches)
+        # This routine is vectorized and returns an array of shape (n_wavelengths, n_layers)
         return self._eval_sigma_t_impl(w, zgrid) * (1.0 - self._eval_albedo_impl(w).m)
 
     def _eval_sigma_s_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         # Return scattering coefficient from dataset (without accounting for bypass switches)
+        # This routine is vectorized and returns an array of shape (n_wavelengths, n_layers)
         return self._eval_sigma_t_impl(w, zgrid) * self._eval_albedo_impl(w)
 
     @singledispatchmethod
@@ -366,7 +368,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        result = self._eval_sigma_t_impl(w, zgrid)
+        result = self._eval_sigma_t_impl(w, zgrid).squeeze()
 
         if self.has_absorption and self.has_scattering:
             return result
@@ -412,7 +414,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        value = self._eval_sigma_a_impl(w, zgrid)
+        value = self._eval_sigma_a_impl(w, zgrid).squeeze()
         return value if self.has_absorption else np.zeros_like(value) * value.units
 
     def eval_sigma_a_ckd(
@@ -443,7 +445,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        value = self._eval_sigma_s_impl(w, zgrid)
+        value = self._eval_sigma_s_impl(w, zgrid).squeeze()
         return value if self.has_scattering else np.zeros_like(value) * value.units
 
     def eval_sigma_s_ckd(
