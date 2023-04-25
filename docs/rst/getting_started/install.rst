@@ -17,11 +17,6 @@ This guide covers all steps necessary to get Eradiate running on your machine.
    * integrating Eradiate in your workflow can be a bit constraining if you have
      specific requirements on package versions.
 
-.. note::
-
-   If you are interested in running Eradiate with Docker, see the
-   :ref:`dedicated page <sec-getting_started-docker>`.
-
 Prerequisites
 -------------
 
