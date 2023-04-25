@@ -9,7 +9,6 @@ Getting started
 
    install
    update
-   docker
 
 What is Eradiate?
 -----------------

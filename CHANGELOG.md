@@ -32,6 +32,9 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 
 % ### Deprecations and removals
 
+* Removed the docker images implemenation, deployment and documentation from the
+  Eradiate repository ({ghpr}`322`).
+
 % ### Improvements and fixes
 
 % ### Documentation
