@@ -385,7 +385,7 @@ class SceneTraversal:
 def traverse(node: NodeSceneElement) -> tuple[KernelDictTemplate, UpdateMapTemplate]:
     """
     Traverse a scene element tree and collect kernel dictionary template and
-     parameter update table data.
+    parameter update table data.
 
     Parameters
     ----------

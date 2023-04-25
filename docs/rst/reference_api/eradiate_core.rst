@@ -64,3 +64,6 @@ Convenience aliases
 
 .. autodata:: run
    :annotation:
+
+.. autodata:: traverse
+   :annotation:
