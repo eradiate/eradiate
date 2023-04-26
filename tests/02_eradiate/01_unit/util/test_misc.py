@@ -82,11 +82,11 @@ def test_fullname(mode_mono):
     assert fullname(path.is_file) == "pathlib.Path.is_file"
     # -- Class method from class definition
     assert (
-        fullname(eradiate.spectral.index.SpectralIndex.new)
+        fullname(eradiate.spectral.SpectralIndex.new)
         == "eradiate.spectral.index.SpectralIndex.new"
     )
     assert (
-        fullname(eradiate.spectral.index.SpectralIndex.new().new)
+        fullname(eradiate.spectral.SpectralIndex.new().new)
         == "eradiate.spectral.index.SpectralIndex.new"
     )
 

@@ -5,43 +5,22 @@
 
 .. py:currentmodule:: eradiate.spectral
 
-Spectral index
---------------
-
-.. automodule:: eradiate.spectral.index
-
-.. py:currentmodule:: eradiate.spectral.index
+Spectral indexes
+----------------
 
 .. autosummary::
    :toctree: generated/autosummary/
 
    SpectralIndex
-   CKDSpectralIndex
    MonoSpectralIndex
-   SPECTRAL_MODE_DISPATCH
+   CKDSpectralIndex
 
-
-BinSet
-------
-
-.. automodule:: eradiate.spectral.ckd
-
-.. py:currentmodule:: eradiate.spectral.ckd
-
-.. autosummary::
-   :toctree: generated/autosummary/
-
-   Bin
-   BinSet
-
-WavelengthSet
--------------
-
-.. automodule:: eradiate.spectral.mono
-
-.. py:currentmodule:: eradiate.spectral.mono
+Utility containers
+------------------
 
 .. autosummary::
    :toctree: generated/autosummary/
 
    WavelengthSet
+   Bin
+   BinSet

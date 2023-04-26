@@ -5,7 +5,7 @@ import xarray as xr
 
 import eradiate
 from eradiate.scenes.phase import TabulatedPhaseFunction
-from eradiate.spectral.index import SpectralIndex
+from eradiate.spectral import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
 
 

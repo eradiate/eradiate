@@ -1,11 +1,5 @@
-"""Data structures for working along the spectral dimension.
-
-This includes in particular:
-
-* :class:`.SpectralIndex`: a data structure used to evaluate spectral quantities
-* :class:`.WavelengthSet`: a set of wavelength values at which an experiment is
-  run
-* :class:`.BinSet`: a set of wavelength bins at which an experiment is run
+"""
+Data structures for working along the spectral dimension.
 """
 import lazy_loader
 

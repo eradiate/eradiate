@@ -27,13 +27,13 @@ class WavelengthSet:
 
     See Also
     --------
-    :class:`~.ckd.BinSet`
+    :class:`~.BinSet`
 
     Notes
     -----
     This is class is a simple container for an array of wavelengths at which
     a monochromatic experiment is to be performed.
-    Its design is inspired by :class:`~.ckd.BinSet`.
+    Its design is inspired by :class:`~.BinSet`.
     """
 
     wavelengths: pint.Quantity = documented(
