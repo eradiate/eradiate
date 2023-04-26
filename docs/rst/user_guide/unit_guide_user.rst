@@ -39,6 +39,7 @@ When a quantity is implicitly known as dimensional, it can be superfluous to
 require a user to specify units—it's so obvious!
 
 .. admonition:: Example
+   :class: tip
 
    A class creates a tree object in a scene. The tree is parametrised by its
    height, and it's obvious that it should be specified in metres. Therefore, a
@@ -55,13 +56,14 @@ For instance, an atmosphere can be kilometre-sized; however, it is common
 practice to use metres to express altitude values. What is the "obvious" unit,
 then? Some user could say it is the kilometre, another might prefer using the
 metre. For this reason, Eradiate keeps track of default units used to configure
-its objects using a Pinttrs :class:`~pinttr.UnitContext` instance. This
+its objects using a Pinttrs :class:`~pinttrs.UnitContext` instance. This
 *configuration unit context* (:data:`eradiate.unit_context_config`, abbreviated
 as ``ucc``) is used to attach units to dimensional quantities when the user does
 not specify them. Default configuration units are the SI units; but
 a user can override them if it seems more convenient in their context.
 
 .. admonition:: Example
+   :class: tip
 
    .. doctest::
 
@@ -126,4 +128,4 @@ following structure: ``<unit_context>[<quantity>]`` where
   quantity IDs).
 
 Units fetching their defaults at runtime from unit contexts can be
-overridden using the :meth:`pinttr.UnitContext.override` method.
+overridden using the :meth:`pinttrs.UnitContext.override` method.

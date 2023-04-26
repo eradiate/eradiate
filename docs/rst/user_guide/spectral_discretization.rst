@@ -1,27 +1,28 @@
 .. _sec-user_guide-spectral_discretization:
 
-Simulation spectral discretization
-##################################
+Spectral discretization
+#######################
+
+This document explains how the spectral domain is discretize in Eradiate
+simulations.
 
 .. note::
 
     This section assumes that you are familiar with
     :class:`~eradiate.experiments.Experiment` objects.
 
+Depending on the active mode, the spectral discretization has a different
+meaning:
 
-Depending on the active spectral mode, the spectral discretization has a
-different meaning:
-
-* In monochromatic mode, the spectral discretization is speficied by a
-  :class:`~eradiate.spectral.mono.WavelengthSet`, i.e., an array of wavelengths.
+* In monochromatic mode, the spectral discretization is specified by a
+  :class:`.WavelengthSet`, *i.e.* an array of wavelengths.
 * In CKD mode, the spectral discretization is specified by a
-  :class:`~eradiate.spectral.ckd.BinSet`, i.e., a set of CKD bins.
+  :class:`.BinSet`, *i.e.* a set of CKD bins.
 
-An :class:`~eradiate.experiments.Experiment` has as many spectral
-discretizations as it has measures.
+An :class:`.Experiment` has as many spectral discretizations as it has measures.
 
-In both spectral modes, the spectral discretization corresponding to each
-measure is determined in three steps:
+In both modes, the spectral discretization corresponding to each measure is
+determined in three steps:
 
 1. The spectral discretization is set to the
    :class:`~eradiate.experiments.Experiment` default spectral discretization,
@@ -43,7 +44,7 @@ The below modules will be required all along; let us import them once for all:
   import eradiate
 
   from eradiate.experiments import AtmopshereExperiment
-  from eradiate.units import unit_registry as ureg
+  from eradiate import unit_registry as ureg
 
 
 The following sections are organized based on
@@ -73,7 +74,7 @@ Monochromatic mode
 
    eradiate.set_mode("mono")
 
-   from eradiate.spectral.mono import WavelengthSet
+   from eradiate.spectral import WavelengthSet
 
 
 Without atmosphere
@@ -97,7 +98,7 @@ identifier corresponding to the platform, instrument and spectral band.
    We set the experiment's ``default_spectral_set`` parameter so that the
    simulation is run ever 5 nm.
    To increase or decrease this spectral discretization, the user should set
-   this attribute to a different value. If unset, a spectral discrezation of
+   this attribute to a different value. If unset, a spectral discretization of
    1 nm is used, by default.
 
    .. code-block:: python
@@ -287,7 +288,7 @@ CKD mode
 
    eradiate.set_mode("ckd")
 
-   from eradiate.spectral.ckd import BinSet
+   from eradiate.spectral import BinSet
 
 
 Without atmosphere
@@ -301,6 +302,7 @@ to perform the simulation in, either by specifying a platform, an instrument
 and the spectral band, or by defining an arbitrary spectral response function.
 
 .. admonition:: Example
+   :class: tip
 
    Below, we create an experiment that performs a simulation in the 3rd band of
    the MSI instrument onboard the Sentinel 2A platform.
@@ -330,6 +332,7 @@ It is going to select only the CKD bin(s) that include(s) each of
 the :class:`.MultiDeltaSpectrum` object's wavelengths.
 
 .. admonition:: Example
+   :class: tip
 
    The following example illustrates how to perform a CKD simulation
    in the CKD bins that include 560 nm and 620 nm.
@@ -367,7 +370,7 @@ In a wavelength interval
 ------------------------
 
 .. admonition:: Example
-
+   :class: tip
 
    .. code-block:: python
 
@@ -400,6 +403,7 @@ Note that the selected CKD bin will originate from the absorption dataset, not
 from the experiment default bin set.
 
 .. admonition:: Example
+   :class: tip
 
    The following example illustrates how to perform a CKD simulation
    in the CKD bin around 560 nm.

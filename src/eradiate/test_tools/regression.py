@@ -238,7 +238,7 @@ class RegressionTest(ABC):
     def _evaluate(self) -> tuple[bool, float]:
         """
         Evaluate the test results and perform a comparison to the reference
-        based on the criterion defined in the specialised class.
+        based on the criterion defined in the specialized class.
 
         Returns
         -------

@@ -104,7 +104,7 @@ class TabulatedPhaseFunction(PhaseFunction):
 
         Notes
         -----
-        This method dispatches evaluation to specialised methods depending on
+        This method dispatches evaluation to specialized methods depending on
         the spectral index type.
         """
         raise NotImplementedError

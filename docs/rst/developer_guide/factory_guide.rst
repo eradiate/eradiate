@@ -34,6 +34,7 @@ the information contained in the dictionary; otherwise, it does nothing and just
 returns the object it is passed.
 
 .. admonition:: Example
+   :class: tip
 
    The following code snippet instantiates a
    :class:`~eradiate.scenes.illumination.DirectionalIllumination` element

@@ -55,15 +55,16 @@ Experiments interpret user-defined configuration and assemble scene elements so
 that the radiometric kernel can perform all necessary computations and yield the
 data requested by the user.
 
-Experiments are also the most specialised component of Eradiate. The long-term
+Experiments are also the most specialized component of Eradiate. The long-term
 goal is to allow users to create dedicated applications for highly specific
 purposes if their use case is not covered well by existing experiments. Eradiate
-ships experiments written as specialised classes meant to be used in a script or
+ships experiments written as specialized classes meant to be used in a script or
 an interactive console. However, in a broader sense, an interactive Jupyter Lab
 session where a user would assemble their scene and execute a computation can
 also be seen as an experiment.
 
 .. admonition:: Example
+   :class: tip
 
    The one-dimensional experiment
    (:class:`~eradiate.experiments.AtmosphereExperiment`)
@@ -108,11 +109,6 @@ Glossary
      algorithm. Eradiate provides lightweight interface components to configure
      them.
 
-   Kernel dictionary
-     A dictionary describing the scene at the kernel level. Kernel dictionaries
-     are created by combining kernel dict parts produced by the various scene
-     elements in the scene and usually depend on contextual data.
-
    Measure
      A high-level interface to one or several :term:`sensors <sensor>`. Measures
      are associated to specific post-processing tasks managed by
@@ -131,3 +127,8 @@ Glossary
    Sensor
      A kernel component which records radiance samples and stores them to a
      :term:`film`. Eradiate creates sensors from :term:`measures <measure>`.
+
+.. seealso::
+
+   The :ref:`sec-developer_guides-radiometric_kernel_interface` section contains
+   an additional specific glossary.

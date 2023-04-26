@@ -50,6 +50,9 @@ Post-processing pipeline definitions [:mod:`eradiate.pipelines`]
     Earth observation applications (*e.g.* reflectance). The data is stored as
     xarray labelled arrays (:term:`Dataset`).
 
+xarray utility functions [:mod:`eradiate.xarray`]
+    Various support components taking advantage of the xarray library.
+
 Plotting [:mod:`eradiate.plot`]
     This module defines optional utility functions to create
     `Matplotlib <https://matplotlib.org>`_-based visualisations of Eradiate's
@@ -67,13 +70,11 @@ Thermosphysical properties [:mod:`eradiate.thermoprops`]
     of scene objects. The output of its components are generally used as input
     of components responsible for radiative property computation.
 
+Numerical constants [:mod:`eradiate.constants`]
+    Various numerical constants used throughout the code base.
+
 Other support components
 ------------------------
-
-Class writing facilities [``eradiate.{`` :mod:`~eradiate.attrs`, :mod:`~eradiate.converters`, :mod:`~eradiate.validators`, :mod:`~eradiate._factory` ``}``]
-    These components are part of Eradiate's core class writing system. It relies
-    on the `attrs <https://www.attrs.org>`_ library, extended for `Pint <https://pint.readthedocs.io>`_
-    compatibility by the `Pinttrs <https://pinttrs.readthedocs.io>`_ library.
 
 Unit support [:mod:`eradiate.units`]
     Various utility functions and data variables used to safely handle unit
@@ -83,9 +84,17 @@ Math support [``eradiate.{`` :mod:`~eradiate.frame`, :mod:`~eradiate.quad`, :mod
     For the cases where Eradiate's math dependencies and kernel are not
     enough, additional mathematical tools are provided.
 
-Exceptions [:mod:`eradiate.exceptions`]
-    This module contains exception and warning definitions.
+Random number generation [:mod:`eradiate.rng`]
+    Support components for fine control of random number generation.
 
-Miscellaneous [:mod:`eradiate._util`]
-    This module contains other support components which don't fit in any of the
-    aforementioned classification entries.
+Exceptions [:mod:`eradiate.exceptions`]
+    Exception and warning definitions.
+
+Class writing facilities [``eradiate.{`` :mod:`~eradiate.attrs`, :mod:`~eradiate.converters`, :mod:`~eradiate.validators`, :mod:`~eradiate._factory` ``}``]
+    These components are part of Eradiate's core class writing system. It relies
+    on the `attrs <https://www.attrs.org>`_ library, extended for `Pint <https://pint.readthedocs.io>`_
+    compatibility by the `Pinttrs <https://pinttrs.readthedocs.io>`_ library.
+
+Miscellaneous [:mod:`eradiate.util`]
+    Other support components which don't fit in any of the aforementioned
+    classification entries.
