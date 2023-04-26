@@ -7,21 +7,22 @@ spectral quantities. The simplest example is provided by
 Each SpectralIndex subclass is specific to an Eradiate spectral mode.
 For example, :class:`MonoSpectralIndex` is used in monochromatic mode.
 
-Note to maintainers
--------------------
-All methods that evaluate spectral quantities, conventionally named ``eval_*``,
-should accept a ``si: SpectralIndex`` parameter.
+.. admonition:: Note to maintainers
+   :class: note
 
-If a new spectral mode is added, you need to:
+   All methods that evaluate spectral quantities, conventionally named ``eval_*``,
+   should accept a ``si: SpectralIndex`` parameter.
 
-* add a new :class:`.SpectralIndex` subclass
-* add it to the :attr:`.SPECTRAL_MODE_DISPATCH` dictionary, which maps
-  spectral mode enum values to the corresponding spectral index type
+   If a new spectral mode is added, you need to:
 
-For experiments to support the newly added spectral mode, you will also need to
-update the eradiate/src/experiment package, in particular the
-`_normalize_spectral()` post-init method of the
-:class:`~eradiate.experiments.EarthObservationExperiment`.
+   * add a new :class:`.SpectralIndex` subclass
+   * add it to the :data:`.SPECTRAL_MODE_DISPATCH` dictionary, which maps
+     spectral mode enum values to the corresponding spectral index type
+
+   For experiments to support the newly added spectral mode, you will also need to
+   update the ``eradiate/src/experiment`` package, in particular the
+   ``_normalize_spectral()`` post-init method of the
+   :class:`.EarthObservationExperiment`.
 """
 from __future__ import annotations
 
@@ -162,7 +163,6 @@ class MonoSpectralIndex(SpectralIndex):
 
     @w.validator
     def _w_validator(self, attribute, value):
-
         # wavelength must be a scalar quantity
         validators.on_quantity(validators.is_scalar)(self, attribute, value)
 
@@ -219,7 +219,6 @@ class CKDSpectralIndex(SpectralIndex):
 
     @w.validator
     def _w_validator(self, attribute, value):
-
         # wavelength must be a scalar quantity
         validators.on_quantity(validators.is_scalar)(self, attribute, value)
 

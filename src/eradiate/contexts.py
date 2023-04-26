@@ -5,7 +5,7 @@ import typing as t
 import attrs
 
 from .attrs import documented, parse_docs
-from .spectral.index import SpectralIndex
+from .spectral import SpectralIndex
 from .units import unit_context_config as ucc
 from .units import unit_registry as ureg
 

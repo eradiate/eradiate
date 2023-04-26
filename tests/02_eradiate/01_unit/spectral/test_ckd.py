@@ -4,7 +4,7 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.quad import Quad
 from eradiate.scenes.spectra import InterpolatedSpectrum, MultiDeltaSpectrum
-from eradiate.spectral.ckd import Bin, BinSet
+from eradiate.spectral import Bin, BinSet
 
 
 def test_ckd_bin():
@@ -26,7 +26,7 @@ def test_ckd_bin():
 
 def test_select_with_multi_delta_1():
     """
-    Unit tests for :meth:`eradiate.ckd.BinSet.select_with`.
+    Unit tests for :meth:`.BinSet.select_with`.
     """
     binset = BinSet.arange(
         start=280.0 * ureg.nm,
@@ -45,7 +45,7 @@ def test_select_with_multi_delta_1():
 
 def test_select_with_multi_delta_2():
     """
-    Unit tests for :meth:`eradiate.ckd.BinSet.select_with`.
+    Unit tests for :meth:`.BinSet.select_with`.
     """
     binset = BinSet.arange(
         start=280.0 * ureg.nm,
@@ -64,7 +64,7 @@ def test_select_with_multi_delta_2():
 
 def test_select_from_connex_interpolated_spectrum_1():
     """
-    Unit tests for :meth:`eradiate.ckd.BinSet.select_from_srf`.
+    Unit tests for :meth:`.BinSet.select_from_srf`.
     """
     binset = BinSet.arange(
         start=280.0 * ureg.nm,
@@ -87,7 +87,7 @@ def test_select_from_connex_interpolated_spectrum_1():
 
 def test_select_from_connex_interpolated_spectrum_2():
     """
-    Unit tests for :meth:`eradiate.ckd.BinSet.select_from_srf`.
+    Unit tests for :meth:`.BinSet.select_from_srf`.
     """
     binset = BinSet.arange(
         start=280.0 * ureg.nm,
@@ -116,7 +116,7 @@ def test_select_from_connex_interpolated_spectrum_2():
 
 def test_select_from_connex_interpolated_spectrum_3():
     """
-    Unit tests for :meth:`eradiate.ckd.BinSet.select_from_srf`.
+    Unit tests for :meth:`.BinSet.select_from_srf`.
     """
     binset = BinSet.arange(
         start=280.0 * ureg.nm,
@@ -145,7 +145,7 @@ def test_select_from_connex_interpolated_spectrum_3():
 
 def test_select_from_non_connex_interpolated_spectrum_1():
     """
-    Unit tests for :meth:`eradiate.ckd.BinSet.select_from_srf`.
+    Unit tests for :meth:`.BinSet.select_from_srf`.
     """
     binset = BinSet.arange(
         start=280.0 * ureg.nm,
@@ -175,7 +175,7 @@ def test_select_from_non_connex_interpolated_spectrum_1():
 
 def test_select_from_non_connex_interpolated_spectrum_2():
     """
-    Unit tests for :meth:`eradiate.ckd.BinSet.select_from_srf`.
+    Unit tests for :meth:`.BinSet.select_from_srf`.
     """
     binset = BinSet.arange(
         start=280.0 * ureg.nm,
@@ -204,7 +204,7 @@ def test_select_from_non_connex_interpolated_spectrum_2():
 
 def test_select_from_connex_interpolated_spectrum_misaligned():
     """
-    Unit tests for :meth:`eradiate.ckd.BinSet.select_from_srf`.
+    Unit tests for :meth:`.BinSet.select_from_srf`.
     """
     binset = BinSet.arange(
         start=280.0 * ureg.nm,

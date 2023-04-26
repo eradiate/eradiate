@@ -8,7 +8,7 @@ from eradiate.units import unit_registry as ureg
 
 def test_select_with_multi_delta():
     """
-    Unit tests for :meth:`eradiate.mono.WavelengthSet.select_with_srf`.
+    Unit tests for :meth:`.WavelengthSet.select_with_srf`.
     """
 
     wset = WavelengthSet(wavelengths=np.arange(280.0, 2400.0, 1.0) * ureg.nm)

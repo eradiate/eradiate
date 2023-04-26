@@ -151,7 +151,7 @@ class BinSet:
 
     See Also
     --------
-    :class:`~.mono.WavelengthSet`
+    :class:`.WavelengthSet`
     """
 
     bins: list[Bin] = documented(
