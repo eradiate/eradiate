@@ -84,9 +84,9 @@ def test_compare_canopy_atmosphere_vs_atmosphere(
     measure = {
         "type": "distant",
         "id": "measure",
-        "construct": "from_viewing_angles",
+        "construct": "hplane",
         "zeniths": np.arange(-90, 91, 15),
-        "azimuths": 0.0,
+        "azimuth": 0.0,
         "spp": 1e4,
         "srf": ertsc.spectra.MultiDeltaSpectrum(
             wavelengths=550 * ureg.nm,
@@ -218,9 +218,9 @@ def test_compare_canopy_atmosphere_vs_canopy(
     measure = {
         "type": "distant",
         "id": "measure",
-        "construct": "from_viewing_angles",
+        "construct": "hplane",
         "zeniths": np.arange(-90, 91, 15),
-        "azimuths": 0.0,
+        "azimuth": 0.0,
         "spp": 1e4,
         "srf": ertsc.spectra.MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
     }

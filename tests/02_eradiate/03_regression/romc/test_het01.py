@@ -74,9 +74,9 @@ def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp):
         measures=[
             {
                 "type": "mdistant",
-                "construct": "from_viewing_angles",
+                "construct": "hplane",
                 "spp": 10000,
-                "azimuths": [180] * ureg.deg,
+                "azimuth": 180 * ureg.deg,
                 "zeniths": np.arange(-75, 75.01, 2) * ureg.deg,
                 "target": {
                     "type": "rectangle",

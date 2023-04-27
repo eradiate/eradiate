@@ -81,11 +81,11 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
         "measures": [
             {
                 "type": "mdistant",
-                "construct": "from_viewing_angles",
+                "construct": "hplane",
                 "zeniths": np.arange(-75, 76, 2),
                 "zeniths_units": "degree",
-                "azimuths": 0.0,
-                "azimuths_units": "degree",
+                "azimuth": 0.0,
+                "azimuth_units": "degree",
                 "srf": "sentinel_2a-msi-3",
                 "spp": 1000,
             }

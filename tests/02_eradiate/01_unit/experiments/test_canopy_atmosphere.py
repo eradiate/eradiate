@@ -193,9 +193,9 @@ def test_canopy_atmosphere_experiment_real_life(mode_mono):
         measures=[
             {
                 "type": "distant",
-                "construct": "from_viewing_angles",
+                "construct": "hplane",
                 "zeniths": np.arange(-60, 61, 5),
-                "azimuths": 0.0,
+                "azimuth": 0.0,
                 "id": "distant",
             },
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
@@ -222,9 +222,9 @@ def test_canopy_atmosphere_experiment_run_detailed(mode_mono):
             {
                 "id": "toa_brf",
                 "type": "distant",
-                "construct": "from_viewing_angles",
+                "construct": "hplane",
                 "zeniths": np.arange(-60, 61, 5),
-                "azimuths": 0.0,
+                "azimuth": 0.0,
             },
         ]
     )

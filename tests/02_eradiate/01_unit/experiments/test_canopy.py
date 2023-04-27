@@ -95,9 +95,9 @@ def test_canopy_experiment_real_life(modes_all_double):
         illumination={"type": "directional", "zenith": 45.0},
         measures={
             "type": "distant",
-            "construct": "from_viewing_angles",
+            "construct": "hplane",
             "zeniths": np.arange(-60, 61, 5),
-            "azimuths": 0.0,
+            "azimuth": 0.0,
         },
     )
     check_scene_element(exp.scene, mi.Scene)

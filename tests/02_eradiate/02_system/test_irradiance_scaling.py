@@ -16,9 +16,9 @@ from eradiate.spectral.index import SpectralIndex
         {"type": "hdistant"},
         {
             "type": "mdistant",
-            "construct": "from_viewing_angles",
+            "construct": "hplane",
             "zeniths": np.arange(-75, 76, 5),
-            "azimuths": 0.0,
+            "azimuth": 0.0,
             "srf": {
                 "type": "multi_delta",
                 "wavelengths": 550.0 * ureg.nm,

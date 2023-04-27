@@ -162,9 +162,9 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
 def test_add_srf(modes_all_single):
     exp = AtmosphereExperiment(
         atmosphere=None,
-        measures=MultiDistantMeasure.from_viewing_angles(
+        measures=MultiDistantMeasure.hplane(
             zeniths=[-60, -45, 0, 45, 60],
-            azimuths=0.0,
+            azimuth=0.0,
             spp=1,
             srf=InterpolatedSpectrum(
                 wavelengths=[550.0, 560.0] * ureg.nm,
