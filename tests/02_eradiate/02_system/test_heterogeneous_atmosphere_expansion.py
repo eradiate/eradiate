@@ -39,9 +39,9 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
     measure = {
         "type": "distant",
         "id": "measure",
-        "construct": "from_viewing_angles",
+        "construct": "hplane",
         "zeniths": np.arange(-90, 91, 15),
-        "azimuths": 0.0,
+        "azimuth": 0.0,
         "srf": eradiate.scenes.spectra.MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
     }
 
@@ -116,9 +116,9 @@ def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
     measure = {
         "type": "distant",
         "id": "measure",
-        "construct": "from_viewing_angles",
+        "construct": "hplane",
         "zeniths": np.arange(-90, 90, 15),
-        "azimuths": 0.0,
+        "azimuth": 0.0,
         "srf": eradiate.scenes.spectra.MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
     }
 

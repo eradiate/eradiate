@@ -42,9 +42,9 @@ def test_ckd_basic(modes_all_ckd):
         atmosphere=None,
         surface=LambertianBSDF(reflectance=1.0),
         measures=[
-            MultiDistantMeasure.from_viewing_angles(
+            MultiDistantMeasure.hplane(
                 zeniths=np.arange(-60, 61, 5) * ureg.deg,
-                azimuths=0.0 * ureg.deg,
+                azimuth=0.0 * ureg.deg,
                 srf={
                     "type": "multi_delta",
                     "wavelengths": [

@@ -102,8 +102,8 @@ def test_film_to_angular_coord_conversion_multi_distant(
         orientation: eradiate.experiments.AtmosphereExperiment(
             measures={
                 "type": "mdistant",
-                "construct": "from_viewing_angles",
-                "azimuths": illumination_azimuth,
+                "construct": "hplane",
+                "azimuth": illumination_azimuth,
                 "zeniths": np.linspace(-89, 89, n_vza) * ureg.deg,
                 "spp": spp,
             },
@@ -722,12 +722,10 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
             illumination={"type": "directional", "zenith": 30.0 * ureg.deg},
             measures={
                 "type": "mdistant",
-                "construct": "from_viewing_angles",
-                **dict(
-                    zeniths=np.arange(-75, 75, 11),
-                    azimuths=0.0 * ureg.deg,
-                    spp=1 if atmosphere is None else 100000,
-                ),
+                "construct": "hplane",
+                "zeniths": np.arange(-75, 75, 11),
+                "azimuth": 0.0 * ureg.deg,
+                "spp": 1 if atmosphere is None else 100000,
             },
             atmosphere=None if atmosphere is None else {"type": atmosphere},
             surface=bsdfs[bsdf],

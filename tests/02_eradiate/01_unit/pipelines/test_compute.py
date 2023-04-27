@@ -32,10 +32,10 @@ def test_apply_spectral_response_function_transform(mode_id, srf):
 
     exp = AtmosphereExperiment(
         atmosphere=None,
-        measures=MultiDistantMeasure.from_viewing_angles(
+        measures=MultiDistantMeasure.hplane(
             id="measure",
             zeniths=[-60, -45, 0, 45, 60],
-            azimuths=0.0,
+            azimuth=0.0,
             spp=1,
             srf=srf,
         ),

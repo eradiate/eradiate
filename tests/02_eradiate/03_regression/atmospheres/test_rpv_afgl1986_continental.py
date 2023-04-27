@@ -54,8 +54,8 @@ def test_rpv_afgl1986_continental_brfpp(
         },
         measures={
             "type": "mdistant",
-            "construct": "from_viewing_angles",
-            "azimuths": 0.0,
+            "construct": "hplane",
+            "azimuth": 0.0,
             "zeniths": np.arange(-75.0, 75.01, 2.0),
             "srf": {"type": "multi_delta", "wavelengths": 550 * ureg.nm},
         },

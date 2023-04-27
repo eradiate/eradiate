@@ -41,6 +41,9 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   dataset that has the corresponding desired bin set ({ghpr}`311`).
 * {class}`.UniformSpectrum` is no longer a valid spectrum type to use for
   spectral response functions ({ghpr}`311`).
+* The {meth}`.MultiDistantMeasure.from_viewing_angles` constructor is removed
+  ({ghpr}`315`). Use one of the other {class}`.MultiDistantMeasure` constructors
+  instead.
 
 % ### Improvements and fixes
 
@@ -48,6 +51,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 
 * Removed {class}`.SpectralContext` and subclasses ({ghpr}`311`).
 * Removed {class}`.MeasureSpectralConfig` and subclasses ({ghpr}`311`).
+* Removed the {meth}`.MultiDistantMeasure.from_viewing_angles` constructor
+  ({ghpr}`315`).
 
 ### Improvements and fixes
 

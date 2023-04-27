@@ -74,9 +74,9 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
         measures={
             "type": "distant",
             "id": "toa_pplane",
-            "construct": "from_viewing_angles",
+            "construct": "hplane",
             "zeniths": np.linspace(-89, 89, n_vza),
-            "azimuths": 0.0,
+            "azimuth": 0.0,
             "spp": spp,
         },
         surface={

@@ -95,10 +95,10 @@ def test(mode_mono_double, rayleigh_tab_phase, artefact_dir, ert_seed_state, req
             },
             measures={
                 "type": "mdistant",
-                "construct": "from_viewing_angles",
+                "construct": "hplane",
                 "srf": {"type": "multi_delta", "wavelengths": wavelengths},
                 "zeniths": np.linspace(-75, 75, 11) * ureg.deg,
-                "azimuths": 0.0 * ureg.deg,
+                "azimuth": 0.0 * ureg.deg,
             },
             illumination={
                 "type": "directional",
