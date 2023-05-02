@@ -3,11 +3,11 @@ import mitsuba as mi
 import numpy as np
 import pytest
 
+from eradiate import KernelContext
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelContext
-from eradiate.scenes.core import BoundingBox, traverse
+from eradiate.scenes.core import traverse
 from eradiate.scenes.shapes import CuboidShape
 from eradiate.test_tools.types import check_scene_element
 

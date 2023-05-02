@@ -2,8 +2,8 @@ import mitsuba as mi
 import numpy as np
 
 import eradiate.data
+from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelContext
 from eradiate.scenes.illumination import SpotIllumination
 from eradiate.test_tools.types import check_scene_element
 

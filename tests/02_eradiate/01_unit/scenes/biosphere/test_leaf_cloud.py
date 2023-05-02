@@ -5,8 +5,8 @@ import attr
 import numpy as np
 import pytest
 
+from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelContext
 from eradiate.scenes.biosphere._leaf_cloud import (
     LeafCloud,
     _leaf_cloud_orientations,

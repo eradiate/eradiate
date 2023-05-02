@@ -2,8 +2,8 @@ import mitsuba as mi
 import numpy as np
 import pytest
 
+from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelContext
 from eradiate.kernel import mi_render, mi_traverse
 from eradiate.scenes.biosphere import LeafCloud
 from eradiate.scenes.core import Scene, traverse

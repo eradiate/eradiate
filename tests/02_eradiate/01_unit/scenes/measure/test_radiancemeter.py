@@ -1,6 +1,6 @@
 import mitsuba as mi
 
-from eradiate.contexts import KernelContext
+from eradiate import KernelContext
 from eradiate.scenes.core import traverse
 from eradiate.scenes.measure import RadiancemeterMeasure
 from eradiate.test_tools.types import check_scene_element
