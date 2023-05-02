@@ -2,8 +2,8 @@ import mitsuba as mi
 import numpy as np
 import pytest
 
+from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelContext
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import SceneGeometry
 from eradiate.scenes.phase import BlendPhaseFunction

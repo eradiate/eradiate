@@ -24,6 +24,7 @@ from ._mode import modes as modes
 from ._mode import set_mode as set_mode
 from ._mode import supported_mode as supported_mode
 from ._mode import unsupported_mode as unsupported_mode
+from .contexts import KernelContext as KernelContext
 from .experiments import run as run
 from .notebook import load_ipython_extension as load_ipython_extension
 from .scenes.core import traverse as traverse

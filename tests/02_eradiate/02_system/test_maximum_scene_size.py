@@ -2,7 +2,7 @@ import mitsuba as mi
 import numpy as np
 
 import eradiate
-from eradiate.contexts import KernelContext
+from eradiate import KernelContext
 from eradiate.kernel import mi_render, mi_traverse
 
 

@@ -1,10 +1,9 @@
 from itertools import product
 
-import attrs
 import mitsuba as mi
 import numpy as np
 
-from eradiate.contexts import KernelContext
+from eradiate import KernelContext
 from eradiate.kernel import (
     MitsubaObjectWrapper,
     TypeIdLookupStrategy,

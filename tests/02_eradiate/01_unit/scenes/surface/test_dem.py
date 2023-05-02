@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate.contexts import KernelContext
+from eradiate import KernelContext
 from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.shapes import BufferMeshShape, FileMeshShape, Shape
 from eradiate.scenes.surface import DEMSurface

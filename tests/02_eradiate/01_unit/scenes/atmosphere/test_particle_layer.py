@@ -2,9 +2,8 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate import data
+from eradiate import KernelContext, data
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelContext
 from eradiate.radprops import ZGrid
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
 from eradiate.scenes.core import traverse

@@ -4,8 +4,8 @@ import tempfile
 import mitsuba as mi
 import pytest
 
+from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelContext
 from eradiate.kernel._kernel_dict import KernelDictTemplate
 from eradiate.scenes.biosphere import MeshTree, MeshTreeElement
 from eradiate.scenes.core import traverse

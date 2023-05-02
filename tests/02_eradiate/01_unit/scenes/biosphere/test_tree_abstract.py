@@ -4,8 +4,8 @@ import tempfile
 import numpy as np
 import pytest
 
+from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelContext
 from eradiate.scenes.biosphere import AbstractTree, LeafCloud
 from eradiate.scenes.core import traverse
 from eradiate.test_tools.types import check_scene_element

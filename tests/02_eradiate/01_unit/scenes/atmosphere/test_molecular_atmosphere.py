@@ -4,8 +4,8 @@ import mitsuba as mi
 import numpy.testing as npt
 import pytest
 
+from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelContext
 from eradiate.data import data_store
 from eradiate.scenes.atmosphere import MolecularAtmosphere
 from eradiate.scenes.core import Scene, traverse

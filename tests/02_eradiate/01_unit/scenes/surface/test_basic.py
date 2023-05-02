@@ -1,7 +1,7 @@
 import mitsuba as mi
 import pytest
 
-from eradiate.contexts import KernelContext
+from eradiate import KernelContext
 from eradiate.exceptions import TraversalError
 from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.shapes import RectangleShape, Shape
