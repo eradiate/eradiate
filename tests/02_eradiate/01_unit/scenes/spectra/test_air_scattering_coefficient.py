@@ -4,7 +4,7 @@ import numpy as np
 import eradiate
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.scenes.spectra import AirScatteringCoefficientSpectrum
 from eradiate.test_tools.types import check_scene_element
 
@@ -20,7 +20,7 @@ def test_air_scattering_coefficient_eval(modes_all_double):
     expected = 0.0114934 / ureg.km  # value at 550 nm (default wavelength)
 
     s = AirScatteringCoefficientSpectrum()
-    ctx = KernelDictContext()
+    ctx = KernelContext()
 
     value = s.eval(ctx.si)
     assert np.allclose(value, expected)

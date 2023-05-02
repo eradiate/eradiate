@@ -13,7 +13,7 @@ import attrs
 import mitsuba as mi
 
 from ..attrs import documented, parse_docs
-from ..contexts import KernelDictContext
+from ..contexts import KernelContext
 from ..util.misc import nest
 
 
@@ -32,11 +32,11 @@ class InitParameter:
     evaluator: t.Callable = documented(
         attrs.field(validator=attrs.validators.is_callable()),
         doc="A callable that returns the value of the parameter for a given "
-        "context, with signature ``f(ctx: KernelDictContext) -> Any``.",
+        "context, with signature ``f(ctx: KernelContext) -> Any``.",
         type="callable",
     )
 
-    def __call__(self, ctx: KernelDictContext) -> t.Any:
+    def __call__(self, ctx: KernelContext) -> t.Any:
         return self.evaluator(ctx)
 
 
@@ -50,7 +50,7 @@ class UpdateParameter:
 
     See Also
     --------
-    :class:`.KernelDictContext`, :class:`.TypeIdLookupStrategy`
+    :class:`.KernelContext`, :class:`.TypeIdLookupStrategy`
     """
 
     #: Sentinel value indicating that a parameter is not used
@@ -69,7 +69,7 @@ class UpdateParameter:
     evaluator: t.Callable = documented(
         attrs.field(validator=attrs.validators.is_callable()),
         doc="A callable that returns the value of the parameter for a given "
-        "context, with signature ``f(ctx: KernelDictContext) -> Any``.",
+        "context, with signature ``f(ctx: KernelContext) -> Any``.",
         type="callable",
     )
 
@@ -98,7 +98,7 @@ class UpdateParameter:
         init_type="str, optional",
     )
 
-    def __call__(self, ctx: KernelDictContext) -> t.Any:
+    def __call__(self, ctx: KernelContext) -> t.Any:
         return self.evaluator(ctx)
 
 
@@ -120,7 +120,7 @@ class KernelDictTemplate(UserDict):
     data: dict[str, InitParameter] = attrs.field(factory=dict)
 
     def render(
-        self, ctx: KernelDictContext, nested: bool = True, drop: bool = True
+        self, ctx: KernelContext, nested: bool = True, drop: bool = True
     ) -> dict:
         """
         Render the template as a nested dictionary using a parameter map to fill
@@ -128,7 +128,7 @@ class KernelDictTemplate(UserDict):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : :class:`.KernelContext`
             A kernel dictionary context.
 
         nested : bool, optional
@@ -218,7 +218,7 @@ class UpdateMapTemplate(UserDict):
 
     def render(
         self,
-        ctx: KernelDictContext,
+        ctx: KernelContext,
         flags: UpdateParameter.Flags = UpdateParameter.Flags.ALL,
         drop: bool = False,
     ) -> dict:
@@ -227,7 +227,7 @@ class UpdateMapTemplate(UserDict):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : :class:`.KernelContext`
             A kernel dictionary context.
 
         flags : :class:`.ParamFlags`

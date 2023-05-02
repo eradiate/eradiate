@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 from ._kernel_dict import UpdateMapTemplate
 from .._config import ProgressLevel, config
 from ..attrs import documented, parse_docs
-from ..contexts import KernelDictContext
+from ..contexts import KernelContext
 from ..rng import SeedState, root_seed_state
 
 logger = logging.getLogger(__name__)
@@ -238,7 +238,7 @@ def mi_traverse(
 
 def mi_render(
     mi_scene: MitsubaObjectWrapper,
-    ctxs: list[KernelDictContext],
+    ctxs: list[KernelContext],
     sensors: None | int | list[int] = None,
     spp: int = 0,
     seed_state: SeedState | None = None,
@@ -252,7 +252,7 @@ def mi_render(
     mi_scene : .MitsubaObjectWrapper
         Mitsuba scene to render.
 
-    ctxs : list of :class:`.KernelDictContext`
+    ctxs : list of :class:`.KernelContext`
         List of contexts used to generate the parameter update table at each
         iteration.
 

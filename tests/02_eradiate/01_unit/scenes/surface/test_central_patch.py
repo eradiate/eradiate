@@ -3,7 +3,7 @@ import mitsuba as mi
 import numpy as np
 import pytest
 
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.exceptions import TraversalError
 from eradiate.scenes.core import Ref, Scene, traverse
 from eradiate.scenes.shapes import RectangleShape, Shape
@@ -63,7 +63,7 @@ def test_central_patch_construct_new(
         # When enclosed in a Scene, the surface can be traversed
         scene = Scene(objects={"surface": surface})
         template, params = traverse(scene)
-        kernel_dict = template.render(KernelDictContext())
+        kernel_dict = template.render(KernelContext())
         assert isinstance(mi.load_dict(kernel_dict), mi.Scene)
 
     elif isinstance(expected_traversal_param_keys, type) and issubclass(
@@ -99,7 +99,7 @@ def test_central_patch_scale_kernel_dict(mode_mono):
     )
 
     template, params = traverse(surface)
-    kernel_dict = template.render(ctx=KernelDictContext())
+    kernel_dict = template.render(ctx=KernelContext())
     result = kernel_dict["surface_bsdf"]["weight"]["to_uv"].matrix
     expected = (
         mi.ScalarTransform4f.scale([10, 10, 1])

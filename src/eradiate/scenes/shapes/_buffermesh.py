@@ -9,7 +9,7 @@ import pinttr
 from ._core import ShapeInstance
 from ..core import BoundingBox, traverse
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
+from ...contexts import KernelContext
 from ...kernel import UpdateParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -65,7 +65,7 @@ class BufferMeshShape(ShapeInstance):
     def instance(self) -> mi.Object:
         if self.bsdf is not None:
             template, _ = traverse(self.bsdf)
-            bsdf = mi.load_dict(template.render(ctx=KernelDictContext()))
+            bsdf = mi.load_dict(template.render(ctx=KernelContext()))
         else:
             bsdf = None
 

@@ -9,7 +9,6 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular_atmosphere import MolecularAtmosphere
@@ -17,7 +16,7 @@ from ._particle_layer import ParticleLayer
 from ..core import traverse
 from ..phase import BlendPhaseFunction, PhaseFunction
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
+from ...contexts import KernelContext
 from ...kernel import TypeIdLookupStrategy
 from ...radprops import ZGrid
 from ...spectral.ckd import BinSet
@@ -197,7 +196,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         # Fall back
         return None
 
-    def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
         # Inherit docstring
         mfp = [component.eval_mfp(ctx=ctx) for component in self.components]
         return max(mfp)

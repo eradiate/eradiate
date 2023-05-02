@@ -3,7 +3,7 @@ from __future__ import annotations
 import mitsuba as mi
 import pytest
 
-from ..contexts import KernelDictContext
+from ..contexts import KernelContext
 from ..kernel import MitsubaObjectWrapper, mi_traverse
 from ..scenes.core import CompositeSceneElement, NodeSceneElement, Scene, traverse
 
@@ -11,7 +11,7 @@ from ..scenes.core import CompositeSceneElement, NodeSceneElement, Scene, traver
 def check_scene_element(
     instance: NodeSceneElement | CompositeSceneElement,
     mi_cls=None,
-    ctx: KernelDictContext = None,
+    ctx: KernelContext = None,
 ) -> MitsubaObjectWrapper:
     """
     Perform kernel dictionary checks on a scene element.
@@ -31,7 +31,7 @@ def check_scene_element(
         Mitsuba class the node scene element expands to. Must be set if
         `instance` is a :class:`.NodeSceneElement`; ignored otherwise.
 
-    ctx : .KernelDictContext, optional
+    ctx : .KernelContext, optional
         If provided, the kernel dictionary context to use. Otherwise, a default
         context is created.
 
@@ -65,7 +65,7 @@ def check_scene_element(
         raise RuntimeError(f"Cannot test type '{instance.__class__}'")
 
     # Check if the template can be instantiated
-    ctx = KernelDictContext() if ctx is None else ctx
+    ctx = KernelContext() if ctx is None else ctx
     kernel_dict = kdict_template.render(ctx)
 
     try:

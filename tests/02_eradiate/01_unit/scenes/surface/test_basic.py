@@ -1,7 +1,7 @@
 import mitsuba as mi
 import pytest
 
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.exceptions import TraversalError
 from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.shapes import RectangleShape, Shape
@@ -47,7 +47,7 @@ def test_basic_surface_construct(
         # When enclosed in a Scene, the surface can be traversed
         scene = Scene(objects={"surface": surface})
         template, params = traverse(scene)
-        kernel_dict = template.render(KernelDictContext())
+        kernel_dict = template.render(KernelContext())
         assert isinstance(mi.load_dict(kernel_dict), mi.Scene)
 
     elif isinstance(expected_traversal_param_keys, type) and issubclass(

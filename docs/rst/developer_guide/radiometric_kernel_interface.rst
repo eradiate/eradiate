@@ -62,7 +62,7 @@ Basic concepts
         :term:`experiment` being processed. The context can carry any kind of
         relevant information: the current spectral coordinate, the Mitsuba ID
         of a :class:`mitsuba.Medium` object attached to a sensor, etc. The
-        kernel context is defined by a :class:`.KernelDictContext` instance.
+        kernel context is defined by a :class:`.KernelContext` instance.
 
     Kernel dictionary template
         :term:`Kernel dictionaries <kernel dictionary>` can be created from

@@ -6,8 +6,6 @@ import attrs
 
 from .attrs import documented, parse_docs
 from .spectral import SpectralIndex
-from .units import unit_context_config as ucc
-from .units import unit_registry as ureg
 
 # ------------------------------------------------------------------------------
 #                                      ABC
@@ -42,12 +40,12 @@ class Context:
 
 @parse_docs
 @attrs.define
-class KernelDictContext(Context):
+class KernelContext(Context):
     """
-    Kernel dictionary evaluation context data structure. This class is used
-    *e.g.* to store information about the spectral configuration to apply
-    when generating kernel dictionaries associated with a :class:`.SceneElement`
-    instance.
+    Kernel evaluation context data structure. This class is used *e.g.* to store
+    information about the spectral configuration to apply when generating kernel
+    dictionaries or update parameter maps associated with a
+    :class:`.SceneElement` instance.
     """
 
     si: SpectralIndex = documented(

@@ -2,7 +2,7 @@ import mitsuba as mi
 import numpy as np
 
 import eradiate
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.kernel import mi_render, mi_traverse
 
 
@@ -89,7 +89,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
         )
 
         result = np.squeeze(
-            mi_render(mi_wrapper, ctxs=[KernelDictContext()])[550.0]["measure"]
+            mi_render(mi_wrapper, ctxs=[KernelContext()])[550.0]["measure"]
         )
         passed[i] = np.allclose(result, expected)
 

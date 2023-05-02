@@ -5,7 +5,7 @@ import pytest
 
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.scenes.core import traverse
 from eradiate.scenes.shapes import RectangleShape
 from eradiate.test_tools.types import check_scene_element
@@ -59,7 +59,7 @@ def test_rectangle_params(mode_mono_double, kwargs, expected_transform):
     # Set edges
     rectangle = RectangleShape(**kwargs)
     template, _ = traverse(rectangle)
-    kernel_dict = template.render(ctx=KernelDictContext())
+    kernel_dict = template.render(ctx=KernelContext())
     to_world = kernel_dict["to_world"]
     assert dr.allclose(
         to_world.transform_affine(mi.Point3f(-1, -1, 0)), expected_transform[0]

@@ -19,7 +19,7 @@ from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ... import converters
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
+from ...contexts import KernelContext
 from ...quad import Quad
 from ...radprops import AFGL1986RadProfile, RadProfile, US76ApproxRadProfile, ZGrid
 from ...spectral.ckd import BinSet
@@ -177,7 +177,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         return self._thermoprops
 
-    def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
         # Inherit docstring
         min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.si).min()
         return np.divide(

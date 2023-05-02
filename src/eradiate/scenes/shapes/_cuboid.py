@@ -13,7 +13,7 @@ from ._core import ShapeNode
 from ..bsdfs import BSDF
 from ..core import BoundingBox
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
+from ...contexts import KernelContext
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -107,9 +107,7 @@ class CuboidShape(ShapeNode):
         )
         return np.all(cmp, axis=1)
 
-    def eval_to_world(
-        self, ctx: KernelDictContext | None = None
-    ) -> mi.ScalarTransform4f:
+    def eval_to_world(self, ctx: KernelContext | None = None) -> mi.ScalarTransform4f:
         kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
 
         if "to_world" in kwargs:

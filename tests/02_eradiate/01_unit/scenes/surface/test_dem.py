@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.shapes import BufferMeshShape, FileMeshShape, Shape
 from eradiate.scenes.surface import DEMSurface
@@ -111,7 +111,7 @@ def test_dem_surface_construct(
         # When enclosed in a Scene, the surface can be traversed
         scene = Scene(objects={"surface": surface})
         template, params = traverse(scene)
-        kernel_dict = template.render(KernelDictContext())
+        kernel_dict = template.render(KernelContext())
         assert isinstance(mi.load_dict(kernel_dict), mi.Scene)
 
     else:

@@ -4,7 +4,7 @@ import xarray as xr
 
 from eradiate import data
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.radprops import ZGrid
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
 from eradiate.scenes.core import traverse
@@ -57,7 +57,7 @@ def test_particle_layer_eval_mono_absorbing_only(mode_mono, absorbing_only, w):
     assert np.allclose(layer.eval_sigma_a(si), 0.2 / ureg.km)
     assert np.allclose(layer.eval_albedo(si).m, 0.0)
 
-    ctx = KernelDictContext(si=si)
+    ctx = KernelContext(si=si)
     assert layer.eval_mfp(ctx).magnitude == np.inf
 
 
@@ -81,7 +81,7 @@ def test_particle_layer_eval_mono_scattering_only(mode_mono, scattering_only, w)
     assert np.allclose(layer.eval_sigma_a(si), 0.0 / ureg.km)
     assert np.allclose(layer.eval_albedo(si).m, 1.0)
 
-    ctx = KernelDictContext(si=si)
+    ctx = KernelContext(si=si)
     assert np.isclose(layer.eval_mfp(ctx), 5.0 * ureg.km)
 
 
@@ -109,7 +109,7 @@ def test_particle_layer_eval_mono(mode_mono, test_particles_dataset, w):
     assert np.allclose(layer.eval_sigma_a(si), 0.2 / ureg.km)
     assert np.allclose(layer.eval_albedo(si).m, 0.8)
 
-    ctx = KernelDictContext(si=si)
+    ctx = KernelContext(si=si)
     assert np.isclose(layer.eval_mfp(ctx), 1.25 * ureg.km)
 
 
@@ -133,7 +133,7 @@ def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, absorbing_only, w):
     assert np.allclose(layer.eval_sigma_a(si), 0.2 / ureg.km)
     assert np.allclose(layer.eval_albedo(si).m, 0.0)
 
-    ctx = KernelDictContext(si=si)
+    ctx = KernelContext(si=si)
     assert layer.eval_mfp(ctx).magnitude > 0.0
 
 
@@ -157,7 +157,7 @@ def test_particle_layer_eval_ckd_scattering_only(mode_ckd, scattering_only, w):
     assert np.allclose(layer.eval_sigma_a(si).m, 0.0)
     assert np.allclose(layer.eval_albedo(si).m, 1.0)
 
-    ctx = KernelDictContext(si=si)
+    ctx = KernelContext(si=si)
     assert layer.eval_mfp(ctx).magnitude > 0.0
 
 
@@ -183,7 +183,7 @@ def test_particle_layer_eval_ckd(mode_ckd, test_particles_dataset, w):
     assert np.allclose(layer.eval_sigma_a(si), 0.2 / ureg.km)
     assert np.allclose(layer.eval_albedo(si).m, 0.8)
 
-    ctx = KernelDictContext(si=si)
+    ctx = KernelContext(si=si)
     assert layer.eval_mfp(ctx) == 1.25 * ureg.km
 
 

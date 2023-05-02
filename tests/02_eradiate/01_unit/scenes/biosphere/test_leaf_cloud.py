@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.scenes.biosphere._leaf_cloud import (
     LeafCloud,
     _leaf_cloud_orientations,
@@ -309,7 +309,7 @@ def test_leaf_cloud_kernel_dict(mode_mono):
     template, params = traverse(leaf_cloud)
 
     # The BSDF is bilambertian with the parameters we initially set
-    kernel_dict = template.render(ctx=KernelDictContext())
+    kernel_dict = template.render(ctx=KernelContext())
     assert kernel_dict[f"bsdf_{leaf_cloud_id}"] == {
         "type": "bilambertian",
         "reflectance": {"type": "uniform", "value": 0.5},
