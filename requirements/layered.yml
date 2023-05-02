@@ -14,6 +14,7 @@ main:
     - "click"
     - "dessinemoi>=23.1.0"
     - "environ-config"
+    - "joseki>=2.1.0"
     - "lazy_loader>=0.1"
     - "matplotlib>=3.3"
     - "netcdf4"
@@ -34,7 +35,6 @@ recommended:
   packages:
     - "aabbtree"  # Used by the leaf collision detection feature
     - "astropy"  # Used by the solar irradiance spectrum date-based scaling feature
-    - "iapws"  # Used by thermophysical property utilities
     - "ipython"
     - "ipywidgets"
     - "jupyterlab"

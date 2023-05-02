@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import logging
 
 import attrs
@@ -11,8 +12,10 @@ import eradiate
 
 from ._core import PipelineStep
 from ..attrs import documented, parse_docs
+from ..cfconventions import ATTRIBUTES
 from ..exceptions import UnsupportedModeError
 from ..kernel import bitmap_to_dataset
+from ..spectral.ckd import BinSet
 from ..units import symbol
 from ..units import unit_context_config as ucc
 
@@ -21,20 +24,11 @@ logger = logging.getLogger(__name__)
 
 def _spectral_dims():
     if eradiate.mode().is_mono:
-        return (
-            (
-                "w",
-                {
-                    "standard_name": "radiation_wavelength",
-                    "long_name": "wavelength",
-                    "units": symbol(ucc.get("wavelength")),
-                },
-            ),
-        )
+        return (("w", ATTRIBUTES["radiation_wavelength"]),)
     elif eradiate.mode().is_ckd:
         return (
-            ("bin", {"standard_name": "ckd_bin", "long_name": "CKD bin"}),
-            ("index", {"standard_name": "ckd_index", "long_name": "CKD index"}),
+            ("w", ATTRIBUTES["radiation_wavelength"]),
+            ("g", ATTRIBUTES["quantile"]),
         )
     else:
         raise UnsupportedModeError
@@ -42,7 +36,7 @@ def _spectral_dims():
 
 @parse_docs
 @attrs.define
-class Gather(PipelineStep):
+class GatherMono(PipelineStep):
     """
     Gather raw kernel results (output as nested dictionaries) into an xarray
     dataset.
@@ -67,7 +61,7 @@ class Gather(PipelineStep):
     )
 
     def transform(self, x: dict) -> xr.Dataset:
-        logger.debug("gather: begin")
+
         # Basic preparation
         spectral_dims = []
         spectral_dim_metadata = {}
@@ -87,10 +81,7 @@ class Gather(PipelineStep):
             if eradiate.mode().is_mono:
                 spectral_index = siah
             elif eradiate.mode().is_ckd:
-                spectral_index = (
-                    str(int(siah[0])),  # TODO: PR#311 hack
-                    siah[1],
-                )
+                spectral_index = siah
 
             ds = bitmap_to_dataset(result_dict["bitmap"])
             spp = result_dict["spp"]
@@ -134,6 +125,117 @@ class Gather(PipelineStep):
         result = result.rename({"img": var})
         result[var].attrs.update(var_metadata)
 
-        logger.debug("gather: end")
+        return result
 
+
+@parse_docs
+@attrs.define
+class GatherCKD(PipelineStep):
+    """
+    Gather raw kernel results into an xarray dataset.
+    """
+
+    binset: BinSet = documented(
+        attrs.field(validator=attrs.validators.instance_of(BinSet)),
+        doc="Bin set.",
+        type=":class:`.BinSet`",
+    )
+
+    var: tuple[str, dict] = documented(
+        attrs.field(default="img"),
+        default='"img"',
+        type="tuple[str, dict]",
+        init_type="tuple[str, dict], optional",
+        doc="Variable name containing sensor data and metadata.",
+    )
+
+    def transform(self, x: dict) -> xr.Dataset:
+
+        # transform 'x' into a list of 'xr.Dataset' where each dataset
+        # corresponds to a spectral index
+
+        logger.debug("gather_ckd: begin")
+
+        datasets = []
+
+        # x is a dictionary whose keys are spectral indexes as hashable tuples
+        # and whose values are dictionaries with keys "bitmap" and "spp"
+
+        ix = 0
+        bins = self.binset.bins
+        # sort bins by wavelength
+        bins = sorted(bins, key=lambda b: b.wcenter)
+
+        for i, _bin in enumerate(bins):  # bin (w) loop
+            ng = _bin.quad.weights.size
+            _datasets = []
+
+            for _ in range(ng):  # g loop
+                item = list(x.items())[ix]
+                siah, result_dict = item
+                w, g = siah  # wavelength, quantile pair
+                bitmap = result_dict["bitmap"]
+                spp = result_dict["spp"]
+                dataset = bitmap_to_dataset(bitmap)
+
+                # expand dimensions of 'img' data variable to include 'w' and 'g'
+                dataset["img"] = dataset.img.expand_dims(dim={"w": [w], "g": [g]})
+
+                # Drop "channel" dimension when using a monochromatic Mitsuba variant
+                if eradiate.mode().check(mi_color_mode="mono"):
+                    dataset = dataset.squeeze("channel", drop=True)
+
+                # self.var is a tuple (name, metadata)
+                name, metadata = self.var
+                dataset = dataset.rename({"img": name})
+                dataset[name].attrs.update(metadata)
+
+                _datasets.append(dataset)
+                ix += 1
+
+            # concatenate along 'g'
+            ds = xr.concat(_datasets, dim="g")
+
+            # compute quadrature
+            # this is a weighted sum array reduction:
+            # https://docs.xarray.dev/en/stable/user-guide/computation.html#weighted-array-reductions
+
+            # normalise weights to the [0, 1] g-interval
+            weights_values = 0.5 * _bin.quad.weights
+            weights = xr.DataArray(weights_values, dims=["g"], coords={"g": ds.g})
+            with xr.set_options(keep_attrs=True):
+                weighted = ds[name].weighted(weights)
+                weighted_sum = weighted.sum(dim="g")
+
+            #  create dataset for current bin (w)
+            dataset = xr.Dataset()
+            dataset[name] = weighted_sum
+
+            # add 'spp' data variable
+            dims = dataset.dims
+            dataset["spp"] = (dims, spp * np.ones(tuple(dims.values())))
+
+            # add 'wbounds' data variable, and 'wbv' coordinate
+            wbounds = np.stack([_bin.wmin, _bin.wmax])
+            wunits = ucc.get("wavelength")
+            dataset["wbounds"] = (
+                ["wbv", "w"],
+                wbounds.m_as(wunits).reshape((2, 1)),
+                {
+                    "standard_name": "radiation_wavelength_bound",
+                    "long_name": "wavelength bound",
+                    "units": symbol(wunits),
+                },
+            )
+            dataset["wbv"] = (["wbv"], ["lower", "upper"])
+
+            datasets.append(dataset)
+
+        with xr.set_options(keep_attrs=True):
+            result = xr.concat(datasets, dim="w")
+
+            # add metadata for 'w'
+            result["w"].attrs.update(ATTRIBUTES["radiation_wavelength"])
+
+        logger.debug("gather: end")
         return result

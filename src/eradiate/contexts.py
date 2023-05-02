@@ -71,3 +71,40 @@ class KernelContext(Context):
     @property
     def index_formatted(self) -> str:
         return self.si.formatted_repr
+
+
+# ------------------------------------------------------------------------------
+#                         Context Generator
+# ------------------------------------------------------------------------------
+
+
+class MultiGenerator:
+    """
+    This generator aggregates several generators and makes sure that items that
+    have already been served are not repeated.
+    """
+
+    def __init__(self, generators):
+        self.generators = generators
+        self._i_generator = 0
+        self._current_iterator = iter(self.generators[self._i_generator])
+        self._visited = set()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            result = next(self._current_iterator)
+            if result not in self._visited:
+                self._visited.add(result)
+                return result
+            else:
+                return self.__next__()
+        except StopIteration:
+            if self._i_generator >= len(self.generators) - 1:
+                raise
+            else:
+                self._i_generator += 1
+                self._current_iterator = iter(self.generators[self._i_generator])
+                return self.__next__()

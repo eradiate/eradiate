@@ -125,6 +125,7 @@ class DEMExperiment(EarthObservationExperiment):
         """
         if self.atmosphere is not None:
             self.atmosphere.geometry = self.geometry
+            self.atmosphere.update()
 
     def _normalize_measures(self) -> None:
         """

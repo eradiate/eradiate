@@ -1,15 +1,13 @@
 import numpy as np
 import pytest
 
-import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.pipelines import (
     AddIllumination,
     AddSpectralResponseFunction,
     AddViewingAngles,
-    AggregateCKDQuad,
-    Gather,
+    GatherMono,
     Pipeline,
 )
 from eradiate.pipelines._assemble import _remap_viewing_angles_plane
@@ -34,22 +32,10 @@ def test_add_illumination(modes_all_single, illumination_type, expected_dims):
         ),
     )
     exp.process()
-    measure_index = 0
     measure = exp.measures[0]
 
     # Apply basic post-processing
-    steps = [("gather", Gather(var="radiance"))]
-    if eradiate.mode().is_ckd:
-        steps.append(
-            (
-                "aggregate_ckd_quad",
-                AggregateCKDQuad(
-                    var="radiance",
-                    measure=measure,
-                    binset=exp.spectral_set[measure_index],
-                ),
-            )
-        )
+    steps = [("gather", GatherMono(var="radiance"))]
 
     values = Pipeline(steps=steps).transform(measure.mi_results)
 
@@ -145,7 +131,7 @@ def test_add_viewing_angles(mode_mono, measure_type, expected_zenith, expected_a
     measure = exp.measures[measure_index]
 
     # Apply basic post-processing
-    values = Gather(var="radiance").transform(measure.mi_results)
+    values = GatherMono(var="radiance").transform(measure.mi_results)
 
     step = AddViewingAngles(measure=measure)
     result = step.transform(values)
@@ -177,15 +163,7 @@ def test_add_srf(modes_all_single):
     measure = exp.measures[measure_index]
 
     # Apply basic post-processing
-    steps = [Gather(var="radiance")]
-    if eradiate.mode().is_ckd:
-        steps.append(
-            AggregateCKDQuad(
-                var="radiance",
-                measure=measure,
-                binset=exp.spectral_set[measure_index],
-            )
-        )
+    steps = [GatherMono(var="radiance")]
     values = Pipeline(steps=steps).transform(measure.mi_results)
 
     step = AddSpectralResponseFunction(measure=measure)

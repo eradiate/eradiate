@@ -1,6 +1,8 @@
+import numpy as np
 import pytest
 
 import eradiate
+from eradiate import unit_registry as ureg
 
 # ------------------------------------------------------------------------------
 #                            Pre-process helpers
@@ -66,3 +68,81 @@ def ert_seed_state():
     from eradiate.rng import SeedState
 
     return SeedState(0)
+
+
+TEST_ERROR_HANDLER_CONFIG = {
+    "x": {
+        "missing": "ignore",
+        "scalar": "ignore",
+        "bounds": "raise",
+    },
+    "p": {"bounds": "ignore"},
+    "t": {"bounds": "ignore"},
+}
+
+
+@pytest.fixture
+def error_handler_config():
+    """Error handler configuration for absorption coefficient interpolation.
+
+    Notes
+    -----
+    This configuration is chosen to ignore all interpolation issues (except
+    bounds error along the mole fraction dimension) because warnings are
+    captured by pytest which will raise.
+    Ignoring the bounds on pressure and temperature is safe because
+    out-of-bounds values usually correspond to locations in the atmosphere
+    that are so high that the contribution to the absorption coefficient
+    are negligible at these heights.
+    The bounds error for the 'x' (mole fraction) coordinate is considered
+    fatal.
+    """
+    return TEST_ERROR_HANDLER_CONFIG
+
+
+@pytest.fixture
+def us_standard_mono():
+    """
+    AFGL (1986) U.S. Standard atmosphere with monochromatic absorption data.
+
+    Notes
+    -----
+    Molecules included are H2O, CO2, O3, N2O, CO, CH4, O2.
+    Specified absorption data covers the wavelength range [250, 3125] nm.
+    Altitude grid is regular with a 1 km step, from 0 to 120 km.
+    """
+    return {
+        "type": "molecular",
+        "thermoprops": {
+            "identifier": "afgl_1986-us_standard",
+            "z": np.linspace(0.0, 120.0, 121) * ureg.km,
+            "additional_molecules": False,
+        },
+        "absorption_data": ("komodo", [549.5, 550.5] * ureg.nm),
+        "error_handler_config": TEST_ERROR_HANDLER_CONFIG,
+    }
+
+
+@pytest.fixture
+def us_standard_ckd_550nm():
+    """
+    AFGL (1986) U.S. Standard atmosphere with CKD absorption data.
+
+    Notes
+    -----
+    Molecules included are H2O, CO2, O3, N2O, CO, CH4, O2.
+    Specified absorption data covers the CKD band associated with wavenumber
+    interval [18100, 18200] cm^-1, i.e. the wavelenght range
+    [549.45, 552.48] nm.
+    Altitude grid is regular with a 1 km step, from 0 to 120 km.
+    """
+    return {
+        "type": "molecular",
+        "thermoprops": {
+            "identifier": "afgl_1986-us_standard",
+            "z": np.linspace(0.0, 120.0, 121) * ureg.km,
+            "additional_molecules": False,
+        },
+        "absorption_data": ("monotropa", [549.5, 550.5] * ureg.nm),
+        "error_handler_config": TEST_ERROR_HANDLER_CONFIG,
+    }
