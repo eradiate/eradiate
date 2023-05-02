@@ -32,7 +32,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 
 ### Breaking changes
 
-* Removed the docker images implemenation, deployment and documentation from the
+* Removed the docker images implementation, deployment and documentation from the
   Eradiate repository ({ghpr}`322`).
 * {class}`.Measure` no longer takes a `spectral_cfg` parameter but instead a
   `srf` parameter ({ghpr}`311`).
