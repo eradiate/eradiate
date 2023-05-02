@@ -3,14 +3,14 @@ import numpy as np
 
 import eradiate.data
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.scenes.illumination import SpotIllumination
 from eradiate.test_tools.types import check_scene_element
 
 
 def test_construct_basic(mode_mono):
     # We need a default spectral config
-    ctx = KernelDictContext()
+    ctx = KernelContext()
 
     # Construct without parameters
     illumination = SpotIllumination()
@@ -37,7 +37,7 @@ def test_construct_texture(mode_mono, tmp_path):
     im.save(filename)
 
     # We need a default spectral config
-    ctx = KernelDictContext()
+    ctx = KernelContext()
 
     # Construct with custom beam profile filename
     illumination = SpotIllumination(
@@ -64,7 +64,7 @@ def test_construct_texture(mode_mono, tmp_path):
 
 def test_construct_from_size(mode_mono):
     # We need a default spectral config
-    ctx = KernelDictContext()
+    ctx = KernelContext()
 
     spot_radius = 1 * ureg.m
     beam_angle = 3 * ureg.deg

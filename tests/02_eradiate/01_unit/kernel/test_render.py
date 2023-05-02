@@ -4,7 +4,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.kernel import (
     MitsubaObjectWrapper,
     TypeIdLookupStrategy,
@@ -157,7 +157,7 @@ def test_mi_render(mode_mono):
     result = mi_render(
         mi_wrapper,
         ctxs=[
-            KernelDictContext(si=SpectralIndex.new(w=w), kwargs={"r": r})
+            KernelContext(si=SpectralIndex.new(w=w), kwargs={"r": r})
             for (r, w) in zip(reflectances, wavelengths)
         ],
     )
@@ -226,7 +226,7 @@ def test_mi_render_multisensor(mode_mono):
     result = mi_render(
         mi_wrapper,
         ctxs=[
-            KernelDictContext(si=SpectralIndex.new(w=w), kwargs={"r": r})
+            KernelContext(si=SpectralIndex.new(w=w), kwargs={"r": r})
             for (r, w) in zip(reflectances, wavelengths)
         ],
     )

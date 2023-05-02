@@ -12,4 +12,4 @@ Classes
    :toctree: generated/autosummary/
 
    Context
-   KernelDictContext
+   KernelContext

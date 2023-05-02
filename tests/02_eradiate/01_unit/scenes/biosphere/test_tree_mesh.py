@@ -5,7 +5,7 @@ import mitsuba as mi
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.kernel._kernel_dict import KernelDictTemplate
 from eradiate.scenes.biosphere import MeshTree, MeshTreeElement
 from eradiate.scenes.core import traverse
@@ -181,7 +181,7 @@ def test_mesh_tree_element_load(mode_mono, tmp_file, request):
     )
 
     # Check that the template successfully expands to a valid Mitsuba scene
-    mi_scene = mi.load_dict(template.render(KernelDictContext()))
+    mi_scene = mi.load_dict(template.render(KernelContext()))
     assert isinstance(mi_scene, mi.Scene)
 
 

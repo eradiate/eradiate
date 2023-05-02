@@ -11,7 +11,7 @@ from ._core import PhaseFunction, phase_function_factory
 from ..core import traverse
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ...attrs import documented
-from ...contexts import KernelDictContext
+from ...contexts import KernelContext
 from ...kernel import InitParameter, UpdateParameter, map_unit_cube
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_kernel as uck
@@ -49,9 +49,7 @@ class BlendPhaseFunction(PhaseFunction):
                 "have at least two components"
             )
 
-    weights: (
-        np.ndarray | list[t.Callable[[KernelDictContext], np.ndarray]]
-    ) = documented(
+    weights: (np.ndarray | list[t.Callable[[KernelContext], np.ndarray]]) = documented(
         attrs.field(
             converter=lambda x: x if callable(x[0]) else np.array(x, dtype=np.float64),
             kw_only=True,
@@ -62,7 +60,7 @@ class BlendPhaseFunction(PhaseFunction):
         "numerical values; in that case, they ust be of shape (n,) or (n, m), "
         "where n is the number of components and m the number of cells along "
         "the atmosphere's vertical axis. Alternatively, weights may be "
-        "callables that take a :class:`.KernelDictContext` as argument and "
+        "callables that take a :class:`.KernelContext` as argument and "
         "return an array of shape (n, m). "
         "This parameter is required and has no default.",
     )
@@ -209,7 +207,7 @@ class BlendPhaseFunction(PhaseFunction):
                 # Note: This defines a partial and evaluates the component index.
                 # Passing i as the kwarg default value is essential to force the
                 # dereferencing of the loop variable.
-                def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
+                def eval_conditional_weights(ctx: KernelContext, n_component=i):
                     return mi.VolumeGrid(
                         np.reshape(
                             self.eval_conditional_weights(ctx.si, n_component),
@@ -227,7 +225,7 @@ class BlendPhaseFunction(PhaseFunction):
 
             elif isinstance(self.geometry, SphericalShellGeometry):
                 # Same comment as above
-                def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
+                def eval_conditional_weights(ctx: KernelContext, n_component=i):
                     return mi.VolumeGrid(
                         np.reshape(
                             self.eval_conditional_weights(ctx.si, n_component),
@@ -277,7 +275,7 @@ class BlendPhaseFunction(PhaseFunction):
                 # Note: This defines a partial and evaluates the component index.
                 # Passing i as the kwarg default value is essential to force the
                 # dereferencing of the loop variable.
-                def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
+                def eval_conditional_weights(ctx: KernelContext, n_component=i):
                     return np.reshape(
                         self.eval_conditional_weights(ctx.si, n_component),
                         (-1, 1, 1, 1),  # Mind dim ordering! (C-style, i.e. zyxc)
@@ -291,7 +289,7 @@ class BlendPhaseFunction(PhaseFunction):
 
             elif isinstance(self.geometry, SphericalShellGeometry):
                 # Same comment as above
-                def eval_conditional_weights(ctx: KernelDictContext, n_component=i):
+                def eval_conditional_weights(ctx: KernelContext, n_component=i):
                     return np.reshape(
                         self.eval_conditional_weights(ctx.si, n_component),
                         (1, 1, -1, 1),  # Mind dim ordering! (C-style, i.e. zyxc)

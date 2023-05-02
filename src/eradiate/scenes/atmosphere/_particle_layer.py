@@ -18,7 +18,7 @@ from ..core import traverse
 from ..phase import TabulatedPhaseFunction
 from ... import converters, data
 from ...attrs import documented, parse_docs
-from ...contexts import KernelDictContext
+from ...contexts import KernelContext
 from ...kernel import UpdateParameter
 from ...radprops import ZGrid
 from ...spectral.ckd import BinSet
@@ -247,7 +247,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         fractions /= np.sum(fractions)
         return fractions
 
-    def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
         min_sigma_s = self.eval_sigma_s(ctx.si).min()
         return 1.0 / min_sigma_s if min_sigma_s != 0.0 else np.inf * ureg.m
 

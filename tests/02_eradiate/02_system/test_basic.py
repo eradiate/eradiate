@@ -8,7 +8,7 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.kernel import mi_render
 from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.core import Scene
@@ -93,7 +93,5 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
     scene = Scene(objects=objects)
     mi_wrapper = check_scene_element(scene, mi.Scene)
 
-    result = np.squeeze(
-        mi_render(mi_wrapper, ctxs=[KernelDictContext()])[550.0]["measure"]
-    )
+    result = np.squeeze(mi_render(mi_wrapper, ctxs=[KernelContext()])[550.0]["measure"])
     np.testing.assert_allclose(result, theoretical_solution, rtol=1e-3)

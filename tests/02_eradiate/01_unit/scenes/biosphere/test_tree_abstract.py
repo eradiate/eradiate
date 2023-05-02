@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.scenes.biosphere import AbstractTree, LeafCloud
 from eradiate.scenes.core import traverse
 from eradiate.test_tools.types import check_scene_element
@@ -132,7 +132,7 @@ def test_abstract_tree_kernel_dict(mode_mono):
     )
 
     template = traverse(tree)[0]
-    kdict = template.render(ctx=KernelDictContext())
+    kdict = template.render(ctx=KernelContext())
 
     # The BSDF is bilambertian with the parameters we initially set
     assert kdict[f"bsdf_{cloud_id}"] == {

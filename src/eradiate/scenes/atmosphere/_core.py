@@ -18,7 +18,7 @@ from ..phase import PhaseFunction
 from ..shapes import Shape
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
-from ...contexts import KernelDictContext
+from ...contexts import KernelContext
 from ...kernel import (
     InitParameter,
     TypeIdLookupStrategy,
@@ -163,7 +163,7 @@ class Atmosphere(CompositeSceneElement, ABC):
     # --------------------------------------------------------------------------
 
     @abstractmethod
-    def eval_mfp(self, ctx: KernelDictContext) -> pint.Quantity:
+    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
         """
         Compute a typical scattering mean free path. This rough estimate can be
         used *e.g.* to compute a distance guaranteeing that the medium can be
@@ -171,7 +171,7 @@ class Atmosphere(CompositeSceneElement, ABC):
 
         Parameters
         ----------
-        ctx : :class:`.KernelDictContext`
+        ctx : :class:`.KernelContext`
             A context data structure containing parameters relevant for kernel
             dictionary generation.
 

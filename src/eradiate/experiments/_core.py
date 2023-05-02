@@ -14,7 +14,7 @@ import eradiate
 
 from .. import pipelines, validators
 from ..attrs import AUTO, documented, parse_docs
-from ..contexts import KernelDictContext
+from ..contexts import KernelContext
 from ..exceptions import UnsupportedModeError
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..pipelines import Pipeline
@@ -248,7 +248,7 @@ class Experiment(ABC):
 
     @property
     @abstractmethod
-    def context_init(self) -> KernelDictContext:
+    def context_init(self) -> KernelContext:
         """
         Return a single context used for scene initialization.
         """
@@ -256,7 +256,7 @@ class Experiment(ABC):
 
     @property
     @abstractmethod
-    def contexts(self) -> list[KernelDictContext]:
+    def contexts(self) -> list[KernelContext]:
         """
         Return a list of contexts used for processing.
         """
@@ -379,14 +379,14 @@ class EarthObservationExperiment(Experiment, ABC):
         pass
 
     @property
-    def context_init(self) -> KernelDictContext:
-        return KernelDictContext(
+    def context_init(self) -> KernelContext:
+        return KernelContext(
             si=SpectralIndex.new(),
             kwargs=self._context_kwargs,
         )
 
     @property
-    def contexts(self) -> list[KernelDictContext]:
+    def contexts(self) -> list[KernelContext]:
         # Inherit docstring
 
         # Collect contexts from all measures
@@ -407,7 +407,7 @@ class EarthObservationExperiment(Experiment, ABC):
         )
         kwargs = self._context_kwargs
 
-        return [KernelDictContext(si, kwargs=kwargs) for si in sis]
+        return [KernelContext(si, kwargs=kwargs) for si in sis]
 
     @property
     @abstractmethod

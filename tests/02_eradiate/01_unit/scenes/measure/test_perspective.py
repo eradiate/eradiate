@@ -1,7 +1,7 @@
 import mitsuba as mi
 import pytest
 
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.scenes.core import traverse
 from eradiate.scenes.measure import PerspectiveCameraMeasure
 from eradiate.test_tools.types import check_scene_element
@@ -54,12 +54,10 @@ def test_perspective_medium(mode_mono):
     measure = PerspectiveCameraMeasure()
     template, _ = traverse(measure)
 
-    kdict = template.render(ctx=KernelDictContext())
+    kdict = template.render(ctx=KernelContext())
     assert "medium" not in kdict
 
     kdict = template.render(
-        ctx=KernelDictContext(
-            kwargs={"measure.atmosphere_medium_id": "test_atmosphere"}
-        )
+        ctx=KernelContext(kwargs={"measure.atmosphere_medium_id": "test_atmosphere"})
     )
     assert kdict["medium"] == {"type": "ref", "id": "test_atmosphere"}

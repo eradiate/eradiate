@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.kernel import mi_render, mi_traverse
 from eradiate.scenes.biosphere import LeafCloud
 from eradiate.scenes.core import Scene, traverse
@@ -56,8 +56,8 @@ def test_mi_render(mode_mono):
     parametric loop index values (in this case, the wavelength) as keys.
     """
     template, params = traverse(make_scene())
-    mi_scene = mi_traverse(mi.load_dict(template.render(ctx=KernelDictContext())))
-    contexts = [KernelDictContext(si={"w": w}) for w in wavelengths]
+    mi_scene = mi_traverse(mi.load_dict(template.render(ctx=KernelContext())))
+    contexts = [KernelContext(si={"w": w}) for w in wavelengths]
     result = mi_render(mi_scene, contexts, spp=spp)
 
     # We store film values and SPPs
@@ -91,12 +91,12 @@ def test_mi_render_rebuild(mode_mono):
     """
     # TODO: Recycle this test and merge with previous
     template, params = traverse(make_scene())
-    kdict = template.render(ctx=KernelDictContext(), drop=True)
+    kdict = template.render(ctx=KernelContext(), drop=True)
 
     for w in wavelengths:
         mi_scene = mi_traverse(mi.load_dict(kdict))
         mi_render(
             mi_scene,
-            [KernelDictContext(si={"w": w})],
+            [KernelContext(si={"w": w})],
             spp=spp,
         )

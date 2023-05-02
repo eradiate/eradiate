@@ -6,7 +6,7 @@ import pytest
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.scenes.core import BoundingBox, traverse
 from eradiate.scenes.shapes import CuboidShape
 from eradiate.test_tools.types import check_scene_element
@@ -44,7 +44,7 @@ def test_cuboid_params(mode_mono_double, kwargs, expected_transform):
     # Set edges
     cuboid = CuboidShape(**kwargs)
     template, _ = traverse(cuboid)
-    kernel_dict = template.render(ctx=KernelDictContext())
+    kernel_dict = template.render(ctx=KernelContext())
     to_world = kernel_dict["to_world"]
     assert dr.allclose(
         to_world.transform_affine(mi.Point3f(-1, -1, -1)), expected_transform[0]
@@ -67,7 +67,7 @@ def test_cuboid_atmosphere(mode_mono_double):
 
     with uck.override(length="m"):
         template, _ = traverse(cuboid)
-        kernel_dict = template.render(ctx=KernelDictContext())
+        kernel_dict = template.render(ctx=KernelContext())
         bbox = mi.load_dict(kernel_dict).bbox()
         assert dr.allclose(bbox.min, [-500, -500, -500])
         assert dr.allclose(bbox.max, [500, 500, 1000])

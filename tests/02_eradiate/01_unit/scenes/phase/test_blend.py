@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import SceneGeometry
 from eradiate.scenes.phase import BlendPhaseFunction
@@ -233,7 +233,7 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
     check_scene_element(phase, mi.PhaseFunction)
 
     template, params = traverse(phase)
-    ctx = KernelDictContext()
+    ctx = KernelContext()
     kernel_dict = mi_to_numpy(template.render(ctx, nested=False))
 
     # Check that the kernel dict is correct
@@ -310,7 +310,7 @@ def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_wei
     check_scene_element(phase, mi.PhaseFunction)
 
     template, params = traverse(phase)
-    kernel_dict = mi_to_numpy(template.render(KernelDictContext(), nested=False))
+    kernel_dict = mi_to_numpy(template.render(KernelContext(), nested=False))
 
     # Array weights
     expected = {

@@ -5,7 +5,7 @@ import pytest
 import eradiate
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
-from eradiate.contexts import KernelDictContext
+from eradiate.contexts import KernelContext
 from eradiate.radprops import ZGrid
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
@@ -54,7 +54,7 @@ def test_heterogeneous_single_mono(
         )
 
     # The scene element produces valid kernel dictionary specifications
-    check_scene_element(atmosphere, KernelDictContext())
+    check_scene_element(atmosphere, KernelContext())
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
@@ -79,7 +79,7 @@ def test_heterogeneous_single_ckd(mode_ckd, geometry, component, bin_set):
         )
 
     # The scene element produces valid kernel dictionary specifications
-    check_scene_element(atmosphere, KernelDictContext())
+    check_scene_element(atmosphere, KernelContext())
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
@@ -99,7 +99,7 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, path_to_ussa76_approx_dat
     )
 
     # The scene element produces valid kernel dictionary specifications
-    check_scene_element(atmosphere, KernelDictContext())
+    check_scene_element(atmosphere, KernelContext())
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
@@ -118,7 +118,7 @@ def test_heterogeneous_multi_ckd(mode_ckd, geometry, bin_set):
     )
 
     # The scene element produces valid kernel dictionary specifications
-    check_scene_element(atmosphere, KernelDictContext())
+    check_scene_element(atmosphere, KernelContext())
 
 
 @pytest.mark.parametrize("field", ["sigma_a", "sigma_t"])
@@ -139,7 +139,7 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         },
         particle_layers=[component_1, component_2, component_3],
     )
-    ctx = KernelDictContext()
+    ctx = KernelContext()
     zgrid = mixed.geometry.zgrid
 
     # Evaluate all profiles on the container's altitude grid
@@ -192,7 +192,7 @@ def test_heterogeneous_mix_weights(modes_all_double):
     """
     Check that component weights are correctly computed.
     """
-    ctx = KernelDictContext()
+    ctx = KernelContext()
     geometry = SceneGeometry.convert(
         {
             "type": "plane_parallel",
@@ -306,7 +306,7 @@ def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
     assert template["medium_atmosphere.scale"] == 2.0
 
     # The scene element produces valid kernel dictionary specifications
-    check_scene_element(atmosphere, KernelDictContext())
+    check_scene_element(atmosphere, KernelContext())
 
 
 def test_heterogeneous_blend_switches(mode_mono):
