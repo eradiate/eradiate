@@ -73,8 +73,6 @@ tests = [
 
 [project.scripts]
 eradiate = "eradiate.cli:main"
-ertdata = "eradiate.cli:data"
-ertshow = "eradiate.cli:show"
 
 [project.urls]
 changelog = "https://github.com/eradiate/eradiate/CHANGELOG.md"
