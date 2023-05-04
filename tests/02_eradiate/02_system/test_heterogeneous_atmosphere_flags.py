@@ -16,13 +16,22 @@ from eradiate import unit_registry as ureg
 )
 def test_heterogeneous_atm_flags(modes_all_double, atm_flags):
     """
+    Heterogeneous atmosphere component flags
+    ========================================
+
     This system test tries various combinations of atmosphere flags and checks
     that a computation succeeds and returns non-zero values.
     """
-    exp = eradiate.experiments.CanopyAtmosphereExperiment(
+    # TODO: Recycle this test
+    exp = eradiate.experiments.AtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
+            "molecular_atmosphere": {
+                "type": "molecular",
+                "construct": "afgl_1986" if eradiate.mode().is_ckd else "ussa_1976",
+                **atm_flags["molecular"],
+            },
             "particle_layers": {
                 "tau_ref": 0.2,
                 "bottom": 0.0,

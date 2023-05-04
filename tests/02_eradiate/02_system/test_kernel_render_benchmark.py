@@ -37,8 +37,23 @@ def make_scene():
 
 def test_mi_render(mode_mono):
     """
-    This basic test checks that the mi_render() function runs without failing
-    and stores results as expected.
+    Mitsuba scene render
+    ====================
+
+    This basic test checks that the ``mi_render()`` function runs without
+    failing and stores results as expected.
+
+    Rationale
+    ---------
+
+    We construct a simple scene and render it using our ``mi_render()`` wrapper
+    for a sequence of wavelengths.
+
+    Expected behaviour
+    ------------------
+
+    Rendering succeed and results are stored in a dictionary which uses
+    parametric loop index values (in this case, the wavelength) as keys.
     """
     template, params = traverse(make_scene())
     mi_scene = mi_traverse(mi.load_dict(template.render(ctx=KernelDictContext())))
@@ -53,10 +68,28 @@ def test_mi_render(mode_mono):
 @pytest.mark.slow
 def test_mi_render_rebuild(mode_mono):
     """
-    This test performs the same computation as the previous, but rebuilds the
-    scene for each parametric iteration. It is designed for comparison with the
-    previous.
+    Mitsuba render scene rebuild
+    ============================
+
+    This test performs the same computation as the previous (see
+    *Mitsuba scene render*), but rebuilds the scene for each parametric
+    iteration. It is designed for comparison with the previous.
+
+    Rationale
+    ---------
+
+    The *Mitsuba scene render* test does not reload the scene at each iteration;
+    instead, it uses Mitsuba's parameter update system to update it at a low
+    cost. In this test, the scene is entirely rebuilt at each iteration.
+
+    Expected behaviour
+    ------------------
+
+    The rendering sequence succeeds and yields the same results as the
+    *Mitsuba scene render* test. This test should take much longer than the
+    *Mitsuba render scene* to complete.
     """
+    # TODO: Recycle this test and merge with previous
     template, params = traverse(make_scene())
     kdict = template.render(ctx=KernelDictContext(), drop=True)
 

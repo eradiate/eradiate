@@ -626,7 +626,9 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("atmosphere", [None, "homogeneous"])
+@pytest.mark.parametrize(
+    "atmosphere", [None, "homogeneous"], ids=["none", "homogeneous"]
+)
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
 def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, request):
     r"""
@@ -638,7 +640,7 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
     and :math:`\rho_c = 1`.
 
     Rationale
-    ----------
+    ---------
 
     * Geometry: a square surface with unit size and
 
@@ -648,7 +650,7 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
 
     * Atmosphere: No atmosphere or default homogeneous atmosphere.
     * Illumination: Directional illumination with a zenith angle
-      :math:`\theta = 30.0°` and an azimuth angle :math:`\varphi = 0.0.
+      :math:`\theta = 30.0°` and an azimuth angle :math:`\varphi = 0.0`.
     * Sensor: Distant reflectance measure covering a plane (11 angular points,
       1 sample per pixel with no atmosphere, 10000 with atmosphere).
 
@@ -660,18 +662,18 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
     Results
     -------
 
-    .. image:: generated/plots/test_rpv_vs_lambertian-0.0.png
+    .. image:: generated/plots/test_rpv_vs_lambertian-none-0.0.png
        :width: 95%
-    .. image:: generated/plots/test_rpv_vs_lambertian-0.5.png
+    .. image:: generated/plots/test_rpv_vs_lambertian-none-0.5.png
        :width: 95%
-    .. image:: generated/plots/test_rpv_vs_lambertian-1.0.png
+    .. image:: generated/plots/test_rpv_vs_lambertian-none-1.0.png
        :width: 95%
 
-    .. image:: generated/plots/test_rpv_vs_lambertian_homo_atm-0.0.png
+    .. image:: generated/plots/test_rpv_vs_lambertian-homogeneous-0.0.png
        :width: 95%
-    .. image:: generated/plots/test_rpv_vs_lambertian_homo_atm-0.5.png
+    .. image:: generated/plots/test_rpv_vs_lambertian-homogeneous-0.5.png
        :width: 95%
-    .. image:: generated/plots/test_rpv_vs_lambertian_homo_atm-1.0.png
+    .. image:: generated/plots/test_rpv_vs_lambertian-homogeneous-1.0.png
        :width: 95%
     """
 
@@ -737,11 +739,7 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
     results = {bsdf: eradiate.run(exp) for bsdf, exp in experiments.items()}
 
     # Make figure
-    filename = (
-        f"{request.node.originalname}-{reflectance}.png"
-        if atmosphere is None
-        else f"test_onedim_rpv_vs_lambertian_homo_atm-{reflectance}.png"
-    )
+    filename = f"{request.node.originalname}-{'none' if atmosphere is None else 'homogeneous'}-{reflectance}.png"
     outdir = os.path.join(artefact_dir, "plots")
     os.makedirs(outdir, exist_ok=True)
     fname_plot = os.path.join(outdir, filename)

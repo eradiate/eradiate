@@ -31,8 +31,23 @@ from eradiate.spectral.index import SpectralIndex
 @pytest.mark.parametrize("datetime", [None, "2000-01-01"])
 def test_radiance_scaling(modes_all_double, measure, scale, datetime):
     """
-    Check if the recorded radiance scales as expected with the incoming
-    irradiance, while the reflectance remains constant.
+    Radiance scaling
+    ================
+
+    This test checks if the recorded radiance scales as expected with the
+    incoming irradiance, while the reflectance remains constant.
+
+    Rationale
+    ---------
+
+    An experiment is set up in which the illumination uses an irradiance
+    spectrum to which a scaling is applied.
+
+    Expected behaviour
+    ------------------
+
+    The scaling is applied to the illumination; consequently, the recorded
+    radiance is scaled by the same amount.
     """
 
     reflectance = 0.5
