@@ -1,53 +1,65 @@
 import os.path
 import textwrap
 from pathlib import Path
+from typing import List, Optional
 
-import click
+import typer
 from rich.console import Console
 from ruamel.yaml import YAML
+from typing_extensions import Annotated
 
 import eradiate
 
 from ..exceptions import DataError
 
+app = typer.Typer()
 console = Console(color_system=None)
 
 
-@click.group()
-def data():
+@app.callback()
+def main():
     """
     Manage data.
     """
     pass
 
 
-@data.command()
-@click.option(
-    "--input-directory",
-    "-i",
-    default=".",
-    help="Path to input directory (default: '.').",
-)
-@click.option(
-    "--output-file",
-    "-o",
-    default=None,
-    help="Path to output file (default: '<input_directory>/registry.txt').",
-)
-@click.option(
-    "--rules",
-    "-r",
-    default=None,
-    help="Path to the registry rule file "
-    "(default: '<input_directory>/registry_rules.yml').",
-)
-@click.option(
-    "--hash-algorithm",
-    "-a",
-    default="sha256",
-    help="Hashing algorithm (default: 'sha256').",
-)
-def make_registry(input_directory, output_file, rules, hash_algorithm):
+@app.command()
+def make_registry(
+    input_directory: Annotated[
+        str,
+        typer.Option(
+            "--input-directory",
+            "-i",
+            help="Path to input directory.",
+        ),
+    ] = ".",
+    output_file: Annotated[
+        Optional[str],
+        typer.Option(
+            "--output-file",
+            "-o",
+            help="Path to output file (default: '<input_directory>/registry.txt').",
+        ),
+    ] = None,
+    rules: Annotated[
+        Optional[str],
+        typer.Option(
+            "--rules",
+            "-r",
+            help="Path to the registry rule file "
+            "(default: '<input_directory>/registry_rules.yml').",
+        ),
+    ] = None,
+    hash_algorithm: Annotated[
+        str,
+        typer.Option(
+            "--hash-algorithm",
+            "-a",
+            help="Hashing algorithm (default: 'sha256').",
+        ),
+    ] = "sha256",
+):
     """
     Recursively construct a file registry from the current working directory.
     """
@@ -76,7 +88,7 @@ def make_registry(input_directory, output_file, rules, hash_algorithm):
     )
 
 
-@data.command()
+@app.command()
 def update_registries():
     """
     Update local registries for online sources.
@@ -98,22 +110,30 @@ def update_registries():
             continue
 
 
-@data.command()
-@click.argument("files", nargs=-1)
-@click.option(
-    "--from-file",
-    "-f",
-    default=None,
-    help="Optional path to a file list (YAML format). If this option is set, "
-    "the FILES argument(s) will be ignored.",
-)
-def fetch(files, from_file):
+@app.command()
+def fetch(
+    files: Annotated[
+        Optional[List[str]],
+        typer.Argument(
+            help="An arbitrary number of relative paths to files to be "
+            "retrieved from the data store. If unset, the list of "
+            "files is read from a YAML file which can be specified by "
+            "using the ``--from-file`` option and defaults to "
+            "``$ERADIATE_SOURCE_DIR/resources/downloads.yml``."
+        ),
+    ] = None,
+    from_file: Annotated[
+        Optional[str],
+        typer.Option(
+            "--from-file",
+            "-f",
+            help="Optional path to a file list (YAML format). If this option is set, "
+            "the FILES argument(s) will be ignored.",
+        ),
+    ] = None,
+):
     """
-    Fetch files from the Eradiate data store. FILES is an arbitrary number of
-    relative paths to files to be retrieved from the data store. If FILES is
-    unset, the list of files is read from a YAML file which can be specified by
-    using the ``--from-file`` option and defaults to
-    ``$ERADIATE_SOURCE_DIR/resources/downloads.yml``.
+    Fetch files from the Eradiate data store.
     """
     if not files:
         if from_file is None:
@@ -133,9 +153,12 @@ def fetch(files, from_file):
             console.print(f"[green]✓[/] found \[{path}]")
 
 
-@data.command()
-@click.option("--keep", "-k", is_flag=True, help="Keep registered files.")
-def purge_cache(keep):
+@app.command()
+def purge_cache(
+    keep: Annotated[
+        bool, typer.Option("--keep", "-k", help="Keep registered files.")
+    ] = False
+):
     """
     Purge the cache of online data stores.
     """
@@ -162,18 +185,27 @@ def purge_cache(keep):
             continue
 
 
-@data.command()
-@click.argument("data_stores", nargs=-1)
-@click.option(
-    "-l", "--list-registry", is_flag=True, help="Show registry content if relevant."
-)
-def info(data_stores, list_registry):
+@app.command()
+def info(
+    data_stores: Annotated[
+        Optional[List[str]],
+        typer.Argument(
+            help=(
+                "List of data stores for which information is requested. "
+                "If no data store ID is passed, information is displayed for "
+                "all data stores."
+            )
+        ),
+    ] = None,
+    list_registry: Annotated[
+        bool,
+        typer.Option(
+            "-l", "--list-registry", help="Show registry content if relevant."
+        ),
+    ] = False,
+):
     """
     Display information about data store configuration.
-
-    The optional DATA_STORES argument specifies the list of data stores for
-    which information is requested. If no data store ID is passed, information
-    is displayed for all data stores.
     """
 
     # Build section list

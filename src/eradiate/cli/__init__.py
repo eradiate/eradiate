@@ -3,27 +3,35 @@ The Eradiate command-line interface, built with Click and Rich.
 """
 
 import logging
+from enum import Enum
 
-import click
+import typer
 from rich.logging import RichHandler
+from typing_extensions import Annotated
 
-from .data import data
-from .show import show
-from .srf import srf
+from . import data, show, srf
 
 
-@click.group()
-@click.option(
-    "--log-level",
-    "-l",
-    type=click.Choice(["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"]),
-    default="WARNING",
-    help="Set log level (default: 'WARNING').",
+class LogLevel(str, Enum):
+    CRITICAL = "CRITICAL"
+    ERROR = "ERROR"
+    WARNING = "WARNING"
+    INFO = "INFO"
+    DEBUG = "DEBUG"
+    NOTSET = "NOTSET"
+
+
+app = typer.Typer(
+    help="Eradiate — A modern radiative transfer model for Earth observation."
 )
-def main(log_level):
-    """
-    Eradiate — A modern radiative transfer model for Earth observation.
-    """
+
+
+@app.callback()
+def cli(
+    log_level: Annotated[
+        LogLevel, typer.Option(help="Set log level.")
+    ] = LogLevel.WARNING
+):
     logging.basicConfig(
         level=log_level.upper(),
         format="%(message)s",
@@ -32,10 +40,14 @@ def main(log_level):
     )
 
 
-main.add_command(show)
-main.add_command(data)
-main.add_command(srf)
+app.command(name="show", help=show.__doc__)(show.main)
+app.add_typer(data.app, name="data")
+app.add_typer(srf.app, name="srf")
+
+
+def main():
+    app()
 
 
 if __name__ == "__main__":
-    main()
+    app()
