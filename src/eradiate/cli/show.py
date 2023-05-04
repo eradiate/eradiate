@@ -1,10 +1,12 @@
-import click
 import mitsuba as mi
+import typer
 from rich.console import Console
 
+app = typer.Typer()
 
-@click.command()
-def show():
+
+@app.command()
+def main():
     """
     Display information useful for debugging.
     """
@@ -43,3 +45,6 @@ def show():
         else:
             var_repr = str(value)
         message(f"• ERADIATE_{var.upper()}: {var_repr}")
+
+
+__doc__ = main.__doc__
