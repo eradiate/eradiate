@@ -50,7 +50,6 @@ extensions = [
     "autodocsumm",  # Possibly add autosummary table to autodoc
     "myst_parser",  # Markdown support
     "nbsphinx",  # Display notebooks
-    "sphinx_click",  # Automatically document CLI
     "sphinx_copybutton",
     "sphinx_design",  # Tabs, buttons, icons...
     "sphinxcontrib.bibtex",  # BibTeX bibliography
@@ -290,9 +289,11 @@ latex_documents = [
 
 def custom_step(app):
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    import generate_md_cli
     import generate_rst_api
     import generate_rst_plugins
 
+    generate_md_cli.generate()  # CLI reference
     generate_rst_plugins.generate()  # Plugins
     generate_rst_api.generate_env_vars_docs()  # Environment variables
     generate_rst_api.generate_factory_docs()  # Factories

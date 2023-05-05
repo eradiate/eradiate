@@ -28,6 +28,9 @@ rst-api:
 rst-plugins:
 	python generate_rst_plugins.py
 
+md-cli:
+	python generate_md_cli.py
+
 clean: clean_generated
 	rm -rf _build/*
 

@@ -109,6 +109,7 @@ docs-linkcheck:
 docs-rst:
 	make -C docs rst-api
 	make -C docs rst-plugins
+	make -C docs md-cli
 
 docs-render-tutorials: conda-init
 	jupyter nbconvert tutorials/**/*.ipynb --execute --to notebook --inplace

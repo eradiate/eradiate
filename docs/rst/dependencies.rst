@@ -41,9 +41,9 @@ Configuration
 
 Interface
 
-* `Click <https://click.palletsprojects.com/>`_
 * `Rich <https://rich.readthedocs.io/>`_
 * `tqdm <https://github.com/tqdm/tqdm/>`_
+* `Typer <https://typer.tiangolo.com/>`_
 
 Optional dependencies
 ---------------------
@@ -82,7 +82,6 @@ Documentation
 * `sphinx-book-theme <https://sphinx-book-theme.readthedocs.io/>`_
 * `sphinxcontrib-bibtex <https://sphinxcontrib-bibtex.readthedocs.io/>`_
 * `sphinx-autobuild <https://github.com/executablebooks/sphinx-autobuild>`_
-* `sphinx-click <https://sphinx-click.readthedocs.io/>`_
 * `sphinx-copybutton <https://sphinx-copybutton.readthedocs.io/>`_
 * `sphinx-design <https://sphinx-design.readthedocs.io/>`_
 
