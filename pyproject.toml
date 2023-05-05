@@ -70,6 +70,12 @@ tests = [
   "pytest",
   "pytest-json-report"
 ]
+optional = [
+  "eradiate_mitsuba=0.0.1rc10"
+]
+production = [
+  "eradiate_mitsuba=0.0.1rc10"
+]
 
 [project.scripts]
 eradiate = "eradiate.cli:main"
