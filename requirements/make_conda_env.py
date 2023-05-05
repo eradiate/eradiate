@@ -12,9 +12,9 @@ from setuptools.config.pyprojecttoml import read_configuration
 @click.option(
     "-s",
     "--sections",
-    default="main,recommended,tests,dev,docs",
+    default="main,recommended,tests,dev,docs,production,optional",
     help="Dependency sections to include in the produced environment.yml file. "
-    "Default: 'main,recommended,tests,dev,docs'",
+    "Default: 'main,recommended,tests,dev,docs,production,optional'",
 )
 @click.option(
     "-i", "--input", default="pyproject.toml", help="Path to pyproject.toml file."
@@ -57,10 +57,22 @@ def cli(sections, input, output, quiet):
         except KeyError:
             raise RuntimeError(f"Cannot fetch dependencies from {input}")
 
+        mitsuba_pkg = None
+
         for package in packages:
-            if package not in dep_list:  # Do not duplicate
-                dep_list.append(package)
-                i += 1
+            if package in dep_list:  # Do not duplicate
+                continue
+            # Temporary fix until an eradiate_mitsuba conda package is made available
+            if "eradiate_mitsuba" in set(package.split("==") + package.split(">=") + package.split("<=") + package.split("!=")):
+                mitsuba_pkg = package
+                continue
+            dep_list.append(package)
+            i += 1
+
+        if mitsuba_pkg:
+            if "pip" not in dep_list:
+                dep_list.append("pip")
+            dep_list.append({"pip": [mitsuba_pkg]})
 
     # Format dependency list
     lst = CS(dep_list)

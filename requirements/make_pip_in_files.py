@@ -9,9 +9,9 @@ from setuptools.config.pyprojecttoml import read_configuration
 @click.option(
     "-s",
     "--sections",
-    default="main,recommended,tests,dev,docs",
+    default="main,recommended,tests,dev,docs,production,optional",
     help="Dependency sections to include in the produced environment.yml file. "
-    "Default: 'main,recommended,tests,dev,docs'",
+    "Default: 'main,recommended,tests,dev,docs,production,optional'",
 )
 @click.option(
     "-i",
