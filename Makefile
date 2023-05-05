@@ -96,6 +96,10 @@ docs:
 	make -C docs html
 	@echo "Documentation index at docs/_build/html/index.html"
 
+docs-pdf:
+	make -C docs latexpdf
+	@echo "Documentation PDF at docs/_build/latex/eradiate.pdf"
+
 docs-serve:
 	make -C docs serve
 
