@@ -23,7 +23,9 @@ dependencies = [
   "rich",
   "ruamel.yaml",
   "scipy",
+  "shellingham!=1.5.1",  # Typer dependency; exclude this version which raises while previous don't
   "tqdm",
+  "typer>=0.9.0",
   "xarray>=0.19,!=0.20.*"
 ]
 description = "A radiative transfer model for the Earth observation community"
@@ -47,18 +49,16 @@ docs = [
   "autodocsumm",
   "myst-parser",
   "nbsphinx>=0.9.0",
-  "pydata-sphinx-theme",  # Pinned until this is fixed: https://github.com/executablebooks/sphinx-book-theme/issues/711
   "sphinx-book-theme>=1.0",
   "sphinx",
   "sphinxcontrib-bibtex>=2.0",
   "sphinx-autobuild",
-  "sphinx-click>=3.0.2",
   "sphinx-copybutton",
   "sphinx-design"
 ]
 recommended = [
   "aabbtree",  # Used by the leaf collision detection feature
-  "astropy",  # Used by the Solar irradiance spectrum date-based scaling feature
+  "astropy",  # Used by the solar irradiance spectrum date-based scaling feature
   "iapws",  # Used by thermophysical property utilities
   "ipython",
   "ipywidgets",
