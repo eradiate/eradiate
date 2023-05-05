@@ -26,3 +26,11 @@ dev:  # All dependencies
     - recommended
     - docs
     - tests
+
+optional:
+  includes:
+    - dev
+
+production:
+  includes:
+    - recommended
