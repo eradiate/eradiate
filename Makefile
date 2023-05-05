@@ -95,6 +95,11 @@ conda-update: conda-lock-all conda-init
 
 .PHONY: conda-env conda-lock conda-lock-all conda-init conda-update
 
+# -- Build Wheel for Eradiate --------------------------------------------------
+
+wheel:
+	python3 -m build
+
 # -- Documentation -------------------------------------------------------------
 
 .PHONY: docs docs-html-plot
