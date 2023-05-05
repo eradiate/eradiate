@@ -65,7 +65,7 @@ Python and C++17. It relies on a radiometric kernel based on the
 
    rst/reference_api/index
    rst/reference_plugins/index
-   rst/reference_cli/index
+   src/reference_cli.md
    src/CHANGELOG.md
    rst/bibliography
 

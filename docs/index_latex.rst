@@ -14,5 +14,5 @@ Eradiate documentation
    rst/developer_guide/index
    rst/reference_api/index
    rst/reference_plugins/index
-   rst/reference_cli/index
+   src/reference_cli.md
    rst/bibliography
