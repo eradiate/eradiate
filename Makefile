@@ -33,7 +33,7 @@ pip-compile: pip-update-in-files
 	rm requirements/dev.txt
 	touch requirements/dev.txt
 
-	@for LAYER in dev main docs tests; do \
+	@for LAYER in dev main docs tests production optional; do \
 		echo "Compiling requirements/$${LAYER}.in to requirements/$${LAYER}.txt"; \
 		pip-compile --upgrade --resolver=backtracking --build-isolation --allow-unsafe \
 			--output-file requirements/$${LAYER}.txt \
@@ -63,7 +63,14 @@ conda-env:
 	    -s "main,recommended" \
 	    -o requirements/environment-recommended.yml --quiet
 	python3 requirements/make_conda_env.py \
+		-s "main,recommended,docs,dev" \
 	    -o requirements/environment-dev.yml --quiet
+	python3 requirements/make_conda_env.py \
+		-s "main,recommended,docs,dev,optional" \
+	    -o requirements/environment-optional.yml --quiet
+	python3 requirements/make_conda_env.py \
+		-s "main,recommended,production" \
+	    -o requirements/environment-production.yml --quiet
 
 # Lock conda dependencies
 conda-lock: conda-env
