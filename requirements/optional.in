@@ -1,0 +1,2 @@
+-r dev.in
+eradiate_mitsuba==0.0.1rc10

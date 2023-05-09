@@ -49,3 +49,7 @@ dependencies:
   - pip>=22
   - pip-tools>=6.5
   - setuptools>=61
+  # optional
+  - pip
+  - pip:
+    - eradiate_mitsuba==0.0.1rc10
