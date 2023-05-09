@@ -32,8 +32,9 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 
 ### Breaking changes
 
-* Removed the docker images implementation, deployment and documentation from the
-  Eradiate repository ({ghpr}`322`).
+* Removed the Docker images implementation, deployment and documentation
+  from the Eradiate repository ({ghpr}`322`). Docker builds are no longer
+  supported for now.
 * {class}`.Measure` no longer takes a `spectral_cfg` parameter but instead a
   `srf` parameter ({ghpr}`311`).
 * In CKD modes with absorbing molecular atmospheres, the way to control the bin
@@ -44,8 +45,10 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * The {meth}`.MultiDistantMeasure.from_viewing_angles` constructor is removed
   ({ghpr}`315`). Use one of the other {class}`.MultiDistantMeasure` constructors
   instead.
-
-% ### Improvements and fixes
+* The ``ertdata`` and ``ertshow`` command-line entry points are removed
+  ({ghpr}`324`). Instead, use ``eradiate data`` and ``eradiate show``.
+* The {class}`.KernelDictContext` class is renamed {class}`.KernelContext`
+  ({ghpr}`324`).
 
 ### Deprecations and removals
 
@@ -53,10 +56,14 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Removed {class}`.MeasureSpectralConfig` and subclasses ({ghpr}`311`).
 * Removed the {meth}`.MultiDistantMeasure.from_viewing_angles` constructor
   ({ghpr}`315`).
+* Removed ``ertdata`` and ``ertshow`` command-line entry points ({ghpr}`324`).
 
 ### Improvements and fixes
 
-* Added {class}`.MultiDeltaSpectrum` spectrum type ({ghpr}`311`)
+* Added {class}`.MultiDeltaSpectrum` spectrum type ({ghpr}`311`).
+* Exposed several API members in the top-level namespace ({ghpr}`324`).
+* Exposed the ``eradiate.spectral.*`` subpackage members in the
+  {mod}`eradiate.spectral` namespace ({ghpr}`324`).
 
 ### Documentation
 
