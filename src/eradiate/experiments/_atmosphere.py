@@ -187,35 +187,9 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
         # Process surface
         if self.surface is not None:
-            if isinstance(self.geometry, PlaneParallelGeometry):
-                width = self.geometry.width
-                altitude = (
-                    self.atmosphere.bottom_altitude
-                    if self.atmosphere is not None
-                    else 0.0 * ureg.km
-                )
-
-                objects["surface"] = attrs.evolve(
-                    self.surface,
-                    shape=RectangleShape.surface(altitude=altitude, width=width),
-                )
-
-            elif isinstance(self.geometry, SphericalShellGeometry):
-                altitude = (
-                    self.atmosphere.bottom_altitude
-                    if self.atmosphere is not None
-                    else 0.0 * ureg.km
-                )
-
-                objects["surface"] = attrs.evolve(
-                    self.surface,
-                    shape=SphereShape.surface(
-                        altitude=altitude, planet_radius=self.geometry.planet_radius
-                    ),
-                )
-
-            else:  # Shouldn't happen, prevented by validator
-                raise RuntimeError
+            objects["surface"] = attrs.evolve(
+                self.surface, shape=self.geometry.surface_shape
+            )
 
         objects.update(
             {
