@@ -34,18 +34,7 @@ dependencies:
   - jupyterlab
   - python-dateutil
   - seaborn
-  # docs
-  - autodocsumm
-  - myst-parser
-  - nbsphinx>=0.9.0
-  - sphinx-book-theme>=1.0
-  - sphinx
-  - sphinxcontrib-bibtex>=2.0
-  - sphinx-autobuild
-  - sphinx-copybutton
-  - sphinx-design
-  # dev
-  - conda-lock>=1.4
-  - pip>=22
-  - pip-tools>=6.5
-  - setuptools>=61
+  # production
+  - pip
+  - pip:
+    - eradiate_mitsuba==0.0.1rc10
