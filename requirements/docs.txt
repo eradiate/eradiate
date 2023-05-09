@@ -40,7 +40,7 @@ bleach==6.0.0
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-certifi==2022.12.7
+certifi==2023.5.7
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -193,7 +193,7 @@ nbclient==0.7.4
     # via
     #   -c requirements/dev.txt
     #   nbconvert
-nbconvert==7.3.1
+nbconvert==7.4.0
     # via
     #   -c requirements/dev.txt
     #   nbsphinx
@@ -325,7 +325,7 @@ rich==13.3.5
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-ruamel-yaml==0.17.22
+ruamel-yaml==0.17.24
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
