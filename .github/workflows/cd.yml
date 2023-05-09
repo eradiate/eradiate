@@ -12,6 +12,9 @@ on:
         description: 'Upload wheels to PyPI? (0: no, 1: yes)'
         required: true
         default: '0'
+  push:
+    paths:
+      - '.github/workflows/cd.yml'
 
 jobs:
   deploy:
