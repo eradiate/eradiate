@@ -1,4 +1,4 @@
-# What's new?
+# Release notes
 
 ```{note}
 For now, Eradiate uses a
@@ -75,6 +75,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Experiments define the spectral discretization, based on information from
   its measure, its atmosphere components if applicable, and a default
   spectral set ({ghpr}`311`).
+* Rewrote the CLI using the Typer framework ({ghpr}`326`).
 
 ## v0.23.1 (21 April 2023)
 
