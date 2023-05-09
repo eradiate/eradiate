@@ -353,6 +353,12 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         individual molecular species to custom concentration values.
         Custom concentrations can be provided in different units.
         """
+        if "absorption_dataset" in kwargs:
+            raise TypeError(
+                "Cannot pass 'absorption_dataset' keyword argument. The "
+                "'afgl_1986' sets the absorption dataset automatically."
+            )
+
         thermoprops = afgl_1986.make_profile(model_id=model)
 
         path = "ckd/absorption"

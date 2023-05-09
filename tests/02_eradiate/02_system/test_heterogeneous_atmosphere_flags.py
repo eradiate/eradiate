@@ -23,13 +23,25 @@ def test_heterogeneous_atm_flags(modes_all_double, atm_flags):
     that a computation succeeds and returns non-zero values.
     """
     # TODO: Recycle this test
+    if eradiate.mode().is_mono:
+        atm_kwargs = {
+            "construct": "ussa_1976",
+            "absorption_dataset": (
+                "spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
+            ),
+        }
+    elif eradiate.mode().is_ckd:
+        atm_kwargs = {"construct": "afgl_1986"}
+    else:
+        raise NotImplementedError
+
     exp = eradiate.experiments.AtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {
                 "type": "molecular",
-                "construct": "afgl_1986" if eradiate.mode().is_ckd else "ussa_1976",
+                **atm_kwargs,
                 **atm_flags["molecular"],
             },
             "particle_layers": {
