@@ -33,6 +33,7 @@ def main():
     message(f"• eradiate {eradiate.__version__}")
     message(f"• drjit {sys_info['drjit_version']}")
     message(f"• mitsuba {sys_info['mitsuba_version']}")
+    message(f"• eradiate-mitsuba {sys_info['eradiate_mitsuba_version']}")
 
     section("Available Mitsuba variants")
     message("\n".join([f"• {variant}" for variant in mi.variants()]))
