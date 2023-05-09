@@ -15,7 +15,7 @@ attrs==23.1.0
     #   dessinemoi
     #   environ-config
     #   pinttrs
-certifi==2022.12.7
+certifi==2023.5.7
     # via
     #   -c requirements/dev.txt
     #   requests
@@ -179,7 +179,7 @@ rich==13.3.5
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
-ruamel-yaml==0.17.22
+ruamel-yaml==0.17.24
     # via
     #   -c requirements/dev.txt
     #   -r requirements/main.in
