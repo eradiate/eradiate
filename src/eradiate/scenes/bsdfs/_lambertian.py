@@ -41,13 +41,18 @@ class LambertianBSDF(BSDF):
     @property
     def template(self) -> dict:
         # Inherit docstring
-        return {
+        result = {
             "type": "diffuse",
             **{
                 f"reflectance.{key}": value
                 for key, value in traverse(self.reflectance)[0].items()
             },
         }
+
+        if self.id is not None:
+            result["id"] = self.id
+
+        return result
 
     @property
     def params(self) -> dict[str, UpdateParameter]:

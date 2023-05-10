@@ -122,6 +122,9 @@ class RPVBSDF(BSDF):
             for key, value in obj_values.items():
                 result[f"{obj_key}.{key}"] = value
 
+        if self.id is not None:
+            result["id"] = self.id
+
         return result
 
     @property

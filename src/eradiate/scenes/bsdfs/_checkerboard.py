@@ -69,6 +69,9 @@ class CheckerboardBSDF(BSDF):
 
         result = {"type": "diffuse", "reflectance.type": "checkerboard"}
 
+        if self.id is not None:
+            result["id"] = self.id
+
         for obj_key, obj_values in {
             "color0": traverse(self.reflectance_a)[0],
             "color1": traverse(self.reflectance_b)[0],

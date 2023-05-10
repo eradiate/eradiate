@@ -121,10 +121,16 @@ class MQDiffuseBSDF(BSDF):
     @property
     def template(self) -> dict:
         # Inherit docstring
-        return {
+
+        result = {
             "type": "mqdiffuse",
             "grid": InitParameter(lambda ctx: self._eval_grid_impl(ctx)),
         }
+
+        if self.id is not None:
+            result["id"] = self.id
+
+        return result
 
     @property
     def params(self) -> dict[str, UpdateParameter]:

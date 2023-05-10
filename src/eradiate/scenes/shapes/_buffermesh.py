@@ -65,7 +65,9 @@ class BufferMeshShape(ShapeInstance):
     def instance(self) -> mi.Object:
         if self.bsdf is not None:
             template, _ = traverse(self.bsdf)
-            bsdf = mi.load_dict(template.render(ctx=KernelContext()))
+            kdict = template.render(ctx=KernelContext())
+            kdict["id"] = self._bsdf_id  # TODO: Enforce ID control at BSDF level
+            bsdf = mi.load_dict(kdict)
         else:
             bsdf = None
 
@@ -94,5 +96,5 @@ class BufferMeshShape(ShapeInstance):
         if self.bsdf is None:
             return None
 
-        _, params = traverse(self.bsdf)
+        _, params = traverse(attrs.evolve(self.bsdf, id=self._bsdf_id))
         return {f"bsdf.{k}": v for k, v in params.items()}

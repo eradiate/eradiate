@@ -64,7 +64,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Exposed several API members in the top-level namespace ({ghpr}`324`).
 * Exposed the ``eradiate.spectral.*`` subpackage members in the
   {mod}`eradiate.spectral` namespace ({ghpr}`324`).
-* Fixed incorrect Mitsuba scene parameter drop ({ghpr}`329`).
+* Fixed incorrect Mitsuba scene parameter drop and lookup ({ghpr}`329`).
 
 ### Documentation
 

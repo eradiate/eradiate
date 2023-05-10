@@ -18,10 +18,16 @@ class BlackBSDF(BSDF):
     @property
     def template(self) -> dict:
         # Inherit docstring
-        return {
+
+        result = {
             "type": "diffuse",
             "reflectance": {"type": "uniform", "value": 0.0},
         }
+
+        if self.id is not None:
+            result["id"] = self.id
+
+        return result
 
     @property
     def params(self) -> dict[str, UpdateParameter]:

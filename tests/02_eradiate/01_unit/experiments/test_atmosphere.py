@@ -34,6 +34,7 @@ def test_atmosphere_experiment_extra_objects(mode_mono):
             "reference_surface": {
                 "factory": "shape",
                 "type": "rectangle",
+                "id": "reference_surface",
                 "bsdf": {"type": "lambertian"},
             }
         }
