@@ -95,6 +95,13 @@ conda-update: conda-lock-all conda-init
 
 .PHONY: conda-env conda-lock conda-lock-all conda-init conda-update
 
+# -- Build the Eradiate Mitsuba kernel -----------------------------------------
+
+kernel:
+	cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release -GNinja --preset eradiate
+	ninja -C ext/mitsuba/build
+
+
 # -- Build Wheel for Eradiate --------------------------------------------------
 
 wheel:
