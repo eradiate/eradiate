@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import typing as t
+import warnings
 
 import attrs
 import mitsuba as mi
@@ -114,10 +115,26 @@ class MitsubaObjectWrapper:
         """
         Reduce the size of the scene parameter table :attr:`.parameters` by
         only keeping elements whose keys are listed in the parameter update
-        map template :attr:`.umap_template`.
+        map template :attr:`.umap_template`. For parameters associated with a
+        lookup protocol, the looked up parameter ID is checked and used.
         """
         if self.umap_template is not None:
-            self.parameters.keep(list(self.umap_template.keys()))
+            keys = []
+            for name, param in self.umap_template.items():
+                if param.lookup_strategy is not None:
+                    if param.parameter_id is not None:
+                        keys.append(param.parameter_id)
+                    else:
+                        warnings.warn(
+                            f"Parameter '{name}' has a lookup strategy but the "
+                            "associated parameter ID is undefined; was a "
+                            "parameter lookup performed during the Mitsuba "
+                            "scene traversal?"
+                        )
+                else:
+                    keys.append(name)
+
+            self.parameters.keep(keys)
 
 
 def mi_traverse(
@@ -191,10 +208,13 @@ def mi_traverse(
             self.flags = flags
 
             # Try and recover a parameter ID from this node
-            for uparam in list(lookups.values()):
+            for name, uparam in list(lookups.items()):
                 lookup_result = uparam.lookup_strategy(self.node, self.name)
                 if lookup_result is not None:
                     uparam.parameter_id = lookup_result
+                    del lookups[
+                        name
+                    ]  # Remove successful lookups to accelerate future searches
 
         def put_parameter(self, name, ptr, flags, cpptype=None):
             name = name if self.name is None else self.name + "." + name
@@ -223,6 +243,13 @@ def mi_traverse(
 
     cb = SceneTraversal(obj)
     obj.traverse(cb)
+
+    # Check if there are unsuccessful lookups
+    if lookups:
+        warnings.warn(
+            "There were unsuccessful Mitsuba scene parameter lookups: "
+            f"{list(lookups.keys())}"
+        )
 
     return MitsubaObjectWrapper(
         obj=obj,
