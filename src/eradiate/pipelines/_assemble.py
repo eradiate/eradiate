@@ -90,7 +90,6 @@ class AddIllumination(PipelineStep):
 
             spectrum: Spectrum = getattr(illumination, field_name)
             results_wavelengths = to_quantity(x.w)
-            print(f"{results_wavelengths=}")
 
             if eradiate.mode().is_mono:
                 wavelengths = results_wavelengths

@@ -114,6 +114,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(xr.Dataset)
             ),
+            repr=summary_repr,
         ),
         doc="Absorption coefficient dataset. If ``None``, the absorption "
         "coefficient is set to zero.",
@@ -356,7 +357,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         if "absorption_dataset" in kwargs:
             raise TypeError(
                 "Cannot pass 'absorption_dataset' keyword argument. The "
-                "'afgl_1986' sets the absorption dataset automatically."
+                "'afgl_1986' constructor sets the absorption dataset "
+                "automatically."
             )
 
         thermoprops = afgl_1986.make_profile(model_id=model)
