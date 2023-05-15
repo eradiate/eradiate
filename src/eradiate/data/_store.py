@@ -13,7 +13,7 @@ from .._config import config
 data_store: MultiDataStore = None
 
 
-def init_data_store(offline: bool | None = None) -> None:
+def init_data_store(offline: bool | None = None, production: bool | None = None) -> None:
     """
     Initialize the global data store.
 
@@ -33,16 +33,29 @@ def init_data_store(offline: bool | None = None) -> None:
     if offline is None:
         offline = config.offline
 
+    if production is None:
+        production = config.source_dir is None
+
+    if not production:
+        small_files = SafeDirectoryDataStore(
+            path=config.source_dir / "resources" / "data"
+        )
+    else:
+        if offline:
+            small_files = BlindDirectoryDataStore(
+                path=config.download_dir / "resources" / "data"
+            )
+        else:
+            small_files = SafeOnlineDataStore(
+                base_url="https://raw.githubusercontent.com/eradiate/eradiate-data/master/",
+                path=config.download_dir / "resources" / "data",
+            )
+
     if not offline:
         data_store = MultiDataStore(
             stores=OrderedDict(
                 [
-                    (
-                        "small_files",
-                        SafeDirectoryDataStore(
-                            path=config.source_dir / "resources/data/"
-                        ),
-                    ),
+                    ("small_files", small_files),
                     (
                         "large_files_stable",
                         SafeOnlineDataStore(
@@ -65,12 +78,7 @@ def init_data_store(offline: bool | None = None) -> None:
         data_store = MultiDataStore(
             stores=OrderedDict(
                 [
-                    (
-                        "small_files",
-                        SafeDirectoryDataStore(
-                            path=config.source_dir / "resources/data/"
-                        ),
-                    ),
+                    ("small_files", small_files),
                     (
                         "large_files_stable",
                         BlindDirectoryDataStore(path=config.download_dir / "stable"),
