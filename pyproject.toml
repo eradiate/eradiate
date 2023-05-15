@@ -118,7 +118,7 @@ src = ["src", "tests"]
 relative-imports-order = "closest-to-furthest"
 
 [tool.setuptools]
-zip-safe = false  # Required because of package data
+include-package-data = true # Required because of package data
 
 [tool.setuptools.package-data]
 # Required by PEP 561
