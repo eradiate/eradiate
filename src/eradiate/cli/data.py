@@ -2,12 +2,12 @@ import os.path
 import textwrap
 from pathlib import Path
 from typing import List, Optional
+from importlib_resources import files
 
 import typer
 from rich.console import Console
 from ruamel.yaml import YAML
 from typing_extensions import Annotated
-
 import eradiate
 
 from ..exceptions import DataError
@@ -112,7 +112,7 @@ def update_registries():
 
 @app.command()
 def fetch(
-    files: Annotated[
+    file_list: Annotated[
         Optional[List[str]],
         typer.Argument(
             help="An arbitrary number of relative paths to files to be "
@@ -135,15 +135,18 @@ def fetch(
     """
     Fetch files from the Eradiate data store.
     """
-    if not files:
+    if not file_list:
         if from_file is None:
             # TODO: fetch this list from online
-            from_file = eradiate.config.source_dir / "resources/downloads.yml"
+            if eradiate.config.source_dir is None:
+                from_file = files("eradiate") / "data" / "downloads.yml"
+            else:
+                from_file = eradiate.config.source_dir / "data" / "downloads_development.yml"
         console.print(f"Reading file list from '{from_file}'")
         yaml = YAML()
-        files = yaml.load(from_file)
+        file_list = yaml.load(from_file)
 
-    for filename in files:
+    for filename in file_list:
         try:
             console.print(f"[blue]Fetching '{filename}'[/]")
             path = eradiate.data.data_store.fetch(filename)
