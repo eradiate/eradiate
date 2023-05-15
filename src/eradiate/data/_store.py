@@ -47,7 +47,7 @@ def init_data_store(offline: bool | None = None, production: bool | None = None)
             )
         else:
             small_files = SafeOnlineDataStore(
-                base_url="https://raw.githubusercontent.com/eradiate/eradiate-data/master/",
+                base_url="/".join([config.small_files_registry_url, config.small_files_registry_revision,]),
                 path=config.download_dir / "resources" / "data",
             )
 
@@ -59,14 +59,14 @@ def init_data_store(offline: bool | None = None, production: bool | None = None)
                     (
                         "large_files_stable",
                         SafeOnlineDataStore(
-                            base_url="http://eradiate.eu/data/store/stable/",
+                            base_url="/".join([config.data_store_url, "stable"]),
                             path=config.download_dir / "stable",
                         ),
                     ),
                     (
                         "large_files_unstable",
                         BlindOnlineDataStore(
-                            base_url="http://eradiate.eu/data/store/unstable/",
+                            base_url="/".join([config.data_store_url, "unstable"]),
                             path=config.download_dir / "unstable",
                         ),
                     ),

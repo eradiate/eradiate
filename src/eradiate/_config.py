@@ -165,6 +165,20 @@ class EradiateConfig:
                 "'ERADIATE_SOURCE_DIR' environment variable."
             ) from FileNotFoundError(eradiate_init)
 
+    #: URL where small data files are located (production use only)
+    small_files_registry_url = var(
+        default="https://raw.githubusercontent.com/eradiate/eradiate-data",
+        converter=str,
+        help="URL where small data files are located (production use only)",
+    )
+
+    #: Revision of the small files registry (production use only)
+    small_files_registry_revision = var(
+        default="master",
+        converter=str,
+        help="Revision of the small files registry (production use only)",
+    )
+
     #: URL where large data files are located.
     data_store_url = var(
         default="http://eradiate.eu/data/store/",
