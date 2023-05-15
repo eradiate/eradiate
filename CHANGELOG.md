@@ -64,6 +64,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Exposed several API members in the top-level namespace ({ghpr}`324`).
 * Exposed the ``eradiate.spectral.*`` subpackage members in the
   {mod}`eradiate.spectral` namespace ({ghpr}`324`).
+* Provide an Eradiate Pypi package ({ghpr}`328`)
 
 ### Documentation
 
