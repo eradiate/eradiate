@@ -174,6 +174,14 @@
 
    BasicSurface
    CentralPatchSurface
+   DEMSurface
+
+**Helpers**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   mesh_from_dem
 
 ``eradiate.scenes.bsdfs``
 -------------------------
@@ -202,6 +210,7 @@
    CheckerboardBSDF
    LambertianBSDF
    MQDiffuseBSDF
+   OpacityMaskBSDF
    RPVBSDF
 
 ``eradiate.scenes.shapes``
@@ -229,7 +238,9 @@
 .. autosummary::
    :toctree: generated/autosummary/
 
+   BufferMeshShape
    CuboidShape
+   FileMeshShape
    RectangleShape
    SphereShape
 

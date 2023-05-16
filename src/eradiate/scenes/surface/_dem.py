@@ -10,6 +10,7 @@ import xarray as xr
 
 from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, OpacityMaskBSDF
+from ..core import SceneElement
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ..shapes import (
     BufferMeshShape,
@@ -22,64 +23,69 @@ from ..shapes import (
 from ...attrs import documented, get_doc, parse_docs
 from ...constants import EARTH_RADIUS
 from ...units import to_quantity
+from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
 def mesh_from_dem(
     da: xr.DataArray,
-    geometry: SceneGeometry,
-    planet_radius: pint.Quantity | None = None,
-):
+    geometry: str | dict | SceneGeometry,
+    planet_radius: pint.Quantity | float | None = None,
+) -> "mitsuba.Mesh":
     """
-    Construct a DEM surface from a dataarray holding elevation data.
+    Construct a DEM surface from a data array holding elevation data.
 
     Parameters
     ----------
-    da : xr.DataArray
-        Data array with elevation data, indexed either by latitude and longitude coordinates or x and y coordinates
+    da : DataArray
+        Data array with elevation data, indexed either by latitude and longitude
+        coordinates or x and y coordinates.
 
-    geometry : SceneGeometry
-        Geometry of the scene.
+    geometry : .SceneGeometry or dict or str
+        Scene geometry configuration. The value is pre-processed by the
+        :meth:`.SceneGeometry.convert` converter.
 
-    planet_radius : pint.Quantity
-        Planet radius, used to convert latitude/longitude to x/y, when `geometry` is a :class:`.PlaneParallel` instance.
-        This parameter is unused otherwise. Default: :data:`.EARTH_RADIUS`.
-
-    id : str
-        Identifier of the scene element.
-
-    Notes
-    -----
-    There are two ways of specifying the dataarray:
-    - With latitude and longitude based coordinates:
-      The coordinates must be named "lat" and "lon".
-    - With x and y length based coordinates
-      The coordinates must be named "x" and "y".
-
-    The unit of the coordinates is specified through the `coordinate_units` metadata field in the dataarray.
-
-    The unit of the elevation data is specified through the `unit` metadata field in the dataarray.
+    planet_radius : quantity or float, default: .EARTH_RADIUS
+        Planet radius used to convert latitude/longitude to x/y when
+        `geometry` is a :class:`.PlaneParallelGeometry` instance.
+        This parameter is unused otherwise. If a unitless value is passed, it is
+        interpreted using
+        :ref:`default config length units <sec-user_guide-unit_guide_user>`.
 
     Returns
     -------
-    mesh : :class:`.BufferMeshShape`
-        A triangulated mesh representing the DEM
+    mesh : .BufferMeshShape
+        A triangulated mesh representing the DEM.
 
     theta_lim : pint.Quantity
-        The limits of the latitude extent of the DEM
+        The limits of the latitude extent of the DEM.
 
     phi_lim : pint.Quantity
-        The limits of the longitude extent of the DEM
+        The limits of the longitude extent of the DEM.
+
+    Notes
+    -----
+    The ``da`` parameter may use the following formats:
+
+    * with latitude and longitude based coordinates, then named ``"lat"`` and
+      ``"lon"``;
+    * with x and y length based coordinates, then named ``"x"`` and ``"y"``.
+
+    Coordinate and variable units are specified using the ``units`` xarray
+    attributes.
     """
-    if isinstance(geometry, PlaneParallelGeometry):
-        if planet_radius is None:
-            planet_radius = EARTH_RADIUS
-    elif isinstance(geometry, SphericalShellGeometry):
-        if planet_radius is not None:
-            warnings.warn(
-                "SphericalShellGeometry overrides the `planet_radius` argument."
-            )
+    # Pre-process geometry parameter
+    geometry = SceneGeometry.convert(geometry)
+
+    if isinstance(geometry, SphericalShellGeometry) and planet_radius is not None:
+        warnings.warn("SphericalShellGeometry overrides the `planet_radius` argument.")
+
+    # Add default units if quantity is unitless
+    if planet_radius is not None and not isinstance(planet_radius, pint.Quantity):
+        planet_radius = planet_radius * ucc.get("length")
+    # Set default if in a plane-parallel setup
+    planet_radius = EARTH_RADIUS if planet_radius is None else planet_radius
 
     if "lat" in da.coords and "lon" in da.coords:
         elevation = to_quantity(da.transpose("lat", "lon"))
@@ -102,6 +108,7 @@ def mesh_from_dem(
 
         vertices = _generate_dem_vertices(x, y, elevation.m_as(uck.get("length")))
         faces = _generate_face_indices(len(x), len(y))
+
     else:
         raise ValueError(
             f"Data array coordinates must be either `x/y` or `lat/lon`.\nGot: {da.coords}"
@@ -126,6 +133,7 @@ def mesh_from_dem(
         )
 
         mesh = BufferMeshShape(vertices=vertices_new, faces=faces)
+
     elif isinstance(geometry, PlaneParallelGeometry):
         vertices_new = _transform_vertices_plane_parallel(
             vertices,
@@ -133,6 +141,7 @@ def mesh_from_dem(
             altitude=atmo_bottom.m_as(uck.get("length")),
         ) * uck.get("length")
         mesh = BufferMeshShape(vertices=vertices_new, faces=faces)
+
     else:
         raise ValueError(f"Unsupported scene geometry: {geometry}")
 
@@ -146,10 +155,10 @@ def _generate_dem_vertices(x, y, elevation):
 
     Parameters
     ----------
-    latitude_points : array-like
+    x : array-like
         Points along the latitude axis of the DEM
 
-    longitude_points : array-like
+    y : array-like
         Points along the longitude axis of the DEM
 
     elevation : array-like
@@ -302,7 +311,7 @@ def _minmax_coordinates(vertices):
     return (theta_min, theta_max), (phi_min, phi_max)
 
 
-def _to_uv(lat_min, lat_max, lon_min, lon_max) -> "mi.ScalarTransform4f":
+def _to_uv(lat_min, lat_max, lon_min, lon_max) -> "mitsuba.ScalarTransform4f":
     """
     Compute the `to_uv` transformation for the opacity mask bitmap. To do this,
     the latitude and longitude extent of the DEM specification are used.
@@ -376,19 +385,19 @@ class DEMSurface(Surface):
         ),
         doc="Shape describing the background surface.",
         type=".SphereShape or .RectangleShape or None",
-        init_type=".SphereShape or .RectangleShape or dict",
+        init_type=".SphereShape or .RectangleShape or dict, optional",
         default="None",
     )
 
     @property
-    def _shape_id(self):
+    def _shape_id(self) -> str:
         """
         Mitsuba shape object identifier.
         """
         return f"{self.id}_shape"
 
     @property
-    def _bsdf_id(self):
+    def _bsdf_id(self) -> str:
         """
         Mitsuba BSDF object identifier.
         """
@@ -425,43 +434,45 @@ class DEMSurface(Surface):
         lat: pint.Quantity,
         lon: pint.Quantity,
         id: str = "surface",
-        geometry: SceneGeometry = PlaneParallelGeometry(),
+        geometry: SceneGeometry = None,
         planet_radius: pint.Quantity = None,
-        bsdf: BSDF = LambertianBSDF(),
+        bsdf: BSDF = None,
     ) -> DEMSurface:
         """
-        Construct a DEMSurface from a mesh object and coordinates, which specify its location.
+        Construct a DEMSurface from a mesh object and coordinates which specify
+        its location.
 
         Parameters
         ----------
-        id : str
-            Identifier of the scene element. Default: "surface"
-
-        mesh : :class:`.BufferMeshShape` or :class:`.FileMeshShape`
-            DEM as a triangulated mesh
+        mesh : .BufferMeshShape or .FileMeshShape
+            DEM as a triangulated mesh.
 
         lat : pint.Quantity
-            Limits of the latitude range covered by the DEM
+            Limits of the latitude range covered by the DEM.
 
         lon : pint.Quantity
-            Limits of the longitude range covered by the DEM
+            Limits of the longitude range covered by the DEM.
 
-        geometry : :class:`.SceneGeometry`
-            Atmospheric geometry of the scene
+        id : str, optional, default: "surface"
+            Identifier of the scene element.
 
-        planet_radius : pint.Quantity
-            Planet radius. Used *ONLY* in case of plane parallel geometry, to convert between
-            latitude/longitude and x/y coordinates
+        geometry : .SceneGeometry, optional, default: :class:`PlaneParallelGeometry() <.PlaneParallelGeometry>`
+            Atmospheric geometry of the scene.
 
-        bsdf : :class:`.BSDF`
-            Scattering model attached to the surface
+        planet_radius : pint.Quantity, optional, default: .EARTH_RADIUS
+            Planet radius. Used only in case of a plane parallel geometry to
+            convert between latitude/longitude and x/y coordinates.
+
+        bsdf : .BSDF, optional, default: :class:`LambertianBSDF() <.LambertianBSDF>`
+            Scattering model attached to the surface.
 
         Returns
         -------
-            :class:`.DEMSurface`
+        .DEMSurface
         """
+        geometry = PlaneParallelGeometry() if geometry is None else geometry
+        bsdf = LambertianBSDF() if bsdf is None else bsdf
         bsdf_id = f"{id}_bsdf"
-
         mesh = attrs.evolve(mesh, bsdf=bsdf)
 
         if isinstance(geometry, SphericalShellGeometry):
@@ -469,6 +480,7 @@ class DEMSurface(Surface):
                 warnings.warn(
                     "SphericalShellGeometry overrides the `planet_radius` argument."
                 )
+
             opacity_mask_trafo = _to_uv(*lat.m_as(ureg.deg), *lon.m_as(ureg.deg))
             opacity_array = np.ones((3, 3))
             opacity_array[1, 1] = 0
@@ -480,6 +492,9 @@ class DEMSurface(Surface):
                 opacity_bitmap=opacity_bitmap,
                 uv_trafo=opacity_mask_trafo,
             )
+
+            # The 'hole' in the background surface is created at the equator:
+            # we rotate it to
             trafo = (
                 mi.ScalarTransform4f.rotate(axis=[0, 0, 1], angle=90)
                 @ mi.ScalarTransform4f.rotate(
@@ -497,28 +512,24 @@ class DEMSurface(Surface):
                 bsdf=opacity_bsdf,
                 to_world=trafo,
             )
+
         elif isinstance(geometry, PlaneParallelGeometry):
-            if planet_radius is None:
-                planet_radius = EARTH_RADIUS
+            planet_radius = EARTH_RADIUS if planet_radius is None else planet_radius
+
             lat_length = (lat[1] - lat[0]).m_as(ureg.rad) * planet_radius
             lat_scale = (geometry.width / (lat_length * 3)).magnitude
             lon_length = (lon[1] - lon[0]).m_as(ureg.rad) * planet_radius
             lon_scale = (geometry.width / (lon_length * 3)).magnitude
             opacity_mask_trafo = mi.ScalarTransform4f.scale(
-                (
-                    lon_scale,
-                    lat_scale,
-                    1,
-                )
+                (lon_scale, lat_scale, 1)
             ) @ mi.ScalarTransform4f.translate(
                 (-0.5 + (0.5 / lon_scale), -0.5 + (0.5 / lat_scale), 0)
             )
             opacity_array = np.ones((3, 3))
             opacity_array[1, 1] = 0
-            opacity_bitmap = mi.Bitmap(opacity_array)
             opacity_bsdf = OpacityMaskBSDF(
                 nested_bsdf=bsdf,
-                opacity_bitmap=opacity_bitmap,
+                opacity_bitmap=opacity_array,
                 uv_trafo=opacity_mask_trafo,
             )
             surface_background = RectangleShape(

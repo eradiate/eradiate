@@ -9,6 +9,8 @@ __all__ = [
 import os
 import typing as t
 
+import mitsuba as mi
+import numpy as np
 import pint
 import xarray as xr
 
@@ -115,7 +117,6 @@ def to_dataset(
     """
 
     def converter(value: xr.Dataset | PathLike) -> xr.Dataset:
-
         if isinstance(value, xr.Dataset):
             return value
 
@@ -137,3 +138,21 @@ def to_dataset(
         raise ValueError(f"Cannot convert value '{value}'")
 
     return converter
+
+
+def to_mi_scalar_transform(value):
+    """
+    Convert an array-like value to a :class:`mitsuba.ScalarTransform4f`.
+    If `value` is a Numpy array, it is used to initialize a
+    :class:`mitsuba.ScalarTransform4f` without copy; if it is a list, a Numpy
+    array is first created from it. Otherwise, `value` is forwarded without
+    change.
+    """
+    if isinstance(value, np.ndarray):
+        return mi.ScalarTransform4f(value)
+
+    elif isinstance(value, list):
+        return mi.ScalarTransform4f(np.array(value))
+
+    else:
+        return value
