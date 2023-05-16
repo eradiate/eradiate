@@ -1,5 +1,3 @@
-import os
-
 import mitsuba as mi
 import numpy as np
 import pytest
@@ -14,7 +12,6 @@ from eradiate.scenes.atmosphere import (
     HomogeneousAtmosphere,
     MolecularAtmosphere,
 )
-from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.spectra import MultiDeltaSpectrum
@@ -224,21 +221,22 @@ def test_dem_experiment_run_detailed(modes_all):
 
 def test_dem_experiment_warn_targeting_dem(modes_all_double, tmpdir):
     """
-    Test that Eradiate raises a warning, when the measure target is a point and a DEM is defined in the scene.
+    Test that the DEMExperiment constructor raises a warning when the measure
+    target is a point and a DEM is defined in the scene.
     """
 
     da = xr.DataArray(
         data=np.zeros((10, 10)),
         dims=["x", "y"],
-        coords=dict(
-            x=(["x"], np.linspace(-10, 20, 10), dict(units="kilometer")),
-            y=(["y"], np.linspace(-30, 40, 10), dict(units="kilometer")),
-        ),
-        attrs=dict(units="meter"),
+        coords={
+            "x": (["x"], np.linspace(-10, 20, 10), {"units": "kilometer"}),
+            "y": (["y"], np.linspace(-30, 40, 10), {"units": "kilometer"}),
+        },
+        attrs={"units": "meter"},
     )
 
     mesh, lat, lon = mesh_from_dem(
-        da, geometry=PlaneParallelGeometry(), planet_radius=EARTH_RADIUS
+        da, geometry="plane_parallel", planet_radius=EARTH_RADIUS
     )
 
     with pytest.warns(UserWarning, match="uses a point target"):

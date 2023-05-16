@@ -2,12 +2,28 @@ from __future__ import annotations
 
 import attrs
 import mitsuba as mi
+import numpy as np
 
 from ._core import BSDF, bsdf_factory
 from ._lambertian import LambertianBSDF
 from ..core import traverse
+from ... import converters
 from ...attrs import documented, parse_docs
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
+
+
+def _to_bitmap(value):
+    if isinstance(value, mi.Bitmap):
+        return value
+
+    elif isinstance(value, np.ndarray):
+        return mi.Bitmap(value)
+
+    elif isinstance(value, list):
+        return mi.Bitmap(np.array(value))
+
+    else:
+        return value
 
 
 @parse_docs
@@ -17,11 +33,12 @@ class OpacityMaskBSDF(BSDF):
     Opacity Mask BSDF [``opacity_mask``]
     """
 
-    opacity_bitmap: "mi.Bitmap" = documented(
-        attrs.field(kw_only=True),
-        doc="Mitsuba bitmap that specifies the opacity of the nested BSDF plugin",
+    opacity_bitmap: np.typing.ArrayLike | "mi.Bitmap" = documented(
+        attrs.field(converter=_to_bitmap, kw_only=True),
+        doc="Mitsuba bitmap that specifies the opacity of the nested BSDF "
+        "plugin. This parameter has no default and is required.",
+        init_type="array-like or mitsuba.Bitmap",
         type="mitsuba.Bitmap",
-        init_type="mitsuba.Bitmap or dict",
     )
 
     @opacity_bitmap.validator
@@ -30,16 +47,16 @@ class OpacityMaskBSDF(BSDF):
             if not isinstance(value, mi.Bitmap):
                 raise TypeError(
                     f"while validating '{attribute.name}': "
-                    f"'{attribute.name}' must be a mitsuba Bitmap instance;"
+                    f"'{attribute.name}' must be a mitsuba Bitmap instance; "
                     f"found: {type(value)}",
                 )
 
     uv_trafo: "mi.ScalarTransform4f" = documented(
-        attrs.field(default=None),
-        doc="Transform to scale the opacity mask.",
+        attrs.field(converter=converters.to_mi_scalar_transform, kw_only=True),
+        doc="Transform to scale the opacity mask. This parameter has no "
+        "default and is required.",
+        init_type="array-like or mitsuba.ScalarTransform4f",
         type="mitsuba.ScalarTransform4f",
-        init_type="mitsuba.ScalarTransform4f or dict",
-        default="None",
     )
 
     @uv_trafo.validator
@@ -48,7 +65,7 @@ class OpacityMaskBSDF(BSDF):
             if not isinstance(value, mi.ScalarTransform4f):
                 raise TypeError(
                     f"while validating '{attribute.name}': "
-                    f"'{attribute.name}' must be a mitsuba ScalarTransform4f instance;"
+                    f"'{attribute.name}' must be a mitsuba ScalarTransform4f instance; "
                     f"found: {type(value)}"
                 )
 
@@ -70,12 +87,14 @@ class OpacityMaskBSDF(BSDF):
 
         result = {
             "type": "mask",
-            "id": self.id,
             "opacity.type": "bitmap",
             "opacity.bitmap": self.opacity_bitmap,
             "opacity.filter_type": "nearest",
             "opacity.wrap_mode": "clamp",
         }
+
+        if self.id is not None:
+            result["id"] = self.id
 
         if self.uv_trafo is not None:
             result["opacity.to_uv"] = self.uv_trafo
@@ -91,7 +110,7 @@ class OpacityMaskBSDF(BSDF):
 
         result = {}
 
-        # improve this, by using the BSDFs own lookup strategy
+        # TODO: Improve this by using the BSDF's own lookup strategy
         for key, param in traverse(self.nested_bsdf)[1].items():
             result[f"nested_bsdf.{key}"] = attrs.evolve(
                 param,

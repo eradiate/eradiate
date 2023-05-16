@@ -11,8 +11,8 @@ from ..core import BoundingBox, traverse
 from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
 from ...kernel import UpdateParameter
-from ...units import unit_context_kernel as uck
 from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
 
 
 @parse_docs
@@ -31,8 +31,10 @@ class BufferMeshShape(ShapeInstance):
             units=ucc.deferred("length"),
             kw_only=True,
         ),
-        doc="List of vertex positions. The passed list must contain a (n, 3) list"
-        "of three dimensional points. \n\nUnit-enabled field (default: ucc['length']).",
+        doc="List of vertex coordinates, specified either as a (n, 3) NumPy "
+        "array or a list of triplets.\n"
+        "\n"
+        "Unit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="array-like",
     )
@@ -42,8 +44,8 @@ class BufferMeshShape(ShapeInstance):
             kw_only=True,
             converter=np.array,
         ),
-        doc="List of face definitions. The passed list must contain a (n, 3) list"
-        "of three vertex indices defining triangles.",
+        doc="List of face definitions. specified either as a (n, 3) NumPy "
+        "array or a list of triplets of vertex indices.",
         type="ndarray",
         init_type="array-like",
     )
@@ -93,7 +95,7 @@ class BufferMeshShape(ShapeInstance):
 
     def write_ply(self, filename: str) -> None:
         """
-        Write a ply file from the mesh data.
+        Write the mesh data to a PLY file.
 
         Parameters
         ----------
@@ -103,10 +105,12 @@ class BufferMeshShape(ShapeInstance):
 
         Notes
         -----
-        Vertices are converted into kernel units and accordingly written to file in these units.
+        Vertex coordinates are expressed in kernel units and accordingly prior
+        to writing to disk. See the documentation of
+        :data:`eradiate.unit_context_kernel` and the
+        :ref:`sec-user_guide-unit_guide_user`.
         """
-        mesh = self.instance
-        mesh.write_ply(filename)
+        self.instance.write_ply(filename)
 
     @property
     def params(self) -> dict[str, UpdateParameter] | None:

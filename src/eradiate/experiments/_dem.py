@@ -19,15 +19,20 @@ from ..scenes.geometry import (
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import DistantMeasure, Measure, TargetPoint
 from ..scenes.surface import BasicSurface, DEMSurface
-from ..units import unit_registry as ureg
 
 
 @parse_docs
 @attrs.define
 class DEMExperiment(EarthObservationExperiment):
     """
-    Simulate radiation in a scene with a digital elevation model (DEM)
-    under a 1D atmosphere.
+    Simulate radiation in a scene with a digital elevation model (DEM) under a
+    1D atmosphere.
+
+    Warnings
+    --------
+    * Although technically supported, DEMs extending below 0 elevation may be
+      a tricky case because atmospheric profile behaviour below sea level is
+      undefined. This will be addressed in a future release.
 
     Notes
     -----
@@ -42,12 +47,8 @@ class DEMExperiment(EarthObservationExperiment):
       unsuitable configuration is detected, a :class:`ValueError` will be raised
       during initialization.
 
-    * Currently DEM surfaces, which extends below 0 elevation will not yield correct
-      results, when used in combination with atmospheres.
-
-    * When using a DEM which extends below 0 elevation, a .VolPathIntegrator must be
-      used. Otherwise, the low regions of the DEM will be shadowed by the background
-      surface.
+    * Even without an atmosphere, this experiment requries using a volumetric
+      path tracing integrator.
     """
 
     geometry: SceneGeometry = documented(
@@ -60,7 +61,8 @@ class DEMExperiment(EarthObservationExperiment):
         ),
         doc="Problem geometry.",
         type=".SceneGeometry",
-        init_type="str or dict or .PlaneParallelGeometry or .SphericalShellGeometry",
+        init_type='{"plane_parallel", "spherical_shell"} or dict or '
+        ".PlaneParallelGeometry or .SphericalShellGeometry",
         default='"plane_parallel"',
     )
 
@@ -76,8 +78,8 @@ class DEMExperiment(EarthObservationExperiment):
         "be added. "
         "This parameter can be specified as a dictionary which will be "
         "interpreted by :data:`.atmosphere_factory`.",
-        type=":class:`.Atmosphere` or None",
-        init_type=":class:`.Atmosphere` or dict or None",
+        type=".Atmosphere or None",
+        init_type=".Atmosphere or dict or None",
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )
 
@@ -107,8 +109,8 @@ class DEMExperiment(EarthObservationExperiment):
         "This parameter can be specified as a dictionary which will be "
         "interpreted by :data:`.integrator_factory`. The DEMExperiment requires"
         "the use of a .VolPathIntegrator.",
-        type=":class:`.VolPathIntegrator`",
-        init_type=":class:`.VolPathIntegrator` or dict",
+        type=".VolPathIntegrator",
+        init_type=".VolPathIntegrator or dict",
         default=":class:`VolPathIntegrator() <.VolPathIntegrator>`",
     )
 
@@ -156,10 +158,6 @@ class DEMExperiment(EarthObservationExperiment):
 
                 if msg is not None:
                     warnings.warn(UserWarning(msg))
-
-    @property
-    def _default_surface_width(self):
-        return 1.0 * ureg.km
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)

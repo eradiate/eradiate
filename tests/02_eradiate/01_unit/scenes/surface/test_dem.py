@@ -1,5 +1,6 @@
 import mitsuba as mi
 import numpy as np
+import pint
 import pytest
 import xarray as xr
 
@@ -21,7 +22,50 @@ from eradiate.scenes.surface._dem import (
     mesh_from_dem,
 )
 from eradiate.test_tools.types import check_scene_element
+from eradiate.units import symbol
 from eradiate.units import unit_registry as ureg
+
+
+def make_dataarray(data: pint.Quantity, coords: dict):
+    if set(coords.keys()) == {"lat", "lon"}:
+        dims = ["lat", "lon"]
+        coords = {
+            "lat": (
+                ["lat"],
+                coords["lat"].magnitude,
+                {"units": symbol(coords["lat"].units)},
+            ),
+            "lon": (
+                ["lon"],
+                coords["lon"].magnitude,
+                {"units": symbol(coords["lon"].units)},
+            ),
+        }
+
+    elif set(coords.keys()) == {"x", "y"}:
+        dims = ["x", "y"]
+        coords = {
+            "x": (
+                ["x"],
+                coords["x"].magnitude,
+                {"units": symbol(coords["x"].units)},
+            ),
+            "y": (
+                ["y"],
+                coords["y"].magnitude,
+                {"units": symbol(coords["y"].units)},
+            ),
+        }
+
+    else:
+        raise ValueError
+
+    return xr.DataArray(
+        data=data.magnitude,
+        dims=dims,
+        coords=coords,
+        attrs={"units": symbol(data.units)},
+    )
 
 
 @pytest.mark.parametrize(
@@ -29,64 +73,56 @@ from eradiate.units import unit_registry as ureg
     [
         (
             {
-                "da": xr.DataArray(
-                    data=np.zeros((10, 10)),
-                    dims=["lat", "lon"],
-                    coords=dict(
-                        lat=(["lat"], np.linspace(-0.1, 0.1, 10), dict(units="degree")),
-                        lon=(["lon"], np.linspace(-0.1, 0.1, 10), dict(units="degree")),
-                    ),
-                    attrs=dict(units="meter"),
+                "da": make_dataarray(
+                    data=np.zeros((10, 10)) * ureg.m,
+                    coords={
+                        "lat": np.linspace(-0.1, 0.1, 10) * ureg.deg,
+                        "lon": np.linspace(-0.1, 0.1, 10) * ureg.deg,
+                    },
                 ),
-                "geometry": PlaneParallelGeometry(),
+                "geometry": "plane_parallel",
                 "planet_radius": EARTH_RADIUS,
             },
             [(-0.1, 0.1), (-0.1, 0.1)],
         ),
         (
             {
-                "da": xr.DataArray(
-                    data=np.zeros((10, 10)),
-                    dims=["lat", "lon"],
-                    coords=dict(
-                        lat=(["lat"], np.linspace(-0.2, 0.3, 10), dict(units="degree")),
-                        lon=(["lon"], np.linspace(-0.4, 0.5, 10), dict(units="degree")),
-                    ),
-                    attrs=dict(units="meter"),
+                "da": make_dataarray(
+                    data=np.zeros((10, 10)) * ureg.m,
+                    coords={
+                        "lat": np.linspace(-0.2, 0.3, 10) * ureg.deg,
+                        "lon": np.linspace(-0.4, 0.5, 10) * ureg.deg,
+                    },
                 ),
-                "geometry": SphericalShellGeometry(),
+                "geometry": "spherical_shell",
                 "planet_radius": EARTH_RADIUS,
             },
             [(-0.2, 0.3), (-0.4, 0.5)],
         ),
         (
             {
-                "da": xr.DataArray(
-                    data=np.zeros((10, 10)),
-                    dims=["x", "y"],
-                    coords=dict(
-                        x=(["x"], np.linspace(-20, 20, 10), dict(units="kilometer")),
-                        y=(["y"], np.linspace(-30, 30, 10), dict(units="kilometer")),
-                    ),
-                    attrs=dict(units="meter"),
+                "da": make_dataarray(
+                    data=np.zeros((10, 10)) * ureg.m,
+                    coords={
+                        "x": np.linspace(-20, 20, 10) * ureg.km,
+                        "y": np.linspace(-30, 30, 10) * ureg.km,
+                    },
                 ),
-                "geometry": PlaneParallelGeometry(),
+                "geometry": "plane_parallel",
                 "planet_radius": EARTH_RADIUS,
             },
             [(-0.179664, 0.179664), (-0.269496, 0.269496)],
         ),
         (
             {
-                "da": xr.DataArray(
-                    data=np.zeros((10, 10)),
-                    dims=["x", "y"],
-                    coords=dict(
-                        x=(["x"], np.linspace(-10, 20, 10), dict(units="kilometer")),
-                        y=(["y"], np.linspace(-30, 40, 10), dict(units="kilometer")),
-                    ),
-                    attrs=dict(units="meter"),
+                "da": make_dataarray(
+                    data=np.zeros((10, 10)) * ureg.m,
+                    coords={
+                        "x": np.linspace(-10, 20, 10) * ureg.km,
+                        "y": np.linspace(-30, 40, 10) * ureg.km,
+                    },
                 ),
-                "geometry": SphericalShellGeometry(),
+                "geometry": "spherical_shell",
                 "planet_radius": EARTH_RADIUS,
             },
             [(-0.089832, 0.179664), (-0.269496, 0.359328)],
@@ -94,10 +130,9 @@ from eradiate.units import unit_registry as ureg
     ],
 )
 def test_mesh_from_dem(modes_all_double, kwargs, expected_limits):
-    if (
-        isinstance(kwargs["geometry"], SphericalShellGeometry)
-        and kwargs["planet_radius"] is not None
-    ):
+    if (kwargs["geometry"] == "spherical_shell") and kwargs[
+        "planet_radius"
+    ] is not None:
         with pytest.warns():
             mesh, lat, lon = mesh_from_dem(**kwargs)
     else:
@@ -118,14 +153,12 @@ def test_mesh_from_dem(modes_all_double, kwargs, expected_limits):
 )
 def test_dem_surface_construct(modes_all_mono, geometry, expected_bg, planet_radius):
     mesh, lat, lon = mesh_from_dem(
-        da=xr.DataArray(
-            data=np.zeros((10, 10)),
-            dims=["lat", "lon"],
-            coords=dict(
-                lat=(["lat"], np.linspace(-0.2, 0.3, 10), dict(units="degree")),
-                lon=(["lon"], np.linspace(-0.4, 0.5, 10), dict(units="degree")),
-            ),
-            attrs=dict(units="meter"),
+        da=make_dataarray(
+            data=np.zeros((10, 10)) * ureg.m,
+            coords={
+                "lat": np.linspace(-0.2, 0.3, 10) * ureg.deg,
+                "lon": np.linspace(-0.4, 0.5, 10) * ureg.deg,
+            },
         ),
         geometry=geometry,
         planet_radius=planet_radius,
@@ -138,22 +171,20 @@ def test_dem_surface_construct(modes_all_mono, geometry, expected_bg, planet_rad
 
 
 def test_dem_surface_kernel_dict(mode_mono):
+    geometry = SphericalShellGeometry()
     mesh, lat, lon = mesh_from_dem(
-        da=xr.DataArray(
-            data=np.zeros((10, 10)),
-            dims=["lat", "lon"],
-            coords=dict(
-                lat=(["lat"], np.linspace(-0.2, 0.3, 10), dict(units="degree")),
-                lon=(["lon"], np.linspace(-0.4, 0.5, 10), dict(units="degree")),
-            ),
-            attrs=dict(units="meter"),
+        da=make_dataarray(
+            data=np.zeros((10, 10)) * ureg.m,
+            coords={
+                "lat": np.linspace(-0.2, 0.3, 10) * ureg.deg,
+                "lon": np.linspace(-0.4, 0.5, 10) * ureg.deg,
+            },
         ),
-        geometry=SphericalShellGeometry(),
-        planet_radius=None,
+        geometry=geometry,
     )
 
     dem = DEMSurface.from_mesh(
-        id="terrain", mesh=mesh, lat=lat, lon=lon, geometry=SphericalShellGeometry()
+        id="terrain", mesh=mesh, lat=lat, lon=lon, geometry=geometry
     )
 
     check_scene_element(dem)

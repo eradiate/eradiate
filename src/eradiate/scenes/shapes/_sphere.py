@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import warnings
-
 import attrs
 import mitsuba as mi
 import numpy as np
@@ -12,9 +10,9 @@ from pinttr.util import ensure_units
 from ._core import ShapeNode
 from ..bsdfs import BSDF
 from ..core import BoundingBox
+from ... import converters
 from ...attrs import documented, parse_docs
 from ...constants import EARTH_RADIUS
-from ...exceptions import ConfigWarning
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -52,16 +50,17 @@ class SphereShape(ShapeNode):
         default="1.0",
     )
 
-    to_world: mi.ScalarTransform4f = documented(
+    to_world: "mitsuba.ScalarTransform4f" = documented(
         attrs.field(
+            converter=converters.to_mi_scalar_transform,
             default=None,
         ),
         doc="Transform to scale, shift and rotate the sphere. "
-        "This transform will be prepended to the transforms derived "
-        "from the center position and radius of the sphere. If for example a "
+        "This transform will be prepended to the transform derived "
+        "from the center position and radius of the sphere. If, for example, a "
         "scaling is provided here, it will multiply the sphere's radius.",
-        type="mitsuba.ScalarTransform4f",
-        init_type="mitsuba.ScalarTransform4f or dict",
+        type="mitsuba.ScalarTransform4f or None",
+        init_type="mitsuba.ScalarTransform4f or array-like, optional",
         default=None,
     )
 
@@ -71,7 +70,7 @@ class SphereShape(ShapeNode):
             if not isinstance(value, mi.ScalarTransform4f):
                 raise TypeError(
                     f"while validating '{attribute.name}': "
-                    f"'{attribute.name}' must be a mitsuba.ScalarTransform4f;"
+                    f"'{attribute.name}' must be a mitsuba.ScalarTransform4f; "
                     f"found: {type(value)}",
                 )
 
