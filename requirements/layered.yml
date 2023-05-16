@@ -21,8 +21,18 @@ tests:
   includes:
     - main
 
-dev:  # All dependencies
+dev:  # All dependencies, except Mitsuba package
   includes:
     - recommended
     - docs
     - tests
+
+optional:  # All dependencies
+  includes:
+    - dev
+
+production:  # Recommended & Mitsuba package
+  constraints:
+    - dev
+  includes:
+    - recommended

@@ -8,6 +8,7 @@ for convenience.
 import enum
 import os.path
 import pathlib
+from importlib.metadata import version, PackageNotFoundError
 
 import attrs
 import environ
@@ -123,12 +124,33 @@ class EradiateConfig:
 
     #: Path to the Eradiate source directory.
     source_dir = var(
-        converter=lambda x: pathlib.Path(x).absolute(),
-        help="Path to the Eradiate source directory.",
+        converter=lambda x: x if x is None else pathlib.Path(x).absolute(),
+        help="Path to the Eradiate source directory. If it is not set, then the "
+            "current setup is assumed to be a production installation of Eradiate.",
+        default=None,
     )
 
     @source_dir.validator
     def _dir_validator(self, var, dir):
+
+        if dir is None:
+            try:
+                version("eradiate-mitsuba")
+                return
+            except PackageNotFoundError as pkg_error:
+                raise ConfigError(
+                    "Could not find a suitable production installation for the "
+                    "Eradiate kernel. This is either because you are using Eradiate "
+                    "in a production environment without having the eradiate-mitsuba "
+                    "package installed, or because you are using Eradiate directly "
+                    "from the sources. In the latter case, please make sure the "
+                    "'ERADIATE_SOURCE_DIR' environment variable is correctly set to "
+                    "the Eradiate installation directory. If you are using Eradiate "
+                    "directly from the sources, you can alternatively source the "
+                    "provided setpath.sh script. You can install the eradiate-mitsuba "
+                    "package using 'pip install eradiate-mitsuba'."
+                ) from pkg_error
+
         eradiate_init = dir / "src" / "eradiate" / "__init__.py"
 
         if not eradiate_init.is_file():
@@ -137,8 +159,25 @@ class EradiateConfig:
                 "Please make sure the 'ERADIATE_SOURCE_DIR' environment variable is "
                 "correctly set to the Eradiate installation directory. If you are "
                 "using Eradiate directly from the sources, you can alternatively "
-                "source the provided setpath.sh script."
+                "source the provided setpath.sh script. If you wish to use Eradiate "
+                "in a production environment, you can install the eradiate-mitsuba "
+                "package using 'pip install eradiate-mitsuba' and unset the "
+                "'ERADIATE_SOURCE_DIR' environment variable."
             ) from FileNotFoundError(eradiate_init)
+
+    #: URL where small data files are located (production use only)
+    small_files_registry_url = var(
+        default="https://raw.githubusercontent.com/eradiate/eradiate-data",
+        converter=str,
+        help="URL where small data files are located (production use only)",
+    )
+
+    #: Revision of the small files registry (production use only)
+    small_files_registry_revision = var(
+        default="master",
+        converter=str,
+        help="Revision of the small files registry (production use only)",
+    )
 
     #: URL where large data files are located.
     data_store_url = var(

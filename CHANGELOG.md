@@ -65,6 +65,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Exposed the ``eradiate.spectral.*`` subpackage members in the
   {mod}`eradiate.spectral` namespace ({ghpr}`324`).
 * Fixed incorrect Mitsuba scene parameter drop and lookup ({ghpr}`329`).
+* Provide an Eradiate Pypi package ({ghpr}`328`)
 
 ### Documentation
 

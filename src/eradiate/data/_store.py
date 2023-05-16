@@ -13,7 +13,7 @@ from .._config import config
 data_store: MultiDataStore = None
 
 
-def init_data_store(offline: bool | None = None) -> None:
+def init_data_store(offline: bool | None = None, production: bool | None = None) -> None:
     """
     Initialize the global data store.
 
@@ -33,27 +33,40 @@ def init_data_store(offline: bool | None = None) -> None:
     if offline is None:
         offline = config.offline
 
+    if production is None:
+        production = config.source_dir is None
+
+    if not production:
+        small_files = SafeDirectoryDataStore(
+            path=config.source_dir / "resources" / "data"
+        )
+    else:
+        if offline:
+            small_files = BlindDirectoryDataStore(
+                path=config.download_dir / "resources" / "data"
+            )
+        else:
+            small_files = SafeOnlineDataStore(
+                base_url="/".join([config.small_files_registry_url, config.small_files_registry_revision,]),
+                path=config.download_dir / "resources" / "data",
+            )
+
     if not offline:
         data_store = MultiDataStore(
             stores=OrderedDict(
                 [
-                    (
-                        "small_files",
-                        SafeDirectoryDataStore(
-                            path=config.source_dir / "resources/data/"
-                        ),
-                    ),
+                    ("small_files", small_files),
                     (
                         "large_files_stable",
                         SafeOnlineDataStore(
-                            base_url="http://eradiate.eu/data/store/stable/",
+                            base_url="/".join([config.data_store_url, "stable"]),
                             path=config.download_dir / "stable",
                         ),
                     ),
                     (
                         "large_files_unstable",
                         BlindOnlineDataStore(
-                            base_url="http://eradiate.eu/data/store/unstable/",
+                            base_url="/".join([config.data_store_url, "unstable"]),
                             path=config.download_dir / "unstable",
                         ),
                     ),
@@ -65,12 +78,7 @@ def init_data_store(offline: bool | None = None) -> None:
         data_store = MultiDataStore(
             stores=OrderedDict(
                 [
-                    (
-                        "small_files",
-                        SafeDirectoryDataStore(
-                            path=config.source_dir / "resources/data/"
-                        ),
-                    ),
+                    ("small_files", small_files),
                     (
                         "large_files_stable",
                         BlindDirectoryDataStore(path=config.download_dir / "stable"),

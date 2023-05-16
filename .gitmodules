@@ -2,9 +2,6 @@
 	path = resources/data
 	url = https://github.com/eradiate/eradiate-data.git
 	shallow = true
-[submodule "ext/cmake-defaults"]
-	path = ext/cmake-defaults
-	url = https://github.com/mitsuba-renderer/cmake-defaults.git
 [submodule "ext/mitsuba"]
 	path = ext/mitsuba
 	url = https://github.com/eradiate/mitsuba3.git

@@ -11,6 +11,7 @@ import platform
 import re
 import subprocess
 import sys
+from importlib.metadata import version, PackageNotFoundError
 
 import drjit as dr
 import mitsuba as mi
@@ -75,6 +76,11 @@ def show() -> dict:
     # result["llvm_version"] = dr.llvm_version()  # Commented until we bump mitsuba and drjit
     result["drjit_version"] = dr.__version__ + (" (DEBUG)" if dr.DEBUG else "")
     result["mitsuba_version"] = mi.MI_VERSION + (" (DEBUG)" if mi.DEBUG else "")
+    try:
+        eradiate_mitsuba_version = version("eradiate-mitsuba")
+    except PackageNotFoundError:
+        eradiate_mitsuba_version = "not installed (DEBUG)"
+    result["eradiate_mitsuba_version"] = eradiate_mitsuba_version
     # result["mitsuba_compiler"] = import_module("mitsuba.config").CXX_COMPILER  # Commented until we bump mitsuba and drjit
 
     return result
@@ -91,6 +97,7 @@ if __name__ == "__main__":
     print("\nVersions")
     print(f"  drjit {sys_info['drjit_version']}")
     print(f"  mitsuba {sys_info['mitsuba_version']}")
+    print(f"  eradiate-mitsuba {sys_info['eradiate_mitsuba_version']}")
 
     print("\nMitsuba variants")
     print("\n".join([f"  {variant}" for variant in mi.variants()]))
