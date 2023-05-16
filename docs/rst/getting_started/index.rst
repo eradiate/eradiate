@@ -8,6 +8,7 @@ Getting started
    :hidden:
 
    install
+   development
    update
 
 What is Eradiate?
