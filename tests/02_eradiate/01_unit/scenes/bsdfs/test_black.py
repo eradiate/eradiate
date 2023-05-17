@@ -11,5 +11,7 @@ def test_black_constructor(modes_all):
 
 def test_black_kernel_dict(modes_all_double):
     b = BlackBSDF()
-    mi_wrapper = check_scene_element(b, mi.BSDF)
+    mi_wrapper = check_scene_element(
+        b, mi.BSDF, drop_parameters=False
+    )  # Do not drop untracked parameters: the reflectance (which we want to check) is untracked
     assert mi_wrapper.parameters["reflectance.value"] == 0.0

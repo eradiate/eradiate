@@ -100,7 +100,9 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
         ],
     )
 
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(
+        exp.scene, mi.Scene, drop_parameters=False
+    )  # Do not drop untracked parameters: we want to check the surface transform
     assert np.allclose(
         mi_wrapper.parameters["surface_shape.to_world"].transform_affine(
             mi.Point3f(1, -1, 0)
@@ -124,7 +126,9 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
         ),
     )
 
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(
+        exp.scene, mi.Scene, drop_parameters=False
+    )  # Do not drop untracked parameters: we want to check the surface transform
     assert np.allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
@@ -158,7 +162,9 @@ def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
         @ mi.ScalarTransform3f.translate([-0.499642857, -0.499642857])
     ).matrix
 
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(
+        exp.scene, mi.Scene, drop_parameters=False
+    )  # Do not drop untracked parameters: we want to check the surface texture's uv transform
     result = mi_wrapper.parameters["surface_bsdf.weight.to_uv"].matrix
 
     np.testing.assert_allclose(expected, result)

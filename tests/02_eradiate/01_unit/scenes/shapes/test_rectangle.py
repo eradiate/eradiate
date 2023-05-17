@@ -13,7 +13,7 @@ from eradiate.test_tools.types import check_scene_element
 
 @pytest.mark.parametrize(
     "kwargs, expected_reflectance",
-    [({}, None), ({"bsdf": {"type": "black"}}, 0.0)],
+    [({}, None), ({"bsdf": {"type": "lambertian", "reflectance": 0.0}}, 0.0)],
     ids=["noargs", "args"],
 )
 def test_rectangle_construct_kernel_dict(modes_all, kwargs, expected_reflectance):

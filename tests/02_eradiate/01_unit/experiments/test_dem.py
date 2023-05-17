@@ -81,7 +81,9 @@ def test_dem_experiment_kernel_dict(modes_all_double):
         ],
     )
     # -- Surface has default value
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    mi_wrapper = check_scene_element(
+        exp.scene, mi.Scene, ctx=exp.context_init, drop_parameters=False
+    )  # Do not drop untracked parameters: we want to check the surface transform
     np.testing.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([500, 500, 1]).matrix,

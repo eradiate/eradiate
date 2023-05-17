@@ -12,6 +12,7 @@ def check_scene_element(
     instance: NodeSceneElement | CompositeSceneElement,
     mi_cls=None,
     ctx: KernelContext = None,
+    drop_parameters: bool = True,
 ) -> MitsubaObjectWrapper:
     """
     Perform kernel dictionary checks on a scene element.
@@ -34,6 +35,10 @@ def check_scene_element(
     ctx : .KernelContext, optional
         If provided, the kernel dictionary context to use. Otherwise, a default
         context is created.
+
+    drop_parameters : bool, default: True
+        If ``True``, the Mitsuba scene parameter table will be stripped off from
+        untracked parameters.
 
     Returns
     -------
@@ -93,5 +98,9 @@ def check_scene_element(
             )
 
     mi_params.update()
+
+    # Drop untracked parameters (this will detect param lookup failures)
+    if drop_parameters:
+        mi_wrapper.drop_parameters()
 
     return mi_wrapper

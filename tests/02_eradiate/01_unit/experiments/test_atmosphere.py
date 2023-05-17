@@ -88,7 +88,9 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
         atmosphere=HomogeneousAtmosphere(),
         measures={"type": "distant"},
     )
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(
+        exp.scene, mi.Scene, drop_parameters=False
+    )  # Do not drop untracked parameters: we want to check the `to_world` transform
     # -- Surface width is inherited from geometry
     assert np.allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
@@ -110,7 +112,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
         ],
     )
     # -- Surface width has default value
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene, drop_parameters=False)
     assert np.allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f.scale([5e8, 5e8, 1]).matrix,

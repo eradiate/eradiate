@@ -69,7 +69,9 @@ def test_canopy_experiment_kernel_dict(modes_all_double, padding):
             padding=padding,
         )
     )
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene)
+    mi_wrapper = check_scene_element(
+        exp.scene, mi.Scene, drop_parameters=False
+    )  # Don't drop untracked params at this stage: we want to check the surface transform
 
     assert np.allclose(
         mi_wrapper.parameters["surface_shape.to_world"].transform_affine(
