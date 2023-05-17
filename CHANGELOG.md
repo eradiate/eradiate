@@ -65,6 +65,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Exposed the ``eradiate.spectral.*`` subpackage members in the
   {mod}`eradiate.spectral` namespace ({ghpr}`324`).
 * Fixed incorrect Mitsuba scene parameter drop and lookup ({ghpr}`329`).
+* Added spherical-shell geometry support to DEM components
+  {ghpr}`320`.
 
 ### Documentation
 
