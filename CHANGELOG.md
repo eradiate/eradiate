@@ -69,7 +69,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   {ghpr}`320`.
 * Fixed broken symmetry between {class}`.Spectrum` dictionary and object
   conversion protocols ({ghpr}`336`).
-* Provide an Eradiate Pypi package ({ghpr}`328`)
+* Provide an Eradiate Pypi package ({ghpr}`328`).
 
 ### Documentation
 

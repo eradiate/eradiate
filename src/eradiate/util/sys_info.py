@@ -96,8 +96,7 @@ if __name__ == "__main__":
 
     print("\nVersions")
     print(f"  drjit {sys_info['drjit_version']}")
-    print(f"  mitsuba {sys_info['mitsuba_version']}")
-    print(f"  eradiate-mitsuba {sys_info['eradiate_mitsuba_version']}")
+    print(f"  eradiate-mitsuba {sys_info['eradiate_mitsuba_version']} (based on mitsuba {sys_info['mitsuba_version']})")
 
     print("\nMitsuba variants")
     print("\n".join([f"  {variant}" for variant in mi.variants()]))
