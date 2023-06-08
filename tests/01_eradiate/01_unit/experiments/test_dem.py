@@ -100,16 +100,12 @@ def test_dem_experiment_kernel_dict(modes_all_double):
 @pytest.mark.slow
 def test_dem_experiment_real_life(mode_mono):
     # Construct with typical parameters
-    test_absorption_data_set = eradiate.data.data_store.fetch(
-        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
-    )
     exp = DEMExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {
                 "construct": "ussa_1976",
-                "absorption_dataset": test_absorption_data_set,
             },
         },
         illumination={"type": "directional", "zenith": 45.0},
@@ -133,16 +129,12 @@ def test_dem_experiment_inconsistent_multiradiancemeter(mode_mono):
     # A mix of both will raise an error.
 
     # Construct with typical parameters
-    test_absorption_data_set = eradiate.data.data_store.fetch(
-        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
-    )
     exp = DEMExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {
                 "construct": "ussa_1976",
-                "absorption_dataset": test_absorption_data_set,
             },
         },
         illumination={"type": "directional", "zenith": 45.0},

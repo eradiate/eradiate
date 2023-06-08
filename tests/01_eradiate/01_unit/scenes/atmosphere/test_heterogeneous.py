@@ -15,13 +15,7 @@ from eradiate.scenes.atmosphere import (
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import SceneGeometry
 from eradiate.test_tools.types import check_scene_element
-
-
-@pytest.fixture
-def path_to_ussa76_approx_data():
-    return eradiate.data.data_store.fetch(
-        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
-    )
+from eradiate.test_tools.util import skipif_data_not_found
 
 
 def test_heterogeneous_empty(modes_all_double):
@@ -32,19 +26,18 @@ def test_heterogeneous_empty(modes_all_double):
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 @pytest.mark.parametrize("component", ["molecular", "particle"])
-def test_heterogeneous_single_mono(
-    mode_mono, geometry, component, path_to_ussa76_approx_data
-):
+def test_heterogeneous_single_mono(mode_mono, geometry, component):
     """
     Unit tests for a HeterogeneousAtmosphere with a single component.
     """
     # Construct succeeds
     if component == "molecular":
+        skipif_data_not_found(
+            f"spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
+        )
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry,
-            molecular_atmosphere=MolecularAtmosphere.ussa_1976(
-                absorption_dataset=path_to_ussa76_approx_data,
-            ),
+            molecular_atmosphere=MolecularAtmosphere.ussa_1976(),
         )
 
     else:
@@ -83,18 +76,17 @@ def test_heterogeneous_single_ckd(mode_ckd, geometry, component, bin_set):
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
-def test_heterogeneous_multi_mono(mode_mono, geometry, path_to_ussa76_approx_data):
+def test_heterogeneous_multi_mono(mode_mono, geometry):
     """
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """
     # Construct succeeds
-    molecular_atmosphere = MolecularAtmosphere.ussa_1976(
-        absorption_dataset=path_to_ussa76_approx_data,
+    skipif_data_not_found(
+        f"spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
     )
-
     atmosphere = HeterogeneousAtmosphere(
         geometry=geometry,
-        molecular_atmosphere=molecular_atmosphere,
+        molecular_atmosphere=MolecularAtmosphere.ussa_1976(),
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
 
@@ -109,11 +101,9 @@ def test_heterogeneous_multi_ckd(mode_ckd, geometry, bin_set):
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """
     # Construct succeeds
-    molecular_atmosphere = MolecularAtmosphere.afgl_1986()
-
     atmosphere = HeterogeneousAtmosphere(
         geometry={"type": geometry, "zgrid": np.linspace(0, 120, 121) * ureg.km},
-        molecular_atmosphere=molecular_atmosphere,
+        molecular_atmosphere=MolecularAtmosphere.afgl_1986(),
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
 
@@ -203,11 +193,15 @@ def test_heterogeneous_mix_weights(modes_all_double):
     )
 
     # Fist basic check: a uniform layer and a molecular atmosphere
-    molecular = (
-        MolecularAtmosphere.afgl_1986(levels=geometry.zgrid.levels)
-        if eradiate.mode().is_ckd
-        else MolecularAtmosphere.ussa_1976(levels=geometry.zgrid.levels)
-    )
+    if eradiate.mode().is_mono:
+        skipif_data_not_found(
+            f"spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
+        )
+        molecular = MolecularAtmosphere.ussa_1976(levels=geometry.zgrid.levels)
+    elif eradiate.mode().is_ckd:
+        molecular = MolecularAtmosphere.afgl_1986(levels=geometry.zgrid.levels)
+    else:
+        raise NotImplementedError
 
     mixed = HeterogeneousAtmosphere(
         geometry=geometry,
@@ -293,12 +287,13 @@ def test_heterogeneous_mix_weights(modes_all_double):
     assert np.all(weights[middle:] == 0.5)
 
 
-def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
+def test_heterogeneous_scale(mode_mono):
+    skipif_data_not_found(
+        f"spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
+    )
     atmosphere = HeterogeneousAtmosphere(
         geometry="plane_parallel",
-        molecular_atmosphere=MolecularAtmosphere.ussa_1976(
-            absorption_dataset=path_to_ussa76_approx_data,
-        ),
+        molecular_atmosphere=MolecularAtmosphere.ussa_1976(),
         particle_layers=[ParticleLayer() for _ in range(2)],
         scale=2.0,
     )
@@ -311,9 +306,13 @@ def test_heterogeneous_scale(mode_mono, path_to_ussa76_approx_data):
 
 def test_heterogeneous_blend_switches(mode_mono):
     # Rayleigh-only atmosphere + particle layer combination works
+    skipif_data_not_found(
+        f"spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
+    )
     assert HeterogeneousAtmosphere(
         molecular_atmosphere=MolecularAtmosphere.ussa_1976(
-            has_absorption=False, has_scattering=True
+            has_absorption=False,
+            has_scattering=True,
         ),
         particle_layers=[ParticleLayer()],
     )

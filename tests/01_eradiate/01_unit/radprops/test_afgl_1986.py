@@ -23,7 +23,6 @@ def test_afgl_1986_rad_profile_default_ckd(mode_ckd, model_id):
     Collision coefficient evaluation methods return pint.Quantity objects.
     """
     profile = AFGL1986RadProfile(
-        {"model_id": model_id},
         absorption_dataset=f"ckd/absorption/10nm/afgl_1986-{model_id}-10nm-v3.nc",
     )
 
@@ -42,7 +41,6 @@ def test_afgl_1986_rad_profile_has_absorption_default(
     coefficient is computed and is not zero everywhere at 1650 nm.
     """
     profile = AFGL1986RadProfile(
-        dict(model_id=model_id),
         absorption_dataset=f"ckd/absorption/10nm/afgl_1986-{model_id}-10nm-v3.nc",
     )
     assert profile.has_absorption
@@ -77,6 +75,7 @@ def test_afgl_1986_rad_profile_has_absorption_false(
     computed and is zero everywhere.
     """
     profile = AFGL1986RadProfile(
+        absorption_dataset=f"ckd/absorption/10nm/afgl_1986-{model_id}-10nm-v3.nc",
         thermoprops=dict(model_id=model_id),
         has_absorption=False,
     )
@@ -104,8 +103,8 @@ def test_afgl_1986_rad_profile_has_scattering_true(mode_ckd, test_ckd_si_550):
     and is not zero everywhere at 550 nm.
     """
     profile = AFGL1986RadProfile(
-        has_scattering=True,
         absorption_dataset="ckd/absorption/10nm/afgl_1986-us_standard-10nm-v3.nc",
+        has_scattering=True,
     )
     assert profile.has_scattering
     ds = profile.eval_dataset(test_ckd_si_550, profile.zgrid)
@@ -118,8 +117,8 @@ def test_afgl_1986_rad_profile_has_scattering_false(mode_ckd, test_ckd_si_550):
     computed and is zero everywhere.
     """
     profile = AFGL1986RadProfile(
-        has_scattering=False,
         absorption_dataset="ckd/absorption/10nm/afgl_1986-us_standard-10nm-v3.nc",
+        has_scattering=False,
     )
     assert not profile.has_scattering
     ds = profile.eval_dataset(test_ckd_si_550, profile.zgrid)
@@ -142,8 +141,8 @@ def test_afgl_1986_rad_profile_model_id(mode_ckd, model_id):
     All models are supported in ckd mode.
     """
     AFGL1986RadProfile(
-        thermoprops=dict(model_id=model_id),
         absorption_dataset=f"ckd/absorption/10nm/afgl_1986-{model_id}-10nm-v3.nc",
+        thermoprops=dict(model_id=model_id),
     )
 
 
@@ -158,8 +157,8 @@ def test_afgl_1986_rad_profile_concentrations_ckd_not_implemented(mode_ckd, mole
     """
     with pytest.raises(NotImplementedError):
         AFGL1986RadProfile(
-            thermoprops=dict(concentrations={molecule: 0.0 * ureg.dimensionless}),
             absorption_dataset="ckd/absorption/10nm/afgl_1986-us_standard-10nm-v3.nc",
+            thermoprops=dict(concentrations={molecule: 0.0 * ureg.dimensionless}),
         )
 
 
@@ -172,8 +171,8 @@ def test_afgl_1986_rad_profile_ckd_10nm(mode_ckd, w, model_id):
     Can evaluate absorption coefficient.
     """
     profile = AFGL1986RadProfile(
-        thermoprops=dict(model_id=model_id),
         absorption_dataset="ckd/absorption/10nm/afgl_1986-us_standard-10nm-v3.nc",
+        thermoprops=dict(model_id=model_id),
     )
     si = SpectralIndex.new(w=w)
     sigma_a = profile.eval_sigma_a(si, profile.zgrid)

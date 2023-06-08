@@ -74,6 +74,9 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   {ghpr}`346`).
 * Fixed a bug where {class}`.Layout` constructors would not raise if passed
   invalid azimuth values (*i.e.* outside the [0, 180]° range) ({ghpr}`345`).
+* Added `wavelength_range` optional parameter to `MolecularAtmosphere.ussa_1976()` 
+  constructor to automatically open absorption datasets and restore working default 
+  constructor ({ghpr}`334`).
 
 ### Documentation
 

@@ -46,7 +46,6 @@ def test_heterogeneous_parameter_lookup(modes_all_double, geometry):
     atmosphere_mono = {
         **atmosphere_kwargs,
         "construct": "ussa_1976",
-        "absorption_dataset": "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc",
     }
     atmosphere_ckd = {
         **atmosphere_kwargs,

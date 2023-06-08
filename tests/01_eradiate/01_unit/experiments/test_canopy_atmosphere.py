@@ -10,6 +10,7 @@ from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import CentralPatchSurface
 from eradiate.test_tools.types import check_scene_element
+from eradiate.test_tools.util import skipif_data_not_found
 
 
 def test_canopy_atmosphere_experiment_construct_default(mode_mono):
@@ -173,18 +174,15 @@ def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
 @pytest.mark.slow
 def test_canopy_atmosphere_experiment_real_life(mode_mono):
     # Construct with typical parameters
-    test_absorption_data_set = eradiate.data.data_store.fetch(
-        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
+    skipif_data_not_found(
+        "spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
     )
-
-    # Construct with typical parameters
     exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {
                 "construct": "ussa_1976",
-                "absorption_dataset": test_absorption_data_set,
             },
         },
         canopy={
@@ -261,18 +259,16 @@ def test_canopy_atmosphere_experiment_run_detailed(mode_mono):
 def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(mode_mono):
     # A MultiRadiancemeter measure must have all origins inside the atmosphere
     # or none. A mix of both will raise an error.
-
-    # Construct with typical parameters
-    test_absorption_data_set = eradiate.data.data_store.fetch(
-        "tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc"
+    skipif_data_not_found(
+        "spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
     )
+    # Construct with typical parameters
     exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": {
                 "construct": "ussa_1976",
-                "absorption_dataset": test_absorption_data_set,
             },
         },
         canopy={
