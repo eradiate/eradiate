@@ -17,7 +17,7 @@ import eradiate
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
-from ... import converters
+from ... import converters, data
 from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
 from ...quad import Quad
@@ -33,6 +33,45 @@ from ...thermoprops.util import (
 )
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
+
+DEFAULT_WAVELENGTH_RANGE = [545.0, 555.0] * ureg.nm
+
+
+def open_us76_dataset(wavelength_range: pint.Quantity) -> xr.Dataset:
+    """
+    Open the monochromatic absorption dataset corresponding to the given
+    wavelength range, for the U.S. 1976 Standard Atmosphere.
+    """
+    path = "spectra/absorption/us76_u86_4"
+    wlmin, wlmax = wavelength_range
+    wnmin = (1 / wlmax).m_as("1/cm")
+    wnmax = (1 / wlmin).m_as("1/cm")
+    w = np.concatenate([np.arange(4000, 25711, 1000), [25711]])
+    if wnmin < w[0] or wnmax > w[-1]:
+        raise ValueError(
+            f"Invalid wavelength range: {wavelength_range}. "
+            f"Supported wavelength range: {1e7 / w[-1]:.1f}-"
+            f"{1e7 / w[0]:.1f} nm."
+        )
+
+    wmin = w[wnmin > w][-1]
+    wmax = w[wnmax < w][0]
+    iwmin = w.tolist().index(wmin)
+    iwmax = w.tolist().index(wmax)
+    paths = [
+        f"{path}/us76_u86_4-spectra-{w[i]}_{w[i+1]}.nc" for i in range(iwmin, iwmax)
+    ]
+
+    if len(paths) == 1:
+        absorption_dataset = data.open_dataset(paths[0])
+    else:
+        datasets = [
+            data.open_dataset(path).isel(w=slice(0, -1))  # strip endpoints
+            for path in paths
+        ]
+        absorption_dataset = xr.concat(datasets, dim="w")
+
+    return absorption_dataset
 
 
 @parse_docs
@@ -153,6 +192,12 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         self.phase.id = self.phase_id
 
         if self.thermoprops.title == "U.S. Standard Atmosphere 1976":
+            # temporary fix
+            if self.absorption_dataset is None and self.has_absorption:
+                self.absorption_dataset = (
+                    "spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
+                )
+
             self._radprops_profile = US76ApproxRadProfile(
                 thermoprops=self.thermoprops,
                 has_scattering=self.has_scattering,
@@ -363,16 +408,15 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
         thermoprops = afgl_1986.make_profile(model_id=model)
 
+        # open the absorption dataset corresponding to 'binset' and 'model'
         path = "ckd/absorption"
-        if kwargs.get("has_absorption", True):
-            if binset == "10nm":
-                absorption_dataset = f"{path}/10nm/afgl_1986-{model}-10nm-v3.nc"
-            elif binset == "1nm":
-                absorption_dataset = f"{path}/1nm/afgl_1986-{model}-1nm-v3.nc"
-            else:
-                raise ValueError(f"Invalid binset: {binset}")
+
+        if binset == "10nm":
+            absorption_dataset = f"{path}/10nm/afgl_1986-{model}-10nm-v3.nc"
+        elif binset == "1nm":
+            absorption_dataset = f"{path}/1nm/afgl_1986-{model}-1nm-v3.nc"
         else:
-            absorption_dataset = None
+            raise ValueError(f"Invalid binset: {binset}")
 
         if concentrations is not None:
             factors = compute_scaling_factors(
@@ -399,6 +443,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         cls,
         levels: pint.Quantity | None = None,
         concentrations: dict[str, pint.Quantity] | None = None,
+        wavelength_range: pint.Quantity | None = None,
         **kwargs: dict[str, t.Any],
     ) -> MolecularAtmosphere:
         """
@@ -413,6 +458,13 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         concentrations : dict
             Molecules concentrations as a ``{str: quantity}`` mapping.
 
+        wavelength_range: quantity
+            Wavelength range wherein the atmosphere radiative properties are
+            expected to be computed.
+            This information is used to select the monochromatic absorption
+            dataset(s) to open.
+            If None, defaults to [545.0, 555.0] nm.
+
         **kwargs
             Keyword arguments passed to the :class:`.MolecularAtmosphere`
             constructor.
@@ -422,6 +474,19 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         :class:`.MolecularAtmosphere`
             U.S. Standard Atmosphere (1976) molecular atmosphere object.
         """
+        if "absorption_dataset" in kwargs:
+            raise TypeError(
+                "Cannot pass 'absorption_dataset' keyword argument. The "
+                "'ussa_1976' constructor sets the absorption dataset "
+                "automatically."
+            )
+
+        # open the absorption dataset corresponding to 'wavelength_range
+        if wavelength_range is None:
+            wavelength_range = DEFAULT_WAVELENGTH_RANGE
+
+        absorption_dataset = open_us76_dataset(wavelength_range)
+
         if levels is None:
             levels = np.linspace(0, 100, 101) * ureg.km
 
@@ -431,4 +496,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             factors = compute_scaling_factors(ds=ds, concentration=concentrations)
             ds = rescale_concentration(ds=ds, factors=factors)
 
-        return cls(thermoprops=ds, **kwargs)
+        return cls(
+            thermoprops=ds,
+            absorption_dataset=absorption_dataset,
+            **kwargs,
+        )

@@ -24,12 +24,7 @@ def test_heterogeneous_atm_flags(modes_all_double, atm_flags):
     """
     # TODO: Recycle this test
     if eradiate.mode().is_mono:
-        atm_kwargs = {
-            "construct": "ussa_1976",
-            "absorption_dataset": (
-                "spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
-            ),
-        }
+        atm_kwargs = {"construct": "ussa_1976"}
     elif eradiate.mode().is_ckd:
         atm_kwargs = {"construct": "afgl_1986"}
     else:

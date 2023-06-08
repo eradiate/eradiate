@@ -50,6 +50,18 @@ class AFGL1986RadProfile(RadProfile):
     This class does not support ``mono`` modes.
     """
 
+    absorption_dataset: xr.Dataset = documented(
+        attrs.field(
+            converter=converters.to_dataset(
+                load_from_id=None  # TODO: open dataset (not load)
+            ),
+            validator=attrs.validators.instance_of(xr.Dataset),
+        ),
+        doc="Absorption coefficient dataset.",
+        type="Dataset",
+        init_type="Dataset or :class:`.PathLike`",
+    )
+
     _thermoprops: xr.Dataset = documented(
         attrs.field(
             factory=lambda: afgl_1986.make_profile(),
@@ -87,38 +99,6 @@ class AFGL1986RadProfile(RadProfile):
         type="bool",
         default="True",
     )
-
-    absorption_dataset: xr.Dataset | None = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(
-                converters.to_dataset(load_from_id=None)
-            ),  # TODO: open dataset (not load)
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(xr.Dataset)
-            ),
-        ),
-        doc="Absorption coefficient dataset. If ``None``, the absorption "
-        "coefficient is set to zero.",
-        type="Dataset or None",
-        init_type="Dataset or :class:`.PathLike`",
-        default="None",
-    )
-
-    @absorption_dataset.validator
-    @has_absorption.validator
-    def _check_absorption_dataset(self, attribute, value):
-        if not self.has_absorption and self.absorption_dataset is not None:
-            warnings.warn(
-                "When validating attribute 'absorption_dataset': specified "
-                "absorption dataset will be ignored because absorption is "
-                "disabled."
-            )
-        if self.has_absorption and self.absorption_dataset is None:
-            raise ValueError(
-                "When validating attribute 'absorption_dataset': no absorption "
-                "dataset was specified, absorption will be disabled."
-            )
 
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+import warnings
 
 import attrs
 import numpy as np
@@ -8,10 +9,9 @@ import pint
 import xarray as xr
 
 from ._core import RadProfile, ZGrid, make_dataset
-from ._util_mono import get_us76_u86_4_spectrum_filename
 from .absorption import compute_sigma_a
 from .rayleigh import compute_sigma_s_air
-from .. import converters, data
+from .. import converters
 from ..attrs import documented, parse_docs
 from ..thermoprops import us76
 from ..units import to_quantity
@@ -106,6 +106,15 @@ class US76ApproxRadProfile(RadProfile):
       not include.
     """
 
+    absorption_dataset: xr.Dataset = documented(
+        attrs.field(
+            converter=converters.to_dataset(load_from_id=None),
+            validator=attrs.validators.instance_of(xr.Dataset),
+        ),
+        doc="Absorption coefficient data set.",
+        type=":class:`xarray.Dataset`",
+    )
+
     _thermoprops: xr.Dataset = documented(
         attrs.field(
             factory=lambda: us76.make_profile(),
@@ -142,22 +151,6 @@ class US76ApproxRadProfile(RadProfile):
         "instead set to zero.",
         type="bool",
         default="True",
-    )
-
-    absorption_dataset: xr.Dataset | None = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(
-                converters.to_dataset(load_from_id=None)
-            ),
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(xr.Dataset)
-            ),
-        ),
-        doc="Absorption coefficient data set. If ``None``, the default "
-        "absorption coefficient data set is opened.",
-        type=":class:`xarray.Dataset` or None",
-        default="None",
     )
 
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
@@ -222,12 +215,8 @@ class US76ApproxRadProfile(RadProfile):
     def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         profile = self._thermoprops_interp(zgrid)
 
-        # TODO: refactor so that absorption dataset must be provided at init
         if self.has_absorption:
-            if self.absorption_dataset is None:  # ! this is never tested
-                ds = data.open_dataset(get_us76_u86_4_spectrum_filename(w))
-            else:
-                ds = self.absorption_dataset
+            ds = self.absorption_dataset
 
             # Compute scattering coefficient
             result = compute_sigma_a(

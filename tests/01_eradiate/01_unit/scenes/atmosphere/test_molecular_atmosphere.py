@@ -6,19 +6,30 @@ import pytest
 
 from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.data import data_store
 from eradiate.scenes.atmosphere import MolecularAtmosphere
 from eradiate.scenes.core import Scene, traverse
 from eradiate.test_tools.types import check_scene_element
+from eradiate.test_tools.util import skipif_data_not_found
+
+
+@pytest.fixture
+def absorption_dataset_550nm():
+    return "spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
 
 
 def test_molecular_atmosphere_default(mode_mono):
     """Default  constructor produces a valid kernel dictionary."""
+    skipif_data_not_found(
+        f"spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
+    )
     atmosphere = MolecularAtmosphere()
     check_scene_element(atmosphere)
 
 
 def test_molecular_atmosphere_scale(mode_mono):
+    skipif_data_not_found(
+        f"spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
+    )
     atmosphere = MolecularAtmosphere(scale=2.0)
     template, _ = traverse(atmosphere)
     kernel_dict = template.render(KernelContext())
@@ -39,44 +50,62 @@ def test_molecular_atmosphere_afgl_1986(mode_ckd):
         mi_params.update(params.render(ctx))
 
 
-@pytest.fixture
-def ussa76_approx_test_absorption_data_set():
-    return data_store.fetch("tests/spectra/absorption/us76_u86_4-spectra-4000_25711.nc")
-
-
-def test_molecular_atmosphere_ussa_1976(
-    mode_mono, ussa76_approx_test_absorption_data_set
-):
+@pytest.mark.slow
+def test_molecular_atmosphere_ussa_1976(mode_mono):
     # ussa_1976() constructor produces a valid kernel dictionary
+
+    for wavenumber_range in [
+        "15000_16000",
+        "18000_19000",
+        "22000_23000",
+    ]:
+        skipif_data_not_found(
+            f"spectra/absorption/us76_u86_4/us76_u86_4-spectra-{wavenumber_range}.nc"
+        )
+
+    eval_w = [440.0, 550.0, 660.0] * ureg.nm
     atmosphere = MolecularAtmosphere.ussa_1976(
-        absorption_dataset=ussa76_approx_test_absorption_data_set,
+        wavelength_range=eval_w[
+            (0, -1),
+        ]
     )
     template, params = traverse(Scene(objects={"atmosphere": atmosphere}))
     mi_scene: mi.Scene = mi.load_dict(template.render(KernelContext()))
 
-    # CKD evaluation generates valid parameter update tables
+    # Mono evaluation generates valid parameter update tables
     mi_params: mi.SceneParameters = mi.traverse(mi_scene)
 
-    for w in [400.0, 550.0, 1040.0, 2120.0, 2400.0] * ureg.nm:
-        # Note: Covered range depends on data
-        #       (as of 24-01-2023, 4000-25000 cm-1, i.e. 400-2500 nm)
+    for w in eval_w:
         ctx = KernelContext(si={"w": w})
         mi_params.update(params.render(ctx))
 
 
-def test_molecular_atmosphere_switches(mode_mono):
+def test_molecular_atmosphere_switches(mode_mono, absorption_dataset_550nm):
     # Absorption can be deactivated
-    atmosphere = MolecularAtmosphere(has_absorption=False)
+    atmosphere = MolecularAtmosphere(
+        absorption_dataset=absorption_dataset_550nm,
+        has_absorption=False,
+    )
     ctx = KernelContext()
     radprops = atmosphere.eval_radprops(ctx.si, optional_fields=True)
     npt.assert_allclose(radprops.sigma_a, 0.0)
 
     # Scattering can be deactivated
-    atmosphere = MolecularAtmosphere(has_scattering=False)
+    skipif_data_not_found(
+        f"spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
+    )
+    atmosphere = MolecularAtmosphere(
+        absorption_dataset=absorption_dataset_550nm,
+        has_scattering=False,
+    )
     ctx = KernelContext()
     radprops = atmosphere.eval_radprops(ctx.si, optional_fields=True)
     npt.assert_allclose(radprops.sigma_s, 0.0)
 
     # At least one must be active
     with pytest.raises(ValueError):
-        MolecularAtmosphere(has_absorption=False, has_scattering=False)
+        MolecularAtmosphere(
+            absorption_dataset=absorption_dataset_550nm,
+            has_absorption=False,
+            has_scattering=False,
+        )
