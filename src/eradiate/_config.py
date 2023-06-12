@@ -8,7 +8,6 @@ for convenience.
 import enum
 import os.path
 import pathlib
-from importlib.metadata import version, PackageNotFoundError
 
 import attrs
 import environ
@@ -134,10 +133,7 @@ class EradiateConfig:
     def _dir_validator(self, var, dir):
 
         if dir is None:
-            try:
-                version("eradiate-mitsuba")
-                return
-            except PackageNotFoundError as pkg_error:
+            if not __import__("eradiate").kernel.ERADIATE_MITSUBA_PACKAGE:
                 raise ConfigError(
                     "Could not find a suitable production installation for the "
                     "Eradiate kernel. This is either because you are using Eradiate "
@@ -149,7 +145,8 @@ class EradiateConfig:
                     "directly from the sources, you can alternatively source the "
                     "provided setpath.sh script. You can install the eradiate-mitsuba "
                     "package using 'pip install eradiate-mitsuba'."
-                ) from pkg_error
+                )
+            return
 
         eradiate_init = dir / "src" / "eradiate" / "__init__.py"
 
