@@ -119,7 +119,10 @@ def fetch(
             "retrieved from the data store. If unset, the list of "
             "files is read from a YAML file which can be specified by "
             "using the ``--from-file`` option and defaults to "
-            "``$ERADIATE_SOURCE_DIR/resources/downloads.yml``."
+            "``$ERADIATE_SOURCE_DIR/data/downloads.yml`` a production "
+            "environment and "
+            "``$ERADIATE_SOURCE_DIR/data/downloads_development.yml`` in a "
+            "development environment."
         ),
     ] = None,
     from_file: Annotated[

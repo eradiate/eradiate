@@ -23,6 +23,13 @@ def init_data_store(offline: bool | None = None, production: bool | None = None)
         If ``True``, replace all online data stores with blind directory data
         stores. If unset, the global offline configuration is used.
 
+    production : bool, optional
+        If ``True``, replace all development data stores providing files from
+        the current local source folder with online safe data stores. If set to
+        ``True`` with ``offline`` flag set to ``True``, then the data must be
+        provided by the user before accessing it. If unset, the global
+        production configuration is used.
+
     Notes
     -----
     This function is called automatically when the ``eradiate.data`` package is
