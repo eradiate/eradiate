@@ -47,7 +47,7 @@ def test_development_config(tmpdir):
 
 
 @pytest.mark.skipif(eradiate_mitsuba_status(), reason='This is not a production environment: eradiate-mitsuba is not installed')
-def test_production_config():
+def test_production_config(tmpdir):
     # Create an appropriate file tree for tests
     tmpdir_path = Path(tmpdir)
     (tmpdir_path / "eradiate/src/eradiate").mkdir(parents=True)
