@@ -1,5 +1,5 @@
 from importlib.metadata import version, PackageNotFoundError
-import re, pathlib
+from unittest.mock import Mock
 
 # Internal constants
 _EXPECTED_MITSUBA_VERSION = "3.2.1"
@@ -35,28 +35,9 @@ try:
 except PackageNotFoundError as pkg_error:
     pass
 
-# Parse the kernel and kernel patch versions
-try:
-    mi_version_regex = re.compile(
-                r"^\s*#\s*define\s+MI_VERSION_([A-Z]+)\s+(.*)$", re.MULTILINE)
-    mi_patch_version_regex = re.compile(
-                r"^\s*#\s*define\s+ERD_MI_VERSION_([A-Z]+)\s+(.*)$", re.MULTILINE)
-    for path in _mi.__path__:
-        path = pathlib.Path(path) / "include" / "mitsuba" / "mitsuba.h"
-        if path.exists() and path.is_file():
-            with path.open("r") as f:
-                header = f.read()
-                matches = dict(mi_version_regex.findall(header))
-                patch_matches = dict(mi_patch_version_regex.findall(header))
-                ERADIATE_KERNEL_VERSION = "{MAJOR}.{MINOR}.{PATCH}".format(**matches)
-                ERADIATE_KERNEL_PATCH_VERSION = "{MAJOR}.{MINOR}.{PATCH}".format(**patch_matches)
-                break
-except Exception as e:
-    raise ImportError(
-        "Could not parse the Eradiate patch version from the Mitsuba kernel header."
-    ) from e
-if ERADIATE_KERNEL_VERSION is None:
-    raise ImportError("Could not find the Mitsuba header file.")
+# Retrieve the kernel and kernel patch versions
+ERADIATE_KERNEL_VERSION = _mi.scalar_mono.MI_VERSION
+ERADIATE_KERNEL_PATCH_VERSION = _mi.scalar_rgb.ERD_MI_VERSION
 
 # Check if the kernel version is compatible
 if ERADIATE_KERNEL_VERSION != _EXPECTED_MITSUBA_VERSION:
