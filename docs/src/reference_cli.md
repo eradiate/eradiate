@@ -60,7 +60,7 @@ $ eradiate data fetch [OPTIONS] [FILE_LIST]...
 
 **Arguments**:
 
-* `[FILE_LIST]...`: An arbitrary number of relative paths to files to be retrieved from the data store. If unset, the list of files is read from a YAML file which can be specified by using the ``--from-file`` option and defaults to ``$ERADIATE_SOURCE_DIR/resources/downloads.yml``.
+* `[FILE_LIST]...`: An arbitrary number of relative paths to files to be retrieved from the data store. If unset, the list of files is read from a YAML file which can be specified by using the ``--from-file`` option and defaults to ``$ERADIATE_SOURCE_DIR/data/downloads.yml`` a production environment and ``$ERADIATE_SOURCE_DIR/data/downloads_development.yml`` in a development environment.
 
 **Options**:
 

@@ -6,7 +6,7 @@ from importlib.metadata import version
 
 # -- Mock Mitsuba modules (required to render CLI reference on RTD) ------------
 
-MOCK_MODULES = ["mitsuba", "mitsuba.scalar_rgb", "drjit"]
+MOCK_MODULES = []
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
@@ -128,7 +128,7 @@ autodoc_preserve_defaults = False
 
 # Mitsuba modules must be mocked in order to allow compiling docs even if they're not here;
 # this mocking is also done in the ertdocs extension
-autodoc_mock_imports = ["drjit", "mitsuba"]
+autodoc_mock_imports = []
 
 # Autosummary tables in autodoc
 # https://autodocsumm.readthedocs.io/en/latest

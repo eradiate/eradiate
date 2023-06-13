@@ -6,7 +6,6 @@ Eradiate documentation
 .. toctree::
    :maxdepth: 1
 
-   rst/getting_started/index
    rst/user_guide/index
    tutorials/index
    rst/contributing
