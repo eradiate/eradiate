@@ -23,23 +23,17 @@ Python and C++17. It relies on a radiometric kernel based on the
 .. grid:: 1 2 auto auto
    :gutter: 3
 
-   .. grid-item-card:: :fas:`download` Getting started
-      :link: sec-getting_started
+   .. grid-item-card:: :fas:`download` User Guide
+      :link: sec-user_guide
       :link-type: ref
 
-      Learn about Eradiate, how to get it and how to compile it.
+      Learn about Eradiate, how to get it and how to use it.
 
    .. grid-item-card:: :fas:`graduation-cap` Tutorials
       :link: sec-tutorials
       :link-type: ref
 
       A practical introduction to Eradiate.
-
-   .. grid-item-card:: :fas:`book` User guide
-      :link: sec-user_guide
-      :link-type: ref
-
-      Learn how to use Eradiate.
 
    .. grid-item-card:: :fas:`file-code` Reference
       :link: sec-reference_api
@@ -53,7 +47,6 @@ Python and C++17. It relies on a radiometric kernel based on the
    :titlesonly:
    :caption: Users
 
-   rst/getting_started/index
    rst/user_guide/index
    tutorials/index
 
