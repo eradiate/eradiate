@@ -67,6 +67,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Fixed incorrect Mitsuba scene parameter drop and lookup ({ghpr}`329`).
 * Added spherical-shell geometry support to DEM components
   {ghpr}`320`.
+* Fixed broken symmetry between {class}`.Spectrum` dictionary and object
+  conversion protocols ({ghpr}`336`).
 
 ### Documentation
 
