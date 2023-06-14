@@ -8,12 +8,14 @@ import pinttr
 from ._core import Spectrum
 from ...attrs import documented, parse_docs
 from ...kernel import InitParameter, UpdateParameter
+from ...units import PhysicalQuantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 
 @parse_docs
-@attrs.define(eq=False, slots=False)
+@attrs.define(eq=False, slots=False, init=False)
 class UniformSpectrum(Spectrum):
     """
     Uniform spectrum [``uniform``] (*i.e.* constant vs wavelength).
@@ -25,29 +27,51 @@ class UniformSpectrum(Spectrum):
             repr=lambda x: f"{x:~P}",
             kw_only=True,
         ),
-        doc="Uniform spectrum value. If a float is passed, it is automatically "
-        "converted to appropriate configuration default units. Integer values "
-        "are also converted to float.",
-        type=":class:`~pint.Quantity`",
-        init_type="float or :class:`~pint.Quantity` or int",
+        doc="Uniform spectrum value. If a quantity is passed, units are "
+        "checked for consistency. If a unitless value is passed, it is "
+        "automatically converted to appropriate configuration default units, "
+        "depending on the value of the ``quantity`` field. Integer values "
+        "are converted to float. If no quantity is specified, this field must be"
+        "a unitless value.",
+        type="quantity",
+        init_type="quantity or float or int",
     )
 
     @value.validator
     def _value_validator(self, attribute, value):
+        # If a quantity is passed, it must match the quantity field
         if isinstance(value, pint.Quantity):
-            expected_units = ucc.get(self.quantity)
-
-            if not pinttr.util.units_compatible(expected_units, value.units):
-                raise pinttr.exceptions.UnitsError(
-                    value.units,
-                    expected_units,
-                    extra_msg=f"while validating {attribute.name}, got units "
-                    f"'{value.units}' incompatible with quantity {self.quantity} "
-                    f"(expected '{expected_units}')",
+            if self.quantity is None:
+                raise ValueError(
+                    f"while validating {attribute.name}, got a Pint quantity, "
+                    "incompatible with 'quantity' field set to None; "
+                    "please provide a unitless value"
                 )
+            else:
+                expected_units = ucc.get(self.quantity)
 
-    def update(self):
-        self.value = pinttr.util.ensure_units(self.value, ucc.get(self.quantity))
+                if not pinttr.util.units_compatible(expected_units, value.units):
+                    raise pinttr.exceptions.UnitsError(
+                        value.units,
+                        expected_units,
+                        extra_msg=f"while validating {attribute.name}, got units "
+                        f"'{value.units}' incompatible with quantity {self.quantity} "
+                        f"(expected '{expected_units}')",
+                    )
+
+    def __init__(
+        self,
+        id: str | None = None,
+        quantity: PhysicalQuantity | str | None = None,
+        *,
+        value: int | float | pint.Quantity,
+    ):
+        # If a quantity is set and a unitless value is passed, it is
+        # automatically applied appropriate units
+        if quantity is not None and not isinstance(value, pint.Quantity):
+            value = pinttr.util.ensure_units(value, ucc.get(quantity))
+
+        self.__attrs_init__(id=id, quantity=quantity, value=value)
 
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         return np.full_like(w, self.value.m) * self.value.units
@@ -56,9 +80,16 @@ class UniformSpectrum(Spectrum):
         return self.eval_mono(w=w)
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
-        wmin = pinttr.util.ensure_units(wmin, ucc.get("wavelength"))
-        wmax = pinttr.util.ensure_units(wmax, ucc.get("wavelength"))
-        return self.value * (wmax - wmin)
+        # Convert bounds to unitless values
+        wavelength_units = wmin.units
+        wmin = wmin.magnitude
+        wmax = wmax.m_as(wavelength_units)
+
+        # Compute integral
+        integral = self.value * (wmax - wmin)
+
+        # Apply units
+        return integral * ureg.dimensionless * wavelength_units
 
     @property
     def template(self) -> dict:

@@ -36,11 +36,10 @@ from eradiate.units import PhysicalQuantity
         (
             {"wavelengths": [500.0, 600.0], "values": [0.0, 1.0]},
             InterpolatedSpectrum(
-                quantity=PhysicalQuantity.DIMENSIONLESS,
                 wavelengths=[500.0, 600.0] * ureg.nm,
-                values=[0.0, 1.0] * ureg.dimensionless,
+                values=[0.0, 1.0],
             ),
-            "dimensionless",
+            None,
         ),
         (
             {
@@ -73,6 +72,18 @@ from eradiate.units import PhysicalQuantity
             UnitsError,
             None,
         ),
+        (
+            {
+                "wavelengths": [500.0, 600.0],
+                "values": [0.0, 1.0] * ureg.dimensionless,
+            },
+            InterpolatedSpectrum(
+                quantity=None,
+                wavelengths=[500.0, 600.0] * ureg.nm,
+                values=[0.0, 1.0] * ureg.dimensionless,
+            ),
+            None,
+        ),
     ],
     ids=[
         "no_args",
@@ -83,15 +94,20 @@ from eradiate.units import PhysicalQuantity
         "no_units",
         "inconsistent_units_1",
         "inconsistent_units_2",
+        "quantity_values_but_no_quantity",
     ],
 )
 def test_interpolated_construct(modes_all, tested, expected, units):
     if isinstance(expected, InterpolatedSpectrum):
         s = InterpolatedSpectrum(**tested)
+
         assert s.quantity is expected.quantity
-        assert isinstance(s.values, pint.Quantity)
-        assert isinstance(s.values.magnitude, np.ndarray)
         assert np.all(s.values == expected.values)
+
+        if isinstance(s.values, pint.Quantity):
+            assert isinstance(s.values.magnitude, np.ndarray)
+        else:
+            assert isinstance(s.values, np.ndarray)
 
     elif issubclass(expected, Exception):
         with pytest.raises(expected):
@@ -101,6 +117,7 @@ def test_interpolated_construct(modes_all, tested, expected, units):
         raise RuntimeError
 
 
+@pytest.mark.parametrize("quantity", ["dimensionless", None])
 @pytest.mark.parametrize(
     "wmin, wmax, expected, isclose_kwargs",
     [
@@ -123,13 +140,17 @@ def test_interpolated_construct(modes_all, tested, expected, units):
         (450.0 * ureg.nm, 600.0 * ureg.nm, 50.0 * ureg.nm, {"rtol": 1e-10}),
     ],
 )
-def test_interpolated_integral(mode_mono, wmin, wmax, expected, isclose_kwargs):
+def test_interpolated_integral(
+    mode_mono, quantity, wmin, wmax, expected, isclose_kwargs
+):
     s = InterpolatedSpectrum(
         wavelengths=[500.0, 525.0, 550.0, 575.0, 600.0],
         values=[0.0, 0.25, 0.5, 0.75, 1.0],
+        quantity=quantity,
     )
 
     integral = s.integral(wmin, wmax)
+
     np.testing.assert_allclose(
         integral.m_as(ureg.nm), expected.m_as(ureg.nm), **isclose_kwargs
     )
@@ -181,18 +202,32 @@ def test_interpolated_eval(modes_all):
         expected = 0.5
 
     else:
-        assert False
+        raise NotImplementedError
 
     # Spectrum performs linear interpolation and yields units consistent with
     # quantity
-    spectrum = InterpolatedSpectrum(wavelengths=[500.0, 600.0], values=[0.0, 1.0])
+    spectrum = InterpolatedSpectrum(
+        quantity="dimensionless",
+        wavelengths=[500.0, 600.0],
+        values=[0.0, 1.0],
+    )
     assert spectrum.eval(si) == expected * spectrum.values.units
 
     spectrum = InterpolatedSpectrum(
         quantity="irradiance", wavelengths=[500.0, 600.0], values=[0.0, 1.0]
     )
-    # Interpolation returns quantity
     assert spectrum.eval(si) == expected * spectrum.values.units
+
+    # If no quantity is specified, the evaluation routine returns a
+    # unitless value
+    spectrum = InterpolatedSpectrum(
+        quantity=None,
+        wavelengths=[500.0, 600.0],
+        values=[0.0, 1.0],
+    )
+    actual = spectrum.eval(si)
+    assert actual == expected
+    assert not isinstance(actual, pint.Quantity)
 
 
 def test_interpolated_kernel_dict(modes_all_mono):
@@ -219,6 +254,6 @@ def test_interpolated_from_dataarray(mode_mono):
     da = eradiate.data.load_dataset(
         "spectra/reflectance/lambertian_soil.nc"
     ).reflectance.sel(brightness="darkest")
-    spectrum = InterpolatedSpectrum.from_dataarray(dataarray=da)
+    spectrum = InterpolatedSpectrum.from_dataarray(quantity="reflectance", dataarray=da)
     assert np.all(spectrum.wavelengths.m_as(da.w.attrs["units"]) == da.w.values)
     assert np.all(spectrum.values.m_as(da.attrs["units"]) == da.values)

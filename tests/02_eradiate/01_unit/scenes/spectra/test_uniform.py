@@ -17,11 +17,11 @@ from eradiate.units import PhysicalQuantity
     [
         (
             {"value": 1.0},
-            UniformSpectrum(quantity=PhysicalQuantity.DIMENSIONLESS, value=1.0),
+            UniformSpectrum(quantity=None, value=1.0),
         ),
         (
             {"value": 1},
-            UniformSpectrum(quantity=PhysicalQuantity.DIMENSIONLESS, value=1.0),
+            UniformSpectrum(quantity=None, value=1.0),
         ),
         (
             {
@@ -42,11 +42,15 @@ from eradiate.units import PhysicalQuantity
         ),
         (
             {"value": 1.0, "quantity": "speed"},
-            ValueError,
+            KeyError,
         ),
         (
             {"quantity": "collision_coefficient", "value": ureg.Quantity(1.0, "")},
             UnitsError,
+        ),
+        (
+            {"value": 1.0 * ureg.dimensionless},
+            ValueError,
         ),
     ],
     ids=[
@@ -56,14 +60,20 @@ from eradiate.units import PhysicalQuantity
         "quantity_convert",
         "unsupported_quantity",
         "inconsistent_units",
+        "unitless_value_but_no_quantity",
     ],
 )
-def test_uniform_construct(modes_all, tested, expected):
+def test_uniform_construct_basic(modes_all, tested, expected):
     if isinstance(expected, UniformSpectrum):
         s = UniformSpectrum(**tested)
+
         assert s.quantity is expected.quantity
         assert np.all(s.value == expected.value)
-        assert isinstance(s.value.magnitude, float)
+
+        if isinstance(s.value, pint.Quantity):
+            assert isinstance(s.value.magnitude, float)
+        else:
+            assert isinstance(s.value, float)
 
     elif issubclass(expected, Exception):
         with pytest.raises(expected):
@@ -111,7 +121,8 @@ def test_uniform_eval_mono(mode_mono, quantity, value, w, expected):
 
 def test_integral(mode_mono):
     s = UniformSpectrum(value=0.5)
-    assert s.integral(300.0, 400.0) == 50.0 * ureg.nm
+    # Unitless value is interpreted as dimensionless
+    assert s.integral(300.0 * ureg.nm, 400.0 * ureg.nm) == 50.0 * ureg.nm
 
     s = UniformSpectrum(quantity="collision_coefficient", value=0.5)
-    assert s.integral(300.0, 400.0) == 50.0 * ureg("nm / m")
+    assert s.integral(300.0 * ureg.nm, 400.0 * ureg.nm) == 50.0 * ureg("nm / m")

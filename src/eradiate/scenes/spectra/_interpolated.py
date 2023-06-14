@@ -19,11 +19,12 @@ from ...spectral.mono import WavelengthSet
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 from ...util.misc import where_consecutive_zeros, where_non_significant_zeros
 
 
 @parse_docs
-@attrs.define(eq=False, slots=False)
+@attrs.define(eq=False, slots=False, init=False)
 class InterpolatedSpectrum(Spectrum):
     """
     Linearly interpolated spectrum [``interpolated``].
@@ -70,19 +71,26 @@ class InterpolatedSpectrum(Spectrum):
             converter=converters.on_quantity(np.atleast_1d),
             kw_only=True,
         ),
-        doc="Uniform spectrum value. If a float is passed, it is automatically "
-        "converted to appropriate default configuration units. "
-        "If a :class:`~pint.Quantity` is passed, units are checked for "
-        "consistency.",
+        doc="Spectrum values. If a quantity is passed, units are "
+        "checked for consistency. If a unitless array is passed, it is "
+        "automatically converted to appropriate default configuration units, "
+        "depending on the value of the ``quantity`` field. If no quantity is "
+        "specified, this field can be a unitless value.",
         type="quantity",
         init_type="array-like",
     )
 
     @values.validator
     def _values_validator(self, attribute, value):
-        if isinstance(value, pint.Quantity):
-            expected_units = ucc.get(self.quantity)
+        if self.quantity is not None:
+            if not isinstance(self.values, pint.Quantity):
+                raise ValueError(
+                    f"while validating '{attribute.name}': expected a Pint "
+                    "quantity compatible with quantity field value "
+                    f"'{self.quantity}', got a unitless value instead"
+                )
 
+            expected_units = ucc.get(self.quantity)
             if not pinttr.util.units_compatible(expected_units, value.units):
                 raise pinttr.exceptions.UnitsError(
                     value.units,
@@ -117,13 +125,24 @@ class InterpolatedSpectrum(Spectrum):
                 f"{self.values.shape}"
             )
 
-    def __attrs_post_init__(self):
-        self.update()
+    def __init__(
+        self,
+        id: str | None = None,
+        quantity: PhysicalQuantity | str | None = None,
+        *,
+        wavelengths: np.typing.ArrayLike,
+        values: np.typing.ArrayLike,
+    ):
+        # If a quantity is set and a unitless value is passed, it is
+        # automatically applied appropriate units
+        if quantity is not None and not isinstance(values, pint.Quantity):
+            values = pinttr.util.ensure_units(values, ucc.get(quantity))
+
+        self.__attrs_init__(
+            id=id, quantity=quantity, wavelengths=wavelengths, values=values
+        )
 
     def update(self):
-        # Apply appropriate units to values field
-        self.values = pinttr.util.ensure_units(self.values, ucc.get(self.quantity))
-
         # Sort by increasing wavelength (required by numpy.interp in eval_mono)
         idx = np.argsort(self.wavelengths)
         self.wavelengths = self.wavelengths[idx]
@@ -161,7 +180,7 @@ class InterpolatedSpectrum(Spectrum):
 
           **Coordinates (\\* means also dimension)**
 
-          * ``*w`` (float): wavelength in nm.
+          * ``*w`` (float): wavelength (units specified as a ``units`` attribute).
 
           **Metadata**
 
@@ -195,6 +214,8 @@ class InterpolatedSpectrum(Spectrum):
         return self.eval_mono(w=w)
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
+        # Inherit docstring
+
         # Collect spectral coordinates
         wavelength_units = self.wavelengths.units
         s_w = self.wavelengths.m
@@ -223,11 +244,13 @@ class InterpolatedSpectrum(Spectrum):
             pass
 
         # Evaluate spectrum at wavelengths
-        w *= wavelength_units
-        interp = self.eval_mono(w)
+        interp = self.eval_mono(w * wavelength_units)
 
         # Compute integral
-        return np.trapz(interp, w)
+        integral = np.trapz(interp, w)
+
+        # Apply units
+        return integral * ureg.dimensionless * wavelength_units
 
     @property
     def template(self) -> dict:
@@ -267,7 +290,7 @@ class InterpolatedSpectrum(Spectrum):
         """
         wunits = self.wavelengths.units
         wm = self.wavelengths.m
-        vm = self.values.m
+        vm = self.values.m if isinstance(self.values, pint.Quantity) else self.values
 
         # 1. strip non significant zeros
         nsz = where_non_significant_zeros(vm)
@@ -291,7 +314,6 @@ class InterpolatedSpectrum(Spectrum):
         # 4. Determine interval
         intervals = []
         for w in wavelengths_cleaned:
-
             # lower and upper bound of current sub-interval
             wlower = w[0]
             wupper = w[-1]
@@ -304,9 +326,9 @@ class InterpolatedSpectrum(Spectrum):
             interval = P.open(wlower * wunits, wupper * wunits)
 
             # update left and right boundaries if necessary
-            if self.values.m[ilower] != 0:
+            if vm[ilower] != 0:
                 interval = interval.replace(left=P.CLOSED)
-            if self.values.m[iupper] != 0:
+            if vm[iupper] != 0:
                 interval = interval.replace(right=P.CLOSED)
 
             intervals.append(interval)

@@ -52,7 +52,7 @@ class SpectrumFactory(Factory):
 
         def f(value):
             if isinstance(value, (int, float, pint.Quantity)):
-                # Convert quantity-less values with dict wrapping and recursive call
+                # Convert unitless values with dict wrapping and recursive call
                 return f({"type": "uniform", "quantity": quantity, "value": value})
 
             if isinstance(value, dict):
@@ -61,7 +61,7 @@ class SpectrumFactory(Factory):
                 # conversion using regular conversion protocol
                 try:
                     if (
-                        value["type"] in {"uniform", "interpolated"}
+                        value["type"] in {"uniform", "interpolated", "multi_delta"}
                         and "quantity" not in value
                     ):
                         return self.convert({**value, "quantity": quantity})
@@ -70,6 +70,10 @@ class SpectrumFactory(Factory):
                     # the ill-formed dict will be correctly reported upon
                     # regular conversion
                     pass
+
+            if isinstance(value, Spectrum) and value.quantity is None:
+                # If quantity is unspecified, apply the expected quantity
+                return self.convert(attrs.evolve(value, quantity=quantity))
 
             # Regular conversion (happens if value is neither int, float nor
             # dict without "quantity" field)
@@ -122,13 +126,19 @@ class Spectrum(NodeSceneElement, ABC):
     * This class is to be used as a mixin.
     * Subclasses must implement :meth:`eval_mono`, :meth:`eval_ckd` and
       :meth:`integral`.
+
+    Warnings
+    --------
+    Leaving the ``quantity`` field unset is discouraged and permitted only to
+    allow for more convenience in some parts of the code (*e.g.* to increase the
+    flexibility of spectrum conversion protocols).
     """
 
-    quantity: PhysicalQuantity = documented(
+    quantity: PhysicalQuantity | None = documented(
         attrs.field(
-            default="dimensionless",
-            converter=PhysicalQuantity,
-            repr=lambda x: x.value.upper(),
+            default=None,
+            converter=attrs.converters.optional(PhysicalQuantity),
+            repr=lambda x: "None" if x is None else x.value.upper(),
         ),
         doc="Physical quantity which the spectrum represents. The specified "
         "quantity must be one which varies with wavelength. "
@@ -136,13 +146,16 @@ class Spectrum(NodeSceneElement, ABC):
         "\n"
         "Child classes should implement value units validation and conversion "
         "based on ``quantity``.",
-        type=":class:`.PhysicalQuantity`",
-        init_type=":class:`.PhysicalQuantity` or str",
-        default="dimensionless",
+        type=".PhysicalQuantity or None",
+        init_type=".PhysicalQuantity or str, optional",
+        default="None",
     )
 
     @quantity.validator
     def _quantity_validator(self, attribute, value):
+        if value is None:
+            return
+
         if value not in PhysicalQuantity.spectrum():
             raise ValueError(
                 f"while validating {attribute.name}: "
@@ -237,8 +250,17 @@ class Spectrum(NodeSceneElement, ABC):
 
         Returns
         -------
-        value : quantity
-            Computed integral value.
+        value : quantity or ndarray
+            Computed integral value, in units consistent with the specified
+            quantity.
+
+        Warnings
+        --------
+        If the ``quantity`` field is unset (*i.e.* left to its default value
+        ``None``), the output of this method will inherit the units of value
+        fields (the actual policy depends on the implementation, and unitless
+        values are intepreted as dimnesionless). Note that leaving the
+        ``quantity`` field unset is discouraged.
         """
         raise NotImplementedError
 
