@@ -2,28 +2,21 @@ import os
 
 import click
 from ruamel.yaml import YAML
-from setuptools.config.pyprojecttoml import read_configuration
 
 
 @click.command()
 @click.option(
     "-s",
     "--sections",
-    default="main,recommended,tests,dev,docs",
+    default="dependencies,main,recommended,tests,dev,docs,optional",
     help="Dependency sections to include in the produced environment.yml file. "
-    "Default: 'main,recommended,tests,dev,docs'",
-)
-@click.option(
-    "-i",
-    "--input",
-    default="pyproject.toml",
-    help="Path to pyproject.toml file. Default: pyproject.toml",
+    "Default: 'dependencies,main,recommended,tests,dev,docs,optional'",
 )
 @click.option(
     "-o",
     "--output-dir",
-    default="./requirements",
-    help="Path to output directory. Default: ./requirements",
+    default="./requirements/pip",
+    help="Path to output directory. Default: ./requirements/pip",
 )
 @click.option(
     "-l",
@@ -33,12 +26,9 @@ from setuptools.config.pyprojecttoml import read_configuration
     "Default: ./requirements/layered.yml",
 )
 @click.option("-q", "--quiet", is_flag=True, help="Suppress terminal output.")
-def cli(sections, input, output_dir, layered_config, quiet):
+def cli(sections, output_dir, layered_config, quiet):
     # Load dependency list
-    if not quiet:
-        print(f"Reading dependencies from {input}")
 
-    setup_config = read_configuration(input)
     sections = [x.strip() for x in sections.split(",")]
 
     # Load layered dependency dependencies
@@ -50,14 +40,7 @@ def cli(sections, input, output_dir, layered_config, quiet):
         if not quiet:
             print(f"Processing section '{section}'")
 
-        try:
-            packages = (
-                setup_config["project"]["dependencies"]
-                if section == "main"
-                else setup_config["project"]["optional-dependencies"][section]
-            )
-        except KeyError:
-            raise RuntimeError(f"Cannot fetch dependencies from {input}")
+        packages = layered_yml[section].get("packages", [])
 
         if not quiet:
             print(f"Writing to {os.path.join(output_dir, f'{section}.in')}")
