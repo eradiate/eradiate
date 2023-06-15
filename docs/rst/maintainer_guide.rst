@@ -187,20 +187,25 @@ Our system uses two tools (included in the development virtual environment):
 Basic principles
 ^^^^^^^^^^^^^^^^
 
-We categorise our dependencies in five sets:
+We categorise our dependencies in five layers:
 
-* ``main``: dependencies strictly required to run Eradiate as a user;
-* ``recommended``: dependencies recommended to run Eradiate as a user;
-* ``docs``: dependencies required to compile the documentation;
-* ``tests``: dependencies required to run tests;
+* ``main``: minimal requirements for eradiate to run in development mode
+* ``recommended``: convenient optional dependencies included in the production package. Installable through PyPI.
+* ``docs``: dependencies required to compile the docs in development mode
+* ``tests``: dependencies required for testing eradiate in development mode
 * ``dev``: dependencies specific to a development setup.
+* ``depencencies``: dependencies list used by default by setuptools in production packages. Includes the eradiate-mitsuba package. Used by users who install eradiate through PyPI.
+* ``optional``: convenient developement dependencies, including the eradiate-mitsuba package.
 
-``main``, ``recommended`` and ``docs`` and ``tests`` are subsets of ``dev``:
+Layers can include other layers. As a result, we have the following layer Directed Acyclic Graph (DAG):
 
-- ``recommended`` includes ``main``;
 - ``docs`` includes ``main``;
 - ``tests`` includes ``main``;
 - ``dev`` includes ``recommended``, ``docs`` and ``tests``.
+- ``dependencies`` includes ``main``;
+- ``optional`` includes ``dev``;
+
+The following figure illustrates the layer DAG:
 
 .. only:: latex
 
@@ -210,11 +215,11 @@ We categorise our dependencies in five sets:
 
    .. figure:: ../fig/requirement_layers.svg
 
-The sets are defined in ``pyproject.toml``, where direct dependencies are
+The sets are defined in ``requirements/layered.yml``, where direct dependencies are
 specified with minimal constraint.
 
 .. warning:: This is the location from which all dependencies are sourced.
-   Dependencies shoud all be specified only in ``pyproject.toml``.
+   Dependencies shoud all be specified only in ``requirements/layered.yml``.
 
 We then have processes which will compile these dependencies into transitively
 pinned dependencies and write them as requirement (lock) files. The Conda and
@@ -223,6 +228,11 @@ Pip pinning processes are different.
 The generated lock files are versioned and come along the source code they were
 used to write. Thus, a developer cloning the codebase will also get the
 information they need to reproduce the same environment as the other developers.
+
+The project's ``pyproject.toml`` file defines the metadata used by the Eradiate wheels.
+It thus includes the necessary pip lock files for production/users setups. These are
+the ``dependencies`` layer pip lock file, which includes the eradiate-mitsuba package, and
+the ``recommended`` layer pip lock file, as an optional dependency set.
 
 Lock files
 ^^^^^^^^^^
@@ -235,14 +245,14 @@ utility scripts.
   platforms, but cannot be used to extract subsets of an existing requirement
   specification. The ``environment-dev.yml`` file is created by the
   ``make_conda_env.py`` script, from a header ``environment.in`` and the data
-  found in ``pyproject.toml``. Our Conda lock files use the extension ``.lock``.
+  found in ``requirements/layered.yml``. Our Conda lock files use the extension ``.lock``.
 * **Pip** dependencies are pinned using pip-tools. It uses a series of ``*.in``
-  files as input (one per requirement set) which can be configured to define
+  files as input (one per requirement layer) which can be configured to define
   subsets of each other, but cannot compile requirements for multiple platforms,
   which basically means that we cannot use hashes to pin requirements with it.
   The ``*.in`` input files are created by the ``make_pip_in_files.py`` script
-  from the data found in ``pyproject.toml`` and the requirement layer relations
-  defined in the ``layered.yml`` file. Our Pip lock files use the extension
+  from the data found in ``requirements/layered.yml`` and the requirement layer relations
+  defined in the ``requirements/layered.yml`` file. Our Pip lock files use the extension
   ``.txt``.
 
 We can already see at this point that neither tool will perfectly fulfill our
