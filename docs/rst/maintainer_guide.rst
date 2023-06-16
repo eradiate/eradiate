@@ -187,15 +187,15 @@ Our system uses two tools (included in the development virtual environment):
 Basic principles
 ^^^^^^^^^^^^^^^^
 
-We categorise our dependencies in five layers:
+We categorize our dependencies in five layers:
 
 * ``main``: minimal requirements for eradiate to run in development mode
 * ``recommended``: convenient optional dependencies included in the production package. Installable through PyPI.
 * ``docs``: dependencies required to compile the docs in development mode
 * ``tests``: dependencies required for testing eradiate in development mode
 * ``dev``: dependencies specific to a development setup.
-* ``depencencies``: dependencies list used by default by setuptools in production packages. Includes the eradiate-mitsuba package. Used by users who install eradiate through PyPI.
-* ``optional``: convenient developement dependencies, including the eradiate-mitsuba package.
+* ``dependencies``: dependency list used by default by Setuptools in production packages. Includes the ``eradiate-mitsuba`` package. Used by users who install Eradiate through PyPI.
+* ``optional``: convenience development dependencies, including the ``eradiate-mitsuba`` package.
 
 Layers can include other layers. As a result, we have the following layer Directed Acyclic Graph (DAG):
 
