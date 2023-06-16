@@ -77,7 +77,7 @@ conda-prepare:
 	python3 requirements/check_conda_env.py
 	conda config --env --add channels conda-forge --add channels eradiate
 
-no-deps-install:
+install-no-deps:
 	python3 requirements/copy_envvars.py
 	pip install --editable . --no-deps
 
