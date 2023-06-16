@@ -43,9 +43,6 @@ dependencies:
   - typer>=0.9.0
   - xarray>=0.19,!=0.20.*
   # optional
-  - pip
-  - pip:
-    - eradiate-mitsuba==0.0.1rc11
   # recommended
   - aabbtree
   - astropy

@@ -24,6 +24,13 @@ from ruamel.yaml.comments import CommentedSeq as CS
     help="Path to layered requirement dependency configuration file. "
     "Default: ./requirements/layered.yml",
 )
+@click.option(
+    "-p",
+    "--pip-deps",
+    is_flag=True,
+    default=False,
+    help="Include pip dependencies in the environment.yml file. Default: False",
+)
 @click.option("-q", "--quiet", is_flag=True, help="Suppress terminal output.")
 @click.option(
     "-g",
@@ -32,7 +39,7 @@ from ruamel.yaml.comments import CommentedSeq as CS
     default=False,
     help="Write dependency graphs to Graphviz dot files. Default: False"
 )
-def cli(sections, output_dir, layered_config, quiet, write_graphs):
+def cli(sections, output_dir, layered_config, pip_deps, quiet, write_graphs):
     """
     Create a Conda environment file from a pyproject.toml.
     """
@@ -86,6 +93,8 @@ def cli(sections, output_dir, layered_config, quiet, write_graphs):
             packages_to_add = sorted(data["packages"] - added_packages)
 
             # Temporary fix until an eradiate_mitsuba conda package is made available
+            # This is disabled by default because the Poetry solver fails to find the
+            # wheel for DrJIT on OSX.
             mitsuba_pkg = set(p for p in packages_to_add if "eradiate-mitsuba" in p)
             if mitsuba_pkg:
                 packages_to_add = [p for p in packages_to_add if p not in mitsuba_pkg]
@@ -95,7 +104,9 @@ def cli(sections, output_dir, layered_config, quiet, write_graphs):
                 ordered_packages.extend(packages_to_add)
 
             # Temporary fix until an eradiate_mitsuba conda package is made available
-            if mitsuba_pkg:
+            # This is disabled by default because the Poetry solver fails to find the
+            # wheel for DrJIT on OSX.
+            if mitsuba_pkg and pip_deps:
                 if "pip" not in added_packages:
                     ordered_packages.append("pip")
                 ordered_packages.append({"pip": list(mitsuba_pkg)})

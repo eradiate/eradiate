@@ -6,9 +6,6 @@ dependencies:
   # default
   - python=3.8
   # dependencies
-  - pip
-  - pip:
-    - eradiate-mitsuba==0.0.1rc11
   # main
   - aenum
   - attrs>=22.2
