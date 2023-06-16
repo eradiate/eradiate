@@ -50,6 +50,7 @@ testpaths = "tests"
 
 [tool.ruff]
 select = [
+  "I"
 ]
 src = ["src", "tests"]
 
