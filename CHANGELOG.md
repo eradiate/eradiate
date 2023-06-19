@@ -69,6 +69,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   {ghpr}`320`.
 * Fixed broken symmetry between {class}`.Spectrum` dictionary and object
   conversion protocols ({ghpr}`336`).
+* Implement the Astronomical Object Illumination, its tests and its
+  documentation ({ghpr}`331`).
 
 ### Documentation
 
