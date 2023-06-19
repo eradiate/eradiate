@@ -70,6 +70,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Fixed broken symmetry between {class}`.Spectrum` dictionary and object
   conversion protocols ({ghpr}`336`).
 * Provide an Eradiate Pypi package ({ghpr}`328`).
+* Implement the Astronomical Object Illumination, its tests and its
+  documentation ({ghpr}`331`).
 
 ### Documentation
 
