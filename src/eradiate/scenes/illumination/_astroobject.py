@@ -15,6 +15,25 @@ from ...validators import is_positive
 @attrs.define(eq=False, slots=False)
 class AstroObjectIllumination(DirectionalIllumination):
 
+    """
+    Astronomical Object Illumination scene element [``astroobject``].
+
+    This illumination represents the light coming from an astronomical object
+    (e.g. the Sun). Contrary to the ``directional`` illumination, the
+    astronomical object has a finite size and is not a point source. The
+    illumination emulates the behavior of a planet/star, being a extremely far
+    away illumination source, but still visible from the observation point.
+
+    The illumination is oriented based on the classical angular convention used
+    in Earth observation. It features a default angular diameter of 1 degree.
+    The angular diameter controls the size of the astronomical object as seen
+    from the observation point.
+
+    Rays casted by the astronomical object are not parallel, but belong to a
+    cone. The cone is defined by the angular diameter of the astronomical object
+    and the angle between the interaction point and the center of the cone cap.
+    """
+
     angular_diameter: pint.Quantity = documented(
         pinttr.field(
             default=1.0 * ureg.deg,
