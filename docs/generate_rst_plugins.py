@@ -35,6 +35,9 @@ PLUGIN_ORDERS = {
         "mdistant",
         "mradiancemeter",
     ],
+    "emitters": [
+        "astroobject",
+    ],
 }
 
 
@@ -90,14 +93,14 @@ def make_toc(section, title) -> str:
     return dedent(
         rf"""
         .. _sec-reference_plugins-{section}:
-        
+
         {title}
         {underline(title)}
-        
+
         .. toctree::
            :maxdepth: 1
            :glob:
-        
+
            ../plugins/{section}/*
         """
     )
@@ -105,7 +108,7 @@ def make_toc(section, title) -> str:
 
 def generate():
     root_dir = Path(__file__).absolute().parent.parent
-    plugin_dir = root_dir / "src/plugins/src"
+    plugin_dir = root_dir / "ext/mitsuba/src/eradiate_plugins"
     out_dir = root_dir / "docs/rst/reference_plugins/generated"
     print(f"Generating plugin docs in '{out_dir}'")
 

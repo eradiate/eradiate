@@ -1,5 +1,3 @@
--r main.in
--c dev.txt
 aabbtree
 astropy
 iapws

@@ -3,7 +3,24 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  # default
   - python=3.8
+  # dev
+  - conda-lock>=1.4
+  - networkx>=3.1
+  - pip-tools>=6.5
+  - pip>=22
+  - setuptools>=61
+  # docs
+  - autodocsumm
+  - myst-parser
+  - nbsphinx>=0.9.0
+  - sphinx
+  - sphinx-autobuild
+  - sphinx-book-theme>=1.0
+  - sphinx-copybutton
+  - sphinx-design
+  - sphinxcontrib-bibtex>=2.0
   # main
   - aenum
   - attrs>=22.2
@@ -16,8 +33,8 @@ dependencies:
   - numpy
   - pint
   - pinttrs>=23.2.0
-  - portion
   - pooch
+  - portion
   - rich
   - ruamel.yaml
   - scipy
@@ -34,18 +51,6 @@ dependencies:
   - jupyterlab
   - python-dateutil
   - seaborn
-  # docs
-  - autodocsumm
-  - myst-parser
-  - nbsphinx>=0.9.0
-  - sphinx-book-theme>=1.0
-  - sphinx
-  - sphinxcontrib-bibtex>=2.0
-  - sphinx-autobuild
-  - sphinx-copybutton
-  - sphinx-design
-  # dev
-  - conda-lock>=1.4
-  - pip>=22
-  - pip-tools>=6.5
-  - setuptools>=61
+  # tests
+  - pytest
+  - pytest-json-report

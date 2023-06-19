@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  # default
   - python=3.8
   # main
   - aenum
@@ -16,8 +17,8 @@ dependencies:
   - numpy
   - pint
   - pinttrs>=23.2.0
-  - portion
   - pooch
+  - portion
   - rich
   - ruamel.yaml
   - scipy
