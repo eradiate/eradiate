@@ -6,30 +6,9 @@ requires = ["setuptools>=61", "setuptools_scm>=6.2"]
 authors = [
   {name = "The Eradiate Team"}
 ]
-dependencies = [
-  "aenum",
-  "attrs>=22.2",
-  "click",
-  "dessinemoi>=23.1.0",
-  "environ-config",
-  "lazy_loader>=0.1",
-  "matplotlib>=3.3",
-  "netcdf4",
-  "numpy",
-  "pint",
-  "pinttrs>=23.2.0",
-  "portion",
-  "pooch",
-  "rich",
-  "ruamel.yaml",
-  "scipy",
-  "shellingham!=1.5.1",  # Typer dependency; exclude this version which raises while previous don't
-  "tqdm",
-  "typer>=0.9.0",
-  "xarray>=0.19,!=0.20.*"
-]
+
 description = "A radiative transfer model for the Earth observation community"
-dynamic = ["version"]
+dynamic = ["version", "dependencies", "optional-dependencies"]
 license = {text = "LGPLv3"}
 maintainers = [
   {name = "The Eradiate Team"}
@@ -37,45 +16,6 @@ maintainers = [
 name = "eradiate"
 readme = "README.md"
 requires-python = ">=3.8"
-
-[project.optional-dependencies]
-dev = [
-  "conda-lock>=1.4",  # Required by dependency management scripts
-  "pip>=22",  # Required by dependency management scripts
-  "pip-tools>=6.5",  # Required by dependency management scripts
-  "setuptools>=61"  # Required by dependency management scripts
-]
-docs = [
-  "autodocsumm",
-  "myst-parser",
-  "nbsphinx>=0.9.0",
-  "sphinx-book-theme>=1.0",
-  "sphinx",
-  "sphinxcontrib-bibtex>=2.0",
-  "sphinx-autobuild",
-  "sphinx-copybutton",
-  "sphinx-design"
-]
-recommended = [
-  "aabbtree",  # Used by the leaf collision detection feature
-  "astropy",  # Used by the solar irradiance spectrum date-based scaling feature
-  "iapws",  # Used by thermophysical property utilities
-  "ipython",
-  "ipywidgets",
-  "jupyterlab",
-  "python-dateutil",  # Used by the Solar irradiance spectrum date-based scaling feature
-  "seaborn"  # Used to define the Eradiate plotting style
-]
-tests = [
-  "pytest",
-  "pytest-json-report"
-]
-optional = [
-  "eradiate_mitsuba==0.0.1rc10"
-]
-production = [
-  "eradiate_mitsuba==0.0.1rc10"
-]
 
 [project.scripts]
 eradiate = "eradiate.cli:main"
@@ -119,6 +59,12 @@ relative-imports-order = "closest-to-furthest"
 
 [tool.setuptools]
 include-package-data = true # Required because of package data
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements/pip/dependencies.txt"]}
+
+[tool.setuptools.dynamic.optional-dependencies]
+recommended = {file = ['requirements/pip/recommended.txt']}
 
 [tool.setuptools.package-data]
 # Required by PEP 561

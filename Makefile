@@ -30,14 +30,14 @@ pip-update-in-files:
 # Dev must be compiled first because it constrains the others
 # No hashes: doesn't play nicely with RTD when running pip-compile on macOS
 pip-compile: pip-update-in-files
-	rm requirements/dev.txt
-	touch requirements/dev.txt
+	rm requirements/pip/dev.txt
+	touch requirements/pip/dev.txt
 
-	@for LAYER in dev main docs tests production optional; do \
-		echo "Compiling requirements/$${LAYER}.in to requirements/$${LAYER}.txt"; \
+	@for LAYER in dev dependencies main recommended tests docs optional; do \
+		echo "Compiling requirements/pip/$${LAYER}.in to requirements/pip/$${LAYER}.txt"; \
 		pip-compile --upgrade --resolver=backtracking --build-isolation --allow-unsafe \
-			--output-file requirements/$${LAYER}.txt \
-			requirements/$${LAYER}.in; \
+			--output-file requirements/pip/$${LAYER}.txt \
+			requirements/pip/$${LAYER}.in; \
 	done
 
 # Lock dependencies
@@ -45,7 +45,7 @@ pip-lock: pip-update-tools pip-compile
 
 # Initialise development environment
 pip-init:
-	pip install --upgrade -r requirements/dev.txt
+	pip install --upgrade -r requirements/pip/dev.txt
 	pip install --editable . --no-deps
 
 pip-update: pip-lock pip-init
@@ -54,42 +54,52 @@ pip-update: pip-lock pip-init
 
 # -- Dependency management with Conda ------------------------------------------
 
-# Generate environment files from pyproject.toml
+# Generate environment files
 conda-env:
-	python3 requirements/make_conda_env.py \
-	    -s "main" \
-	    -o requirements/environment-minimal.yml --quiet
-	python3 requirements/make_conda_env.py \
-	    -s "main,recommended" \
-	    -o requirements/environment-recommended.yml --quiet
-	python3 requirements/make_conda_env.py \
-		-s "main,recommended,docs,dev" \
-	    -o requirements/environment-dev.yml --quiet
-	python3 requirements/make_conda_env.py \
-		-s "main,recommended,docs,dev,optional" \
-	    -o requirements/environment-optional.yml --quiet
-	python3 requirements/make_conda_env.py \
-		-s "main,recommended,production" \
-	    -o requirements/environment-production.yml --quiet
+	python3 requirements/make_conda_env.py --quiet;
 
 # Lock conda dependencies
 conda-lock: conda-env
-	conda-lock --kind explicit --no-mamba --file requirements/environment-dev.yml \
-	    --filename-template "requirements/environment-{platform}.lock" \
-	    -p $(PLATFORM)
+	@for LAYER in dev dependencies main recommended tests docs optional; do \
+		conda-lock --kind explicit --no-mamba --file requirements/conda/environment-$${LAYER}.yml \
+			--filename-template "requirements/conda/environment-$${LAYER}-{platform}.lock" \
+			-p $(PLATFORM); \
+	done
 
 conda-lock-all: conda-env
-	conda-lock --kind explicit --no-mamba --file requirements/environment-dev.yml \
-	    --filename-template "requirements/environment-{platform}.lock" \
-	    -p osx-64 -p linux-64
+	@for LAYER in dev dependencies main recommended tests docs optional; do \
+		conda-lock --kind explicit --no-mamba --file requirements/conda/environment-$${LAYER}.yml \
+			--filename-template "requirements/conda/environment-$${LAYER}-{platform}.lock" \
+			-p osx-64 -p linux-64; \
+	done
 
-# Initialise development environment
-conda-init:
+conda-prepare:
 	python3 requirements/check_conda_env.py
 	conda config --env --add channels conda-forge --add channels eradiate
-	conda update --file requirements/environment-$(PLATFORM).lock
+
+install-no-deps:
 	python3 requirements/copy_envvars.py
 	pip install --editable . --no-deps
+
+# Initialise development environment
+conda-init: conda-prepare
+	conda update --file requirements/conda/environment-dev-$(PLATFORM).lock
+	$(MAKE) no-deps-install
+
+# Initialise docs building environment
+conda-init-docs: conda-prepare
+	conda update --file requirements/conda/environment-docs-$(PLATFORM).lock
+	$(MAKE) no-deps-install
+
+# Initialise tests environment
+conda-init-tests: conda-prepare
+	conda update --file requirements/conda/environment-tests-$(PLATFORM).lock
+	$(MAKE) no-deps-install
+
+# Initialise production environment
+conda-init-prod: conda-prepare
+	conda update --file requirements/conda/environment-dependencies-$(PLATFORM).lock
+	$(MAKE) no-deps-install
 
 conda-update: conda-lock-all conda-init
 
