@@ -13,6 +13,7 @@ illumination_factory.register_lazy_batch(
     [
         ("_constant.ConstantIllumination", "constant", {}),
         ("_directional.DirectionalIllumination", "directional", {}),
+        ("_astroobject.AstroObjectIllumination", "astro_object", {}),
         ("_spot.SpotIllumination", "spot", {}),
     ],
     cls_prefix="eradiate.scenes.illumination",
