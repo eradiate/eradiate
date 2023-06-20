@@ -92,7 +92,8 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
     elif illumination == "astroobject":
         objects["illumination"] = AstroObjectIllumination(zenith=0.0, irradiance=li, angular_diameter=0.03)
         theoretical_solution = np.full_like(vza, rho * li / np.pi)
-        rtol=55e-3
+        # The angular diameter is not taken into account in the theoretical solution
+        rtol=1e-2
 
     else:
         raise ValueError(f"unsupported illumination '{illumination}'")
