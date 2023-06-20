@@ -1,3 +1,0 @@
--r recommended.in
--c dev.txt
-eradiate_mitsuba==0.0.1rc10
