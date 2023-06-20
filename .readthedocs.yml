@@ -28,4 +28,5 @@ submodules:
   include:
     - resources/data
     - tutorials
+    - ext/mitsuba
   recursive: true
