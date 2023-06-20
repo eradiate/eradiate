@@ -12,7 +12,7 @@ build:
 
 conda:
   # Setup Conda env with dev dependencies
-  environment: requirements/environment-dev.yml
+  environment: requirements/conda/environment-dev.yml
 
 python:
   # Install Eradiate package in Conda env
