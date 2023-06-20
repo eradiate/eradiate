@@ -43,7 +43,7 @@ drjit==0.4.1
     # via eradiate-mitsuba
 environ-config==23.2.0
     # via -r requirements/pip/main.in
-eradiate-mitsuba==0.0.1rc11
+eradiate-mitsuba==0.0.1
     # via -r requirements/pip/dependencies.in
 fonttools==4.40.0
     # via

@@ -196,7 +196,7 @@ environ-config==23.2.0
     # via
     #   -c requirements/pip/dev.txt
     #   -r requirements/pip/main.in
-eradiate-mitsuba==0.0.1rc11
+eradiate-mitsuba==0.0.1
     # via -r requirements/pip/optional.in
 exceptiongroup==1.1.1
     # via

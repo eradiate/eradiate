@@ -3,7 +3,7 @@ dependencies:
   includes:
     - main
   packages:
-    - "eradiate-mitsuba==0.0.1rc11"
+    - "eradiate-mitsuba==0.0.1"
 
 main:
   constraints:
@@ -82,4 +82,4 @@ optional:
   includes:
     - dev
   packages:
-    - "eradiate-mitsuba==0.0.1rc11"
+    - "eradiate-mitsuba==0.0.1"
