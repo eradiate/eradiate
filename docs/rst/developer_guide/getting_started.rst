@@ -224,11 +224,11 @@ Once your Conda environment is configured, you should reactivate it:
 Compiling the radiometric kernel
 --------------------------------
 
-Configure CMake for compilation:
+Using the Makefile rule to build the kernel is the recommended way to compile.
 
 .. code:: bash
 
-   cmake --preset default
+   make kernel
 
 .. dropdown:: CMake Error: The source directory "..." does not exist
    :color: info
@@ -279,26 +279,6 @@ Clang.
             export CC=clang
             export CXX=clang++
 
-   You might want to add these commands to your environment profile loading
-   script. If you don't want to modify your environment variables, you can
-   alternatively specify compilers during CMake configuration using CMake
-   variables:
-
-   .. tab-set::
-
-      .. tab-item:: Linux
-         :sync: linux
-
-          .. code:: bash
-
-             cmake --preset default -DCMAKE_C_COMPILER=clang-11 -DCMAKE_CXX_COMPILER=clang++-11
-
-      .. tab-item:: macOS
-         :sync: macos
-
-          .. code:: bash
-
-             cmake --preset default -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
 Inspect CMake's output to check if your Conda environment Python is used by
 CMake. Search for a line starting with:
@@ -342,12 +322,6 @@ environment, do not proceed before fixing it.
        before starting to compile.*
 
    This is expected: do not worry about it.
-
-When CMake is successfully configured, you can compile the code:
-
-.. code:: bash
-
-   cmake --build build
 
 The compilation process can last for up to around half an hour on old machines.
 It completes within a few minutes on modern workstations.
