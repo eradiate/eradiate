@@ -2,7 +2,7 @@ from importlib.metadata import version, PackageNotFoundError
 from unittest.mock import Mock
 
 # Internal constants
-_EXPECTED_MITSUBA_VERSION = "3.3.0"
+_EXPECTED_MITSUBA_VERSION = "3.2.1"
 _EXPECTED_MITSUBA_PATCH_VERSION = "0.0.1"
 
 # Exported constants
