@@ -1,0 +1,3 @@
+strict digraph  {
+main [packages="{'dessinemoi>=23.1.0', 'pinttrs>=23.2.0', 'netcdf4', 'scipy', 'aenum', 'matplotlib>=3.3', 'pint', 'numpy', 'pooch', 'environ-config', 'tqdm', 'click', 'lazy_loader>=0.1', 'shellingham!=1.5.1', 'portion', 'ruamel.yaml', 'typer>=0.9.0', 'xarray>=0.19,!=0.20.*', 'rich', 'attrs>=22.2'}"];
+}

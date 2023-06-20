@@ -1,0 +1,14 @@
+strict digraph  {
+main [packages="{'dessinemoi>=23.1.0', 'pinttrs>=23.2.0', 'netcdf4', 'scipy', 'aenum', 'matplotlib>=3.3', 'pint', 'numpy', 'pooch', 'environ-config', 'tqdm', 'click', 'lazy_loader>=0.1', 'shellingham!=1.5.1', 'portion', 'ruamel.yaml', 'typer>=0.9.0', 'xarray>=0.19,!=0.20.*', 'rich', 'attrs>=22.2'}"];
+recommended [packages="{'astropy', 'seaborn', 'jupyterlab', 'iapws', 'python-dateutil', 'ipython', 'ipywidgets', 'aabbtree'}"];
+tests [packages="{'pytest', 'pytest-json-report'}"];
+dev [packages="{'setuptools>=61', 'pip>=22', 'pip-tools>=6.5', 'networkx>=3.1', 'conda-lock>=1.4'}"];
+docs [packages="{'sphinx-autobuild', 'sphinx-copybutton', 'nbsphinx>=0.9.0', 'autodocsumm', 'sphinxcontrib-bibtex>=2.0', 'myst-parser', 'sphinx-design', 'sphinx', 'sphinx-book-theme>=1.0'}"];
+optional [packages="{'eradiate-mitsuba==0.0.1rc11'}"];
+tests -> main;
+dev -> recommended;
+dev -> docs;
+dev -> tests;
+docs -> main;
+optional -> dev;
+}
