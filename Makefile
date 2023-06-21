@@ -84,22 +84,22 @@ install-no-deps:
 # Initialise development environment
 conda-init: conda-prepare
 	conda update --file requirements/conda/environment-dev-$(PLATFORM).lock
-	$(MAKE) no-deps-install
+	$(MAKE) install-no-deps
 
 # Initialise docs building environment
 conda-init-docs: conda-prepare
 	conda update --file requirements/conda/environment-docs-$(PLATFORM).lock
-	$(MAKE) no-deps-install
+	$(MAKE) install-no-deps
 
 # Initialise tests environment
 conda-init-tests: conda-prepare
 	conda update --file requirements/conda/environment-tests-$(PLATFORM).lock
-	$(MAKE) no-deps-install
+	$(MAKE) install-no-deps
 
 # Initialise production environment
 conda-init-prod: conda-prepare
 	conda update --file requirements/conda/environment-dependencies-$(PLATFORM).lock
-	$(MAKE) no-deps-install
+	$(MAKE) install-no-deps
 
 conda-update: conda-lock-all conda-init
 
