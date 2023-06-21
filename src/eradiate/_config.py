@@ -125,13 +125,12 @@ class EradiateConfig:
     source_dir = var(
         converter=lambda x: x if x is None else pathlib.Path(x).absolute(),
         help="Path to the Eradiate source directory. If it is not set, then the "
-            "current setup is assumed to be a production installation of Eradiate.",
+        "current setup is assumed to be a production installation of Eradiate.",
         default=None,
     )
 
     @source_dir.validator
     def _dir_validator(self, var, dir):
-
         if dir is None:
             if not __import__("eradiate").kernel.ERADIATE_MITSUBA_PACKAGE:
                 raise ConfigError(
@@ -186,7 +185,9 @@ class EradiateConfig:
     #: Path to the Eradiate download directory.
     download_dir = var(
         default="$ERADIATE_SOURCE_DIR/resources/downloads",
-        converter=lambda x: pathlib.Path(os.path.expandvars(x)).absolute(),
+        converter=lambda x: pathlib.Path(
+            os.path.expanduser(os.path.expandvars(x))
+        ).absolute(),
         help="Path to the Eradiate download directory.",
     )
 
