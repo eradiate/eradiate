@@ -13,5 +13,5 @@ elif [ "$ZSH_VERSION" ]; then
     export ERADIATE_SOURCE_DIR=$(dirname "$0:A")
 fi
 
-export PYTHONPATH="${ERADIATE_SOURCE_DIR}/${BUILD_DIR}/ext/mitsuba/python:${PYTHONPATH}"
-export PATH="${ERADIATE_SOURCE_DIR}/${BUILD_DIR}/ext/mitsuba:${PATH}"
+export PYTHONPATH="${ERADIATE_SOURCE_DIR}/ext/mitsuba/${BUILD_DIR}/python:${PYTHONPATH}"
+export PATH="${ERADIATE_SOURCE_DIR}/ext/mitsuba/${BUILD_DIR}:${PATH}"
