@@ -1,4 +1,4 @@
-.. _sec-getting_started-install:
+.. _sec-user_guide-install:
 
 Installation
 ============
@@ -13,7 +13,7 @@ is the recommended way to install Eradiate.
 
 This will install the latest stable version of Eradiate, along with all the
 dependencies necessary to run it. If you want to install the latest development,
-please refer to the :ref:`sec-getting_started-development`.
+please refer to the :ref:`sec-developer_guides-dev_install`.
 
 .. warning::
 

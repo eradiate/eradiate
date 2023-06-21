@@ -8,7 +8,7 @@ Hereafter is a collection of detailed guides for developers.
 .. toctree::
    :maxdepth: 1
 
-   getting_started
+   dev_install
    update
    scene_generator
    factory_guide

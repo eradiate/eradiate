@@ -70,7 +70,7 @@ necessary. In that case, the ``conda-init`` target can be used:
    make conda-init
 
 If something goes wrong during that process, an environment reset should solve
-most issues (see :ref:`sec-getting_started-install-setup_conda`).
+most issues (see :ref:`sec-developer_guide-dev_install-setup_conda`).
 
 Update data files
 -----------------

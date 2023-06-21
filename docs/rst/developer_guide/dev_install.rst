@@ -1,4 +1,4 @@
-.. _sec-getting_started-development:
+.. _sec-developer_guide-dev_install:
 
 Development installation
 ========================
@@ -118,7 +118,7 @@ set up your Python environment. Conda can be installed notably as part of the
 Anaconda distribution, or using its lightweight counterpart Miniconda.
 `See installation instructions here <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
-.. _sec-getting_started-install-cloning:
+.. _sec-developer_guide-dev_install-cloning:
 
 Cloning the repository
 ----------------------
@@ -163,7 +163,7 @@ your Internet connection.
    with **repo** permissions and to use it instead of your password. You might
    also have to make sure that `Git will remember your token <https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage>`_.
 
-.. _sec-getting_started-install-setup_conda:
+.. _sec-developer_guide-dev_install-setup_conda:
 
 Setting up the Conda environment
 --------------------------------
@@ -219,7 +219,7 @@ Once your Conda environment is configured, you should reactivate it:
 
    conda deactivate && conda activate eradiate
 
-.. _sec-getting_started-install-compiling:
+.. _sec-developer_guide-dev_install-compiling:
 
 Compiling the radiometric kernel
 --------------------------------
@@ -326,7 +326,7 @@ environment, do not proceed before fixing it.
 The compilation process can last for up to around half an hour on old machines.
 It completes within a few minutes on modern workstations.
 
-.. _sec-getting_started-install-verify_installation:
+.. _sec-developer_guide-dev_install-verify_installation:
 
 Verifying the installation
 --------------------------
