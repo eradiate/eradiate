@@ -1,24 +1,27 @@
-import pytest
-import numpy as np
-
 import mitsuba as mi
+import numpy as np
+import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.scenes.illumination import AstroObjectIllumination
-from eradiate.scenes.spectra import UniformSpectrum, SolarIrradianceSpectrum
+from eradiate.scenes.spectra import SolarIrradianceSpectrum, UniformSpectrum
 from eradiate.test_tools.types import check_scene_element
+
 
 @pytest.mark.parametrize(
     "kwargs, expected_irradiance_type, angular_diameter",
     [({}, SolarIrradianceSpectrum, 1.0), ({"irradiance": 1.0}, UniformSpectrum, 2.0)],
     ids=["noargs", "from_scalar"],
 )
-def test_directional_construct(modes_all, kwargs, expected_irradiance_type, angular_diameter):
+def test_directional_construct(
+    modes_all, kwargs, expected_irradiance_type, angular_diameter
+):
     # Construction without argument succeeds
     illumination = AstroObjectIllumination(**kwargs, angular_diameter=angular_diameter)
     assert illumination
     assert isinstance(illumination.irradiance, expected_irradiance_type)
     assert illumination.angular_diameter == angular_diameter * ureg.deg
+
 
 @pytest.mark.parametrize(
     "zenith, azimuth, direction, to_world",
@@ -54,6 +57,7 @@ def test_directional_to_world(mode_mono, zenith, azimuth, direction, to_world):
     illumination = AstroObjectIllumination(zenith=zenith, azimuth=azimuth)
     np.testing.assert_allclose(illumination.direction, direction)
     np.testing.assert_allclose(illumination._to_world.matrix, to_world)
+
 
 def test_directional_kernel_dict(modes_all_double):
     # The associated kernel dict is correctly formed and can be loaded

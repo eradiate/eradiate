@@ -1,0 +1,58 @@
+from __future__ import annotations
+
+import attrs
+import pint
+import pinttr
+
+from ._directional import DirectionalIllumination
+from ...attrs import documented, parse_docs
+from ...units import unit_context_config as ucc
+from ...units import unit_registry as ureg
+from ...validators import is_positive
+
+
+@parse_docs
+@attrs.define(eq=False, slots=False)
+class AstroObjectIllumination(DirectionalIllumination):
+    """
+    Astronomical Object Illumination scene element [``astro_object``].
+
+    This illumination represents the light coming from a distant astronomical
+    object (*e.g.* the Sun). The astronomical object uniformly illuminates a
+    portion of the sky such that it appears to the observer as a circle. Its
+    size is defined by the apparent diameter of the circle, expressed in
+    degrees.
+
+    Notes
+    -----
+    Contrary to the directional illuminant, the astronomical object is not a
+    delta emitter, *i.e.* it has a non-zero apparent size. Light rays cast by
+    this illuminant are, from the point of view of the observer, encompassed
+    in a cone, while they are parallel in the case of the directional
+    illumination.
+    """
+
+    angular_diameter: pint.Quantity = documented(
+        pinttr.field(
+            default=0.5358 * ureg.deg,
+            validator=[is_positive, pinttr.validators.has_compatible_units],
+            units=ucc.deferred("angle"),
+        ),
+        doc="Apparent diameter of the celestial body as seen from the point. "
+        "The default value is an average of the apparent diameter of the "
+        "Sun as seen from Earth.\n"
+        "\n"
+        "Unit-enabled field (default units: ucc['angle']).",
+        type="quantity",
+        init_type="quantity or float",
+        default="0.5358 deg",
+    )
+
+    @property
+    def template(self) -> dict:
+        # Inherit docstring
+        return {
+            "type": "astroobject",
+            "to_world": self._to_world,
+            "angular_diameter": self.angular_diameter.m_as("degree"),
+        }
