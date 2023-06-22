@@ -16,7 +16,6 @@ from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...util.deprecation import deprecated
 from ...util.misc import flatten
 
 # ------------------------------------------------------------------------------
@@ -139,6 +138,15 @@ class Layout(ABC):
         )
 
 
+def _angles_converter(value):
+    value = pinttr.util.ensure_units(value, ucc.deferred("angle"))
+    angle_units = value.u
+    magnitude = np.reshape(value.m_as(ureg.deg), (-1, 2))
+    zeniths = magnitude[:, 0]
+    azimuths = magnitude[:, 1]
+    return (np.stack((zeniths, azimuths % 360), axis=1) * ureg.deg).to(angle_units)
+
+
 @parse_docs
 @attrs.define
 class AngleLayout(Layout):
@@ -149,21 +157,26 @@ class AngleLayout(Layout):
 
     _angles: pint.Quantity = documented(
         pinttr.ib(
-            converter=lambda x: np.reshape(
-                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1, 2)
-            )
-            % (360.0 * ureg.deg),
+            converter=_angles_converter,
             units=ucc.deferred("angle"),
         ),
         doc="A sequence of viewing angles, corresponding to the direction "
         "sequence produced by :attr:`directions`, as a (N, 2) array. "
-        "The last dimension is ordered as (zenith, azimuth). "
-        "**Required, no default**.\n"
+        "The last dimension is ordered as (zenith, azimuth). Zenith values "
+        "must be between 0 and 180°. **Required, no default**.\n"
         "\n"
         "Unit-enabled field (default: ucc['angle']).",
         type="quantity",
         init_type="array-like",
     )
+
+    @_angles.validator
+    def _angles_validator(self, attribute, value):
+        zeniths = value[:, 0].m_as(ureg.deg)
+        if np.any((zeniths < 0) | (zeniths > 180)):
+            raise ValueError(
+                f"while validating {attribute.name}: zenith values must be in [0°, 180°]"
+            )
 
     @property
     def angles(self) -> pint.Quantity:
@@ -181,24 +194,34 @@ class AzimuthRingLayout(Layout):
 
     zenith: pint.Quantity = documented(
         pinttr.field(
-            converter=lambda x: converters.on_quantity(float)(
-                pinttr.converters.to_units(ucc.deferred("angle"))(x)
+            converter=attrs.converters.pipe(
+                pinttr.converters.to_units(ucc.deferred("angle")),
+                lambda x: converters.on_quantity(float)(x),
             ),
             units=ucc.deferred("angle"),
         ),
-        doc="A single zenith value. **Required, no default**.\n"
+        doc="A single zenith value. Must be in [0°, 180°]. **Required, no default**.\n"
         "\n"
         "Unit-enabled field (default: ucc['angle']).",
         type="quantity",
         init_type="float or quantity",
     )
 
+    @zenith.validator
+    def _zenith_validator(self, attribute, value):
+        zenith = value.m_as(ureg.deg)
+        if zenith < 0 or zenith > 180:
+            raise ValueError(
+                f"while validating {attribute.name}: zenith value must be in [0°, 180°]"
+            )
+
     azimuths: pint.Quantity = documented(
         pinttr.field(
-            converter=lambda x: np.reshape(
-                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1,)
-            )
-            % (360.0 * ureg.deg),
+            converter=attrs.converters.pipe(
+                pinttr.converters.to_units(ucc.deferred("angle")),
+                lambda x: np.reshape(x, (-1,)),
+                lambda x: x % (360.0 * ureg.deg),
+            ),
             units=ucc.deferred("angle"),
         ),
         doc="A vector of azimuth values. **Required, no default**.\n"
@@ -269,8 +292,9 @@ class HemispherePlaneLayout(Layout):
 
     zeniths: pint.Quantity = documented(
         pinttr.field(
-            converter=lambda x: np.reshape(
-                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1,)
+            converter=attrs.converters.pipe(
+                pinttr.converters.to_units(ucc.deferred("angle")),
+                lambda x: np.reshape(x, (-1,)),
             ),
             units=ucc.deferred("angle"),
         ),
@@ -282,7 +306,13 @@ class HemispherePlaneLayout(Layout):
     )
 
     azimuth: pint.Quantity = documented(
-        pinttr.field(units=ucc.deferred("angle")),
+        pinttr.field(
+            converter=attrs.converters.pipe(
+                pinttr.converters.to_units(ucc.deferred("angle")),
+                lambda x: x % (360 * ureg.deg),
+            ),
+            units=ucc.deferred("angle"),
+        ),
         doc="A single zenith value. **Required, no default**.",
         type="quantity",
         init_type="float or quantity",
@@ -310,8 +340,9 @@ class GridLayout(Layout):
 
     zeniths: pint.Quantity = documented(
         pinttr.field(
-            converter=lambda x: np.reshape(
-                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1,)
+            converter=attrs.converters.pipe(
+                pinttr.converters.to_units(ucc.deferred("angle")),
+                lambda x: np.reshape(x, (-1,)),
             ),
             units=ucc.deferred("angle"),
         ),
@@ -322,10 +353,19 @@ class GridLayout(Layout):
         init_type="array-like",
     )
 
+    @zeniths.validator
+    def _zeniths_validator(self, attribute, value):
+        zeniths = value.m_as(ureg.deg)
+        if np.any((zeniths < 0) | (zeniths > 180)):
+            raise ValueError(
+                f"while validating {attribute.name}: zenith values must be in [0°, 180°]"
+            )
+
     azimuths: pint.Quantity = documented(
         pinttr.field(
-            converter=lambda x: np.reshape(
-                pinttr.converters.to_units(ucc.deferred("angle"))(x), (-1,)
+            converter=attrs.converters.pipe(
+                pinttr.converters.to_units(ucc.deferred("angle")),
+                lambda x: np.reshape(x, (-1,)),
             ),
             units=ucc.deferred("angle"),
         ),
