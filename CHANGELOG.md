@@ -62,7 +62,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 
 * Added {class}`.MultiDeltaSpectrum` spectrum type ({ghpr}`311`).
 * Exposed several API members in the top-level namespace ({ghpr}`324`).
-* Exposed the ``eradiate.spectral.*`` subpackage members in the
+* Exposed the `eradiate.spectral.*` subpackage members in the
   {mod}`eradiate.spectral` namespace ({ghpr}`324`).
 * Fixed incorrect Mitsuba scene parameter drop and lookup ({ghpr}`329`).
 * Added spherical-shell geometry support to DEM components
@@ -70,8 +70,9 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Fixed broken symmetry between {class}`.Spectrum` dictionary and object
   conversion protocols ({ghpr}`336`).
 * Provide an Eradiate Pypi package ({ghpr}`328`).
-* Implement the Astronomical Object Illumination, its tests and its
-  documentation ({ghpr}`331`).
+* Added {class}`.AstroObjectIllumination` illumination type ({ghpr}`331`).
+* Fixed a bug where {class}`.Layout` constructors would not raise if passed
+  invalid azimuth values (*i.e.* outside the [0, 180]° range) ({ghpr}`345`).
 
 ### Documentation
 
@@ -84,6 +85,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   its measure, its atmosphere components if applicable, and a default
   spectral set ({ghpr}`311`).
 * Rewrote the CLI using the Typer framework ({ghpr}`326`).
+* Refactored {class}`.Layout` constructor code ({ghpr}`345`).
 
 ## v0.23.1 (21 April 2023)
 

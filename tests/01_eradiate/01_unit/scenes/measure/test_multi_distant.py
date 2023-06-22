@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.frame import AzimuthConvention
 from eradiate.scenes.measure import (
     AngleLayout,
     AzimuthRingLayout,
@@ -31,6 +30,12 @@ def test_angle_layout(mode_mono):
 
     # (2,) arrays are reshaped as (1, 2)
     assert AngleLayout([0, 0] * ureg.deg).angles.shape == (1, 2)
+
+    # Zenith values outside [0, 180]° are not allowed
+    with pytest.raises(ValueError):
+        AngleLayout([-45, 0] * ureg.deg)
+    with pytest.raises(ValueError):
+        AngleLayout([210, 0] * ureg.deg)
 
     # Regular construction pattern succeeds
     layout = AngleLayout([[0, 0], [45, 0], [45, 90], [45, 180]] * ureg.deg)
@@ -88,7 +93,7 @@ def test_direction_layout(mode_mono):
     """
     # Constructing without argument fails
     with pytest.raises(TypeError):
-        print(DirectionLayout())
+        DirectionLayout()
 
     # (3,) arrays are reshaped as (1, 3)
     assert DirectionLayout([0, 0, 1]).directions.shape == (1, 3)
@@ -237,7 +242,6 @@ def test_grid_layout_azimuth_convention(mode_mono, convention, expected):
         [0, 90] * ureg.deg,
         azimuth_convention=convention,
     )
-    print(layout.directions)
     np.testing.assert_allclose(layout.directions, expected, atol=1e-8)
 
 
