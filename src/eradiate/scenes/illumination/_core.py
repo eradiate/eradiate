@@ -11,9 +11,9 @@ from ...attrs import documented, get_doc, parse_docs
 illumination_factory = Factory()
 illumination_factory.register_lazy_batch(
     [
+        ("_astro_object.AstroObjectIllumination", "astro_object", {}),
         ("_constant.ConstantIllumination", "constant", {}),
         ("_directional.DirectionalIllumination", "directional", {}),
-        ("_astroobject.AstroObjectIllumination", "astro_object", {}),
         ("_spot.SpotIllumination", "spot", {}),
     ],
     cls_prefix="eradiate.scenes.illumination",

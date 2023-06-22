@@ -268,6 +268,7 @@
    :toctree: generated/autosummary/
 
    DirectionalIllumination
+   AstroObjectIllumination
    ConstantIllumination
    SpotIllumination
 
