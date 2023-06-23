@@ -655,20 +655,32 @@ class MultiDistantMeasure(DistantMeasure):
 
     @property
     def kernel_type(self) -> str:
-        return "mdistant"
+        return "batch"
 
     @property
     def template(self) -> dict:
         result = super().template
-        result["directions"] = ",".join(
-            map(str, -self.direction_layout.directions.ravel(order="C"))
-        )
 
-        if self.target is not None:
-            result.update(flatten({"target": self.target.kernel_item()}))
+        subsensor_film_dict = dict_hdrfilm(width=1, height=1)
 
-        if self.ray_offset is not None:
-            result["ray_offset"] = self.ray_offset.m_as(uck.get("length"))
+        for i, direction in enumerate(
+            -self.direction_layout.directions
+        ):  # Looping on axis 0
+            subsensor_key = f"mpdistant_{i}"
+            subsensor = {
+                f"{subsensor_key}.type": "mpdistant",
+            }
+            for k, v in subsensor_film_dict.items():
+                subsensor[f"{subsensor_key}.film.{k}"] = v
+            if self.target is not None:
+                for k, v in flatten({"target": self.target.kernel_item()}):
+                    subsensor[f"{subsensor_key}.{k}"] = v
+            if self.ray_offset is not None:
+                subsensor[f"{subsensor_key}.ray_offset"] = self.ray_offset.m_as(
+                    uck.get("length")
+                )
+
+            result.update(subsensor)
 
         return result
 
@@ -684,3 +696,17 @@ class MultiDistantMeasure(DistantMeasure):
             "long_name": "radiance",
             "units": symbol(uck.get("radiance")),
         }
+
+
+# Scene dict generation helpers
+
+
+def dict_hdrfilm(width, height):
+    return {
+        "type": "hdrfilm",
+        "width": width,
+        "height": height,
+        "pixel_format": "luminance",
+        "component_format": "float32",
+        "rfilter.type": "box",
+    }

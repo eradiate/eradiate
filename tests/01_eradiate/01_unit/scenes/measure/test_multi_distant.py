@@ -1,7 +1,9 @@
 import mitsuba as mi
 import numpy as np
 import pytest
+from rich.pretty import pprint
 
+from eradiate import KernelContext, traverse
 from eradiate import unit_registry as ureg
 from eradiate.scenes.measure import (
     AngleLayout,
@@ -248,6 +250,15 @@ def test_grid_layout_azimuth_convention(mode_mono, convention, expected):
 # ------------------------------------------------------------------------------
 #                       MultiDistantMeasure implementation
 # ------------------------------------------------------------------------------
+
+
+def test_playground(mode_mono):
+    measure = MultiDistantMeasure(direction_layout=[0, 45] * ureg.deg)
+    pprint(measure)
+    kdict_template, _ = traverse(measure)
+    rendered = kdict_template.render(KernelContext())
+    pprint(rendered)
+    pprint(mi.load_dict(rendered))
 
 
 def test_multi_distant_measure_construct(mode_mono):
