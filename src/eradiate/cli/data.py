@@ -2,12 +2,13 @@ import os.path
 import textwrap
 from pathlib import Path
 from typing import List, Optional
-from importlib_resources import files
 
 import typer
+from importlib_resources import files
 from rich.console import Console
 from ruamel.yaml import YAML
 from typing_extensions import Annotated
+
 import eradiate
 
 from ..exceptions import DataError
@@ -144,7 +145,9 @@ def fetch(
             if eradiate.config.source_dir is None:
                 from_file = files("eradiate") / "data" / "downloads.yml"
             else:
-                from_file = eradiate.config.source_dir / "data" / "downloads_development.yml"
+                from_file = (
+                    eradiate.config.source_dir / "data" / "downloads_development.yml"
+                )
         console.print(f"Reading file list from '{from_file}'")
         yaml = YAML()
         file_list = yaml.load(from_file)

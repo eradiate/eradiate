@@ -73,7 +73,6 @@ class MultiDeltaSpectrum(Spectrum):
         raise NotImplementedError
 
     def select_in_wavelength_set(self, wset: WavelengthSet) -> WavelengthSet:
-
         # the input wavelength set is completely ignored
         # only the attribute wavelengths are included in the returned
         # wavelength set
@@ -81,7 +80,6 @@ class MultiDeltaSpectrum(Spectrum):
         return WavelengthSet(self.wavelengths)
 
     def select_in_bin_set(self, binset: BinSet) -> BinSet:
-
         bins = binset.bins
 
         # transform bins into closed-open intervals, so that a wavelength

@@ -117,7 +117,6 @@ class AggregateCKDQuad(PipelineStep):
 
         # For each bin and each pixel, compute quadrature and store the result
         for i_bin, bin in enumerate(bin_ids):
-
             # TODO: PR#311 hack (next 2 lines)
             _bin_index = _bins_wcenters_str.index(bin)
             _bin = _bins[_bin_index]

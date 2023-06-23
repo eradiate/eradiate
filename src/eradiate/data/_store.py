@@ -13,7 +13,9 @@ from .._config import config
 data_store: MultiDataStore = None
 
 
-def init_data_store(offline: bool | None = None, production: bool | None = None) -> None:
+def init_data_store(
+    offline: bool | None = None, production: bool | None = None
+) -> None:
     """
     Initialize the global data store.
 
@@ -54,7 +56,12 @@ def init_data_store(offline: bool | None = None, production: bool | None = None)
             )
         else:
             small_files = SafeOnlineDataStore(
-                base_url="/".join([config.small_files_registry_url, config.small_files_registry_revision,]),
+                base_url="/".join(
+                    [
+                        config.small_files_registry_url,
+                        config.small_files_registry_revision,
+                    ]
+                ),
                 path=config.download_dir / "resources" / "data",
             )
 

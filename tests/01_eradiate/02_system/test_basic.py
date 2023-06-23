@@ -12,7 +12,11 @@ from eradiate import unit_registry as ureg
 from eradiate.kernel import mi_render
 from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.core import Scene
-from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination, AstroObjectIllumination
+from eradiate.scenes.illumination import (
+    AstroObjectIllumination,
+    ConstantIllumination,
+    DirectionalIllumination,
+)
 from eradiate.scenes.integrators import PathIntegrator
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.shapes import RectangleShape
@@ -20,7 +24,9 @@ from eradiate.scenes.surface import BasicSurface
 from eradiate.test_tools.types import check_scene_element
 
 
-@pytest.mark.parametrize("illumination, spp", [("directional", 1), ("constant", 5e5), ("astroobject", 5e5)])
+@pytest.mark.parametrize(
+    "illumination, spp", [("directional", 1), ("constant", 5e5), ("astroobject", 5e5)]
+)
 @pytest.mark.parametrize("li", [0.1, 1.0, 10.0])
 @pytest.mark.slow
 def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_state):
@@ -82,18 +88,20 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
     if illumination == "directional":
         objects["illumination"] = DirectionalIllumination(zenith=0.0, irradiance=li)
         theoretical_solution = np.full_like(vza, rho * li / np.pi)
-        rtol=1e-3
+        rtol = 1e-3
 
     elif illumination == "constant":
         objects["illumination"] = ConstantIllumination(radiance=li)
         theoretical_solution = np.full_like(vza, rho * li)
-        rtol=1e-3
+        rtol = 1e-3
 
     elif illumination == "astroobject":
-        objects["illumination"] = AstroObjectIllumination(zenith=0.0, irradiance=li, angular_diameter=0.03)
+        objects["illumination"] = AstroObjectIllumination(
+            zenith=0.0, irradiance=li, angular_diameter=0.03
+        )
         theoretical_solution = np.full_like(vza, rho * li / np.pi)
         # The angular diameter is not taken into account in the theoretical solution
-        rtol=1e-2
+        rtol = 1e-2
 
     else:
         raise ValueError(f"unsupported illumination '{illumination}'")

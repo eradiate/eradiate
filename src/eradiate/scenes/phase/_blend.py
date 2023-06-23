@@ -185,7 +185,6 @@ class BlendPhaseFunction(PhaseFunction):
 
     @property
     def template(self) -> dict:
-
         result = {"type": "blendphase"}
 
         for i in range(len(self.components) - 1):

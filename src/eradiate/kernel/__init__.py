@@ -1,4 +1,4 @@
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 from unittest.mock import Mock
 
 # Internal constants

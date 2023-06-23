@@ -17,6 +17,7 @@ _LOSCHMIDT = ureg.Quantity(
 # Air number density at 101325 Pa and 288.15 K
 _STANDARD_AIR_NUMBER_DENSITY = _LOSCHMIDT * (273.15 / 288.15)
 
+
 # Bates (1984) King correction factor data
 class _BATES_1984_DATA(metaclass=Singleton):
     # Lazy loader for Bates (1984) King correction data

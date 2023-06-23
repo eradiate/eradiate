@@ -751,7 +751,6 @@ def show(
         )
 
     if wmin is not None or wmax is not None:
-
         if wmin is not None:
             _wmin_value = wmin.m_as(ds.w.attrs["units"])
             plt.axvline(x=_wmin_value, color="red", lw=0.5)

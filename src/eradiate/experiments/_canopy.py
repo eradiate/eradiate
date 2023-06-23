@@ -94,7 +94,6 @@ class CanopyExperiment(EarthObservationExperiment):
     )
 
     def __attrs_post_init__(self):
-
         self._normalize_spectral()
         self._normalize_measures()
 
