@@ -70,7 +70,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 * Fixed broken symmetry between {class}`.Spectrum` dictionary and object
   conversion protocols ({ghpr}`336`).
 * Provide an Eradiate Pypi package ({ghpr}`328`).
-* Added {class}`.AstroObjectIllumination` illumination type ({ghpr}`331`).
+* Added {class}`.AstroObjectIllumination` illumination type ({ghpr}`331`,
+  {ghpr}`346`).
 * Fixed a bug where {class}`.Layout` constructors would not raise if passed
   invalid azimuth values (*i.e.* outside the [0, 180]° range) ({ghpr}`345`).
 
